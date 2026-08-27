@@ -229,8 +229,20 @@ interface Window {
 // needed here any more; keeping one would silently shadow the real
 // package's own global with `any` (confirmed via a local `tsc` repro
 // during planning). `Piecon` has no real upstream types (one of P46-0's
-// own genuinely-unresolved vendored libraries) and stays hand-typed.
-declare const Piecon: { setProgress(percent: number): void; reset(): void };
+// own genuinely-unresolved vendored libraries) and stays hand-typed --
+// as a module declaration now that it is imported rather than read off
+// a CDN-supplied global. The package is UMD with a `module.exports =
+// Piecon` branch, so Vite's CommonJS interop hands back the namespace
+// object as the default export. `setOptions` is part of the real API
+// too, though this codebase only calls the other two.
+declare module "piecon" {
+  const Piecon: {
+    setProgress(percent: number): void;
+    setOptions(options: Record<string, unknown>): void;
+    reset(): void;
+  };
+  export default Piecon;
+}
 
 // jquery.geoip.js -- genuinely first-party (docs/PLAN.md's own scope
 // note), but excluded from this phase's real 61-file count and not yet

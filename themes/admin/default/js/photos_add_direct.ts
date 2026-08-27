@@ -1,3 +1,4 @@
+import Piecon from "piecon";
 import {
   Upload,
   type Upload as TusUpload,
@@ -69,10 +70,10 @@ interface MultipartParams {
 // picture_modify.ts (docs/PLAN.md P46-B's own finding) -- safe since
 // these pages never co-load.
 //
-// First file in P46 to use the vendored plupload/Piecon/tus-js-client
-// globals -- their ambient types (loosely typed, matching every other
-// vendored-library entry in build/jquery-plugins.d.ts) are added there
-// alongside this conversion.
+// Piecon and tus-js-client are imported from their npm packages and
+// bundled; neither is a CDN-supplied global any more. plupload still is
+// (typed by @types/plupload), and remains a jQuery-family CDN script
+// pending its own removal batch.
 
 /*--------------
 Variables

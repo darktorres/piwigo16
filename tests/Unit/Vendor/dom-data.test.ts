@@ -1,0 +1,103 @@
+import { beforeEach, describe, expect, it } from "vitest";
+
+import {
+  coerceDataAttribute,
+  data,
+  removeData,
+  setData,
+} from "../../../themes/default/js/vendor/dom";
+
+beforeEach(() => {
+  document.body.innerHTML = "";
+});
+
+function el(attrs = ""): HTMLElement {
+  document.body.innerHTML = `<div id="t" ${attrs}></div>`;
+  return document.getElementById("t") as HTMLElement;
+}
+
+describe("coerceDataAttribute", () => {
+  it("maps the three literals jQuery special-cases", () => {
+    expect(coerceDataAttribute("true")).toBe(true);
+    expect(coerceDataAttribute("false")).toBe(false);
+    expect(coerceDataAttribute("null")).toBeNull();
+  });
+
+  it("converts a number only when it round-trips exactly", () => {
+    expect(coerceDataAttribute("12")).toBe(12);
+    expect(coerceDataAttribute("-3.5")).toBe(-3.5);
+    // `+"007" + "" === "7"`, not "007", so jQuery leaves it a string --
+    // this is the guard that keeps zero-padded ids from becoming numbers.
+    expect(coerceDataAttribute("007")).toBe("007");
+    expect(coerceDataAttribute("1e1000")).toBe("1e1000");
+    expect(coerceDataAttribute("")).toBe("");
+  });
+
+  it("parses only brace- or bracket-wrapped JSON", () => {
+    expect(coerceDataAttribute('{"a":1}')).toEqual({ a: 1 });
+    expect(coerceDataAttribute("[1,2]")).toEqual([1, 2]);
+    // Valid JSON, but not wrapped -- jQuery's rbrace does not match it.
+    expect(coerceDataAttribute('"quoted"')).toBe('"quoted"');
+  });
+
+  it("falls back to the raw string on malformed JSON instead of throwing", () => {
+    expect(coerceDataAttribute("{not json}")).toBe("{not json}");
+  });
+});
+
+describe("data()", () => {
+  it("reads and coerces a data-* attribute", () => {
+    const node = el('data-count="42" data-flag="true"');
+    expect(data(node, "count")).toBe(42);
+    expect(data(node, "flag")).toBe(true);
+  });
+
+  it("maps camelCase keys onto dashed attribute names", () => {
+    const node = el('data-foo-bar="9"');
+    expect(data(node, "fooBar")).toBe(9);
+  });
+
+  it("returns undefined when the attribute is absent", () => {
+    expect(data(el(), "missing")).toBeUndefined();
+  });
+
+  it("caches on first read, so a later attribute change is invisible", () => {
+    // jQuery's documented behaviour: the attribute is consulted once, then
+    // the store wins. Translating .data() to dataset would break this.
+    const node = el('data-x="1"');
+    expect(data(node, "x")).toBe(1);
+    node.setAttribute("data-x", "2");
+    expect(data(node, "x")).toBe(1);
+  });
+
+  it("does not write the attribute back when set", () => {
+    const node = el('data-x="1"');
+    setData(node, "x", 99);
+    expect(data(node, "x")).toBe(99);
+    expect(node.getAttribute("data-x")).toBe("1");
+  });
+
+  it("stores values the DOM cannot hold", () => {
+    const node = el();
+    const obj = { nested: [1, 2] };
+    setData(node, "payload", obj);
+    expect(data(node, "payload")).toBe(obj);
+  });
+
+  it("removeData drops the cached value and re-reads the attribute", () => {
+    const node = el('data-x="1"');
+    setData(node, "x", 99);
+    removeData(node, "x");
+    expect(data(node, "x")).toBe(1);
+  });
+
+  it("keeps each element's store separate", () => {
+    document.body.innerHTML = `<div id="a"></div><div id="b"></div>`;
+    const a = document.getElementById("a") as HTMLElement;
+    const b = document.getElementById("b") as HTMLElement;
+    setData(a, "k", "A");
+    setData(b, "k", "B");
+    expect(data(a, "k")).toBe("A");
+    expect(data(b, "k")).toBe("B");
+  });
+});

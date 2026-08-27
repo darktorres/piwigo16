@@ -11,6 +11,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
+import { data as readData, ready } from "../../../default/js/vendor/dom";
 export {};
 
 const str_number_page_visited = pwg_getPageString("Page Visited");
@@ -46,13 +47,19 @@ interface StatData {
   "compare-years": StatDataPoint;
   "month-stats": { month: StatDataPoint[]; avg: number };
 }
+// jQuery's `.data()`, not `dataset`: these six attributes hold JSON
+// objects, and the coercion that turns a brace-wrapped attribute into a
+// parsed object is jQuery's, not the DOM's. `dataset` would hand back the
+// raw strings and every `Object.keys()` below would walk the characters of
+// one.
+const dataElement = document.getElementById("data")!;
 const data = {} as StatData;
-data["hours"] = $("#data").data("hours") as StatDataPoint;
-data["days"] = $("#data").data("days") as StatDataPoint;
-data["months"] = $("#data").data("months") as StatDataPoint;
-data["years"] = $("#data").data("years") as StatDataPoint;
-data["compare-years"] = $("#data").data("compare-years") as StatDataPoint;
-data["month-stats"] = $("#data").data("month-stats") as {
+data["hours"] = readData(dataElement, "hours") as StatDataPoint;
+data["days"] = readData(dataElement, "days") as StatDataPoint;
+data["months"] = readData(dataElement, "months") as StatDataPoint;
+data["years"] = readData(dataElement, "years") as StatDataPoint;
+data["compare-years"] = readData(dataElement, "compare-years") as StatDataPoint;
+data["month-stats"] = readData(dataElement, "month-stats") as {
   month: StatDataPoint[];
   avg: number;
 };
@@ -316,50 +323,71 @@ function getMonthStatsDataset() {
   return dataset;
 }
 
+type DataType = "hours" | "days" | "months" | "years";
+
+// The label carries `data-value`; reading it through the helper keeps
+// jQuery's coercion, which leaves a plain word a string.
+function selectedDataType(): DataType {
+  const label = document.querySelector(
+    ".stat-data-selector input:checked + label",
+  )!;
+
+  return readData(label, "value") as DataType;
+}
+
+function checkbox(id: string): HTMLInputElement | null {
+  return document.getElementById(id) as HTMLInputElement | null;
+}
+
 //Event listener
-$(".stat-data-selector label").on("click", function () {
-  const dataType = $(this).data("value") as
-    "hours" | "days" | "months" | "years";
-  changeData(dataType);
+document.querySelectorAll(".stat-data-selector label").forEach((label) => {
+  label.addEventListener("click", function () {
+    const dataType = readData(label, "value") as DataType;
+    changeData(dataType);
+  });
 });
 
-$(".stat-compare-mode input").on("change", function () {
-  compareMode = ($(this)[0] as HTMLInputElement).checked;
+document.querySelectorAll(".stat-compare-mode input").forEach((input) => {
+  input.addEventListener("change", function () {
+    compareMode = (input as HTMLInputElement).checked;
 
-  if (compareMode) {
-    $("#hours-selector + label, #days-selector + label").addClass(
-      "unavailable",
+    const unavailable = document.querySelectorAll(
+      "#hours-selector + label, #days-selector + label",
     );
-    if (
-      $("#hours-selector").prop("checked") ||
-      $("#days-selector").prop("checked")
-    ) {
-      $("#years-selector").prop("checked", true);
-      $("#hours-selector, #days-selector").prop("checked", false);
-      changeData("years");
+
+    if (compareMode) {
+      unavailable.forEach((label) => {
+        label.classList.add("unavailable");
+      });
+      if (
+        checkbox("hours-selector")?.checked === true ||
+        checkbox("days-selector")?.checked === true
+      ) {
+        const years = checkbox("years-selector");
+        if (years !== null) {
+          years.checked = true;
+        }
+        document
+          .querySelectorAll<HTMLInputElement>("#hours-selector, #days-selector")
+          .forEach((selector) => {
+            selector.checked = false;
+          });
+        changeData("years");
+      } else {
+        changeData(selectedDataType());
+      }
     } else {
-      changeData(
-        $(".stat-data-selector input:checked + label").data("value") as
-          "hours" | "days" | "months" | "years",
-      );
+      unavailable.forEach((label) => {
+        label.classList.remove("unavailable");
+      });
+      changeData(selectedDataType());
     }
-  } else {
-    $("#hours-selector + label, #days-selector + label").removeClass(
-      "unavailable",
-    );
-    changeData(
-      $(".stat-data-selector input:checked + label").data("value") as
-        "hours" | "days" | "months" | "years",
-    );
-  }
+  });
 });
 
 /*-------
 Initialize the page
 -------*/
-$(function () {
-  changeData(
-    $(".stat-data-selector input:checked + label").data("value") as
-      "hours" | "days" | "months" | "years",
-  );
+ready(function () {
+  changeData(selectedDataType());
 });

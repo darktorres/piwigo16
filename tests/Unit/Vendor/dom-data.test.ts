@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   coerceDataAttribute,
   data,
+  parseHtml,
   removeData,
   setData,
 } from "../../../themes/default/js/vendor/dom";
@@ -99,5 +100,32 @@ describe("data()", () => {
     setData(b, "k", "B");
     expect(data(a, "k")).toBe("A");
     expect(data(b, "k")).toBe("B");
+  });
+});
+
+describe("parseHtml", () => {
+  it("returns the top-level elements of a markup string", () => {
+    const nodes = parseHtml('<li class="a"></li><li class="b"></li>');
+
+    expect(nodes.map((n) => n.className)).toEqual(["a", "b"]);
+  });
+
+  it("parses a table row, which innerHTML on a div would discard", () => {
+    // This is the case jQuery keeps a `wrapMap` for; a <template> gets it
+    // right without one.
+    const nodes = parseHtml("<tr><td>x</td></tr>");
+
+    expect(nodes).toHaveLength(1);
+    expect(nodes[0]?.tagName).toBe("TR");
+  });
+
+  it("drops the whitespace between elements", () => {
+    const nodes = parseHtml("\n  <div></div>\n  ");
+
+    expect(nodes).toHaveLength(1);
+  });
+
+  it("returns nothing for markup with no elements", () => {
+    expect(parseHtml("")).toEqual([]);
   });
 });

@@ -232,22 +232,56 @@ function showHide(target: Element | ArrayLike<Element>, show: boolean): void {
 }
 
 /** `$(el).show()`. */
-export function show(target: Element | ArrayLike<Element>): void {
-  showHide(target, true);
+export function show(
+  target: Element | ArrayLike<Element>,
+  speed?: number | string | (() => void),
+  complete?: () => void
+): void {
+  if (speed === undefined) {
+    showHide(target, true);
+
+    return;
+  }
+
+  runEffect(target, SHOW_PROPS, "show", speed, complete);
 }
 
-/** `$(el).hide()`. */
-export function hide(target: Element | ArrayLike<Element>): void {
-  showHide(target, false);
+/** `$(el).hide()` / `.hide(duration)`. */
+export function hide(
+  target: Element | ArrayLike<Element>,
+  speed?: number | string | (() => void),
+  complete?: () => void
+): void {
+  if (speed === undefined) {
+    showHide(target, false);
+
+    return;
+  }
+
+  runEffect(target, SHOW_PROPS, "hide", speed, complete);
 }
 
-/** `$(el).toggle()` / `.toggle(force)`. */
+/**
+ * `$(el).toggle()` / `.toggle(force)` / `.toggle(duration)`.
+ *
+ * jQuery overloads all three on one argument, and distinguishes them exactly
+ * as this does (effects.js: `speed == null || typeof speed === "boolean"`
+ * takes the instant path, anything else animates). A boolean is a forced
+ * state, a number or string is a duration.
+ */
 export function toggle(
   target: Element | ArrayLike<Element>,
-  force?: boolean
+  speedOrForce?: boolean | number | string | (() => void),
+  complete?: () => void
 ): void {
-  if (force !== undefined) {
-    showHide(target, force);
+  if (typeof speedOrForce === "boolean") {
+    showHide(target, speedOrForce);
+
+    return;
+  }
+
+  if (speedOrForce !== undefined) {
+    runEffect(target, SHOW_PROPS, "toggle", speedOrForce, complete);
 
     return;
   }
@@ -757,6 +791,26 @@ export function stop(
 // left `display:none` with its opacity intact rather than stranded at 0.
 
 /** Vertical box properties a slide animates, per `genFx()`. */
+/**
+ * `genFx("show", true)` -- what `.show(duration)`, `.hide(duration)` and
+ * `.toggle(duration)` animate. Not just opacity and not just height: the
+ * element's whole box collapses, margins and padding included, which is why
+ * it reads as a fold rather than a fade.
+ */
+const SHOW_PROPS = [
+  "height",
+  "width",
+  "opacity",
+  "marginTop",
+  "marginRight",
+  "marginBottom",
+  "marginLeft",
+  "paddingTop",
+  "paddingRight",
+  "paddingBottom",
+  "paddingLeft",
+];
+
 const SLIDE_PROPS = [
   "height",
   "marginTop",
@@ -1249,6 +1303,25 @@ export function css(
       el.style.setProperty(property, resolved);
     }
   }
+}
+
+// ── Markup ───────────────────────────────────────────────────────────────
+
+/**
+ * `$(htmlString)` -- parse markup into its top-level elements.
+ *
+ * A `<template>` is used rather than a detached `<div>` because the HTML
+ * parser applies the same content restrictions jQuery works around with its
+ * `wrapMap`: a bare `<tr>` assigned to a div's innerHTML is discarded, while
+ * a template parses it correctly. Text nodes between the elements are
+ * dropped, which every call site here wants -- each parses one element out
+ * of a template block.
+ */
+export function parseHtml(html: string): Element[] {
+  const template = document.createElement("template");
+  template.innerHTML = html;
+
+  return Array.from(template.content.children);
 }
 
 // ── Document ready ───────────────────────────────────────────────────────

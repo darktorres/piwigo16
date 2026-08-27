@@ -23,6 +23,13 @@ import {
 // entries -- its own `albums` entry and this file's own `catSearch`
 // entry -- and Rollup emits the shared part as a chunk both import.
 import { data } from "./albums";
+import {
+  fadeIn,
+  hide,
+  parseHtml,
+  ready,
+  show,
+} from "../../../default/js/vendor/dom";
 
 export {};
 
@@ -46,30 +53,44 @@ const colors = [
   "icon-green",
 ];
 
-$(function () {
-  $(".limit-album-reached").hide();
+ready(function () {
+  hide(document.querySelectorAll(".limit-album-reached"));
 
-  $("#cat_search_input").on("input", () => {
+  document.getElementById("cat_search_input")?.addEventListener("input", () => {
     updateSearch();
   });
 });
 
+/** jQuery's `.html(value)` writes to every element of the set. */
+function setHtml(selector: string, value: string): void {
+  document.querySelectorAll(selector).forEach((element) => {
+    element.innerHTML = value;
+  });
+}
+
 // Update the page according to the search field
 function updateSearch() {
-  const string = String($(".search-input").val());
-  $(".search-album-result").html("");
-  $(".search-album-noresult").hide();
-  $(".limit-album-reached").hide();
+  // `String($(".search-input").val())` on an empty set is the literal
+  // "undefined", a non-empty string that would send this down the search
+  // branch looking for albums named "undefined". Kept rather than tidied to
+  // "" because it is unreachable either way: `.search-input` and
+  // `#cat_search_input` are the same element on this page, and that
+  // element's own listener is the only caller.
+  const input = document.querySelector<HTMLInputElement>(".search-input");
+  const string = input === null ? "undefined" : input.value;
+  setHtml(".search-album-result", "");
+  hide(document.querySelectorAll(".search-album-noresult"));
+  hide(document.querySelectorAll(".limit-album-reached"));
   if (string == "") {
     // help button unnecessary so do not show
     // $('.search-album-help').show();
-    $(".search-album-ghost").show();
-    $(".search-album-num-result").hide();
+    show(document.querySelectorAll(".search-album-ghost"));
+    hide(document.querySelectorAll(".search-album-num-result"));
     hideSearchContainer();
   } else {
-    $(".search-album-ghost").hide();
-    $(".search-album-help").hide();
-    $(".search-album-num-result").show();
+    hide(document.querySelectorAll(".search-album-ghost"));
+    hide(document.querySelectorAll(".search-album-help"));
+    show(document.querySelectorAll(".search-album-num-result"));
     showSearchContainer();
 
     let nbResult = 0;
@@ -78,22 +99,28 @@ function updateSearch() {
 
     if (nbResult != 1) {
       if (nbResult >= RESULT_LIMIT) {
-        $(".search-album-num-result").html(
+        setHtml(
+          ".search-album-num-result",
           str_result_limit.replace("%d", String(nbResult)),
         );
       } else {
-        $(".search-album-num-result").html(
+        setHtml(
+          ".search-album-num-result",
           str_albums_found.replace("%d", String(nbResult)),
         );
       }
     } else {
-      $(".search-album-num-result").html(str_album_found);
+      setHtml(".search-album-num-result", str_album_found);
     }
 
     if (nbResult != 0) {
-      resultAppear($(".search-album-result .search-album-elem").first());
+      resultAppear(
+        document.querySelector<HTMLElement>(
+          ".search-album-result .search-album-elem",
+        ),
+      );
     } else {
-      $(".search-album-noresult").show();
+      show(document.querySelectorAll(".search-album-noresult"));
     }
   }
 }
@@ -140,48 +167,66 @@ function addAlbumResult(
   name: string,
 ) {
   const id = +cat.id;
-  const template = $(".search-album-elem-template").html();
-  const newCatNode = $(template);
+  const template = document.querySelector(".search-album-elem-template");
+  const newCatNodes = parseHtml(template === null ? "" : template.innerHTML);
 
-  if (haveChildren) {
-    newCatNode.find(".search-album-icon").addClass("icon-sitemap");
-  } else {
-    newCatNode.find(".search-album-icon").addClass("icon-folder-open");
+  for (const newCatNode of newCatNodes) {
+    // `.find()` is every matching descendant, not the first.
+    newCatNode.querySelectorAll(".search-album-icon").forEach((icon) => {
+      icon.classList.add(haveChildren ? "icon-sitemap" : "icon-folder-open");
+      icon.classList.add(colors[id % 5]!);
+    });
+    newCatNode.querySelectorAll(".search-album-name").forEach((label) => {
+      label.innerHTML = name.slice(0, -2);
+    });
+
+    const href = "admin.php?page=album-" + id;
+    newCatNode.querySelectorAll(".search-album-edit").forEach((edit) => {
+      edit.setAttribute("href", href);
+    });
   }
 
-  const colorId = id % 5;
-  newCatNode.find(".search-album-icon").addClass(colors[colorId]!);
-  newCatNode.find(".search-album-name").html(name.slice(0, -2));
-
-  const href = "admin.php?page=album-" + id;
-  newCatNode.find(".search-album-edit").attr("href", href);
-
-  $(".search-album-result").append(newCatNode);
+  // jQuery appends the nodes themselves to the first container of the set
+  // and a clone to each one after it.
+  document.querySelectorAll(".search-album-result").forEach((container, i) => {
+    for (const newCatNode of newCatNodes) {
+      container.appendChild(i === 0 ? newCatNode : newCatNode.cloneNode(true));
+    }
+  });
 
   if (nbResult >= RESULT_LIMIT) {
-    $(".limit-album-reached").show(1000);
-    $(".limit-album-reached").html(
+    // `.show(duration)` folds the whole box open -- height, width, opacity,
+    // margins and padding together -- not a fade.
+    show(document.querySelectorAll(".limit-album-reached"), 1000);
+    setHtml(
+      ".limit-album-reached",
       str_result_limit.replace("%d", String(nbResult)),
     );
   }
 }
 
 // Make the results appear one after one [and limit results to 100]
-function resultAppear(result: JQuery) {
-  result.fadeIn();
-  if (result.next().length != 0) {
+function resultAppear(result: HTMLElement | null) {
+  if (result === null) {
+    return;
+  }
+
+  fadeIn(result);
+  // `.next()` is the next *element* sibling, skipping text nodes.
+  const next = result.nextElementSibling;
+  if (next !== null) {
     setTimeout(() => {
-      resultAppear(result.next().first());
+      resultAppear(next as HTMLElement);
     }, 50);
   }
 }
 
 function showSearchContainer() {
-  $(".tree").hide();
-  $(".album-search-result-container").show();
+  hide(document.querySelectorAll(".tree"));
+  show(document.querySelectorAll(".album-search-result-container"));
 }
 
 function hideSearchContainer() {
-  $(".album-search-result-container").hide();
-  $(".tree").fadeIn();
+  hide(document.querySelectorAll(".album-search-result-container"));
+  fadeIn(document.querySelectorAll(".tree"));
 }

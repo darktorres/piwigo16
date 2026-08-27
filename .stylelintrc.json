@@ -14,7 +14,7 @@
     "selector-id-pattern": null,
     "keyframes-name-pattern": null,
     "no-duplicate-selectors": true,
-    "declaration-no-important": [true, { "severity": "warning" }],
+    "declaration-no-important": true,
     "alpha-value-notation": "number",
     "color-function-notation": null,
     "hue-degree-notation": null,

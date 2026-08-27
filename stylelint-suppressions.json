@@ -18,6 +18,9 @@
   "themes/default/print.css": {
     "selector-type-case": {
       "count": 1
+    },
+    "declaration-no-important": {
+      "count": 1
     }
   },
   "themes/default/theme.css": {
@@ -50,6 +53,9 @@
     },
     "shorthand-property-no-redundant-values": {
       "count": 5
+    },
+    "declaration-no-important": {
+      "count": 8
     }
   },
   "themes/standard_pages/theme.css": {
@@ -82,6 +88,9 @@
     },
     "selector-pseudo-element-colon-notation": {
       "count": 6
+    },
+    "declaration-no-important": {
+      "count": 15
     }
   },
   "themes/admin/clear/theme.css": {
@@ -117,6 +126,9 @@
     },
     "selector-type-case": {
       "count": 38
+    },
+    "declaration-no-important": {
+      "count": 52
     }
   },
   "themes/admin/default/print.css": {
@@ -196,6 +208,9 @@
     },
     "shorthand-property-no-redundant-values": {
       "count": 39
+    },
+    "declaration-no-important": {
+      "count": 158
     }
   },
   "themes/admin/roma/theme.css": {
@@ -240,6 +255,9 @@
     },
     "shorthand-property-no-redundant-values": {
       "count": 4
+    },
+    "declaration-no-important": {
+      "count": 172
     }
   },
   "themes/default/css/clear-search.css": {
@@ -257,6 +275,9 @@
     },
     "no-duplicate-selectors": {
       "count": 1
+    },
+    "declaration-no-important": {
+      "count": 6
     }
   },
   "themes/default/css/dark-search.css": {
@@ -274,6 +295,9 @@
     },
     "selector-pseudo-element-colon-notation": {
       "count": 1
+    },
+    "declaration-no-important": {
+      "count": 8
     }
   },
   "themes/default/css/search.css": {
@@ -306,6 +330,9 @@
     },
     "shorthand-property-no-redundant-values": {
       "count": 7
+    },
+    "declaration-no-important": {
+      "count": 16
     }
   },
   "themes/standard_pages/skins/cadmium.css": {
@@ -326,6 +353,9 @@
     },
     "selector-pseudo-element-colon-notation": {
       "count": 4
+    },
+    "declaration-no-important": {
+      "count": 20
     }
   },
   "themes/standard_pages/skins/cobalt.css": {
@@ -346,6 +376,9 @@
     },
     "selector-pseudo-element-colon-notation": {
       "count": 4
+    },
+    "declaration-no-important": {
+      "count": 20
     }
   },
   "themes/standard_pages/skins/default.css": {
@@ -366,6 +399,9 @@
     },
     "selector-pseudo-element-colon-notation": {
       "count": 4
+    },
+    "declaration-no-important": {
+      "count": 20
     }
   },
   "themes/standard_pages/skins/fuchsia.css": {
@@ -386,6 +422,9 @@
     },
     "selector-pseudo-element-colon-notation": {
       "count": 4
+    },
+    "declaration-no-important": {
+      "count": 20
     }
   },
   "themes/standard_pages/skins/green.css": {
@@ -406,6 +445,9 @@
     },
     "selector-pseudo-element-colon-notation": {
       "count": 4
+    },
+    "declaration-no-important": {
+      "count": 20
     }
   },
   "themes/standard_pages/skins/lime.css": {
@@ -426,6 +468,9 @@
     },
     "selector-pseudo-element-colon-notation": {
       "count": 4
+    },
+    "declaration-no-important": {
+      "count": 20
     }
   },
   "themes/standard_pages/skins/purple.css": {
@@ -446,6 +491,9 @@
     },
     "selector-pseudo-element-colon-notation": {
       "count": 4
+    },
+    "declaration-no-important": {
+      "count": 20
     }
   },
   "themes/standard_pages/skins/red.css": {
@@ -466,6 +514,9 @@
     },
     "selector-pseudo-element-colon-notation": {
       "count": 4
+    },
+    "declaration-no-important": {
+      "count": 20
     }
   },
   "themes/standard_pages/skins/sienna.css": {
@@ -486,6 +537,9 @@
     },
     "selector-pseudo-element-colon-notation": {
       "count": 4
+    },
+    "declaration-no-important": {
+      "count": 20
     }
   },
   "themes/standard_pages/skins/silver.css": {
@@ -506,6 +560,9 @@
     },
     "selector-pseudo-element-colon-notation": {
       "count": 4
+    },
+    "declaration-no-important": {
+      "count": 20
     }
   },
   "themes/standard_pages/skins/teal.css": {
@@ -526,11 +583,17 @@
     },
     "selector-pseudo-element-colon-notation": {
       "count": 4
+    },
+    "declaration-no-important": {
+      "count": 20
     }
   },
   "themes/default/css/help/quick_search.css": {
     "color-hex-length": {
       "count": 1
+    },
+    "declaration-no-important": {
+      "count": 2
     }
   },
   "themes/default/js/plugins/chosen.css": {
@@ -645,6 +708,9 @@
     },
     "value-no-vendor-prefix": {
       "count": 9
+    },
+    "declaration-no-important": {
+      "count": 22
     }
   },
   "themes/default/js/plugins/selectize.dark.css": {
@@ -671,6 +737,9 @@
     },
     "value-no-vendor-prefix": {
       "count": 9
+    },
+    "declaration-no-important": {
+      "count": 22
     }
   },
   "themes/admin/clear/css/components/general.css": {
@@ -689,6 +758,9 @@
       "count": 2
     },
     "shorthand-property-no-redundant-values": {
+      "count": 2
+    },
+    "declaration-no-important": {
       "count": 2
     }
   },
@@ -713,6 +785,9 @@
     },
     "selector-pseudo-element-colon-notation": {
       "count": 1
+    },
+    "declaration-no-important": {
+      "count": 9
     }
   },
   "themes/admin/default/fonts/open-sans/open-sans.css": {
@@ -735,6 +810,9 @@
     },
     "length-zero-no-unit": {
       "count": 2
+    },
+    "declaration-no-important": {
+      "count": 5
     }
   },
   "themes/admin/default/fontello/css/animation.css": {
@@ -1035,6 +1113,61 @@
     },
     "shorthand-property-no-redundant-values": {
       "count": 1
+    }
+  },
+  "themes/standard_pages/css/utilities.css": {
+    "declaration-no-important": {
+      "count": 2
+    }
+  },
+  "themes/admin/default/css/pages/albums.css": {
+    "declaration-no-important": {
+      "count": 6
+    }
+  },
+  "themes/admin/default/css/pages/batch_manager_unit.css": {
+    "declaration-no-important": {
+      "count": 1
+    }
+  },
+  "themes/admin/default/css/pages/cat_list.css": {
+    "declaration-no-important": {
+      "count": 2
+    }
+  },
+  "themes/admin/default/css/pages/history.css": {
+    "declaration-no-important": {
+      "count": 3
+    }
+  },
+  "themes/admin/default/css/pages/install.css": {
+    "declaration-no-important": {
+      "count": 1
+    }
+  },
+  "themes/admin/default/css/pages/intro.css": {
+    "declaration-no-important": {
+      "count": 2
+    }
+  },
+  "themes/admin/default/css/pages/maintenance_sys.css": {
+    "declaration-no-important": {
+      "count": 4
+    }
+  },
+  "themes/admin/default/css/pages/picture_modify.css": {
+    "declaration-no-important": {
+      "count": 11
+    }
+  },
+  "themes/admin/default/css/pages/user_activity.css": {
+    "declaration-no-important": {
+      "count": 3
+    }
+  },
+  "themes/admin/default/css/pages/user_list.css": {
+    "declaration-no-important": {
+      "count": 20
     }
   }
 }

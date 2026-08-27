@@ -391,3 +391,300 @@ export function trigger(
   triggeredNamespaces.set(event, namespaces);
   target.dispatchEvent(event);
 }
+
+// ── Animation: the fx queue and tween engine ─────────────────────────────
+//
+// 151 first-party calls across 7 methods, plus .delay() (15) and .stop()
+// (11), and none of them has a native one-liner. Ported from
+// node_modules/jquery/src/effects.js and effects/Tween.js.
+//
+// Animations queue per element rather than running concurrently, which is
+// what makes the dominant real idiom work:
+//
+//   $(x).stop(false, true); $(x).delay(1500).fadeOut(2500);
+//
+// -- jump any running animation to its end without dropping what is queued
+// behind it, then queue a wait followed by a fade.
+
+const FX_SPEEDS: Record<string, number> = {
+  slow: 600,
+  fast: 200,
+  _default: 400,
+};
+
+/** jQuery's own tick interval (`jQuery.fx.interval`), not rAF. */
+const FX_INTERVAL = 13;
+
+/** Properties jQuery treats as unitless (`jQuery.cssNumber`). */
+const CSS_NUMBER = new Set([
+  "opacity",
+  "zIndex",
+  "fontWeight",
+  "lineHeight",
+  "order",
+  "zoom",
+]);
+
+/** jQuery's default easing (`effects/Tween.js`). */
+export function swing(p: number): number {
+  return 0.5 - Math.cos(p * Math.PI) / 2;
+}
+
+export function resolveDuration(duration?: number | string): number {
+  if (typeof duration === "number") {
+    return duration;
+  }
+  if (typeof duration === "string" && duration in FX_SPEEDS) {
+    return FX_SPEEDS[duration] as number;
+  }
+
+  return FX_SPEEDS._default as number;
+}
+
+type QueueStep = (next: () => void) => void;
+
+interface Stoppable {
+  stop(jumpToEnd: boolean): void;
+}
+
+interface FxState {
+  queue: QueueStep[];
+  running: Stoppable | null;
+}
+
+const fxStore = new WeakMap<Element, FxState>();
+
+function fxState(el: Element): FxState {
+  let state = fxStore.get(el);
+  if (state === undefined) {
+    state = {
+      queue: [],
+      running: null,
+    };
+    fxStore.set(el, state);
+  }
+
+  return state;
+}
+
+function runNext(el: Element): void {
+  const state = fxState(el);
+  state.running = null;
+  const step = state.queue.shift();
+  if (step === undefined) {
+    return;
+  }
+  step(() => {
+    runNext(el);
+  });
+}
+
+function enqueue(el: Element, step: QueueStep): void {
+  const state = fxState(el);
+  state.queue.push(step);
+  if (state.running === null && state.queue.length === 1) {
+    runNext(el);
+  }
+}
+
+const NUMBER_UNIT = /^([+-]?(?:\d*\.)?\d+)([a-z%]*)$/i;
+
+function currentValue(el: HTMLElement, prop: string): number {
+  const raw = el.ownerDocument.defaultView
+    ?.getComputedStyle(el)
+    .getPropertyValue(cssPropertyName(prop));
+
+  return parseFloat(raw ?? "") || 0;
+}
+
+function cssPropertyName(prop: string): string {
+  return prop.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase());
+}
+
+function setStyleValue(
+  el: HTMLElement,
+  prop: string,
+  value: number,
+  unit: string
+): void {
+  el.style.setProperty(cssPropertyName(prop), value + unit);
+}
+
+/**
+ * jQuery's own unit reconciliation (`effects.js`'s `"*"` tweener): when the
+ * target's unit differs from the computed one, it iteratively scales a
+ * nonzero starting point until the ratio settles, capped at 20 iterations.
+ * Ported rather than replaced by direct arithmetic -- the reference box for a
+ * percentage differs per property, and this makes no assumption about it.
+ */
+function startValueInUnit(
+  el: HTMLElement,
+  prop: string,
+  target: number,
+  unit: string
+): number {
+  const computedRaw = el.ownerDocument.defaultView
+    ?.getComputedStyle(el)
+    .getPropertyValue(cssPropertyName(prop));
+  const parsed = NUMBER_UNIT.exec((computedRaw ?? "").trim());
+  const computedUnit = parsed?.[2] ?? "";
+
+  if (parsed === null || computedUnit === unit) {
+    return parseFloat(parsed?.[1] ?? "") || 0;
+  }
+
+  let start = parseFloat(parsed[1] ?? "") || target || 1;
+  let scale = 1;
+  let iterations = 20;
+  const original = el.style.getPropertyValue(cssPropertyName(prop));
+
+  let previous: number;
+  do {
+    scale = scale === 0 ? 0.5 : scale;
+    start = start / scale;
+    setStyleValue(el, prop, start, unit);
+    previous = scale;
+    scale = target === 0 ? 1 : currentValue(el, prop) / target;
+    iterations -= 1;
+  } while (previous !== scale && scale !== 1 && iterations > 0);
+
+  el.style.setProperty(cssPropertyName(prop), original);
+
+  return start;
+}
+
+class Tween implements Stoppable {
+  private readonly startedAt = Date.now();
+
+  private timer: ReturnType<typeof setInterval> | null = null;
+
+  public constructor(
+    private readonly el: HTMLElement,
+    private readonly props: {
+      prop: string;
+      from: number;
+      to: number;
+      unit: string;
+    }[],
+    private readonly duration: number,
+    private readonly complete: (() => void) | undefined,
+    private readonly done: () => void
+  ) {}
+
+  public start(): void {
+    if (this.duration <= 0) {
+      this.finish(true);
+
+      return;
+    }
+    this.timer = setInterval(() => {
+      this.tick();
+    }, FX_INTERVAL);
+  }
+
+  private tick(): void {
+    const elapsed = Date.now() - this.startedAt;
+    const fraction = Math.min(1, elapsed / this.duration);
+    const eased = swing(fraction);
+
+    for (const { prop, from, to, unit } of this.props) {
+      setStyleValue(this.el, prop, from + (to - from) * eased, unit);
+    }
+
+    if (fraction >= 1) {
+      this.finish(true);
+    }
+  }
+
+  public stop(jumpToEnd: boolean): void {
+    if (this.timer !== null) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+    this.finish(jumpToEnd);
+  }
+
+  private finish(applyEnd: boolean): void {
+    if (this.timer !== null) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+    if (applyEnd) {
+      for (const { prop, to, unit } of this.props) {
+        setStyleValue(this.el, prop, to, unit);
+      }
+      this.complete?.call(this.el);
+    }
+    this.done();
+  }
+}
+
+/** `$(el).animate(props, duration, complete)`. */
+export function animate(
+  target: Element | ArrayLike<Element>,
+  props: Record<string, number | string>,
+  duration?: number | string,
+  complete?: () => void
+): void {
+  const ms = resolveDuration(duration);
+
+  for (const el of toElements(target)) {
+    if (!(el instanceof HTMLElement)) {
+      continue;
+    }
+
+    enqueue(el, (next) => {
+      const tweens = Object.entries(props).map(([prop, value]) => {
+        const parsed = NUMBER_UNIT.exec(String(value).trim());
+        const to = parseFloat(parsed?.[1] ?? String(value)) || 0;
+        const unit =
+          (parsed?.[2] ?? "") || (CSS_NUMBER.has(prop) ? "" : "px");
+
+        return {
+          prop,
+          from: startValueInUnit(el, prop, to, unit),
+          to,
+          unit,
+        };
+      });
+
+      const tween = new Tween(el, tweens, ms, complete, next);
+      fxState(el).running = tween;
+      tween.start();
+    });
+  }
+}
+
+/** `$(el).delay(ms)` -- a queued wait, not a bare setTimeout. */
+export function delay(target: Element | ArrayLike<Element>, ms: number): void {
+  for (const el of toElements(target)) {
+    enqueue(el, (next) => {
+      const handle = setTimeout(next, ms);
+      fxState(el).running = {
+        stop: () => {
+          clearTimeout(handle);
+          next();
+        },
+      };
+    });
+  }
+}
+
+/**
+ * `$(el).stop(clearQueue, jumpToEnd)`. The call sites use `.stop()` and
+ * `.stop(false, true)`: the latter jumps the running animation to its end
+ * and runs its completion callback, while leaving the queue behind it intact.
+ */
+export function stop(
+  target: Element | ArrayLike<Element>,
+  clearQueue = false,
+  jumpToEnd = false
+): void {
+  for (const el of toElements(target)) {
+    const state = fxState(el);
+    if (clearQueue) {
+      state.queue = [];
+    }
+    state.running?.stop(jumpToEnd);
+  }
+}

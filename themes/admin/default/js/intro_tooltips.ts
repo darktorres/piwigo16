@@ -5,7 +5,32 @@ import {
   translate_files,
   translate_type,
 } from "./intro";
-$(function () {
+import {
+  css,
+  cssValue,
+  data as readData,
+  hide,
+  innerHeight,
+  innerWidth,
+  offset,
+  on,
+  off,
+  parseHtml,
+  position,
+  ready,
+  show,
+  width,
+  windowHeight,
+} from "../../../default/js/vendor/dom";
+
+/** jQuery's `.html(value)` writes to every element of the set. */
+function setHtml(selector: string, value: string): void {
+  document.querySelectorAll(selector).forEach((element) => {
+    element.innerHTML = value;
+  });
+}
+
+ready(function () {
   Object.entries(storage_details).forEach(([type, rawInfos]) => {
     // `Object.entries()` infers `StorageDetails`'s index-signature value
     // type directly, so `rawInfos` needs no cast. It used to: intro.ts
@@ -22,9 +47,10 @@ $(function () {
     const str_size = str_size_type_string.replace("%s", size_nb);
 
     // Display head of Tooltip
-    $("#storage-title-" + type).html("<b>" + translate_type[type] + "</b>");
-    $("#storage-size-" + type).html("<b>" + str_size + "</b>");
-    $("#storage-files-" + type).html(
+    setHtml("#storage-title-" + type, "<b>" + translate_type[type] + "</b>");
+    setHtml("#storage-size-" + type, "<b>" + str_size + "</b>");
+    setHtml(
+      "#storage-files-" + type,
       "<p>" +
         (infos.total.nb_files
           ? translate_files.replace("%d", String(infos.total.nb_files))
@@ -34,9 +60,9 @@ $(function () {
 
     // Display body of Tooltip
     if (infos.details) {
-      $.each(
-        infos.details,
-        function (ext: string, data: { filesize: number; nb_files: number }) {
+      // `$.each(object, fn)` walks a plain object's own keys.
+      Object.entries(infos.details).forEach(
+        ([ext, data]: [string, { filesize: number; nb_files: number }]) => {
           // Determinate if we use MB or GB and show it correctly (duplicate code from total size for scaling code)
           const detail_size = data.filesize;
           let detail_str_size_type_string;
@@ -55,62 +81,91 @@ $(function () {
             "%s",
             String(detail_size_nb),
           );
-          $("#storage-detail-" + type).append(
+          const markup =
             "" +
-              '<span class="tooltip-details-cont">' +
-              '<span class="tooltip-details-ext"><b>' +
-              ext +
-              "</b></span>" +
-              '<span class="tooltip-details-size"><b>' +
-              detail_str_size +
-              "</b></span>" +
-              '<span class="tooltip-details-files">' +
-              translate_files.replace("%d", String(data.nb_files)) +
-              "</span>" +
-              "</span>" +
-              "",
-          );
-          const ext_bg_color = $(
+            '<span class="tooltip-details-cont">' +
+            '<span class="tooltip-details-ext"><b>' +
+            ext +
+            "</b></span>" +
+            '<span class="tooltip-details-size"><b>' +
+            detail_str_size +
+            "</b></span>" +
+            '<span class="tooltip-details-files">' +
+            translate_files.replace("%d", String(data.nb_files)) +
+            "</span>" +
+            "</span>" +
+            "";
+          document
+            .querySelectorAll("#storage-detail-" + type)
+            .forEach((container) => {
+              for (const node of parseHtml(markup)) {
+                container.appendChild(node);
+              }
+            });
+
+          // `.css(name)` is a *getter* here: the computed background colour
+          // of the chart segment, read off the first match of the set.
+          const swatch = document.querySelector(
             '.storage-chart span[data-type="storage-' + type + '"]',
-          ).css("background-color");
-          $("#storage-" + type + " .tooltip-details-ext b").css(
+          );
+          const ext_bg_color =
+            swatch === null ? "" : cssValue(swatch, "background-color");
+          css(
+            document.querySelectorAll(
+              "#storage-" + type + " .tooltip-details-ext b",
+            ),
             "color",
             ext_bg_color,
           );
         },
       );
     } else {
-      $("#storage-" + type + " .separated").attr(
-        "style",
-        "display: none !important",
+      document
+        .querySelectorAll("#storage-" + type + " .separated")
+        .forEach((element) => {
+          element.setAttribute("style", "display: none !important");
+        });
+      css(
+        document.querySelectorAll("#storage-" + type + " .tooltip-header"),
+        "margin",
+        "0",
       );
-      $("#storage-" + type + " .tooltip-header").css("margin", "0");
     }
 
     // Fixing storage chart tooltip bug in little screen
     // Keep showing tooltip and his % when hovered
-    $("#storage-" + type)
-      .on("mouseenter", function () {
-        $(this).css("display", "block");
-        $('.storage-chart span[data-type="storage-' + type + '"] p').css(
+    document.querySelectorAll("#storage-" + type).forEach((tooltip) => {
+      tooltip.addEventListener("mouseenter", function () {
+        css(tooltip, "display", "block");
+        css(
+          document.querySelectorAll(
+            '.storage-chart span[data-type="storage-' + type + '"] p',
+          ),
           "opacity",
           "0.4",
         );
-      })
-      .on("mouseleave", function () {
-        $(this).css("display", "none");
-        $('.storage-chart span[data-type="storage-' + type + '"] p').css(
+      });
+      tooltip.addEventListener("mouseleave", function () {
+        css(tooltip, "display", "none");
+        css(
+          document.querySelectorAll(
+            '.storage-chart span[data-type="storage-' + type + '"] p',
+          ),
           "opacity",
           "0",
         );
       });
+    });
 
-    $('.storage-chart span[data-type="storage-' + type + '"]')
-      .on("mouseover", function () {
-        $(this).find("p").css("opacity", "0.4");
-      })
-      .on("mouseout", function () {
-        $(this).find("p").css("opacity", "0");
+    document
+      .querySelectorAll('.storage-chart span[data-type="storage-' + type + '"]')
+      .forEach((segment) => {
+        segment.addEventListener("mouseover", function () {
+          css(segment.querySelectorAll("p"), "opacity", "0.4");
+        });
+        segment.addEventListener("mouseout", function () {
+          css(segment.querySelectorAll("p"), "opacity", "0");
+        });
       });
   });
 
@@ -120,7 +175,7 @@ $(function () {
   resizeActivityTooltips();
 
   // Resize
-  $(window).on("resize", function () {
+  window.addEventListener("resize", function () {
     // resize storage tooltips
     resizeStorageTooltips(true);
     // resize activity tooltips
@@ -132,74 +187,109 @@ $(function () {
 General function
 ----------------*/
 function resizeStorageTooltips(resize: boolean = false) {
-  $(".storage-chart span").each(function () {
-    const tooltip = $(".storage-tooltips #" + $(this).data("type"));
-    const arrow = $(
-      ".storage-tooltips #" + $(this).data("type") + " .tooltip-arrow",
+  document.querySelectorAll(".storage-chart span").forEach((segment) => {
+    const type = String(readData(segment, "type"));
+    const tooltips = document.querySelectorAll<HTMLElement>(
+      ".storage-tooltips #" + type,
     );
+    const arrows = document.querySelectorAll<HTMLElement>(
+      ".storage-tooltips #" + type + " .tooltip-arrow",
+    );
+
+    // jQuery's dimension getters read the *first* element of a set and give
+    // `undefined` for an empty one, which this arithmetic then turns into
+    // NaN. The NaN survives into a "NaNpx" string the browser ignores, so
+    // an absent tooltip is a silent no-op rather than an error -- kept
+    // rather than guarded, because guarding would change which branches run
+    // below.
+    const firstTooltip = tooltips[0];
+    const tooltipWidth =
+      firstTooltip === undefined ? Number.NaN : innerWidth(firstTooltip);
+    const chartTitle = document.querySelector<HTMLElement>(
+      "#chart-title-storage",
+    );
+
     let left =
-      $(this).position().left +
-      $(this).width()! / 2 -
-      tooltip.innerWidth()! / 2;
+      position(segment as HTMLElement).left +
+      width(segment as HTMLElement) / 2 -
+      tooltipWidth / 2;
     // Move tooltip if he create horizontal scrollbar
-    const storage_width = $("#chart-title-storage").innerWidth();
-    if (left + tooltip.innerWidth()! > storage_width!) {
-      const diff = left + tooltip.innerWidth()! - storage_width!;
+    const storage_width =
+      chartTitle === null ? Number.NaN : innerWidth(chartTitle);
+    if (left + tooltipWidth > storage_width) {
+      const diff = left + tooltipWidth - storage_width;
       left = left - diff;
-      arrow.css("left", "calc(50% + " + diff + "px)");
+      css(arrows, "left", "calc(50% + " + diff + "px)");
     }
-    tooltip.css("left", left + "px");
+    css(tooltips, "left", left + "px");
     // Move tooltip if he create vertical scrollbar
-    const str_chart_pos = $(".storage-chart").offset()!.top;
-    const str_chart_height = $(".storage-chart").innerHeight();
+    const chart = document.querySelector<HTMLElement>(".storage-chart")!;
+    const str_chart_pos = offset(chart).top;
+    const str_chart_height = innerHeight(chart);
     const tooltip_height =
-      $(".storage-tooltips #" + $(this).data("type")).innerHeight()! +
-      str_chart_height!;
-    const windows_height = $(window).height();
+      (firstTooltip === undefined ? Number.NaN : innerHeight(firstTooltip)) +
+      str_chart_height;
+    const windows_height = windowHeight();
 
     if (resize) {
-      if (str_chart_pos + tooltip_height > windows_height!) {
-        tooltip.css("bottom", "calc(100% + " + str_chart_height + "px)");
-        arrow.addClass("bottom");
+      if (str_chart_pos + tooltip_height > windows_height) {
+        css(tooltips, "bottom", "calc(100% + " + str_chart_height + "px)");
+        arrows.forEach((arrow) => {
+          arrow.classList.add("bottom");
+        });
       } else {
-        tooltip.css("bottom", "");
-        arrow.removeClass("bottom");
+        css(tooltips, "bottom", "");
+        arrows.forEach((arrow) => {
+          arrow.classList.remove("bottom");
+        });
       }
     } else {
-      if (str_chart_pos + tooltip_height > windows_height!) {
-        tooltip.css("bottom", "calc(100% + " + str_chart_height + "px)");
-        arrow.addClass("bottom");
+      if (str_chart_pos + tooltip_height > windows_height) {
+        css(tooltips, "bottom", "calc(100% + " + str_chart_height + "px)");
+        arrows.forEach((arrow) => {
+          arrow.classList.add("bottom");
+        });
       }
-      $(this)
-        .off("mouseenter")
-        .on("mouseenter", function () {
-          tooltip.show();
-        });
-      $(this)
-        .off("mouseleave")
-        .on("mouseleave", function () {
-          tooltip.hide();
-        });
+      // off-then-on, so a second call replaces the previous registration
+      // instead of stacking another one. Both sides go through the helper
+      // because `removeEventListener` has no way to say "every handler of
+      // this type".
+      off(segment, "mouseenter");
+      on(segment, "mouseenter", function () {
+        show(tooltips);
+      });
+      off(segment, "mouseleave");
+      on(segment, "mouseleave", function () {
+        hide(tooltips);
+      });
     }
   });
 }
 
 function resizeActivityTooltips() {
-  $(".activity_tooltips")
-    .has(".tooltip")
-    .each(function () {
-      const max_width = $("#pwgMain").innerWidth()! - 20;
-      const tooltip = $(this).find(".tooltip");
+  const main = document.querySelector<HTMLElement>("#pwgMain");
+
+  document
+    .querySelectorAll<HTMLElement>(".activity_tooltips")
+    .forEach((container) => {
+      // `.has(selector)` keeps only the elements that contain a match.
+      const tooltip = container.querySelector<HTMLElement>(".tooltip");
+      if (tooltip === null) {
+        return;
+      }
+
+      const max_width = (main === null ? Number.NaN : innerWidth(main)) - 20;
       const left =
-        $(this).position().left +
-        $(this).innerWidth()! / 2 +
-        tooltip.innerWidth()! / 2;
+        position(container).left +
+        innerWidth(container) / 2 +
+        innerWidth(tooltip) / 2;
       if (left > max_width) {
-        const arrow = $(this).find(".tooltip-arrow");
+        const arrows =
+          container.querySelectorAll<HTMLElement>(".tooltip-arrow");
         const diff = max_width - left;
 
-        tooltip.css("left", "calc(50% + " + diff + "px)");
-        arrow.css("left", "calc(50% - " + diff + "px)");
+        css(tooltip, "left", "calc(50% + " + diff + "px)");
+        css(arrows, "left", "calc(50% - " + diff + "px)");
       }
     });
 }

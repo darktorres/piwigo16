@@ -1328,6 +1328,28 @@ export function position(el: HTMLElement): { top: number; left: number } {
 }
 
 /**
+ * `.css(name)` -- the *getter*, which is the computed value, not the inline
+ * one. Note the asymmetry with `width()`/`height()` above: those return a
+ * number, while `.css("width")` returns a px string, and jQuery routes it
+ * through the same box hooks so a hidden element still measures.
+ */
+export function cssValue(el: Element, name: string): string {
+  const property = cssPropertyName(name);
+  const styles = computedStyles(el);
+  if (styles === null) {
+    return "";
+  }
+
+  if ((property === "width" || property === "height") && el instanceof HTMLElement) {
+    const isBorderBox = styles.getPropertyValue("box-sizing") === "border-box";
+
+    return `${boxSize(el, property, isBorderBox ? "border" : "content")}px`;
+  }
+
+  return styles.getPropertyValue(property);
+}
+
+/**
  * `.css(name, value)`. The reason this exists rather than a direct
  * `style.foo =` at the call sites: jQuery appends "px" to a bare number for
  * every property outside `jQuery.cssNumber`, so `.css("left", 12)` sets

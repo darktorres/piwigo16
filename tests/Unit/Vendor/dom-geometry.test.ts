@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import {
   css,
+  cssValue,
   height,
   innerHeight,
   innerWidth,
@@ -300,5 +301,48 @@ describe("css NaN guard", () => {
     css(el, "left", Number.NaN);
 
     expect(el.style.left).toBe("4px");
+  });
+});
+
+describe("cssValue", () => {
+  it("reads the computed value, not the inline one", () => {
+    document.body.innerHTML =
+      '<div id="probe" style="background-color:rgb(1, 2, 3)"></div>';
+    const el = document.getElementById("probe") as HTMLElement;
+
+    expect(cssValue(el, "background-color")).toBe("rgb(1, 2, 3)");
+  });
+
+  it("accepts a camelCase property name", () => {
+    document.body.innerHTML = '<div id="probe" style="margin-top:9px"></div>';
+    const el = document.getElementById("probe") as HTMLElement;
+
+    expect(cssValue(el, "marginTop")).toBe("9px");
+  });
+
+  it("returns width as a px string, unlike width() which returns a number", () => {
+    document.body.innerHTML =
+      '<div id="probe" style="width:70px;padding:3px"></div>';
+    const el = document.getElementById("probe") as HTMLElement;
+
+    // The asymmetry is jQuery's: .css("width") is a string, .width() a
+    // number, and both mean the content box for a content-box element.
+    expect(cssValue(el, "width")).toBe("70px");
+    expect(width(el)).toBe(70);
+  });
+
+  it("measures width through the box hooks for a hidden element", () => {
+    document.body.innerHTML =
+      '<div id="probe" style="display:none;width:45px"></div>';
+    const el = document.getElementById("probe") as HTMLElement;
+
+    expect(cssValue(el, "width")).toBe("45px");
+  });
+
+  it("returns an empty string for an undeclared property", () => {
+    document.body.innerHTML = '<div id="probe"></div>';
+    const el = document.getElementById("probe") as HTMLElement;
+
+    expect(cssValue(el, "z-index")).toBe("");
   });
 });

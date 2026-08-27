@@ -68,9 +68,7 @@
       ></select>
     </p>
 
-    <p
-      n:if="isset($nbUsersGrantedIndirect) && $nbUsersGrantedIndirect > 0"
-    >
+    <p n:if="isset($nbUsersGrantedIndirect) && $nbUsersGrantedIndirect > 0">
       {='%u users have automatic permission because they belong to a granted group.'|translate:$nbUsersGrantedIndirect}
       <a
         href="#"

@@ -148,9 +148,7 @@
             <img src='{$formatsOriginalInfo['src']|noescape}'>
           </div>
           <div class='info-framed-container'>
-            <div
-              class='info-framed-title'
-            >{$formatsOriginalInfo['name']}</div>
+            <div class='info-framed-title'>{$formatsOriginalInfo['name']}</div>
             <div
               n:if="isset($formatsOriginalInfo['formats'])"
             >{$formatsOriginalInfo['formats']}</div>
@@ -220,10 +218,7 @@
           {/if}
         </div>
       </div>
-      <div
-        class="photosUploader{if !$can_upload} u-hidden{/if}"
-        id="uploader"
-      >
+      <div class="photosUploader{if !$can_upload} u-hidden{/if}" id="uploader">
         <p>Your browser doesn't have HTML5 support.</p>
       </div>
       <div

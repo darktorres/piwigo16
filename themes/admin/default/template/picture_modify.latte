@@ -2,53 +2,53 @@
 
 <form action="{$fAction|noescape}" method="post" id="pictureModify">
   <div id='picture-preview' n:class="$introVars['is_svg'] ? svg-container">
-  <div class='picture-preview-actions'>
-    <a
-      class="preview-box icon-zoom-square"
-      href="{$fileSrc}"
-      title="{='Zoom'|translate}"
-    ></a>
-    <a
-      class="icon-download"
-      href="{$uDownload|noescape}"
-      title="{='Download'|translate}"
-    ></a>
-    <a
-      class="icon-signal"
-      href="{$uHistory|noescape}"
-      title="{='Visit history'|translate}"
-    ></a>
-    <a
-      class="icon-pulse"
-      href="{$uActivity|noescape}"
-      title="{='Activity'|translate}"
-    ></a>
-    {if !url_is_remote($path)}
+    <div class='picture-preview-actions'>
       <a
-        class="icon-arrows-cw"
-        href="{$uSync|noescape}"
-        title="{='Synchronize metadata'|translate}"
+        class="preview-box icon-zoom-square"
+        href="{$fileSrc}"
+        title="{='Zoom'|translate}"
       ></a>
       <a
-        class="icon-trash"
-        title="{='delete photo'|translate}"
-        id='action-delete-picture'
+        class="icon-download"
+        href="{$uDownload|noescape}"
+        title="{='Download'|translate}"
       ></a>
+      <a
+        class="icon-signal"
+        href="{$uHistory|noescape}"
+        title="{='Visit history'|translate}"
+      ></a>
+      <a
+        class="icon-pulse"
+        href="{$uActivity|noescape}"
+        title="{='Activity'|translate}"
+      ></a>
+      {if !url_is_remote($path)}
+        <a
+          class="icon-arrows-cw"
+          href="{$uSync|noescape}"
+          title="{='Synchronize metadata'|translate}"
+        ></a>
+        <a
+          class="icon-trash"
+          title="{='delete photo'|translate}"
+          id='action-delete-picture'
+        ></a>
+      {/if}
+    </div>
+    {if $introVars['is_svg']}
+      <img
+        src="{$path}"
+        alt="{='Thumbnail'|translate}"
+        class="svg-image other-image-format {if $format}is-portrait{else}is-landscape{/if}"
+      >
+    {else}
+      <img
+        src="{$tnSrc|noescape}"
+        alt="{='Thumbnail'|translate}"
+        class="other-image-format {if $format}is-portrait{else}is-landscape{/if}"
+      >
     {/if}
-  </div>
-  {if $introVars['is_svg']}
-    <img
-      src="{$path}"
-      alt="{='Thumbnail'|translate}"
-      class="svg-image other-image-format {if $format}is-portrait{else}is-landscape{/if}"
-    >
-  {else}
-    <img
-      src="{$tnSrc|noescape}"
-      alt="{='Thumbnail'|translate}"
-      class="other-image-format {if $format}is-portrait{else}is-landscape{/if}"
-    >
-  {/if}
   </div>
   <div id='picture-content'>
     <div id='picture-infos'>
@@ -239,4 +239,3 @@
    already merge in AlbumSelectorView's own contribution too
    (dedup-safe no-op). *}
 {include 'include/album_selector.inc.latte'}
-

@@ -1,132 +1,135 @@
 {templateType Piwigo\Controller\Projection\RegisterView}
 {layout 'layout.latte'}
 {block content}
-{if isset($MENUBAR)}{$MENUBAR}{/if}
-<div id="registerPage">
-  <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
-    <div class="titrePage">
-      <ul class="categoryActions"></ul>
-      <h2><a
-          href="{$homeUrl|noescape}"
-        >{='Home'|translate}</a>{$LEVEL_SEPARATOR|noescape}{='Registration'|translate}</h2>
-    </div>
+  {if isset($MENUBAR)}{$MENUBAR}{/if}
+  <div id="registerPage">
+    <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
+      <div class="titrePage">
+        <ul class="categoryActions"></ul>
+        <h2><a
+            href="{$homeUrl|noescape}"
+          >{='Home'|translate}</a>{$LEVEL_SEPARATOR|noescape}{='Registration'|translate}</h2>
+      </div>
 
-    {include 'infos_errors.latte'}
+      {include 'infos_errors.latte'}
 
-    <form
-      method="post"
-      action="{$formAction|noescape}"
-      class="properties"
-      name="register_form"
-    >
-      <fieldset>
-        <legend>{='Enter your personnal informations'|translate}</legend>
-
-        <ul>
-          <li>
-            <span class="property">
-              <label for="login">* {='Username'|translate}</label>
-            </span>
-            <input type="text" name="login" id="login" value="{$formLogin}">
-          </li>
-          <li>
-            <span class="property">
-              <label for="password">* {='Password'|translate}</label>
-            </span>
-            <input type="password" name="password" id="password">
-          </li>
-          <li>
-            <span class="property">
-              <label
-                for="password_conf"
-              >* {='Confirm Password'|translate}</label>
-            </span>
-            <input type="password" name="password_conf" id="password_conf">
-            <span id="password_conf-error" class="field-error"></span>
-          </li>
-          <li>
-            <span class="property">
-              <label
-                for="mail_address"
-              >{if $obligatoryUserMailAddress}* {/if}{='Email address'|translate}</label>
-            </span>
-            <input
-              type="text"
-              name="mail_address"
-              id="mail_address"
-              value="{$formEmail}"
-            >
-            <span id="mail_address-error" class="field-error"></span>
-            {if !$obligatoryUserMailAddress}
-              ({='useful when password forgotten'|translate})
-            {/if}
-          </li>
-          <li>
-            <span class="property">
-              <label
-                for="send_password_by_mail"
-              >{='Send my connection settings by email'|translate}</label>
-            </span>
-            <input
-              type="checkbox"
-              name="send_password_by_mail"
-              id="send_password_by_mail"
-              value="1"
-              n:attr="checked: $formSendPasswordByMail ? 'checked' : null"
-            >
-          </li>
-        </ul>
-      </fieldset>
-
-      <fieldset n:if="$pluginRegisterFields !== []">
-        <ul>
-          <li n:foreach="$pluginRegisterFields as $field">
-            <span class="property">
-              <label for="{$field->name}">{$field->label}</label>
-            </span>
-            <input
-              n:if="$field->type === \Piwigo\Contribution\FieldType::Checkbox"
-              type="checkbox"
-              name="{$field->name}"
-              id="{$field->name}"
-              value="1"
-              n:attr="checked: $field->value !== '' ? 'checked' : null"
-            >
-            <input
-              n:if="$field->type !== \Piwigo\Contribution\FieldType::Checkbox"
-              type="text"
-              name="{$field->name}"
-              id="{$field->name}"
-              value="{$field->value}"
-            >
-          </li>
-        </ul>
-      </fieldset>
-
-      <p class="bottomButtons">
-        <input type="hidden" name="key" value="{$formKey}">
-        <input
-          class="submit"
-          type="submit"
-          name="submit"
-          value="{='Register'|translate}"
-        >
-        <input class="submit" type="reset" value="{='Reset'|translate}">
-      </p>
-    </form>
-
-    <fieldset n:if="$pluginAuthButtons !== []" class="authButtons">
-      <legend>{='Or sign in with'|translate}</legend>
-      <a
-        n:foreach="$pluginAuthButtons as $button"
-        href="#"
-        data-provider="{$button->providerId}"
-        title="{$button->label}"
-        class="pwg-state-default pwg-button"
+      <form
+        method="post"
+        action="{$formAction|noescape}"
+        class="properties"
+        name="register_form"
       >
-        <span n:if="$button->icon" class="{$button->icon}">&nbsp;</span><span>{$button->label}</span>
-      </a>
-    </fieldset>
-  </div> <!-- content -->
-</div> <!-- registerPage -->
+        <fieldset>
+          <legend>{='Enter your personnal informations'|translate}</legend>
+
+          <ul>
+            <li>
+              <span class="property">
+                <label for="login">* {='Username'|translate}</label>
+              </span>
+              <input type="text" name="login" id="login" value="{$formLogin}">
+            </li>
+            <li>
+              <span class="property">
+                <label for="password">* {='Password'|translate}</label>
+              </span>
+              <input type="password" name="password" id="password">
+            </li>
+            <li>
+              <span class="property">
+                <label
+                  for="password_conf"
+                >* {='Confirm Password'|translate}</label>
+              </span>
+              <input type="password" name="password_conf" id="password_conf">
+              <span id="password_conf-error" class="field-error"></span>
+            </li>
+            <li>
+              <span class="property">
+                <label
+                  for="mail_address"
+                >{if $obligatoryUserMailAddress}* {/if}{='Email address'|translate}</label>
+              </span>
+              <input
+                type="text"
+                name="mail_address"
+                id="mail_address"
+                value="{$formEmail}"
+              >
+              <span id="mail_address-error" class="field-error"></span>
+              {if !$obligatoryUserMailAddress}
+                ({='useful when password forgotten'|translate})
+              {/if}
+            </li>
+            <li>
+              <span class="property">
+                <label
+                  for="send_password_by_mail"
+                >{='Send my connection settings by email'|translate}</label>
+              </span>
+              <input
+                type="checkbox"
+                name="send_password_by_mail"
+                id="send_password_by_mail"
+                value="1"
+                n:attr="checked: $formSendPasswordByMail ? 'checked' : null"
+              >
+            </li>
+          </ul>
+        </fieldset>
+
+        <fieldset n:if="$pluginRegisterFields !== []">
+          <ul>
+            <li n:foreach="$pluginRegisterFields as $field">
+              <span class="property">
+                <label for="{$field->name}">{$field->label}</label>
+              </span>
+              <input
+                n:if="$field->type === \Piwigo\Contribution\FieldType::Checkbox"
+                type="checkbox"
+                name="{$field->name}"
+                id="{$field->name}"
+                value="1"
+                n:attr="checked: $field->value !== '' ? 'checked' : null"
+              >
+              <input
+                n:if="$field->type !== \Piwigo\Contribution\FieldType::Checkbox"
+                type="text"
+                name="{$field->name}"
+                id="{$field->name}"
+                value="{$field->value}"
+              >
+            </li>
+          </ul>
+        </fieldset>
+
+        <p class="bottomButtons">
+          <input type="hidden" name="key" value="{$formKey}">
+          <input
+            class="submit"
+            type="submit"
+            name="submit"
+            value="{='Register'|translate}"
+          >
+          <input class="submit" type="reset" value="{='Reset'|translate}">
+        </p>
+      </form>
+
+      <fieldset n:if="$pluginAuthButtons !== []" class="authButtons">
+        <legend>{='Or sign in with'|translate}</legend>
+        <a
+          n:foreach="$pluginAuthButtons as $button"
+          href="#"
+          data-provider="{$button->providerId}"
+          title="{$button->label}"
+          class="pwg-state-default pwg-button"
+        >
+          <span
+            n:if="$button->icon"
+            class="{$button->icon}"
+          >&nbsp;</span><span>{$button->label}</span>
+        </a>
+      </fieldset>
+    </div> <!-- content -->
+  </div> <!-- registerPage -->
 {/block}

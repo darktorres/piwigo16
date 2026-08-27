@@ -193,7 +193,7 @@
 to merge the margin with the element bellow (typically h1/h2/...) --> *}
                 <div id="topSpacer"></div>
                 {* <!-- begin CONTENT --> *}
-{$CONTENT}
+                {$CONTENT}
                 {* <!-- end CONTENT --> *}
               </td></tr>
 
@@ -206,7 +206,10 @@ to show the origin of the script... --> *}
                 {='Sent by'|translate} <a
                   href="{$GALLERY_URL|noescape}"
                 >{$GALLERY_TITLE}</a>
-                - {='Powered by'|translate} <a href="{$APP_URL}" class="Piwigo">Piwigo</a>
+                - {='Powered by'|translate} <a
+                  href="{$APP_URL}"
+                  class="Piwigo"
+                >Piwigo</a>
                 {if !empty($VERSION)}{$VERSION}{/if}
 
                 - {='Contact'|translate}

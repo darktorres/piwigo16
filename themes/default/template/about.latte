@@ -1,22 +1,22 @@
 {templateType Piwigo\Controller\Projection\AboutView}
 {layout 'layout.latte'}
 {block content}
-{if isset($MENUBAR)}{$MENUBAR}{/if}
-<div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
-  <div class="titrePage">
-    <ul class="categoryActions"></ul>
-    <h2><a
-        href="{$U_HOME|noescape}"
-      >{='Home'|translate}</a>{$LEVEL_SEPARATOR|noescape}{='About'|translate}</h2>
-  </div>
+  {if isset($MENUBAR)}{$MENUBAR}{/if}
+  <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
+    <div class="titrePage">
+      <ul class="categoryActions"></ul>
+      <h2><a
+          href="{$U_HOME|noescape}"
+        >{='Home'|translate}</a>{$LEVEL_SEPARATOR|noescape}{='About'|translate}</h2>
+    </div>
 
-  {include 'infos_errors.latte'}
+    {include 'infos_errors.latte'}
 
-  <div id="piwigoAbout">
-    {$aboutMessage|noescape}
-    <ul n:if="isset($themeAbout)">
-      <li>{$themeAbout|noescape}</li>
-    </ul>
+    <div id="piwigoAbout">
+      {$aboutMessage|noescape}
+      <ul n:if="isset($themeAbout)">
+        <li>{$themeAbout|noescape}</li>
+      </ul>
+    </div>
   </div>
-</div>
 {/block}

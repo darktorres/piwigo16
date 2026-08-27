@@ -36,27 +36,27 @@
       {='</ul></li>'|str_repeat:($ref_level - $cat['LEVEL'])|noescape}
     {/if}
     {="<li" . ($cat['SELECTED'] ? ' class="selected"' : '') . ">"|noescape}
-      <a
-        href="{$cat['URL']|noescape}"
-        {if $cat['IS_UPPERCAT']}
-        rel="up"
-        {/if}
-        title="{$cat['TITLE']}"
-      >{$cat['NAME']}</a>
-      <span
-        n:if="$cat['count_images'] > 0"
-        class="{if $cat['nb_images'] > 0}menuInfoCat{else}menuInfoCatByChild{/if} badge"
-        title="{$cat['TITLE']}"
-      >{$cat['count_images']}</span>
-      <img
-        n:if="!empty($cat['icon_ts'])"
-        title="{$cat['icon_ts']['TITLE']}"
-        src="{$ROOT_URL}{$themeconf['icon_dir']}/recent{if $cat['icon_ts']['IS_CHILD_DATE']}_by_child{/if}.png"
-        class="icon"
-        alt="(!)"
-      >
-      {var $ref_level = $cat['LEVEL']}
-    {/foreach}
+    <a
+      href="{$cat['URL']|noescape}"
+      {if $cat['IS_UPPERCAT']}
+      rel="up"
+      {/if}
+      title="{$cat['TITLE']}"
+    >{$cat['NAME']}</a>
+    <span
+      n:if="$cat['count_images'] > 0"
+      class="{if $cat['nb_images'] > 0}menuInfoCat{else}menuInfoCatByChild{/if} badge"
+      title="{$cat['TITLE']}"
+    >{$cat['count_images']}</span>
+    <img
+      n:if="!empty($cat['icon_ts'])"
+      title="{$cat['icon_ts']['TITLE']}"
+      src="{$ROOT_URL}{$themeconf['icon_dir']}/recent{if $cat['icon_ts']['IS_CHILD_DATE']}_by_child{/if}.png"
+      class="icon"
+      alt="(!)"
+    >
+    {var $ref_level = $cat['LEVEL']}
+  {/foreach}
   {='</li></ul>'|str_repeat:$ref_level|noescape}
 
   <p

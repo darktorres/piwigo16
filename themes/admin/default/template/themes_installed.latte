@@ -23,20 +23,20 @@
          {/if}, spanning every remaining theme in this group, which
          Latte's HTML-aware parser can't verify statically either. *}
       {="<fieldset>"|noescape}
-        <legend>
-          {if $theme['STATE'] == 'active'}
-            <span
-              class="icon-purple icon-toggle-on"
-            ></span>{='Active Themes'|translate}
-          {else}
-            <span
-              class="icon-yellow icon-toggle-off"
-            ></span>{='Inactive Themes'|translate}
-          {/if}
-        </legend>
-        {="<div class=\"themeBoxes\">"|noescape}
-          {var $field_name = $theme['STATE']}
+      <legend>
+        {if $theme['STATE'] == 'active'}
+          <span
+            class="icon-purple icon-toggle-on"
+          ></span>{='Active Themes'|translate}
+        {else}
+          <span
+            class="icon-yellow icon-toggle-off"
+          ></span>{='Inactive Themes'|translate}
         {/if}
+      </legend>
+      {="<div class=\"themeBoxes\">"|noescape}
+      {var $field_name = $theme['STATE']}
+    {/if}
 
     {if !empty($theme['AUTHOR'])}
       {if !empty($theme['AUTHOR_URL'])}
@@ -145,6 +145,5 @@
       {/if}
     </div>
   {/foreach}
-{="</div> <!-- themeBoxes -->\n</fieldset>"|noescape}
-
+  {="</div> <!-- themeBoxes -->\n</fieldset>"|noescape}
 </div> <!-- themesContent -->

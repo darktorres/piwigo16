@@ -58,21 +58,21 @@
 <dd>
   <ul>
   <li>
-    <a
-        href="index.php?/category/1"
-        
-        title="3 photos in this album / 2 photos in 1 sub-album"
-      >Sample Album</a>
-    <span
-        class="menuInfoCat badge"
-        title="3 photos in this album / 2 photos in 1 sub-album"
-      >5</span>
-    <img
-        title="photos posted during the last 7 days"
-        src="themes/default/icon/recent.png"
-        class="icon"
-        alt="(!)"
-      >
+  <a
+      href="index.php?/category/1"
+      
+      title="3 photos in this album / 2 photos in 1 sub-album"
+    >Sample Album</a>
+  <span
+      class="menuInfoCat badge"
+      title="3 photos in this album / 2 photos in 1 sub-album"
+    >5</span>
+  <img
+      title="photos posted during the last 7 days"
+      src="themes/default/icon/recent.png"
+      class="icon"
+      alt="(!)"
+    >
   </li></ul>
 
   <p
@@ -96,11 +96,7 @@
   <dl id="mbMenu">
 <dt>Menu</dt>
 <dd>
-  <form
-      action="qsearch.php"
-      method="get"
-      id="quicksearch"
-    >
+  <form action="qsearch.php" method="get" id="quicksearch">
     <p
         class="quicksearch-form-p"
         
@@ -127,16 +123,16 @@
 </div><div id="menuSwitcher"></div>
 
 <div id="content" class="content contentWithMenu">
-<div class="titrePage">
-  <ul class="categoryActions"></ul>
-  <h2><a
-        href="{{BASE_PATH}}/"
-      >Home</a> / Profile</h2>
-</div>
+  <div class="titrePage">
+    <ul class="categoryActions"></ul>
+    <h2><a
+          href="{{BASE_PATH}}/"
+        >Home</a> / Profile</h2>
+  </div>
 
 
 
-<form
+  <form
   method="post"
   name="profile"
   action="profile.php"
@@ -179,7 +175,12 @@
           <span class="property">
             <label for="passwordConf">Confirm Password</label>
           </span>
-          <input type="password" name="passwordConf" id="passwordConf" value="">
+          <input
+              type="password"
+              name="passwordConf"
+              id="passwordConf"
+              value=""
+            >
           <span id="passwordConf-error" class="field-error"></span>
         </li>
     </ul>
@@ -324,6 +325,5 @@
       type="module"
       src="dist/vitals.js"
     ></script>
-
   </body>
 </html>

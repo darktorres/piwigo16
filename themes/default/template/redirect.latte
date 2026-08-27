@@ -1,13 +1,13 @@
 {templateType Piwigo\Bootstrap\Projection\RedirectView}
 {layout 'layout.latte'}
 {block content}
-<div class="redirect-message">
-  {$redirectMsg|noescape}
-</div>
+  <div class="redirect-message">
+    {$redirectMsg|noescape}
+  </div>
 
-<p class="redirect-fallback-link">
-  <a href="{$page_refresh['U_REFRESH']}">
-    {='Click here if your browser does not automatically forward you'|translate}
-  </a>
-</p>
+  <p class="redirect-fallback-link">
+    <a href="{$page_refresh['U_REFRESH']}">
+      {='Click here if your browser does not automatically forward you'|translate}
+    </a>
+  </p>
 {/block}

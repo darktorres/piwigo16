@@ -53,7 +53,6 @@
 <p>Welcome to my photo gallery</p></div>
 
 
-
 <div id="menubar">
   <dl id="mbLinks">
     
@@ -65,21 +64,21 @@
 <dd>
   <ul>
   <li>
-    <a
-        href="index.php?/category/1"
-        
-        title="3 photos in this album / 2 photos in 1 sub-album"
-      >Sample Album</a>
-    <span
-        class="menuInfoCat badge"
-        title="3 photos in this album / 2 photos in 1 sub-album"
-      >5</span>
-    <img
-        title="photos posted during the last 7 days"
-        src="themes/default/icon/recent.png"
-        class="icon"
-        alt="(!)"
-      >
+  <a
+      href="index.php?/category/1"
+      
+      title="3 photos in this album / 2 photos in 1 sub-album"
+    >Sample Album</a>
+  <span
+      class="menuInfoCat badge"
+      title="3 photos in this album / 2 photos in 1 sub-album"
+    >5</span>
+  <img
+      title="photos posted during the last 7 days"
+      src="themes/default/icon/recent.png"
+      class="icon"
+      alt="(!)"
+    >
   </li></ul>
 
   <p
@@ -103,11 +102,7 @@
   <dl id="mbMenu">
 <dt>Menu</dt>
 <dd>
-  <form
-      action="qsearch.php"
-      method="get"
-      id="quicksearch"
-    >
+  <form action="qsearch.php" method="get" id="quicksearch">
     <p
         class="quicksearch-form-p"
         
@@ -136,35 +131,37 @@
 
 
 <div id="content" class="content contentWithMenu">
-<div class="titrePage">
-  <ul class="categoryActions">
+  <div
+      class="titrePage"
+    >
+    <ul class="categoryActions">
 
 
 
-    <li><a href="index.php?/categories/posted-monthly-list" title="display a calendar by posted date" class="pwg-state-default pwg-button" rel="nofollow"><span class="pwg-icon pwg-icon-calendar"></span><span class="pwg-button-text">Calendar</span></a></li>
-    <li><a href="index.php?/categories/created-monthly-list" title="display a calendar by creation date" class="pwg-state-default pwg-button" rel="nofollow"><span class="pwg-icon pwg-icon-camera-calendar"></span><span class="pwg-button-text">Calendar</span></a></li>
-  </ul>
+      <li><a href="index.php?/categories/posted-monthly-list" title="display a calendar by posted date" class="pwg-state-default pwg-button" rel="nofollow"><span class="pwg-icon pwg-icon-calendar"></span><span class="pwg-button-text">Calendar</span></a></li>
+      <li><a href="index.php?/categories/created-monthly-list" title="display a calendar by creation date" class="pwg-state-default pwg-button" rel="nofollow"><span class="pwg-icon pwg-icon-camera-calendar"></span><span class="pwg-button-text">Calendar</span></a></li>
+    </ul>
 
-  <div id="breadcrumb">
-    <h2><a href="{{BASE_PATH}}/">Home</a>
-    </h2>
+    <div id="breadcrumb">
+      <h2><a href="{{BASE_PATH}}/">Home</a>
+      </h2>
 
-    
+      
+    </div>
+
+
   </div>
 
 
-</div>
+
+  <div class="action-buttons">
+
+  </div>
 
 
+  
 
-<div class="action-buttons">
-
-</div>
-
-
-
-
-<div class="loader"><img
+  <div class="loader"><img
     src="themes/default/images/ajax_loader.gif"
   ></div>
 <ul
@@ -207,9 +204,7 @@
 
 
 
-
 </div>
-
       <div id="copyright">
 
         Powered by <a href="https://upstream.example.invalid" class="Piwigo">Piwigo</a>
@@ -227,6 +222,5 @@
       type="module"
       src="dist/vitals.js"
     ></script>
-
   </body>
 </html>

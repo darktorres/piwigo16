@@ -1,528 +1,536 @@
 {templateType Piwigo\Controller\Projection\PictureView}
 {layout 'layout.latte'}
 {block content}
-{if isset($MENUBAR)}{$MENUBAR}{/if}
-<div id="content" {if isset($MENUBAR)} class="contentWithMenu" {/if}>
-  {if isset($errors) or !empty($infos)}
-    {include 'infos_errors.latte'}
-  {/if}
+  {if isset($MENUBAR)}{$MENUBAR}{/if}
+  <div id="content" {if isset($MENUBAR)} class="contentWithMenu" {/if}>
+    {if isset($errors) or !empty($infos)}
+      {include 'infos_errors.latte'}
+    {/if}
 
-  <div id="imageHeaderBar">
-    <div class="browsePath">
-      {$sectionTitle|noescape}<span
-        class="browsePathSeparator"
-      >{$levelSeparator|noescape}</span><h2>{$navCurrent['TITLE']|noescape}</h2>
-    </div>
-  </div>
-
-  <div id="imageToolBar">
-    <div class="imageNumber">{$photo}</div>
-    {include 'picture_nav_buttons.latte'}
-
-    <div class="actionButtons">
-      {if isset($navCurrent['unique_derivatives']) && count($navCurrent['unique_derivatives']) > 1}
-        {spaceless}<a
-            id="derivativeSwitchLink"
-            title="{='Photo sizes'|translate}"
-            class="pwg-state-default pwg-button"
-            rel="nofollow"
-          >
-            <span class="pwg-icon pwg-icon-sizes"></span><span
-              class="pwg-button-text"
-            >{='Photo sizes'|translate}</span>
-          </a>
-          <div id="derivativeSwitchBox" class="switchBox">
-            <div class="switchBoxTitle">{='Photo sizes'|translate}</div>
-            {foreach $navCurrent['unique_derivatives'] as $derivative_type => $derivative}
-              <span
-                class="switchCheck{if $derivative->getType() != $navCurrent['selected_derivative']->getType()} u-invisible{/if}"
-                id="derivativeChecked{$derivative->getType()}"
-              >&#x2714; </span>
-              <a
-                href="#"
-                data-derivative-url="{$derivative->getUrl()}"
-                data-derivative-type-save="{$derivative_type}"
-                data-derivative-type-map="{$derivative->getType()}"
-              >
-                {$derivative->getType()|translate}<span
-                  class="derivativeSizeDetails"
-                > ({$derivative->getSizeHr()})</span>
-              </a><br>
-            {/foreach}
-            {if isset($uOriginal)}
-              <a
-                id="originalLink"
-                href="#"
-                data-original-url="{$uOriginal}"
-                rel="nofollow"
-              >{='Original'|translate}</a>
-            {/if}
-          </div>
-        {/spaceless}
-      {/if}
-      {spaceless}{if isset($uSlideshowStart)}
-          <a
-            href="{$uSlideshowStart|noescape}"
-            title="{='slideshow'|translate}"
-            class="pwg-state-default pwg-button"
-            rel="nofollow"
-          >
-            <span class="pwg-icon pwg-icon-slideshow"></span><span
-              class="pwg-button-text"
-            >{='slideshow'|translate}</span>
-          </a>
-        {/if}{/spaceless}
-      {spaceless}{if isset($uMetadata)}
-          <a
-            href="{$uMetadata|noescape}"
-            title="{='Show file metadata'|translate}"
-            class="pwg-state-default pwg-button"
-            rel="nofollow"
-          >
-            <span class="pwg-icon pwg-icon-camera-info"></span><span
-              class="pwg-button-text"
-            >{='Show file metadata'|translate}</span>
-          </a>
-        {/if}{/spaceless}
-      {spaceless}{if isset($navCurrent['U_DOWNLOAD'])}
-          <a
-            id="downloadSwitchLink"
-            href="{$navCurrent['U_DOWNLOAD']|noescape}"
-            title="{='Download this file'|translate}"
-            class="pwg-state-default pwg-button"
-            rel="nofollow"
-          >
-            <span class="pwg-icon pwg-icon-save"></span><span
-              class="pwg-button-text"
-            >{='Download'|translate}</span>
-          </a>
-
-          {if !empty($navCurrent['formats'])}
-            <div id="downloadSwitchBox" class="switchBox">
-              <div
-                class="switchBoxTitle"
-              >{='Download'|translate} - {='Formats'|translate}</div>
-              <ul>
-                {foreach $navCurrent['formats'] as $format}
-                  <li><a
-                      href="{$format['download_url']|noescape}"
-                      rel="nofollow"
-                    >{$format['label']}<span
-                        class="downloadformatDetails"
-                      > ({$format['filesize']})</span></a></li>
-                {/foreach}
-              </ul>
-            </div>
-          {/if} {* has formats *}
-        {/if}{/spaceless}
-      {foreach $pluginPictureButtons as $button}{spaceless}<a
-            n:attr="id: $button->id"
-            href="{$button->url}"
-            title="{$button->label}"
-            class="pwg-state-default pwg-button"
-            rel="nofollow"
-          >
-            <span class="{$button->icon}"></span><span
-              class="pwg-button-text"
-            >{$button->label}</span>
-          </a>{/spaceless}{/foreach}
-      {foreach $pluginPictureActions as $action}{spaceless}<a
-            id="{$action->id}Link"
-            title="{$action->label}"
-            class="pwg-state-default pwg-button"
-            rel="nofollow"
-          >
-            <span class="{$action->icon}"></span><span
-              class="pwg-button-text"
-            >{$action->label}</span>
-          </a>
-          <div n:if="$action->panel !== []" id="{$action->id}Box" class="switchBox">
-            <div class="switchBoxTitle">{$action->label}</div>
-            <a
-              n:foreach="$action->panel as $link"
-              href="{$link->url|noescape}"
-              rel="nofollow"
-            >{if $link->icon !== null}<span class="{$link->icon}"></span>{/if}{$link->label}</a>
-          </div>
-        {/spaceless}{/foreach}
-      {spaceless}{if isset($favorite)}
-          <a
-            href="{$favorite['U_FAVORITE']|noescape}"
-            title="{if $favorite['IS_FAVORITE']}{='delete this photo from your favorites'|translate}{else}{='add this photo to your favorites'|translate}{/if}"
-            class="pwg-state-default pwg-button"
-            rel="nofollow"
-          >
-            <span
-              class="pwg-icon pwg-icon-favorite-{if $favorite['IS_FAVORITE']}del{else}add{/if}"
-            ></span><span
-              class="pwg-button-text"
-            >{='Favorites'|translate}</span>
-          </a>
-        {/if}{/spaceless}
-      {spaceless}{if isset($uSetAsRepresentative)}
-          <a
-            id="cmdSetRepresentative"
-            href="{$uSetAsRepresentative|noescape}"
-            title="{='set as album representative'|translate}"
-            class="pwg-state-default pwg-button"
-            rel="nofollow"
-          >
-            <span class="pwg-icon pwg-icon-representative"></span><span
-              class="pwg-button-text"
-            >{='representative'|translate}</span>
-          </a>
-        {/if}{/spaceless}
-      {spaceless}{if isset($uPhotoAdmin)}
-          <a
-            id="cmdEditPhoto"
-            href="{$uPhotoAdmin|noescape}"
-            title="{='Edit photo'|translate}"
-            class="pwg-state-default pwg-button"
-            rel="nofollow"
-          >
-            <span class="pwg-icon pwg-icon-edit"></span><span
-              class="pwg-button-text"
-            >{='Edit'|translate}</span>
-          </a>
-        {/if}{/spaceless}
-      {spaceless}{if isset($uCaddie)}{* caddie management BEGIN *}
-          <a
-            id="caddieLink"
-            href="{$uCaddie|noescape}"
-            title="{='Add to caddie'|translate}"
-            class="pwg-state-default pwg-button"
-            rel="nofollow"
-          >
-            <span class="pwg-icon pwg-icon-caddie-add"></span><span
-              class="pwg-button-text"
-            >{='Caddie'|translate}</span>
-          </a>
-        {/if}{/spaceless}{* caddie management END *}
-    </div>
-  </div>{* imageToolBar *}
-
-  <div id="theImageAndInfos">
-    <div id="theImage" n:attr="data-image-id: $navCurrent['id'] ?? null">
-      {$elementContent|noescape}
-
-      {if isset($commentImg)}
-        <p class="imageComment">{$commentImg|noescape}</p>
-      {/if}
-      {if isset($uSlideshowStop)}
-        <p>
-          [ <a
-            href="{$uSlideshowStop|noescape}"
-          >{='stop the slideshow'|translate}</a> ]
-        </p>
-      {/if}
-    </div>{* no significant white space for elegant
-*}<div
-      id="infoSwitcher"
-    ></div>{* no significant white space for elegant
-*}<div id="imageInfos">
-      {if $displayNavThumb}
-        <div class="navThumbs">
-          {if isset($navPrevious)}
-            <a
-              class="navThumb"
-              id="linkPrev"
-              href="{$navPrevious['U_IMG']|noescape}"
-              title="{='Previous'|translate} : {$navPrevious['TITLE_ESC']|noescape}"
-              rel="prev"
-            >
-              <span class="thumbHover prevThumbHover"></span>
-              <img
-                class="{if (isset($navPrevious['path_ext']) and $navPrevious['path_ext'] == 'svg')}svgImg{/if}"
-                src="{if (isset($navPrevious['path_ext']) and $navPrevious['path_ext'] == 'svg')}{$navPrevious['path']|noescape}{else}{$navPrevious['derivatives']['square']->getUrl()|noescape}{/if}"
-                alt="{$navPrevious['TITLE_ESC']|noescape}"
-              >
-            </a>
-          {elseif isset($uUp)}
-            <a
-              class="navThumb"
-              id="linkPrev"
-              href="{$uUp|noescape}"
-              title="{='Thumbnails'|translate}"
-            >
-              <div
-                class="thumbHover"
-              >{='First Page'|translate}<br><br>{='Go back to the album'|translate}</div>
-            </a>
-          {/if}
-          {if isset($navNext)}
-            <a
-              class="navThumb"
-              id="linkNext"
-              href="{$navNext['U_IMG']|noescape}"
-              title="{='Next'|translate} : {$navNext['TITLE_ESC']|noescape}"
-              rel="next"
-            >
-              <span class="thumbHover nextThumbHover"></span>
-              <img
-                class="{if (isset($navNext['path_ext']) and $navNext['path_ext'] == 'svg')}svgImg{/if}"
-                src="{if (isset($navNext['path_ext']) and $navNext['path_ext'] == 'svg')}{$navNext['path']|noescape}{else}{$navNext['derivatives']['square']->getUrl()|noescape}{/if}"
-                alt="{$navNext['TITLE_ESC']|noescape}"
-              >
-            </a>
-          {elseif isset($uUp)}
-            <a
-              class="navThumb"
-              id="linkNext"
-              href="{$uUp|noescape}"
-              title="{='Thumbnails'|translate}"
-            >
-              <div
-                class="thumbHover"
-              >{='Last Page'|translate}<br><br>{='Go back to the album'|translate}</div>
-            </a>
-          {/if}
-        </div>
-      {/if}
-
-      <dl id="standard" class="imageInfoTable">
-        {spaceless}
-          {if $displayInfo['author'] and isset($infoAuthor)}
-            <div id="Author" class="imageInfo">
-              <dt>{='Author'|translate}</dt>
-              <dd>{$infoAuthor}</dd>
-            </div>
-          {/if}
-          {if $displayInfo['created_on'] and isset($infoCreationDate)}
-            <div id="datecreate" class="imageInfo">
-              <dt>{='Created on'|translate}</dt>
-              <dd>{$infoCreationDate|noescape}</dd>
-            </div>
-          {/if}
-          {if $displayInfo['posted_on']}
-            <div id="datepost" class="imageInfo">
-              <dt>{='Posted on'|translate}</dt>
-              <dd>{$infoPostedDate|noescape}</dd>
-            </div>
-          {/if}
-          {if $displayInfo['dimensions'] and isset($infoDimensions)}
-            <div id="Dimensions" class="imageInfo">
-              <dt>{='Dimensions'|translate}</dt>
-              <dd>{$infoDimensions}</dd>
-            </div>
-          {/if}
-          {if $displayInfo['file']}
-            <div id="File" class="imageInfo">
-              <dt>{='File'|translate}</dt>
-              <dd>{$infoFile}</dd>
-            </div>
-          {/if}
-          {if $displayInfo['filesize'] and isset($infoFilesize)}
-            <div id="Filesize" class="imageInfo">
-              <dt>{='Filesize'|translate}</dt>
-              <dd>{$infoFilesize}</dd>
-            </div>
-          {/if}
-          {if ($displayInfo['tags'] and isset($relatedTags))}
-            <div id="Tags" class="imageInfo">
-              <dt>{='Tags'|translate}</dt>
-              <dd>
-                {foreach $relatedTags as $tag}{if !$iterator->first}, {/if}<a
-                    href="{$tag['URL']|noescape}"
-                  >{$tag['name']}</a>{/foreach}
-              </dd>
-            </div>
-          {/if}
-          {if $displayInfo['categories'] and isset($relatedCategories)}
-            <div id="Categories" class="imageInfo">
-              <dt>{='Albums'|translate}</dt>
-              <dd>
-                <ul>
-                  {foreach $relatedCategories as $cat}
-                    <li>{$cat|noescape}</li>
-                  {/foreach}
-                </ul>
-              </dd>
-            </div>
-          {/if}
-          {if $displayInfo['visits']}
-            <div id="Visits" class="imageInfo">
-              <dt>{='Visits'|translate}</dt>
-              <dd>{$infoVisits}</dd>
-            </div>
-          {/if}
-
-          {if isset($pdfNbPages) and $navCurrent['path_ext'] == "pdf"}
-            <div id="Pages" class="imageInfo">
-              <dt>{='Pages'|translate}</dt>
-              <dd>{$pdfNbPages}</dd>
-            </div>
-          {/if}
-
-          {if $displayInfo['rating_score'] and isset($rateSummary)}
-            <div id="Average" class="imageInfo">
-              <dt>{='Rating score'|translate}</dt>
-              <dd>
-                {if $rateSummary['count']}
-                  <span id="ratingScore">{$rateSummary['score']}</span> <span
-                    id="ratingCount"
-                  >({$rateSummary['count']|translate_dec:'%d rate','%d rates'})</span>
-                {else}
-                  <span id="ratingScore">{='no rate'|translate}</span> <span
-                    id="ratingCount"
-                  ></span>
-                {/if}
-              </dd>
-            </div>
-          {/if}
-
-          {if isset($rating)}
-            <div id="rating" class="imageInfo">
-              <dt>
-                <span
-                  id="updateRate"
-                >{if isset($rating['USER_RATE'])}{='Update your rating'|translate}{else}{='Rate this photo'|translate}{/if}</span>
-              </dt>
-              <dd>
-                <form
-                  action="{$rating['F_ACTION']|noescape}"
-                  method="post"
-                  id="rateForm"
-                >
-                  <div>
-                    {foreach $rating['marks'] as $mark}
-                      {if isset($rating['USER_RATE']) && $mark == $rating['USER_RATE']}
-                        <input
-                          type="button"
-                          name="rate"
-                          value="{$mark}"
-                          id="rate-{$mark}"
-                          class="rateButtonSelected"
-                          title="{$mark}"
-                        >
-                      {else}
-                        <input
-                          type="submit"
-                          name="rate"
-                          value="{$mark}"
-                          id="rate-{$mark}"
-                          class="rateButton"
-                          title="{$mark}"
-                        >
-                      {/if}
-                    {/foreach}
-                  </div>
-                </form>
-              </dd>
-            </div>
-          {/if}
-
-          <div
-            n:foreach="$pluginPictureInfoRows as $row"
-            n:attr="id: $row->id"
-            class="imageInfo"
-          >
-            <dt>{$row->label}</dt>
-            <dd>{$row->value}</dd>
-          </div>
-        {/spaceless}
-      </dl>
-
-      {if isset($metadata)}
-        <dl id="Metadata" class="imageInfoTable">
-          {foreach $metadata as $meta}
-            <h3>{$meta['TITLE']}</h3>
-            {foreach $meta['lines'] as $label => $value}
-              <div class="imageInfo">
-                <dt>{$label}</dt>
-                <dd>{$value}</dd>
-              </div>
-            {/foreach}
-          {/foreach}
-        </dl>
-      {/if}
-    </div>
-  </div>
-
-  {if isset($commentCount)}
-    <div
-      id="comments"
-      {if (!isset($commentAdd) && ($commentCount == 0))}
-      class="noCommentContent"
-      {else}
-      class="commentContent"
-      {/if}
-    ><div id="commentsSwitcher"></div>
-      <h3>{$commentCount|translate_dec:'%d comment','%d comments'}</h3>
-
-      <div id="pictureComments">
-        {if isset($commentAdd)}
-          <div id="commentAdd">
-            <h4>{='Add a comment'|translate}</h4>
-            <form
-              method="post"
-              action="{$commentAdd['F_ACTION']|noescape}"
-              id="addComment"
-            >
-              {if $commentAdd['SHOW_AUTHOR']}
-                <p><label
-                    for="author"
-                  >{='Author'|translate}{if $commentAdd['AUTHOR_MANDATORY']} ({='mandatory'|translate}){/if} :</label></p>
-                <p><input
-                    type="text"
-                    name="author"
-                    id="author"
-                    value="{$commentAdd['AUTHOR']}"
-                  ></p>
-              {/if}
-              {if $commentAdd['SHOW_EMAIL']}
-                <p><label
-                    for="email"
-                  >{='Email address'|translate}{if $commentAdd['EMAIL_MANDATORY']} ({='mandatory'|translate}){/if} :</label></p>
-                <p><input
-                    type="text"
-                    name="email"
-                    id="email"
-                    value="{$commentAdd['EMAIL']}"
-                  ></p>
-              {/if}
-              {if $commentAdd['SHOW_WEBSITE']}
-                <p><label for="website_url">{='Website'|translate} :</label></p>
-                <p><input
-                    type="text"
-                    name="website_url"
-                    id="website_url"
-                    value="{$commentAdd['WEBSITE_URL']}"
-                  ></p>
-              {/if}
-              <p><label
-                  for="contentid"
-                >{='Comment'|translate} ({='mandatory'|translate}) :</label></p>
-              <p><textarea
-                  name="content"
-                  id="contentid"
-                  rows="5"
-                  cols="50"
-                >{$commentAdd['CONTENT']}</textarea></p>
-              <p><input type="hidden" name="key" value="{$commentAdd['KEY']}">
-                <input type="submit" value="{='Submit'|translate}"></p>
-            </form>
-          </div>
-        {/if}
-        {if isset($comments)}
-          <div id="pictureCommentList">
-            {if (($commentCount > 2) || !empty($commentsNavbar))}
-              <div id="pictureCommentNavBar">
-                {if $commentCount > 2}
-                  <a
-                    href="{$commentsOrderUrl|noescape}#comments"
-                    rel="nofollow"
-                    class="commentsOrder"
-                  >{$commentsOrderTitle}</a>
-                {/if}
-                {if !empty($commentsNavbar)}{include 'navigation_bar.latte', navbar: $commentsNavbar}{/if}
-              </div>
-            {/if}
-            {$commentList}
-          </div>
-        {/if}
-        <div class="clear-both"></div>
+    <div id="imageHeaderBar">
+      <div class="browsePath">
+        {$sectionTitle|noescape}<span
+          class="browsePathSeparator"
+        >{$levelSeparator|noescape}</span><h2>{$navCurrent['TITLE']|noescape}</h2>
       </div>
     </div>
-  {/if}{* comments *}
-</div>
+
+    <div id="imageToolBar">
+      <div class="imageNumber">{$photo}</div>
+      {include 'picture_nav_buttons.latte'}
+
+      <div class="actionButtons">
+        {if isset($navCurrent['unique_derivatives']) && count($navCurrent['unique_derivatives']) > 1}
+          {spaceless}<a
+              id="derivativeSwitchLink"
+              title="{='Photo sizes'|translate}"
+              class="pwg-state-default pwg-button"
+              rel="nofollow"
+            >
+              <span class="pwg-icon pwg-icon-sizes"></span><span
+                class="pwg-button-text"
+              >{='Photo sizes'|translate}</span>
+            </a>
+            <div id="derivativeSwitchBox" class="switchBox">
+              <div class="switchBoxTitle">{='Photo sizes'|translate}</div>
+              {foreach $navCurrent['unique_derivatives'] as $derivative_type => $derivative}
+                <span
+                  class="switchCheck{if $derivative->getType() != $navCurrent['selected_derivative']->getType()} u-invisible{/if}"
+                  id="derivativeChecked{$derivative->getType()}"
+                >&#x2714; </span>
+                <a
+                  href="#"
+                  data-derivative-url="{$derivative->getUrl()}"
+                  data-derivative-type-save="{$derivative_type}"
+                  data-derivative-type-map="{$derivative->getType()}"
+                >
+                  {$derivative->getType()|translate}<span
+                    class="derivativeSizeDetails"
+                  > ({$derivative->getSizeHr()})</span>
+                </a><br>
+              {/foreach}
+              {if isset($uOriginal)}
+                <a
+                  id="originalLink"
+                  href="#"
+                  data-original-url="{$uOriginal}"
+                  rel="nofollow"
+                >{='Original'|translate}</a>
+              {/if}
+            </div>
+          {/spaceless}
+        {/if}
+        {spaceless}{if isset($uSlideshowStart)}
+            <a
+              href="{$uSlideshowStart|noescape}"
+              title="{='slideshow'|translate}"
+              class="pwg-state-default pwg-button"
+              rel="nofollow"
+            >
+              <span class="pwg-icon pwg-icon-slideshow"></span><span
+                class="pwg-button-text"
+              >{='slideshow'|translate}</span>
+            </a>
+          {/if}{/spaceless}
+        {spaceless}{if isset($uMetadata)}
+            <a
+              href="{$uMetadata|noescape}"
+              title="{='Show file metadata'|translate}"
+              class="pwg-state-default pwg-button"
+              rel="nofollow"
+            >
+              <span class="pwg-icon pwg-icon-camera-info"></span><span
+                class="pwg-button-text"
+              >{='Show file metadata'|translate}</span>
+            </a>
+          {/if}{/spaceless}
+        {spaceless}{if isset($navCurrent['U_DOWNLOAD'])}
+            <a
+              id="downloadSwitchLink"
+              href="{$navCurrent['U_DOWNLOAD']|noescape}"
+              title="{='Download this file'|translate}"
+              class="pwg-state-default pwg-button"
+              rel="nofollow"
+            >
+              <span class="pwg-icon pwg-icon-save"></span><span
+                class="pwg-button-text"
+              >{='Download'|translate}</span>
+            </a>
+
+            {if !empty($navCurrent['formats'])}
+              <div id="downloadSwitchBox" class="switchBox">
+                <div
+                  class="switchBoxTitle"
+                >{='Download'|translate} - {='Formats'|translate}</div>
+                <ul>
+                  {foreach $navCurrent['formats'] as $format}
+                    <li><a
+                        href="{$format['download_url']|noescape}"
+                        rel="nofollow"
+                      >{$format['label']}<span
+                          class="downloadformatDetails"
+                        > ({$format['filesize']})</span></a></li>
+                  {/foreach}
+                </ul>
+              </div>
+            {/if} {* has formats *}
+          {/if}{/spaceless}
+        {foreach $pluginPictureButtons as $button}{spaceless}<a
+              n:attr="id: $button->id"
+              href="{$button->url}"
+              title="{$button->label}"
+              class="pwg-state-default pwg-button"
+              rel="nofollow"
+            >
+              <span class="{$button->icon}"></span><span
+                class="pwg-button-text"
+              >{$button->label}</span>
+            </a>{/spaceless}{/foreach}
+        {foreach $pluginPictureActions as $action}{spaceless}<a
+              id="{$action->id}Link"
+              title="{$action->label}"
+              class="pwg-state-default pwg-button"
+              rel="nofollow"
+            >
+              <span class="{$action->icon}"></span><span
+                class="pwg-button-text"
+              >{$action->label}</span>
+            </a>
+            <div
+              n:if="$action->panel !== []"
+              id="{$action->id}Box"
+              class="switchBox"
+            >
+              <div class="switchBoxTitle">{$action->label}</div>
+              <a
+                n:foreach="$action->panel as $link"
+                href="{$link->url|noescape}"
+                rel="nofollow"
+              >{if $link->icon !== null}<span
+                    class="{$link->icon}"
+                  ></span>{/if}{$link->label}</a>
+            </div>
+          {/spaceless}{/foreach}
+        {spaceless}{if isset($favorite)}
+            <a
+              href="{$favorite['U_FAVORITE']|noescape}"
+              title="{if $favorite['IS_FAVORITE']}{='delete this photo from your favorites'|translate}{else}{='add this photo to your favorites'|translate}{/if}"
+              class="pwg-state-default pwg-button"
+              rel="nofollow"
+            >
+              <span
+                class="pwg-icon pwg-icon-favorite-{if $favorite['IS_FAVORITE']}del{else}add{/if}"
+              ></span><span
+                class="pwg-button-text"
+              >{='Favorites'|translate}</span>
+            </a>
+          {/if}{/spaceless}
+        {spaceless}{if isset($uSetAsRepresentative)}
+            <a
+              id="cmdSetRepresentative"
+              href="{$uSetAsRepresentative|noescape}"
+              title="{='set as album representative'|translate}"
+              class="pwg-state-default pwg-button"
+              rel="nofollow"
+            >
+              <span class="pwg-icon pwg-icon-representative"></span><span
+                class="pwg-button-text"
+              >{='representative'|translate}</span>
+            </a>
+          {/if}{/spaceless}
+        {spaceless}{if isset($uPhotoAdmin)}
+            <a
+              id="cmdEditPhoto"
+              href="{$uPhotoAdmin|noescape}"
+              title="{='Edit photo'|translate}"
+              class="pwg-state-default pwg-button"
+              rel="nofollow"
+            >
+              <span class="pwg-icon pwg-icon-edit"></span><span
+                class="pwg-button-text"
+              >{='Edit'|translate}</span>
+            </a>
+          {/if}{/spaceless}
+        {spaceless}{if isset($uCaddie)}{* caddie management BEGIN *}
+            <a
+              id="caddieLink"
+              href="{$uCaddie|noescape}"
+              title="{='Add to caddie'|translate}"
+              class="pwg-state-default pwg-button"
+              rel="nofollow"
+            >
+              <span class="pwg-icon pwg-icon-caddie-add"></span><span
+                class="pwg-button-text"
+              >{='Caddie'|translate}</span>
+            </a>
+          {/if}{/spaceless}{* caddie management END *}
+      </div>
+    </div>{* imageToolBar *}
+
+    <div id="theImageAndInfos">
+      <div id="theImage" n:attr="data-image-id: $navCurrent['id'] ?? null">
+        {$elementContent|noescape}
+
+        {if isset($commentImg)}
+          <p class="imageComment">{$commentImg|noescape}</p>
+        {/if}
+        {if isset($uSlideshowStop)}
+          <p>
+            [ <a
+              href="{$uSlideshowStop|noescape}"
+            >{='stop the slideshow'|translate}</a> ]
+          </p>
+        {/if}
+      </div>{* no significant white space for elegant
+*}<div
+        id="infoSwitcher"
+      ></div>{* no significant white space for elegant
+*}<div id="imageInfos">
+        {if $displayNavThumb}
+          <div class="navThumbs">
+            {if isset($navPrevious)}
+              <a
+                class="navThumb"
+                id="linkPrev"
+                href="{$navPrevious['U_IMG']|noescape}"
+                title="{='Previous'|translate} : {$navPrevious['TITLE_ESC']|noescape}"
+                rel="prev"
+              >
+                <span class="thumbHover prevThumbHover"></span>
+                <img
+                  class="{if (isset($navPrevious['path_ext']) and $navPrevious['path_ext'] == 'svg')}svgImg{/if}"
+                  src="{if (isset($navPrevious['path_ext']) and $navPrevious['path_ext'] == 'svg')}{$navPrevious['path']|noescape}{else}{$navPrevious['derivatives']['square']->getUrl()|noescape}{/if}"
+                  alt="{$navPrevious['TITLE_ESC']|noescape}"
+                >
+              </a>
+            {elseif isset($uUp)}
+              <a
+                class="navThumb"
+                id="linkPrev"
+                href="{$uUp|noescape}"
+                title="{='Thumbnails'|translate}"
+              >
+                <div
+                  class="thumbHover"
+                >{='First Page'|translate}<br><br>{='Go back to the album'|translate}</div>
+              </a>
+            {/if}
+            {if isset($navNext)}
+              <a
+                class="navThumb"
+                id="linkNext"
+                href="{$navNext['U_IMG']|noescape}"
+                title="{='Next'|translate} : {$navNext['TITLE_ESC']|noescape}"
+                rel="next"
+              >
+                <span class="thumbHover nextThumbHover"></span>
+                <img
+                  class="{if (isset($navNext['path_ext']) and $navNext['path_ext'] == 'svg')}svgImg{/if}"
+                  src="{if (isset($navNext['path_ext']) and $navNext['path_ext'] == 'svg')}{$navNext['path']|noescape}{else}{$navNext['derivatives']['square']->getUrl()|noescape}{/if}"
+                  alt="{$navNext['TITLE_ESC']|noescape}"
+                >
+              </a>
+            {elseif isset($uUp)}
+              <a
+                class="navThumb"
+                id="linkNext"
+                href="{$uUp|noescape}"
+                title="{='Thumbnails'|translate}"
+              >
+                <div
+                  class="thumbHover"
+                >{='Last Page'|translate}<br><br>{='Go back to the album'|translate}</div>
+              </a>
+            {/if}
+          </div>
+        {/if}
+
+        <dl id="standard" class="imageInfoTable">
+          {spaceless}
+            {if $displayInfo['author'] and isset($infoAuthor)}
+              <div id="Author" class="imageInfo">
+                <dt>{='Author'|translate}</dt>
+                <dd>{$infoAuthor}</dd>
+              </div>
+            {/if}
+            {if $displayInfo['created_on'] and isset($infoCreationDate)}
+              <div id="datecreate" class="imageInfo">
+                <dt>{='Created on'|translate}</dt>
+                <dd>{$infoCreationDate|noescape}</dd>
+              </div>
+            {/if}
+            {if $displayInfo['posted_on']}
+              <div id="datepost" class="imageInfo">
+                <dt>{='Posted on'|translate}</dt>
+                <dd>{$infoPostedDate|noescape}</dd>
+              </div>
+            {/if}
+            {if $displayInfo['dimensions'] and isset($infoDimensions)}
+              <div id="Dimensions" class="imageInfo">
+                <dt>{='Dimensions'|translate}</dt>
+                <dd>{$infoDimensions}</dd>
+              </div>
+            {/if}
+            {if $displayInfo['file']}
+              <div id="File" class="imageInfo">
+                <dt>{='File'|translate}</dt>
+                <dd>{$infoFile}</dd>
+              </div>
+            {/if}
+            {if $displayInfo['filesize'] and isset($infoFilesize)}
+              <div id="Filesize" class="imageInfo">
+                <dt>{='Filesize'|translate}</dt>
+                <dd>{$infoFilesize}</dd>
+              </div>
+            {/if}
+            {if ($displayInfo['tags'] and isset($relatedTags))}
+              <div id="Tags" class="imageInfo">
+                <dt>{='Tags'|translate}</dt>
+                <dd>
+                  {foreach $relatedTags as $tag}{if !$iterator->first}, {/if}<a
+                      href="{$tag['URL']|noescape}"
+                    >{$tag['name']}</a>{/foreach}
+                </dd>
+              </div>
+            {/if}
+            {if $displayInfo['categories'] and isset($relatedCategories)}
+              <div id="Categories" class="imageInfo">
+                <dt>{='Albums'|translate}</dt>
+                <dd>
+                  <ul>
+                    {foreach $relatedCategories as $cat}
+                      <li>{$cat|noescape}</li>
+                    {/foreach}
+                  </ul>
+                </dd>
+              </div>
+            {/if}
+            {if $displayInfo['visits']}
+              <div id="Visits" class="imageInfo">
+                <dt>{='Visits'|translate}</dt>
+                <dd>{$infoVisits}</dd>
+              </div>
+            {/if}
+
+            {if isset($pdfNbPages) and $navCurrent['path_ext'] == "pdf"}
+              <div id="Pages" class="imageInfo">
+                <dt>{='Pages'|translate}</dt>
+                <dd>{$pdfNbPages}</dd>
+              </div>
+            {/if}
+
+            {if $displayInfo['rating_score'] and isset($rateSummary)}
+              <div id="Average" class="imageInfo">
+                <dt>{='Rating score'|translate}</dt>
+                <dd>
+                  {if $rateSummary['count']}
+                    <span id="ratingScore">{$rateSummary['score']}</span> <span
+                      id="ratingCount"
+                    >({$rateSummary['count']|translate_dec:'%d rate','%d rates'})</span>
+                  {else}
+                    <span id="ratingScore">{='no rate'|translate}</span> <span
+                      id="ratingCount"
+                    ></span>
+                  {/if}
+                </dd>
+              </div>
+            {/if}
+
+            {if isset($rating)}
+              <div id="rating" class="imageInfo">
+                <dt>
+                  <span
+                    id="updateRate"
+                  >{if isset($rating['USER_RATE'])}{='Update your rating'|translate}{else}{='Rate this photo'|translate}{/if}</span>
+                </dt>
+                <dd>
+                  <form
+                    action="{$rating['F_ACTION']|noescape}"
+                    method="post"
+                    id="rateForm"
+                  >
+                    <div>
+                      {foreach $rating['marks'] as $mark}
+                        {if isset($rating['USER_RATE']) && $mark == $rating['USER_RATE']}
+                          <input
+                            type="button"
+                            name="rate"
+                            value="{$mark}"
+                            id="rate-{$mark}"
+                            class="rateButtonSelected"
+                            title="{$mark}"
+                          >
+                        {else}
+                          <input
+                            type="submit"
+                            name="rate"
+                            value="{$mark}"
+                            id="rate-{$mark}"
+                            class="rateButton"
+                            title="{$mark}"
+                          >
+                        {/if}
+                      {/foreach}
+                    </div>
+                  </form>
+                </dd>
+              </div>
+            {/if}
+
+            <div
+              n:foreach="$pluginPictureInfoRows as $row"
+              n:attr="id: $row->id"
+              class="imageInfo"
+            >
+              <dt>{$row->label}</dt>
+              <dd>{$row->value}</dd>
+            </div>
+          {/spaceless}
+        </dl>
+
+        {if isset($metadata)}
+          <dl id="Metadata" class="imageInfoTable">
+            {foreach $metadata as $meta}
+              <h3>{$meta['TITLE']}</h3>
+              {foreach $meta['lines'] as $label => $value}
+                <div class="imageInfo">
+                  <dt>{$label}</dt>
+                  <dd>{$value}</dd>
+                </div>
+              {/foreach}
+            {/foreach}
+          </dl>
+        {/if}
+      </div>
+    </div>
+
+    {if isset($commentCount)}
+      <div
+        id="comments"
+        {if (!isset($commentAdd) && ($commentCount == 0))}
+        class="noCommentContent"
+        {else}
+        class="commentContent"
+        {/if}
+      ><div id="commentsSwitcher"></div>
+        <h3>{$commentCount|translate_dec:'%d comment','%d comments'}</h3>
+
+        <div id="pictureComments">
+          {if isset($commentAdd)}
+            <div id="commentAdd">
+              <h4>{='Add a comment'|translate}</h4>
+              <form
+                method="post"
+                action="{$commentAdd['F_ACTION']|noescape}"
+                id="addComment"
+              >
+                {if $commentAdd['SHOW_AUTHOR']}
+                  <p><label
+                      for="author"
+                    >{='Author'|translate}{if $commentAdd['AUTHOR_MANDATORY']} ({='mandatory'|translate}){/if} :</label></p>
+                  <p><input
+                      type="text"
+                      name="author"
+                      id="author"
+                      value="{$commentAdd['AUTHOR']}"
+                    ></p>
+                {/if}
+                {if $commentAdd['SHOW_EMAIL']}
+                  <p><label
+                      for="email"
+                    >{='Email address'|translate}{if $commentAdd['EMAIL_MANDATORY']} ({='mandatory'|translate}){/if} :</label></p>
+                  <p><input
+                      type="text"
+                      name="email"
+                      id="email"
+                      value="{$commentAdd['EMAIL']}"
+                    ></p>
+                {/if}
+                {if $commentAdd['SHOW_WEBSITE']}
+                  <p><label
+                      for="website_url"
+                    >{='Website'|translate} :</label></p>
+                  <p><input
+                      type="text"
+                      name="website_url"
+                      id="website_url"
+                      value="{$commentAdd['WEBSITE_URL']}"
+                    ></p>
+                {/if}
+                <p><label
+                    for="contentid"
+                  >{='Comment'|translate} ({='mandatory'|translate}) :</label></p>
+                <p><textarea
+                    name="content"
+                    id="contentid"
+                    rows="5"
+                    cols="50"
+                  >{$commentAdd['CONTENT']}</textarea></p>
+                <p><input type="hidden" name="key" value="{$commentAdd['KEY']}">
+                  <input type="submit" value="{='Submit'|translate}"></p>
+              </form>
+            </div>
+          {/if}
+          {if isset($comments)}
+            <div id="pictureCommentList">
+              {if (($commentCount > 2) || !empty($commentsNavbar))}
+                <div id="pictureCommentNavBar">
+                  {if $commentCount > 2}
+                    <a
+                      href="{$commentsOrderUrl|noescape}#comments"
+                      rel="nofollow"
+                      class="commentsOrder"
+                    >{$commentsOrderTitle}</a>
+                  {/if}
+                  {if !empty($commentsNavbar)}{include 'navigation_bar.latte', navbar: $commentsNavbar}{/if}
+                </div>
+              {/if}
+              {$commentList}
+            </div>
+          {/if}
+          <div class="clear-both"></div>
+        </div>
+      </div>
+    {/if}{* comments *}
+  </div>
 {/block}

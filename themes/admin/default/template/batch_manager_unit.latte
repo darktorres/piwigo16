@@ -17,12 +17,9 @@
     <span class="count-badge"> {count($all_elements)}</span>
   </legend>
   {if !empty($elements)}
-    <div
-      class="pagination-bar"
-    >
+    <div class="pagination-bar">
       <div class="pagination-per-page">
-        <span
-        >{='photos per page'|translate} :</span>
+        <span>{='photos per page'|translate} :</span>
         <a
           href="{$uElementsPage|noescape}&amp;display=5"
           class="{if $perPage == 5}selected-pagination{/if}"
@@ -50,10 +47,7 @@
       </div>
     </div>
     {foreach $elements as $element}
-      <div
-        class="infos deleted-badge"
-        data-image_id="{$element['ID']}"
-      >
+      <div class="infos deleted-badge" data-image_id="{$element['ID']}">
         <i class="icon-ok"></i>
         <p>
           &nbsp;{='Image'|translate}&nbsp;
@@ -129,7 +123,7 @@
                   {='Open in gallery'|translate}
                 </p>
               </a>
-              {else}
+            {else}
               <a class="see-out disabled" href="#">
                 <p
                   class=""
@@ -139,7 +133,7 @@
                   {='Open in gallery'|translate}
                 </p>
               </a>
-              {/if}
+            {/if}
           </div>
         </div>
         <div class="main-info-container">
@@ -297,25 +291,19 @@
                 {='Save'|translate}
               </div>
             </div>
-            <div
-              class="local-unsaved-badge badge-container"
-            >
+            <div class="local-unsaved-badge badge-container">
               <div class="badge-unsaved">
                 <i class="icon-attention"></i>
                 {='You have unsaved changes'|translate}
               </div>
             </div>
-            <div
-              class="local-success-badge badge-container"
-            >
+            <div class="local-success-badge badge-container">
               <div class="badge-succes">
                 <i class="icon-ok"></i>
                 {='Changes saved'|translate}
               </div>
             </div>
-            <div
-              class="local-error-badge badge-container"
-            >
+            <div class="local-error-badge badge-container">
               <div class="badge-error">
                 <i class="icon-cancel"></i>
                 {='An error has occured'|translate}
@@ -325,12 +313,9 @@
         </div>
       </fieldset>
     {/foreach}
-    <div
-      class="pagination-bar"
-    >
+    <div class="pagination-bar">
       <div class="pagination-per-page">
-        <span
-        >{='photos per page'|translate} :</span>
+        <span>{='photos per page'|translate} :</span>
         <a
           href="{$uElementsPage|noescape}&amp;display=5"
           class="{if $perPage == 5}selected-pagination{/if}"

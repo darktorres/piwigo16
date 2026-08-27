@@ -1,129 +1,129 @@
 {templateType Piwigo\Controller\Projection\CommentsView}
 {layout 'layout.latte'}
 {block content}
-{if isset($MENUBAR)}{$MENUBAR}{/if}
-<div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
-  <div class="titrePage">
-    <ul class="categoryActions"></ul>
-    <h2><a
-        href="{$homeUrl|noescape}"
-      >{='Home'|translate}</a>{$LEVEL_SEPARATOR|noescape}{='User comments'|translate}</h2>
-  </div>
+  {if isset($MENUBAR)}{$MENUBAR}{/if}
+  <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
+    <div class="titrePage">
+      <ul class="categoryActions"></ul>
+      <h2><a
+          href="{$homeUrl|noescape}"
+        >{='Home'|translate}</a>{$LEVEL_SEPARATOR|noescape}{='User comments'|translate}</h2>
+    </div>
 
-  {include 'infos_errors.latte'}
+    {include 'infos_errors.latte'}
 
-  <form class="filter" action="{$fAction|noescape}" method="get">
-    <fieldset>
-      <legend><span
-          class="icon-filter icon-green"
-        ></span>{='Filter'|translate}</legend>
+    <form class="filter" action="{$fAction|noescape}" method="get">
+      <fieldset>
+        <legend><span
+            class="icon-filter icon-green"
+          ></span>{='Filter'|translate}</legend>
 
-      <ul>
-        <li>
-          <label>{='Keyword'|translate}</label>
-        </li>
-        <li>
-          <input type="text" name="keyword" value="{$fKeyword}">
-        </li>
-      </ul>
+        <ul>
+          <li>
+            <label>{='Keyword'|translate}</label>
+          </li>
+          <li>
+            <input type="text" name="keyword" value="{$fKeyword}">
+          </li>
+        </ul>
 
-      <ul>
-        <li>
-          <label>{='Author'|translate}</label>
-        </li>
-        <li>
-          <input type="text" name="author" value="{$fAuthor}">
-        </li>
-      </ul>
+        <ul>
+          <li>
+            <label>{='Author'|translate}</label>
+          </li>
+          <li>
+            <input type="text" name="author" value="{$fAuthor}">
+          </li>
+        </ul>
 
-      <ul>
-        <li>
-          <label>{='Album'|translate}</label>
-        </li>
-        <li>
-          <select name="cat">
-            <option value="0">------------</option>
-            <option
-              n:foreach="$categories as $optKey => $optLabel"
-              value="{$optKey}"
-              n:attr="selected: in_array((string) $optKey, array_map(strval(...), $categoriesSelected), true) ? 'selected' : null"
-            >{html_entity_decode(strval($optLabel))}</option>
-          </select>
-        </li>
-      </ul>
+        <ul>
+          <li>
+            <label>{='Album'|translate}</label>
+          </li>
+          <li>
+            <select name="cat">
+              <option value="0">------------</option>
+              <option
+                n:foreach="$categories as $optKey => $optLabel"
+                value="{$optKey}"
+                n:attr="selected: in_array((string) $optKey, array_map(strval(...), $categoriesSelected), true) ? 'selected' : null"
+              >{html_entity_decode(strval($optLabel))}</option>
+            </select>
+          </li>
+        </ul>
 
-      <ul>
-        <li>
-          <label>{='Since'|translate}</label>
-        </li>
-        <li>
-          <select name="since">
-            <option
-              n:foreach="$sinceOptions as $optKey => $optLabel"
-              value="{$optKey}"
-              n:attr="selected: in_array((string) $optKey, array_map(strval(...), (array) $sinceOptionsSelected), true) ? 'selected' : null"
-            >{html_entity_decode(strval($optLabel))}</option>
-          </select>
-        </li>
-      </ul>
-    </fieldset>
+        <ul>
+          <li>
+            <label>{='Since'|translate}</label>
+          </li>
+          <li>
+            <select name="since">
+              <option
+                n:foreach="$sinceOptions as $optKey => $optLabel"
+                value="{$optKey}"
+                n:attr="selected: in_array((string) $optKey, array_map(strval(...), (array) $sinceOptionsSelected), true) ? 'selected' : null"
+              >{html_entity_decode(strval($optLabel))}</option>
+            </select>
+          </li>
+        </ul>
+      </fieldset>
 
-    <fieldset>
-      <legend>{='Display'|translate}</legend>
+      <fieldset>
+        <legend>{='Display'|translate}</legend>
 
-      <ul>
-        <li>
-          <label>{='Sort by'|translate}</label>
-        </li>
-        <li>
-          <select name="sort_by">
-            <option
-              n:foreach="$sortByOptions as $optKey => $optLabel"
-              value="{$optKey}"
-              n:attr="selected: in_array($optKey, array_map(strval(...), (array) $sortByOptionsSelected), true) ? 'selected' : null"
-            >{html_entity_decode(strval($optLabel))}</option>
-          </select>
-        </li>
-      </ul>
+        <ul>
+          <li>
+            <label>{='Sort by'|translate}</label>
+          </li>
+          <li>
+            <select name="sort_by">
+              <option
+                n:foreach="$sortByOptions as $optKey => $optLabel"
+                value="{$optKey}"
+                n:attr="selected: in_array($optKey, array_map(strval(...), (array) $sortByOptionsSelected), true) ? 'selected' : null"
+              >{html_entity_decode(strval($optLabel))}</option>
+            </select>
+          </li>
+        </ul>
 
-      <ul>
-        <li>
-          <label>{='Sort order'|translate}</label>
-        </li>
-        <li>
-          <select name="sort_order">
-            <option
-              n:foreach="$sortOrderOptions as $optKey => $optLabel"
-              value="{$optKey}"
-              n:attr="selected: in_array($optKey, array_map(strval(...), (array) $sortOrderOptionsSelected), true) ? 'selected' : null"
-            >{html_entity_decode(strval($optLabel))}</option>
-          </select>
-        </li>
-      </ul>
+        <ul>
+          <li>
+            <label>{='Sort order'|translate}</label>
+          </li>
+          <li>
+            <select name="sort_order">
+              <option
+                n:foreach="$sortOrderOptions as $optKey => $optLabel"
+                value="{$optKey}"
+                n:attr="selected: in_array($optKey, array_map(strval(...), (array) $sortOrderOptionsSelected), true) ? 'selected' : null"
+              >{html_entity_decode(strval($optLabel))}</option>
+            </select>
+          </li>
+        </ul>
 
-      <ul>
-        <li>
-          <label>{='Number of items'|translate}</label>
-        </li>
-        <li>
-          <select name="items_number">
-            <option
-              n:foreach="$itemNumberOptions as $optKey => $optLabel"
-              value="{$optKey}"
-              n:attr="selected: in_array((string) $optKey, array_map(strval(...), (array) $itemNumberOptionsSelected), true) ? 'selected' : null"
-            >{html_entity_decode(strval($optLabel))}</option>
-          </select>
-        </li>
-      </ul>
-    </fieldset>
+        <ul>
+          <li>
+            <label>{='Number of items'|translate}</label>
+          </li>
+          <li>
+            <select name="items_number">
+              <option
+                n:foreach="$itemNumberOptions as $optKey => $optLabel"
+                value="{$optKey}"
+                n:attr="selected: in_array((string) $optKey, array_map(strval(...), (array) $itemNumberOptionsSelected), true) ? 'selected' : null"
+              >{html_entity_decode(strval($optLabel))}</option>
+            </select>
+          </li>
+        </ul>
+      </fieldset>
 
-    <p><input type="submit" value="{='Filter and display'|translate}"></p>
-  </form>
+      <p><input type="submit" value="{='Filter and display'|translate}"></p>
+    </form>
 
-  {if !empty($navbar)}{include 'navigation_bar.latte'}{/if}
+    {if !empty($navbar)}{include 'navigation_bar.latte'}{/if}
 
-  <div n:if="isset($commentList)" id="comments">
-    {$commentList}
-  </div>
-</div> <!-- content -->
+    <div n:if="isset($commentList)" id="comments">
+      {$commentList}
+    </div>
+  </div> <!-- content -->
 {/block}

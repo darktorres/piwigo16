@@ -1,346 +1,357 @@
 {templateType Piwigo\Controller\Projection\IndexView}
 {layout 'layout.latte'}
 {block content}
+  {$MENUBAR}
 
-{$MENUBAR}
+  <div
+    n:if="isset($errors) or isset($infos)"
+    class="content messages{if isset($MENUBAR)} contentWithMenu{/if}"
+  >
+    {include 'infos_errors.latte'}
+  </div>
 
-<div
-  n:if="isset($errors) or isset($infos)"
-  class="content messages{if isset($MENUBAR)} contentWithMenu{/if}"
->
-  {include 'infos_errors.latte'}
-</div>
-
-<div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
-  <div class="titrePage{if isset($chronology['TITLE'])} calendarTitleBar{/if}">
-    <ul class="categoryActions">
-      <li
-        n:if="isset($searchInSetAction) and $searchInSetAction"
-        id="cmdSearchInSet"
-      ><a
-          href="{$searchInSetUrl|noescape}"
-          title="{='Search in this set'|translate}"
-          class="pwg-state-default pwg-button"
-          rel="nofollow"
-        >
-          <span class="gallery-icon-search-folder"></span><span
-            class="pwg-button-text"
-          >{='Search in this set'|translate}</span>
-        </a></li>
-
-      {* We want the related tags action icon on all pages except the index and tag pages*}
-      <li
-        n:if="isset($relatedTagsAction) and $relatedTagsAction"
-      >{spaceless}<a
-            id="cmdRelatedTags"
-            title="{='Related tags'|translate}"
-            class="pwg-state-default pwg-button"
-            rel="nofollow"
-          >
-            <span class="pwg-icon gallery-icon-tag"></span><span
-              class="pwg-button-text"
-            >{='Related tags'|translate}</span>
-          </a>
-          <div id="relatedTagsBox" class="switchBox">
-            <div class="switchBoxTitle">{='Related tags'|translate}</div>
-            <a
-              n:foreach="$relatedTags as $tag"
-              href="{$tag['URL']|noescape}"
-              title="{='display photos linked to this tag'|translate}"
-            >
-              {$tag['name']}
-            </a>
-          </div>
-        {/spaceless}</li>
-
-      <li n:if="!empty($imageOrders)">{spaceless}<a
-            id="sortOrderLink"
-            title="{='Sort order'|translate}"
-            class="pwg-state-default pwg-button"
-            rel="nofollow"
-          >
-            <span class="pwg-icon pwg-icon-sort"></span><span
-              class="pwg-button-text"
-            >{='Sort order'|translate}</span>
-          </a>
-          <div id="sortOrderBox" class="switchBox">
-            <div class="switchBoxTitle">{='Sort order'|translate}</div>
-            {foreach $imageOrders as $image_order}<br n:if="!$iterator->first">
-              {if $image_order['SELECTED']}
-                <span>&#x2714; </span>{$image_order['DISPLAY']|noescape}
-              {else}
-                <span class="u-invisible">&#x2714; </span><a
-                  href="{$image_order['URL']|noescape}"
-                  rel="nofollow"
-                >{$image_order['DISPLAY']|noescape}</a>
-              {/if}
-            {/foreach}
-          </div>
-        {/spaceless}</li>
-      <li n:if="!empty($imageDerivatives)">{spaceless}<a
-            id="derivativeSwitchLink"
-            title="{='Photo sizes'|translate}"
-            class="pwg-state-default pwg-button"
-            rel="nofollow"
-          >
-            <span class="pwg-icon pwg-icon-sizes"></span><span
-              class="pwg-button-text"
-            >{='Photo sizes'|translate}</span>
-          </a>
-          <div id="derivativeSwitchBox" class="switchBox">
-            <div class="switchBoxTitle">{='Photo sizes'|translate}</div>
-            {foreach $imageDerivatives as $image_derivative}<br
-                n:if="!$iterator->first"
-              >
-              {if $image_derivative['SELECTED']}
-                <span>&#x2714; </span>{$image_derivative['DISPLAY']}
-              {else}
-                <span class="u-invisible">&#x2714; </span><a
-                  href="{$image_derivative['URL']|noescape}"
-                  rel="nofollow"
-                >{$image_derivative['DISPLAY']}</a>
-              {/if}
-            {/foreach}
-          </div>
-        {/spaceless}</li>
-
-      <li n:if="isset($favorite)" id="cmdFavorite"><a
-          href="{$favorite['U_FAVORITE']|noescape}"
-          title="{='delete all photos from your favorites'|translate}"
-          class="pwg-state-default pwg-button"
-          rel="nofollow"
-        >
-          <span class="pwg-icon pwg-icon-favorite-del"></span><span
-            class="pwg-button-text"
-          >{='delete all photos from your favorites'|translate}</span>
-        </a></li>
-      <li n:if="isset($uCaddie)" id="cmdCaddie"><a
-          href="{$uCaddie|noescape}"
-          title="{='Add to caddie'|translate}"
-          class="pwg-state-default pwg-button"
-        >
-          <span class="pwg-icon pwg-icon-caddie-add"></span><span
-            class="pwg-button-text"
-          >{='Caddie'|translate}</span>
-        </a></li>
-      <li n:if="isset($uEdit)" id="cmdEditAlbum"><a
-          href="{$uEdit|noescape}"
-          title="{='Edit album'|translate}"
-          class="pwg-state-default pwg-button"
-        >
-          <span class="pwg-icon pwg-icon-category-edit"></span><span
-            class="pwg-button-text"
-          >{='Edit'|translate}</span>
-        </a></li>
-      <li n:if="isset($uSlideshow)" id="cmdSlideshow">{spaceless}<a
-            href="{$uSlideshow|noescape}"
-            title="{='slideshow'|translate}"
-            class="pwg-state-default pwg-button"
-            rel="nofollow"
-          >
-            <span class="pwg-icon pwg-icon-slideshow"></span><span
-              class="pwg-button-text"
-            >{='slideshow'|translate}</span>
-          </a>{/spaceless}</li>
-      <li n:if="isset($uModeFlat)">{spaceless}<a
-            href="{$uModeFlat|noescape}"
-            title="{='display all photos in all sub-albums'|translate}"
-            class="pwg-state-default pwg-button"
-            rel="nofollow"
-          >
-            <span class="pwg-icon pwg-icon-category-view-flat"></span><span
-              class="pwg-button-text"
-            >{='display all photos in all sub-albums'|translate}</span>
-          </a>{/spaceless}</li>
-      <li n:if="isset($uModeNormal)">{spaceless}<a
-            href="{$uModeNormal|noescape}"
-            title="{='return to normal view mode'|translate}"
-            class="pwg-state-default pwg-button"
-          >
-            <span class="pwg-icon pwg-icon-category-view-normal"></span><span
-              class="pwg-button-text"
-            >{='return to normal view mode'|translate}</span>
-          </a>{/spaceless}</li>
-      <li n:if="isset($uModePosted)">{spaceless}<a
-            href="{$uModePosted|noescape}"
-            title="{='display a calendar by posted date'|translate}"
-            class="pwg-state-default pwg-button"
-            rel="nofollow"
-          >
-            <span class="pwg-icon pwg-icon-calendar"></span><span
-              class="pwg-button-text"
-            >{='Calendar'|translate}</span>
-          </a>{/spaceless}</li>
-      <li n:if="isset($uModeCreated)">{spaceless}<a
-            href="{$uModeCreated|noescape}"
-            title="{='display a calendar by creation date'|translate}"
-            class="pwg-state-default pwg-button"
-            rel="nofollow"
-          >
-            <span class="pwg-icon pwg-icon-camera-calendar"></span><span
-              class="pwg-button-text"
-            >{='Calendar'|translate}</span>
-          </a>{/spaceless}</li>
-      <li n:foreach="$pluginIndexButtons as $button" n:attr="id: $button->id">{spaceless}<a
-            href="{$button->url}"
-            title="{$button->label}"
-            class="pwg-state-default pwg-button"
-            rel="nofollow"
-          >
-            <span class="{$button->icon}"></span><span
-              class="pwg-button-text"
-            >{$button->label}</span>
-          </a>{/spaceless}</li>
-      <li n:foreach="$pluginIndexActions as $action">{spaceless}<a
-            id="{$action->id}Link"
-            title="{$action->label}"
-            class="pwg-state-default pwg-button"
-            rel="nofollow"
-          >
-            <span class="{$action->icon}"></span><span
-              class="pwg-button-text"
-            >{$action->label}</span>
-          </a>
-          <div n:if="$action->panel !== []" id="{$action->id}Box" class="switchBox">
-            <div class="switchBoxTitle">{$action->label}</div>
-            <a
-              n:foreach="$action->panel as $link"
-              href="{$link->url|noescape}"
-              rel="nofollow"
-            >{if $link->icon !== null}<span class="{$link->icon}"></span>{/if}{$link->label}</a>
-          </div>
-        {/spaceless}</li>
-    </ul>
-
-    <div id="breadcrumb">
-      <h2>{$title|noescape}
-        <span n:if="$nbItems > 0" class="badge nb_items">{$nbItems}</span>
-      </h2>
-
-      {$selectedTagsTemplate}
-    </div>
-
+  <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
     <div
-      n:if="isset($chronology_views)"
-      class="calendarViews"
-    >{='View'|translate}:
-      <a id="calendarViewSwitchLink" href="#">
-        {foreach $chronology_views as $view}{if $view['SELECTED']}{$view['CONTENT']}{/if}{/foreach}
-      </a>
-      <div id="calendarViewSwitchBox" class="switchBox">
-        {foreach $chronology_views as $view}<br n:if="!$iterator->first">
-          <span
-            class="{if !$view['SELECTED']}u-invisible{/if}"
-          >&#x2714; </span><a
-            href="{$view['VALUE']|noescape}"
-          >{$view['CONTENT']}</a>
-        {/foreach}
-      </div>
-    </div>
-
-    <h2
-      n:if="isset($chronology['TITLE'])"
-      class="calendarTitle"
-    >{$chronology['TITLE']|noescape}</h2>
-  </div>{* <!-- titrePage --> *}
-
-  <p
-    n:if="!empty($noSearchResults)"
-    class="search_results"
-  >{='No results for'|translate} :
-    <em><strong>
-        {foreach $noSearchResults as $res}
-          {if !$iterator->first} &mdash; {/if}
-          {$res|noescape}
-        {/foreach}
-      </strong></em>
-  </p>
-
-  <p
-    n:if="!empty($categorySearchResults)"
-    class="search_results"
-  >{='Album results for'|translate} <strong>{$QUERY_SEARCH|noescape}</strong> :
-    <em><strong>
-        {foreach $categorySearchResults as $res}
-          {if !$iterator->first} &mdash; {/if}
-          {$res|noescape}
-        {/foreach}
-      </strong></em>
-  </p>
-
-  <p
-    n:if="!empty($tagSearchResults)"
-    class="search_results"
-  >{='Tag results for'|translate} <strong>{$QUERY_SEARCH|noescape}</strong> :
-    <em><strong>
-        {foreach $tagSearchResults as $tag}
-          {if !$iterator->first} &mdash; {/if} <a
-            href="{$tag['URL']|noescape}"
-          >{$tag['name']}</a>
-        {/foreach}
-      </strong></em>
-  </p>
-
-  {if isset($FILE_CHRONOLOGY_VIEW)}
-    {include $FILE_CHRONOLOGY_VIEW}
-  {/if}
-
-  <div class="action-buttons">
-    <div
-      n:if="isset($searchInSetButton) and $searchInSetButton"
-      class="mcs-side-results search-in-set-button"
+      class="titrePage{if isset($chronology['TITLE'])} calendarTitleBar{/if}"
     >
-      <div>
-        <p><a
+      <ul class="categoryActions">
+        <li
+          n:if="isset($searchInSetAction) and $searchInSetAction"
+          id="cmdSearchInSet"
+        ><a
             href="{$searchInSetUrl|noescape}"
-            class="gallery-icon-search-folder"
+            title="{='Search in this set'|translate}"
+            class="pwg-state-default pwg-button"
             rel="nofollow"
-          >{='Search in this set'|translate}</a></p>
-      </div>
-    </div>
+          >
+            <span class="gallery-icon-search-folder"></span><span
+              class="pwg-button-text"
+            >{='Search in this set'|translate}</span>
+          </a></li>
 
-    {if isset($combinableTags)}
-      {include 'include/related_tags.inc.latte'}
+        {* We want the related tags action icon on all pages except the index and tag pages*}
+        <li
+          n:if="isset($relatedTagsAction) and $relatedTagsAction"
+        >{spaceless}<a
+              id="cmdRelatedTags"
+              title="{='Related tags'|translate}"
+              class="pwg-state-default pwg-button"
+              rel="nofollow"
+            >
+              <span class="pwg-icon gallery-icon-tag"></span><span
+                class="pwg-button-text"
+              >{='Related tags'|translate}</span>
+            </a>
+            <div id="relatedTagsBox" class="switchBox">
+              <div class="switchBoxTitle">{='Related tags'|translate}</div>
+              <a
+                n:foreach="$relatedTags as $tag"
+                href="{$tag['URL']|noescape}"
+                title="{='display photos linked to this tag'|translate}"
+              >
+                {$tag['name']}
+              </a>
+            </div>
+          {/spaceless}</li>
+
+        <li n:if="!empty($imageOrders)">{spaceless}<a
+              id="sortOrderLink"
+              title="{='Sort order'|translate}"
+              class="pwg-state-default pwg-button"
+              rel="nofollow"
+            >
+              <span class="pwg-icon pwg-icon-sort"></span><span
+                class="pwg-button-text"
+              >{='Sort order'|translate}</span>
+            </a>
+            <div id="sortOrderBox" class="switchBox">
+              <div class="switchBoxTitle">{='Sort order'|translate}</div>
+              {foreach $imageOrders as $image_order}<br
+                  n:if="!$iterator->first"
+                >
+                {if $image_order['SELECTED']}
+                  <span>&#x2714; </span>{$image_order['DISPLAY']|noescape}
+                {else}
+                  <span class="u-invisible">&#x2714; </span><a
+                    href="{$image_order['URL']|noescape}"
+                    rel="nofollow"
+                  >{$image_order['DISPLAY']|noescape}</a>
+                {/if}
+              {/foreach}
+            </div>
+          {/spaceless}</li>
+        <li n:if="!empty($imageDerivatives)">{spaceless}<a
+              id="derivativeSwitchLink"
+              title="{='Photo sizes'|translate}"
+              class="pwg-state-default pwg-button"
+              rel="nofollow"
+            >
+              <span class="pwg-icon pwg-icon-sizes"></span><span
+                class="pwg-button-text"
+              >{='Photo sizes'|translate}</span>
+            </a>
+            <div id="derivativeSwitchBox" class="switchBox">
+              <div class="switchBoxTitle">{='Photo sizes'|translate}</div>
+              {foreach $imageDerivatives as $image_derivative}<br
+                  n:if="!$iterator->first"
+                >
+                {if $image_derivative['SELECTED']}
+                  <span>&#x2714; </span>{$image_derivative['DISPLAY']}
+                {else}
+                  <span class="u-invisible">&#x2714; </span><a
+                    href="{$image_derivative['URL']|noescape}"
+                    rel="nofollow"
+                  >{$image_derivative['DISPLAY']}</a>
+                {/if}
+              {/foreach}
+            </div>
+          {/spaceless}</li>
+
+        <li n:if="isset($favorite)" id="cmdFavorite"><a
+            href="{$favorite['U_FAVORITE']|noescape}"
+            title="{='delete all photos from your favorites'|translate}"
+            class="pwg-state-default pwg-button"
+            rel="nofollow"
+          >
+            <span class="pwg-icon pwg-icon-favorite-del"></span><span
+              class="pwg-button-text"
+            >{='delete all photos from your favorites'|translate}</span>
+          </a></li>
+        <li n:if="isset($uCaddie)" id="cmdCaddie"><a
+            href="{$uCaddie|noescape}"
+            title="{='Add to caddie'|translate}"
+            class="pwg-state-default pwg-button"
+          >
+            <span class="pwg-icon pwg-icon-caddie-add"></span><span
+              class="pwg-button-text"
+            >{='Caddie'|translate}</span>
+          </a></li>
+        <li n:if="isset($uEdit)" id="cmdEditAlbum"><a
+            href="{$uEdit|noescape}"
+            title="{='Edit album'|translate}"
+            class="pwg-state-default pwg-button"
+          >
+            <span class="pwg-icon pwg-icon-category-edit"></span><span
+              class="pwg-button-text"
+            >{='Edit'|translate}</span>
+          </a></li>
+        <li n:if="isset($uSlideshow)" id="cmdSlideshow">{spaceless}<a
+              href="{$uSlideshow|noescape}"
+              title="{='slideshow'|translate}"
+              class="pwg-state-default pwg-button"
+              rel="nofollow"
+            >
+              <span class="pwg-icon pwg-icon-slideshow"></span><span
+                class="pwg-button-text"
+              >{='slideshow'|translate}</span>
+            </a>{/spaceless}</li>
+        <li n:if="isset($uModeFlat)">{spaceless}<a
+              href="{$uModeFlat|noescape}"
+              title="{='display all photos in all sub-albums'|translate}"
+              class="pwg-state-default pwg-button"
+              rel="nofollow"
+            >
+              <span class="pwg-icon pwg-icon-category-view-flat"></span><span
+                class="pwg-button-text"
+              >{='display all photos in all sub-albums'|translate}</span>
+            </a>{/spaceless}</li>
+        <li n:if="isset($uModeNormal)">{spaceless}<a
+              href="{$uModeNormal|noescape}"
+              title="{='return to normal view mode'|translate}"
+              class="pwg-state-default pwg-button"
+            >
+              <span class="pwg-icon pwg-icon-category-view-normal"></span><span
+                class="pwg-button-text"
+              >{='return to normal view mode'|translate}</span>
+            </a>{/spaceless}</li>
+        <li n:if="isset($uModePosted)">{spaceless}<a
+              href="{$uModePosted|noescape}"
+              title="{='display a calendar by posted date'|translate}"
+              class="pwg-state-default pwg-button"
+              rel="nofollow"
+            >
+              <span class="pwg-icon pwg-icon-calendar"></span><span
+                class="pwg-button-text"
+              >{='Calendar'|translate}</span>
+            </a>{/spaceless}</li>
+        <li n:if="isset($uModeCreated)">{spaceless}<a
+              href="{$uModeCreated|noescape}"
+              title="{='display a calendar by creation date'|translate}"
+              class="pwg-state-default pwg-button"
+              rel="nofollow"
+            >
+              <span class="pwg-icon pwg-icon-camera-calendar"></span><span
+                class="pwg-button-text"
+              >{='Calendar'|translate}</span>
+            </a>{/spaceless}</li>
+        <li
+          n:foreach="$pluginIndexButtons as $button"
+          n:attr="id: $button->id"
+        >{spaceless}<a
+              href="{$button->url}"
+              title="{$button->label}"
+              class="pwg-state-default pwg-button"
+              rel="nofollow"
+            >
+              <span class="{$button->icon}"></span><span
+                class="pwg-button-text"
+              >{$button->label}</span>
+            </a>{/spaceless}</li>
+        <li n:foreach="$pluginIndexActions as $action">{spaceless}<a
+              id="{$action->id}Link"
+              title="{$action->label}"
+              class="pwg-state-default pwg-button"
+              rel="nofollow"
+            >
+              <span class="{$action->icon}"></span><span
+                class="pwg-button-text"
+              >{$action->label}</span>
+            </a>
+            <div
+              n:if="$action->panel !== []"
+              id="{$action->id}Box"
+              class="switchBox"
+            >
+              <div class="switchBoxTitle">{$action->label}</div>
+              <a
+                n:foreach="$action->panel as $link"
+                href="{$link->url|noescape}"
+                rel="nofollow"
+              >{if $link->icon !== null}<span
+                    class="{$link->icon}"
+                  ></span>{/if}{$link->label}</a>
+            </div>
+          {/spaceless}</li>
+      </ul>
+
+      <div id="breadcrumb">
+        <h2>{$title|noescape}
+          <span n:if="$nbItems > 0" class="badge nb_items">{$nbItems}</span>
+        </h2>
+
+        {$selectedTagsTemplate}
+      </div>
+
+      <div
+        n:if="isset($chronology_views)"
+        class="calendarViews"
+      >{='View'|translate}:
+        <a id="calendarViewSwitchLink" href="#">
+          {foreach $chronology_views as $view}{if $view['SELECTED']}{$view['CONTENT']}{/if}{/foreach}
+        </a>
+        <div id="calendarViewSwitchBox" class="switchBox">
+          {foreach $chronology_views as $view}<br n:if="!$iterator->first">
+            <span
+              class="{if !$view['SELECTED']}u-invisible{/if}"
+            >&#x2714; </span><a
+              href="{$view['VALUE']|noescape}"
+            >{$view['CONTENT']}</a>
+          {/foreach}
+        </div>
+      </div>
+
+      <h2
+        n:if="isset($chronology['TITLE'])"
+        class="calendarTitle"
+      >{$chronology['TITLE']|noescape}</h2>
+    </div>{* <!-- titrePage --> *}
+
+    <p
+      n:if="!empty($noSearchResults)"
+      class="search_results"
+    >{='No results for'|translate} :
+      <em><strong>
+          {foreach $noSearchResults as $res}
+            {if !$iterator->first} &mdash; {/if}
+            {$res|noescape}
+          {/foreach}
+        </strong></em>
+    </p>
+
+    <p
+      n:if="!empty($categorySearchResults)"
+      class="search_results"
+    >{='Album results for'|translate} <strong>{$QUERY_SEARCH|noescape}</strong> :
+      <em><strong>
+          {foreach $categorySearchResults as $res}
+            {if !$iterator->first} &mdash; {/if}
+            {$res|noescape}
+          {/foreach}
+        </strong></em>
+    </p>
+
+    <p
+      n:if="!empty($tagSearchResults)"
+      class="search_results"
+    >{='Tag results for'|translate} <strong>{$QUERY_SEARCH|noescape}</strong> :
+      <em><strong>
+          {foreach $tagSearchResults as $tag}
+            {if !$iterator->first} &mdash; {/if} <a
+              href="{$tag['URL']|noescape}"
+            >{$tag['name']}</a>
+          {/foreach}
+        </strong></em>
+    </p>
+
+    {if isset($FILE_CHRONOLOGY_VIEW)}
+      {include $FILE_CHRONOLOGY_VIEW}
     {/if}
-  </div>
 
-  <div n:if="!empty($contentDescription)" class="additional_info">
-    {$contentDescription|noescape}
-  </div>
-
-  {if !empty($CONTENT)}{$CONTENT|noescape}{/if}
-
-  {if !empty($CATEGORIES)}{$CATEGORIES}{/if}
-
-  {if !empty($cats_navbar)}
-    {include 'navigation_bar.latte', navbar: $cats_navbar}
-  {/if}
-
-  {if !empty($SEARCH_FILTERS)}
-    {$SEARCH_FILTERS}
-  {/if}
-
-  {if !empty($THUMBNAILS)}
-    <div class="loader"><img
-        src="{$ROOT_URL}{$themeconf['img_dir']}/ajax_loader.gif"
-      ></div>
-
-    <ul class="thumbnails" id="thumbnails">
-      {$THUMBNAILS}
-    </ul>
-  {elseif !empty($searchId)}
-    <div class="mcs-no-result">
-      <div class="text">
-        <span class="top">{='No results are available.'|translate}</span>
-        <span
-          class="bot"
-        >{='You can try to edit your filters and perform a new search.'|translate}</span>
+    <div class="action-buttons">
+      <div
+        n:if="isset($searchInSetButton) and $searchInSetButton"
+        class="mcs-side-results search-in-set-button"
+      >
+        <div>
+          <p><a
+              href="{$searchInSetUrl|noescape}"
+              class="gallery-icon-search-folder"
+              rel="nofollow"
+            >{='Search in this set'|translate}</a></p>
+        </div>
       </div>
-    </div>
-  {/if}
-  {if !empty($thumbNavbar)}
-    {include 'navigation_bar.latte', navbar: $thumbNavbar}
-  {/if}
 
-</div>{* <!-- content --> *}
+      {if isset($combinableTags)}
+        {include 'include/related_tags.inc.latte'}
+      {/if}
+    </div>
+
+    <div n:if="!empty($contentDescription)" class="additional_info">
+      {$contentDescription|noescape}
+    </div>
+
+    {if !empty($CONTENT)}{$CONTENT|noescape}{/if}
+
+    {if !empty($CATEGORIES)}{$CATEGORIES}{/if}
+
+    {if !empty($cats_navbar)}
+      {include 'navigation_bar.latte', navbar: $cats_navbar}
+    {/if}
+
+    {if !empty($SEARCH_FILTERS)}
+      {$SEARCH_FILTERS}
+    {/if}
+
+    {if !empty($THUMBNAILS)}
+      <div class="loader"><img
+          src="{$ROOT_URL}{$themeconf['img_dir']}/ajax_loader.gif"
+        ></div>
+
+      <ul class="thumbnails" id="thumbnails">
+        {$THUMBNAILS}
+      </ul>
+    {elseif !empty($searchId)}
+      <div class="mcs-no-result">
+        <div class="text">
+          <span class="top">{='No results are available.'|translate}</span>
+          <span
+            class="bot"
+          >{='You can try to edit your filters and perform a new search.'|translate}</span>
+        </div>
+      </div>
+    {/if}
+    {if !empty($thumbNavbar)}
+      {include 'navigation_bar.latte', navbar: $thumbNavbar}
+    {/if}
+  </div>{* <!-- content --> *}
 {/block}

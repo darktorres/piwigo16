@@ -49,17 +49,13 @@
 
       <div class="user-header-actions-row">
         <div class="user-header-actions-left">
-          <div
-            class="not-in-selection-mode user-header-button add-user-button"
-          >
+          <div class="not-in-selection-mode user-header-button add-user-button">
             <label class="head-button-2 icon-plus-circled">
               <p>{='Add a user'|translate}</p>
             </label>
           </div>
 
-          <div
-            class="not-in-selection-mode user-header-button"
-          >
+          <div class="not-in-selection-mode user-header-button">
             <label
               class="head-button-2 icon-user-secret edit-guest-user-button"
             >
@@ -254,9 +250,7 @@
     <!-- Pagination -->
     <div class="user-pagination">
       <div class="pagination-per-page">
-        <span
-          class="thumbnailsActionsShow"
-        >{='Display'|translate}</span>
+        <span class="thumbnailsActionsShow">{='Display'|translate}</span>
         <a id="pagination-per-page-5">5</a>
         <a id="pagination-per-page-10">10</a>
         <a id="pagination-per-page-25">25</a>
@@ -275,10 +269,7 @@
       </div>
     </div>
   </div>
-  <div
-    id="selection-mode-block"
-    class="in-selection-mode tag-selection"
-  >
+  <div id="selection-mode-block" class="in-selection-mode tag-selection">
     <div class="user-selection-content">
       <div class="selection-mode-ul">
         <p>{='Your selection'|translate}</p>
@@ -359,7 +350,10 @@
           <div id="action_group_associate" class="bulkAction">
             <div class="user-action-select-container">
               <select class="user-action-select" name="associate">
-                <option n:foreach="$associationOptions as $optKey => $optLabel" value="{$optKey}">{html_entity_decode(strval($optLabel))}</option>
+                <option
+                  n:foreach="$associationOptions as $optKey => $optLabel"
+                  value="{$optKey}"
+                >{html_entity_decode(strval($optLabel))}</option>
               </select>
             </div>
           </div>
@@ -368,7 +362,10 @@
           <div id="action_group_dissociate" class="bulkAction">
             <div class="user-action-select-container">
               <select class="user-action-select" name="dissociate">
-                <option n:foreach="$associationOptions as $optKey => $optLabel" value="{$optKey}">{html_entity_decode(strval($optLabel))}</option>
+                <option
+                  n:foreach="$associationOptions as $optKey => $optLabel"
+                  value="{$optKey}"
+                >{html_entity_decode(strval($optLabel))}</option>
               </select>
             </div>
           </div>
@@ -754,10 +751,7 @@
                 </div>
               </div>
 
-              <div
-                class="user-list-checkbox"
-                name="hd_enabled"
-              >
+              <div class="user-list-checkbox" name="hd_enabled">
                 <span class="select-checkbox">
                   <i class="icon-ok"></i>
                 </span>

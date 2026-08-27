@@ -91,10 +91,7 @@
           {='orphans to delete'|translate}
         </span>
 
-        <span
-          id="orphans_deletion_error"
-          class="errors u-hidden"
-        ></span>
+        <span id="orphans_deletion_error" class="errors u-hidden"></span>
 
         <span
           id="duplicates_options"
@@ -194,12 +191,7 @@
         </p>
       </li>
 
-      <li
-        id="filter_tags"
-        {if !isset($filter['tags'])}
-        class="u-hidden"
-        {/if}
-      >
+      <li id="filter_tags" {if !isset($filter['tags'])} class="u-hidden" {/if}>
         <input
           type="checkbox"
           name="filter_tags_use"
@@ -569,10 +561,7 @@
         <i class="icon-arrows-cw"></i> {='Refresh photo set'|translate}
       </button>
 
-      <div
-        id="errorFilter"
-        class="icon-red-error u-hidden"
-      ></div>
+      <div id="errorFilter" class="icon-red-error u-hidden"></div>
     </div>
   </div>
 </fieldset>

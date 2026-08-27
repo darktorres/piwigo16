@@ -23,29 +23,29 @@
       {='</ul></li>'|str_repeat:($ref_level - $cat['LEVEL'])|noescape}
     {/if}
     {="<li>"|noescape}
-      {if isset($cat['TITLE'])}
-        <a
-          href="{if isset($cat['url'])}{$cat['url']|noescape}{/if}"
-          title="{$cat['TITLE']}"
-          rel="nofollow"
-        >{$cat['name']}</a>
-      {else}
-        <a
-          href="{if isset($cat['url'])}{$cat['url']|noescape}{/if}"
-          rel="nofollow"
-        >{$cat['name']}</a>
-      {/if}
-      <span
-        n:if="isset($cat['count_images']) and $cat['count_images'] > 0"
-        class="badge"
-        title="{$cat['count_images']|translate_dec:'%d photo','%d photos'}"
-      >{$cat['count_images']}</span>
-      <span
-        n:if="isset($cat['count_categories']) and $cat['count_categories'] > 0"
-        class="badge badgeCategories"
-        title="{='sub-albums'|translate}"
-      >{$cat['count_categories']}</span>
-      {var $ref_level = $cat['LEVEL']}
-    {/foreach}
+    {if isset($cat['TITLE'])}
+      <a
+        href="{if isset($cat['url'])}{$cat['url']|noescape}{/if}"
+        title="{$cat['TITLE']}"
+        rel="nofollow"
+      >{$cat['name']}</a>
+    {else}
+      <a
+        href="{if isset($cat['url'])}{$cat['url']|noescape}{/if}"
+        rel="nofollow"
+      >{$cat['name']}</a>
+    {/if}
+    <span
+      n:if="isset($cat['count_images']) and $cat['count_images'] > 0"
+      class="badge"
+      title="{$cat['count_images']|translate_dec:'%d photo','%d photos'}"
+    >{$cat['count_images']}</span>
+    <span
+      n:if="isset($cat['count_categories']) and $cat['count_categories'] > 0"
+      class="badge badgeCategories"
+      title="{='sub-albums'|translate}"
+    >{$cat['count_categories']}</span>
+    {var $ref_level = $cat['LEVEL']}
+  {/foreach}
   {='</li></ul>'|str_repeat:$ref_level|noescape}
 </dd>

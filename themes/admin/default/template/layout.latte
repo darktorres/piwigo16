@@ -292,7 +292,10 @@
       id="whats_new"
     >
       <div id="whats_new_popin">
-        <a class="icon-cancel close_whats_new" onClick="hide_user_whats_new()"></a>
+        <a
+          class="icon-cancel close_whats_new"
+          onClick="hide_user_whats_new()"
+        ></a>
         <h3>{='What\'s new in version %s'|translate:$WHATS_NEW_MAJOR_VERSION}</h3>
         <div>
           <div class="whats_new_block_container">
@@ -340,6 +343,5 @@
       type="module"
       src="{$VITALS_SCRIPT_URL}"
     ></script>
-
   </body>
 </html>

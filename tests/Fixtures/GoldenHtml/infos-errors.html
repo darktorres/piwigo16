@@ -57,21 +57,21 @@
 <dd>
   <ul>
   <li>
-    <a
-        href="index.php?/category/1"
-        
-        title="3 photos in this album / 2 photos in 1 sub-album"
-      >Sample Album</a>
-    <span
-        class="menuInfoCat badge"
-        title="3 photos in this album / 2 photos in 1 sub-album"
-      >5</span>
-    <img
-        title="photos posted during the last 7 days"
-        src="themes/default/icon/recent.png"
-        class="icon"
-        alt="(!)"
-      >
+  <a
+      href="index.php?/category/1"
+      
+      title="3 photos in this album / 2 photos in 1 sub-album"
+    >Sample Album</a>
+  <span
+      class="menuInfoCat badge"
+      title="3 photos in this album / 2 photos in 1 sub-album"
+    >5</span>
+  <img
+      title="photos posted during the last 7 days"
+      src="themes/default/icon/recent.png"
+      class="icon"
+      alt="(!)"
+    >
   </li></ul>
 
   <p
@@ -95,11 +95,7 @@
   <dl id="mbMenu">
 <dt>Menu</dt>
 <dd>
-  <form
-      action="qsearch.php"
-      method="get"
-      id="quicksearch"
-    >
+  <form action="qsearch.php" method="get" id="quicksearch">
     <p
         class="quicksearch-form-p"
         
@@ -121,12 +117,12 @@
 </div><div id="menuSwitcher"></div>
 
 <div id="content" class="content contentWithMenu">
-<div class="titrePage">
-  <ul class="categoryActions"></ul>
-  <h2><a
-        href="{{BASE_PATH}}/"
-      >Home</a> / Identification</h2>
-</div>
+  <div class="titrePage">
+    <ul class="categoryActions"></ul>
+    <h2><a
+          href="{{BASE_PATH}}/"
+        >Home</a> / Identification</h2>
+  </div>
 
 <div class="errors">
   <ul>
@@ -135,90 +131,90 @@
 </div>
 
 
-<form
-    action="identification.php"
-    method="post"
-    name="login_form"
-    class="properties"
-  >
-  <fieldset>
-    <legend>Connection settings</legend>
+  <form
+      action="identification.php"
+      method="post"
+      name="login_form"
+      class="properties"
+    >
+    <fieldset>
+      <legend>Connection settings</legend>
 
-    <ul>
-      <li>
-        <span class="property">
-          <label for="username">Username</label>
-        </span>
-        <input
-            tabindex="1"
-            class="login"
-            type="text"
-            name="username"
-            id="username"
-            size="25"
-          >
-      </li>
+      <ul>
+        <li>
+          <span class="property">
+            <label for="username">Username</label>
+          </span>
+          <input
+              tabindex="1"
+              class="login"
+              type="text"
+              name="username"
+              id="username"
+              size="25"
+            >
+        </li>
 
-      <li>
-        <span class="property">
-          <label for="password">Password</label>
-        </span>
-        <input
-            tabindex="2"
-            class="login"
-            type="password"
-            name="password"
-            id="password"
-            size="25"
-          >
-      </li>
+        <li>
+          <span class="property">
+            <label for="password">Password</label>
+          </span>
+          <input
+              tabindex="2"
+              class="login"
+              type="password"
+              name="password"
+              id="password"
+              size="25"
+            >
+        </li>
 
-      <li>
-        <span class="property">
-          <label for="remember_me">Auto login</label>
-        </span>
-        <input
-            tabindex="3"
-            type="checkbox"
-            name="remember_me"
-            id="remember_me"
-            value="1"
-          >
-      </li>
-    </ul>
-  </fieldset>
+        <li>
+          <span class="property">
+            <label for="remember_me">Auto login</label>
+          </span>
+          <input
+              tabindex="3"
+              type="checkbox"
+              name="remember_me"
+              id="remember_me"
+              value="1"
+            >
+        </li>
+      </ul>
+    </fieldset>
 
-  <p>
-    <input type="hidden" name="redirect" value="">
-    <input
-        tabindex="4"
-        type="submit"
-        name="login"
-        value="Submit"
-      >
-  </p>
+    <p>
+      <input type="hidden" name="redirect" value="">
+      <input
+          tabindex="4"
+          type="submit"
+          name="login"
+          value="Submit"
+        >
+    </p>
 
-  <p>
-    <a
-        href="register.php"
-        title="Register"
-        class="pwg-state-default pwg-button"
-      >
-      <span
-          class="pwg-icon pwg-icon-register"
-        >&nbsp;</span><span>Register</span>
-    </a>
-    <a
-        href="password.php"
-        title="Forgot your password?"
-        class="pwg-state-default pwg-button"
-      >
-      <span
-          class="pwg-icon pwg-icon-lost-password"
-        >&nbsp;</span><span>Forgot your password?</span>
-    </a>
-  </p>
-</form>
+    <p>
+      <a
+          href="register.php"
+          title="Register"
+          class="pwg-state-default pwg-button"
+        >
+        <span
+            class="pwg-icon pwg-icon-register"
+          >&nbsp;</span><span>Register</span>
+      </a>
+      <a
+          href="password.php"
+          title="Forgot your password?"
+          class="pwg-state-default pwg-button"
+        >
+        <span
+            class="pwg-icon pwg-icon-lost-password"
+          >&nbsp;</span><span>Forgot your password?</span>
+      </a>
+    </p>
+  </form>
 
 </div> <!-- content -->
 
@@ -241,6 +237,5 @@
       type="module"
       src="dist/vitals.js"
     ></script>
-
   </body>
 </html>

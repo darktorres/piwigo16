@@ -1,179 +1,173 @@
 {templateType Piwigo\Controller\Projection\IdentificationView}
 {layout 'layout.latte'}
 {block content}
-<container id="mode" class="light">
-  <section id="header-options">
-    <div>
-      <i
-        class="gallery-icon-moon toggle-mode"
-        id="toggle_mode_light"
-      ></i>
-      <i
-        class="gallery-icon-sun toggle-mode"
-        id="toggle_mode_dark"
-      ></i>
-    </div>
-    <div>
-      <a href="{$helpLink}" target="_blank">{='Help'|translate}</a>
-      <div
-        n:if="isset($errors['login_page_error'])"
-        class="error_block_container"
-      >
+  <container id="mode" class="light">
+    <section id="header-options">
+      <div>
+        <i class="gallery-icon-moon toggle-mode" id="toggle_mode_light"></i>
+        <i class="gallery-icon-sun toggle-mode" id="toggle_mode_dark"></i>
+      </div>
+      <div>
+        <a href="{$helpLink}" target="_blank">{='Help'|translate}</a>
         <div
-          n:foreach="$errors['login_page_error'] as $error"
-          class="error_block"
+          n:if="isset($errors['login_page_error'])"
+          class="error_block_container"
         >
-          <i class="gallery-icon-cancel"></i>
-          <p>{$error}</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section n:if="'none' != $STD_PGS_SELECTED_LOGO" id="logo-section">
-    {if 'piwigo_logo' == $STD_PGS_SELECTED_LOGO}
-      <img
-        id="piwigo-logo"
-        src="{$ROOT_URL}themes/standard_pages/images/piwigo_logo.svg"
-        data-logo-light="{$ROOT_URL}themes/standard_pages/images/piwigo_logo.svg"
-        data-logo-dark="{$ROOT_URL}themes/standard_pages/images/piwigo_logo_dark.svg"
-      >
-    {elseif 'custom_logo' == $STD_PGS_SELECTED_LOGO}
-      <img id="custom-logo" src="{$ROOT_URL}logo.php">
-    {elseif 'gallery_title'}
-      <h1>{$GALLERY_TITLE}</h1>
-    {/if}
-  </section>
-
-  <section id="login-form">
-    <div class="">
-      <h1 class="">
-        {='Login'|translate}
-      </h1>
-
-      <form
-        class="properties"
-        action="{$loginAction}"
-        method="post"
-        name="login_form"
-      >
-        <div class="column-flex">
-          <label for="username">{='Username'|translate}</label>
-          <div class="row-flex input-container">
-            <i class="gallery-icon-user"></i>
-            <input
-              type="text"
-              class=""
-              type="text"
-              name="username"
-              id="username"
-              size="25"
-              autofocus
-              data-required="true"
-            >
-          </div>
-          <p class="error-message"><i
-              class="gallery-icon-attention-circled"
-            ></i> {='must not be empty'|translate}</p>
-        </div>
-
-        <div class="column-flex">
-          <label for="password">{='Password'|translate}</label>
-          <div class="row-flex input-container">
-            <i class="gallery-icon-lock"></i>
-            <input
-              type="password"
-              class=""
-              name="password"
-              id="password"
-              size="25"
-            >
-            <i class="gallery-icon-eye togglePassword"></i>
-          </div>
-          <p class="error-message"><i
-              class="gallery-icon-attention-circled"
-            ></i> {='must not be empty'|translate}</p>
-        </div>
-
-        <div n:if="$authorizeRemembering" class="column-flex">
-          <div class="row-flex remember-me-container">
-            <label for="remember_me">
-              <input
-                tabindex="3"
-                type="checkbox"
-                name="remember_me"
-                id="remember_me"
-                value="1"
-              >
-              <span class="gallery-icon-checkmark"></span>
-              {='Auto login'|translate}</label>
-          </div>
-        </div>
-
-        <div class="column-flex">
-          <input type="hidden" name="redirect" value="{$redirect|urlencode}">
-          <input
-            tabindex="4"
-            type="submit"
-            name="login"
-            value="{='Login'|translate}"
-            class="btn btn-main "
+          <div
+            n:foreach="$errors['login_page_error'] as $error"
+            class="error_block"
           >
-          <p
-            n:if="isset($errors['login_form_error'])"
-            class="error-message error-message-visible"
-          ><i
-              class="gallery-icon-attention-circled"
-            ></i> {$errors['login_form_error']}</p>
+            <i class="gallery-icon-cancel"></i>
+            <p>{$error}</p>
+          </div>
         </div>
-      </form>
-
-      <div n:if="$pluginAuthButtons !== []" class="auth-buttons">
-        <p>{='Or sign in with'|translate}</p>
-        <a
-          n:foreach="$pluginAuthButtons as $button"
-          href="#"
-          data-provider="{$button->providerId}"
-          title="{$button->label}"
-          class="btn btn-main btn-secondary"
-        >{$button->label}</a>
       </div>
+    </section>
 
-      <div class="secondary-links">
-        {if isset($register)}
-          <p>{='Don\'t have an account yet ?'|translate} <a
-              href="register.php"
-              title="{='Register'|translate}"
-            >{='Create an account'|translate}</a></p>
-          <span id="separator"></span>
-        {/if}
-        <a
-          href="password.php"
-          title="{='Forgot your password?'|translate}"
-        >{='Forgot your password?'|translate}</a>
+    <section n:if="'none' != $STD_PGS_SELECTED_LOGO" id="logo-section">
+      {if 'piwigo_logo' == $STD_PGS_SELECTED_LOGO}
+        <img
+          id="piwigo-logo"
+          src="{$ROOT_URL}themes/standard_pages/images/piwigo_logo.svg"
+          data-logo-light="{$ROOT_URL}themes/standard_pages/images/piwigo_logo.svg"
+          data-logo-dark="{$ROOT_URL}themes/standard_pages/images/piwigo_logo_dark.svg"
+        >
+      {elseif 'custom_logo' == $STD_PGS_SELECTED_LOGO}
+        <img id="custom-logo" src="{$ROOT_URL}logo.php">
+      {elseif 'gallery_title'}
+        <h1>{$GALLERY_TITLE}</h1>
+      {/if}
+    </section>
+
+    <section id="login-form">
+      <div class="">
+        <h1 class="">
+          {='Login'|translate}
+        </h1>
+
+        <form
+          class="properties"
+          action="{$loginAction}"
+          method="post"
+          name="login_form"
+        >
+          <div class="column-flex">
+            <label for="username">{='Username'|translate}</label>
+            <div class="row-flex input-container">
+              <i class="gallery-icon-user"></i>
+              <input
+                type="text"
+                class=""
+                type="text"
+                name="username"
+                id="username"
+                size="25"
+                autofocus
+                data-required="true"
+              >
+            </div>
+            <p class="error-message"><i
+                class="gallery-icon-attention-circled"
+              ></i> {='must not be empty'|translate}</p>
+          </div>
+
+          <div class="column-flex">
+            <label for="password">{='Password'|translate}</label>
+            <div class="row-flex input-container">
+              <i class="gallery-icon-lock"></i>
+              <input
+                type="password"
+                class=""
+                name="password"
+                id="password"
+                size="25"
+              >
+              <i class="gallery-icon-eye togglePassword"></i>
+            </div>
+            <p class="error-message"><i
+                class="gallery-icon-attention-circled"
+              ></i> {='must not be empty'|translate}</p>
+          </div>
+
+          <div n:if="$authorizeRemembering" class="column-flex">
+            <div class="row-flex remember-me-container">
+              <label for="remember_me">
+                <input
+                  tabindex="3"
+                  type="checkbox"
+                  name="remember_me"
+                  id="remember_me"
+                  value="1"
+                >
+                <span class="gallery-icon-checkmark"></span>
+                {='Auto login'|translate}</label>
+            </div>
+          </div>
+
+          <div class="column-flex">
+            <input type="hidden" name="redirect" value="{$redirect|urlencode}">
+            <input
+              tabindex="4"
+              type="submit"
+              name="login"
+              value="{='Login'|translate}"
+              class="btn btn-main "
+            >
+            <p
+              n:if="isset($errors['login_form_error'])"
+              class="error-message error-message-visible"
+            ><i
+                class="gallery-icon-attention-circled"
+              ></i> {$errors['login_form_error']}</p>
+          </div>
+        </form>
+
+        <div n:if="$pluginAuthButtons !== []" class="auth-buttons">
+          <p>{='Or sign in with'|translate}</p>
+          <a
+            n:foreach="$pluginAuthButtons as $button"
+            href="#"
+            data-provider="{$button->providerId}"
+            title="{$button->label}"
+            class="btn btn-main btn-secondary"
+          >{$button->label}</a>
+        </div>
+
+        <div class="secondary-links">
+          {if isset($register)}
+            <p>{='Don\'t have an account yet ?'|translate} <a
+                href="register.php"
+                title="{='Register'|translate}"
+              >{='Create an account'|translate}</a></p>
+            <span id="separator"></span>
+          {/if}
+          <a
+            href="password.php"
+            title="{='Forgot your password?'|translate}"
+          >{='Forgot your password?'|translate}</a>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <a href="index.php" id="return-to-gallery"><i
-      class="gallery-icon-left"
-    ></i> {='Return to the gallery'|translate}</a>
+    <a href="index.php" id="return-to-gallery"><i
+        class="gallery-icon-left"
+      ></i> {='Return to the gallery'|translate}</a>
 
-  <section n:if="count($languageOptions) > 1" id="language-switch">
-    <div id="lang-select">
-      <span id="other-languages">
-        <span
-          n:foreach="$languageOptions as $code => $lang"
-          id="lang={$code}"
-          data-lang-code="{$code}"
-        >{$lang}</span>
-      </span>
-      <div id="selected-language-container">
-        <i class="gallery-icon-left-chevron"></i><span
-          id="selected-language"
-        >{$languageOptions[$currentLanguage]}</span>
+    <section n:if="count($languageOptions) > 1" id="language-switch">
+      <div id="lang-select">
+        <span id="other-languages">
+          <span
+            n:foreach="$languageOptions as $code => $lang"
+            id="lang={$code}"
+            data-lang-code="{$code}"
+          >{$lang}</span>
+        </span>
+        <div id="selected-language-container">
+          <i class="gallery-icon-left-chevron"></i><span
+            id="selected-language"
+          >{$languageOptions[$currentLanguage]}</span>
+        </div>
       </div>
-    </div>
-  </section>
-</container>
+    </section>
+  </container>
 {/block}

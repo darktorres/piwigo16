@@ -59,21 +59,21 @@
 <dd>
   <ul>
   <li>
-    <a
-        href="index.php?/category/1"
-        
-        title="3 photos in this album / 2 photos in 1 sub-album"
-      >Sample Album</a>
-    <span
-        class="menuInfoCat badge"
-        title="3 photos in this album / 2 photos in 1 sub-album"
-      >5</span>
-    <img
-        title="photos posted during the last 7 days"
-        src="themes/default/icon/recent.png"
-        class="icon"
-        alt="(!)"
-      >
+  <a
+      href="index.php?/category/1"
+      
+      title="3 photos in this album / 2 photos in 1 sub-album"
+    >Sample Album</a>
+  <span
+      class="menuInfoCat badge"
+      title="3 photos in this album / 2 photos in 1 sub-album"
+    >5</span>
+  <img
+      title="photos posted during the last 7 days"
+      src="themes/default/icon/recent.png"
+      class="icon"
+      alt="(!)"
+    >
   </li></ul>
 
   <p
@@ -97,11 +97,7 @@
   <dl id="mbMenu">
 <dt>Menu</dt>
 <dd>
-  <form
-      action="qsearch.php"
-      method="get"
-      id="quicksearch"
-    >
+  <form action="qsearch.php" method="get" id="quicksearch">
     <p
         class="quicksearch-form-p"
         
@@ -128,146 +124,146 @@
 </div><div id="menuSwitcher"></div>
 
 <div id="content" class="content contentWithMenu">
-<div class="titrePage">
-  <ul class="categoryActions"></ul>
-  <h2><a
-        href="{{BASE_PATH}}/"
-      >Home</a> / User comments</h2>
-</div>
+  <div class="titrePage">
+    <ul class="categoryActions"></ul>
+    <h2><a
+          href="{{BASE_PATH}}/"
+        >Home</a> / User comments</h2>
+  </div>
 
 
 
-<form class="filter" action="comments.php" method="get">
-  <fieldset>
-    <legend><span
-          class="icon-filter icon-green"
-        ></span>Filter</legend>
+  <form class="filter" action="comments.php" method="get">
+    <fieldset>
+      <legend><span
+            class="icon-filter icon-green"
+          ></span>Filter</legend>
 
-    <ul>
-      <li>
-        <label>Keyword</label>
-      </li>
-      <li>
-        <input type="text" name="keyword" value="">
-      </li>
-    </ul>
+      <ul>
+        <li>
+          <label>Keyword</label>
+        </li>
+        <li>
+          <input type="text" name="keyword" value="">
+        </li>
+      </ul>
 
-    <ul>
-      <li>
-        <label>Author</label>
-      </li>
-      <li>
-        <input type="text" name="author" value="">
-      </li>
-    </ul>
+      <ul>
+        <li>
+          <label>Author</label>
+        </li>
+        <li>
+          <input type="text" name="author" value="">
+        </li>
+      </ul>
 
-    <ul>
-      <li>
-        <label>Album</label>
-      </li>
-      <li>
-        <select name="cat">
-          <option value="0">------------</option>
-          <option
-              value="1"
-            >Sample Album</option>
-          <option
-              value="2"
-            >Sample Album / Nested Sub Album</option>
-        </select>
-      </li>
-    </ul>
+      <ul>
+        <li>
+          <label>Album</label>
+        </li>
+        <li>
+          <select name="cat">
+            <option value="0">------------</option>
+            <option
+                value="1"
+              >Sample Album</option>
+            <option
+                value="2"
+              >Sample Album / Nested Sub Album</option>
+          </select>
+        </li>
+      </ul>
 
-    <ul>
-      <li>
-        <label>Since</label>
-      </li>
-      <li>
-        <select name="since">
-          <option
-              value="1"
-            >today</option>
-          <option
-              value="2"
-            >last 7 days</option>
-          <option
-              value="3"
-            >last 30 days</option>
-          <option
-              value="4" selected
-            >the beginning</option>
-        </select>
-      </li>
-    </ul>
-  </fieldset>
+      <ul>
+        <li>
+          <label>Since</label>
+        </li>
+        <li>
+          <select name="since">
+            <option
+                value="1"
+              >today</option>
+            <option
+                value="2"
+              >last 7 days</option>
+            <option
+                value="3"
+              >last 30 days</option>
+            <option
+                value="4" selected
+              >the beginning</option>
+          </select>
+        </li>
+      </ul>
+    </fieldset>
 
-  <fieldset>
-    <legend>Display</legend>
+    <fieldset>
+      <legend>Display</legend>
 
-    <ul>
-      <li>
-        <label>Sort by</label>
-      </li>
-      <li>
-        <select name="sort_by">
-          <option
-              value="date" selected
-            >comment date</option>
-          <option
-              value="image_id"
-            >photo</option>
-        </select>
-      </li>
-    </ul>
+      <ul>
+        <li>
+          <label>Sort by</label>
+        </li>
+        <li>
+          <select name="sort_by">
+            <option
+                value="date" selected
+              >comment date</option>
+            <option
+                value="image_id"
+              >photo</option>
+          </select>
+        </li>
+      </ul>
 
-    <ul>
-      <li>
-        <label>Sort order</label>
-      </li>
-      <li>
-        <select name="sort_order">
-          <option
-              value="DESC" selected
-            >descending</option>
-          <option
-              value="ASC"
-            >ascending</option>
-        </select>
-      </li>
-    </ul>
+      <ul>
+        <li>
+          <label>Sort order</label>
+        </li>
+        <li>
+          <select name="sort_order">
+            <option
+                value="DESC" selected
+              >descending</option>
+            <option
+                value="ASC"
+              >ascending</option>
+          </select>
+        </li>
+      </ul>
 
-    <ul>
-      <li>
-        <label>Number of items</label>
-      </li>
-      <li>
-        <select name="items_number">
-          <option
-              value="5"
-            >5</option>
-          <option
-              value="10" selected
-            >10</option>
-          <option
-              value="20"
-            >20</option>
-          <option
-              value="50"
-            >50</option>
-          <option
-              value="all"
-            >all</option>
-        </select>
-      </li>
-    </ul>
-  </fieldset>
+      <ul>
+        <li>
+          <label>Number of items</label>
+        </li>
+        <li>
+          <select name="items_number">
+            <option
+                value="5"
+              >5</option>
+            <option
+                value="10" selected
+              >10</option>
+            <option
+                value="20"
+              >20</option>
+            <option
+                value="50"
+              >50</option>
+            <option
+                value="all"
+              >all</option>
+          </select>
+        </li>
+      </ul>
+    </fieldset>
 
-  <p><input type="submit" value="Filter and display"></p>
-</form>
+    <p><input type="submit" value="Filter and display"></p>
+  </form>
 
 
-<div id="comments">
-  <div class="loader"><img
+  <div id="comments">
+    <div class="loader"><img
       src="themes/default/images/ajax_loader.gif"
     ></div>
 <ul
@@ -360,7 +356,7 @@
   </li>
 </ul>
 
-</div>
+  </div>
 </div> <!-- content -->
 
       <div id="copyright">
@@ -379,6 +375,5 @@
       type="module"
       src="dist/vitals.js"
     ></script>
-
   </body>
 </html>

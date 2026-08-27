@@ -1,32 +1,32 @@
 {templateType Piwigo\Controller\Projection\NotificationView}
 {layout 'layout.latte'}
 {block content}
-{if isset($MENUBAR)}{$MENUBAR}{/if}
-<div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
-  <div class="titrePage">
-    <ul class="categoryActions"></ul>
-    <h2><a
-        href="{$U_HOME|noescape}"
-      >{='Home'|translate}</a>{$LEVEL_SEPARATOR|noescape}{='Notification'|translate}</h2>
+  {if isset($MENUBAR)}{$MENUBAR}{/if}
+  <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
+    <div class="titrePage">
+      <ul class="categoryActions"></ul>
+      <h2><a
+          href="{$U_HOME|noescape}"
+        >{='Home'|translate}</a>{$LEVEL_SEPARATOR|noescape}{='Notification'|translate}</h2>
+    </div>
+
+    {include 'infos_errors.latte'}
+
+    <div class="notification">
+      <p>{='The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader.'|translate}</p>
+
+      <dl>
+        <dt>
+          <a
+            href="{$feedImageOnlyUrl|noescape}"
+          >{='Photos only RSS feed'|translate}</a><br><br>
+        </dt>
+        <dt>
+          <a
+            href="{$feedUrl|noescape}"
+          >{='Complete RSS feed (photos, comments)'|translate}</a>
+        </dt>
+      </dl>
+    </div>
   </div>
-
-  {include 'infos_errors.latte'}
-
-  <div class="notification">
-    <p>{='The RSS notification feed provides notification on news from this website : new photos, updated albums, new comments. Use a RSS feed reader.'|translate}</p>
-
-    <dl>
-      <dt>
-        <a
-          href="{$feedImageOnlyUrl|noescape}"
-        >{='Photos only RSS feed'|translate}</a><br><br>
-      </dt>
-      <dt>
-        <a
-          href="{$feedUrl|noescape}"
-        >{='Complete RSS feed (photos, comments)'|translate}</a>
-      </dt>
-    </dl>
-  </div>
-</div>
 {/block}

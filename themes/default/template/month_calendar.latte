@@ -1,10 +1,7 @@
 {templateType Piwigo\Calendar\Projection\MonthCalendarView}
 {if !empty($chronology_navigation_bars)}
   <div n:foreach="$chronology_navigation_bars as $bar" class="calendarBar">
-    <div
-      n:if="isset($bar['previous'])"
-      class="calendar-nav-prev"
-    >&laquo; <a
+    <div n:if="isset($bar['previous'])" class="calendar-nav-prev">&laquo; <a
         href="{$bar['previous']['URL']|noescape}"
       >{$bar['previous']['LABEL']}</a></div>
     <div n:if="isset($bar['next'])" class="calendar-nav-next"><a
@@ -82,9 +79,9 @@
               </a>
             </div>
           </td>
-          {else}
+        {else}
           <td class="calDayCellEmpty">{$day['DAY']}</td>
-          {/if}
+        {/if}
       {else}{*blank cell first or last row only*}
         <td></td>{/if}
     {/foreach}{*day in week*}

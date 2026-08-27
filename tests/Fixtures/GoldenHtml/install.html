@@ -61,10 +61,7 @@
                     class="table2-label-col"
                   >Default gallery language</td>
                 <td>
-                  <select
-                      name="language"
-                      id="language"
-                    >
+                  <select name="language" id="language">
                     <option
                         value="af_ZA"
                       >Afrikaans (Suid-Afrika)</option>
@@ -286,9 +283,9 @@
 
             <table class="table2">
               <tr>
-                <td
-                    class="table2-label-col fieldname"
-                  ><label for="dbdriver">Database type</label></td>
+                <td class="table2-label-col fieldname"><label
+                      for="dbdriver"
+                    >Database type</label></td>
                 <td>
                   <select
                       name="dbdriver"
@@ -312,9 +309,9 @@
                   >MySQL/MariaDB or PostgreSQL, matching what your host provider gave you</td>
               </tr>
               <tr>
-                <td
-                    class="table2-label-col fieldname"
-                  ><label for="dbhost">Host</label></td>
+                <td class="table2-label-col fieldname"><label
+                      for="dbhost"
+                    >Host</label></td>
                 <td><input
                       type="text"
                       name="dbhost"
@@ -327,7 +324,9 @@
                   >localhost or other, supplied by your host provider</td>
               </tr>
               <tr>
-                <td class="fieldname"><label for="dbport">Port</label></td>
+                <td class="fieldname"><label
+                      for="dbport"
+                    >Port</label></td>
                 <td><input
                       type="number"
                       name="dbport"
@@ -341,7 +340,9 @@
                   >leave empty to use the default port for your chosen database type</td>
               </tr>
               <tr>
-                <td class="fieldname"><label for="dbuser">User</label></td>
+                <td class="fieldname"><label
+                      for="dbuser"
+                    >User</label></td>
                 <td><input
                       type="text"
                       name="dbuser"
@@ -354,7 +355,9 @@
                   >user login supplied by your host provider</td>
               </tr>
               <tr>
-                <td class="fieldname"><label for="dbpasswd">Password</label></td>
+                <td class="fieldname"><label
+                      for="dbpasswd"
+                    >Password</label></td>
                 <td><input
                       type="password"
                       name="dbpasswd"
@@ -366,7 +369,9 @@
                   >user password supplied by your host provider</td>
               </tr>
               <tr>
-                <td class="fieldname"><label for="dbname">Database name</label></td>
+                <td class="fieldname"><label
+                      for="dbname"
+                    >Database name</label></td>
                 <td><input
                       type="text"
                       name="dbname"
@@ -396,7 +401,11 @@
                       >
                     I understand, overwrite the existing installation
                   </label>
-                  <input type="hidden" name="overwrite_token" id="overwrite_token">
+                  <input
+                      type="hidden"
+                      name="overwrite_token"
+                      id="overwrite_token"
+                    >
                 </td>
               </tr>
             </table>
@@ -406,9 +415,9 @@
 
             <table class="table2">
               <tr>
-                <td
-                    class="table2-label-col fieldname"
-                  ><label for="admin_name">Username</label></td>
+                <td class="table2-label-col fieldname"><label
+                      for="admin_name"
+                    >Username</label></td>
                 <td>
                   <input
                       type="text"
@@ -424,7 +433,9 @@
                   >It will be shown to visitors. It is necessary for website administration</td>
               </tr>
               <tr>
-                <td class="fieldname"><label for="admin_pass1">Password</label></td>
+                <td class="fieldname"><label
+                      for="admin_pass1"
+                    >Password</label></td>
                 <td><input
                       type="password"
                       name="admin_pass1"
@@ -437,7 +448,9 @@
                   >Keep it confidential, it enables you to access the administration panel</td>
               </tr>
               <tr>
-                <td class="fieldname"><label for="admin_pass2">Password [confirm]</label></td>
+                <td class="fieldname"><label
+                      for="admin_pass2"
+                    >Password [confirm]</label></td>
                 <td>
                   <input
                       type="password"
@@ -451,7 +464,9 @@
                 <td class="fielddesc">verification</td>
               </tr>
               <tr>
-                <td class="fieldname"><label for="admin_mail">Email address</label></td>
+                <td class="fieldname"><label
+                      for="admin_mail"
+                    >Email address</label></td>
                 <td>
                   <input
                       type="text"
@@ -468,28 +483,28 @@
               </tr>
               <tr>
                 <td>Options</td>
-                  <td colspan="2">
-                    <label>
-                      <input
-                          type="checkbox"
-                          name="newsletter_subscribe"
-                          
-                        >
-                      <span
-                          class="cluetip"
-                          title="Piwigo Announcement Newsletter|Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will be sent emails when a new release is available (sometimes including a security bug fix, it is important to know and upgrade) and when major events happen to the project. Only a few emails a year."
-                        >Subscribe <span class="adminEmail"></span> to Piwigo Announcements Newsletter</span>
-                    </label>
-                    <br>
-                    <label>
-                      <input
-                          type="checkbox"
-                          name="send_credentials_by_mail"
-                        >
-                      Send my connection settings by email
-                    </label>
-                  </td>
-                </tr>
+                <td colspan="2">
+                  <label>
+                    <input
+                        type="checkbox"
+                        name="newsletter_subscribe"
+                        
+                      >
+                    <span
+                        class="cluetip"
+                        title="Piwigo Announcement Newsletter|Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will be sent emails when a new release is available (sometimes including a security bug fix, it is important to know and upgrade) and when major events happen to the project. Only a few emails a year."
+                      >Subscribe <span class="adminEmail"></span> to Piwigo Announcements Newsletter</span>
+                  </label>
+                  <br>
+                  <label>
+                    <input
+                        type="checkbox"
+                        name="send_credentials_by_mail"
+                      >
+                    Send my connection settings by email
+                  </label>
+                </td>
+              </tr>
             </table>
           </fieldset>
 

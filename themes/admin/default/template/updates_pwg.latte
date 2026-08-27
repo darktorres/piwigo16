@@ -195,7 +195,7 @@
               href="{$dockerUpdateGuideUrl}"
               target="_blank"
             > {='Follow the update guide'|translate}</a></p>
-          {else}
+        {else}
           <p><input
               type="submit"
               name="submit"
@@ -204,7 +204,7 @@
               disabled="disabled"
               {/if}
             ></p>
-          {/if}
+        {/if}
         <span
           n:if="isset($majorReleasePhpRequired)"
           class="errors icon-block"

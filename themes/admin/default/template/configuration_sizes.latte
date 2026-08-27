@@ -259,9 +259,7 @@
         {/foreach}
       </table>
 
-      <p
-        class="sizeDetails{if isset($ferrors)} u-block{/if}"
-      >
+      <p class="sizeDetails{if isset($ferrors)} u-block{/if}">
         {='Image Quality'|translate}
         <input
           type="text"
@@ -279,9 +277,7 @@
           title="{$ferrors['resize_quality']}"
         >!</span>
       </p>
-      <p
-        class="sizeDetails{if isset($ferrors)} u-block{/if}"
-      >
+      <p class="sizeDetails{if isset($ferrors)} u-block{/if}">
         <a
           href="{$fAction|noescape}&action=restore_settings&pwg_token={$csrfToken}"
           class="restore-settings-button"

@@ -1,221 +1,224 @@
 {templateType Piwigo\Controller\Projection\RegisterView}
 {layout 'layout.latte'}
 {block content}
-<container id="mode" class="light">
-  <section id="header-options">
-    <div>
-      <i
-        class="gallery-icon-moon toggle-mode"
-        id="toggle_mode_light"
-      ></i>
-      <i
-        class="gallery-icon-sun toggle-mode"
-        id="toggle_mode_dark"
-      ></i>
-    </div>
-    <div>
-      <a href="{$helpLink}" target="_blank">{='Help'|translate}</a>
-      <div
-        n:if="isset($errors['register_page_error'])"
-        class="error_block_container"
-      >
+  <container id="mode" class="light">
+    <section id="header-options">
+      <div>
+        <i class="gallery-icon-moon toggle-mode" id="toggle_mode_light"></i>
+        <i class="gallery-icon-sun toggle-mode" id="toggle_mode_dark"></i>
+      </div>
+      <div>
+        <a href="{$helpLink}" target="_blank">{='Help'|translate}</a>
         <div
-          n:foreach="$errors['register_page_error'] as $error"
-          class="error_block"
+          n:if="isset($errors['register_page_error'])"
+          class="error_block_container"
         >
-          <i class="gallery-icon-cancel"></i>
-          <p>{$error}</p>
+          <div
+            n:foreach="$errors['register_page_error'] as $error"
+            class="error_block"
+          >
+            <i class="gallery-icon-cancel"></i>
+            <p>{$error}</p>
+          </div>
         </div>
       </div>
-    </div>
     </section>
 
-  <section n:if="'none' != $STD_PGS_SELECTED_LOGO" id="logo-section">
-    {if 'piwigo_logo' == $STD_PGS_SELECTED_LOGO}
-      <img
-        id="piwigo-logo"
-        src="{$ROOT_URL}themes/standard_pages/images/piwigo_logo.svg"
-        data-logo-light="{$ROOT_URL}themes/standard_pages/images/piwigo_logo.svg"
-        data-logo-dark="{$ROOT_URL}themes/standard_pages/images/piwigo_logo_dark.svg"
-      >
-    {elseif 'custom_logo' == $STD_PGS_SELECTED_LOGO}
-      <img id="custom-logo" src="{$ROOT_URL}logo.php">
-    {elseif 'gallery_title'}
-      <h1>{$GALLERY_TITLE}</h1>
-    {/if}
-  </section>
+    <section n:if="'none' != $STD_PGS_SELECTED_LOGO" id="logo-section">
+      {if 'piwigo_logo' == $STD_PGS_SELECTED_LOGO}
+        <img
+          id="piwigo-logo"
+          src="{$ROOT_URL}themes/standard_pages/images/piwigo_logo.svg"
+          data-logo-light="{$ROOT_URL}themes/standard_pages/images/piwigo_logo.svg"
+          data-logo-dark="{$ROOT_URL}themes/standard_pages/images/piwigo_logo_dark.svg"
+        >
+      {elseif 'custom_logo' == $STD_PGS_SELECTED_LOGO}
+        <img id="custom-logo" src="{$ROOT_URL}logo.php">
+      {elseif 'gallery_title'}
+        <h1>{$GALLERY_TITLE}</h1>
+      {/if}
+    </section>
 
-  <section id="register-form">
-    <div class="">
-      <h1 class="">
-        {='Create an account'|translate}
-      </h1>
+    <section id="register-form">
+      <div class="">
+        <h1 class="">
+          {='Create an account'|translate}
+        </h1>
 
-      <form
-        class="properties"
-        method="post"
-        action="{$formAction}"
-        name="register_form"
-        autocomplete="off"
-      >
-        <div class="column-flex">
-          <label
-            for="mail_address"
-          >{='Email address'|translate}{if !$obligatoryUserMailAddress} ({='useful when password forgotten'|translate}){/if}</label>
-          <div class="row-flex input-container">
-            <i class="gallery-icon-user-2"></i>
-            <input
-              type="email"
-              name="mail_address"
-              id="mail_address"
-              value="{$formEmail}"
-              {if $obligatoryUserMailAddress}
-              data-required="true"
-              {/if}
-            >
-          </div>
-          <p class="error-message"><i
-              class="gallery-icon-attention-circled"
-            ></i> {='must not be empty'|translate}</p>
-        </div>
-
-        <div class="column-flex">
-          <label for="username">{='Username'|translate}</label>
-          <div class="row-flex input-container">
-            <i class="gallery-icon-user-2"></i>
-            <input
-              type="text"
-              name="login"
-              id="login"
-              value="{$formLogin}"
-              data-required="true"
-            >
-          </div>
-          <p class="error-message"><i
-              class="gallery-icon-attention-circled"
-            ></i> {='must not be empty'|translate}</p>
-        </div>
-
-        <div class="column-flex">
-          <label for="password">{='Password'|translate}</label>
-          <div class="row-flex input-container">
-            <i class="gallery-icon-lock"></i>
-            <input
-              type="password"
-              class=""
-              name="password"
-              id="password"
-              size="25"
-              data-required="true"
-            >
-            <i class="gallery-icon-eye togglePassword"></i>
-          </div>
-          <p class="error-message"><i
-              class="gallery-icon-attention-circled"
-            ></i> {='must not be empty'|translate}</p>
-        </div>
-
-        <div class="column-flex">
-          <label for="password">{='Confirm Password'|translate}</label>
-          <div class="row-flex input-container">
-            <i class="gallery-icon-lock"></i>
-            <input
-              type="password"
-              class=""
-              name="password_conf"
-              id="password_conf"
-              size="25"
-              data-required="true"
-            >
-            <i class="gallery-icon-eye togglePassword"></i>
-          </div>
-          <p class="error-message"><i
-              class="gallery-icon-attention-circled"
-            ></i> {='must not be empty'|translate}</p>
-        </div>
-
-        <div n:foreach="$pluginRegisterFields as $field" class="column-flex">
-          <label n:if="$field->type !== \Piwigo\Contribution\FieldType::Checkbox" for="{$field->name}">{$field->label}</label>
-          <div n:if="$field->type !== \Piwigo\Contribution\FieldType::Checkbox" class="row-flex input-container">
-            <input
-              type="text"
-              name="{$field->name}"
-              id="{$field->name}"
-              value="{$field->value}"
-            >
-          </div>
-          <div n:if="$field->type === \Piwigo\Contribution\FieldType::Checkbox" class="row-flex option">
-            <label class="switch">
+        <form
+          class="properties"
+          method="post"
+          action="{$formAction}"
+          name="register_form"
+          autocomplete="off"
+        >
+          <div class="column-flex">
+            <label
+              for="mail_address"
+            >{='Email address'|translate}{if !$obligatoryUserMailAddress} ({='useful when password forgotten'|translate}){/if}</label>
+            <div class="row-flex input-container">
+              <i class="gallery-icon-user-2"></i>
               <input
-                type="checkbox"
+                type="email"
+                name="mail_address"
+                id="mail_address"
+                value="{$formEmail}"
+                {if $obligatoryUserMailAddress}
+                data-required="true"
+                {/if}
+              >
+            </div>
+            <p class="error-message"><i
+                class="gallery-icon-attention-circled"
+              ></i> {='must not be empty'|translate}</p>
+          </div>
+
+          <div class="column-flex">
+            <label for="username">{='Username'|translate}</label>
+            <div class="row-flex input-container">
+              <i class="gallery-icon-user-2"></i>
+              <input
+                type="text"
+                name="login"
+                id="login"
+                value="{$formLogin}"
+                data-required="true"
+              >
+            </div>
+            <p class="error-message"><i
+                class="gallery-icon-attention-circled"
+              ></i> {='must not be empty'|translate}</p>
+          </div>
+
+          <div class="column-flex">
+            <label for="password">{='Password'|translate}</label>
+            <div class="row-flex input-container">
+              <i class="gallery-icon-lock"></i>
+              <input
+                type="password"
+                class=""
+                name="password"
+                id="password"
+                size="25"
+                data-required="true"
+              >
+              <i class="gallery-icon-eye togglePassword"></i>
+            </div>
+            <p class="error-message"><i
+                class="gallery-icon-attention-circled"
+              ></i> {='must not be empty'|translate}</p>
+          </div>
+
+          <div class="column-flex">
+            <label for="password">{='Confirm Password'|translate}</label>
+            <div class="row-flex input-container">
+              <i class="gallery-icon-lock"></i>
+              <input
+                type="password"
+                class=""
+                name="password_conf"
+                id="password_conf"
+                size="25"
+                data-required="true"
+              >
+              <i class="gallery-icon-eye togglePassword"></i>
+            </div>
+            <p class="error-message"><i
+                class="gallery-icon-attention-circled"
+              ></i> {='must not be empty'|translate}</p>
+          </div>
+
+          <div n:foreach="$pluginRegisterFields as $field" class="column-flex">
+            <label
+              n:if="$field->type !== \Piwigo\Contribution\FieldType::Checkbox"
+              for="{$field->name}"
+            >{$field->label}</label>
+            <div
+              n:if="$field->type !== \Piwigo\Contribution\FieldType::Checkbox"
+              class="row-flex input-container"
+            >
+              <input
+                type="text"
                 name="{$field->name}"
                 id="{$field->name}"
-                value="1"
-                n:attr="checked: $field->value !== '' ? 'checked' : null"
+                value="{$field->value}"
               >
-              <span class="slider round"></span>
-            </label>
-            <p>{$field->label}</p>
+            </div>
+            <div
+              n:if="$field->type === \Piwigo\Contribution\FieldType::Checkbox"
+              class="row-flex option"
+            >
+              <label class="switch">
+                <input
+                  type="checkbox"
+                  name="{$field->name}"
+                  id="{$field->name}"
+                  value="1"
+                  n:attr="checked: $field->value !== '' ? 'checked' : null"
+                >
+                <span class="slider round"></span>
+              </label>
+              <p>{$field->label}</p>
+            </div>
           </div>
+
+          <div class="column-flex">
+            <input type="hidden" name="key" value="{$formKey}">
+            <input
+              tabindex="4"
+              type="submit"
+              name="submit"
+              value="{='Register'|translate}"
+              class="btn btn-main "
+            >
+            <p
+              n:if="isset($errors['register_form_error'])"
+              class="error-message error-message-visible"
+            ><i
+                class="gallery-icon-attention-circled"
+              ></i> {$errors['register_form_error']}</p>
+          </div>
+        </form>
+
+        <div n:if="$pluginAuthButtons !== []" class="auth-buttons">
+          <p>{='Or sign in with'|translate}</p>
+          <a
+            n:foreach="$pluginAuthButtons as $button"
+            href="#"
+            data-provider="{$button->providerId}"
+            title="{$button->label}"
+            class="btn btn-main btn-secondary"
+          >{$button->label}</a>
         </div>
 
-        <div class="column-flex">
-          <input type="hidden" name="key" value="{$formKey}">
-          <input
-            tabindex="4"
-            type="submit"
-            name="submit"
-            value="{='Register'|translate}"
-            class="btn btn-main "
-          >
-          <p
-            n:if="isset($errors['register_form_error'])"
-            class="error-message error-message-visible"
-          ><i
-              class="gallery-icon-attention-circled"
-            ></i> {$errors['register_form_error']}</p>
+        <div class="secondary-links">
+          <p>{='Already have an account ?'|translate} <a
+              href="identification.php"
+              title="{='Login'|translate}"
+            >{='Login'|translate}</a></p>
         </div>
-      </form>
-
-      <div n:if="$pluginAuthButtons !== []" class="auth-buttons">
-        <p>{='Or sign in with'|translate}</p>
-        <a
-          n:foreach="$pluginAuthButtons as $button"
-          href="#"
-          data-provider="{$button->providerId}"
-          title="{$button->label}"
-          class="btn btn-main btn-secondary"
-        >{$button->label}</a>
       </div>
+    </section>
 
-      <div class="secondary-links">
-        <p>{='Already have an account ?'|translate} <a
-            href="identification.php"
-            title="{='Login'|translate}"
-          >{='Login'|translate}</a></p>
+    <a href="index.php" id="return-to-gallery"><i
+        class="gallery-icon-left"
+      ></i> {='Return to the gallery'|translate}</a>
+
+    <section n:if="count($languageOptions) > 1" id="language-switch">
+      <div id="lang-select">
+        <span id="other-languages">
+          <span
+            n:foreach="$languageOptions as $code => $lang"
+            id="lang={$code}"
+            data-lang-code="{$code}"
+          >{$lang}</span>
+        </span>
+        <div id="selected-language-container">
+          <i class="gallery-icon-left-chevron"></i><span
+            id="selected-language"
+          >{$languageOptions[$currentLanguage]}</span>
+        </div>
       </div>
-    </div>
-  </section>
-
-  <a href="index.php" id="return-to-gallery"><i
-      class="gallery-icon-left"
-    ></i> {='Return to the gallery'|translate}</a>
-
-  <section n:if="count($languageOptions) > 1" id="language-switch">
-    <div id="lang-select">
-      <span id="other-languages">
-        <span
-          n:foreach="$languageOptions as $code => $lang"
-          id="lang={$code}"
-          data-lang-code="{$code}"
-        >{$lang}</span>
-      </span>
-      <div id="selected-language-container">
-        <i class="gallery-icon-left-chevron"></i><span
-          id="selected-language"
-        >{$languageOptions[$currentLanguage]}</span>
-      </div>
-    </div>
-  </section>
-</container>
+    </section>
+  </container>
 {/block}

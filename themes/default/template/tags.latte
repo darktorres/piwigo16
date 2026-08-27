@@ -1,75 +1,75 @@
 {templateType Piwigo\Controller\Projection\TagsView}
 {layout 'layout.latte'}
 {block content}
-{if isset($MENUBAR)}{$MENUBAR}{/if}
-<div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
-  <div class="titrePage">
-    <ul class="categoryActions">
-      <li n:if="$displayMode == 'letters'"><a
-          href="{$cloudUrl|noescape}"
-          title="{='show tag cloud'|translate}"
-          class="pwg-state-default pwg-button"
-        >
-          <span class="pwg-icon pwg-icon-cloud"></span><span
-            class="pwg-button-text"
-          >{='cloud'|translate}</span>
-        </a></li>
-      <li n:if="$displayMode == 'cloud'"><a
-          href="{$lettersUrl|noescape}"
-          title="{='group by letters'|translate}"
-          class="pwg-state-default pwg-button"
-          rel="nofollow"
-        >
-          <span class="pwg-icon pwg-icon-letters"></span><span
-            class="pwg-button-text"
-          >{='letters'|translate}</span>
-        </a></li>
-    </ul>
-    <h2><a
-        href="{$U_HOME|noescape}"
-      >{='Home'|translate}</a>{$LEVEL_SEPARATOR|noescape}{='Tags'|translate}</h2>
-  </div>
+  {if isset($MENUBAR)}{$MENUBAR}{/if}
+  <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
+    <div class="titrePage">
+      <ul class="categoryActions">
+        <li n:if="$displayMode == 'letters'"><a
+            href="{$cloudUrl|noescape}"
+            title="{='show tag cloud'|translate}"
+            class="pwg-state-default pwg-button"
+          >
+            <span class="pwg-icon pwg-icon-cloud"></span><span
+              class="pwg-button-text"
+            >{='cloud'|translate}</span>
+          </a></li>
+        <li n:if="$displayMode == 'cloud'"><a
+            href="{$lettersUrl|noescape}"
+            title="{='group by letters'|translate}"
+            class="pwg-state-default pwg-button"
+            rel="nofollow"
+          >
+            <span class="pwg-icon pwg-icon-letters"></span><span
+              class="pwg-button-text"
+            >{='letters'|translate}</span>
+          </a></li>
+      </ul>
+      <h2><a
+          href="{$U_HOME|noescape}"
+        >{='Home'|translate}</a>{$LEVEL_SEPARATOR|noescape}{='Tags'|translate}</h2>
+    </div>
 
-  {include 'infos_errors.latte'}
+    {include 'infos_errors.latte'}
 
-  <div n:if="$displayMode == 'cloud' and isset($tags)" id="fullTagCloud">
-    <span n:foreach="$tags as $tag"><a
-        href="{$tag['URL']|noescape}"
-        class="tagLevel{$tag['level']}"
-        title="{$tag['counter']|translate_dec:'%d photo','%d photos'}"
-      >{$tag['name']}</a></span>
-  </div>
+    <div n:if="$displayMode == 'cloud' and isset($tags)" id="fullTagCloud">
+      <span n:foreach="$tags as $tag"><a
+          href="{$tag['URL']|noescape}"
+          class="tagLevel{$tag['level']}"
+          title="{$tag['counter']|translate_dec:'%d photo','%d photos'}"
+        >{$tag['name']}</a></span>
+    </div>
 
-  <table n:if="$displayMode == 'letters' and isset($letters)">
-    <tr>
-      <td valign="top">
-        {foreach $letters as $letter}
-          <fieldset class="tagLetter">
-            <legend class="tagLetterLegend">{$letter['TITLE']}</legend>
-            <table class="tagLetterContent">
-              <tr n:foreach="$letter['tags'] as $tag" class="tagLine">
-                <td><a
-                    href="{$tag['URL']|noescape}"
-                    title="{$tag['name']}"
-                  >{$tag['name']}</a></td>
-                <td
-                  class="nbEntries"
-                >{$tag['counter']|translate_dec:'%d photo','%d photos'}</td>
-              </tr>
-            </table>
-          </fieldset>
-          {if isset($letter['CHANGE_COLUMN'])}
-            {* Starts a new column mid-loop: raw text, not a real tracked
+    <table n:if="$displayMode == 'letters' and isset($letters)">
+      <tr>
+        <td valign="top">
+          {foreach $letters as $letter}
+            <fieldset class="tagLetter">
+              <legend class="tagLetterLegend">{$letter['TITLE']}</legend>
+              <table class="tagLetterContent">
+                <tr n:foreach="$letter['tags'] as $tag" class="tagLine">
+                  <td><a
+                      href="{$tag['URL']|noescape}"
+                      title="{$tag['name']}"
+                    >{$tag['name']}</a></td>
+                  <td
+                    class="nbEntries"
+                  >{$tag['counter']|translate_dec:'%d photo','%d photos'}</td>
+                </tr>
+              </table>
+            </fieldset>
+            {if isset($letter['CHANGE_COLUMN'])}
+              {* Starts a new column mid-loop: raw text, not a real tracked
                HTML tag pair, because this </td><td> pairing spans across
                loop iterations from the single, lexically-real <td
                valign="top"> opened before this {foreach} (and closed
                once, after it) -- Latte's HTML-aware parser can't verify
                that cross-iteration pairing statically. *}
-            {="</td>\n            <td valign=\"top\">"|noescape}
-          {/if}
-        {/foreach}
-      </td>
-    </tr>
-  </table>
-</div> <!-- content -->
+              {="</td>\n            <td valign=\"top\">"|noescape}
+            {/if}
+          {/foreach}
+        </td>
+      </tr>
+    </table>
+  </div> <!-- content -->
 {/block}

@@ -41,7 +41,10 @@
           <input type="hidden" name="whole_set" value="">
         </p>
 
-        <ul class="thumbnails" style="--tn-width:{$thumbParams->maxWidth() + 2}px; --tn-height:{$thumbParams->maxHeight() + 25}px;">
+        <ul
+          class="thumbnails"
+          style="--tn-width:{$thumbParams->maxWidth() + 2}px; --tn-height:{$thumbParams->maxHeight() + 25}px;"
+        >
           {foreach $thumbnails as $thumbnail}
             {var $isSelected = ($thumbnail['id']|in_array:$selection)}
             <li {if $isSelected} class="thumbSelected" {/if}>
@@ -117,12 +120,7 @@
         class="u-hidden"
         {/if}
       >{='No photos selected, no actions possible.'|translate}</div>
-      <div
-        id="permitAction"
-        {if count($selection) == 0}
-        class="u-hidden"
-        {/if}
-      >
+      <div id="permitAction" {if count($selection) == 0} class="u-hidden" {/if}>
         <div class="permitActionListButton">
           <div>
             <select name="selectAction">
@@ -187,10 +185,7 @@
               class="errors u-invisible"
             >{="You need to confirm deletion"|translate}</span>
           </p>
-          <p
-            id="applyActionBlock"
-            class="actionButtons u-hidden"
-          >
+          <p id="applyActionBlock" class="actionButtons u-hidden">
             <button
               id="applyAction"
               name="submit"
@@ -302,11 +297,7 @@
                 name="remove_date_creation"
               > {='remove creation date'|translate}</label><br>
             <div id="set_date_creation">
-              <input
-                type="hidden"
-                name="date_creation"
-                value="{$dateCreation}"
-              >
+              <input type="hidden" name="date_creation" value="{$dateCreation}">
               <label>
                 <i class="icon-calendar"></i>
                 <input type="text" data-datepicker="date_creation" readonly>
@@ -365,13 +356,9 @@
                 value="{$type}"
               > {$disp}</label>
           </div>
-
         </div>
       </div> <!-- #permitAction -->
-      <div
-        id="regenerationMsg"
-        class="bulkAction u-hidden"
-      >
+      <div id="regenerationMsg" class="bulkAction u-hidden">
         <div id="regenerationStatus">
           <span
             id="regenerationText"
@@ -383,9 +370,7 @@
       </div>
       <!-- progress bar -->
       <div id="uploadingActions" class="u-hidden">
-        <div
-          class="big-progressbar"
-        >
+        <div class="big-progressbar">
           <div class="progressbar"></div>
         </div>
       </div>

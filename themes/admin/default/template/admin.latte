@@ -1,186 +1,185 @@
 {templateType Piwigo\Admin\Projection\AdminShellView}
 {layout 'layout.latte'}
 {block content}
+  <div id="menubar">
+    <div id="adminHome"><a href="{$uAdmin|noescape}" class="admin-main"><i
+          class="icon-television"
+        ></i> {='Dashboard'|translate}</a></div>
 
-<div id="menubar">
-  <div id="adminHome"><a href="{$uAdmin|noescape}" class="admin-main"><i
-        class="icon-television"
-      ></i> {='Dashboard'|translate}</a></div>
+    <dl>
+      <dt><i class="icon-picture"></i><span>{='Photos'|translate}&nbsp;</span><i
+          class="icon-down-open open-menu"
+        ></i></dt>
+      <dd>
+        <ul>
+          <li><a href="{$uAddPhotos|noescape}"><i
+                class="icon-plus-circled"
+              ></i>{='Add'|translate}</a></li>
+          <li n:if="$showRating"><a href="{$uRating|noescape}"><i
+                class="icon-star"
+              ></i>{='Rating'|translate}</a></li>
+          <li><a href="{$uTags|noescape}"><i
+                class="icon-tags"
+              ></i>{='Tags'|translate}</a></li>
+          <li><a href="{$uRecentSet|noescape}"><i
+                class="icon-clock"
+              ></i>{='Recent photos'|translate}</a></li>
+          <li><a href="{$uBatch|noescape}"><i
+                class="icon-th"
+              ></i>{='Batch Manager'|translate}</a></li>
+          <li n:if="$nbPhotosInCaddie > 0"><a href="{$uCaddie|noescape}"><i
+                class="icon-flag"
+              ></i>{='Caddie'|translate}<span
+                class="adminMenubarCounter"
+              >{$nbPhotosInCaddie}</span></a></li>
+          <li n:if="$nbOrphans > 0"><a href="{$uOrphans|noescape}"><i
+                class="icon-heart-broken"
+              ></i>{='Orphans'|translate}<span
+                class="adminMenubarCounter"
+              >{$nbOrphans}</span></a></li>
+        </ul>
+      </dd>
+    </dl>
+    <dl>
+      <dt><i class="icon-sitemap"></i><span>{='Albums'|translate}&nbsp;</span><i
+          class="icon-down-open open-menu"
+        ></i></dt>
+      <dd>
+        <ul>
+          <li><a href="{$uAlbums|noescape}"><i
+                class="icon-folder-open"
+              ></i>{='Manage'|translate}</a></li>
+          <li><a href="{$uCatOptions|noescape}"><i
+                class="icon-pencil"
+              ></i>{='Properties'|translate}</a></li>
+        </ul>
+      </dd>
+    </dl>
+    <dl>
+      <dt><i class="icon-users"></i><span>{='Users'|translate}&nbsp;</span><i
+          class="icon-down-open open-menu"
+        ></i></dt>
+      <dd>
+        <ul>
+          <li><a href="{$uUsers|noescape}"><i
+                class="icon-user-add"
+              ></i>{='Manage'|translate}</a></li>
+          <li><a href="{$uGroups|noescape}"><i
+                class="icon-group"
+              ></i>{='Groups'|translate}</a></li>
+          <li><a href="{$uNotificationByMail|noescape}"><i
+                class="icon-mail-1"
+              ></i>{='Notification'|translate}</a></li>
+        </ul>
+      </dd>
+    </dl>
+    <dl>
+      <dt><a href="{$uPlugins|noescape}" class="admin-main"><i
+            class="icon-puzzle"
+          ></i><span>{='Plugins'|translate}&nbsp;</span></a></dt>
+    </dl>
+    <dl>
+      <dt><i class="icon-wrench"></i><span>{='Tools'|translate}&nbsp;</span><i
+          class="icon-down-open open-menu"
+        ></i></dt>
+      <dd>
+        <ul>
+          <li n:if="$enableSynchronization"><a href="{$uCatUpdate|noescape}"><i
+                class="icon-exchange"
+              ></i>{='Synchronize'|translate}</a></li>
+          <li><a href="{$uHistoryStat|noescape}"><i
+                class="icon-signal"
+              ></i>{='History'|translate}</a></li>
+          <li><a href="{$uMaintenance|noescape}"><i
+                class="icon-tools"
+              ></i>{='Maintenance'|translate}</a></li>
+          <li n:if="isset($uComments)"><a href="{$uComments|noescape}"><i
+                class="icon-chat"
+              ></i>{='Comments'|translate}
+              <span
+                n:if="isset($nbPendingComments) and $nbPendingComments > 0"
+                class="adminMenubarCounter"
+                title="{='%d waiting for validation'|translate:$nbPendingComments}"
+              >{$nbPendingComments}</span></a></li>
+          <li n:if="isset($uUpdates)"><a href="{$uUpdates|noescape}"><i
+                class="icon-arrows-cw"
+              ></i>{='Updates'|translate}</a></li>
+        </ul>
+      </dd>
+    </dl>
+    <dl>
+      <dt><i
+          class="icon-cog"
+        ></i><span>{='Configuration'|translate}&nbsp;</span><i
+          class="icon-down-open open-menu"
+        ></i></dt>
+      <dd>
+        <ul>
+          <li><a href="{$uConfigGeneral|noescape}"><i
+                class="icon-cog-alt"
+              ></i>{='Options'|translate}</a></li>
+          <li><a href="{$uConfigMenubar|noescape}"><i
+                class="icon-menu"
+              ></i>{='Menu Management'|translate}</a></li>
+          <li><a href="{$uConfigLanguages|noescape}"><i
+                class="icon-language"
+              ></i>{='Languages'|translate}</a></li>
+          <li><a href="{$uConfigThemes|noescape}"><i
+                class="icon-brush"
+              ></i>{='Themes'|translate}</a></li>
+        </ul>
+      </dd>
+    </dl>
+  </div> <!-- menubar -->
 
-  <dl>
-    <dt><i class="icon-picture"></i><span>{='Photos'|translate}&nbsp;</span><i
-        class="icon-down-open open-menu"
-      ></i></dt>
-    <dd>
-      <ul>
-        <li><a href="{$uAddPhotos|noescape}"><i
-              class="icon-plus-circled"
-            ></i>{='Add'|translate}</a></li>
-        <li n:if="$showRating"><a href="{$uRating|noescape}"><i
-              class="icon-star"
-            ></i>{='Rating'|translate}</a></li>
-        <li><a href="{$uTags|noescape}"><i
-              class="icon-tags"
-            ></i>{='Tags'|translate}</a></li>
-        <li><a href="{$uRecentSet|noescape}"><i
-              class="icon-clock"
-            ></i>{='Recent photos'|translate}</a></li>
-        <li><a href="{$uBatch|noescape}"><i
-              class="icon-th"
-            ></i>{='Batch Manager'|translate}</a></li>
-        <li n:if="$nbPhotosInCaddie > 0"><a href="{$uCaddie|noescape}"><i
-              class="icon-flag"
-            ></i>{='Caddie'|translate}<span
-              class="adminMenubarCounter"
-            >{$nbPhotosInCaddie}</span></a></li>
-        <li n:if="$nbOrphans > 0"><a href="{$uOrphans|noescape}"><i
-              class="icon-heart-broken"
-            ></i>{='Orphans'|translate}<span
-              class="adminMenubarCounter"
-            >{$nbOrphans}</span></a></li>
-      </ul>
-    </dd>
-  </dl>
-  <dl>
-    <dt><i class="icon-sitemap"></i><span>{='Albums'|translate}&nbsp;</span><i
-        class="icon-down-open open-menu"
-      ></i></dt>
-    <dd>
-      <ul>
-        <li><a href="{$uAlbums|noescape}"><i
-              class="icon-folder-open"
-            ></i>{='Manage'|translate}</a></li>
-        <li><a href="{$uCatOptions|noescape}"><i
-              class="icon-pencil"
-            ></i>{='Properties'|translate}</a></li>
-      </ul>
-    </dd>
-  </dl>
-  <dl>
-    <dt><i class="icon-users"></i><span>{='Users'|translate}&nbsp;</span><i
-        class="icon-down-open open-menu"
-      ></i></dt>
-    <dd>
-      <ul>
-        <li><a href="{$uUsers|noescape}"><i
-              class="icon-user-add"
-            ></i>{='Manage'|translate}</a></li>
-        <li><a href="{$uGroups|noescape}"><i
-              class="icon-group"
-            ></i>{='Groups'|translate}</a></li>
-        <li><a href="{$uNotificationByMail|noescape}"><i
-              class="icon-mail-1"
-            ></i>{='Notification'|translate}</a></li>
-      </ul>
-    </dd>
-  </dl>
-  <dl>
-    <dt><a href="{$uPlugins|noescape}" class="admin-main"><i
-          class="icon-puzzle"
-        ></i><span>{='Plugins'|translate}&nbsp;</span></a></dt>
-  </dl>
-  <dl>
-    <dt><i class="icon-wrench"></i><span>{='Tools'|translate}&nbsp;</span><i
-        class="icon-down-open open-menu"
-      ></i></dt>
-    <dd>
-      <ul>
-        <li n:if="$enableSynchronization"><a href="{$uCatUpdate|noescape}"><i
-              class="icon-exchange"
-            ></i>{='Synchronize'|translate}</a></li>
-        <li><a href="{$uHistoryStat|noescape}"><i
-              class="icon-signal"
-            ></i>{='History'|translate}</a></li>
-        <li><a href="{$uMaintenance|noescape}"><i
-              class="icon-tools"
-            ></i>{='Maintenance'|translate}</a></li>
-        <li n:if="isset($uComments)"><a href="{$uComments|noescape}"><i
-              class="icon-chat"
-            ></i>{='Comments'|translate}
-            <span
-              n:if="isset($nbPendingComments) and $nbPendingComments > 0"
-              class="adminMenubarCounter"
-              title="{='%d waiting for validation'|translate:$nbPendingComments}"
-            >{$nbPendingComments}</span></a></li>
-        <li n:if="isset($uUpdates)"><a href="{$uUpdates|noescape}"><i
-              class="icon-arrows-cw"
-            ></i>{='Updates'|translate}</a></li>
-      </ul>
-    </dd>
-  </dl>
-  <dl>
-    <dt><i
-        class="icon-cog"
-      ></i><span>{='Configuration'|translate}&nbsp;</span><i
-        class="icon-down-open open-menu"
-      ></i></dt>
-    <dd>
-      <ul>
-        <li><a href="{$uConfigGeneral|noescape}"><i
-              class="icon-cog-alt"
-            ></i>{='Options'|translate}</a></li>
-        <li><a href="{$uConfigMenubar|noescape}"><i
-              class="icon-menu"
-            ></i>{='Menu Management'|translate}</a></li>
-        <li><a href="{$uConfigLanguages|noescape}"><i
-              class="icon-language"
-            ></i>{='Languages'|translate}</a></li>
-        <li><a href="{$uConfigThemes|noescape}"><i
-              class="icon-brush"
-            ></i>{='Themes'|translate}</a></li>
-      </ul>
-    </dd>
-  </dl>
-</div> <!-- menubar -->
+  <div id="content" class="content">
+    <h1>{$ADMIN_PAGE_TITLE|noescape}<span
+        class="admin-object-id"
+      >{$ADMIN_PAGE_OBJECT_ID}</span></h1>
 
-<div id="content" class="content">
-  <h1>{$ADMIN_PAGE_TITLE|noescape}<span
-      class="admin-object-id"
-    >{$ADMIN_PAGE_OBJECT_ID}</span></h1>
-
-  {if isset($TABSHEET)}
-    {$TABSHEET}
-  {/if}
-  {if isset($U_HELP)}
-    <ul class="HelpActions">
-      <li><a
-          href="{$U_HELP|noescape}&amp;output=content_only"
-          title="{='Help'|translate}"
-          class="help-popin"
-        ><span class="icon-help-circled"></span></a></li>
-    </ul>
-  {/if}
-
-  <div class="eiw">
-    <div n:if="isset($errors)" class="errors">
-      <i class="eiw-icon icon-cancel"></i>
-      <ul>
-        <li n:foreach="$errors as $error">{$error|noescape}</li>
+    {if isset($TABSHEET)}
+      {$TABSHEET}
+    {/if}
+    {if isset($U_HELP)}
+      <ul class="HelpActions">
+        <li><a
+            href="{$U_HELP|noescape}&amp;output=content_only"
+            title="{='Help'|translate}"
+            class="help-popin"
+          ><span class="icon-help-circled"></span></a></li>
       </ul>
-    </div>
+    {/if}
 
-    <div n:if="isset($infos)" class="infos">
-      <i class="eiw-icon icon-ok"></i>
-      <ul>
-        <li n:foreach="$infos as $info">{$info|noescape}</li>
-      </ul>
-    </div>
+    <div class="eiw">
+      <div n:if="isset($errors)" class="errors">
+        <i class="eiw-icon icon-cancel"></i>
+        <ul>
+          <li n:foreach="$errors as $error">{$error|noescape}</li>
+        </ul>
+      </div>
 
-    <div n:if="isset($warnings)" class="warnings">
-      <i class="eiw-icon icon-attention"></i>
-      <ul>
-        <li n:foreach="$warnings as $warning">{$warning|noescape}</li>
-      </ul>
-    </div>
+      <div n:if="isset($infos)" class="infos">
+        <i class="eiw-icon icon-ok"></i>
+        <ul>
+          <li n:foreach="$infos as $info">{$info|noescape}</li>
+        </ul>
+      </div>
 
-    <div n:if="isset($messages)" class="messages">
-      <i class="eiw-icon icon-info-circled-1"></i>
-      <ul>
-        <li n:foreach="$messages as $message">{$message|noescape}</li>
-      </ul>
-    </div>
-  </div> {* .eiw *}
+      <div n:if="isset($warnings)" class="warnings">
+        <i class="eiw-icon icon-attention"></i>
+        <ul>
+          <li n:foreach="$warnings as $warning">{$warning|noescape}</li>
+        </ul>
+      </div>
 
-  {$ADMIN_CONTENT}
-</div>
+      <div n:if="isset($messages)" class="messages">
+        <i class="eiw-icon icon-info-circled-1"></i>
+        <ul>
+          <li n:foreach="$messages as $message">{$message|noescape}</li>
+        </ul>
+      </div>
+    </div> {* .eiw *}
+
+    {$ADMIN_CONTENT}
+  </div>
 {/block}

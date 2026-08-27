@@ -1,31 +1,31 @@
 {templateType Piwigo\Controller\Projection\SlideshowView}
 {layout 'layout.latte'}
 {block content}
-<div id="slideshow">
-  <div id="imageHeaderBar">
-    <div class="browsePath">
-      {if isset($uSlideshowStop)}
-        [ <a
-          href="{$uSlideshowStop|noescape}"
-        >{='stop the slideshow'|translate}</a> ]
-      {/if}
-      <h2 class="showtitle">{$navCurrent['TITLE']}</h2>
+  <div id="slideshow">
+    <div id="imageHeaderBar">
+      <div class="browsePath">
+        {if isset($uSlideshowStop)}
+          [ <a
+            href="{$uSlideshowStop|noescape}"
+          >{='stop the slideshow'|translate}</a> ]
+        {/if}
+        <h2 class="showtitle">{$navCurrent['TITLE']}</h2>
+      </div>
+    </div>
+
+    <div id="imageToolBar">
+      <div class="imageNumber">{$photo}</div>
+      {include 'picture_nav_buttons.latte'}
+    </div>
+
+    <div id="content">
+      <div id="theImage" n:attr="data-image-id: $navCurrent['id'] ?? null">
+        {$elementContent|noescape}
+        <p
+          n:if="isset($commentImg)"
+          class="showlegend"
+        >{$commentImg|noescape}</p>
+      </div>
     </div>
   </div>
-
-  <div id="imageToolBar">
-    <div class="imageNumber">{$photo}</div>
-    {include 'picture_nav_buttons.latte'}
-  </div>
-
-  <div id="content">
-    <div id="theImage" n:attr="data-image-id: $navCurrent['id'] ?? null">
-      {$elementContent|noescape}
-      <p
-        n:if="isset($commentImg)"
-        class="showlegend"
-      >{$commentImg|noescape}</p>
-    </div>
-  </div>
-</div>
 {/block}

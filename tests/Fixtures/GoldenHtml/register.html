@@ -58,21 +58,21 @@
 <dd>
   <ul>
   <li>
-    <a
-        href="index.php?/category/1"
-        
-        title="3 photos in this album / 2 photos in 1 sub-album"
-      >Sample Album</a>
-    <span
-        class="menuInfoCat badge"
-        title="3 photos in this album / 2 photos in 1 sub-album"
-      >5</span>
-    <img
-        title="photos posted during the last 7 days"
-        src="themes/default/icon/recent.png"
-        class="icon"
-        alt="(!)"
-      >
+  <a
+      href="index.php?/category/1"
+      
+      title="3 photos in this album / 2 photos in 1 sub-album"
+    >Sample Album</a>
+  <span
+      class="menuInfoCat badge"
+      title="3 photos in this album / 2 photos in 1 sub-album"
+    >5</span>
+  <img
+      title="photos posted during the last 7 days"
+      src="themes/default/icon/recent.png"
+      class="icon"
+      alt="(!)"
+    >
   </li></ul>
 
   <p
@@ -96,11 +96,7 @@
   <dl id="mbMenu">
 <dt>Menu</dt>
 <dd>
-  <form
-      action="qsearch.php"
-      method="get"
-      id="quicksearch"
-    >
+  <form action="qsearch.php" method="get" id="quicksearch">
     <p
         class="quicksearch-form-p"
         
@@ -127,92 +123,92 @@
 </div><div id="menuSwitcher"></div>
 
 <div id="registerPage">
-<div id="content" class="content contentWithMenu">
-  <div class="titrePage">
-    <ul class="categoryActions"></ul>
-    <h2><a
-          href="{{BASE_PATH}}/"
-        >Home</a> / Registration</h2>
-  </div>
+  <div id="content" class="content contentWithMenu">
+    <div class="titrePage">
+      <ul class="categoryActions"></ul>
+      <h2><a
+            href="{{BASE_PATH}}/"
+          >Home</a> / Registration</h2>
+    </div>
 
 
 
-  <form
-      method="post"
-      action="register.php"
-      class="properties"
-      name="register_form"
-    >
-    <fieldset>
-      <legend>Enter your personal data</legend>
+    <form
+        method="post"
+        action="register.php"
+        class="properties"
+        name="register_form"
+      >
+      <fieldset>
+        <legend>Enter your personal data</legend>
 
-      <ul>
-        <li>
-          <span class="property">
-            <label for="login">* Username</label>
-          </span>
-          <input type="text" name="login" id="login" value="">
-        </li>
-        <li>
-          <span class="property">
-            <label for="password">* Password</label>
-          </span>
-          <input type="password" name="password" id="password">
-        </li>
-        <li>
-          <span class="property">
-            <label
-                for="password_conf"
-              >* Confirm Password</label>
-          </span>
-          <input type="password" name="password_conf" id="password_conf">
-          <span id="password_conf-error" class="field-error"></span>
-        </li>
-        <li>
-          <span class="property">
-            <label
-                for="mail_address"
-              >Email address</label>
-          </span>
-          <input
-              type="text"
-              name="mail_address"
-              id="mail_address"
-              value=""
-            >
-          <span id="mail_address-error" class="field-error"></span>
-          (useful in case password is forgotten)
-        </li>
-        <li>
-          <span class="property">
-            <label
-                for="send_password_by_mail"
-              >Send my connection settings by email</label>
-          </span>
-          <input
-              type="checkbox"
-              name="send_password_by_mail"
-              id="send_password_by_mail"
-              value="1"
-            >
-        </li>
-      </ul>
-    </fieldset>
+        <ul>
+          <li>
+            <span class="property">
+              <label for="login">* Username</label>
+            </span>
+            <input type="text" name="login" id="login" value="">
+          </li>
+          <li>
+            <span class="property">
+              <label for="password">* Password</label>
+            </span>
+            <input type="password" name="password" id="password">
+          </li>
+          <li>
+            <span class="property">
+              <label
+                  for="password_conf"
+                >* Confirm Password</label>
+            </span>
+            <input type="password" name="password_conf" id="password_conf">
+            <span id="password_conf-error" class="field-error"></span>
+          </li>
+          <li>
+            <span class="property">
+              <label
+                  for="mail_address"
+                >Email address</label>
+            </span>
+            <input
+                type="text"
+                name="mail_address"
+                id="mail_address"
+                value=""
+              >
+            <span id="mail_address-error" class="field-error"></span>
+            (useful in case password is forgotten)
+          </li>
+          <li>
+            <span class="property">
+              <label
+                  for="send_password_by_mail"
+                >Send my connection settings by email</label>
+            </span>
+            <input
+                type="checkbox"
+                name="send_password_by_mail"
+                id="send_password_by_mail"
+                value="1"
+              >
+          </li>
+        </ul>
+      </fieldset>
 
 
-    <p class="bottomButtons">
-      <input type="hidden" name="key" value="{{ANTIBOT_KEY}}">
-      <input
-          class="submit"
-          type="submit"
-          name="submit"
-          value="Register"
-        >
-      <input class="submit" type="reset" value="Reset">
-    </p>
-  </form>
+      <p class="bottomButtons">
+        <input type="hidden" name="key" value="{{ANTIBOT_KEY}}">
+        <input
+            class="submit"
+            type="submit"
+            name="submit"
+            value="Register"
+          >
+        <input class="submit" type="reset" value="Reset">
+      </p>
+    </form>
 
-</div> <!-- content -->
+  </div> <!-- content -->
 </div> <!-- registerPage -->
 
       <div id="copyright">
@@ -234,6 +230,5 @@
       type="module"
       src="dist/vitals.js"
     ></script>
-
   </body>
 </html>

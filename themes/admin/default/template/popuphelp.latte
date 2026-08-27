@@ -1,19 +1,22 @@
 {templateType Piwigo\Controller\Projection\PopuphelpView}
 {layout 'layout.latte'}
 {block content}
-<div id="content" class="content">
-  {$helpContent|noescape}
-</div> <!-- content -->
+  <div id="content" class="content">
+    {$helpContent|noescape}
+  </div> <!-- content -->
 
-<ul class="categoryActions">
-  <li>
-    <a
-      href="#"
-      onclick="window.close();"
-      title="{='Close this window'|translate}"
-    >
-      <img src="{$ROOT_URL}{$themeconf['admin_icon_dir']}/exit.png" alt="exit">
-    </a>
-  </li>
-</ul>
+  <ul class="categoryActions">
+    <li>
+      <a
+        href="#"
+        onclick="window.close();"
+        title="{='Close this window'|translate}"
+      >
+        <img
+          src="{$ROOT_URL}{$themeconf['admin_icon_dir']}/exit.png"
+          alt="exit"
+        >
+      </a>
+    </li>
+  </ul>
 {/block}

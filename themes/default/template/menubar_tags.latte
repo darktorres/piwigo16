@@ -4,7 +4,7 @@
   <div id="menuTagCloud">
     {foreach $block->data as $tag}
       {spaceless}
-      <span>
+        <span>
           {if isset($tag['U_ADD'])}
             <a
               class="tagLevel {if isset($tag['level'])}{$tag['level']}{/if}"
@@ -19,7 +19,7 @@
               title="{='display photos linked to this tag'|translate}"
             >{$tag['name']}</a>
           {/if}</span>{/spaceless}
-        {* ABOVE there should be no space between text, </a> and </span> elements to avoid IE8 bug https://connect.microsoft.com/IE/feedback/ViewFeedback.aspx?FeedbackID=366567 *}
-      {/foreach}
+      {* ABOVE there should be no space between text, </a> and </span> elements to avoid IE8 bug https://connect.microsoft.com/IE/feedback/ViewFeedback.aspx?FeedbackID=366567 *}
+    {/foreach}
   </div>
 </dd>

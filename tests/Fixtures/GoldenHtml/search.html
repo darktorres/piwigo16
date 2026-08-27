@@ -57,7 +57,6 @@
 <p>Welcome to my photo gallery</p></div>
 
 
-
 <div id="menubar">
   <dl id="mbLinks">
     
@@ -69,21 +68,21 @@
 <dd>
   <ul>
   <li>
-    <a
-        href="index.php?/category/1"
-        
-        title="3 photos in this album / 2 photos in 1 sub-album"
-      >Sample Album</a>
-    <span
-        class="menuInfoCat badge"
-        title="3 photos in this album / 2 photos in 1 sub-album"
-      >5</span>
-    <img
-        title="photos posted during the last 7 days"
-        src="themes/default/icon/recent.png"
-        class="icon"
-        alt="(!)"
-      >
+  <a
+      href="index.php?/category/1"
+      
+      title="3 photos in this album / 2 photos in 1 sub-album"
+    >Sample Album</a>
+  <span
+      class="menuInfoCat badge"
+      title="3 photos in this album / 2 photos in 1 sub-album"
+    >5</span>
+  <img
+      title="photos posted during the last 7 days"
+      src="themes/default/icon/recent.png"
+      class="icon"
+      alt="(!)"
+    >
   </li></ul>
 
   <p
@@ -107,11 +106,7 @@
   <dl id="mbMenu">
 <dt>Menu</dt>
 <dd>
-  <form
-      action="qsearch.php"
-      method="get"
-      id="quicksearch"
-    >
+  <form action="qsearch.php" method="get" id="quicksearch">
     <p
         class="quicksearch-form-p"
         
@@ -140,38 +135,40 @@
 
 
 <div id="content" class="content contentWithMenu">
-<div class="titrePage">
-  <ul class="categoryActions">
+  <div
+      class="titrePage"
+    >
+    <ul class="categoryActions">
 
 
 
-    <li><a href="index.php?/search/psk-20260801-{{SEARCH_SUFFIX}}/posted-monthly-list" title="display a calendar by posted date" class="pwg-state-default pwg-button" rel="nofollow"><span class="pwg-icon pwg-icon-calendar"></span><span class="pwg-button-text">Calendar</span></a></li>
-    <li><a href="index.php?/search/psk-20260801-{{SEARCH_SUFFIX}}/created-monthly-list" title="display a calendar by creation date" class="pwg-state-default pwg-button" rel="nofollow"><span class="pwg-icon pwg-icon-camera-calendar"></span><span class="pwg-button-text">Calendar</span></a></li>
-  </ul>
+      <li><a href="index.php?/search/psk-20260801-{{SEARCH_SUFFIX}}/posted-monthly-list" title="display a calendar by posted date" class="pwg-state-default pwg-button" rel="nofollow"><span class="pwg-icon pwg-icon-calendar"></span><span class="pwg-button-text">Calendar</span></a></li>
+      <li><a href="index.php?/search/psk-20260801-{{SEARCH_SUFFIX}}/created-monthly-list" title="display a calendar by creation date" class="pwg-state-default pwg-button" rel="nofollow"><span class="pwg-icon pwg-icon-camera-calendar"></span><span class="pwg-button-text">Calendar</span></a></li>
+    </ul>
 
-  <div id="breadcrumb">
-    <h2><a href="{{BASE_PATH}}/">Home</a> / <a href="{{BASE_PATH}}/">Search results</a>
-    </h2>
+    <div id="breadcrumb">
+      <h2><a href="{{BASE_PATH}}/">Home</a> / <a href="{{BASE_PATH}}/">Search results</a>
+      </h2>
 
-    
+      
+    </div>
+
+
   </div>
 
 
-</div>
+
+  <div class="action-buttons">
+
+  </div>
 
 
+  
 
-<div class="action-buttons">
-
-</div>
-
+  
 
 
-
-
-
-
-<div class="mcs-container">
+  <div class="mcs-container">
   <div class="filter-manager-popin">
     <div class="filter-manager-popin-container">
       <span class="gallery-icon-cancel filter-manager-close"></span>
@@ -468,7 +465,6 @@
       </div>
     </div>
   </div>
-
 <div id="addLinkedAlbum" class="linkedAlbumPopIn">
   <div class="linkedAlbumPopInContainer">
     <a class="gallery-icon-cancel ClosePopIn" id="closeAlbumPopIn"></a>
@@ -491,9 +487,7 @@
 
       <div id="linkedAlbumSearch">
         <span class='icon-search search-icon'></span>
-        <span
-            class="icon-cancel search-cancel-linked-album"
-          ></span>
+        <span class="icon-cancel search-cancel-linked-album"></span>
         <input
             class='search-input'
             type='text'
@@ -936,17 +930,15 @@
 
 
 
-<div class="mcs-no-result">
-  <div class="text">
-    <span class="top">No results are available.</span>
-    <span
-          class="bot"
-        >You can try to edit your filters and perform a new search.</span>
+  <div class="mcs-no-result">
+    <div class="text">
+      <span class="top">No results are available.</span>
+      <span
+            class="bot"
+          >You can try to edit your filters and perform a new search.</span>
+    </div>
   </div>
 </div>
-
-</div>
-
       <div id="copyright">
 
         Powered by <a href="https://upstream.example.invalid" class="Piwigo">Piwigo</a>
@@ -965,6 +957,5 @@
       type="module"
       src="dist/vitals.js"
     ></script>
-
   </body>
 </html>

@@ -48,9 +48,7 @@
         class=""
       >{='Standard pages aren\'t activated, however you have %d active themes that will still use them. These themes are:'|translate:count($standardPagesUsedBy)} </p>
       <ul>
-        <li
-          n:foreach="$standardPagesUsedBy as $theme_name"
-        >{$theme_name}</li>
+        <li n:foreach="$standardPagesUsedBy as $theme_name">{$theme_name}</li>
       </ul>
     </div>
 

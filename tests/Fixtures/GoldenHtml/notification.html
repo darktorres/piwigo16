@@ -57,21 +57,21 @@
 <dd>
   <ul>
   <li>
-    <a
-        href="index.php?/category/1"
-        
-        title="3 photos in this album / 2 photos in 1 sub-album"
-      >Sample Album</a>
-    <span
-        class="menuInfoCat badge"
-        title="3 photos in this album / 2 photos in 1 sub-album"
-      >5</span>
-    <img
-        title="photos posted during the last 7 days"
-        src="themes/default/icon/recent.png"
-        class="icon"
-        alt="(!)"
-      >
+  <a
+      href="index.php?/category/1"
+      
+      title="3 photos in this album / 2 photos in 1 sub-album"
+    >Sample Album</a>
+  <span
+      class="menuInfoCat badge"
+      title="3 photos in this album / 2 photos in 1 sub-album"
+    >5</span>
+  <img
+      title="photos posted during the last 7 days"
+      src="themes/default/icon/recent.png"
+      class="icon"
+      alt="(!)"
+    >
   </li></ul>
 
   <p
@@ -95,11 +95,7 @@
   <dl id="mbMenu">
 <dt>Menu</dt>
 <dd>
-  <form
-      action="qsearch.php"
-      method="get"
-      id="quicksearch"
-    >
+  <form action="qsearch.php" method="get" id="quicksearch">
     <p
         class="quicksearch-form-p"
         
@@ -126,31 +122,31 @@
 </div><div id="menuSwitcher"></div>
 
 <div id="content" class="content contentWithMenu">
-<div class="titrePage">
-  <ul class="categoryActions"></ul>
-  <h2><a
-        href="{{BASE_PATH}}/"
-      >Home</a> / Notification</h2>
-</div>
+  <div class="titrePage">
+    <ul class="categoryActions"></ul>
+    <h2><a
+          href="{{BASE_PATH}}/"
+        >Home</a> / Notification</h2>
+  </div>
 
 
 
-<div class="notification">
-  <p>The RSS feed provides notification on new events from this website: new photos, updated albums, new comments. To be used with a RSS feed reader.</p>
+  <div class="notification">
+    <p>The RSS feed provides notification on new events from this website: new photos, updated albums, new comments. To be used with a RSS feed reader.</p>
 
-  <dl>
-    <dt>
-      <a
-          href="feed.php"
-        >Photos only RSS feed</a><br><br>
-    </dt>
-    <dt>
-      <a
-          href="feed.php?feed={{FEED_TOKEN}}"
-        >Complete RSS feed (photos, comments)</a>
-    </dt>
-  </dl>
-</div>
+    <dl>
+      <dt>
+        <a
+            href="feed.php"
+          >Photos only RSS feed</a><br><br>
+      </dt>
+      <dt>
+        <a
+            href="feed.php?feed={{FEED_TOKEN}}"
+          >Complete RSS feed (photos, comments)</a>
+      </dt>
+    </dl>
+  </div>
 </div>
 
       <div id="copyright">
@@ -167,6 +163,5 @@
       type="module"
       src="dist/vitals.js"
     ></script>
-
   </body>
 </html>

@@ -28,126 +28,120 @@
   >
     <div id="the_page">
 <container id="mode" class="light">
-<section id="header-options">
-  <div>
-    <i
-        class="gallery-icon-moon toggle-mode"
-        id="toggle_mode_light"
-      ></i>
-    <i
-        class="gallery-icon-sun toggle-mode"
-        id="toggle_mode_dark"
-      ></i>
-  </div>
-  <div>
-    <a href="https://upstream.example.invalid/help/" target="_blank">Help</a>
-  </div>
-</section>
-
-<section id="logo-section">
-  <img
-        id="piwigo-logo"
-        src="themes/standard_pages/images/piwigo_logo.svg"
-        data-logo-light="themes/standard_pages/images/piwigo_logo.svg"
-        data-logo-dark="themes/standard_pages/images/piwigo_logo_dark.svg"
-      >
-</section>
-
-<section id="login-form">
-  <div class="">
-    <h1 class="">
-      Sign in
-    </h1>
-
-    <form
-        class="properties"
-        action="identification.php"
-        method="post"
-        name="login_form"
-      >
-      <div class="column-flex">
-        <label for="username">Username</label>
-        <div class="row-flex input-container">
-          <i class="gallery-icon-user"></i>
-          <input
-              type="text"
-              class=""
-              type="text"
-              name="username"
-              id="username"
-              size="25"
-              autofocus
-              data-required="true"
-            >
-        </div>
-        <p class="error-message"><i
-              class="gallery-icon-attention-circled"
-            ></i> must not be empty</p>
-      </div>
-
-      <div class="column-flex">
-        <label for="password">Password</label>
-        <div class="row-flex input-container">
-          <i class="gallery-icon-lock"></i>
-          <input
-              type="password"
-              class=""
-              name="password"
-              id="password"
-              size="25"
-            >
-          <i class="gallery-icon-eye togglePassword"></i>
-        </div>
-        <p class="error-message"><i
-              class="gallery-icon-attention-circled"
-            ></i> must not be empty</p>
-      </div>
-
-      <div class="column-flex">
-        <div class="row-flex remember-me-container">
-          <label for="remember_me">
-            <input
-                tabindex="3"
-                type="checkbox"
-                name="remember_me"
-                id="remember_me"
-                value="1"
-              >
-            <span class="gallery-icon-checkmark"></span>
-            Auto login</label>
-        </div>
-      </div>
-
-      <div class="column-flex">
-        <input type="hidden" name="redirect" value="">
-        <input
-            tabindex="4"
-            type="submit"
-            name="login"
-            value="Sign in"
-            class="btn btn-main "
-          >
-      </div>
-    </form>
-
-
-    <div class="secondary-links">
-      <p>Don't have an account yet? <a
-              href="register.php"
-              title="Register"
-            >Create an account</a></p>
-      <span id="separator"></span>
-      <a
-          href="password.php"
-          title="Forgot your password?"
-        >Forgot your password?</a>
+  <section id="header-options">
+    <div>
+      <i class="gallery-icon-moon toggle-mode" id="toggle_mode_light"></i>
+      <i class="gallery-icon-sun toggle-mode" id="toggle_mode_dark"></i>
     </div>
-  </div>
-</section>
+    <div>
+      <a href="https://upstream.example.invalid/help/" target="_blank">Help</a>
+    </div>
+  </section>
 
-<a href="index.php" id="return-to-gallery"><i
-      class="gallery-icon-left"
-    ></i> Return to the gallery</a>
+  <section id="logo-section">
+    <img
+          id="piwigo-logo"
+          src="themes/standard_pages/images/piwigo_logo.svg"
+          data-logo-light="themes/standard_pages/images/piwigo_logo.svg"
+          data-logo-dark="themes/standard_pages/images/piwigo_logo_dark.svg"
+        >
+  </section>
+
+  <section id="login-form">
+    <div class="">
+      <h1 class="">
+        Sign in
+      </h1>
+
+      <form
+          class="properties"
+          action="identification.php"
+          method="post"
+          name="login_form"
+        >
+        <div class="column-flex">
+          <label for="username">Username</label>
+          <div class="row-flex input-container">
+            <i class="gallery-icon-user"></i>
+            <input
+                type="text"
+                class=""
+                type="text"
+                name="username"
+                id="username"
+                size="25"
+                autofocus
+                data-required="true"
+              >
+          </div>
+          <p class="error-message"><i
+                class="gallery-icon-attention-circled"
+              ></i> must not be empty</p>
+        </div>
+
+        <div class="column-flex">
+          <label for="password">Password</label>
+          <div class="row-flex input-container">
+            <i class="gallery-icon-lock"></i>
+            <input
+                type="password"
+                class=""
+                name="password"
+                id="password"
+                size="25"
+              >
+            <i class="gallery-icon-eye togglePassword"></i>
+          </div>
+          <p class="error-message"><i
+                class="gallery-icon-attention-circled"
+              ></i> must not be empty</p>
+        </div>
+
+        <div class="column-flex">
+          <div class="row-flex remember-me-container">
+            <label for="remember_me">
+              <input
+                  tabindex="3"
+                  type="checkbox"
+                  name="remember_me"
+                  id="remember_me"
+                  value="1"
+                >
+              <span class="gallery-icon-checkmark"></span>
+              Auto login</label>
+          </div>
+        </div>
+
+        <div class="column-flex">
+          <input type="hidden" name="redirect" value="">
+          <input
+              tabindex="4"
+              type="submit"
+              name="login"
+              value="Sign in"
+              class="btn btn-main "
+            >
+        </div>
+      </form>
+
+
+      <div class="secondary-links">
+        <p>Don't have an account yet? <a
+                href="register.php"
+                title="Register"
+              >Create an account</a></p>
+        <span id="separator"></span>
+        <a
+            href="password.php"
+            title="Forgot your password?"
+          >Forgot your password?</a>
+      </div>
+    </div>
+  </section>
+
+  <a href="index.php" id="return-to-gallery"><i
+        class="gallery-icon-left"
+      ></i> Return to the gallery</a>
 
 </container>
     </div>
@@ -167,6 +161,5 @@ var s,after = document.getElementsByTagName('script')[document.getElementsByTagN
       type="module"
       src="dist/vitals.js"
     ></script>
-
   </body>
 </html>

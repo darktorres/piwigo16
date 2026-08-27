@@ -89,7 +89,7 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
                 ->pageAssets(),
             // Real per-page bundle entry (docs/PLAN.md's P48) -- folds
             // autosize.ts's, datepicker.ts's, and scripts.ts's own code
-            // in via real `?dup` imports instead of the separate script
+            // in via direct imports instead of the separate script
             // tags AutosizeView/DatepickerView/this method's own former
             // `core.scripts` registration used to register directly
             // (all 3 have several real registrant pages, so a plain

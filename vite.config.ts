@@ -83,13 +83,13 @@ export default defineConfig({
         // deleted rather than converted).
         // page-data.ts is no longer its own entry either (docs/PLAN.md
         // P48, its own later, heaviest batch -- 48 real consumer files)
-        // -- every real consumer folds its code in via its own `?dup`
-        // import instead of the separate centralized script tag
-        // `Template::finalizeHtml()` used to register directly.
+        // -- every real consumer imports it directly instead of the
+        // separate centralized script tag `Template::finalizeHtml()`
+        // used to register, and Rollup emits it once as a shared chunk.
         // scripts.ts is no longer its own entry (docs/PLAN.md P48, its
         // own later batch) -- it has several real registrant pages,
-        // each with their own bundle folding its code in via a `?dup`
-        // import (see the pages/ entries below, and picture.ts's/
+        // each of whose bundles imports it directly (see the pages/
+        // entries below, and picture.ts's/
         // rating.ts's own direct imports for its 2 real symbol
         // consumers).
         picture: r("themes/default/js/picture.ts"),
@@ -105,7 +105,7 @@ export default defineConfig({
         popuphelp: r("themes/default/js/popuphelp.ts"),
         // switchbox.ts is no longer its own entry (docs/PLAN.md P48)
         // -- its 2 real registrant pages (IndexView/PictureView) fold
-        // its code in via their own `?dup` import instead (their own
+        // its code in via their own direct import instead (their own
         // index.ts/picture.ts, its 2 real "pusher" files).
         thumbnailsLoader: r("themes/default/js/thumbnails.loader.ts"),
         // P46-C — themes/admin/default/js/*.js's first 4 real entries
@@ -116,17 +116,17 @@ export default defineConfig({
         // entries below, its one real registrant. album_selector.ts is
         // no longer its own entry either (docs/PLAN.md P48, its own
         // later batch) -- it has 8 real consumer files, each importing
-        // its code directly via a `?dup` import instead.
+        // its code directly via a direct import instead.
         // common.ts is no longer its own entry either (docs/PLAN.md
         // P48, its own later batch) -- 30+ real registrant pages, each
-        // folding its code in via a `?dup` import instead (its own real
+        // folding its code in via a direct import instead (its own real
         // consumer files, or a new minimal pages/ entry for the 2 pages
         // whose only first-party JS need was common.ts's own side
         // effects).
         // LocalStorageCache.ts is no longer its own entry either (docs/
         // PLAN.md P48, its own later batch) -- its 4 real exported
         // classes fold into their own 7 real consumer files' bundles
-        // via a `?dup` import instead.
+        // via a direct import instead.
         // P46-C part 2 — the genuinely bidirectional pair (see both
         // files' own leading comments for the real ordering-safety
         // analysis). Neither is its own entry any more (docs/PLAN.md
@@ -165,7 +165,7 @@ export default defineConfig({
         ),
         // autosize.ts is no longer its own entry (docs/PLAN.md P48) --
         // it has 3 real registrant pages, each with their own pages/
-        // entry below folding its code in via a `?dup` import.
+        // entry below folding its code in via a direct import.
         languagesNew: r("themes/admin/default/js/languages_new.ts"),
         siteUpdate: r("themes/admin/default/js/site_update.ts"),
         languagesInstalled: r("themes/admin/default/js/languages_installed.ts"),
@@ -204,7 +204,7 @@ export default defineConfig({
         // doubleSlider.ts is no longer its own entry (docs/PLAN.md P48)
         // -- its 2 real file-level consumers (batchManagerFilter.ts/
         // mcs.ts, each its own real registrant-page entry) fold its
-        // code in via their own `?dup` import instead.
+        // code in via their own direct import instead.
         // P46-C part 14 -- 5 more small, self-contained admin files.
         configurationComments: r(
           "themes/admin/default/js/configuration_comments.ts",
@@ -221,7 +221,7 @@ export default defineConfig({
         // datepicker.ts itself is no longer its own entry either
         // (docs/PLAN.md P48, its own later batch) -- it has 4 real
         // registrant pages, each with their own pages/ entry folding
-        // its code in via a `?dup` import.
+        // its code in via a direct import.
         // P46-C part 16 -- migrating the remaining files in bulk;
         // validation (typecheck/lint/build/test) deferred to the end
         // per direct instruction, not per-file from here on.
@@ -258,7 +258,7 @@ export default defineConfig({
         // files' own leading comments): batchManagerGlobal.ts has real,
         // unconditional page-load side effects (event-handler
         // registration), so it can never be duplicated across 2 script
-        // tags the way addAlbum.ts's ?dup import safely is.
+        // tags the way addAlbum.ts's direct import safely is.
         batchManagerGlobalPage: r(
           "themes/admin/default/js/pages/batch_manager_global.ts",
         ),
@@ -278,12 +278,12 @@ export default defineConfig({
         ),
         // datepicker.ts's own batch (docs/PLAN.md P48) -- extends
         // batchManagerUnitPage/pictureModifyPage/batchManagerGlobalPage
-        // above with a `?dup` import each; historyPage is its 4th real
+        // above with a direct import each; historyPage is its 4th real
         // registrant page, with no prior page bundle to extend.
         historyPage: r("themes/admin/default/js/pages/history.ts"),
         // scripts.ts's own batch (docs/PLAN.md P48) -- extends
         // batchManagerUnitPage/batchManagerGlobalPage above with a
-        // `?dup` import each; coreScriptsPage is the shared bundle for
+        // direct import each; coreScriptsPage is the shared bundle for
         // every other real registrant page with no other file of its
         // own to fold scripts.ts into (register.php/password.php/
         // identification.php/profile.php's default-theme branch,

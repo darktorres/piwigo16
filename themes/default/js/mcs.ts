@@ -1,21 +1,20 @@
 import type { operations } from "../../../openapi/client/schema";
 // Real consumer of album_selector.ts's own top-level `class
-// AlbumSelector` (docs/PLAN.md P48 -- was a `window.AlbumSelector` read,
-// see that file's own leading comment for the full real-consumer
-// list). `?dup` since album_selector.ts has several real registrant
-// pages (Design §4).
+// AlbumSelector` (docs/PLAN.md P48 -- was a `window.AlbumSelector`
+// read, see that file's own leading comment for the full real-consumer
+// list).
 import { AlbumSelector } from "../../admin/default/js/album_selector";
 import { sprintf } from "../../admin/default/js/common";
 // doubleSlider.ts's own side effect only (`$.fn.pwgDoubleSlider`, this
 // file's real `.pwgDoubleSlider(...)` call sites below). This file has
 // exactly one real registrant page (SearchFiltersView), but
 // doubleSlider.ts itself has 2 real file-level consumers (this file and
-// batchManagerFilter.ts, each its own separate Vite entry) -- `?dup`
-// per Design §4.
+// batchManagerFilter.ts, each its own separate Vite entry), so Rollup
+// emits it as a shared chunk.
 import "../../admin/default/js/doubleSlider";
 // Real consumer of search_filters.ts's own exports (docs/PLAN.md P48,
 // search_filters.ts's own batch -- was bare-global reads before that).
-// No `?dup`: this file is search_filters.ts's only real consumer
+// This file is search_filters.ts's only real consumer
 // anywhere (confirmed directly -- history.ts's own leading comment
 // mentions `global_params`/`fullname_of_cat` only in prose, not a real
 // bare-identifier read), so a plain import is safe (Design §4) --

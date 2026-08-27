@@ -85,7 +85,7 @@ test('pageAssets registers only the 3 unconditional entries when uOriginal and r
         ]);
 });
 
-test('pageAssets registers only the 2 unconditional entries when uOriginal is set (no separate core.scripts/core.switchbox any more, picture.ts already carries both via ?dup)', function (): void {
+test('pageAssets registers only the 2 unconditional entries when uOriginal is set (no separate core.scripts/core.switchbox any more, picture.ts already imports both)', function (): void {
     $view = makePictureView(uOriginal: 'http://example.com/original.jpg');
 
     expect($view->pageAssets())
@@ -96,7 +96,7 @@ test('pageAssets registers only the 2 unconditional entries when uOriginal is se
         ]);
 });
 
-test('pageAssets registers rating when rating is set (no separate core.scripts dependsOn any more, rating.ts already carries it via ?dup)', function (): void {
+test('pageAssets registers rating when rating is set (no separate core.scripts dependsOn any more, rating.ts already imports it)', function (): void {
     $view = makePictureView(rating: [
         'F_ACTION' => '',
         'USER_RATE' => null,

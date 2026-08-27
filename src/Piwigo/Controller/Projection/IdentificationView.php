@@ -76,7 +76,7 @@ final readonly class IdentificationView implements View, HasPageAssets
 
         return [
             // Real shared per-page bundle entry (docs/PLAN.md's P48) --
-            // folds scripts.ts's own code in via a real `?dup` import
+            // folds scripts.ts's own code in via a direct import
             // instead of the separate `core.scripts` script tag this
             // method used to register directly; shared with the other
             // real pages that need scripts.ts for nothing but its own

@@ -10,8 +10,7 @@
 //   latter's own top-level, synchronous `jQuery("[data-datepicker]")
 //   .pwgDatepicker(...)` call needs that plugin already registered,
 //   replicating the real script-tag `dependsOn` ordering this page
-//   used before this batch (datepicker.ts had 4 real registrant pages,
-//   so its own import needs the `?dup` suffix -- Design §4).
+//   used before this batch.
 // - batchManagerGlobal.ts must be entered before batch_manager_global.ts
 //   for its own top-level, synchronous `lang.Cancel` read to see
 //   `lang` already set -- its own circular import of
@@ -21,7 +20,7 @@
 // Do not reorder without re-verifying both.
 import "../addAlbum";
 import "../datepicker";
-// scripts.ts also has several real registrant pages (`?dup` needed --
+// scripts.ts also has several real registrant pages (
 // Design §4); this import replaces the separate `core.scripts` script
 // tag BatchManagerGlobalView used to register directly. This page
 // doesn't read any of scripts.ts's own real exports, just needs its

@@ -1,10 +1,8 @@
 import type { components, operations } from "../../../../openapi/client/schema";
 import { jConfirm_alert_options, TemporaryState } from "./common";
 import { UsersCache } from "./LocalStorageCache";
-// Type-only -- erased at compile time, so no `?dup` needed regardless
-// of LocalStorageCache.ts's own many real registrant pages (Design §4
-// only applies to real runtime imports; `import type` never reaches
-// Rollup's module graph at all).
+// Type-only -- erased at compile time, so it never reaches Rollup's
+// module graph at all.
 import type { EntityCacheInstance, UserEntity } from "./LocalStorageCache";
 
 import {

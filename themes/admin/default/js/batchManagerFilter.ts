@@ -1,21 +1,20 @@
 // Real consumer of album_selector.ts's own top-level `class
 // AlbumSelector` (docs/PLAN.md P48 -- was a bare ambient-global read,
 // see that file's own leading comment for the full real-consumer
-// list). `?dup` since album_selector.ts has several real registrant
-// pages (Design §4). This file is itself its own single Vite entry,
-// registered (as the identical compiled file) on 2 real pages
-// (batch_manager_unit.php, batch_manager_global.php) -- each of those
-// pages also separately `?dup`-imports album_selector.ts from its own
-// other real consumer (batchManagerUnit.ts / batchManagerGlobal.ts),
-// so this file's own copy here is the 2nd of 2 independent
-// `AlbumSelector` class copies coexisting on either page -- a real,
-// accepted consequence documented in album_selector.ts's own leading
-// comment.
+// list). This file is its own Vite entry, registered on 2 real pages
+// (batch_manager_unit.php, batch_manager_global.php), each of which
+// also reaches album_selector.ts through its other real consumer
+// (batchManagerUnit.ts / batchManagerGlobal.ts).
+//
+// That used to mean two independent `AlbumSelector` class copies
+// coexisted on either page, since every consumer was handed a private
+// duplicate. It no longer does: album_selector.ts is emitted once as a
+// shared chunk, so both consumers now hold the *same* class and the
+// single-active-popup coordination its module state was written for
+// actually works.
 import { AlbumSelector } from "./album_selector";
 // doubleSlider.ts's own side effect only (`$.fn.pwgDoubleSlider`, this
-// file's real `.pwgDoubleSlider(...)` call sites below) -- `?dup` since
-// this file is itself registered on 2 real pages, same reasoning as
-// album_selector.ts's own import above.
+// file's real `.pwgDoubleSlider(...)` call sites below).
 import "./doubleSlider";
 
 import {

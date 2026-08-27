@@ -43,7 +43,7 @@ final readonly class HistoryView implements View, HasPageAssets, ExposesPageData
             ...new DatepickerView(jqueryCode: $this->jqueryCode)
                 ->pageAssets(),
             // Real per-page bundle entry (docs/PLAN.md's P48) -- folds
-            // datepicker.ts's own code in via a real `?dup` import
+            // datepicker.ts's own code in via a direct import
             // instead of the separate script tag DatepickerView used to
             // register directly (datepicker.ts has 4 real registrant
             // pages, so a plain import isn't safe here -- Design §4).

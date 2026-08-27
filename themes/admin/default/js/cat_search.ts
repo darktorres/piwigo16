@@ -18,14 +18,10 @@ import {
 } from "./album_selector";
 // Real consumer of albums.ts's own top-level `data` (docs/PLAN.md P48,
 // albums.ts's own batch -- was a `window.data` read before that).
-// `?dup`, NOT a plain import (a real bug found and fixed via a live
-// `vite build` + manifest.json inspection, confirmed directly: albums.ts
-// stays its own separate standalone Vite entry, unlike every other
-// declarer this campaign folded away -- so it's reachable from 2 real
-// entries, its own `albums` entry and this file's own `catSearch` entry,
-// the same 2-entry threshold as any other `?dup` case, "one real
-// registrant page" alone isn't the right test when the declarer itself
-// is still independently registered).
+// albums.ts stays its own standalone Vite entry, unlike every other
+// declarer this campaign folded away, so it is reachable from 2 real
+// entries -- its own `albums` entry and this file's own `catSearch`
+// entry -- and Rollup emits the shared part as a chunk both import.
 import { data } from "./albums";
 
 export {};

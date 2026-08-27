@@ -42,7 +42,7 @@ use Piwigo\Template\Latte\Attribute\Template as TemplateAttr;
  * No `$load_mode` constructor param any more (docs/PLAN.md's P48) --
  * it only ever fed `album_selector.ts`'s own standalone script
  * registration below, vestigial now that album_selector.ts has 8 real
- * consumer files, each with its own real `?dup` import instead (see
+ * consumer files, each with its own real direct import instead (see
  * that file's own leading comment).
  */
 #[TemplateAttr('include/album_selector.inc.latte')]
@@ -59,7 +59,7 @@ final readonly class AlbumSelectorView implements View, HasPageAssets, ExposesPa
             AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
             // album_selector.ts's own registration is no longer here
             // (docs/PLAN.md P48) -- it has 8 real consumer files, each
-            // folding its code in via its own `?dup` import instead of
+            // folding its code in via its own direct import instead of
             // one shared standalone script tag (the same reasoning as
             // AutosizeView/DatepickerView's own P48 batches).
         ];

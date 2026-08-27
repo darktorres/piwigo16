@@ -130,12 +130,12 @@ final readonly class PictureView implements View, HasPageAssets, ExposesPageData
         $assets = [
             // switchbox.ts's own registration dropped (docs/PLAN.md P48,
             // switchbox.ts's own batch) -- folds into picture.ts's own
-            // bundle via a real `?dup` import instead, same real,
+            // bundle via a direct import instead, same real,
             // accepted Async-to-Footer timing change as IndexView's own
             // identical copy of this comment.
             AssetContribution::css('themes/default/css/pages/picture.css', id: 'picture'),
-            // 'picture' folds scripts.ts's own code in via a real `?dup`
-            // import now (docs/PLAN.md P48) -- both of this method's own
+            // 'picture' imports scripts.ts directly now (docs/PLAN.md
+            // P48) -- both of this method's own
             // former conditional `core.scripts` registrations below are
             // dropped, since 'picture' is unconditional and already
             // covers them regardless of $uOriginal/$rating.
@@ -144,7 +144,7 @@ final readonly class PictureView implements View, HasPageAssets, ExposesPageData
 
         if ($this->rating !== null) {
             // 'rating' folds scripts.ts's own code in via its own real
-            // `?dup` import too (docs/PLAN.md P48) -- no more
+            // direct import too (docs/PLAN.md P48) -- no more
             // `dependsOn: ['core.scripts']`, that id no longer exists as
             // a separate registration.
             $assets[] = AssetContribution::script('rating', 'themes/default/js/rating.ts', loadMode: LoadMode::Async);

@@ -1,11 +1,10 @@
 // Real consumer of page-data.ts's own top-level `pwg_getPageData`
 // (docs/PLAN.md P48, page-data.ts's own batch -- was a bare
-// ambient-global read before that). `?dup` since page-data.ts has many
-// real registrant pages (Design §4) -- this import doesn't change this
+// ambient-global read before that). This import doesn't change this
 // file's own "stays its own standalone entry, unfolded" status below:
 // nothing else imports footer.ts itself, so it's safe for it to become
-// a real module (gaining this import) without needing to be folded
-// into anyone else's bundle.
+// a real module (gaining this import) without needing to be folded into
+// anyone else's bundle.
 import { pwg_getPageData } from "../../../default/js/page-data";
 
 export {};
@@ -13,8 +12,8 @@ export {};
 // This file's own registration stays its own standalone Vite entry,
 // unfolded (docs/PLAN.md P48, this file's own catalog line's
 // investigation, confirmed not just assumed): every OTHER shared-
-// library file in this campaign folds into its real registrant pages'
-// own bundles via `?dup` because each is registered by an individual
+// library file in this campaign is imported by its real registrant
+// pages' own bundles because each is registered by an individual
 // View's own `pageAssets()`, giving a concrete per-page file to attach
 // the import to. `footer.ts` is different -- it's injected exactly
 // once, centrally, by `Template::finalizeHtml()` (via

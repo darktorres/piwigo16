@@ -103,7 +103,7 @@ final readonly class ProfileView implements View, HasPageAssets, ExposesPageData
             return [
                 // Real shared per-page bundle entry (docs/PLAN.md's
                 // P48) -- folds scripts.ts's own code in via a real
-                // `?dup` import instead of the separate `core.scripts`
+                // direct import instead of the separate `core.scripts`
                 // script tag this branch used to register directly;
                 // shared with the other real pages that need
                 // scripts.ts for nothing but its own side effects (see

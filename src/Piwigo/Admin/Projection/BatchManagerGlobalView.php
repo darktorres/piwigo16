@@ -104,7 +104,7 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
                 ->pageAssets(),
             // Real per-page bundle entry (docs/PLAN.md's P48) -- folds
             // addAlbum.ts's, datepicker.ts's, and scripts.ts's own code
-            // in via real `?dup` imports instead of the separate script
+            // in via direct imports instead of the separate script
             // tags AddAlbumView/DatepickerView/this method's own former
             // `core.scripts` registration used to register directly
             // (all 3 have several real registrant pages, so a plain
@@ -117,7 +117,7 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             // shared-library files do -- batchManagerGlobal.ts has real,
             // unconditional page-load side effects (event-handler
             // registration), so it can never be safely duplicated the
-            // way addAlbum.ts's `?dup` import is. Footer (not
+            // way addAlbum.ts's direct import is. Footer (not
             // batchManagerGlobal.ts's former Async) is the merged mode,
             // matching batch_manager_global.ts's own former mode --
             // `jquery.ui.timepicker-addon`/`jquery.colorbox`

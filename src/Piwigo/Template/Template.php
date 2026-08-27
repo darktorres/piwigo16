@@ -846,7 +846,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             // (docs/PLAN.md's P48, page-data.ts's own batch): every real
             // `.ts` consumer of `pwg_getPageData`/`pwg_getPageString`
             // (48 files, confirmed via a direct grep, not assumed) now
-            // imports them directly via a real `?dup` import instead of
+            // imports them directly via a direct import instead of
             // reading a bare global this centralized registration used
             // to provide -- confirmed safe against every real page:
             // no `.latte` template anywhere reads either function

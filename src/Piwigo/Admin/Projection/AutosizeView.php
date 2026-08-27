@@ -43,9 +43,9 @@ final readonly class AutosizeView implements View, HasPageAssets
             AssetContribution::script('jquery.autogrow', 'themes/default/js/plugins/jquery.autogrow-textarea.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
             // autosize.ts's own registration is no longer here
             // (docs/PLAN.md P48) -- it has 3 real registrant pages, each
-            // now folding its code in via its own page bundle's `?dup`
-            // import instead of one shared standalone script tag (the
-            // same reasoning as AddAlbumView's own P48 batch). Each
+            // of whose page bundles imports it directly instead of one
+            // shared standalone script tag (the same reasoning as
+            // AddAlbumView's own P48 batch). Each
             // registrant page adds its own `AssetContribution::script()`
             // call for that bundle.
         ];

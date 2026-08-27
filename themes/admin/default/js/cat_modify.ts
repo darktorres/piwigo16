@@ -1,9 +1,7 @@
 import type { operations } from "../../../../openapi/client/schema";
 // Real consumer of album_selector.ts's own top-level `class
 // AlbumSelector` (docs/PLAN.md P48 -- was a bare ambient-global read,
-// see that file's own leading comment for the full real-consumer
-// list). `?dup` since album_selector.ts has several real registrant
-// pages (Design §4).
+// see that file's own leading comment for the full real-consumer list).
 import { AlbumSelector } from "./album_selector";
 import { jConfirm_confirm_options } from "./common";
 

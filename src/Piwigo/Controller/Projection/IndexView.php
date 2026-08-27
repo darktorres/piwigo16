@@ -96,7 +96,7 @@ final readonly class IndexView implements View, HasPageAssets
         $assets = [
             // switchbox.ts's own registration dropped (docs/PLAN.md P48,
             // switchbox.ts's own batch) -- folds into index.ts's own
-            // bundle via a real `?dup` import instead. Real, accepted
+            // bundle via a direct import instead. Real, accepted
             // timing change: switchbox.ts used to load at this page's
             // own Async, now runs at index.ts's own Footer instead --
             // safe since switchbox.ts's own "queue array, then live

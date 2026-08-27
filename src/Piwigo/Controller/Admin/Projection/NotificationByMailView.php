@@ -50,7 +50,7 @@ final readonly class NotificationByMailView implements View, HasPageAssets
             ...new AutosizeView()
                 ->pageAssets(),
             // Real per-page bundle entry (docs/PLAN.md's P48) -- folds
-            // autosize.ts's code in via a real `?dup` import instead of
+            // autosize.ts's code in via a direct import instead of
             // the separate script tag AutosizeView used to register
             // directly (autosize.ts has 3 real registrant pages, so a
             // plain import isn't safe here -- Design §4).

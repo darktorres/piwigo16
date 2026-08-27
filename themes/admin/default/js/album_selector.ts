@@ -11,33 +11,25 @@
 // cat_modify.ts/batchManagerUnit.ts/batchManagerGlobal.ts/
 // batchManagerFilter.ts/mcs.ts (all `new AlbumSelector(...)`).
 //
-// Every real consumer imports via the `?dup` suffix (Design §4) --
-// this file has many real registrant pages. On the 2 pages where 2
-// real consumer files coexist (batch_manager_unit.php:
-// batchManagerUnit.ts + batchManagerFilter.ts; batch_manager_global.php:
-// batchManagerGlobal.ts + batchManagerFilter.ts), each file's own
-// independent `?dup` import means 2 separate `AlbumSelector` class
-// copies load on that one page -- a real, accepted behavior change
-// (docs/PLAN.md's own Design §6 precedent for documented, unavoidable
-// changes): `activeAlbumSelector`'s single-active-popup coordination
-// (below) no longer spans both widgets on those 2 pages specifically,
-// since each copy tracks its own independent module state. No safe
-// single-copy alternative exists here -- unlike batchManagerGlobal.ts/
-// batch_manager_global.ts's own circular pair, batchManagerFilter.ts is
-// itself shared across 2 different pages, so it can't statically import
-// "the one true copy" from either page's own hub file.
+// Every consumer imports this file directly, and Rollup emits it once
+// as a shared chunk, so there is exactly one `AlbumSelector` class per
+// page no matter how many consumers reach it.
 //
-// This file's own `sprintf` need is satisfied by a *nested* `?dup`
-// import (common.ts, itself imported via `?dup` since it too has many
-// real registrant pages) -- the first real use of this pattern in the
-// codebase, since this file is itself already `?dup`-imported by its 8
-// own consumers above. Confirmed sound directly from vite.config.ts's
-// own plugin: each `resolveId` call for THIS import receives the
-// *current* importer (the caller's own already-unique dup'd virtual
-// id, which differs per outer consumer), so the resulting nested id
-// stays uniquely keyed per outer page just the same -- no shared-chunk
-// collision risk, just (accepted, Design §4) code duplicated once per
-// outer consumer that reaches this file.
+// That is a change worth recording, because it silently *fixed*
+// something. While each consumer was handed a private duplicate, the 2
+// pages carrying 2 consumer files (batch_manager_unit.php:
+// batchManagerUnit.ts + batchManagerFilter.ts; batch_manager_global.php:
+// batchManagerGlobal.ts + batchManagerFilter.ts) loaded 2 independent
+// copies of this class, so `activeAlbumSelector`'s single-active-popup
+// coordination (below) did not span both widgets on those pages -- each
+// copy tracked its own module state. That was documented as an accepted
+// loss with no safe single-copy alternative. Sharing removes the
+// problem outright: both widgets now read and write the same
+// `activeAlbumSelector`, which is what the coordination was written to
+// assume in the first place.
+//
+// `sprintf` comes from common.ts by plain import; common.ts is itself
+// another shared chunk.
 import { sprintf } from "./common";
 import {
   pwg_getPageData,

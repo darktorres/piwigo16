@@ -8,7 +8,5 @@
 // each real registrant page's own `AssetContribution::script()` call
 // points at this same file/id; Rollup compiles it once regardless of
 // how many pages load it (the same "one entry, many pages" shape
-// scripts.ts's own former standalone entry already had). `?dup` since
-// scripts.ts has several real registrant pages beyond this shared one
-// too (Design §4).
+// scripts.ts's own former standalone entry already had).
 import "../scripts";

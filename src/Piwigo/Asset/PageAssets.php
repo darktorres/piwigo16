@@ -86,7 +86,7 @@ final class PageAssets
     private static array $knownPaths = [
         // 'core.scripts' entry removed (docs/PLAN.md P48, scripts.ts's
         // own module conversion) -- no `dependsOn` references it any
-        // more (every real registrant page now `?dup`-imports the file
+        // more (every real registrant page now imports directly the file
         // directly instead of registering it as its own script tag).
         'jquery' => 'https://cdn.jsdelivr.net/npm/jquery@1.11.3/dist/jquery.min.js',
         // One full bundle, not the old per-widget minified files

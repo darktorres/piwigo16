@@ -104,7 +104,7 @@ final readonly class ThemeBaseAssets
      * (docs/PLAN.md's P48, footer.ts's own catalog line -- see that
      * file's own leading comment for the full reasoning): this method's
      * whole point is a page-agnostic, centrally-ordered late injection,
-     * which a per-page `?dup` fold would have to re-derive per View
+     * which a per-page import would have to re-derive per View
      * instead, for a file with zero real exports to gain from module
      * conversion.
      *

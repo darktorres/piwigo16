@@ -1,7 +1,6 @@
 // Real consumer of scripts.ts's own top-level `phpWGOpenWindow`
 // (docs/PLAN.md P48 -- was a bare ambient-global read, see that file's
-// own leading comment for the full real-consumer list). `?dup` since
-// scripts.ts has many real registrant pages (Design §4). This file
+// own leading comment for the full real-consumer list). This file
 // itself becomes a real module as a result (previously non-module) --
 // `window.SwitchBox`/`window._pwgRatingAutoQueue` below are a separate,
 // already-established queue-based deferred-init pattern (P47's
@@ -10,9 +9,7 @@
 import { phpWGOpenWindow } from "./scripts";
 // switchbox.ts's own side effect only (docs/PLAN.md P48) -- drains
 // `window.SwitchBox`; this file is one of its 2 real pushers (the
-// other, IndexView's own index.ts, has its own separate `?dup`
-// import). `?dup` since switchbox.ts has 2 real registrant pages
-// (Design §4).
+// other is IndexView's own index.ts).
 import "./switchbox";
 
 import { pwg_getPageData, pwg_getPageString } from "./page-data";

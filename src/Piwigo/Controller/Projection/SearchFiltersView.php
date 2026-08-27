@@ -116,7 +116,7 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
             // event handlers, no template reads it directly either).
             // 'page-data' added to mcs.ts's own registration's dependsOn
             // below (docs/PLAN.md's P48, album_selector.ts's own batch): this
-            // file's real `?dup` import of album_selector.ts embeds that
+            // file's real direct import of album_selector.ts embeds that
             // file's own top-level `pwg_getPageString()` calls directly
             // into this bundle, a real new dependency on page-data.ts
             // having already run that didn't exist before this batch.

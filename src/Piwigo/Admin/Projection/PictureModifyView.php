@@ -81,7 +81,7 @@ final readonly class PictureModifyView implements View, HasPageAssets, ExposesPa
                 ->pageAssets(),
             // Real per-page bundle entry (docs/PLAN.md's P48) -- folds
             // autosize.ts's and datepicker.ts's own code in via real
-            // `?dup` imports instead of the separate script tags
+            // direct imports instead of the separate script tags
             // AutosizeView/DatepickerView used to register directly
             // (both have several real registrant pages, so a plain
             // import isn't safe here -- Design §4).

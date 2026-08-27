@@ -18,9 +18,8 @@ import {
 // AlbumSelector` (docs/PLAN.md P48 -- was a `window.AlbumSelector`
 // read, see that file's own leading comment for the full real-consumer
 // list, including the real, accepted "2 independent class copies on
-// this page" consequence of batchManagerFilter.ts's own separate
-// `?dup` import). `?dup` since album_selector.ts has several real
-// registrant pages (Design §4).
+// this page" consequence of batchManagerFilter.ts's own separate direct
+// import).
 import { AlbumSelector } from "./album_selector";
 
 /* ********** Thumbs */
@@ -407,7 +406,7 @@ jQuery("#applyAction").click(function (e) {
     // Local alias for the definitely-assigned value, kept for
     // readability. The non-null assertion this used to need is gone:
     // it was only necessary while `all_elements` arrived typed as `any`
-    // through a `?dup` import, which defeated control-flow narrowing of
+    // through a direct import, which defeated control-flow narrowing of
     // the outer `let elements`. With the real `(string | number)[]`
     // type restored, both assignment branches narrow it properly.
     const syncElements = elements;

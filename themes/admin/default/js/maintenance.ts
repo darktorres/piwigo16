@@ -1,6 +1,8 @@
 import type { operations } from "../../../../openapi/client/schema";
 
 import { pwg_getPageString } from "../../../default/js/page-data";
+import { ajax } from "../../../default/js/vendor/ajax";
+import { ready } from "../../../default/js/vendor/dom";
 export {};
 
 const no_time_elapsed = pwg_getPageString("right now");
@@ -10,43 +12,54 @@ type CacheSizeResponse =
   operations["cacheSize"]["responses"][200]["content"]["application/json"];
 
 function displayResponse(
-  domElem: JQuery[],
+  domElem: NodeListOf<HTMLElement>[],
   values: string[],
-  mDivs: JQuery,
+  mDivs: HTMLElement[],
   mValues: Record<string, string>,
 ) {
   for (let index = 0; index < domElem.length; index++) {
-    domElem[index]!.html(unit_MB.replace("%s", values[index]!));
+    // jQuery's `.html()` writes to every element of the set, not just the
+    // first, so each of these three selectors keeps writing to all matches.
+    domElem[index]!.forEach((node) => {
+      node.innerHTML = unit_MB.replace("%s", values[index]!);
+    });
   }
 
   for (let index = 0; index < mDivs.length; index++) {
-    const mDivName = (mDivs[index] as HTMLElement).getAttribute("name")!;
-    (mDivs[index] as HTMLElement).title = unit_MB.replace(
-      "%s",
-      mValues[mDivName]!,
-    );
+    const mDivName = mDivs[index]!.getAttribute("name")!;
+    mDivs[index]!.title = unit_MB.replace("%s", mValues[mDivName]!);
   }
 
-  $(".cache-lastCalculated-value").html(no_time_elapsed);
+  document.querySelectorAll(".cache-lastCalculated-value").forEach((node) => {
+    node.innerHTML = no_time_elapsed;
+  });
 }
 
-$(document).ready(function () {
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises -- returns a Promise jQuery's .on() never awaits either way, same as the original .js; fire-and-forget by design.
-  $(".refresh-cache-size").on("click", function () {
-    $(this).find(".refresh-icon").addClass("animate-spin");
+ready(function () {
+  document.querySelectorAll(".refresh-cache-size").forEach((button) => {
+    button.addEventListener("click", function () {
+      button.querySelectorAll(".refresh-icon").forEach((icon) => {
+        icon.classList.add("animate-spin");
+      });
 
-    return new Promise<void>((res, rej) => {
-      jQuery.ajax({
+      // The original wrapped this in a `new Promise` returned from the
+      // handler, purely to satisfy a lint rule during the TypeScript
+      // conversion -- jQuery's `.on()` ignores any return value that is not
+      // `false`, so nothing ever observed it. Dropped with the two
+      // eslint-disable comments it needed.
+      void ajax({
         url: "api/v1/cache-size",
         type: "GET",
         dataType: "json",
-        success: function (data: CacheSizeResponse) {
-          res();
+        success: function (payload) {
+          const data = payload as CacheSizeResponse;
 
           const domElemToRefresh = [
-            $(".cache-size-value"),
-            $(".multiple-pictures-sizes"),
-            $(".multiple-compiledTemplate-sizes"),
+            document.querySelectorAll<HTMLElement>(".cache-size-value"),
+            document.querySelectorAll<HTMLElement>(".multiple-pictures-sizes"),
+            document.querySelectorAll<HTMLElement>(
+              ".multiple-compiledTemplate-sizes",
+            ),
           ];
           const domElemValues: string[] = [
             data.cacheSize,
@@ -54,9 +67,22 @@ $(document).ready(function () {
             data.templatesSize,
           ].map((v) => ((v ?? 0) / 1024 / 1024).toFixed(2));
 
-          const multipleSizes = $(".delete-check-container").children(
-            ".delete-size-check",
-          );
+          // `.children(selector)` is direct children only, gathered across
+          // every container in the set.
+          const multipleSizes: HTMLElement[] = [];
+          document
+            .querySelectorAll(".delete-check-container")
+            .forEach((container) => {
+              for (const child of container.children) {
+                if (
+                  child instanceof HTMLElement &&
+                  child.matches(".delete-size-check")
+                ) {
+                  multipleSizes.push(child);
+                }
+              }
+            });
+
           const multipleSizesValues: Record<string, string> = {};
           for (const [key, value] of Object.entries(data.msizes)) {
             multipleSizesValues[key] = (value / 1024 / 1024).toFixed(2);
@@ -69,11 +95,11 @@ $(document).ready(function () {
             multipleSizesValues,
           );
 
-          $(".animate-spin").removeClass("animate-spin");
+          document.querySelectorAll(".animate-spin").forEach((node) => {
+            node.classList.remove("animate-spin");
+          });
         },
-        error: function (message: JQuery.jqXHR) {
-          // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- rejects with the real jqXHR error object, matching the original .js's own console.log(message) usage; not a new Error.
-          rej(message);
+        error: function (message) {
           console.log(message);
         },
       });

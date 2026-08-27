@@ -1,38 +1,71 @@
 import "./common";
 
 import { pwg_getPageData } from "../../../default/js/page-data";
+import { hide, show, toggle } from "../../../default/js/vendor/dom";
 export {};
 
 (function () {
+  const select = document.getElementById("wSelect") as HTMLSelectElement | null;
+  const image = document.getElementById("wImg");
+
   function onWatermarkChange() {
-    const val = String(jQuery("#wSelect").val());
+    if (image === null) {
+      return;
+    }
+
+    // jQuery's `.val()` on an empty set is undefined, which this code then
+    // stringified to the literal "undefined" -- a truthy length. Unreachable:
+    // #wSelect and #wImg come from the same template block, so neither can
+    // exist without the other.
+    const val = select === null ? "" : select.value;
     if (val.length) {
-      jQuery("#wImg")
-        .attr("src", pwg_getPageData<string>("root_url") + val)
-        .show();
+      image.setAttribute("src", pwg_getPageData<string>("root_url") + val);
+      show(image);
     } else {
-      jQuery("#wImg").hide();
+      hide(image);
     }
   }
 
   onWatermarkChange();
 
-  jQuery("#wSelect").bind("change", onWatermarkChange);
+  select?.addEventListener("change", onWatermarkChange);
 
-  if (jQuery("input[name='w[position]']:checked").val() === "custom") {
-    jQuery("#positionCustomDetails").show();
+  const positionDetails = document.getElementById("positionCustomDetails");
+  const positionInputs = document.querySelectorAll<HTMLInputElement>(
+    "input[name='w[position]']",
+  );
+
+  if (
+    document.querySelector<HTMLInputElement>(
+      "input[name='w[position]']:checked",
+    )?.value === "custom"
+  ) {
+    if (positionDetails !== null) {
+      show(positionDetails);
+    }
   }
 
-  jQuery("input[name='w[position]']").change(function () {
-    if (jQuery(this).val() === "custom") {
-      jQuery("#positionCustomDetails").show();
-    } else {
-      jQuery("#positionCustomDetails").hide();
-    }
+  positionInputs.forEach((input) => {
+    input.addEventListener("change", function () {
+      if (positionDetails === null) {
+        return;
+      }
+
+      if (input.value === "custom") {
+        show(positionDetails);
+      } else {
+        hide(positionDetails);
+      }
+    });
   });
 
-  jQuery(".addWatermarkOpen").click(function () {
-    jQuery("#addWatermark, #selectWatermark").toggle();
-    return false;
+  document.querySelectorAll(".addWatermarkOpen").forEach((opener) => {
+    opener.addEventListener("click", function (event) {
+      toggle(document.querySelectorAll("#addWatermark, #selectWatermark"));
+
+      // `return false` from a jQuery handler.
+      event.preventDefault();
+      event.stopPropagation();
+    });
   });
 })();

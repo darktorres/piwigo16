@@ -16,6 +16,9 @@
     "isolatedModules": true,
     "noEmit": true,
     "types": [
+      // Vite's ambient types: needed for the `*.css` side-effect import
+      // in stats.ts (Chart.js's resize-monitor stylesheet).
+      "vite/client",
       "node",
       "jquery",
       "jqueryui",

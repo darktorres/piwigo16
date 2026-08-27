@@ -1,3 +1,12 @@
+import Chart from "chart.js";
+// Functionally required, not cosmetic: this stylesheet carries the
+// `chartjs-size-monitor` machinery Chart.js 2.x uses to detect
+// container resizes, so responsive charts stop resizing without it. It
+// used to arrive as a separate CDN <link>; imported here, Vite emits it
+// as this entry's own CSS chunk and PageAssets::resolveCss() renders
+// the <link> from the manifest automatically.
+import "chart.js/dist/Chart.min.css";
+import moment from "moment";
 import {
   pwg_getPageData,
   pwg_getPageString,
@@ -72,14 +81,14 @@ function gradient(r: number, g: number, b: number) {
 }
 
 //Setup the graph
-window.Chart.defaults.global.elements!.point!.radius = 0.1;
-window.Chart.defaults.global.elements!.point!.hitRadius = 10;
-window.Chart.defaults.global.defaultFontSize = 14;
-window.Chart.defaults.global.defaultFontColor = "#888";
-window.Chart.defaults.global.tooltips.intersect = false;
-window.Chart.defaults.global.legend!.onClick = undefined;
+Chart.defaults.global.elements!.point!.radius = 0.1;
+Chart.defaults.global.elements!.point!.hitRadius = 10;
+Chart.defaults.global.defaultFontSize = 14;
+Chart.defaults.global.defaultFontColor = "#888";
+Chart.defaults.global.tooltips.intersect = false;
+Chart.defaults.global.legend!.onClick = undefined;
 
-const statGraph = new window.Chart(ctx, {
+const statGraph = new Chart(ctx, {
   type: "line",
   options: {
     maintainAspectRatio: false,

@@ -205,18 +205,6 @@ interface Window {
     set_data_function?: ((...args: unknown[]) => unknown) | null,
     get_data_function?: ((...args: unknown[]) => unknown) | null,
   ) => void;
-
-  // Chart.js (vendored -- P46-0's own CDN table, real types from
-  // `@types/chart.js`, P47). `@types/chart.js`'s own `.d.ts` has a real
-  // top-level `import` of its own (for `moment`'s types), which makes
-  // it an ambient *module* -- its `export as namespace Chart` UMD
-  // global is therefore only referenceable bare from a *non*-module
-  // file (TS2686 otherwise). Every P46 entry except the 4 established
-  // shared-global files is a module (`export {}`), so `stats.ts` (the
-  // one real first-party call site) reads this `window.` property
-  // instead of the bare identifier -- same exposure pattern as every
-  // other cross-file/cross-module-boundary global in this file.
-  Chart: typeof Chart;
 }
 
 // `pwg_token` (the CSRF token) is independently declared per-page by
@@ -271,7 +259,6 @@ declare const GeoIp: {
 // `typeof import(...)` bridges the real npm types to the CDN-loaded
 // global the same way `tus` does above. `stats.ts`'s own graph
 // rendering is the one real first-party call site.
-declare const moment: typeof import("moment");
 
 interface JQueryStatic {
   // jquery.ajaxmanager (vendored, never published to npm -- P46-0's own

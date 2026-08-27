@@ -25,12 +25,12 @@
     <link rel="stylesheet" type="text/css" href="themes/admin/default/css/components/general.css?v17.0.0">
     <link rel="stylesheet" type="text/css" href="themes/admin/clear/css/components/general.css?v17.0.0">
     <link rel="stylesheet" type="text/css" href="themes/admin/default/css/utilities.css?v17.0.0">
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.css?v17.0.0">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/jackmoore/colorbox@1.5.14/example2/colorbox.css?v17.0.0">
+    <link rel="stylesheet" type="text/css" href="dist/assets/stats-{{ASSET_HASH}}.css">
 
+    <link rel="modulepreload" href="dist/assets/rolldown-runtime-{{ASSET_HASH}}.js">
     <link rel="modulepreload" href="dist/assets/page-data-{{ASSET_HASH}}.js">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@1.11.3/dist/jquery.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/moment@2.26.0/min/moment-with-locales.min.js"></script>
 
   </head>
 
@@ -341,11 +341,10 @@
 
     <script type="application/json" id="page-data">{"data":{"month_labels":"January~February~March~April~May~June~July~August~September~October~November~December","lang_code":"en_UK","active_menu":3,"whats_new_major_version":"17","show_whats_new":false},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?","Page Visited":"Page Visited","Average last 12 months":"Average last 12 months"}}</script>
 
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+    <script type="module" src="dist/assets/stats-{{ASSET_HASH}}.js?v17.0.0"></script>
     <script type="module" src="dist/assets/adminShell-{{ASSET_HASH}}.js?v17.0.0"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/jackmoore/colorbox@1.5.14/jquery.colorbox-min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/drewwilson/TipTip@277e33629e/jquery.tipTip.minified.js"></script>
-    <script type="module" src="dist/assets/stats-{{ASSET_HASH}}.js?v17.0.0"></script>
     <script type="module" src="dist/assets/adminHelp-{{ASSET_HASH}}.js?v17.0.0"></script>
     <script type="module" src="dist/assets/footerAdmin-{{ASSET_HASH}}.js?v17.0.0"></script>
 

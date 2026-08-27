@@ -50,10 +50,7 @@ final readonly class StatsView implements View, HasPageAssets, ExposesPageData
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('chart.js', 'https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js', loadMode: LoadMode::Footer),
-            AssetContribution::css('https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.css'),
-            AssetContribution::script('moment-with-locales.js', 'https://cdn.jsdelivr.net/npm/moment@2.26.0/min/moment-with-locales.min.js'),
-            AssetContribution::script('stats', 'themes/admin/default/js/stats.ts', loadMode: LoadMode::Footer, dependsOn: ['chart.js', 'moment-with-locales.js', 'page-data']),
+            AssetContribution::script('stats', 'themes/admin/default/js/stats.ts', loadMode: LoadMode::Footer, dependsOn: ['page-data']),
         ];
     }
 

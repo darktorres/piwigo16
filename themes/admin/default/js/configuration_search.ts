@@ -1,70 +1,73 @@
 import "./common";
 
 import { pwg_getPageData } from "../../../default/js/page-data";
+import { hide, show } from "../../../default/js/vendor/dom";
 export {};
 
 const filters_names = pwg_getPageData<string[]>("filters_names");
 
+/**
+ * jQuery quietly skips a selector that matches nothing, and several of the
+ * ids below are optional per filter. Collecting the ones that exist keeps
+ * that behaviour without a null check at every call.
+ */
+function present(...elements: (HTMLElement | null)[]): HTMLElement[] {
+  return elements.filter((element): element is HTMLElement => element !== null);
+}
+
 for (const filter_name of filters_names) {
-  if (!$("input#" + filter_name + "Filters").is(":checked")) {
-    $("#f" + filter_name + "Select, #" + filter_name + "Arrow").hide();
-    $("#default_" + filter_name)
-      .parent()
-      .hide();
+  const toggle = document.getElementById(
+    filter_name + "Filters",
+  ) as HTMLInputElement | null;
+  const select = document.getElementById(
+    "f" + filter_name + "Select",
+  ) as HTMLSelectElement | null;
+  const arrow = document.getElementById(filter_name + "Arrow");
+  const adminIcon = document.getElementById(filter_name + "AdminIcon");
+  const defaultInput = document.getElementById(
+    "default_" + filter_name,
+  ) as HTMLInputElement | null;
+  const defaultContainer = defaultInput?.parentElement ?? null;
+
+  if (toggle?.checked !== true) {
+    hide(present(select, arrow));
+    hide(present(defaultContainer));
   }
 
-  if ($("#f" + filter_name + "Select").val() !== "admins-only") {
-    $("#" + filter_name + "AdminIcon").hide();
+  if (select?.value !== "admins-only") {
+    hide(present(adminIcon));
   }
 
-  if ($("#default_" + filter_name).is(":checked")) {
-    $("#default_" + filter_name)
-      .parent()
-      .addClass("selected-filter-container");
+  if (defaultInput?.checked === true) {
+    defaultContainer?.classList.add("selected-filter-container");
   }
 
-  $("#" + filter_name + "Filters").on("click", function () {
-    if ($("input#" + filter_name + "Filters").is(":checked")) {
-      $("#f" + filter_name + "Select, #" + filter_name + "Arrow").show();
-      $("#default_" + filter_name)
-        .parent()
-        .show();
-      if ($("#f" + filter_name + "Select").val() === "admins-only") {
-        $("#" + filter_name + "AdminIcon").show();
+  toggle?.addEventListener("click", function () {
+    if (toggle.checked) {
+      show(present(select, arrow));
+      show(present(defaultContainer));
+      if (select?.value === "admins-only") {
+        show(present(adminIcon));
       }
     } else {
-      $(
-        "#f" +
-          filter_name +
-          "Select, #" +
-          filter_name +
-          "Arrow, #" +
-          filter_name +
-          "AdminIcon",
-      ).hide();
-      $("#default_" + filter_name)
-        .parent()
-        .hide();
+      hide(present(select, arrow, adminIcon));
+      hide(present(defaultContainer));
     }
   });
 
-  $("#f" + filter_name + "Select").on("click", function () {
-    if ($("#f" + filter_name + "Select").val() === "admins-only") {
-      $("#" + filter_name + "AdminIcon").show();
+  select?.addEventListener("click", function () {
+    if (select.value === "admins-only") {
+      show(present(adminIcon));
     } else {
-      $("#" + filter_name + "AdminIcon").hide();
+      hide(present(adminIcon));
     }
   });
 
-  $("#default_" + filter_name).on("click", function () {
-    if ($("#default_" + filter_name).is(":checked")) {
-      $("#default_" + filter_name)
-        .parent()
-        .addClass("selected-filter-container");
+  defaultInput?.addEventListener("click", function () {
+    if (defaultInput.checked) {
+      defaultContainer?.classList.add("selected-filter-container");
     } else {
-      $("#default_" + filter_name)
-        .parent()
-        .removeClass("selected-filter-container");
+      defaultContainer?.classList.remove("selected-filter-container");
     }
   });
 }

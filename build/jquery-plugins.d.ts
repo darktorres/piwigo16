@@ -242,12 +242,7 @@ interface Window {
 // package's own global with `any` (confirmed via a local `tsc` repro
 // during planning). `Piecon` has no real upstream types (one of P46-0's
 // own genuinely-unresolved vendored libraries) and stays hand-typed.
-// `tus` is real, verified via `tus-js-client`'s own bundled `.d.ts`
-// (already an installed npm dependency) -- `typeof import(...)` gives
-// the real named-export shape (`Upload`, `isSupported`, etc.) the CDN
-// global mirrors.
 declare const Piecon: { setProgress(percent: number): void; reset(): void };
-declare const tus: typeof import("tus-js-client");
 
 // jquery.geoip.js -- genuinely first-party (docs/PLAN.md's own scope
 // note), but excluded from this phase's real 61-file count and not yet

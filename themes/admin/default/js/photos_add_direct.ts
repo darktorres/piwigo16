@@ -1,7 +1,8 @@
-import type {
-  Upload as TusUpload,
-  DetailedError as TusDetailedError,
-  HttpResponse as TusHttpResponse,
+import {
+  Upload,
+  type Upload as TusUpload,
+  type DetailedError as TusDetailedError,
+  type HttpResponse as TusHttpResponse,
 } from "tus-js-client";
 import type { operations, components } from "../../../../openapi/client/schema";
 // Real consumer of album_selector.ts's own top-level `class
@@ -734,7 +735,7 @@ function uploadNextTusFile(
     metadata.updateMode = "1";
   }
 
-  activeTusUpload = new tus.Upload(file.getNative(), {
+  activeTusUpload = new Upload(file.getNative(), {
     endpoint: "api/v1/uploads",
     chunkSize: parseInt(chunk_size) * 1024,
     retryDelays: [0, 1000, 3000, 5000],

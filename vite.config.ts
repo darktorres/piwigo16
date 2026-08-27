@@ -8,6 +8,24 @@ const r = (p: string) => resolve(__dirname, p);
 export default defineConfig({
   root: ".",
   plugins: [],
+  resolve: {
+    alias: {
+      // tus-js-client ships separate node and browser builds and points
+      // `main`/`module` at the NODE one (lib.esm/node/index.js). It
+      // redirects them via a `browser` field, but that field is an
+      // object *map* rather than a plain string and the package has no
+      // `exports` block, so Vite's mainFields resolution reaches
+      // `module` first and bundles the node build.
+      //
+      // Found live, not by any gate: typecheck, lint, the unit suite and
+      // golden-html all passed, and the page threw `TypeError: Super
+      // expression must either be null or a function` in the browser --
+      // the node build extending APIs that do not exist there. Pinning
+      // the browser entry explicitly makes the resolution deterministic
+      // instead of dependent on mainFields ordering.
+      "tus-js-client": r("node_modules/tus-js-client/lib.esm/browser/index.js"),
+    },
+  },
   // Resolve dynamic chunk URLs via import.meta.url so they work under any
   // Apache document root prefix (Piwigo can be served at /, /piwigo17/, etc.).
   base: "./",

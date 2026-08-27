@@ -25,12 +25,12 @@
     <link rel="stylesheet" type="text/css" href="themes/admin/default/css/components/general.css?v17.0.0">
     <link rel="stylesheet" type="text/css" href="themes/admin/clear/css/components/general.css?v17.0.0">
     <link rel="stylesheet" type="text/css" href="themes/admin/default/css/utilities.css?v17.0.0">
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/jackmoore/colorbox@1.5.14/example2/colorbox.css?v17.0.0">
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css?v17.0.0">
+    <link rel="stylesheet" type="text/css" href="themes/admin/default/css/pages/menubar.css?v17.0.0">
 
-    <link rel="modulepreload" href="dist/assets/page-data-{{ASSET_HASH}}.js">
     <link rel="modulepreload" href="dist/assets/common-{{ASSET_HASH}}.js">
+    <link rel="modulepreload" href="dist/assets/page-data-{{ASSET_HASH}}.js">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@1.11.3/dist/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.js"></script>
 
   </head>
 
@@ -50,7 +50,7 @@
               class="icon-user"
             ></i>fixture_admin</span>
 
-<a href="admin.php?change_theme=1" class="tiptip" title="Switch to clear or dark colors for administration"><i class="icon-moon-inv"></i><span>Dark</span></a>
+<a href="admin.php?page=menubar&amp;change_theme=1" class="tiptip" title="Switch to clear or dark colors for administration"><i class="icon-moon-inv"></i><span>Dark</span></a>
           <a
             class="tiptip"
             href="admin.php?page=help"
@@ -189,7 +189,7 @@
 </div> <!-- menubar -->
 
 <div id="content" class="content">
-  <h1>Themes<span
+  <h1>Menus<span
         class="admin-object-id"
       ></span></h1>
 
@@ -199,29 +199,8 @@
       class="selected_tab"
     >
       <a
-        href="admin.php?page=themes&amp;tab=installed"
+        href="admin.php?page=menubar"
       ><span><span class="icon-menu"></span>List</span></a>
-    </li>
-    <li
-      class="normal_tab"
-    >
-      <a
-        href="admin.php?page=themes&amp;tab=update"
-      ><span><span class="icon-arrows-cw"></span>Check for updates</span></a>
-    </li>
-    <li
-      class="normal_tab"
-    >
-      <a
-        href="admin.php?page=themes&amp;tab=new"
-      ><span><span class="icon-plus-circled"></span>Add a new theme</span></a>
-    </li>
-    <li
-      class="normal_tab"
-    >
-      <a
-        href="admin.php?page=themes&amp;tab=standard_pages"
-      ><span><span class="icon-cog-alt"></span>Standard pages</span></a>
     </li>
   </ul>
 </div>
@@ -233,12 +212,289 @@
 
   </div> 
 
-  
-<div id="themesContent">
-   
-  </div> <!-- themeBoxes -->
-</fieldset>
-</div> <!-- themesContent -->
+  <form id="menuOrdering" action="admin.php?page=menubar" method="post">
+  <ul class="menuUl">
+    <li
+      class="menuLi "
+      id="menu_mbLinks"
+    >
+      <p>
+        <span>
+          <label class="font-checkbox"><strong>Hide</strong><i
+              class="icon-check"
+            ></i><input
+              type="checkbox"
+              name="hide_mbLinks"
+              
+            ></label>
+        </span>
+
+        <img
+          src="themes/admin/clear/icon/cat_move.png"
+          class="drag_button u-hidden"
+          alt="Click-and-drag to re-order"
+          title="Click-and-drag to re-order"
+        >
+        <strong>Links</strong> (mbLinks)
+      </p>
+
+
+      <p class="menuPos">
+        <label>
+          Position :
+          <input
+            type="text"
+            size="4"
+            name="pos_mbLinks"
+            maxlength="4"
+            value="10"
+          >
+        </label>
+      </p>
+    </li>
+    <li
+      class="menuLi "
+      id="menu_mbCategories"
+    >
+      <p>
+        <span>
+          <label class="font-checkbox"><strong>Hide</strong><i
+              class="icon-check"
+            ></i><input
+              type="checkbox"
+              name="hide_mbCategories"
+              
+            ></label>
+        </span>
+
+        <img
+          src="themes/admin/clear/icon/cat_move.png"
+          class="drag_button u-hidden"
+          alt="Click-and-drag to re-order"
+          title="Click-and-drag to re-order"
+        >
+        <strong>Albums</strong> (mbCategories)
+      </p>
+
+
+      <p class="menuPos">
+        <label>
+          Position :
+          <input
+            type="text"
+            size="4"
+            name="pos_mbCategories"
+            maxlength="4"
+            value="20"
+          >
+        </label>
+      </p>
+    </li>
+    <li
+      class="menuLi "
+      id="menu_mbTags"
+    >
+      <p>
+        <span>
+          <label class="font-checkbox"><strong>Hide</strong><i
+              class="icon-check"
+            ></i><input
+              type="checkbox"
+              name="hide_mbTags"
+              
+            ></label>
+        </span>
+
+        <img
+          src="themes/admin/clear/icon/cat_move.png"
+          class="drag_button u-hidden"
+          alt="Click-and-drag to re-order"
+          title="Click-and-drag to re-order"
+        >
+        <strong>Tags</strong> (mbTags)
+      </p>
+
+
+      <p class="menuPos">
+        <label>
+          Position :
+          <input
+            type="text"
+            size="4"
+            name="pos_mbTags"
+            maxlength="4"
+            value="30"
+          >
+        </label>
+      </p>
+    </li>
+    <li
+      class="menuLi "
+      id="menu_mbSpecials"
+    >
+      <p>
+        <span>
+          <label class="font-checkbox"><strong>Hide</strong><i
+              class="icon-check"
+            ></i><input
+              type="checkbox"
+              name="hide_mbSpecials"
+              
+            ></label>
+        </span>
+
+        <img
+          src="themes/admin/clear/icon/cat_move.png"
+          class="drag_button u-hidden"
+          alt="Click-and-drag to re-order"
+          title="Click-and-drag to re-order"
+        >
+        <strong>Specials</strong> (mbSpecials)
+      </p>
+
+
+      <p class="menuPos">
+        <label>
+          Position :
+          <input
+            type="text"
+            size="4"
+            name="pos_mbSpecials"
+            maxlength="4"
+            value="40"
+          >
+        </label>
+      </p>
+    </li>
+    <li
+      class="menuLi "
+      id="menu_mbMenu"
+    >
+      <p>
+        <span>
+          <label class="font-checkbox"><strong>Hide</strong><i
+              class="icon-check"
+            ></i><input
+              type="checkbox"
+              name="hide_mbMenu"
+              
+            ></label>
+        </span>
+
+        <img
+          src="themes/admin/clear/icon/cat_move.png"
+          class="drag_button u-hidden"
+          alt="Click-and-drag to re-order"
+          title="Click-and-drag to re-order"
+        >
+        <strong>Menu</strong> (mbMenu)
+      </p>
+
+
+      <p class="menuPos">
+        <label>
+          Position :
+          <input
+            type="text"
+            size="4"
+            name="pos_mbMenu"
+            maxlength="4"
+            value="50"
+          >
+        </label>
+      </p>
+    </li>
+    <li
+      class="menuLi "
+      id="menu_mbRelatedCategories"
+    >
+      <p>
+        <span>
+          <label class="font-checkbox"><strong>Hide</strong><i
+              class="icon-check"
+            ></i><input
+              type="checkbox"
+              name="hide_mbRelatedCategories"
+              
+            ></label>
+        </span>
+
+        <img
+          src="themes/admin/clear/icon/cat_move.png"
+          class="drag_button u-hidden"
+          alt="Click-and-drag to re-order"
+          title="Click-and-drag to re-order"
+        >
+        <strong>Related albums</strong> (mbRelatedCategories)
+      </p>
+
+
+      <p class="menuPos">
+        <label>
+          Position :
+          <input
+            type="text"
+            size="4"
+            name="pos_mbRelatedCategories"
+            maxlength="4"
+            value="60"
+          >
+        </label>
+      </p>
+    </li>
+    <li
+      class="menuLi "
+      id="menu_mbIdentification"
+    >
+      <p>
+        <span>
+          <label class="font-checkbox"><strong>Hide</strong><i
+              class="icon-check"
+            ></i><input
+              type="checkbox"
+              name="hide_mbIdentification"
+              
+            ></label>
+        </span>
+
+        <img
+          src="themes/admin/clear/icon/cat_move.png"
+          class="drag_button u-hidden"
+          alt="Click-and-drag to re-order"
+          title="Click-and-drag to re-order"
+        >
+        <strong>Identification</strong> (mbIdentification)
+      </p>
+
+
+      <p class="menuPos">
+        <label>
+          Position :
+          <input
+            type="text"
+            size="4"
+            name="pos_mbIdentification"
+            maxlength="4"
+            value="70"
+          >
+        </label>
+      </p>
+    </li>
+  </ul>
+  <div class="savebar-footer">
+    <div class="savebar-footer-start"></div>
+    <div class="savebar-footer-end">
+      <div class="savebar-footer-block">
+        <button
+          class="buttonLike"
+          type="submit"
+          name="submit"
+          
+        ><i class="icon-floppy"></i> Save Settings</button>
+      </div>
+    </div>
+  </div>
+</form>
 
 </div>
       </div>
@@ -311,13 +567,11 @@
       </div>
     </div>
 
-    <script type="application/json" id="page-data">{"data":{"active_menu":4,"whats_new_major_version":"17","show_whats_new":false},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?","Are you sure you want to delete the theme \"%s\"?":"Are you sure you want to delete the theme \"%s\"?"}}</script>
+    <script type="application/json" id="page-data">{"data":{"active_menu":4,"whats_new_major_version":"17","show_whats_new":false},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
 
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/jackmoore/colorbox@1.5.14/jquery.colorbox-min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js"></script>
+    <script type="module" src="dist/assets/menubarAdmin-{{ASSET_HASH}}.js?v17.0.0"></script>
     <script type="module" src="dist/assets/adminShell-{{ASSET_HASH}}.js?v17.0.0"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/drewwilson/TipTip@277e33629e/jquery.tipTip.minified.js"></script>
-    <script type="module" src="dist/assets/themesInstalled-{{ASSET_HASH}}.js?v17.0.0"></script>
     <script type="module" src="dist/assets/footerAdmin-{{ASSET_HASH}}.js?v17.0.0"></script>
 
     <script

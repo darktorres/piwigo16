@@ -338,14 +338,20 @@ function goldenHtmlWriteDiff(string $name, string $normalizedFresh, string $norm
 function goldenHtmlAssertOrWrite(string $name, string $body): void
 {
     $path = goldenHtmlDir() . "/{$name}.html";
+    $normalizedFresh = goldenHtmlNormalize($body);
 
+    // Normalized here too, not raw. A first capture used to be written
+    // unnormalized, which quietly broke the invariant the comment below
+    // states: the three fixtures added for the plugins/themes/languages
+    // `tab=installed` routes went in carrying this checkout's own base path
+    // and a live CSRF token, and a baseline holding `/piwigo17/` cannot
+    // match in the -2/-3/-4 worktrees, which serve the same app from a
+    // different path.
     if (! is_file($path)) {
-        file_put_contents($path, $body);
+        file_put_contents($path, $normalizedFresh);
 
         return;
     }
-
-    $normalizedFresh = goldenHtmlNormalize($body);
 
     // The baseline is stored already-normalized, so the committed file is
     // exactly what gets asserted rather than a raw capture with a

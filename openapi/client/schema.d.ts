@@ -1641,6 +1641,11 @@ export interface components {
             commentRaw: string | null;
             /** @description Full breadcrumb-style display name, HTML-stripped. */
             fullname: string;
+            /** @description The same breadcrumb as `fullname`, one entry per path segment, root first. Lets a client rebuild the linked breadcrumb the admin templates render server-side, which neither `fullname` (joined text) nor `uppercats` (ids only) can do alone. `name` is HTML-escaped, as `fullname` is. */
+            breadcrumb: {
+                id: string;
+                name: string;
+            }[];
             uppercats: string;
             globalRank: string | null;
             /** @enum {string} */
@@ -4155,6 +4160,8 @@ export interface operations {
                 content: {
                     "application/json": {
                         categories: components["schemas"]["CategoryAdmin"][];
+                        /** @description The gallery's configured breadcrumb separator, so a client joining `breadcrumb` produces the same string the server renders. */
+                        levelSeparator: string;
                         limit: components["schemas"]["LimitInfo"];
                     };
                 };

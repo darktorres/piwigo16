@@ -45,6 +45,11 @@ final class SearchServiceTestFatalSignalHtmlRenderer implements HtmlRenderingInt
         throw new LogicException('not implemented in this fake');
     }
 
+    public function getCatBreadcrumb(string $uppercats): array
+    {
+        return [];
+    }
+
     /**
      * @param array<string, mixed> $a
      * @param array<string, mixed> $b

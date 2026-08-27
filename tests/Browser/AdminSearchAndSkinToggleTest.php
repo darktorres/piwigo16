@@ -56,7 +56,8 @@ it('marks the chosen filter as the default one', function (): void {
 
     // The class tracks the checkbox, so whatever the stored state is, the
     // container must already agree with it before anything is clicked.
-    expect($startsMarked)->toBe($startsChecked);
+    expect($startsMarked)
+        ->toBe($startsChecked);
 
     // The checkbox is `hidden`; its own container label is the control.
     $page->click('label.filter-manager-options-container:has(#default_words)');
@@ -66,7 +67,8 @@ it('marks the chosen filter as the default one', function (): void {
         "document.getElementById('default_words').parentElement.classList.contains('selected-filter-container')"
     );
 
-    expect($afterMarked)->toBe(! $startsChecked);
+    expect($afterMarked)
+        ->toBe(! $startsChecked);
 
     $page->assertNoJavaScriptErrors();
 });
@@ -147,7 +149,8 @@ it('swaps the custom logo upload and reuse panels', function (): void {
     // Cancelling also clears the pending file selection.
     /** @var string $logoValue */
     $logoValue = $page->script("document.getElementById('std_pgs_logo').value");
-    expect($logoValue)->toBe('');
+    expect($logoValue)
+        ->toBe('');
 
     $page->assertNoJavaScriptErrors();
 });

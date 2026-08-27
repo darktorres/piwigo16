@@ -52,6 +52,15 @@ interface HtmlRenderingInterface
     ): string;
 
     /**
+     * The same breadcrumb `getCatDisplayNameCache()` renders, as data, so a
+     * JSON client can build the identical markup itself. `name` is
+     * HTML-escaped, matching `fullname`'s own convention.
+     *
+     * @return list<array{id: string, name: string}>
+     */
+    public function getCatBreadcrumb(string $uppercats): array;
+
+    /**
      * @param array<string, mixed> $a
      * @param array<string, mixed> $b
      */

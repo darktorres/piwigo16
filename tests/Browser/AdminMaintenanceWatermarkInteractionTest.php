@@ -93,7 +93,7 @@ it('shows the custom watermark position details only for the custom position', f
     $page->click('label.custom-position-label');
     $page->assertVisible('#positionCustomDetails');
 
-    $page->click("#watermarkPositionBox label:nth-of-type(2)");
+    $page->click('#watermarkPositionBox label:nth-of-type(2)');
     $page->assertMissing('#positionCustomDetails');
 
     // The add/select watermark panels swap, a single toggle() over a

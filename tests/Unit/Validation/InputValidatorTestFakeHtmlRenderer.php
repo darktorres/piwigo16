@@ -43,6 +43,12 @@ final class InputValidatorTestFakeHtmlRenderer implements HtmlRenderingInterface
     }
 
     #[Override]
+    public function getCatBreadcrumb(string $uppercats): array
+    {
+        return [];
+    }
+
+    #[Override]
     public function nameCompare(array $a, array $b): int
     {
         throw new LogicException('not used by InputValidator::fatalError()');

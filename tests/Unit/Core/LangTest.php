@@ -136,6 +136,11 @@ function langTestMakeFatalRenderer(stdClass $capture): HtmlRenderingInterface
             return '';
         }
 
+        public function getCatBreadcrumb(string $uppercats): array
+        {
+            return [];
+        }
+
         #[\Override]
         public function nameCompare(array $a, array $b): int
         {

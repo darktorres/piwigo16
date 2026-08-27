@@ -8,6 +8,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
+import { albumBreadcrumbHtml } from "../../../default/js/vendor/dom";
 export {};
 //
 // `add_related_category`/`remove_related_category` are declared here
@@ -153,13 +154,14 @@ function remove_related_category({
 
 function add_related_category({
   album,
+  levelSeparator,
   addSelectedAlbum,
   getSelectedAlbum,
 }: AlbumSelectorCallbackArgs) {
   if (!getSelectedAlbum().includes(String(album.id))) {
     $(".related-categories-container").append(
       `<div class="breadcrumb-item">
-        <span class="link-path">${album.fullname ?? ""}</span><span id="${album.id}" class="icon-cancel-circled remove-item"></span>
+        <span class="link-path">${albumBreadcrumbHtml(album.breadcrumb, levelSeparator)}</span><span id="${album.id}" class="icon-cancel-circled remove-item"></span>
       </div>`,
     );
 

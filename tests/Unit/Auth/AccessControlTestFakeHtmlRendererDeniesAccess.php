@@ -33,6 +33,12 @@ final class AccessControlTestFakeHtmlRendererDeniesAccess implements HtmlRenderi
     }
 
     #[Override]
+    public function getCatBreadcrumb(string $uppercats): array
+    {
+        return [];
+    }
+
+    #[Override]
     public function nameCompare(array $a, array $b): int
     {
         throw new LogicException('not used by checkStatus()');

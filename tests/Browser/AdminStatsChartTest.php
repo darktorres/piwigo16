@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Pest\Browser\Api\AwaitableWebpage;
+use Pest\Browser\Api\PendingAwaitablePage;
+use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 // The stats page is a canvas. Golden-html sees the server-rendered
@@ -24,7 +27,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * Playwright's stability check, not on anything in the page -- so every test
  * here waits for the first paint before touching a control.
  */
-function statsWaitForFirstPaint(object $page, int $timeoutMs = 10000): void
+function statsWaitForFirstPaint(Webpage|PendingAwaitablePage|AwaitableWebpage $page, int $timeoutMs = 10000): void
 {
     $page->script(<<<JS
     new Promise((resolve, reject) => {
@@ -54,7 +57,7 @@ function statsWaitForFirstPaint(object $page, int $timeoutMs = 10000): void
 /**
  * Chart.js animates, so the repaint lands after the click returns.
  */
-function statsWaitForRepaint(object $page, string $before, int $timeoutMs = 10000): void
+function statsWaitForRepaint(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $before, int $timeoutMs = 10000): void
 {
     $encoded = json_encode($before, JSON_THROW_ON_ERROR);
 
@@ -151,7 +154,8 @@ it('moves the selection off the unavailable ranges when compare mode is turned o
         "document.querySelectorAll('.stat-data-selector label.unavailable').length"
     );
 
-    expect($released)->toBe(0);
+    expect($released)
+        ->toBe(0);
 
     $page->assertNoJavaScriptErrors();
 });

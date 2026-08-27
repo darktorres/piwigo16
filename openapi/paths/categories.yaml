@@ -30,12 +30,18 @@
           application/json:
             schema:
               type: object
-              required: [categories, limit]
+              required: [categories, levelSeparator, limit]
               properties:
                 categories:
                   type: array
                   items:
                     $ref: '#/components/schemas/CategoryAdmin'
+                levelSeparator:
+                  type: string
+                  description: >-
+                    The gallery's configured breadcrumb separator, so a client
+                    joining `breadcrumb` produces the same string the server
+                    renders.
                 limit:
                   $ref: '#/components/schemas/LimitInfo'
       '401':
@@ -670,6 +676,7 @@ components:
         - comment
         - commentRaw
         - fullname
+        - breadcrumb
         - uppercats
         - globalRank
         - status
@@ -691,6 +698,22 @@ components:
         fullname:
           type: string
           description: Full breadcrumb-style display name, HTML-stripped.
+        breadcrumb:
+          type: array
+          description: >-
+            The same breadcrumb as `fullname`, one entry per path segment,
+            root first. Lets a client rebuild the linked breadcrumb the admin
+            templates render server-side, which neither `fullname` (joined
+            text) nor `uppercats` (ids only) can do alone. `name` is
+            HTML-escaped, as `fullname` is.
+          items:
+            type: object
+            required: [id, name]
+            properties:
+              id:
+                type: string
+              name:
+                type: string
         uppercats:
           type: string
         globalRank:

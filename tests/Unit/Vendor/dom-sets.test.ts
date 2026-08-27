@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import {
   addClass,
+  albumBreadcrumbHtml,
   after,
   append,
   attr,
@@ -240,5 +241,65 @@ describe("escapeId", () => {
 
   it("leaves an already-conforming id alone", () => {
     expect(escapeId("plain-id")).toBe("plain-id");
+  });
+});
+
+describe("albumBreadcrumbHtml", () => {
+  it("renders one link per segment, joined by the separator", () => {
+    // Must match HtmlService::getCatDisplayNameCache($uppercats,
+    // 'admin.php?page=album-') exactly, because the same page renders rows
+    // both ways -- server-side on load, here on selection.
+    const html = albumBreadcrumbHtml(
+      [
+        { id: "1", name: "Top" },
+        { id: "7", name: "Nested" },
+      ],
+      " / "
+    );
+
+    expect(html).toBe(
+      '<a href="admin.php?page=album-1">Top</a>' +
+        "<span> / </span>" +
+        '<a href="admin.php?page=album-7">Nested</a>'
+    );
+  });
+
+  it("emits no separator for a single segment", () => {
+    expect(albumBreadcrumbHtml([{ id: "3", name: "Only" }], " / ")).toBe(
+      '<a href="admin.php?page=album-3">Only</a>'
+    );
+  });
+
+  it("honours a non-default separator", () => {
+    const html = albumBreadcrumbHtml(
+      [
+        { id: "1", name: "A" },
+        { id: "2", name: "B" },
+      ],
+      " > "
+    );
+
+    expect(html).toContain("<span> &gt; </span>".replace("&gt;", ">"));
+  });
+
+  it("passes an already-escaped name straight through", () => {
+    // The server escapes segment names, the same convention `fullname`
+    // follows. Escaping again here would render the entities literally.
+    const html = albumBreadcrumbHtml(
+      [{ id: "1", name: "Tom &amp; Jerry" }],
+      " / "
+    );
+
+    expect(html).toContain("Tom &amp; Jerry");
+
+    document.body.innerHTML = html;
+
+    expect(document.body.textContent).toBe("Tom & Jerry");
+  });
+
+  it("returns nothing when the payload has no breadcrumb", () => {
+    // The available-albums endpoint does not carry one.
+    expect(albumBreadcrumbHtml(undefined, " / ")).toBe("");
+    expect(albumBreadcrumbHtml([], " / ")).toBe("");
   });
 });

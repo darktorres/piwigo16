@@ -640,7 +640,13 @@ interface AlbumSelectorCallbackArgs {
     // declaration kept it compiling. All four consumers are
     // `adminMode: true`, which is the mode that carries `fullname`.
     fullname?: string;
+    // The same breadcrumb, per segment, for the three consumers that render
+    // it as links the way their own server-rendered rows do.
+    breadcrumb?: { id: string; name: string }[];
   };
+  // Response-level, not per-album: the separator the server joins breadcrumb
+  // segments with.
+  levelSeparator: string;
   newSelectedAlbum: () => void;
   addSelectedAlbum: (...args: any[]) => void;
   getSelectedAlbum: () => (string | number)[];

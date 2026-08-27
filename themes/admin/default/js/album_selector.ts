@@ -193,6 +193,7 @@ export class AlbumSelector {
   #title: string;
   #searchPlaceholder: string;
   #loading_add: boolean;
+  #levelSeparator: string;
 
   /**
    * Selector for AlbumSelector
@@ -251,6 +252,9 @@ export class AlbumSelector {
     this.#selectAlbum = (args) =>
       selectAlbum.call(null, {
         ...args,
+        // Response-level, not per-album: a consumer rebuilding the linked
+        // breadcrumb needs the same separator the server joins with.
+        levelSeparator: this.#levelSeparator,
         newSelectedAlbum: this.#newSelectedAlbum.bind(this),
         addSelectedAlbum: this.#addSelectedAlbum.bind(this),
         getSelectedAlbum: this.get_selected_albums.bind(this),
@@ -270,6 +274,9 @@ export class AlbumSelector {
         ? str_album_modal_placeholder
         : modalSearchPlaceholder;
     this.#loading_add = false;
+    // Replaced by the real configured separator on the first response; the
+    // fallback is Piwigo's own default, for the window before one arrives.
+    this.#levelSeparator = " / ";
 
     this.#init();
   }
@@ -841,6 +848,16 @@ export class AlbumSelector {
       this.#loadFillResultEvent(tempSelectedCat);
   }
 
+  /**
+   * Only the admin endpoint carries `levelSeparator`; the available-albums
+   * one does not, and leaves the default in place.
+   */
+  #rememberLevelSeparator(data: CategoryListOrAvailableResponse) {
+    if ("levelSeparator" in data && typeof data.levelSeparator === "string") {
+      this.#levelSeparator = data.levelSeparator;
+    }
+  }
+
   #getEllipsisName(str: string, lenght = 50) {
     if (str.length <= lenght) return str;
     return "..." + str.slice(-lenght).trim();
@@ -874,6 +891,7 @@ export class AlbumSelector {
         // for debug
         // console.log(data);
         const data = payload as CategoryListOrAvailableResponse;
+        this.#rememberLevelSeparator(data);
         hide(q(".linkedAlbumPopInContainer .searching"));
         const cats = data.categories;
         const limit = data.limit!;
@@ -901,6 +919,7 @@ export class AlbumSelector {
       data: api_params,
       success: (payload) => {
         const data = payload as CategoryListOrAvailableResponse;
+        this.#rememberLevelSeparator(data);
         const cats = data.categories.filter((c) => c.id != cat_id);
         const limit = data.limit!;
         this.#prefill_results(cat_id, cats, limit);
@@ -931,6 +950,7 @@ export class AlbumSelector {
       data: api_params,
       success: (payload) => {
         const data = payload as CategoryListOrAvailableResponse;
+        this.#rememberLevelSeparator(data);
         hide(AlbumSelector.selectors.iconSearchingSpin);
         const categories = data.categories;
         this.#fill_results(categories);

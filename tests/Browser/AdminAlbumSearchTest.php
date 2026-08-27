@@ -21,8 +21,10 @@ it('filters the album tree as you type and restores it when cleared', function (
             $db,
             'SELECT id, name FROM categories ORDER BY id LIMIT 1'
         );
-        $albumId = (int) $album['id'];
-        $albumName = (string) $album['name'];
+        expect($album)
+            ->not->toBeNull('the fixture has no albums to search for');
+        $albumId = (int) ($album['id'] ?? 0);
+        $albumName = (string) ($album['name'] ?? '');
     } finally {
         H::dbClose($db);
     }
@@ -84,7 +86,8 @@ it('filters the album tree as you type and restores it when cleared', function (
         "document.querySelectorAll('.search-album-result .search-album-elem').length"
     );
 
-    expect($leftover)->toBe(0);
+    expect($leftover)
+        ->toBe(0);
 
     $page->assertNoJavaScriptErrors();
 });
@@ -102,7 +105,8 @@ it('reports no results for a term that matches nothing', function (): void {
         "document.querySelectorAll('.search-album-result .search-album-elem').length"
     );
 
-    expect($rows)->toBe(0);
+    expect($rows)
+        ->toBe(0);
 
     $page->assertNoJavaScriptErrors();
 });

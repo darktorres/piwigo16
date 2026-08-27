@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Pest\Browser\Api\AwaitableWebpage;
+use Pest\Browser\Api\PendingAwaitablePage;
+use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 // The album selector is a ~950-line widget shared by seven admin entries
@@ -18,7 +21,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * The popup fades in, and its rows arrive over the API, so both need
  * waiting on rather than racing.
  */
-function albumSelectorOpen(object $page, string $trigger): void
+function albumSelectorOpen(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $trigger): void
 {
     $page->click($trigger);
 
@@ -42,7 +45,6 @@ function albumSelectorOpen(object $page, string $trigger): void
     JS);
 }
 
-
 /**
  * Searches for an album by name and clicks its row, then waits for the
  * breadcrumb it adds.
@@ -55,7 +57,10 @@ function albumSelectorOpen(object $page, string $trigger): void
  * (`#loadFillResultEvent`); the prefill path binds the inner
  * `.prefill-results-item` instead.
  */
-function albumSelectorAddByName(object $page, string $name): string
+/**
+ * @return array{text: string, links: int, href: string}
+ */
+function albumSelectorAddByName(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $name): array
 {
     /** @var int $before */
     $before = $page->script(
@@ -115,17 +120,22 @@ function albumSelectorAddByName(object $page, string $name): string
     })
     JS);
 
-    /** @var string $text */
-    $text = $page->script(<<<'JS'
+    /** @var array{text: string, links: int, href: string} $rendered */
+    $rendered = $page->script(<<<'JS'
     (() => {
         const paths = document.querySelectorAll('.related-categories-container .link-path');
         const last = paths[paths.length - 1];
+        const anchors = last === undefined ? [] : Array.from(last.querySelectorAll('a'));
 
-        return last === undefined ? '' : last.textContent.trim();
+        return {
+            text: last === undefined ? '' : last.textContent.trim(),
+            links: anchors.length,
+            href: anchors.length === 0 ? '' : anchors[anchors.length - 1].getAttribute('href'),
+        };
     })()
     JS);
 
-    return $text;
+    return $rendered;
 }
 
 it('opens, prefills the album list from the API and closes again', function (): void {
@@ -139,7 +149,8 @@ it('opens, prefills the album list from the API and closes again', function (): 
     $before = $page->script(
         "document.querySelectorAll('#searchResult .search-result-item').length"
     );
-    expect($before)->toBe(0);
+    expect($before)
+        ->toBe(0);
 
     // `#btnPhotosAS` sits inside a `u-hidden` block whenever an album is
     // already selected, which the fixture always is. The pencil beside the
@@ -208,7 +219,9 @@ it('searches albums by name and reports the count', function (): void {
             $db,
             'SELECT id, name FROM categories ORDER BY id LIMIT 1'
         );
-        $albumName = (string) $album['name'];
+        expect($album)
+            ->not->toBeNull('the fixture has no albums to search for');
+        $albumName = (string) ($album['name'] ?? '');
     } finally {
         H::dbClose($db);
     }
@@ -337,7 +350,8 @@ it('expands a sub-album row in place', function (): void {
     );
 
     // Only albums that actually have children get the expand arrow.
-    expect($parentId)->not->toBe('');
+    expect($parentId)
+        ->not->toBe('');
 
     // This is the path that builds selectors out of the album id --
     // `#<id>.display-subcat` and `#<id>.search-result-item`. Album ids are
@@ -399,16 +413,24 @@ it('names the album in the photo editor rather than writing "undefined"', functi
 
     // A fresh album, so the photo is definitely not already in it.
     $albumName = 'Album Selector Editor Album ' . uniqid();
-    H::createCategory($page, ['name' => $albumName]);
+    H::createCategory($page, [
+        'name' => $albumName,
+    ]);
 
     $page = H::navigateOk($page, '/admin.php?page=photo-1');
 
     albumSelectorOpen($page, '.linked-albums.add-item');
 
-    $text = albumSelectorAddByName($page, $albumName);
+    $added = albumSelectorAddByName($page, $albumName);
 
-    expect($text)->toContain($albumName);
-    expect($text)->not->toBe('undefined');
+    expect($added['text'])->toContain($albumName);
+    expect($added['text'])->not->toBe('undefined');
+
+    // Linked, matching the rows the server renders into this same container
+    // on page load. A plain-text breadcrumb here would look identical in a
+    // snapshot and be the odd one out on the page.
+    expect($added['links'])->toBeGreaterThan(0);
+    expect($added['href'])->toMatch('/^admin\.php\?page=album-\d+$/');
 
     $page->assertNoJavaScriptErrors();
 });
@@ -443,14 +465,145 @@ it('names the album in the unit batch manager rather than writing "undefined"', 
 
     // A second album, one the photo is not already in.
     $targetName = 'Album Selector Batch Target ' . uniqid();
-    H::createCategory($page, ['name' => $targetName]);
+    H::createCategory($page, [
+        'name' => $targetName,
+    ]);
 
     albumSelectorOpen($page, '.linked-albums.add-item');
 
-    $text = albumSelectorAddByName($page, $targetName);
+    $added = albumSelectorAddByName($page, $targetName);
 
-    expect($text)->toContain($targetName);
-    expect($text)->not->toBe('undefined');
+    expect($added['text'])->toContain($targetName);
+    expect($added['text'])->not->toBe('undefined');
+    expect($added['links'])->toBeGreaterThan(0);
+    expect($added['href'])->toMatch('/^admin\.php\?page=album-\d+$/');
+
+    $page->assertNoJavaScriptErrors();
+});
+
+it('links the parent-album breadcrumb on the album editor, as the server does', function (): void {
+    $page = H::asAdmin($this);
+
+    $parentName = 'Album Selector Parent ' . uniqid();
+    H::createCategory($page, [
+        'name' => $parentName,
+    ]);
+
+    // A *child* album: #cat-parent renders the "Root" label rather than a
+    // breadcrumb for a top-level one, and the comparison needs the linked
+    // server-rendered form to exist first.
+    $db = H::connect();
+
+    try {
+        $child = H::dbFetchAssoc(
+            $db,
+            'SELECT id FROM categories WHERE id_uppercat IS NOT NULL ORDER BY id LIMIT 1'
+        );
+    } finally {
+        H::dbClose($db);
+    }
+
+    expect($child['id'] ?? null)->not->toBeNull('the fixture has no nested album');
+    $childId = (int) ($child['id'] ?? 0);
+
+    $page = H::navigateOk($page, "/admin.php?page=album-{$childId}");
+
+    /** @var array{links: int, hrefPattern: bool} $before */
+    $before = $page->script(<<<'JS'
+    (() => {
+        const anchors = Array.from(document.querySelectorAll('#cat-parent a'));
+
+        return {
+            links: anchors.length,
+            hrefPattern: anchors.every(a => /admin\.php\?page=album-\d+$/.test(a.getAttribute('href'))),
+        };
+    })()
+    JS);
+
+    // Establishes what "as the server does" means here, rather than
+    // assuming it.
+    expect($before['links'])->toBeGreaterThan(0);
+    expect($before['hrefPattern'])->toBeTrue();
+
+    albumSelectorOpen($page, '#cat-parent');
+
+    /** @var int $poppedIn */
+    $poppedIn = $page->script(
+        "document.querySelectorAll('#searchResult .search-result-item').length"
+    );
+    expect($poppedIn)
+        ->toBeGreaterThan(0);
+
+    $page->fill('#search-input-ab', $parentName);
+    $page->script(
+        "document.getElementById('search-input-ab').dispatchEvent(new KeyboardEvent('keyup', {bubbles: true}))"
+    );
+
+    $encoded = json_encode($parentName, JSON_THROW_ON_ERROR);
+    $timeoutMs = 10000;
+    $page->script(<<<JS
+    new Promise((resolve, reject) => {
+        const deadline = Date.now() + {$timeoutMs};
+        const wanted = {$encoded};
+        const check = () => {
+            const row = Array.from(
+                document.querySelectorAll('#searchResult .search-result-item')
+            ).find(
+                r => r.querySelector('.search-result-path.not-rtl') !== null &&
+                    r.textContent.includes(wanted)
+            );
+            if (row !== undefined) {
+                row.click();
+
+                return resolve(true);
+            }
+            if (Date.now() > deadline) {
+                return reject(new Error('Timed out waiting for the album search result'));
+            }
+            setTimeout(check, 100);
+        };
+        check();
+    })
+    JS);
+
+    $page->script(<<<JS
+    new Promise((resolve, reject) => {
+        const deadline = Date.now() + {$timeoutMs};
+        const wanted = {$encoded};
+        const check = () => {
+            const parent = document.getElementById('cat-parent');
+            if (parent !== null && parent.textContent.includes(wanted)) {
+                return resolve(true);
+            }
+            if (Date.now() > deadline) {
+                return reject(new Error('Timed out waiting for the parent breadcrumb to update'));
+            }
+            setTimeout(check, 100);
+        };
+        check();
+    })
+    JS);
+
+    /** @var array{links: int, hrefPattern: bool, text: string} $after */
+    $after = $page->script(<<<'JS'
+    (() => {
+        const parent = document.getElementById('cat-parent');
+        const anchors = Array.from(parent.querySelectorAll('a'));
+
+        return {
+            links: anchors.length,
+            hrefPattern: anchors.every(a => /admin\.php\?page=album-\d+$/.test(a.getAttribute('href'))),
+            text: parent.textContent.trim(),
+        };
+    })()
+    JS);
+
+    // The JS-written breadcrumb has to be linked the same way the
+    // server-written one was, or the element silently changes character the
+    // first time anyone picks a parent.
+    expect($after['text'])->toContain($parentName);
+    expect($after['links'])->toBeGreaterThan(0);
+    expect($after['hrefPattern'])->toBeTrue();
 
     $page->assertNoJavaScriptErrors();
 });

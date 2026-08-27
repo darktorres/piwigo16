@@ -266,17 +266,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
             $add_url_params['auth'] = $authKey;
         }
 
-        if ($this->processCache->has('cat_names')) {
-            $cat_names_raw = $this->processCache->get('cat_names');
-        } else {
-            $cat_names_raw = $this->categoryRepo
-                ->findAllIdNamePermalink();
-            $this->processCache->set('cat_names', $cat_names_raw);
-        }
-        // Narrowed once here (fix pattern #7): ProcessCache::get() returns
-        // mixed, proving the key exists does not prove the stored value is
-        // array-like.
-        $cat_names = is_array($cat_names_raw) ? $cat_names_raw : [];
+        $cat_names = $this->catNames();
 
         $output = '';
         if ($singleLink) {
@@ -291,17 +281,10 @@ final readonly class HtmlService implements HtmlRenderingInterface
             $output .= '>';
         }
         $is_first = true;
-        foreach (explode(',', $uppercats) as $category_id) {
-            $cat = $cat_names[$category_id] ?? null;
-            $cat = $cat instanceof CategoryIdNamePermalink ? $cat->toArray() : [];
-
-            $cat_name = $cat['name'] ?? null;
-            $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName(is_string($cat_name) ? $cat_name : '', 'get_cat_display_name_cache'));
-            $cat['name'] = $nameEvent->categoryName;
-            // Escaped only for the HTML text this method builds below --
-            // $cat['name'] itself stays raw for makeIndexUrl()'s own
-            // 'id-name'-style permalink slug generation (P44-D).
-            $cat_name_html = htmlspecialchars($cat['name']);
+        foreach ($this->resolveUppercats($uppercats, $cat_names) as $segment) {
+            $category_id = $segment['id'];
+            $cat = $segment['cat'];
+            $cat_name_html = $segment['name'];
 
             if ($is_first) {
                 $is_first = false;
@@ -335,6 +318,85 @@ final readonly class HtmlService implements HtmlRenderingInterface
         }
 
         return $output;
+    }
+
+    /**
+     * The same breadcrumb `getCatDisplayNameCache()` renders, as data.
+     *
+     * Exists so a JSON client can build the identical markup itself.
+     * `CategoryListController` used to answer with the rendered HTML
+     * (`additional_output=full_name_with_admin_links`) and deliberately
+     * stopped; without the per-segment names, though, a client holding only
+     * `uppercats` (ids) and `fullname` (the joined text) cannot rebuild the
+     * per-segment links at all.
+     *
+     * `name` is HTML-escaped, the same convention `fullname` follows, so it
+     * is interpolated into markup rather than assigned as text.
+     *
+     * @return list<array{id: string, name: string}>
+     */
+    public function getCatBreadcrumb(string $uppercats): array
+    {
+        $breadcrumb = [];
+        foreach ($this->resolveUppercats($uppercats, $this->catNames()) as $segment) {
+            $breadcrumb[] = [
+                'id' => $segment['id'],
+                'name' => $segment['name'],
+            ];
+        }
+
+        return $breadcrumb;
+    }
+
+    /**
+     * The id -> name/permalink map both breadcrumb builders read, cached for
+     * the request.
+     *
+     * @return array<mixed>
+     */
+    private function catNames(): array
+    {
+        if ($this->processCache->has('cat_names')) {
+            $cat_names_raw = $this->processCache->get('cat_names');
+        } else {
+            $cat_names_raw = $this->categoryRepo->findAllIdNamePermalink();
+            $this->processCache->set('cat_names', $cat_names_raw);
+        }
+
+        return is_array($cat_names_raw) ? $cat_names_raw : [];
+    }
+
+    /**
+     * Resolves each id in an `uppercats` chain to its rendered name.
+     *
+     * Shared by the HTML and the data breadcrumb so the two cannot drift:
+     * both must dispatch `RenderCategoryName` (a plugin may rewrite a name)
+     * and both must escape identically. `cat` carries the raw name through
+     * for `makeIndexUrl()`'s own 'id-name' permalink slug generation (P44-D),
+     * which needs it unescaped.
+     *
+     * @param array<mixed> $cat_names
+     * @return list<array{id: string, cat: array<string, mixed>, name: string}>
+     */
+    private function resolveUppercats(string $uppercats, array $cat_names): array
+    {
+        $segments = [];
+        foreach (explode(',', $uppercats) as $category_id) {
+            $cat = $cat_names[$category_id] ?? null;
+            $cat = $cat instanceof CategoryIdNamePermalink ? $cat->toArray() : [];
+
+            $cat_name = $cat['name'] ?? null;
+            $nameEvent = $this->eventDispatcher->dispatch(new RenderCategoryName(is_string($cat_name) ? $cat_name : '', 'get_cat_display_name_cache'));
+            $cat['name'] = $nameEvent->categoryName;
+
+            $segments[] = [
+                'id' => $category_id,
+                'cat' => $cat,
+                'name' => htmlspecialchars($cat['name']),
+            ];
+        }
+
+        return $segments;
     }
 
     /**

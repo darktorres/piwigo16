@@ -9,6 +9,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
+import { albumBreadcrumbHtml } from "../../../default/js/vendor/dom";
 export {};
 
 // `add_related_category` is declared here too, independently of the
@@ -524,14 +525,20 @@ function checkAlbumLock() {
 
 function add_related_category({
   album,
+  levelSeparator,
   newSelectedAlbum,
   getSelectedAlbum,
 }: AlbumSelectorCallbackArgs) {
   if (parent_album != album.id) {
-    // Plain breadcrumb text, not linked markup: the API deliberately no
-    // longer returns per-segment admin links, and `uppercats` alone (comma-
-    // separated ids, no names) cannot rebuild them client-side.
-    $("#cat-parent").html(album.fullname ?? album.root ?? "");
+    // Linked, matching what the server renders into this same element on
+    // page load (`getCatDisplayNameCache($uppercats, 'admin.php?page=album-')`
+    // via `categoriesParentNav`). `album.root` is the "Root" label the
+    // put-at-root button passes instead of an album.
+    $("#cat-parent").html(
+      album.breadcrumb !== undefined
+        ? albumBreadcrumbHtml(album.breadcrumb, levelSeparator)
+        : (album.root ?? ""),
+    );
 
     $(".search-result-item #" + album.id).addClass("notClickable");
     $(".invisible-related-categories-select").append(

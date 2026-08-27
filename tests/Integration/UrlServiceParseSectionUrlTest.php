@@ -48,6 +48,12 @@ final class UrlServiceParseSectionUrlTestHtmlRenderer implements HtmlRenderingIn
     }
 
     #[Override]
+    public function getCatBreadcrumb(string $uppercats): array
+    {
+        return [];
+    }
+
+    #[Override]
     public function nameCompare(array $a, array $b): int
     {
         return 0;

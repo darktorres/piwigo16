@@ -48,7 +48,8 @@ it('mirrors the password-match check before the form is submitted', function ():
     })()
     JS);
 
-    expect($mismatch)->toContain('The passwords do not match');
+    expect($mismatch)
+        ->toContain('The passwords do not match');
 
     // Correcting it clears the message again.
     $page->fill('#password_conf', 'correct-horse');
@@ -65,7 +66,8 @@ it('mirrors the password-match check before the form is submitted', function ():
     })()
     JS);
 
-    expect($cleared)->toBeTrue();
+    expect($cleared)
+        ->toBeTrue();
 
     $page->assertNoJavaScriptErrors();
 });
@@ -88,7 +90,8 @@ it('mirrors the email format check on blur', function (): void {
     })()
     JS);
 
-    expect($message)->toContain('xxx@yyy.eee');
+    expect($message)
+        ->toContain('xxx@yyy.eee');
 
     $page->fill('#mail_address', 'someone@example.com');
     $page->script(
@@ -104,7 +107,8 @@ it('mirrors the email format check on blur', function (): void {
     })()
     JS);
 
-    expect($cleared)->toBeTrue();
+    expect($cleared)
+        ->toBeTrue();
 
     $page->assertNoJavaScriptErrors();
 });
@@ -151,7 +155,8 @@ it('reveals and re-hides a password field', function (): void {
 
     /** @var string $initial */
     $initial = $page->script("document.getElementById('password').type");
-    expect($initial)->toBe('password');
+    expect($initial)
+        ->toBe('password');
 
     // `.siblings("input")` -- the toggle's own parent's other children.
     $page->click('#password ~ .togglePassword');
@@ -172,13 +177,15 @@ it('reveals and re-hides a password field', function (): void {
 
     /** @var string $rehidden */
     $rehidden = $page->script("document.getElementById('password').type");
-    expect($rehidden)->toBe('password');
+    expect($rehidden)
+        ->toBe('password');
 
     // The confirmation field has its own toggle and must be untouched by
     // the first one -- siblings, not "the next input on the page".
     /** @var string $conf */
     $conf = $page->script("document.getElementById('password_conf').type");
-    expect($conf)->toBe('password');
+    expect($conf)
+        ->toBe('password');
 
     $page->assertNoJavaScriptErrors();
 });

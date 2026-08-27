@@ -1563,6 +1563,35 @@ export function remove(target: Element | ArrayLike<Element>): void {
 }
 
 /**
+ * Renders the linked album breadcrumb the admin templates render
+ * server-side, from the `breadcrumb`/`levelSeparator` an album API response
+ * carries.
+ *
+ * Mirrors `HtmlService::getCatDisplayNameCache($uppercats,
+ * 'admin.php?page=album-')` exactly: one `<a>` per segment, joined by
+ * `<span>{separator}</span>`. Segment names arrive HTML-escaped, as
+ * `fullname` does, so they are interpolated rather than assigned as text.
+ *
+ * Lives here rather than in one of the three call sites because all three
+ * must agree with the server, and with each other.
+ */
+export function albumBreadcrumbHtml(
+  breadcrumb: readonly { id: string; name: string }[] | undefined,
+  levelSeparator: string
+): string {
+  if (breadcrumb === undefined) {
+    return "";
+  }
+
+  return breadcrumb
+    .map(
+      (segment) =>
+        `<a href="admin.php?page=album-${encodeURIComponent(segment.id)}">${segment.name}</a>`
+    )
+    .join(`<span>${levelSeparator}</span>`);
+}
+
+/**
  * Escapes a value for use as an id in a selector.
  *
  * `#1` is a valid Sizzle selector and an invalid CSS one:

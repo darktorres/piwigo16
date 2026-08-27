@@ -25,8 +25,11 @@ use Psr\Http\Message\ServerRequestInterface;
  * Query params: `parentId`, `search`,
  * `recursive` (default true). `additional_output=full_name_with_admin_links`
  * is dropped -- an XML-era opt-in for embedding admin-link HTML in every
- * row; a JSON client that wants an admin link can build one itself from
- * `id`.
+ * row. `breadcrumb` replaces it with the same information as data: one
+ * `{id, name}` per path segment, which is what a client actually needs to
+ * rebuild the linked breadcrumb the admin templates render. `id` alone is
+ * not enough -- the intermediate segments' names appear nowhere else in the
+ * payload.
  */
 final readonly class CategoryListController implements ControllerInterface
 {
@@ -85,6 +88,11 @@ final readonly class CategoryListController implements ControllerInterface
                 'comment' => $commentEvent->categoryDescription,
                 'commentRaw' => is_string($row['comment']) ? $row['comment'] : null,
                 'fullname' => strip_tags($this->htmlRenderer->getCatDisplayNameCache($row['uppercats'], 'admin.php?page=album-')),
+                // The same breadcrumb as `fullname`, per segment, so a
+                // client can rebuild the linked form the admin pages render
+                // server-side. `fullname` alone cannot: it is the joined
+                // text, and `uppercats` carries ids with no names.
+                'breadcrumb' => $this->htmlRenderer->getCatBreadcrumb($row['uppercats']),
                 'uppercats' => $row['uppercats'],
                 'globalRank' => is_scalar($row_global_rank) ? (string) $row_global_rank : null,
                 'status' => $row['status'],
@@ -115,6 +123,10 @@ final readonly class CategoryListController implements ControllerInterface
             // path reads limitedTo/totalCats/remainingCats directly, its
             // free-text-search path derives a reached/not-reached flag as
             // remainingCats > 0.
+            // Presentation config the client needs to join `breadcrumb`
+            // exactly as the server does (`<span>{separator}</span>` between
+            // segments, HtmlService::getCatDisplayNameCache()).
+            'levelSeparator' => $this->currentConfig->levelSeparator,
             'limit' => [
                 'limitedTo' => $limitedTo,
                 'totalCats' => $counter,

@@ -49,6 +49,40 @@ describe("fadeOut", () => {
   });
 });
 
+describe("the callback-first overload", () => {
+  it("accepts fadeOut(complete) with no duration", () => {
+    // jQuery's effect methods are overloaded and at least 10 call sites pass
+    // the callback first -- toaster.ts's own `template.fadeOut(() => ...)`
+    // among them. Treating that argument as a duration would silently never
+    // run the callback.
+    const done = vi.fn();
+    fadeOut(el, done);
+    vi.advanceTimersByTime(600);
+
+    expect(done).toHaveBeenCalledTimes(1);
+    expect(el.style.display).toBe("none");
+  });
+
+  it("uses the default 400ms duration in that form", () => {
+    const done = vi.fn();
+    fadeOut(el, done);
+
+    vi.advanceTimersByTime(300);
+    expect(done).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(200);
+    expect(done).toHaveBeenCalledTimes(1);
+  });
+
+  it("accepts slideToggle(complete) too", () => {
+    const done = vi.fn();
+    slideToggle(el, done);
+    vi.advanceTimersByTime(600);
+
+    expect(done).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("fadeIn", () => {
   it("shows a hidden element and restores its display", () => {
     hide(el);

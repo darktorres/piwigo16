@@ -441,6 +441,28 @@ export function resolveDuration(duration?: number | string): number {
   return FX_SPEEDS._default as number;
 }
 
+/**
+ * jQuery's effect methods are overloaded: `.fadeOut(complete)`,
+ * `.fadeOut(duration)` and `.fadeOut(duration, complete)` are all valid, and
+ * at least 10 call sites pass the callback first. Normalise before use.
+ */
+function normalizeEffectArgs(
+  duration?: number | string | (() => void),
+  complete?: () => void
+): { ms: number; done: (() => void) | undefined } {
+  if (typeof duration === "function") {
+    return {
+      ms: resolveDuration(),
+      done: duration,
+    };
+  }
+
+  return {
+    ms: resolveDuration(duration),
+    done: complete,
+  };
+}
+
 type QueueStep = (next: () => void) => void;
 
 interface Stoppable {
@@ -623,10 +645,10 @@ class Tween implements Stoppable {
 export function animate(
   target: Element | ArrayLike<Element>,
   props: Record<string, number | string>,
-  duration?: number | string,
+  duration?: number | string | (() => void),
   complete?: () => void
 ): void {
-  const ms = resolveDuration(duration);
+  const { ms, done: onComplete } = normalizeEffectArgs(duration, complete);
 
   for (const el of toElements(target)) {
     if (!(el instanceof HTMLElement)) {
@@ -648,7 +670,7 @@ export function animate(
         };
       });
 
-      const tween = new Tween(el, tweens, ms, complete, next);
+      const tween = new Tween(el, tweens, ms, onComplete, next);
       fxState(el).running = tween;
       tween.start();
     });
@@ -717,10 +739,10 @@ function runEffect(
   target: Element | ArrayLike<Element>,
   propNames: string[],
   mode: EffectMode,
-  duration?: number | string,
+  duration?: number | string | (() => void),
   complete?: () => void
 ): void {
-  const ms = resolveDuration(duration);
+  const { ms, done: onComplete } = normalizeEffectArgs(duration, complete);
 
   for (const el of toElements(target)) {
     if (!(el instanceof HTMLElement)) {
@@ -734,7 +756,7 @@ function runEffect(
       // jQuery skips a prop whose requested state already holds -- fadeIn on
       // a visible element animates nothing, but still runs the callback.
       if (mode !== "toggle" && showing !== hidden) {
-        complete?.call(el);
+        onComplete?.call(el);
         next();
 
         return;
@@ -786,7 +808,7 @@ function runEffect(
             el.style.setProperty(cssPropertyName(prop), inline);
           }
         }
-        complete?.call(el);
+        onComplete?.call(el);
       };
 
       const tween = new Tween(el, tweens, ms, finish, next);
@@ -799,7 +821,7 @@ function runEffect(
 /** `$(el).fadeIn(duration, complete)`. */
 export function fadeIn(
   target: Element | ArrayLike<Element>,
-  duration?: number | string,
+  duration?: number | string | (() => void),
   complete?: () => void
 ): void {
   runEffect(target, ["opacity"], "show", duration, complete);
@@ -808,7 +830,7 @@ export function fadeIn(
 /** `$(el).fadeOut(duration, complete)`. */
 export function fadeOut(
   target: Element | ArrayLike<Element>,
-  duration?: number | string,
+  duration?: number | string | (() => void),
   complete?: () => void
 ): void {
   runEffect(target, ["opacity"], "hide", duration, complete);
@@ -836,7 +858,7 @@ export function fadeTo(
 /** `$(el).slideDown(duration, complete)`. */
 export function slideDown(
   target: Element | ArrayLike<Element>,
-  duration?: number | string,
+  duration?: number | string | (() => void),
   complete?: () => void
 ): void {
   runEffect(target, SLIDE_PROPS, "show", duration, complete);
@@ -845,7 +867,7 @@ export function slideDown(
 /** `$(el).slideUp(duration, complete)`. */
 export function slideUp(
   target: Element | ArrayLike<Element>,
-  duration?: number | string,
+  duration?: number | string | (() => void),
   complete?: () => void
 ): void {
   runEffect(target, SLIDE_PROPS, "hide", duration, complete);
@@ -854,7 +876,7 @@ export function slideUp(
 /** `$(el).slideToggle(duration, complete)`. */
 export function slideToggle(
   target: Element | ArrayLike<Element>,
-  duration?: number | string,
+  duration?: number | string | (() => void),
   complete?: () => void
 ): void {
   runEffect(target, SLIDE_PROPS, "toggle", duration, complete);

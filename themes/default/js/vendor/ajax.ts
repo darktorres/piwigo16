@@ -94,6 +94,15 @@ export interface AjaxThenable extends Promise<unknown> {
 }
 
 function decorate(promise: Promise<unknown>): AjaxThenable {
+  // jQuery's jqXHR is not a native promise, so a failing request never
+  // produced an unhandled-rejection event. This one would, on every request
+  // whose failure is handled by the `error` callback rather than by a
+  // .catch() -- which is how nearly every call site is written, and which
+  // Browser tests would see through assertNoJavaScriptErrors(). Attaching a
+  // silent handler to a *derived* promise suppresses that without changing
+  // the original: `await ajax(...)` still rejects, and .fail() still fires.
+  void promise.catch(() => undefined);
+
   const thenable = promise as AjaxThenable;
 
   thenable.done = (handler) => {

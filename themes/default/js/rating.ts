@@ -1,3 +1,5 @@
+import { ajax } from "./vendor/ajax";
+
 // Real consumer of scripts.ts's own top-level `pwgAddEventListener`
 // (docs/PLAN.md P48 -- was a bare ambient-global read, see that file's
 // own leading comment for the full real-consumer list, and Design §6
@@ -111,7 +113,7 @@ function updateRating(e: Event) {
 
   for (let i = 0; i < gRatingButtons.length; i++)
     gRatingButtons[i]!.disabled = true;
-  $.ajax({
+  void ajax({
     url:
       gRatingOptions.rootUrl +
       "api/v1/images/" +
@@ -120,12 +122,13 @@ function updateRating(e: Event) {
     method: "PUT",
     contentType: "application/json",
     data: JSON.stringify({ rate: rateButton.initialRateValue }),
-    error: function (jqXHR) {
-      alert(jqXHR.status + " " + jqXHR.statusText);
+    error: function (xhr) {
+      alert(xhr.status + " " + xhr.statusText);
       document.location.href =
         rateButton.form!.action + "&rate=" + rateButton.initialRateValue;
     },
-    success: function (result: PwgRatingResult) {
+    success: function (data) {
+      const result = data as PwgRatingResult;
       gUserRating = rateButton.initialRateValue;
       for (let i = 0; i < gRatingButtons.length; i++)
         gRatingButtons[i]!.disabled = false;

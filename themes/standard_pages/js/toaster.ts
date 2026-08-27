@@ -1,3 +1,5 @@
+import { fadeOut } from "../../default/js/vendor/dom";
+
 export interface PwgToasterInfo {
   text: string;
   icon: "success" | "error";
@@ -20,20 +22,35 @@ export function pwgToaster(info: PwgToasterInfo) {
     return;
   }
 
-  const template = $("#toast_template").clone();
+  const source = document.getElementById("toast_template");
+  const host = document.getElementById("pwg_toaster");
+  if (source === null || host === null) {
+    return;
+  }
 
-  template.find(".toast_text").html(info.text);
+  // cloneNode(true) keeps the id, exactly as jQuery's .clone() did. That
+  // leaves duplicate #toast_template ids in the DOM, but harmlessly: the
+  // template lives inside #pwg_toaster and clones are appended after it, so
+  // getElementById still returns the original. Preserved rather than tidied
+  // -- this is a translation, and no CSS targets the id (the template is
+  // hidden through .toast.template-pwg-toaster).
+  const template = source.cloneNode(true) as HTMLElement;
+
+  const text = template.querySelector(".toast_text");
+  if (text !== null) {
+    text.innerHTML = info.text;
+  }
   template
-    .find(".toast_icon")
-    .addClass(info.icon === "success" ? "icon-ok" : "icon-cancel");
-  template.addClass(info.icon === "success" ? info.icon : "error");
+    .querySelector(".toast_icon")
+    ?.classList.add(info.icon === "success" ? "icon-ok" : "icon-cancel");
+  template.classList.add(info.icon === "success" ? info.icon : "error");
 
-  template.removeClass("template-pwg-toaster");
-  template.appendTo("#pwg_toaster");
+  template.classList.remove("template-pwg-toaster");
+  host.appendChild(template);
 
   const time = info.time ?? 3600;
   setTimeout(() => {
-    template.fadeOut(() => {
+    fadeOut(template, () => {
       template.remove();
     });
   }, time);

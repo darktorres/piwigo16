@@ -205,6 +205,51 @@ test('circular script dependencies throw rather than looping forever', function 
         ->toThrow(LogicException::class);
 });
 
+test('resolveModulePreloads() walks shared chunks transitively, dedupes them, and never versions them', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-page-assets-test-preload-' . bin2hex(random_bytes(8)) . '/';
+    mkdir($root . 'dist/.vite', 0o777, true);
+    // Real manifest shape: an entry's `imports` are manifest *keys*, and a
+    // chunk may import a further chunk (page-data -> common here).
+    file_put_contents($root . 'dist/.vite/manifest.json', json_encode([
+        'themes/a.ts' => [
+            'file' => 'assets/a-111.js',
+            'isEntry' => true,
+            'imports' => ['_page-data-222.js'],
+        ],
+        'themes/b.ts' => [
+            'file' => 'assets/b-333.js',
+            'isEntry' => true,
+            'imports' => ['_page-data-222.js'],
+        ],
+        '_page-data-222.js' => [
+            'file' => 'assets/page-data-222.js',
+            'imports' => ['_common-444.js'],
+        ],
+        '_common-444.js' => [
+            'file' => 'assets/common-444.js',
+        ],
+    ], JSON_THROW_ON_ERROR));
+
+    $assets = new PageAssets(new ViteManifest(Paths::fromRoot($root)));
+    $assets->add(AssetContribution::script('a', 'themes/a.ts', loadMode: LoadMode::Footer));
+    $assets->add(AssetContribution::script('b', 'themes/b.ts', loadMode: LoadMode::Footer));
+    // Not a Vite entry at all: contributes nothing to preload.
+    $assets->add(AssetContribution::script('vendor', 'themes/default/js/plugins/jquery.sort.js', loadMode: LoadMode::Footer));
+
+    $preloads = $assets->resolveModulePreloads();
+
+    // page-data reached from both entries appears once; common is reached
+    // only transitively, through page-data.
+    expect(array_map(fn ($r) => $r->path, $preloads))
+        ->toBe(['dist/assets/page-data-222.js', 'dist/assets/common-444.js']);
+
+    // `version: false` keeps the href queryless so it matches the URL the
+    // module graph actually requests -- otherwise the browser fetches the
+    // chunk twice and the hint costs more than it saves.
+    expect(array_unique(array_map(fn ($r) => $r->version, $preloads)))
+        ->toBe([false]);
+});
+
 test('resolvePath() uses the real ViteManifest entry when one exists, falls back to the raw path otherwise', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-page-assets-test-real-' . bin2hex(random_bytes(8)) . '/';
     mkdir($root . 'dist/.vite', 0o777, true);

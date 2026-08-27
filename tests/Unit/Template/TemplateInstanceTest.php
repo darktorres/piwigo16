@@ -1195,7 +1195,8 @@ test('the async bootstrap keeps a classic wrapper and types each injected script
     // The wrapper itself must stay classic: it finds its own insertion
     // point via getElementsByTagName('script')[len-1], which is only
     // "itself" while running during parsing.
-    expect($footer)->toStartWith('<script type="text/javascript">');
+    expect($footer)
+        ->toStartWith('<script type="text/javascript">');
     // ...while each injected script is typed on its own merits.
     expect($footer)
         ->toContain("s.type='module'; s.async=true; s.src='dist/assets/asyncmod-abc12345.js?v" . AppInfo::VERSION . "'")

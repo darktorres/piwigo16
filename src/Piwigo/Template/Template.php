@@ -878,6 +878,21 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             $pos = strpos($html, self::COMBINED_SCRIPTS_TAG);
             if ($pos !== false) {
                 $content = [];
+                // Emitted in the header, ahead of every script tag: a
+                // shared chunk is otherwise undiscoverable until the
+                // entry importing it has been fetched and parsed, so
+                // splitting would trade duplicated bytes for a request
+                // waterfall. Routed through makeAssetSrc() so the root
+                // URL, embellishUrl() and the CombinedScript event apply
+                // exactly as they do to the script tag that will request
+                // the same file -- if the two URLs disagreed, the
+                // browser would fetch the chunk twice.
+                foreach ($this->pageAssets->resolveModulePreloads() as $chunk) {
+                    $content[] =
+                        '<link rel="modulepreload" href="'
+                        . $this->makeAssetSrc($chunk)
+                        . '">';
+                }
                 foreach ($scripts as $asset) {
                     if ($asset->loadMode === LoadMode::Header) {
                         $content[] =

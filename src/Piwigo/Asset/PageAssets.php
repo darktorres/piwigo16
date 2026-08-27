@@ -316,6 +316,66 @@ final class PageAssets
     }
 
     /**
+     * Every shared chunk this page's built entries import, transitively
+     * and deduplicated, ready to render as `<link rel="modulepreload">`.
+     *
+     * Without these the browser cannot discover a chunk until it has
+     * fetched *and parsed* the entry that imports it, turning what used
+     * to be one self-contained request per entry into a waterfall.
+     *
+     * `version: false` is load-bearing, not tidiness. A chunk is reached
+     * from inside its importer by a relative specifier that carries no
+     * query string, so a `?v`-suffixed preload href would be a
+     * *different URL*: the browser would fetch the chunk twice and the
+     * hint would cost more than it saves. Content-hashed filenames make
+     * cache-busting redundant anyway -- the same reasoning `resolveCss()`
+     * already applies to manifest-derived CSS chunks below.
+     *
+     * @return list<ResolvedAsset>
+     */
+    public function resolveModulePreloads(): array
+    {
+        $seen = [];
+        $resolved = [];
+        foreach ($this->scripts as $contribution) {
+            $entry = $this->viteManifest->resolve($contribution->path);
+            if ($entry === null) {
+                continue;
+            }
+
+            $this->collectChunkImports($entry, $seen, $resolved);
+        }
+
+        return $resolved;
+    }
+
+    /**
+     * `$entry->imports` holds *manifest keys* (`_common-vA1Nr0H_.js`),
+     * which index the same map entries do, so one `resolve()` per key
+     * walks the graph. Recurses because a chunk may import another.
+     *
+     * @param array<string, true> $seen
+     * @param list<ResolvedAsset> $resolved
+     */
+    private function collectChunkImports(ViteManifestEntry $entry, array &$seen, array &$resolved): void
+    {
+        foreach ($entry->imports as $key) {
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+
+            $chunk = $this->viteManifest->resolve($key);
+            if ($chunk === null) {
+                continue;
+            }
+
+            $resolved[] = ResolvedAsset::file('dist/' . $chunk->file, null, false);
+            $this->collectChunkImports($chunk, $seen, $resolved);
+        }
+    }
+
+    /**
      * @return list<ResolvedAsset>
      */
     public function resolveCss(): array

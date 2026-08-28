@@ -25,6 +25,7 @@ use Piwigo\Template\Renderer;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\Projection\DefaultUserInfo;
+use Piwigo\Users\Projection\UserCountOption;
 use Piwigo\Users\UserService;
 use Piwigo\Users\UserStatus;
 use Piwigo\Validation\InputValidator;
@@ -85,14 +86,12 @@ final class UserListPageRenderer
         }
 
         $nb_users_by_status = [];
-        foreach ($userService->getUserCountsByStatus($guest_id) as $status => $counter) {
-            $nb_users_by_status[$status] = [
-                'name' => $lang->t('user_status_' . $status),
-                'counter' => $counter,
-            ];
+        foreach ($label_of_status as $status => $label) {
+            $nb_users_by_status[$status] = new UserCountOption($label);
         }
-
-        $nb_users_by_status = array_merge($label_of_status, $nb_users_by_status);
+        foreach ($userService->getUserCountsByStatus($guest_id) as $status => $counter) {
+            $nb_users_by_status[$status] = new UserCountOption($lang->t('user_status_' . $status), $counter);
+        }
 
         $pref_status_options = $label_of_status;
 
@@ -110,12 +109,12 @@ final class UserListPageRenderer
             $level_options[$level] = $lang->t(sprintf('Level %d', $level));
         }
 
-        $nb_users_by_level = $level_options;
+        $nb_users_by_level = [];
+        foreach ($level_options as $level => $label) {
+            $nb_users_by_level[$level] = new UserCountOption($label);
+        }
         foreach ($userService->getUserCountsByLevel($guest_id) as $level => $counter) {
-            $nb_users_by_level[$level] = [
-                'name' => $lang->t(sprintf('Level %d', $level)),
-                'counter' => $counter,
-            ];
+            $nb_users_by_level[$level] = new UserCountOption($lang->t(sprintf('Level %d', $level)), $counter);
         }
 
         $groups_arr_id = [];

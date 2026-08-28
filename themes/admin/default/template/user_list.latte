@@ -136,12 +136,15 @@
             >
               <option value="" label="" selected></option>
               {foreach $nbUsersByStatus as $status_value => $status}
-                {if isset($status['name']) && isset($status['counter'])}
+                {if $status->counter !== null}
                   <option
                     value="{$status_value}"
-                  >{$status['name']} ({$status['counter']})</option>
+                  >{$status->name} ({$status->counter})</option>
                 {else}
-                  <option value="{$status_value}" disabled>{$status}</option>
+                  <option
+                    value="{$status_value}"
+                    disabled
+                  >{$status->name}</option>
                 {/if}
               {/foreach}
             </select>
@@ -161,12 +164,15 @@
             >
               <option value="" label="" selected></option>
               {foreach $nbUsersByLevel as $level_value => $level}
-                {if isset($level['name']) && isset($level['counter'])}
+                {if $level->counter !== null}
                   <option
                     value="{$level_value}"
-                  >{$level['name']} ({$level['counter']})</option>
+                  >{$level->name} ({$level->counter})</option>
                 {else}
-                  <option value="{$level_value}" disabled>{$level}</option>
+                  <option
+                    value="{$level_value}"
+                    disabled
+                  >{$level->name}</option>
                 {/if}
               {/foreach}
             </select>

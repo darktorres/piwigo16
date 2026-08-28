@@ -11,6 +11,7 @@ use Piwigo\Asset\LoadMode;
 use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
+use Piwigo\Users\Projection\UserCountOption;
 
 /**
  * `user_list.latte`'s own typed view, constructed by {@see
@@ -35,9 +36,9 @@ final readonly class UserListView implements View, HasPageAssets, ExposesPageDat
      * @param array<string, string> $languageOptions
      * @param array<int, string> $associationOptions
      * @param array<string, string> $prefStatusOptions
-     * @param array<string, string|array{name: string, counter: int}> $nbUsersByStatus
+     * @param array<string, UserCountOption> $nbUsersByStatus
      * @param array<int, string> $levelOptions
-     * @param array<int, string|array{name: string, counter: int}> $nbUsersByLevel
+     * @param array<int, UserCountOption> $nbUsersByLevel
      */
     public function __construct(
         public array $groupsForFilter,

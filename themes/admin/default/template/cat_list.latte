@@ -64,31 +64,31 @@
   {if count($categories)}
     <div
       n:foreach="$categories as $category"
-      class="categoryBox{if $category['IS_VIRTUAL']} virtual_cat{/if}"
-      id="cat_{$category['ID']}"
+      class="categoryBox{if $category->isVirtual} virtual_cat{/if}"
+      id="cat_{$category->id}"
     >
       <div class="albumTop">
         <div class="albumIcon">
           <span
             class="
-        {if $category['NB_SUB_ALBUMS'] == 0}icon-folder-open{else}icon-sitemap{/if}
-        {$color_tab[$category['ID'] % 5]}
+        {if $category->nbSubAlbums == 0}icon-folder-open{else}icon-sitemap{/if}
+        {$color_tab[$category->id % 5]}
         "
           ></span>
         </div>
 
         <div class="albumTitle">
-          {$category['NAME']}
+          {$category->name}
         </div>
       </div>
 
       <span
         class="albumInfos"
-      ><p>{$category['NB_PHOTOS']|translate_dec:'%d photo','%d photos'}</p> <p>{$category['NB_SUB_PHOTOS']|translate_dec:'%d photo','%d photos'} {$category['NB_SUB_ALBUMS']|translate_dec:'in %d sub-album','in %d sub-albums'}</p></span>
+      ><p>{$category->nbPhotos|translate_dec:'%d photo','%d photos'}</p> <p>{$category->nbSubPhotos|translate_dec:'%d photo','%d photos'} {$category->nbSubAlbums|translate_dec:'in %d sub-album','in %d sub-albums'}</p></span>
 
       <div class="albumActions">
         <a
-          href="{$category['U_EDIT']|noescape}"
+          href="{$category->uEdit|noescape}"
           class="actionEdit"
           {*title="{'Edit'|@translate}"*}
         ><span
@@ -96,31 +96,28 @@
             title="{='Edit'|translate}"
           ></span><span class="iconLegend">{='Edit'|translate}</span></a>
         <a
-          href="{$category['U_CHILDREN']|noescape}"
+          href="{$category->uChildren|noescape}"
           class="actionTitle"
           {*title="{'sub-albums'|@translate}"*}
         ><span
             class="icon-sitemap tiptip"
             title="{='sub-albums'|translate}"
           ></span><span class="iconLegend">{='sub-albums'|translate}</span></a>
-        <a href="{$category['U_MOVE']|noescape}" class="actionMove"><span
+        <a href="{$category->uMove|noescape}" class="actionMove"><span
             class="icon-move tiptip"
             title="{='Move'|translate}"
           ></span><span class="iconLegend">{='Move'|translate}</span></a>
-        {* NOTE: this is a real, pre-existing bug in the original .tpl -- it
-         checks a bare $CAT_ADMIN_ACCESS, but the renderer only ever sets
-         $category['CAT_ADMIN_ACCESS'] (a per-row field). The bare variable
-         is never assigned anywhere, so this condition is always false under
-         Smarty too (its variable resolution silently treats an unassigned
-         var as null, no warning) -- the isset() guard here reproduces that
-         exact always-false behavior without Latte's stricter direct-PHP
-         variable access surfacing a new "undefined variable" warning on
-         every render. Not fixed to $category['CAT_ADMIN_ACCESS'] -- that
-         would change which branch renders, a real behavior change beyond
-         this migration's engine-swap scope. *}
-        {if isset($CAT_ADMIN_ACCESS) && $CAT_ADMIN_ACCESS}
+        {* Reads the per-row permission the renderer actually computes.
+         The original .tpl checked a bare $CAT_ADMIN_ACCESS that nothing
+         ever assigned, so this link never rendered for anyone -- Smarty
+         resolved the unassigned variable to null silently, and the
+         Latte conversion preserved that with an isset() guard rather than
+         change behaviour mid-migration. CategoryService::catAdminAccess()
+         answers "this album is not in the user's forbidden list", per row,
+         which is exactly what gating a jump-to-gallery link wants. *}
+        {if $category->catAdminAccess}
           <a
-            href="{$category['U_JUMPTO']|noescape}"
+            href="{$category->uJumpto|noescape}"
             class="actionGalery"
             {*title="{'Visit Gallery'|@translate}"*}
           ><span
@@ -131,7 +128,7 @@
             >{='Visit Gallery'|translate}</span></a>
         {else}
           <span
-            href="{$category['U_JUMPTO']|noescape}"
+            href="{$category->uJumpto|noescape}"
             class="actionGalery"
             {*title="{'This album is private'|@translate}"*}
           ><span
@@ -142,7 +139,7 @@
             >{='Visit Gallery'|translate}</span></span>
         {/if}
         <a
-          href="{$category['U_ADD_PHOTOS_ALBUM']|noescape}"
+          href="{$category->uAddPhotosAlbum|noescape}"
           class="actionAdd"
           {*title="{'Add Photos'|@translate}"*}
         ><span

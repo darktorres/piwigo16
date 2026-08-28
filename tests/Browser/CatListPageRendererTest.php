@@ -251,3 +251,53 @@ it('rejects a delete request without a valid CSRF token', function (): void {
     expect(catListPageCategoryExists($albumId))
         ->toBeTrue();
 });
+
+/**
+ * Regression test for a bug this page shipped with for its whole life: the
+ * "Visit Gallery" link was gated on a bare `$CAT_ADMIN_ACCESS` that nothing
+ * ever assigned, so the condition was always false and *every* album -- even
+ * one the admin can plainly see -- rendered the else branch instead: an inert
+ * <span> titled "This album is private".
+ *
+ * The renderer had been computing the real answer per row all along, through
+ * CategoryService::catAdminAccess() ("this album is not in the user's
+ * forbidden list"), and throwing it away. The template now reads it.
+ *
+ * Asserting both halves matters, because the bug's signature is not a missing
+ * link on its own -- it is the private-album span appearing in its place.
+ */
+it('renders the visit-gallery link for an album the admin can access', function (): void {
+    $page = H::asAdmin($this);
+    $album = H::createCategory($page, [
+        'name' => 'Cat List Access Album ' . uniqid(),
+    ]);
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $album['id'];
+
+    $page = H::navigateOk($page, '/admin.php?page=cat_list');
+    $html = H::rawWebpage($page)->content();
+
+    // The row for this album, up to the start of the next one.
+    $start = strpos($html, 'id="cat_' . $albumId . '"');
+    expect($start)
+        ->not->toBeFalse();
+    $row = substr($html, (int) $start, 4000);
+
+    expect($row)
+        // An <a>, not the else branch's inert <span>, and pointing at this
+        // album's own gallery URL.
+        ->toContain('<a href="index.php?/category/' . $albumId . '" class="actionGalery"')
+        // 'Visit Gallery' is the source key; en_UK renders it as 'Visit the
+        // gallery'. Asserting the key would pass against a page rendering
+        // neither branch.
+        ->and($row)
+        ->toContain('Visit the gallery')
+        // The else branch's own title has no en_UK entry, so it renders
+        // verbatim -- and it is what appeared here before the fix.
+        ->and($row)
+        ->not->toContain('This album is private');
+
+    $page->assertNoJavaScriptErrors();
+});

@@ -4,6 +4,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
+import { ajax } from "../../../default/js/vendor/ajax";
 export {};
 
 const str_yes_delete_confirmation = pwg_getPageString("Yes, delete");
@@ -180,7 +181,7 @@ $(function () {
 });
 
 function getComments(params: CommentsFilterParams) {
-  $.ajax({
+  void ajax({
     url: "api/v1/comments",
     type: "GET",
     dataType: "json",
@@ -205,7 +206,7 @@ function getComments(params: CommentsFilterParams) {
 
       delete commentsParams.search;
     },
-    error: (e: JQuery.jqXHR) => {
+    error: (e) => {
       console.log(e);
       $.alert({
         title: str_an_error_has,
@@ -525,7 +526,7 @@ function closeModalViewComment() {
 function validateComment(id: (string | number)[]) {
   const idLenght = id.length ?? 1;
 
-  $.ajax({
+  void ajax({
     url: "api/v1/comments/actions/validate",
     type: "POST",
     contentType: "application/json",
@@ -548,7 +549,7 @@ function validateComment(id: (string | number)[]) {
       });
       getComments(commentsParams);
     },
-    error: function (e: JQuery.jqXHR) {
+    error: function (e) {
       console.log(e);
       $.alert({
         ...{
@@ -585,7 +586,7 @@ function deleteComment(id: (string | number)[]) {
         text: str_yes_delete_confirmation,
         btnClass: "btn-red",
         action: function () {
-          $.ajax({
+          void ajax({
             url: "api/v1/comments/actions/delete",
             type: "POST",
             contentType: "application/json",
@@ -601,7 +602,7 @@ function deleteComment(id: (string | number)[]) {
             ) {
               getComments(commentsParams);
             },
-            error: function (e: JQuery.jqXHR) {
+            error: function (e) {
               console.log(e);
             },
           });

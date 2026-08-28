@@ -9,6 +9,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
+import { ajax } from "../../../default/js/vendor/ajax";
 export {};
 
 // `UserEntity`/`EntityCacheInstance<T>` are LocalStorageCache.ts's own
@@ -139,7 +140,7 @@ jQuery(document).ready(function () {
     );
 
     if (name.replace(/\s/g, "").length != 0) {
-      jQuery.ajax({
+      void ajax({
         url: "api/v1/groups",
         type: "POST",
         contentType: "application/json",
@@ -161,7 +162,7 @@ jQuery(document).ready(function () {
           setupGroupBox(groupBox);
           updateBadge();
         },
-        error: function (_err: JQuery.jqXHR) {
+        error: function (_err) {
           loadState.reverse();
           $("#addGroupForm .groupError").html(str_name_not_empty);
           $("#addGroupForm .groupError").fadeIn();
@@ -397,7 +398,7 @@ const deleteGroup = function (id: string | number) {
             ...{
               title: str_group_deleted.replace("%s", groupName),
               content: function () {
-                return jQuery.ajax({
+                return ajax({
                   url: "api/v1/groups/" + id,
                   type: "DELETE",
                   headers: {
@@ -412,7 +413,7 @@ const deleteGroup = function (id: string | number) {
                     $("#MergeOptionsChoices option[value=" + id + "]").remove();
                     updateBadge();
                   },
-                  error: function (err: JQuery.jqXHR) {
+                  error: function (err) {
                     console.log(err);
                   },
                 });
@@ -446,7 +447,7 @@ const renameGroup = function (id: string | number, newName: string) {
   );
 
   if (newName.replace(/\s/g, "").length != 0) {
-    jQuery.ajax({
+    void ajax({
       url: "api/v1/groups/" + id,
       type: "PATCH",
       contentType: "application/json",
@@ -480,7 +481,7 @@ const renameGroup = function (id: string | number, newName: string) {
         //Hide editable field
         displayRenameForm(false, id);
       },
-      error: function (_err: JQuery.jqXHR) {
+      error: function (_err) {
         loadState.reverse();
         //Display error message
         $("#group-" + id)
@@ -556,7 +557,7 @@ const setDefaultGroup = function (id: string | number, is_default: boolean) {
     .addClass("icon-spin6")
     .addClass("animate-spin")
     .removeClass("icon-star");
-  jQuery.ajax({
+  void ajax({
     url: "api/v1/groups/" + id,
     type: "PATCH",
     contentType: "application/json",
@@ -577,7 +578,7 @@ const setDefaultGroup = function (id: string | number, is_default: boolean) {
         setupDefaultActions(id, false);
       }
     },
-    error: function (err: JQuery.jqXHR) {
+    error: function (err) {
       console.log(err);
     },
   });
@@ -667,7 +668,7 @@ const duplicateAction = function (id: string | number) {
       str_other_copy.replace("%s", String(i++));
   }
 
-  jQuery.ajax({
+  void ajax({
     url: "api/v1/groups/" + id + "/actions/duplicate",
     type: "POST",
     contentType: "application/json",
@@ -693,7 +694,7 @@ const duplicateAction = function (id: string | number) {
         setupDefaultActions(data.id, true);
       }
     },
-    error: function (err: JQuery.jqXHR) {
+    error: function (err) {
       loadState.reverse();
       console.log(err);
     },
@@ -851,7 +852,7 @@ $(".ConfirmMergeButton").on("click", function () {
     }
   });
 
-  jQuery.ajax({
+  void ajax({
     url: "api/v1/groups/actions/merge",
     type: "POST",
     contentType: "application/json",
@@ -890,7 +891,7 @@ $(".ConfirmMergeButton").on("click", function () {
       $("#group-" + String(dest_grp) + " .group_number_users").html(
         "<i class='icon-spin6 animate-spin'> </i>",
       );
-      jQuery.ajax({
+      void ajax({
         url: "api/v1/users",
         type: "GET",
         data: {
@@ -908,7 +909,7 @@ $(".ConfirmMergeButton").on("click", function () {
         },
       });
     },
-    error: function (err: JQuery.jqXHR) {
+    error: function (err) {
       loadState.reverse();
       console.log(err);
     },
@@ -944,7 +945,7 @@ $(".ConfirmDeleteButton").on("click", function () {
   // per P27's own design) -- fire one DELETE per selected group.
   Promise.all(
     ids.map(function (id: string | number) {
-      return jQuery.ajax({
+      return ajax({
         url: "api/v1/groups/" + id,
         type: "DELETE",
         headers: {
@@ -974,7 +975,7 @@ $(".ConfirmDeleteButton").on("click", function () {
       });
       updateBadge();
     })
-    .catch(function (err: JQuery.jqXHR) {
+    .catch(function (err) {
       loadState.reverse();
       console.log(err);
     });
@@ -1091,7 +1092,7 @@ const openUserManager = function (grp_id: string | number) {
     $("#group-" + grp_id + " #UserListTrigger"),
     "<i class='icon-spin6 animate-spin'> </i>",
   );
-  jQuery.ajax({
+  void ajax({
     url: "api/v1/users",
     type: "GET",
     data: {
@@ -1141,7 +1142,7 @@ const openUserManager = function (grp_id: string | number) {
         "admin.php?page=user_list&group=" + grp_id,
       );
     },
-    error: function (err: JQuery.jqXHR) {
+    error: function (err) {
       loadState.reverse();
       console.log(err);
     },
@@ -1181,7 +1182,7 @@ const getUserDisplay = function (
     userBlock.find(".icon-cancel").addClass("animate-spin");
     userBlock.find(".icon-cancel").css("pointer-events", "none");
     userBlock.find(".icon-cancel").removeClass("icon-cancel");
-    jQuery.ajax({
+    void ajax({
       url: "api/v1/groups/" + grp_id + "/actions/remove-user",
       type: "POST",
       contentType: "application/json",
@@ -1252,7 +1253,7 @@ $(".AddUserBlock button").on("click", function () {
     );
     loadState.removeClass($("#UserSubmit"), "icon-user-add");
     loadState.changeAttribute($("#UserSubmit"), "css", "pointer-events:none");
-    jQuery.ajax({
+    void ajax({
       url: "api/v1/groups/" + grp_id + "/actions/add-user",
       type: "POST",
       contentType: "application/json",
@@ -1309,7 +1310,7 @@ $(".AddUserBlock button").on("click", function () {
         //Update member number
         updateMembernumber(parseInt($(".UserNumberBadge").html()) + 1, grp_id);
       },
-      error: function (err: JQuery.jqXHR) {
+      error: function (err) {
         loadState.reverse();
         console.log(err);
       },

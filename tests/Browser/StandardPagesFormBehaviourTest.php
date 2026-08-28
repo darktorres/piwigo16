@@ -15,12 +15,26 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 // cannot strand it, and the shared session is marked dirty because it
 // caches the resolved theme.
 beforeEach(function (): void {
+    // `allow_user_registration` is shared, global config across the whole
+    // Browser suite: a concurrent file leaving it `false` makes
+    // /register.php answer with the "User registration closed" page and
+    // none of the form exists. Reset to the fixture's documented default
+    // before *and* after, the pattern RegisterControllerTest and
+    // CatOptionsPageRendererTest already use for contended shared state --
+    // a snapshot/restore round trip would just preserve whatever another
+    // process happened to leave behind.
+    //
+    // Missing this passed for as long as these tests were only ever run
+    // filtered; the first full-suite run failed all five.
+    H::setConfigValue('allow_user_registration', 'true');
+
     $this->previousGuestTheme = H::userTheme(2) ?? 'default';
     H::setUserTheme(2, 'golden_html_test');
     H::markSharedSessionDirty();
 });
 
 afterEach(function (): void {
+    H::setConfigValue('allow_user_registration', 'true');
     H::setUserTheme(2, $this->previousGuestTheme);
     H::markSharedSessionDirty();
 });

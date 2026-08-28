@@ -5,6 +5,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
+import { ajax } from "../../../default/js/vendor/ajax";
 export {};
 
 type HistorySearchResponse =
@@ -296,7 +297,7 @@ function showResults(doShow: boolean) {
 
 function fillHistoryResult(ajaxParam: HistoryFilterParams) {
   let maxPage = 0;
-  $.ajax({
+  void ajax({
     url: "api/v1/history/search",
     data: ajaxParam,
     beforeSend: function () {
@@ -327,7 +328,7 @@ function fillHistoryResult(ajaxParam: HistoryFilterParams) {
         $(".noResults").show();
       }
     },
-    error: function (e: JQuery.jqXHR) {
+    error: function (e) {
       console.log(e);
     },
   }).done(() => {

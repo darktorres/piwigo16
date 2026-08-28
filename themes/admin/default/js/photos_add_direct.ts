@@ -16,6 +16,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
+import { ajax } from "../../../default/js/vendor/ajax";
 export {};
 
 // `@types/plupload`'s own File shape is an untyped `TODO` (its own
@@ -157,7 +158,7 @@ $(function () {
 
   // Upload logics
   $(".dont-show-again").on("click", function () {
-    $.ajax({
+    void ajax({
       url: "api/v1/session/preferences/promote-mobile-apps",
       type: "PUT",
       contentType: "application/json",
@@ -307,7 +308,7 @@ $(function () {
             const images_search: ImageFormatSearchResponse["results"] =
               await new Promise((res, _rej) => {
                 //ajax qui renvois les id des images dans la gallerie.
-                $.ajax({
+                void ajax({
                   url: "api/v1/images/formats/actions/search",
                   type: "POST",
                   contentType: "application/json",
@@ -561,7 +562,7 @@ $(function () {
         Piecon.reset();
 
         if (!formatMode && uploadCategory) {
-          $.ajax({
+          void ajax({
             url: "api/v1/uploads/actions/complete-batch",
             type: "POST",
             contentType: "application/json",
@@ -800,7 +801,7 @@ function uploadNextTusFile(
         operations["imageGet"]["responses"][200]["content"]["application/json"]
       > = {};
       try {
-        imageInfo = (await $.ajax({
+        imageInfo = (await ajax({
           url: "api/v1/images/" + result.imageId,
           type: "GET",
           dataType: "json",
@@ -901,7 +902,7 @@ function add_first_album(add_cat: (id: string | number) => void) {
     name: String(inputFirstAlbum.val()),
   };
 
-  $.ajax({
+  void ajax({
     url: "api/v1/categories",
     method: "POST",
     contentType: "application/json",

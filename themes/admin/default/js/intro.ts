@@ -2,6 +2,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
+import { ajax } from "../../../default/js/vendor/ajax";
 
 const piwigo_need_update_msg =
   '<a href="admin.php?page=updates">' +
@@ -36,7 +37,7 @@ jQuery().ready(function () {
   });
 
   if (pwg_getPageData<boolean>("check_for_updates")) {
-    jQuery.ajax({
+    void ajax({
       type: "GET",
       url: "api/v1/extensions/updates",
       dataType: "json",
@@ -91,7 +92,7 @@ jQuery().ready(function () {
   jQuery(".newsletter-hide").click(function () {
     jQuery(".promote-newsletter").hide();
 
-    jQuery.ajax({
+    void ajax({
       type: "GET",
       url: "admin.php?action=hide_newsletter_subscription",
     });

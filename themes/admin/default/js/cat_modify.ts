@@ -10,6 +10,7 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { albumBreadcrumbHtml } from "../../../default/js/vendor/dom";
+import { ajax } from "../../../default/js/vendor/ajax";
 export {};
 
 // `add_related_category` is declared here too, independently of the
@@ -69,7 +70,7 @@ jQuery(document).ready(function () {
   });
 
   $(".unlock-album").on("click", function () {
-    jQuery.ajax({
+    void ajax({
       url: "api/v1/categories/" + album_id,
       type: "PATCH",
       dataType: "json",
@@ -92,7 +93,7 @@ jQuery(document).ready(function () {
         }, 5000);
       },
       error: function (
-        XMLHttpRequest: JQuery.jqXHR,
+        XMLHttpRequest,
         textStatus: string,
         errorThrows: string,
       ) {
@@ -117,7 +118,7 @@ jQuery(document).ready(function () {
     save_button_set_loading(true);
     $(".info-error,.info-message").hide();
 
-    jQuery.ajax({
+    void ajax({
       url: "api/v1/categories/" + album_id,
       type: "PATCH",
       dataType: "json",
@@ -146,7 +147,7 @@ jQuery(document).ready(function () {
         }, 5000);
       },
       error: function (
-        XMLHttpRequest: JQuery.jqXHR,
+        XMLHttpRequest,
         textStatus: string,
         errorThrows: string,
       ) {
@@ -161,7 +162,7 @@ jQuery(document).ready(function () {
     });
 
     if (parent_album != default_parent_album) {
-      jQuery.ajax({
+      void ajax({
         url: "api/v1/categories/actions/move",
         type: "POST",
         dataType: "json",
@@ -177,7 +178,7 @@ jQuery(document).ready(function () {
           $(".cat-modify-ariane").html(data.newArianeString);
           default_parent_album = parent_album;
         },
-        error: function (e: JQuery.jqXHR) {
+        error: function (e) {
           $(".info-error").show();
           setTimeout(function () {
             $(".info-error").hide();
@@ -217,7 +218,7 @@ jQuery(document).ready(function () {
       content: function (this: JConfirmModalInstance) {
         // eslint-disable-next-line @typescript-eslint/no-this-alias -- the classic callback-closure idiom: `this` (the jquery-confirm modal instance) needs to stay reachable inside the nested `success`/`error` callbacks below, which have their own `this`.
         const self = this;
-        return $.ajax({
+        return ajax({
           url: "api/v1/categories/" + album_id + "/orphan-impact",
           type: "GET",
           dataType: "json",
@@ -254,7 +255,7 @@ jQuery(document).ready(function () {
 
             self.setContent(message);
           },
-          error: function (message: JQuery.jqXHR) {
+          error: function (message) {
             console.log(message);
             self.setContent("An error has occured while calculating orphans");
           },
@@ -271,7 +272,7 @@ jQuery(document).ready(function () {
             );
             delete_album(deletionMode)
               .then(() => (window.location.href = u_delete))
-              .catch((err: JQuery.jqXHR) => {
+              .catch((err) => {
                 this.close();
                 console.log(err);
               });
@@ -288,7 +289,7 @@ jQuery(document).ready(function () {
 
   function delete_album(photo_deletion_mode: string) {
     return new Promise<void>((res, rej) => {
-      $.ajax({
+      void ajax({
         url: "api/v1/categories/" + album_id,
         type: "DELETE",
         contentType: "application/json",
@@ -301,7 +302,7 @@ jQuery(document).ready(function () {
         ) {
           res();
         },
-        error: function (message: JQuery.jqXHR) {
+        error: function (message) {
           // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- rejects with the real jqXHR error object, matching the original .catch()'s own console.log(err) usage; not a new Error, same as pre-P46.
           rej(message);
         },
@@ -315,7 +316,7 @@ jQuery(document).ready(function () {
       .addClass("icon-spin6")
       .addClass("animate-spin");
 
-    jQuery.ajax({
+    void ajax({
       url: "api/v1/categories/" + album_id + "/actions/refresh-representative",
       type: "POST",
       contentType: "application/json",
@@ -336,7 +337,7 @@ jQuery(document).ready(function () {
           .removeClass("animate-spin");
       },
       error: function (
-        XMLHttpRequest: JQuery.jqXHR,
+        XMLHttpRequest,
         textStatus: string,
         errorThrows: string,
       ) {
@@ -357,7 +358,7 @@ jQuery(document).ready(function () {
       .addClass("icon-spin6")
       .addClass("animate-spin");
 
-    jQuery.ajax({
+    void ajax({
       url: "api/v1/categories/" + album_id + "/representative",
       type: "DELETE",
       contentType: "application/json",
@@ -376,7 +377,7 @@ jQuery(document).ready(function () {
           .removeClass("animate-spin");
       },
       error: function (
-        XMLHttpRequest: JQuery.jqXHR,
+        XMLHttpRequest,
         textStatus: string,
         errorThrows: string,
       ) {
@@ -400,7 +401,7 @@ jQuery(document).ready(function () {
   });
 
   $(".allow-comments").on("click", function () {
-    jQuery.ajax({
+    void ajax({
       url: "api/v1/categories/" + album_id,
       type: "PATCH",
       dataType: "json",
@@ -430,7 +431,7 @@ jQuery(document).ready(function () {
           $(".info-message").text(temp_txt);
         }, 5000);
       },
-      error: function (e: JQuery.jqXHR) {
+      error: function (e) {
         console.log(e);
         save_button_set_loading(false);
         $(".info-error").show();
@@ -441,7 +442,7 @@ jQuery(document).ready(function () {
     });
   });
   $(".disallow-comments").on("click", function () {
-    jQuery.ajax({
+    void ajax({
       url: "api/v1/categories/" + album_id,
       type: "PATCH",
       dataType: "json",
@@ -471,7 +472,7 @@ jQuery(document).ready(function () {
           $(".info-message").text(temp_txt);
         }, 5000);
       },
-      error: function (e: JQuery.jqXHR) {
+      error: function (e) {
         console.log(e);
         save_button_set_loading(false);
         $(".info-error").show();

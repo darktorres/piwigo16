@@ -228,3 +228,111 @@ describe("the returned thenable", () => {
     });
   });
 });
+
+describe("param() null handling", () => {
+  it("serialises null and undefined as empty, not as the words", () => {
+    // jQuery: `value == null ? "" : value`. Getting this wrong sends
+    // `minDate=undefined`, which the comments API answers with a 422 --
+    // found by visual regression, not by any type check.
+    expect(param({ a: undefined, b: null, c: "x" })).toBe("a=&b=&c=x");
+  });
+
+  it("invokes a function value, as jQuery does", () => {
+    expect(param({ a: () => "called" })).toBe("a=called");
+  });
+
+  it("applies the same rule inside an array", () => {
+    expect(param({ ids: [1, null, 3] })).toBe("ids%5B%5D=1&ids%5B%5D=&ids%5B%5D=3");
+  });
+});
+
+describe("dataType omitted (jQuery's intelligent guess)", () => {
+  it("parses JSON when the response says application/json", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        Promise.resolve({
+          status: 200,
+          statusText: "OK",
+          ok: true,
+          headers: new Headers({ "Content-Type": "application/json" }),
+          text: () => Promise.resolve('{"lines":[]}'),
+        })
+      )
+    );
+
+    // No dataType given. jQuery sniffs the header; a call site that relies
+    // on it would otherwise get a string and throw on first property
+    // access.
+    await expect(ajax({ url: "/x" })).resolves.toEqual({ lines: [] });
+  });
+
+  it("leaves the body as text when the response is not JSON", async () => {
+    stubFetch(200, "<p>hi</p>");
+
+    await expect(ajax({ url: "/x" })).resolves.toBe("<p>hi</p>");
+  });
+
+  it("does not parse when an explicit non-json dataType is given", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        Promise.resolve({
+          status: 200,
+          statusText: "OK",
+          ok: true,
+          headers: new Headers({ "Content-Type": "application/json" }),
+          text: () => Promise.resolve('{"a":1}'),
+        })
+      )
+    );
+
+    await expect(ajax({ url: "/x", dataType: "text" })).resolves.toBe(
+      '{"a":1}'
+    );
+  });
+});
+
+describe("dataType casing", () => {
+  it('parses JSON for dataType "JSON" as well as "json"', async () => {
+    // jQuery lowercases dataType; four call sites spell it "JSON", and a
+    // case-sensitive check would hand them back an unparsed string.
+    stubFetch(200, '{"ok":1}');
+
+    await expect(ajax({ url: "/x", dataType: "JSON" })).resolves.toEqual({
+      ok: 1,
+    });
+    await expect(ajax({ url: "/x", dataType: "json" })).resolves.toEqual({
+      ok: 1,
+    });
+  });
+});
+
+describe("abort()", () => {
+  it("cancels the in-flight request through its own signal", async () => {
+    let seenSignal: AbortSignal | undefined;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((_url: string, init: RequestInit) => {
+        seenSignal = init.signal ?? undefined;
+
+        return new Promise((_resolve, reject) => {
+          init.signal?.addEventListener("abort", () => {
+            reject(new DOMException("Aborted", "AbortError"));
+          });
+        });
+      })
+    );
+
+    const request = ajax({ url: "/slow" });
+    const settled = request.then(
+      () => "resolved",
+      () => "rejected"
+    );
+
+    request.abort();
+
+    await expect(settled).resolves.toBe("rejected");
+    expect(seenSignal?.aborted).toBe(true);
+  });
+});

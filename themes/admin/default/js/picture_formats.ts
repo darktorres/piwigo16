@@ -4,6 +4,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
+import { ajax } from "../../../default/js/vendor/ajax";
 export {};
 
 const pwg_token = pwg_getPageData<string>("csrf_token");
@@ -49,7 +50,7 @@ $(".format-card").each((i, node) => {
 
 function deleteFormat(card: JQuery) {
   card.find(".format-delete i").attr("class", "icon-spin6 animate-spin");
-  $.ajax({
+  void ajax({
     url: "api/v1/images/formats/actions/delete",
     type: "POST",
     contentType: "application/json",
@@ -64,7 +65,7 @@ function deleteFormat(card: JQuery) {
         if ($(".format-card").length == 0) $(".no-formats").show();
       });
     },
-    error: function (message: JQuery.jqXHR) {
+    error: function (message) {
       console.log(message);
     },
   });

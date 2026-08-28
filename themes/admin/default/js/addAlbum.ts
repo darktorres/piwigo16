@@ -1,4 +1,5 @@
 import type { operations } from "../../../../openapi/client/schema";
+import { ajax } from "../../../default/js/vendor/ajax";
 
 export {};
 
@@ -81,7 +82,7 @@ jQuery.fn.pwgAddAlbum = function (this: JQuery, options?: PwgAddAlbumOptions) {
       }
       jQuery("#categoryNameError").css("visibility", "hidden");
 
-      jQuery.ajax({
+      void ajax({
         url: "api/v1/categories",
         type: "POST",
         contentType: "application/json",
@@ -141,7 +142,7 @@ jQuery.fn.pwgAddAlbum = function (this: JQuery, options?: PwgAddAlbumOptions) {
           }
         },
         error: function (
-          XMLHttpRequest: JQuery.jqXHR,
+          XMLHttpRequest,
           textStatus: string,
           errorThrows: string,
         ) {

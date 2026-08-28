@@ -5,6 +5,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
+import { ajax, type AjaxThenable } from "../../../default/js/vendor/ajax";
 export {};
 
 // The real `GET /api/v1/users` per-row shape (P47) -- `current_users`/
@@ -483,7 +484,7 @@ $(document).ready(function () {
 });
 
 function set_view_selector(view_type: string) {
-  $.ajax({
+  void ajax({
     url: "api/v1/session/preferences/user-manager-view",
     type: "PUT",
     contentType: "application/json",
@@ -775,7 +776,7 @@ $(".pagination-arrow.left").on("click", () => {
 });
 
 $(".pagination-per-page a").on("click", function () {
-  jQuery.ajax({
+  void ajax({
     url: "api/v1/session/preferences/user-manager-pagination",
     type: "PUT",
     contentType: "application/json",
@@ -2269,7 +2270,7 @@ Ajax Requests
 
 function get_first_selection_usernames(callback: () => void) {
   const first_ids = selection.slice(0, 50).map((x) => x.id);
-  jQuery.ajax({
+  void ajax({
     url: "api/v1/users",
     type: "GET",
     data: {
@@ -2295,7 +2296,7 @@ function select_whole_set() {
   const filterLevel = $(".advanced-filter-select[name=filter_level]").val();
   const filterGroup = $(".advanced-filter-select[name=filter_group]").val();
   const filterStatus = $(".advanced-filter-select[name=filter_status]").val();
-  jQuery.ajax({
+  void ajax({
     url: "api/v1/users",
     type: "GET",
     data: {
@@ -2358,7 +2359,7 @@ function update_user_username() {
       .fadeOut(2500);
     return;
   }
-  jQuery.ajax({
+  void ajax({
     url: "api/v1/users/" + last_user_id,
     type: "PATCH",
     contentType: "application/json",
@@ -2404,7 +2405,7 @@ function update_user_password() {
     pop_in_container.find(".user-property-input-password").val(),
   );
   ajax_data["password"] = newPassword;
-  jQuery.ajax({
+  void ajax({
     url: "api/v1/users/" + last_user_id,
     type: "PATCH",
     contentType: "application/json",
@@ -2452,7 +2453,7 @@ function update_user_info() {
   }
 
   ajax_data = fill_ajax_data_from_container(ajax_data, pop_in_container);
-  jQuery.ajax({
+  void ajax({
     url: "api/v1/users/" + last_user_id,
     type: "PATCH",
     contentType: "application/json",
@@ -2500,7 +2501,7 @@ function update_user_info() {
         $("#UserList"),
       );
     },
-    error: function (jqXHR: JQuery.jqXHR) {
+    error: function (jqXHR) {
       const message =
         (jqXHR.responseJSON as { detail?: string } | undefined)?.detail ??
         errorStr;
@@ -2518,7 +2519,7 @@ function update_user_info() {
 }
 
 function get_guest_info() {
-  jQuery.ajax({
+  void ajax({
     url: "api/v1/users",
     type: "GET",
     data: {
@@ -2535,7 +2536,7 @@ function get_guest_info() {
 }
 
 function get_user_info(uid: number, callback: (() => void) | null = null) {
-  jQuery.ajax({
+  void ajax({
     url: "api/v1/users",
     type: "GET",
     data: {
@@ -2564,7 +2565,7 @@ function update_guest_info() {
   ajax_data = fill_ajax_data_from_container(ajax_data, pop_in_container);
   ajax_data.email = undefined;
   ajax_data.status = undefined;
-  jQuery.ajax({
+  void ajax({
     url: "api/v1/users/" + guest_id,
     type: "PATCH",
     contentType: "application/json",
@@ -2638,7 +2639,7 @@ function update_user_list() {
         )[1]!
       ];
   }
-  jQuery.ajax({
+  void ajax({
     url: "api/v1/users",
     type: "GET",
     data: update_data,
@@ -2747,7 +2748,7 @@ function add_user() {
     data.autoPassword = true;
   }
 
-  $.ajax({
+  void ajax({
     url: "api/v1/users",
     type: "POST",
     contentType: "application/json",
@@ -2791,7 +2792,7 @@ function add_user() {
       );
       add_infos_to_new_user(new_user_id, ajax_data);
     },
-    error: (jqXHR: JQuery.jqXHR) => {
+    error: (jqXHR) => {
       const message =
         (jqXHR.responseJSON as { detail?: string } | undefined)?.detail ??
         errorStr;
@@ -2805,7 +2806,7 @@ function add_infos_to_new_user(
   user_id: number,
   ajax_data: Record<string, unknown>,
 ) {
-  $.ajax({
+  void ajax({
     url: "api/v1/users/" + user_id,
     type: "PATCH",
     contentType: "application/json",
@@ -2854,7 +2855,7 @@ function add_infos_to_new_user(
       $("#AddUserSuccess").css("display", "flex");
       $(".badge-number").html(String(+$(".badge-number").html() + 1));
     },
-    error: function (jqXHR: JQuery.jqXHR) {
+    error: function (jqXHR) {
       const message =
         (jqXHR.responseJSON as { detail?: string } | undefined)?.detail ??
         errorStr;
@@ -2866,7 +2867,7 @@ function add_infos_to_new_user(
 
 function send_new_user_password(user_id: number, mail: string) {
   const send_by_mail = mail === "" ? false : true;
-  $.ajax({
+  void ajax({
     url: "api/v1/users/" + user_id + "/actions/generate-password-link",
     dataType: "json",
     type: "POST",
@@ -2921,7 +2922,7 @@ function send_new_user_password(user_id: number, mail: string) {
           add_user_close();
         });
     },
-    error: function (jqXHR: JQuery.jqXHR) {
+    error: function (jqXHR) {
       const message =
         (jqXHR.responseJSON as { detail?: string } | undefined)?.detail ??
         errorStr;
@@ -2934,7 +2935,7 @@ function send_new_user_password(user_id: number, mail: string) {
 }
 
 function delete_user(uid: number) {
-  jQuery.ajax({
+  void ajax({
     url: "api/v1/users/" + uid,
     type: "DELETE",
     headers: { "X-CSRF-Token": pwg_token },
@@ -2991,7 +2992,7 @@ function send_link_password(
   user_id: number,
   send_by_mail: boolean,
 ) {
-  $.ajax({
+  void ajax({
     url: "api/v1/users/" + user_id + "/actions/generate-password-link",
     dataType: "json",
     type: "POST",
@@ -3080,7 +3081,7 @@ function send_link_password(
 }
 
 function set_main_user(user_id: number, new_username: string) {
-  $.ajax({
+  void ajax({
     url: "api/v1/users/" + user_id + "/actions/set-main-user",
     dataType: "json",
     type: "POST",
@@ -3358,14 +3359,14 @@ $(document).ready(function () {
     };
     const numericFields = ["level", "nbImagePage", "recentPeriod"];
 
-    let request: Promise<unknown> | JQuery.jqXHR;
+    let request: Promise<unknown> | AjaxThenable;
     jQuery("#applyActionLoading").show();
     jQuery("#applyActionBlock .infos").fadeOut();
 
     if (action === "delete") {
       request = Promise.all(
         userIds.map((id) =>
-          jQuery.ajax({
+          ajax({
             url: "api/v1/users/" + id,
             method: "DELETE",
             headers: { "X-CSRF-Token": pwg_token },
@@ -3373,7 +3374,7 @@ $(document).ready(function () {
         ),
       );
     } else if (action === "group_associate" || action === "group_dissociate") {
-      request = jQuery.ajax({
+      request = ajax({
         url:
           "api/v1/groups/" +
           String(data.group_id) +
@@ -3391,7 +3392,7 @@ $(document).ready(function () {
         : data[action];
       request = Promise.all(
         userIds.map((id) =>
-          jQuery.ajax({
+          ajax({
             url: "api/v1/users/" + id,
             method: "PATCH",
             contentType: "application/json",

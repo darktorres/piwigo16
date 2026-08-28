@@ -1,4 +1,5 @@
 import { pwg_getPageString } from "../../../default/js/page-data";
+import { ajax, type AjaxThenable } from "../../../default/js/vendor/ajax";
 export {};
 
 $(document).ready(function () {
@@ -11,7 +12,7 @@ $(document).ready(function () {
     $(".adminEmail").text(String($(this).val()));
   });
 
-  let dbCheckXhr: JQuery.jqXHR | null = null;
+  let dbCheckXhr: AjaxThenable | null = null;
   let dbCheckTimer: ReturnType<typeof setTimeout> | null = null;
 
   function dbCheckReady() {
@@ -96,7 +97,7 @@ $(document).ready(function () {
       pwg_getPageString("Testing connection..."),
     );
 
-    dbCheckXhr = $.ajax({
+    dbCheckXhr = ajax({
       url: "install.php?ajax=check-db",
       method: "POST",
       dataType: "json",
@@ -132,7 +133,7 @@ $(document).ready(function () {
           toggleOverwriteWarning(false, null);
         }
       },
-      error: function (jqXHR: JQuery.jqXHR, textStatus: string) {
+      error: function (jqXHR, textStatus: string) {
         if (textStatus === "abort") {
           return;
         }

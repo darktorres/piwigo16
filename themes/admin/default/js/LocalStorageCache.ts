@@ -1,8 +1,10 @@
 // Real entity shapes for the 4 real per-list caches below, via the
 // existing OpenAPI schema. Declared as top-level `type X =
-// import(...)` aliases, not real `import` statements -- this file is
-// a genuinely non-module IIFE (`(function ($, exports) {...})(jQuery,
-// window)`).
+// import(...)` aliases rather than real `import` statements, which is
+// now only a style holdover: the file was a non-module IIFE
+// (`(function ($, exports) {...})(jQuery, window)`) when that was
+// written, and P48 made it a real module -- it has had `export`
+// statements ever since.
 //
 // `CategoryAdmin` duplicates album_selector.ts's own identically-named,
 // identically-defined type alias -- until that file's own P48 module
@@ -10,9 +12,10 @@
 // a real ambient global visible here too, so this file didn't need its
 // own copy; a second declaration would have been a real
 // duplicate-identifier conflict. Now that album_selector.ts is a real
-// module, its own types are module-private, so this file needs (and,
-// since this file itself is still non-module, safely can have) its own
+// module, its own types are module-private, so this file needs its own
 // local copy -- a pure type alias, safe to duplicate.
+import { ajax } from "../../../default/js/vendor/ajax";
+
 type CategoryAdmin =
   import("../../../../openapi/client/schema").operations["categoryList"]["responses"][200]["content"]["application/json"]["categories"][number];
 type TagAdmin =
@@ -407,9 +410,10 @@ const CategoriesCache = function (
   options.key = "categoriesAdminList";
 
   options.loader = function (callback) {
-    $.getJSON(
-      options.rootUrl + "api/v1/categories",
-      function (
+    void ajax({
+      url: options.rootUrl + "api/v1/categories",
+      dataType: "json",
+      success: function (
         data: import("../../../../openapi/client/schema").operations["categoryList"]["responses"][200]["content"]["application/json"],
       ) {
         const cats: ProcessedCategory[] = data.categories.map(function (c, i) {
@@ -419,7 +423,7 @@ const CategoriesCache = function (
 
         callback(cats);
       },
-    );
+    });
   };
 
   this._init(options);
@@ -466,9 +470,10 @@ const TagsCache = function (
   options.key = "tagsAdminList";
 
   options.loader = function (callback) {
-    $.getJSON(
-      options.rootUrl + "api/v1/tags",
-      function (
+    void ajax({
+      url: options.rootUrl + "api/v1/tags",
+      dataType: "json",
+      success: function (
         data: import("../../../../openapi/client/schema").operations["tagList"]["responses"][200]["content"]["application/json"],
       ) {
         const tags: ProcessedTag[] = data.tags.map(function (t) {
@@ -478,7 +483,7 @@ const TagsCache = function (
 
         callback(tags);
       },
-    );
+    });
   };
 
   this._init(options);
@@ -525,9 +530,10 @@ const GroupsCache = function (
   options.key = "groupsAdminList";
 
   options.loader = function (callback) {
-    $.getJSON(
-      options.rootUrl + "api/v1/groups",
-      function (
+    void ajax({
+      url: options.rootUrl + "api/v1/groups",
+      dataType: "json",
+      success: function (
         data: import("../../../../openapi/client/schema").operations["groupList"]["responses"][200]["content"]["application/json"],
       ) {
         const groups: ProcessedGroup[] = data.groups.map(function (g) {
@@ -537,7 +543,7 @@ const GroupsCache = function (
 
         callback(groups);
       },
-    );
+    });
   };
 
   this._init(options);
@@ -588,9 +594,10 @@ const UsersCache = function (
 
     // recursive loader
     (function load(page: number) {
-      jQuery.getJSON(
-        options.rootUrl + "api/v1/users?perPage=9999&page=" + page,
-        function (
+      void ajax({
+        url: options.rootUrl + "api/v1/users?perPage=9999&page=" + page,
+        dataType: "json",
+        success: function (
           data: import("../../../../openapi/client/schema").operations["userList"]["responses"][200]["content"]["application/json"],
         ) {
           users = users.concat(data.users);
@@ -601,7 +608,7 @@ const UsersCache = function (
             callback(users);
           }
         },
-      );
+      });
     })(0);
   };
 

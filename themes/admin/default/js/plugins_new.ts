@@ -1,6 +1,7 @@
 import "./common";
 
 import { pwg_getPageString } from "../../../default/js/page-data";
+import { ajax } from "../../../default/js/vendor/ajax";
 export {};
 
 const str_confirm_msg = pwg_getPageString("Yes, I am sure");
@@ -98,7 +99,7 @@ $(function () {
   jQuery('select[name="selectOrder"]').change(function () {
     sortOrder = (this as HTMLSelectElement).value;
     $(".pluginBox").sortElements(sortPlugins);
-    $.get("admin.php?plugins_new_order=" + sortOrder);
+    void ajax({ url: "admin.php?plugins_new_order=" + sortOrder });
   });
 
   jQuery("#search").on("input", function () {

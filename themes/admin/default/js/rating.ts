@@ -10,6 +10,7 @@ import "./common";
 import { CategoriesCache } from "./LocalStorageCache";
 
 import { pwg_getPageData } from "../../../default/js/page-data";
+import { ajax } from "../../../default/js/vendor/ajax";
 export {};
 
 const categoriesCache = new CategoriesCache({
@@ -68,7 +69,7 @@ function del(node: HTMLElement, id: number, uid: number, aid: string | null) {
       anonymousId: aid || null,
     };
 
-  $.ajax({
+  void ajax({
     url:
       pwg_getPageData<string>("root_url") +
       "api/v1/users/" +
@@ -78,7 +79,7 @@ function del(node: HTMLElement, id: number, uid: number, aid: string | null) {
     contentType: "application/json",
     data: JSON.stringify(data),
     headers: { "X-CSRF-Token": pwg_token },
-    error: function (jqXHR: JQuery.jqXHR) {
+    error: function (jqXHR) {
       tr.stop();
       tr.fadeTo(0, 1);
       alert(jqXHR.status + " " + jqXHR.statusText);

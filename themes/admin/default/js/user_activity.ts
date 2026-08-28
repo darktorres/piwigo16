@@ -13,6 +13,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
+import { ajax } from "../../../default/js/vendor/ajax";
 export {};
 
 type UserListResponse =
@@ -218,7 +219,7 @@ async function fetchAndMergeActivityLines(
     if (object !== undefined) params.object = object;
     if (id !== undefined && id !== null) params.objectId = id;
 
-    const data = (await $.ajax({
+    const data = (await ajax({
       url: "api/v1/activity",
       type: "GET",
       dataType: "json",
@@ -276,7 +277,7 @@ async function fetchAndMergeActivityLines(
   const userLines = lines.filter((l) => l.object === "user");
   if (userLines.length > 0) {
     const allUserIds = [...new Set(userLines.flatMap((l) => l.object_id))];
-    const userInfo = (await $.ajax({
+    const userInfo = (await ajax({
       url: "api/v1/users",
       type: "GET",
       dataType: "json",

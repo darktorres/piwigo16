@@ -46,6 +46,7 @@ import {
   sliders,
   show_filter_ratings,
 } from "./search_filters";
+import { ajax } from "./vendor/ajax";
 
 export {};
 
@@ -1782,7 +1783,7 @@ function performSearch(params: Record<string, any>, reload: boolean = false) {
     }
   });
 
-  $.ajax({
+  void ajax({
     url: "api/v1/images/searches",
     type: "POST",
     contentType: "application/json",
@@ -1795,7 +1796,7 @@ function performSearch(params: Record<string, any>, reload: boolean = false) {
         reloadPage(data.searchUrl);
       }
     },
-    error: function (e: JQuery.jqXHR) {
+    error: function (e) {
       console.log(e);
       $(".filter-form ").append('<p class="error">Error</p>');
       $(".filter-validate").find(".validate-text").css("display", "block");

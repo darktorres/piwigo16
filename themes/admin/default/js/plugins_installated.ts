@@ -31,6 +31,7 @@ import {
   uninstall_plugin_msg,
   x_plugins_found,
 } from "./plugins_installed_config";
+import { ajax } from "../../../default/js/vendor/ajax";
 function setDisplayClassic() {
   $(".pluginContainer")
     .removeClass("line-form")
@@ -104,7 +105,7 @@ function normalTitle() {
 function activatePlugin(id: string) {
   $("#" + id + " .switch").prop("disabled", true);
 
-  $.ajax({
+  void ajax({
     type: "POST",
     dataType: "json",
     contentType: "application/json",
@@ -123,7 +124,7 @@ function activatePlugin(id: string) {
       nb_plugin.inactive -= 1;
       actualizeFilter();
     },
-    error: function (e: JQuery.jqXHR) {
+    error: function (e) {
       console.log(e.responseText);
       $("#" + id + " .pluginNotif").stop(false, true);
       $("#" + id + " .PluginActionError label span:first").html(
@@ -200,7 +201,7 @@ function confirmIncompatibleActivation(toggle: JQuery, row: JQuery) {
 function disactivatePlugin(id: string) {
   $("#" + id + " .switch").prop("disabled", true);
 
-  $.ajax({
+  void ajax({
     type: "POST",
     dataType: "json",
     contentType: "application/json",
@@ -219,7 +220,7 @@ function disactivatePlugin(id: string) {
       nb_plugin.active -= 1;
       actualizeFilter();
     },
-    error: function (e: JQuery.jqXHR) {
+    error: function (e) {
       console.log(e);
       $("#" + id + " .pluginNotif").stop(false, true);
       $("#" + id + " .PluginActionError label span:first").html(
@@ -240,7 +241,7 @@ function deletePlugin(id: string, name: string) {
   $.alert({
     title: deleted_plugin_msg.replace("%s", name),
     content: function () {
-      return $.ajax({
+      return ajax({
         type: "POST",
         dataType: "json",
         contentType: "application/json",
@@ -254,7 +255,7 @@ function deletePlugin(id: string, name: string) {
           nb_plugin.all -= 1;
           actualizeFilter();
         },
-        error: function (e: JQuery.jqXHR) {
+        error: function (e) {
           console.log(e);
           $("#" + id + " .pluginNotif").stop(false, true);
           $("#" + id + " .PluginActionError label span:first").html(
@@ -272,7 +273,7 @@ function deletePlugin(id: string, name: string) {
 }
 
 function restorePlugin(id: string) {
-  $.ajax({
+  void ajax({
     type: "POST",
     dataType: "json",
     contentType: "application/json",
@@ -287,7 +288,7 @@ function restorePlugin(id: string) {
       );
       $("#" + id + " .RestorePluginSuccess").css("display", "flex");
     },
-    error: function (e: JQuery.jqXHR) {
+    error: function (e) {
       console.log(e);
       $("#" + id + " .pluginNotif").stop(false, true);
       $("#" + id + " .PluginActionError label span:first").html(
@@ -304,7 +305,7 @@ function restorePlugin(id: string) {
 }
 
 function uninstallPlugin(id: string) {
-  $.ajax({
+  void ajax({
     type: "POST",
     dataType: "json",
     contentType: "application/json",
@@ -318,7 +319,7 @@ function uninstallPlugin(id: string) {
       nb_plugin.all -= 1;
       actualizeFilter();
     },
-    error: function (e: JQuery.jqXHR) {
+    error: function (e) {
       $("#" + id + " .pluginNotif").stop(false, true);
       $("#" + id + " .PluginActionError label span:first").html(
         plugin_action_error,
@@ -575,7 +576,7 @@ $(document).ready(function () {
 });
 
 function set_view_selector(view_type: string) {
-  $.ajax({
+  void ajax({
     url: "api/v1/session/preferences/plugin-manager-view",
     type: "PUT",
     contentType: "application/json",
@@ -650,7 +651,7 @@ jQuery(document).ready(function () {
   });
 
   /* incompatible plugins */
-  jQuery.ajax({
+  void ajax({
     method: "GET",
     url: "admin.php",
     // `page=plugins_installed` is upstream Piwigo's slug. This fork

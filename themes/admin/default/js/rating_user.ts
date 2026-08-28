@@ -12,6 +12,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
+import { ajax } from "../../../default/js/vendor/ajax";
 export {};
 
 // GeoIp -- themes/admin/default/js/jquery.geoip.js, loaded via the
@@ -118,7 +119,7 @@ $(document).ready(function () {
               trElement = trElement.parentNode as HTMLElement;
             const tr = jQuery(trElement).fadeTo(1000, 0.4);
             const data = uidFromCell(cell);
-            $.ajax({
+            void ajax({
               url:
                 pwg_getPageData<string>("root_url") +
                 "api/v1/users/" +
@@ -128,7 +129,7 @@ $(document).ready(function () {
               contentType: "application/json",
               data: JSON.stringify({ anonymousId: data.aid || null }),
               headers: { "X-CSRF-Token": pwg_token },
-              error: function (jqXHR: JQuery.jqXHR) {
+              error: function (jqXHR) {
                 tr.stop();
                 tr.fadeTo(0, 1);
                 alert(jqXHR.status + " " + jqXHR.statusText);

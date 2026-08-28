@@ -5,6 +5,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
+import { ajax } from "../../../default/js/vendor/ajax";
 export {};
 
 // jqtree's own custom `tree.open`/`tree.close`/`tree.move` jQuery events
@@ -311,7 +312,7 @@ $(document).ready(() => {
 
   $(".RenameAlbumSubmit").on("click", function () {
     const catToEdit = $(this).data("cat_id") as string | number;
-    jQuery.ajax({
+    void ajax({
       url: "api/v1/categories/" + catToEdit,
       type: "PATCH",
       contentType: "application/json",
@@ -352,7 +353,7 @@ $(document).ready(() => {
 
         closeRenameAlbumPopIn();
       },
-      error: function (message: JQuery.jqXHR) {
+      error: function (message) {
         console.log(message);
       },
     });
@@ -391,7 +392,7 @@ $(document).ready(() => {
       string | number;
     const newAlbumPosition = $("input[name=position]:checked").val();
 
-    jQuery.ajax({
+    void ajax({
       url: "api/v1/categories",
       type: "POST",
       contentType: "application/json",
@@ -508,7 +509,7 @@ $(document).ready(() => {
         closeAddAlbumPopIn();
         $(".AddAlbumSubmit").removeClass("notClickable");
       },
-      error: function (message: JQuery.jqXHR) {
+      error: function (message) {
         console.log(message);
         $(".AddAlbumErrors").text(str_album_name_empty).show();
         $(".AddAlbumSubmit").removeClass("notClickable");
@@ -804,7 +805,7 @@ function closeRenameAlbumPopIn() {
 }
 
 function triggerDeleteAlbum(cat_id: string | number) {
-  $.ajax({
+  void ajax({
     url: "api/v1/categories/" + cat_id + "/orphan-impact",
     type: "GET",
     dataType: "json",
@@ -838,7 +839,7 @@ function triggerDeleteAlbum(cat_id: string | number) {
         }
       }
     },
-    error: function (message: JQuery.jqXHR) {
+    error: function (message) {
       console.log(message);
     },
   }).done(function () {
@@ -866,7 +867,7 @@ function openDeleteAlbumPopIn(cat_to_delete: string | number) {
   $(".DeleteAlbumSubmit")
     .unbind("click")
     .on("click", function () {
-      $.ajax({
+      void ajax({
         url: "api/v1/categories/" + cat_to_delete,
         type: "DELETE",
         contentType: "application/json",
@@ -913,7 +914,7 @@ function openDeleteAlbumPopIn(cat_to_delete: string | number) {
           setSubcatsBadge(parentOfDeletedNode);
           closeDeleteAlbumPopIn();
         },
-        error: function (message: JQuery.jqXHR) {
+        error: function (message) {
           console.log(message);
         },
       });
@@ -1168,7 +1169,7 @@ function changeParent(
   rank: number | null,
 ) {
   return new Promise<void>((res, rej) => {
-    jQuery.ajax({
+    void ajax({
       url: "api/v1/categories/actions/move",
       type: "POST",
       contentType: "application/json",
@@ -1195,7 +1196,7 @@ function changeParent(
         }
         res();
       },
-      error: function (message: JQuery.jqXHR) {
+      error: function (message) {
         rej(new Error(message.statusText || "move failed"));
       },
     });
@@ -1204,7 +1205,7 @@ function changeParent(
 
 function changeRank(node: string | number, rank: number | null) {
   return new Promise<void>((res, rej) => {
-    jQuery.ajax({
+    void ajax({
       url: "api/v1/categories/actions/reorder",
       type: "POST",
       contentType: "application/json",
@@ -1217,7 +1218,7 @@ function changeRank(node: string | number, rank: number | null) {
       success: function (_data: unknown) {
         res();
       },
-      error: function (message: JQuery.jqXHR) {
+      error: function (message) {
         rej(new Error(message.statusText || "rank change failed"));
       },
     });

@@ -5,6 +5,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
+import { ajax } from "../../../default/js/vendor/ajax";
 export {};
 
 // ignoreAll/resetIgnored/updateExtension/ignoreExtension are called
@@ -45,7 +46,7 @@ function ignoreAll() {
 }
 
 function resetIgnored() {
-  jQuery.ajax({
+  void ajax({
     type: "POST",
     url: "api/v1/extensions/updates/ignore",
     contentType: "application/json",

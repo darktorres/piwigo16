@@ -3,6 +3,7 @@ import { pwgToaster } from "./toaster";
 import { sprintf } from "../../admin/default/js/common";
 
 import { pwg_getPageData, pwg_getPageString } from "../../default/js/page-data";
+import { ajax, type AjaxResponse } from "../../default/js/vendor/ajax";
 export {};
 
 interface DefaultUserValues {
@@ -401,12 +402,12 @@ function setInfos(
   // and revoke endpoints) -- each real call site below narrows its own
   // `data`/`res` parameter to the shape that endpoint actually returns.
   callback: ((data: any) => void) | null = null,
-  errCallback: ((e: JQuery.jqXHR) => void) | null = null,
+  errCallback: ((e: AjaxResponse) => void) | null = null,
 ) {
   // for debug
   // console.log('setInfos', params);
   const { url, httpMethod, body } = API_KEY_ENDPOINTS[method]!(params);
-  $.ajax({
+  void ajax({
     url: url,
     method: httpMethod,
     contentType: "application/json",
@@ -421,9 +422,11 @@ function setInfos(
       }
       pwgToaster({ text: str_infos_saved, icon: "success" });
     },
-    error: function (e: JQuery.jqXHR) {
+    error: function (e) {
       pwgToaster({
-        text: e.responseJSON?.detail ?? str_handle_error,
+        text:
+          (e.responseJSON as { detail?: string } | undefined)?.detail ??
+          str_handle_error,
         icon: "error",
       });
       if (typeof errCallback === "function") {
@@ -435,7 +438,7 @@ function setInfos(
 }
 
 function getAllApiKeys(reset: boolean = false) {
-  $.ajax({
+  void ajax({
     url: "api/v1/session/api-keys",
     type: "GET",
     dataType: "json",
@@ -448,9 +451,11 @@ function getAllApiKeys(reset: boolean = false) {
         AddApiLine(res.apiKeys, reset);
       }
     },
-    error: function (e: JQuery.jqXHR) {
+    error: function (e) {
       pwgToaster({
-        text: e.responseJSON?.detail ?? str_handle_error + "getAllApiKeys",
+        text:
+          (e.responseJSON as { detail?: string } | undefined)?.detail ??
+          str_handle_error + "getAllApiKeys",
         icon: "error",
       });
     },

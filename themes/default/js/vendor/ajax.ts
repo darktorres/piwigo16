@@ -6,7 +6,7 @@
 // behave as the call sites already expect.
 
 /** What handlers receive in place of jQuery's jqXHR. */
-interface AjaxResponse {
+export interface AjaxResponse {
   status: number;
   statusText: string;
   responseText: string;
@@ -38,18 +38,29 @@ export class AjaxError extends Error implements AjaxResponse {
   }
 }
 
-export interface AjaxOptions {
+/**
+ * `T` is the response shape the caller asserts. Nothing validates it --
+ * exactly as jQuery's own typings did (`success: (data: any)`), and the
+ * reason the call sites can go on naming their OpenAPI response types
+ * instead of casting inside every callback.
+ */
+export interface AjaxOptions<T = unknown> {
   url: string;
   /** jQuery accepts both spellings; `method` wins, as in 1.11.3. */
   type?: string;
   method?: string;
   data?: unknown;
-  dataType?: "json" | "html" | "text";
+  /**
+   * Matched case-insensitively. jQuery lowercases it
+   * (`s.dataType.toLowerCase()` in `ajaxSettings`), and four call sites
+   * spell it "JSON".
+   */
+  dataType?: string;
   contentType?: string | false;
   headers?: Record<string, string>;
   timeout?: number;
   beforeSend?: (xhr: AjaxResponse) => void;
-  success?: (data: unknown, statusText: string, xhr: AjaxResponse) => void;
+  success?: (data: T, statusText: string, xhr: AjaxResponse) => void;
   error?: (xhr: AjaxResponse, statusText: string, errorThrown: string) => void;
   complete?: (xhr: AjaxResponse, statusText: string) => void;
 }
@@ -59,6 +70,22 @@ export interface AjaxOptions {
  * the key with `[]`, matching jQuery's traditional-off default; booleans
  * serialise as "true"/"false" rather than 1/0.
  */
+/**
+ * jQuery's own `add()` (`src/serialize.js`): a function value is invoked,
+ * and `null`/`undefined` serialise as the **empty string**, not as the words
+ * "null"/"undefined".
+ *
+ * That last rule is load-bearing rather than pedantic. Several filter
+ * requests pass a bag of optional criteria and leave the unused ones
+ * undefined; `String(undefined)` sends `minDate=undefined`, which the API
+ * rejects with a 422.
+ */
+function paramValue(value: unknown): string {
+  const resolved = typeof value === "function" ? (value as () => unknown)() : value;
+
+  return resolved === null || resolved === undefined ? "" : String(resolved);
+}
+
 export function param(data: Record<string, unknown>): string {
   const parts: string[] = [];
 
@@ -66,12 +93,12 @@ export function param(data: Record<string, unknown>): string {
     if (Array.isArray(value)) {
       for (const item of value) {
         parts.push(
-          encodeURIComponent(key + "[]") + "=" + encodeURIComponent(String(item))
+          encodeURIComponent(key + "[]") + "=" + encodeURIComponent(paramValue(item))
         );
       }
       continue;
     }
-    parts.push(encodeURIComponent(key) + "=" + encodeURIComponent(String(value)));
+    parts.push(encodeURIComponent(key) + "=" + encodeURIComponent(paramValue(value)));
   }
 
   return parts.join("&");
@@ -91,9 +118,15 @@ export interface AjaxThenable extends Promise<unknown> {
   done(handler: (data: unknown) => void): AjaxThenable;
   fail(handler: (xhr: AjaxError) => void): AjaxThenable;
   always(handler: () => void): AjaxThenable;
+  /**
+   * `jqXHR.abort()`. The installer keeps a handle to its in-flight
+   * database check and cancels it when the form changes again, so this is
+   * a real call site rather than API completeness.
+   */
+  abort(): void;
 }
 
-function decorate(promise: Promise<unknown>): AjaxThenable {
+function decorate(promise: Promise<unknown>, abort: () => void): AjaxThenable {
   // jQuery's jqXHR is not a native promise, so a failing request never
   // produced an unhandled-rejection event. This one would, on every request
   // whose failure is handled by the `error` callback rather than by a
@@ -125,13 +158,15 @@ function decorate(promise: Promise<unknown>): AjaxThenable {
 
     return thenable;
   };
+  thenable.abort = abort;
 
   return thenable;
 }
 
 /** `$.ajax(options)`. */
-export function ajax(options: AjaxOptions): AjaxThenable {
+export function ajax<T = unknown>(options: AjaxOptions<T>): AjaxThenable {
   const method = (options.method ?? options.type ?? "GET").toUpperCase();
+  const dataType = options.dataType?.toLowerCase();
   const isBodyless = method === "GET" || method === "HEAD";
 
   let url = options.url;
@@ -198,7 +233,19 @@ export function ajax(options: AjaxOptions): AjaxThenable {
       response.status === 204 || response.status === 304 || method === "HEAD";
 
     let data: unknown;
-    if (!noContent && options.dataType === "json" && responseText !== "") {
+    // jQuery's default dataType is "intelligent guess": with none given it
+    // maps the response Content-Type through `ajaxSettings.contents`
+    // (`json: /json/`) and converts accordingly. Roughly a seventh of the
+    // call sites omit `dataType` and rely on this -- without it their
+    // `success` receives raw text and the first property access throws,
+    // which is how the history page's spinner ended up never hiding.
+    const sniffed =
+      dataType ??
+      (/json/.test(response.headers.get("Content-Type") ?? "")
+        ? "json"
+        : undefined);
+
+    if (!noContent && sniffed === "json" && responseText !== "") {
       try {
         data = JSON.parse(responseText);
         xhr.responseJSON = data;
@@ -235,7 +282,9 @@ export function ajax(options: AjaxOptions): AjaxThenable {
     }
 
     const statusText = noContent ? "nocontent" : "success";
-    options.success?.(data, statusText, xhr);
+    // The cast is the whole of what `T` means: the caller asserted this
+    // shape, and neither jQuery nor this checks it.
+    options.success?.(data as T, statusText, xhr);
     options.complete?.(xhr, statusText);
 
     return data;
@@ -253,5 +302,7 @@ export function ajax(options: AjaxOptions): AjaxThenable {
     return run();
   })();
 
-  return decorate(pending);
+  return decorate(pending, () => {
+    controller.abort();
+  });
 }

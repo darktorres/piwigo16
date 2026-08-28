@@ -13,6 +13,7 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { albumBreadcrumbHtml } from "../../../default/js/vendor/dom";
+import { ajax } from "../../../default/js/vendor/ajax";
 export {};
 
 // Real shape confirmed via BatchManagerUnitPageRenderer.php's own
@@ -183,7 +184,7 @@ $(document).ready(function () {
           btnClass: "btn-red",
           action: function () {
             disableLocalButton(pictureId);
-            $.ajax({
+            void ajax({
               type: "POST",
               url: "api/v1/images/actions/sync-metadata",
               contentType: "application/json",
@@ -199,7 +200,7 @@ $(document).ready(function () {
               ) {
                 updateBlock(pictureId);
               },
-              error: function (_data: JQuery.jqXHR) {
+              error: function (_data) {
                 console.error("Error occurred");
                 showErrorLocalBadge(pictureId);
                 enableLocalButton(pictureId);
@@ -237,7 +238,7 @@ $(document).ready(function () {
           action: function () {
             const image_ids = [pictureId];
             (function (ids: (string | number)[]) {
-              $.ajax({
+              void ajax({
                 type: "POST",
                 url: "api/v1/images/actions/delete",
                 contentType: "application/json",
@@ -262,7 +263,7 @@ $(document).ready(function () {
                     "flex",
                   );
                 },
-                error: function (_data: JQuery.jqXHR) {
+                error: function (_data) {
                   console.error("Error occurred");
                   showErrorLocalBadge(pictureId);
                 },
@@ -573,7 +574,7 @@ async function saveChanges(pictureId: string | number) {
       ajax_data[pluginValues[key_index]!.api_key] = pluginValues_value;
     }
 
-    await $.ajax({
+    await ajax({
       url: "api/v1/images/" + pictureId,
       method: "PATCH",
       contentType: "application/json",
@@ -593,7 +594,7 @@ async function saveChanges(pictureId: string | number) {
         // Method 1 for extension's save (see Skeleton extension for more details)
         pluginSaveLoop(activePlugins, pictureId);
       },
-      error: function (xhr: JQuery.jqXHR, status: string, error: string) {
+      error: function (xhr, status: string, error: string) {
         enableLocalButton(pictureId);
         enableGlobalButton();
         hideUnsavedLocalBadge(pictureId);
@@ -642,7 +643,7 @@ function pluginSaveLoop(activePlugins: string[], pictureId: string | number) {
 }
 // UPDATE BLOCKS
 function updateBlock(pictureId: string | number) {
-  $.ajax({
+  void ajax({
     url: "api/v1/images/" + pictureId,
     type: "GET",
     dataType: "json",
@@ -666,7 +667,7 @@ function updateBlock(pictureId: string | number) {
       enableLocalButton(pictureId);
       enableGlobalButton();
     },
-    error: function (xhr: JQuery.jqXHR, status: string, error: string) {
+    error: function (xhr, status: string, error: string) {
       console.error("Error:", status, error);
       showErrorLocalBadge(pictureId);
       enableLocalButton(pictureId);

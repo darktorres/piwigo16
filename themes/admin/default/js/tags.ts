@@ -9,6 +9,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
+import { ajax } from "../../../default/js/vendor/ajax";
 export {};
 
 // Real per-row shape (P47), traced to TagsPageRenderer.php's own
@@ -267,7 +268,7 @@ $("#add-tag .icon-validate").on("click", function () {
 
 function addTag(name: string) {
   return new Promise<void>((resolve, reject) => {
-    jQuery.ajax({
+    void ajax({
       url: "api/v1/tags",
       type: "POST",
       contentType: "application/json",
@@ -294,7 +295,7 @@ function addTag(name: string) {
         updateBadge();
         resolve();
       },
-      error: function (err: JQuery.jqXHR) {
+      error: function (err) {
         if (err.status === 422) {
           reject(new Error(str_already_exist.replace("%s", name)));
           return;
@@ -416,7 +417,7 @@ function removeTag(id: TagId, name: string) {
   $.alert({
     title: str_tag_deleted.replace("%s", name),
     content: function () {
-      return jQuery.ajax({
+      return ajax({
         url: "api/v1/tags/" + id,
         type: "DELETE",
         headers: {
@@ -443,7 +444,7 @@ function removeTag(id: TagId, name: string) {
 
 function renameTag(id: TagId, new_name: string) {
   return new Promise<TagRenameResponse>((resolve, reject) => {
-    jQuery.ajax({
+    void ajax({
       url: "api/v1/tags/" + id,
       type: "PATCH",
       contentType: "application/json",
@@ -483,7 +484,7 @@ function renameTag(id: TagId, new_name: string) {
 
         resolve(data);
       },
-      error: function (XMLHttpRequest: JQuery.jqXHR) {
+      error: function (XMLHttpRequest) {
         if (XMLHttpRequest.status === 422) {
           reject(new Error(str_already_exist.replace("%s", new_name)));
           return;
@@ -511,7 +512,7 @@ function duplicateTag(id: TagId, name: string) {
       copy_name = name + str_other_copy.replace("%s", String(i++));
     }
 
-    jQuery.ajax({
+    void ajax({
       url: "api/v1/tags/" + id + "/actions/duplicate",
       type: "POST",
       contentType: "application/json",
@@ -552,7 +553,7 @@ function duplicateTag(id: TagId, name: string) {
         updateSearchInfo();
         resolve(data);
       },
-      error: function (XMLHttpRequest: JQuery.jqXHR) {
+      error: function (XMLHttpRequest) {
         reject(new Error(XMLHttpRequest.statusText));
       },
     });
@@ -866,7 +867,7 @@ function removeSelectedTags() {
       // per P27's own design) -- fire one DELETE per selected tag.
       return Promise.all(
         selected.map(function (id) {
-          return jQuery.ajax({
+          return ajax({
             url: "api/v1/tags/" + id,
             type: "DELETE",
             headers: {
@@ -917,7 +918,7 @@ function mergeGroups(destination_id: TagId, merge_ids: TagId[]) {
   $.alert({
     title: str_message,
     content: function () {
-      return jQuery.ajax({
+      return ajax({
         url: "api/v1/tags/actions/merge",
         type: "POST",
         contentType: "application/json",

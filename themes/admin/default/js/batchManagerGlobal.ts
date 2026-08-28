@@ -21,6 +21,7 @@ import {
 // this page" consequence of batchManagerFilter.ts's own separate direct
 // import).
 import { AlbumSelector } from "./album_selector";
+import { ajax } from "../../../default/js/vendor/ajax";
 
 /* ********** Thumbs */
 
@@ -259,7 +260,7 @@ export function getDerivativeUrls() {
   jQuery("#regenerationMsg").show();
   jQuery("#regenerationText").html(lang.generateMsg);
   progress_start();
-  jQuery.ajax({
+  void ajax({
     type: "POST",
     url: "api/v1/images/actions/missing-derivatives",
     contentType: "application/json",
@@ -618,7 +619,7 @@ jQuery("#sync_md5sum").click(function (_e) {
 });
 
 function add_md5sum_block(blockSize?: number) {
-  jQuery.ajax({
+  void ajax({
     url: "api/v1/images/actions/set-md5sum",
     type: "POST",
     contentType: "application/json",
@@ -654,7 +655,7 @@ function add_md5sum_block(blockSize?: number) {
         window.location.href = redirect_to;
       }
     },
-    error: function (XMLHttpRequest: JQuery.jqXHR) {
+    error: function (XMLHttpRequest) {
       jQuery("#add_md5sum").hide();
       jQuery("#add_md5sum_error")
         .show()
@@ -680,7 +681,7 @@ jQuery("#delete_orphans").click(function (_e) {
 });
 
 function delete_orphans_block(blockSize?: number) {
-  jQuery.ajax({
+  void ajax({
     url: "api/v1/images/actions/delete-orphans",
     type: "POST",
     contentType: "application/json",
@@ -717,7 +718,7 @@ function delete_orphans_block(blockSize?: number) {
         window.location.href = redirect_to;
       }
     },
-    error: function (XMLHttpRequest: JQuery.jqXHR) {
+    error: function (XMLHttpRequest) {
       jQuery("#orphans_deletion").hide();
       jQuery("#orphans_deletion_error")
         .show()

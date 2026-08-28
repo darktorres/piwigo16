@@ -6,6 +6,7 @@
 // a real module (gaining this import) without needing to be folded into
 // anyone else's bundle.
 import { pwg_getPageData } from "../../../default/js/page-data";
+import { ajax } from "../../../default/js/vendor/ajax";
 
 export {};
 
@@ -47,7 +48,7 @@ jQuery("a.externalLink").click(function () {
 });
 
 function hide_user_whats_new() {
-  $.ajax({
+  void ajax({
     url:
       "api/v1/session/preferences/show_whats_new_" +
       pwg_getPageData<string>("whats_new_major_version"),

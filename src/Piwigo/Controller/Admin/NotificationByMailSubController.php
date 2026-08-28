@@ -74,6 +74,16 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final readonly class NotificationByMailSubController implements AdminSubControllerInterface
 {
+    /**
+     * The `nbm_%` params whose CurrentConfig property is a `bool`, posted
+     * by this page as the radio strings 'true'/'false'.
+     */
+    private const array BOOLEAN_PARAMS = [
+        'nbm_send_html_mail',
+        'nbm_send_detailed_content',
+        'nbm_send_recent_post_dates',
+    ];
+
     public function __construct(
         private Lang $lang,
         private AccessControl $accessControl,
@@ -152,7 +162,22 @@ final readonly class NotificationByMailSubController implements AdminSubControll
                         if (isset($post[$nbm_user->param])) {
                             $post_value = $post[$nbm_user->param];
                             $value = is_string($post_value) ? $post_value : '';
-                            $this->configService->confUpdateParam($nbm_user->param, $value, true);
+                            // The three radio pairs validated above post the
+                            // literal strings 'true'/'false' (their own
+                            // `value=` attributes). confUpdateParam()
+                            // json_encode()s what it is given, and each of
+                            // the three maps to a `bool` CurrentConfig
+                            // property, which ConfigService::hydrate()
+                            // resolves through
+                            // `is_bool($decoded) ? $decoded : false` -- so
+                            // storing the string turned all three settings
+                            // off on save. The other nbm_* params really are
+                            // strings and pass through unchanged.
+                            $this->configService->confUpdateParam(
+                                $nbm_user->param,
+                                in_array($nbm_user->param, self::BOOLEAN_PARAMS, true) ? $value === 'true' : $value,
+                                true
+                            );
                             $updated_param_count++;
                         }
                     }

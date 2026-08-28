@@ -165,8 +165,8 @@ it('updates notification parameters via the param tab', function (): void {
 
         expect($result['status'])->toBe(200);
         expect($result['body'])->not->toContain('Fatal error');
-        expect(H::configValue('nbm_send_html_mail'))->toBe(json_encode('true'));
-        expect(H::configValue('nbm_send_recent_post_dates'))->toBe(json_encode('false'));
+        expect(H::configValue('nbm_send_html_mail'))->toBe(json_encode(true));
+        expect(H::configValue('nbm_send_recent_post_dates'))->toBe(json_encode(false));
         expect(H::configValue('nbm_send_mail_as'))->toBe(json_encode('notify@example.test'));
     } finally {
         H::restoreConfig($snapshot);

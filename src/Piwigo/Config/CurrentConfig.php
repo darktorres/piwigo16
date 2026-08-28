@@ -587,9 +587,17 @@ final class CurrentConfig
 
     // === index_search_in_set_action ===
     /**
-     * Behaviour when searching within the current set: results or filter.
+     * Show the "search in this set" icon on album index pages.
+     *
+     * A bool, despite the name and despite the `'results'|'filter'`
+     * behaviour its docblock used to claim: nothing anywhere compares it
+     * to either of those words, the admin form lists it among
+     * `$display_checkboxes`, and `index.latte` gates a single icon on it.
+     * It was declared `string` and stored as the JSON string `"true"`,
+     * which is truthy either way -- so the icon showed even when the
+     * setting was off, and the admin checkbox always rendered ticked.
      */
-    public private(set) string $indexSearchInSetAction = 'results';
+    public private(set) bool $indexSearchInSetAction = true;
 
     // === index_search_in_set_button ===
     /**

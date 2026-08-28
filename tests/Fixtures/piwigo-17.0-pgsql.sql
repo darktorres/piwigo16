@@ -3114,7 +3114,7 @@ picture_representative_icon	true	\N
 show_mobile_app_banner_in_admin	true	\N
 show_mobile_app_banner_in_gallery	false	\N
 index_search_in_set_button	false	\N
-index_search_in_set_action	"true"	\N
+index_search_in_set_action	true	\N
 upload_detect_duplicate	true	\N
 webmaster_id	1	\N
 use_standard_pages	true	\N

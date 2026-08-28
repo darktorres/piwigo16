@@ -11,11 +11,7 @@ namespace Piwigo\Controller\Admin\Projection;
  * of them come from `checkboxValue()`'s own literal `match` arms before
  * this conversion, confirmed as real bool `CurrentConfig` properties, not
  * a genuinely dynamic bag) -- `configuration_display.latte` reads them as
- * properties directly (P58-A). `$indexSearchInSetAction` is the one
- * checkbox-list entry that isn't actually boolean (a `'results'|'filter'`
- * string,
- * {@see \Piwigo\Config\CurrentConfig::$indexSearchInSetAction}).
- * `$pictureInformations` stays array-shaped -- a confirmed dynamic
+ * properties directly (P58-A). `$pictureInformations` stays array-shaped -- a confirmed dynamic
  * plugin-extensibility boundary (mirrors `Picture\Event\
  * FilterPictureDisplayInfo::$displayInfo` 1:1).
  */
@@ -27,7 +23,7 @@ final readonly class ConfigurationDisplayData
     public function __construct(
         public bool $menubarFilterIcon,
         public bool $indexSearchInSetButton,
-        public string $indexSearchInSetAction,
+        public bool $indexSearchInSetAction,
         public bool $indexSortOrderInput,
         public bool $indexFlatIcon,
         public bool $indexPostedDateIcon,

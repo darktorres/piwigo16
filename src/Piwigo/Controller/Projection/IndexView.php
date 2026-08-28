@@ -58,7 +58,7 @@ final readonly class IndexView implements View, HasPageAssets
         public ?string $uModeCreated,
         public ?string $uModePosted,
         public ?bool $searchInSetButton,
-        public ?string $searchInSetAction,
+        public ?bool $searchInSetAction,
         public ?string $searchInSetUrl,
         public ?array $combinableTags,
         public ?string $uEdit,

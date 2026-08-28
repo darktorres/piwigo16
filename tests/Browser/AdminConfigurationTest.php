@@ -487,7 +487,7 @@ it('saves the comments tab and persists real config values', function (): void {
 
         expect($result['status'])->toBe(200);
         expect(H::configValue('nb_comment_page'))->toBe(json_encode('25'));
-        expect(H::configValue('comments_forall'))->toBe(json_encode('true'));
+        expect(H::configValue('comments_forall'))->toBe(json_encode(true));
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -545,7 +545,7 @@ it('saves the display tab and persists real config values', function (): void {
 
         expect($result['status'])->toBe(200);
         expect(H::configValue('nb_categories_page'))->toBe(json_encode('20'));
-        expect(H::configValue('display_fromto'))->toBe(json_encode('true'));
+        expect(H::configValue('display_fromto'))->toBe(json_encode(true));
         $pictureInformations = H::configValue('picture_informations');
         expect($pictureInformations)
             ->not->toBeNull();
@@ -2388,5 +2388,50 @@ it('sizes tab: renders age labels for existing custom derivatives without error'
         expect(ctDecodedDerivatives()['c'])->toHaveKey($oldKey);
     } finally {
         H::restoreDerivativeConfig($snapshot);
+    }
+});
+
+// The three checkbox tabs stored their values as the JSON *strings*
+// `"true"`/`"false"`, which ConfigService::hydrate() resolves to `false` for
+// a bool-typed CurrentConfig property -- so saving a tab turned every
+// checkbox on it off, whatever the admin had just ticked. The assertions
+// above check what lands in the config row; this one checks what the admin
+// actually experiences, which is the half that was broken.
+it('keeps a ticked display checkbox ticked after saving and reloading', function (): void {
+    $snapshot = H::snapshotConfig(['display_fromto', 'index_flat_icon', 'nb_categories_page', 'picture_informations']);
+
+    try {
+        $page = H::asAdmin($this);
+        H::navigateOk($page, ctConfigSection('display'));
+        $token = H::pwgToken($page);
+
+        $result = H::adminPost($page, ctConfigSection('display'), [
+            'submit' => '1',
+            'pwg_token' => $token,
+            'nb_categories_page' => '20',
+            'display_fromto' => '1',
+            'index_flat_icon' => '1',
+        ]);
+        expect($result['status'])->toBe(200);
+
+        $page = H::navigateOk($page, ctConfigSection('display'));
+
+        /** @var bool $fromto */
+        $fromto = $page->script("document.querySelector('input[name=display_fromto]').checked");
+        /** @var bool $flat */
+        $flat = $page->script("document.querySelector('input[name=index_flat_icon]').checked");
+        /** @var bool $untouched */
+        $untouched = $page->script("document.querySelector('input[name=index_new_icon]').checked");
+
+        expect($fromto)
+            ->toBeTrue()
+            ->and($flat)
+            ->toBeTrue()
+            // Not posted, so it must have gone off -- proving the two above
+            // are not simply "every box renders ticked".
+            ->and($untouched)
+            ->toBeFalse();
+    } finally {
+        H::restoreConfig($snapshot);
     }
 });

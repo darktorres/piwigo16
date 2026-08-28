@@ -23,12 +23,11 @@ namespace Piwigo\Admin\Install;
  * runtime, so a row written here reads back identically to one written by
  * a real `confUpdateParam()` call later.
  *
- * `'index_search_in_set_action' => 'true'` is deliberately a *string*, not
- * the literal `true` boolean -- `config.sql`'s own literal was the quoted
- * JSON string `'"true"'`, not the bare `'true'` every boolean row here
- * uses; preserved verbatim rather than "corrected" to a real bool, since
- * this class's whole job is reproducing the old file's rows exactly, not
- * second-guessing them.
+ * `'index_search_in_set_action'` was the one row seeded as a *string*
+ * (`config.sql`'s own literal was the quoted JSON string `'"true"'`),
+ * preserved verbatim here rather than "corrected". It is a real bool now:
+ * the string form is truthy whichever way the setting is set, so the
+ * feature could not be turned off. See `CurrentConfig::$indexSearchInSetAction`.
  */
 final class InstallDefaultConfig
 {
@@ -370,7 +369,7 @@ final class InstallDefaultConfig
             ],
             [
                 'param' => 'index_search_in_set_action',
-                'value' => 'true',
+                'value' => true,
             ],
             [
                 'param' => 'upload_detect_duplicate',

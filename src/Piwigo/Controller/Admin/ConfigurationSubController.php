@@ -403,7 +403,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     }
 
                     foreach ($main_checkboxes as $checkbox) {
-                        $post[$checkbox] = self::emptyValue($post[$checkbox] ?? null) ? 'false' : 'true';
+                        $post[$checkbox] = ! self::emptyValue($post[$checkbox] ?? null);
                     }
                     break;
 
@@ -428,7 +428,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         $this->pageState->addError($this->lang->t('The number of comments a page must be between 5 and 50 included.'));
                     }
                     foreach ($comments_checkboxes as $checkbox) {
-                        $post[$checkbox] = self::emptyValue($post[$checkbox] ?? null) ? 'false' : 'true';
+                        $post[$checkbox] = ! self::emptyValue($post[$checkbox] ?? null);
                     }
                     break;
 
@@ -445,7 +445,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         $this->pageState->addError($this->lang->t('The number of albums a page must be above 4.'));
                     }
                     foreach ($display_checkboxes as $checkbox) {
-                        $post[$checkbox] = self::emptyValue($post[$checkbox] ?? null) ? 'false' : 'true';
+                        $post[$checkbox] = ! self::emptyValue($post[$checkbox] ?? null);
                     }
                     $picture_informations_raw = is_array($post['picture_informations'] ?? null) ? $post['picture_informations'] : [];
                     $picture_informations = array_fill_keys($display_info_checkboxes, false);
@@ -493,7 +493,14 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 foreach ($this->configService->getAllParamNames() as $param_name) {
                     if (isset($post[$param_name])) {
                         $post_value = $post[$param_name];
-                        $value = is_string($post_value) || is_array($post_value) ? $post_value : '';
+                        // `bool` alongside string/array: the per-tab
+                        // checkbox loops above normalize to a real bool, and
+                        // ConfigService::hydrate() reads a bool-typed
+                        // CurrentConfig property back through
+                        // `is_bool($decoded) ? $decoded : false` -- so a
+                        // string here does not merely read oddly, it reads
+                        // as false.
+                        $value = is_string($post_value) || is_array($post_value) || is_bool($post_value) ? $post_value : '';
 
                         if ($param_name === 'gallery_title' && is_string($value)) {
                             if (! $this->currentConfig->allowHtmlDescriptions) {

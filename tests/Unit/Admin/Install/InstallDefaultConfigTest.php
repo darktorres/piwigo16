@@ -86,7 +86,7 @@ function installDefaultConfigExpectedJson(): array
         'show_mobile_app_banner_in_admin' => 'true',
         'show_mobile_app_banner_in_gallery' => 'false',
         'index_search_in_set_button' => 'false',
-        'index_search_in_set_action' => '"true"',
+        'index_search_in_set_action' => 'true',
         'upload_detect_duplicate' => 'true',
         'webmaster_id' => '1',
         'use_standard_pages' => 'true',

@@ -36,7 +36,9 @@ use Piwigo\Controller\Admin\Projection\ConfigurationSizesTabData;
 use Piwigo\Controller\Admin\Projection\ConfigurationSizesView;
 use Piwigo\Controller\Admin\Projection\ConfigurationWatermarkResult;
 use Piwigo\Controller\Admin\Projection\ConfigurationWatermarkView;
+use Piwigo\Controller\Admin\Projection\DerivativeSizeErrors;
 use Piwigo\Controller\Admin\Projection\DerivativeSizeRow;
+use Piwigo\Controller\Admin\Projection\SizesFormErrors;
 use Piwigo\Controller\Admin\Projection\WatermarkFormErrors;
 use Piwigo\Controller\Admin\Projection\WatermarkFormValues;
 use Piwigo\Controller\Admin\Request\ConfigurationRequest;
@@ -1248,10 +1250,27 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             );
         }
 
+        // Two differently-shaped maps that used to be added together and
+        // told apart by which key the template reached for (P58-A's §3).
+        $byType = [];
+        foreach ($derivative_errors as $errorType => $typeErrors) {
+            $byType[$errorType] = new DerivativeSizeErrors(
+                width: $typeErrors['w'] ?? null,
+                height: $typeErrors['h'] ?? null,
+                sharpen: $typeErrors['sharpen'] ?? null,
+            );
+        }
+
         return new ConfigurationSizesResult(
             saveSuccess: null,
             derivatives: $redisplay_derivatives,
-            ferrors: $errors + $derivative_errors,
+            ferrors: new SizesFormErrors(
+                originalResizeMaxwidth: $errors['original_resize_maxwidth'] ?? null,
+                originalResizeMaxheight: $errors['original_resize_maxheight'] ?? null,
+                originalResizeQuality: $errors['original_resize_quality'] ?? null,
+                resizeQuality: $errors['resize_quality'] ?? null,
+                byType: $byType,
+            ),
             resizeQuality: is_string($post['resize_quality']) ? $post['resize_quality'] : null,
             sizes: $sizes,
         );

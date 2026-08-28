@@ -22,12 +22,11 @@ final readonly class ConfigurationSizesResult
 {
     /**
      * @param array<string, DerivativeSizeRow>|null $derivatives
-     * @param array<string, mixed>|null $ferrors
      */
     public function __construct(
         public ?string $saveSuccess,
         public ?array $derivatives,
-        public ?array $ferrors,
+        public ?SizesFormErrors $ferrors,
         public ?string $resizeQuality,
         public ?ConfigurationSizesTabData $sizes,
     ) {}

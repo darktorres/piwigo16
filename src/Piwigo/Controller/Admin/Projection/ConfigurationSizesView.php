@@ -33,14 +33,13 @@ final readonly class ConfigurationSizesView implements View, HasPageAssets, Expo
 {
     /**
      * @param array<string, DerivativeSizeRow> $derivatives
-     * @param array<string, mixed>|null $ferrors
      */
     public function __construct(
         public ?bool $isGd,
         public ConfigurationSizesTabData $sizes,
         public array $derivatives,
         public string|int|null $resizeQuality,
-        public ?array $ferrors,
+        public ?SizesFormErrors $ferrors,
         public string $fAction,
         public ?string $saveSuccess,
         public int $isWebmaster,

@@ -55,14 +55,14 @@
                 value="{$sizes->originalResizeMaxwidth}"
                 size="4"
                 maxlength="4"
-                {if isset($ferrors['original_resize_maxwidth'])}
+                {if $ferrors?->originalResizeMaxwidth !== null}
                 class="dError"
                 {/if}
               > {='pixels'|translate}
               <span
-                n:if="isset($ferrors['original_resize_maxwidth'])"
+                n:if="$ferrors?->originalResizeMaxwidth !== null"
                 class="dErrorDesc"
-                title="{$ferrors['original_resize_maxwidth']}"
+                title="{$ferrors->originalResizeMaxwidth}"
               >!</span>
             </td>
           </tr>
@@ -75,14 +75,14 @@
                 value="{$sizes->originalResizeMaxheight}"
                 size="4"
                 maxlength="4"
-                {if isset($ferrors['original_resize_maxheight'])}
+                {if $ferrors?->originalResizeMaxheight !== null}
                 class="dError"
                 {/if}
               > {='pixels'|translate}
               <span
-                n:if="isset($ferrors['original_resize_maxheight'])"
+                n:if="$ferrors?->originalResizeMaxheight !== null"
                 class="dErrorDesc"
-                title="{$ferrors['original_resize_maxheight']}"
+                title="{$ferrors->originalResizeMaxheight}"
               >!</span>
             </td>
           </tr>
@@ -95,14 +95,14 @@
                 value="{$sizes->originalResizeQuality}"
                 size="3"
                 maxlength="3"
-                {if isset($ferrors['original_resize_quality'])}
+                {if $ferrors?->originalResizeQuality !== null}
                 class="dError"
                 {/if}
               > %
               <span
-                n:if="isset($ferrors['original_resize_quality'])"
+                n:if="$ferrors?->originalResizeQuality !== null"
                 class="dErrorDesc"
-                title="{$ferrors['original_resize_quality']}"
+                title="{$ferrors->originalResizeQuality}"
               >!</span>
             </td>
           </tr>
@@ -119,7 +119,7 @@
         <a
           href="#"
           id="showDetails"
-          class="{if isset($ferrors)}u-hidden{/if}"
+          class="{if $ferrors !== null}u-hidden{/if}"
         >{='show details'|translate}</a>
       </div>
 
@@ -150,13 +150,13 @@
 
             <td>
               <span
-                class="sizeDetails{if isset($ferrors)} u-inline{/if}"
+                class="sizeDetails{if $ferrors !== null} u-inline{/if}"
               >{$d->width} x {$d->height} {='pixels'|translate}{if $d->cropped}, {='Crop'|translate|lower}{/if}</span>
             </td>
 
             <td>
               <span
-                class="sizeDetails{if isset($ferrors) and !isset($ferrors[$type])} u-inline{/if}"
+                class="sizeDetails{if $ferrors !== null and $ferrors->forType($type) === null} u-inline{/if}"
               >
                 <a
                   href="#"
@@ -169,7 +169,7 @@
 
           <tr
             id="sizeEdit-{$type}"
-            class="sizeEdit{if isset($ferrors[$type])} u-block{/if}"
+            class="sizeEdit{if $ferrors?->forType($type) !== null} u-block{/if}"
           >
             <td colspan="3">
               <table class="sizeEditForm">
@@ -200,14 +200,14 @@
                       maxlength="4"
                       size="4"
                       value="{$d->width}"
-                      {if isset($ferrors[$type]['w'])}
+                      {if $ferrors?->forType($type)?->width !== null}
                       class="dError"
                       {/if}
                     > {='pixels'|translate}
                     <span
-                      n:if="isset($ferrors[$type]['w'])"
+                      n:if="$ferrors?->forType($type)?->width !== null"
                       class="dErrorDesc"
-                      title="{$ferrors[$type]['w']}"
+                      title="{$ferrors->forType($type)->width}"
                     >!</span>
                   </td>
                 </tr>
@@ -222,14 +222,14 @@
                       maxlength="4"
                       size="4"
                       value="{$d->height}"
-                      {if isset($ferrors[$type]['h'])}
+                      {if $ferrors?->forType($type)?->height !== null}
                       class="dError"
                       {/if}
                     > {='pixels'|translate}
                     <span
-                      n:if="isset($ferrors[$type]['h'])"
+                      n:if="$ferrors?->forType($type)?->height !== null"
                       class="dErrorDesc"
-                      title="{$ferrors[$type]['h']}"
+                      title="{$ferrors->forType($type)->height}"
                     >!</span>
                   </td>
                 </tr>
@@ -242,14 +242,14 @@
                       maxlength="4"
                       size="4"
                       value="{$d->sharpen}"
-                      {if isset($ferrors[$type]['sharpen'])}
+                      {if $ferrors?->forType($type)?->sharpen !== null}
                       class="dError"
                       {/if}
                     > %
                     <span
-                      n:if="isset($ferrors[$type]['sharpen'])"
+                      n:if="$ferrors?->forType($type)?->sharpen !== null"
                       class="dErrorDesc"
-                      title="{$ferrors[$type]['sharpen']}"
+                      title="{$ferrors->forType($type)->sharpen}"
                     >!</span>
                   </td>
                 </tr>
@@ -259,7 +259,7 @@
         {/foreach}
       </table>
 
-      <p class="sizeDetails{if isset($ferrors)} u-block{/if}">
+      <p class="sizeDetails{if $ferrors !== null} u-block{/if}">
         {='Image Quality'|translate}
         <input
           type="text"
@@ -267,17 +267,17 @@
           value="{$resizeQuality}"
           size="3"
           maxlength="3"
-          {if isset($ferrors['resize_quality'])}
+          {if $ferrors?->resizeQuality !== null}
           class="dError"
           {/if}
         > %
         <span
-          n:if="isset($ferrors['resize_quality'])"
+          n:if="$ferrors?->resizeQuality !== null"
           class="dErrorDesc"
-          title="{$ferrors['resize_quality']}"
+          title="{$ferrors->resizeQuality}"
         >!</span>
       </p>
-      <p class="sizeDetails{if isset($ferrors)} u-block{/if}">
+      <p class="sizeDetails{if $ferrors !== null} u-block{/if}">
         <a
           href="{$fAction|noescape}&action=restore_settings&pwg_token={$csrfToken}"
           class="restore-settings-button"

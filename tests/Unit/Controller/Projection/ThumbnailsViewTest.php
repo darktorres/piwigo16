@@ -45,31 +45,40 @@ test('pageAssets registers the 3 entries and exposedPageData includes error_icon
     // SrcImage's constructor reads CurrentConfig through the container.
     // Only the list being non-empty matters to pageAssets(); the tile's
     // contents are never read here.
+    //
+    // Reset afterwards, not just booted: the Kernel is process-global and
+    // refuses to rebind to a different Paths root, so leaving this one bound
+    // fails whichever later test in the same parallel worker boots its own.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-thumbnails-view-test'));
 
-    $view = makeThumbnailsView([
-        new ImageThumbnail(
-            id: 1,
-            name: 'photo1',
-            url: 'picture.php?/1',
-            tnAlt: 'photo1',
-            tnTitle: 'photo1',
-            srcImage: new SrcImage(SrcImageInfo::fromRow([
-                'id' => 1,
-                'path' => 'galleries/photo1.jpg',
-            ])),
-        ),
-    ]);
+    try {
 
-    expect($view->pageAssets())
-        ->toEqual([
-            AssetContribution::css('themes/default/css/pages/thumbnails.css', id: 'thumbnails'),
-            AssetContribution::script('jquery.ajaxmanager', 'https://cdn.jsdelivr.net/gh/aFarkas/Ajaxmanager@3.12/jquery.ajaxmanager.js', loadMode: LoadMode::Footer),
-            AssetContribution::script('thumbnails.loader', 'themes/default/js/thumbnails.loader.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ajaxmanager']),
+        $view = makeThumbnailsView([
+            new ImageThumbnail(
+                id: 1,
+                name: 'photo1',
+                url: 'picture.php?/1',
+                tnAlt: 'photo1',
+                tnTitle: 'photo1',
+                srcImage: new SrcImage(SrcImageInfo::fromRow([
+                    'id' => 1,
+                    'path' => 'galleries/photo1.jpg',
+                ])),
+            ),
         ]);
-    expect($view->exposedPageData())
-        ->toBe([
-            'error_icon' => 'http://example.com/icon/errors_small.png',
-            'max_requests' => 3,
-        ]);
+
+        expect($view->pageAssets())
+            ->toEqual([
+                AssetContribution::css('themes/default/css/pages/thumbnails.css', id: 'thumbnails'),
+                AssetContribution::script('jquery.ajaxmanager', 'https://cdn.jsdelivr.net/gh/aFarkas/Ajaxmanager@3.12/jquery.ajaxmanager.js', loadMode: LoadMode::Footer),
+                AssetContribution::script('thumbnails.loader', 'themes/default/js/thumbnails.loader.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ajaxmanager']),
+            ]);
+        expect($view->exposedPageData())
+            ->toBe([
+                'error_icon' => 'http://example.com/icon/errors_small.png',
+                'max_requests' => 3,
+            ]);
+    } finally {
+        Kernel::reset();
+    }
 });

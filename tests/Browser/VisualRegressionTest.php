@@ -104,14 +104,16 @@ $routes = require __DIR__ . '/Helpers/VisualRegressionRoutes.php';
 
 foreach ($routes as $name => [$path, $needsAuth]) {
     it("{$name} matches its visual baseline", function () use ($name, $path, $needsAuth): void {
-        // Only admin-site-manager needs this restored -- see its own
-        // freezeGalleriesUrl() call below for why, and
-        // H::galleriesUrl()'s own docblock for why a later route in this
-        // same suite invocation (admin-site-update) would otherwise see
-        // the frozen placeholder leak into its own baseline.
-        $originalGalleriesUrl = $name === 'admin-site-manager' ? H::galleriesUrl() : null;
+        // Both routes that render `sites`.galleries_url need the freeze,
+        // and each restores the real value afterwards so no other test in
+        // this suite invocation sees the placeholder -- see the
+        // freezeGalleriesUrl() call below for why the value has to be
+        // frozen at all, and H::galleriesUrl()'s own docblock for the
+        // snapshot/restore pairing.
+        $freezesGalleriesUrl = in_array($name, ['admin-site-manager', 'admin-site-update'], true);
+        $originalGalleriesUrl = $freezesGalleriesUrl ? H::galleriesUrl() : null;
 
-        if ($name === 'admin-site-manager') {
+        if ($freezesGalleriesUrl) {
             // See H::freezeGalleriesUrl()'s own docblock: the fixture's
             // real, checkout-specific galleries_url would otherwise make
             // this baseline fail on any checkout but the one it was
@@ -134,6 +136,17 @@ foreach ($routes as $name => [$path, $needsAuth]) {
             // *different* worktree's own path, confirmed by decoding it)
             // instead of this placeholder -- the original freeze call
             // was already too late to matter, for every prior capture.
+            //
+            // admin-site-update reads the same column and was left out of
+            // this freeze until now, deliberately -- the restore above was
+            // written to hand it back the real path. That made its baseline
+            // worktree-specific in exactly the way this freeze exists to
+            // prevent: the committed snapshot rendered one worktree's own
+            // absolute path, so it could not match in any other checkout
+            // (confirmed by decoding it -- it read `piwigo17-rewrite-4`).
+            // SiteUpdateSubController renders it server-side at request
+            // time, same as the site manager, so the same before-navigation
+            // ordering applies.
             H::freezeGalleriesUrl('/srv/piwigo-vr-baseline/galleries/');
         }
 

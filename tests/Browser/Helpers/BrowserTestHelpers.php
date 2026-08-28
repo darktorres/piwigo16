@@ -1881,9 +1881,10 @@ final class BrowserTestHelpers
      * Reads `sites` id=1's own current `galleries_url` -- pairs with
      * freezeGalleriesUrl() so a caller can snapshot the real,
      * environment-injected value before overriding it and restore it
-     * exactly afterward (later needsAuth routes in the same suite
-     * invocation, e.g. admin-site-update, render this same column and
-     * must not see the frozen placeholder leak into their own baseline).
+     * exactly afterward, leaving the column as every other test in the
+     * same suite invocation expects to find it. Both routes that render
+     * this column (admin-site-manager, admin-site-update) freeze it around
+     * their own capture and hand the real value back straight after.
      */
     public static function galleriesUrl(): string
     {

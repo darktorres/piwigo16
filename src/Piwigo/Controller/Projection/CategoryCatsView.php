@@ -8,6 +8,7 @@ use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
+use Piwigo\Category\Projection\CategoryThumbnail;
 use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Image\DerivativeParams;
@@ -26,7 +27,7 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class CategoryCatsView implements View, HasPageAssets, ExposesPageData
 {
     /**
-     * @param array<int|string, mixed> $categoryThumbnails
+     * @param list<CategoryThumbnail> $categoryThumbnails
      */
     public function __construct(
         public int $maxRequests,

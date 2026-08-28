@@ -14,6 +14,7 @@ use Piwigo\Category\Event\RenderCategoryName;
 use Piwigo\Category\Projection\CategoryCatsNavbarPageContext;
 use Piwigo\Category\Projection\CategoryCatsResult;
 use Piwigo\Category\Projection\CategoryInfo;
+use Piwigo\Category\Projection\CategoryThumbnail;
 use Piwigo\Category\Projection\ComputedCategoryRow;
 use Piwigo\Category\Projection\RandomImageCategoryQuery;
 use Piwigo\Common\Enum\Section;
@@ -386,36 +387,24 @@ final readonly class CategoryCatsRenderer
                 $descriptionEvent = $this->eventDispatcher->dispatch(new RenderCategoryDescription(is_string($categoryComment) ? $categoryComment : null, 'subcatify_category_description'));
                 $literalDescriptionEvent = $this->eventDispatcher->dispatch(new RenderCategoryLiteralDescription($descriptionEvent->categoryDescription));
 
-                $tplVar = array_merge($category, [
-                    'ID' => $category['id'] /* obsolete */,
-                    'representative' => $representativeInfos,
-                    'TN_ALT' => strip_tags($category['name']),
+                // The merged array above stays the renderer's own working
+                // state; what the template gets is this (P58-A's §3). The
+                // 'ID' key the merge also wrote is dropped -- it was
+                // already marked obsolete there, and nothing reads it.
+                $categoryId = $category['id'];
+                $representativeSrcImage = $representativeInfos === null ? null : $representativeInfos['src_image'];
 
-                    'URL' => $this->urlService->makeIndexUrl(
-                        [
-                            'category' => $category,
-                        ]
-                    ),
-                    'CAPTION_NB_IMAGES' => CategoryService::getDisplayImagesCount(
-                        $this->lang,
-                        $catNbImages,
-                        $catCountImages,
-                        $catCountCategories,
-                        true,
-                        '<br>'
-                    ),
-                    'DESCRIPTION' => $literalDescriptionEvent->description,
-                    'NAME' => $name,
-                ]);
+                $iconTs = null;
                 if ($this->currentConfig->indexNewIcon) {
                     $categoryMaxDateLast = $category['max_date_last'];
                     $categoryMaxDateLast = is_string($categoryMaxDateLast) ? $categoryMaxDateLast : '';
                     $categoryIsChildDateLast = $category['is_child_date_last'];
                     $categoryIsChildDateLast = is_bool($categoryIsChildDateLast) ? $categoryIsChildDateLast : false;
                     $recentPeriodForIcon = is_numeric($user->rawAttributes['recent_period'] ?? null) ? (int) $user->rawAttributes['recent_period'] : 0;
-                    $tplVar['icon_ts'] = RecentIconResolver::getIcon($categoryMaxDateLast, $recentPeriodForIcon, $this->processCache, $this->lang, $categoryIsChildDateLast);
+                    $iconTs = RecentIconResolver::getIcon($categoryMaxDateLast, $recentPeriodForIcon, $this->processCache, $this->lang, $categoryIsChildDateLast);
                 }
 
+                $infoDates = null;
                 if ($this->currentConfig->displayFromto) {
                     $categoryIdKey = $category['id'];
                     $categoryIdKey = (is_string($categoryIdKey) or is_int($categoryIdKey)) ? $categoryIdKey : 0;
@@ -425,12 +414,31 @@ final readonly class CategoryCatsRenderer
                         $to = is_string($to) ? $to : '';
 
                         if (is_string($from) && $from !== '') {
-                            $tplVar['INFO_DATES'] = DateHelper::formatFromto($from, $to);
+                            $infoDates = DateHelper::formatFromto($from, $to);
                         }
                     }
                 }
 
-                $tplThumbnailsVar[] = $tplVar;
+                $tplThumbnailsVar[] = new CategoryThumbnail(
+                    id: (is_int($categoryId) || is_string($categoryId)) ? $categoryId : 0,
+                    name: $name,
+                    url: $this->urlService->makeIndexUrl([
+                        'category' => $category,
+                    ]),
+                    tnAlt: strip_tags($nameEvent->categoryName),
+                    captionNbImages: CategoryService::getDisplayImagesCount(
+                        $this->lang,
+                        $catNbImages,
+                        $catCountImages,
+                        $catCountCategories,
+                        true,
+                        '<br>'
+                    ),
+                    representative: $representativeSrcImage,
+                    description: $literalDescriptionEvent->description,
+                    iconTs: $iconTs,
+                    infoDates: $infoDates,
+                );
             }
 
             // pagination

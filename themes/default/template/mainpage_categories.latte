@@ -7,18 +7,18 @@
   style="--cat-illustration-width: {$derivativeParams->maxWidth() + 5}px; --cat-description-height: {$derivativeParams->maxHeight() + 5}px;"
 >
   {foreach $categoryThumbnails as $cat}
-    {if $cat['representative']}
-      {var $derivative = $pwg->derivative($derivativeParams, $cat['representative']['src_image'])}
+    {if $cat->representative !== null}
+      {var $derivative = $pwg->derivative($derivativeParams, $cat->representative)}
     {/if}
     <li
       class="{if $iterator->counter0 % 2 !== 0}odd{else}even{/if}"
-      data-category-id="{$cat['id']}"
+      data-category-id="{$cat->id}"
     >
       <div class="thumbnailCategory">
         <div class="illustration">
-          <a href="{$cat['URL']|noescape}">
+          <a href="{$cat->url|noescape}">
             <img
-              {if !$cat['representative']}
+              {if $cat->representative === null}
               src="{$ROOT_URL}{$themeconf['icon_dir']}/img_small.png"
               {elseif $derivative->isCached()}
               src="{$derivative->getUrl()|noescape}"
@@ -26,30 +26,30 @@
               src="{$ROOT_URL}{$themeconf['icon_dir']}/img_small.png"
               data-src="{$derivative->getUrl()|noescape}"
               {/if}
-              alt="{$cat['TN_ALT']}"
-              title="{$cat['NAME']|replace:'"',' '|stripTags} - {='display this album'|translate}"
+              alt="{$cat->tnAlt}"
+              title="{$cat->name|replace:'"',' '|stripTags} - {='display this album'|translate}"
             >
           </a>
         </div>
         <div class="description">
           <h3>
-            <a href="{$cat['URL']|noescape}">{$cat['NAME']}</a>
+            <a href="{$cat->url|noescape}">{$cat->name}</a>
             <img
-              n:if="$cat['icon_ts'] !== null"
-              title="{$cat['icon_ts']->title}"
-              src="{$ROOT_URL}{$themeconf['icon_dir']}/recent{if $cat['icon_ts']->isChildDate}_by_child{/if}.png"
+              n:if="$cat->iconTs !== null"
+              title="{$cat->iconTs->title}"
+              src="{$ROOT_URL}{$themeconf['icon_dir']}/recent{if $cat->iconTs->isChildDate}_by_child{/if}.png"
               alt="(!)"
             >
           </h3>
           <div class="text">
             <p
-              n:if="isset($cat['INFO_DATES'])"
+              n:if="$cat->infoDates !== null"
               class="dates"
-            >{$cat['INFO_DATES']}</p>
-            <p class="Nb_images">{$cat['CAPTION_NB_IMAGES']|noescape}</p>
+            >{$cat->infoDates}</p>
+            <p class="Nb_images">{$cat->captionNbImages|noescape}</p>
             <p
-              n:if="!empty($cat['DESCRIPTION'])"
-            >{$cat['DESCRIPTION']|noescape}</p>
+              n:if="$cat->description !== null && $cat->description !== ''"
+            >{$cat->description|noescape}</p>
           </div>
         </div>
       </div>

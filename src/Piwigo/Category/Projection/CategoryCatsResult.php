@@ -17,7 +17,7 @@ use Piwigo\Image\DerivativeParams;
 final readonly class CategoryCatsResult
 {
     /**
-     * @param array<int|string, mixed> $categoryThumbnails
+     * @param list<CategoryThumbnail> $categoryThumbnails
      */
     public function __construct(
         public int $maxRequests,

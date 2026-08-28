@@ -151,3 +151,92 @@ it('shows the webmaster-required warning for a plain "admin"-status user', funct
         H::dbClose($db);
     }
 });
+
+/**
+ * P58 step 0b. themes_installed.latte's row loop reads 17 distinct keys off
+ * ThemesInstalledView::$tplThemes, and nothing asserted any of them --
+ * because the loop cannot render in this repo at all. Every theme on disk
+ * (default, standard_pages, golden_html_test) is on the renderer's own
+ * exclusion list, which is what the first test in this file asserts.
+ *
+ * So covering it means putting a fourth, non-excluded theme on disk for the
+ * duration of one page load. The manifest below carries the exact fields
+ * ExtensionScanner reads into ThemeScanRow, with values distinctive enough
+ * that finding them in the markup proves they came from this theme.
+ *
+ * The row lands in the *inactive* list: nothing INSERTs a `themes` DB row
+ * for it, which is also the branch that decides activable/deletable.
+ */
+it('renders a real theme row, with every field it emits, when a non-excluded theme is on disk', function (): void {
+    $themeId = 'p58_row_probe';
+    $dir = dirname(__DIR__, 2) . '/themes/' . $themeId;
+
+    if (is_dir($dir)) {
+        throw new RuntimeException("{$dir} already exists; refusing to overwrite it");
+    }
+
+    mkdir($dir, 0o755, true);
+
+    try {
+        $manifest = json_encode([
+            'id' => $themeId,
+            'name' => 'P58 Row Probe',
+            'version' => '3.2.1',
+            'description' => 'Temporary theme proving the installed-themes row loop renders.',
+            'license' => 'GPL-2.0-or-later',
+            'minPiwigo' => '16.3.0',
+            'main' => 'Piwigo\\Theme\\P58RowProbe\\Theme',
+            'homepage' => 'https://example.invalid/p58-theme',
+            'author' => 'P58 Author',
+            'authorUri' => 'https://example.invalid/p58-author',
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        if ($manifest === false) {
+            throw new RuntimeException('json_encode failed for the probe theme manifest');
+        }
+        file_put_contents($dir . '/theme.json', $manifest);
+
+        $page = H::asAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=themes');
+        $html = H::rawWebpage($page)->content();
+
+        // NAME/VERSION/DESC/AUTHOR and the two URLs, each emitted by its own
+        // expression in the row loop.
+        expect($html)
+            ->toContain('P58 Row Probe')
+            ->and($html)
+            ->toContain('3.2.1')
+            ->and($html)
+            ->toContain('Temporary theme proving the installed-themes row loop renders.')
+            ->and($html)
+            ->toContain('P58 Author')
+            ->and($html)
+            ->toContain('https://example.invalid/p58-theme')
+            ->and($html)
+            ->toContain('https://example.invalid/p58-author');
+
+        // ID reaches the action URLs the row builds, and STATE puts it in
+        // the inactive fieldset -- both are row-loop expressions too.
+        expect($html)
+            ->toContain('action=activate')
+            ->and($html)
+            ->toContain('theme=' . $themeId)
+            ->and($html)
+            ->toContain('theme=' . $themeId);
+
+        // STATE decides which fieldset the row lands in, and the legend is
+        // the translated string ('Inactive themes'), not the source key
+        // ('Inactive Themes') the template passes to |translate.
+        expect($html)
+            ->toContain('Inactive themes');
+
+        // SCREENSHOT falls back to the admin theme's placeholder, since the
+        // probe ships no screenshot.png.
+        expect($html)
+            ->toContain('missing_screenshot.png');
+
+        $page->assertNoJavaScriptErrors();
+    } finally {
+        @unlink($dir . '/theme.json');
+        @rmdir($dir);
+    }
+});

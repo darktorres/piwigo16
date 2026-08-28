@@ -26,13 +26,14 @@ use Piwigo\Template\Latte\Attribute\Template;
  *   The renderer used to set them only inside its own `$step === 0`
  *   branch and now reads them unconditionally off `NewVersionsInfo`,
  *   which is where the correlation with `$step` went (P58-A's §11).
- * - `$majorReleaseUrl` is still `?string` and is still read bare, through
- *   `|htmlspecialchars`, inside the step-1 and step-3 blocks. It is
- *   non-null exactly when `$new_versions->major` is, and `$step` comes
- *   straight from `$_GET` with no check that the version each mode
- *   promises exists -- so `?step=3` on an up-to-date install renders an
- *   empty version badge and an empty href. That is a real defect, not a
- *   typing gap, and it is not fixed here.
+ * - `$majorReleaseUrl` stays `?string`, because it genuinely is null
+ *   whenever there is no major release. What changed is that the step
+ *   can no longer disagree with it: the renderer validates the requested
+ *   step against the releases that actually exist and falls back to 0
+ *   otherwise, so steps 1 and 3 imply a major release the way they always
+ *   meant to. The two blocks that read it say so themselves
+ *   (`$step == 1 && $majorReleaseUrl !== null`) rather than relying on a
+ *   correlation established eighty lines away in the renderer.
  */
 #[Template('updates_pwg.latte')]
 final readonly class UpdatesPwgView implements View, HasPageAssets

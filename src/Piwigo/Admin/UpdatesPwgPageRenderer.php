@@ -97,6 +97,43 @@ final readonly class UpdatesPwgPageRenderer
         $check_version = $new_versions->piwigoOrgChecked;
         $dev_version = $new_versions->isDev;
 
+        // $step arrives straight from $_GET as an int, with no check that
+        // the release the mode it selects would present actually exists.
+        // Step 1 offers a choice between the two branches, step 2 upgrades
+        // on the same branch and step 3 to a new one, and each renders that
+        // release's version and URL unguarded -- so `?step=3` on an
+        // up-to-date install rendered an empty version badge inside an
+        // empty href and passed null to htmlspecialchars(). Steps 2 and 3
+        // are also the two that call CoreUpdateService::upgradeTo() on a
+        // submitted form.
+        //
+        // Fall back to 0 rather than to a nearby step: 0 means "check is
+        // needed", and the block below then derives whichever step the
+        // available versions really support -- 2 if only a minor exists, 3
+        // if only a major, and 0 (the check page) if neither.
+
+        // CSRF runs before that validation, not after, so a forged
+        // submission is still rejected outright instead of falling through
+        // to the check page with a 200. Same condition the two action
+        // blocks below use; they no longer check it themselves.
+        if ($updatesPwgRequest->isUpgradeSubmitted
+            and ($step === 2 or $step === 3)
+            and $this->accessControl->isWebmaster()
+        ) {
+            $this->csrfService
+                ->checkOrFail($this->htmlRenderer, $this->redirectService);
+        }
+
+        $stepHasRelease = match ($step) {
+            1 => $new_versions->minor !== null && $new_versions->major !== null,
+            2 => $new_versions->minor !== null,
+            3 => $new_versions->major !== null,
+            default => true,
+        };
+        if (! $stepHasRelease) {
+            $step = 0;
+        }
+
         if ($step === 0) {
             if ($new_versions->minor !== null and $new_versions->major !== null) {
                 $step = 1;
@@ -116,8 +153,6 @@ final readonly class UpdatesPwgPageRenderer
 
         if ($step === 2 and $this->accessControl->isWebmaster()) {
             if ($updatesPwgRequest->isUpgradeSubmitted) {
-                $this->csrfService
-                    ->checkOrFail($this->htmlRenderer, $this->redirectService);
                 $core_update_service->upgradeTo($updatesPwgRequest->upgradeToSubmitted, $step);
             }
         }
@@ -125,8 +160,6 @@ final readonly class UpdatesPwgPageRenderer
         $missing = null;
         if ($step === 3 and $this->accessControl->isWebmaster()) {
             if ($updatesPwgRequest->isUpgradeSubmitted) {
-                $this->csrfService
-                    ->checkOrFail($this->htmlRenderer, $this->redirectService);
                 $core_update_service->upgradeTo($updatesPwgRequest->upgradeToSubmitted, $step);
             }
 

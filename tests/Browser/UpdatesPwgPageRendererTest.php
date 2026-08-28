@@ -117,3 +117,49 @@ it('shows the webmaster-required warning for a plain "admin"-status user', funct
         H::restoreConfig($snapshot);
     }
 });
+
+/**
+ * `$step` arrives straight from `$_GET['step']` as an int with no check
+ * that the release the mode it selects would present actually exists.
+ * Steps 1 and 3 render a major-branch upgrade and step 2 a minor one,
+ * each reading that release's version and URL unguarded -- so on an
+ * install with nothing to update, those URLs were null and the page
+ * rendered an empty version badge inside an empty href, and passed null
+ * to htmlspecialchars().
+ *
+ * This suite's environment is exactly that state: getPiwigoNewVersions()
+ * reaches piwigo.org over the network, which is unavailable here, so it
+ * returns piwigoOrgChecked=false with no minor and no major -- which is
+ * why the committed golden fixture for this page reads "Check for update
+ * failed for unknown reasons."
+ */
+it('falls back to the check page when a step is requested for a release that does not exist', function (): void {
+    $snapshot = H::snapshotConfig(['enable_core_update']);
+    H::setConfigValue('enable_core_update', 'true');
+
+    try {
+        $page = H::asAdmin($this);
+
+        foreach ([1, 2, 3] as $step) {
+            $page = H::navigateOk($page, '/admin.php?page=updates&step=' . $step);
+            H::assertNoServerErrors($page, 'updates step=' . $step . ' with no release available');
+
+            $html = H::rawWebpage($page)->content();
+
+            // The step-0 body, which is the truthful state here.
+            expect($html)
+                ->toContain('Check for update failed for unknown reasons.');
+
+            // And none of the three upgrade bodies. Asserted on the badge
+            // markup rather than on absence of a word: an empty
+            // `<a href="" class="badge-release ..."></a>` is precisely what
+            // the unguarded read produced, and it is the thing that must
+            // not come back.
+            expect($html)
+                ->not->toContain('badge-release')
+                ->not->toContain('A new version of Piwigo is available.');
+        }
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});

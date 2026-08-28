@@ -30,7 +30,7 @@
   {/if}
 {/if}
 
-<fieldset n:if="$step == 1">
+<fieldset n:if="$step == 1 && $majorReleaseUrl !== null">
   {if isset($containerVersion)}
     <legend><span
         class="icon-ok icon-purple"
@@ -140,7 +140,7 @@
   </form>
 {/if}
 
-{if $step == 3}
+{if $step == 3 && $majorReleaseUrl !== null}
   <p>
     <a
       href="{if isset($containerVersion)} {$majorDockerReleaseUrl} {else} {$majorReleaseUrl} {/if}"

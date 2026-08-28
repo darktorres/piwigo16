@@ -284,6 +284,26 @@ parameters:
         -
             identifier: shipmonk.deadMethod
             path: _analysis/phpstan-latte/*
+        -
+            # Latte's compiled {block}/{include} guard, emitted verbatim as
+            # `if (!$this->getReferringTemplate() || $this->getReferenceType()
+            # === 'extends')` -- a negation of its own API's own
+            # `Latte\Runtime\Template|null` return. Read directly at
+            # _analysis/phpstan-latte/themes-admin-default-template-admin.latte.php:362,
+            # not inferred. Every {block}-declaring template compiles to it,
+            # so this is the same "Latte-authored codegen, no app change can
+            # exist" disposition as the entries above.
+            #
+            # Scoped by message rather than by identifier deliberately: the
+            # same identifier also fires on real template source (`{if !$x}`
+            # where $x is mixed), which is Campaign A's and must keep
+            # reporting. Only this one operand type is codegen, and no
+            # template variable is ever typed Latte\Runtime\Template|null.
+            # Placed here, ahead of Campaign A's identifier-wide entry: the
+            # first matching ignore wins, so this takes the codegen findings
+            # and that entry keeps the real ones.
+            message: '#^Only booleans are allowed in a negated boolean, Latte\\Runtime\\Template\|null given\.$#'
+            path: _analysis/phpstan-latte/*
 
         # (2) PERMANENT while the @var injection asserts presence -- the
         # compile step declares every known variable as defined (extract()
@@ -321,10 +341,16 @@ parameters:
         # source work, tracked as named follow-up campaigns; each batch of
         # fixes shrinks these until reportUnmatched forces the entry out.
         #
-        # Campaign A -- context-docblock enrichment: mixed-typed values
-        # flowing out of the 130 TemplatePageContext classes' array<*,
-        # mixed> docblocks. Tightening those docblocks (array shapes, value
-        # types) immediately tightens template checking; ~1,400 findings.
+        # Campaign A (docs/PLAN.md P58-A) -- values reaching a template as
+        # `mixed` because the View property they arrive through is typed
+        # `array<string, mixed>`. The dominant cause is a producer calling
+        # `->toArray()` on an already-typed VO one line before handing it to
+        # the View constructor, so the fix is usually deleting the flatten
+        # and letting the VO through, not writing a new docblock.
+        #
+        # 843 findings across 74 templates / 63 View classes, re-measured
+        # 2026-08-28 (P32's own ~1,400 figure predates P40's View migration,
+        # which has been shrinking this as a side effect).
         -
             identifier: offsetAccess.nonOffsetAccessible
             path: _analysis/phpstan-latte/*

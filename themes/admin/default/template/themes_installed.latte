@@ -3,7 +3,7 @@
 <div id="themesContent">
   {var $field_name = 'null'} {* <!-- 'counter' for fieldset management --> *}
   {foreach $tplThemes as $theme}
-    {if $field_name != $theme['STATE']}
+    {if $field_name != $theme->state}
       {if $field_name != 'null'}
         {* Closes the PREVIOUS group's <div class="themeBoxes">/<fieldset>
            (opened further down, once per group, at the loop's real,
@@ -24,7 +24,7 @@
          Latte's HTML-aware parser can't verify statically either. *}
       {="<fieldset>"|noescape}
       <legend>
-        {if $theme['STATE'] == 'active'}
+        {if $theme->state == 'active'}
           <span
             class="icon-purple icon-toggle-on"
           ></span>{='Active Themes'|translate}
@@ -35,37 +35,37 @@
         {/if}
       </legend>
       {="<div class=\"themeBoxes\">"|noescape}
-      {var $field_name = $theme['STATE']}
+      {var $field_name = $theme->state}
     {/if}
 
-    {if !empty($theme['AUTHOR'])}
-      {if !empty($theme['AUTHOR_URL'])}
-        {var $author = ("<a href='%s'>%s</a>"|sprintf:$theme['AUTHOR_URL'],$theme['AUTHOR'])}
+    {if !empty($theme->author)}
+      {if !empty($theme->authorUrl)}
+        {var $author = ("<a href='%s'>%s</a>"|sprintf:$theme->authorUrl,$theme->author)}
       {else}
-        {var $author = ('<u>' . $theme['AUTHOR'] . '</u>')}
+        {var $author = ('<u>' . $theme->author . '</u>')}
       {/if}
     {/if}
-    {if !empty($theme['VISIT_URL'])}
-      {var $version = ("<a class='externalLink' href='" . $theme['VISIT_URL'] . "'>" . $theme['VERSION'] . "</a>")}
+    {if !empty($theme->visitUrl)}
+      {var $version = ("<a class='externalLink' href='" . $theme->visitUrl . "'>" . $theme->version . "</a>")}
     {else}
-      {var $version = $theme['VERSION']}
+      {var $version = $theme->version}
     {/if}
 
     <div
-      class="themeBox{if isset($theme['IS_DEFAULT']) and $theme['IS_DEFAULT']} themeDefault{/if}"
+      class="themeBox{if $theme->isDefault} themeDefault{/if}"
     >
       <div class="themeShot"><a
-          href="{$theme['SCREENSHOT']|noescape}"
+          href="{$theme->screenshot|noescape}"
           class="preview-box"
-          title="{$theme['NAME']}"
-        ><img src="{$theme['SCREENSHOT']|noescape}" alt=""></a></div>
-      <div class="themeName" title="{$theme['NAME']}">
-        {$theme['NAME']} <i
-          n:if="isset($theme['IS_DEFAULT']) and $theme['IS_DEFAULT']"
+          title="{$theme->name}"
+        ><img src="{$theme->screenshot|noescape}" alt=""></a></div>
+      <div class="themeName" title="{$theme->name}">
+        {$theme->name} <i
+          n:if="$theme->isDefault"
           class="icon-star"
           title="{='default'|translate}"
         ></i> <i
-          n:if="$theme['IS_MOBILE']"
+          n:if="$theme->isMobile"
           class="icon-mobile"
           title="{='Mobile'|translate}"
         ></i>
@@ -79,34 +79,34 @@
           {='Version'|translate} {$version|noescape}
         </div>
         <div class="showInfo-dropdown-content">
-          {$theme['DESC']}
+          {$theme->desc}
         </div>
-        {if $theme['STATE'] != "active" and $enableExtensionsInstall}
-          {if $theme['DELETABLE']}
+        {if $theme->state != "active" and $enableExtensionsInstall}
+          {if $theme->deletable}
             <a
               class="dropdown-option icon-trash delete-plugin-button delete-theme-button"
-              href="{$deleteBaseUrl|noescape}{$theme['ID']}"
+              href="{$deleteBaseUrl|noescape}{$theme->id}"
             >{='Delete'|translate}</a>
           {else}
             <span
               class="dropdown-option icon-trash delete-plugin-button"
-              title="{$theme['DELETE_TOOLTIP']}"
+              title="{$theme->deleteTooltip}"
             >{='Delete'|translate}</span>
           {/if}
         {/if}
         <a
-          n:if="isset($theme['DEACTIVABLE']) and $theme['DEACTIVABLE']"
-          href="{$deactivateBaseUrl|noescape}{$theme['ID']}"
+          n:if="$theme->deactivable"
+          href="{$deactivateBaseUrl|noescape}{$theme->id}"
           class="showInfo-dropdown-action tiptip icon-cancel-circled"
           title="{='Forbid this theme to users'|translate}"
         >{='Deactivate'|translate}</a>
       </div>
       {if $isWebmaster == 1}
         <div class="themeActions">
-          {if $theme['STATE'] == 'active'}
-            {if $theme['ADMIN_URI']}
+          {if $theme->state == 'active'}
+            {if $theme->adminUri}
               <a
-                href="{$theme['ADMIN_URI']|noescape}"
+                href="{$theme->adminUri|noescape}"
                 class="icon-cog"
               >{='Configuration'|translate}</a>
             {else}
@@ -115,9 +115,9 @@
                 title="{='N/A'|translate}"
               >{='Configuration'|translate}</div>
             {/if}
-            {if isset($theme['IS_DEFAULT']) and !$theme['IS_DEFAULT']}
+            {if !$theme->isDefault}
               <a
-                href="{$setDefaultBaseUrl|noescape}{$theme['ID']}"
+                href="{$setDefaultBaseUrl|noescape}{$theme->id}"
                 class="tiptip icon-star"
                 title="{='Set as default theme for unregistered and new users'|translate}"
               >{='Set as default'|translate}</a>
@@ -128,15 +128,15 @@
               >{='Set as default'|translate}</span>
             {/if}
           {else}
-            {if $theme['ACTIVABLE']}
+            {if $theme->activable}
               <a
-                href="{$activateBaseUrl|noescape}{$theme['ID']}"
+                href="{$activateBaseUrl|noescape}{$theme->id}"
                 title="{='Make this theme available to users'|translate}"
                 class="icon-plus tiptip"
               >{='Activate'|translate}</a>
             {else}
               <span
-                title="{$theme['ACTIVABLE_TOOLTIP']}"
+                title="{$theme->activableTooltip}"
                 class="icon-plus tiptip"
               >{='Activate'|translate}</span>
             {/if}

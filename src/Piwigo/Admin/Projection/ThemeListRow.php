@@ -39,36 +39,4 @@ final readonly class ThemeListRow
         public bool $deletable,
         public ?string $deleteTooltip,
     ) {}
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function toArray(): array
-    {
-        $result = [
-            'ID' => $this->id,
-            'NAME' => $this->name,
-            'VISIT_URL' => $this->visitUrl,
-            'VERSION' => $this->version,
-            'DESC' => $this->desc,
-            'AUTHOR' => $this->author,
-            'AUTHOR_URL' => $this->authorUrl,
-            'IS_MOBILE' => $this->isMobile,
-            'SCREENSHOT' => $this->screenshot,
-            'ADMIN_URI' => $this->adminUri,
-            'STATE' => $this->state,
-        ];
-
-        if ($this->state === 'active') {
-            $result['IS_DEFAULT'] = $this->isDefault;
-            $result['DEACTIVABLE'] = $this->deactivable;
-        } else {
-            $result['ACTIVABLE'] = $this->activable;
-            $result['ACTIVABLE_TOOLTIP'] = $this->activableTooltip;
-            $result['DELETABLE'] = $this->deletable;
-            $result['DELETE_TOOLTIP'] = $this->deleteTooltip;
-        }
-
-        return $result;
-    }
 }

@@ -185,7 +185,7 @@ final readonly class ThemesInstalledPageRenderer
             deactivateBaseUrl: $base_url . '&amp;action=deactivate&amp;pwg_token=' . $pwg_token . '&amp;theme=',
             setDefaultBaseUrl: $base_url . '&amp;action=set_default&amp;pwg_token=' . $pwg_token . '&amp;theme=',
             deleteBaseUrl: $base_url . '&amp;action=delete&amp;pwg_token=' . $pwg_token . '&amp;theme=',
-            tplThemes: array_map(static fn (ThemeListRow $theme): array => $theme->toArray(), $tpl_themes),
+            tplThemes: $tpl_themes,
             isWebmaster: $this->accessControl->isWebmaster() ? 1 : 0,
             enableExtensionsInstall: $this->currentConfig->enableExtensionsInstall,
         ));

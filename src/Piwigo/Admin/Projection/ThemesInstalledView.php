@@ -20,7 +20,7 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class ThemesInstalledView implements View, HasPageAssets, ExposesPageData
 {
     /**
-     * @param list<array<string, mixed>> $tplThemes
+     * @param list<ThemeListRow> $tplThemes
      */
     public function __construct(
         public string $activateBaseUrl,

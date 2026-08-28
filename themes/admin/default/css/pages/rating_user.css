@@ -6,20 +6,25 @@
   margin: 10px 0 0;
 }
 
-/* Paths are relative to this file's own location (themes/admin/default/css/pages/),
-   not the page URL -- browsers resolve stylesheet url()s against the stylesheet's
-   own address, so no site-root prefix is needed here. */
+/* dataTables' own sort-direction sprites, from the 1.10.11 distribution this
+   page loads over CDN. They lived under themes/default/js/plugins/datatables/
+   until 78e945ab9e purged that vendored-plugin tree wholesale, which left these
+   five url()s dangling and the column headers arrow-less; they belong to the one
+   theme that reads them, so they now sit beside it. Paths are relative to this
+   file's own location (themes/admin/default/css/pages/), not the page URL --
+   browsers resolve stylesheet url()s against the stylesheet's own address, so no
+   site-root prefix is needed here. */
 .sorting {
-  background: url("../../../../default/js/plugins/datatables/images/sort_both.png") no-repeat center right;
+  background: url("../../images/datatables/sort_both.png") no-repeat center right;
   cursor: pointer;
 }
 
 .sorting_asc {
-  background: url("../../../../default/js/plugins/datatables/images/sort_asc.png") no-repeat center right;
+  background: url("../../images/datatables/sort_asc.png") no-repeat center right;
 }
 
 .sorting_desc {
-  background: url("../../../../default/js/plugins/datatables/images/sort_desc.png") no-repeat center right;
+  background: url("../../images/datatables/sort_desc.png") no-repeat center right;
 }
 
 .sorting,
@@ -29,11 +34,11 @@
 }
 
 .sorting_asc_disabled {
-  background: url("../../../../default/js/plugins/datatables/images/sort_asc_disabled.png") no-repeat center right;
+  background: url("../../images/datatables/sort_asc_disabled.png") no-repeat center right;
 }
 
 .sorting_desc_disabled {
-  background: url("../../../../default/js/plugins/datatables/images/sort_desc_disabled.png") no-repeat center right;
+  background: url("../../images/datatables/sort_desc_disabled.png") no-repeat center right;
 }
 
 .dtBar {

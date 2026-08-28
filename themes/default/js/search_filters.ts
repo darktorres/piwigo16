@@ -1,29 +1,118 @@
 import { pwg_getPageData, pwg_getPageString } from "./page-data";
 
+interface SearchAllwordsRule {
+  words: string[];
+  mode: "AND" | "OR";
+  fields: string[];
+}
+
+/**
+ * `AuthorRule` deliberately drops the `mode` key server-side (its own
+ * docblock: "always 'OR' from every real producer -- dropped here,
+ * confirmed dead"). mcs.ts still writes it, so it is typed here as the
+ * client-only field it is.
+ */
+interface SearchAuthorRule {
+  words: string[];
+  mode?: "OR";
+}
+
+interface SearchExpertRule {
+  string: string;
+}
+
+interface SearchTagsRule {
+  words: (number | string)[];
+  mode: "AND" | "OR";
+}
+
+/**
+ * `words` stays `int|string` per element for the same reason
+ * `CategoryRule::$words` does: the API only regex-validates each id is
+ * all-digits, it never casts, so JSON can hand this either.
+ */
+interface SearchCategoryRule {
+  words: (number | string)[];
+  sub_inc: boolean;
+}
+
+interface SearchDateRule {
+  preset: string;
+  custom: string[];
+}
+
+interface SearchFields {
+  allwords?: SearchAllwordsRule;
+  author?: SearchAuthorRule;
+  expert?: SearchExpertRule;
+  filetypes?: string[];
+  added_by?: (number | string)[];
+  cat?: SearchCategoryRule;
+  tags?: SearchTagsRule;
+  date_posted?: SearchDateRule;
+  date_created?: SearchDateRule;
+  ratios?: string[];
+  ratings?: string[];
+  filesize_min?: number | string;
+  filesize_max?: number | string;
+  width_min?: number | string;
+  width_max?: number | string;
+  height_min?: number | string;
+  height_max?: number | string;
+}
+
+/**
+ * The saved search's own `rules` array, JSON-encoded by
+ * `SearchFilterRenderer::render()` (`gp: json_encode($mySearch)`) right
+ * after it overwrites `$mySearch['fields']` with
+ * `SearchRules::toArray()`. Every member of the interfaces above is
+ * derived from that method and its seven rule projections in
+ * `src/Piwigo/Search/Projection/`, whose docblocks carry the element
+ * types (`list<string>`, `list<int|string>`, `'AND'|'OR'`).
+ *
+ * Every field of `SearchFields` is optional because
+ * `SearchRules::toArray()` only emits a key when that filter is part of
+ * the search -- a null property there plays the original array's own
+ * `!isset()` role, and the distinction is load-bearing (`filetypes: []`
+ * means "filter active, nothing matched"; absent means "filter never
+ * chosen"). mcs.ts reads it exactly that way, one
+ * `if (global_params.fields.x)` per filter.
+ */
+interface GlobalSearchParams {
+  /**
+   * Always present: `SearchFilterRenderer::render()` assigns
+   * `$mySearch['fields']` unconditionally before encoding.
+   */
+  fields: SearchFields;
+}
+
 const global_params_json = pwg_getPageData<string | false>(
   "global_params_json",
 );
-// Deferred to P48 (real modules/type-design pass), matching this same
-// key's own established ambient-type comment below: the parsed shape
-// is a complex nested search-filter query object, not something this
-// phase re-derives real types for.
-let global_params: any;
+let global_params: GlobalSearchParams;
 if (typeof global_params_json !== "undefined") {
   // String(...) makes explicit the same coercion JSON.parse() already
   // did implicitly pre-P47 whenever this value was `false` (JSON.parse
   // itself calls ToString on a non-string argument) -- same behavior,
   // just satisfies the stricter real parameter type now that this
   // value's real `string | false` shape is known.
-  global_params = JSON.parse(String(global_params_json));
+  global_params = JSON.parse(String(global_params_json)) as GlobalSearchParams;
 }
 
 const fullname_of_cat_json = pwg_getPageData<string | false | null>(
   "fullname_of_cat_json",
 );
-let fullname_of_cat: any;
+// `SearchFilterRenderer::render()` builds this as
+// `$fullnameOf[$row->id->value] = strip_tags($catDisplayName)` -- an
+// album-id-keyed map of plain-text full names, encoded only when the
+// `cat` filter is part of the search.
+let fullname_of_cat: Record<string, string>;
 if (typeof fullname_of_cat_json !== "undefined") {
   // Same String(...) coercion note as global_params_json above.
-  fullname_of_cat = JSON.parse(String(fullname_of_cat_json));
+  fullname_of_cat = JSON.parse(String(fullname_of_cat_json)) as Record<
+    string,
+    string
+  >;
 }
 
 const search_id_from_page = pwg_getPageData<string | undefined>("search_id");

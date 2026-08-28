@@ -187,7 +187,14 @@ final class RatingPageRenderer
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($urlService, ['categories']),
             orderByOptionsSelected: [$order_by_index],
             userOptions: $user_options,
-            userOptionsSelected: [$ratingRequest->usersRaw],
+            // `<select name="users">` is a single select, so this is a
+            // scalar in every real request; an array only arrives from a
+            // hand-written `?users[]=`, and rating.latte's own
+            // `array_map(strval(...), $userOptionsSelected)` turned that
+            // into the string 'Array' plus a PHP warning. Narrowed here
+            // instead (P58-A's §11) -- '' matches no option key, which is
+            // what both the array and the null case already did.
+            userOptionsSelected: [is_string($ratingRequest->usersRaw) ? $ratingRequest->usersRaw : ''],
             orderByOptions: $order_by_options,
             images: $tpl_images,
             csrfToken: $csrfService->getToken(),

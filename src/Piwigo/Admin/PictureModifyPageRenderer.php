@@ -345,8 +345,17 @@ final readonly class PictureModifyPageRenderer
             formats: $intro_formats,
         );
 
-        // image level options
-        $selected_level = $pictureModifyRequest->postLevel ?? $row['level'];
+        // image level options. Narrowed to a string here rather than left
+        // mixed for picture_modify.latte's own
+        // `array_map(strval(...), $levelOptionsSelected)` to convert
+        // (P58-A's §11): $row is a raw DBAL row, so $row['level'] is mixed,
+        // and strval() does not accept mixed. The conversion is the same
+        // one the template was doing -- a non-scalar becomes '', which is
+        // what strval(null) gave and matches no option key either way.
+        $row_level = $row['level'];
+        $selected_level = $pictureModifyRequest->postLevel !== null
+            ? (string) $pictureModifyRequest->postLevel
+            : (is_scalar($row_level) ? (string) $row_level : '');
         $level_options = PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang);
 
         // categories

@@ -30,7 +30,7 @@ final readonly class PictureModifyView implements View, HasPageAssets, ExposesPa
     /**
      * @param array<int, array{name: mixed, id: string}> $tagSelection
      * @param array<array-key, string> $levelOptions
-     * @param list<mixed> $levelOptionsSelected
+     * @param list<string> $levelOptionsSelected
      * @param array<array-key, array{name: string, unlinkable: bool}> $relatedCategories
      * @param list<string> $relatedCategoriesIds
      * @param list<int> $representedAlbums

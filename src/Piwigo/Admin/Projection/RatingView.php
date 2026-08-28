@@ -32,7 +32,7 @@ final readonly class RatingView implements View, HasPageAssets, ExposesPageData
      * @param array<array-key, string> $cacheKeys
      * @param list<int> $orderByOptionsSelected
      * @param array<string, string> $userOptions
-     * @param list<mixed> $userOptionsSelected
+     * @param list<string> $userOptionsSelected
      * @param list<string> $orderByOptions
      * @param list<RatingReportImageRow> $images
      */

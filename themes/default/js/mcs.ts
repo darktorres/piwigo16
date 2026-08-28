@@ -1972,8 +1972,10 @@ function updateFilters(filterName: string, mode: "add" | "del") {
 
         PS_params[filterName] = "";
       } else if (mode == "del") {
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- both are search-parameter bags keyed by the filter name chosen at runtime, and they are serialised straight to the API; a Map would have to be converted back on every request.
         delete global_params.fields[filterName];
 
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- see above.
         delete PS_params[filterName];
       }
       break;

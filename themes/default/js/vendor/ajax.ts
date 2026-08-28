@@ -174,8 +174,12 @@ function decorate(promise: Promise<unknown>, abort: () => void): AjaxThenable {
   };
   thenable.always = (handler) => {
     void promise.then(
-      () => handler(),
-      () => handler()
+      () => {
+        handler();
+      },
+      () => {
+        handler();
+      }
     );
 
     return thenable;

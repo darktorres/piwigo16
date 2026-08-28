@@ -272,7 +272,7 @@ jQuery(document).ready(function () {
             );
             delete_album(deletionMode)
               .then(() => (window.location.href = u_delete))
-              .catch((err) => {
+              .catch((err: unknown) => {
                 this.close();
                 console.log(err);
               });

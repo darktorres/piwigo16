@@ -129,7 +129,7 @@ $(document).ready(function () {
   $("input, textarea").on("input", function () {
     const pictureId = $(this).parents("fieldset").data("image_id") as
       string | number;
-    if (user_interacted == true) {
+    if (user_interacted) {
       showUnsavedLocalBadge(pictureId);
     }
   });
@@ -138,7 +138,7 @@ $(document).ready(function () {
   $("input[data-datepicker]").on("change", function () {
     const pictureId = $(this).parents("fieldset").data("image_id") as
       string | number;
-    if (user_interacted == true) {
+    if (user_interacted) {
       showUnsavedLocalBadge(pictureId);
     }
   });
@@ -146,7 +146,7 @@ $(document).ready(function () {
   $("select").on("change", function () {
     const pictureId = $(this).parents("fieldset").data("image_id") as
       string | number;
-    if (user_interacted == true) {
+    if (user_interacted) {
       showUnsavedLocalBadge(pictureId);
     }
   });

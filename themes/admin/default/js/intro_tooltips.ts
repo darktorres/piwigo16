@@ -79,10 +79,9 @@ ready(function () {
           }
           const detail_str_size = detail_str_size_type_string.replace(
             "%s",
-            String(detail_size_nb),
+            detail_size_nb,
           );
           const markup =
-            "" +
             '<span class="tooltip-details-cont">' +
             '<span class="tooltip-details-ext"><b>' +
             ext +
@@ -93,8 +92,7 @@ ready(function () {
             '<span class="tooltip-details-files">' +
             translate_files.replace("%d", String(data.nb_files)) +
             "</span>" +
-            "</span>" +
-            "";
+            "</span>";
           document
             .querySelectorAll("#storage-detail-" + type)
             .forEach((container) => {

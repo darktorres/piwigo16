@@ -70,7 +70,7 @@ $(".info-warning p a").on("click", () => {
         text: str_delete_them,
         btnClass: "btn-red",
         action: function () {
-          window.location.href = String(url).replace(/amp;/g, "");
+          window.location.href = url.replace(/amp;/g, "");
         },
       },
       keep: {
@@ -213,7 +213,7 @@ $(".TagSubmit").on("click", function () {
       $("[data-id=" + $tagboxid + "]").wrap('<div class="tag-changed"></div>');
       $(".tag-changed").prepend('<i class="icon-ok tag-checkmark"></i>');
     })
-    .catch((message: Error) => {
+    .catch((message: unknown) => {
       $(".TagSubmit").show();
       $(".TagLoading").hide();
       console.error(message);
@@ -253,9 +253,9 @@ $("#add-tag").submit(function (e) {
         $("#search-tag .search-input").trigger("input");
         loadState.reverse();
       })
-      .catch((message: Error) => {
+      .catch((message: unknown) => {
         loadState.reverse();
-        showError(message.message);
+        showError(message instanceof Error ? message.message : String(message));
       });
   }
 });

@@ -249,7 +249,7 @@ export class AlbumSelector {
     this.#isAlbumCreationChecked = false;
     this.#cats = {};
     this.#searchCat = {};
-    this.#selectAlbum = (args) =>
+    this.#selectAlbum = (args) => {
       selectAlbum.call(null, {
         ...args,
         // Response-level, not per-album: a consumer rebuilding the linked
@@ -259,11 +259,13 @@ export class AlbumSelector {
         addSelectedAlbum: this.#addSelectedAlbum.bind(this),
         getSelectedAlbum: this.get_selected_albums.bind(this),
       });
-    this.#removeSelectedAlbum = (args) =>
+    };
+    this.#removeSelectedAlbum = (args) => {
       removeSelectedAlbum.call(null, {
         ...args,
         getSelectedAlbum: this.get_selected_albums.bind(this),
       });
+    };
     this.#currentSelectedId = "";
     this.#show_root_btn = showRootButton;
     this.#put_to_root = false;
@@ -408,9 +410,7 @@ export class AlbumSelector {
     // event perform search
     off(AlbumSelector.selectors.searchInput, `keyup${instanceAb}`);
     on(AlbumSelector.selectors.searchInput, `keyup${instanceAb}`, () => {
-      const searchValue = String(
-        val(AlbumSelector.selectors.searchInput) ?? "",
-      );
+      const searchValue = val(AlbumSelector.selectors.searchInput) ?? "";
       if (searchValue.length > 0) {
         show(AlbumSelector.selectors.iconCancelInput);
       } else {

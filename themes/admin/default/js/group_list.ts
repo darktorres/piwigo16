@@ -214,7 +214,7 @@ const createGroup = function (group: Group) {
     "icon-purple",
     "icon-green",
   ];
-  const colorId = Number(group.id) % 5;
+  const colorId = group.id % 5;
   newgroup.find(".icon-users-1").addClass(colors[colorId]!);
 
   //Place group in first Place
@@ -690,7 +690,7 @@ const duplicateAction = function (id: string | number) {
       setupGroupBox(groupbox);
       updateBadge();
 
-      if (data.isDefault === true) {
+      if (data.isDefault) {
         setupDefaultActions(data.id, true);
       }
     },
@@ -888,7 +888,7 @@ $(".ConfirmMergeButton").on("click", function () {
         ...jConfirm_alert_options,
       });
 
-      $("#group-" + String(dest_grp) + " .group_number_users").html(
+      $("#group-" + dest_grp + " .group_number_users").html(
         "<i class='icon-spin6 animate-spin'> </i>",
       );
       void ajax({
@@ -900,7 +900,7 @@ $(".ConfirmMergeButton").on("click", function () {
         dataType: "json",
         success: function (data: GroupUserListResponse) {
           const number = data.users.length;
-          $("#group-" + String(dest_grp) + " .group_number_users").html(
+          $("#group-" + dest_grp + " .group_number_users").html(
             number +
               " " +
               (number > 1 ? str_members_default : str_member_default),
@@ -975,7 +975,7 @@ $(".ConfirmDeleteButton").on("click", function () {
       });
       updateBadge();
     })
-    .catch(function (err) {
+    .catch(function (err: unknown) {
       loadState.reverse();
       console.log(err);
     });

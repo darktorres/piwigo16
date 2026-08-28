@@ -110,6 +110,7 @@ interface Window {
   // `popuphelp`/`pwg_tryFocus` stay -- both real, permanent `window.X`
   // exposures even after that conversion (see scripts.ts's own leading
   // comment for why neither converts).
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- mirrors page-data.ts's own signature; see the note there.
   pwg_getPageData: <T = unknown>(key: string) => T;
   pwg_getPageString: (key: string) => string;
   popuphelp: (url: string) => void;

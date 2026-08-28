@@ -1103,8 +1103,11 @@ function applyMove(event: JqTreeMoveEvent) {
         edgeOffset: 3,
       });
     })
-    .catch(function (message: Error) {
-      console.log("An error has occured : " + message.message);
+    .catch(function (message: unknown) {
+      console.log(
+        "An error has occured : " +
+          (message instanceof Error ? message.message : String(message)),
+      );
       $(".move-cat-add")
         .off("click")
         .on("click", function (e) {
@@ -1139,12 +1142,20 @@ function moveNode(
   return new Promise<void>((res, rej) => {
     if (parent != null) {
       changeParent(node, parent, rank)
-        .then(() => res())
-        .catch(() => rej(new Error("move failed")));
+        .then(() => {
+          res();
+        })
+        .catch(() => {
+          rej(new Error("move failed"));
+        });
     } else if (rank != null) {
       changeRank(node, rank)
-        .then(() => res())
-        .catch(() => rej(new Error("move failed")));
+        .then(() => {
+          res();
+        })
+        .catch(() => {
+          rej(new Error("move failed"));
+        });
     }
   });
 }

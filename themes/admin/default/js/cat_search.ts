@@ -140,7 +140,7 @@ function searchAlbumByName(
     const currentName =
       name + `<a href="${editLink + c.id}">${c.name}</a>` + " / ";
 
-    if (c.name.toString().toLowerCase().includes(search.toLowerCase())) {
+    if (c.name.toLowerCase().includes(search.toLowerCase())) {
       const haveChild = c.children && c.children.length ? true : false;
       nbResult++;
       addAlbumResult(c, nbResult, haveChild, currentName);

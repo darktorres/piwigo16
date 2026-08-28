@@ -1204,7 +1204,7 @@ $(document).ready(function () {
   $("#activityMoreFilters").on("click", function () {
     if (
       $("#activityMoreFiltersContent").css("display") == "none" &&
-      toggleTriggered == false
+      !toggleTriggered
     ) {
       toggleTriggered = true;
       $("#activityMoreFilters").addClass("extend-padding");
@@ -1213,7 +1213,7 @@ $(document).ready(function () {
       });
     } else if (
       $("#activityMoreFiltersContent").css("display") == "flex" &&
-      toggleTriggered == false
+      !toggleTriggered
     ) {
       toggleTriggered = true;
       $("#activityMoreFiltersContent").slideToggle(function () {

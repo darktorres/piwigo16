@@ -70,7 +70,7 @@ export default tseslint.config(
   },
   {
     files: ["**/*.ts"],
-    extends: [...tseslint.configs.recommendedTypeChecked],
+    extends: [...tseslint.configs.strictTypeChecked],
     languageOptions: {
       parserOptions: {
         projectService: true,
@@ -116,6 +116,18 @@ export default tseslint.config(
     },
   },
   {
+    // KNOWN GAP, measured rather than assumed: the base rules in the
+    // plain-JS block above (`eqeqeq`, `no-console`, `no-implicit-coercion`,
+    // `no-param-reassign`) are scoped to `**/*.{js,mjs,cjs}`, which is 8
+    // tooling files. The 93 `.ts` files that are the actual application get
+    // none of them. Turning them on for `.ts` costs, measured: eqeqeq 389,
+    // no-console 56, no-param-reassign 31, no-implicit-coercion 22.
+    //
+    // `eqeqeq` is the one worth real work, and it is not a mechanical
+    // `==` -> `===` sweep: several comparisons here are deliberately loose
+    // because an id arrives as a number from one endpoint and a string from
+    // another (album_selector's `c.id != cat_id`), so each site needs
+    // reading. Its own commit, not a rider on a config change.
     // Match the plain-JS block's own `^_`-prefixed-means-intentionally-
     // unused convention (see the `no-unused-vars` rule above) --
     // `recommendedTypeChecked` enables `@typescript-eslint/no-unused-vars`
@@ -123,6 +135,47 @@ export default tseslint.config(
     // with the rest of this config once .ts files exist to lint (P46-B).
     files: ["**/*.ts"],
     rules: {
+      // `strictTypeChecked` above turns on ~20 rules beyond
+      // `recommendedTypeChecked`, and the tree is clean under all of them
+      // except the five opted out here. Each carries the violation count
+      // measured when it was disabled, so the cost of adopting it later is
+      // a fact rather than a guess -- and so a future reader can tell a
+      // deliberate exclusion from an unexamined one.
+
+      // 464 violations. The `!` assertion is this codebase's normal way of
+      // stating an invariant the type system cannot see (a template always
+      // renders the element, an id is always in range), usually with a
+      // comment. Banning it would replace them with `as` casts, which are
+      // strictly worse: they also silence genuine type errors.
+      "@typescript-eslint/no-non-null-assertion": "off",
+
+      // 396. Almost entirely `"text " + number` when building markup or a
+      // URL, which is idiomatic and safe.
+      "@typescript-eslint/restrict-plus-operands": "off",
+
+      // 251, and essentially all of them are jQuery APIs that P49 is in the
+      // middle of removing. Worth revisiting once that phase lands, when
+      // the count should be near zero on its own.
+      "@typescript-eslint/no-deprecated": "off",
+
+      // 58. `${number}` in a template literal; noise here.
+      "@typescript-eslint/restrict-template-expressions": "off",
+
+      // 44, and it is the one rule on this list that is *unsafe* to act on
+      // here rather than merely noisy. It trusts the declared types, and
+      // this codebase's types are partly assertions -- `!` in 464 places,
+      // `as` casts, and ambient declarations for jQuery plugins with no
+      // real type source. "Always truthy according to the type" is
+      // therefore not "always truthy at runtime", and the fixes it asks for
+      // delete real runtime guards: `toaster.ts`'s check that its caller
+      // passed a text and an icon, `addAlbum.ts`'s check that the plugin
+      // was given a cache. It also produces outright false positives
+      // against closure mutation -- it reports `dom.ts`'s `if (stopped)` as
+      // always false, though `stopped` is set by the `stopPropagation`
+      // wrapper installed a few lines above. Revisit when the ambient
+      // jQuery declarations are gone.
+      "@typescript-eslint/no-unnecessary-condition": "off",
+
       "@typescript-eslint/no-unused-vars": [
         "warn",
         {

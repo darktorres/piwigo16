@@ -22,16 +22,4 @@ final class ImageOrderOption
         public readonly string $url,
         public bool $selected,
     ) {}
-
-    /**
-     * @return array{DISPLAY: string, URL: string, SELECTED: bool}
-     */
-    public function toArray(): array
-    {
-        return [
-            'DISPLAY' => $this->display,
-            'URL' => $this->url,
-            'SELECTED' => $this->selected,
-        ];
-    }
 }

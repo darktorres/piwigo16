@@ -539,7 +539,7 @@ final readonly class GalleryController implements ControllerInterface
             }
 
             $tpl_orders[0]->selected = ! $order_selected; // unselect "Default" if another one is selected
-            $image_orders = array_map(static fn (ImageOrderOption $option): array => $option->toArray(), $tpl_orders);
+            $image_orders = $tpl_orders;
         }
 
         // category comment
@@ -607,7 +607,7 @@ final readonly class GalleryController implements ControllerInterface
                         display: $this->lang->t($params->type),
                         url: $url . $params->type,
                         selected: $params->type === $selected_type,
-                    )->toArray();
+                    );
                 }
             }
         }

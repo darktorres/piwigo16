@@ -69,13 +69,13 @@
               {foreach $imageOrders as $image_order}<br
                   n:if="!$iterator->first"
                 >
-                {if $image_order['SELECTED']}
-                  <span>&#x2714; </span>{$image_order['DISPLAY']|noescape}
+                {if $image_order->selected}
+                  <span>&#x2714; </span>{$image_order->display|noescape}
                 {else}
                   <span class="u-invisible">&#x2714; </span><a
-                    href="{$image_order['URL']|noescape}"
+                    href="{$image_order->url|noescape}"
                     rel="nofollow"
-                  >{$image_order['DISPLAY']|noescape}</a>
+                  >{$image_order->display|noescape}</a>
                 {/if}
               {/foreach}
             </div>
@@ -95,13 +95,13 @@
               {foreach $imageDerivatives as $image_derivative}<br
                   n:if="!$iterator->first"
                 >
-                {if $image_derivative['SELECTED']}
-                  <span>&#x2714; </span>{$image_derivative['DISPLAY']}
+                {if $image_derivative->selected}
+                  <span>&#x2714; </span>{$image_derivative->display}
                 {else}
                   <span class="u-invisible">&#x2714; </span><a
-                    href="{$image_derivative['URL']|noescape}"
+                    href="{$image_derivative->url|noescape}"
                     rel="nofollow"
-                  >{$image_derivative['DISPLAY']}</a>
+                  >{$image_derivative->display}</a>
                 {/if}
               {/foreach}
             </div>

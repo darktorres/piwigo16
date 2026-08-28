@@ -42,10 +42,10 @@ final readonly class IndexView implements View, HasPageAssets
      * @param list<array<string, mixed>>|null $combinableTags
      * @param list<string>|null $categorySearchResults
      * @param list<string>|null $noSearchResults
-     * @param array<int, array<string, mixed>>|null $imageOrders
+     * @param array<int, ImageOrderOption>|null $imageOrders
      * @param list<array<string, mixed>>|null $relatedTags
      * @param list<array<string, mixed>> $tagSearchResults
-     * @param list<array{DISPLAY: string, URL: string, SELECTED: bool}> $imageDerivatives
+     * @param list<ImageOrderOption> $imageDerivatives
      * @param list<ButtonContribution> $pluginIndexButtons
      * @param list<ActionContribution> $pluginIndexActions
      */

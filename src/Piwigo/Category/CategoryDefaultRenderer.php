@@ -8,6 +8,7 @@ use Piwigo\Category\Event\IndexThumbnailsRendered;
 use Piwigo\Category\Event\IndexThumbnailsRendering;
 use Piwigo\Category\Event\IndexThumbnailsSelected;
 use Piwigo\Category\Projection\CategoryDefaultResult;
+use Piwigo\Category\Projection\ImageThumbnail;
 use Piwigo\Category\Request\CategorySlideshowRequest;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Config\CurrentConfig;
@@ -17,7 +18,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RecentIconResolver;
 use Piwigo\Core\RequestMetrics;
-use Piwigo\Core\StringHelper;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\Event\GetIndexDerivativeParams;
@@ -153,9 +153,14 @@ final readonly class CategoryDefaultRenderer
                 ['start']
             );
 
+            // 'nb_comments' stays on $row -- renderElementName()/
+            // getThumbnailTitle() below both read the raw row. The template
+            // copy is a real value on the VO instead of a second key.
+            $nbCommentsForRow = null;
             if ($nbCommentsOf !== null) {
                 $nbComments = array_key_exists($imageIdKey, $nbCommentsOf) ? $nbCommentsOf[$imageIdKey] : 0;
-                $row['NB_COMMENTS'] = $row['nb_comments'] = $nbComments;
+                $row['nb_comments'] = $nbComments;
+                $nbCommentsForRow = $nbComments;
             }
 
             $name = $this->htmlRenderer->renderElementName($row);
@@ -164,16 +169,11 @@ final readonly class CategoryDefaultRenderer
             $rowPath = $row['path'];
             $rowFile = $row['file'];
 
-            $tplVar = array_merge($row, [
-                'TN_ALT' => htmlspecialchars(strip_tags($name)),
-                'TN_TITLE' => $this->htmlRenderer->getThumbnailTitle($row, $name, $desc),
-                'URL' => $url,
-                'DESCRIPTION' => $desc,
-                'src_image' => new SrcImage(SrcImageInfo::fromRow($row)),
-                'path_ext' => strtolower(StringHelper::getExtension($rowPath)),
-                'file_ext' => strtolower(StringHelper::getExtension($rowFile)),
-            ]);
+            $tnAlt = htmlspecialchars(strip_tags($name));
+            $tnTitle = $this->htmlRenderer->getThumbnailTitle($row, $name, $desc);
+            $srcImage = new SrcImage(SrcImageInfo::fromRow($row));
 
+            $iconTs = null;
             if ($this->currentConfig->indexNewIcon) {
                 // '' falls through get_icon()'s own empty($date) guard
                 // exactly like a non-string/null column value would, so
@@ -182,11 +182,12 @@ final readonly class CategoryDefaultRenderer
                 $recentPeriodRaw = $this->currentUser->get()
                     ->rawAttributes['recent_period'] ?? null;
                 $recentPeriodForIcon = is_numeric($recentPeriodRaw) ? (int) $recentPeriodRaw : 0;
-                $tplVar['icon_ts'] = RecentIconResolver::getIcon($dateAvailable, $recentPeriodForIcon, $this->processCache, $this->lang);
+                $iconTs = RecentIconResolver::getIcon($dateAvailable, $recentPeriodForIcon, $this->processCache, $this->lang);
             }
 
+            $nbHits = null;
             if ((bool) $this->currentUser->get()->rawAttributes['show_nb_hits']) {
-                $tplVar['NB_HITS'] = $row['hit'];
+                $nbHits = $row['hit'];
             }
 
             switch ($section) {
@@ -210,8 +211,17 @@ final readonly class CategoryDefaultRenderer
                     }
                     break;
             }
-            $tplVar['NAME'] = $name;
-            $tplThumbnailsVar[] = $tplVar;
+            $tplThumbnailsVar[] = new ImageThumbnail(
+                id: $row['id'],
+                name: $name,
+                url: $url,
+                tnAlt: $tnAlt,
+                tnTitle: $tnTitle,
+                srcImage: $srcImage,
+                iconTs: $iconTs,
+                nbComments: $nbCommentsForRow,
+                nbHits: $nbHits,
+            );
         }
 
         $indexDeriv = $this->sessionService->getIndexDeriv() ?? ImageStdParams::THUMB;

@@ -8,6 +8,7 @@ use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
+use Piwigo\Category\Projection\ImageThumbnail;
 use Piwigo\Contribution\ThumbnailOverlay;
 use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
@@ -38,7 +39,7 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class ThumbnailsView implements View, HasPageAssets, ExposesPageData
 {
     /**
-     * @param array<int|string, mixed> $thumbnails
+     * @param list<ImageThumbnail> $thumbnails
      * @param list<ThumbnailOverlay> $pluginThumbnailOverlays
      */
     public function __construct(

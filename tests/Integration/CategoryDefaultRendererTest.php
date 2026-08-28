@@ -9,6 +9,7 @@ use LogicException;
 use Override;
 use Piwigo\Category\CategoryDefaultRenderer;
 use Piwigo\Category\Projection\CategoryDefaultResult;
+use Piwigo\Category\Projection\ImageThumbnail;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Common\Enum\Section;
@@ -177,17 +178,9 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         ]));
     }
 
-    /**
-     * @return array<array-key, mixed>
-     */
-    private function thumbnailAt(CategoryDefaultResult $result, int $index): array
+    private function thumbnailAt(CategoryDefaultResult $result, int $index): ImageThumbnail
     {
-        $thumbnail = $result->thumbnails[$index];
-        if (! is_array($thumbnail)) {
-            throw new LogicException('unreachable -- every CategoryDefaultResult::$thumbnails entry is a shaped array');
-        }
-
-        return $thumbnail;
+        return $result->thumbnails[$index];
     }
 
     // CategoryDefaultRenderer::render() only returns raw thumbnail-grid
@@ -267,7 +260,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // id=3's real fixture rating_score is 5.00 -> (string) 5.0 is '5'.
         $result = $this->renderer->render([3], 0, 1, Section::BestRated);
 
-        self::assertSame('(5) Photo 3', $this->thumbnailAt($result, 0)['NAME']);
+        self::assertSame('(5) Photo 3', $this->thumbnailAt($result, 0)->name);
     }
 
     public function testRenderPrefixesTheNameWithTheHitCountForMostVisitedWhenShowNbHitsIsDisabled(): void
@@ -283,7 +276,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
 
         $result = $this->renderer->render([3], 0, 1, Section::MostVisited);
 
-        self::assertSame('(17) Photo 3', $this->thumbnailAt($result, 0)['NAME']);
+        self::assertSame('(17) Photo 3', $this->thumbnailAt($result, 0)->name);
     }
 
     public function testRenderDoesNotPrefixTheNameForMostVisitedWhenShowNbHitsIsEnabled(): void
@@ -298,8 +291,8 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         $result = $this->renderer->render([3], 0, 1, Section::MostVisited);
 
         $thumbnail = $this->thumbnailAt($result, 0);
-        self::assertSame('Photo 3', $thumbnail['NAME']);
-        self::assertSame(17, $thumbnail['NB_HITS']);
+        self::assertSame('Photo 3', $thumbnail->name);
+        self::assertSame(17, $thumbnail->nbHits);
 
         // show_nb_hits=true makes thumbnails.latte display NB_HITS via the
         // "translate_dec" filter (fixed bug: it used to call the
@@ -319,7 +312,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // so countValidatedByImageIds() reaches this real row.
         $result = $this->renderer->render([3], 0, 1, Section::Categories);
 
-        self::assertSame(1, $this->thumbnailAt($result, 0)['NB_COMMENTS']);
+        self::assertSame(1, $this->thumbnailAt($result, 0)->nbComments);
 
         // thumbnails.latte renders NB_COMMENTS via the "translate_dec"
         // filter -- the other of its 2 call sites (NB_HITS is covered

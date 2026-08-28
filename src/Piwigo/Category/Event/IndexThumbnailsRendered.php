@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Category\Event;
 
+use Piwigo\Category\Projection\ImageThumbnail;
+
 /**
  * Typed event for the legacy `loc_end_index_thumbnails` filter. No
  * handler is registered for it anywhere today. Mutable on
@@ -12,7 +14,7 @@ namespace Piwigo\Category\Event;
 final class IndexThumbnailsRendered
 {
     /**
-     * @param array<mixed> $tplThumbnailsVar
+     * @param list<ImageThumbnail> $tplThumbnailsVar
      * @param array<mixed> $pictures
      */
     public function __construct(

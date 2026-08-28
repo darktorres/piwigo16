@@ -19,7 +19,7 @@ use Piwigo\Image\DerivativeParams;
 final readonly class CategoryDefaultResult
 {
     /**
-     * @param array<int|string, mixed> $thumbnails
+     * @param list<ImageThumbnail> $thumbnails
      */
     public function __construct(
         public ?string $slideshowUrl,

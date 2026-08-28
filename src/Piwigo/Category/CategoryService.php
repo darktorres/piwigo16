@@ -825,6 +825,13 @@ final readonly class CategoryService
                 'SELECTED' => $selectedCategory !== null && $selectedIdStr !== null && $selectedIdStr === $rowIdStr,
                 'IS_UPPERCAT' => $selectedCategory !== null && $selectedIdUppercatStr !== null && $selectedIdUppercatStr === $rowIdStr,
             ];
+            // Always set, null when the feature is off, rather than the
+            // key being absent: menubar_categories.latte asks
+            // `$cat['icon_ts'] !== null`, and unlike the `!empty()` that
+            // preceded it, that does not suppress an undefined-key warning.
+            // Same rendered output either way -- both are false -- but one
+            // of them says so quietly.
+            $row['icon_ts'] = null;
             if ($this->currentConfig->indexNewIcon) {
                 $maxDateLast = $computedRow->maxDateLast;
                 $recentPeriodForIcon = is_numeric($user->rawAttributes['recent_period'] ?? null) ? (int) $user->rawAttributes['recent_period'] : 0;

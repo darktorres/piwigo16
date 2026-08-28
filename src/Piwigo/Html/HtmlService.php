@@ -335,6 +335,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
      *
      * @return list<array{id: string, name: string}>
      */
+    #[Override]
     public function getCatBreadcrumb(string $uppercats): array
     {
         $breadcrumb = [];

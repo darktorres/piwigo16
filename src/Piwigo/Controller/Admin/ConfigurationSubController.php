@@ -884,16 +884,13 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             case 'search':
 
                 $search = new ConfigurationSearchTabData(
-                    filtersViews: array_map(
-                        static fn (FilterViewDefinition $d): array => $d->toArray(),
-                        $this->currentConfig->filtersViews->filters ?? $this->currentConfig->defaultFiltersViews,
-                    ),
+                    filtersViews: $this->currentConfig->filtersViews->filters ?? $this->currentConfig->defaultFiltersViews,
                     lastFiltersConf: $this->currentConfig->filtersViews->lastFiltersConf ?? false,
                     filtersNames: $filters_names_checkboxes,
                 );
 
                 $view = new ConfigurationSearchView(
-                    search: $search->toArray(),
+                    search: $search,
                     showFilterRatings: $this->currentConfig->rateEnabled,
                     fAction: $action,
                     saveSuccess: $save_success,

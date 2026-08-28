@@ -21,11 +21,8 @@ use Piwigo\Template\Latte\Attribute\Template;
 #[Template('configuration_search.latte')]
 final readonly class ConfigurationSearchView implements View, HasPageAssets, ExposesPageData
 {
-    /**
-     * @param array<string, mixed> $search
-     */
     public function __construct(
-        public array $search,
+        public ConfigurationSearchTabData $search,
         public bool $showFilterRatings,
         public string $fAction,
         public ?string $saveSuccess,
@@ -50,15 +47,15 @@ final readonly class ConfigurationSearchView implements View, HasPageAssets, Exp
     /**
      * `configuration_search.latte`'s own unconditional
      * `{do exposeData('filters_names', $search['filters_names'])}`
-     * (docs/PLAN.md's P42-B).
+     * (docs/PLAN.md's P42-B). The key name is the one
+     * `configuration_search.ts` reads through `pwg_getPageData()` and
+     * does not follow the property rename.
      */
     #[Override]
     public function exposedPageData(): array
     {
-        $filtersNames = $this->search['filters_names'] ?? [];
-
         return [
-            'filters_names' => is_array($filtersNames) ? array_values($filtersNames) : [],
+            'filters_names' => $this->search->filtersNames,
         ];
     }
 

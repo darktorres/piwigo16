@@ -154,3 +154,36 @@ it('swaps the custom logo upload and reuse panels', function (): void {
 
     $page->assertNoJavaScriptErrors();
 });
+
+// `last_filters_conf` is a sibling of the per-filter entries inside the
+// `filters_views` config value, and the template read it as if it were
+// nested one level deeper (`$search['filters_views']['last_filters_conf']`).
+// The lookup therefore always missed and the box always rendered unchecked,
+// however the setting was actually stored. The golden fixture could not see
+// it: the fixture DB has the setting off, which is also what the bug
+// rendered. This is the state that tells the two apart.
+it('checks the last-used-filters box when that preference is enabled', function (): void {
+    $snapshot = H::snapshotConfig(['filters_views']);
+    $filtersViews = json_encode([
+        'words' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'last_filters_conf' => true,
+    ], JSON_THROW_ON_ERROR);
+    H::setConfigValue('filters_views', $filtersViews);
+
+    try {
+        $page = H::asAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=configuration&section=search');
+
+        /** @var bool $checked */
+        $checked = $page->script("document.getElementById('lastFilters').checked");
+        expect($checked)
+            ->toBeTrue();
+
+        $page->assertNoJavaScriptErrors();
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});

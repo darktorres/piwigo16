@@ -125,7 +125,7 @@
           class="pwg-state-default pwg-button"
         >
           <span
-            n:if="$button->icon"
+            n:if="$button->icon !== null && $button->icon !== ''"
             class="{$button->icon}"
           >&nbsp;</span><span>{$button->label}</span>
         </a>

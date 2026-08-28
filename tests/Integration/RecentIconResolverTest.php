@@ -9,6 +9,7 @@ use Override;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ProcessCache;
+use Piwigo\Core\Projection\RecentIcon;
 use Piwigo\Core\RecentIconResolver;
 use Piwigo\Tests\Support\DbTransactionTestOverride;
 
@@ -68,10 +69,10 @@ final class RecentIconResolverTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function testGetIconReturnsFalseForAnEmptyOrZeroDate(): void
+    public function testGetIconReturnsNullForAnEmptyOrZeroDate(): void
     {
-        self::assertFalse(RecentIconResolver::getIcon('', 7, $this->processCache, $this->lang));
-        self::assertFalse(RecentIconResolver::getIcon('0', 7, $this->processCache, $this->lang));
+        self::assertNull(RecentIconResolver::getIcon('', 7, $this->processCache, $this->lang));
+        self::assertNull(RecentIconResolver::getIcon('0', 7, $this->processCache, $this->lang));
     }
 
     public function testGetIconReturnsTheTitleIconForADateWithinTheRecentPeriod(): void
@@ -80,30 +81,24 @@ final class RecentIconResolverTest extends IntegrationTestCase
         // 2026-07-30 is within the recent window.
         $result = RecentIconResolver::getIcon('2026-07-30', 7, $this->processCache, $this->lang);
 
-        self::assertIsArray($result);
-        if (! array_key_exists('TITLE', $result)) {
-            self::fail('Expected getIcon() to return a TITLE key: ' . var_export($result, true));
-        }
-        self::assertSame('photos posted during the last 7 days', $result['TITLE']);
-        self::assertFalse($result['IS_CHILD_DATE']);
+        self::assertInstanceOf(RecentIcon::class, $result);
+        self::assertSame('photos posted during the last 7 days', $result->title);
+        self::assertFalse($result->isChildDate);
     }
 
-    public function testGetIconReturnsAnEmptyArrayForADateOutsideTheRecentPeriod(): void
+    public function testGetIconReturnsNullForADateOutsideTheRecentPeriod(): void
     {
-        $result = RecentIconResolver::getIcon('2026-07-01', 7, $this->processCache, $this->lang);
-
-        self::assertSame([], $result);
+        // Was an empty array, distinct from the false above; both meant
+        // "render nothing" and both are null now.
+        self::assertNull(RecentIconResolver::getIcon('2026-07-01', 7, $this->processCache, $this->lang));
     }
 
     public function testGetIconPropagatesTheIsChildDateFlag(): void
     {
         $result = RecentIconResolver::getIcon('2026-07-30', 7, $this->processCache, $this->lang, true);
 
-        self::assertIsArray($result);
-        if (! array_key_exists('IS_CHILD_DATE', $result)) {
-            self::fail('Expected getIcon() to return an IS_CHILD_DATE key: ' . var_export($result, true));
-        }
-        self::assertTrue($result['IS_CHILD_DATE']);
+        self::assertInstanceOf(RecentIcon::class, $result);
+        self::assertTrue($result->isChildDate);
     }
 
     public function testGetIconReusesThePerRequestCacheForARepeatedDate(): void
@@ -111,6 +106,10 @@ final class RecentIconResolverTest extends IntegrationTestCase
         $first = RecentIconResolver::getIcon('2026-07-30', 7, $this->processCache, $this->lang);
         $second = RecentIconResolver::getIcon('2026-07-30', 7, $this->processCache, $this->lang);
 
-        self::assertSame($first, $second);
+        // assertEquals, not assertSame: getIcon() builds a fresh RecentIcon
+        // per call, so the two are equal by value and distinct by identity.
+        // On the arrays this used to return, assertSame compared by value
+        // and did not notice the difference.
+        self::assertEquals($first, $second);
     }
 }

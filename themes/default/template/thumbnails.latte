@@ -41,8 +41,8 @@
           <span n:if="$showThumbnailCaption" class="thumbLegend">
             <span class="thumbName">{$thumbnail['NAME']}</span>
             <img
-              n:if="!empty($thumbnail['icon_ts'])"
-              title="{$thumbnail['icon_ts']['TITLE']}"
+              n:if="$thumbnail['icon_ts'] !== null"
+              title="{$thumbnail['icon_ts']->title}"
               src="{$ROOT_URL}{$themeconf['icon_dir']}/recent.png"
               alt="(!)"
             >

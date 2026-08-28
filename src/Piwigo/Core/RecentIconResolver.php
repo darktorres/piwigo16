@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Piwigo\Core\Projection\RecentIcon;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialectExecutor;
 
@@ -24,14 +25,14 @@ use Piwigo\Db\SqlDialectExecutor;
 final class RecentIconResolver
 {
     /**
-     * return an array which will be sent to template to display recent icon
-     *
-     * @return false|array{}|array{TITLE: string, IS_CHILD_DATE: bool}
+     * The recent-posted marker for a template, or null when there is none
+     * to show -- which covers both "no date to judge" and "that date is not
+     * recent", the two cases this used to return `false` and `[]` for.
      */
-    public static function getIcon(string $date, int $recentPeriod, ProcessCache $processCache, Lang $lang, bool $isChildDate = false): false|array
+    public static function getIcon(string $date, int $recentPeriod, ProcessCache $processCache, Lang $lang, bool $isChildDate = false): ?RecentIcon
     {
         if ($date === '' || $date === '0') {
-            return false;
+            return null;
         }
 
         $recent_period = $recentPeriod;
@@ -46,14 +47,14 @@ final class RecentIconResolver
             );
         }
 
-        $icon = [
-            'TITLE' => is_string($get_icon_cache['title']) ? $get_icon_cache['title'] : '',
-            'IS_CHILD_DATE' => $isChildDate,
-        ];
+        $icon = new RecentIcon(
+            title: is_string($get_icon_cache['title']) ? $get_icon_cache['title'] : '',
+            isChildDate: $isChildDate,
+        );
 
         if (isset($get_icon_cache[$date])) {
             $processCache->set('get_icon', $get_icon_cache);
-            return ((bool) $get_icon_cache[$date]) ? $icon : [];
+            return ((bool) $get_icon_cache[$date]) ? $icon : null;
         }
 
         if (! isset($get_icon_cache['sql_recent_date'])) {
@@ -65,6 +66,6 @@ final class RecentIconResolver
         $get_icon_cache[$date] = $date > $get_icon_cache['sql_recent_date'];
         $processCache->set('get_icon', $get_icon_cache);
 
-        return $get_icon_cache[$date] ? $icon : [];
+        return $get_icon_cache[$date] ? $icon : null;
     }
 }

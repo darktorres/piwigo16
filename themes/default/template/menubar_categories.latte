@@ -49,9 +49,9 @@
       title="{$cat['TITLE']}"
     >{$cat['count_images']}</span>
     <img
-      n:if="!empty($cat['icon_ts'])"
-      title="{$cat['icon_ts']['TITLE']}"
-      src="{$ROOT_URL}{$themeconf['icon_dir']}/recent{if $cat['icon_ts']['IS_CHILD_DATE']}_by_child{/if}.png"
+      n:if="$cat['icon_ts'] !== null"
+      title="{$cat['icon_ts']->title}"
+      src="{$ROOT_URL}{$themeconf['icon_dir']}/recent{if $cat['icon_ts']->isChildDate}_by_child{/if}.png"
       class="icon"
       alt="(!)"
     >

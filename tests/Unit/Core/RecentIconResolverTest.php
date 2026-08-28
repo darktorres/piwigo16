@@ -9,6 +9,7 @@ use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
+use Piwigo\Core\Projection\RecentIcon;
 use Piwigo\Core\RecentIconResolver;
 use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -32,18 +33,18 @@ function recentIconResolverTestLang(): Lang
     return new Lang(new Translator($currentConfig, new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
 }
 
-test('getIcon returns false for an empty date string', function (): void {
+test('getIcon returns null for an empty date string', function (): void {
     $result = RecentIconResolver::getIcon('', 7, new ProcessCache(), recentIconResolverTestLang());
 
     expect($result)
-        ->toBeFalse();
+        ->toBeNull();
 });
 
-test('getIcon returns false for a "0" date string', function (): void {
+test('getIcon returns null for a "0" date string', function (): void {
     $result = RecentIconResolver::getIcon('0', 7, new ProcessCache(), recentIconResolverTestLang());
 
     expect($result)
-        ->toBeFalse();
+        ->toBeNull();
 });
 
 test('getIcon returns the icon with the cached title when the date is already cached as recent', function (): void {
@@ -55,14 +56,14 @@ test('getIcon returns the icon with the cached title when the date is already ca
 
     $result = RecentIconResolver::getIcon('2026-01-01 00:00:00', 7, $processCache, recentIconResolverTestLang(), isChildDate: true);
 
+    // toEqual, not toBe: getIcon() returns a fresh RecentIcon per call, so
+    // identity never matches. On the array this used to return, toBe
+    // compared by value and the distinction did not arise.
     expect($result)
-        ->toBe([
-            'TITLE' => 'SENTINEL-CACHED-TITLE',
-            'IS_CHILD_DATE' => true,
-        ]);
+        ->toEqual(new RecentIcon(title: 'SENTINEL-CACHED-TITLE', isChildDate: true));
 });
 
-test('getIcon returns an empty array when the date is already cached as not recent', function (): void {
+test('getIcon returns null when the date is already cached as not recent', function (): void {
     $processCache = new ProcessCache();
     $processCache->set('get_icon', [
         'title' => 'SENTINEL-CACHED-TITLE',
@@ -72,7 +73,7 @@ test('getIcon returns an empty array when the date is already cached as not rece
     $result = RecentIconResolver::getIcon('2020-01-01 00:00:00', 7, $processCache, recentIconResolverTestLang());
 
     expect($result)
-        ->toBe([]);
+        ->toBeNull();
 });
 
 test('getIcon computes and caches a fresh comparison against a cached sql_recent_date cutoff', function (): void {
@@ -86,12 +87,9 @@ test('getIcon computes and caches a fresh comparison against a cached sql_recent
     $oldResult = RecentIconResolver::getIcon('2024-01-01 00:00:00', 7, $processCache, recentIconResolverTestLang());
 
     expect($recentResult)
-        ->toBe([
-            'TITLE' => 'SENTINEL-CACHED-TITLE',
-            'IS_CHILD_DATE' => false,
-        ])
+        ->toEqual(new RecentIcon(title: 'SENTINEL-CACHED-TITLE', isChildDate: false))
         ->and($oldResult)
-        ->toBe([]);
+        ->toBeNull();
 
     $cached = $processCache->get('get_icon');
     expect($cached)

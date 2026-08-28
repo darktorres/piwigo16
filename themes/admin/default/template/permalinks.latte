@@ -84,7 +84,10 @@
       <td>{='Hit'|translate} {$sortOldHit|noescape}</td>
       <td class="hit-history-spacer"></td>
     </tr>
-    <tr n:foreach="$deletedPermalinks as $deletedPermalink" class="permalink-row">
+    <tr
+      n:foreach="$deletedPermalinks as $deletedPermalink"
+      class="permalink-row"
+    >
       <td class="centered-cell">{$deletedPermalink->catId}</td>
       <td>{$deletedPermalink->name|noescape}</td>
       <td>{$deletedPermalink->permalink}</td>

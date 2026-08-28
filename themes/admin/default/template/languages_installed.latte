@@ -11,9 +11,7 @@
   <div class="languageBoxes">
     {foreach $languages as $language}
       {if $language->state == $language_state}
-        <div
-          class="languageBox{if $language->isDefault} languageDefault{/if}"
-        >
+        <div class="languageBox{if $language->isDefault} languageDefault{/if}">
           <div class="languageName">{$language->name}<em
               n:if="$language->isDefault"
             >({='default'|translate})</em></div>

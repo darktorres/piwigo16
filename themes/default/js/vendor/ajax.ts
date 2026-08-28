@@ -81,9 +81,31 @@ export interface AjaxOptions<T = unknown> {
  * rejects with a 422.
  */
 function paramValue(value: unknown): string {
-  const resolved = typeof value === "function" ? (value as () => unknown)() : value;
+  const resolved =
+    typeof value === "function" ? (value as () => unknown)() : value;
 
-  return resolved === null || resolved === undefined ? "" : String(resolved);
+  if (resolved === null || resolved === undefined) {
+    return "";
+  }
+
+  // Narrowed positively, one primitive at a time: excluding cases from
+  // `unknown` does not narrow it, so a trailing `String(resolved)` would
+  // still be stringifying `unknown`.
+  switch (typeof resolved) {
+    case "string":
+      return resolved;
+    case "number":
+    case "boolean":
+    case "bigint":
+    case "symbol":
+      return String(resolved);
+    default:
+      // jQuery passes the value straight to `encodeURIComponent`, which
+      // stringifies it -- a plain object becomes "[object Object]". Kept as
+      // jQuery has it rather than "improved" into JSON: no call site passes
+      // one, and diverging would be a silent behaviour change, not a fix.
+      return Object.prototype.toString.call(resolved);
+  }
 }
 
 export function param(data: Record<string, unknown>): string {

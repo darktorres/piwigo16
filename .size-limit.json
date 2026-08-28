@@ -1,7 +1,717 @@
 [
   {
-    "name": "noop (placeholder — real per-entry budgets land in P52)",
-    "path": "dist/assets/noop-*.js",
-    "limit": "1 KB"
+    "name": "adminHelp",
+    "path": ["dist/assets/adminHelp-*.js"],
+    "limit": "3 KB",
+    "running": false
+  },
+  {
+    "name": "adminShell",
+    "path": ["dist/assets/adminShell-*.js", "dist/assets/page-data-*.js"],
+    "limit": "3 KB",
+    "running": false
+  },
+  {
+    "name": "albumNotification",
+    "path": ["dist/assets/albumNotification-*.js", "dist/assets/common-*.js"],
+    "limit": "4 KB",
+    "running": false
+  },
+  {
+    "name": "albums",
+    "path": [
+      "dist/assets/ajax-*.js",
+      "dist/assets/albums-*.js",
+      "dist/assets/common-*.js",
+      "dist/assets/page-data-*.js"
+    ],
+    "limit": "9 KB",
+    "running": false
+  },
+  {
+    "name": "batchManagerFilter",
+    "path": [
+      "dist/assets/ajax-*.js",
+      "dist/assets/album_selector-*.js",
+      "dist/assets/batchManagerFilter-*.js",
+      "dist/assets/common-*.js",
+      "dist/assets/dom-*.js",
+      "dist/assets/doubleSlider-*.js",
+      "dist/assets/page-data-*.js"
+    ],
+    "limit": "13 KB",
+    "running": false
+  },
+  {
+    "name": "batchManagerGlobalPage",
+    "path": [
+      "dist/assets/LocalStorageCache-*.js",
+      "dist/assets/addAlbum-*.js",
+      "dist/assets/ajax-*.js",
+      "dist/assets/album_selector-*.js",
+      "dist/assets/batchManagerGlobalPage-*.js",
+      "dist/assets/common-*.js",
+      "dist/assets/datepicker-*.js",
+      "dist/assets/dom-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/scripts-*.js"
+    ],
+    "limit": "19 KB",
+    "running": false
+  },
+  {
+    "name": "batchManagerUnit",
+    "path": [
+      "dist/assets/LocalStorageCache-*.js",
+      "dist/assets/ajax-*.js",
+      "dist/assets/album_selector-*.js",
+      "dist/assets/batchManagerUnit-*.js",
+      "dist/assets/common-*.js",
+      "dist/assets/dom-*.js",
+      "dist/assets/page-data-*.js"
+    ],
+    "limit": "15 KB",
+    "running": false
+  },
+  {
+    "name": "batchManagerUnitPage",
+    "path": [
+      "dist/assets/autosize-*.js",
+      "dist/assets/batchManagerUnitPage-*.js",
+      "dist/assets/datepicker-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/scripts-*.js"
+    ],
+    "limit": "4 KB",
+    "running": false
+  },
+  {
+    "name": "catList",
+    "path": ["dist/assets/catList-*.js", "dist/assets/common-*.js"],
+    "limit": "5 KB",
+    "running": false
+  },
+  {
+    "name": "catModify",
+    "path": [
+      "dist/assets/ajax-*.js",
+      "dist/assets/album_selector-*.js",
+      "dist/assets/catModify-*.js",
+      "dist/assets/common-*.js",
+      "dist/assets/dom-*.js",
+      "dist/assets/page-data-*.js"
+    ],
+    "limit": "14 KB",
+    "running": false
+  },
+  {
+    "name": "catPerm",
+    "path": [
+      "dist/assets/LocalStorageCache-*.js",
+      "dist/assets/ajax-*.js",
+      "dist/assets/catPerm-*.js",
+      "dist/assets/common-*.js",
+      "dist/assets/page-data-*.js"
+    ],
+    "limit": "7 KB",
+    "running": false
+  },
+  {
+    "name": "catSearch",
+    "path": [
+      "dist/assets/ajax-*.js",
+      "dist/assets/album_selector-*.js",
+      "dist/assets/albums-*.js",
+      "dist/assets/catSearch-*.js",
+      "dist/assets/common-*.js",
+      "dist/assets/dom-*.js",
+      "dist/assets/page-data-*.js"
+    ],
+    "limit": "17 KB",
+    "running": false
+  },
+  {
+    "name": "checkIntegrity",
+    "path": [
+      "dist/assets/checkIntegrity-*.js",
+      "dist/assets/dom-*.js",
+      "dist/assets/page-data-*.js"
+    ],
+    "limit": "6 KB",
+    "running": false
+  },
+  {
+    "name": "comments",
+    "path": [
+      "dist/assets/ajax-*.js",
+      "dist/assets/comments-*.js",
+      "dist/assets/common-*.js",
+      "dist/assets/page-data-*.js"
+    ],
+    "limit": "8 KB",
+    "running": false
+  },
+  {
+    "name": "configurationComments",
+    "path": [
+      "dist/assets/common-*.js",
+      "dist/assets/configurationComments-*.js",
+      "dist/assets/dom-*.js"
+    ],
+    "limit": "8 KB",
+    "running": false
+  },
+  {
+    "name": "configurationDefaultPage",
+    "path": [
+      "dist/assets/common-*.js",
+      "dist/assets/configurationDefaultPage-*.js"
+    ],
+    "limit": "4 KB",
+    "running": false
+  },
+  {
+    "name": "configurationDisplayPage",
+    "path": [
+      "dist/assets/common-*.js",
+      "dist/assets/configurationDisplayPage-*.js"
+    ],
+    "limit": "4 KB",
+    "running": false
+  },
+  {
+    "name": "configurationMain",
+    "path": [
+      "dist/assets/common-*.js",
+      "dist/assets/configurationMain-*.js",
+      "dist/assets/page-data-*.js"
+    ],
+    "limit": "5 KB",
+    "running": false
+  },
+  {
+    "name": "configurationSearch",
+    "path": [
+      "dist/assets/common-*.js",
+      "dist/assets/configurationSearch-*.js",
+      "dist/assets/dom-*.js",
+      "dist/assets/page-data-*.js"
+    ],
+    "limit": "8 KB",
+    "running": false
+  },
+  {
+    "name": "configurationSizes",
+    "path": [
+      "dist/assets/common-*.js",
+      "dist/assets/configurationSizes-*.js",
+      "dist/assets/page-data-*.js"
+    ],
+    "limit": "5 KB",
+    "running": false
+  },
+  {
+    "name": "configurationWatermark",
+    "path": [
+      "dist/assets/common-*.js",
+      "dist/assets/configurationWatermark-*.js",
+      "dist/assets/dom-*.js",
+      "dist/assets/page-data-*.js"
+    ],
+    "limit": "8 KB",
+    "running": false
+  },
+  {
+    "name": "coreScriptsPage",
+    "path": [
+      "dist/assets/coreScriptsPage-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/scripts-*.js"
+    ],
+    "limit": "3 KB",
+    "running": false
+  },
+  {
+    "name": "elementSetRanks",
+    "path": ["dist/assets/common-*.js", "dist/assets/elementSetRanks-*.js"],
+    "limit": "4 KB",
+    "running": false
+  },
+  {
+    "name": "footerAdmin",
+    "path": [
+      "dist/assets/ajax-*.js",
+      "dist/assets/footerAdmin-*.js",
+      "dist/assets/page-data-*.js"
+    ],
+    "limit": "4 KB",
+    "running": false
+  },
+  {
+    "name": "groupList",
+    "path": [
+      "dist/assets/LocalStorageCache-*.js",
+      "dist/assets/ajax-*.js",
+      "dist/assets/common-*.js",
+      "dist/assets/groupList-*.js",
+      "dist/assets/page-data-*.js"
+    ],
+    "limit": "11 KB",
+    "running": false
+  },
+  {
+    "name": "history",
+    "path": [
+      "dist/assets/ajax-*.js",
+      "dist/assets/common-*.js",
+      "dist/assets/history-*.js",
+      "dist/assets/page-data-*.js"
+    ],
+    "limit": "9 KB",
+    "running": false
+  },
+  {
+    "name": "historyPage",
+    "path": ["dist/assets/datepicker-*.js", "dist/assets/historyPage-*.js"],
+    "limit": "4 KB",
+    "running": false
+  },
+  {
+    "name": "index",
+    "path": [
+      "dist/assets/dom-*.js",
+      "dist/assets/index-*.js",
+      "dist/assets/switchbox-*.js"
+    ],
+    "limit": "6 KB",
+    "running": false
+  },
+  {
+    "name": "install",
+    "path": [
+      "dist/assets/ajax-*.js",
+      "dist/assets/dom-*.js",
+      "dist/assets/install-*.js",
+      "dist/assets/page-data-*.js"
+    ],
+    "limit": "8 KB",
+    "running": false
+  },
+  {
+    "name": "introPage",
+    "path": [
+      "dist/assets/ajax-*.js",
+      "dist/assets/dom-*.js",
+      "dist/assets/introPage-*.js",
+      "dist/assets/page-data-*.js"
+    ],
+    "limit": "9 KB",
+    "running": false
+  },
+  {
+    "name": "languagesInstalled",
+    "path": [
+      "dist/assets/common-*.js",
+      "dist/assets/languagesInstalled-*.js",
+      "dist/assets/page-data-*.js"
+    ],
+    "limit": "4 KB",
+    "running": false
+  },
+  {
+    "name": "languagesNew",
+    "path": ["dist/assets/languagesNew-*.js"],
+    "limit": "3 KB",
+    "running": false
+  },
+  {
+    "name": "maintenance",
+    "path": [
+      "dist/assets/ajax-*.js",
+      "dist/assets/dom-*.js",
+      "dist/assets/maintenance-*.js",
+      "dist/assets/page-data-*.js"
+    ],
+    "limit": "8 KB",
+    "running": false
+  },
+  {
+    "name": "maintenanceActions",
+    "path": [
+      "dist/assets/common-*.js",
+      "dist/assets/maintenanceActions-*.js",
+      "dist/assets/page-data-*.js"
+    ],
+    "limit": "5 KB",
+    "running": false
+  },
+  {
+    "name": "mcs",
+    "path": [
+      "dist/assets/ajax-*.js",
+      "dist/assets/album_selector-*.js",
+      "dist/assets/common-*.js",
+      "dist/assets/dom-*.js",
+      "dist/assets/doubleSlider-*.js",
+      "dist/assets/mcs-*.js",
+      "dist/assets/page-data-*.js"
+    ],
+    "limit": "19 KB",
+    "running": false
+  },
+  {
+    "name": "menubarAdmin",
+    "path": ["dist/assets/common-*.js", "dist/assets/menubarAdmin-*.js"],
+    "limit": "4 KB",
+    "running": false
+  },
+  {
+    "name": "menubarLinks",
+    "path": ["dist/assets/menubarLinks-*.js"],
+    "limit": "3 KB",
+    "running": false
+  },
+  {
+    "name": "menubarQuicksearch",
+    "path": [
+      "dist/assets/menubarQuicksearch-*.js",
+      "dist/assets/page-data-*.js"
+    ],
+    "limit": "3 KB",
+    "running": false
+  },
+  {
+    "name": "noop",
+    "path": ["dist/assets/noop-*.js"],
+    "limit": "3 KB",
+    "running": false
+  },
+  {
+    "name": "notificationByMail",
+    "path": ["dist/assets/dom-*.js", "dist/assets/notificationByMail-*.js"],
+    "limit": "6 KB",
+    "running": false
+  },
+  {
+    "name": "notificationByMailPage",
+    "path": [
+      "dist/assets/autosize-*.js",
+      "dist/assets/notificationByMailPage-*.js"
+    ],
+    "limit": "3 KB",
+    "running": false
+  },
+  {
+    "name": "permalinks",
+    "path": [
+      "dist/assets/dom-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/permalinks-*.js"
+    ],
+    "limit": "6 KB",
+    "running": false
+  },
+  {
+    "name": "photosAddApplications",
+    "path": ["dist/assets/photosAddApplications-*.js"],
+    "limit": "3 KB",
+    "running": false
+  },
+  {
+    "name": "photosAddDirect",
+    "path": [
+      "dist/assets/ajax-*.js",
+      "dist/assets/album_selector-*.js",
+      "dist/assets/common-*.js",
+      "dist/assets/dom-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/photosAddDirect-*.js",
+      "dist/assets/rolldown-runtime-*.js"
+    ],
+    "limit": "32 KB",
+    "running": false
+  },
+  {
+    "name": "photosAddDirectPage",
+    "path": [
+      "dist/assets/addAlbum-*.js",
+      "dist/assets/ajax-*.js",
+      "dist/assets/photosAddDirectPage-*.js"
+    ],
+    "limit": "4 KB",
+    "running": false
+  },
+  {
+    "name": "picture",
+    "path": [
+      "dist/assets/ajax-*.js",
+      "dist/assets/dom-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/picture-*.js",
+      "dist/assets/scripts-*.js",
+      "dist/assets/switchbox-*.js"
+    ],
+    "limit": "9 KB",
+    "running": false
+  },
+  {
+    "name": "pictureCoi",
+    "path": ["dist/assets/page-data-*.js", "dist/assets/pictureCoi-*.js"],
+    "limit": "3 KB",
+    "running": false
+  },
+  {
+    "name": "pictureFormats",
+    "path": [
+      "dist/assets/ajax-*.js",
+      "dist/assets/common-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/pictureFormats-*.js"
+    ],
+    "limit": "6 KB",
+    "running": false
+  },
+  {
+    "name": "pictureModify",
+    "path": [
+      "dist/assets/LocalStorageCache-*.js",
+      "dist/assets/ajax-*.js",
+      "dist/assets/album_selector-*.js",
+      "dist/assets/common-*.js",
+      "dist/assets/dom-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/pictureModify-*.js"
+    ],
+    "limit": "14 KB",
+    "running": false
+  },
+  {
+    "name": "pictureModifyPage",
+    "path": [
+      "dist/assets/autosize-*.js",
+      "dist/assets/datepicker-*.js",
+      "dist/assets/pictureModifyPage-*.js"
+    ],
+    "limit": "4 KB",
+    "running": false
+  },
+  {
+    "name": "pictureNavButtons",
+    "path": [
+      "dist/assets/page-data-*.js",
+      "dist/assets/pictureNavButtons-*.js"
+    ],
+    "limit": "3 KB",
+    "running": false
+  },
+  {
+    "name": "pluginsInstalledPage",
+    "path": [
+      "dist/assets/ajax-*.js",
+      "dist/assets/common-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/pluginsInstalledPage-*.js"
+    ],
+    "limit": "7 KB",
+    "running": false
+  },
+  {
+    "name": "pluginsNew",
+    "path": [
+      "dist/assets/ajax-*.js",
+      "dist/assets/common-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/pluginsNew-*.js"
+    ],
+    "limit": "7 KB",
+    "running": false
+  },
+  {
+    "name": "popuphelp",
+    "path": ["dist/assets/dom-*.js", "dist/assets/popuphelp-*.js"],
+    "limit": "6 KB",
+    "running": false
+  },
+  {
+    "name": "profile",
+    "path": [
+      "dist/assets/ajax-*.js",
+      "dist/assets/common-*.js",
+      "dist/assets/dom-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/profile-*.js"
+    ],
+    "limit": "12 KB",
+    "running": false
+  },
+  {
+    "name": "rating",
+    "path": [
+      "dist/assets/ajax-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/rating-*.js",
+      "dist/assets/scripts-*.js"
+    ],
+    "limit": "5 KB",
+    "running": false
+  },
+  {
+    "name": "ratingAdmin",
+    "path": [
+      "dist/assets/LocalStorageCache-*.js",
+      "dist/assets/ajax-*.js",
+      "dist/assets/common-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/ratingAdmin-*.js",
+      "dist/assets/scripts-*.js"
+    ],
+    "limit": "8 KB",
+    "running": false
+  },
+  {
+    "name": "ratingUser",
+    "path": [
+      "dist/assets/ajax-*.js",
+      "dist/assets/common-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/ratingUser-*.js",
+      "dist/assets/scripts-*.js"
+    ],
+    "limit": "7 KB",
+    "running": false
+  },
+  {
+    "name": "siteManager",
+    "path": [
+      "dist/assets/common-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/siteManager-*.js"
+    ],
+    "limit": "4 KB",
+    "running": false
+  },
+  {
+    "name": "siteUpdate",
+    "path": ["dist/assets/dom-*.js", "dist/assets/siteUpdate-*.js"],
+    "limit": "6 KB",
+    "running": false
+  },
+  {
+    "name": "standardPages",
+    "path": [
+      "dist/assets/dom-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/standardPages-*.js"
+    ],
+    "limit": "7 KB",
+    "running": false
+  },
+  {
+    "name": "stats",
+    "path": [
+      "dist/assets/dom-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/rolldown-runtime-*.js",
+      "dist/assets/stats-*.js"
+    ],
+    "limit": "121 KB",
+    "running": false
+  },
+  {
+    "name": "tags",
+    "path": [
+      "dist/assets/ajax-*.js",
+      "dist/assets/common-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/tags-*.js"
+    ],
+    "limit": "10 KB",
+    "running": false
+  },
+  {
+    "name": "themesInstalled",
+    "path": [
+      "dist/assets/common-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/themesInstalled-*.js"
+    ],
+    "limit": "5 KB",
+    "running": false
+  },
+  {
+    "name": "themesNew",
+    "path": [
+      "dist/assets/dom-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/themesNew-*.js"
+    ],
+    "limit": "6 KB",
+    "running": false
+  },
+  {
+    "name": "themesStandardPages",
+    "path": [
+      "dist/assets/common-*.js",
+      "dist/assets/dom-*.js",
+      "dist/assets/themesStandardPages-*.js"
+    ],
+    "limit": "8 KB",
+    "running": false
+  },
+  {
+    "name": "thumbnailsLoader",
+    "path": ["dist/assets/page-data-*.js", "dist/assets/thumbnailsLoader-*.js"],
+    "limit": "3 KB",
+    "running": false
+  },
+  {
+    "name": "updatesExt",
+    "path": [
+      "dist/assets/ajax-*.js",
+      "dist/assets/common-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/updatesExt-*.js"
+    ],
+    "limit": "6 KB",
+    "running": false
+  },
+  {
+    "name": "updatesPwg",
+    "path": [
+      "dist/assets/dom-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/updatesPwg-*.js"
+    ],
+    "limit": "6 KB",
+    "running": false
+  },
+  {
+    "name": "userActivity",
+    "path": [
+      "dist/assets/LocalStorageCache-*.js",
+      "dist/assets/ajax-*.js",
+      "dist/assets/common-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/userActivity-*.js"
+    ],
+    "limit": "9 KB",
+    "running": false
+  },
+  {
+    "name": "userList",
+    "path": [
+      "dist/assets/ajax-*.js",
+      "dist/assets/common-*.js",
+      "dist/assets/page-data-*.js",
+      "dist/assets/userList-*.js"
+    ],
+    "limit": "16 KB",
+    "running": false
+  },
+  {
+    "name": "vitals",
+    "path": ["dist/vitals.js"],
+    "limit": "5 KB",
+    "running": false
   }
 ]

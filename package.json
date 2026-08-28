@@ -20,7 +20,8 @@
     "format:latte": "prettier --check --plugin=./tools/latte-prettier/plugin.cjs \"{themes,template-extension}/**/*.latte\"",
     "format:latte:fix": "prettier --write --plugin=./tools/latte-prettier/plugin.cjs \"{themes,template-extension}/**/*.latte\"",
     "knip": "knip",
-    "size-limit": "size-limit"
+    "size-limit": "node tools/size-budget.mjs --verify && size-limit",
+    "size:update": "node tools/size-budget.mjs --update && prettier --write .size-limit.json"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.2",

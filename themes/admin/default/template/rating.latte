@@ -75,25 +75,25 @@
     valign="top"
     class="{if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}"
   >
-    <td><a href="{$image['U_URL']|noescape}"><img
-          src="{$image['U_THUMB']|noescape}"
-          alt="{$image['FILE']}"
-          title="{$image['FILE']}"
+    <td><a href="{$image->uUrl|noescape}"><img
+          src="{$image->uThumb|noescape}"
+          alt="{$image->file}"
+          title="{$image->file}"
         ></a></td>
-    <td><strong>{$image['NB_RATES']}/{$image['NB_RATES_TOTAL']}</strong></td>
-    <td><strong>{$image['SCORE_RATE']}</strong></td>
-    <td><strong>{$image['AVG_RATE']}</strong></td>
-    <td class="rating-sum-rate"><strong>{$image['SUM_RATE']}</strong></td>
+    <td><strong>{$image->nbRates}/{$image->nbRatesTotal}</strong></td>
+    <td><strong>{$image->scoreRate}</strong></td>
+    <td><strong>{$image->avgRate}</strong></td>
+    <td class="rating-sum-rate"><strong>{$image->sumRate}</strong></td>
     <td>
       <table class="rating-detail-table">
-        <tr n:foreach="$image['rates'] as $rate">
-          <td>{$rate['rate']}</td>
-          <td><b>{$rate['USER']}</b></td>
-          <td>{$rate['date']}</td>
+        <tr n:foreach="$image->rates as $rate">
+          <td>{$rate->rate}</td>
+          <td><b>{$rate->user}</b></td>
+          <td>{$rate->date}</td>
           <td><a
-              data-image-id="{$image['id']}"
-              data-user-id="{$rate['user_id']}"
-              data-anonymous-id="{$rate['anonymous_id']}"
+              data-image-id="{$image->id}"
+              data-user-id="{$rate->userId}"
+              data-anonymous-id="{$rate->anonymousId}"
               class="icon-trash"
             ></a></td>
         </tr>{* rates *}

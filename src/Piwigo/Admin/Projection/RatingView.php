@@ -34,7 +34,7 @@ final readonly class RatingView implements View, HasPageAssets, ExposesPageData
      * @param array<string, string> $userOptions
      * @param list<mixed> $userOptionsSelected
      * @param list<string> $orderByOptions
-     * @param list<array<string, mixed>> $images
+     * @param list<RatingReportImageRow> $images
      */
     public function __construct(
         public array $navbar,

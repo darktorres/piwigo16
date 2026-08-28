@@ -157,7 +157,6 @@ final class RatingPageRenderer
 
                 $tpl_rates[] = new RatingReportRateRow(
                     userId: $rate_row->userId->value,
-                    elementId: $rate_row->elementId->value,
                     anonymousId: $rate_row->anonymousId,
                     rate: $rate_row->rate,
                     date: $rate_row->date,
@@ -190,7 +189,7 @@ final class RatingPageRenderer
             userOptions: $user_options,
             userOptionsSelected: [$ratingRequest->usersRaw],
             orderByOptions: $order_by_options,
-            images: array_map(static fn (RatingReportImageRow $image): array => $image->toArray(), $tpl_images),
+            images: $tpl_images,
             csrfToken: $csrfService->getToken(),
             colorscheme: $template->themeConf('colorscheme'),
             rootUrl: $urlService->getRootUrl(),

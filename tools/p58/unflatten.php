@@ -59,16 +59,33 @@ if (preg_match('/public function toArray\(\).*?\n    \{(.*?)\n    \}/s', $voSour
 }
 
 /*
- * Two shapes, both common: keys declared in the returned array literal, and
- * keys appended afterwards (`$result['U_DELETE'] = $this->uDelete;`), often
- * inside an `if` -- which is itself the signal that the property is nullable
- * and the template guards on its absence. Both are equally derivable; only
- * computed expressions are not, and those stay unmapped so the write blocks.
+ * Three shapes, all common:
+ *
+ *  - keys declared in the returned array literal;
+ *  - keys appended afterwards (`$result['U_DELETE'] = $this->uDelete;`),
+ *    often inside an `if` -- which is itself the signal that the property is
+ *    nullable and the template guards on its absence;
+ *  - keys whose value is a *nested* flatten of a list of VOs,
+ *    `'rates' => array_map(fn (RateRow $r) => $r->toArray(), $this->rates)`.
+ *
+ * The third is still a derivable key -> property pair: only the element type
+ * is flattened, not which property the key comes from. It matters because
+ * these nest -- rating.latte reads `$image['rates']` and then `$rate['…']`
+ * inside it -- so the outer rewrite is blocked until the key maps, and the
+ * inner one is a separate run against the element's own VO.
+ *
+ * Anything else genuinely computed stays unmapped, and the write blocks.
  */
 $map = [];
 preg_match_all('~\'([^\']+)\'\s*=>\s*\$this->([A-Za-z_][A-Za-z0-9_]*)\s*,~', $body[1], $literal, PREG_SET_ORDER);
 preg_match_all('~\$\w+\[\'([^\']+)\'\]\s*=\s*\$this->([A-Za-z_][A-Za-z0-9_]*)\s*;~', $body[1], $appended, PREG_SET_ORDER);
-foreach ([...$literal, ...$appended] as $pair) {
+preg_match_all(
+    '~\'([^\']+)\'\s*=>\s*array_map\([^;]*?\$this->([A-Za-z_][A-Za-z0-9_]*)\s*\)~s',
+    $body[1],
+    $nested,
+    PREG_SET_ORDER
+);
+foreach ([...$literal, ...$appended, ...$nested] as $pair) {
     $map[$pair[1]] = $pair[2];
 }
 

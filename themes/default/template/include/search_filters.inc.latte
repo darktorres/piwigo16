@@ -717,8 +717,8 @@
           >
             {foreach $authors as $author}
               <option
-                value="{$author['author']|stripTags}"
-              >{$author['author']|stripTags} ({$author['counter']|translate_dec:'%d photo','%d photos'})</option>
+                value="{$author->author|stripTags}"
+              >{$author->author|stripTags} ({$author->counter|translate_dec:'%d photo','%d photos'})</option>
             {/foreach}
           </select>
 
@@ -758,17 +758,17 @@
               <div class="added_by-option">
                 <input
                   type="checkbox"
-                  id="added_by-{$added_by['added_by_id']}"
-                  name="{$added_by['added_by_id']}"
+                  id="added_by-{$added_by->addedById}"
+                  name="{$added_by->addedById}"
                 >
-                <label for="added_by-{$added_by['added_by_id']}">
+                <label for="added_by-{$added_by->addedById}">
                   <span
                     class="mcs-icon gallery-icon-checkmark checked-icon"
                   ></span>
                   <span
                     class="added_by-name"
-                  >{$added_by['added_by_name']|stripTags}</span>
-                  <span class="added_by-badge">{$added_by['counter']}</span>
+                  >{$added_by->addedByName|stripTags}</span>
+                  <span class="added_by-badge">{$added_by->counter}</span>
                 </label>
               </div>
             {/foreach}

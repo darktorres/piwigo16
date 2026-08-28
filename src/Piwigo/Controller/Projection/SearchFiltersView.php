@@ -12,6 +12,8 @@ use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
 use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
+use Piwigo\Search\Projection\AddedByFilterCount;
+use Piwigo\Search\Projection\AuthorFilterCount;
 use Piwigo\Search\Projection\DateFilterYear;
 use Piwigo\Search\Projection\RangeFilterOptions;
 use Piwigo\Template\Latte\Attribute\Template;
@@ -41,8 +43,8 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
     /**
      * @param array<string, array<string, mixed>> $displayFilter
      * @param list<array<array-key, mixed>>|null $tags
-     * @param list<array<array-key, mixed>>|null $authors
-     * @param list<array<array-key, mixed>>|null $addedBy
+     * @param list<AuthorFilterCount>|null $authors
+     * @param list<AddedByFilterCount>|null $addedBy
      * @param array<array-key, mixed>|null $filetypes
      * @param array<array-key, mixed>|null $rating
      * @param array<array-key, mixed>|null $ratios

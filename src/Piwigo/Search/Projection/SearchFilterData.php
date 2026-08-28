@@ -26,8 +26,8 @@ final readonly class SearchFilterData
     /**
      * @param array<string, array<string, mixed>> $displayFilter
      * @param list<array<array-key, mixed>>|null $tags
-     * @param list<array<array-key, mixed>>|null $authors
-     * @param list<array<array-key, mixed>>|null $addedBy
+     * @param list<AuthorFilterCount>|null $authors
+     * @param list<AddedByFilterCount>|null $addedBy
      * @param array<array-key, mixed>|null $filetypes
      * @param array<array-key, mixed>|null $rating
      * @param array<array-key, mixed>|null $ratios

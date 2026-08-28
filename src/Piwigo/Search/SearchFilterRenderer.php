@@ -22,6 +22,8 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\NoMatchSentinel;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\Search\Projection\AddedByFilterCount;
+use Piwigo\Search\Projection\AuthorFilterCount;
 use Piwigo\Search\Projection\AuthorRule;
 use Piwigo\Search\Projection\CategoryRule;
 use Piwigo\Search\Projection\DateFilterDay;
@@ -302,9 +304,13 @@ final readonly class SearchFilterRenderer
                 if (! is_array($authorRow)) {
                     continue;
                 }
-                $authors[] = $authorRow;
 
                 $authorName = $authorRow['author'] ?? null;
+                $authors[] = new AuthorFilterCount(
+                    author: is_string($authorName) ? $authorName : '',
+                    counter: self::filterCount($authorRow['counter'] ?? null),
+                );
+
                 if (is_string($authorName)) {
                     $authorNames[] = $authorName;
                 }
@@ -379,23 +385,24 @@ final readonly class SearchFilterRenderer
 
             // the cache pool stores this row set as plain mixed data, so
             // validate each row's shape defensively rather than trusting it.
-            $addedBy = [];
+            $addedByRows = [];
             foreach ($filterRows as $addedByRow) {
                 if (is_array($addedByRow)) {
-                    $addedBy[] = $addedByRow;
+                    $addedByRows[] = $addedByRow;
                 }
             }
 
             $userIds = [];
+            $addedBy = [];
 
-            if (count($addedBy) > 0) {
+            if ($addedByRows !== []) {
                 // now let's find the usernames of added_by users. added_by_id
                 // is a native ?int here (DQL-hydrated) -- is_int()||is_string(),
                 // not is_string() alone, or every id gets silently filtered
                 // out; UserService::getUsernamesByIds()/the $usernameOf
                 // lookup below both accept either (PHP coerces a numeric
                 // array key either way).
-                foreach ($addedBy as $row) {
+                foreach ($addedByRows as $row) {
                     $rowAddedById = $row['added_by_id'] ?? null;
                     if (is_int($rowAddedById) || is_string($rowAddedById)) {
                         $userIds[] = (string) $rowAddedById;
@@ -406,12 +413,20 @@ final readonly class SearchFilterRenderer
                 // id => username map shape this block already builds.
                 $usernameOf = $this->userService->getUsernamesByIds($userIds);
 
-                foreach (array_keys($addedBy) as $addedByIdx) {
-                    $addedById = $addedBy[$addedByIdx]['added_by_id'] ?? null;
-                    if (! is_int($addedById) && ! is_string($addedById)) {
-                        continue;
-                    }
-                    $addedBy[$addedByIdx]['added_by_name'] = $usernameOf[$addedById] ?? 'user #' . $addedById . ' (deleted)';
+                foreach ($addedByRows as $row) {
+                    $addedById = $row['added_by_id'] ?? null;
+                    $resolvable = is_int($addedById) || is_string($addedById);
+                    // getUsernamesByIds() returns a string map, so the
+                    // fallback label is the only other possibility here.
+                    $addedByName = $resolvable
+                        ? ($usernameOf[$addedById] ?? 'user #' . $addedById . ' (deleted)')
+                        : '';
+
+                    $addedBy[] = new AddedByFilterCount(
+                        addedById: $resolvable ? $addedById : null,
+                        addedByName: $addedByName,
+                        counter: self::filterCount($row['counter'] ?? null),
+                    );
                 }
             }
 
@@ -1092,7 +1107,7 @@ final readonly class SearchFilterRenderer
                             }
                             $days[$ymd] = new DateFilterDay(
                                 label: DateHelper::formatDate($ymd),
-                                count: self::dateFilterCount($dayBucket['count'] ?? null),
+                                count: self::filterCount($dayBucket['count'] ?? null),
                             );
                         }
                     }
@@ -1102,7 +1117,7 @@ final readonly class SearchFilterRenderer
                     $monthName = is_string($monthName) ? $monthName : '';
                     $months[$ym] = new DateFilterMonth(
                         label: $monthName . ' ' . $y,
-                        count: self::dateFilterCount($monthBucket['count'] ?? null),
+                        count: self::filterCount($monthBucket['count'] ?? null),
                         days: $days,
                     );
                 }
@@ -1110,7 +1125,7 @@ final readonly class SearchFilterRenderer
 
             $years[$y] = new DateFilterYear(
                 label: $this->lang->t('year %d', $y),
-                count: self::dateFilterCount($yearBucket['count'] ?? null),
+                count: self::filterCount($yearBucket['count'] ?? null),
                 months: $months,
             );
         }
@@ -1123,13 +1138,16 @@ final readonly class SearchFilterRenderer
     }
 
     /**
-     * A day/month/year bucket count, as read back out of the persistent
-     * cache pool, where it is plain mixed data. Real values are the ints
-     * this method's own accumulation loop wrote; anything else is a corrupt
-     * or stale entry and counts as zero, which is what the templates
-     * rendered for it before these buckets were typed.
+     * A "how many photos" count for one sidebar filter row -- a
+     * day/month/year date bucket, or an author/added-by group.
+     *
+     * Every one of those row sets is read back out of the persistent cache
+     * pool, where it is plain mixed data, and the DBAL COUNT() aggregate is
+     * itself int-or-string depending on driver. Anything non-numeric is a
+     * corrupt or stale entry and counts as zero, which is what the
+     * templates rendered for it before these rows were typed.
      */
-    private static function dateFilterCount(mixed $count): int
+    private static function filterCount(mixed $count): int
     {
         return is_numeric($count) ? (int) $count : 0;
     }

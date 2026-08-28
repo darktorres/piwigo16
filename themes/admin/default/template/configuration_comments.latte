@@ -10,7 +10,7 @@
               type="checkbox"
               name="activate_comments"
               id="activate_comments"
-              {if ($comments['activate_comments'])}
+              {if ($comments->activateComments)}
               checked="checked"
               {/if}
             >
@@ -26,7 +26,7 @@
             <input
               type="checkbox"
               name="comments_forall"
-              {if ($comments['comments_forall'])}
+              {if ($comments->commentsForall)}
               checked="checked"
               {/if}
             >
@@ -43,7 +43,7 @@
               maxlength="4"
               name="nb_comment_page"
               id="nb_comment_page"
-              value="{$comments['NB_COMMENTS_PAGE']}"
+              value="{$comments->nbCommentsPage}"
             >
           </label>
         </li>
@@ -53,9 +53,9 @@
             {='Default comments order'|translate}
             <select name="comments_order">
               <option
-                n:foreach="$comments['comments_order_options'] as $optKey => $optLabel"
+                n:foreach="$comments->commentsOrderOptions as $optKey => $optLabel"
                 value="{$optKey}"
-                n:attr="selected: in_array(strval($optKey), array_map(strval(...), (array) $comments['comments_order']), true) ? 'selected' : null"
+                n:attr="selected: in_array(strval($optKey), array_map(strval(...), (array) $comments->commentsOrder), true) ? 'selected' : null"
               >{html_entity_decode(strval($optLabel))}</option>
             </select>
           </label>
@@ -67,7 +67,7 @@
             <input
               type="checkbox"
               name="comments_validation"
-              {if ($comments['comments_validation'])}
+              {if ($comments->commentsValidation)}
               checked="checked"
               {/if}
             >
@@ -81,7 +81,7 @@
             <input
               type="checkbox"
               name="comments_author_mandatory"
-              {if ($comments['comments_author_mandatory'])}
+              {if ($comments->commentsAuthorMandatory)}
               checked="checked"
               {/if}
             >
@@ -95,7 +95,7 @@
             <input
               type="checkbox"
               name="comments_email_mandatory"
-              {if ($comments['comments_email_mandatory'])}
+              {if ($comments->commentsEmailMandatory)}
               checked="checked"
               {/if}
             >
@@ -109,7 +109,7 @@
             <input
               type="checkbox"
               name="comments_enable_website"
-              {if ($comments['comments_enable_website'])}
+              {if ($comments->commentsEnableWebsite)}
               checked="checked"
               {/if}
             >
@@ -123,7 +123,7 @@
             <input
               type="checkbox"
               name="user_can_edit_comment"
-              {if ($comments['user_can_edit_comment'])}
+              {if ($comments->userCanEditComment)}
               checked="checked"
               {/if}
             >
@@ -137,7 +137,7 @@
             <input
               type="checkbox"
               name="user_can_delete_comment"
-              {if ($comments['user_can_delete_comment'])}
+              {if ($comments->userCanDeleteComment)}
               checked="checked"
               {/if}
             >
@@ -156,7 +156,7 @@
             <input
               type="checkbox"
               name="email_admin_on_comment_validation"
-              {if ($comments['email_admin_on_comment_validation'])}
+              {if ($comments->emailAdminOnCommentValidation)}
               checked="checked"
               {/if}
             >
@@ -168,7 +168,7 @@
             <input
               type="checkbox"
               name="email_admin_on_comment"
-              {if ($comments['email_admin_on_comment'])}
+              {if ($comments->emailAdminOnComment)}
               checked="checked"
               {/if}
             >
@@ -183,7 +183,7 @@
             <input
               type="checkbox"
               name="email_admin_on_comment_edition"
-              {if ($comments['email_admin_on_comment_edition'])}
+              {if ($comments->emailAdminOnCommentEdition)}
               checked="checked"
               {/if}
             >
@@ -198,7 +198,7 @@
             <input
               type="checkbox"
               name="email_admin_on_comment_deletion"
-              {if ($comments['email_admin_on_comment_deletion'])}
+              {if ($comments->emailAdminOnCommentDeletion)}
               checked="checked"
               {/if}
             >

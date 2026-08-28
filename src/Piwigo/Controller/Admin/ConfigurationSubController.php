@@ -612,7 +612,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 );
 
                 $view = new ConfigurationMainView(
-                    main: $main->toArray(),
+                    main: $main,
                     groupOptions: $groups,
                     fAction: $action,
                     saveSuccess: $save_success,
@@ -642,7 +642,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 );
 
                 $view = new ConfigurationCommentsView(
-                    comments: $comments->toArray(),
+                    comments: $comments,
                     fAction: $action,
                     saveSuccess: $save_success,
                     isWebmaster: $is_webmaster,

@@ -25,11 +25,10 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class ConfigurationMainView implements View, HasPageAssets, ExposesPageData
 {
     /**
-     * @param array<string, mixed> $main
      * @param array<int, string> $groupOptions
      */
     public function __construct(
-        public array $main,
+        public ConfigurationMainData $main,
         public array $groupOptions,
         public string $fAction,
         public ?string $saveSuccess,
@@ -58,7 +57,7 @@ final readonly class ConfigurationMainView implements View, HasPageAssets, Expos
     public function exposedPageData(): array
     {
         return [
-            'order_by_options_count' => is_array($this->main['order_by_options'] ?? null) ? count($this->main['order_by_options']) : 0,
+            'order_by_options_count' => count($this->main->orderByOptions),
         ];
     }
 

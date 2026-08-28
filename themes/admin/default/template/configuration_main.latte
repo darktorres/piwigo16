@@ -16,7 +16,7 @@
             size="50"
             name="gallery_title"
             id="gallery_title"
-            value="{$main['CONF_GALLERY_TITLE']}"
+            value="{$main->confGalleryTitle}"
           >
         </li>
 
@@ -29,16 +29,16 @@
             class="description"
             name="page_banner"
             id="page_banner"
-          >{$main['CONF_PAGE_BANNER']}</textarea>
+          >{$main->confPageBanner}</textarea>
         </li>
 
         <li id="order_filters">
           <label>{='Default photos order'|translate}</label>
 
-          <span n:foreach="$main['order_by'] as $order" class="filter">
+          <span n:foreach="$main->orderBy as $order" class="filter">
             <select name="order_by[]">
               <option
-                n:foreach="$main['order_by_options'] as $optKey => $optLabel"
+                n:foreach="$main->orderByOptions as $optKey => $optLabel"
                 value="{$optKey}"
                 n:attr="selected: in_array(strval($optKey), array_map(strval(...), (array) $order), true) ? 'selected' : null"
               >{html_entity_decode(strval($optLabel))}</option>
@@ -62,7 +62,7 @@
             <input
               type="checkbox"
               name="rate"
-              {if ($main['rate'])}
+              {if ($main->rate)}
               checked="checked"
               {/if}
             >
@@ -75,7 +75,7 @@
               <input
                 type="checkbox"
                 name="rate_anonymous"
-                {if ($main['rate_anonymous'])}
+                {if ($main->rateAnonymous)}
                 checked="checked"
                 {/if}
               >
@@ -90,7 +90,7 @@
             <input
               type="checkbox"
               name="allow_user_registration"
-              {if ($main['allow_user_registration'])}
+              {if ($main->allowUserRegistration)}
               checked="checked"
               {/if}
             >
@@ -103,7 +103,7 @@
               <input
                 type="checkbox"
                 name="email_admin_on_new_user"
-                {if ($main['email_admin_on_new_user'])}
+                {if ($main->emailAdminOnNewUser)}
                 checked="checked"
                 {/if}
               >
@@ -112,7 +112,7 @@
 
             <div
               id="email_admin_on_new_user_filter"
-              class="sub-setting{if !$main['email_admin_on_new_user']} u-hidden{/if}"
+              class="sub-setting{if !$main->emailAdminOnNewUser} u-hidden{/if}"
             >
               <label class="font-checkbox no-bold">
                 <span class="icon-dot-circled"></span>
@@ -120,7 +120,7 @@
                   type="radio"
                   name="email_admin_on_new_user_filter"
                   value="all"
-                  {if ($main['email_admin_on_new_user_filter'] == 'all')}
+                  {if ($main->emailAdminOnNewUserFilter == 'all')}
                   checked
                   {/if}
                 >
@@ -133,7 +133,7 @@
                   type="radio"
                   name="email_admin_on_new_user_filter"
                   value="group"
-                  {if ($main['email_admin_on_new_user_filter'] == 'group')}
+                  {if ($main->emailAdminOnNewUserFilter == 'group')}
                   checked
                   {/if}
                 >
@@ -142,14 +142,14 @@
 
               <span
                 id="email_admin_on_new_user_filter_group_options"
-                class="{if $main['email_admin_on_new_user_filter'] != 'group'}u-hidden{/if}"
+                class="{if $main->emailAdminOnNewUserFilter != 'group'}u-hidden{/if}"
               >
                 {if count($groupOptions) > 0}
                   <select name="email_admin_on_new_user_filter_group">
                     <option
                       n:foreach="$groupOptions as $optKey => $optLabel"
                       value="{$optKey}"
-                      n:attr="selected: in_array((string) $optKey, array_map(strval(...), (array) $main['email_admin_on_new_user_filter_group']), true) ? 'selected' : null"
+                      n:attr="selected: in_array((string) $optKey, array_map(strval(...), (array) $main->emailAdminOnNewUserFilterGroup), true) ? 'selected' : null"
                     >{html_entity_decode(strval($optLabel))}</option>
                   </select>
                 {else}
@@ -169,7 +169,7 @@
             <input
               type="checkbox"
               name="allow_user_customization"
-              {if ($main['allow_user_customization'])}
+              {if ($main->allowUserCustomization)}
               checked="checked"
               {/if}
             >
@@ -183,7 +183,7 @@
             <input
               type="checkbox"
               name="obligatory_user_mail_address"
-              {if ($main['obligatory_user_mail_address'])}
+              {if ($main->obligatoryUserMailAddress)}
               checked="checked"
               {/if}
             >
@@ -202,9 +202,9 @@
           <label>{='Week starts on'|translate}
             <select name="week_starts_on">
               <option
-                n:foreach="$main['week_starts_on_options'] as $optKey => $optLabel"
+                n:foreach="$main->weekStartsOnOptions as $optKey => $optLabel"
                 value="{$optKey}"
-                n:attr="selected: in_array(strval($optKey), array_map(strval(...), (array) $main['week_starts_on_options_selected']), true) ? 'selected' : null"
+                n:attr="selected: in_array(strval($optKey), array_map(strval(...), (array) $main->weekStartsOnOptionsSelected), true) ? 'selected' : null"
               >{html_entity_decode(strval($optLabel))}</option>
             </select></label>
         </li>
@@ -217,7 +217,7 @@
             <input
               type="checkbox"
               name="history_guest"
-              {if ($main['history_guest'])}
+              {if ($main->historyGuest)}
               checked="checked"
               {/if}
             >
@@ -229,7 +229,7 @@
             <input
               type="checkbox"
               name="log"
-              {if ($main['log'])}
+              {if ($main->log)}
               checked="checked"
               {/if}
             >
@@ -241,7 +241,7 @@
             <input
               type="checkbox"
               name="history_admin"
-              {if ($main['history_admin'])}
+              {if ($main->historyAdmin)}
               checked="checked"
               {/if}
             >
@@ -257,7 +257,7 @@
             <input
               type="checkbox"
               name="show_mobile_app_banner_in_gallery"
-              {if ($main['show_mobile_app_banner_in_gallery'])}
+              {if ($main->showMobileAppBannerInGallery)}
               checked="checked"
               {/if}
             >
@@ -269,7 +269,7 @@
             <input
               type="checkbox"
               name="show_mobile_app_banner_in_admin"
-              {if ($main['show_mobile_app_banner_in_admin'])}
+              {if ($main->showMobileAppBannerInAdmin)}
               checked="checked"
               {/if}
             >
@@ -288,7 +288,7 @@
             <input
               type="checkbox"
               name="upload_detect_duplicate"
-              {if ($main['upload_detect_duplicate'])}
+              {if ($main->uploadDetectDuplicate)}
               checked="checked"
               {/if}
             >
@@ -306,8 +306,8 @@
 
           <div class="themeBoxes font-checkbox">
             <div
-              n:foreach="$main['mail_theme_options'] as $theme => $name"
-              class="themeSelect {if $main['mail_theme'] == $theme}themeDefault{/if}"
+              n:foreach="$main->mailThemeOptions as $theme => $name"
+              class="themeSelect {if $main->mailTheme == $theme}themeDefault{/if}"
             >
               <label class="font-checkbox">
                 <div class="themeName">
@@ -316,7 +316,7 @@
                     type="radio"
                     name="mail_theme"
                     value="{$theme}"
-                    {if $main['mail_theme'] == $theme}
+                    {if $main->mailTheme == $theme}
                     checked
                     {/if}
                   >

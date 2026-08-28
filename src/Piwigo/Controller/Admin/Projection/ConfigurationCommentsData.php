@@ -11,9 +11,7 @@ namespace Piwigo\Controller\Admin\Projection;
  * (11 of them come from `checkboxValue()`'s own literal `match` arms
  * before this conversion, confirmed as real bool `CurrentConfig`
  * properties, not a genuinely dynamic bag) -- `configuration_comments.latte`
- * still reads them via `$comments['key']` (through
- * {@see ConfigurationCommentsView}'s own array-typed `$comments`), so
- * `toArray()` reproduces that exact shape.
+ * reads them as properties directly (P58-A).
  */
 final readonly class ConfigurationCommentsData
 {
@@ -37,28 +35,4 @@ final readonly class ConfigurationCommentsData
         public bool $commentsEmailMandatory,
         public bool $commentsEnableWebsite,
     ) {}
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function toArray(): array
-    {
-        return [
-            'NB_COMMENTS_PAGE' => $this->nbCommentsPage,
-            'comments_order' => $this->commentsOrder,
-            'comments_order_options' => $this->commentsOrderOptions,
-            'activate_comments' => $this->activateComments,
-            'comments_forall' => $this->commentsForall,
-            'comments_validation' => $this->commentsValidation,
-            'email_admin_on_comment' => $this->emailAdminOnComment,
-            'email_admin_on_comment_validation' => $this->emailAdminOnCommentValidation,
-            'user_can_delete_comment' => $this->userCanDeleteComment,
-            'user_can_edit_comment' => $this->userCanEditComment,
-            'email_admin_on_comment_edition' => $this->emailAdminOnCommentEdition,
-            'email_admin_on_comment_deletion' => $this->emailAdminOnCommentDeletion,
-            'comments_author_mandatory' => $this->commentsAuthorMandatory,
-            'comments_email_mandatory' => $this->commentsEmailMandatory,
-            'comments_enable_website' => $this->commentsEnableWebsite,
-        ];
-    }
 }

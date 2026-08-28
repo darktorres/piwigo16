@@ -20,11 +20,8 @@ use Piwigo\Template\Latte\Attribute\Template;
 #[Template('configuration_comments.latte')]
 final readonly class ConfigurationCommentsView implements View, HasPageAssets
 {
-    /**
-     * @param array<string, mixed> $comments
-     */
     public function __construct(
-        public array $comments,
+        public ConfigurationCommentsData $comments,
         public string $fAction,
         public ?string $saveSuccess,
         public int $isWebmaster,

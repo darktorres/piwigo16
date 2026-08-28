@@ -26,7 +26,7 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class PictureFormatsView implements View, HasPageAssets, ExposesPageData
 {
     /**
-     * @param list<array<string, mixed>> $formats
+     * @param list<PictureFormatRow> $formats
      */
     public function __construct(
         public string $addFormatsUrl,

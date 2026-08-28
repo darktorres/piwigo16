@@ -14,15 +14,15 @@
     <div
       n:foreach="$formats as $format"
       class="format-card"
-      data-id="{$format['format_id']}"
+      data-id="{$format->formatId}"
       style="background-image: url('{$imgSquareSrc|noescape}')"
     >
       <span
         class="format-card-size"
-      >{='%s MB'|translate:$format['filesize']}</span>
-      <div class="format-card-ext"><span>{$format['label']}</span></div>
+      >{='%s MB'|translate:$format->filesize}</span>
+      <div class="format-card-ext"><span>{$format->label}</span></div>
       <div class="format-card-actions">
-        <a href="{$format['download_url']|noescape}" rel="nofollow"> <i
+        <a href="{$format->downloadUrl|noescape}" rel="nofollow"> <i
             class="icon-download"
           ></i> </a>
         <a class="format-delete"> <i class="icon-trash-1"></i> </a>

@@ -62,8 +62,6 @@ final class PictureFormatsPageRenderer
 
             $formats[] = new PictureFormatRow(
                 formatId: $formatRow->formatId,
-                imageId: $formatRow->imageId->value,
-                ext: $formatRow->ext,
                 filesize: round($filesize / 1024.0, 2),
                 downloadUrl: 'action.php?format=' . $formatRow->formatId . '&amp;download',
                 label: $label,
@@ -73,7 +71,7 @@ final class PictureFormatsPageRenderer
         $adminContent = $renderer->render(new PictureFormatsView(
             addFormatsUrl: $urlService->getRootUrl() . 'admin.php?page=photos_add&formats=' . $image_id->value,
             imgSquareSrc: DerivativeImage::url($imageStdParams->getByType(ImageStdParams::SQUARE), $image),
-            formats: array_map(static fn (PictureFormatRow $format): array => $format->toArray(), $formats),
+            formats: $formats,
             pwgToken: $csrfService
                 ->getToken(),
         ));

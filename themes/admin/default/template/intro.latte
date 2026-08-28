@@ -103,21 +103,21 @@
               class="activity-day-cell"
             ></div>
             <p
-              n:if="$activityLastWeeks[$WEEK_NUMBER][$DAY_NUMBER]['number'] != 0"
+              n:if="$activityLastWeeks[$WEEK_NUMBER][$DAY_NUMBER]->number != 0"
               class="tooltip"
             >
               <span class="tooltip-arrow"></span>
               <span class="tooltip-header">
                 <span
                   class="tooltip-title"
-                >{if $activityLastWeeks[$WEEK_NUMBER][$DAY_NUMBER]['number'] > 1}{='%d Activities'|translate:$activityLastWeeks[$WEEK_NUMBER][$DAY_NUMBER]['number']}{else}{='%d Activity'|translate:$activityLastWeeks[$WEEK_NUMBER][$DAY_NUMBER]['number']}{/if}</span>
+                >{if $activityLastWeeks[$WEEK_NUMBER][$DAY_NUMBER]->number > 1}{='%d Activities'|translate:$activityLastWeeks[$WEEK_NUMBER][$DAY_NUMBER]->number}{else}{='%d Activity'|translate:$activityLastWeeks[$WEEK_NUMBER][$DAY_NUMBER]->number}{/if}</span>
                 <span
                   class="tooltip-date"
-                >{$activityLastWeeks[$WEEK_NUMBER][$DAY_NUMBER]['date']}</span>
+                >{$activityLastWeeks[$WEEK_NUMBER][$DAY_NUMBER]->date}</span>
               </span>
               <span class="tooltip-details">
                 <span
-                  n:foreach="$activityLastWeeks[$WEEK_NUMBER][$DAY_NUMBER]['details'] as $cat => $actions"
+                  n:foreach="$activityLastWeeks[$WEEK_NUMBER][$DAY_NUMBER]->details as $cat => $actions"
                   class="tooltip-details-cont"
                 >
                   {if $cat == "Group"} <span

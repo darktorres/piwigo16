@@ -10,6 +10,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Latte\Runtime\Html;
 use Override;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Activity\Projection\ActivityDay;
 use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Admin\InstallationStats;
 use Piwigo\Admin\Integrity\C13yInternal;
@@ -336,15 +337,42 @@ final readonly class IntroSubController implements AdminSubControllerInterface
                     continue;
                 }
 
+                // Everything below the cache read is `mixed`: the session
+                // holds whatever a previous request put there, so each
+                // field is narrowed rather than assumed, and the day is
+                // frozen into an ActivityDay here -- after the read, never
+                // before it (docs/PLAN.md's P6: a serialized object embeds
+                // its class name).
                 $details = $j['details'] ?? null;
                 $details = is_array($details) ? $details : [];
                 ksort($details);
 
-                $number = $j['number'] ?? null;
-                $number = is_numeric($number) ? $number : 0;
+                $day_details = [];
+                foreach ($details as $category => $actions) {
+                    if (! is_string($category) || ! is_array($actions)) {
+                        continue;
+                    }
 
-                $activity_last_weeks[$week][$day] = $j;
-                $activity_last_weeks[$week][$day]['details'] = $details;
+                    $category_actions = [];
+                    foreach ($actions as $action => $counter) {
+                        if (is_string($action) && is_numeric($counter)) {
+                            $category_actions[$action] = (int) $counter;
+                        }
+                    }
+
+                    $day_details[$category] = $category_actions;
+                }
+
+                $number = $j['number'] ?? null;
+                $number = is_numeric($number) ? (int) $number : 0;
+
+                $date = $j['date'] ?? null;
+
+                $activity_last_weeks[$week][$day] = new ActivityDay(
+                    number: $number,
+                    date: is_string($date) ? $date : '',
+                    details: $day_details,
+                );
 
                 if ($number > 0) {
                     $temp_data[] = [

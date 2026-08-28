@@ -820,6 +820,27 @@ it('skips malformed cached activity-week/day entries from a stale-but-still-"fre
                 1 => [
                     0 => 'ct_intro_day_not_an_array',
                 ],
+                // A day that IS well-formed at the week/day level but whose
+                // 'details' are not: the per-category value is a string
+                // rather than an action map, and one action's counter is
+                // non-numeric. Both are skipped when the day is frozen into
+                // an ActivityDay, which iterates 'details' two levels deep
+                // -- without those guards this entry would raise a warning
+                // the loop above asserts against. 'number' is 0 so the
+                // tooltip's own `!= 0` guard keeps the final assertion
+                // below true.
+                2 => [
+                    3 => [
+                        'number' => 0,
+                        'date' => 'Saturday, August 1, 2026',
+                        'details' => [
+                            'Album' => 'ct_intro_actions_not_an_array',
+                            'Photo' => [
+                                'Add' => 'ct_intro_counter_not_numeric',
+                            ],
+                        ],
+                    ],
+                ],
             ],
         ]);
         $fragment = 'cache_activity_last_weeks|' . $malformedValue;
@@ -827,7 +848,35 @@ it('skips malformed cached activity-week/day entries from a stale-but-still-"fre
         H::dbQuery($db, sprintf("UPDATE sessions SET data = CONCAT(data, '%s') WHERE id = '%s'", H::dbEscape($db, $fragment), H::dbEscape($db, $sessionId)));
         H::dbClose($db);
 
+        // Only what this request appends: the log is shared and
+        // append-only, written by every test-mode request the Apache
+        // worker serves, so its existing contents say nothing about this
+        // one.
+        $testErrorsLogPath = dirname(__DIR__, 2) . '/_data/logs/test_errors.log';
+        $logOffsetBefore = is_file($testErrorsLogPath) ? (int) filesize($testErrorsLogPath) : 0;
+
         $html = $curl(H::baseUrl() . '/admin.php');
+
+        // The one channel that can actually show a PHP warning here, and
+        // the reason the body patterns below cannot: ErrorCollector forces
+        // display_errors to '0' so an error can never corrupt a non-HTML
+        // response, and its X-PHP-Error-* headers are emitted from a
+        // shutdown function that returns early once headers_sent() -- which
+        // for a fully rendered admin page is always. writeTestErrorsLog()
+        // runs synchronously inside handleError() instead, straight to a
+        // file both the Apache worker and this process can read (the same
+        // reasoning CommentsControllerTest records for its own use of it).
+        //
+        // This is what makes the malformed-'details' entry above a
+        // regression test rather than a smoke test: drop either guard from
+        // IntroSubController's ActivityDay freeze and a
+        // "foreach() argument must be of type array|object" warning lands
+        // in this log.
+        $appendedLog = is_file($testErrorsLogPath)
+            ? (string) file_get_contents($testErrorsLogPath, false, null, $logOffsetBefore)
+            : '';
+        expect($appendedLog)
+            ->not->toContain('IntroSubController.php');
 
         foreach ([
             'Fatal error' => '/Fatal error/i',

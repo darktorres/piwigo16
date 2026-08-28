@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin\Projection;
 
 use Override;
+use Piwigo\Activity\Projection\ActivityDay;
 use Piwigo\Admin\Projection\ColorboxView;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
@@ -27,7 +28,7 @@ final readonly class IntroView implements View, HasPageAssets, ExposesPageData
 {
     /**
      * @param list<string> $activityWeekNumber
-     * @param array<array-key, mixed> $activityLastWeeks
+     * @param array<array-key, array<array-key, ActivityDay>> $activityLastWeeks
      * @param array<array-key, mixed> $activityChartData
      * @param list<string> $dayLabels
      * @param array<string, array<string, array<string, mixed>>> $storageChartData

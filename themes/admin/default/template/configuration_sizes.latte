@@ -128,7 +128,7 @@
           <tr>
             <td>
               <label>
-                {if $d['must_enable']}
+                {if $d->mustEnable}
                   <span class="sizeEnable">
                     <span class="icon-ok"></span>
                   </span>
@@ -138,7 +138,7 @@
                     <input
                       type="checkbox"
                       name="d[{$type}][enabled]"
-                      {if $d['enabled']}
+                      {if $d->enabled}
                       checked="checked"
                       {/if}
                     >
@@ -151,7 +151,7 @@
             <td>
               <span
                 class="sizeDetails{if isset($ferrors)} u-inline{/if}"
-              >{$d['w']} x {$d['h']} {='pixels'|translate}{if $d['crop']}, {='Crop'|translate|lower}{/if}</span>
+              >{$d->width} x {$d->height} {='pixels'|translate}{if $d->cropped}, {='Crop'|translate|lower}{/if}</span>
             </td>
 
             <td>
@@ -173,7 +173,7 @@
           >
             <td colspan="3">
               <table class="sizeEditForm">
-                <tr n:if="!$d['must_square']">
+                <tr n:if="!$d->mustSquare">
                   <td colspan="2">
                     <label class="font-checkbox">
                       <span class="icon-check"></span>
@@ -181,7 +181,7 @@
                         type="checkbox"
                         class="cropToggle"
                         name="d[{$type}][crop]"
-                        {if $d['crop']}
+                        {if $d->cropped}
                         checked="checked"
                         {/if}
                       >
@@ -192,14 +192,14 @@
                 <tr>
                   <td
                     class="sizeEditWidth"
-                  >{if $d['must_square'] or $d['crop']}{='Width'|translate}{else}{='Maximum width'|translate}{/if}</td>
+                  >{if $d->mustSquare or $d->cropped}{='Width'|translate}{else}{='Maximum width'|translate}{/if}</td>
                   <td>
                     <input
                       type="text"
                       name="d[{$type}][w]"
                       maxlength="4"
                       size="4"
-                      value="{$d['w']}"
+                      value="{$d->width}"
                       {if isset($ferrors[$type]['w'])}
                       class="dError"
                       {/if}
@@ -211,17 +211,17 @@
                     >!</span>
                   </td>
                 </tr>
-                <tr n:if="!$d['must_square']">
+                <tr n:if="!$d->mustSquare">
                   <td
                     class="sizeEditHeight"
-                  >{if $d['crop']}{='Height'|translate}{else}{='Maximum height'|translate}{/if}</td>
+                  >{if $d->cropped}{='Height'|translate}{else}{='Maximum height'|translate}{/if}</td>
                   <td>
                     <input
                       type="text"
                       name="d[{$type}][h]"
                       maxlength="4"
                       size="4"
-                      value="{$d['h']}"
+                      value="{$d->height}"
                       {if isset($ferrors[$type]['h'])}
                       class="dError"
                       {/if}
@@ -241,7 +241,7 @@
                       name="d[{$type}][sharpen]"
                       maxlength="4"
                       size="4"
-                      value="{$d['sharpen']}"
+                      value="{$d->sharpen}"
                       {if isset($ferrors[$type]['sharpen'])}
                       class="dError"
                       {/if}

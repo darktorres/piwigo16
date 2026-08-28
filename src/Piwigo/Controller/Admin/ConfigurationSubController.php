@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use LogicException;
 use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\CoreTabs;
@@ -35,6 +36,7 @@ use Piwigo\Controller\Admin\Projection\ConfigurationSizesTabData;
 use Piwigo\Controller\Admin\Projection\ConfigurationSizesView;
 use Piwigo\Controller\Admin\Projection\ConfigurationWatermarkResult;
 use Piwigo\Controller\Admin\Projection\ConfigurationWatermarkView;
+use Piwigo\Controller\Admin\Projection\DerivativeSizeRow;
 use Piwigo\Controller\Admin\Projection\WatermarkFormValues;
 use Piwigo\Controller\Admin\Request\ConfigurationRequest;
 use Piwigo\Controller\ProfileFormHandler;
@@ -771,7 +773,24 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         }
                         $tpl_vars[$type] = $tpl_var;
                     }
-                    $derivatives = $tpl_vars;
+
+                    $derivatives = [];
+                    foreach ($tpl_vars as $type => $tpl_var) {
+                        // 'w'/'h'/'crop'/'sharpen' are only set on the
+                        // branch above where $params resolved; a type in
+                        // neither the enabled nor the disabled map leaves
+                        // them absent, which the template used to read
+                        // straight through.
+                        $derivatives[$type] = new DerivativeSizeRow(
+                            mustSquare: $tpl_var['must_square'],
+                            mustEnable: $tpl_var['must_enable'],
+                            enabled: $tpl_var['enabled'],
+                            cropped: ($tpl_var['crop'] ?? 0) > 0,
+                            width: $tpl_var['w'] ?? null,
+                            height: $tpl_var['h'] ?? null,
+                            sharpen: $tpl_var['sharpen'] ?? null,
+                        );
+                    }
                     $resize_quality = $this->imageStdParams->getQuality();
 
                     $view = new ConfigurationSizesView(
@@ -786,11 +805,17 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         csrfToken: $pwg_token,
                     );
                 } else {
-                    // $sizesResult is guaranteed non-null here: $sizesLoadedInTpl
-                    // is only ever flipped true inside processSizes()'s own
-                    // validation-failure branch, which is the same branch that
-                    // populates $sizesResult.
-                    assert($sizesResult !== null);
+                    // $sizesLoadedInTpl is only ever flipped true inside
+                    // processSizes()'s own validation-failure branch, which
+                    // is the same branch that populates all three of these
+                    // -- so none can be null here. Checked rather than
+                    // asserted: this build runs with zend.assertions=-1, so
+                    // the assert() that used to stand here was a no-op and
+                    // proved nothing to anyone, reader or analyser.
+                    if ($sizesResult === null || $sizesResult->sizes === null || $sizesResult->derivatives === null) {
+                        throw new LogicException('processSizes() set sizesLoadedInTpl without populating its result');
+                    }
+
                     $view = new ConfigurationSizesView(
                         isGd: null,
                         sizes: $sizesResult->sizes,
@@ -1180,7 +1205,18 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             }
         }
 
-        $sizes = $raw === [] ? null : new ConfigurationSizesTabData(
+        // Always constructed, never null. A validation failure whose POST
+        // carried none of the four original_* fields -- which is every
+        // failure raised by the derivative table alone -- used to leave
+        // this null while $sizesLoadedInTpl said the tab was populated, and
+        // configuration_sizes.latte reads $sizes->originalResize* unguarded
+        // in six places. PHP 8 makes a property read on null a warning
+        // yielding null rather than a fatal, so the page rendered with four
+        // empty original-resize inputs and four warnings instead. Every
+        // field is independently nullable already, so an all-null instance
+        // renders exactly what the null did, minus the warnings (P58-A's
+        // §3).
+        $sizes = new ConfigurationSizesTabData(
             originalResizeMaxwidth: $raw['original_resize_maxwidth'] ?? null,
             originalResizeMaxheight: $raw['original_resize_maxheight'] ?? null,
             originalResizeQuality: $raw['original_resize_quality'] ?? null,
@@ -1189,9 +1225,31 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         $this->sizesLoadedInTpl = true;
 
+        // The same conversion the fresh-render path does, at the other
+        // place a derivative set reaches configuration_sizes.latte. Values
+        // here are the submitted strings, echoed back verbatim -- the rows
+        // $pderivatives holds are what validation ran against, and they
+        // stay arrays for it.
+        $redisplay_derivatives = [];
+        foreach ($pderivatives as $ptype => $prow) {
+            $pwidth = $prow['w'] ?? null;
+            $pheight = $prow['h'] ?? null;
+            $psharpen = $prow['sharpen'] ?? null;
+
+            $redisplay_derivatives[$ptype] = new DerivativeSizeRow(
+                mustSquare: $prow['must_square'],
+                mustEnable: $prow['must_enable'],
+                enabled: $prow['enabled'],
+                cropped: $prow['crop'] > 0,
+                width: is_bool($pwidth) ? null : $pwidth,
+                height: is_bool($pheight) ? null : $pheight,
+                sharpen: is_bool($psharpen) ? null : $psharpen,
+            );
+        }
+
         return new ConfigurationSizesResult(
             saveSuccess: null,
-            derivatives: $pderivatives,
+            derivatives: $redisplay_derivatives,
             ferrors: $errors + $derivative_errors,
             resizeQuality: is_string($post['resize_quality']) ? $post['resize_quality'] : null,
             sizes: $sizes,

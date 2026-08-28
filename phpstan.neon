@@ -425,12 +425,6 @@ parameters:
             identifier: logicalAnd.rightNotBoolean
             path: _analysis/phpstan-latte/*
         -
-            identifier: logicalOr.leftNotBoolean
-            path: _analysis/phpstan-latte/*
-        -
-            identifier: logicalOr.rightNotBoolean
-            path: _analysis/phpstan-latte/*
-        -
             identifier: echo.nonString
             path: _analysis/phpstan-latte/*
         -

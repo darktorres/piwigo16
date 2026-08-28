@@ -18,23 +18,27 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `'sizes'` case, merged with `processSizes()`'s own POST-handler result
  * (see that method's own return type) and the whole-page shared fields
  * every `configuration_*.latte` tab needs -- see {@see
- * ConfigurationMainView}. `$isGd`/`$sizes` are only ever both non-null
- * together (a fresh render), same for `$derivatives`/`$resizeQuality`;
- * `$ferrors` is only ever non-null on `processSizes()`'s own
- * validation-failure branch. No `$customDerivatives` field -- the
+ * ConfigurationMainView}. `$sizes` and `$derivatives` are non-nullable:
+ * the template reads both unguarded, and both construction sites really do
+ * supply them -- the fresh render computes them, and the
+ * validation-failure redisplay takes them from `processSizes()`'s own
+ * result, whose `$sizesLoadedInTpl` flag is set in the same branch that
+ * populates them. `$isGd` is null on that second path (P58-A's §3/§11).
+ * `$ferrors` is only ever non-null on that same validation-failure
+ * branch. No `$customDerivatives` field -- the
  * template's own body never references it.
  */
 #[Template('configuration_sizes.latte')]
 final readonly class ConfigurationSizesView implements View, HasPageAssets, ExposesPageData
 {
     /**
-     * @param array<string, array<string, mixed>>|null $derivatives
+     * @param array<string, DerivativeSizeRow> $derivatives
      * @param array<string, mixed>|null $ferrors
      */
     public function __construct(
         public ?bool $isGd,
-        public ?ConfigurationSizesTabData $sizes,
-        public ?array $derivatives,
+        public ConfigurationSizesTabData $sizes,
+        public array $derivatives,
         public string|int|null $resizeQuality,
         public ?array $ferrors,
         public string $fAction,

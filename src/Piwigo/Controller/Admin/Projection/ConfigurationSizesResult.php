@@ -21,7 +21,7 @@ namespace Piwigo\Controller\Admin\Projection;
 final readonly class ConfigurationSizesResult
 {
     /**
-     * @param array<string, array<string, mixed>>|null $derivatives
+     * @param array<string, DerivativeSizeRow>|null $derivatives
      * @param array<string, mixed>|null $ferrors
      */
     public function __construct(

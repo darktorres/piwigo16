@@ -422,12 +422,6 @@ parameters:
             identifier: booleanAnd.rightNotBoolean
             path: _analysis/phpstan-latte/*
         -
-            identifier: booleanOr.leftNotBoolean
-            path: _analysis/phpstan-latte/*
-        -
-            identifier: booleanOr.rightNotBoolean
-            path: _analysis/phpstan-latte/*
-        -
             identifier: logicalAnd.rightNotBoolean
             path: _analysis/phpstan-latte/*
         -

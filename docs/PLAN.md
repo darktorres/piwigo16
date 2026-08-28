@@ -148,7 +148,7 @@ Three structural changes produced that drift:
 | P55 | Real quality gates | Not started | 0 |
 | P56 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P57 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
-| P58 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | In progress — A0/A0b done (103 findings refiled as Latte codegen); a generic `CachingIterator` stub removed the erasure hiding 133 more; **P58-A 704 → 386**, of which the flatten technique is fully closed; P58-B 376 → 375. Four live bugs found and fixed along the way | 1 |
+| P58 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | In progress — A0/A0b done (103 findings refiled as Latte codegen); a generic `CachingIterator` stub removed the erasure hiding 133 more; **P58-A 843 → 362**, with techniques 1, 4 and 11 closed; P58-B 376 → 363. Six live bugs found and fixed along the way | 1 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -4516,8 +4516,9 @@ techniques. Re-run `phpstan-latte:compile` first — a stale compile
 changes the count.
 
 Opened at **P58-A 843** across 74 templates and 63 View classes and
-**P58-B 376** across 72 (P32 recorded ~1,400 and ~450). Now **A 386, B
-375**. Two entries have already come out of the block
+**P58-B 376** across 72 (P32 recorded ~1,400 and ~450). Now **A 362, B
+363** -- B's 13 were not B work, but `empty()` guards A had to restate on
+its way past, since `empty()` on an object is always false. Two entries have already come out of the block
 (`booleanOr.leftNotBoolean`/`rightNotBoolean`), forced by
 `reportUnmatchedIgnoredErrors` rather than noticed.
 
@@ -4557,9 +4558,16 @@ not a partition, since one chain can need two:
 | 2 | tighten a leaf `*Result`/`*Data` property | 87 | 53 |
 | 5 | polymorphic block data (`mixed` by design) | 52 | 52 |
 | 6 | picture family: untyped event payloads | 35 | 35 |
-| 11 | nullable/union used as if definite | 23 | 23 |
-| 4 | retire a flattening `TemplatePageContext` | 86 | 12 |
+| 11 | nullable/union used as if definite | 23 | **6** |
+| 4 | retire a flattening `TemplatePageContext` | 86 | **5** |
 | 1 | delete a `->toArray()` flatten | 118 | **0** |
+
+§1 and §11 are finished and §4 all but; what is still filed under them is
+residue of `assign.php`'s single-assignment rule, verified expression by
+expression against the compiled output. `trace.php` attributes a finding to
+the first root variable in the compiled condition, which for
+`{if isset($pdfNbPages) and $navCurrent['path_ext'] == "pdf"}` is the wrong
+one of the two.
 
 Delete each `toArray()` whose last caller this removes — but check the
 *other* consumer first. A View's `exposedPageData()` reads the same bags,
@@ -4608,7 +4616,7 @@ padding cells to the wrong branch, and the only thing that caught it was a
 golden fixture built one commit earlier. Every `{if !empty($x)}` whose
 `$x` becomes an object has to be read by hand.
 
-Four live bugs have surfaced this way, none of them type work:
+Six live bugs have surfaced this way, none of them type work:
 
 1. Saving the Main, Comments or Display config tab turned off every
    checkbox on it. The tabs normalized to `'true'`/`'false'` strings and
@@ -4628,6 +4636,13 @@ Four live bugs have surfaced this way, none of them type work:
    nonexistent index: its `data-max` was written across two source lines,
    Latte emitted the newline verbatim inside the attribute, and the value
    no longer matched any entry of the list `indexOf()` searches.
+5. `rating.php?users[]=…` passed an array to `strval()`, producing the
+   literal string `Array` and an "Array to string conversion" warning.
+6. `admin.php?page=updates&step=3` on an up-to-date install rendered an
+   empty release badge inside an empty href and passed `null` to
+   `htmlspecialchars()`. The step came straight from `$_GET` with no check
+   that the release its mode presents exists, and steps 2 and 3 are the two
+   that reach `CoreUpdateService::upgradeTo()`.
 
 ## Greenfield tracks (T3, cuttable — outside the P0–P58 backbone)
 

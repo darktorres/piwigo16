@@ -776,7 +776,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                     $view = new ConfigurationSizesView(
                         isGd: $is_gd,
-                        sizes: $sizes->toArray(),
+                        sizes: $sizes,
                         derivatives: $derivatives,
                         resizeQuality: $resize_quality,
                         ferrors: null,
@@ -1170,13 +1170,22 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             );
         }
 
-        $sizes = null;
+        // Echoed back exactly as typed, invalid values included -- that is
+        // the point of a validation-failure redisplay. strip_tags() prevents
+        // an XSS attempt from reaching the value= attribute.
+        $raw = [];
         foreach ($original_fields as $field) {
             if (isset($post[$field]) && is_string($post[$field])) {
-                $sizes ??= [];
-                $sizes[$field] = strip_tags($post[$field]); // strip_tags prevents from XSS attempt
+                $raw[$field] = strip_tags($post[$field]);
             }
         }
+
+        $sizes = $raw === [] ? null : new ConfigurationSizesTabData(
+            originalResizeMaxwidth: $raw['original_resize_maxwidth'] ?? null,
+            originalResizeMaxheight: $raw['original_resize_maxheight'] ?? null,
+            originalResizeQuality: $raw['original_resize_quality'] ?? null,
+            originalResize: $raw['original_resize'] ?? null,
+        );
 
         $this->sizesLoadedInTpl = true;
 

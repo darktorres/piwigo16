@@ -28,13 +28,12 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class ConfigurationSizesView implements View, HasPageAssets, ExposesPageData
 {
     /**
-     * @param array<string, mixed>|null $sizes
      * @param array<string, array<string, mixed>>|null $derivatives
      * @param array<string, mixed>|null $ferrors
      */
     public function __construct(
         public ?bool $isGd,
-        public ?array $sizes,
+        public ?ConfigurationSizesTabData $sizes,
         public ?array $derivatives,
         public string|int|null $resizeQuality,
         public ?array $ferrors,

@@ -17,17 +17,17 @@
           <input
             type="hidden"
             name="original_resize_maxwidth"
-            value="{$sizes['original_resize_maxwidth']}"
+            value="{$sizes->originalResizeMaxwidth}"
           >
           <input
             type="hidden"
             name="original_resize_maxheight"
-            value="{$sizes['original_resize_maxheight']}"
+            value="{$sizes->originalResizeMaxheight}"
           >
           <input
             type="hidden"
             name="original_resize_quality"
-            value="{$sizes['original_resize_quality']}"
+            value="{$sizes->originalResizeQuality}"
           >
         </div>
       {else}
@@ -37,7 +37,7 @@
             <input
               type="checkbox"
               name="original_resize"
-              {if (isset($sizes['original_resize']) and $sizes['original_resize'])}
+              {if (isset($sizes->originalResize) and $sizes->originalResize)}
               checked="checked"
               {/if}
             >
@@ -52,7 +52,7 @@
               <input
                 type="text"
                 name="original_resize_maxwidth"
-                value="{$sizes['original_resize_maxwidth']}"
+                value="{$sizes->originalResizeMaxwidth}"
                 size="4"
                 maxlength="4"
                 {if isset($ferrors['original_resize_maxwidth'])}
@@ -72,7 +72,7 @@
               <input
                 type="text"
                 name="original_resize_maxheight"
-                value="{$sizes['original_resize_maxheight']}"
+                value="{$sizes->originalResizeMaxheight}"
                 size="4"
                 maxlength="4"
                 {if isset($ferrors['original_resize_maxheight'])}
@@ -92,7 +92,7 @@
               <input
                 type="text"
                 name="original_resize_quality"
-                value="{$sizes['original_resize_quality']}"
+                value="{$sizes->originalResizeQuality}"
                 size="3"
                 maxlength="3"
                 {if isset($ferrors['original_resize_quality'])}

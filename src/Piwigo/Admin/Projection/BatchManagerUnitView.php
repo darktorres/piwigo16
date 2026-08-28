@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Projection;
 
 use Override;
+use Piwigo\Admin\BatchManager\Projection\BatchManagerUnitElement;
 use Piwigo\Admin\BatchManager\Projection\DimensionFilterOptions;
 use Piwigo\Admin\BatchManager\Projection\FilesizeFilterOptions;
 use Piwigo\Asset\AssetContribution;
@@ -59,7 +60,7 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
      * @param array<array-key, string> $levelOptions
      * @param list<string> $activePlugins
      * @param array<array-key, string> $cacheKeys
-     * @param list<array<string, mixed>> $elements
+     * @param list<BatchManagerUnitElement> $elements
      * @param array<array-key, mixed> $associatedCategories
      */
     public function __construct(
@@ -153,13 +154,7 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
     {
         $allSelectedAlbum = [];
         foreach ($this->elements as $element) {
-            $id = $element['ID'] ?? null;
-            if (! is_string($id) && ! is_int($id)) {
-                continue;
-            }
-
-            $relatedCategoryIds = $element['related_category_ids'] ?? null;
-            $allSelectedAlbum[$id] = json_decode(is_string($relatedCategoryIds) ? $relatedCategoryIds : '');
+            $allSelectedAlbum[$element->id] = json_decode($element->relatedCategoryIds);
         }
 
         return [

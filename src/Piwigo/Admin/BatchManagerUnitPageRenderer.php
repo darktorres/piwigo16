@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
+use Piwigo\Admin\BatchManager\Projection\BatchManagerUnitElement;
 use Piwigo\Admin\BatchManager\Projection\BulkManagerFilter;
 use Piwigo\Admin\BatchManager\Projection\DimensionFilterOptions;
 use Piwigo\Admin\BatchManager\Projection\FilesizeFilterOptions;
@@ -428,47 +429,39 @@ final readonly class BatchManagerUnitPageRenderer
                 $row_added_by_raw = $row['added_by'] ?? null;
                 $row_added_by = (is_int($row_added_by_raw) || is_string($row_added_by_raw)) ? $row_added_by_raw : null;
 
-                $elements[] =
-                    array_merge(
-                        $row,
-                        [
-                            'ID' => $row_id,
-                            'TN_SRC' => DerivativeImage::url(ImageStdParams::MEDIUM, $src_image),
-                            'FILE_SRC' => DerivativeImage::url(ImageStdParams::LARGE, $src_image),
-                            'LEGEND' => $legend,
-                            'U_EDIT' => $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $row_id_str,
-                            'NAME' => $row_name,
-                            'AUTHOR' => $row_author,
-                            'LEVEL' => $selected_level !== null && $selected_level !== '' && $selected_level !== '0' ? $selected_level : '0',
-                            'DESCRIPTION' => $row_comment,
-                            'DATE_CREATION' => $row['date_creation'],
-                            'TAGS' => $tag_selection,
-                            'is_svg' => (strtoupper(end($extTab)) === 'SVG'),
-                            'TITLE' => $htmlRenderer->renderElementName($row),
-                            'DIMENSIONS' => $row_width . 'x' . $row_height . ' px',
-                            'FORMAT' => ($row_width >= $row_height) ? 1 : 0, // 0:horizontal, 1:vertical
-                            'FILESIZE' => $this->lang->t('%.2f MB', $row_filesize / 1024.0),
-                            'REGISTRATION_DATE' => DateHelper::formatDate($row_date_available),
-                            'EXT' => $this->lang->t('%s file type', end($extTab)),
-                            'POST_DATE' => $this->lang->t('Added on %s', DateHelper::formatDate($row_date_available, ['day', 'month', 'year'])),
-                            'AGE' => $this->lang->t(ucfirst(DateHelper::timeSince($row_date_available, 'year'))),
-                            'ADDED_BY' => $this->lang->t('Added by %s', $row_added_by !== null ? ($added_by_username_of[$row_added_by] ?? $this->lang->t('N/A')) : $this->lang->t('N/A')),
-                            'STATS' => $this->lang->t('Visited %d times', $row['hit']),
-                            'FILE' => $this->lang->t('%s', $row['file']),
-                            'related_categories' => $related_categories,
-                            'related_category_ids' => json_encode($related_category_ids),
-                            'U_JUMPTO' => (isset($url_img) and $user->level >= $media['image']['level']) ? $url_img : null,
-                            'tag_selection' => $tag_selection,
-                            'U_DOWNLOAD' => 'action.php?id=' . $row_id_str . '&amp;part=e&amp;pwg_token=' . $this->csrfService->getToken() . '&amp;download',
-                            'U_HISTORY' => $this->urlService->getRootUrl() . 'admin.php?page=history&amp;filter_image_id=' . $row_id_str,
-                            'U_ACTIVITY' => $this->urlService->getRootUrl() . 'admin.php?page=user_activity&photo=' . $row_id_str,
-                            'U_DELETE' => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . $this->csrfService->getToken(),
-                            'U_SYNC' => $admin_url_start . '&amp;sync_metadata=1',
-                            'PATH' => $row['path'],
-                            'level_options_selected' => [$selected_level],
+                // '' on failure, which is what the View's own reader
+                // coerced json_encode()'s false to before this was typed --
+                // json_decode('') is null, same as it was.
+                $related_category_ids_json = json_encode($related_category_ids);
 
-                        ]
-                    );
+                $elements[] = new BatchManagerUnitElement(
+                    id: $row_id,
+                    tnSrc: DerivativeImage::url(ImageStdParams::MEDIUM, $src_image),
+                    fileSrc: DerivativeImage::url(ImageStdParams::LARGE, $src_image),
+                    uEdit: $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $row_id_str,
+                    name: $row_name,
+                    author: $row_author,
+                    description: $row_comment,
+                    dateCreation: $row['date_creation'],
+                    tags: $tag_selection,
+                    dimensions: $row_width . 'x' . $row_height . ' px',
+                    format: ($row_width >= $row_height) ? 1 : 0, // 0:horizontal, 1:vertical
+                    filesize: $this->lang->t('%.2f MB', $row_filesize / 1024.0),
+                    ext: $this->lang->t('%s file type', end($extTab)),
+                    postDate: $this->lang->t('Added on %s', DateHelper::formatDate($row_date_available, ['day', 'month', 'year'])),
+                    age: $this->lang->t(ucfirst(DateHelper::timeSince($row_date_available, 'year'))),
+                    addedBy: $this->lang->t('Added by %s', $row_added_by !== null ? ($added_by_username_of[$row_added_by] ?? $this->lang->t('N/A')) : $this->lang->t('N/A')),
+                    stats: $this->lang->t('Visited %d times', $row['hit']),
+                    file: $this->lang->t('%s', $row['file']),
+                    relatedCategories: $related_categories,
+                    relatedCategoryIds: $related_category_ids_json === false ? '' : $related_category_ids_json,
+                    uJumpto: (isset($url_img) and $user->level >= $media['image']['level']) ? $url_img : null,
+                    uDownload: 'action.php?id=' . $row_id_str . '&amp;part=e&amp;pwg_token=' . $this->csrfService->getToken() . '&amp;download',
+                    uHistory: $this->urlService->getRootUrl() . 'admin.php?page=history&amp;filter_image_id=' . $row_id_str,
+                    uActivity: $this->urlService->getRootUrl() . 'admin.php?page=user_activity&photo=' . $row_id_str,
+                    path: $row['path'],
+                    levelOptionsSelected: [$selected_level],
+                );
             }
 
             $element_ids_value = implode(',', $element_ids);

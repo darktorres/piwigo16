@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Admin\BatchManager\Projection\BatchManagerUnitElement;
 use Piwigo\Admin\BatchManager\Projection\DimensionBounds;
 use Piwigo\Admin\BatchManager\Projection\DimensionFilterOptions;
 use Piwigo\Admin\BatchManager\Projection\FilesizeBounds;
@@ -10,7 +11,43 @@ use Piwigo\Admin\BatchManager\Projection\RatioRange;
 use Piwigo\Admin\Projection\BatchManagerUnitView;
 
 /**
- * @param list<array<string, mixed>> $elements
+ * The two fields exposedPageData() reads; every other one is filled with a
+ * placeholder, since nothing under test looks at them.
+ */
+function batchManagerUnitElement(int|string $id, string $relatedCategoryIds): BatchManagerUnitElement
+{
+    return new BatchManagerUnitElement(
+        id: $id,
+        tnSrc: '',
+        fileSrc: '',
+        uEdit: '',
+        name: '',
+        author: '',
+        description: '',
+        dateCreation: null,
+        tags: [],
+        dimensions: '',
+        format: 0,
+        filesize: '',
+        ext: '',
+        postDate: '',
+        age: '',
+        addedBy: '',
+        stats: '',
+        file: '',
+        relatedCategories: [],
+        relatedCategoryIds: $relatedCategoryIds,
+        uJumpto: null,
+        uDownload: '',
+        uHistory: '',
+        uActivity: '',
+        path: null,
+        levelOptionsSelected: [null],
+    );
+}
+
+/**
+ * @param list<BatchManagerUnitElement> $elements
  */
 function makeBatchManagerUnitView(array $elements): BatchManagerUnitView
 {
@@ -54,14 +91,8 @@ function makeBatchManagerUnitView(array $elements): BatchManagerUnitView
 
 test('exposedPageData builds all_related_categories_ids by decoding each element JSON', function (): void {
     $view = makeBatchManagerUnitView([
-        [
-            'ID' => '1',
-            'related_category_ids' => '[2,3]',
-        ],
-        [
-            'ID' => '2',
-            'related_category_ids' => '[4]',
-        ],
+        batchManagerUnitElement('1', '[2,3]'),
+        batchManagerUnitElement('2', '[4]'),
     ]);
 
     expect($view->exposedPageData()['all_related_categories_ids'])
@@ -71,29 +102,14 @@ test('exposedPageData builds all_related_categories_ids by decoding each element
         ]);
 });
 
-test('exposedPageData skips an element with a non-scalar ID', function (): void {
+// The sibling test that fed a non-scalar ID is gone: BatchManagerUnitElement
+// declares `int|string $id`, so the element exposedPageData() used to skip
+// can no longer be built. That skip is the type's job now.
+test('exposedPageData decodes an empty related_category_ids as null', function (): void {
+    // '' is what the renderer emits when json_encode() fails -- the one way
+    // this field is not real JSON.
     $view = makeBatchManagerUnitView([
-        [
-            'ID' => ['nested'],
-            'related_category_ids' => '[1]',
-        ],
-        [
-            'ID' => '5',
-            'related_category_ids' => '[9]',
-        ],
-    ]);
-
-    expect($view->exposedPageData()['all_related_categories_ids'])
-        ->toBe([
-            '5' => [9],
-        ]);
-});
-
-test('exposedPageData decodes a missing related_category_ids as null', function (): void {
-    $view = makeBatchManagerUnitView([
-        [
-            'ID' => '1',
-        ],
+        batchManagerUnitElement('1', ''),
     ]);
 
     expect($view->exposedPageData()['all_related_categories_ids'])

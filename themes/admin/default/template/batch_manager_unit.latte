@@ -47,20 +47,20 @@
       </div>
     </div>
     {foreach $elements as $element}
-      <div class="infos deleted-badge" data-image_id="{$element['ID']}">
+      <div class="infos deleted-badge" data-image_id="{$element->id}">
         <i class="icon-ok"></i>
         <p>
           &nbsp;{='Image'|translate}&nbsp;
           <p>
-            #{$element['ID']} '{$element['FILE']}'
+            #{$element->id} '{$element->file}'
           </p>
           &nbsp;{='was succesfully deleted'|translate}
         </p>
       </div>
       <fieldset
         class="elementEdit"
-        id="picture-{$element['ID']}"
-        data-image_id="{$element['ID']}"
+        id="picture-{$element->id}"
+        data-image_id="{$element->id}"
       >
         <div class="metasync-success badge-container">
           <div class="badge-succes">
@@ -69,43 +69,43 @@
           </div>
         </div>
         <div class="pictureIdLabel">
-          #{$element['ID']}
+          #{$element->id}
         </div>
         <div class="media-box">
           <img
-            src="{$element['TN_SRC']|noescape}"
+            src="{$element->tnSrc|noescape}"
             alt="imagename"
-            class="media-box-embed {if $element['FORMAT']}is-portrait{else}is-landscape{/if}"
+            class="media-box-embed {if $element->format}is-portrait{else}is-landscape{/if}"
           >
           <div class="media-hover">
             <div class='picture-preview-actions'>
               <a
                 class="preview-box icon-zoom-square tiptip"
-                href="{$element['FILE_SRC']|noescape}"
+                href="{$element->fileSrc|noescape}"
                 title="{='Zoom'|translate}"
               ></a>
               <a
                 class="icon-download tiptip"
-                href="{$element['U_DOWNLOAD']|noescape}"
+                href="{$element->uDownload|noescape}"
                 title="{='Download'|translate}"
               ></a>
               <a
                 class="icon-signal tiptip"
-                href="{$element['U_HISTORY']|noescape}"
+                href="{$element->uHistory|noescape}"
                 title="{='Visit history'|translate}"
               ></a>
               <a
                 class="icon-pulse tiptip"
-                href="{$element['U_ACTIVITY']}"
+                href="{$element->uActivity}"
                 title="{='Activity'|translate}"
               ></a>
               <a
                 target="_blank"
                 class="icon-pencil tiptip"
-                href="{$element['U_EDIT']}"
+                href="{$element->uEdit}"
                 title="{='Edit photo'|translate}"
               ></a>
-              {if !url_is_remote($element['PATH'])}
+              {if !url_is_remote($element->path)}
                 <a
                   class="icon-arrows-cw tiptip action-sync-metadata"
                   title="{='Synchronize metadata'|translate}"
@@ -116,8 +116,8 @@
                 ></a>
               {/if}
             </div>
-            {if isset($element['U_JUMPTO'])}
-              <a class="see-out" href="{$element['U_JUMPTO']}">
+            {if isset($element->uJumpto)}
+              <a class="see-out" href="{$element->uJumpto}">
                 <p>
                   <i class="icon-left-open"></i>
                   {='Open in gallery'|translate}
@@ -141,19 +141,16 @@
             <div class='info-framed-icon'>
               <i class='icon-picture'></i>
             </div>
-            <span
-              class="main-info-title"
-              id="filename"
-            >{$element['FILE']}</span>
+            <span class="main-info-title" id="filename">{$element->file}</span>
             <span
               class="main-info-desc"
               id="dimensions"
-            >{$element['DIMENSIONS']}</span>
+            >{$element->dimensions}</span>
             <span
               class="main-info-desc"
               id="filesize"
-            >{$element['FILESIZE']}</span>
-            <span class="main-info-desc">{$element['EXT']}</span>
+            >{$element->filesize}</span>
+            <span class="main-info-desc">{$element->ext}</span>
           </div>
           <div class="main-info-block">
             <div class='info-framed-icon'>
@@ -161,37 +158,37 @@
             </div>
             <span
               class="main-info-title first-letter-capitalize"
-            >{$element['POST_DATE']}</span>
-            <span class="main-info-desc">{$element['AGE']}</span>
-            <span class="main-info-desc">{$element['ADDED_BY']}</span>
-            <span class="main-info-desc">{$element['STATS']}</span>
+            >{$element->postDate}</span>
+            <span class="main-info-desc">{$element->age}</span>
+            <span class="main-info-desc">{$element->addedBy}</span>
+            <span class="main-info-desc">{$element->stats}</span>
           </div>
         </div>
         <div class="info-container">
           <div class="half-line-info-box">
             <strong>{='Title'|translate}</strong>
-            <input type="text" name="name" id="name" value="{$element['NAME']}">
+            <input type="text" name="name" id="name" value="{$element->name}">
           </div>
           <div class="calendar-box">
             <strong>{='Creation date'|translate}</strong>
             <input
               type="hidden"
               id="date_creation"
-              name="date_creation-{$element['id']}"
-              value="{$element['DATE_CREATION']}"
+              name="date_creation-{$element->id}"
+              value="{$element->dateCreation}"
             >
             <label class="calendar-input">
               <i class="icon-calendar"></i>
               <input
                 type="text"
-                data-datepicker="date_creation-{$element['id']}"
-                data-datepicker-unset="date_creation_unset-{$element['id']}"
+                data-datepicker="date_creation-{$element->id}"
+                data-datepicker-unset="date_creation_unset-{$element->id}"
                 readonly
               >
               <a
                 href="#"
                 class="icon-cancel-circled unset datepickerDelete"
-                id="date_creation_unset-{$element['id']}"
+                id="date_creation_unset-{$element->id}"
               ></a>
             </label>
           </div>
@@ -201,7 +198,7 @@
               type="text"
               name="author"
               id="author"
-              value="{$element['AUTHOR']}"
+              value="{$element->author}"
             >
           </div>
           <div class="half-line-info-box">
@@ -213,7 +210,7 @@
               <option
                 n:foreach="$levelOptions as $optKey => $optLabel"
                 value="{$optKey}"
-                n:attr="selected: in_array((string) $optKey, array_map(strval(...), (array) $element['level_options_selected']), true) ? 'selected' : null"
+                n:attr="selected: in_array((string) $optKey, array_map(strval(...), $element->levelOptionsSelected), true) ? 'selected' : null"
               >{html_entity_decode(strval($optLabel))}</option>
             </select>
           </div>
@@ -222,19 +219,19 @@
             <select
               id="tags"
               data-selectize="tags"
-              data-value="{$element['TAGS']|json_encode|htmlspecialchars|noescape}"
+              data-value="{$element->tags|json_encode|htmlspecialchars|noescape}"
               placeholder="{='Type in a search term'|translate}"
               data-create="true"
               name="tags"
-              id="tags-{$element['id']}[]"
+              id="tags-{$element->id}[]"
               multiple
             ></select>
           </div>
-          <div class="full-line-box" id="{$element['ID']}">
+          <div class="full-line-box" id="{$element->id}">
             <strong>{='Linked albums'|translate} <span
-                class="linked-albums-badge {if count($element['related_categories']) < 1} badge-red {/if}"
-              > {count($element['related_categories'])} </span></strong>
-            {if count($element['related_categories']) < 1}
+                class="linked-albums-badge {if count($element->relatedCategories) < 1} badge-red {/if}"
+              > {count($element->relatedCategories)} </span></strong>
+            {if count($element->relatedCategories) < 1}
               <span
                 class="orphan-photo"
               >{='This photo is an orphan'|translate}</span>
@@ -243,7 +240,7 @@
             {/if}
             <div class="related-categories-container">
               <div
-                n:foreach="$element['related_categories'] as $key => $cat_path"
+                n:foreach="$element->relatedCategories as $key => $cat_path"
                 class="breadcrumb-item"
               >
                 <span class="link-path">{$cat_path['name']|noescape}</span>
@@ -262,7 +259,7 @@
               </div>
             </div>
             <div
-              class="breadcrumb-item linked-albums add-item {if count($element['related_categories']) < 1} highlight {/if}"
+              class="breadcrumb-item linked-albums add-item {if count($element->relatedCategories) < 1} highlight {/if}"
             >
               <span class="icon-plus-circled"></span>
               {='Add'|translate}
@@ -276,7 +273,7 @@
               name="description"
               class="description-box"
               id="description"
-            >{$element['DESCRIPTION']}</textarea>
+            >{$element->description}</textarea>
           </div>
           {if isset($PLUGINS_BATCH_MANAGER_UNIT_ELEMENT_SUBTEMPLATE)}
             {foreach $PLUGINS_BATCH_MANAGER_UNIT_ELEMENT_SUBTEMPLATE as $PATH}

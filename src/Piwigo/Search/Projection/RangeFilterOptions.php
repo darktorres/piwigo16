@@ -16,16 +16,19 @@ namespace Piwigo\Search\Projection;
  * `.split(",").map(Number)`, so it stays a single string rather than
  * becoming a list here.
  *
- * `$bounds` is the range the slider spans and `$selected` the sub-range
- * currently chosen; they are deliberately different objects even when they
- * hold equal values, because a search that names no min/max falls back to
- * the bounds and the two then coincide by accident, not by definition.
+ * There is deliberately no `$bounds`. The renderer used to compute one and
+ * the template used to emit it as `data-min`/`data-max` on each slider's
+ * clear button, but nothing ever read either: `pwgDoubleSlider` takes its
+ * range from `options.values` (i.e. `$list`) and its position from
+ * `options.selected`, and no CSS or script reads the attributes. It was also
+ * redundant by construction -- the bounds were exactly the first and last
+ * entries of `$list`. The width slider never emitted them at all, which is
+ * what made the asymmetry visible (P58-A).
  */
 final readonly class RangeFilterOptions
 {
     public function __construct(
         public string $list,
-        public RangeBounds $bounds,
         public RangeBounds $selected,
     ) {}
 
@@ -40,16 +43,12 @@ final readonly class RangeFilterOptions
      * are `?string` now. That is invisible to the client: every read there
      * is `Number(...)`, and `Number('0') === Number(0)`.
      *
-     * @return array{list: string, bounds: array{min: ?string, max: ?string}, selected: array{min: ?string, max: ?string}}
+     * @return array{list: string, selected: array{min: ?string, max: ?string}}
      */
     public function toPageData(): array
     {
         return [
             'list' => $this->list,
-            'bounds' => [
-                'min' => $this->bounds->min,
-                'max' => $this->bounds->max,
-            ],
             'selected' => [
                 'min' => $this->selected->min,
                 'max' => $this->selected->max,

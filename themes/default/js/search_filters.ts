@@ -172,18 +172,20 @@ const sliders: {
   widths?: PwgSliderConfig;
 } = {};
 
-// Real shape of the filesize/height/width page-data keys. These are now
+// Real shape of the filesize/height/width page-data keys -- now
 // RangeFilterOptions::toPageData()'s own declared shape (P58-A), so this is
-// the whole payload rather than a narrowing of an `array<string, mixed>`:
-// `bounds` is genuinely sent too, it just isn't read here -- the sliders take
-// their range from the markup's data-min/data-max instead.
+// the whole payload rather than a narrowing of an `array<string, mixed>`.
+//
+// The slider's range comes from `list` and its position from `selected`;
+// there is no `bounds`, and the claim in an earlier version of this comment
+// that the range came from the markup's data-min/data-max was simply wrong.
+// Nothing read those attributes, and they are gone.
 //
 // The endpoints are strings, and null when the option set is empty. Both are
 // passed through Number() below, which is why the previous `number | string`
 // never mattered: Number('0') === Number(0), and Number(null) === 0.
 interface PageDataSliderSource {
   list: string;
-  bounds: { min: string | null; max: string | null };
   selected: { min: string | null; max: string | null };
 }
 

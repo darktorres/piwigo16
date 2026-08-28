@@ -1068,8 +1068,8 @@ it('counts the "Landscape" ratio bucket and skips non-numeric/zero-dimension row
  * setter for it) together with the "no bucket values at all" arbitrary
  * fallback array (line ~679-686) it feeds into when every row in scope
  * gets skipped that way -- distinguishable from a genuinely-empty gallery
- * by its exact, fixed bounds (0..15), asserted below via the slider's own
- * `data-min`/`data-max` attributes (search_filters.inc.latte).
+ * by its exact, fixed set (0/2/5/8/15), asserted below via the slider's own
+ * page-data `list` (RangeFilterOptions::toPageData()).
  */
 it('falls back to the arbitrary filesize bucket set when every filesize row in scope is NULL', function (): void {
     $snapshot = H::snapshotConfig(['filters_views']);
@@ -1122,11 +1122,20 @@ it('falls back to the arbitrary filesize bucket set when every filesize row in s
         H::assertNoServerErrors($page, 'filesize bucket fallback search (every row NULL)');
         $page->assertNoJavaScriptErrors();
 
-        $html = H::rawWebpage($page)->content();
-        expect($html)
-            ->toContain('data-min="0"')
-            ->and($html)
-            ->toContain('data-max="15"');
+        // The arbitrary set is 0/2/5/8/15, and `list` is where it now shows:
+        // this used to assert data-min="0"/data-max="15" on the clear
+        // button, but nothing read those attributes and they are gone
+        // (P58-A). `list` is the stronger assertion anyway -- it pins the
+        // whole fallback set rather than just its two ends.
+        // The arbitrary set is 0/1/2/5/8/15 (SearchFilterRenderer:617), and
+        // `list` is where it now shows: this used to assert data-min="0"/
+        // data-max="15" on the clear button, but nothing read those
+        // attributes and they are gone (P58-A). The whole payload is the
+        // stronger assertion anyway -- it pins every bucket rather than the
+        // two ends, and `selected` alongside it, which is the search's own
+        // 100..4000 KB converted to megabytes.
+        expect(H::rawWebpage($page)->content())
+            ->toContain('"filesize":{"list":"0,1,2,5,8,15","selected":{"min":"0.1","max":"3.9"}}');
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -1173,7 +1182,7 @@ function searchFilterDataSetImageDims(int $imageId, int $width, int $height, int
  * column is KB, the slider is MB), so the three values are a megabyte apart
  * to land in three distinct buckets.
  */
-it('emits real slider bounds and selected values for the filesize, height and width filters', function (): void {
+it('emits the real option list and selected values for the filesize, height and width sliders', function (): void {
     $snapshot = H::snapshotConfig(['filters_views']);
     $filtersViews = json_encode([
         'file_size' => [
@@ -1236,38 +1245,36 @@ it('emits real slider bounds and selected values for the filesize, height and wi
         preg_match_all('/data-(min|max)="([^"]*)"/', $html, $b, PREG_SET_ORDER);
         preg_match_all('/name="(filter_(?:filesize|height|width)_[a-z_]*)"\s*value="([^"]*)"/', $html, $v, PREG_SET_ORDER);
 
-        // Each filter's own bucket set is deliberately computed under the
-        // *other* active filters rather than its own -- the renderer says so
-        // itself ("the min/max of the current search won't always be the
-        // first/last values found"), via getClauseForFilter(). So filesize's
-        // bounds are taken with height 500..700 and width 600..800 applied,
-        // and height's with filesize 2048..4096 and width 600..800 applied.
-        // Either way only the second and third photo qualify, so both pairs
-        // are this album's own values and the 400x300/1024 one is excluded.
-        //
-        // That clause does NOT include the category filter, so the ranges
-        // here have to exclude every other photo in the gallery by dimension
-        // alone. Both halves of that were found by being wrong first, and
-        // are why the numbers look arbitrary:
-        //
-        //  - a draft using 200x150 photos read a filesize lower bound of 0.0
-        //    instead of its own album's 1.0, because every makeTestImage
-        //    photo in the gallery (all fixed at 200x150, a few KB) fell
-        //    inside its height/width range and bucketed to 0.0;
-        //  - a draft using width 600..800 read a height lower bound of 200,
-        //    because the ratio-bucket test above creates 800x200 panorama
-        //    photos at filesize 3000, which sit inside both the width and
-        //    the filesize range. Hence 600..700: it excludes them by width.
-        //
-        // Both only appear when the file runs as a whole, not when this test
-        // runs alone.
-        //
-        // Exactly four data-min/data-max values, not six: the width filter's
-        // clear button emits neither, unlike filesize's and height's. That
-        // asymmetry is pre-existing and is left alone here -- P58 is type
-        // work -- but pinning the count keeps it from changing unnoticed.
-        expect(array_map(static fn (array $m): string => $m[1] . '=' . $m[2], $b))
-            ->toBe(['min=2.0', 'max=4.0', 'min=500', 'max=700']);
+        // The clear buttons used to carry data-min/data-max, and this test
+        // used to assert four of them. Nothing ever read those attributes --
+        // pwgDoubleSlider takes its range from the option list and its
+        // position from `selected` -- and the width slider never emitted
+        // them at all, so they are gone (P58-A). The bounds they came from
+        // were the first and last entries of the option list anyway, which
+        // the `list` values below still pin.
+        expect($b)
+            ->toBe([]);
+
+        // What replaces them: RangeFilterOptions::toPageData() is now the
+        // whole payload, and `list` is where the slider's range actually
+        // comes from. Asserting it here keeps the range covered, and pins
+        // that the filesize buckets really are megabytes to one decimal
+        // while height and width are raw pixel values.
+        preg_match_all(
+            '/"(filesize|height|width)":\{"list":"([^"]*)"/',
+            $html,
+            $lists,
+            PREG_SET_ORDER
+        );
+        expect(array_map(static fn (array $m): string => $m[1] . '=' . $m[2], $lists))
+            ->toBe([
+                'filesize=2.0,4.0',
+                'height=500,700',
+                // 600 is absent: the width bucket set is scoped by the
+                // filesize and height filters too, and the 600x300/1024
+                // photo fails both.
+                'width=650,700',
+            ]);
 
         // The eight 'selected' values are the search's own rules echoed back,
         // and are chosen to sit strictly inside the bounds above so neither

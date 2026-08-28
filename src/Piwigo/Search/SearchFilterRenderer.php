@@ -636,10 +636,6 @@ final readonly class SearchFilterRenderer
             // this way to select selected values
             $filesize = new RangeFilterOptions(
                 list: implode(',', $uniqueFilesizes),
-                bounds: new RangeBounds(
-                    min: RangeBounds::value($uniqueFilesizes[0]),
-                    max: RangeBounds::value(end($uniqueFilesizes)),
-                ),
                 selected: new RangeBounds(
                     min: (is_numeric($filesizeMin) && (float) $filesizeMin !== 0.0) ? sprintf('%.1f', (float) $filesizeMin / 1024.0) : RangeBounds::value($uniqueFilesizes[0]),
                     max: (is_numeric($filesizeMax) && (float) $filesizeMax !== 0.0) ? sprintf('%.1f', (float) $filesizeMax / 1024.0) : RangeBounds::value(end($uniqueFilesizes)),
@@ -739,10 +735,6 @@ final readonly class SearchFilterRenderer
 
             $height = new RangeFilterOptions(
                 list: implode(',', $heights),
-                bounds: new RangeBounds(
-                    min: RangeBounds::value($heights[0] ?? null),
-                    max: RangeBounds::value(end($heights)),
-                ),
                 selected: new RangeBounds(
                     min: RangeBounds::value(($heightMin !== '' && $heightMin !== 0) ? $heightMin : ($heights[0] ?? null)),
                     max: RangeBounds::value(($heightMax !== '' && $heightMax !== 0) ? $heightMax : end($heights)),
@@ -787,10 +779,6 @@ final readonly class SearchFilterRenderer
 
             $width = new RangeFilterOptions(
                 list: implode(',', $widths),
-                bounds: new RangeBounds(
-                    min: RangeBounds::value($widths[0] ?? null),
-                    max: RangeBounds::value(end($widths)),
-                ),
                 selected: new RangeBounds(
                     min: RangeBounds::value(($widthMin !== '' && $widthMin !== 0) ? $widthMin : ($widths[0] ?? null)),
                     max: RangeBounds::value(($widthMax !== '' && $widthMax !== 0) ? $widthMax : end($widths)),

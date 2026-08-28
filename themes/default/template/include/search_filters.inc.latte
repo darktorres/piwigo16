@@ -398,8 +398,8 @@
                     data-type='year'
                   ></i>
                   <label for="date_posted_{$y}" id="{$y}">
-                    <span class="date-period">{$year['label']}</span>
-                    <span class="date_posted-badge">{$year['count']}</span>
+                    <span class="date-period">{$year->label}</span>
+                    <span class="date_posted-badge">{$year->count}</span>
                     <span
                       class="mcs-icon gallery-icon-checkmark checked-icon"
                     ></span>
@@ -407,7 +407,7 @@
                 </div>
 
                 <div class="months_container">
-                  {foreach $year['months'] as $m => $month}
+                  {foreach $year->months as $m => $month}
                     <div class="date_posted-option month" id="container_{$m}">
                       <div class="month_input">
                         <input
@@ -421,10 +421,10 @@
                           data-type='month'
                         ></i>
                         <label for="date_posted_{$m}" id="{$m}">
-                          <span class="date-period">{$month['label']}</span>
+                          <span class="date-period">{$month->label}</span>
                           <span
                             class="date_posted-badge"
-                          >{$month['count']}</span>
+                          >{$month->count}</span>
                           <span
                             class="mcs-icon gallery-icon-checkmark checked-icon"
                           ></span>
@@ -432,7 +432,7 @@
                       </div>
 
                       <div class="days_container">
-                        {foreach $month['days'] as $d => $day}
+                        {foreach $month->days as $d => $day}
                           <div
                             class="date_posted-option day"
                             id="container_{$d}"
@@ -444,10 +444,10 @@
                               data-year="{$y}"
                             >
                             <label for="date_posted_{$d}" id="{$d}">
-                              <span class="date-period">{$day['label']}</span>
+                              <span class="date-period">{$day->label}</span>
                               <span
                                 class="date_posted-badge"
-                              >{$day['count']}</span>
+                              >{$day->count}</span>
                               <span
                                 class="mcs-icon gallery-icon-checkmark checked-icon"
                               ></span>
@@ -561,8 +561,8 @@
                         data-type='year'
                       ></i>
                       <label for="date_created_{$y}" id="{$y}">
-                        <span class="date-period">{$year['label']}</span>
-                        <span class="date_created-badge">{$year['count']}</span>
+                        <span class="date-period">{$year->label}</span>
+                        <span class="date_created-badge">{$year->count}</span>
                         <span
                           class="mcs-icon gallery-icon-checkmark checked-icon"
                         ></span>
@@ -570,7 +570,7 @@
                     </div>
 
                     <div class="months_container">
-                      {foreach $year['months'] as $m => $month}
+                      {foreach $year->months as $m => $month}
                         <div
                           class="date_created-option month"
                           id="container_{$m}"
@@ -587,10 +587,10 @@
                               data-type='month'
                             ></i>
                             <label for="date_created_{$m}" id="{$m}">
-                              <span class="date-period">{$month['label']}</span>
+                              <span class="date-period">{$month->label}</span>
                               <span
                                 class="date_created-badge"
-                              >{$month['count']}</span>
+                              >{$month->count}</span>
                               <span
                                 class="mcs-icon gallery-icon-checkmark checked-icon"
                               ></span>
@@ -598,7 +598,7 @@
                           </div>
 
                           <div class="days_container">
-                            {foreach $month['days'] as $d => $day}
+                            {foreach $month->days as $d => $day}
                               <div
                                 class="date_created-option day"
                                 id="container_{$d}"
@@ -612,10 +612,10 @@
                                 <label for="date_created_{$d}" id="{$d}">
                                   <span
                                     class="date-period"
-                                  >{$day['label']}</span>
+                                  >{$day->label}</span>
                                   <span
                                     class="date_created-badge"
-                                  >{$day['count']}</span>
+                                  >{$day->count}</span>
                                   <span
                                     class="mcs-icon gallery-icon-checkmark checked-icon"
                                   ></span>

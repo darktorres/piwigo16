@@ -12,6 +12,7 @@ use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
 use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
+use Piwigo\Search\Projection\DateFilterYear;
 use Piwigo\Search\Projection\RangeFilterOptions;
 use Piwigo\Template\Latte\Attribute\Template;
 use Piwigo\Template\Projection\QuickSearchView;
@@ -47,9 +48,9 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
      * @param array<array-key, mixed>|null $ratios
      * @param list<string>|null $albumsFound
      * @param list<string>|null $tagsFound
-     * @param array<array-key, mixed>|null $listDatePosted
+     * @param array<array-key, DateFilterYear>|null $listDatePosted
      * @param array<string, array{label: string, counter: mixed}>|null $datePosted
-     * @param array<array-key, mixed>|null $listDateCreated
+     * @param array<array-key, DateFilterYear>|null $listDateCreated
      * @param array<string, array{label: string, counter: mixed}>|null $dateCreated
      */
     public function __construct(

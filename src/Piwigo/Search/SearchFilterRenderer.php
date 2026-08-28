@@ -24,6 +24,9 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Search\Projection\AuthorRule;
 use Piwigo\Search\Projection\CategoryRule;
+use Piwigo\Search\Projection\DateFilterDay;
+use Piwigo\Search\Projection\DateFilterMonth;
+use Piwigo\Search\Projection\DateFilterYear;
 use Piwigo\Search\Projection\RangeBounds;
 use Piwigo\Search\Projection\RangeFilterOptions;
 use Piwigo\Search\Projection\SearchFilterData;
@@ -970,7 +973,7 @@ final readonly class SearchFilterRenderer
      * @param array<string, string> $labelForThreshold keyed by threshold id
      *   (e.g. '24h', '7d'), in display order
      * @param array<string, mixed> $page see render()'s own docblock
-     * @return array{listOfDates: array<array-key, mixed>, counters: array<string, array{label: string, counter: mixed}>}
+     * @return array{listOfDates: array<array-key, DateFilterYear>, counters: array<string, array{label: string, counter: mixed}>}
      */
     private function renderDateFilter(
         array $langMonth,
@@ -1059,14 +1062,18 @@ final readonly class SearchFilterRenderer
 
         // $listOfDates may have come from the persistent cache above, which
         // stores it as plain mixed data — validate each nesting level
-        // defensively rather than trusting its shape.
+        // defensively rather than trusting its shape. This pass is also
+        // where the counted arrays are frozen into DateFilterYear/Month/Day:
+        // the freeze happens *after* the cache read, never before, so no
+        // object is ever serialized into the cache pool.
+        $years = [];
         foreach (array_keys($listOfDates) as $y) {
             $yearBucket = $listOfDates[$y] ?? null;
             if (! is_array($yearBucket)) {
                 continue;
             }
-            $yearBucket['label'] = $this->lang->t('year %d', $y);
 
+            $months = [];
             $monthsBucket = $yearBucket['months'] ?? null;
             if (is_array($monthsBucket)) {
                 foreach (array_keys($monthsBucket) as $ym) {
@@ -1075,11 +1082,7 @@ final readonly class SearchFilterRenderer
                         continue;
                     }
 
-                    [, $m] = explode('-', (string) $ym);
-                    $monthName = $langMonth[(int) $m] ?? null;
-                    $monthName = is_string($monthName) ? $monthName : '';
-                    $monthBucket['label'] = $monthName . ' ' . $y;
-
+                    $days = [];
                     $daysBucket = $monthBucket['days'] ?? null;
                     if (is_array($daysBucket)) {
                         foreach (array_keys($daysBucket) as $ymd) {
@@ -1087,25 +1090,48 @@ final readonly class SearchFilterRenderer
                             if (! is_array($dayBucket)) {
                                 continue;
                             }
-                            $dayBucket['label'] = DateHelper::formatDate($ymd);
-                            $daysBucket[$ymd] = $dayBucket;
+                            $days[$ymd] = new DateFilterDay(
+                                label: DateHelper::formatDate($ymd),
+                                count: self::dateFilterCount($dayBucket['count'] ?? null),
+                            );
                         }
-                        $monthBucket['days'] = $daysBucket;
                     }
 
-                    $monthsBucket[$ym] = $monthBucket;
+                    [, $m] = explode('-', (string) $ym);
+                    $monthName = $langMonth[(int) $m] ?? null;
+                    $monthName = is_string($monthName) ? $monthName : '';
+                    $months[$ym] = new DateFilterMonth(
+                        label: $monthName . ' ' . $y,
+                        count: self::dateFilterCount($monthBucket['count'] ?? null),
+                        days: $days,
+                    );
                 }
-                $yearBucket['months'] = $monthsBucket;
             }
 
-            $listOfDates[$y] = $yearBucket;
+            $years[$y] = new DateFilterYear(
+                label: $this->lang->t('year %d', $y),
+                count: self::dateFilterCount($yearBucket['count'] ?? null),
+                months: $months,
+            );
         }
-        krsort($listOfDates);
+        krsort($years);
 
         return [
-            'listOfDates' => $listOfDates,
+            'listOfDates' => $years,
             'counters' => $counters,
         ];
+    }
+
+    /**
+     * A day/month/year bucket count, as read back out of the persistent
+     * cache pool, where it is plain mixed data. Real values are the ints
+     * this method's own accumulation loop wrote; anything else is a corrupt
+     * or stale entry and counts as zero, which is what the templates
+     * rendered for it before these buckets were typed.
+     */
+    private static function dateFilterCount(mixed $count): int
+    {
+        return is_numeric($count) ? (int) $count : 0;
     }
 
     private function intervalForThreshold(string $threshold): string

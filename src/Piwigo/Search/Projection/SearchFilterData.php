@@ -33,9 +33,9 @@ final readonly class SearchFilterData
      * @param array<array-key, mixed>|null $ratios
      * @param list<string>|null $albumsFound
      * @param list<string>|null $tagsFound
-     * @param array<array-key, mixed>|null $listDatePosted
+     * @param array<array-key, DateFilterYear>|null $listDatePosted
      * @param array<string, array{label: string, counter: mixed}>|null $datePosted
-     * @param array<array-key, mixed>|null $listDateCreated
+     * @param array<array-key, DateFilterYear>|null $listDateCreated
      * @param array<string, array{label: string, counter: mixed}>|null $dateCreated
      */
     public function __construct(

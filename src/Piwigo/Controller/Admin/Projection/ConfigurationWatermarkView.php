@@ -31,12 +31,11 @@ final readonly class ConfigurationWatermarkView implements View, HasPageAssets, 
     /**
      * @param array<string, string> $watermarkFiles
      * @param array<string, mixed> $watermark
-     * @param array<string, mixed>|null $ferrors
      */
     public function __construct(
         public array $watermarkFiles,
         public array $watermark,
-        public ?array $ferrors,
+        public ?WatermarkFormErrors $ferrors,
         public string $fAction,
         public ?string $saveSuccess,
         public int $isWebmaster,

@@ -37,6 +37,7 @@ use Piwigo\Controller\Admin\Projection\ConfigurationSizesView;
 use Piwigo\Controller\Admin\Projection\ConfigurationWatermarkResult;
 use Piwigo\Controller\Admin\Projection\ConfigurationWatermarkView;
 use Piwigo\Controller\Admin\Projection\DerivativeSizeRow;
+use Piwigo\Controller\Admin\Projection\WatermarkFormErrors;
 use Piwigo\Controller\Admin\Projection\WatermarkFormValues;
 use Piwigo\Controller\Admin\Request\ConfigurationRequest;
 use Piwigo\Controller\ProfileFormHandler;
@@ -1488,10 +1489,22 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         $this->watermarkLoadedInTpl = true;
 
+        // Flattened for the template (P58-A's §3). $errors is a two-level
+        // bag here -- a top-level 'watermarkImage' string beside a
+        // 'watermark' sub-array -- and the template only ever read leaves,
+        // so the nesting carried nothing.
+        $watermarkImageError = $errors['watermarkImage'] ?? null;
+        $watermarkFieldErrors = $errors['watermark'] ?? [];
+
         return new ConfigurationWatermarkResult(
             saveSuccess: null,
             watermark: $pwatermark,
-            ferrors: $errors,
+            ferrors: new WatermarkFormErrors(
+                watermarkImage: is_string($watermarkImageError) ? $watermarkImageError : null,
+                xpos: $watermarkFieldErrors['xpos'] ?? null,
+                ypos: $watermarkFieldErrors['ypos'] ?? null,
+                opacity: $watermarkFieldErrors['opacity'] ?? null,
+            ),
         );
     }
 

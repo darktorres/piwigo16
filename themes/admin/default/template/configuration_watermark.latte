@@ -12,7 +12,7 @@
         <li>
           <span
             id="selectWatermark"
-            class="{if isset($ferrors['watermarkImage'])}u-hidden{/if}"
+            class="{if $ferrors?->watermarkImage !== null}u-hidden{/if}"
           ><label>{='Select a file'|translate}</label>
             <select name="w[file]" id="wSelect">
               <option
@@ -32,7 +32,7 @@
 
           <span
             id="addWatermark"
-            class="{if isset($ferrors['watermarkImage'])}u-inline{/if}"
+            class="{if $ferrors?->watermarkImage !== null}u-inline{/if}"
           >
             {='add a new watermark'|translate} {='... or '|translate}<a
               href="#"
@@ -45,14 +45,14 @@
               size="60"
               id="watermarkImage"
               name="watermarkImage"
-              {if isset($ferrors['watermarkImage'])}
+              {if $ferrors?->watermarkImage !== null}
               class="dError"
               {/if}
             > (png)
             <span
-              n:if="isset($ferrors['watermarkImage'])"
+              n:if="$ferrors?->watermarkImage !== null"
               class="dErrorDesc"
-              title="{$ferrors['watermarkImage']|htmlspecialchars|noescape}"
+              title="{$ferrors->watermarkImage|htmlspecialchars|noescape}"
             >!</span>
           </span>
         </li>
@@ -66,9 +66,6 @@
               type="text"
               name="w[minw]"
               value="{$watermark['minw']}"
-              {if isset($ferrors['watermark']['minw'])}
-              class="dError"
-              {/if}
             >
           </label>
           {='pixels'|translate}
@@ -83,9 +80,6 @@
               type="text"
               name="w[minh]"
               value="{$watermark['minh']}"
-              {if isset($ferrors['watermark']['minh'])}
-              class="dError"
-              {/if}
             >
           </label>
           {='pixels'|translate}
@@ -170,14 +164,14 @@
                 type="text"
                 name="w[xpos]"
                 value="{$watermark['xpos']}"
-                {if isset($ferrors['watermark']['xpos'])}
+                {if $ferrors?->xpos !== null}
                 class="dError"
                 {/if}
               >%
               <span
-                n:if="isset($ferrors['watermark']['xpos'])"
+                n:if="$ferrors?->xpos !== null"
                 class="dErrorDesc"
-                title="{$ferrors['watermark']['xpos']}"
+                title="{$ferrors->xpos}"
               >!</span>
             </label>
 
@@ -189,14 +183,14 @@
                 type="text"
                 name="w[ypos]"
                 value="{$watermark['ypos']}"
-                {if isset($ferrors['watermark']['ypos'])}
+                {if $ferrors?->ypos !== null}
                 class="dError"
                 {/if}
               >%
               <span
-                n:if="isset($ferrors['watermark']['ypos'])"
+                n:if="$ferrors?->ypos !== null"
                 class="dErrorDesc"
-                title="{$ferrors['watermark']['ypos']}"
+                title="{$ferrors->ypos}"
               >!</span>
             </label>
 
@@ -208,15 +202,7 @@
                 type="text"
                 name="w[xrepeat]"
                 value="{$watermark['xrepeat']}"
-                {if isset($ferrors['watermark']['xrepeat'])}
-                class="dError"
-                {/if}
               >
-              <span
-                n:if="isset($ferrors['watermark']['xrepeat'])"
-                class="dErrorDesc"
-                title="{$ferrors['watermark']['xrepeat']}"
-              >!</span>
             </label>
 
             <br>
@@ -227,15 +213,7 @@
                 type="text"
                 name="w[yrepeat]"
                 value="{$watermark['yrepeat']}"
-                {if isset($ferrors['watermark']['yrepeat'])}
-                class="dError"
-                {/if}
               >
-              <span
-                n:if="isset($ferrors['watermark']['yrepeat'])"
-                class="dErrorDesc"
-                title="{$ferrors['watermark']['yrepeat']}"
-              >!</span>
             </label>
           </div>
         </li>
@@ -248,14 +226,14 @@
             type="text"
             name="w[opacity]"
             value="{$watermark['opacity']}"
-            {if isset($ferrors['watermark']['opacity'])}
+            {if $ferrors?->opacity !== null}
             class="dError"
             {/if}
           > %
           <span
-            n:if="isset($ferrors['watermark']['opacity'])"
+            n:if="$ferrors?->opacity !== null"
             class="dErrorDesc"
-            title="{$ferrors['watermark']['opacity']}"
+            title="{$ferrors->opacity}"
           >!</span>
         </li>
       </ul>

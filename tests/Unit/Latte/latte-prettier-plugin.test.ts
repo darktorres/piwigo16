@@ -165,4 +165,18 @@ describe("Latte Prettier plugin (tools/latte-prettier/)", () => {
       "formatted output should be AST-equivalent to its source for every real file",
     ).toEqual([]);
   });
+
+  // The whole-tree tests above would pass even if the printer dropped the
+  // `?`, since parsing `->` back gives an AST that normalizes the same way.
+  // This pins the operator itself, on both a property read and a call.
+  it("round-trips the nullsafe operator rather than flattening it to ->", async () => {
+    const src =
+      '{if $ferrors?->opacity !== null}{$ferrors?->opacity}{$a?->b()}{/if}\n';
+    const formatted = await format(src);
+
+    expect(formatted).toContain("$ferrors?->opacity !== null");
+    expect(formatted).toContain("{$ferrors?->opacity}");
+    expect(formatted).toContain("$a?->b()");
+    expect(formatted).not.toContain("$ferrors->opacity");
+  });
 });

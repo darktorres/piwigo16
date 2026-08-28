@@ -17,11 +17,10 @@ final readonly class ConfigurationWatermarkResult
 {
     /**
      * @param array<string, string>|null $watermark
-     * @param array<string, mixed>|null $ferrors
      */
     public function __construct(
         public ?string $saveSuccess,
         public ?array $watermark,
-        public ?array $ferrors,
+        public ?WatermarkFormErrors $ferrors,
     ) {}
 }

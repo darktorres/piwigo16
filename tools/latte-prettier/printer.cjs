@@ -42,7 +42,7 @@ function exprToDoc(e) {
     case "Binary":
       return [exprToDoc(e.left), " ", e.op, " ", exprToDoc(e.right)];
     case "PropAccess":
-      return [exprToDoc(e.object), "->", e.prop];
+      return [exprToDoc(e.object), e.nullsafe ? "?->" : "->", e.prop];
     case "StaticAccess":
       return [exprToDoc(e.object), "::", e.prop];
     case "Index":

@@ -188,7 +188,7 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
             formAction: $this->urlService->getRootUrl() . 'admin.php' . $this->urlService->getQueryStringDiff(['action', 'site', 'pwg_token']),
             csrfToken: $this->csrfService
                 ->getToken(),
-            sites: array_map(static fn (SiteRow $site): array => $site->toArray(), $tpl_sites),
+            sites: $tpl_sites,
         ));
 
         return new AdminPageResult(

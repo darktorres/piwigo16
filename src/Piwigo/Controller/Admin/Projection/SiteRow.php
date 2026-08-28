@@ -26,26 +26,4 @@ final readonly class SiteRow
         public ?string $uDelete,
         public array $pluginLinks,
     ) {}
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function toArray(): array
-    {
-        $result = [
-            'NAME' => $this->name,
-            'TYPE' => $this->type,
-            'CATEGORIES' => $this->categories,
-            'IMAGES' => $this->images,
-            'U_SYNCHRONIZE' => $this->uSynchronize,
-        ];
-
-        if ($this->uDelete !== null) {
-            $result['U_DELETE'] = $this->uDelete;
-        }
-
-        $result['plugin_links'] = $this->pluginLinks;
-
-        return $result;
-    }
 }

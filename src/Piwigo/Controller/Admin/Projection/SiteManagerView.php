@@ -22,7 +22,7 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class SiteManagerView implements View, HasPageAssets, ExposesPageData
 {
     /**
-     * @param list<array<string, mixed>> $sites
+     * @param list<SiteRow> $sites
      */
     public function __construct(
         public string $formAction,

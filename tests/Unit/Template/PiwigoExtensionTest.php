@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Latte\Runtime\Html;
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Core\DateHelper;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Template\Latte\PiwigoExtension;
@@ -137,4 +138,51 @@ test('replace does a plain scalar search/replacement, not a regex', function ():
 test('strReplace reorders to str_replace($search, $replace, $subject) with the piped value as $subject', function (): void {
     expect(PiwigoExtension::strReplace('hello world', 'world', 'there'))
         ->toBe('hello there');
+});
+
+/**
+ * P58 step 2. The date filters exist so a row VO can carry the domain value
+ * and let the template format it, instead of a producer baking a localized
+ * string into a display key beside the row's real data.
+ *
+ * The requirement is byte-invariance: the filter must produce exactly what
+ * the producers' own DateHelper call produces today, or every golden fixture
+ * moves. These assert against DateHelper directly rather than against a
+ * hardcoded string, so they stay correct under a different test locale and
+ * whether or not ext-intl is installed -- DateHelper resolves its own
+ * language and IntlDateFormatter availability inside the call.
+ */
+test('the format_date filter is registered and reproduces DateHelper::formatDate exactly', function (): void {
+    $filters = piwigo_extension_test_build()
+        ->getFilters();
+
+    expect($filters)
+        ->toHaveKey('format_date');
+    $filter = $filters['format_date'];
+
+    expect($filter('2024-06-15 12:34:56'))
+        ->toBe(DateHelper::formatDate('2024-06-15 12:34:56'));
+    // The $show array is the shape the producers actually pass.
+    expect($filter('2024-06-15 12:34:56', ['day', 'month', 'year']))
+        ->toBe(DateHelper::formatDate('2024-06-15 12:34:56', ['day', 'month', 'year']));
+    // And the widened input type, which is the point of carrying the value
+    // on the VO rather than a preformatted string.
+    $immutable = new DateTimeImmutable('2024-06-15 12:34:56');
+    expect($filter($immutable))
+        ->toBe(DateHelper::formatDate($immutable));
+});
+
+test('the time_since filter is registered and reproduces DateHelper::timeSince exactly', function (): void {
+    $filters = piwigo_extension_test_build()
+        ->getFilters();
+
+    expect($filters)
+        ->toHaveKey('time_since');
+    $filter = $filters['time_since'];
+
+    expect($filter('2024-06-15 12:34:56'))
+        ->toBe(DateHelper::timeSince('2024-06-15 12:34:56'));
+    // $stop is the second argument at every producer call site that passes one.
+    expect($filter('2024-06-15 12:34:56', 'day'))
+        ->toBe(DateHelper::timeSince('2024-06-15 12:34:56', 'day'));
 });

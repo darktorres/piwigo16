@@ -95,6 +95,8 @@ final class LatteAnalysisShims
         'nl2br',
         'str_repeat',
         'default',
+        'format_date',
+        'time_since',
         'url_is_remote',
         'is_admin',
         'is_classic_user',
@@ -571,6 +573,27 @@ final class LatteAnalysisShims
     }
 
     public static function default(mixed $value, mixed $fallback): mixed
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    /**
+     * @param int|string|\DateTimeInterface|false $original timestamp, datetime string, or
+     * @param string[]|null $show list of components displayed, default is ['day_name', 'day', 'month', 'year']
+     * @param string|null $format input format respecting date() syntax
+     */
+    public static function format_date(\DateTimeInterface|string|int|false $original, ?array $show = null, ?string $format = null): string
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    /**
+     * @param int|string $original timestamp or datetime string
+     * @param string $stop year,month,week,day,hour,minute,second
+     * @param string|null $format input format respecting date() syntax
+     * @param bool $with_text append "ago" or "in the future"
+     */
+    public static function time_since(string|int $original, string $stop = 'minute', ?string $format = null, bool $with_text = true, bool $with_week = true, bool $only_last_unit = false): string
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }

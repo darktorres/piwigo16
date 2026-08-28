@@ -15,6 +15,7 @@ use Latte\Extension;
 use Latte\Runtime\Html;
 use Override;
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Core\DateHelper;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Template\Template;
@@ -119,6 +120,18 @@ final class PiwigoExtension extends Extension
             'str_repeat' => str_repeat(...),
             'default' => self::defaultFilter(...),
             'replace' => self::replace(...),
+
+            // Date formatting. Registered so a row VO can carry the domain
+            // value (a DateTimeInterface, or the raw datetime string a
+            // repository returns) and let the template do the formatting,
+            // rather than a producer baking a localized string into a
+            // display key beside the row's real data (P58). Both delegate
+            // to the same DateHelper the producers call today, with the
+            // same arguments, so the rendered bytes are unchanged --
+            // DateHelper resolves its own language and IntlDateFormatter
+            // availability inside the call, so there is no state to pass.
+            'format_date' => DateHelper::formatDate(...),
+            'time_since' => DateHelper::timeSince(...),
 
             // Domain-specific helpers.
             'url_is_remote' => $this->urlService->urlIsRemote(...),

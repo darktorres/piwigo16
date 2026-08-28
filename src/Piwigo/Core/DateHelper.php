@@ -64,7 +64,7 @@ final class DateHelper
     /**
      * converts a value into a DateTimeInterface object
      *
-     * @param int|string|DateTimeInterface|false $original timestamp, datetime
+     * @param int|string|\DateTimeInterface|false $original timestamp, datetime
      *   string, or an already-converted DateTimeInterface (returned as-is;
      *   callers pass the same value through this method repeatedly) --
      *   false/empty short-circuits to the false/''/0/'0' check below, so
@@ -120,7 +120,7 @@ final class DateHelper
     /**
      * returns a formatted and localized date for display (LEGACY use formatDate)
      *
-     * @param int|string|DateTimeInterface|false $original timestamp, datetime string, or
+     * @param int|string|\DateTimeInterface|false $original timestamp, datetime string, or
      *   an already-converted DateTimeInterface/false -- same as formatDate(), since this
      *   re-derives via the same permissive str2DateTime()
      * @param string[]|null $show list of components displayed, default is ['day_name', 'day', 'month', 'year']
@@ -168,7 +168,7 @@ final class DateHelper
     /**
      * returns a formatted and localized date for display
      *
-     * @param int|string|DateTimeInterface|false $original timestamp, datetime string, or
+     * @param int|string|\DateTimeInterface|false $original timestamp, datetime string, or
      *   an already-converted DateTimeInterface/false -- formatFromto() passes
      *   str2DateTime()'s own return type straight through; both are handled
      *   gracefully (a DateTimeInterface passes through str2DateTime() as-is, false/empty

@@ -172,12 +172,19 @@ const sliders: {
   widths?: PwgSliderConfig;
 } = {};
 
-// Real shape of the filesize/height/width page-data keys (SearchFiltersView.php's
-// own `array<string, mixed>|null` docblock, narrowed to the real fields
-// this file itself reads).
+// Real shape of the filesize/height/width page-data keys. These are now
+// RangeFilterOptions::toPageData()'s own declared shape (P58-A), so this is
+// the whole payload rather than a narrowing of an `array<string, mixed>`:
+// `bounds` is genuinely sent too, it just isn't read here -- the sliders take
+// their range from the markup's data-min/data-max instead.
+//
+// The endpoints are strings, and null when the option set is empty. Both are
+// passed through Number() below, which is why the previous `number | string`
+// never mattered: Number('0') === Number(0), and Number(null) === 0.
 interface PageDataSliderSource {
   list: string;
-  selected: { min: number | string; max: number | string };
+  bounds: { min: string | null; max: string | null };
+  selected: { min: string | null; max: string | null };
 }
 
 const filesize = pwg_getPageData<PageDataSliderSource | null>("filesize");

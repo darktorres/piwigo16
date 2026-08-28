@@ -12,6 +12,7 @@ use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
 use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
+use Piwigo\Search\Projection\RangeFilterOptions;
 use Piwigo\Template\Latte\Attribute\Template;
 use Piwigo\Template\Projection\QuickSearchView;
 
@@ -43,10 +44,7 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
      * @param list<array<array-key, mixed>>|null $addedBy
      * @param array<array-key, mixed>|null $filetypes
      * @param array<array-key, mixed>|null $rating
-     * @param array<string, mixed>|null $filesize
      * @param array<array-key, mixed>|null $ratios
-     * @param array<string, mixed>|null $height
-     * @param array<string, mixed>|null $width
      * @param list<string>|null $albumsFound
      * @param list<string>|null $tagsFound
      * @param array<array-key, mixed>|null $listDatePosted
@@ -65,10 +63,10 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
         public string|false|null $fullnameOf,
         public ?array $filetypes,
         public ?array $rating,
-        public ?array $filesize,
+        public ?RangeFilterOptions $filesize,
         public ?array $ratios,
-        public ?array $height,
-        public ?array $width,
+        public ?RangeFilterOptions $height,
+        public ?RangeFilterOptions $width,
         public ?array $albumsFound,
         public ?array $tagsFound,
         public ?array $listDatePosted,
@@ -184,13 +182,13 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
             $data['search_id'] = $this->searchId;
         }
         if ($this->filesize !== null) {
-            $data['filesize'] = $this->filesize;
+            $data['filesize'] = $this->filesize->toPageData();
         }
         if ($this->height !== null) {
-            $data['height'] = $this->height;
+            $data['height'] = $this->height->toPageData();
         }
         if ($this->width !== null) {
-            $data['width'] = $this->width;
+            $data['width'] = $this->width->toPageData();
         }
 
         return $data;

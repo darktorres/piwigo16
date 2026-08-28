@@ -24,6 +24,8 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Search\Projection\AuthorRule;
 use Piwigo\Search\Projection\CategoryRule;
+use Piwigo\Search\Projection\RangeBounds;
+use Piwigo\Search\Projection\RangeFilterOptions;
 use Piwigo\Search\Projection\SearchFilterData;
 use Piwigo\Search\Projection\SearchFilterResult;
 use Piwigo\Search\Projection\SearchRules;
@@ -614,17 +616,17 @@ final readonly class SearchFilterRenderer
             // The min/max of the current search won't always be the
             // first/last values found. It's going to be a problem with
             // this way to select selected values
-            $filesize = [
-                'list' => implode(',', $uniqueFilesizes),
-                'bounds' => [
-                    'min' => $uniqueFilesizes[0],
-                    'max' => end($uniqueFilesizes),
-                ],
-                'selected' => [
-                    'min' => (is_numeric($filesizeMin) && (float) $filesizeMin !== 0.0) ? sprintf('%.1f', (float) $filesizeMin / 1024.0) : $uniqueFilesizes[0],
-                    'max' => (is_numeric($filesizeMax) && (float) $filesizeMax !== 0.0) ? sprintf('%.1f', (float) $filesizeMax / 1024.0) : end($uniqueFilesizes),
-                ],
-            ];
+            $filesize = new RangeFilterOptions(
+                list: implode(',', $uniqueFilesizes),
+                bounds: new RangeBounds(
+                    min: RangeBounds::value($uniqueFilesizes[0]),
+                    max: RangeBounds::value(end($uniqueFilesizes)),
+                ),
+                selected: new RangeBounds(
+                    min: (is_numeric($filesizeMin) && (float) $filesizeMin !== 0.0) ? sprintf('%.1f', (float) $filesizeMin / 1024.0) : RangeBounds::value($uniqueFilesizes[0]),
+                    max: (is_numeric($filesizeMax) && (float) $filesizeMax !== 0.0) ? sprintf('%.1f', (float) $filesizeMax / 1024.0) : RangeBounds::value(end($uniqueFilesizes)),
+                ),
+            );
 
         } elseif ($rules->filesizeMin !== null && $rules->filesizeMax !== null and ! ((bool) $displayFilters['file_size']['access'])) {
             $rules->filesizeMin = null;
@@ -717,17 +719,17 @@ final readonly class SearchFilterRenderer
             $heightMin = $rules->heightMin;
             $heightMax = $rules->heightMax;
 
-            $height = [
-                'list' => implode(',', $heights),
-                'bounds' => [
-                    'min' => $heights[0] ?? null,
-                    'max' => end($heights),
-                ],
-                'selected' => [
-                    'min' => ($heightMin !== '' && $heightMin !== 0) ? $heightMin : ($heights[0] ?? null),
-                    'max' => ($heightMax !== '' && $heightMax !== 0) ? $heightMax : end($heights),
-                ],
-            ];
+            $height = new RangeFilterOptions(
+                list: implode(',', $heights),
+                bounds: new RangeBounds(
+                    min: RangeBounds::value($heights[0] ?? null),
+                    max: RangeBounds::value(end($heights)),
+                ),
+                selected: new RangeBounds(
+                    min: RangeBounds::value(($heightMin !== '' && $heightMin !== 0) ? $heightMin : ($heights[0] ?? null)),
+                    max: RangeBounds::value(($heightMax !== '' && $heightMax !== 0) ? $heightMax : end($heights)),
+                ),
+            );
 
         } elseif ($rules->heightMin !== null && $rules->heightMax !== null and ! ((bool) $displayFilters['height']['access'])) {
             $rules->heightMin = null;
@@ -765,17 +767,17 @@ final readonly class SearchFilterRenderer
             $widthMin = $rules->widthMin;
             $widthMax = $rules->widthMax;
 
-            $width = [
-                'list' => implode(',', $widths),
-                'bounds' => [
-                    'min' => $widths[0] ?? null,
-                    'max' => end($widths),
-                ],
-                'selected' => [
-                    'min' => ($widthMin !== '' && $widthMin !== 0) ? $widthMin : ($widths[0] ?? null),
-                    'max' => ($widthMax !== '' && $widthMax !== 0) ? $widthMax : end($widths),
-                ],
-            ];
+            $width = new RangeFilterOptions(
+                list: implode(',', $widths),
+                bounds: new RangeBounds(
+                    min: RangeBounds::value($widths[0] ?? null),
+                    max: RangeBounds::value(end($widths)),
+                ),
+                selected: new RangeBounds(
+                    min: RangeBounds::value(($widthMin !== '' && $widthMin !== 0) ? $widthMin : ($widths[0] ?? null)),
+                    max: RangeBounds::value(($widthMax !== '' && $widthMax !== 0) ? $widthMax : end($widths)),
+                ),
+            );
 
         } elseif ($rules->widthMin !== null && $rules->widthMax !== null and ! ((bool) $displayFilters['width']['access'])) {
             $rules->widthMin = null;

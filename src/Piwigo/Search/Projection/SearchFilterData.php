@@ -30,10 +30,7 @@ final readonly class SearchFilterData
      * @param list<array<array-key, mixed>>|null $addedBy
      * @param array<array-key, mixed>|null $filetypes
      * @param array<array-key, mixed>|null $rating
-     * @param array<string, mixed>|null $filesize
      * @param array<array-key, mixed>|null $ratios
-     * @param array<string, mixed>|null $height
-     * @param array<string, mixed>|null $width
      * @param list<string>|null $albumsFound
      * @param list<string>|null $tagsFound
      * @param array<array-key, mixed>|null $listDatePosted
@@ -52,10 +49,10 @@ final readonly class SearchFilterData
         public string|false|null $fullnameOf,
         public ?array $filetypes,
         public ?array $rating,
-        public ?array $filesize,
+        public ?RangeFilterOptions $filesize,
         public ?array $ratios,
-        public ?array $height,
-        public ?array $width,
+        public ?RangeFilterOptions $height,
+        public ?RangeFilterOptions $width,
         public ?array $albumsFound,
         public ?array $tagsFound,
         public ?array $listDatePosted,

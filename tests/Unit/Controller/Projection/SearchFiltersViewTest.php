@@ -3,18 +3,15 @@
 declare(strict_types=1);
 
 use Piwigo\Controller\Projection\SearchFiltersView;
+use Piwigo\Search\Projection\RangeBounds;
+use Piwigo\Search\Projection\RangeFilterOptions;
 
-/**
- * @param array<string, mixed> $filesize
- * @param array<string, mixed> $height
- * @param array<string, mixed> $width
- */
 function makeSearchFiltersView(
     ?string $fullnameOf = null,
     ?string $searchId = null,
-    ?array $filesize = null,
-    ?array $height = null,
-    ?array $width = null,
+    ?RangeFilterOptions $filesize = null,
+    ?RangeFilterOptions $height = null,
+    ?RangeFilterOptions $width = null,
     string $userRank = 'none',
     string $colorscheme = 'light',
     string $csrfToken = 'token',
@@ -59,21 +56,32 @@ test('exposedPageData omits every nullable field when unset', function (): void 
 });
 
 test('exposedPageData includes every nullable field once set', function (): void {
+    // Real RangeFilterOptions values, not an arbitrary ['min','max'] pair:
+    // the previous version of this test passed a shape the renderer never
+    // produces, so it only ever proved the key reached the payload. The
+    // selected sub-range is deliberately inside the bounds, which is what
+    // distinguishes the two.
     $view = makeSearchFiltersView(
         fullnameOf: '{"1":"Album"}',
         searchId: 'abc123',
-        filesize: [
-            'min' => 0,
-            'max' => 100,
-        ],
-        height: [
-            'min' => 0,
-            'max' => 200,
-        ],
-        width: [
-            'min' => 0,
-            'max' => 300,
-        ],
+        filesize: new RangeFilterOptions(
+            list: '0.0,2.0,4.0',
+            bounds: new RangeBounds('0.0', '4.0'),
+            selected: new RangeBounds('2.0', '4.0'),
+        ),
+        height: new RangeFilterOptions(
+            list: '150,300',
+            bounds: new RangeBounds('150', '300'),
+            selected: new RangeBounds('150', '300'),
+        ),
+        width: new RangeFilterOptions(
+            list: '200,400',
+            // An empty option set is the one case that produces null ends:
+            // `$values[0] ?? null` and `end([])`'s own false, both
+            // normalized to null by RangeBounds::value().
+            bounds: new RangeBounds(null, null),
+            selected: new RangeBounds('200', '400'),
+        ),
         userRank: 'admin',
     );
 
@@ -86,16 +94,37 @@ test('exposedPageData includes every nullable field once set', function (): void
             'fullname_of_cat_json' => '{"1":"Album"}',
             'search_id' => 'abc123',
             'filesize' => [
-                'min' => 0,
-                'max' => 100,
+                'list' => '0.0,2.0,4.0',
+                'bounds' => [
+                    'min' => '0.0',
+                    'max' => '4.0',
+                ],
+                'selected' => [
+                    'min' => '2.0',
+                    'max' => '4.0',
+                ],
             ],
             'height' => [
-                'min' => 0,
-                'max' => 200,
+                'list' => '150,300',
+                'bounds' => [
+                    'min' => '150',
+                    'max' => '300',
+                ],
+                'selected' => [
+                    'min' => '150',
+                    'max' => '300',
+                ],
             ],
             'width' => [
-                'min' => 0,
-                'max' => 300,
+                'list' => '200,400',
+                'bounds' => [
+                    'min' => null,
+                    'max' => null,
+                ],
+                'selected' => [
+                    'min' => '200',
+                    'max' => '400',
+                ],
             ],
         ]);
 });

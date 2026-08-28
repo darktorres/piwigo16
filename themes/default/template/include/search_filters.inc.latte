@@ -964,8 +964,8 @@
           ></span>
           <span
             class="clear mcs-icon gallery-icon-arrow-rotate-left tiptip"
-            data-min="{$filesize['bounds']['min']}"
-            data-max="{$filesize['bounds']['max']}"
+            data-min="{$filesize->bounds->min}"
+            data-max="{$filesize->bounds->max}"
             title="{='Clear'|translate}"
           ></span>
         </div>
@@ -980,7 +980,7 @@
                   step=".1"
                   min="0"
                   name="filter_filesize_min_text"
-                  value="{$filesize['selected']['min']}"
+                  value="{$filesize->selected->min}"
                   disabled
                 >
               </div>
@@ -991,7 +991,7 @@
                   step=".1"
                   min="0"
                   name="filter_filesize_max_text"
-                  value="{$filesize['selected']['max']}"
+                  value="{$filesize->selected->max}"
                   disabled
                 >
               </div>
@@ -1005,13 +1005,13 @@
                 type="hidden"
                 data-input="min"
                 name="filter_filesize_min"
-                value="{$filesize['selected']['min']}"
+                value="{$filesize->selected->min}"
               >
               <input
                 type="hidden"
                 data-input="max"
                 name="filter_filesize_max"
-                value="{$filesize['selected']['max']}"
+                value="{$filesize->selected->max}"
               >
             </div>
           </div>
@@ -1041,8 +1041,8 @@
           ></span>
           <span
             class="clear mcs-icon gallery-icon-arrow-rotate-left tiptip"
-            data-min="{$height['bounds']['min']}"
-            data-max="{$height['bounds']['max']}"
+            data-min="{$height->bounds->min}"
+            data-max="{$height->bounds->max}"
             title="{='Reset'|translate}"
           ></span>
         </div>
@@ -1056,13 +1056,13 @@
                 type="hidden"
                 data-input="min"
                 name="filter_height_min"
-                value="{$height['selected']['min']}"
+                value="{$height->selected->min}"
               >
               <input
                 type="hidden"
                 data-input="max"
                 name="filter_height_max"
-                value="{$height['selected']['max']}"
+                value="{$height->selected->max}"
               >
             </div>
           </div>
@@ -1105,13 +1105,13 @@
                 type="hidden"
                 data-input="min"
                 name="filter_width_min"
-                value="{$width['selected']['min']}"
+                value="{$width->selected->min}"
               >
               <input
                 type="hidden"
                 data-input="max"
                 name="filter_width_max"
-                value="{$width['selected']['max']}"
+                value="{$width->selected->max}"
               >
             </div>
           </div>

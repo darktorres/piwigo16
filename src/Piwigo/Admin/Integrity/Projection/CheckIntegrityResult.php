@@ -15,7 +15,7 @@ namespace Piwigo\Admin\Integrity\Projection;
 final readonly class CheckIntegrityResult
 {
     /**
-     * @param list<array<string, mixed>> $c13yList
+     * @param list<AnomalyDisplayRow> $c13yList
      * @param list<string>|null $c13yDoCheck
      */
     public function __construct(

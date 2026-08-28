@@ -347,8 +347,8 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         self::assertNotNull($result);
         $list = $result->c13yList;
-        self::assertTrue($list[0]['show_ignore_msg']);
-        self::assertFalse($list[0]['can_select']);
+        self::assertTrue($list[0]->showIgnoreMsg);
+        self::assertFalse($list[0]->canSelect);
         self::assertFalse($result->showSubmitIgnore);
         self::assertFalse($result->showSubmitAutomaticCorrection);
     }
@@ -393,8 +393,8 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         self::assertNotNull($result);
         $list = $result->c13yList;
-        self::assertTrue($list[0]['show_correction_success_fct']);
-        self::assertFalse($list[0]['can_select']);
+        self::assertTrue($list[0]->showCorrectionSuccessFct);
+        self::assertFalse($list[0]->canSelect);
     }
 
     public function testDisplayFlagsAFailedCorrectionWithTheMoreInfoLinks(): void
@@ -416,11 +416,10 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         self::assertNotNull($result);
         $list = $result->c13yList;
-        self::assertFalse($list[0]['show_correction_success_fct']);
-        self::assertFalse($list[0]['can_select']);
-        self::assertIsString($list[0]['correction_error_fct']);
-        self::assertNotSame('', $list[0]['correction_error_fct']);
-        self::assertStringContainsString('forum', $list[0]['correction_error_fct']);
+        self::assertFalse($list[0]->showCorrectionSuccessFct);
+        self::assertFalse($list[0]->canSelect);
+        self::assertNotSame('', $list[0]->correctionErrorFct);
+        self::assertStringContainsString('forum', $list[0]->correctionErrorFct);
     }
 
     public function testDisplayOffersACallableUncorrectedAnomalyForAutomaticCorrection(): void
@@ -441,8 +440,8 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         self::assertNotNull($result);
         $list = $result->c13yList;
-        self::assertTrue($list[0]['show_correction_fct']);
-        self::assertTrue($list[0]['can_select']);
+        self::assertTrue($list[0]->showCorrectionFct);
+        self::assertTrue($list[0]->canSelect);
         self::assertTrue($result->showSubmitAutomaticCorrection);
         self::assertTrue($result->showSubmitIgnore);
         $doCheck = $result->c13yDoCheck;
@@ -468,8 +467,8 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         self::assertNotNull($result);
         $list = $result->c13yList;
-        self::assertTrue($list[0]['show_correction_bad_fct']);
-        self::assertTrue($list[0]['can_select']);
+        self::assertTrue($list[0]->showCorrectionBadFct);
+        self::assertTrue($list[0]->canSelect);
     }
 
     public function testDisplayShowsACorrectionMsgForAnAnomalyWithNoCorrectionFunction(): void
@@ -490,8 +489,8 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         self::assertNotNull($result);
         $list = $result->c13yList;
-        self::assertTrue($list[0]['can_select']);
-        self::assertSame('please fix this by hand', $list[0]['correction_msg']);
+        self::assertTrue($list[0]->canSelect);
+        self::assertSame('please fix this by hand', $list[0]->correctionMsg);
     }
 
     public function testDisplayDoesNothingWhenThereAreNoAnomalies(): void

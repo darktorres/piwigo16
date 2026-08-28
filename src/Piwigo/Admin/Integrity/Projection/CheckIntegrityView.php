@@ -29,7 +29,7 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class CheckIntegrityView implements View, HasPageAssets, ExposesPageData
 {
     /**
-     * @param list<array<string, mixed>> $c13yList
+     * @param list<AnomalyDisplayRow> $c13yList
      * @param list<string>|null $c13yDoCheck
      */
     public function __construct(

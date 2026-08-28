@@ -260,7 +260,7 @@ final class CheckIntegrity
             return new CheckIntegrityResult(
                 showSubmitAutomaticCorrection: $submit_automatic_correction,
                 showSubmitIgnore: $submit_ignore,
-                c13yList: array_map(static fn (AnomalyDisplayRow $row): array => $row->toArray(), $c13y_list),
+                c13yList: $c13y_list,
                 c13yDoCheck: $c13y_do_check,
             );
         }

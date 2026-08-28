@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Integrity\Projection;
 
 /**
- * One row of `check_integrity.latte`'s `$c13y_list`, built by
+ * One row of `check_integrity.latte`'s `$c13yList`, built by
  * {@see \Piwigo\Admin\Integrity\CheckIntegrity::display()} from a real
- * {@see \Piwigo\Admin\Integrity\Projection\AnomalyRow}.
+ * {@see \Piwigo\Admin\Integrity\Projection\AnomalyRow}, and read by the
+ * template as this object -- it used to be flattened back to an array one
+ * line before the result was built (P58-A).
  */
 final readonly class AnomalyDisplayRow
 {
@@ -22,22 +24,4 @@ final readonly class AnomalyDisplayRow
         public string $correctionMsg,
         public bool $canSelect,
     ) {}
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function toArray(): array
-    {
-        return [
-            'id' => $this->id,
-            'anomaly' => $this->anomaly,
-            'show_ignore_msg' => $this->showIgnoreMsg,
-            'show_correction_success_fct' => $this->showCorrectionSuccessFct,
-            'correction_error_fct' => $this->correctionErrorFct,
-            'show_correction_fct' => $this->showCorrectionFct,
-            'show_correction_bad_fct' => $this->showCorrectionBadFct,
-            'correction_msg' => $this->correctionMsg,
-            'can_select' => $this->canSelect,
-        ];
-    }
 }

@@ -326,10 +326,6 @@ $(document).ready(function () {
 // the real access pattern used by every other function in this file
 // rather than left uncompilable, since there's no real behavior to
 // preserve here either way.
-function get_related_category(pictureId: string | number) {
-  return all_related_categories_ids[String(pictureId)] ?? [];
-}
-
 function remove_selected_category(
   cat_id: string | number,
   picture_id: string | number,

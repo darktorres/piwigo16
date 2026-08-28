@@ -631,11 +631,7 @@ function successApiModal(secret: string, id: string) {
   $("#api_secret_copy")
     .off("click")
     .on("click", function () {
-      const copy = copyToClipboard(
-        secret,
-        str_copy_key_secret,
-        "#api_key_copy_success",
-      );
+      copyToClipboard(secret, str_copy_key_secret, "#api_key_copy_success");
 
       $("#done_apikey").removeAttr("disabled");
       $("#done_apikey").on("click", closeApiModal);
@@ -644,7 +640,7 @@ function successApiModal(secret: string, id: string) {
   $("#api_id_copy")
     .off("click")
     .on("click", function () {
-      const copy = copyToClipboard(id, str_copy_key_id, "#api_id_copy_success");
+      copyToClipboard(id, str_copy_key_id, "#api_id_copy_success");
     });
 }
 

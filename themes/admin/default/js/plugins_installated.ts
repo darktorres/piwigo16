@@ -43,8 +43,6 @@ function setDisplayClassic() {
   $(".pluginActionsSmallIcons").hide();
 
   $(".pluginName").removeClass("pluginNameCompact");
-
-  // normalTitle();
 }
 
 function setDisplayCompact() {
@@ -58,8 +56,6 @@ function setDisplayCompact() {
   $(".pluginActionsSmallIcons").show();
 
   $(".pluginName").addClass("pluginNameCompact");
-
-  // reduceTitle()
 }
 
 function setDisplayLine() {
@@ -71,35 +67,6 @@ function setDisplayLine() {
   $(".pluginDesc").show();
   $(".pluginActions").show();
   $(".pluginActionsSmallIcons").hide();
-  // normalTitle();
-}
-
-function reduceTitle() {
-  const x = document.getElementsByClassName(
-    "pluginName",
-  ) as HTMLCollectionOf<HTMLElement>;
-  const length = 22;
-
-  for (const div of x) {
-    const text = div.innerHTML.trim();
-    if (text.length > length) {
-      let newText = text.substring(0, length);
-      newText = newText + "...";
-
-      div.innerHTML = newText;
-      div.title = text;
-    }
-  }
-}
-
-function normalTitle() {
-  const x = document.getElementsByClassName(
-    "pluginName",
-  ) as HTMLCollectionOf<HTMLElement>;
-
-  for (const div of x) {
-    div.innerHTML = div.dataset.title || "";
-  }
 }
 
 function activatePlugin(id: string) {

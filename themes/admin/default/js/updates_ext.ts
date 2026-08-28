@@ -131,10 +131,7 @@ const targetNode = document.getElementById("theAdminPage");
 
 const config = { attributes: false, childList: true, subtree: true };
 
-const callback = (
-  mutationList: MutationRecord[],
-  observer: MutationObserver,
-) => {
+const callback = (mutationList: MutationRecord[]) => {
   for (const mutation of mutationList) {
     if (mutation.type === "childList") {
       const popup = jQuery("#jGrowl").children();

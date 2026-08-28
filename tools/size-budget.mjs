@@ -118,7 +118,7 @@ if (mode === "--update") {
     path: entry.paths,
     limit: `${Math.max(
       Math.ceil((entry.brotli * HEADROOM) / 1024),
-      Math.ceil((entry.brotli + MIN_HEADROOM_BYTES) / 1024)
+      Math.ceil((entry.brotli + MIN_HEADROOM_BYTES) / 1024),
     )} KB`,
     // See the note at the top of this file: without this, size-limit spawns
     // a headless Chrome per entry to time it.
@@ -126,9 +126,9 @@ if (mode === "--update") {
   }));
   writeFileSync(BUDGET, JSON.stringify(budget, null, 2) + "\n");
   const total = measured.reduce((t, e) => t + e.brotli, 0);
-  console.log(
+  process.stdout.write(
     `Wrote ${budget.length} entry budgets to ${BUDGET} ` +
-      `(${(total / 1024).toFixed(1)} KB brotli summed across entries, shared chunks counted per page).`
+      `(${(total / 1024).toFixed(1)} KB brotli summed across entries, shared chunks counted per page).\n`,
   );
   process.exit(0);
 }
@@ -160,7 +160,7 @@ for (const entry of entries) {
     // different set of files than the page actually loads, so the number it
     // enforces is meaningless until regenerated.
     problems.push(
-      `"${entry.name}" loads a different set of chunks than its budget lists`
+      `"${entry.name}" loads a different set of chunks than its budget lists`,
     );
   }
   byName.delete(entry.name);
@@ -176,4 +176,6 @@ if (problems.length > 0) {
   process.exit(1);
 }
 
-console.log(`Size budgets cover all ${entries.length} entries and match the build.`);
+process.stdout.write(
+  `Size budgets cover all ${entries.length} entries and match the build.\n`,
+);

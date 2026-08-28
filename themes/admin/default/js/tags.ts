@@ -769,7 +769,7 @@ function selectAll(data: TagRow[]) {
   const promises: Promise<void>[] = [];
   data.forEach((tag) => {
     promises.push(
-      new Promise<void>((res, rej) => {
+      new Promise<void>((res, _rej) => {
         $(".tag-box[data-id=" + tag.id + "]").attr("data-selected", 1);
         addSelectedItem(tag.id);
         res();
@@ -988,7 +988,6 @@ function tagListToString(list: string[]) {
  Filter research
 -------*/
 
-const maxShown = 100;
 // `ReturnType<typeof setTimeout>`, not `number` -- this project's
 // tsconfig `types` array includes `"node"`, so the ambient
 // `setTimeout`/`clearTimeout` here resolve to Node's own
@@ -1013,15 +1012,6 @@ $("#search-tag .search-input").on("input", function () {
 // Genuinely dead code -- zero real callers found (confirmed via grep)
 // -- typed rather than left broken, same policy as prior files this
 // campaign.
-function isSearched(tagBox: JQuery, stringSearch: string): boolean {
-  const name = tagBox.find("p").text().toLowerCase();
-  if (name.startsWith(stringSearch.toLowerCase())) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
 function isDataSearched(tagObj: TagRow) {
   const name = tagObj.raw_name.toLowerCase();
   const stringSearch = String($("#search-tag .search-input").val());
@@ -1056,7 +1046,6 @@ let per_page = $(".tag-container").data("per_page") as number;
 const pageItem = '<a data-page="%d">%d</a>';
 const pageEllipsis = "<span>...</span>";
 let promisePending = false;
-const delay = 100;
 let updateAsk = false;
 
 let actualPage = 1;
@@ -1169,8 +1158,7 @@ function movePage(toRigth: boolean = true) {
 }
 
 function updatePage() {
-  return new Promise<void>((resolve, reject) => {
-    const newPage = actualPage;
+  return new Promise<void>((resolve, _reject) => {
     const dataToDisplay = tagToDisplay();
     const tagBoxes = $(".tag-box");
     cleanCheckmark();
@@ -1179,7 +1167,7 @@ function updatePage() {
       .animate({ opacity: 0 }, 500)
       .promise()
       .then(() => {
-        const displayTags: Promise<void> = new Promise((res, rej) => {
+        const displayTags: Promise<void> = new Promise((res, _rej) => {
           const boxToRecycle = Math.min(dataToDisplay.length, tagBoxes.length);
 
           for (let i = 0; i < boxToRecycle; i++) {
@@ -1293,7 +1281,6 @@ const str_tag_deleted = pwg_getPageString('Tag "%s" succesfully deleted');
 const str_tags_deleted = pwg_getPageString("Tags {%s} succesfully deleted");
 const str_already_exist = pwg_getPageString('Tag "%s" already exists');
 const str_tag_created = pwg_getPageString('Tag "%s" created');
-const str_tag_renamed = pwg_getPageString('Tag "%s1" renamed in "%s2"');
 const str_tag_rename = pwg_getPageString('Rename "%s"');
 const str_delete_orphan_tags = pwg_getPageString("Delete orphan tags ?");
 const str_orphan_tags = pwg_getPageString("You have %s1 orphan : %s2");
@@ -1305,9 +1292,6 @@ const str_merged_into = pwg_getPageString(
   'Tag(s) {%s1} succesfully merged into "%s2"',
 );
 const str_and_others_tags = pwg_getPageString("and %s others");
-const str_others_tags_available = pwg_getPageString(
-  "%s other tags available...",
-);
 const str_number_photos = pwg_getPageString("%d photos");
 const str_no_photos = pwg_getPageString("no photo");
 const str_select_all_tag = pwg_getPageString("Select all %d tags");

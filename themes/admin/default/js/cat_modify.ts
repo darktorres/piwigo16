@@ -484,7 +484,6 @@ jQuery(document).ready(function () {
   });
 
   // Modal description
-  const form_unsaved = false;
   // Genuine pre-existing implicit-global bug (no `var`/`let`/`const`
   // anywhere) -- shared, harmlessly, between the allow-comments/
   // disallow-comments handlers above (each assigns before reading, so
@@ -492,7 +491,6 @@ jQuery(document).ready(function () {
   // accidental `window.temp_txt`). Declared here, scoped to this ready
   // callback, since strict TS refuses a bare undeclared assignment.
   let temp_txt: string;
-  const cat_modify = $("#cat-modify");
   const desc_modal = $("#desc-modal");
   const textareas = $(".sync-textarea");
   $("#desc-zoom-square, #desc-modal-close").on("click", function () {

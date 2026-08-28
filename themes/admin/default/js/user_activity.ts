@@ -7,7 +7,6 @@ import type { operations } from "../../../../openapi/client/schema";
 // file, it now runs at this file's own `LoadMode::Async` instead (the
 // only registrant page where common.ts's timing actually changes).
 import "./common";
-import { UsersCache } from "./LocalStorageCache";
 
 import {
   pwg_getPageData,
@@ -53,11 +52,6 @@ interface MergedActivityLine {
   counter: number;
 }
 
-const usersCache = new UsersCache({
-  serverKey: pwg_getPageData<string>("cache_key_users"),
-  serverId: pwg_getPageData<string>("cache_key_hash"),
-  rootUrl: pwg_getPageData<string>("root_url"),
-});
 const nb_users = pwg_getPageData<number>("nb_users");
 
 const additional_filt_type = pwg_getPageData<string | false>(
@@ -75,7 +69,6 @@ const color_icons = [
   "icon-green",
 ];
 let activity_page = 1;
-let current_page_offset = 0;
 let page_offsets: number[] = [0];
 let actual_page = 1;
 let end_page = false;
@@ -90,11 +83,7 @@ const date_max = pwg_getPageData<string>("activity_dates_max");
 
 const page_ellipsis = "<span>...</span>";
 const page_item = '<a data-page="%d">%d</a>';
-const create_selecter = true;
 const users_key = pwg_getPageString("Users");
-
-const line_key = pwg_getPageString("%s line");
-const lines_key = pwg_getPageString("%s lines");
 
 const actionType_add = pwg_getPageString("add");
 const actionType_delete = pwg_getPageString("deletion");
@@ -349,7 +338,6 @@ async function get_user_activity(
       emptyLine();
     }
 
-    current_page_offset = page_offsets[page - 1]!;
     end_page = merged.endPage;
     if (!page_offsets.includes(merged.nextOffset)) {
       page_offsets.push(merged.nextOffset);
@@ -995,12 +983,6 @@ function get_initials(username: string) {
   return res;
 }
 
-function setCreationDate(startDate: string, endDate: string) {
-  $(".start-date").html(startDate);
-
-  $(".end-date").html(endDate);
-}
-
 //{* Pagination *}
 
 function move_to_page(page: number) {
@@ -1082,7 +1064,6 @@ function append_pagination_item(page: number | null = null) {
 
 function page_reset() {
   activity_page = 1;
-  current_page_offset = 0;
   page_offsets = [0];
   actual_page = 1;
   end_page = false;

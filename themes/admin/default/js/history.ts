@@ -96,7 +96,7 @@ $(document).ready(() => {
     addUserFilter(filter_user_name);
   }
 
-  $(".elem-type-select").on("change", function (e) {
+  $(".elem-type-select").on("change", function () {
     console.log($(".elem-type-select option:selected").attr("value"));
 
     if ($(".elem-type-select option:selected").attr("value") == "visited") {
@@ -655,7 +655,7 @@ function lineConstructor(line: HistoryLine, id: number) {
               value_str = value.join(" + ");
             } else if (typeof value === "object") {
               value_str = Object.entries(value)
-                .map(([k, v]: [string, any]) => v)
+                .map(([, v]: [string, any]) => v)
                 .join(" + ");
             } else {
               value_str = value;

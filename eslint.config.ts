@@ -40,11 +40,32 @@ export default tseslint.config(
       "no-console": ["warn", { allow: ["warn", "error"] }],
       "no-unused-vars": [
         "warn",
-        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          // A `catch (_e)` binding is neither a var nor an arg to this
+          // rule, so the two patterns above do not reach it -- the
+          // `_`-means-intentional convention has to be stated a third time
+          // or every deliberately-ignored catch warns.
+          caughtErrorsIgnorePattern: "^_",
+        },
       ],
       eqeqeq: "error",
       "no-implicit-coercion": "error",
       "no-param-reassign": ["warn", { props: false }],
+    },
+  },
+  {
+    // `.mjs` is an ES module by definition, so the `sourceType: "script"`
+    // above cannot apply to it -- it makes every `import` a parse error.
+    // Node-only build tooling, so no browser or jQuery globals.
+    files: ["**/*.mjs"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: {
+        ...globals.node,
+      },
     },
   },
   {
@@ -104,7 +125,12 @@ export default tseslint.config(
     rules: {
       "@typescript-eslint/no-unused-vars": [
         "warn",
-        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          // See the plain-JS block: `catch (_e)` needs its own pattern.
+          caughtErrorsIgnorePattern: "^_",
+        },
       ],
     },
   },

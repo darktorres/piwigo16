@@ -364,10 +364,6 @@ $(function () {
     });
   }
 
-  function clearSort() {
-    $(".pluginBox").show();
-  }
-
   // Crop the names of plugins if there are too long
   $(".pluginName span").each((i, el) => {
     const name = $(el);

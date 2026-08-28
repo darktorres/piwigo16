@@ -17,8 +17,7 @@ jQuery.fn.lightAccordion = function (
   return this.each(function () {
     const self = jQuery(this);
 
-    const contents = self.find(settings.content),
-      headers = self.find(settings.header);
+    const contents = self.find(settings.content);
 
     contents.not(contents[settings.active ?? 0]!).hide();
 

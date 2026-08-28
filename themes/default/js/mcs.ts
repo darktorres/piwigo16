@@ -296,13 +296,13 @@ $(document).ready(function () {
     $("#date_posted_custom").attr("disabled", "disabled");
 
     // Handle toggle between preset and custom options
-    $(".custom_posted_date_toggle").on("click", function (e) {
+    $(".custom_posted_date_toggle").on("click", function () {
       $(".custom_posted_date").toggle();
       $(".preset_posted_date").toggle();
     });
 
     // Handle accoridan features in custom options
-    $(".custom_posted_date .accordion-toggle").on("click", function (e) {
+    $(".custom_posted_date .accordion-toggle").on("click", function () {
       const clickedOption = $(this).parent();
       $(clickedOption).toggleClass("show-child");
       if ("year" == $(this).data("type")) {
@@ -429,13 +429,13 @@ $(document).ready(function () {
     $("#date_created_custom").attr("disabled", "disabled");
 
     // Handle toggle between preset and custom options
-    $(".custom_created_date_toggle").on("click", function (e) {
+    $(".custom_created_date_toggle").on("click", function () {
       $(".custom_created_date").toggle();
       $(".preset_created_date").toggle();
     });
 
     // Handle accoridan features in custom options
-    $(".custom_created_date .accordion-toggle").on("click", function (e) {
+    $(".custom_created_date .accordion-toggle").on("click", function () {
       const clickedOption = $(this).parent();
       $(clickedOption).toggleClass("show-child");
       if ("year" == $(this).data("type")) {
@@ -782,7 +782,7 @@ $(document).ready(function () {
 
     $("[data-slider=filesizes]").pwgDoubleSlider(sliders.filesizes);
 
-    $("[data-slider=filesizes]").on("slidestop", function (event, ui) {
+    $("[data-slider=filesizes]").on("slidestop", function () {
       const min = $("[data-slider=filesizes]").find("[data-input=min]").val();
       const max = $("[data-slider=filesizes]").find("[data-input=max]").val();
 
@@ -1045,7 +1045,7 @@ $(document).ready(function () {
     ".filter-manager-popin .filter-cancel, .filter-manager-popin .filter-manager-close",
   ).on("click", function () {
     $(".filter-manager-popin").hide();
-    $(".filter-manager-controller-container input").each(function (e) {
+    $(".filter-manager-controller-container input").each(function () {
       if ($(this).is(":checked")) {
         if (!$(".filter.filter-" + $(this).data("wid")).is(":visible")) {
           $(this).prop("checked", false);
@@ -1059,7 +1059,7 @@ $(document).ready(function () {
   });
 
   $(".filter-manager-popin .filter-validate").on("click", function () {
-    $(".filter-manager-controller-container input").each(function (e) {
+    $(".filter-manager-controller-container input").each(function () {
       if ($(this).is(":checked")) {
         if (!$(".filter.filter-" + $(this).data("wid")).is(":visible")) {
           updateFilters($(this).data("wid"), "add");
@@ -1989,7 +1989,6 @@ function updateDateFilters(selector: string) {
   const inputYear = ctx.find(".year_input input");
   const iconYear = ctx.find(".year_input .mcs-icon");
   const allMonth = ctx.find(".months_container").children();
-  const allDays = ctx.find(".days_container").children();
   let yearIsCheck = false;
 
   // check year

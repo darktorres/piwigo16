@@ -688,13 +688,12 @@
   {
     "name": "userActivity",
     "path": [
-      "dist/assets/LocalStorageCache-*.js",
       "dist/assets/ajax-*.js",
       "dist/assets/common-*.js",
       "dist/assets/page-data-*.js",
       "dist/assets/userActivity-*.js"
     ],
-    "limit": "9 KB",
+    "limit": "8 KB",
     "running": false
   },
   {

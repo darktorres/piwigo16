@@ -55,7 +55,6 @@ let connected_user = 0;
 let groups_arr: [number, string][] = [];
 let nb_days = "";
 let nb_photos = "";
-let nb_photos_per_page = "";
 let last_user_index = -1;
 let last_user_id = -1;
 let pwg_token = "";
@@ -757,8 +756,6 @@ let max_page = 1;
 let nb_filtered_users = 0;
 const page_ellipsis = "<span>...</span>";
 const page_item = '<a data-page="%d">%d</a>';
-const promise_pending = false;
-const update_ask = false;
 
 function move_to_page(page: number) {
   if (page < 1 || page > max_page) return;
@@ -980,46 +977,6 @@ function add_user_open() {
 /*------------------
 Selection mode
 ------------------*/
-
-function checkbox_container_change(this: HTMLElement) {
-  if ($(this).attr("data-selected") == "1") {
-    $(this).attr("data-selected", "0");
-    $(this).find("i").hide();
-  } else {
-    $(this).attr("data-selected", "1");
-    $(this).find("i").show();
-  }
-}
-
-function checkbox_container_click(this: HTMLElement) {
-  const curr_container = $(this).closest(".user-container");
-  const in_container = curr_container.length != 0;
-  // Non-null: `parseInt(curr_container.attr("key"))` is only ever
-  // evaluated when `in_container` is true, and every rendered
-  // container's `key` attribute is a real, in-bounds `current_users`
-  // index.
-  const curr_user: { id: number; username: string } = in_container
-    ? current_users[parseInt(curr_container.attr("key")!)]!
-    : { id: -1, username: "" };
-  if ($(this).attr("data-selected") == "1") {
-    $(this).attr("data-selected", "0");
-    $(this).find("i").hide();
-    if (in_container) {
-      curr_container.removeClass("container-selected");
-      selection = selection.filter((elem) => elem.id != curr_user.id);
-    }
-  } else {
-    $(this).attr("data-selected", "1");
-    $(this).find("i").show();
-    if (in_container) {
-      curr_container.addClass("container-selected");
-      selection.push({ id: curr_user.id, username: curr_user.username });
-    }
-  }
-  if (in_container) {
-    update_selection_content();
-  }
-}
 
 function create_user_selected_item(user: SelectionEntry) {
   const new_elem = $("#template .user-selected-item").clone();
@@ -1626,16 +1583,6 @@ function copyToClipboard(toCopy: string) {
 /*---------------------
 Fill the pop-in values
 ---------------------*/
-
-function get_formatted_date(date_str: string | null) {
-  if (date_str === null) {
-    return "N/A";
-  }
-  const first_part = date_str.split(" ")[0]!;
-  const formatted = first_part.split("-").join("/");
-  // console.log(formatted);
-  return formatted;
-}
 
 function get_status_index(status: string | null) {
   for (let i = 0; i < status_arr.length; i++) {
@@ -2338,7 +2285,7 @@ function select_whole_set() {
       $("#checkActions .loading").hide();
       update_selection_content();
     },
-    error: function (XMLHttpRequest, textStatus, errorThrows) {
+    error: function () {
       $("#checkActions .loading").hide();
     },
   });
@@ -2702,7 +2649,7 @@ function update_user_list() {
 
       show_filter_infos(nb_filters);
     },
-    error: (raw_data) => {
+    error: () => {
       $(".user-update-spinner").hide();
     },
   });
@@ -2951,7 +2898,7 @@ function delete_user(uid: number) {
       // msg where user was deleted
       //jQuery('#showAddUser .infos').html('&#x2714; User '+username+' deleted').show();
     },
-    error: function (XMLHttpRequest, textStatus, errorThrows) {
+    error: function () {
       //error just hide loading
       //jQuery('#user'+uid+' .userDelete .loading').hide();
     },
@@ -3087,7 +3034,7 @@ function set_main_user(user_id: number, new_username: string) {
     type: "POST",
     contentType: "application/json",
     headers: { "X-CSRF-Token": pwg_token },
-    success: function (res) {
+    success: function () {
       $("#who_is_the_king")
         .off("click")
         .removeClass(
@@ -3217,7 +3164,6 @@ guest_id = pwg_getPageData<number>("guest_id");
 nb_days = pwg_getPageString("%d days");
 //per page is too long for the popin
 nb_photos = pwg_getPageString("%d photos");
-nb_photos_per_page = pwg_getPageString("%d photos per page");
 pwg_token = pwg_getPageData<string>("csrf_token");
 const has_group = pwg_getPageData<string | null>("filter_group");
 

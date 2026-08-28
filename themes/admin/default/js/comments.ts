@@ -27,7 +27,6 @@ const str_comments_validated = pwg_getPageString(
 );
 const str_and_others = pwg_getPageString("and %s others");
 
-const commentsContainer = $("#comments");
 const advancedFilters = $("#advancedFilters");
 const switchMode = $("#toggleSelectionMode");
 const commentContainer = $("#commentContainer");

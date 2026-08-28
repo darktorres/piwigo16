@@ -138,7 +138,7 @@ $(document).ready(() => {
     },
   });
 
-  $(".tree").on("click", ".move-cat-toogler", function (e) {
+  $(".tree").on("click", ".move-cat-toogler", function () {
     const node_id = $(this).attr("data-id");
     const node = $(".tree").tree(
       "getNodeById",
@@ -246,7 +246,7 @@ $(document).ready(() => {
     }
   });
 
-  $(".tree").on("click", ".move-cat-order", function (e) {
+  $(".tree").on("click", ".move-cat-order", function () {
     const node_id = $(this).attr("data-id");
     const node = $(".tree").tree(
       "getNodeById",
@@ -447,7 +447,7 @@ $(document).ready(() => {
           $("#cat-" + parent_node.id).on(
             "click",
             ".move-cat-toogler",
-            function (e) {
+            function () {
               const node_id = parent_node.id;
               const node = $(".tree").tree(
                 "getNodeById",
@@ -740,10 +740,6 @@ function checkbox_click(this: HTMLElement) {
 // Genuinely dead code -- zero real callers found (confirmed via grep)
 // -- typed rather than left broken, same policy as other confirmed-dead
 // functions found this campaign.
-function isNumeric(num: unknown): boolean {
-  return !isNaN(num as number);
-}
-
 function openAddAlbumPopIn(parentAlbumId: string | number) {
   if (parentAlbumId != 0) {
     $("#AddAlbum .AddIconTitle span").html(
@@ -995,16 +991,6 @@ function showNodeChildrens(node: AlbumJqTreeNode) {
 
 // Genuinely dead code -- zero real callers found (confirmed via grep)
 // -- typed rather than left broken, same policy as isNumeric() above.
-function closeTree(tree: JQuery) {
-  // console.log(tree);
-  if (tree.tree("getState").open_nodes.length > 0) {
-    tree.tree("getState").open_nodes.forEach((nodeItem) => {
-      const node = tree.tree("getNodeById", nodeItem);
-      tree.tree("closeNode", node!);
-    });
-  }
-}
-
 function getId(parent: AlbumJqTreeNode): string | number {
   if (parent.getLevel() == 0) {
     return 0;

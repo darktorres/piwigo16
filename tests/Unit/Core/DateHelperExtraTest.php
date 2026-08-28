@@ -680,3 +680,39 @@ test('isValidMysqlDatetime returns false for a string matching neither MySQL dat
  *    defers to str2DateTime()'s inner one, which still returns false and
  *    still produces the same $default fallback either way.
  */
+
+/**
+ * P58 step 2. Every entry point that used to accept a `DateTime` now accepts
+ * a `DateTimeInterface`, so a VO holding a `DateTimeImmutable` can be handed
+ * straight to the helper. Before the widening this was a TypeError, not a
+ * type-checker complaint: `DateTimeImmutable` does not extend `DateTime` --
+ * they are siblings under `DateTimeInterface`.
+ *
+ * The widening is safe because the only mutating calls in the class
+ * (`setDate()`/`setTime()` in str2DateTime()'s "unknown format" branch) are
+ * made on a `DateTime` the method itself constructs; every operation on a
+ * caller-supplied value is `format()` or `diff()`, both declared on
+ * `DateTimeInterface`.
+ */
+test('str2DateTime passes a DateTimeImmutable straight back out', function (): void {
+    $immutable = new DateTimeImmutable('2024-06-15 12:34:56');
+
+    expect(DateHelper::str2DateTime($immutable))->toBe($immutable);
+});
+
+test('formatDate formats a DateTimeImmutable identically to the equivalent DateTime', function (): void {
+    $mutable = new DateTime('2024-06-15 12:34:56');
+    $immutable = new DateTimeImmutable('2024-06-15 12:34:56');
+
+    expect(DateHelper::formatDate($immutable))
+        ->toBe(DateHelper::formatDate($mutable));
+});
+
+test('dateDiff accepts DateTimeImmutable on either side', function (): void {
+    $from = new DateTimeImmutable('2024-06-15 00:00:00');
+    $to = new DateTimeImmutable('2024-06-18 00:00:00');
+
+    expect(DateHelper::dateDiff($from, $to)->days)->toBe(3);
+    // Mixed operands are the shape a half-migrated caller actually produces.
+    expect(DateHelper::dateDiff(new DateTime('2024-06-15 00:00:00'), $to)->days)->toBe(3);
+});

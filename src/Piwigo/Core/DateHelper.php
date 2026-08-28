@@ -6,6 +6,7 @@ namespace Piwigo\Core;
 
 use DateInterval;
 use DateTime;
+use DateTimeInterface;
 use IntlDateFormatter;
 use LogicException;
 use Piwigo\Cache\CacheFactory;
@@ -55,29 +56,29 @@ final class DateHelper
         return self::$translatorFallback ??= new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations')));
     }
 
-    public static function dateDiff(DateTime $date1, DateTime $date2): DateInterval
+    public static function dateDiff(DateTimeInterface $date1, DateTimeInterface $date2): DateInterval
     {
         return $date1->diff($date2);
     }
 
     /**
-     * converts a value into a DateTime object
+     * converts a value into a DateTimeInterface object
      *
-     * @param int|string|DateTime|false $original timestamp, datetime
-     *   string, or an already-converted DateTime (returned as-is; some
+     * @param int|string|DateTimeInterface|false $original timestamp, datetime
+     *   string, or an already-converted DateTimeInterface (returned as-is;
      *   callers pass the same value through this method repeatedly) --
      *   false/empty short-circuits to the false/''/0/'0' check below, so
-     *   callers may pass another method's own DateTime|false return
+     *   some callers may pass another method's own DateTimeInterface|false
      *   straight through
      * @param string|null $format input format respecting date() syntax
      */
-    public static function str2DateTime(int|string|DateTime|false $original, ?string $format = null): DateTime|false
+    public static function str2DateTime(int|string|DateTimeInterface|false $original, ?string $format = null): DateTimeInterface|false
     {
         if ($original === false || $original === '' || $original === 0 || $original === '0') {
             return false;
         }
 
-        if ($original instanceof DateTime) {
+        if ($original instanceof DateTimeInterface) {
             return $original;
         }
 
@@ -119,13 +120,13 @@ final class DateHelper
     /**
      * returns a formatted and localized date for display (LEGACY use formatDate)
      *
-     * @param int|string|DateTime|false $original timestamp, datetime string, or
-     *   an already-converted DateTime/false -- same as formatDate(), since this
+     * @param int|string|DateTimeInterface|false $original timestamp, datetime string, or
+     *   an already-converted DateTimeInterface/false -- same as formatDate(), since this
      *   re-derives via the same permissive str2DateTime()
      * @param string[]|null $show list of components displayed, default is ['day_name', 'day', 'month', 'year']
      * @param string|null $format input format respecting date() syntax
      */
-    public static function formatDateLegacy(int|string|DateTime|false $original, ?array $show = null, ?string $format = null): string
+    public static function formatDateLegacy(int|string|DateTimeInterface|false $original, ?array $show = null, ?string $format = null): string
     {
         $date = self::str2DateTime($original, $format);
 
@@ -167,16 +168,16 @@ final class DateHelper
     /**
      * returns a formatted and localized date for display
      *
-     * @param int|string|DateTime|false $original timestamp, datetime string, or
-     *   an already-converted DateTime/false -- formatFromto() passes
+     * @param int|string|DateTimeInterface|false $original timestamp, datetime string, or
+     *   an already-converted DateTimeInterface/false -- formatFromto() passes
      *   str2DateTime()'s own return type straight through; both are handled
-     *   gracefully (DateTime passes through str2DateTime() as-is, false/empty
+     *   gracefully (a DateTimeInterface passes through str2DateTime() as-is, false/empty
      *   short-circuits to the "N/A" string below)
      * @param string[]|null $show list of components displayed, default is ['day_name', 'day', 'month', 'year']
      *    THIS PARAMETER IS PLANNED TO CHANGE
      * @param string|null $format input format respecting date() syntax
      */
-    public static function formatDate(int|string|DateTime|false $original, ?array $show = null, ?string $format = null): string
+    public static function formatDate(int|string|DateTimeInterface|false $original, ?array $show = null, ?string $format = null): string
     {
         $date = self::str2DateTime($original, $format);
 

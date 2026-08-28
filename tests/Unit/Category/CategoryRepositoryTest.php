@@ -694,31 +694,25 @@ test('findDateRangeByCategory() returns empty for no category ids', function ():
 });
 
 test('findDateRangeByCategory() returns the min and max creation date', function (): void {
-    // Only image 2's date_creation is set (the other 2 direct images
-    // of category 1 stay NULL) -- MIN/MAX both resolve to that single
-    // real value, proving the aggregate reads real data rather than
-    // just echoing back a NULL.
-    $conn = DbConnection::build();
-
-    try {
-        $conn->executeStatement("UPDATE images SET date_creation = '2019-06-15 10:00:00' WHERE id = 2");
-
-        $range = categoryTestRepo()
-            ->findDateRangeByCategory([1], categoryTestNoPermissionRestriction());
-        expect($range)
-            ->toHaveCount(1);
-        $entry = array_first($range);
-        if ($entry === null) {
-            throw new LogicException('unreachable -- asserted count above');
-        }
-
-        expect($entry->from)
-            ->toBe('2019-06-15 10:00:00')
-            ->and($entry->to)
-            ->toBe('2019-06-15 10:00:00');
-    } finally {
-        $conn->executeStatement('UPDATE images SET date_creation = NULL WHERE id = 2');
+    // Category 1's three direct images carry distinct creation dates
+    // (1: 2024-03-15, 2: 2024-07-22, 3: 2025-05-10), so MIN and MAX
+    // resolve to two *different* rows -- an aggregate that returned any
+    // single row's value would fail. This used to set one image's date and
+    // NULL it again in a finally block, which both understated what the
+    // aggregate had to do (MIN == MAX) and wrote to shared fixture data.
+    $range = categoryTestRepo()
+        ->findDateRangeByCategory([1], categoryTestNoPermissionRestriction());
+    expect($range)
+        ->toHaveCount(1);
+    $entry = array_first($range);
+    if ($entry === null) {
+        throw new LogicException('unreachable -- asserted count above');
     }
+
+    expect($entry->from)
+        ->toBe('2024-03-15 10:00:00')
+        ->and($entry->to)
+        ->toBe('2025-05-10 09:15:00');
 });
 
 test('findIdNamePermalinkById() returns null for a missing category', function (): void {

@@ -26,6 +26,32 @@ return [
     'category-2' => ['/index.php?/category/2', false],
     'random' => ['/random.php', false],
     'calendar-posted' => ['/index.php?/category/1/posted-monthly-list', false],
+    // month_calendar.latte is FILE_CHRONOLOGY_VIEW for both the -list and
+    // -calendar styles, but which of its three branches runs depends
+    // entirely on how many distinct periods the data holds. Every fixture
+    // photo shares one date_available (2026-08), so a -posted calendar
+    // bails out of the all-years view (one year) and then the year view
+    // (one month) and only ever reaches the month grid. The -created
+    // routes carry dates spanning 2024-2026 precisely so the other two
+    // branches execute (P58, tools/p58).
+    //
+    // There is deliberately no -posted-calendar route. Each day cell picks
+    // its thumbnail through CalendarRepository::findRandomImageForDay(),
+    // which really does ORDER BY RAND(), so a cell is only reproducible
+    // when exactly one photo falls on that day. Every fixture photo shares
+    // 2026-08-01, so a posted month grid re-rolls its thumbnail on every
+    // capture; the -created dates put one photo per day cell instead.
+    //
+    // No date part: buildGlobalCalendar() emits one calendar_bars row per
+    // year (2024/2025/2026).
+    'calendar-created-calendar' => ['/index.php?/category/1/created-monthly-calendar', false],
+    // One date part, and 2024 holds two months, so buildYearCalendar()
+    // emits calendar_bars AND buildNavBar(CYEAR) emits
+    // chronology_navigation_bars -- the only route reaching that variable.
+    'calendar-created-year' => ['/index.php?/category/1/created-monthly-calendar-2024', false],
+    // Two date parts: the month grid over real photos (2026-02 holds two),
+    // so calDayCellFull renders alongside buildNextPrev()'s links.
+    'calendar-created-month' => ['/index.php?/category/1/created-monthly-calendar-2026-2', false],
     'popuphelp' => ['/popuphelp.php?page=maintenance', false],
 
     // ── Gallery (auth required) ──────────────────────────────────────────

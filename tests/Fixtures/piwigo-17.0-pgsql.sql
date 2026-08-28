@@ -3260,11 +3260,11 @@ COPY public.image_tag (image_id, tag_id) FROM stdin;
 --
 
 COPY public.images (id, file, date_available, date_creation, name, comment, author, hit, filesize, width, height, coi, representative_ext, date_metadata_update, rating_score, path, storage_category_id, level, md5sum, added_by, rotation, latitude, longitude, lastmodified) FROM stdin;
-5	fixture-photo-5.jpg	2026-08-01 00:00:00	\N	Photo 5	\N	\N	0	1	200	150	\N	\N	2026-08-17	\N	upload/2026/08/01/20260801000000-4b017258.jpg	\N	0	4b01d21f3d56009c3b1f913fafda86c5	1	0	\N	\N	2026-08-01 00:00:00
-1	fixture-photo-1.jpg	2026-08-01 00:00:00	\N	Photo 1	\N	\N	0	1	200	150	\N	\N	2026-08-17	4.5	upload/2026/08/01/20260801000000-2e7e2251.jpg	\N	0	2e7ee450c4a4cffe42945205029782b9	1	0	\N	\N	2026-08-01 00:00:00
-2	fixture-photo-2.jpg	2026-08-01 00:00:00	\N	Photo 2	\N	\N	0	1	200	150	\N	\N	2026-08-17	3	upload/2026/08/01/20260801000000-4a012aff.jpg	\N	0	4a010138f010067cfc713afb6dcf45e1	1	0	\N	\N	2026-08-01 00:00:00
-3	fixture-photo-3.jpg	2026-08-01 00:00:00	\N	Photo 3	\N	\N	0	1	200	150	\N	\N	2026-08-17	5	upload/2026/08/01/20260801000000-a6a0d152.jpg	\N	0	a6a04acded208db63890b74c4252a012	1	0	\N	\N	2026-08-01 00:00:00
-4	fixture-photo-4.jpg	2026-08-01 00:00:00	\N	Photo 4	\N	\N	0	1	200	150	\N	\N	2026-08-17	2	upload/2026/08/01/20260801000000-3df685b2.jpg	\N	0	3df6bd0ebb6f22ea988f2ffb1c3a9566	1	0	\N	\N	2026-08-01 00:00:00
+5	fixture-photo-5.jpg	2026-08-01 00:00:00	2026-02-19 11:20:00	Photo 5	\N	\N	0	1	200	150	\N	\N	2026-08-17	\N	upload/2026/08/01/20260801000000-4b017258.jpg	\N	0	4b01d21f3d56009c3b1f913fafda86c5	1	0	\N	\N	2026-08-01 00:00:00
+1	fixture-photo-1.jpg	2026-08-01 00:00:00	2024-03-15 10:00:00	Photo 1	\N	\N	0	1	200	150	\N	\N	2026-08-17	4.5	upload/2026/08/01/20260801000000-2e7e2251.jpg	\N	0	2e7ee450c4a4cffe42945205029782b9	1	0	\N	\N	2026-08-01 00:00:00
+2	fixture-photo-2.jpg	2026-08-01 00:00:00	2024-07-22 14:30:00	Photo 2	\N	\N	0	1	200	150	\N	\N	2026-08-17	3	upload/2026/08/01/20260801000000-4a012aff.jpg	\N	0	4a010138f010067cfc713afb6dcf45e1	1	0	\N	\N	2026-08-01 00:00:00
+3	fixture-photo-3.jpg	2026-08-01 00:00:00	2025-05-10 09:15:00	Photo 3	\N	\N	0	1	200	150	\N	\N	2026-08-17	5	upload/2026/08/01/20260801000000-a6a0d152.jpg	\N	0	a6a04acded208db63890b74c4252a012	1	0	\N	\N	2026-08-01 00:00:00
+4	fixture-photo-4.jpg	2026-08-01 00:00:00	2026-02-08 16:45:00	Photo 4	\N	\N	0	1	200	150	\N	\N	2026-08-17	2	upload/2026/08/01/20260801000000-3df685b2.jpg	\N	0	3df6bd0ebb6f22ea988f2ffb1c3a9566	1	0	\N	\N	2026-08-01 00:00:00
 \.
 
 

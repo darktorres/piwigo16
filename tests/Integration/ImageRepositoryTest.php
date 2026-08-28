@@ -775,14 +775,16 @@ final class ImageRepositoryTest extends IntegrationTestCase
     {
         $rows = $this->repo->findIdsAndDatesForBatchUnitSave([1, 2]);
 
+        // Both dates were NULL until the fixture gained real creation dates,
+        // so this asserted nothing about the date column being read at all.
         self::assertSame([
             [
                 'id' => 1,
-                'date_creation' => null,
+                'date_creation' => '2024-03-15 10:00:00',
             ],
             [
                 'id' => 2,
-                'date_creation' => null,
+                'date_creation' => '2024-07-22 14:30:00',
             ],
         ], $rows);
     }

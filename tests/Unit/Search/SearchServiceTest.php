@@ -1731,10 +1731,26 @@ test('getQuickSearchResultsNoCache() filters by filesize scope', function (): vo
         ->toBe([1, 2, 3, 4, 5]);
 });
 
-test('getQuickSearchResultsNoCache() filters by created scope with no match', function (): void {
-    // date_creation is NULL for every fixture image.
+test('getQuickSearchResultsNoCache() filters by created scope', function (): void {
+    // The fixture photos' date_creation spans 2024-2026 (1: 2024-03-15,
+    // 2: 2024-07-22, 3: 2025-05-10, 4: 2026-02-08, 5: 2026-02-19), so a
+    // year range genuinely discriminates. It used to be NULL for every
+    // image, which made the only assertion here an empty result -- a test
+    // a completely broken `created:` scope would also have passed.
     $results = searchServiceTestService()
-        ->getQuickSearchResultsNoCache('created:2024..2027', []);
+        ->getQuickSearchResultsNoCache('created:2024..2024', []);
+
+    $items = $results['items'];
+    sort($items);
+    expect($items)
+        ->toBe([1, 2]);
+});
+
+test('getQuickSearchResultsNoCache() filters by created scope with no match', function (): void {
+    // A range no fixture photo falls in -- the empty result now means the
+    // filter excluded them, not that the column was empty.
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('created:2019..2020', []);
 
     expect($results['items'])->toBe([]);
 });

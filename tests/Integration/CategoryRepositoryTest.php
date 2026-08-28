@@ -636,22 +636,19 @@ namespace Piwigo\Tests\Integration {
 
         public function testFindDateRangeByCategoryReturnsTheMinAndMaxCreationDate(): void
         {
-            // Only image 2's date_creation is set (the other 2 direct images
-            // of category 1 stay NULL) -- MIN/MAX both resolve to that single
-            // real value, proving the aggregate reads real data rather than
-            // just echoing back a NULL.
-            $this->conn->executeStatement("UPDATE images SET date_creation = '2019-06-15 10:00:00' WHERE id = 2");
+            // Category 1's three direct images carry distinct creation dates
+            // (1: 2024-03-15, 2: 2024-07-22, 3: 2025-05-10), so MIN and MAX
+            // resolve to two *different* rows -- an aggregate that returned
+            // any single row's value would fail. This used to set one image's
+            // date and NULL it again in a finally block, which both
+            // understated what the aggregate had to do (MIN == MAX) and wrote
+            // to shared fixture data.
+            $range = $this->repo->findDateRangeByCategory([1], self::noPermissionRestriction());
+            self::assertCount(1, $range);
+            $entry = array_first($range);
 
-            try {
-                $range = $this->repo->findDateRangeByCategory([1], self::noPermissionRestriction());
-                self::assertCount(1, $range);
-                $entry = array_first($range);
-
-                self::assertSame('2019-06-15 10:00:00', $entry->from);
-                self::assertSame('2019-06-15 10:00:00', $entry->to);
-            } finally {
-                $this->conn->executeStatement('UPDATE images SET date_creation = NULL WHERE id = 2');
-            }
+            self::assertSame('2024-03-15 10:00:00', $entry->from);
+            self::assertSame('2025-05-10 09:15:00', $entry->to);
         }
 
         public function testFindIdNamePermalinkByIdReturnsNullForAMissingCategory(): void

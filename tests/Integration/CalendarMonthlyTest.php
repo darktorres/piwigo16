@@ -585,25 +585,73 @@ namespace Piwigo\Tests\Integration {
 
         /**
          * chronology_field='created' points every image at date_creation,
-         * which is NULL for all 5 fixture images (this file's own UPDATEs
-         * only ever touch date_available) -- getDateWhere() with nothing
-         * selected falls back to `AND date_creation IS NOT NULL`, matching
-         * zero rows.
+         * whose fixture values deliberately span three years (1: 2024-03-15,
+         * 2: 2024-07-22, 3: 2025-05-10, 4: 2026-02-08, 5: 2026-02-19) so the
+         * all-years view has something to group. Years come back newest
+         * first, and 2024 is the year carrying two distinct months.
          *
-         * Regression test for the same fixed ONLY_FULL_GROUP_BY bug documented
-         * above (test_buildGlobalCalendar_groups_multiple_years_and_months_correctly()):
-         * confirms the query now runs to completion (rather than being
-         * rejected at the SQL level before any row is ever read) even when
-         * zero rows actually match -- an empty result set is a real, distinct
-         * scenario from "the query never even ran".
+         * This assertion used to be `assertSame([], ...)`: date_creation was
+         * NULL for every fixture image, so the only thing it could check was
+         * that nothing came back -- which a completely broken grouping query
+         * would also have satisfied.
          */
-        public function testCreatedFieldUsesDateCreationAndReturnsAnEmptyCalendarForZeroMatchingRows(): void
+        public function testCreatedFieldUsesDateCreationAndGroupsRealCreationDates(): void
         {
             $calendar = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfigTestFactory::get(), ImageStdParamsTestFactory::get());
             $calendar->chronology_field = 'created';
             $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
             $calendar->chronology_date = [];
             $calendar->initialize($this->makeScope('id IN (1,2,3,4,5)'));
+
+            self::assertSame('date_creation', $calendar->date_field);
+
+            $template = TemplateTestFactory::build();
+            $ret = $calendar->generateCategoryContent($template);
+
+            self::assertTrue($ret);
+            $calendarVars = $template->getTemplateVars('chronology_calendar');
+            self::assertCount(3, $this->digArray($calendarVars, ['calendar_bars']));
+
+            // ORDER BY YEAR(date_creation) DESC -- 2026, then 2025, then 2024.
+            $year2026 = $this->digArray($calendarVars, ['calendar_bars', 0]);
+            $year2025 = $this->digArray($calendarVars, ['calendar_bars', 1]);
+            $year2024 = $this->digArray($calendarVars, ['calendar_bars', 2]);
+
+            self::assertSame(2026, $year2026['HEAD_LABEL']);
+            self::assertSame(2, $year2026['NB_IMAGES']);
+            self::assertSame(2025, $year2025['HEAD_LABEL']);
+            self::assertSame(1, $year2025['NB_IMAGES']);
+            self::assertSame(2024, $year2024['HEAD_LABEL']);
+            self::assertSame(2, $year2024['NB_IMAGES']);
+
+            // 2024 is the only year holding more than one month, so it is the
+            // one that proves the per-year month grouping (ASC within a year).
+            self::assertCount(2, $this->digArray($year2024, ['items']));
+            self::assertSame(3, $this->dig($year2024, ['items', 0, 'LABEL']));
+            self::assertSame(1, $this->dig($year2024, ['items', 0, 'NB_IMAGES']));
+            self::assertSame(7, $this->dig($year2024, ['items', 1, 'LABEL']));
+            self::assertSame(1, $this->dig($year2024, ['items', 1, 'NB_IMAGES']));
+        }
+
+        /**
+         * The empty-result path, kept as its own case now that the fixture
+         * data no longer produces it by accident. The scope matches no image
+         * at all, so the grouping query returns zero rows.
+         *
+         * Regression test for the same fixed ONLY_FULL_GROUP_BY bug documented
+         * above (test_buildGlobalCalendar_groups_multiple_years_and_months_correctly()):
+         * confirms the query runs to completion (rather than being rejected at
+         * the SQL level before any row is ever read) even when zero rows
+         * actually match -- an empty result set is a real, distinct scenario
+         * from "the query never even ran".
+         */
+        public function testCreatedFieldReturnsAnEmptyCalendarForZeroMatchingRows(): void
+        {
+            $calendar = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfigTestFactory::get(), ImageStdParamsTestFactory::get());
+            $calendar->chronology_field = 'created';
+            $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
+            $calendar->chronology_date = [];
+            $calendar->initialize($this->makeScope('id IN (999999)'));
 
             self::assertSame('date_creation', $calendar->date_field);
 

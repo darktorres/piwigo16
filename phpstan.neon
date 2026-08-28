@@ -304,6 +304,33 @@ parameters:
             # and that entry keeps the real ones.
             message: '#^Only booleans are allowed in a negated boolean, Latte\\Runtime\\Template\|null given\.$#'
             path: _analysis/phpstan-latte/*
+        -
+            # Latte's {foreach} codegen for templates that use $iterator: it
+            # emits `foreach ($iterator = $ʟ_it = new Latte\Essential\
+            # CachingIterator($xs, $ʟ_it ?? null) as $x)`, chaining each loop
+            # to the enclosing one through its own codegen temporary. The
+            # `mixed` is that temporary, $ʟ_it, whose own variable.undefined
+            # is already permanently ignored by group (3) below. Read
+            # directly at _analysis/phpstan-latte/
+            # themes-admin-default-template-check_integrity.latte.php:177.
+            # 18 templates use $iterator; 20 findings.
+            #
+            # Message-scoped, like the entry above and for the same reason:
+            # argument.type is Campaign A's largest identifier after
+            # offsetAccess, so an identifier-wide ignore would bury real
+            # work. This message names Latte's own class as the *expected*
+            # parameter type, and no injected @var anywhere in
+            # _analysis/phpstan-latte is a CachingIterator (checked, 0 hits),
+            # so no template variable can ever produce it.
+            message: '#^Parameter \#2 \$parent of class Latte\\Essential\\CachingIterator constructor expects Latte\\Essential\\CachingIterator\|null, mixed given\.$#'
+            path: _analysis/phpstan-latte/*
+        -
+            # The matching {foreach} epilogue for the same codegen:
+            # `$iterator = $ʟ_it = $ʟ_it->getParent();` unwinds the chain on
+            # loop exit. Same disposition, same class-naming guarantee.
+            # 2 findings.
+            message: '#^Cannot call method getParent\(\) on Latte\\Essential\\CachingIterator\|null\.$#'
+            path: _analysis/phpstan-latte/*
 
         # (2) PERMANENT while the @var injection asserts presence -- the
         # compile step declares every known variable as defined (extract()
@@ -348,9 +375,14 @@ parameters:
         # the View constructor, so the fix is usually deleting the flatten
         # and letting the VO through, not writing a new docblock.
         #
-        # 843 findings across 74 templates / 63 View classes, re-measured
-        # 2026-08-28 (P32's own ~1,400 figure predates P40's View migration,
-        # which has been shrinking this as a side effect).
+        # 682 findings across 70 templates, measured 2026-08-28 by
+        # tools/p58/census.php (which strips this block and re-runs PHPStan;
+        # with the block in place `composer analyse:phpstan` reports zero and
+        # says nothing about progress). P32's own ~1,400 figure predates
+        # P40's View migration, which has been shrinking this as a side
+        # effect. An earlier 711 recorded here was wrong -- a cold-cache
+        # re-measure agrees with the warm one at 704, less A0b's 22 codegen
+        # findings refiled into group (1) above.
         -
             identifier: offsetAccess.nonOffsetAccessible
             path: _analysis/phpstan-latte/*

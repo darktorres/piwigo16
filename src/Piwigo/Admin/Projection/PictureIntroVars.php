@@ -25,28 +25,4 @@ final readonly class PictureIntroVars
         public bool $isSvg,
         public ?string $formats,
     ) {}
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function toArray(): array
-    {
-        $result = [
-            'file' => $this->file,
-            'date' => $this->date,
-            'age' => $this->age,
-            'added_by' => $this->addedBy,
-            'size' => $this->size,
-            'stats' => $this->stats,
-            'id' => $this->id,
-            'ext' => $this->ext,
-            'is_svg' => $this->isSvg,
-        ];
-
-        if ($this->formats !== null) {
-            $result['formats'] = $this->formats;
-        }
-
-        return $result;
-    }
 }

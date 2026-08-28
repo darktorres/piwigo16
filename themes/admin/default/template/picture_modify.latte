@@ -1,7 +1,7 @@
 {templateType Piwigo\Admin\Projection\PictureModifyView}
 
 <form action="{$fAction|noescape}" method="post" id="pictureModify">
-  <div id='picture-preview' n:class="$introVars['is_svg'] ? svg-container">
+  <div id='picture-preview' n:class="$introVars->isSvg ? svg-container">
     <div class='picture-preview-actions'>
       <a
         class="preview-box icon-zoom-square"
@@ -36,7 +36,7 @@
         ></a>
       {/if}
     </div>
-    {if $introVars['is_svg']}
+    {if $introVars->isSvg}
       <img
         src="{$path}"
         alt="{='Thumbnail'|translate}"
@@ -57,10 +57,10 @@
           <i class='icon-picture'></i>
         </div>
         <div class='info-framed-container'>
-          <div class='info-framed-title'>{$introVars['file']}</div>
-          <div>{$introVars['size']|noescape}</div>
-          <div>{if isset($introVars['formats'])}{$introVars['formats']} {/if}</div>
-          <div>{$introVars['ext']}</div>
+          <div class='info-framed-title'>{$introVars->file}</div>
+          <div>{$introVars->size|noescape}</div>
+          <div>{if isset($introVars->formats)}{$introVars->formats} {/if}</div>
+          <div>{$introVars->ext}</div>
         </div>
       </div>
 
@@ -69,10 +69,10 @@
           <span class='icon-calendar'></span>
         </div>
         <div class='info-framed-container'>
-          <div class='info-framed-title'>{$introVars['date']}</div>
-          <div>{$introVars['age']}</div>
-          <div>{$introVars['added_by']}</div>
-          <div>{$introVars['stats']}</div>
+          <div class='info-framed-title'>{$introVars->date}</div>
+          <div>{$introVars->age}</div>
+          <div>{$introVars->addedBy}</div>
+          <div>{$introVars->stats}</div>
         </div>
       </div>
     </div>

@@ -29,7 +29,6 @@ final readonly class PictureModifyView implements View, HasPageAssets, ExposesPa
 {
     /**
      * @param array<int, array{name: mixed, id: string}> $tagSelection
-     * @param array<string, mixed> $introVars
      * @param array<array-key, string> $levelOptions
      * @param list<mixed> $levelOptionsSelected
      * @param array<array-key, array{name: string, unlinkable: bool}> $relatedCategories
@@ -54,7 +53,7 @@ final readonly class PictureModifyView implements View, HasPageAssets, ExposesPa
         public string|int|null $dateCreation,
         public string $description,
         public string $fAction,
-        public array $introVars,
+        public PictureIntroVars $introVars,
         public array $levelOptions,
         public array $levelOptionsSelected,
         public array $relatedCategories,

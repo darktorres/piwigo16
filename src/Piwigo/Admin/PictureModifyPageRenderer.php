@@ -449,7 +449,7 @@ final readonly class PictureModifyPageRenderer
             dateCreation: $date_creation,
             description: $comment_value,
             fAction: $f_action,
-            introVars: $intro_vars->toArray(),
+            introVars: $intro_vars,
             levelOptions: $level_options,
             levelOptionsSelected: [$selected_level],
             relatedCategories: $related_categories,

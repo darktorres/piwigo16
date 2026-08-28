@@ -388,9 +388,16 @@ parameters:
 
         # Campaign B -- template-source modernization: Smarty-conversion
         # legacy in the .latte files themselves (loose ==/!=, empty(),
-        # foreach loop-variable shadowing, always-true/false conditions);
-        # ~450 findings, each needing per-site semantic care, not bulk
-        # replacement.
+        # always-true/false conditions); ~450 findings, each needing
+        # per-site semantic care, not bulk replacement.
+        #
+        # `foreach.valueOverwrite` is no longer among them: it had exactly
+        # two sites, both in search_filters.inc.latte, and both were live
+        # bugs rather than style -- Latte compiles `{foreach $x as $k =>
+        # $x}` to `unset($k, $x); foreach ($x as ...)`, so each loop
+        # iterated a variable it had just destroyed and the file-type and
+        # rating option lists rendered empty on every search page. Fixed
+        # (P49-A typing pass), and the ignore dropped so a new one fails.
         -
             identifier: equal.notAllowed
             path: _analysis/phpstan-latte/*
@@ -399,9 +406,6 @@ parameters:
             path: _analysis/phpstan-latte/*
         -
             identifier: empty.notAllowed
-            path: _analysis/phpstan-latte/*
-        -
-            identifier: foreach.valueOverwrite
             path: _analysis/phpstan-latte/*
         -
             identifier: if.alwaysTrue

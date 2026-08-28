@@ -804,13 +804,15 @@
         </div>
         <div class="form-container">
           <div class="filetypes-option-container">
-            {foreach $filetypes as $k => $filetypes}
-              <div class="filetypes-option {if 0 == $filetypes}disabled{/if}">
+            {foreach $filetypes as $k => $filetypeCount}
+              <div
+                class="filetypes-option {if 0 == $filetypeCount}disabled{/if}"
+              >
                 <input
                   type="checkbox"
                   id="filetype-{$k}"
                   name="{$k}"
-                  {if 0 == $filetypes}
+                  {if 0 == $filetypeCount}
                   disabled
                   {/if}
                 >
@@ -819,9 +821,9 @@
                     class="mcs-icon gallery-icon-checkmark checked-icon"
                   ></span>
                   <span class="ext-name">{$k}</span>
-                  {if 0 != $filetypes}<span
+                  {if 0 != $filetypeCount}<span
                       class="ext-badge"
-                    >{$filetypes}</span>{/if}
+                    >{$filetypeCount}</span>{/if}
                 </label>
               </div>
             {/foreach}
@@ -910,13 +912,13 @@
         <div class="form-container">
           <div class="ratings-option-container">
             <form>
-              {foreach $rating as $k => $rating}
-                <div class="ratings-option {if 0 == $rating}disabled{/if}">
+              {foreach $rating as $k => $ratingCount}
+                <div class="ratings-option {if 0 == $ratingCount}disabled{/if}">
                   <input
                     type="checkbox"
                     id="rating-{$k}"
                     name="{if 0 == $k}0{else}{$k}{/if}"
-                    {if 0 == $rating}
+                    {if 0 == $ratingCount}
                     disabled
                     {/if}
                   >
@@ -927,9 +929,9 @@
                     <span
                       class="ratings-name"
                     >{if 0 == $k}{='no rate'|translate}{else}{=translate('between %d and %d', intval($k) - 1, $k)}{/if}</span>
-                    {if 0 != $rating}<span
+                    {if 0 != $ratingCount}<span
                         class="ratings-badge"
-                      >{$rating}</span>{/if}
+                      >{$ratingCount}</span>{/if}
                   </label>
                 </div>
               {/foreach}

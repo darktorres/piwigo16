@@ -1,5 +1,5 @@
 {
-    "_hash": "f522c8087c945c94d5b27f7f67481fd44b72215a51a6d73e2e6f0be339c74f96",
+    "_hash": "d5d24de76800b7dc5fcac38b0997a08a11e0a57e99432e065c86826db94a9a95",
     "patches": {
         "doctrine/dbal": [
             {
@@ -41,6 +41,16 @@
                 "description": "Add Chromium launch flags for deterministic screenshot rendering on Linux (font hinting/LCD text/color profile) -- the plugin's own maintainers don't trust screenshot assertions on Linux/CI without this class of mitigation, see PR pestphp/pest-plugin-browser#175",
                 "url": "patches/pest-plugin-browser-5.0.0-deterministic-screenshot-flags.patch",
                 "sha256": "e689bb2a394cfd1831f18ac30d13efeea83a874c9af03fa598afeae598c5d3d3",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            },
+            {
+                "package": "pestphp/pest-plugin-browser",
+                "description": "Start `playwright run-server` with --unsafe, without which playwright-core's own filterLaunchOptions() silently discards every `args` entry the patch above sends (allowUnsafe gates args/executablePath/ignoreDefaultArgs; `headless` passes through regardless, so nothing looks broken). Confirmed by reading the live browser's argv: none of the five determinism flags was applied, LCD subpixel text anti-aliasing was on in every screenshot, and 5-14 of the 80 visual baselines differed between any two capture runs. With the flags actually reaching Chromium, three consecutive full captures are byte-identical",
+                "url": "patches/pest-plugin-browser-5.0.0-run-server-unsafe-launch-options.patch",
+                "sha256": "20def3e3c855546b5f79c2afea07a738ad37ca9812878322e1437c12223d8cad",
                 "depth": 1,
                 "extra": {
                     "provenance": "root"

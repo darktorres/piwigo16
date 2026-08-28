@@ -1,0 +1,57 @@
+# Starts `playwright run-server` with --unsafe, without which every launch
+# option this plugin sends is silently discarded by Playwright's own server.
+#
+# ServerManager::playwright() connects to a `playwright run-server` process
+# over a WebSocket, and Client::connectTo() passes the launch options as a
+# JSON `launch-options` query parameter. playwright-core's own server then
+# runs them through filterLaunchOptions():
+#
+#     function filterLaunchOptions(options, allowUnsafe) {
+#       return {
+#         channel: options.channel,
+#         args: allowUnsafe ? options.args : void 0,
+#         ignoreAllDefaultArgs: allowUnsafe ? options.ignoreAllDefaultArgs : void 0,
+#         ...
+#         headless: options.headless,
+#         ...
+#       };
+#     }
+#
+# with `allowUnsafe = isExtension || !!this._options.unsafe`. So `args` --
+# and executablePath, ignoreDefaultArgs, chromiumSandbox -- are dropped
+# unless the SERVER was started with --unsafe, while `headless` passes
+# through unconditionally. Nothing errors and nothing warns: the browser
+# launches, tests run, and the flags simply are not there.
+#
+# The consequence here was that
+# pest-plugin-browser-5.0.0-deterministic-screenshot-flags.patch had never
+# taken effect. Confirmed by reading the live browser's own /proc argv
+# during a run: of --font-render-hinting=none, --disable-lcd-text,
+# --disable-partial-raster, --run-all-compositor-stages-before-draw and
+# --disable-skia-runtime-opts, not one was present (--force-color-profile=srgb
+# was, but that is one of Playwright's own default args, present equally on
+# a browser launched with no patch at all).
+#
+# So LCD subpixel text anti-aliasing was live in every screenshot -- visible
+# directly in the baselines as orange/blue colour fringing on grey text --
+# and subpixel text rendering is phase-sensitive, which made a handful of
+# routes' glyph edges differ run to run. With the flags actually applied,
+# three consecutive full captures of all 80 visual baselines are
+# byte-identical; before it, 5 to 14 routes differed between any two runs.
+#
+# --unsafe is documented by playwright-core's own CLI as "Allow clients to
+# set unsafe launch options (args, executablePath, ignoreAllDefaultArgs,
+# etc)". The server here is started by this plugin, on localhost, on a port
+# it picks itself, and is the only client -- so the trust boundary the flag
+# guards does not exist in this deployment.
+--- a/src/ServerManager.php	2026-04-08 18:04:12.000000000 -0300
++++ b/src/ServerManager.php	2026-08-28 21:10:00.000000000 -0300
+@@ -64,7 +64,7 @@
+ 
+         $this->playwright ??= PlaywrightNpmServer::create(
+             PackageJsonDirectory::find(),
+-            '.'.DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR.'.bin'.DIRECTORY_SEPARATOR.'playwright run-server --host %s --port %d --mode launchServer',
++            '.'.DIRECTORY_SEPARATOR.'node_modules'.DIRECTORY_SEPARATOR.'.bin'.DIRECTORY_SEPARATOR.'playwright run-server --host %s --port %d --mode launchServer --unsafe',
+             $host,
+             $port,
+             'Listening on',

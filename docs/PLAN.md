@@ -148,7 +148,7 @@ Three structural changes produced that drift:
 | P55 | Real quality gates | Not started | 0 |
 | P56 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P57 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
-| P58 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | In progress — A0/A0b done (103 findings refiled as Latte codegen); a generic `CachingIterator` stub removed the erasure hiding 133 more; **P58-A 843 → 362**, with techniques 1, 4 and 11 closed; P58-B 376 → 363. Six live bugs found and fixed along the way | 1 |
+| P58 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | In progress — A0/A0b done (103 findings refiled as Latte codegen); a generic `CachingIterator` stub removed the erasure hiding 133 more; **P58-A 843 → 270**, with techniques 1, 4 and 11 closed; P58-B 376 → 356. Nine live bugs found and fixed along the way | 1 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -4516,9 +4516,10 @@ techniques. Re-run `phpstan-latte:compile` first — a stale compile
 changes the count.
 
 Opened at **P58-A 843** across 74 templates and 63 View classes and
-**P58-B 376** across 72 (P32 recorded ~1,400 and ~450). Now **A 362, B
-363** -- B's 13 were not B work, but `empty()` guards A had to restate on
-its way past, since `empty()` on an object is always false. Two entries have already come out of the block
+**P58-B 376** across 72 (P32 recorded ~1,400 and ~450). Now **A 270, B
+356** -- B's 20 were not B work, but `empty()`/`==` guards A had to restate
+on its way past, since `empty()` on an object is always false and a
+comparison against a newly-typed value can be written strictly. Two entries have already come out of the block
 (`booleanOr.leftNotBoolean`/`rightNotBoolean`), forced by
 `reportUnmatchedIgnoredErrors` rather than noticed.
 
@@ -4553,12 +4554,12 @@ not a partition, since one chain can need two:
 
 | # | technique | opened | now |
 |---|---|---|---|
-| 3 | compose a row VO (incl. `array_merge` sites) | 160 | 117 |
-| 9 | template locals / fallback-union globals | 119 | 92 |
-| 2 | tighten a leaf `*Result`/`*Data` property | 87 | 53 |
-| 5 | polymorphic block data (`mixed` by design) | 52 | 52 |
+| 9 | template locals / fallback-union globals | 119 | 90 |
+| 3 | compose a row VO (incl. `array_merge` sites) | 160 | 71 |
+| 5 | polymorphic block data (`mixed` by design) | 52 | 51 |
 | 6 | picture family: untyped event payloads | 35 | 35 |
-| 11 | nullable/union used as if definite | 23 | **6** |
+| 2 | tighten a leaf `*Result`/`*Data` property | 87 | **11** |
+| 11 | nullable/union used as if definite | 23 | **5** |
 | 4 | retire a flattening `TemplatePageContext` | 86 | **5** |
 | 1 | delete a `->toArray()` flatten | 118 | **0** |
 
@@ -4616,7 +4617,7 @@ padding cells to the wrong branch, and the only thing that caught it was a
 golden fixture built one commit earlier. Every `{if !empty($x)}` whose
 `$x` becomes an object has to be read by hand.
 
-Six live bugs have surfaced this way, none of them type work:
+Nine live bugs have surfaced this way, none of them type work:
 
 1. Saving the Main, Comments or Display config tab turned off every
    checkbox on it. The tabs normalized to `'true'`/`'false'` strings and
@@ -4643,6 +4644,17 @@ Six live bugs have surfaced this way, none of them type work:
    `htmlspecialchars()`. The step came straight from `$_GET` with no check
    that the release its mode presents exists, and steps 2 and 3 are the two
    that reach `CoreUpdateService::upgradeTo()`.
+7. The sizes tab dereferenced null on every derivative-only validation
+   failure: `$sizes` was left null whenever the POST carried no `original_*`
+   field, while the flag said the tab was populated, and
+   `configuration_sizes.latte` reads `$sizes->originalResize*` unguarded six
+   times. Found by replacing a no-op `assert()` with a real check.
+8. `Image\ImagePathHelper` built paths out of `strrpos()`'s `false` --
+   `false + 1` is `1`, so a path with no directory or no extension was
+   rebuilt from its own offset 1. Found by enabling `zend.assertions`.
+9. Four watermark form fields (`minw`, `minh`, `xrepeat`, `yrepeat`) go
+   through no validation at all. Not fixed -- that is new behaviour -- but
+   their unreachable error markup is removed.
 
 ## Greenfield tracks (T3, cuttable — outside the P0–P58 backbone)
 

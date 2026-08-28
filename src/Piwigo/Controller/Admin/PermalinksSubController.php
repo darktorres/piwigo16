@@ -163,14 +163,14 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
             sortId: $sortHeaders['SORT_ID'],
             sortName: $sortHeaders['SORT_NAME'],
             sortPermalink: $sortHeaders['SORT_PERMALINK'],
-            permalinks: array_map(static fn (PermalinkListRow $row): array => $row->toArray(), $categories),
+            permalinks: $categories,
             sortOldCatId: $oldSortHeaders['SORT_OLD_CAT_ID'],
             sortOldPermalink: $oldSortHeaders['SORT_OLD_PERMALINK'],
             sortOldDateDeleted: $oldSortHeaders['SORT_OLD_DATE_DELETED'],
             sortOldLastHit: $oldSortHeaders['SORT_OLD_LAST_HIT'],
             sortOldHit: $oldSortHeaders['SORT_OLD_HIT'],
             csrfToken: $pwg_token,
-            deletedPermalinks: array_map(static fn (DeletedPermalinkRow $row): array => $row->toArray(), $deleted_permalinks),
+            deletedPermalinks: $deleted_permalinks,
             categoriesOptions: $categories_options,
         ));
 

@@ -21,21 +21,4 @@ final readonly class DeletedPermalinkRow
         public string $name,
         public string $uDelete,
     ) {}
-
-    /**
-     * @return array{cat_id: int, permalink: string, date_deleted: ?string,
-     *     last_hit: ?string, hit: int, name: string, U_DELETE: string}
-     */
-    public function toArray(): array
-    {
-        return [
-            'cat_id' => $this->catId,
-            'permalink' => $this->permalink,
-            'date_deleted' => $this->dateDeleted,
-            'last_hit' => $this->lastHit,
-            'hit' => $this->hit,
-            'name' => $this->name,
-            'U_DELETE' => $this->uDelete,
-        ];
-    }
 }

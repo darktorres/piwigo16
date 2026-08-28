@@ -23,8 +23,8 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class PermalinksView implements View, HasPageAssets, ExposesPageData
 {
     /**
-     * @param list<array<string, mixed>> $permalinks
-     * @param list<array<string, mixed>> $deletedPermalinks
+     * @param list<PermalinkListRow> $permalinks
+     * @param list<DeletedPermalinkRow> $deletedPermalinks
      */
     public function __construct(
         public int $nbCats,

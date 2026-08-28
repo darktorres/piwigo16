@@ -20,16 +20,4 @@ final readonly class PermalinkListRow
         public string $name,
         public ?string $permalink,
     ) {}
-
-    /**
-     * @return array{id: int, name: string, permalink: ?string}
-     */
-    public function toArray(): array
-    {
-        return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'permalink' => $this->permalink,
-        ];
-    }
 }

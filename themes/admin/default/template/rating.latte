@@ -58,7 +58,7 @@
   </fieldset>
 </form>
 
-{if !empty($navbar)}{include 'navigation_bar.latte', navbar: $navbar}{/if}
+{if !$navbar->isEmpty()}{include 'navigation_bar.latte', navbar: $navbar}{/if}
 
 <table width="99%">
   <tr class="throw">
@@ -102,4 +102,4 @@
   </tr>{* images *}
 </table>
 
-{if !empty($navbar)}{include 'navigation_bar.latte', navbar: $navbar}{/if}
+{if !$navbar->isEmpty()}{include 'navigation_bar.latte', navbar: $navbar}{/if}

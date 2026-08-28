@@ -9,6 +9,7 @@
 {varType \Latte\Runtime\Html $CATEGORIES}
 {varType ?string $COMMENT_IMG}
 {varType ?string|string $CONTACT_MAIL}
+{varType \Latte\Runtime\Html $CONTENT}
 {varType string $CONTENT_ENCODING}
 {varType string $CSRF_TOKEN}
 {varType bool $DISPLAY_BELL}
@@ -96,17 +97,17 @@
 {varType string $WHATS_NEW_MAJOR_VERSION}
 {varType array<array-key, int|string|float|bool> $all_elements}
 {varType array<array-key, mixed> $associated_categories}
-{varType array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int} $cats_navbar}
+{varType \Piwigo\Core\Projection\Navbar $cats_navbar}
 {varType string $chronology}
-{varType array<array-key, mixed> $chronology_calendar}
-{varType list<array<string, mixed>> $chronology_navigation_bars}
+{varType \Piwigo\Calendar\Projection\CalendarChronologyCalendar $chronology_calendar}
+{varType list<\Piwigo\Calendar\Projection\ChronologyNavBarRow> $chronology_navigation_bars}
 {varType list<array{VALUE: string, CONTENT: string, SELECTED: bool}>|null $chronology_views}
 {varType int $conf_checksum_compute_blocksize}
 {varType \Piwigo\Page\Projection\DebugInfo $debug}
-{varType array<string, mixed> $dimensions}
+{varType \Piwigo\Admin\BatchManager\Projection\DimensionFilterOptions $dimensions}
 {varType array<array-key, string>|null $errors}
 {varType string $favorite}
-{varType array<string, mixed> $filesize}
+{varType \Piwigo\Admin\BatchManager\Projection\FilesizeFilterOptions $filesize}
 {varType array<string, mixed> $filter}
 {varType ?int $filter_category_selected}
 {varType string $filter_category_selected_name}

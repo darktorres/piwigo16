@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Picture\Projection;
 
 use Latte\Runtime\Html;
+use Piwigo\Core\Projection\Navbar;
 
 /**
  * {@see \Piwigo\Picture\PictureCommentRenderer::render()}'s own return
@@ -20,7 +21,6 @@ use Latte\Runtime\Html;
 final readonly class PictureCommentsResult
 {
     /**
-     * @param array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int}|null $commentsNavbar
      * @param list<array<string, mixed>>|null $comments
      * @param array<string, mixed>|null $commentAdd
      */
@@ -28,7 +28,7 @@ final readonly class PictureCommentsResult
         public ?string $commentsOrderUrl,
         public ?string $commentsOrderTitle,
         public ?int $commentCount,
-        public ?array $commentsNavbar,
+        public ?Navbar $commentsNavbar,
         public ?array $comments,
         public ?array $commentAdd,
         public ?Html $commentList,

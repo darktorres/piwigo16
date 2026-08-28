@@ -11,6 +11,7 @@ use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
 use Piwigo\Core\ExposesPageData;
+use Piwigo\Core\Projection\Navbar;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 use Piwigo\Template\Projection\QuickSearchView;
@@ -57,7 +58,6 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
     /**
      * @param array<array-key, string> $levelOptions
      * @param list<string> $activePlugins
-     * @param array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int}|null $navbar
      * @param array<array-key, string> $cacheKeys
      * @param list<array<string, mixed>> $elements
      * @param array<array-key, mixed> $associatedCategories
@@ -68,7 +68,7 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
         public string $csrfToken,
         public array $activePlugins,
         public int $perPage,
-        public ?array $navbar,
+        public ?Navbar $navbar,
         public ?string $elementIds,
         public array $cacheKeys,
         public array $elements,

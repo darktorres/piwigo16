@@ -9,6 +9,7 @@ use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
 use Piwigo\Core\ExposesPageData;
+use Piwigo\Core\Projection\Navbar;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -27,7 +28,6 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class RatingView implements View, HasPageAssets, ExposesPageData
 {
     /**
-     * @param array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int} $navbar
      * @param list<mixed> $category
      * @param array<array-key, string> $cacheKeys
      * @param list<int> $orderByOptionsSelected
@@ -37,7 +37,7 @@ final readonly class RatingView implements View, HasPageAssets, ExposesPageData
      * @param list<RatingReportImageRow> $images
      */
     public function __construct(
-        public array $navbar,
+        public Navbar $navbar,
         public string $fAction,
         public int $display,
         public int $nbElements,

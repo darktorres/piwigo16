@@ -324,7 +324,7 @@
 
     {if !empty($CATEGORIES)}{$CATEGORIES}{/if}
 
-    {if !empty($cats_navbar)}
+    {if isset($cats_navbar) && !$cats_navbar->isEmpty()}
       {include 'navigation_bar.latte', navbar: $cats_navbar}
     {/if}
 
@@ -350,7 +350,7 @@
         </div>
       </div>
     {/if}
-    {if !empty($thumbNavbar)}
+    {if !$thumbNavbar->isEmpty()}
       {include 'navigation_bar.latte', navbar: $thumbNavbar}
     {/if}
   </div>{* <!-- content --> *}

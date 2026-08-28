@@ -29,7 +29,7 @@ final readonly class CategoryCatsNavbarPageContext implements TemplatePageContex
     public function toArray(): array
     {
         return [
-            'cats_navbar' => $this->catsNavbar->toArray(),
+            'cats_navbar' => $this->catsNavbar,
         ];
     }
 }

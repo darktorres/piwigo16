@@ -590,7 +590,7 @@ final readonly class BatchManagerGlobalPageRenderer
             levelOptionsSelected: 0,
             delDerivativesTypes: $del_deriv_map,
             generateDerivativesTypes: $gen_deriv_map,
-            navbar: $nav_bar?->toArray(),
+            navbar: $nav_bar,
             thumbParams: $thumb_params,
             nbThumbsPage: $nb_thumbs_page,
             nbThumbsSet: count($cat_elements_id),

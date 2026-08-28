@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Projection;
 
+use Piwigo\Core\Projection\Navbar;
+
 /**
  * `{templateType}` target shared by both theme variants of
  * `navigation_bar.latte` (`themes/default/template/`,
@@ -20,10 +22,7 @@ namespace Piwigo\Controller\Projection;
  */
 final readonly class NavigationBarView
 {
-    /**
-     * @param array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int} $navbar
-     */
     public function __construct(
-        public array $navbar,
+        public Navbar $navbar,
     ) {}
 }

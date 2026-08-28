@@ -12,6 +12,7 @@ use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\MethodCall;
+use PhpParser\Node\Expr\New_;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Expr\Variable;
@@ -445,6 +446,33 @@ final readonly class ContextVariableExtractor
                     return $chained;
                 }
             }
+        }
+
+        // `'key' => new SomeVo(...)` is exact, not an approximation: the
+        // assigned value is an instance of that class whatever its
+        // arguments are. Without this it fell through to the
+        // first-property-reference heuristic below and came back as the
+        // type of whichever constructor argument happened to be first --
+        // which is how 'chronology_calendar' was declared
+        // `?list<CalendarBarEntry>` (its $calendarBars argument) rather
+        // than `CalendarChronologyCalendar`.
+        // `'key' => new SomeVo(...)` is exact, not an approximation: the
+        // assigned value is an instance of that class whatever its
+        // arguments are. Without this it fell through to the
+        // first-property-reference heuristic below and came back as the
+        // type of whichever constructor argument happened to be first --
+        // which is how 'chronology_calendar' was declared
+        // `?list<CalendarBarEntry>` (its $calendarBars argument) rather
+        // than `CalendarChronologyCalendar`.
+        if ($expr instanceof New_ && $expr->class instanceof Name) {
+            // Resolved through the context class's own name context, not
+            // printed straight from the node: the AST this walks is parsed
+            // without a NameResolver pass, so `new CalendarChronologyCalendar`
+            // arrives as the short name written in the source and would be
+            // emitted as a root-namespace class that does not exist.
+            return '\\' . $this->buildNameContext($reflection)
+                ->getResolvedClassName($expr->class)
+                ->toString();
         }
 
         $fallback = new NodeFinder()

@@ -90,7 +90,10 @@
           {/foreach}
         </ul>
 
-        <div n:if="!empty($navbar)" class="batchManager-pagination">
+        <div
+          n:if="$navbar !== null && !$navbar->isEmpty()"
+          class="batchManager-pagination"
+        >
           <div class="pagination-per-page">
             <span>{='display'|translate}</span>
             <a href="{$U_DISPLAY|noescape}&amp;display=20">20</a>

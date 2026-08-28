@@ -13,6 +13,7 @@ use Piwigo\Contribution\ActionContribution;
 use Piwigo\Contribution\ButtonContribution;
 use Piwigo\Contribution\PictureInfoRow;
 use Piwigo\Core\ExposesPageData;
+use Piwigo\Core\Projection\Navbar;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -57,7 +58,6 @@ final readonly class PictureView implements View, HasPageAssets, ExposesPageData
      * @param list<array{TITLE: string, lines: array<string, mixed>}>|null $metadata
      * @param array<string, mixed>|null $rateSummary
      * @param array{F_ACTION: string, USER_RATE: ?int, marks: list<int>}|null $rating
-     * @param array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int}|null $commentsNavbar
      * @param list<array<string, mixed>>|null $comments
      * @param array<string, mixed>|null $commentAdd
      */
@@ -108,7 +108,7 @@ final readonly class PictureView implements View, HasPageAssets, ExposesPageData
         public ?string $commentsOrderUrl,
         public ?string $commentsOrderTitle,
         public ?int $commentCount,
-        public ?array $commentsNavbar,
+        public ?Navbar $commentsNavbar,
         public ?array $comments,
         public ?array $commentAdd,
         public ?Html $commentList,

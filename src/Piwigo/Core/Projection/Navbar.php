@@ -11,13 +11,11 @@ namespace Piwigo\Core\Projection;
  * a `$navbar`/`$thumbNavbar`/`$commentsNavbar`/`$catsNavbar` constructor
  * param docblock across every View/renderer site that carries one.
  *
- * Every real field is independently optional, matching the .latte
- * files' own per-key `isset()` checks -- `none()` is "single page, no
- * navigation needed", not an error state. `toArray()` is the literal
- * template-assign boundary: every real caller hands
- * `createNavigationBar()`'s result straight into a View constructor's
- * still-array-typed `$navbar`-shaped param (the real .latte files read
- * it via bracket access, unchanged), never a key read in PHP.
+ * Every real field is independently optional -- `none()` is "single page,
+ * no navigation needed", not an error state. Both `navigation_bar.latte`
+ * files read these as properties as of P58-A; the `toArray()` that used
+ * to flatten it at every View constructor is gone, and with it the
+ * array shape that was duplicated as a docblock across ten call sites.
  */
 final readonly class Navbar
 {
@@ -61,39 +59,25 @@ final readonly class Navbar
     }
 
     /**
-     * @return array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int}
+     * "No navigation needed", the state `none()` produces and
+     * `PaginationService::createNavigationBar()` returns whenever the
+     * element count fits on one page.
+     *
+     * This is what the templates' own `{if !empty($navbar)}` used to ask
+     * of the flattened array, and it has to be asked explicitly now:
+     * `empty()` on an object is always false, so leaving those guards
+     * alone would have rendered a navigation bar on every single-page
+     * listing -- and PHPStan does not report it, because `empty()` on an
+     * object is legal.
      */
-    public function toArray(): array
+    public function isEmpty(): bool
     {
-        $result = [];
-        if ($this->currentPage !== null) {
-            $result['CURRENT_PAGE'] = $this->currentPage;
-        }
-
-        if ($this->urlFirst !== null) {
-            $result['URL_FIRST'] = $this->urlFirst;
-        }
-
-        if ($this->urlPrev !== null) {
-            $result['URL_PREV'] = $this->urlPrev;
-        }
-
-        if ($this->urlNext !== null) {
-            $result['URL_NEXT'] = $this->urlNext;
-        }
-
-        if ($this->urlLast !== null) {
-            $result['URL_LAST'] = $this->urlLast;
-        }
-
-        if ($this->pages !== []) {
-            $result['pages'] = $this->pages;
-        }
-
-        if ($this->nbPage !== null) {
-            $result['NB_PAGE'] = $this->nbPage;
-        }
-
-        return $result;
+        return $this->currentPage === null
+            && $this->urlFirst === null
+            && $this->urlPrev === null
+            && $this->urlNext === null
+            && $this->urlLast === null
+            && $this->pages === []
+            && $this->nbPage === null;
     }
 }

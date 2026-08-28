@@ -97,10 +97,9 @@
 {varType string $WHATS_NEW_MAJOR_VERSION}
 {varType array<array-key, int|string|float|bool> $all_elements}
 {varType array<array-key, mixed> $associated_categories}
-{varType ?list<\Piwigo\Calendar\Projection\CalendarBarEntry> $calendar_bars}
 {varType \Piwigo\Core\Projection\Navbar $cats_navbar}
 {varType string $chronology}
-{varType mixed $chronology_calendar}
+{varType \Piwigo\Calendar\Projection\CalendarChronologyCalendar $chronology_calendar}
 {varType list<\Piwigo\Calendar\Projection\ChronologyNavBarRow> $chronology_navigation_bars}
 {varType list<array{VALUE: string, CONTENT: string, SELECTED: bool}>|null $chronology_views}
 {varType int $conf_checksum_compute_blocksize}
@@ -125,7 +124,6 @@
 {varType array<string, mixed>|null $last}
 {varType array<array-key, string>|null $messages}
 {varType ?int $meta_ref}
-{varType ?\Piwigo\Calendar\Projection\CalendarMonthView $month_view}
 {varType array<string, mixed>|null $next}
 {varType list<string> $no_search_results}
 {varType array{TIME: string, U_REFRESH: string}|null $page_refresh}

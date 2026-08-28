@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Calendar\Projection\CalendarChronologyCalendar;
 use Piwigo\Calendar\Projection\CalendarChronologyPageContext;
+use Piwigo\Calendar\Projection\CalendarMonthlyCalendarPageContext;
 use Piwigo\Menu\DisplayBlock;
 use Piwigo\Template\TemplateAdapter;
 use Piwigo\Tests\Unit\Tools\ContextVariableExtractorTestDisplayBlocksFixture;
@@ -177,4 +179,19 @@ it('enumerates theme_template_vars keys across real themeconf files with reflect
 
     expect($result['vars']['GALLERY_TITLE'])->toBe('string')
         ->and($result['vars'])->toHaveKey('STD_PGS_SELECTED_SKIN');
+});
+
+it('types a new-expression value as that class, not its first argument', function (): void {
+    $extracted = $this->extractor->extract(CalendarMonthlyCalendarPageContext::class);
+
+    // `'chronology_calendar' => new CalendarChronologyCalendar(calendarBars:
+    // ..., monthView: ...)`. Before this was handled the extractor fell
+    // through to its first-property-reference heuristic and declared the
+    // variable as $calendarBars's own type, and emitted a notice saying so.
+    expect($extracted->vars['chronology_calendar'])
+        ->toBe('\\' . CalendarChronologyCalendar::class);
+    expect(array_filter(
+        $extracted->notices,
+        static fn (string $n): bool => str_contains($n, 'chronology_calendar'),
+    ))->toBe([]);
 });

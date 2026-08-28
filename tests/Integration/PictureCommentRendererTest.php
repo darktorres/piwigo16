@@ -25,6 +25,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\HttpStatusLine;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Projection\Navbar;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
@@ -651,13 +652,13 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
             self::assertSame(3, $result->commentCount);
             $navbar = $result->commentsNavbar;
-            self::assertIsArray($navbar);
-            self::assertArrayHasKey('URL_NEXT', $navbar);
+            self::assertInstanceOf(Navbar::class, $navbar);
+            self::assertNotNull($navbar->urlNext);
             // cleanUrl=true (real 5th arg) -- '/start-N', not '?start=N'.
-            self::assertStringContainsString('/start-', $navbar['URL_NEXT']);
+            self::assertStringContainsString('/start-', $navbar->urlNext);
             // The stale start=42 from the current section context must
             // have been stripped before the nav bar appended its own.
-            self::assertStringNotContainsString('start-42', $navbar['URL_NEXT']);
+            self::assertStringNotContainsString('start-42', $navbar->urlNext);
         } finally {
             $this->conn->executeStatement(
                 'DELETE FROM comments WHERE id IN (?, ?, ?)',

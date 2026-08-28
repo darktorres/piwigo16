@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 use Latte\Runtime\Html;
 use Piwigo\Controller\Projection\IndexView;
+use Piwigo\Core\Projection\Navbar;
 
 function makeIndexView(bool $monthCalendarActive): IndexView
 {
     return new IndexView(
-        thumbNavbar: [],
+        thumbNavbar: Navbar::none(),
         title: '',
         nbItems: 0,
         uModeNormal: null,

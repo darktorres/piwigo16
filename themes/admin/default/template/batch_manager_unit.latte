@@ -36,7 +36,7 @@
 
       <div class="pagination-reload-container">
         <div class="pagination-reload">
-          {if !empty($navbar)}
+          {if $navbar !== null && !$navbar->isEmpty()}
             <a
               class="button-reload tiptip"
               title="{='Pagination has changed and needs to be reloaded !'|translate}"
@@ -332,7 +332,7 @@
 
       <div class="pagination-reload-container">
         <div class="pagination-reload">
-          {if !empty($navbar)}
+          {if $navbar !== null && !$navbar->isEmpty()}
             <a
               class="button-reload tiptip"
               title="{='Pagination has changed and needs to be reloaded !'|translate}"

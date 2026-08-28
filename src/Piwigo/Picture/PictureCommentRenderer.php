@@ -319,7 +319,7 @@ final class PictureCommentRenderer
             commentsOrderUrl: $commentsOrderUrl,
             commentsOrderTitle: $commentsOrderTitle,
             commentCount: $nbComments,
-            commentsNavbar: $navigationBar->toArray(),
+            commentsNavbar: $navigationBar,
             comments: $comments,
             commentAdd: $commentAdd,
             commentList: $commentList,

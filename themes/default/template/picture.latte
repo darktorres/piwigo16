@@ -513,7 +513,7 @@
           {/if}
           {if isset($comments)}
             <div id="pictureCommentList">
-              {if (($commentCount > 2) || !empty($commentsNavbar))}
+              {if (($commentCount > 2) || ($commentsNavbar !== null && !$commentsNavbar->isEmpty()))}
                 <div id="pictureCommentNavBar">
                   {if $commentCount > 2}
                     <a
@@ -522,7 +522,7 @@
                       class="commentsOrder"
                     >{$commentsOrderTitle}</a>
                   {/if}
-                  {if !empty($commentsNavbar)}{include 'navigation_bar.latte', navbar: $commentsNavbar}{/if}
+                  {if $commentsNavbar !== null && !$commentsNavbar->isEmpty()}{include 'navigation_bar.latte', navbar: $commentsNavbar}{/if}
                 </div>
               {/if}
               {$commentList}

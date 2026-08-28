@@ -11,6 +11,7 @@ use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
 use Piwigo\Contribution\ActionContribution;
 use Piwigo\Contribution\ButtonContribution;
+use Piwigo\Core\Projection\Navbar;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -38,7 +39,6 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class IndexView implements View, HasPageAssets
 {
     /**
-     * @param array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int} $thumbNavbar
      * @param list<array<string, mixed>>|null $combinableTags
      * @param list<string>|null $categorySearchResults
      * @param list<string>|null $noSearchResults
@@ -50,7 +50,7 @@ final readonly class IndexView implements View, HasPageAssets
      * @param list<ActionContribution> $pluginIndexActions
      */
     public function __construct(
-        public array $thumbNavbar,
+        public Navbar $thumbNavbar,
         public string $title,
         public int $nbItems,
         public ?string $uModeNormal,

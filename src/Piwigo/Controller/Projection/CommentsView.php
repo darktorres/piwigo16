@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Projection;
 
 use Latte\Runtime\Html;
+use Piwigo\Core\Projection\Navbar;
 use Piwigo\Core\View;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Template\Latte\Attribute\Template;
@@ -29,7 +30,6 @@ final readonly class CommentsView implements View
      * @param array<string, string> $sortByOptions
      * @param array<string, string> $sortOrderOptions
      * @param array<int|string, int|string> $itemNumberOptions
-     * @param array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int} $navbar
      * @param array<int|string, string> $categories
      * @param array<int, mixed> $categoriesSelected
      */
@@ -46,7 +46,7 @@ final readonly class CommentsView implements View
         public string $sortOrderOptionsSelected,
         public array $itemNumberOptions,
         public int|string $itemNumberOptionsSelected,
-        public array $navbar,
+        public Navbar $navbar,
         public DerivativeParams $commentDerivativeParams,
         public array $categories,
         public array $categoriesSelected,

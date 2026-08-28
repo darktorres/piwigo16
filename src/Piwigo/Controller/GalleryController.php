@@ -671,7 +671,7 @@ final readonly class GalleryController implements ControllerInterface
         $monthCalendarActive = $template->getTemplateVars('FILE_CHRONOLOGY_VIEW') === 'month_calendar.latte';
 
         $indexView = new IndexView(
-            thumbNavbar: $navigationBar->toArray(),
+            thumbNavbar: $navigationBar,
             title: $template_title,
             nbItems: $nb_items,
             uModeNormal: $u_mode_normal,

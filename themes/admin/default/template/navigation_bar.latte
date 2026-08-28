@@ -1,8 +1,8 @@
 {templateType Piwigo\Controller\Projection\NavigationBarView}
 <div class="pagination-container">
-  {if isset($navbar['URL_FIRST'])}
+  {if $navbar->urlFirst !== null}
     <a
-      href="{$navbar['URL_PREV']|noescape}"
+      href="{$navbar->urlPrev|noescape}"
       class='pagination-arrow left'
       rel="prev"
     >
@@ -16,9 +16,9 @@
 
   {var $prev_page = 0}
   <div class="pagination-item-container">
-    {foreach $navbar['pages'] as $page => $url}
+    {foreach $navbar->pages as $page => $url}
       <span n:if="$page > $prev_page + 1">...</span>
-      {if $page == $navbar['CURRENT_PAGE']}
+      {if $page == $navbar->currentPage}
         <a class="actual">{$page}</a>
       {else}
         <a href="{$url|noescape}">{$page}</a>
@@ -27,9 +27,9 @@
     {/foreach}
   </div>
 
-  {if isset($navbar['URL_NEXT'])}
+  {if $navbar->urlNext !== null}
     <a
-      href="{$navbar['URL_NEXT']|noescape}"
+      href="{$navbar->urlNext|noescape}"
       class='pagination-arrow rigth'
       rel="next"
     >

@@ -11,6 +11,7 @@ use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
 use Piwigo\Core\ExposesPageData;
+use Piwigo\Core\Projection\Navbar;
 use Piwigo\Core\View;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Template\Latte\Attribute\Template;
@@ -61,7 +62,6 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
      * @param array<array-key, string> $levelOptions
      * @param array<string, string> $delDerivativesTypes
      * @param array<string, string> $generateDerivativesTypes
-     * @param array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int}|null $navbar
      * @param array<array-key, string> $cacheKeys
      * @param list<array<string, mixed>> $thumbnails
      * @param array<array-key, mixed> $associatedCategories
@@ -75,7 +75,7 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
         public int $levelOptionsSelected,
         public array $delDerivativesTypes,
         public array $generateDerivativesTypes,
-        public ?array $navbar,
+        public ?Navbar $navbar,
         public ?DerivativeParams $thumbParams,
         public int $nbThumbsPage,
         public int $nbThumbsSet,

@@ -148,7 +148,7 @@ Three structural changes produced that drift:
 | P55 | Real quality gates | Not started | 0 |
 | P56 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P57 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
-| P58 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | In progress — A0 done (81 findings refiled as Latte codegen, campaign's real size 843); P58-A 843 findings / 74 templates / 63 Views, P58-B 376 / 72 templates | 1 |
+| P58 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | In progress — A0/A0b done (103 findings refiled as Latte codegen); a generic `CachingIterator` stub removed the erasure hiding 133 more; **P58-A 704 → 386**, of which the flatten technique is fully closed; P58-B 376 → 375. Four live bugs found and fixed along the way | 1 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -4507,29 +4507,76 @@ after the bug existed, and a snapshot cannot report an absence. Fixed in
 assumes every finding under it is the same kind of finding; for that one
 it wasn't.
 
-*Sizes, re-measured 2026-08-28* (strip the CAMPAIGN-PENDING block into a
-scratch config beside `phpstan.neon` — relative paths need the repo root
-— then `phpstan analyse -c` it): **P58-A 843** across 74 templates and 63
-View classes, **P58-B 376** across 72. P32 recorded ~1,400 and ~450.
+*Sizes.* `tools/p58/` is how they are measured: `census.php` strips the
+CAMPAIGN-PENDING block into a scratch config beside `phpstan.neon`
+(relative paths need the repo root) and re-runs PHPStan; `trace.php`
+walks each finding back from its compiled line to the View property that
+carries the wrong type; `assign.php` maps those pairs onto fix
+techniques. Re-run `phpstan-latte:compile` first — a stale compile
+changes the count.
 
-*P58-A0 (done, `3e6255a4d9`).* 81 of A's raw 924 were
+Opened at **P58-A 843** across 74 templates and 63 View classes and
+**P58-B 376** across 72 (P32 recorded ~1,400 and ~450). Now **A 386, B
+375**. Two entries have already come out of the block
+(`booleanOr.leftNotBoolean`/`rightNotBoolean`), forced by
+`reportUnmatchedIgnoredErrors` rather than noticed.
+
+*P58-A0/A0b (done, `3e6255a4d9`, `fc763eaa57`).* 81 of A's raw 924 were
 `booleanNot.exprNotBoolean` reading `Latte\Runtime\Template|null` —
-Latte's own compiled `{block}` guard, not template source. Refiled into
-the permanent codegen group, scoped by message so the same identifier
-keeps reporting on real template source.
+Latte's own compiled `{block}` guard, not template source. A0b refiled 22
+more, the `$ʟ_it ?? null` chaining Latte emits for `{foreach}` in any
+template that uses `$iterator`. Both are in the permanent codegen group,
+scoped by message so the same identifiers keep reporting on real template
+source — which matters: a third, near-identical `CachingIterator` message
+is *not* codegen and has to keep firing.
+
+*The erasure that was hiding a fifth of the campaign (`a796cf74cb`).*
+Latte compiles every `{foreach}` in an `$iterator`-using template to
+`foreach ($iterator = $ʟ_it = new CachingIterator($rows, …) as $row)`
+and declares that class `@extends \CachingIterator<mixed, mixed, …>`, so
+`$row` was `mixed` however well `$rows` was typed — in 13 templates
+holding 219 of the then-638 findings. It was invisible until a retype
+landed inside one of them and cleared 9 of 24, the other 15 having merely
+changed identifier on the same expressions. A generic stub
+(`phpstan-stubs/LatteCachingIterator.stub.php`) took A from 638 to 505 on
+its own. A stub *replaces* the real docblock, so Latte's own
+`@property-read` list has to be carried over verbatim, and the parameters
+must stay invariant — PHP's own `\CachingIterator` declares invariance
+and `@template-covariant` is rejected outright.
 
 *P58-A — type the producer → View → template chain.* The dominant cause
 is not a missing type: it is a typed VO flattened to an array at the View
-constructor, one line before the template that needed it. 33
-named-argument `->toArray()` sites across 24 producer files;
-`ConfigurationSubController.php:885` flattens twice over
-(`FilterViewDefinition` inside `ConfigurationSearchTabData`, then that
-VO itself), producing 54 `mixed` findings in one template. Un-flatten
-those, then type the ~56 remaining bags — reusing one of the 278
-existing `Projection/` VOs where the shape already exists, introducing
-one where it doesn't, and leaving `array<string, VO>` an array where the
-template indexes it by a runtime key. Delete each `toArray()` whose last
-caller this removes; keep `Navbar::toArray()`, which has 15.
+constructor, one line before the template that needed it. `assign.php`
+sorts every traced pair into eight fix techniques — these are techniques,
+not a partition, since one chain can need two:
+
+| # | technique | opened | now |
+|---|---|---|---|
+| 3 | compose a row VO (incl. `array_merge` sites) | 160 | 117 |
+| 9 | template locals / fallback-union globals | 119 | 92 |
+| 2 | tighten a leaf `*Result`/`*Data` property | 87 | 53 |
+| 5 | polymorphic block data (`mixed` by design) | 52 | 52 |
+| 6 | picture family: untyped event payloads | 35 | 35 |
+| 11 | nullable/union used as if definite | 23 | 23 |
+| 4 | retire a flattening `TemplatePageContext` | 86 | 12 |
+| 1 | delete a `->toArray()` flatten | 118 | **0** |
+
+Delete each `toArray()` whose last caller this removes — but check the
+*other* consumer first. A View's `exposedPageData()` reads the same bags,
+and `.ts` files read those by name through `pwg_getPageData()`, so a
+flatten that also feeds page data is renamed `toPageData()` and kept, not
+deleted. Where a flatten really is dead, grep the class name alone and
+read the hits: a `grep Class | grep toArray` needs both on one line, and
+a call spanning five lines is how five gallery pages were briefly left
+fatal.
+
+Two structural constraints, both learned by getting them wrong. Only a
+template rendered through `Renderer::render()` can carry a
+`{templateType}`, so a `{varType}` layout extended by 23 children and an
+`{include}`d partial both take their variables from elsewhere — type the
+ambient producers instead of inventing a View. And
+`phpstan-latte:compile` must re-run after every template edit, or
+shipmonk reports every property of the newly-typed VO as never read.
 
 *P58-B — modernize the template source.* Ordered strictly after A: 154
 of B's 268 loose comparisons and 28 of its 103 `empty()` calls have
@@ -4546,9 +4593,41 @@ numeric strings, and `'' == null` is true.
 commit that takes its count to zero; `reportUnmatchedIgnoredErrors`
 forces it. A ends with 20 entries removed, B with 6, and the
 CAMPAIGN-PENDING block gone. Output is invariant across A by
-construction, so golden-html (81) and VR (71) staying green with no
+construction, so golden-html (83) and VR (75) staying green with no
 regeneration is the proof, not a chore; in B a changed byte means the
 loose comparison was load-bearing.
+
+*What the invariance argument does not cover, and what it cost.*
+Un-flattening inverts two guards in opposite directions. `isset($x['k'])`
+becomes `isset($obj->prop)`, always *true* on a non-nullable property —
+PHPStan reports that as `isset.property`. `empty($x)` becomes
+`empty($obj)`, always *false* on any object — and PHPStan is **silent**,
+because calling `empty()` on an object is perfectly legal. In
+`month_calendar.latte` that silently flipped all seven of a month's
+padding cells to the wrong branch, and the only thing that caught it was a
+golden fixture built one commit earlier. Every `{if !empty($x)}` whose
+`$x` becomes an object has to be read by hand.
+
+Four live bugs have surfaced this way, none of them type work:
+
+1. Saving the Main, Comments or Display config tab turned off every
+   checkbox on it. The tabs normalized to `'true'`/`'false'` strings and
+   saved through `confUpdateParam()`, which `json_encode()`s, so a `json`
+   column got the JSON *string* `"true"` and a `bool` property resolved
+   through `is_bool($decoded) ? $decoded : false`. 49 params, repaired by
+   `Version20260828120000` on MySQL, Postgres and SQLite.
+2. `configuration_search.latte:87` read a key that has only ever been a
+   sibling of the array it was read from, so the box never rendered
+   ticked.
+3. The integrity panel's two action buttons did nothing — the form named
+   them one thing and the handler read another. Inherited from the
+   pre-conversion `.tpl`, and it survived because the Integration tests
+   set `$_POST` directly, the one coverage shape that cannot see a
+   form/handler mismatch.
+4. The batch manager's Square ratio preset drove its slider to a
+   nonexistent index: its `data-max` was written across two source lines,
+   Latte emitted the newline verbatim inside the attribute, and the value
+   no longer matched any entry of the list `indexOf()` searches.
 
 ## Greenfield tracks (T3, cuttable — outside the P0–P58 backbone)
 

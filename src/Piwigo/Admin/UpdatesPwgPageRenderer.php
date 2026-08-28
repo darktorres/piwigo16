@@ -87,8 +87,16 @@ final readonly class UpdatesPwgPageRenderer
         $core_update_service = $this->coreUpdateService;
         $new_versions = $core_update_service->getPiwigoNewVersions();
 
-        $check_version = null;
-        $dev_version = null;
+        // Read unconditionally, not inside the `$step === 0` branch below
+        // (P58-A's §11). Both are plain bools on NewVersionsInfo and
+        // getPiwigoNewVersions() has already run, so the values are the
+        // same ones that branch used to set -- and updates_pwg.latte reads
+        // them only inside its own `{if $step == 0}`, which is exactly the
+        // case where the branch did set them. The correlation is gone
+        // rather than documented, and the two View properties are bool.
+        $check_version = $new_versions->piwigoOrgChecked;
+        $dev_version = $new_versions->isDev;
+
         if ($step === 0) {
             if ($new_versions->minor !== null and $new_versions->major !== null) {
                 $step = 1;
@@ -100,9 +108,6 @@ final readonly class UpdatesPwgPageRenderer
                 $step = 3;
                 $upgrade_to = $new_versions->major;
             }
-
-            $check_version = $new_versions->piwigoOrgChecked;
-            $dev_version = $new_versions->isDev;
         }
 
         if ($step === 1) {

@@ -510,8 +510,16 @@ final readonly class BatchManagerGlobalPageRenderer
 
         $nb_thumbs_page = 0;
         $nav_bar = null;
-        $thumb_params = null;
         $thumbnails = [];
+
+        // Hoisted out of the `count($cat_elements_id) > 0` branch below
+        // (P58-A's §11). getByType() is a pure lookup in ImageStdParams'
+        // own type map with no dependence on the element set, and
+        // batch_manager_global.latte:46 calls $thumbParams->maxWidth()
+        // unguarded -- which was safe only because that line sits inside
+        // an {if} on $thumbnails, which fills in the same branch. Removing
+        // the correlation is better than documenting it.
+        $thumb_params = $this->imageStdParams->getByType(ImageStdParams::SQUARE);
 
         if (count($cat_elements_id) > 0) {
             $nav_bar = new PaginationService($this->currentConfig)
@@ -548,7 +556,6 @@ final readonly class BatchManagerGlobalPageRenderer
                 }
             }
 
-            $thumb_params = $this->imageStdParams->getByType(ImageStdParams::SQUARE);
             // template thumbnail initialization
             foreach ($this->imageService->getBatchManagerThumbnails($cat_elements_id, $is_category ? $filter_category_id : null, $order_by, $nb_images, $page_start) as $row) {
                 $nb_thumbs_page++;

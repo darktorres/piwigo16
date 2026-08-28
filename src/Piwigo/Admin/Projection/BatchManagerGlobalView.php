@@ -20,9 +20,13 @@ use Piwigo\Template\Projection\QuickSearchView;
 /**
  * `batch_manager_global.latte`'s own typed view, constructed by {@see
  * \Piwigo\Admin\BatchManagerGlobalPageRenderer::render()}.
- * `$associatedTags`, `$navbar`, and `$thumbParams` are genuinely
- * optional -- all three are only ever computed inside the renderer's own
- * `count($cat_elements_id) > 0` branch. No `$usedMetadata` field -- the
+ * `$associatedTags` and `$navbar` are genuinely optional -- both are
+ * only ever computed inside the renderer's own
+ * `count($cat_elements_id) > 0` branch. `$thumbParams` used to be too,
+ * and the template called `->maxWidth()` on it unguarded; it is
+ * non-nullable now, its `ImageStdParams::getByType()` lookup hoisted out
+ * of that branch, since the lookup never depended on the element set
+ * (P58-A's §11). No `$usedMetadata` field -- the
  * template's own body (and `batch_manager_global.js`'s
  * `pwg_getPageData()` reads) never reference it. No `$fAction`/
  * `$start`/`$uDisplay`/`$selection` field either -- those
@@ -76,7 +80,7 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
         public array $delDerivativesTypes,
         public array $generateDerivativesTypes,
         public ?Navbar $navbar,
-        public ?DerivativeParams $thumbParams,
+        public DerivativeParams $thumbParams,
         public int $nbThumbsPage,
         public int $nbThumbsSet,
         public array $cacheKeys,

@@ -13,13 +13,26 @@ use Piwigo\Template\Latte\Attribute\Template;
 
 /**
  * `updates_pwg.latte`'s own typed view, constructed by {@see
- * \Piwigo\Admin\UpdatesPwgPageRenderer::render()}. Every remaining
- * optional field stays optional -- the template's own body reads all
- * of them through `isset()`/`empty()` guards, never a bare truthy
- * check, so an always-present `null` behaves identically to the
- * original conditionally-omitted key. No `$majorVersionPwg` field --
- * the template's own body never references it (confirmed against
- * `updates_pwg.js` too).
+ * \Piwigo\Admin\UpdatesPwgPageRenderer::render()}. No
+ * `$majorVersionPwg` field -- the template's own body never references
+ * it (confirmed against `updates_pwg.js` too).
+ *
+ * Most optional fields stay optional because the template reads them
+ * through `isset()` guards, so an always-present `null` behaves
+ * identically to the original conditionally-omitted key. Two exceptions,
+ * both read bare:
+ *
+ * - `$checkVersion`/`$devVersion` are `bool`, read as `{if $checkVersion}`.
+ *   The renderer used to set them only inside its own `$step === 0`
+ *   branch and now reads them unconditionally off `NewVersionsInfo`,
+ *   which is where the correlation with `$step` went (P58-A's §11).
+ * - `$majorReleaseUrl` is still `?string` and is still read bare, through
+ *   `|htmlspecialchars`, inside the step-1 and step-3 blocks. It is
+ *   non-null exactly when `$new_versions->major` is, and `$step` comes
+ *   straight from `$_GET` with no check that the version each mode
+ *   promises exists -- so `?step=3` on an up-to-date install renders an
+ *   empty version badge and an empty href. That is a real defect, not a
+ *   typing gap, and it is not fixed here.
  */
 #[Template('updates_pwg.latte')]
 final readonly class UpdatesPwgView implements View, HasPageAssets
@@ -30,8 +43,8 @@ final readonly class UpdatesPwgView implements View, HasPageAssets
     public function __construct(
         public ?string $containerVersion,
         public ?string $dockerUpdateGuideUrl,
-        public ?bool $checkVersion,
-        public ?bool $devVersion,
+        public bool $checkVersion,
+        public bool $devVersion,
         public ?array $missing,
         public ?string $minorReleasePhpRequired,
         public ?string $majorReleasePhpRequired,

@@ -93,7 +93,8 @@ it('completes a fresh install end-to-end', function (): void {
         $mirrored = $page->script(
             "(document.querySelector('.adminEmail') || {}).textContent || ''"
         );
-        expect($mirrored)->toBe('mirrored@example.test');
+        expect($mirrored)
+            ->toBe('mirrored@example.test');
 
         // Mismatched passwords report on blur, and clear again when fixed.
         $page->fill('admin_pass1', 'one');
@@ -106,7 +107,8 @@ it('completes a fresh install end-to-end', function (): void {
         $mismatch = $page->script(
             "(document.getElementById('admin_pass2-error') || {}).textContent || ''"
         );
-        expect($mismatch)->not->toBe('');
+        expect($mismatch)
+            ->not->toBe('');
 
         // A quote in the webmaster login is rejected client-side.
         $page->fill('admin_name', "bad'name");
@@ -118,7 +120,8 @@ it('completes a fresh install end-to-end', function (): void {
         $loginError = $page->script(
             "(document.getElementById('admin_name-error') || {}).textContent || ''"
         );
-        expect($loginError)->not->toBe('');
+        expect($loginError)
+            ->not->toBe('');
 
         $page = $page
             ->fill('dbhost', (string) getenv('PIWIGO_DB_HOST'))

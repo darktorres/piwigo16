@@ -1467,6 +1467,24 @@ export function htmlOf(target: Element | ArrayLike<Element>): string | undefined
   return toElements(target)[0]?.innerHTML;
 }
 
+/** `.text(value)` -- writes to every element. */
+export function text(target: Element | ArrayLike<Element>, value: string): void {
+  for (const el of toElements(target)) {
+    el.textContent = value;
+  }
+}
+
+/**
+ * `.text()` -- note this one *concatenates* across the whole set rather than
+ * reading the first, unlike `.html()` and `.val()` (`jQuery.text()` over
+ * `getText`). The odd one out, so it is spelled out here.
+ */
+export function textOf(target: Element | ArrayLike<Element>): string {
+  return toElements(target)
+    .map((el) => el.textContent ?? "")
+    .join("");
+}
+
 /** `.val()` -- reads the first element, `undefined` for an empty set. */
 export function val(
   target: Element | ArrayLike<Element>

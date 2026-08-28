@@ -75,6 +75,51 @@ it('completes a fresh install end-to-end', function (): void {
         $page->assertPresent('input[name="dbpasswd"]');
         $page->assertPresent('input[name="dbname"]');
 
+        // install.ts's client-side half, asserted here rather than in a test
+        // of its own: reaching the install form at all means wiping the
+        // database and moving the installed-flag aside, so a second
+        // install-flow test would pay that cost again for behaviour this
+        // one already has the page open for.
+        //
+        // None of it was covered before the P49 conversion of that file
+        // (docs/PLAN.md P49-A) -- the flow below fills the form and submits,
+        // which exercises none of the mirroring or validation.
+        $page->fill('admin_mail', 'mirrored@example.test');
+        $page->script(
+            "document.getElementById('admin_mail').dispatchEvent(new KeyboardEvent('keyup', {bubbles: true}))"
+        );
+
+        /** @var string $mirrored */
+        $mirrored = $page->script(
+            "(document.querySelector('.adminEmail') || {}).textContent || ''"
+        );
+        expect($mirrored)->toBe('mirrored@example.test');
+
+        // Mismatched passwords report on blur, and clear again when fixed.
+        $page->fill('admin_pass1', 'one');
+        $page->fill('admin_pass2', 'two');
+        $page->script(
+            "document.getElementById('admin_pass2').dispatchEvent(new Event('blur'))"
+        );
+
+        /** @var string $mismatch */
+        $mismatch = $page->script(
+            "(document.getElementById('admin_pass2-error') || {}).textContent || ''"
+        );
+        expect($mismatch)->not->toBe('');
+
+        // A quote in the webmaster login is rejected client-side.
+        $page->fill('admin_name', "bad'name");
+        $page->script(
+            "document.getElementById('admin_name').dispatchEvent(new Event('blur'))"
+        );
+
+        /** @var string $loginError */
+        $loginError = $page->script(
+            "(document.getElementById('admin_name-error') || {}).textContent || ''"
+        );
+        expect($loginError)->not->toBe('');
+
         $page = $page
             ->fill('dbhost', (string) getenv('PIWIGO_DB_HOST'))
             ->fill('dbuser', (string) getenv('PIWIGO_DB_USER'))
@@ -99,6 +144,9 @@ it('completes a fresh install end-to-end', function (): void {
         // that actually accepts one.
         H::clickWithTimeout($page, 'install');
 
+        // Every error the client-side checks raised above must have cleared
+        // once the real values went in -- otherwise the install would have
+        // been submitted with a visible validation error still on screen.
         $page->assertSee('Congratulations');
         $page->assertSeeLink('Visit the gallery');
         H::assertNoServerErrors($page, 'install success page');

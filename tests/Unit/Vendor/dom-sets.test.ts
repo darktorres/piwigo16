@@ -17,6 +17,8 @@ import {
   remove,
   removeClass,
   setVal,
+  text,
+  textOf,
   val,
 } from "../../../themes/default/js/vendor/dom";
 
@@ -301,5 +303,35 @@ describe("albumBreadcrumbHtml", () => {
     // The available-albums endpoint does not carry one.
     expect(albumBreadcrumbHtml(undefined, " / ")).toBe("");
     expect(albumBreadcrumbHtml([], " / ")).toBe("");
+  });
+});
+
+describe("text", () => {
+  it("writes to every element", () => {
+    const set = mount('<p class="t"></p><p class="t"></p>');
+
+    text(set, "hi");
+
+    expect(Array.from(set).map((el) => el.textContent)).toEqual(["hi", "hi"]);
+  });
+
+  it("concatenates the whole set when reading, unlike html() and val()", () => {
+    // The one getter in the family that is not first-element-only.
+    const set = mount('<p class="t">one</p><p class="t">two</p>');
+
+    expect(textOf(set)).toBe("onetwo");
+  });
+
+  it("assigns as text, not markup", () => {
+    const set = mount('<p class="t"></p>');
+
+    text(set, "<b>x</b>");
+
+    expect(set[0]?.querySelector("b")).toBeNull();
+    expect(set[0]?.textContent).toBe("<b>x</b>");
+  });
+
+  it("returns an empty string for an empty set", () => {
+    expect(textOf(document.querySelectorAll(".absent"))).toBe("");
   });
 });

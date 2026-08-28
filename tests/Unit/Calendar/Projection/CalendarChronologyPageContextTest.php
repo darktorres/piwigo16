@@ -6,30 +6,29 @@ use Piwigo\Calendar\Projection\CalendarChronologyPageContext;
 use Piwigo\Calendar\Projection\CalendarNavBarEntry;
 use Piwigo\Calendar\Projection\ChronologyNavBarRow;
 
-test('toArray nests the chronology title, flattens the file view, and includes the navigation bars, omitting chronology_views when null', function (): void {
+test('toArray nests the chronology title and passes the navigation bar rows through unflattened, omitting chronology_views when null', function (): void {
+    $row = new ChronologyNavBarRow(items: [
+        new CalendarNavBarEntry(label: '2026', url: '/index.php?/calendar/2026', nbImages: null),
+    ]);
+
     $context = new CalendarChronologyPageContext(
         fileChronologyView: 'month_calendar.latte',
         chronologyTitle: '<a href="/index.php">2026</a>',
-        chronologyNavigationBars: [
-            new ChronologyNavBarRow(items: [
-                new CalendarNavBarEntry(label: '2026', url: '/index.php?/calendar/2026', nbImages: null),
-            ]),
-        ],
+        chronologyNavigationBars: [$row],
         chronologyViews: null,
     );
 
+    // The rows reach month_calendar.latte as objects as of P58-A's §4:
+    // toArray() no longer renames LABEL/URL, and the identity assertion
+    // below is what says so -- an equality one would still pass against a
+    // flatten that happened to round-trip.
     expect($context->toArray())
         ->toBe([
             'FILE_CHRONOLOGY_VIEW' => 'month_calendar.latte',
             'chronology' => [
                 'TITLE' => '<a href="/index.php">2026</a>',
             ],
-            'chronology_navigation_bars' => [[
-                'items' => [[
-                    'LABEL' => '2026',
-                    'URL' => '/index.php?/calendar/2026',
-                ]],
-            ]],
+            'chronology_navigation_bars' => [$row],
         ]);
 });
 

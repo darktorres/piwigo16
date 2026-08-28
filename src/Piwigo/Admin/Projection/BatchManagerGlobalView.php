@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Projection;
 
 use Override;
+use Piwigo\Admin\BatchManager\Projection\DimensionFilterOptions;
+use Piwigo\Admin\BatchManager\Projection\FilesizeFilterOptions;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
@@ -28,11 +30,14 @@ use Piwigo\Template\Projection\QuickSearchView;
  * mechanism) assigns them directly onto the same `Template` instance's
  * `$vars` bag, which `Renderer::render()`'s own ambient merge picks up
  * the same way it does `ROOT_URL`. `$associatedCategories`/
- * `$allElements`/`$filterDimensions`/`$filterFilesize`/
- * `$filterCategorySelected` are the exceptions -- read back from that
- * same ambient bag right after `FilterPanelRenderer::render()` returns
- * (docs/PLAN.md's P42-B), since `exposedPageData()` below needs their
- * real values. The last 3 feed `include/batch_manager_filter.inc.latte`'s
+ * `$allElements`/`$filterCategorySelected` are the exceptions -- read
+ * back from that same ambient bag right after `FilterPanelRenderer::
+ * render()` returns (docs/PLAN.md's P42-B), since `exposedPageData()`
+ * below needs their real values. `$filterDimensions`/`$filterFilesize`
+ * used to be read back the same way and are now passed to
+ * `BatchManagerGlobalPageRenderer::render()` directly from the controller
+ * that computes them (P58-A) -- see `BatchManagerUnitView`'s own
+ * docblock. The last 3 feed `include/batch_manager_filter.inc.latte`'s
  * own registrations, declared directly here rather than via a
  * constructed `BatchManagerFilterView` instance -- see
  * `BatchManagerUnitView`'s own docblock for why. `$thumbnails` is
@@ -61,8 +66,6 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
      * @param list<array<string, mixed>> $thumbnails
      * @param array<array-key, mixed> $associatedCategories
      * @param array<array-key, mixed> $allElements
-     * @param array<array-key, mixed> $filterDimensions
-     * @param array<array-key, mixed> $filterFilesize
      */
     public function __construct(
         public bool $inCaddie,
@@ -83,8 +86,8 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
         public string $rootUrl,
         public array $associatedCategories,
         public array $allElements,
-        public array $filterDimensions,
-        public array $filterFilesize,
+        public DimensionFilterOptions $filterDimensions,
+        public FilesizeFilterOptions $filterFilesize,
         public ?int $filterCategorySelected,
         public string $csrfToken,
     ) {}
@@ -180,8 +183,8 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             'nb_thumbs_page' => $this->nbThumbsPage,
             'nb_thumbs_set' => $this->nbThumbsSet,
             'all_elements' => $this->allElements,
-            'dimensions' => $this->filterDimensions,
-            'filesize' => $this->filterFilesize,
+            'dimensions' => $this->filterDimensions->toPageData(),
+            'filesize' => $this->filterFilesize->toPageData(),
             'filter_category_selected' => $this->filterCategorySelected,
             'csrf_token' => $this->csrfToken,
         ];

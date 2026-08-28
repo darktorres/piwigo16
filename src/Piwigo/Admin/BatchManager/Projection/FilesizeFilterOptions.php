@@ -20,9 +20,13 @@ final readonly class FilesizeFilterOptions
     ) {}
 
     /**
+     * The `"filesize"` page-data payload batchManagerFilter.ts reads
+     * through `pwg_getPageData()`; the template reads this object's own
+     * properties instead.
+     *
      * @return array{list: string, bounds: array{min: float|int|string, max: float|int|string}, selected: array{min: float|int|string, max: float|int|string}}
      */
-    public function toArray(): array
+    public function toPageData(): array
     {
         return [
             'list' => $this->list,

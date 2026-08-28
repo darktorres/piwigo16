@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Projection;
 
 use Override;
+use Piwigo\Admin\BatchManager\Projection\DimensionFilterOptions;
+use Piwigo\Admin\BatchManager\Projection\FilesizeFilterOptions;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
@@ -26,11 +28,16 @@ use Piwigo\Template\Projection\QuickSearchView;
  * same request, still on the old assignContext() mechanism) assigns
  * them onto the same `Template` instance's `$vars` bag, which
  * `Renderer::render()`'s own ambient merge picks up same as
- * `ROOT_URL`. `$associatedCategories`/`$filterDimensions`/
- * `$filterFilesize`/`$filterCategorySelected` are the exceptions -- read
- * back from that same ambient bag right after `FilterPanelRenderer::
- * render()` returns (docs/PLAN.md's P42-B), since `exposedPageData()`
- * below needs their real values. The last 3 feed
+ * `ROOT_URL`. `$associatedCategories`/`$filterCategorySelected` are the
+ * exceptions -- read back from that same ambient bag right after
+ * `FilterPanelRenderer::render()` returns (docs/PLAN.md's P42-B), since
+ * `exposedPageData()` below needs their real values.
+ * `$filterDimensions`/`$filterFilesize` used to be read back the same
+ * way and are now passed to `BatchManagerUnitPageRenderer::render()`
+ * directly from the controller that computes them (P58-A): the bag read
+ * returned `mixed`, so both had to be laundered through an `is_array()`
+ * fallback that could not fail usefully, and they carry real value
+ * objects now, not arrays. The last 3 feed
  * `include/batch_manager_filter.inc.latte`'s own registrations, declared
  * directly here rather than via a constructed `BatchManagerFilterView`
  * instance -- that partial's own real markup stays `{include}`d (same
@@ -54,8 +61,6 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
      * @param array<array-key, string> $cacheKeys
      * @param list<array<string, mixed>> $elements
      * @param array<array-key, mixed> $associatedCategories
-     * @param array<array-key, mixed> $filterDimensions
-     * @param array<array-key, mixed> $filterFilesize
      */
     public function __construct(
         public string $uElementsPage,
@@ -71,8 +76,8 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
         public string $colorscheme,
         public string $rootUrl,
         public array $associatedCategories,
-        public array $filterDimensions,
-        public array $filterFilesize,
+        public DimensionFilterOptions $filterDimensions,
+        public FilesizeFilterOptions $filterFilesize,
         public ?int $filterCategorySelected,
     ) {}
 
@@ -164,8 +169,8 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
             'cache_key_hash' => $this->cacheKeys['_hash'],
             'root_url' => $this->rootUrl,
             'associated_categories' => $this->associatedCategories,
-            'dimensions' => $this->filterDimensions,
-            'filesize' => $this->filterFilesize,
+            'dimensions' => $this->filterDimensions->toPageData(),
+            'filesize' => $this->filterFilesize->toPageData(),
             'filter_category_selected' => $this->filterCategorySelected,
             'all_related_categories_ids' => $allSelectedAlbum,
             // Real pre-existing gap, found via album_selector.ts's own

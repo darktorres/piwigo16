@@ -8,6 +8,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Admin\BatchManager\Projection\BulkManagerFilter;
+use Piwigo\Admin\BatchManager\Projection\DimensionFilterOptions;
+use Piwigo\Admin\BatchManager\Projection\FilesizeFilterOptions;
 use Piwigo\Admin\Event\BatchManagerGlobalRendered;
 use Piwigo\Admin\Event\BatchManagerGlobalRendering;
 use Piwigo\Admin\Event\ElementSetGlobalAction;
@@ -97,8 +99,13 @@ final readonly class BatchManagerGlobalPageRenderer
      *   {@see \Piwigo\Controller\Admin\BatchManagerSubController::computeCurrentSet()}
      * @param ?list<ImageDuplicateField> $duplicatesOnFields
      */
-    public function render(array $catElementsId, int $pageStart, ?array $duplicatesOnFields = null): AdminPageResult
-    {
+    public function render(
+        array $catElementsId,
+        int $pageStart,
+        DimensionFilterOptions $filterDimensions,
+        FilesizeFilterOptions $filterFilesize,
+        ?array $duplicatesOnFields = null,
+    ): AdminPageResult {
         $template = $this->currentTemplate->get();
 
         // Runs before Request\BatchManagerGlobalRequest::fromGlobals() below
@@ -457,12 +464,11 @@ final readonly class BatchManagerGlobalPageRenderer
         $all_elements_raw = $template->getTemplateVars('all_elements');
 
         // batch_manager_filter.inc.latte's own exposedPageData() needs --
-        // 'dimensions'/'filesize' are assigned by
-        // BatchManagerSubController::handle() (before this renderer
-        // runs at all), 'filter_category_selected' by
-        // FilterPanelRenderer::render() above, same ambient-bag shape.
-        $filter_dimensions_raw = $template->getTemplateVars('dimensions');
-        $filter_filesize_raw = $template->getTemplateVars('filesize');
+        // 'filter_category_selected' is assigned by
+        // FilterPanelRenderer::render() above, and still comes back out of
+        // the ambient bag. The 'dimensions'/'filesize' pair used to as
+        // well; both are now render() parameters, passed straight from the
+        // BatchManagerSubController::handle() that computes them (P58-A).
         $filter_category_selected_raw = $template->getTemplateVars('filter_category_selected');
 
         $in_caddie = $prefilter_value === 'caddie';
@@ -595,8 +601,8 @@ final readonly class BatchManagerGlobalPageRenderer
             rootUrl: $this->urlService->getRootUrl(),
             associatedCategories: is_array($associated_categories_raw) ? $associated_categories_raw : [],
             allElements: is_array($all_elements_raw) ? $all_elements_raw : [],
-            filterDimensions: is_array($filter_dimensions_raw) ? $filter_dimensions_raw : [],
-            filterFilesize: is_array($filter_filesize_raw) ? $filter_filesize_raw : [],
+            filterDimensions: $filterDimensions,
+            filterFilesize: $filterFilesize,
             filterCategorySelected: is_int($filter_category_selected_raw) ? $filter_category_selected_raw : null,
             csrfToken: $this->csrfService->getToken(),
         ));

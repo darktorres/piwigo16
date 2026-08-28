@@ -284,7 +284,7 @@ test('select discards a well-shaped sheet entry keyed by an int, not just a malf
 });
 
 test('assign makes the sheets array available to the tabsheet.latte template before rendering', function (): void {
-    file_put_contents(CurrentPathsTestFactory::get()->root . '/tabsheet.latte', 'CAPTION:{$sheets[\'general\'][\'caption\']}');
+    file_put_contents(CurrentPathsTestFactory::get()->root . '/tabsheet.latte', 'CAPTION:{$sheets[\'general\']->caption}');
 
     $tabsheet = new Tabsheet('MY_TABSHEET', 'MY_TITLE');
     $tabsheet->add('general', 'General Settings', '/general');

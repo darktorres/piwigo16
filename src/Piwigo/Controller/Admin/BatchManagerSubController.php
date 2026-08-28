@@ -172,18 +172,21 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
         $tabsheet->select($tab, $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate, $this->renderer);
 
+        $filter_dimensions = $this->computeDimensionOptions($filter->dimension);
+        $filter_filesize = $this->computeFilesizeOptions($filter->filesize);
+
         $template->assignContext(new BatchManagerFilterOptionsPageContext(
-            dimensions: $this->computeDimensionOptions($filter->dimension),
-            filesize: $this->computeFilesizeOptions($filter->filesize),
+            dimensions: $filter_dimensions,
+            filesize: $filter_filesize,
         ));
 
         if ($tab === 'unit') {
             return $this->batchManagerUnitPageRenderer
-                ->render($cat_elements_id, $start);
+                ->render($cat_elements_id, $start, $filter_dimensions, $filter_filesize);
         }
 
         return new BatchManagerGlobalPageRenderer($this->lang, $this->redirectService, $this->urlService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->tagService, $this->categoryService, $this->imageService, $this->htmlRenderer, $this->currentConfig, $this->csrfService, $this->inputValidator, $this->paths, $this->renderer)
-            ->render($cat_elements_id, $start, $duplicates_on_fields);
+            ->render($cat_elements_id, $start, $filter_dimensions, $filter_filesize, $duplicates_on_fields);
     }
 
     private function handleGetActions(BatchManagerRequest $batchManagerRequest, string $getPage, UserId $userId): void

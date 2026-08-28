@@ -1358,8 +1358,8 @@ it('aggregates portrait/square/panorama ratio buckets from real distinct image d
 
     // batch_manager_filter.inc.latte only ever renders these `<a
     // class="slider-choice" ...>` ratio-bucket links inside their own
-    // `{if isset($dimensions.ratio_*)}` guard -- their mere presence
-    // proves the portrait/square/panorama keys got set. The template's
+    // `n:if="$dimensions->ratio* !== null"` guard -- their mere presence
+    // proves the portrait/square/panorama buckets got filled. The template's
     // own {'square'|translate} renders as "Square" (capital S) -- en_UK's
     // common.po translates the lowercase "square" msgid to "Square",
     // matching Portrait/Landscape/Panorama's own capitalization (whose
@@ -1370,4 +1370,62 @@ it('aggregates portrait/square/panorama ratio buckets from real distinct image d
         ->toContain('>Square</a>')
         ->and($html)
         ->toContain('>Panorama</a>');
+
+    // Presence alone is not the contract. doubleSlider.ts:78 reads each
+    // button's data-min/data-max back through $(this).data(...) and then
+    // calls options.values.indexOf() on the result, where options.values is
+    // the "ratios" page-data list split on commas -- so a value that is not
+    // character-for-character an entry of that list yields -1 and drives the
+    // slider to a nonexistent index instead of the bucket's range. The
+    // square button used to fail exactly this way: its data-max was written
+    // across two source lines, Latte emitted the newline verbatim inside the
+    // attribute, and jQuery's data() coercion (whose numeric regex anchors
+    // at both ends) left it a string no list entry could equal.
+    //
+    // Asserted against the serialized DOM, which preserves whitespace inside
+    // an attribute value while collapsing the source line breaks between
+    // attributes -- so a stray newline of that kind survives into the match
+    // below and a merely-cosmetic source reflow does not.
+    //
+    // The expected values are read off the page rather than written out: the
+    // buckets aggregate over the whole images table unscoped, and every
+    // concurrently-running Browser test that uploads a photo can widen them.
+    if (preg_match('~"ratios":"([^"]*)"~', $html, $ratiosMatch) !== 1) {
+        throw new RuntimeException('no "ratios" page-data list in the rendered batch manager page');
+    }
+
+    $ratioValues = explode(',', $ratiosMatch[1]);
+
+    // Scoped to the ratios slider's own block: the widths and heights
+    // sliders carry identically-shaped Reset links whose values are pixel
+    // counts, and an unscoped match would find one of those first.
+    $ratiosBlockStart = strpos($html, 'data-slider="ratios"');
+    $ratiosBlockEnd = strpos($html, 'name="filter_dimension_max_ratio"');
+    if ($ratiosBlockStart === false || $ratiosBlockEnd === false || $ratiosBlockEnd < $ratiosBlockStart) {
+        throw new RuntimeException('the ratios slider block did not render');
+    }
+
+    $ratiosBlock = substr($html, $ratiosBlockStart, $ratiosBlockEnd - $ratiosBlockStart);
+
+    foreach (['Portrait', 'Square', 'Landscape', 'Panorama'] as $label) {
+        $pattern = '~<a class="slider-choice" data-min="([^"]*)" data-max="([^"]*)">' . $label . '</a>~';
+        if (preg_match($pattern, $ratiosBlock, $buttonMatch) !== 1) {
+            throw new RuntimeException($label . ' ratio preset did not render as a single well-formed slider-choice link');
+        }
+
+        expect($ratioValues)
+            ->toContain($buttonMatch[1])
+            ->toContain($buttonMatch[2]);
+    }
+
+    // The Reset button restores the whole range, so its two values are the
+    // ends of that same list.
+    if (preg_match('~<a class="slider-choice dimension-cancel" data-min="([^"]*)" data-max="([^"]*)">Reset</a>~', $ratiosBlock, $resetMatch) !== 1) {
+        throw new RuntimeException('the ratio Reset link did not render');
+    }
+
+    expect($resetMatch[1])
+        ->toBe($ratioValues[0]);
+    expect($resetMatch[2])
+        ->toBe($ratioValues[count($ratioValues) - 1]);
 });

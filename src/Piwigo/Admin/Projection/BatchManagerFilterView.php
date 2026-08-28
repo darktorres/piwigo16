@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Piwigo\Admin\BatchManager\Projection\DimensionFilterOptions;
+use Piwigo\Admin\BatchManager\Projection\FilesizeFilterOptions;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template as TemplateAttr;
 
@@ -54,8 +56,6 @@ final readonly class BatchManagerFilterView implements View
      * @param array<int, string> $filter_level_options
      * @param array<int, array{name: mixed, id: string}> $filter_tags
      * @param list<array<mixed>> $prefilters
-     * @param array<string, mixed> $dimensions
-     * @param array<string, mixed> $filesize
      * @param ?list<string> $no_search_results
      */
     public function __construct(
@@ -69,8 +69,8 @@ final readonly class BatchManagerFilterView implements View
         public string $CSRF_TOKEN,
         public array $prefilters,
         public int $NB_ORPHANS,
-        public array $dimensions,
-        public array $filesize,
+        public DimensionFilterOptions $dimensions,
+        public FilesizeFilterOptions $filesize,
         public ?array $no_search_results = null,
     ) {}
 }

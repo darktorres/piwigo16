@@ -27,9 +27,16 @@ final readonly class DimensionFilterOptions
     ) {}
 
     /**
+     * The `"dimensions"` page-data payload batchManagerFilter.ts reads
+     * through `pwg_getPageData()`. Not a template flatten -- the template
+     * reads this object's own properties -- so the key names here answer
+     * to that one JS consumer and nothing else, and the four `ratio_*`
+     * keys stay conditionally *absent* rather than becoming null, which is
+     * what the payload has always emitted.
+     *
      * @return array<string, mixed>
      */
-    public function toArray(): array
+    public function toPageData(): array
     {
         $result = [
             'widths' => $this->widths,

@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+use Piwigo\Admin\BatchManager\Projection\DimensionBounds;
+use Piwigo\Admin\BatchManager\Projection\DimensionFilterOptions;
+use Piwigo\Admin\BatchManager\Projection\FilesizeBounds;
+use Piwigo\Admin\BatchManager\Projection\FilesizeFilterOptions;
+use Piwigo\Admin\BatchManager\Projection\RatioRange;
 use Piwigo\Admin\Projection\BatchManagerUnitView;
 
 /**
@@ -27,8 +32,22 @@ function makeBatchManagerUnitView(array $elements): BatchManagerUnitView
         colorscheme: 'light',
         rootUrl: '',
         associatedCategories: [],
-        filterDimensions: [],
-        filterFilesize: [],
+        filterDimensions: new DimensionFilterOptions(
+            widths: '600',
+            heights: '480',
+            ratios: '1.25',
+            bounds: new DimensionBounds(600, 600, 480, 480, 1.25, 1.25),
+            ratioPortrait: null,
+            ratioSquare: null,
+            ratioLandscape: new RatioRange(min: 1.25, max: 1.25),
+            ratioPanorama: null,
+            selected: new DimensionBounds(600, 600, 480, 480, 1.25, 1.25),
+        ),
+        filterFilesize: new FilesizeFilterOptions(
+            list: '0.0',
+            bounds: new FilesizeBounds(min: '0.0', max: '0.0'),
+            selected: new FilesizeBounds(min: '0.0', max: '0.0'),
+        ),
         filterCategorySelected: null,
     );
 }

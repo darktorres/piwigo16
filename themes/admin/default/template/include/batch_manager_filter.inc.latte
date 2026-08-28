@@ -297,12 +297,12 @@
               <div>
                 {='Width'|translate} <span
                   class="slider-info"
-                >{='between %d and %d pixels'|translate:$dimensions['selected']['min_width'],$dimensions['selected']['max_width']}</span>
+                >{='between %d and %d pixels'|translate:$dimensions->selected->minWidth,$dimensions->selected->maxWidth}</span>
               </div>
               <a
                 class="slider-choice dimension-cancel"
-                data-min="{$dimensions['bounds']['min_width']}"
-                data-max="{$dimensions['bounds']['max_width']}"
+                data-min="{$dimensions->bounds->minWidth}"
+                data-max="{$dimensions->bounds->maxWidth}"
               >{='Reset'|translate}</a>
             </div>
             <div class="slider-slider"></div>
@@ -311,13 +311,13 @@
               type="hidden"
               data-input="min"
               name="filter_dimension_min_width"
-              value="{$dimensions['selected']['min_width']}"
+              value="{$dimensions->selected->minWidth}"
             >
             <input
               type="hidden"
               data-input="max"
               name="filter_dimension_max_width"
-              value="{$dimensions['selected']['max_width']}"
+              value="{$dimensions->selected->maxWidth}"
             >
           </div>
 
@@ -326,12 +326,12 @@
               <div>
                 {='Height'|translate} <span
                   class="slider-info"
-                >{='between %d and %d pixels'|translate:$dimensions['selected']['min_height'],$dimensions['selected']['max_height']}</span>
+                >{='between %d and %d pixels'|translate:$dimensions->selected->minHeight,$dimensions->selected->maxHeight}</span>
               </div>
               <a
                 class="slider-choice dimension-cancel"
-                data-min="{$dimensions['bounds']['min_height']}"
-                data-max="{$dimensions['bounds']['max_height']}"
+                data-min="{$dimensions->bounds->minHeight}"
+                data-max="{$dimensions->bounds->maxHeight}"
               >{='Reset'|translate}</a>
             </div>
             <div class="slider-slider"></div>
@@ -340,13 +340,13 @@
               type="hidden"
               data-input="min"
               name="filter_dimension_min_height"
-              value="{$dimensions['selected']['min_height']}"
+              value="{$dimensions->selected->minHeight}"
             >
             <input
               type="hidden"
               data-input="max"
               name="filter_dimension_max_height"
-              value="{$dimensions['selected']['max_height']}"
+              value="{$dimensions->selected->maxHeight}"
             >
           </div>
 
@@ -355,40 +355,40 @@
               <span>{='Ratio'|translate} ({='Width'|translate}/{='Height'|translate})</span>
               <span
                 class="slider-info"
-              >{='between %.2f and %.2f'|translate:$dimensions['selected']['min_ratio'],$dimensions['selected']['max_ratio']}</span>
+              >{='between %.2f and %.2f'|translate:$dimensions->selected->minRatio,$dimensions->selected->maxRatio}</span>
             </div>
             <div class="dimensionSlidersRatioButtons">
               <div>
                 <a
-                  n:if="isset($dimensions['ratio_portrait'])"
+                  n:if="$dimensions->ratioPortrait !== null"
                   class="slider-choice"
-                  data-min="{$dimensions['ratio_portrait']['min']}"
-                  data-max="{$dimensions['ratio_portrait']['max']}"
+                  data-min="{$dimensions->ratioPortrait->min}"
+                  data-max="{$dimensions->ratioPortrait->max}"
                 >{='Portrait'|translate}</a>
                 <a
-                  n:if="isset($dimensions['ratio_square'])"
+                  n:if="$dimensions->ratioSquare !== null"
                   class="slider-choice"
-                  data-min="{$dimensions['ratio_square']['min']}"
-                  data-max="{$dimensions['ratio_square']['max']}"
+                  data-min="{$dimensions->ratioSquare->min}"
+                  data-max="{$dimensions->ratioSquare->max}"
                 >{='square'|translate}</a>
                 <a
-                  n:if="isset($dimensions['ratio_landscape'])"
+                  n:if="$dimensions->ratioLandscape !== null"
                   class="slider-choice"
-                  data-min="{$dimensions['ratio_landscape']['min']}"
-                  data-max="{$dimensions['ratio_landscape']['max']}"
+                  data-min="{$dimensions->ratioLandscape->min}"
+                  data-max="{$dimensions->ratioLandscape->max}"
                 >{='Landscape'|translate}</a>
                 <a
-                  n:if="isset($dimensions['ratio_panorama'])"
+                  n:if="$dimensions->ratioPanorama !== null"
                   class="slider-choice"
-                  data-min="{$dimensions['ratio_panorama']['min']}"
-                  data-max="{$dimensions['ratio_panorama']['max']}"
+                  data-min="{$dimensions->ratioPanorama->min}"
+                  data-max="{$dimensions->ratioPanorama->max}"
                 >{='Panorama'|translate}</a>
               </div>
               <div>
                 <a
                   class="slider-choice dimension-cancel"
-                  data-min="{$dimensions['bounds']['min_ratio']}"
-                  data-max="{$dimensions['bounds']['max_ratio']}"
+                  data-min="{$dimensions->bounds->minRatio}"
+                  data-max="{$dimensions->bounds->maxRatio}"
                 >{='Reset'|translate}</a>
               </div>
             </div>
@@ -398,13 +398,13 @@
               type="hidden"
               data-input="min"
               name="filter_dimension_min_ratio"
-              value="{$dimensions['selected']['min_ratio']}"
+              value="{$dimensions->selected->minRatio}"
             >
             <input
               type="hidden"
               data-input="max"
               name="filter_dimension_max_ratio"
-              value="{$dimensions['selected']['max_ratio']}"
+              value="{$dimensions->selected->maxRatio}"
             >
           </div>
         </blockquote>
@@ -473,11 +473,11 @@
           <div data-slider="filesizes">
             <span
               class="slider-info"
-            >{='between %s and %s MB'|translate:$filesize['selected']['min'],$filesize['selected']['max']}</span>
+            >{='between %s and %s MB'|translate:$filesize->selected->min,$filesize->selected->max}</span>
             <a
               class="slider-choice dimension-cancel"
-              data-min="{$filesize['bounds']['min']}"
-              data-max="{$filesize['bounds']['max']}"
+              data-min="{$filesize->bounds->min}"
+              data-max="{$filesize->bounds->max}"
             >{='Reset'|translate}</a>
             <div class="slider-slider"></div>
 
@@ -485,13 +485,13 @@
               type="hidden"
               data-input="min"
               name="filter_filesize_min"
-              value="{$filesize['selected']['min']}"
+              value="{$filesize->selected->min}"
             >
             <input
               type="hidden"
               data-input="max"
               name="filter_filesize_max"
-              value="{$filesize['selected']['max']}"
+              value="{$filesize->selected->max}"
             >
           </div>
         </blockquote>

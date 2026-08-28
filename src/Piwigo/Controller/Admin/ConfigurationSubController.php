@@ -707,7 +707,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 );
 
                 $view = new ConfigurationDisplayView(
-                    display: $display->toArray(),
+                    display: $display,
                     fAction: $action,
                     saveSuccess: $save_success,
                     isWebmaster: $is_webmaster,

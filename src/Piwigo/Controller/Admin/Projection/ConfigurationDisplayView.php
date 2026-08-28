@@ -20,11 +20,8 @@ use Piwigo\Template\Latte\Attribute\Template;
 #[Template('configuration_display.latte')]
 final readonly class ConfigurationDisplayView implements View, HasPageAssets
 {
-    /**
-     * @param array<string, mixed> $display
-     */
     public function __construct(
-        public array $display,
+        public ConfigurationDisplayData $display,
         public string $fAction,
         public ?string $saveSuccess,
         public int $isWebmaster,

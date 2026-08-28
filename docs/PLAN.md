@@ -148,6 +148,7 @@ Three structural changes produced that drift:
 | P55 | Real quality gates | Not started | 0 |
 | P56 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P57 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
+| P58 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | In progress — A0 done (81 findings refiled as Latte codegen, campaign's real size 843); P58-A 843 findings / 74 templates / 63 Views, P58-B 376 / 72 templates | 1 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -406,12 +407,15 @@ used `AbstractRepository` + `Tables::` (DBAL) instead. That was migrated
 under P24 and is finished: `Db/AbstractRepository.php` no longer exists
 and nothing extends it.
 
-38 domain repositories today, split two ways:
+39 domain repositories today, split two ways. (The glob below counts 40:
+`Db/TypedRepository` also matches it and is not one — it is the helper
+that narrows a generic `getRepository()` return to the concrete custom
+class.)
 
 <!-- markdownlint-disable-next-line MD013 -->
-<!-- doc-drift-check: cmd='find src/Piwigo -iname "*Repository.php" | wc -l' expect="38" -->
+<!-- doc-drift-check: cmd='find src/Piwigo -iname "*Repository.php" | wc -l' expect="40" -->
 
-- **23 extend `Doctrine\ORM\EntityRepository`** — not Symfony's
+- **24 extend `Doctrine\ORM\EntityRepository`** — not Symfony's
   `ServiceEntityRepository`, which stays unused because this codebase
   does not run on the Symfony framework or DoctrineBundle.
 - **15 extend nothing**, holding `EntityManagerInterface` by constructor
@@ -472,11 +476,11 @@ domain-local by design).
 **P21 — Admin controller migration.** "62 admin pages" was never a target
 count of services to build — it is the `origin/16.x` raw `admin/*.php`
 file count being replaced. `config/admin_pages.php` maps 37 page slugs to
-`AdminSubControllerInterface` services, matching the 37 classes that
+`AdminSubControllerInterface` services, matching the 36 classes that
 implement the interface.
 
 <!-- markdownlint-disable-next-line MD013 -->
-<!-- doc-drift-check: cmd='grep -rl "implements AdminSubControllerInterface" src/Piwigo --include="*.php" | wc -l' expect="37" -->
+<!-- doc-drift-check: cmd='grep -rl "implements AdminSubControllerInterface" src/Piwigo --include="*.php" | wc -l' expect="36" -->
 
 Dispatch is `Bootstrap\AdminDispatcher::dispatch()`, built decomposed
 from the start: the reference implementation's god-classes
@@ -794,11 +798,14 @@ root every system needs.
 `Template::assign()` with a real key converted to a
 `final readonly class FooPageContext implements TemplatePageContext` plus
 a single `assignContext()` call. Zero `Template::assign()` calls with a
-string or array key remain in `src/Piwigo`; 130 context classes ship
-today.
+string or array key remain in `src/Piwigo`. 130 context classes shipped
+when this phase closed; **28 remain**, P40 having replaced the rest with
+typed `View` classes — which is also what shrank P58-A, since a
+`{templateType}` template takes its variable types from the View's own
+reflected properties rather than from a context's `array<*, mixed>`.
 
 <!-- markdownlint-disable-next-line MD013 -->
-<!-- doc-drift-check: cmd='grep -rl "implements TemplatePageContext" src/Piwigo --include="*.php" | wc -l' expect="130" -->
+<!-- doc-drift-check: cmd='grep -rl "implements TemplatePageContext" src/Piwigo --include="*.php" | wc -l' expect="28" -->
 
 Four sites are correctly excluded and carry an explicit comment saying so
 — the assign *key* itself is caller-chosen or per-instance-mutable, not a
@@ -1301,16 +1308,18 @@ completed Latte foundation, then refactor and modernization (same
 behavior, different implementation), then new features, then a closing
 gate.
 
-The tree is 135 templates and 119,752 lines, of which **93,420 lines
-(78%) are auto-generated `{varType}` boilerplate** — every template
-carries the same 692-line block while referencing 11.5 distinct
-variables on average. That is forced by `Template::$vars` being one
-request-global bag, and P40 is what removes it.
+The tree was 135 templates and 119,752 lines when this epoch was
+scoped, of which **93,420 lines (78%) were auto-generated `{varType}`
+boilerplate** — every template carried the same 692-line block while
+referencing 11.5 distinct variables on average, forced by
+`Template::$vars` being one request-global bag. P40 is what removes it,
+and has: **121 templates, 19,719 lines, 1,212 `{varType}` occurrences
+left across 9 templates.**
 
 <!-- markdownlint-disable-next-line MD013 -->
-<!-- doc-drift-check: cmd='find themes template-extension -name "*.latte" | wc -l' expect="135" -->
+<!-- doc-drift-check: cmd='find themes template-extension -name "*.latte" | wc -l' expect="121" -->
 <!-- markdownlint-disable-next-line MD013 -->
-<!-- doc-drift-check: cmd='grep -rho "{varType" themes template-extension --include="*.latte" | wc -l' expect="93420" -->
+<!-- doc-drift-check: cmd='grep -rho "{varType" themes template-extension --include="*.latte" | wc -l' expect="1212" -->
 
 #### Completed Latte foundation
 
@@ -1349,10 +1358,14 @@ inside `composer analyse:phpstan`. It compiles all 135 templates with
 typed `@var` injection and shim-rewritten filter calls into
 `_analysis/phpstan-latte/`, analysed by plain `phpstan analyse` with
 errors mapped back to real `.latte` lines via an `errorFormatter.table!`
-override. Two follow-up campaigns shrink its remaining scoped ignores:
-context-docblock enrichment (~1,400 mixed-flow findings across the
-context classes) and template-source modernization (~450 loose-`==` and
-`empty()` findings).
+override. Two follow-up campaigns shrink its remaining scoped ignores;
+they had no owner until **P58** picked them up, and the figures recorded
+here originally (~1,400 and ~450) were both stale — re-measured
+2026-08-28 as **843** and **376**. The first was also mis-described as
+"context-docblock enrichment": P40's View migration has since made the
+dominant cause a producer calling `->toArray()` on an already-typed VO
+one line before handing it to the View, so the fix is deleting the
+flatten rather than writing a docblock. See P58.
 
 *Format half*: no prior art existed even in the reference, so it is
 genuinely new work. `tools/latte-prettier/` is a real Prettier plugin —
@@ -4475,7 +4488,69 @@ further apart (the `profile` id mismatch above is the cautionary
 example) rather than committing to either merge or permanent
 duplication.
 
-## Greenfield tracks (T3, cuttable — outside the P0–P57 backbone)
+**P58 — phpstan-latte CAMPAIGN-PENDING.** `phpstan.neon`'s
+CAMPAIGN-PENDING block holds 26 identifier-wide `ignoreErrors` entries
+scoped to `_analysis/phpstan-latte/*` — P32's two named follow-up
+campaigns, described there and never scheduled. No phase owned them and
+no status field tracked them until this one.
+
+*Why it stopped being housekeeping.* `foreach.valueOverwrite` sat inside
+Campaign B's blanket ignore, filed as Smarty-conversion style needing
+per-site care. It had two sites, both in `search_filters.inc.latte`, and
+both were live bugs: Latte compiles `{foreach $x as $k => $x}` to
+`unset($k, $x); foreach ($x as ...)`, so each loop destroyed its own
+collection and the file-type and rating filter option lists rendered
+empty on every search page carrying those filters. Neither the
+golden-html fixture nor the VR baseline noticed — both were generated
+after the bug existed, and a snapshot cannot report an absence. Fixed in
+`086b658ca5`, the ignore dropped with it. A blanket identifier ignore
+assumes every finding under it is the same kind of finding; for that one
+it wasn't.
+
+*Sizes, re-measured 2026-08-28* (strip the CAMPAIGN-PENDING block into a
+scratch config beside `phpstan.neon` — relative paths need the repo root
+— then `phpstan analyse -c` it): **P58-A 843** across 74 templates and 63
+View classes, **P58-B 376** across 72. P32 recorded ~1,400 and ~450.
+
+*P58-A0 (done, `3e6255a4d9`).* 81 of A's raw 924 were
+`booleanNot.exprNotBoolean` reading `Latte\Runtime\Template|null` —
+Latte's own compiled `{block}` guard, not template source. Refiled into
+the permanent codegen group, scoped by message so the same identifier
+keeps reporting on real template source.
+
+*P58-A — type the producer → View → template chain.* The dominant cause
+is not a missing type: it is a typed VO flattened to an array at the View
+constructor, one line before the template that needed it. 33
+named-argument `->toArray()` sites across 24 producer files;
+`ConfigurationSubController.php:885` flattens twice over
+(`FilterViewDefinition` inside `ConfigurationSearchTabData`, then that
+VO itself), producing 54 `mixed` findings in one template. Un-flatten
+those, then type the ~56 remaining bags — reusing one of the 278
+existing `Projection/` VOs where the shape already exists, introducing
+one where it doesn't, and leaving `array<string, VO>` an array where the
+template indexes it by a runtime key. Delete each `toArray()` whose last
+caller this removes; keep `Navbar::toArray()`, which has 15.
+
+*P58-B — modernize the template source.* Ordered strictly after A: 154
+of B's 268 loose comparisons and 28 of its 103 `empty()` calls have
+`mixed` on one side and are undecidable until A lands, and tightening
+types *creates* new always-true/false findings, which are the
+bug-bearing kind. B leads with those 5 (`notification_by_mail.latte`
+compares a bool against the string `'false'` three times;
+`cat_modify.latte:122` repeats an operand across `and`/`||`), then
+`empty()`, then the comparisons. `===` is not a mechanical substitution:
+`int == int` is the only always-safe pair, `'10' == '1e1'` is true for
+numeric strings, and `'' == null` is true.
+
+*Gate.* Each identifier's ignore comes out of `phpstan.neon` in the
+commit that takes its count to zero; `reportUnmatchedIgnoredErrors`
+forces it. A ends with 20 entries removed, B with 6, and the
+CAMPAIGN-PENDING block gone. Output is invariant across A by
+construction, so golden-html (81) and VR (71) staying green with no
+regeneration is the proof, not a chore; in B a changed byte means the
+loose comparison was load-bearing.
+
+## Greenfield tracks (T3, cuttable — outside the P0–P58 backbone)
 
 All entirely cuttable, never gating a backbone commit, dropped first on
 overrun. None have started; each depends on backbone phases that have not

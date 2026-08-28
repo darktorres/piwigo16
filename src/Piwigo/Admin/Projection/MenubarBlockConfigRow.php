@@ -19,15 +19,4 @@ final readonly class MenubarBlockConfigRow
         public int|float $pos,
         public RegisteredBlock $reg,
     ) {}
-
-    /**
-     * @return array{pos: int|float, reg: RegisteredBlock}
-     */
-    public function toArray(): array
-    {
-        return [
-            'pos' => $this->pos,
-            'reg' => $this->reg,
-        ];
-    }
 }

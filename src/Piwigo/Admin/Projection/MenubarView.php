@@ -23,7 +23,7 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class MenubarView implements View, HasPageAssets
 {
     /**
-     * @param list<array{pos: int|float, reg: mixed}> $blocks
+     * @param list<MenubarBlockConfigRow> $blocks
      */
     public function __construct(
         public string $formAction,

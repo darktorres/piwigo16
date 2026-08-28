@@ -3,8 +3,8 @@
   <ul class="menuUl">
     <li
       n:foreach="$blocks as $block"
-      class="menuLi {if $block['pos'] < 0}menuLi_hidden{/if}"
-      id="menu_{$block['reg']->getId()}"
+      class="menuLi {if $block->pos < 0}menuLi_hidden{/if}"
+      id="menu_{$block->reg->getId()}"
     >
       <p>
         <span>
@@ -12,8 +12,8 @@
               class="icon-check"
             ></i><input
               type="checkbox"
-              name="hide_{$block['reg']->getId()}"
-              {if $block['pos'] < 0}
+              name="hide_{$block->reg->getId()}"
+              {if $block->pos < 0}
               checked="checked"
               {/if}
             ></label>
@@ -25,11 +25,11 @@
           alt="{='Drag to re-order'|translate}"
           title="{='Drag to re-order'|translate}"
         >
-        <strong>{$block['reg']->getName()|translate}</strong> ({$block['reg']->getId()})
+        <strong>{$block->reg->getName()|translate}</strong> ({$block->reg->getId()})
       </p>
 
-      <p n:if="$block['reg']->getOwner() != 'piwigo'" class="menuAuthor">
-        {='Author'|translate}: <i>{$block['reg']->getOwner()}</i>
+      <p n:if="$block->reg->getOwner() != 'piwigo'" class="menuAuthor">
+        {='Author'|translate}: <i>{$block->reg->getOwner()}</i>
       </p>
 
       <p class="menuPos">
@@ -38,9 +38,9 @@
           <input
             type="text"
             size="4"
-            name="pos_{$block['reg']->getId()}"
+            name="pos_{$block->reg->getId()}"
             maxlength="4"
-            value="{=abs($block['pos'])}"
+            value="{=abs($block->pos)}"
           >
         </label>
       </p>

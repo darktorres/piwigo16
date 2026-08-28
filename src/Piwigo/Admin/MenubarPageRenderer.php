@@ -118,7 +118,7 @@ final class MenubarPageRenderer
         $adminContent = $renderer->render(new MenubarView(
             formAction: $action,
             isWebmaster: $accessControl->isWebmaster() ? 1 : 0,
-            blocks: array_map(static fn (MenubarBlockConfigRow $block): array => $block->toArray(), $blocks),
+            blocks: $blocks,
             saveSuccess: $save_success,
         ));
 

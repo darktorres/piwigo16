@@ -80,6 +80,13 @@ return [
     'admin-picture-coi' => ['/admin.php?page=picture_coi&image_id=1', true],
     'admin-rating' => ['/admin.php?page=rating', true],
     'admin-rating-user' => ['/admin.php?page=rating_user', true],
+    // f_min_rates defaults to 2 and the renderer drops every user whose
+    // rate count is <= that, so the default route above renders an empty
+    // table: the fixture's three raters have 2, 2 and 1 rates. This one
+    // lowers the threshold so the per-user row loop actually runs -- it is
+    // the only thing that exercises $ratings and, through the thumbnail
+    // {capture}, $imageUrls (P58, tools/p58).
+    'admin-rating-user-rows' => ['/admin.php?page=rating_user&f_min_rates=0', true],
 
     // ── Admin — Users ─────────────────────────────────────────────────────
     'admin-users' => ['/admin.php?page=user_list', true],

@@ -1131,3 +1131,160 @@ it('falls back to the arbitrary filesize bucket set when every filesize row in s
         H::restoreConfig($snapshot);
     }
 });
+
+/**
+ * `width`/`height`/`filesize` are all nullable and none has an API setter,
+ * so a test that needs specific values sets them directly -- the same
+ * established fact this file's own docblock documents for the NULL-ing
+ * helpers above.
+ */
+function searchFilterDataSetImageDims(int $imageId, int $width, int $height, int $filesize): void
+{
+    $db = searchFilterDataDb();
+    H::dbQuery($db, sprintf(
+        'UPDATE images SET width = %d, height = %d, filesize = %d WHERE id = %d',
+        $width,
+        $height,
+        $filesize,
+        $imageId,
+    ));
+    H::dbClose($db);
+}
+
+/**
+ * P58 step 0b. search_filters.inc.latte emits 12 values from the filesize,
+ * height and width sliders -- `['bounds']['min'|'max']` into the clear
+ * button's data-min/data-max, and `['selected']['min'|'max']` into the
+ * inputs' value= -- and 10 of them had no assertion anywhere. The two that
+ * did (filesize's bounds, asserted by the fallback test above) only ever
+ * ran on the path where every filesize row is NULL, so they checked the
+ * arbitrary 0..15 bucket set rather than anything derived from real rows.
+ *
+ * That matters now because SearchFilterData is the largest single class in
+ * P58-A's leaf-projection step (38 findings), and these are the expressions
+ * that retype has to leave byte-identical. Asserting them afterwards would
+ * prove nothing: the baseline would already contain whatever the retype
+ * emitted.
+ *
+ * Three photos with distinct dimensions give bounds a real range instead of
+ * the fixture's uniform 200x150, and the search's own min/max are chosen so
+ * `selected` and `bounds` come out different, so neither can be mistaken for
+ * the other. Filesize buckets are `filesize / 1024` to one decimal (the
+ * column is KB, the slider is MB), so the three values are a megabyte apart
+ * to land in three distinct buckets.
+ */
+it('emits real slider bounds and selected values for the filesize, height and width filters', function (): void {
+    $snapshot = H::snapshotConfig(['filters_views']);
+    $filtersViews = json_encode([
+        'file_size' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'height' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'width' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+    ]);
+    if ($filtersViews === false) {
+        throw new RuntimeException('json_encode failed for the filters_views config value');
+    }
+    H::setConfigValue('filters_views', $filtersViews);
+
+    try {
+        $page = H::asAdmin($this);
+        $album = H::createCategory($page, [
+            'name' => 'Search Slider Bounds Album ' . uniqid(),
+        ]);
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
+        }
+        $albumId = (int) $album['id'];
+
+        $dims = [
+            [600, 300, 1024],
+            [650, 500, 2048],
+            [700, 700, 4096],
+        ];
+        foreach ($dims as [$w, $h, $filesize]) {
+            $image = H::makeTestImage(uniqid());
+            $imageId = H::uploadPhotoViaApi($image, $albumId, sprintf('Slider Photo %dx%d', $w, $h));
+            @unlink($image);
+            searchFilterDataSetImageDims($imageId, $w, $h, $filesize);
+        }
+
+        $search = H::createFilteredSearch($page, [
+            'categories' => $albumId,
+            'filesize_min' => 2048,
+            'filesize_max' => 4096,
+            'height_min' => 500,
+            'height_max' => 700,
+            'width_min' => 600,
+            'width_max' => 700,
+        ]);
+        if (! is_string($search['searchUrl'] ?? null)) {
+            throw new RuntimeException('createFilteredSearch did not return a searchUrl: ' . var_export($search, true));
+        }
+
+        H::rawWebpage($page)->navigate($search['searchUrl']);
+        H::assertNoServerErrors($page, 'slider bounds search');
+        $html = H::rawWebpage($page)->content();
+
+        preg_match_all('/data-(min|max)="([^"]*)"/', $html, $b, PREG_SET_ORDER);
+        preg_match_all('/name="(filter_(?:filesize|height|width)_[a-z_]*)"\s*value="([^"]*)"/', $html, $v, PREG_SET_ORDER);
+
+        // Each filter's own bucket set is deliberately computed under the
+        // *other* active filters rather than its own -- the renderer says so
+        // itself ("the min/max of the current search won't always be the
+        // first/last values found"), via getClauseForFilter(). So filesize's
+        // bounds are taken with height 500..700 and width 600..800 applied,
+        // and height's with filesize 2048..4096 and width 600..800 applied.
+        // Either way only the second and third photo qualify, so both pairs
+        // are this album's own values and the 400x300/1024 one is excluded.
+        //
+        // That clause does NOT include the category filter, so the ranges
+        // here have to exclude every other photo in the gallery by dimension
+        // alone. Both halves of that were found by being wrong first, and
+        // are why the numbers look arbitrary:
+        //
+        //  - a draft using 200x150 photos read a filesize lower bound of 0.0
+        //    instead of its own album's 1.0, because every makeTestImage
+        //    photo in the gallery (all fixed at 200x150, a few KB) fell
+        //    inside its height/width range and bucketed to 0.0;
+        //  - a draft using width 600..800 read a height lower bound of 200,
+        //    because the ratio-bucket test above creates 800x200 panorama
+        //    photos at filesize 3000, which sit inside both the width and
+        //    the filesize range. Hence 600..700: it excludes them by width.
+        //
+        // Both only appear when the file runs as a whole, not when this test
+        // runs alone.
+        //
+        // Exactly four data-min/data-max values, not six: the width filter's
+        // clear button emits neither, unlike filesize's and height's. That
+        // asymmetry is pre-existing and is left alone here -- P58 is type
+        // work -- but pinning the count keeps it from changing unnoticed.
+        expect(array_map(static fn (array $m): string => $m[1] . '=' . $m[2], $b))
+            ->toBe(['min=2.0', 'max=4.0', 'min=500', 'max=700']);
+
+        // The eight 'selected' values are the search's own rules echoed back,
+        // and are chosen to sit strictly inside the bounds above so neither
+        // can be mistaken for the other. filesize is the one that converts:
+        // the column is KB and the slider is MB, so 2048 renders as '2.0'.
+        expect(array_map(static fn (array $m): string => $m[1] . '=' . $m[2], $v))
+            ->toBe([
+                'filter_filesize_min_text=2.0',
+                'filter_filesize_max_text=4.0',
+                'filter_filesize_min=2.0',
+                'filter_filesize_max=4.0',
+                'filter_height_min=500',
+                'filter_height_max=700',
+                'filter_width_min=600',
+                'filter_width_max=700',
+            ]);
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});

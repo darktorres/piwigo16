@@ -25,15 +25,7 @@ final class ImagePathHelper
      */
     public static function originalToRepresentative(string $path, string $representativeExt): string
     {
-        // real image paths always carry a directory component and a file
-        // extension (galleries/YYYY/photo.jpg-style), same invariant
-        // getElementPath() below documents for images.path.
-        $pos = strrpos($path, '/');
-        assert($pos !== false);
-        $path = substr_replace($path, 'pwg_representative/', $pos + 1, 0);
-        $pos = strrpos($path, '.');
-        assert($pos !== false);
-        return substr_replace($path, $representativeExt, $pos + 1);
+        return self::inSubdirWithExtension($path, 'pwg_representative/', $representativeExt);
     }
 
     /**
@@ -41,12 +33,42 @@ final class ImagePathHelper
      */
     public static function originalToFormat(string $path, string $formatExt): string
     {
-        $pos = strrpos($path, '/');
-        assert($pos !== false);
-        $path = substr_replace($path, 'pwg_format/', $pos + 1, 0);
-        $pos = strrpos($path, '.');
-        assert($pos !== false);
-        return substr_replace($path, $formatExt, $pos + 1);
+        return self::inSubdirWithExtension($path, 'pwg_format/', $formatExt);
+    }
+
+    /**
+     * `galleries/2024/photo.raw` + `pwg_format/` + `jpg` ->
+     * `galleries/2024/pwg_format/photo.jpg`. Shared by the two callers
+     * above, which differed only in the subdirectory they insert.
+     *
+     * Both used to assert that the path had a directory component and an
+     * extension, and then feed `strrpos()`'s result straight into `$pos +
+     * 1`. `assert()` was compiled out, and `false + 1` is `1` -- so a path
+     * missing either one silently produced a string built from offset 1 of
+     * itself: `originalToRepresentative('', 'jpg')` returned `'pjpg'`.
+     * The asserted invariant was never guaranteed anyway; `images.path` is
+     * `NOT NULL DEFAULT ''`, so an empty path is representable, and
+     * `SrcImageInfo::fromRow()` deliberately tolerates a missing one.
+     *
+     * Each case is answered instead of assumed: no path means no derived
+     * path, a path with no directory takes the subdirectory at the front,
+     * and a path with no extension gains one rather than having its first
+     * character overwritten.
+     */
+    private static function inSubdirWithExtension(string $path, string $subdir, string $extension): string
+    {
+        if ($path === '') {
+            return '';
+        }
+
+        $slash = strrpos($path, '/');
+        $path = substr_replace($path, $subdir, $slash === false ? 0 : $slash + 1, 0);
+
+        $dot = strrpos($path, '.');
+
+        return $dot === false
+            ? $path . '.' . $extension
+            : substr_replace($path, $extension, $dot + 1);
     }
 
     /**

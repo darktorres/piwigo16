@@ -440,9 +440,17 @@ test('constructor treats a missing path as an empty string, not null, when build
     // is NOT dead: it feeds $this->rel_path directly in the
     // representative_ext branch (ImagePathHelper::originalToRepresentative()),
     // so its own is_string() default is real, observable behavior for a
-    // malformed/partial row, confirmed by hand-tracing
-    // originalToRepresentative('', 'jpg') vs the mutant's non-empty
-    // placeholder value producing genuinely different results.
+    // malformed/partial row -- the mutant's non-empty placeholder takes
+    // the same call somewhere else entirely
+    // ('pwg_representative/<placeholder>.jpg'), so the two stay
+    // distinguishable.
+    //
+    // This used to expect 'pjpg', which was not a path but the wreckage of
+    // strrpos() returning false and being used as an offset: assert() is
+    // compiled out under zend.assertions=-1, and `false + 1` is 1, so the
+    // result was rebuilt from offset 1 of the empty string. Enabling
+    // assertions surfaced it. An empty path now yields an empty derived
+    // path.
     //
     // SrcImage's constructor needs a booted Kernel (it reads
     // pictureExtensions()).
@@ -455,7 +463,7 @@ test('constructor treats a missing path as an empty string, not null, when build
     ]));
 
     expect($src->rel_path)
-        ->toBe('pjpg');
+        ->toBe('');
 });
 
 test('constructor throws when neither the per-extension icon nor the shared unknown.png fallback exist on disk', function (): void {

@@ -344,6 +344,26 @@ in progress as of this writing, not yet complete for all 7.
   is activated via a system-level `php.ini` kept outside this repo, so
   neither is enabled in any shipped `php.ini` here; this is left as a
   deployment-time optimization, not something CI/local dev needs.
+- **`zend.assertions = 1`** — enabled on this development machine for
+  both SAPIs via `/etc/php/8.5/{cli,apache2}/conf.d/99-zend-assertions.ini`,
+  another system-level file outside this repo (same shape as the
+  `pcov.directory` drop-in already there). It is not gated to a suite or a
+  worktree: an invariant worth writing with `assert()` is worth being told
+  about when it is false.
+
+  What it does **not** do is make `assert()` an enforcement mechanism for
+  shipped code. `zend.assertions` is `PHP_INI_SYSTEM` — no `ini_set`, no
+  `.htaccess` — and Piwigo installs on hosting whose `php.ini` we do not
+  control, where PHP's own `php.ini-production` sets `-1`. So an invariant
+  that has to hold on a real install still needs a real check; `assert()`
+  only tells *us* when one is wrong.
+
+  It earns its keep. The first run under it found
+  `Image\ImagePathHelper`'s two path builders feeding `strrpos()`'s
+  `false` straight into `$pos + 1`: compiled out, `false + 1` is `1`, so a
+  path with no directory or no extension was silently rebuilt from its own
+  offset 1 — `originalToRepresentative('', 'jpg')` returned `'pjpg'`, and a
+  test had pinned that as the contract.
 - **Mobile/tablet device detection** — `Core\DeviceHelper::getDevice()`
   has a single writer, and it unconditionally sets `'desktop'` on every
   new session; no User-Agent parsing exists anywhere in this codebase.

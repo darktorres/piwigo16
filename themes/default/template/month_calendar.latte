@@ -1,86 +1,90 @@
 {templateType Piwigo\Calendar\Projection\MonthCalendarView}
 {if !empty($chronology_navigation_bars)}
   <div n:foreach="$chronology_navigation_bars as $bar" class="calendarBar">
-    <div n:if="isset($bar['previous'])" class="calendar-nav-prev">&laquo; <a
-        href="{$bar['previous']['URL']|noescape}"
-      >{$bar['previous']['LABEL']}</a></div>
-    <div n:if="isset($bar['next'])" class="calendar-nav-next"><a
-        href="{$bar['next']['URL']|noescape}"
-      >{$bar['next']['LABEL']}</a> &raquo;</div>
-    {if empty($bar['items'])}
+    <div n:if="isset($bar->previous)" class="calendar-nav-prev">&laquo; <a
+        href="{$bar->previous->url|noescape}"
+      >{$bar->previous->label}</a></div>
+    <div n:if="isset($bar->next)" class="calendar-nav-next"><a
+        href="{$bar->next->url|noescape}"
+      >{$bar->next->label}</a> &raquo;</div>
+    {if empty($bar->items)}
       &nbsp;
     {else}
-      {foreach $bar['items'] as $item}
-        {if !isset($item['URL'])}
-          <span class="calItem">{$item['LABEL']}</span>
+      {foreach $bar->items as $item}
+        {if !isset($item->url)}
+          <span class="calItem">{$item->label}</span>
         {else}
           <a
             class="calItem"
-            {if isset($item['NB_IMAGES'])}
-            title="{$item['NB_IMAGES']|translate_dec:'%d photo','%d photos'}"
+            {if isset($item->nbImages)}
+            title="{$item->nbImages|translate_dec:'%d photo','%d photos'}"
             {/if}
-            href="{$item['URL']|noescape}"
-          >{$item['LABEL']}</a>
+            href="{$item->url|noescape}"
+          >{$item->label}</a>
         {/if}
       {/foreach}
     {/if}
   </div>
 {/if}
 
-{if !empty($chronology_calendar['calendar_bars'])}
+{if !empty($chronology_calendar->calendarBars)}
   <div
-    n:foreach="$chronology_calendar['calendar_bars'] as $bar"
+    n:foreach="$chronology_calendar->calendarBars as $bar"
     class="calendarCalBar"
   >
     <span class="calCalHead"><a
-        href="{$bar['U_HEAD']|noescape}"
-      >{$bar['HEAD_LABEL']}</a> ({$bar['NB_IMAGES']})</span><br>
+        href="{$bar->uHead|noescape}"
+      >{$bar->headLabel}</a> ({$bar->nbImages})</span><br>
     <span
-      n:foreach="$bar['items'] as $item"
-      class="calCal{if !isset($item['URL'])}Empty{/if}"
+      n:foreach="$bar->items as $item"
+      class="calCal{if !isset($item->url)}Empty{/if}"
     >
-      {if isset($item['URL'])}
-        <a href="{$item['URL']|noescape}">{$item['LABEL']}</a>
+      {if isset($item->url)}
+        <a href="{$item->url|noescape}">{$item->label}</a>
       {else}
-        {$item['LABEL']}
+        {$item->label}
       {/if}
-      {if isset($item['NB_IMAGES'])}({$item['NB_IMAGES']}){/if}
+      {if isset($item->nbImages)}({$item->nbImages}){/if}
     </span>
   </div>
 {/if}
 
 <table
-  n:if="isset($chronology_calendar['month_view'])"
+  n:if="isset($chronology_calendar->monthView)"
   class="calMonth"
-  style="--cal-cell-width: {$chronology_calendar['month_view']['CELL_WIDTH']}px; --cal-cell-height: {$chronology_calendar['month_view']['CELL_HEIGHT']}px;"
+  style="--cal-cell-width: {$chronology_calendar->monthView->cellWidth}px; --cal-cell-height: {$chronology_calendar->monthView->cellHeight}px;"
 >
   <thead>
     <tr>
       <th
-        n:foreach="$chronology_calendar['month_view']['wday_labels'] as $wday"
+        n:foreach="$chronology_calendar->monthView->wdayLabels as $wday"
       >{$wday}</th>
     </tr>
   </thead>
-  <tr n:foreach="$chronology_calendar['month_view']['weeks'] as $week">
+  <tr n:foreach="$chronology_calendar->monthView->weeks as $week">
     {foreach $week as $day}
-      {if !empty($day)}
-        {if isset($day['IMAGE'])}
+      {* A padding cell before the 1st or after the last day of the month
+         carries no day number at all. This was `!empty($day)` while the
+         cells were flattened arrays, where a padding cell was []; empty()
+         on an object is always false, so it has to ask about the field. *}
+      {if $day->day !== null}
+        {if isset($day->image)}
           <td class="calDayCellFull">
-            <div class="calBackDate">{$day['DAY']}</div><div
+            <div class="calBackDate">{$day->day}</div><div
               class="calForeDate"
-            >{$day['DAY']}</div>
+            >{$day->day}</div>
             <div class="calImg">
-              <a href="{$day['U_IMG_LINK']|noescape}">
+              <a href="{$day->uImgLink|noescape}">
                 <img
-                  src="{$day['IMAGE']|noescape}"
-                  alt="{$day['IMAGE_ALT']}"
-                  title="{$day['NB_ELEMENTS']|translate_dec:'%d photo','%d photos'}"
+                  src="{$day->image|noescape}"
+                  alt="{$day->imageAlt}"
+                  title="{$day->nbElements|translate_dec:'%d photo','%d photos'}"
                 >
               </a>
             </div>
           </td>
         {else}
-          <td class="calDayCellEmpty">{$day['DAY']}</td>
+          <td class="calDayCellEmpty">{$day->day}</td>
         {/if}
       {else}{*blank cell first or last row only*}
         <td></td>{/if}

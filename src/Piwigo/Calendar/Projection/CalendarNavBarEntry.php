@@ -18,24 +18,4 @@ final readonly class CalendarNavBarEntry
         public ?string $url,
         public ?int $nbImages,
     ) {}
-
-    /**
-     * @return array{LABEL: int|string, URL?: string, NB_IMAGES?: int}
-     */
-    public function toArray(): array
-    {
-        $result = [
-            'LABEL' => $this->label,
-        ];
-
-        if ($this->url !== null) {
-            $result['URL'] = $this->url;
-        }
-
-        if ($this->nbImages !== null) {
-            $result['NB_IMAGES'] = $this->nbImages;
-        }
-
-        return $result;
-    }
 }

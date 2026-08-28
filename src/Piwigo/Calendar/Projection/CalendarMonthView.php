@@ -24,20 +24,4 @@ final readonly class CalendarMonthView
         public array $wdayLabels,
         public array $weeks,
     ) {}
-
-    /**
-     * @return array{CELL_WIDTH: int, CELL_HEIGHT: int, wday_labels: list<string>, weeks: list<list<array<string, mixed>>>}
-     */
-    public function toArray(): array
-    {
-        return [
-            'CELL_WIDTH' => $this->cellWidth,
-            'CELL_HEIGHT' => $this->cellHeight,
-            'wday_labels' => $this->wdayLabels,
-            'weeks' => array_map(
-                static fn (array $week): array => array_map(static fn (CalendarDayCell $cell): array => $cell->toArray(), $week),
-                $this->weeks
-            ),
-        ];
-    }
 }

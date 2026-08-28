@@ -487,7 +487,6 @@ final class CalendarMonthly extends CalendarBase
 
                     $tpl_crt_week[] = new CalendarDayCell(
                         day: $day,
-                        dow: $dow,
                         nbElements: $items[$day]['nb_images'],
                         image: $items[$day]['derivative']->getUrl(),
                         uImgLink: $url,

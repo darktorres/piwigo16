@@ -32,24 +32,11 @@ final readonly class CalendarMonthlyCalendarPageContext implements TemplatePageC
     #[Override]
     public function toArray(): array
     {
-        if ($this->calendarBars !== null) {
-            return [
-                'chronology_calendar' => [
-                    'calendar_bars' => array_map(static fn (CalendarBarEntry $entry): array => $entry->toArray(), $this->calendarBars),
-                ],
-            ];
-        }
-
-        if ($this->monthView !== null) {
-            return [
-                'chronology_calendar' => [
-                    'month_view' => $this->monthView->toArray(),
-                ],
-            ];
-        }
-
         return [
-            'chronology_calendar' => [],
+            'chronology_calendar' => new CalendarChronologyCalendar(
+                calendarBars: $this->calendarBars,
+                monthView: $this->monthView,
+            ),
         ];
     }
 }

@@ -24,11 +24,10 @@ namespace Piwigo\Calendar\Projection;
 final readonly class MonthCalendarView
 {
     /**
-     * @param array<array-key, mixed> $chronology_calendar
-     * @param list<array<string, mixed>> $chronology_navigation_bars
+     * @param list<ChronologyNavBarRow> $chronology_navigation_bars
      */
     public function __construct(
-        public array $chronology_calendar,
+        public CalendarChronologyCalendar $chronology_calendar,
         public array $chronology_navigation_bars,
     ) {}
 }

@@ -13,6 +13,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Calendar\CalendarBase;
     use Piwigo\Calendar\CalendarRenderer;
     use Piwigo\Calendar\CalendarRenderResult;
+    use Piwigo\Calendar\Projection\CalendarBarEntry;
+    use Piwigo\Calendar\Projection\ChronologyNavBarRow;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Common\Enum\Section;
     use Piwigo\Config\ConfigLoader;
@@ -175,7 +177,22 @@ namespace Piwigo\Tests\Integration {
         private function dig(mixed $value, array $path): mixed
         {
             foreach ($path as $key) {
-                $value = is_array($value) && array_key_exists($key, $value) ? $value[$key] : null;
+                if (is_array($value) && array_key_exists($key, $value)) {
+                    $value = $value[$key];
+                    continue;
+                }
+
+                // Calendar template variables are objects now, not flattened
+                // arrays (P58-A §4), and a path walks through both.
+                if (is_object($value) && is_string($key)) {
+                    $vars = get_object_vars($value);
+                    if (array_key_exists($key, $vars)) {
+                        $value = $vars[$key];
+                        continue;
+                    }
+                }
+
+                $value = null;
             }
 
             return $value;
@@ -310,19 +327,24 @@ namespace Piwigo\Tests\Integration {
 
             $calendarVars = $template->getTemplateVars('chronology_calendar');
             // ORDER BY YEAR(date_field) DESC -- 2025 sorts before 2024.
-            $year2025 = $this->digArray($calendarVars, ['calendar_bars', 0]);
-            $year2024 = $this->digArray($calendarVars, ['calendar_bars', 1]);
+            $bars = $this->digArray($calendarVars, ['calendarBars']);
+            self::assertArrayHasKey(0, $bars);
+            self::assertArrayHasKey(1, $bars);
+            $year2025 = $bars[0];
+            $year2024 = $bars[1];
+            self::assertInstanceOf(CalendarBarEntry::class, $year2025);
+            self::assertInstanceOf(CalendarBarEntry::class, $year2024);
 
-            self::assertSame(2025, $year2025['HEAD_LABEL']);
-            self::assertSame(2, $year2025['NB_IMAGES']);
-            self::assertSame(1, $this->dig($year2025, ['items', 0, 'LABEL']));
+            self::assertSame(2025, $year2025->headLabel);
+            self::assertSame(2, $year2025->nbImages);
+            self::assertSame(1, $this->dig($year2025, ['items', 0, 'label']));
 
-            self::assertSame(2024, $year2024['HEAD_LABEL']);
-            self::assertSame(3, $year2024['NB_IMAGES']);
+            self::assertSame(2024, $year2024->headLabel);
+            self::assertSame(3, $year2024->nbImages);
             // ORDER BY MONTH(date_field) ASC within the year -- month 3 before
             // month 7.
-            self::assertSame(3, $this->dig($year2024, ['items', 0, 'LABEL']));
-            self::assertSame(7, $this->dig($year2024, ['items', 1, 'LABEL']));
+            self::assertSame(3, $this->dig($year2024, ['items', 0, 'label']));
+            self::assertSame(7, $this->dig($year2024, ['items', 1, 'label']));
         }
 
         /**
@@ -356,16 +378,19 @@ namespace Piwigo\Tests\Integration {
             // getDateWhere() filter, oldest-first (small selected period).
             self::assertSame([1, 2], $result->items);
 
-            $nav = $this->digArray($template->getTemplateVars('chronology_navigation_bars'), [0]);
-            self::assertArrayNotHasKey('previous', $nav);
+            $navRows = $this->digArray($template->getTemplateVars('chronology_navigation_bars'), []);
+            self::assertArrayHasKey(0, $navRows);
+            $nav = $navRows[0];
+            self::assertInstanceOf(ChronologyNavBarRow::class, $nav);
+            self::assertNull($nav->previous);
             // "next" points at the real next period (2024-7), not the period
             // already being viewed.
-            self::assertSame('7 2024', $this->dig($nav, ['next', 'LABEL']));
+            self::assertSame('7 2024', $this->dig($nav, ['next', 'label']));
             self::assertSame(
                 '/fake-index?' . json_encode([
                     'chronology_date' => ['2024', '7'],
                 ], JSON_THROW_ON_ERROR) . '|removed=' . json_encode(['start'], JSON_THROW_ON_ERROR),
-                $this->dig($nav, ['next', 'URL'])
+                $this->dig($nav, ['next', 'url'])
             );
         }
 

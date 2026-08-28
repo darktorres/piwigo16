@@ -14,44 +14,9 @@ final readonly class CalendarDayCell
 {
     public function __construct(
         public ?int $day = null,
-        public ?int $dow = null,
         public ?int $nbElements = null,
         public ?string $image = null,
         public ?string $uImgLink = null,
         public ?string $imageAlt = null,
     ) {}
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function toArray(): array
-    {
-        $result = [];
-
-        if ($this->day !== null) {
-            $result['DAY'] = $this->day;
-        }
-
-        if ($this->dow !== null) {
-            $result['DOW'] = $this->dow;
-        }
-
-        if ($this->nbElements !== null) {
-            $result['NB_ELEMENTS'] = $this->nbElements;
-        }
-
-        if ($this->image !== null) {
-            $result['IMAGE'] = $this->image;
-        }
-
-        if ($this->uImgLink !== null) {
-            $result['U_IMG_LINK'] = $this->uImgLink;
-        }
-
-        if ($this->imageAlt !== null) {
-            $result['IMAGE_ALT'] = $this->imageAlt;
-        }
-
-        return $result;
-    }
 }

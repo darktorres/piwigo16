@@ -157,38 +157,33 @@ namespace Piwigo\Tests\Integration {
         private function dig(mixed $value, array $path): mixed
         {
             foreach ($path as $key) {
-                $value = is_array($value) && array_key_exists($key, $value) ? $value[$key] : null;
+                if (is_array($value) && array_key_exists($key, $value)) {
+                    $value = $value[$key];
+                    continue;
+                }
+
+                // The nav bar rows are objects now, not flattened arrays
+                // (P58-A §4), and a path walks through both.
+                if (is_object($value) && is_string($key)) {
+                    $vars = get_object_vars($value);
+                    if (array_key_exists($key, $vars)) {
+                        $value = $vars[$key];
+                        continue;
+                    }
+                }
+
+                $value = null;
             }
 
             return $value;
         }
 
         /**
-         * Same as dig(), narrowed to array<int|string, mixed> for callers that
-         * need to keep indexing.
-         *
-         * @param list<int|string> $path
-         * @return array<int|string, mixed>
+         * @return list<ChronologyNavBarRow>
          */
-        private function digArray(mixed $value, array $path): array
+        private function navBars(CalendarBase $calendar): array
         {
-            $result = $this->dig($value, $path);
-
-            return is_array($result) ? $result : [];
-        }
-
-        /**
-         * getChronologyNavigationBars() returns real ChronologyNavBarRow
-         * objects; dig()/digArray() above only walk arrays, matching the
-         * original array-shaped $chronology_navigation_bars template
-         * variable -- convert back to that exact shape at this one test
-         * boundary rather than reworking dig() itself.
-         *
-         * @return list<array<string, mixed>>
-         */
-        private function navBarsAsArrays(CalendarBase $calendar): array
-        {
-            return array_map(static fn (ChronologyNavBarRow $row): array => $row->toArray(), $calendar->getChronologyNavigationBars());
+            return $calendar->getChronologyNavigationBars();
         }
 
         /**
@@ -262,12 +257,12 @@ namespace Piwigo\Tests\Integration {
 
             self::assertFalse($calendar->generateCategoryContent($template));
 
-            $navVars = $this->navBarsAsArrays($calendar);
-            self::assertSame(2024, $this->dig($navVars, [0, 'items', 0, 'LABEL']));
-            self::assertSame(3, $this->dig($navVars, [0, 'items', 0, 'NB_IMAGES']));
-            self::assertSame(2025, $this->dig($navVars, [0, 'items', 1, 'LABEL']));
-            self::assertSame(2, $this->dig($navVars, [0, 'items', 1, 'NB_IMAGES']));
-            self::assertSame('All', $this->dig($navVars, [0, 'items', 2, 'LABEL']));
+            $navVars = $this->navBars($calendar);
+            self::assertSame(2024, $this->dig($navVars, [0, 'items', 0, 'label']));
+            self::assertSame(3, $this->dig($navVars, [0, 'items', 0, 'nbImages']));
+            self::assertSame(2025, $this->dig($navVars, [0, 'items', 1, 'label']));
+            self::assertSame(2, $this->dig($navVars, [0, 'items', 1, 'nbImages']));
+            self::assertSame('All', $this->dig($navVars, [0, 'items', 2, 'label']));
         }
 
         /**
@@ -285,13 +280,13 @@ namespace Piwigo\Tests\Integration {
 
             self::assertFalse($calendar->generateCategoryContent($template));
 
-            $navVars = $this->navBarsAsArrays($calendar);
-            self::assertSame(11, $this->dig($navVars, [0, 'items', 0, 'LABEL']));
-            self::assertSame(1, $this->dig($navVars, [0, 'items', 0, 'NB_IMAGES']));
-            self::assertSame(12, $this->dig($navVars, [0, 'items', 1, 'LABEL']));
-            self::assertSame(1, $this->dig($navVars, [0, 'items', 1, 'NB_IMAGES']));
-            self::assertSame(28, $this->dig($navVars, [0, 'items', 2, 'LABEL']));
-            self::assertSame(1, $this->dig($navVars, [0, 'items', 2, 'NB_IMAGES']));
+            $navVars = $this->navBars($calendar);
+            self::assertSame(11, $this->dig($navVars, [0, 'items', 0, 'label']));
+            self::assertSame(1, $this->dig($navVars, [0, 'items', 0, 'nbImages']));
+            self::assertSame(12, $this->dig($navVars, [0, 'items', 1, 'label']));
+            self::assertSame(1, $this->dig($navVars, [0, 'items', 1, 'nbImages']));
+            self::assertSame(28, $this->dig($navVars, [0, 'items', 2, 'label']));
+            self::assertSame(1, $this->dig($navVars, [0, 'items', 2, 'nbImages']));
         }
 
         public function testGenerateCategoryContentBuildsDayNavBarWithTwoDistinctDaysInTheSameWeek(): void
@@ -302,12 +297,12 @@ namespace Piwigo\Tests\Integration {
 
             self::assertFalse($calendar->generateCategoryContent($template));
 
-            $navVars = $this->navBarsAsArrays($calendar);
+            $navVars = $this->navBars($calendar);
             // WEEKDAY(2025-01-20) = 0 (Monday, image 4), WEEKDAY(2025-01-25) = 5 (Saturday, image 5).
-            self::assertSame(0, $this->dig($navVars, [0, 'items', 0, 'LABEL']));
-            self::assertSame(1, $this->dig($navVars, [0, 'items', 0, 'NB_IMAGES']));
-            self::assertSame(5, $this->dig($navVars, [0, 'items', 1, 'LABEL']));
-            self::assertSame(1, $this->dig($navVars, [0, 'items', 1, 'NB_IMAGES']));
+            self::assertSame(0, $this->dig($navVars, [0, 'items', 0, 'label']));
+            self::assertSame(1, $this->dig($navVars, [0, 'items', 0, 'nbImages']));
+            self::assertSame(5, $this->dig($navVars, [0, 'items', 1, 'label']));
+            self::assertSame(1, $this->dig($navVars, [0, 'items', 1, 'nbImages']));
         }
 
         /**
@@ -326,11 +321,14 @@ namespace Piwigo\Tests\Integration {
 
             $calendar->generateCategoryContent($template);
 
-            $nav = $this->digArray($this->navBarsAsArrays($calendar), [0]);
-            self::assertArrayNotHasKey('previous', $nav);
+            $navRows = $this->navBars($calendar);
+            self::assertArrayHasKey(0, $navRows);
+            $nav = $navRows[0];
+            self::assertNull($nav->previous);
             // Fixed: correctly advances to '2025', not '2024' (the period
             // already being viewed).
-            self::assertSame('2025', $this->dig($nav, ['next', 'LABEL']));
+            self::assertNotNull($nav->next);
+            self::assertSame('2025', $nav->next->label);
         }
 
         /**

@@ -20,17 +20,4 @@ final readonly class CalendarBarEntry
         public int|string $headLabel,
         public array $items,
     ) {}
-
-    /**
-     * @return array{U_HEAD: string, NB_IMAGES: int, HEAD_LABEL: int|string, items: list<array<string, mixed>>}
-     */
-    public function toArray(): array
-    {
-        return [
-            'U_HEAD' => $this->uHead,
-            'NB_IMAGES' => $this->nbImages,
-            'HEAD_LABEL' => $this->headLabel,
-            'items' => array_map(static fn (CalendarNavBarEntry $entry): array => $entry->toArray(), $this->items),
-        ];
-    }
 }

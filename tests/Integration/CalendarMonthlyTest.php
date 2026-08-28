@@ -11,6 +11,9 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Calendar\CalendarMonthly;
     use Piwigo\Calendar\CalendarQueryScope;
     use Piwigo\Calendar\CalendarRepository;
+    use Piwigo\Calendar\Projection\CalendarBarEntry;
+    use Piwigo\Calendar\Projection\CalendarDayCell;
+    use Piwigo\Calendar\Projection\CalendarNavBarEntry;
     use Piwigo\Calendar\Projection\ChronologyNavBarRow;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Config\ConfigService;
@@ -169,7 +172,24 @@ namespace Piwigo\Tests\Integration {
         private function dig(mixed $value, array $path): mixed
         {
             foreach ($path as $key) {
-                $value = is_array($value) && array_key_exists($key, $value) ? $value[$key] : null;
+                if (is_array($value) && array_key_exists($key, $value)) {
+                    $value = $value[$key];
+                    continue;
+                }
+
+                // The calendar's template variables are objects now, not
+                // flattened arrays (P58-A §4), and a path walks through both:
+                // `calendarBars` is an object property, the `0` under it an
+                // array index, `headLabel` a property again.
+                if (is_object($value) && is_string($key)) {
+                    $vars = get_object_vars($value);
+                    if (array_key_exists($key, $vars)) {
+                        $value = $vars[$key];
+                        continue;
+                    }
+                }
+
+                $value = null;
             }
 
             return $value;
@@ -200,9 +220,50 @@ namespace Piwigo\Tests\Integration {
          *
          * @return list<array<string, mixed>>
          */
-        private function navBarsAsArrays(CalendarBase $calendar): array
+        /**
+         * @return list<ChronologyNavBarRow>
+         */
+        private function navBars(CalendarBase $calendar): array
         {
-            return array_map(static fn (ChronologyNavBarRow $row): array => $row->toArray(), $calendar->getChronologyNavigationBars());
+            return $calendar->getChronologyNavigationBars();
+        }
+
+        /**
+         * dig(), for a path that lands on one of the calendar's own value
+         * objects rather than an array -- digArray() would flatten it to []
+         * (P58-A §4). One per class, so the assertion narrows the return type
+         * and the call sites can read real properties.
+         *
+         * @param list<int|string> $path
+         */
+        private function digBar(mixed $value, array $path): CalendarBarEntry
+        {
+            $result = $this->dig($value, $path);
+            self::assertInstanceOf(CalendarBarEntry::class, $result);
+
+            return $result;
+        }
+
+        /**
+         * @param list<int|string> $path
+         */
+        private function digCell(mixed $value, array $path): CalendarDayCell
+        {
+            $result = $this->dig($value, $path);
+            self::assertInstanceOf(CalendarDayCell::class, $result);
+
+            return $result;
+        }
+
+        /**
+         * @param list<int|string> $path
+         */
+        private function digNavRow(mixed $value, array $path): ChronologyNavBarRow
+        {
+            $result = $this->dig($value, $path);
+            self::assertInstanceOf(ChronologyNavBarRow::class, $result);
+
+            return $result;
         }
 
         public function testInitializeSelectsDateAvailableForPostedAndDateCreationForCreated(): void
@@ -323,25 +384,25 @@ namespace Piwigo\Tests\Integration {
 
             $calendarVars = $template->getTemplateVars('chronology_calendar');
             // ORDER BY YEAR(date_field) DESC -- 2025 sorts before 2024.
-            $year2025 = $this->digArray($calendarVars, ['calendar_bars', 0]);
-            $year2024 = $this->digArray($calendarVars, ['calendar_bars', 1]);
+            $year2025 = $this->digBar($calendarVars, ['calendarBars', 0]);
+            $year2024 = $this->digBar($calendarVars, ['calendarBars', 1]);
 
-            self::assertSame(2025, $year2025['HEAD_LABEL']);
-            self::assertSame(2, $year2025['NB_IMAGES']);
-            self::assertSame(1, $this->dig($year2025, ['items', 0, 'LABEL']));
-            self::assertSame(2, $this->dig($year2025, ['items', 0, 'NB_IMAGES']));
+            self::assertSame(2025, $year2025->headLabel);
+            self::assertSame(2, $year2025->nbImages);
+            self::assertSame(1, $this->dig($year2025, ['items', 0, 'label']));
+            self::assertSame(2, $this->dig($year2025, ['items', 0, 'nbImages']));
             self::assertCount(1, $this->digArray($year2025, ['items']));
 
-            self::assertSame(2024, $year2024['HEAD_LABEL']);
-            self::assertSame(3, $year2024['NB_IMAGES']);
+            self::assertSame(2024, $year2024->headLabel);
+            self::assertSame(3, $year2024->nbImages);
             // ORDER BY MONTH(date_field) ASC within the year -- month 3 before
             // month 7 (a renderer that swapped the sort direction, or grouped
             // by the wrong expression, would show these out of order or merge
             // them into the wrong year).
-            self::assertSame(3, $this->dig($year2024, ['items', 0, 'LABEL']));
-            self::assertSame(2, $this->dig($year2024, ['items', 0, 'NB_IMAGES']));
-            self::assertSame(7, $this->dig($year2024, ['items', 1, 'LABEL']));
-            self::assertSame(1, $this->dig($year2024, ['items', 1, 'NB_IMAGES']));
+            self::assertSame(3, $this->dig($year2024, ['items', 0, 'label']));
+            self::assertSame(2, $this->dig($year2024, ['items', 0, 'nbImages']));
+            self::assertSame(7, $this->dig($year2024, ['items', 1, 'label']));
+            self::assertSame(1, $this->dig($year2024, ['items', 1, 'nbImages']));
         }
 
         public function testGenerateCategoryContentCaseBGroupsDaysByMonthWithinASelectedYear(): void
@@ -360,35 +421,35 @@ namespace Piwigo\Tests\Integration {
             self::assertSame([2024], $calendar->chronology_date);
 
             $calendarVars = $template->getTemplateVars('chronology_calendar');
-            $month3 = $this->digArray($calendarVars, ['calendar_bars', 0]);
-            $month7 = $this->digArray($calendarVars, ['calendar_bars', 1]);
+            $month3 = $this->digBar($calendarVars, ['calendarBars', 0]);
+            $month7 = $this->digBar($calendarVars, ['calendarBars', 1]);
 
             // Month 3 (March): 2 images, on days 10 and 15.
-            self::assertSame(2, $month3['NB_IMAGES']);
-            self::assertSame(3, $month3['HEAD_LABEL']);
-            self::assertSame(10, $this->dig($month3, ['items', 0, 'LABEL']));
-            self::assertSame(1, $this->dig($month3, ['items', 0, 'NB_IMAGES']));
-            self::assertSame(15, $this->dig($month3, ['items', 1, 'LABEL']));
-            self::assertSame(1, $this->dig($month3, ['items', 1, 'NB_IMAGES']));
+            self::assertSame(2, $month3->nbImages);
+            self::assertSame(3, $month3->headLabel);
+            self::assertSame(10, $this->dig($month3, ['items', 0, 'label']));
+            self::assertSame(1, $this->dig($month3, ['items', 0, 'nbImages']));
+            self::assertSame(15, $this->dig($month3, ['items', 1, 'label']));
+            self::assertSame(1, $this->dig($month3, ['items', 1, 'nbImages']));
 
             // Month 7 (July): 1 image, on day 4 -- buildYearCalendar() keeps
             // the day component as a raw substr() slice ('04'), not an
             // int-cast value, unlike the month key itself (real, observed
             // behaviour: a leading-zero day never survives PHP's numeric-string
             // array-key coercion the way '10'/'15' silently do).
-            self::assertSame(1, $month7['NB_IMAGES']);
-            self::assertSame(7, $month7['HEAD_LABEL']);
-            self::assertSame('04', $this->dig($month7, ['items', 0, 'LABEL']));
-            self::assertSame(1, $this->dig($month7, ['items', 0, 'NB_IMAGES']));
+            self::assertSame(1, $month7->nbImages);
+            self::assertSame(7, $month7->headLabel);
+            self::assertSame('04', $this->dig($month7, ['items', 0, 'label']));
+            self::assertSame(1, $this->dig($month7, ['items', 0, 'nbImages']));
 
             // buildNavBar(CYEAR) also ran (case B always calls it) -- 2024
             // has 3 images total, 2025 has 2, plus the "All" link.
-            $navVars = $this->navBarsAsArrays($calendar);
-            self::assertSame(2024, $this->dig($navVars, [0, 'items', 0, 'LABEL']));
-            self::assertSame(3, $this->dig($navVars, [0, 'items', 0, 'NB_IMAGES']));
-            self::assertSame(2025, $this->dig($navVars, [0, 'items', 1, 'LABEL']));
-            self::assertSame(2, $this->dig($navVars, [0, 'items', 1, 'NB_IMAGES']));
-            self::assertSame('All', $this->dig($navVars, [0, 'items', 2, 'LABEL']));
+            $navVars = $this->navBars($calendar);
+            self::assertSame(2024, $this->dig($navVars, [0, 'items', 0, 'label']));
+            self::assertSame(3, $this->dig($navVars, [0, 'items', 0, 'nbImages']));
+            self::assertSame(2025, $this->dig($navVars, [0, 'items', 1, 'label']));
+            self::assertSame(2, $this->dig($navVars, [0, 'items', 1, 'nbImages']));
+            self::assertSame('All', $this->dig($navVars, [0, 'items', 2, 'label']));
         }
 
         public function testGenerateCategoryContentCaseCBuildsTheMonthGridPickingTheSingleImagePerDay(): void
@@ -407,23 +468,21 @@ namespace Piwigo\Tests\Integration {
             // March 2024: day 10 is week-row 1 (0-indexed) column 6 (Sunday,
             // Monday-start grid), day 15 is week-row 2 column 4 (Friday) --
             // both real calendar facts, not guesses.
-            $day10 = $this->digArray($calendarVars, ['month_view', 'weeks', 1, 6]);
-            self::assertSame(10, $day10['DAY']);
-            self::assertSame(6, $day10['DOW']);
-            self::assertSame(1, $day10['NB_ELEMENTS']);
-            self::assertSame('fixture-photo-1.jpg', $day10['IMAGE_ALT']);
+            $day10 = $this->digCell($calendarVars, ['monthView', 'weeks', 1, 6]);
+            self::assertSame(10, $day10->day);
+            self::assertSame(1, $day10->nbElements);
+            self::assertSame('fixture-photo-1.jpg', $day10->imageAlt);
             self::assertSame(
                 '/fake-index?' . json_encode([
                     'chronology_date' => [2024, 3, 10],
                 ], JSON_THROW_ON_ERROR) . '|removed=[]',
-                $day10['U_IMG_LINK']
+                $day10->uImgLink
             );
 
-            $day15 = $this->digArray($calendarVars, ['month_view', 'weeks', 2, 4]);
-            self::assertSame(15, $day15['DAY']);
-            self::assertSame(4, $day15['DOW']);
-            self::assertSame(1, $day15['NB_ELEMENTS']);
-            self::assertSame('fixture-photo-2.jpg', $day15['IMAGE_ALT']);
+            $day15 = $this->digCell($calendarVars, ['monthView', 'weeks', 2, 4]);
+            self::assertSame(15, $day15->day);
+            self::assertSame(1, $day15->nbElements);
+            self::assertSame('fixture-photo-2.jpg', $day15->imageAlt);
 
             // The picked-image derivative URL is the real DerivativeImage
             // algorithm's own output for image 1's known, real fixture row --
@@ -439,12 +498,16 @@ namespace Piwigo\Tests\Integration {
                 ->fetchAssociative();
             self::assertIsArray($row1);
             $expectedDerivative = new DerivativeImage(ImageStdParams::SQUARE, new SrcImage(SrcImageInfo::fromRow($row1)), CurrentConfigTestFactory::get());
-            self::assertSame($expectedDerivative->getUrl(), $day10['IMAGE']);
+            self::assertSame($expectedDerivative->getUrl(), $day10->image);
 
-            // Empty grid cells (no images) carry only DAY, no DOW/IMAGE/etc.
-            self::assertSame([
-                'DAY' => 1,
-            ], $this->dig($calendarVars, ['month_view', 'weeks', 0, 4]));
+            // Empty grid cells (no images) carry only the day number; every
+            // other field of CalendarDayCell stays null.
+            $emptyCell = $this->digCell($calendarVars, ['monthView', 'weeks', 0, 4]);
+            self::assertSame(1, $emptyCell->day);
+            self::assertNull($emptyCell->image);
+            self::assertNull($emptyCell->uImgLink);
+            self::assertNull($emptyCell->imageAlt);
+            self::assertNull($emptyCell->nbElements);
 
             $where = $calendar->getDateWhere();
             self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd', (string) $where->expr);
@@ -494,9 +557,9 @@ namespace Piwigo\Tests\Integration {
             $templateStrings = TemplateTestFactory::build();
             $withStrings->generateCategoryContent($templateStrings);
 
-            $navStrings = $this->digArray($this->navBarsAsArrays($withStrings), [0]);
-            self::assertArrayNotHasKey('previous', $navStrings);
-            self::assertSame('7 2024', $this->dig($navStrings, ['next', 'LABEL']));
+            $navStrings = $this->digNavRow($this->navBars($withStrings), [0]);
+            self::assertNull($navStrings->previous);
+            self::assertSame('7 2024', $this->dig($navStrings, ['next', 'label']));
 
             $withInts = $this->makeCalendar();
             $withInts->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
@@ -504,17 +567,17 @@ namespace Piwigo\Tests\Integration {
             $templateInts = TemplateTestFactory::build();
             $withInts->generateCategoryContent($templateInts);
 
-            $navInts = $this->digArray($this->navBarsAsArrays($withInts), [0]);
-            self::assertArrayNotHasKey('previous', $navInts);
+            $navInts = $this->digNavRow($this->navBars($withInts), [0]);
+            self::assertNull($navInts->previous);
             // Fixed: "next" now correctly points at the real next period
             // (2024-7), identically to the string-typed case above, instead of
             // the bug's old '3 2024' (the period already being viewed).
-            self::assertSame('7 2024', $this->dig($navInts, ['next', 'LABEL']));
+            self::assertSame('7 2024', $this->dig($navInts, ['next', 'label']));
             self::assertSame(
                 '/fake-index?' . json_encode([
                     'chronology_date' => ['2024', '7'],
                 ], JSON_THROW_ON_ERROR) . '|removed=' . json_encode(['start'], JSON_THROW_ON_ERROR),
-                $this->dig($navInts, ['next', 'URL'])
+                $this->dig($navInts, ['next', 'url'])
             );
         }
 
@@ -526,9 +589,9 @@ namespace Piwigo\Tests\Integration {
             $yearLevel->chronology_date = [];
             $yearTemplate = TemplateTestFactory::build();
             self::assertFalse($yearLevel->generateCategoryContent($yearTemplate));
-            $yearNav = $this->navBarsAsArrays($yearLevel);
-            self::assertSame(2024, $this->dig($yearNav, [0, 'items', 0, 'LABEL']));
-            self::assertSame(3, $this->dig($yearNav, [0, 'items', 0, 'NB_IMAGES']));
+            $yearNav = $this->navBars($yearLevel);
+            self::assertSame(2024, $this->dig($yearNav, [0, 'items', 0, 'label']));
+            self::assertSame(3, $this->dig($yearNav, [0, 'items', 0, 'nbImages']));
 
             // nb_date_parts=1 -> month nav bar (2 months in 2024).
             $monthLevel = $this->makeCalendar();
@@ -536,11 +599,11 @@ namespace Piwigo\Tests\Integration {
             $monthLevel->chronology_date = [2024];
             $monthTemplate = TemplateTestFactory::build();
             self::assertFalse($monthLevel->generateCategoryContent($monthTemplate));
-            $monthNav = $this->navBarsAsArrays($monthLevel);
-            self::assertSame(3, $this->dig($monthNav, [0, 'items', 0, 'LABEL']));
-            self::assertSame(2, $this->dig($monthNav, [0, 'items', 0, 'NB_IMAGES']));
-            self::assertSame(7, $this->dig($monthNav, [0, 'items', 1, 'LABEL']));
-            self::assertSame(1, $this->dig($monthNav, [0, 'items', 1, 'NB_IMAGES']));
+            $monthNav = $this->navBars($monthLevel);
+            self::assertSame(3, $this->dig($monthNav, [0, 'items', 0, 'label']));
+            self::assertSame(2, $this->dig($monthNav, [0, 'items', 0, 'nbImages']));
+            self::assertSame(7, $this->dig($monthNav, [0, 'items', 1, 'label']));
+            self::assertSame(1, $this->dig($monthNav, [0, 'items', 1, 'nbImages']));
 
             // nb_date_parts=2 -> day nav bar. Unlike the year/month levels
             // above, this call passes an explicit, non-empty $day_labels
@@ -555,18 +618,19 @@ namespace Piwigo\Tests\Integration {
             $dayLevel->chronology_date = [2024, 3];
             $dayTemplate = TemplateTestFactory::build();
             self::assertFalse($dayLevel->generateCategoryContent($dayTemplate));
-            $dayItems = $this->digArray($this->navBarsAsArrays($dayLevel), [0, 'items']);
+            $dayItems = $this->digArray($this->navBars($dayLevel), [0, 'items']);
             self::assertCount(31, $dayItems);
-            self::assertSame([
-                'LABEL' => 1,
-            ], $dayItems[0]);
-            self::assertSame(10, $this->dig($dayItems, [9, 'LABEL']));
-            self::assertSame(1, $this->dig($dayItems, [9, 'NB_IMAGES']));
-            self::assertSame(15, $this->dig($dayItems, [14, 'LABEL']));
-            self::assertSame(1, $this->dig($dayItems, [14, 'NB_IMAGES']));
-            self::assertSame([
-                'LABEL' => 31,
-            ], $dayItems[30]);
+            self::assertInstanceOf(CalendarNavBarEntry::class, $dayItems[0]);
+            self::assertSame(1, $dayItems[0]->label);
+            self::assertNull($dayItems[0]->url);
+            self::assertNull($dayItems[0]->nbImages);
+            self::assertSame(10, $this->dig($dayItems, [9, 'label']));
+            self::assertSame(1, $this->dig($dayItems, [9, 'nbImages']));
+            self::assertSame(15, $this->dig($dayItems, [14, 'label']));
+            self::assertSame(1, $this->dig($dayItems, [14, 'nbImages']));
+            self::assertInstanceOf(CalendarNavBarEntry::class, $dayItems[30]);
+            self::assertSame(31, $dayItems[30]->label);
+            self::assertNull($dayItems[30]->url);
         }
 
         public function testGetDisplayNameRendersTheAnyWildcardWithATranslatedLabel(): void
@@ -610,27 +674,27 @@ namespace Piwigo\Tests\Integration {
 
             self::assertTrue($ret);
             $calendarVars = $template->getTemplateVars('chronology_calendar');
-            self::assertCount(3, $this->digArray($calendarVars, ['calendar_bars']));
+            self::assertCount(3, $this->digArray($calendarVars, ['calendarBars']));
 
             // ORDER BY YEAR(date_creation) DESC -- 2026, then 2025, then 2024.
-            $year2026 = $this->digArray($calendarVars, ['calendar_bars', 0]);
-            $year2025 = $this->digArray($calendarVars, ['calendar_bars', 1]);
-            $year2024 = $this->digArray($calendarVars, ['calendar_bars', 2]);
+            $year2026 = $this->digBar($calendarVars, ['calendarBars', 0]);
+            $year2025 = $this->digBar($calendarVars, ['calendarBars', 1]);
+            $year2024 = $this->digBar($calendarVars, ['calendarBars', 2]);
 
-            self::assertSame(2026, $year2026['HEAD_LABEL']);
-            self::assertSame(2, $year2026['NB_IMAGES']);
-            self::assertSame(2025, $year2025['HEAD_LABEL']);
-            self::assertSame(1, $year2025['NB_IMAGES']);
-            self::assertSame(2024, $year2024['HEAD_LABEL']);
-            self::assertSame(2, $year2024['NB_IMAGES']);
+            self::assertSame(2026, $year2026->headLabel);
+            self::assertSame(2, $year2026->nbImages);
+            self::assertSame(2025, $year2025->headLabel);
+            self::assertSame(1, $year2025->nbImages);
+            self::assertSame(2024, $year2024->headLabel);
+            self::assertSame(2, $year2024->nbImages);
 
             // 2024 is the only year holding more than one month, so it is the
             // one that proves the per-year month grouping (ASC within a year).
             self::assertCount(2, $this->digArray($year2024, ['items']));
-            self::assertSame(3, $this->dig($year2024, ['items', 0, 'LABEL']));
-            self::assertSame(1, $this->dig($year2024, ['items', 0, 'NB_IMAGES']));
-            self::assertSame(7, $this->dig($year2024, ['items', 1, 'LABEL']));
-            self::assertSame(1, $this->dig($year2024, ['items', 1, 'NB_IMAGES']));
+            self::assertSame(3, $this->dig($year2024, ['items', 0, 'label']));
+            self::assertSame(1, $this->dig($year2024, ['items', 0, 'nbImages']));
+            self::assertSame(7, $this->dig($year2024, ['items', 1, 'label']));
+            self::assertSame(1, $this->dig($year2024, ['items', 1, 'nbImages']));
         }
 
         /**
@@ -659,7 +723,7 @@ namespace Piwigo\Tests\Integration {
             $ret = $calendar->generateCategoryContent($template);
 
             self::assertTrue($ret);
-            self::assertSame([], $this->digArray($template->getTemplateVars('chronology_calendar'), ['calendar_bars']));
+            self::assertSame([], $this->digArray($template->getTemplateVars('chronology_calendar'), ['calendarBars']));
         }
 
         /**
@@ -697,17 +761,17 @@ namespace Piwigo\Tests\Integration {
             // found a single distinct month (January) across id 4 and 5.
             self::assertSame([2025, 1], $calendar->chronology_date);
             // buildNavBar() itself returned early, before appending anything
-            // for the month level -- the only entry present comes from
-            // buildNextPrev()'s own separate (buggy) 'next' link, not from
-            // a real nav bar of month choices.
-            // buildNavBar() itself returned early, before appending anything
             // for the month level. buildNextPrev() still runs immediately
-            // afterwards (unconditional, see generateCategoryContent()) --
-            // now that it's fixed, it correctly finds that 2025-1 is the only
-            // period id 4/5 (the only images in scope) ever fall into, so
-            // there is genuinely no next or previous period at all.
-            $navVars = $this->digArray($this->navBarsAsArrays($calendar), [0]);
-            self::assertSame([], $navVars);
+            // afterwards (unconditional, see generateCategoryContent()) and
+            // correctly finds that 2025-1 is the only period id 4/5 (the only
+            // images in scope) ever fall into, so there is genuinely no next
+            // or previous period -- and therefore no nav bar row at all.
+            //
+            // This used to read as digArray(..., [0]) === [], which passed for
+            // the wrong reason: digArray() coerces a missing row to an empty
+            // array, so it could not tell "a row with nothing in it" from "no
+            // row". Asserting the list itself says which one is true.
+            self::assertSame([], $this->navBars($calendar));
         }
 
         /**
@@ -762,7 +826,7 @@ namespace Piwigo\Tests\Integration {
 
             $calendar->generateCategoryContent($template);
 
-            $dayNav = $this->digArray($this->navBarsAsArrays($calendar), [0, 'items']);
+            $dayNav = $this->digArray($this->navBars($calendar), [0, 'items']);
             self::assertCount(31, $dayNav);
         }
 
@@ -789,14 +853,14 @@ namespace Piwigo\Tests\Integration {
 
             $calendar->generateCategoryContent($template);
 
-            $nav = $this->digArray($this->navBarsAsArrays($calendar), [0]);
-            self::assertArrayNotHasKey('previous', $nav);
-            self::assertSame('2025', $this->dig($nav, ['next', 'LABEL']));
+            $nav = $this->digNavRow($this->navBars($calendar), [0]);
+            self::assertNull($nav->previous);
+            self::assertSame('2025', $this->dig($nav, ['next', 'label']));
             self::assertSame(
                 '/fake-index?' . json_encode([
                     'chronology_date' => ['2025', 'any'],
                 ], JSON_THROW_ON_ERROR) . '|removed=' . json_encode(['start'], JSON_THROW_ON_ERROR),
-                $this->dig($nav, ['next', 'URL'])
+                $this->dig($nav, ['next', 'url'])
             );
         }
 
@@ -824,14 +888,14 @@ namespace Piwigo\Tests\Integration {
 
             $calendar->generateCategoryContent($template);
 
-            $nav = $this->digArray($this->navBarsAsArrays($calendar), [0]);
-            self::assertArrayNotHasKey('previous', $nav);
-            self::assertSame('3 2024', $this->dig($nav, ['next', 'LABEL']));
+            $nav = $this->digNavRow($this->navBars($calendar), [0]);
+            self::assertNull($nav->previous);
+            self::assertSame('3 2024', $this->dig($nav, ['next', 'label']));
             self::assertSame(
                 '/fake-index?' . json_encode([
                     'chronology_date' => ['2024', '3'],
                 ], JSON_THROW_ON_ERROR) . '|removed=' . json_encode(['start'], JSON_THROW_ON_ERROR),
-                $this->dig($nav, ['next', 'URL'])
+                $this->dig($nav, ['next', 'url'])
             );
         }
 
@@ -897,10 +961,10 @@ namespace Piwigo\Tests\Integration {
 
                 $calendar->generateCategoryContent($template);
 
-                $weeks = $this->digArray($template->getTemplateVars('chronology_calendar'), ['month_view', 'weeks']);
+                $weeks = $this->digArray($template->getTemplateVars('chronology_calendar'), ['monthView', 'weeks']);
                 $firstWeek = $this->digArray($weeks, [0]);
                 self::assertArrayNotHasKey('DAY', $this->digArray($firstWeek, [0]));
-                self::assertSame(1, $this->dig($firstWeek, [6, 'DAY']));
+                self::assertSame(1, $this->dig($firstWeek, [6, 'day']));
             } finally {
                 $this->conn->executeStatement("UPDATE images SET date_available = '2024-03-10 00:00:00' WHERE id = 1");
             }
@@ -924,7 +988,7 @@ namespace Piwigo\Tests\Integration {
 
             $calendar->generateCategoryContent($template);
 
-            $weeks = $this->digArray($template->getTemplateVars('chronology_calendar'), ['month_view', 'weeks']);
+            $weeks = $this->digArray($template->getTemplateVars('chronology_calendar'), ['monthView', 'weeks']);
             $lastWeek = $this->digArray($weeks, [count($weeks) - 1]);
 
             self::assertCount(7, $lastWeek);
@@ -951,19 +1015,19 @@ namespace Piwigo\Tests\Integration {
 
             $calendar->generateCategoryContent($template);
 
-            $weeks = $this->digArray($template->getTemplateVars('chronology_calendar'), ['month_view', 'weeks']);
+            $weeks = $this->digArray($template->getTemplateVars('chronology_calendar'), ['monthView', 'weeks']);
             $dayCell = null;
             foreach ($weeks as $week) {
                 foreach ((array) $week as $cell) {
-                    if (($this->dig($cell, ['DAY'])) === 4) {
+                    if (($this->dig($cell, ['day'])) === 4) {
                         $dayCell = $cell;
                     }
                 }
             }
 
-            self::assertIsArray($dayCell);
-            self::assertSame('fixture-photo-3.jpg', $this->dig($dayCell, ['IMAGE_ALT']));
-            $image = $this->dig($dayCell, ['IMAGE']);
+            self::assertInstanceOf(CalendarDayCell::class, $dayCell);
+            self::assertSame('fixture-photo-3.jpg', $this->dig($dayCell, ['imageAlt']));
+            $image = $this->dig($dayCell, ['image']);
             self::assertIsString($image);
             self::assertNotSame('', $image);
         }

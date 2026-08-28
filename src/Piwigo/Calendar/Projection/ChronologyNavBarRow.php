@@ -20,26 +20,4 @@ final readonly class ChronologyNavBarRow
         public ?CalendarNavAdjacent $previous = null,
         public ?CalendarNavAdjacent $next = null,
     ) {}
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function toArray(): array
-    {
-        $result = [];
-
-        if ($this->items !== null) {
-            $result['items'] = array_map(static fn (CalendarNavBarEntry $entry): array => $entry->toArray(), $this->items);
-        }
-
-        if ($this->previous !== null) {
-            $result['previous'] = $this->previous->toArray();
-        }
-
-        if ($this->next !== null) {
-            $result['next'] = $this->next->toArray();
-        }
-
-        return $result;
-    }
 }

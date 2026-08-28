@@ -25,10 +25,10 @@
     <link rel="stylesheet" type="text/css" href="themes/admin/default/css/components/general.css?v17.0.0">
     <link rel="stylesheet" type="text/css" href="themes/admin/clear/css/components/general.css?v17.0.0">
     <link rel="stylesheet" type="text/css" href="themes/admin/default/css/utilities.css?v17.0.0">
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/jackmoore/colorbox@1.5.14/example2/colorbox.css?v17.0.0">
+    <link rel="stylesheet" type="text/css" href="themes/admin/default/css/pages/maintenance_sys.css?v17.0.0">
+    <link rel="stylesheet" type="text/css" href="themes/admin/default/fontello/css/animation.css?v17.0.0">
 
     <link rel="modulepreload" href="dist/assets/page-data-{{ASSET_HASH}}.js">
-    <link rel="modulepreload" href="dist/assets/dom-{{ASSET_HASH}}.js">
     <link rel="modulepreload" href="dist/assets/ajax-{{ASSET_HASH}}.js">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@1.11.3/dist/jquery.min.js"></script>
 
@@ -189,7 +189,7 @@
 </div> <!-- menubar -->
 
 <div id="content" class="content">
-  <h1>Themes<span
+  <h1>Maintenance<span
         class="admin-object-id"
       ></span></h1>
 
@@ -199,29 +199,22 @@
       class="normal_tab"
     >
       <a
-        href="admin.php?page=themes&amp;tab=installed"
-      ><span><span class="icon-menu"></span>List</span></a>
+        href="admin.php?page=maintenance&tab=actions"
+      ><span><span class="icon-tools"></span>Actions</span></a>
     </li>
     <li
       class="normal_tab"
     >
       <a
-        href="admin.php?page=themes&amp;tab=update"
-      ><span><span class="icon-arrows-cw"></span>Check for updates</span></a>
+        href="admin.php?page=maintenance&tab=env"
+      ><span><span class="icon-television"></span>Environment</span></a>
     </li>
     <li
       class="selected_tab"
     >
       <a
-        href="admin.php?page=themes&amp;tab=new"
-      ><span><span class="icon-plus-circled"></span>Add a new theme</span></a>
-    </li>
-    <li
-      class="normal_tab"
-    >
-      <a
-        href="admin.php?page=themes&amp;tab=standard_pages"
-      ><span><span class="icon-cog-alt"></span>Standard pages</span></a>
+        href="admin.php?page=maintenance&tab=sys"
+      ><span><span class="icon-pulse"></span>System Activities</span></a>
     </li>
   </ul>
 </div>
@@ -233,20 +226,122 @@
 
   </div> 
 
-  
-<div class="themeBoxes">
-  <div class="themeBox">
-    <div class="themeShot"><a
-          href="http://localhost/piwigo16-themes/MockTestTheme_1.0.0.png"
-          class="preview-box"
-          title="Mock Test Theme"
-        ><img src="http://localhost/piwigo16-themes/MockTestTheme_1.0.0.png" class="themeShotImg"></a></div>
-    <div class="themeName" title="Mock Test Theme">Mock Test Theme</div>
-    <div class="themeActions"><a
-          href="admin.php?page=themes&amp;tab=new&amp;revision=990002&amp;extension=990002&amp;pwg_token={{TOKEN}}"
-        >Install</a></div>
+  <fieldset id="activities-system">
+  <div class="tab-header">
+    <div class="tab-object">
+      <p>Object</p>
+    </div>
+    <div class="tab-action">
+      <p>Action</p>
+    </div>
+    <div class="tab-users">
+      <p>Users</p>
+    </div>
+    <div class="tab-date">
+      <p>Date</p>
+    </div>
+    <div class="tab-details">
+      <p>Details</p>
+    </div>
   </div>
-</div> <!-- themeBoxes -->
+
+  <div
+      id="2"
+      class="tab-body line"
+    >
+    <div class="tab-body-object">
+      <p>
+        <span class="icon_object icon-piwigo"></span>
+        <span
+            class="text_object"
+            title="Core"
+          >Core</span>
+      </p>
+    </div>
+    <div class="tab-body-action">
+      <p class="color_action icon-green">
+        <span class="icon_action icon-download"></span>
+        <span
+            class="text_action"
+            title="Install"
+          >Install</span>
+      </p>
+    </div>
+    <div class="tab-body-users">
+      <p>
+        <span class="icon_user icon-robot-head"></span>
+        <span
+            class="text_username"
+            title="System"
+          >System</span>
+      </p>
+    </div>
+    <div class="tab-body-date">
+      <p>
+        <span class="icon icon-clock"></span>
+        <span
+            class="text_date"
+            title="Saturday, August 1, 2026 00:00:00"
+          >Saturday, August 1, 2026</span>
+        <span class="text_hour">00:00:00</span>
+      </p>
+    </div>
+    <div class="tab-body-details">
+
+      <p class="detail-item">
+        <span class="icon_details icon-flow-branch"></span>
+        <span
+              class="text_details"
+              title="17.0.0"
+            >17.0.0</span>
+      </p>
+    </div>
+  </div>
+  <div
+      id="1"
+      class="tab-body line"
+    >
+    <div class="tab-body-object">
+      <p>
+        <span class="icon_object icon-brush"></span>
+        <span
+            class="text_object"
+            title="Default"
+          >Default</span>
+      </p>
+    </div>
+    <div class="tab-body-action">
+      <p class="color_action icon-green">
+        <span class="icon_action icon-check"></span>
+        <span
+            class="text_action"
+            title="Activate"
+          >Activate</span>
+      </p>
+    </div>
+    <div class="tab-body-users">
+      <p>
+        <span class="icon_user icon-robot-head"></span>
+        <span
+            class="text_username"
+            title="System"
+          >System</span>
+      </p>
+    </div>
+    <div class="tab-body-date">
+      <p>
+        <span class="icon icon-clock"></span>
+        <span
+            class="text_date"
+            title="Saturday, August 1, 2026 00:00:00"
+          >Saturday, August 1, 2026</span>
+        <span class="text_hour">00:00:00</span>
+      </p>
+    </div>
+    <div class="tab-body-details">
+    </div>
+  </div>
+</fieldset>
 
 </div>
       </div>
@@ -319,10 +414,8 @@
       </div>
     </div>
 
-    <script type="application/json" id="page-data">{"data":{"default_screenshot":"themes\/admin\/clear\/images\/missing_screenshot.png","active_menu":4,"whats_new_major_version":"17","show_whats_new":false},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
+    <script type="application/json" id="page-data">{"data":{"active_menu":3,"whats_new_major_version":"17","show_whats_new":false},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?"}}</script>
 
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/jackmoore/colorbox@1.5.14/jquery.colorbox-min.js"></script>
-    <script type="module" src="dist/assets/themesNew-{{ASSET_HASH}}.js?v17.0.0"></script>
     <script type="module" src="dist/assets/adminShell-{{ASSET_HASH}}.js?v17.0.0"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/drewwilson/TipTip@277e33629e/jquery.tipTip.minified.js"></script>
     <script type="module" src="dist/assets/footerAdmin-{{ASSET_HASH}}.js?v17.0.0"></script>

@@ -144,6 +144,18 @@ return [
     'admin-config-comments' => ['/admin.php?page=configuration&section=comments', true],
     'admin-config-search' => ['/admin.php?page=configuration&section=search', true],
     'admin-maintenance' => ['/admin.php?page=maintenance', true],
+    // The maintenance page has three tabs and only its default one was
+    // captured. 'sys' is the one that matters here: it is the sole renderer
+    // of maintenance_sys.latte, whose activity-log rows are eleven reads off
+    // an untyped bag (P58, tools/p58), and its rows come from the fixture's
+    // own activity table.
+    //
+    // There is deliberately no 'env' route. That tab prints wall-clock
+    // timestamps next to its PHP/MySQL rows ("[2026-08-28 21:40:29]"), so
+    // every capture differs from the last -- the same reason
+    // calendar-posted-calendar was removed. Cover it with an assertion that
+    // names what it should contain, not a snapshot.
+    'admin-maintenance-sys' => ['/admin.php?page=maintenance&tab=sys', true],
     'admin-history' => ['/admin.php?page=history', true],
     'admin-tags' => ['/admin.php?page=tags', true],
     'admin-comments' => ['/admin.php?page=comments', true],

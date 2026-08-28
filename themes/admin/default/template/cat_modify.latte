@@ -105,25 +105,25 @@
     </div>
 
     <div
-      class="cat-modify-representative {if !isset($representant)}icon-file-image{elseif !isset($representant['picture'])}icon-dice-solid{/if}"
+      class="cat-modify-representative {if !isset($representant)}icon-file-image{elseif !isset($representant->picture)}icon-dice-solid{/if}"
       {if !isset($representant)}
       title="{='No photos in the current album, no thumbnail available'|translate}"
       {/if}
-      {if isset($representant) && isset($representant['picture'])}
+      {if isset($representant) && isset($representant->picture)}
       {* A custom property can't carry this url() safely: browsers resolve a
          url() inside a custom property against the STYLESHEET that consumes
          it via var() (cat_modify.css, 4 directories deep), not the page --
-         breaking $representant['picture']['src']'s page-relative path. Kept
+         breaking $representant->picture->src's page-relative path. Kept
          as a full inline declaration instead. *}
-      style="background-image:url('{$representant['picture']['src']|noescape}')"
+      style="background-image:url('{$representant->picture->src|noescape}')"
       {/if}
     >
       <div
-        n:if="isset($representant) and ($representant['ALLOW_SET_RANDOM'] || $representant['ALLOW_SET_RANDOM'])"
+        n:if="isset($representant) and ($representant->allowSetRandom || $representant->allowSetRandom)"
         class="cat-modify-representative-actions"
       >
         <a
-          n:if="$representant['ALLOW_SET_RANDOM']"
+          n:if="$representant->allowSetRandom"
           class="refreshRepresentative buttonLike"
           id="refreshRepresentative"
           title="{='Find a new representant by random'|translate}"
@@ -132,8 +132,8 @@
           {='Refresh thumbnail'|translate}
         </a>
         <a
-          n:if="isset($representant['ALLOW_DELETE'])"
-          class="deleteRepresentative buttonLike{if !isset($representant['picture'])} u-hidden{/if}"
+          n:if="isset($representant->allowDelete)"
+          class="deleteRepresentative buttonLike{if !isset($representant->picture)} u-hidden{/if}"
           id="deleteRepresentative"
           title="{='Delete Representant'|translate}"
         >

@@ -21,24 +21,4 @@ final readonly class CategoryRepresentant
         public bool $allowSetRandom,
         public ?bool $allowDelete,
     ) {}
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function toArray(): array
-    {
-        $result = [];
-
-        if ($this->picture instanceof CategoryRepresentantProperties) {
-            $result['picture'] = $this->picture->toArray();
-        }
-
-        $result['ALLOW_SET_RANDOM'] = $this->allowSetRandom;
-
-        if ($this->allowDelete !== null) {
-            $result['ALLOW_DELETE'] = $this->allowDelete;
-        }
-
-        return $result;
-    }
 }

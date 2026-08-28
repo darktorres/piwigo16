@@ -65,8 +65,10 @@ if (preg_match('/public function toArray\(\).*?\n    \{(.*?)\n    \}/s', $voSour
  *  - keys appended afterwards (`$result['U_DELETE'] = $this->uDelete;`),
  *    often inside an `if` -- which is itself the signal that the property is
  *    nullable and the template guards on its absence;
- *  - keys whose value is a *nested* flatten of a list of VOs,
- *    `'rates' => array_map(fn (RateRow $r) => $r->toArray(), $this->rates)`.
+ *  - keys whose value is a *nested* flatten, either of a list of VOs
+ *    (`'rates' => array_map(fn (RateRow $r) => $r->toArray(), $this->rates)`)
+ *    or of a single one, appended under its own `if` because the property is
+ *    nullable (`$result['picture'] = $this->picture->toArray();`).
  *
  * The third is still a derivable key -> property pair: only the element type
  * is flattened, not which property the key comes from. It matters because
@@ -78,7 +80,7 @@ if (preg_match('/public function toArray\(\).*?\n    \{(.*?)\n    \}/s', $voSour
  */
 $map = [];
 preg_match_all('~\'([^\']+)\'\s*=>\s*\$this->([A-Za-z_][A-Za-z0-9_]*)\s*,~', $body[1], $literal, PREG_SET_ORDER);
-preg_match_all('~\$\w+\[\'([^\']+)\'\]\s*=\s*\$this->([A-Za-z_][A-Za-z0-9_]*)\s*;~', $body[1], $appended, PREG_SET_ORDER);
+preg_match_all('~\$\w+\[\'([^\']+)\'\]\s*=\s*\$this->([A-Za-z_][A-Za-z0-9_]*)(?:->toArray\(\))?\s*;~', $body[1], $appended, PREG_SET_ORDER);
 preg_match_all(
     '~\'([^\']+)\'\s*=>\s*array_map\([^;]*?\$this->([A-Za-z_][A-Za-z0-9_]*)\s*\)~s',
     $body[1],

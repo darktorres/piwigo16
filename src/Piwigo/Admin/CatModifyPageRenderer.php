@@ -281,7 +281,7 @@ final class CatModifyPageRenderer
             catDirName: $cat_dir_name,
             catMinDir: $cat_min_dir,
             uSync: $u_sync,
-            representant: $representant?->toArray(),
+            representant: $representant,
             csrfToken: $csrfService
                 ->getToken(),
         ));

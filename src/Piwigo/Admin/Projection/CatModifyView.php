@@ -28,9 +28,6 @@ use Piwigo\Template\Latte\Attribute\Template;
 #[Template('cat_modify.latte')]
 final readonly class CatModifyView implements View, HasPageAssets, ExposesPageData
 {
-    /**
-     * @param array<string, mixed>|null $representant
-     */
     public function __construct(
         public string $categoriesNav,
         public string $categoriesParentNav,
@@ -61,7 +58,7 @@ final readonly class CatModifyView implements View, HasPageAssets, ExposesPageDa
         public ?string $catDirName,
         public ?string $catMinDir,
         public ?string $uSync,
-        public ?array $representant,
+        public ?CategoryRepresentant $representant,
         public string $csrfToken,
     ) {}
 

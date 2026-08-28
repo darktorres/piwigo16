@@ -13,15 +13,4 @@ final readonly class TabSheetEntry
         public string $caption,
         public string $url,
     ) {}
-
-    /**
-     * @return array{caption: string, url: string}
-     */
-    public function toArray(): array
-    {
-        return [
-            'caption' => $this->caption,
-            'url' => $this->url,
-        ];
-    }
 }

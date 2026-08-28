@@ -17,7 +17,7 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class TabsheetView implements View
 {
     /**
-     * @param array<string, array{caption: string, url: string}> $sheets
+     * @param array<string, TabSheetEntry> $sheets
      */
     public function __construct(
         public array $sheets,

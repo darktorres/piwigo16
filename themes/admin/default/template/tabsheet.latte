@@ -6,8 +6,8 @@
       class="{if ($name == $selected)}selected_tab{else}normal_tab{/if}"
     >
       <a
-        href="{$sheet['url']|noescape}"
-      ><span>{$sheet['caption']|noescape}</span></a>
+        href="{$sheet->url|noescape}"
+      ><span>{$sheet->caption|noescape}</span></a>
     </li>
   </ul>
 </div>

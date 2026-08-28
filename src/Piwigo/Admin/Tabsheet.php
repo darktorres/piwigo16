@@ -161,7 +161,7 @@ final class Tabsheet
         ));
 
         $tabsheetHtml = $renderer->render(new TabsheetView(
-            sheets: array_map(static fn (TabSheetEntry $entry): array => $entry->toArray(), $this->sheets),
+            sheets: $this->sheets,
             selected: $this->selected,
         ));
         $template->assignContext(new TabsheetHtmlPageContext($this->name, $tabsheetHtml));

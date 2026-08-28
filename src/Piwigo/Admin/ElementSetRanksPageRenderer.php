@@ -191,7 +191,7 @@ final readonly class ElementSetRanksPageRenderer
                 ->getToken(),
             imageOrderOptions: $sort_fields,
             imageOrderChoice: $image_order_choice,
-            thumbnails: array_map(static fn (ElementSetThumbnailRow $thumbnail): array => $thumbnail->toArray(), $thumbnails),
+            thumbnails: $thumbnails,
             imageOrder: $image_order_tpl,
             saveSuccess: $save_success,
         ));

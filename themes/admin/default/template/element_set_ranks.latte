@@ -10,16 +10,16 @@
       <ul class="thumbnails">
         <li n:foreach="$thumbnails as $thumbnail" class="rank-of-image">
           <img
-            src="{$thumbnail['TN_SRC']|noescape}"
+            src="{$thumbnail->tnSrc|noescape}"
             class="thumbnail"
-            alt="{$thumbnail['NAME']}"
-            title="{$thumbnail['NAME']}"
-            style="--tn-width:{$thumbnail['SIZE'][0]}px; --tn-height:{$thumbnail['SIZE'][1]}px;"
+            alt="{$thumbnail->name}"
+            title="{$thumbnail->name}"
+            style="--tn-width:{$thumbnail->size[0]}px; --tn-height:{$thumbnail->size[1]}px;"
           >
           <input
             type="text"
-            name="rank_of_image[{$thumbnail['ID']}]"
-            value="{$thumbnail['RANK']}"
+            name="rank_of_image[{$thumbnail->id}]"
+            value="{$thumbnail->rank}"
             class="u-hidden"
           >
         </li>

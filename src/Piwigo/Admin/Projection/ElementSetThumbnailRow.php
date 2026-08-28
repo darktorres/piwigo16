@@ -23,18 +23,4 @@ final readonly class ElementSetThumbnailRow
         public int $rank,
         public ?array $size,
     ) {}
-
-    /**
-     * @return array{ID: int, NAME: string, TN_SRC: string, RANK: int, SIZE: ?int[]}
-     */
-    public function toArray(): array
-    {
-        return [
-            'ID' => $this->id,
-            'NAME' => $this->name,
-            'TN_SRC' => $this->tnSrc,
-            'RANK' => $this->rank,
-            'SIZE' => $this->size,
-        ];
-    }
 }

@@ -26,7 +26,7 @@ final readonly class ElementSetRanksView implements View, HasPageAssets
 {
     /**
      * @param array<string, string> $imageOrderOptions
-     * @param list<array<string, mixed>> $thumbnails
+     * @param list<ElementSetThumbnailRow> $thumbnails
      * @param list<string> $imageOrder
      */
     public function __construct(

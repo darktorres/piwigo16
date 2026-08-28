@@ -168,7 +168,7 @@ final readonly class LanguagesInstalledPageRenderer
         }
 
         $adminContent = $this->renderer->render(new LanguagesInstalledView(
-            languages: array_map(static fn (LanguageListRow $language): array => $language->toArray(), $tpl_languages),
+            languages: $tpl_languages,
             isWebmaster: $this->accessControl->isWebmaster() ? 1 : 0,
             enableExtensionsInstall: $this->currentConfig->enableExtensionsInstall,
         ));

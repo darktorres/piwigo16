@@ -24,7 +24,7 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class LanguagesInstalledView implements View, HasPageAssets, ExposesPageData
 {
     /**
-     * @param list<array<string, mixed>> $languages
+     * @param list<LanguageListRow> $languages
      */
     public function __construct(
         public array $languages,

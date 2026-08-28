@@ -23,19 +23,4 @@ final readonly class LanguageListRow
         public ?string $deactivateTooltip,
         public bool $isDefault,
     ) {}
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function toArray(): array
-    {
-        return [
-            'name' => $this->name,
-            'u_action' => $this->uAction,
-            'state' => $this->state,
-            'deactivable' => $this->deactivable,
-            'deactivate_tooltip' => $this->deactivateTooltip,
-            'is_default' => $this->isDefault,
-        ];
-    }
 }

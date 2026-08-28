@@ -49,3 +49,78 @@ it('shows the missing-checksum counter when at least one photo has no md5sum', f
         H::dbClose($db);
     }
 });
+
+/**
+ * The dimension filter's four ratio-preset buttons (Portrait / Square /
+ * Landscape / Panorama) each render only when at least one distinct photo
+ * ratio falls in that bucket -- `BatchManagerSubController::
+ * computeDimensionOptions()` leaves the other categories null and the
+ * template's own `n:if` drops them. Every fixture photo is 200x150, one
+ * single ratio of 1.33, so only Landscape has ever rendered: three of the
+ * four branches, and with them every `ratio_*` read in the template, were
+ * unreachable by any request. Four temporary dimensions produce one photo
+ * per bucket.
+ *
+ * `floor($w / $h * 100) / 100` is the ratio the producer computes, so the
+ * expected values below are 150/200 -> 0.75, 200/200 -> 1, 200/150 -> 1.33
+ * and 400/150 -> 2.66, and `implode(',')` renders the second as `1`, not
+ * `1.00`.
+ */
+it('renders all four dimension ratio presets when every ratio bucket is populated', function (): void {
+    $db = H::connect();
+
+    $original = [];
+    foreach ([1, 2, 3, 4, 5] as $imageId) {
+        $row = H::fetchAssocOrFail($db, 'SELECT width, height FROM images WHERE id = ' . $imageId);
+        $original[$imageId] = [(int) $row['width'], (int) $row['height']];
+    }
+
+    // portrait 0.75, square 1, landscape 1.33 (already), panorama 2.66.
+    H::dbQuery($db, 'UPDATE images SET width = 150, height = 200 WHERE id = 1');
+    H::dbQuery($db, 'UPDATE images SET width = 200, height = 200 WHERE id = 2');
+    H::dbQuery($db, 'UPDATE images SET width = 400, height = 150 WHERE id = 4');
+
+    try {
+        $page = H::asAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=batch_manager');
+        $page->assertNoJavaScriptErrors();
+
+        $html = H::rawWebpage($page)->content();
+
+        // Each preset asserted as the whole rendered element, not as loose
+        // attribute values: doubleSlider.ts:78 reads these back through
+        // `$(this).data("min")` and looks the result up with
+        // `options.values.indexOf()`, which only ever matches when the
+        // attribute holds exactly the string the ratio list carries. This
+        // is the serialized DOM, where attribute whitespace is preserved
+        // verbatim but source line breaks between attributes are not --
+        // so a stray newline *inside* a value survives here and is exactly
+        // what this assertion is shaped to catch.
+        foreach ([
+            ['Portrait', '0.75', '0.75'],
+            ['Square', '1', '1'],
+            ['Landscape', '1.33', '1.33'],
+            ['Panorama', '2.66', '2.66'],
+        ] as [$label, $min, $max]) {
+            expect($html)->toContain('<a class="slider-choice" data-min="' . $min . '" data-max="' . $max . '">' . $label . '</a>');
+        }
+
+        // The bounds the Reset button restores, and the option list the
+        // slider is actually built from -- the ratio list is what every
+        // data-min above has to be findable in.
+        expect($html)
+            ->toContain('<a class="slider-choice dimension-cancel" data-min="0.75" data-max="2.66">Reset</a>')
+            ->toContain('<span class="slider-info">between 0.75 and 2.66</span>')
+            ->toContain('between 150 and 400 pixels')
+            ->toContain('between 150 and 200 pixels')
+            ->toContain('"ratios":"0.75,1,1.33,2.66"')
+            ->toContain('"widths":"150,200,400"')
+            ->toContain('"heights":"150,200"');
+    } finally {
+        foreach ($original as $imageId => [$width, $height]) {
+            H::dbQuery($db, sprintf('UPDATE images SET width = %d, height = %d WHERE id = %d', $width, $height, $imageId));
+        }
+
+        H::dbClose($db);
+    }
+});

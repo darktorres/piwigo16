@@ -78,7 +78,10 @@
         />
       </div>
 
-      <div n:if="$additionalFiltType" class="additional-filters-section">
+      <div
+        n:if="$additionalFiltType !== false"
+        class="additional-filters-section"
+      >
         <div class="additional-filters-info">
           {='Additional filters'|translate}
         </div>

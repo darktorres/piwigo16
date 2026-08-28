@@ -109,7 +109,14 @@ final readonly class CatPermPageRenderer
         $user_granted_direct_ids = $permissionRepository->findGrantedUserIdsByCategory([$cat_id])[$cat_id] ?? [];
 
         $nb_users_granted_indirect = null;
-        $user_granted_indirect_groups = null;
+        // Defaults to the empty list, not null (P58-A's §11). Both this and
+        // $nb_users_granted_indirect are filled together in the branch
+        // below, and cat_perm.latte guards the whole block on the counter,
+        // so the list is only ever read when that branch ran -- but the
+        // foreach itself was unguarded, so a null here was a PHP warning
+        // away from being visible. An empty list iterates the same way,
+        // without one.
+        $user_granted_indirect_groups = [];
         $user_granted_indirect_ids = [];
         if (count($group_granted_ids) > 0) {
             $user_granted_indirect_groups = [];

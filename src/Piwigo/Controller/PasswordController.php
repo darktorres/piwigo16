@@ -302,8 +302,16 @@ final class PasswordController implements ControllerInterface
             title: $title,
             formAction: $urlService->getRootUrl() . 'password.php',
             action: $action,
+            // '' rather than null, so the View property is a plain string
+            // (P58-A's §11). Both readers already treated null as the empty
+            // string: password.latte echoes it into a disabled input, and
+            // passes it to htmlspecialchars(), which coerces null to '' and
+            // has deprecated doing so since PHP 8.1. Saying it here keeps
+            // the output and drops the deprecation. `->` rather than `?->`
+            // because ?? already absorbs the null, and PHPStan reports the
+            // nullsafe as redundant in front of it.
             username: $username ?? $this->currentUser->get()
-                ->username?->value,
+                ->username->value ?? '',
             pwgToken: $this->csrfService
                 ->getToken(),
             languageOptions: $language_options,

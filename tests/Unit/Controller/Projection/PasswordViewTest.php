@@ -16,7 +16,7 @@ function makePasswordView(bool $isStandardPagesTheme, ?string $action): Password
         title: '',
         formAction: 'password.php',
         action: $action,
-        username: null,
+        username: '',
         pwgToken: 'token',
         languageOptions: [],
         currentLanguage: 'en_UK',

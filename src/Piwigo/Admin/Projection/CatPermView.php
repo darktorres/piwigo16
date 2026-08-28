@@ -30,7 +30,7 @@ final readonly class CatPermView implements View, HasPageAssets, ExposesPageData
      * @param array<int, string> $groups
      * @param list<int> $groupsSelected
      * @param list<int> $usersSelected
-     * @param list<array{group_name: string, group_users: string}>|null $userGrantedIndirectGroups
+     * @param list<array{group_name: string, group_users: string}> $userGrantedIndirectGroups
      * @param array<array-key, string> $cacheKeys
      */
     public function __construct(
@@ -40,7 +40,7 @@ final readonly class CatPermView implements View, HasPageAssets, ExposesPageData
         public array $groupsSelected,
         public array $usersSelected,
         public ?int $nbUsersGrantedIndirect,
-        public ?array $userGrantedIndirectGroups,
+        public array $userGrantedIndirectGroups,
         public bool $inherit,
         public array $cacheKeys,
         public ?string $saveSuccess,

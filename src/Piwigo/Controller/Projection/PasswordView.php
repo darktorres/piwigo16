@@ -39,7 +39,7 @@ final readonly class PasswordView implements View, HasPageAssets, ExposesPageDat
         public string $title,
         public string $formAction,
         public ?string $action,
-        public ?string $username,
+        public string $username,
         public string $pwgToken,
         public array $languageOptions,
         public string $currentLanguage,

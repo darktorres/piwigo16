@@ -22,6 +22,19 @@ return [
     'nbm' => ['/nbm.php', false],
     'search' => ['/search.php', false],
     'comments' => ['/comments.php', false],
+    // navigation_bar.latte's *gallery* copy -- a different file from the
+    // admin one below, with its own markup (.navigationBar, First/Last
+    // spans) -- rendered in no fixture and no VR baseline either.
+    // comments.php takes its page size from ?items_number, and only 3 of
+    // the 5 fixture comments are validated, so 2 per page is 2 pages. This
+    // is also the one call site that includes the template bare, with full
+    // parent-scope inheritance, rather than passing `navbar:` explicitly.
+    // Same two-route split as the admin pair below -- first page and last
+    // page run all four of the template's arms between them: page 1 leaves
+    // First/Previous as plain text and links Next/Last, the last page does
+    // the reverse.
+    'comments-paged-first' => ['/comments.php?items_number=2', false],
+    'comments-paged-last' => ['/comments.php?items_number=2&start=2', false],
     'category-1' => ['/index.php?/category/1', false],
     'category-2' => ['/index.php?/category/2', false],
     'random' => ['/random.php', false],
@@ -76,6 +89,33 @@ return [
     'admin-photos-add-ftp' => ['/admin.php?page=photos_add&section=ftp', true],
     'admin-batch' => ['/admin.php?page=batch_manager', true],
     'admin-batch-unit' => ['/admin.php?page=batch_manager&mode=unit', true],
+    // navigation_bar.latte rendered nowhere in this table -- no fixture
+    // page paginated, so `class="navigationBar"` appeared in none of the
+    // 83 golden files and in none of the 75 VR baselines, for either
+    // theme's copy of it.
+    //
+    // Two GET parameters get there without touching a preference or the
+    // data. `filter` writes the session filter
+    // (BatchManagerRequest::$urlFilterTokens), and the batch manager shows
+    // nothing at all without one -- `prefilter-all_photos` resolves
+    // through FilterResolver::resolvePrefilter(), whose 'all_photos' arm
+    // is guarded on being the only active filter, which it is here.
+    // `display` is the unit tab's own per-page count, so 2 over the five
+    // fixture photos is three pages. The session write is safe in this
+    // table: GoldenHtmlSnapshotTest and VisualRegressionTest each capture
+    // a route through its own fresh cookie jar, so no other route sees it.
+    //
+    // Two routes, first page and last page, which between them run all
+    // four of the template's arms: page 1 renders the left arrow
+    // `unavailable` and the right one as a link, the last page does the
+    // reverse. Both render the .actual span for the current page.
+    //
+    // Not covered by either, and not reachable here: the `...` elision
+    // between non-adjacent page numbers, which createNavigationBar() only
+    // emits once there are enough pages to skip. Five photos cannot make
+    // one.
+    'admin-batch-unit-paged-first' => ['/admin.php?page=batch_manager&mode=unit&filter=prefilter-all_photos&display=2', true],
+    'admin-batch-unit-paged-last' => ['/admin.php?page=batch_manager&mode=unit&filter=prefilter-all_photos&display=2&start=4', true],
     'admin-picture-formats' => ['/admin.php?page=picture_formats&image_id=1', true],
     'admin-picture-coi' => ['/admin.php?page=picture_coi&image_id=1', true],
     'admin-rating' => ['/admin.php?page=rating', true],

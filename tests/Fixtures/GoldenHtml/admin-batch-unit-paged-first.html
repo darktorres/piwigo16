@@ -1,0 +1,1899 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta
+      name="apple-itunes-app"
+      content="app-id=472225196"
+    >
+    <meta charset="utf-8">
+    <title>Fixture Gallery :: Piwigo Administration</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="themes/default/icon/piwigo.org-icon 1.svg"
+    >
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="themes/admin/default/fonts/open-sans/open-sans.css"
+    >
+
+
+    <link rel="stylesheet" type="text/css" href="themes/admin/default/fontello/css/fontello.css?v17.0.0">
+    <link rel="stylesheet" type="text/css" href="themes/admin/default/theme.css?v17.0.0">
+    <link rel="stylesheet" type="text/css" href="themes/admin/clear/theme.css?v17.0.0">
+    <link rel="stylesheet" type="text/css" href="themes/default/vendor/fontello/css/gallery-icon.css?v17.0.0">
+    <link rel="stylesheet" type="text/css" href="themes/admin/default/css/components/general.css?v17.0.0">
+    <link rel="stylesheet" type="text/css" href="themes/admin/clear/css/components/general.css?v17.0.0">
+    <link rel="stylesheet" type="text/css" href="themes/admin/default/css/utilities.css?v17.0.0">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css?v17.0.0">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/trentrichardson/jQuery-Timepicker-Addon@v1.4.4/dist/jquery-ui-timepicker-addon.min.css?v17.0.0">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/jackmoore/colorbox@1.5.14/example2/colorbox.css?v17.0.0">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css?v17.0.0">
+    <link rel="stylesheet" type="text/css" href="themes/default/js/plugins/selectize.clear.css?v17.0.0">
+    <link rel="stylesheet" type="text/css" href="themes/admin/default/css/pages/batch_manager_unit.css?v17.0.0">
+    <link rel="stylesheet" type="text/css" href="themes/admin/default/css/components/album_selector.css?v17.0.0">
+    <link rel="stylesheet" type="text/css" href="themes/admin/default/css/components/batch_manager_filter.css?v17.0.0">
+    <link rel="stylesheet" type="text/css" href="themes/default/css/help/quick_search.css?v17.0.0">
+    <link rel="stylesheet" type="text/css" href="themes/admin/default/fontello/css/animation.css?v17.0.0">
+
+    <link rel="modulepreload" href="dist/assets/scripts-{{ASSET_HASH}}.js">
+    <link rel="modulepreload" href="dist/assets/page-data-{{ASSET_HASH}}.js">
+    <link rel="modulepreload" href="dist/assets/datepicker-{{ASSET_HASH}}.js">
+    <link rel="modulepreload" href="dist/assets/autosize-{{ASSET_HASH}}.js">
+    <link rel="modulepreload" href="dist/assets/dom-{{ASSET_HASH}}.js">
+    <link rel="modulepreload" href="dist/assets/ajax-{{ASSET_HASH}}.js">
+    <link rel="modulepreload" href="dist/assets/album_selector-{{ASSET_HASH}}.js">
+    <link rel="modulepreload" href="dist/assets/common-{{ASSET_HASH}}.js">
+    <link rel="modulepreload" href="dist/assets/LocalStorageCache-{{ASSET_HASH}}.js">
+    <link rel="modulepreload" href="dist/assets/doubleSlider-{{ASSET_HASH}}.js">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@1.11.3/dist/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.js"></script>
+
+  </head>
+
+  <body id="theAdminPage">
+    <div id="the_page">
+
+      <div id="pwgHead">
+        <a
+          href="{{BASE_PATH}}/"
+          class="visit-gallery tiptip"
+          title="Visit the gallery"
+        ><i class="icon-left-open"></i>Visit</a>
+        <div class="pwgHead-gallery-title">Fixture Gallery</div>
+
+        <div id="headActions">
+          <span class="admin-head-username"><i
+              class="icon-user"
+            ></i>fixture_admin</span>
+
+<a href="admin.php?change_theme=1" class="tiptip" title="Switch to clear or dark colors for administration"><i class="icon-moon-inv"></i><span>Dark</span></a>
+          <a
+            class="tiptip"
+            href="admin.php?page=help"
+            title="Instructions to use Piwigo"
+          ><i
+              class="icon-help-circled"
+            ></i><span>Help Me</span></a>
+          <a href="index.php?act=logout"><i
+              class="icon-logout"
+            ></i><span>Logout</span></a>
+        </div>
+      </div>
+
+      <div class="u-clear-both"></div>
+
+
+      <div id="pwgMain">
+<div id="menubar">
+  <div id="adminHome"><a href="admin.php" class="admin-main"><i
+          class="icon-television"
+        ></i> Dashboard</a></div>
+
+  <dl>
+    <dt><i class="icon-picture"></i><span>Photos&nbsp;</span><i
+          class="icon-down-open open-menu"
+        ></i></dt>
+    <dd>
+      <ul>
+        <li><a href="admin.php?page=photos_add"><i
+                class="icon-plus-circled"
+              ></i>Add</a></li>
+        <li><a href="admin.php?page=rating"><i
+                class="icon-star"
+              ></i>Rating</a></li>
+        <li><a href="admin.php?page=tags"><i
+                class="icon-tags"
+              ></i>Tags</a></li>
+        <li><a href="admin.php?page=batch_manager&amp;filter=prefilter-last_import"><i
+                class="icon-clock"
+              ></i>Recent photos</a></li>
+        <li><a href="admin.php?page=batch_manager"><i
+                class="icon-th"
+              ></i>Batch Manager</a></li>
+      </ul>
+    </dd>
+  </dl>
+  <dl>
+    <dt><i class="icon-sitemap"></i><span>Albums&nbsp;</span><i
+          class="icon-down-open open-menu"
+        ></i></dt>
+    <dd>
+      <ul>
+        <li><a href="admin.php?page=albums"><i
+                class="icon-folder-open"
+              ></i>Manage</a></li>
+        <li><a href="admin.php?page=cat_options"><i
+                class="icon-pencil"
+              ></i>Properties</a></li>
+      </ul>
+    </dd>
+  </dl>
+  <dl>
+    <dt><i class="icon-users"></i><span>Users&nbsp;</span><i
+          class="icon-down-open open-menu"
+        ></i></dt>
+    <dd>
+      <ul>
+        <li><a href="admin.php?page=user_list"><i
+                class="icon-user-add"
+              ></i>Manage</a></li>
+        <li><a href="admin.php?page=group_list"><i
+                class="icon-group"
+              ></i>Groups</a></li>
+        <li><a href="admin.php?page=notification_by_mail"><i
+                class="icon-mail-1"
+              ></i>Notification</a></li>
+      </ul>
+    </dd>
+  </dl>
+  <dl>
+    <dt><a href="admin.php?page=plugins" class="admin-main"><i
+            class="icon-puzzle"
+          ></i><span>Plugins&nbsp;</span></a></dt>
+  </dl>
+  <dl>
+    <dt><i class="icon-wrench"></i><span>Tools&nbsp;</span><i
+          class="icon-down-open open-menu"
+        ></i></dt>
+    <dd>
+      <ul>
+        <li><a href="admin.php?page=site_update&amp;site=1"><i
+                class="icon-exchange"
+              ></i>Synchronize</a></li>
+        <li><a href="admin.php?page=stats&amp;year=2026&amp;month=8"><i
+                class="icon-signal"
+              ></i>History</a></li>
+        <li><a href="admin.php?page=maintenance"><i
+                class="icon-tools"
+              ></i>Maintenance</a></li>
+        <li><a href="admin.php?page=comments"><i
+                class="icon-chat"
+              ></i>Comments
+            <span
+                class="adminMenubarCounter"
+                title="1 waiting for validation"
+              >1</span></a></li>
+        <li><a href="admin.php?page=updates"><i
+                class="icon-arrows-cw"
+              ></i>Updates</a></li>
+      </ul>
+    </dd>
+  </dl>
+  <dl>
+    <dt><i
+          class="icon-cog"
+        ></i><span>Configuration&nbsp;</span><i
+          class="icon-down-open open-menu"
+        ></i></dt>
+    <dd>
+      <ul>
+        <li><a href="admin.php?page=configuration"><i
+                class="icon-cog-alt"
+              ></i>Options</a></li>
+        <li><a href="admin.php?page=menubar"><i
+                class="icon-menu"
+              ></i>Menus</a></li>
+        <li><a href="admin.php?page=languages"><i
+                class="icon-language"
+              ></i>Languages</a></li>
+        <li><a href="admin.php?page=themes"><i
+                class="icon-brush"
+              ></i>Themes</a></li>
+      </ul>
+    </dd>
+  </dl>
+</div> <!-- menubar -->
+
+<div id="content" class="content">
+  <h1>Batch Manager<span
+        class="admin-object-id"
+      ></span></h1>
+
+  <div id="tabsheet">
+  <ul class="tabsheet">
+    <li
+      class="normal_tab"
+    >
+      <a
+        href="admin.php?page=batch_manager&amp;mode=global"
+      ><span><span class="icon-th"></span>global mode</span></a>
+    </li>
+    <li
+      class="selected_tab"
+    >
+      <a
+        href="admin.php?page=batch_manager&amp;mode=unit"
+      ><span><span class="icon-th-list"></span>single mode</span></a>
+    </li>
+  </ul>
+</div>
+
+
+  <div class="eiw">
+
+
+
+  </div> 
+
+  
+<div id="batchManagerGlobal">
+  <div class="clear-both"></div>
+  <div>
+    <input type="hidden" name="element_ids" value="1,2">
+  </div>
+  <form method="post" action="admin.php?page=batch_manager&amp;mode=unit&amp;display=2">
+<fieldset>
+  <legend><span
+      class='icon-filter icon-green'
+    ></span>Filter</legend>
+  <div class="filterBlock">
+    <ul id="filterList">
+      <li
+        id="filter_prefilter"
+        
+      >
+        <input
+          type="checkbox"
+          name="filter_prefilter_use"
+          class="useFilterCheckbox"
+          
+          checked="checked"
+          
+        >
+        <p>Predefined filter</p>
+        <a
+          href="#"
+          class="removeFilter"
+          title="remove this filter"
+        ><span>[x]</span></a>
+        <select name="filter_prefilter">
+
+          <option
+              value="all_photos"
+              class=""
+              
+              selected="selected"
+              
+            >All</option>
+
+          <option
+              value="caddie"
+              class="icon-flag"
+              
+            >Caddie</option>
+
+          <option
+              value="duplicates"
+              class=""
+              
+            >Duplicates</option>
+
+          <option
+              value="last_import"
+              class=""
+              
+            >Last import</option>
+
+          <option
+              value="favorites"
+              class=""
+              
+            >My favorites</option>
+
+          <option
+              value="no_album"
+              class="icon-heart-broken"
+              
+            >With no album (Orphans)</option>
+
+          <option
+              value="no_sync_md5sum"
+              class=""
+              
+            >With no checksum</option>
+
+          <option
+              value="no_tag"
+              class=""
+              
+            >With no tag</option>
+
+          <option
+              value="no_virtual_album"
+              class=""
+              
+            >With no virtual album</option>
+        </select>
+        <a
+          id="empty_caddie"
+          href="admin.php?page=batch_manager&amp;action=empty_caddie&amp;pwg_token={{TOKEN}}"
+          class="u-hidden"
+        >Empty caddie</a>
+
+        <span id="add_md5sum" class="u-hidden">
+          <img
+            class="loading"
+            src="themes/default/images/ajax-loader-small.gif"
+          >
+          <span id="md5sum_added">0</span>% -
+          <span
+            id="md5sum_to_add"
+            data-origin=""
+          ></span>
+          checksums to add
+        </span>
+
+        <span id="add_md5sum_error" class="errors u-hidden"></span>
+
+        <span id="orphans_deletion" class="u-hidden">
+          <img
+            class="loading"
+            src="themes/default/images/ajax-loader-small.gif"
+          >
+          <span id="orphans_deleted">0</span>% -
+          <span
+            id="orphans_to_delete"
+            data-origin="0"
+          >0</span>
+          orphans to delete
+        </span>
+
+        <span id="orphans_deletion_error" class="errors u-hidden"></span>
+
+        <span
+          id="duplicates_options"
+          class="u-hidden"
+        >
+          based on
+          <label class="font-checkbox"><span class="icon-check"></span><input
+              type="checkbox"
+              name="filter_duplicates_filename"
+              
+            > file name</label>
+          <label class="font-checkbox" title="md5sum"><span
+              class="icon-check"
+            ></span><input
+              type="checkbox"
+              name="filter_duplicates_checksum"
+              
+            > checksum <i
+              class="icon-help-circled tiptip"
+              title="translated md5sum definition here !"
+            ></i></label>
+          <label class="font-checkbox"><span class="icon-check"></span><input
+              type="checkbox"
+              name="filter_duplicates_date"
+              
+              checked="checked"
+              
+            > date &amp; time</label>
+          <label class="font-checkbox"><span class="icon-check"></span><input
+              type="checkbox"
+              name="filter_duplicates_dimensions"
+              
+            > width &amp; height</label>
+        </span>
+      </li>
+      <li
+        id="filter_category"
+        
+        class="u-hidden"
+        
+      >
+        <input
+          type="checkbox"
+          name="filter_category_use"
+          class="useFilterCheckbox"
+          
+        >
+        <p>Album</p>
+        <a
+          href="#"
+          class="removeFilter"
+          title="remove this filter"
+        ><span>[x]</span></a>
+        <div
+          id="selectedAlbumFilterArea"
+          
+          class="u-hidden"
+          
+        >
+          <div class="selectedAlbum" id="selectedAlbumFilter">
+            <input
+              type="hidden"
+              name="filter_category"
+              id="filterCategoryValue"
+              value="null"
+            >
+            <span
+              class="icon-sitemap"
+              id="selectedAlbumNameFilter"
+            ></span>
+            <a class="icon-pencil" id="selectedAlbumEditFilter"></a>
+          </div>
+          <label class="font-checkbox"><span class="icon-check"></span><input
+              type="checkbox"
+              name="filter_category_recursive"
+              
+            > include sub-albums</label>
+        </div>
+        <p
+          class="head-button-1"
+          id="selectAlbumFilter"
+        >
+          Select an album
+        </p>
+      </li>
+
+      <li id="filter_tags"  class="u-hidden" >
+        <input
+          type="checkbox"
+          name="filter_tags_use"
+          class="useFilterCheckbox"
+          
+        >
+        <p>Tags</p>
+        <a
+          href="#"
+          class="removeFilter"
+          title="remove this filter"
+        ><span>[x]</span></a>
+        <select
+          data-selectize="tags"
+          data-value="[]"
+          placeholder="Type in a search term"
+          name="filter_tags[]"
+          multiple
+        ></select>
+        <label class="font-checkbox"><span
+            class="icon-circle-empty"
+          ></span><span><input
+              type="radio"
+              name="tag_mode"
+              value="AND"
+              
+              checked="checked"
+              
+            > All tags</span></label>
+        <label class="font-checkbox"><span
+            class="icon-circle-empty"
+          ></span><span><input
+              type="radio"
+              name="tag_mode"
+              value="OR"
+              
+            > Any tag</span></label>
+      </li>
+
+      <li
+        id="filter_level"
+        
+        class="u-hidden"
+        
+      >
+        <input
+          type="checkbox"
+          name="filter_level_use"
+          class="useFilterCheckbox"
+          
+        >
+        <p>Privacy level</p>
+        <a
+          href="#"
+          class="removeFilter"
+          title="remove this filter"
+        ><span>[x]</span></a>
+        <select name="filter_level" size="1">
+          <option
+            value="0" selected
+          >Everybody</option>
+          <option
+            value="1"
+          >Contacts</option>
+          <option
+            value="2"
+          >Friends</option>
+          <option
+            value="4"
+          >Family</option>
+          <option
+            value="8"
+          >Admins</option>
+        </select>
+        <label class="font-checkbox"><span class="icon-check"></span><input
+            type="checkbox"
+            name="filter_level_include_lower"
+            
+          > include photos with lower privacy level</label>
+      </li>
+
+      <li
+        id="filter_dimension"
+        
+        class="u-hidden"
+        
+      >
+        <input
+          type="checkbox"
+          name="filter_dimension_use"
+          class="useFilterCheckbox"
+          
+        >
+        <p>Dimensions</p>
+        <a
+          href="#"
+          class="removeFilter"
+          title="remove this filter"
+        ><span>[x]</span></a>
+        <blockquote>
+          <div data-slider="widths" class="dimensionSlidersBlocks">
+            <div class="dimensionSlidersTitleButtons">
+              <div>
+                Width <span
+                  class="slider-info"
+                >between 200 and 200 pixels</span>
+              </div>
+              <a
+                class="slider-choice dimension-cancel"
+                data-min="200"
+                data-max="200"
+              >Reset</a>
+            </div>
+            <div class="slider-slider"></div>
+
+            <input
+              type="hidden"
+              data-input="min"
+              name="filter_dimension_min_width"
+              value="200"
+            >
+            <input
+              type="hidden"
+              data-input="max"
+              name="filter_dimension_max_width"
+              value="200"
+            >
+          </div>
+
+          <div data-slider="heights" class="dimensionSlidersBlocks">
+            <div class="dimensionSlidersTitleButtons">
+              <div>
+                Height <span
+                  class="slider-info"
+                >between 150 and 150 pixels</span>
+              </div>
+              <a
+                class="slider-choice dimension-cancel"
+                data-min="150"
+                data-max="150"
+              >Reset</a>
+            </div>
+            <div class="slider-slider"></div>
+
+            <input
+              type="hidden"
+              data-input="min"
+              name="filter_dimension_min_height"
+              value="150"
+            >
+            <input
+              type="hidden"
+              data-input="max"
+              name="filter_dimension_max_height"
+              value="150"
+            >
+          </div>
+
+          <div data-slider="ratios" class="dimensionSlidersBlocks">
+            <div class="ratio-slider-label">
+              <span>Ratio (Width/Height)</span>
+              <span
+                class="slider-info"
+              >between 1.33 and 1.33</span>
+            </div>
+            <div class="dimensionSlidersRatioButtons">
+              <div>
+                <a
+                  class="slider-choice"
+                  data-min="1.33"
+                  data-max="1.33"
+                >Landscape</a>
+              </div>
+              <div>
+                <a
+                  class="slider-choice dimension-cancel"
+                  data-min="1.33"
+                  data-max="1.33"
+                >Reset</a>
+              </div>
+            </div>
+            <div class="slider-slider"></div>
+
+            <input
+              type="hidden"
+              data-input="min"
+              name="filter_dimension_min_ratio"
+              value="1.33"
+            >
+            <input
+              type="hidden"
+              data-input="max"
+              name="filter_dimension_max_ratio"
+              value="1.33"
+            >
+          </div>
+        </blockquote>
+      </li>
+
+      <li
+        id="filter_search"
+        
+        class="u-hidden"
+        
+      >
+        <input
+          type="checkbox"
+          name="filter_search_use"
+          class="useFilterCheckbox"
+          
+        >
+        <p>Search</p>
+        <a
+          href="#"
+          class="removeFilter"
+          title="remove this filter"
+        ><span>[x]</span></a>
+        <input
+          name="q"
+          size="40"
+          value=""
+        >
+        <p title="Help" class="help-popin-search">
+          <i class="icon-help-circled"></i>
+          <span>Search tips</span>
+        </p>
+      </li>
+
+      <li
+        id="filter_filesize"
+        
+        class="u-hidden"
+        
+      >
+        <input
+          type="checkbox"
+          name="filter_filesize_use"
+          class="useFilterCheckbox"
+          
+        >
+        <p>Filesize</p>
+        <a
+          href="#"
+          class="removeFilter"
+          title="remove this filter"
+        ><span>[x]</span></a>
+        <blockquote>
+          <div data-slider="filesizes">
+            <span
+              class="slider-info"
+            >between 0.0 and 0.0 MB</span>
+            <a
+              class="slider-choice dimension-cancel"
+              data-min="0.0"
+              data-max="0.0"
+            >Reset</a>
+            <div class="slider-slider"></div>
+
+            <input
+              type="hidden"
+              data-input="min"
+              name="filter_filesize_min"
+              value="0.0"
+            >
+            <input
+              type="hidden"
+              data-input="max"
+              name="filter_filesize_max"
+              value="0.0"
+            >
+          </div>
+        </blockquote>
+      </li>
+    </ul>
+
+    <div class='noFilter'>No filter, add one</div>
+
+    <div class="filterActions">
+      <div id="addFilter">
+        <div
+          class="addFilter-button icon-plus"
+        >Add a filter</div>
+        <div class="addFilter-dropdown">
+          <a
+            data-value="filter_prefilter"
+            
+            class="disabled"
+            
+          >Predefined filter</a>
+          <a
+            data-value="filter_category"
+            
+          >Album</a>
+          <a
+            data-value="filter_tags"
+            
+          >Tags</a>
+          <a
+            data-value="filter_level"
+            
+          >Privacy level</a>
+          <a
+            data-value="filter_dimension"
+            
+          >Dimensions</a>
+          <a
+            data-value="filter_filesize"
+            
+          >Filesize</a>
+          <a
+            data-value="filter_search"
+            
+          >Search</a>
+        </div>
+        <a
+          id="removeFilters"
+          class="icon-cancel u-hidden"
+        >Remove all filters</a>
+      </div>
+
+      <button id="applyFilter" name="submitFilter" type="submit">
+        <i class="icon-arrows-cw"></i> Refresh photo set
+      </button>
+
+      <div id="errorFilter" class="icon-red-error u-hidden"></div>
+    </div>
+  </div>
+</fieldset>
+
+<div class="bg-modal" id="modalQuickSearch">
+  <div class="modal-content">
+    <a class="icon-cancel close-modal" id="closeModalQuickSearch"></a>
+
+    <div class="quick-search-content">
+      <div class="quick-search-header">
+        <div class="AddIconContainer">
+          <span class="AddIcon icon-blue icon-search"></span>
+        </div>
+      </div>
+      <div class="quick-search-syntax">
+
+<div class="quick-search-headers">
+  <span
+    class="mcs-popin-title"
+  >Search using extended syntax</span>
+</div>
+<div class="quick-search-infos">
+  <p>
+    The quick search engine allows you to use boolean operators to refine your search. By default, the search applies to all keywords. Searches are not case sensitive.
+  </p>
+  <p>Here is a list of actions you can perform:</p>
+</div>
+
+<p class="quick-search-section">With keywords</p>
+
+<div class="quick-search-items">
+  <div class="quick-search-item">
+    <div class="quick-search-item-info">
+      <div class="quick-search-item-type">
+        <p>Exact search</p>
+      </div>
+      <div class="quick-search-item-example">
+        <p><b>"</b>george washington<b>"</b></p>
+      </div>
+    </div>
+    <div class="quick-search-item-tip">
+      <p>Use quotes to search for an exact keyword or phrase.</p>
+    </div>
+  </div>
+
+  <div class="quick-search-item">
+    <div class="quick-search-item-info">
+      <div class="quick-search-item-type">
+        <p>OR inclusive</p>
+      </div>
+      <div class="quick-search-item-example">
+        <p>john <b>OR</b> bill</p>
+      </div>
+    </div>
+    <div class="quick-search-item-tip">
+      <p>Add an OR between words.</p>
+    </div>
+  </div>
+
+  <div class="quick-search-item">
+    <div class="quick-search-item-info">
+      <div class="quick-search-item-type">
+        <p>Exclude</p>
+      </div>
+      <div class="quick-search-item-example">
+        <p>george washington <b>NOT</b> bush</p>
+        <p><b>-</b>george</p>
+      </div>
+    </div>
+    <div class="quick-search-item-tip">
+      Add a dash (-) or NOT before a word to exclude from search. Note that NOT acts as a filtering operator so you cannot have a search containing only NOT operators. You cannot combine OR with NOT (john OR NOT bill is not valid)
+    </div>
+  </div>
+
+  <div class="quick-search-item">
+    <div class="quick-search-item-info">
+      <div class="quick-search-item-type">
+        <p>Grouping ()</p>
+      </div>
+      <div class="quick-search-item-example">
+        <p><b>(</b>mother OR father<b>)</b> AND <b>(</b>daugther OR son<b>)</b></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p
+  class="quick-search-section quick-search-section-others"
+>Others</p>
+<div class="quick-search-items">
+  <div class="quick-search-item">
+    <div class="quick-search-item-info">
+      <div class="quick-search-item-type">
+        <p>Supported numeric operators</p>
+      </div>
+      <div class="quick-search-item-example">
+        <p><b>=100</b> equals 100</p>
+        <p><b>&gt;100</b> greater than 100</p>
+        <p><b>&lt;100</b> less than 100</p>
+        <p><b>10..100</b> between 10 and 100 (inclusive)</p>
+        <p><b>..100</b> up to 100 (inclusive)</p>
+        <p><b>100..</b> from 100 and above</p>
+      </div>
+    </div>
+    <div class="quick-search-item-tip">
+      These operators can be used with numeric fields such as created:, posted:, width:, height:, size:, ratio:, hits:, score:, filesize:, id:.
+    </div>
+  </div>
+
+  <div class="quick-search-item">
+    <div class="quick-search-item-info">
+      <div class="quick-search-item-type">
+        <p>tag:</p>
+        <p>tags:</p>
+      </div>
+      <div class="quick-search-item-example">
+        <p><b>tag:</b>(john OR bill)</p>
+      </div>
+    </div>
+    <div class="quick-search-item-tip">
+      Searches only in tag names without looking at photo titles or descriptions.
+    </div>
+  </div>
+
+  <div class="quick-search-item">
+    <div class="quick-search-item-info">
+      <div class="quick-search-item-type">
+        <p>photo:</p>
+        <p>photos:</p>
+      </div>
+      <div class="quick-search-item-example">
+        <p><b>photo:</b>Tiger</p>
+      </div>
+    </div>
+    <div class="quick-search-item-tip">
+      Searches only for photos with the given words in title or description.
+    </div>
+  </div>
+
+  <div class="quick-search-item">
+    <div class="quick-search-item-info">
+      <div class="quick-search-item-type">
+        <p>file:</p>
+      </div>
+      <div class="quick-search-item-example">
+        <p><b>file:</b>DSC_</p>
+        <p><b>file:</b>*.webp</p>
+      </div>
+    </div>
+    <div class="quick-search-item-tip">
+      Searches by file name.
+    </div>
+  </div>
+
+  <div class="quick-search-item">
+    <div class="quick-search-item-info">
+      <div class="quick-search-item-type">
+        <p>author:</p>
+      </div>
+      <div class="quick-search-item-example">
+        <p><b>author:</b>John</p>
+      </div>
+    </div>
+    <div class="quick-search-item-tip">
+      Searches by author.
+    </div>
+  </div>
+
+  <div class="quick-search-item">
+    <div class="quick-search-item-info">
+      <div class="quick-search-item-type">
+        <p>created:</p>
+        <p>taken:</p>
+        <p>shot:</p>
+      </div>
+      <div class="quick-search-item-example">
+        <p><b>taken:2003</b> photos taken in 2003</p>
+        <p><b>taken:20035, taken:2003-5, taken:2003-05</b> photos from may 2003</p>
+        <p><b>taken:2003..2008</b> photos from 2003 to 2008</p>
+        <p><b>taken:>2008, taken:2008*, taken:2008..</b> photos after Jan 1st 2008</p>
+      </div>
+    </div>
+    <div class="quick-search-item-tip">
+      Searches photos by taken date.
+    </div>
+  </div>
+
+  <div class="quick-search-item">
+    <div class="quick-search-item-info">
+      <div class="quick-search-item-type">
+        <p>posted:</p>
+      </div>
+      <div class="quick-search-item-example">
+        <p><b>posted:2003</b> photos posted in 2003</p>
+      </div>
+    </div>
+    <div class="quick-search-item-tip">
+      Searches photos by posted date. Same principle as for created:.
+    </div>
+  </div>
+
+  <div class="quick-search-item">
+    <div class="quick-search-item-info">
+      <div class="quick-search-item-type">
+        <p>width:</p>
+        <p>height:</p>
+      </div>
+      <div class="quick-search-item-example">
+        <p><b>width:</b>>500 photos wider than 500px</p>
+        <p><b>height:</b>&lt;700 photos less than 700px high</p>
+      </div>
+    </div>
+    <div class="quick-search-item-tip">
+      Searches photos with a given width or height.
+    </div>
+  </div>
+
+  <div class="quick-search-item">
+    <div class="quick-search-item-info">
+      <div class="quick-search-item-type">
+        <p>size:</p>
+      </div>
+      <div class="quick-search-item-example">
+        <p><b>size:</b>5m returns photos of 5 megapixels</p>
+        <p><b>size:</b>>12m returns photos of 12 megapixels or more</p>
+      </div>
+    </div>
+    <div class="quick-search-item-tip">
+      Searches photos by size in pixels.
+    </div>
+  </div>
+
+  <div class="quick-search-item">
+    <div class="quick-search-item-info">
+      <div class="quick-search-item-type">
+        <p>ratio:</p>
+      </div>
+      <div class="quick-search-item-example">
+        <p><b>ratio:</b>3/4 OR <b>ratio:</b>4/3
+          finds photos from compact cameras in portrait or landscape modes</p>
+        <p><b>ratio:</b>>16/9 finds panoramas</p>
+      </div>
+    </div>
+    <div class="quick-search-item-tip">
+      Searches photos by width/height ratio.
+    </div>
+  </div>
+
+  <div class="quick-search-item">
+    <div class="quick-search-item-info">
+      <div class="quick-search-item-type">
+        <p>hits:</p>
+      </div>
+      <div class="quick-search-item-example">
+        <p><b>hits:</b>>1000 return photos with at least 1,000 views</p>
+      </div>
+    </div>
+    <div class="quick-search-item-tip">
+      <p>Searches for photos by number of views.</p>
+    </div>
+  </div>
+
+  <div class="quick-search-item">
+    <div class="quick-search-item-info">
+      <div class="quick-search-item-type">
+        <p>score:</p>
+        <p>rating:</p>
+      </div>
+      <div class="quick-search-item-example">
+        <p><b>score:</b>* will give you all photos with at least one note.</p>
+        <p><b>score:</b> will give you photos without notes.</p>
+      </div>
+    </div>
+    <div class="quick-search-item-tip">
+      <p>Searches photos by rating.</p>
+    </div>
+  </div>
+
+  <div class="quick-search-item">
+    <div class="quick-search-item-info">
+      <div class="quick-search-item-type">
+        <p>filesize:</p>
+      </div>
+      <div class="quick-search-item-example">
+        <p><b>filesize:</b>1m..10m finds files between 1MB and 10MB.</p>
+      </div>
+    </div>
+    <div class="quick-search-item-tip">
+      Searches photos by file size.
+    </div>
+  </div>
+
+  <div class="quick-search-item">
+    <div class="quick-search-item-info">
+      <div class="quick-search-item-type">
+        <p>id:</p>
+      </div>
+      <div class="quick-search-item-example">
+        <p><b>id:</b>123..126
+          finds photo 123 to 126 (it may find between 0 and 4 photos, because photos can be deleted)</p>
+      </div>
+    </div>
+    <div class="quick-search-item-tip">
+      Searches photos by its numeric identifier in Piwigo.
+    </div>
+  </div>
+</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="addLinkedAlbum" class="linkedAlbumPopIn">
+  <div class="linkedAlbumPopInContainer">
+    <a class="gallery-icon-cancel ClosePopIn" id="closeAlbumPopIn"></a>
+
+    <div class="AddIconContainer">
+      <span class="AddIcon icon-blue gallery-icon-plus-circled"></span>
+    </div>
+    <div class="AddIconTitle">
+      <span id="linkedModalTitle"></span>
+    </div>
+
+    <div class="album-selector" id="linkedAlbumSelector">
+      <label
+          class="head-button-2 put-to-root-container notClickable"
+          id="put-to-root"
+        >
+        <p class="icon-home">Put at the root</p>
+      </label>
+      <p class="put-to-root-container">or</p>
+
+      <div id="linkedAlbumSearch">
+        <span class='icon-search search-icon'></span>
+        <span class="icon-cancel search-cancel-linked-album"></span>
+        <input
+            class='search-input'
+            type='text'
+            id="search-input-ab"
+            placeholder=""
+          >
+      </div>
+      <div class="limitReached"></div>
+      <div class="noSearch"></div>
+      <div class="searching gallery-icon-spin6 animate-spin"></div>
+    </div>
+
+    <div id="searchResult"></div>
+
+    <div class="album-create" id="linkedAlbumCreate">
+      <div class="linked-album-subtitle">
+        <p id="linkedAlbumSubtitle">Add a sub-album of “Album 3”</p>
+      </div>
+
+      <div class="linked-album-input-container album-name">
+        <label class="user-property-label">Album name
+          <input class="user-property-input" id="linkedAlbumInput" />
+        </label>
+      </div>
+
+      <div class="linked-album-input-container">
+        <label class="user-property-label">Position
+          <div class="linked-add-radio-input">
+            <input
+                type="radio"
+                id="place-start"
+                name="position"
+                value="first"
+                checked
+              >
+            <label for="place-start">Place first</label>
+          </div>
+          <div class="linked-add-radio-input">
+            <input type="radio" id="place-end" name="position" value="last">
+            <label for="place-end">Place last</label>
+          </div>
+        </label>
+      </div>
+
+      <div class="AddAlbumErrors">
+        <p class="icon-cancel" id="linkedAddAlbumErrors">omg big big error</p>
+      </div>
+
+      <div class="linked-album-create-btn">
+        <p
+            class="linked-button-cancel"
+            id="linkedAlbumCancel"
+          >Cancel</p>
+        <p
+            class="buttonLike icon-plus"
+            id="linkedAddNewAlbum"
+          >Create and select</p>
+      </div>
+    </div>
+
+    <div class="album-switch-bottom" id="linkedAlbumSwitch">
+      <div class="album-switch-container">
+        <div class="switch-input">
+          <label class="switch">
+            <input
+                type="checkbox"
+                name="locked"
+                id="album-create-check"
+                value="true"
+              >
+            <span class="slider round"></span>
+          </label>
+          <label
+              class="switch-label"
+              for="album-create-check"
+            ><span>Creation mode</span> <i
+                class="icon-help-circled tiptip u-help-cursor"
+                title="Activate create mode to create and select an album"
+              ></i></label>
+        </div>
+        <p
+            class="head-button-2 icon-plus-circled linked-add-album"
+            id="linkedAddAlbum"
+          >
+          Create a root album</p>
+      </div>
+    </div>
+  </div>
+</div>
+  </form>
+  <legend class="list-legend">
+    <span class='icon-menu icon-blue'></span>
+    List
+    <span class="count-badge"> 5</span>
+  </legend>
+  <div class="pagination-bar">
+    <div class="pagination-per-page">
+      <span>photos per page :</span>
+      <a
+          href="admin.php?page=batch_manager&amp;mode=unit&amp;filter=prefilter-all_photos&amp;display=5"
+          class=""
+        >5</a>
+      <a
+          href="admin.php?page=batch_manager&amp;mode=unit&amp;filter=prefilter-all_photos&amp;display=10"
+          class=""
+        >10</a>
+      <a
+          href="admin.php?page=batch_manager&amp;mode=unit&amp;filter=prefilter-all_photos&amp;display=50"
+          class=""
+        >50</a>
+    </div>
+
+    <div class="pagination-reload-container">
+      <div class="pagination-reload">
+        <a
+              class="button-reload tiptip"
+              title="Pagination has changed and needs to be reloaded !"
+              href="admin.php?page=batch_manager&amp;mode=unit&amp;display=2"
+            ><i class="icon-cw"></i></a>
+<div class="pagination-container">
+  <a class='pagination-arrow left unavailable'>
+    <span class="icon-left-open"></span>
+  </a>
+
+  <div class="pagination-item-container">
+    <a class="actual">1</a>
+    <a href="admin.php?page=batch_manager&amp;mode=unit&amp;filter=prefilter-all_photos&amp;display=2&amp;start=2">2</a>
+    <a href="admin.php?page=batch_manager&amp;mode=unit&amp;filter=prefilter-all_photos&amp;display=2&amp;start=4">3</a>
+  </div>
+
+  <a
+      href="admin.php?page=batch_manager&amp;mode=unit&amp;filter=prefilter-all_photos&amp;display=2&amp;start=2"
+      class='pagination-arrow rigth'
+      rel="next"
+    >
+    <span class="icon-left-open"></span>
+  </a>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="infos deleted-badge" data-image_id="1">
+    <i class="icon-ok"></i>
+    <p>
+      &nbsp;Image&nbsp;
+      <p>
+        #1 'fixture-photo-1.jpg'
+      </p>
+      &nbsp;was succesfully deleted
+    </p>
+  </div>
+  <fieldset
+        class="elementEdit"
+        id="picture-1"
+        data-image_id="1"
+      >
+    <div class="metasync-success badge-container">
+      <div class="badge-succes">
+        <i class="icon-ok"></i>
+        Metadata sync complete
+      </div>
+    </div>
+    <div class="pictureIdLabel">
+      #1
+    </div>
+    <div class="media-box">
+      <img
+            src="action.php?id=1&amp;part=e"
+            alt="imagename"
+            class="media-box-embed is-portrait"
+          >
+      <div class="media-hover">
+        <div class='picture-preview-actions'>
+          <a
+                class="preview-box icon-zoom-square tiptip"
+                href="action.php?id=1&amp;part=e"
+                title="Zoom"
+              ></a>
+          <a
+                class="icon-download tiptip"
+                href="action.php?id=1&amp;part=e&amp;pwg_token={{TOKEN}}&amp;download"
+                title="download"
+              ></a>
+          <a
+                class="icon-signal tiptip"
+                href="admin.php?page=history&amp;filter_image_id=1"
+                title="Visit history"
+              ></a>
+          <a
+                class="icon-pulse tiptip"
+                href="admin.php?page=user_activity&amp;photo=1"
+                title="Activity"
+              ></a>
+          <a
+                target="_blank"
+                class="icon-pencil tiptip"
+                href="admin.php?page=photo-1"
+                title="Edit photo"
+              ></a>
+          <a
+                  class="icon-arrows-cw tiptip action-sync-metadata"
+                  title="Synchronize metadata"
+                ></a>
+          <a
+                  class="icon-trash tiptip action-delete-picture"
+                  title="delete photo"
+                ></a>
+        </div>
+        <a class="see-out" href="picture.php?/1/category/1">
+          <p>
+            <i class="icon-left-open"></i>
+            Open in gallery
+          </p>
+        </a>
+      </div>
+    </div>
+    <div class="main-info-container">
+      <div class="main-info-block">
+        <div class='info-framed-icon'>
+          <i class='icon-picture'></i>
+        </div>
+        <span
+              class="main-info-title"
+              id="filename"
+            >fixture-photo-1.jpg</span>
+        <span
+              class="main-info-desc"
+              id="dimensions"
+            >200x150 px</span>
+        <span
+              class="main-info-desc"
+              id="filesize"
+            >0.00 MB</span>
+        <span class="main-info-desc">jpg file type</span>
+      </div>
+      <div class="main-info-block">
+        <div class='info-framed-icon'>
+          <span class='icon-calendar'></span>
+        </div>
+        <span
+              class="main-info-title first-letter-capitalize"
+            >Added on August 1, 2026</span>
+        <span class="main-info-desc"> ago</span>
+        <span class="main-info-desc">Added by fixture_admin</span>
+        <span class="main-info-desc">Visited 0 times</span>
+      </div>
+    </div>
+    <div class="info-container">
+      <div class="half-line-info-box">
+        <strong>Title</strong>
+        <input type="text" name="name" id="name" value="Photo 1">
+      </div>
+      <div class="calendar-box">
+        <strong>Creation date</strong>
+        <input
+              type="hidden"
+              id="date_creation"
+              name="date_creation-1"
+              value="2024-03-15 10:00:00"
+            >
+        <label class="calendar-input">
+          <i class="icon-calendar"></i>
+          <input
+                type="text"
+                data-datepicker="date_creation-1"
+                data-datepicker-unset="date_creation_unset-1"
+                readonly
+              >
+          <a
+                href="#"
+                class="icon-cancel-circled unset datepickerDelete"
+                id="date_creation_unset-1"
+              ></a>
+        </label>
+      </div>
+      <div class="half-line-info-box">
+        <strong>Author</strong>
+        <input
+              type="text"
+              name="author"
+              id="author"
+              value=""
+            >
+      </div>
+      <div class="half-line-info-box">
+        <div class="privacy-label-container">
+          <strong>Who can see?</strong>
+          <i>level of confidentiality</i>
+        </div>
+        <select name="level" id="level" size="1">
+          <option
+                value="8"
+              >Admins</option>
+          <option
+                value="4"
+              >Admins, Family</option>
+          <option
+                value="2"
+              >Admins, Family, Friends</option>
+          <option
+                value="1"
+              >Admins, Family, Friends, Contacts</option>
+          <option
+                value="0" selected
+              >Everybody</option>
+        </select>
+      </div>
+      <div class="full-line-tag-box" id="action_add_tags">
+        <strong>Tags</strong>
+        <select
+              id="tags"
+              data-selectize="tags"
+              data-value="[{&quot;name&quot;:&quot;family&quot;,&quot;id&quot;:&quot;~~3~~&quot;},{&quot;name&quot;:&quot;nature&quot;,&quot;id&quot;:&quot;~~1~~&quot;},{&quot;name&quot;:&quot;travel&quot;,&quot;id&quot;:&quot;~~2~~&quot;}]"
+              placeholder="Type in a search term"
+              data-create="true"
+              name="tags"
+              id="tags-1[]"
+              multiple
+            ></select>
+      </div>
+      <div class="full-line-box" id="1">
+        <strong>Linked albums <span
+                class="linked-albums-badge "
+              > 1 </span></strong>
+        <span class="orphan-photo"></span>
+        <div class="related-categories-container">
+          <div
+                class="breadcrumb-item"
+              >
+            <span class="link-path">
+<a href="admin.php?page=album-1">Sample Album</a></span>
+            <span
+                    id="1"
+                    class="icon-cancel-circled remove-item"
+                  ></span>
+          </div>
+        </div>
+        <div
+              class="breadcrumb-item linked-albums add-item "
+            >
+          <span class="icon-plus-circled"></span>
+          Add
+        </div>
+      </div>
+      <div class="full-line-description-box">
+        <strong>Description</strong>
+        <textarea
+              cols="50"
+              rows="4"
+              name="description"
+              class="description-box"
+              id="description"
+            ></textarea>
+      </div>
+      <div class="validation-container">
+        <div class="save-button-container">
+          <div class="buttonLike action-save-picture buttonSubmitLocal">
+            <i class="icon-floppy"></i>
+            Save
+          </div>
+        </div>
+        <div class="local-unsaved-badge badge-container">
+          <div class="badge-unsaved">
+            <i class="icon-attention"></i>
+            You have unsaved changes
+          </div>
+        </div>
+        <div class="local-success-badge badge-container">
+          <div class="badge-succes">
+            <i class="icon-ok"></i>
+            Changes saved
+          </div>
+        </div>
+        <div class="local-error-badge badge-container">
+          <div class="badge-error">
+            <i class="icon-cancel"></i>
+            An error has occured
+          </div>
+        </div>
+      </div>
+    </div>
+  </fieldset>
+  <div class="infos deleted-badge" data-image_id="2">
+    <i class="icon-ok"></i>
+    <p>
+      &nbsp;Image&nbsp;
+      <p>
+        #2 'fixture-photo-2.jpg'
+      </p>
+      &nbsp;was succesfully deleted
+    </p>
+  </div>
+  <fieldset
+        class="elementEdit"
+        id="picture-2"
+        data-image_id="2"
+      >
+    <div class="metasync-success badge-container">
+      <div class="badge-succes">
+        <i class="icon-ok"></i>
+        Metadata sync complete
+      </div>
+    </div>
+    <div class="pictureIdLabel">
+      #2
+    </div>
+    <div class="media-box">
+      <img
+            src="action.php?id=2&amp;part=e"
+            alt="imagename"
+            class="media-box-embed is-portrait"
+          >
+      <div class="media-hover">
+        <div class='picture-preview-actions'>
+          <a
+                class="preview-box icon-zoom-square tiptip"
+                href="action.php?id=2&amp;part=e"
+                title="Zoom"
+              ></a>
+          <a
+                class="icon-download tiptip"
+                href="action.php?id=2&amp;part=e&amp;pwg_token={{TOKEN}}&amp;download"
+                title="download"
+              ></a>
+          <a
+                class="icon-signal tiptip"
+                href="admin.php?page=history&amp;filter_image_id=2"
+                title="Visit history"
+              ></a>
+          <a
+                class="icon-pulse tiptip"
+                href="admin.php?page=user_activity&amp;photo=2"
+                title="Activity"
+              ></a>
+          <a
+                target="_blank"
+                class="icon-pencil tiptip"
+                href="admin.php?page=photo-2"
+                title="Edit photo"
+              ></a>
+          <a
+                  class="icon-arrows-cw tiptip action-sync-metadata"
+                  title="Synchronize metadata"
+                ></a>
+          <a
+                  class="icon-trash tiptip action-delete-picture"
+                  title="delete photo"
+                ></a>
+        </div>
+        <a class="see-out" href="picture.php?/2/category/1">
+          <p>
+            <i class="icon-left-open"></i>
+            Open in gallery
+          </p>
+        </a>
+      </div>
+    </div>
+    <div class="main-info-container">
+      <div class="main-info-block">
+        <div class='info-framed-icon'>
+          <i class='icon-picture'></i>
+        </div>
+        <span
+              class="main-info-title"
+              id="filename"
+            >fixture-photo-2.jpg</span>
+        <span
+              class="main-info-desc"
+              id="dimensions"
+            >200x150 px</span>
+        <span
+              class="main-info-desc"
+              id="filesize"
+            >0.00 MB</span>
+        <span class="main-info-desc">jpg file type</span>
+      </div>
+      <div class="main-info-block">
+        <div class='info-framed-icon'>
+          <span class='icon-calendar'></span>
+        </div>
+        <span
+              class="main-info-title first-letter-capitalize"
+            >Added on August 1, 2026</span>
+        <span class="main-info-desc"> ago</span>
+        <span class="main-info-desc">Added by fixture_admin</span>
+        <span class="main-info-desc">Visited 0 times</span>
+      </div>
+    </div>
+    <div class="info-container">
+      <div class="half-line-info-box">
+        <strong>Title</strong>
+        <input type="text" name="name" id="name" value="Photo 2">
+      </div>
+      <div class="calendar-box">
+        <strong>Creation date</strong>
+        <input
+              type="hidden"
+              id="date_creation"
+              name="date_creation-2"
+              value="2024-07-22 14:30:00"
+            >
+        <label class="calendar-input">
+          <i class="icon-calendar"></i>
+          <input
+                type="text"
+                data-datepicker="date_creation-2"
+                data-datepicker-unset="date_creation_unset-2"
+                readonly
+              >
+          <a
+                href="#"
+                class="icon-cancel-circled unset datepickerDelete"
+                id="date_creation_unset-2"
+              ></a>
+        </label>
+      </div>
+      <div class="half-line-info-box">
+        <strong>Author</strong>
+        <input
+              type="text"
+              name="author"
+              id="author"
+              value=""
+            >
+      </div>
+      <div class="half-line-info-box">
+        <div class="privacy-label-container">
+          <strong>Who can see?</strong>
+          <i>level of confidentiality</i>
+        </div>
+        <select name="level" id="level" size="1">
+          <option
+                value="8"
+              >Admins</option>
+          <option
+                value="4"
+              >Admins, Family</option>
+          <option
+                value="2"
+              >Admins, Family, Friends</option>
+          <option
+                value="1"
+              >Admins, Family, Friends, Contacts</option>
+          <option
+                value="0" selected
+              >Everybody</option>
+        </select>
+      </div>
+      <div class="full-line-tag-box" id="action_add_tags">
+        <strong>Tags</strong>
+        <select
+              id="tags"
+              data-selectize="tags"
+              data-value="[{&quot;name&quot;:&quot;nature&quot;,&quot;id&quot;:&quot;~~1~~&quot;}]"
+              placeholder="Type in a search term"
+              data-create="true"
+              name="tags"
+              id="tags-2[]"
+              multiple
+            ></select>
+      </div>
+      <div class="full-line-box" id="2">
+        <strong>Linked albums <span
+                class="linked-albums-badge "
+              > 1 </span></strong>
+        <span class="orphan-photo"></span>
+        <div class="related-categories-container">
+          <div
+                class="breadcrumb-item"
+              >
+            <span class="link-path">
+<a href="admin.php?page=album-1">Sample Album</a></span>
+            <span
+                    id="1"
+                    class="icon-cancel-circled remove-item"
+                  ></span>
+          </div>
+        </div>
+        <div
+              class="breadcrumb-item linked-albums add-item "
+            >
+          <span class="icon-plus-circled"></span>
+          Add
+        </div>
+      </div>
+      <div class="full-line-description-box">
+        <strong>Description</strong>
+        <textarea
+              cols="50"
+              rows="4"
+              name="description"
+              class="description-box"
+              id="description"
+            ></textarea>
+      </div>
+      <div class="validation-container">
+        <div class="save-button-container">
+          <div class="buttonLike action-save-picture buttonSubmitLocal">
+            <i class="icon-floppy"></i>
+            Save
+          </div>
+        </div>
+        <div class="local-unsaved-badge badge-container">
+          <div class="badge-unsaved">
+            <i class="icon-attention"></i>
+            You have unsaved changes
+          </div>
+        </div>
+        <div class="local-success-badge badge-container">
+          <div class="badge-succes">
+            <i class="icon-ok"></i>
+            Changes saved
+          </div>
+        </div>
+        <div class="local-error-badge badge-container">
+          <div class="badge-error">
+            <i class="icon-cancel"></i>
+            An error has occured
+          </div>
+        </div>
+      </div>
+    </div>
+  </fieldset>
+  <div class="pagination-bar">
+    <div class="pagination-per-page">
+      <span>photos per page :</span>
+      <a
+          href="admin.php?page=batch_manager&amp;mode=unit&amp;filter=prefilter-all_photos&amp;display=5"
+          class=""
+        >5</a>
+      <a
+          href="admin.php?page=batch_manager&amp;mode=unit&amp;filter=prefilter-all_photos&amp;display=10"
+          class=""
+        >10</a>
+      <a
+          href="admin.php?page=batch_manager&amp;mode=unit&amp;filter=prefilter-all_photos&amp;display=50"
+          class=""
+        >50</a>
+    </div>
+
+    <div class="pagination-reload-container">
+      <div class="pagination-reload">
+        <a
+              class="button-reload tiptip"
+              title="Pagination has changed and needs to be reloaded !"
+              href="admin.php?page=batch_manager&amp;mode=unit&amp;display=2"
+            ><i class="icon-cw"></i></a>
+<div class="pagination-container">
+  <a class='pagination-arrow left unavailable'>
+    <span class="icon-left-open"></span>
+  </a>
+
+  <div class="pagination-item-container">
+    <a class="actual">1</a>
+    <a href="admin.php?page=batch_manager&amp;mode=unit&amp;filter=prefilter-all_photos&amp;display=2&amp;start=2">2</a>
+    <a href="admin.php?page=batch_manager&amp;mode=unit&amp;filter=prefilter-all_photos&amp;display=2&amp;start=4">3</a>
+  </div>
+
+  <a
+      href="admin.php?page=batch_manager&amp;mode=unit&amp;filter=prefilter-all_photos&amp;display=2&amp;start=2"
+      class='pagination-arrow rigth'
+      rel="next"
+    >
+    <span class="icon-left-open"></span>
+  </a>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-save-bar">
+    <input type="hidden" name="pwg_token" value="{{TOKEN}}">
+    <div class="badge-container global-unsaved-badge">
+      <div class="badge-unsaved">
+        <i class="icon-attention"></i>
+        <span id="unsaved-count"></span>
+        image(s) contains unsaved changes
+      </div>
+    </div>
+    <div class="badge-container global-succes-badge">
+      <div class="badge-succes">
+        <i class="icon-ok"></i>
+        Changes saved
+      </div>
+    </div>
+    <div class="badge-container global-error-badge">
+      <div class="badge-error">
+        <i class="icon-cancel"></i>
+        An error has occured
+      </div>
+    </div>
+    <div class="buttonLike action-save-global">
+      <i class="icon-floppy"></i>
+      Save all photos
+    </div>
+  </div>
+</div>
+
+
+</div>
+      </div>
+
+      <div id="footer">
+        <div>
+          <a
+            class="externalLink tiptip piwigo-logo"
+            href="https://upstream.example.invalid"
+            title="Visit Piwigo project website"
+          ><img src="themes/admin/default/images/piwigo-grey.svg"></a>
+          <span
+            id="whats_new_notification"
+            class="icon-blue tiptip"
+            onclick="show_user_whats_new()"
+            title="What&apos;s new in version 17?"
+          >
+            <i class="icon-bell"></i>
+          </span>
+        </div>
+        <div id="pageInfos">
+
+          Contact
+          <a
+            href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site"
+          >Webmaster</a>
+        </div>      </div>    </div>    <div
+      id="whats_new"
+    >
+      <div id="whats_new_popin">
+        <a
+          class="icon-cancel close_whats_new"
+          onClick="hide_user_whats_new()"
+        ></a>
+        <h3>What's new in version 17?</h3>
+        <div>
+          <div class="whats_new_block_container">
+            <div class="whats_new_block icon-blue whats_new_block_w_60">
+              <h4><a
+                  href="https://upstream.example.invalid/releases/17.0.0"
+                  target="_blank"
+                >Brand new login &amp; preferences with Standard pages !</a></h4>
+            </div>
+            <div class="whats_new_block icon-purple whats_new_block_w_40">
+              <h4><a
+                  href="https://upstream.example.invalid/releases/17.0.0"
+                  target="_blank"
+                >Two factor authentication is here</a></h4>
+            </div>
+          </div>
+          <div class="whats_new_block_container">
+            <div class="whats_new_block icon-green whats_new_block_w_100">
+              <h4><a
+                  href="https://upstream.example.invalid/releases/17.0.0"
+                  target="_blank"
+                >UI redesigns that make a difference</a></h4>
+            </div>
+          </div>
+        </div>
+        <div class="whats_new_buttons">
+          <button onClick="hide_user_whats_new()"><i
+              class="icon-thumbs-up"
+            ></i> Ok, got it!</button>
+          <a
+            class="buttonLike"
+            href="https://upstream.example.invalid/releases/17.0.0"
+            target="_blank"
+          ><i class="icon-book"></i> Read the release note</a>
+        </div>
+      </div>
+    </div>
+
+    <script type="application/json" id="page-data">{"data":{"active_plugins":[],"cache_key_tags":"1785553200_3","cache_key_categories":"1785639600_2","cache_key_hash":"{{TOKEN}}","root_url":"","associated_categories":{"1":1,"2":2},"dimensions":{"widths":"200","heights":"150","ratios":"1.33","bounds":{"min_width":200,"max_width":200,"min_height":150,"max_height":150,"min_ratio":1.33,"max_ratio":1.33},"ratio_landscape":{"min":1.33,"max":1.33},"selected":{"min_width":200,"max_width":200,"min_height":150,"max_height":150,"min_ratio":1.33,"max_ratio":1.33}},"filesize":{"list":"0.0","bounds":{"min":"0.0","max":"0.0"},"selected":{"min":"0.0","max":"0.0"}},"filter_category_selected":null,"all_related_categories_ids":{"1":[1],"2":[1]},"csrf_token":"{{TOKEN}}","active_menu":0,"whats_new_major_version":"17","show_whats_new":false},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?","Create":"Create","Cancel":"Cancel","Yes, delete":"Yes, delete","This photo is an orphan":"This photo is an orphan","Warning ! Unsaved changes will be lost":"Warning ! Unsaved changes will be lost","I want to continue":"I want to continue","Associate to album":"Associate to album","Only the first %d albums are displayed, out of %d.":"Only the first %d albums are displayed, out of %d.","Album already selected":"Album already selected","No search in progress":"No search in progress","\u003Cb\u003E%d\u003C\/b\u003E albums found":"\u003Cb\u003E%d\u003C\/b\u003E albums found","\u003Cb\u003E1\u003C\/b\u003E album found":"\u003Cb\u003E1\u003C\/b\u003E album found","\u003Cb\u003E%d+\u003C\/b\u003E albums found, try to refine the search":"\u003Cb\u003E%d+\u003C\/b\u003E albums found, try to refine the search","Add a sub-album to “%s”":"Add a sub-album to “%s”","Create and select":"Create and select","Root":"Root","Name field must not be empty":"Name field must not be empty","An error has occured":"An error has occured","Select an album":"Select an album","Search":"Search","between %d and %d pixels":"between %d and %d pixels","between %.2f and %.2f":"between %.2f and %.2f","between %s and %s MB":"between %s and %s MB","Select at least one album":"Select at least one album","Select at least one tag":"Select at least one tag"}}</script>
+
+    <script type="text/javascript" src="themes/default/js/plugins/jquery.autogrow-textarea.js?v17.0.0"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/trentrichardson/jQuery-Timepicker-Addon@v1.4.4/dist/jquery-ui-timepicker-addon.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/jackmoore/colorbox@1.5.14/jquery.colorbox-min.js"></script>
+    <script type="text/javascript" src="themes/default/js/plugins/jquery.sort.js?v17.0.0"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js"></script>
+    <script type="module" src="dist/assets/batchManagerFilter-{{ASSET_HASH}}.js?v17.0.0"></script>
+    <script type="module" src="dist/assets/adminShell-{{ASSET_HASH}}.js?v17.0.0"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/drewwilson/TipTip@277e33629e/jquery.tipTip.minified.js"></script>
+    <script type="module" src="dist/assets/batchManagerUnitPage-{{ASSET_HASH}}.js?v17.0.0"></script>
+    <script type="module" src="dist/assets/batchManagerUnit-{{ASSET_HASH}}.js?v17.0.0"></script>
+    <script type="module" src="dist/assets/footerAdmin-{{ASSET_HASH}}.js?v17.0.0"></script>
+
+    <script
+      type="module"
+      src="dist/vitals.js"
+    ></script>
+  </body>
+</html>

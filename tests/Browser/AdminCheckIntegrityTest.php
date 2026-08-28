@@ -105,18 +105,20 @@ it('renders the integrity panel and loads its bundle when a real anomaly exists'
             );
 
         // The ignore branch: show_ignore_msg true and can_select false, the
-        // only other state this anomaly can reach. Driven through the
-        // server's own documented field names rather than the form's submit
-        // button -- see this file's trailing note on why those differ.
-        $ignored = H::adminPost($page, '/admin.php', [
-            'c13y_submit_ignore' => '1',
-            'c13y_selection' => [$anomalyId],
-        ]);
-        expect($ignored['status'])->toBe(200);
+        // only other state this anomaly can reach. Driven by ticking the real
+        // checkbox and pressing the real button, which is the whole point --
+        // until the button was renamed to the field name
+        // C13yTreatmentRequest actually reads, this submitted nothing the
+        // server recognised and the page just re-rendered unchanged.
+        $page->click('#c13y_selection-' . $anomalyId);
+        $page->click('input[name="c13y_submit_ignore"]');
+        H::assertNoServerErrors($page, 'after pressing Ignore selected anomalies');
+
+        $ignoredHtml = H::rawWebpage($page)->content();
 
         // show_ignore_msg's two sentences now, and show_correction_fct's
         // text gone -- the branch swap is the whole point.
-        expect(c13yPanelText($ignored['body']))
+        expect(c13yPanelText($ignoredHtml))
             ->toBe(
                 'Anomaly Correction'
                 . ' The main "guest" user status is incorrect'
@@ -126,13 +128,13 @@ it('renders the integrity panel and loads its bundle when a real anomaly exists'
 
         // can_select is false once ignored, so the checkbox that carried the
         // id is gone with it.
-        expect($ignored['body'])
+        expect($ignoredHtml)
             ->not->toContain('name="c13y_selection[]"');
 
         // can_select is false now, so the checkbox and its empty first-cell
         // label are gone -- which is why the label list above is 2 long, not
         // 3, and why the id no longer reaches the markup four times.
-        expect($ignored['body'])
+        expect($ignoredHtml)
             ->not->toContain('name="c13y_selection[]"');
     } finally {
         H::dbQuery(
@@ -150,25 +152,76 @@ it('renders the integrity panel and loads its bundle when a real anomaly exists'
     }
 });
 
+/**
+ * The correction half of the same fix. "Apply selected corrections" ran the
+ * anomaly's own correction function -- here C13yInternal::c13yCorrectionUser(),
+ * which puts the guest user's status back -- and then re-renders with
+ * show_correction_success_fct set, the one message branch the other test
+ * cannot reach.
+ *
+ * Like the ignore button, this did nothing at all until the input was named
+ * c13y_submit_correction: the form posted a field the server never looked at.
+ */
+it('applies a selected correction when the correction button is pressed', function (): void {
+    $db = H::connect();
+    $before = H::dbFetchAssoc($db, 'SELECT status FROM user_infos WHERE user_id = 2');
+    $original = is_string($before['status'] ?? null) ? $before['status'] : 'guest';
+
+    try {
+        H::dbQuery($db, "UPDATE user_infos SET status = 'normal' WHERE user_id = 2");
+
+        $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, '/admin.php');
+
+        $html = H::rawWebpage($page)->content();
+        if (preg_match('/name="c13y_selection\[\]"\s+value="([^"]+)"/', $html, $m) !== 1) {
+            throw new RuntimeException('no c13y selection checkbox rendered: ' . c13yPanelText($html));
+        }
+
+        $page->click('#c13y_selection-' . $m[1]);
+        $page->click('input[name="c13y_submit_correction"]');
+        H::assertNoServerErrors($page, 'after pressing Apply selected corrections');
+
+        expect(c13yPanelText(H::rawWebpage($page)->content()))
+            ->toBe(
+                'Anomaly Correction'
+                . ' The main "guest" user status is incorrect'
+                . ' Correction successfully applied'
+            );
+
+        // And it really corrected the underlying data, not just the label.
+        $after = H::dbFetchAssoc($db, 'SELECT status FROM user_infos WHERE user_id = 2');
+        expect($after['status'] ?? null)->toBe('guest');
+    } finally {
+        H::dbQuery(
+            $db,
+            "UPDATE user_infos SET status = '" . H::dbEscape($db, $original) . "' WHERE user_id = 2"
+        );
+        H::dbQuery($db, 'DELETE FROM integrity_ignored_anomalies');
+        H::dbClose($db);
+        H::markSharedSessionDirty();
+    }
+});
+
 /*
- * Why the ignore branch above is driven by a direct POST of
- * `c13y_submit_ignore` rather than by clicking the form's own button:
+ * Both action buttons in check_integrity.latte were inert until this change.
  *
- * check_integrity.latte renders its two action buttons as
- * `name="Apply selected corrections"` and `name="Ignore selected anomalies"`,
- * but C13yTreatmentRequest::fromArray() looks for `c13y_submit_correction`
- * and `c13y_submit_ignore`, and nothing anywhere sets those -- not the
- * template, not check_integrity.ts. So both buttons submit the form, the
- * request resolves `mode` to null, and the page simply re-renders unchanged.
+ * The template rendered them as `name="Apply selected corrections"` and
+ * `name="Ignore selected anomalies"`, while C13yTreatmentRequest::fromArray()
+ * looks for `c13y_submit_correction` and `c13y_submit_ignore` -- and nothing
+ * anywhere set those, not the template and not check_integrity.ts. So either
+ * button submitted the form, the request resolved `mode` to null, and the
+ * page re-rendered unchanged: no correction applied, no anomaly ignored.
  *
- * This is inherited, not a Latte-conversion regression, and not something
- * P58 introduced: the pre-conversion check_integrity.tpl used the same two
- * button names with no hidden fields alongside them, and the pre-DTO PHP it
- * ran against already read `$_POST['c13y_submit_correction']`. It has simply
- * never been exercised end-to-end -- the Integration tests set $_POST
- * directly (CheckIntegrityTest:222/266), which is exactly why the mismatch
- * survived.
+ * It was inherited rather than introduced by the Latte conversion -- the
+ * pre-conversion check_integrity.tpl carried the same two button names with
+ * no hidden fields beside them, and the pre-DTO PHP it ran against already
+ * read $_POST['c13y_submit_correction']. It survived because it was never
+ * exercised end-to-end: the Integration tests set $_POST directly
+ * (CheckIntegrityTest:222/266), which is exactly the shape of coverage that
+ * cannot see a form/handler mismatch.
  *
- * Left alone deliberately. P58 is type and expression work, and making these
- * buttons functional is a behaviour change that deserves its own decision.
+ * Fixed by naming the inputs what the server reads. The two tests above now
+ * tick the real checkbox and press the real button, so the mismatch cannot
+ * come back silently; each was confirmed to fail against the old names.
  */

@@ -21,7 +21,6 @@ final readonly class CategoryListRow
         public int $nbSubPhotos,
         public int $nbSubAlbums,
         public int $id,
-        public int $rank,
         public string $uJumpto,
         public string $uChildren,
         public string $uEdit,
@@ -29,39 +28,5 @@ final readonly class CategoryListRow
         public string $uMove,
         public bool $isVirtual,
         public bool $catAdminAccess,
-        public ?string $uDelete,
-        public ?string $uSync,
     ) {}
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function toArray(): array
-    {
-        $result = [
-            'NAME' => $this->name,
-            'NB_PHOTOS' => $this->nbPhotos,
-            'NB_SUB_PHOTOS' => $this->nbSubPhotos,
-            'NB_SUB_ALBUMS' => $this->nbSubAlbums,
-            'ID' => $this->id,
-            'RANK' => $this->rank,
-            'U_JUMPTO' => $this->uJumpto,
-            'U_CHILDREN' => $this->uChildren,
-            'U_EDIT' => $this->uEdit,
-            'U_ADD_PHOTOS_ALBUM' => $this->uAddPhotosAlbum,
-            'U_MOVE' => $this->uMove,
-            'IS_VIRTUAL' => $this->isVirtual,
-            'CAT_ADMIN_ACCESS' => $this->catAdminAccess,
-        ];
-
-        if ($this->uDelete !== null) {
-            $result['U_DELETE'] = $this->uDelete;
-        }
-
-        if ($this->uSync !== null) {
-            $result['U_SYNC'] = $this->uSync;
-        }
-
-        return $result;
-    }
 }

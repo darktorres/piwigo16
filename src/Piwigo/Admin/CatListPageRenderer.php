@@ -223,7 +223,6 @@ final readonly class CatListPageRenderer
                 nbSubPhotos: $nb_sub_photos[$cat_id] ?? 0,
                 nbSubAlbums: isset($subcats_of[$cat_id]) ? count($subcats_of[$cat_id]) : 0,
                 id: $cat_id,
-                rank: ($category->rank ?? 0) * 10,
                 uJumpto: $this->urlService->makeIndexUrl(
                     [
                         'category' => $category->toArray(),
@@ -235,8 +234,6 @@ final readonly class CatListPageRenderer
                 uMove: $base_url . 'albums#cat-' . $cat_id,
                 isVirtual: in_array($category->dir, [null, '', '0'], true),
                 catAdminAccess: $categoryService->catAdminAccess($cat_id, $this->currentUser),
-                uDelete: $u_delete,
-                uSync: $u_sync,
             );
         }
 
@@ -245,7 +242,7 @@ final readonly class CatListPageRenderer
             formAction: $form_action,
             csrfToken: $this->csrfService
                 ->getToken(),
-            categories: array_map(static fn (CategoryListRow $category): array => $category->toArray(), $tpl_categories),
+            categories: $tpl_categories,
         ));
 
         return new AdminPageResult(

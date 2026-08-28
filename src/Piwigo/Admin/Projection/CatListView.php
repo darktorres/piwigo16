@@ -23,7 +23,7 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class CatListView implements View, HasPageAssets
 {
     /**
-     * @param list<array<string, mixed>> $categories
+     * @param list<CategoryListRow> $categories
      */
     public function __construct(
         public string $categoriesNav,

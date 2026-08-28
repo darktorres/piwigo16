@@ -120,10 +120,6 @@ final class RatingUserPageRenderer
                         representativeExt: $thumb_row->representativeExt,
                         dimensionsUnavailable: true,
                     )),
-                    page: $urlService->makePictureUrl([
-                        'image_id' => $thumb_row->id,
-                        'image_file' => $thumb_row->file,
-                    ]),
                 );
             }
         }
@@ -226,7 +222,7 @@ final class RatingUserPageRenderer
             consensusTopNumber: $consensus_top_number,
             availableRates: $currentConfig->rateItems,
             ratings: $by_user_ratings,
-            imageUrls: array_map(static fn (ImageThumbUrl $imageUrl): array => $imageUrl->toArray(), $image_urls),
+            imageUrls: $image_urls,
             tnWidth: (int) $imageStdParams->getByType(ImageStdParams::SQUARE)->sizing->ideal_size->width,
             nbElements: $nb_elements,
             orderByOptions: $order_by_options,

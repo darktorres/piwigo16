@@ -10,6 +10,7 @@ use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
 use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
+use Piwigo\Rate\Projection\ImageThumbUrl;
 use Piwigo\Template\Latte\Attribute\Template;
 
 /**
@@ -33,7 +34,7 @@ final readonly class RatingUserView implements View, HasPageAssets, ExposesPageD
      * @param list<int> $orderByOptionsSelected
      * @param list<int> $availableRates
      * @param array<string, array<string, mixed>> $ratings
-     * @param array<int, array{tn: string, page: string}> $imageUrls
+     * @param array<int, ImageThumbUrl> $imageUrls
      * @param list<string> $orderByOptions
      */
     public function __construct(

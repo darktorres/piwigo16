@@ -70,7 +70,7 @@
         <td>{$rating['cv']|number:3}</td><td>{$rating['cd']|number:3}</td><td>{if !empty($rating['cdtop'])}{$rating['cdtop']|number:3}{/if}</td>
         {foreach $rating['rates'] as $rate => $rates}
           <td>{if !empty($rates)}
-              {capture $rate_over}{foreach $rates as $rate_arr}{breakIf $iterator->counter0 > 29}<img src="{$imageUrls[$rate_arr['id']]['tn']|noescape}" alt="thumb-{$rate_arr['id']}" width="{$tnWidth}" height="{$tnWidth}">{/foreach}{/capture}
+              {capture $rate_over}{foreach $rates as $rate_arr}{breakIf $iterator->counter0 > 29}<img src="{$imageUrls[$rate_arr['id']]->tn|noescape}" alt="thumb-{$rate_arr['id']}" width="{$tnWidth}" height="{$tnWidth}">{/foreach}{/capture}
               <a
                 title="{=(string) $rate_over|htmlspecialchars|noescape}"
               >{$rates|length}</a>

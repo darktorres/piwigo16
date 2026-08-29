@@ -442,10 +442,10 @@ final readonly class BatchManagerUnitPageRenderer
                     name: $row_name,
                     author: $row_author,
                     description: $row_comment,
-                    dateCreation: $row['date_creation'],
+                    dateCreation: is_string($row['date_creation'] ?? null) ? $row['date_creation'] : null,
                     tags: $tag_selection,
                     dimensions: $row_width . 'x' . $row_height . ' px',
-                    format: ($row_width >= $row_height) ? 1 : 0, // 0:horizontal, 1:vertical
+                    isWide: $row_width >= $row_height,
                     filesize: $this->lang->t('%.2f MB', $row_filesize / 1024.0),
                     ext: $this->lang->t('%s file type', end($extTab)),
                     postDate: $this->lang->t('Added on %s', DateHelper::formatDate($row_date_available, ['day', 'month', 'year'])),
@@ -459,8 +459,8 @@ final readonly class BatchManagerUnitPageRenderer
                     uDownload: 'action.php?id=' . $row_id_str . '&amp;part=e&amp;pwg_token=' . $this->csrfService->getToken() . '&amp;download',
                     uHistory: $this->urlService->getRootUrl() . 'admin.php?page=history&amp;filter_image_id=' . $row_id_str,
                     uActivity: $this->urlService->getRootUrl() . 'admin.php?page=user_activity&photo=' . $row_id_str,
-                    path: $row['path'],
-                    levelOptionsSelected: [$selected_level],
+                    path: $row_path,
+                    levelSelected: is_numeric($selected_level) ? (int) $selected_level : null,
                 );
             }
 

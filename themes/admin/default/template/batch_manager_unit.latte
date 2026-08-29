@@ -75,7 +75,7 @@
           <img
             src="{$element->tnSrc|noescape}"
             alt="imagename"
-            class="media-box-embed {if $element->format}is-portrait{else}is-landscape{/if}"
+            class="media-box-embed {if $element->isWide}is-portrait{else}is-landscape{/if}"
           >
           <div class="media-hover">
             <div class='picture-preview-actions'>
@@ -210,7 +210,7 @@
               <option
                 n:foreach="$levelOptions as $optKey => $optLabel"
                 value="{$optKey}"
-                n:attr="selected: in_array((string) $optKey, array_map(strval(...), $element->levelOptionsSelected), true) ? 'selected' : null"
+                n:attr="selected: (string) $optKey === (string) $element->levelSelected ? 'selected' : null"
               >{html_entity_decode(strval($optLabel))}</option>
             </select>
           </div>

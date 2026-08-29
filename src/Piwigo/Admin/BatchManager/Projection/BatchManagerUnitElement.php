@@ -29,17 +29,19 @@ namespace Piwigo\Admin\BatchManager\Projection;
  * `json_encode()`'s `false` to `''`, which is what the View's own reader
  * did before this was typed.
  *
- * `$levelOptionsSelected` stays a one-element array of `mixed`: it is
- * `[$row['level']]` off a raw DBAL row, and the template feeds it straight
- * to `array_map(strval(...), ...)`. Narrowing it belongs with that idiom's
- * own cleanup, not here.
+ * `$isWide` is the old `format` flag, which was an int the template used
+ * as a boolean. Its name is the honest one: the producer computes
+ * `width >= height`, and the CSS classes it selects are named the other
+ * way round (`is-portrait` styles a wide image, `is-landscape` a tall
+ * one). Those class names are wrong in both this page and
+ * `picture_modify.latte`, and their rules are right, so the rendering has
+ * always been correct; renaming them is a CSS change, not this one.
  */
 final readonly class BatchManagerUnitElement
 {
     /**
      * @param array<int, array{name: mixed, id: string}> $tags
      * @param array<int, array{name: string, unlinkable: bool}> $relatedCategories
-     * @param array{mixed} $levelOptionsSelected
      */
     public function __construct(
         public int|string $id,
@@ -49,10 +51,10 @@ final readonly class BatchManagerUnitElement
         public string $name,
         public string $author,
         public string $description,
-        public mixed $dateCreation,
+        public ?string $dateCreation,
         public array $tags,
         public string $dimensions,
-        public int $format,
+        public bool $isWide,
         public string $filesize,
         public string $ext,
         public string $postDate,
@@ -66,7 +68,7 @@ final readonly class BatchManagerUnitElement
         public string $uDownload,
         public string $uHistory,
         public string $uActivity,
-        public mixed $path,
-        public array $levelOptionsSelected,
+        public string $path,
+        public ?int $levelSelected,
     ) {}
 }

@@ -27,7 +27,7 @@ function batchManagerUnitElement(int|string $id, string $relatedCategoryIds): Ba
         dateCreation: null,
         tags: [],
         dimensions: '',
-        format: 0,
+        isWide: false,
         filesize: '',
         ext: '',
         postDate: '',
@@ -41,8 +41,8 @@ function batchManagerUnitElement(int|string $id, string $relatedCategoryIds): Ba
         uDownload: '',
         uHistory: '',
         uActivity: '',
-        path: null,
-        levelOptionsSelected: [null],
+        path: '',
+        levelSelected: null,
     );
 }
 

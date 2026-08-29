@@ -1,34 +1,38 @@
-{templateType Piwigo\Menu\Projection\MenubarBlockView}
+{templateType Piwigo\Menu\Projection\MenubarIdentificationView}
 <dt>{='Identification'|translate}</dt>
 <dd>
   {spaceless}
-    <p n:if="isset($USERNAME)">{='Hello'|translate} {$USERNAME} !</p>
+    <p n:if="$user !== null">{='Hello'|translate} {$user->username} !</p>
     <ul>
-      <li n:if="isset($U_REGISTER)"><a
-          href="{$U_REGISTER|noescape}"
+      <li n:if="$guest !== null and $guest->registerUrl !== null"><a
+          href="{$guest->registerUrl|noescape}"
           title="{='Create a new account'|translate}"
           rel="nofollow"
         >{='Register'|translate}</a></li>
-      <li n:if="isset($U_LOGIN)"><a
-          href="{$U_LOGIN|noescape}"
+      <li n:if="$guest !== null"><a
+          href="{$guest->loginUrl|noescape}"
           rel="nofollow"
         >{='Login'|translate}</a></li>
-      <li n:if="isset($U_LOGOUT)"><a
-          href="{$U_LOGOUT|noescape}"
+      <li n:if="$user !== null and $user->logoutUrl !== null"><a
+          href="{$user->logoutUrl|noescape}"
         >{='Logout'|translate}</a></li>
-      <li n:if="isset($U_PROFILE)"><a
-          href="{$U_PROFILE|noescape}"
+      <li n:if="$user !== null and $user->profileUrl !== null"><a
+          href="{$user->profileUrl|noescape}"
           title="{='edit user preferences'|translate}"
         >{='Profile'|translate}</a></li>
-      <li n:if="isset($U_ADMIN)"><a
-          href="{$U_ADMIN|noescape}"
+      <li n:if="$user !== null and $user->adminUrl !== null"><a
+          href="{$user->adminUrl|noescape}"
           title="{='available for administrators only'|translate}"
         >{='Administration'|translate}</a></li>
     </ul>
   {/spaceless}
-  {if isset($U_LOGIN)}
+  {if $guest !== null}
     {spaceless}
-      <form method="post" action="{$U_LOGIN|noescape}" id="quickconnect">
+      <form
+        method="post"
+        action="{$guest->loginUrl|noescape}"
+        id="quickconnect"
+      >
         <fieldset>
           <legend>{='Quick connect'|translate}</legend>
           <div>
@@ -51,7 +55,7 @@
             >
           </div>
 
-          <div n:if="$AUTHORIZE_REMEMBERING"><label for="remember_me">
+          <div n:if="$guest->authorizeRemembering"><label for="remember_me">
               <input
                 type="checkbox"
                 name="remember_me"
@@ -64,13 +68,13 @@
             <input
               type="hidden"
               name="redirect"
-              value="{$LOGIN_REDIRECT|urlencode}"
+              value="{$loginRedirect|urlencode}"
             >
             <input type="submit" name="login" value="{='Submit'|translate}">
             <span class="categoryActions">
               <a
-                n:if="isset($U_REGISTER)"
-                href="{$U_REGISTER|noescape}"
+                n:if="$guest->registerUrl !== null"
+                href="{$guest->registerUrl|noescape}"
                 title="{='Create a new account'|translate}"
                 class="pwg-state-default pwg-button"
                 rel="nofollow"
@@ -78,7 +82,7 @@
                 <span class="pwg-icon pwg-icon-register"></span>
               </a>
               <a
-                href="{$U_LOST_PASSWORD|noescape}"
+                href="{$guest->lostPasswordUrl|noescape}"
                 title="{='Forgot your password?'|translate}"
                 class="pwg-state-default pwg-button"
               >

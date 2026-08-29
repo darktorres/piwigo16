@@ -25,14 +25,6 @@ final class DisplayBlock
     private ?string $title = null;
 
     /**
-     * Only ever set by MenubarRenderer for the specific block ids it knows
-     * about -- stays null for any other registered (e.g. plugin) block,
-     * which is why menubar.latte checks `empty($block->template)` rather
-     * than reading it unconditionally.
-     */
-    public ?string $template = null;
-
-    /**
      * @var string|null the block's rendered HTML. MenubarRenderer renders
      *   each block it knows about through its own typed View into this;
      *   a block nothing fills stays null and BlockManager::apply() hides

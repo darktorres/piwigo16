@@ -29,17 +29,20 @@ use Piwigo\Lang\Translator;
 use Piwigo\Menu\Event\CheckMenuLinkVisibility;
 use Piwigo\Menu\Projection\MenubarCategoriesView;
 use Piwigo\Menu\Projection\MenubarCategoryRow;
-use Piwigo\Menu\Projection\MenubarIdentificationPageContext;
+use Piwigo\Menu\Projection\MenubarGuestIdentity;
+use Piwigo\Menu\Projection\MenubarIdentificationView;
 use Piwigo\Menu\Projection\MenubarLinkRow;
 use Piwigo\Menu\Projection\MenubarLinksView;
 use Piwigo\Menu\Projection\MenubarMenuRow;
 use Piwigo\Menu\Projection\MenubarMenuView;
+use Piwigo\Menu\Projection\MenubarQuerySearchPageContext;
 use Piwigo\Menu\Projection\MenubarRelatedCategoriesView;
 use Piwigo\Menu\Projection\MenubarRelatedCategoryRow;
 use Piwigo\Menu\Projection\MenubarSpecialRow;
 use Piwigo\Menu\Projection\MenubarSpecialsView;
 use Piwigo\Menu\Projection\MenubarTagRow;
 use Piwigo\Menu\Projection\MenubarTagsView;
+use Piwigo\Menu\Projection\MenubarUserIdentity;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContext;
@@ -397,56 +400,40 @@ final class MenubarRenderer
             ));
         }
 
-        $u_login = null;
-        $u_lost_password = null;
-        $authorize_remembering = null;
-        $u_register = null;
-        $username_value = null;
-        $u_profile = null;
-        $u_logout = null;
-        $u_admin = null;
         if ($accessLevelChecker->isAGuest()) {
-            $u_login = $urlService->getRootUrl() . 'identification.php';
-            $u_lost_password = $urlService->getRootUrl() . 'password.php';
-            $authorize_remembering = $currentConfig->authorizeRemembering;
-            if ($currentConfig->allowUserRegistration) {
-                $u_register = $urlService->getRootUrl() . 'register.php';
-            }
+            $identity = new MenubarGuestIdentity(
+                loginUrl: $urlService->getRootUrl() . 'identification.php',
+                lostPasswordUrl: $urlService->getRootUrl() . 'password.php',
+                authorizeRemembering: $currentConfig->authorizeRemembering,
+                registerUrl: $currentConfig->allowUserRegistration
+                    ? $urlService->getRootUrl() . 'register.php'
+                    : null,
+            );
         } else {
-            $username = $currentUser->get()
-                ->username->value ?? '';
-            $username_value = $username;
-            if ($accessLevelChecker->isAuthorizeStatus(AccessLevel::Classic)) {
-                $u_profile = $urlService->getRootUrl() . 'profile.php';
-            }
-
-            // the logout link has no meaning with Apache authentication : it is not
-            // possible to logout with this kind of authentication.
-            if (! $deploymentPolicy->apacheAuthentication) {
-                $u_logout = $urlService->getRootUrl() . '?act=logout';
-            }
-            if ($accessLevelChecker->isAdmin()) {
-                $u_admin = $urlService->getRootUrl() . 'admin.php';
-            }
+            $identity = new MenubarUserIdentity(
+                username: $currentUser->get()
+                    ->username->value ?? '',
+                profileUrl: $accessLevelChecker->isAuthorizeStatus(AccessLevel::Classic)
+                    ? $urlService->getRootUrl() . 'profile.php'
+                    : null,
+                // the logout link has no meaning with Apache authentication : it is not
+                // possible to logout with this kind of authentication.
+                logoutUrl: $deploymentPolicy->apacheAuthentication
+                    ? null
+                    : $urlService->getRootUrl() . '?act=logout',
+                adminUrl: $accessLevelChecker->isAdmin()
+                    ? $urlService->getRootUrl() . 'admin.php'
+                    : null,
+            );
         }
         if (($block = $menu->getBlock('mbIdentification')) instanceof DisplayBlock) {
-            $block->template = 'menubar_identification.latte';
+            $block->raw_content = (string) $renderer->render(new MenubarIdentificationView(
+                identity: $identity,
+                loginRedirect: is_string($_SERVER['REQUEST_URI'] ?? null) ? $_SERVER['REQUEST_URI'] : '',
+            ));
         }
 
-        $template->assignContext(new MenubarIdentificationPageContext(
-            querySearch: $query_search,
-            uStopFilter: $u_stop_filter,
-            uStartFilter: $u_start_filter,
-            uLogin: $u_login,
-            uLostPassword: $u_lost_password,
-            authorizeRemembering: $authorize_remembering,
-            uRegister: $u_register,
-            username: $username_value,
-            uProfile: $u_profile,
-            uLogout: $u_logout,
-            uAdmin: $u_admin,
-            loginRedirect: is_string($_SERVER['REQUEST_URI'] ?? null) ? $_SERVER['REQUEST_URI'] : '',
-        ));
+        $template->assignContext(new MenubarQuerySearchPageContext($query_search));
 
         $menu->apply();
 

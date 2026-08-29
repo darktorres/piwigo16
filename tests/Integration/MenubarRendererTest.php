@@ -205,6 +205,15 @@ final class MenubarRendererTest extends IntegrationTestCase
         self::assertNull($this->template->getTemplateVars('QUERY_SEARCH'));
     }
 
+    /**
+     * These two assert the rendered `<a href>` rather than a
+     * `U_STOP_FILTER`/`U_START_FILTER` template var: both values used to
+     * be assigned ambiently by MenubarIdentificationPageContext and are
+     * now passed straight to MenubarCategoriesView, which is their only
+     * reader. Asserting the markup is the stronger check anyway -- it
+     * fails if the value is computed correctly but never rendered, which
+     * is the failure the old assertion could not see.
+     */
     public function testRenderAssignsAStopFilterLinkWhenTheRecentFilterIsActive(): void
     {
         CurrentConfigTestFactory::get()->menubarFilterIcon = true;
@@ -220,8 +229,10 @@ final class MenubarRendererTest extends IntegrationTestCase
         $expected = $this->urlService->addUrlParams($this->urlService->makeIndexUrl([]), [
             'filter' => 'stop',
         ]);
-        self::assertSame($expected, $this->template->getTemplateVars('U_STOP_FILTER'));
-        self::assertNull($this->template->getTemplateVars('U_START_FILTER'));
+        $menubar = $this->template->getTemplateVars('MENUBAR');
+        self::assertInstanceOf(Html::class, $menubar);
+        self::assertStringContainsString(sprintf('href="%s"', $expected), (string) $menubar);
+        self::assertStringNotContainsString('filter=start-recent-', (string) $menubar);
     }
 
     public function testRenderAssignsAStartFilterLinkWithTheUsersRecentPeriodWhenTheFilterIsInactive(): void
@@ -240,8 +251,10 @@ final class MenubarRendererTest extends IntegrationTestCase
         $expected = $this->urlService->addUrlParams($this->urlService->makeIndexUrl([]), [
             'filter' => 'start-recent-7',
         ]);
-        self::assertSame($expected, $this->template->getTemplateVars('U_START_FILTER'));
-        self::assertNull($this->template->getTemplateVars('U_STOP_FILTER'));
+        $menubar = $this->template->getTemplateVars('MENUBAR');
+        self::assertInstanceOf(Html::class, $menubar);
+        self::assertStringContainsString(sprintf('href="%s"', $expected), (string) $menubar);
+        self::assertStringNotContainsString('filter=stop', (string) $menubar);
     }
 
     /**

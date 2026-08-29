@@ -4,10 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Menu\Projection;
 
-use Override;
-use Piwigo\Asset\AssetContribution;
-use Piwigo\Asset\HasPageAssets;
-use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Menu\DisplayBlock;
 use Piwigo\Template\Latte\Attribute\Template;
@@ -20,29 +16,22 @@ use Piwigo\Template\Latte\Attribute\Template;
  * data-returning method + caller-renders shape -- `BlockManager` renders
  * this itself.
  *
- * `pageAssets()`/`exposedStrings()` (docs/PLAN.md's P42-B) close the
- * `MenubarBlockView`/`index.latte` design gap noted earlier: the 7 real
- * `menubar_*.latte` sub-block templates are reached only via
- * `menubar.latte`'s own native Latte `{include $block->template, ...}`
- * (a dynamic filename include, never individually
- * `Renderer::render()`'d), so `MenubarBlockView` itself stays
- * deliberately contract-only (no `View`, no `#[Template]`) -- but by the
- * time *this* View is constructed, every block's own `$template`/`$data`
- * is already fully resolved (`BlockManager::prepareDisplay()`/`apply()`
- * run first), so this class can pattern-match the 3 known in-tree
- * sub-block filenames that carry real registrations
- * (`menubar_identification.latte`/`menubar_links.latte`/
- * `menubar_menu.latte` -- `menubar_categories.latte`/
- * `menubar_related_categories.latte`/`menubar_tags.latte`/
- * `menubar_specials.latte` carry none) and replicate each one's own
- * registrations directly, gated the same way the template body itself
- * gates them. An unrecognized `$block->template` (a plugin-registered
- * block) falls through untouched -- its own `{do}` calls, if any, stay
- * live in its own file, same as every other plugin template not yet in
- * scope for this campaign.
+ * Each block arrives with its markup already in `raw_content`, so this
+ * view only lays them out. It used to carry a `match ($block->template)`
+ * that replicated three sub-blocks' asset registrations on their behalf,
+ * because `menubar.latte` reached them through a dynamic-filename
+ * `{include $block->template, ...}` that no sub-template could hang a
+ * `{templateType}` on. All seven now render through `Renderer::render()`
+ * into `raw_content` and own their own assets, so both the include and
+ * the dispatch are gone -- and with them `MenubarBlockView`, the
+ * contract-only class that stood in for the seven missing view types.
+ *
+ * A plugin-registered block is no longer a separate path: it fills
+ * `raw_content` like every other block, and one that fills nothing is
+ * hidden by `apply()` rather than emitting an empty `<dl>`.
  */
 #[Template('menubar.latte')]
-final readonly class MenubarView implements View, HasPageAssets, ExposesPageData
+final readonly class MenubarView implements View
 {
     /**
      * @param array<int|string, DisplayBlock> $blocks
@@ -51,42 +40,4 @@ final readonly class MenubarView implements View, HasPageAssets, ExposesPageData
         public array $blocks,
     ) {}
 
-    /**
-     * @return list<AssetContribution>
-     */
-    #[Override]
-    public function pageAssets(): array
-    {
-        $assets = [];
-
-        foreach ($this->blocks as $block) {
-            $assets = match ($block->template) {
-                'menubar_identification.latte' => [
-                    ...$assets,
-                    AssetContribution::css('themes/default/css/components/menubar_identification.css', id: 'menubar_identification'),
-                ],
-                default => $assets,
-            };
-        }
-
-        return $assets;
-    }
-
-    /**
-     * @return array<string, string|int|float|bool|null|array<mixed>>
-     */
-    #[Override]
-    public function exposedPageData(): array
-    {
-        return [];
-    }
-
-    /**
-     * @return list<string>
-     */
-    #[Override]
-    public function exposedStrings(): array
-    {
-        return [];
-    }
 }

@@ -401,9 +401,6 @@ parameters:
             identifier: offsetAccess.notFound
             path: _analysis/phpstan-latte/*
         -
-            identifier: offsetAccess.invalidOffset
-            path: _analysis/phpstan-latte/*
-        -
             identifier: argument.type
             path: _analysis/phpstan-latte/*
         -

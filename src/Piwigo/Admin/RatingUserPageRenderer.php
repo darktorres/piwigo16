@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Projection\RatingUserView;
+use Piwigo\Admin\Projection\UserRatingRow;
 use Piwigo\Admin\Request\RatingUserFilterRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
@@ -62,15 +63,9 @@ final class RatingUserPageRenderer
 
         $rate_items = $currentConfig->rateItems;
 
-        $by_user_rating_model = [
-            'rates' => [],
-        ];
-        foreach ($rate_items as $rate) {
-            $by_user_rating_model['rates'][$rate] = [];
-        }
-
         // by user aggregation
         $image_ids = [];
+        /** @var array<string, UserRatingAccumulator> $by_user_ratings */
         $by_user_ratings = [];
         foreach ($rate_repository->findAllRatesOrderedByDateDesc() as $rate_row) {
             $user_id = $rate_row->userId->value;
@@ -86,22 +81,22 @@ final class RatingUserPageRenderer
             } else {
                 $user_key = $usr['name'];
             }
+            // Rate::$date is nullable, and every consumer of it --
+            // the two rendered dates and lastRateCompare()'s strcmp --
+            // already treated null as the empty string.
+            $rate_date = $rate_row->date ?? '';
+
             if (! isset($by_user_ratings[$user_key])) {
-                $rating = $by_user_rating_model;
-                $rating['uid'] = $user_id;
-                $rating['aid'] = $usr['anon'] ? $rate_row->anonymousId : '';
-                $rating['last_date'] = $rating['first_date'] = $rate_row->date;
-            } else {
-                $rating = $by_user_ratings[$user_key];
-                $rating['first_date'] = $rate_row->date;
+                $by_user_ratings[$user_key] = new UserRatingAccumulator(
+                    uid: $user_id,
+                    aid: $usr['anon'] ? $rate_row->anonymousId : '',
+                    lastDate: $rate_date,
+                    rateItems: $rate_items,
+                );
             }
 
             $element_id = $rate_row->elementId->value;
-            $rating['rates'][$rate_row->rate][] = [
-                'id' => $element_id,
-                'date' => $rate_row->date,
-            ];
-            $by_user_ratings[$user_key] = $rating;
+            $by_user_ratings[$user_key]->add($rate_row->rate, $element_id, $rate_date);
             $image_ids[$element_id] = 1;
         }
 
@@ -125,71 +120,19 @@ final class RatingUserPageRenderer
         }
 
         // all image averages
-        $all_img_sum = [];
-        foreach ($rate_repository->findAverageRatePerElement() as $element_id => $avg) {
-            $all_img_sum[$element_id] = [
-                'avg' => $avg,
-            ];
-        }
+        $all_img_sum = $rate_repository->findAverageRatePerElement();
 
         $best_rated = array_flip($rate_repository->findTopRatedImageIds($consensus_top_number));
 
         // by user stats
-        foreach ($by_user_ratings as $id => &$rating) {
-            $c = 0;
-            $s = 0;
-            $ss = 0;
-            $consensus_dev = 0.0;
-            $consensus_dev_top = 0.0;
-            $consensus_dev_top_count = 0;
-            foreach ($rating['rates'] as $rate => $rates) {
-                // $rate is a rating-score array key (1-5); PHP always
-                // canonicalises a purely-numeric array key to int, so this
-                // is genuinely always int at runtime despite Psalm's own
-                // generic array-key typing here. PHPStan already infers
-                // int on its own (hence the ignore below), Psalm doesn't.
-                // @phpstan-ignore cast.useless
-                $rate = (int) $rate;
-                $ct = count($rates);
-                $c += $ct;
-                $s += $ct * $rate;
-                $ss += $ct * $rate * $rate;
-                foreach ($rates as $id_date) {
-                    // PHPStan already infers float here (hence the ignore
-                    // below); Psalm's own strictBinaryOperands check needs
-                    // the explicit cast to stop treating abs()'s result as
-                    // a wider int|float union.
-                    // @phpstan-ignore cast.useless
-                    $dev = (float) abs((float) $rate - $all_img_sum[$id_date['id']]['avg']);
-                    $consensus_dev += $dev;
-                    if (isset($best_rated[$id_date['id']])) {
-                        $consensus_dev_top += $dev;
-                        $consensus_dev_top_count++;
-                    }
-                }
-            }
+        /** @var array<string, UserRatingRow> $rating_rows */
+        $rating_rows = [];
+        foreach ($by_user_ratings as $user_key => $accumulator) {
+            $row = $accumulator->freeze($all_img_sum, $best_rated);
 
-            $consensus_dev /= (float) $c;
-            if ($consensus_dev_top_count > 0) {
-                $consensus_dev_top /= (float) $consensus_dev_top_count;
-            }
-
-            $var = ((float) $ss - (float) $s * (float) $s / (float) $c) / (float) $c;
-            $rating += [
-                'id' => $id,
-                'count' => $c,
-                'avg' => $s / $c,
-                'cv' => $s === 0 ? -1 : sqrt($var) / ((float) $s / (float) $c), // http://en.wikipedia.org/wiki/Coefficient_of_variation
-                'cd' => $consensus_dev,
-                'cdtop' => $consensus_dev_top_count > 0 ? $consensus_dev_top : '',
-            ];
-        }
-        unset($rating);
-
-        // filter
-        foreach ($by_user_ratings as $id => $rating) {
-            if ($rating['count'] <= $filter_min_rates) {
-                unset($by_user_ratings[$id]);
+            // filter
+            if ($row->count > $filter_min_rates) {
+                $rating_rows[$user_key] = $row;
             }
         }
 
@@ -211,7 +154,7 @@ final class RatingUserPageRenderer
         for ($i = 0; $i < count($available_order_by); $i++) {
             $order_by_options[] = $available_order_by[$i][0];
         }
-        uasort($by_user_ratings, $available_order_by[$order_by_index][1]);
+        uasort($rating_rows, $available_order_by[$order_by_index][1]);
 
         $nb_elements = $rate_repository->countAllRates();
 
@@ -221,7 +164,7 @@ final class RatingUserPageRenderer
             minRates: $filter_min_rates,
             consensusTopNumber: $consensus_top_number,
             availableRates: $currentConfig->rateItems,
-            ratings: $by_user_ratings,
+            ratings: $rating_rows,
             imageUrls: $image_urls,
             tnWidth: (int) $imageStdParams->getByType(ImageStdParams::SQUARE)->sizing->ideal_size->width,
             nbElements: $nb_elements,
@@ -238,84 +181,42 @@ final class RatingUserPageRenderer
     }
 
     /**
-     * The 5 compare*() methods below all sort the same $by_user_ratings
-     * row, incrementally built up by render() across 3 separate mutation
-     * points (the initial $by_user_rating_model copy, the per-rate 'rates'
-     * bucket appends, and the final by-user-stats `$rating += [...]`) --
-     * a real static shape for it is derivable but would tie every
-     * comparator to render()'s own internal accumulation order, for no
-     * safety gain: each comparator already reads only its own 1-2 keys
-     * defensively (is_numeric()/is_string() + a default), the same
-     * cross-domain generic-row-reader pattern used for comparators
-     * elsewhere (e.g. {@see \Piwigo\Category\CategoryService::compareByGlobalRank()}).
-     *
-     * Two mutation-testing-confirmed-equivalent shapes repeated across all 4
-     * numeric comparators below:
-     * - Each side's `(float)` cast, taken alone, can't change $d's numeric
-     *   VALUE (is_numeric() already guarantees an int/float/numeric-string,
-     *   which all coerce identically under `-`) -- it can only affect $d's
-     *   TYPE, and only if BOTH sides lose their cast simultaneously (which a
-     *   single mutation never does: the other side's still-active cast
-     *   always forces the subtraction result back to float).
-     * - `$d < 0` is only ever reached after `$d === 0.0` has already failed,
-     *   so $d is guaranteed nonzero there -- `$d <= 0` would behave
-     *   identically to `$d < 0` in that reduced domain.
-     *
-     * @param array<string, mixed> $a
-     * @param array<string, mixed> $b
+     * The 5 compare*() methods below sort {@see UserRatingRow}s. They
+     * used to read a `array<string, mixed>` defensively -- an
+     * is_numeric()/is_string() narrowing plus a default per key --
+     * because the row they sorted was built across three separate
+     * mutation points and had no shape a caller could rely on. It is
+     * frozen by {@see UserRatingAccumulator::freeze()} now, so each
+     * one reads the field it sorts on directly.
      */
-    public static function avgCompare(array $a, array $b): int
+    public static function avgCompare(UserRatingRow $a, UserRatingRow $b): int
     {
-        $a_avg = is_numeric($a['avg'] ?? null) ? (float) $a['avg'] : 0.0;
-        $b_avg = is_numeric($b['avg'] ?? null) ? (float) $b['avg'] : 0.0;
-        $d = $a_avg - $b_avg;
+        $d = $a->avg - $b->avg;
         return $d === 0.0 ? 0 : ($d < 0 ? -1 : 1);
     }
 
-    /**
-     * @param array<string, mixed> $a see {@see avgCompare()}'s own docblock
-     * @param array<string, mixed> $b
-     */
-    public static function countCompare(array $a, array $b): int
+    public static function countCompare(UserRatingRow $a, UserRatingRow $b): int
     {
-        $a_count = is_numeric($a['count'] ?? null) ? (float) $a['count'] : 0.0;
-        $b_count = is_numeric($b['count'] ?? null) ? (float) $b['count'] : 0.0;
-        $d = $a_count - $b_count;
+        // Cast, even though both sides are int: the zero test below
+        // is a strict one, and `0 === 0.0` is false.
+        $d = (float) $a->count - (float) $b->count;
         return $d === 0.0 ? 0 : ($d < 0 ? -1 : 1);
     }
 
-    /**
-     * @param array<string, mixed> $a see {@see avgCompare()}'s own docblock
-     * @param array<string, mixed> $b
-     */
-    public static function cvCompare(array $a, array $b): int
+    public static function cvCompare(UserRatingRow $a, UserRatingRow $b): int
     {
-        $a_cv = is_numeric($a['cv'] ?? null) ? (float) $a['cv'] : 0.0;
-        $b_cv = is_numeric($b['cv'] ?? null) ? (float) $b['cv'] : 0.0;
-        $d = $b_cv - $a_cv; // desc
+        $d = $b->cv - $a->cv; // desc
         return $d === 0.0 ? 0 : ($d < 0 ? -1 : 1);
     }
 
-    /**
-     * @param array<string, mixed> $a see {@see avgCompare()}'s own docblock
-     * @param array<string, mixed> $b
-     */
-    public static function consensusDevCompare(array $a, array $b): int
+    public static function consensusDevCompare(UserRatingRow $a, UserRatingRow $b): int
     {
-        $a_cd = is_numeric($a['cd'] ?? null) ? (float) $a['cd'] : 0.0;
-        $b_cd = is_numeric($b['cd'] ?? null) ? (float) $b['cd'] : 0.0;
-        $d = $b_cd - $a_cd; // desc
+        $d = $b->cd - $a->cd; // desc
         return $d === 0.0 ? 0 : ($d < 0 ? -1 : 1);
     }
 
-    /**
-     * @param array<string, mixed> $a see {@see avgCompare()}'s own docblock
-     * @param array<string, mixed> $b
-     */
-    public static function lastRateCompare(array $a, array $b): int
+    public static function lastRateCompare(UserRatingRow $a, UserRatingRow $b): int
     {
-        $a_date = is_string($a['last_date'] ?? null) ? $a['last_date'] : '';
-        $b_date = is_string($b['last_date'] ?? null) ? $b['last_date'] : '';
-        return -strcmp($a_date, $b_date);
+        return -strcmp($a->lastDate, $b->lastDate);
     }
 }

@@ -15,12 +15,9 @@ use Piwigo\Template\Latte\Attribute\Template;
 
 /**
  * `rating_user.latte`'s own typed view, constructed by {@see
- * \Piwigo\Admin\RatingUserPageRenderer::render()}. `$ratings`/
- * `$imageUrls` stay loose row shapes: `$ratings` is the same genuinely
- * dynamic, incrementally-accumulated-across-3-mutation-points shape
- * documented on `RatingUserPageRenderer`'s own `avgCompare()`/
- * `countCompare()`/etc. comparators, not a fixed structural shape worth
- * minting its own DTO for here. `$orderByOptions` is always included --
+ * \Piwigo\Admin\RatingUserPageRenderer::render()}. `$ratings` is
+ * keyed by the display name the table's first column renders, which
+ * is why the row itself carries no name. `$orderByOptions` is always included --
  * the template reads it via an unguarded `{foreach}`, matching
  * the original code's own unconditional loop. `$rootUrl` is the ambient
  * `$ROOT_URL` the template's own `exposeData` call reads -- the
@@ -33,7 +30,7 @@ final readonly class RatingUserView implements View, HasPageAssets, ExposesPageD
     /**
      * @param list<int> $orderByOptionsSelected
      * @param list<int> $availableRates
-     * @param array<string, array<string, mixed>> $ratings
+     * @param array<string, UserRatingRow> $ratings
      * @param array<int, ImageThumbUrl> $imageUrls
      * @param list<string> $orderByOptions
      */

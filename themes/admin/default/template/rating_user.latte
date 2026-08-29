@@ -62,15 +62,15 @@
   </thead>
   {foreach $ratings as $user => $rating}
     {spaceless}
-      <tr data-usr='{"uid":{$rating["uid"]},"aid":"{$rating["aid"]}"}'>
+      <tr data-usr='{"uid":{$rating->uid},"aid":"{$rating->aid}"}'>
         <td class="usr">{$user}</td><td
-          title="First: {$rating['first_date']}"
-        >{$rating['last_date']}</td>
-        <td>{$rating['count']}</td><td>{$rating['avg']|number:2}</td>
-        <td>{$rating['cv']|number:3}</td><td>{$rating['cd']|number:3}</td><td>{if !empty($rating['cdtop'])}{$rating['cdtop']|number:3}{/if}</td>
-        {foreach $rating['rates'] as $rate => $rates}
+          title="First: {$rating->firstDate}"
+        >{$rating->lastDate}</td>
+        <td>{$rating->count}</td><td>{$rating->avg|number:2}</td>
+        <td>{$rating->cv|number:3}</td><td>{$rating->cd|number:3}</td><td>{if !empty($rating->cdTop)}{$rating->cdTop|number:3}{/if}</td>
+        {foreach $rating->rates as $rate => $rates}
           <td>{if !empty($rates)}
-              {capture $rate_over}{foreach $rates as $rate_arr}{breakIf $iterator->counter0 > 29}<img src="{$imageUrls[$rate_arr['id']]->tn|noescape}" alt="thumb-{$rate_arr['id']}" width="{$tnWidth}" height="{$tnWidth}">{/foreach}{/capture}
+              {capture $rate_over}{foreach $rates as $rate_arr}{breakIf $iterator->counter0 > 29}<img src="{$imageUrls[$rate_arr]->tn|noescape}" alt="thumb-{$rate_arr}" width="{$tnWidth}" height="{$tnWidth}">{/foreach}{/capture}
               <a
                 title="{=(string) $rate_over|htmlspecialchars|noescape}"
               >{$rates|length}</a>

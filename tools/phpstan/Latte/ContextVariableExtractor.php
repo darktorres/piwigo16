@@ -475,24 +475,9 @@ final readonly class ContextVariableExtractor
         // `$chronology['TITLE']` read as an offset on a string. A literal
         // whose keys are not all plain strings falls through unchanged.
         if ($expr instanceof Array_ && $expr->items !== []) {
-            $fields = [];
-            foreach ($expr->items as $item) {
-                if (! $item->key instanceof String_ || $item->byRef || $item->unpack) {
-                    $fields = null;
-                    break;
-                }
-                $fields[] = $item->key->value . ': ' . $this->typeOfExpression(
-                    $item->value,
-                    $contextClass,
-                    $reflection,
-                    $propertyTypes,
-                    $key . '.' . $item->key->value,
-                    $notices,
-                );
-            }
-
-            if ($fields !== null) {
-                return 'array{' . implode(', ', $fields) . '}';
+            $shape = $this->typeOfArrayLiteral($expr, $contextClass, $reflection, $propertyTypes, $key, $notices);
+            if ($shape !== null) {
+                return $shape;
             }
         }
 
@@ -513,6 +498,53 @@ final readonly class ContextVariableExtractor
         $notices[] = "'{$key}' in {$contextClass}::toArray() has no property reference -- typed mixed";
 
         return 'mixed';
+    }
+
+    /**
+     * `array{A: T, B: U}` for an all-string-keyed literal, `list<T|U>` for
+     * an all-keyless one, and null for anything else -- a mix of the two,
+     * an int key, a spread, a by-ref item. Null means "fall through to the
+     * approximation and say so in a notice": emitting a shape for a
+     * literal this cannot describe would be inventing one.
+     *
+     * @param ReflectionClass<object> $reflection
+     * @param array<string, string> $propertyTypes
+     * @param list<string> $notices
+     */
+    private function typeOfArrayLiteral(
+        Array_ $expr,
+        string $contextClass,
+        ReflectionClass $reflection,
+        array $propertyTypes,
+        string $key,
+        array &$notices,
+    ): ?string {
+        $keyed = $expr->items[0]->key !== null;
+
+        $parts = [];
+        foreach ($expr->items as $index => $item) {
+            if ($item->byRef || $item->unpack || ($item->key !== null) !== $keyed) {
+                return null;
+            }
+            if ($keyed && ! $item->key instanceof String_) {
+                return null;
+            }
+
+            $label = $item->key instanceof String_ ? $item->key->value : (string) $index;
+            $type = $this->typeOfExpression(
+                $item->value,
+                $contextClass,
+                $reflection,
+                $propertyTypes,
+                $key . '.' . $label,
+                $notices,
+            );
+            $parts[] = $keyed ? $label . ': ' . $type : $type;
+        }
+
+        return $keyed
+            ? 'array{' . implode(', ', $parts) . '}'
+            : 'list<' . implode('|', array_unique($parts)) . '>';
     }
 
     private function directPropertyName(Node $node): ?string

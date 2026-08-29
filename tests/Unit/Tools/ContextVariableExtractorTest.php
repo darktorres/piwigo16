@@ -37,6 +37,18 @@ it('types a toArray value built as an array literal by its real shape, not its f
         ->toBe('array{TITLE: string, COUNT: int}');
 });
 
+it('types a keyless literal as a list of its value types', function (): void {
+    $extracted = $this->extractor->extract(ContextVariableExtractorTestArrayLiteralFixture::class);
+
+    // `'footer_elements' => [$this->searchDebug]` is the real shape this
+    // covers: without it the layouts took `footer_elements` as `string`
+    // and both foreach'd over it.
+    expect($extracted->vars['listed'])
+        ->toBe('list<string|int>')
+        ->and($extracted->vars['listed_same'])
+        ->toBe('list<string>');
+});
+
 it('falls back to the approximation for a literal it cannot describe as a shape', function (): void {
     $extracted = $this->extractor->extract(ContextVariableExtractorTestArrayLiteralFixture::class);
 
@@ -49,7 +61,11 @@ it('falls back to the approximation for a literal it cannot describe as a shape'
         ->toBe('list<string>')
         ->and(implode(' ', $extracted->notices))
         ->toContain("'int_keyed'")
-        ->toContain("'spread_built'");
+        ->toContain("'spread_built'")
+        ->toContain("'mixed_keys'");
+    // A literal mixing a keyed and a keyless item is neither shape.
+    expect($extracted->vars['mixed_keys'])
+        ->toBe('string');
 });
 
 it('FQCN-expands use-imported classes in docblock types', function (): void {

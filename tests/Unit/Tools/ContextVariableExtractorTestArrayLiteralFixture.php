@@ -43,6 +43,12 @@ final readonly class ContextVariableExtractorTestArrayLiteralFixture implements 
             'spread_built' => [
                 ...$this->spread,
             ],
+            'listed' => [$this->title, $this->count],
+            'listed_same' => [$this->title],
+            'mixed_keys' => [
+                'A' => $this->title,
+                $this->count,
+            ],
         ];
     }
 }

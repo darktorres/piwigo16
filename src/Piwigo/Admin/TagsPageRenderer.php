@@ -9,6 +9,7 @@ use Piwigo\Admin\Projection\TagRow;
 use Piwigo\Admin\Projection\TagsView;
 use Piwigo\Admin\Request\TagsActionRequest;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\CookieService;
 use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -169,11 +170,39 @@ final readonly class TagsPageRenderer
             data: $all_tags,
             total: count($all_tags),
             perPage: $per_page,
+            tagsPerPageSelected: self::tagsPerPageSelected(new CookieService()->getTagsPerPage()),
         ));
 
         return new AdminPageResult(
             content: $adminContent,
             pageTitle: $this->lang->t('Tags'),
         );
+    }
+
+    /**
+     * Which page-size link `tags.latte` paints as selected, from the
+     * `pwg_tags_per_page` cookie.
+     *
+     * Absent, empty or `'0'` means the visitor has no preference yet and
+     * the first link wins -- `tags.ts` writes `'100'` on its own next
+     * tick, and reasserts the whole selection client-side anyway, so this
+     * only decides the pre-JS paint. Anything that is not one of the four
+     * offered sizes selects nothing, which is what the template's own
+     * `== 100`/`== 200`/... comparisons did with a value they did not
+     * recognise.
+     */
+    private static function tagsPerPageSelected(?string $cookie): ?int
+    {
+        if ($cookie === null || $cookie === '' || $cookie === '0') {
+            return 100;
+        }
+
+        if (! is_numeric($cookie)) {
+            return null;
+        }
+
+        $value = (int) $cookie;
+
+        return in_array($value, [100, 200, 500, 1000], true) ? $value : null;
     }
 }

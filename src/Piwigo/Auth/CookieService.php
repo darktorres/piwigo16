@@ -16,11 +16,12 @@ use Piwigo\Core\RequestMountDepth;
  * crafted `cookie[]=a&cookie[]=b` request header parses into a nested
  * array, same as $_GET/$_POST), not just "every real caller happens to
  * pass a string" -- narrowing here would misrepresent attacker-controlled
- * input as trusted. There is no generic `getCookieVar()` reader -- the 2
- * real callers each get a named, correctly-narrowed accessor below
- * instead (`getDisplayThumbnailPref()`/`getAnonymousRaterId()`),
- * narrowing at the one call site that actually knows what shape it expects
- * rather than trusting a runtime key name.
+ * input as trusted. There is no generic `getCookieVar()` reader -- each
+ * real caller gets a named, correctly-narrowed accessor below instead
+ * (`getDisplayThumbnailPref()`, `getAnonymousRaterId()`,
+ * `getTagsPerPage()`, `getAlbumManagerView()`), narrowing at the one call
+ * site that actually knows what shape it expects rather than trusting a
+ * runtime key name.
  */
 final class CookieService
 {
@@ -217,6 +218,28 @@ final class CookieService
     public function getAnonymousRaterId(): ?string
     {
         $value = $_COOKIE['pwg_anonymous_rater'] ?? null;
+
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * The admin tag manager's page-size preference, written by `tags.ts`
+     * with the text of whichever pagination link was clicked.
+     */
+    public function getTagsPerPage(): ?string
+    {
+        $value = $_COOKIE['pwg_tags_per_page'] ?? null;
+
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * The album manager's layout preference -- `tile`, `line` or
+     * `compact` -- written by `cat_list.ts`.
+     */
+    public function getAlbumManagerView(): ?string
+    {
+        $value = $_COOKIE['pwg_album_manager_view'] ?? null;
 
         return is_string($value) ? $value : null;
     }

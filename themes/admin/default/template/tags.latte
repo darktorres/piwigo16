@@ -181,27 +181,12 @@
 <div class="tag-pagination">
   <div class="pagination-per-page">
     <span class="thumbnailsActionsShow">{='Display'|translate}</span>
-    <a
-      id="100"
-      {if !isset($_COOKIE['pwg_tags_per_page']) || !$_COOKIE['pwg_tags_per_page'] || $_COOKIE['pwg_tags_per_page'] == 100}
-      class="selected"
-      {/if}
-    >100</a>
-    <a
-      id="200"
-      {if isset($_COOKIE['pwg_tags_per_page']) && $_COOKIE['pwg_tags_per_page'] == 200}
-      class="selected"
-      {/if}
-    >200</a>
-    <a
-      id="500"
-      {if isset($_COOKIE['pwg_tags_per_page']) && $_COOKIE['pwg_tags_per_page'] == 500}
-      class="selected"
-      {/if}
-    >500</a>
+    <a id="100" {if $tagsPerPageSelected === 100} class="selected" {/if}>100</a>
+    <a id="200" {if $tagsPerPageSelected === 200} class="selected" {/if}>200</a>
+    <a id="500" {if $tagsPerPageSelected === 500} class="selected" {/if}>500</a>
     <a
       id="1000"
-      {if isset($_COOKIE['pwg_tags_per_page']) && $_COOKIE['pwg_tags_per_page'] == 1000}
+      {if $tagsPerPageSelected === 1000}
       class="selected"
       {/if}
     >1000</a>

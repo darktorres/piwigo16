@@ -21,6 +21,11 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `$firstTags` is the first page of `$data`, not a different collection --
  * the template renders that slice server-side and hands the whole list to
  * `tags.ts` as JSON for the client-side pager.
+ *
+ * `$tagsPerPageSelected` decides which page-size link the server paints
+ * as selected. Null means none of them: the cookie holds a value that is
+ * not one of the four the links offer. See
+ * {@see \Piwigo\Admin\TagsPageRenderer::tagsPerPageSelected()}.
  */
 #[Template('tags.latte')]
 final readonly class TagsView implements View, HasPageAssets, ExposesPageData
@@ -38,6 +43,7 @@ final readonly class TagsView implements View, HasPageAssets, ExposesPageData
         public array $data,
         public int $total,
         public int $perPage,
+        public ?int $tagsPerPageSelected,
     ) {}
 
     /**

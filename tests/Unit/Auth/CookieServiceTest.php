@@ -228,6 +228,48 @@ test('getAnonymousRaterId returns the raw cookie value when set', function (): v
         ->toBe('10.0.0.1');
 });
 
+test('getTagsPerPage returns null when the cookie is unset', function (): void {
+    unset($_COOKIE['pwg_tags_per_page']);
+
+    expect(new CookieService()->getTagsPerPage())
+        ->toBeNull();
+});
+
+test('getTagsPerPage returns the raw cookie value when set', function (): void {
+    $_COOKIE['pwg_tags_per_page'] = '500';
+
+    expect(new CookieService()->getTagsPerPage())
+        ->toBe('500');
+});
+
+test('getTagsPerPage narrows a non-string cookie value to null', function (): void {
+    $_COOKIE['pwg_tags_per_page'] = ['not', 'scalar'];
+
+    expect(new CookieService()->getTagsPerPage())
+        ->toBeNull();
+});
+
+test('getAlbumManagerView returns null when the cookie is unset', function (): void {
+    unset($_COOKIE['pwg_album_manager_view']);
+
+    expect(new CookieService()->getAlbumManagerView())
+        ->toBeNull();
+});
+
+test('getAlbumManagerView returns the raw cookie value when set', function (): void {
+    $_COOKIE['pwg_album_manager_view'] = 'line';
+
+    expect(new CookieService()->getAlbumManagerView())
+        ->toBe('line');
+});
+
+test('getAlbumManagerView narrows a non-string cookie value to null', function (): void {
+    $_COOKIE['pwg_album_manager_view'] = ['not', 'scalar'];
+
+    expect(new CookieService()->getAlbumManagerView())
+        ->toBeNull();
+});
+
 test('cookiePath does not throw when PATH_INFO is present but not a string', function (): void {
     // isset()+is_string() must both hold (a real AND, not an OR) -- a
     // present-but-non-string PATH_INFO that slipped through an OR would

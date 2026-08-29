@@ -131,25 +131,25 @@
           >{='Select or create an album'|translate}</p>
         </div>
       </fieldset>
-    {elseif $haveFormatsOriginal}
+    {elseif $formatsOriginalInfo !== null}
       <fieldset class="originalPicture">
         <legend><span
             class="icon-link-1 icon-red"
           ></span>{='Picture to associate formats with'|translate}</legend>
         <a
           class='info-framed'
-          href='{$formatsOriginalInfo['u_edit']|noescape}'
+          href='{$formatsOriginalInfo->editUrl|noescape}'
           title='{='Edit photo'|translate}'
         >
           <div class='info-framed-icon'>
-            <img src='{$formatsOriginalInfo['src']|noescape}'>
+            <img src='{$formatsOriginalInfo->src|noescape}'>
           </div>
           <div class='info-framed-container'>
-            <div class='info-framed-title'>{$formatsOriginalInfo['name']}</div>
+            <div class='info-framed-title'>{$formatsOriginalInfo->name}</div>
             <div
-              n:if="isset($formatsOriginalInfo['formats'])"
-            >{$formatsOriginalInfo['formats']}</div>
-            <div>{$formatsOriginalInfo['ext']}</div>
+              n:if="$formatsOriginalInfo->formats !== null"
+            >{$formatsOriginalInfo->formats}</div>
+            <div>{$formatsOriginalInfo->ext}</div>
           </div>
         </a>
       </fieldset>
@@ -206,7 +206,7 @@
             {else}
               {='Allowed file types: %s.'|translate:$strFormatExt}
               <p
-                n:if="!$haveFormatsOriginal"
+                n:if="$formatsOriginalInfo === null"
               >{='The original picture will be detected with the filename (without extension).'|translate}</p>
             {/if}
           </p>

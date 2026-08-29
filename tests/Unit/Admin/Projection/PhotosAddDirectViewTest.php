@@ -2,13 +2,11 @@
 
 declare(strict_types=1);
 
+use Piwigo\Admin\Projection\FormatsOriginalInfo;
 use Piwigo\Admin\Projection\PhotosAddDirectView;
 
-/**
- * @param array<array-key, mixed>|null $formatsOriginalInfo
- */
 function makePhotosAddDirectView(
-    ?array $formatsOriginalInfo = null,
+    ?FormatsOriginalInfo $formatsOriginalInfo = null,
     string $pluploadCode = 'xx',
 ): PhotosAddDirectView {
     return new PhotosAddDirectView(
@@ -16,7 +14,6 @@ function makePhotosAddDirectView(
         phpwgUrl: '',
         enableFormats: false,
         displayFormats: false,
-        haveFormatsOriginal: false,
         formatsOriginalInfo: $formatsOriginalInfo,
         formatsExtInfo: null,
         switchFormatModeUrl: '',
@@ -64,15 +61,20 @@ test('pageAssets registers the plupload i18n script for a locale plupload ships'
 });
 
 test('exposedPageData derives original_image_id_str from formatsOriginalInfo id', function (): void {
-    $view = makePhotosAddDirectView(formatsOriginalInfo: [
-        'id' => 42,
-    ]);
+    $view = makePhotosAddDirectView(formatsOriginalInfo: new FormatsOriginalInfo(
+        id: 42,
+        name: '',
+        src: '',
+        formats: null,
+        ext: '',
+        editUrl: '',
+    ));
 
     expect($view->exposedPageData()['original_image_id_str'])
         ->toBe(' 42 ');
 });
 
-test('exposedPageData falls back to -1 when formatsOriginalInfo has no id', function (): void {
+test('exposedPageData falls back to -1 when there is no formatsOriginalInfo', function (): void {
     $view = makePhotosAddDirectView(formatsOriginalInfo: null);
 
     expect($view->exposedPageData()['original_image_id_str'])

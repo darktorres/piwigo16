@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Event\PhotosAddDirectPageRendered;
 use Piwigo\Admin\Image\ImageBackend;
+use Piwigo\Admin\Projection\FormatsOriginalInfo;
 use Piwigo\Admin\Projection\PhotosAddDirectView;
 use Piwigo\Admin\Request\PhotosAddDirectRequest;
 use Piwigo\Bootstrap\AdminAccessor;
@@ -130,24 +131,22 @@ final readonly class PhotosAddDirectPageRenderer
 
         $display_formats = $photosAddDirectRequest->displayFormats;
 
-        $have_formats_original = false;
-        $formats_original_info = [];
+        $formats_original_info = null;
         $formats_ext_info = null;
 
         // If URL parameter isn't empty
         if ($photosAddDirectRequest->formatsTruthy) {
-            $formats_original_info = $this->imageService
+            $formats_original_row = $this->imageService
                 ->getImageInfos($photosAddDirectRequest->formatsId, $htmlRenderer);
-            if ((bool) $formats_original_info) {
-                $src_image = new SrcImage(SrcImageInfo::fromRow($formats_original_info));
+            if ($formats_original_row !== null) {
+                $src_image = new SrcImage(SrcImageInfo::fromRow($formats_original_row));
 
-                $formats_original_info['src'] = DerivativeImage::url(ImageStdParams::SQUARE, $src_image);
-
-                $formats_image_id = $formats_original_info['id'];
+                $formats_image_id = $formats_original_row['id'];
 
                 $formats = TypedRepository::narrow($this->entityManager->getRepository(ImageEntity::class), ImageRepository::class)
                     ->findFormatsForImage(ImageId::from($formats_image_id));
 
+                $formats_summary = null;
                 if ($formats !== []) {
                     $format_strings = [];
                     $formats_exts = [];
@@ -159,17 +158,24 @@ final readonly class PhotosAddDirectPageRenderer
                         $formats_exts[] = strtolower($format_ext);
                     }
 
-                    $formats_original_info['formats'] = $this->lang->t('Formats: %s', implode(', ', $format_strings));
+                    $formats_summary = $this->lang->t('Formats: %s', implode(', ', $format_strings));
                     $formats_ext_info = json_encode($formats_exts);
                 }
 
-                $extTab = explode('.', $formats_original_info['file']);
+                $extTab = explode('.', $formats_original_row['file']);
 
-                $formats_original_info['ext'] = $this->lang->t('%s file type', strtoupper(end($extTab)));
+                $formats_original_info = new FormatsOriginalInfo(
+                    id: $formats_image_id,
+                    // The row's own `name` is nullable and the
+                    // template rendered a null one as the empty
+                    // string, which is what this keeps.
+                    name: $formats_original_row['name'] ?? '',
+                    src: DerivativeImage::url(ImageStdParams::SQUARE, $src_image),
+                    formats: $formats_summary,
+                    ext: $this->lang->t('%s file type', strtoupper(end($extTab))),
+                    editUrl: $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $formats_image_id,
+                );
 
-                $formats_original_info['u_edit'] = $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $formats_image_id;
-
-                $have_formats_original = true;
             } else {
                 $this->pageState->addError($this->lang->t('The original picture selected dosen\'t exists.'));
             }
@@ -190,7 +196,6 @@ final readonly class PhotosAddDirectPageRenderer
             phpwgUrl: AppInfo::URL,
             enableFormats: $this->currentConfig->isFormatsEnabled,
             displayFormats: $display_formats,
-            haveFormatsOriginal: $have_formats_original,
             formatsOriginalInfo: $formats_original_info,
             formatsExtInfo: $formats_ext_info,
             switchFormatModeUrl: $this->urlService->getRootUrl() . 'admin.php?page=photos_add' . ($display_formats ? '' : '&formats'),

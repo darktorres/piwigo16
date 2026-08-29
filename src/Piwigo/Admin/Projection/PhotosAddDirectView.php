@@ -28,7 +28,9 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class PhotosAddDirectView implements View, HasPageAssets, ExposesPageData
 {
     /**
-     * @param array<array-key, mixed>|null $formatsOriginalInfo
+     * @param ?FormatsOriginalInfo $formatsOriginalInfo null when there
+     *   is no such photo, which is also what the template and the
+     *   `have_formats_original` page-data flag both test
      * @param list<int> $selectedCategory
      * @param list<string> $setupErrors
      * @param list<string> $setupWarnings
@@ -38,8 +40,7 @@ final readonly class PhotosAddDirectView implements View, HasPageAssets, Exposes
         public string $phpwgUrl,
         public bool $enableFormats,
         public bool $displayFormats,
-        public bool $haveFormatsOriginal,
-        public ?array $formatsOriginalInfo,
+        public ?FormatsOriginalInfo $formatsOriginalInfo,
         public string|false|null $formatsExtInfo,
         public string $switchFormatModeUrl,
         public string $formatExt,
@@ -158,12 +159,20 @@ final readonly class PhotosAddDirectView implements View, HasPageAssets, Exposes
     #[Override]
     public function exposedPageData(): array
     {
-        $id = $this->formatsOriginalInfo['id'] ?? -1;
-        $originalImageIdStr = ' ' . (is_scalar($id) ? (string) $id : -1) . ' ';
+        // `??` already covers the null view property -- no nullsafe
+        // needed, since property access on null is exactly what it
+        // suppresses.
+        $originalImageIdStr = ' ' . ($this->formatsOriginalInfo->id ?? -1) . ' ';
 
         return [
             'display_formats' => $this->displayFormats,
-            'have_formats_original' => $this->haveFormatsOriginal,
+            // Derived rather than carried: it was a second
+            // constructor argument that had to agree with
+            // $formatsOriginalInfo being null, and nothing
+            // could make PHPStan (or a reader) believe they
+            // did -- every property read in the template was
+            // reported as a read on a possibly-null value.
+            'have_formats_original' => $this->formatsOriginalInfo !== null,
             'original_image_id_str' => $originalImageIdStr,
             'formats_ext_info' => $this->formatsExtInfo,
             'nb_albums' => (string) $this->nbAlbums,

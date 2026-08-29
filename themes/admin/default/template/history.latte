@@ -71,21 +71,6 @@
   </fieldset>
 </form>
 
-<fieldset n:if="isset($search_summary)">
-  <legend>{='Summary'|translate}</legend>
-
-  <ul>
-    <li>{$search_summary['NB_LINES']}, {$search_summary['FILESIZE']}</li>
-    <li>
-      {$search_summary['USERS']}
-      <ul>
-        <li>{$search_summary['MEMBERS']}</li>
-        <li>{$search_summary['GUESTS']}</li>
-      </ul>
-    </li>
-  </ul>
-</fieldset>
-
 {* Hidden template row, cloned by history.js for each summary user *}
 <span id="-2" class="icon-green summary-user-item hide">
   <i class="icon-user-1"></i>

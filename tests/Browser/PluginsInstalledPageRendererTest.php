@@ -164,6 +164,22 @@ function pluginsInstalledParseHeaderFields(string $pluginId, string $mainIncPhpS
     if (preg_match('/Has Settings:\s*([Tt]rue|[Ww]ebmaster)/', $mainIncPhpSource, $val) === 1) {
         $manifest['hasSettings'] = strtolower($val[1]) === 'webmaster' ? 'webmaster' : true;
     }
+    // The three fields that drive plugins_installed.latte's author and
+    // version blocks. Neither block had a fixture before: every plugin
+    // this file writes left `author`/`authorUri`/`uri` empty, so the
+    // listing always took the "no author" and "no visit URL" arms.
+    if (preg_match('|Author:\s*(.+)|', $mainIncPhpSource, $val) === 1) {
+        $manifest['author'] = trim($val[1]);
+    }
+    if (preg_match('|Author URI:\s*(\S+)|', $mainIncPhpSource, $val) === 1) {
+        $manifest['authorUri'] = trim($val[1]);
+    }
+    // `homepage`, not `uri`: ExtensionScanner reads the manifest's own
+    // `homepage` key into PluginScanRow::$uri, which is what the listing's
+    // "visit" link is built from.
+    if (preg_match('|Plugin URI:\s*(\S+)|', $mainIncPhpSource, $val) === 1) {
+        $manifest['homepage'] = trim($val[1]);
+    }
 
     return $manifest;
 }
@@ -628,6 +644,59 @@ it('leaves a $_SESSION[incompatible_plugins] entry untouched when its recorded v
     } finally {
         H::dbQuery($db, sprintf("DELETE FROM plugins WHERE id = '%s'", H::dbEscape($db, $pluginId)));
         H::dbClose($db);
+        pluginsInstalledRemoveFixturePlugin($pluginId);
+    }
+});
+
+it('links the author and the version when the manifest carries an author URI and a plugin URI', function (): void {
+    // Both blocks these assertions cover were unreachable before: every
+    // other fixture plugin in this file leaves author/authorUri/uri empty,
+    // so `{if !empty($plugin->author)}` and `{if !empty($plugin->visitUrl)}`
+    // always took their else arms and the listing never rendered either
+    // link. P58's own retype of these expressions (PluginListRow stopped
+    // being flattened at the View constructor) would have gone entirely
+    // unexercised by golden-html too -- that fixture's install has no
+    // plugins at all and renders "No plugins found".
+    $pluginId = 'authored-plugin-' . uniqid();
+    pluginsInstalledWriteFixturePlugin($pluginId, <<<'PHP'
+    <?php
+
+    /*
+    Plugin Name: Plugins Installed Test -- Authored
+    Version: 2.5.0
+    Description: Test-only fixture plugin (tests/Browser/PluginsInstalledPageRendererTest.php).
+    Author: Ada Lovelace
+    Author URI: https://authors.example.invalid/ada
+    Plugin URI: https://plugins.example.invalid/authored
+    */
+    PHP);
+
+    try {
+        $page = H::asAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=plugins');
+
+        // Off the HTTP response, not the DOM: both `{var}`s build their
+        // markup with single-quoted attributes, and the browser's own
+        // serializer rewrites those to double quotes -- which would make a
+        // DOM assertion pass against markup the server never emitted.
+        $response = H::rawGet($page, '/admin.php?page=plugins');
+        expect($response['status'])
+            ->toBe(200);
+
+        expect($response['body'])
+            // `{var $author = ("<a href='%s'>%s</a>"|sprintf:...)}` -- the
+            // sprintf arm, not the `<u>` one, and rendered as a real
+            // anchor rather than escaped into visible text.
+            ->toContain("<a href='https://authors.example.invalid/ada'>Ada Lovelace</a>")
+            // `{var $version = ("<a class='externalLink' href='" . ... )}`
+            // -- the concatenated arm, three of the binaryOp findings this
+            // retype cleared.
+            ->and($response['body'])
+            ->toContain("<a class='externalLink' href='https://plugins.example.invalid/authored'>2.5.0</a>");
+
+        $page->assertNoJavaScriptErrors();
+        H::assertNoServerErrors($page, 'plugins listing with an authored plugin');
+    } finally {
         pluginsInstalledRemoveFixturePlugin($pluginId);
     }
 });

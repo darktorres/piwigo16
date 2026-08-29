@@ -242,7 +242,7 @@ final class PluginsInstalledPageRenderer
         }
 
         $adminContent = $renderer->render(new PluginsInstalledView(
-            plugins: array_map(static fn (PluginListRow $plugin): array => $plugin->toArray(), $tpl_plugins),
+            plugins: $tpl_plugins,
             countTypesPlugins: $count_types_plugins,
             csrfToken: $pwg_token,
             showDetails: $show_details,

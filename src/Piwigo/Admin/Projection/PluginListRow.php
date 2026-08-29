@@ -24,22 +24,4 @@ final readonly class PluginListRow
         public string $settingsUrl,
         public string $state,
     ) {}
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function toArray(): array
-    {
-        return [
-            'ID' => $this->id,
-            'NAME' => $this->name,
-            'VISIT_URL' => $this->visitUrl,
-            'VERSION' => $this->version,
-            'DESC' => $this->desc,
-            'AUTHOR' => $this->author,
-            'AUTHOR_URL' => $this->authorUrl,
-            'SETTINGS_URL' => $this->settingsUrl,
-            'STATE' => $this->state,
-        ];
-    }
 }

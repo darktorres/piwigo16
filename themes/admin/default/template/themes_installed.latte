@@ -72,7 +72,7 @@
       <div class="showInfo-dropdown dropdown">
         <div class="showInfo-dropdown-header">
           {if !empty($author)}
-            {='By %s'|translate:$author} |
+            {='By %s'|translate:$author|noescape} |
           {/if}
           {='Version'|translate} {$version|noescape}
         </div>

@@ -90,23 +90,23 @@
     class="pluginContainer {if $viewSelector == 'classic'} classic-form {elseif $viewSelector == 'line'} line-form {elseif $viewSelector == 'compact'} compact-form {else} {/if}"
   >
     {foreach $plugins as $plugin}
-      {if !empty($plugin['AUTHOR'])}
-        {if !empty($plugin['AUTHOR_URL'])}
-          {var $author = ("<a href='%s'>%s</a>"|sprintf:$plugin['AUTHOR_URL'],$plugin['AUTHOR'])}
+      {if !empty($plugin->author)}
+        {if !empty($plugin->authorUrl)}
+          {var $author = ("<a href='%s'>%s</a>"|sprintf:$plugin->authorUrl,$plugin->author)}
         {else}
-          {var $author = ('<u>' . $plugin['AUTHOR'] . '</u>')}
+          {var $author = ('<u>' . $plugin->author . '</u>')}
         {/if}
       {/if}
 
-      {if !empty($plugin['VISIT_URL'])}
-        {var $version = ("<a class='externalLink' href='" . $plugin['VISIT_URL'] . "'>" . $plugin['VERSION'] . "</a>")}
+      {if !empty($plugin->visitUrl)}
+        {var $version = ("<a class='externalLink' href='" . $plugin->visitUrl . "'>" . $plugin->version . "</a>")}
       {else}
-        {var $version = $plugin['VERSION']}
+        {var $version = $plugin->version}
       {/if}
 
       <div
-        id="{$plugin['ID']}"
-        class="pluginBox pluginMiniBox {$plugin['STATE']} plugin-{$plugin['STATE']}"
+        id="{$plugin->id}"
+        class="pluginBox pluginMiniBox {$plugin->state} plugin-{$plugin->state}"
       >
         <div class="AddPluginSuccess pluginNotif">
           <label class="icon-ok">
@@ -135,18 +135,18 @@
         <div class="pluginContent">
           <div class="PluginOptionsIcons">
             <a
-              n:if="$plugin['STATE'] == 'active' || $plugin['STATE'] == 'inactive'"
+              n:if="$plugin->state == 'active' || $plugin->state == 'inactive'"
               class="icon-ellipsis-v showOptions showInfo"
             ></a>
           </div>
           <label
-            n:if="$plugin['STATE'] == 'active' || $plugin['STATE'] == 'inactive'"
+            n:if="$plugin->state == 'active' || $plugin->state == 'inactive'"
             class="switch"
           >
             <input
               type="checkbox"
               id="toggleSelectionMode"
-              {if $plugin['STATE'] === "active"}
+              {if $plugin->state === "active"}
               checked
               {/if}
             >
@@ -154,10 +154,10 @@
           </label>
 
           <div class="pluginActionsSmallIcons">
-            {if $plugin['STATE'] == 'active'}
-              {if $plugin['SETTINGS_URL'] != ''}
+            {if $plugin->state == 'active'}
+              {if $plugin->settingsUrl != ''}
                 <div class="tiptip" title="{='Settings'|translate}">
-                  <a href="{$plugin['SETTINGS_URL']|noescape}"><span
+                  <a href="{$plugin->settingsUrl|noescape}"><span
                       class="icon-cog"
                     ></span></a>
                 </div>
@@ -166,10 +166,10 @@
                   <a><i class="icon-cog"></i></a>
                 </div>
               {/if}
-            {elseif $plugin['STATE'] == 'inactive'}
-              {if $plugin['SETTINGS_URL'] != ''}
+            {elseif $plugin->state == 'inactive'}
+              {if $plugin->settingsUrl != ''}
                 <div class="tiptip" title="{='Settings'|translate}">
-                  <a href="{$plugin['SETTINGS_URL']|noescape}"><span
+                  <a href="{$plugin->settingsUrl|noescape}"><span
                       class="icon-cog"
                     ></span></a>
                 </div>
@@ -178,7 +178,7 @@
                   <a><i class="icon-cog"></i></a>
                 </div>
               {/if}
-            {elseif $plugin['STATE'] == 'missing'}
+            {elseif $plugin->state == 'missing'}
               <div class="tiptip" title="{='Uninstall'|translate}">
                 <a class="uninstall-plugin-button">{='Uninstall'|translate}</a>
               </div>
@@ -188,9 +188,9 @@
           <div class="PluginOptionsBlock dropdown">
             <div
               class="dropdown-option-content"
-            > {if !empty($author)}{='By %s'|translate:$author} | {/if}{='Version'|translate} {$version}</div>
+            > {if !empty($author)}{='By %s'|translate:$author|noescape} | {/if}{='Version'|translate} {$version|noescape}</div>
             <div class="pluginDescCompact">
-              {$plugin['DESC']}
+              {$plugin->desc}
             </div>
             <a
               class="dropdown-option icon-back-in-time plugin-restore separator-top tiptip"
@@ -201,17 +201,17 @@
               class="dropdown-option icon-trash delete-plugin-button separator-top"
             >{='Delete'|translate}</a>
           </div>
-          <div class="pluginName" data-title="{$plugin['NAME']}">
-            {$plugin['NAME']}
+          <div class="pluginName" data-title="{$plugin->name}">
+            {$plugin->name}
           </div>
           <div class="pluginDesc">
-            {$plugin['DESC']}
+            {$plugin->desc}
           </div>
           <div class="pluginActions">
-            {if $plugin['STATE'] == 'active'}
-              {if $plugin['SETTINGS_URL'] != ''}
+            {if $plugin->state == 'active'}
+              {if $plugin->settingsUrl != ''}
                 <a
-                  href="{$plugin['SETTINGS_URL']|noescape}"
+                  href="{$plugin->settingsUrl|noescape}"
                   class="pluginActionLevel1 icon-cog"
                 >{='Settings'|translate}</a>
               {else}
@@ -220,10 +220,10 @@
                   title="{='N/A'|translate}"
                 >{='Settings'|translate}</a>
               {/if}
-            {elseif $plugin['STATE'] == 'inactive'}
-              {if $plugin['SETTINGS_URL'] != ''}
+            {elseif $plugin->state == 'inactive'}
+              {if $plugin->settingsUrl != ''}
                 <a
-                  href="{$plugin['SETTINGS_URL']|noescape}"
+                  href="{$plugin->settingsUrl|noescape}"
                   class="pluginUnavailableAction icon-cog"
                 >{='Settings'|translate}</a>
               {else}
@@ -232,7 +232,7 @@
                   title="{='N/A'|translate}"
                 >{='Settings'|translate}</a>
               {/if}
-            {elseif $plugin['STATE'] == 'missing'}
+            {elseif $plugin->state == 'missing'}
               <a
                 class="pluginActionLevel3 uninstall-plugin-button"
               >{='Uninstall'|translate}</a>

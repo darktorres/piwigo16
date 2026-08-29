@@ -26,7 +26,7 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class PluginsInstalledView implements View, HasPageAssets, ExposesPageData
 {
     /**
-     * @param list<array<string, mixed>> $plugins
+     * @param list<PluginListRow> $plugins
      * @param array<string, int> $countTypesPlugins keyed by
      *   active/inactive/missing/merged, but the renderer builds this via a
      *   dynamic-key increment loop, so PHPStan can't verify the sealed

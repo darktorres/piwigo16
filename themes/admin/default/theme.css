@@ -5896,10 +5896,6 @@ input[type="text"].dError {border-color:#ff7070; background-color:#FFe5e5;}
   content: "\E81D";
   font-family: 'fontello';
   font-size: 15px;
-  animation-name: spin;
-  animation-duration: .5s;
-  animation-iteration-count: infinite;
-  animation-timing-function: linear; 
   opacity: 0;
 }
 
@@ -5930,8 +5926,19 @@ input:checked + .slider.small:before, input:checked + .slider.small::after {
   opacity: 0;
 }
 
+/* The rotation belongs to the loading state, not to every switch on the
+   page. Declared on `.slider::after` it ran unconditionally -- an infinite
+   0.5s compositor animation on an opacity:0 pseudo-element, on every admin
+   page carrying a toggle, forever. `.loading` (photos_add_direct.ts:113,
+   plugins_new.ts:376) is the only thing that ever made it visible, so
+   scoping the animation here is behaviour-identical and lets the page reach
+   a still state. */
 .slider.loading::after {
   opacity: 1;
+  animation-name: spin;
+  animation-duration: .5s;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
 }
 
 .notUsable input.disabled + .slider.activate_disabled:before {

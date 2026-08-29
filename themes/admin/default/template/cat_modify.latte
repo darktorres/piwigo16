@@ -119,7 +119,7 @@
       {/if}
     >
       <div
-        n:if="isset($representant) and ($representant->allowSetRandom || $representant->allowSetRandom)"
+        n:if="isset($representant) and ($representant->allowSetRandom || $representant->allowDelete)"
         class="cat-modify-representative-actions"
       >
         <a
@@ -132,7 +132,7 @@
           {='Refresh thumbnail'|translate}
         </a>
         <a
-          n:if="isset($representant->allowDelete)"
+          n:if="$representant->allowDelete"
           class="deleteRepresentative buttonLike{if !isset($representant->picture)} u-hidden{/if}"
           id="deleteRepresentative"
           title="{='Delete Representant'|translate}"

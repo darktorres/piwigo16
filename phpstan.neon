@@ -455,6 +455,17 @@ parameters:
         # iterated a variable it had just destroyed and the file-type and
         # rating option lists rendered empty on every search page. Fixed
         # (P49-A typing pass), and the ignore dropped so a new one fails.
+        #
+        # The three always-true/false identifiers are gone the same way
+        # (B1): `if.alwaysTrue`, `booleanOr.rightAlwaysFalse` and
+        # `identical.alwaysFalse` had 5 findings between them, in 2 files,
+        # and one of them was a live bug -- cat_modify.latte guarded the
+        # representative-actions box with `allowSetRandom || allowSetRandom`,
+        # a duplicated operand inherited verbatim from the original Smarty,
+        # so the "Remove thumbnail" action never rendered for an album with
+        # no direct photos. What remains under this block is the loose
+        # comparison and `empty()` work (B2/B3), which is bulk but not
+        # mechanical.
         -
             identifier: equal.notAllowed
             path: _analysis/phpstan-latte/*
@@ -463,15 +474,6 @@ parameters:
             path: _analysis/phpstan-latte/*
         -
             identifier: empty.notAllowed
-            path: _analysis/phpstan-latte/*
-        -
-            identifier: if.alwaysTrue
-            path: _analysis/phpstan-latte/*
-        -
-            identifier: booleanOr.rightAlwaysFalse
-            path: _analysis/phpstan-latte/*
-        -
-            identifier: identical.alwaysFalse
             path: _analysis/phpstan-latte/*
 
 services:

@@ -148,7 +148,7 @@ Three structural changes produced that drift:
 | P55 | Real quality gates | Not started | 0 |
 | P56 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P57 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
-| P58 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | In progress — A0/A0b done (103 findings refiled as Latte codegen); a generic `CachingIterator` stub removed the erasure hiding 133 more; **P58-A 843 → 0, closed**; P58-B 376 → 314. All 20 of A's identifier ignores retired from `phpstan.neon`. Nineteen live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
+| P58 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | In progress — A0/A0b done (103 findings refiled as Latte codegen); a generic `CachingIterator` stub removed the erasure hiding 133 more; **P58-A 843 → 0, closed**; P58-B 376 → 309, B1 (the always-true/false set) done. All 20 of A's identifier ignores retired from `phpstan.neon`, and 3 of B's 6. Twenty live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -4685,16 +4685,29 @@ consumer's `require` — and all three must move together.
 of B's 268 loose comparisons and 28 of its 103 `empty()` calls have
 `mixed` on one side and are undecidable until A lands, and tightening
 types *creates* new always-true/false findings, which are the
-bug-bearing kind. B leads with those 5 (`notification_by_mail.latte`
-compares a bool against the string `'false'` three times;
-`cat_modify.latte:122` repeats an operand across `and`/`||`), then
-`empty()`, then the comparisons. `===` is not a mechanical substitution:
-`int == int` is the only always-safe pair, `'10' == '1e1'` is true for
-numeric strings, and `'' == null` is true.
+bug-bearing kind.
+
+*B1 (done).* B led with those 5, and the bet paid: one of the two files
+held a live bug (#20 below). `notification_by_mail.latte`'s three
+`=== "false"` comparisons were the other file, and they really were dead
+-- the legacy half of a check written when those config values were the
+JSON strings `"true"`/`"false"`, which is bug #1's data corruption seen
+from the reading side. The migration repaired the data and the properties
+are plain `bool` now, so the string half cannot match; the `!$param[X]`
+half it was `||`-ed with already carried the branch alone. Removed rather
+than corrected, and the "No" radio's `checked` -- the branch those three
+lines control, which nothing asserted -- is now covered. Three identifier
+ignores (`if.alwaysTrue`, `booleanOr.rightAlwaysFalse`,
+`identical.alwaysFalse`) retired; **314 → 309**, 3 entries left in the
+CAMPAIGN-PENDING block.
+
+Then `empty()`, then the comparisons. `===` is not a mechanical
+substitution: `int == int` is the only always-safe pair, `'10' == '1e1'`
+is true for numeric strings, and `'' == null` is true.
 
 *Gate.* Each identifier's ignore comes out of `phpstan.neon` in the
 commit that takes its count to zero; `reportUnmatchedIgnoredErrors`
-forces it. A ends with 20 entries removed, B with 6, and the
+forces it. A ends with 20 entries removed, B with 6 (3 gone with B1), and the
 CAMPAIGN-PENDING block gone. Output is invariant across A by
 construction, so golden-html (83) and VR (75) staying green with no
 regeneration is the proof, not a chore; in B a changed byte means the
@@ -4711,7 +4724,7 @@ padding cells to the wrong branch, and the only thing that caught it was a
 golden fixture built one commit earlier. Every `{if !empty($x)}` whose
 `$x` becomes an object has to be read by hand.
 
-Nineteen live bugs have surfaced this way, none of them type work:
+Twenty live bugs have surfaced this way, none of them type work:
 
 1. Saving the Main, Comments or Display config tab turned off every
    checkbox on it. The tabs normalized to `'true'`/`'false'` strings and
@@ -4801,8 +4814,20 @@ Nineteen live bugs have surfaced this way, none of them type work:
     it. Neither page could show it -- every theme on disk is excluded from
     the list by the renderer's own `continue`, and the plugins fixture has
     no rows -- so both loops render at most one entry here.
+20. An album with a thumbnail but no direct photos could not have that
+    thumbnail removed. `cat_modify.latte` wrapped the two representative
+    actions in `isset($representant) and ($representant->allowSetRandom ||
+    $representant->allowSetRandom)` -- a duplicated operand, inherited
+    verbatim from `62fdf2ab65`, the commit that first introduced the block
+    in Smarty. The second half was meant to be `allowDelete`, the only
+    other action the box holds. `allowSetRandom` is `$has_images` and
+    `allowDelete` is true whenever `!$has_images`, so the one combination
+    the typo swallows is exactly the one where `allowDelete` is the reason
+    the box exists, and "Remove thumbnail" never rendered there. Reachable
+    through the public API alone: `PUT /categories/{id}/representative`
+    checks that both ids exist, not that the image is in the category.
 
-A twentieth is the compile step's own: `VariableMapBuilder` joined a
+A twenty-first is the compile step's own: `VariableMapBuilder` joined a
 variable's declarations by imploding type strings, so a name one context
 declares `?string` and another declares `string` became `?string|string` --
 not valid PHPDoc, since the `?` shorthand cannot take part in a union.

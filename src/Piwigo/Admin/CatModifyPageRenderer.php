@@ -235,13 +235,8 @@ final class CatModifyPageRenderer
             // !empty($category_representative_picture_id) whenever
             // !$has_images, since that's the only way its own
             // has_images-or-!empty(...) condition could be true here.
-            $tpl_allow_delete = null;
-            if (
-                ($has_images
-                 and $currentConfig->allowRandomRepresentative)
-                or ! $has_images) {
-                $tpl_allow_delete = true;
-            }
+            $tpl_allow_delete = ($has_images and $currentConfig->allowRandomRepresentative)
+                || ! $has_images;
 
             $representant = new CategoryRepresentant(
                 picture: $tpl_picture,

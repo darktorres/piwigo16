@@ -168,6 +168,22 @@ it('updates notification parameters via the param tab', function (): void {
         expect(H::configValue('nbm_send_html_mail'))->toBe(json_encode(true));
         expect(H::configValue('nbm_send_recent_post_dates'))->toBe(json_encode(false));
         expect(H::configValue('nbm_send_mail_as'))->toBe(json_encode('notify@example.test'));
+
+        // The saved values have to come back as the checked radios, and
+        // the "No" side is the half nothing asserted: its `checked` used
+        // to be guarded by `!$param[X] || $param[X] === "false"`, a
+        // leftover from when these config values really were the strings
+        // "true"/"false" (repaired by Version20260828120000). The property
+        // is a plain bool now, so the string half was dead -- but only an
+        // assertion on the rendered radio can say the surviving half
+        // carries the branch on its own.
+        $page = H::navigateOk($page, '/admin.php?page=notification_by_mail&mode=param');
+        $page->assertChecked('input[name="nbm_send_html_mail"][value="true"]');
+        $page->assertNotChecked('input[name="nbm_send_html_mail"][value="false"]');
+        $page->assertChecked('input[name="nbm_send_recent_post_dates"][value="false"]');
+        $page->assertNotChecked('input[name="nbm_send_recent_post_dates"][value="true"]');
+        $page->assertChecked('input[name="nbm_send_detailed_content"][value="true"]');
+        $page->assertNotChecked('input[name="nbm_send_detailed_content"][value="false"]');
     } finally {
         H::restoreConfig($snapshot);
     }

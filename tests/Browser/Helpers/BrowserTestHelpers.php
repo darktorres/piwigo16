@@ -938,6 +938,21 @@ final class BrowserTestHelpers
     }
 
     /**
+     * `PUT /api/v1/categories/{id}/representative`. The endpoint checks
+     * only that both ids exist -- it does not require the image to belong
+     * to the category -- so this reaches an album with no direct photos
+     * that nonetheless carries a representative thumbnail.
+     *
+     * @return array<array-key, mixed>
+     */
+    public static function setCategoryRepresentative(Webpage|PendingAwaitablePage|AwaitableWebpage $page, int $categoryId, int $imageId): array
+    {
+        return self::apiJson($page, 'PUT', '/api/v1/categories/' . $categoryId . '/representative', [
+            'imageId' => $imageId,
+        ], true);
+    }
+
+    /**
      * @param  array<string, mixed>  $params
      * @return array<array-key, mixed>
      */

@@ -204,6 +204,56 @@ it('shows the delete-representative action when allow_random_representative is e
     }
 });
 
+// The album with no direct photos but a representative thumbnail anyway --
+// the one combination that reaches allowDelete without allowSetRandom, and
+// the state cat_modify.latte's own wrapper guard used to swallow. It read
+// `allowSetRandom || allowSetRandom`, a duplicated operand inherited
+// verbatim from the original Smarty (62fdf2ab65, the commit that introduced
+// the block), so the whole .cat-modify-representative-actions box was
+// suppressed whenever allowSetRandom was false -- taking "Remove thumbnail"
+// with it and leaving the album's thumbnail unremovable through the UI.
+//
+// Reachable through the public API alone: PUT /categories/{id}/representative
+// checks only that both ids exist, not that the image is in the category.
+it('offers the delete-representative action for an album with a thumbnail but no direct photos', function (): void {
+    $page = H::asAdmin($this);
+    $albumName = 'Representative Without Photos ' . uniqid();
+    $album = H::createCategory($page, [
+        'name' => $albumName,
+    ]);
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $album['id'];
+    $pwgToken = H::pwgToken($page);
+
+    try {
+        H::setCategoryRepresentative($page, $albumId, 1);
+
+        $page = H::navigateOk($page, '/admin.php?page=album&cat_id=' . $albumId . '&tab=properties');
+        $page->assertNoJavaScriptErrors();
+
+        // has_images is false, so there is no "Refresh thumbnail" action --
+        // asserting its absence is what pins this to the branch where the
+        // wrapper's second operand is the only thing that can open the box.
+        $page->assertMissing('#refreshRepresentative');
+        $page->assertPresent('.cat-modify-representative-actions');
+        $page->assertPresent('#deleteRepresentative');
+        // The representative really did take effect, so the button acts on
+        // something: the tile carries the thumbnail rather than the
+        // "no thumbnail available" placeholder, and the delete link is not
+        // hidden by its own no-picture u-hidden branch.
+        $page->assertMissing('#deleteRepresentative.u-hidden');
+        $page->assertPresent('.cat-modify-representative[style*="background-image"]');
+    } finally {
+        H::deleteCategory($page, [
+            'category_id' => $albumId,
+            'photo_deletion_mode' => 'no_delete',
+            'pwg_token' => $pwgToken,
+        ]);
+    }
+});
+
 it('shows the real physical directory info for a non-virtual (disk-synced) album', function (): void {
     $page = H::asAdmin($this);
 

@@ -297,7 +297,7 @@ it('joins real get_tag_alt_names hook results into a comma-separated alt_names v
  *
  * @return list<string> the `id` of every selected link, in document order
  */
-function tagsPageSelectedSizes(mixed $page, ?string $cookie): array
+function tagsPageSelectedSizes(Webpage|PendingAwaitablePage|AwaitableWebpage $page, ?string $cookie): array
 {
     $page = H::navigateOk($page, '/admin.php?page=tags');
 

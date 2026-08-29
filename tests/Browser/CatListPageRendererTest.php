@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Pest\Browser\Api\AwaitableWebpage;
+use Pest\Browser\Api\PendingAwaitablePage;
+use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 function catListPageCategoryExists(int $categoryId): bool
@@ -310,7 +313,7 @@ it('renders the visit-gallery link for an album the admin can access', function 
  * whatever `CatListPageRenderer::albumViewSelected()` decides is what the
  * album manager actually looks like.
  */
-function catListSetViewCookie(mixed $page, ?string $value): mixed
+function catListSetViewCookie(Webpage|PendingAwaitablePage|AwaitableWebpage $page, ?string $value): Webpage|PendingAwaitablePage|AwaitableWebpage
 {
     $page = H::navigateOk($page, '/admin.php?page=cat_list');
 

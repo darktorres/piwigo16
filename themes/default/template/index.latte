@@ -11,9 +11,7 @@
   </div>
 
   <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
-    <div
-      class="titrePage{if isset($chronology['TITLE'])} calendarTitleBar{/if}"
-    >
+    <div class="titrePage{if isset($chronology)} calendarTitleBar{/if}">
       <ul class="categoryActions">
         <li
           n:if="isset($searchInSetAction) and $searchInSetAction"
@@ -30,9 +28,7 @@
           </a></li>
 
         {* We want the related tags action icon on all pages except the index and tag pages*}
-        <li
-          n:if="isset($relatedTagsAction) and $relatedTagsAction"
-        >{spaceless}<a
+        <li n:if="$relatedTags !== []">{spaceless}<a
               id="cmdRelatedTags"
               title="{='Related tags'|translate}"
               class="pwg-state-default pwg-button"
@@ -251,7 +247,7 @@
       </div>
 
       <h2
-        n:if="isset($chronology['TITLE'])"
+        n:if="isset($chronology)"
         class="calendarTitle"
       >{$chronology['TITLE']|noescape}</h2>
     </div>{* <!-- titrePage --> *}

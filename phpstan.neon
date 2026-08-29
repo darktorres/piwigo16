@@ -448,9 +448,6 @@ parameters:
         -
             identifier: method.nonObject
             path: _analysis/phpstan-latte/*
-        -
-            identifier: isset.offset
-            path: _analysis/phpstan-latte/*
 
         # Campaign B -- template-source modernization: Smarty-conversion
         # legacy in the .latte files themselves (loose ==/!=, empty(),

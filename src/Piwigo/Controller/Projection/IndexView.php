@@ -43,7 +43,8 @@ final readonly class IndexView implements View, HasPageAssets
      * @param list<string>|null $categorySearchResults
      * @param list<string>|null $noSearchResults
      * @param array<int, ImageOrderOption>|null $imageOrders
-     * @param list<array<string, mixed>>|null $relatedTags
+     * @param list<array<string, mixed>> $relatedTags empty when the panel
+     *   has nothing to show, which is the only thing its `n:if` asks
      * @param list<array<string, mixed>> $tagSearchResults
      * @param list<ImageOrderOption> $imageDerivatives
      * @param list<ButtonContribution> $pluginIndexButtons
@@ -68,8 +69,7 @@ final readonly class IndexView implements View, HasPageAssets
         public ?array $imageOrders,
         public ?string $contentDescription,
         public ?string $uSlideshow,
-        public ?bool $relatedTagsAction,
-        public ?array $relatedTags,
+        public array $relatedTags,
         public array $tagSearchResults,
         public array $imageDerivatives,
         public Html $selectedTagsTemplate,

@@ -845,5 +845,11 @@ it('links the author only for a comment that carries a website, not for a blank 
         $db = commentsDbConnect();
         H::dbQuery($db, sprintf('DELETE FROM comments WHERE id IN (%d, %d)', $linkedId, $blankId));
         H::dbClose($db);
+        // Unlike this file's older tests, the uploaded photo goes too: a
+        // surviving image row changes what the Unit suite's own
+        // getRegularSearchResults() cases see.
+        H::deleteImage($page, [
+            'image_id' => (string) $imageId,
+        ]);
     }
 });

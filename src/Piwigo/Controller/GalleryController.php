@@ -629,8 +629,7 @@ final readonly class GalleryController implements ControllerInterface
         // tags page
         // Fill related tags action
         $body_data_section = $this->pageState->bodyData['section'] ?? null;
-        $related_tags_action = null;
-        $related_tags_list = null;
+        $related_tags_list = [];
         if ($page_items !== [] and $body_data_section !== 'tags') {
             $selection = array_slice($page_items, $page_start, $page_nb_image_page);
             $tags = $tagService->addLevelToTags($tagService->getCommonTags($selection, $this->currentConfig->contentTagCloudItemsNumber, $this->htmlService));
@@ -647,7 +646,6 @@ final readonly class GalleryController implements ControllerInterface
                 );
             }
 
-            $related_tags_action = $related_tags !== [];
             $related_tags_list = $related_tags;
         }
 
@@ -689,7 +687,6 @@ final readonly class GalleryController implements ControllerInterface
             imageOrders: $image_orders,
             contentDescription: $content_description,
             uSlideshow: $u_slideshow,
-            relatedTagsAction: $related_tags_action,
             relatedTags: $related_tags_list,
             tagSearchResults: $tag_search_results,
             imageDerivatives: $image_derivatives,

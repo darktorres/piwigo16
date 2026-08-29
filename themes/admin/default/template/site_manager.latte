@@ -27,9 +27,9 @@
         <br>
         {foreach $site->pluginLinks as $plugin_link}
           [<a
-            href="{$plugin_link['U_HREF']}"
-            title='{$plugin_link['U_HINT']}'
-          >{$plugin_link['U_CAPTION']}</a>]
+            href="{$plugin_link->url}"
+            title='{$plugin_link->hint}'
+          >{$plugin_link->label}</a>]
         {/foreach}
       {/if}
     </td></tr>

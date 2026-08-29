@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin\Projection;
 
+use Piwigo\Contribution\SiteLink;
+
 /**
  * One row of `site_manager.latte`'s `$sites` list, built by
  * {@see \Piwigo\Controller\Admin\SiteManagerSubController::handle()}.
- * `$pluginLinks` stays a raw array -- it's the direct, unconverted
- * output of {@see \Piwigo\Controller\Admin\Event\GetAdminsSiteLinks}, a
- * confirmed plugin-extensible event payload (`array<mixed> $pluginLinks`
- * on that event itself).
+ * `$pluginLinks` is whatever
+ * {@see \Piwigo\Controller\Admin\Event\GetAdminsSiteLinks} collected --
+ * a plugin-extensible list, typed as the contribution it always was.
  */
 final readonly class SiteRow
 {
     /**
-     * @param array<mixed> $pluginLinks
+     * @param list<SiteLink> $pluginLinks
      */
     public function __construct(
         public string $name,

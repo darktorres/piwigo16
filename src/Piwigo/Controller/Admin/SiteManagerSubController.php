@@ -179,7 +179,6 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
                 images: $sites_detail[$id_int]->images ?? 0,
                 uSynchronize: $update_url,
                 uDelete: (int) $id !== 1 ? $base_url . 'delete' : null,
-                // plugin_links is array of array composed of U_HREF, U_HINT & U_CAPTION
                 pluginLinks: $this->eventDispatcher->dispatch(new GetAdminsSiteLinks([], $id, $is_remote))->pluginLinks,
             );
         }

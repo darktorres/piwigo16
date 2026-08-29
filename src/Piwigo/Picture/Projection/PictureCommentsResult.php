@@ -22,7 +22,6 @@ final readonly class PictureCommentsResult
 {
     /**
      * @param list<CommentRow>|null $comments
-     * @param array<string, mixed>|null $commentAdd
      */
     public function __construct(
         public ?string $commentsOrderUrl,
@@ -30,7 +29,7 @@ final readonly class PictureCommentsResult
         public ?int $commentCount,
         public ?Navbar $commentsNavbar,
         public ?array $comments,
-        public ?array $commentAdd,
+        public ?CommentAddForm $commentAdd,
         public ?Html $commentList,
     ) {}
 

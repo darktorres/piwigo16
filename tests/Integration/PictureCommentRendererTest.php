@@ -35,6 +35,7 @@ use Piwigo\Http\ResponseReadyException;
 use Piwigo\Mail\MailService;
 use Piwigo\Picture\Event\UserCommentInsertion;
 use Piwigo\Picture\PictureCommentRenderer;
+use Piwigo\Picture\Projection\CommentAddForm;
 use Piwigo\Picture\Projection\CommentRow;
 use Piwigo\Picture\Projection\PictureCommentsResult;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -452,12 +453,12 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             );
 
             $commentAdd = $result->commentAdd;
-            self::assertIsArray($commentAdd);
-            self::assertSame('Some Author', $commentAdd['AUTHOR']);
+            self::assertInstanceOf(CommentAddForm::class, $commentAdd);
+            self::assertSame('Some Author', $commentAdd->author);
             // htmlspecialchars() escapes the tag markup.
-            self::assertSame('Rejected &lt;b&gt;content&lt;/b&gt;.', $commentAdd['CONTENT']);
-            self::assertSame('', $commentAdd['WEBSITE_URL']);
-            self::assertSame('', $commentAdd['EMAIL']);
+            self::assertSame('Rejected &lt;b&gt;content&lt;/b&gt;.', $commentAdd->content);
+            self::assertSame('', $commentAdd->websiteUrl);
+            self::assertSame('', $commentAdd->email);
         } finally {
             unset($_POST['author'], $_POST['content'], $_POST['website_url'], $_POST['email'], $_POST['key']);
         }
@@ -687,30 +688,23 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         $commentAdd = $this->renderCommentsResult($imageId)
             ->commentAdd;
-        self::assertIsArray($commentAdd);
-        self::assertArrayHasKey('KEY', $commentAdd);
-        self::assertIsString($commentAdd['KEY']);
-        $keyParts = explode(':', $commentAdd['KEY']);
+        self::assertInstanceOf(CommentAddForm::class, $commentAdd);
+        $keyParts = explode(':', $commentAdd->key);
         self::assertCount(3, $keyParts);
         // generate()'s own $validAfterSeconds argument (3).
         self::assertSame('3', $keyParts[1]);
 
-        unset($commentAdd['KEY']);
-        self::assertSame(
-            [
-                'F_ACTION' => '/picture.php',
-                'CONTENT' => '',
-                'SHOW_AUTHOR' => false,
-                'AUTHOR_MANDATORY' => true,
-                'AUTHOR' => '',
-                'WEBSITE_URL' => '',
-                'SHOW_EMAIL' => true,
-                'EMAIL_MANDATORY' => true,
-                'EMAIL' => '',
-                'SHOW_WEBSITE' => true,
-            ],
-            $commentAdd
-        );
+        // Every field but the key, which is time-seeded and checked above.
+        self::assertSame('/picture.php', $commentAdd->formAction);
+        self::assertSame('', $commentAdd->content);
+        self::assertFalse($commentAdd->showAuthor);
+        self::assertTrue($commentAdd->authorMandatory);
+        self::assertSame('', $commentAdd->author);
+        self::assertSame('', $commentAdd->websiteUrl);
+        self::assertTrue($commentAdd->showEmail);
+        self::assertTrue($commentAdd->emailMandatory);
+        self::assertSame('', $commentAdd->email);
+        self::assertTrue($commentAdd->showWebsite);
     }
 
     public function testRenderHidesTheAddCommentFormWhileEditingAnExistingComment(): void
@@ -747,8 +741,8 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         $commentAdd = $this->renderCommentsResult($imageId)
             ->commentAdd;
-        self::assertIsArray($commentAdd);
-        self::assertFalse($commentAdd['SHOW_EMAIL']);
+        self::assertInstanceOf(CommentAddForm::class, $commentAdd);
+        self::assertFalse($commentAdd->showEmail);
     }
 
     public function testRenderShowsTheAuthorAndEmailPromptsForANonClassicNonGuestViewerWithARealEmail(): void
@@ -763,9 +757,9 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         $commentAdd = $this->renderCommentsResult($imageId)
             ->commentAdd;
-        self::assertIsArray($commentAdd);
-        self::assertTrue($commentAdd['SHOW_AUTHOR']);
-        self::assertTrue($commentAdd['SHOW_EMAIL']);
+        self::assertInstanceOf(CommentAddForm::class, $commentAdd);
+        self::assertTrue($commentAdd->showAuthor);
+        self::assertTrue($commentAdd->showEmail);
     }
 
     public function testRenderRepopulatesWebsiteUrlAndEmailAfterARejectedSubmissionWithNoAuthor(): void
@@ -785,10 +779,10 @@ final class PictureCommentRendererTest extends IntegrationTestCase
                 ->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new CsrfService(CurrentConfigTestFactory::get()), $this->mailService(), PresentationAccessor::htmlService(), $this->entityManager(), new Renderer(CurrentTemplateTestFactory::get()));
 
             $commentAdd = $result->commentAdd;
-            self::assertIsArray($commentAdd);
-            self::assertSame('', $commentAdd['AUTHOR']);
-            self::assertSame('mutation-check.example.test', $commentAdd['WEBSITE_URL']);
-            self::assertSame('mutation-check@example.test', $commentAdd['EMAIL']);
+            self::assertInstanceOf(CommentAddForm::class, $commentAdd);
+            self::assertSame('', $commentAdd->author);
+            self::assertSame('mutation-check.example.test', $commentAdd->websiteUrl);
+            self::assertSame('mutation-check@example.test', $commentAdd->email);
         } finally {
             unset($_POST['content'], $_POST['website_url'], $_POST['email'], $_POST['key']);
         }

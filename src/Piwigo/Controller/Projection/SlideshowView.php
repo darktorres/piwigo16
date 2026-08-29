@@ -10,6 +10,7 @@ use Piwigo\Asset\HasPageAssets;
 use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\Projection\Navbar;
 use Piwigo\Core\View;
+use Piwigo\Picture\Projection\CommentAddForm;
 use Piwigo\Picture\Projection\CommentRow;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -54,7 +55,6 @@ final readonly class SlideshowView implements View, HasPageAssets, ExposesPageDa
      * @param array<string, mixed>|null $rateSummary
      * @param array{F_ACTION: string, USER_RATE: ?int, marks: list<int>}|null $rating
      * @param list<CommentRow>|null $comments
-     * @param array<string, mixed>|null $commentAdd
      */
     public function __construct(
         public ?array $navFirst,
@@ -102,7 +102,7 @@ final readonly class SlideshowView implements View, HasPageAssets, ExposesPageDa
         public ?int $commentCount,
         public ?Navbar $commentsNavbar,
         public ?array $comments,
-        public ?array $commentAdd,
+        public ?CommentAddForm $commentAdd,
         public ?Html $commentList,
     ) {}
 

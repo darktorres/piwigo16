@@ -461,32 +461,32 @@
               <h4>{='Add a comment'|translate}</h4>
               <form
                 method="post"
-                action="{$commentAdd['F_ACTION']|noescape}"
+                action="{$commentAdd->formAction|noescape}"
                 id="addComment"
               >
-                {if $commentAdd['SHOW_AUTHOR']}
+                {if $commentAdd->showAuthor}
                   <p><label
                       for="author"
-                    >{='Author'|translate}{if $commentAdd['AUTHOR_MANDATORY']} ({='mandatory'|translate}){/if} :</label></p>
+                    >{='Author'|translate}{if $commentAdd->authorMandatory} ({='mandatory'|translate}){/if} :</label></p>
                   <p><input
                       type="text"
                       name="author"
                       id="author"
-                      value="{$commentAdd['AUTHOR']}"
+                      value="{$commentAdd->author}"
                     ></p>
                 {/if}
-                {if $commentAdd['SHOW_EMAIL']}
+                {if $commentAdd->showEmail}
                   <p><label
                       for="email"
-                    >{='Email address'|translate}{if $commentAdd['EMAIL_MANDATORY']} ({='mandatory'|translate}){/if} :</label></p>
+                    >{='Email address'|translate}{if $commentAdd->emailMandatory} ({='mandatory'|translate}){/if} :</label></p>
                   <p><input
                       type="text"
                       name="email"
                       id="email"
-                      value="{$commentAdd['EMAIL']}"
+                      value="{$commentAdd->email}"
                     ></p>
                 {/if}
-                {if $commentAdd['SHOW_WEBSITE']}
+                {if $commentAdd->showWebsite}
                   <p><label
                       for="website_url"
                     >{='Website'|translate} :</label></p>
@@ -494,7 +494,7 @@
                       type="text"
                       name="website_url"
                       id="website_url"
-                      value="{$commentAdd['WEBSITE_URL']}"
+                      value="{$commentAdd->websiteUrl}"
                     ></p>
                 {/if}
                 <p><label
@@ -505,8 +505,8 @@
                     id="contentid"
                     rows="5"
                     cols="50"
-                  >{$commentAdd['CONTENT']}</textarea></p>
-                <p><input type="hidden" name="key" value="{$commentAdd['KEY']}">
+                  >{$commentAdd->content}</textarea></p>
+                <p><input type="hidden" name="key" value="{$commentAdd->key}">
                   <input type="submit" value="{='Submit'|translate}"></p>
               </form>
             </div>

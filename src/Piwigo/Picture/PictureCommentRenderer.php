@@ -30,6 +30,7 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Picture\Event\RenderCommentAuthor;
 use Piwigo\Picture\Event\UserCommentInsertion;
+use Piwigo\Picture\Projection\CommentAddForm;
 use Piwigo\Picture\Projection\CommentListView;
 use Piwigo\Picture\Projection\CommentRow;
 use Piwigo\Picture\Projection\PictureCommentsResult;
@@ -306,32 +307,26 @@ final class PictureCommentRenderer
                 ->email;
             $userEmailEmpty = ! $userEmail instanceof Email;
 
-            $tplVar = [
-                'F_ACTION' => $url_self,
-                'KEY' => $key,
-                'CONTENT' => '',
-                'SHOW_AUTHOR' => ! $accessLevelChecker->isClassicUser(),
-                'AUTHOR_MANDATORY' => $currentConfig->commentsAuthorMandatory,
-                'AUTHOR' => '',
-                'WEBSITE_URL' => '',
-                'SHOW_EMAIL' => ! $accessLevelChecker->isClassicUser() or $userEmailEmpty,
-                'EMAIL_MANDATORY' => $currentConfig->commentsEmailMandatory,
-                'EMAIL' => '',
-                'SHOW_WEBSITE' => $currentConfig->commentsEnableWebsite,
-            ];
+            // A rejected submission comes back into the form; a first
+            // render starts empty. `escapeSubmitted()` is where the old
+            // `$tplVar[strtoupper($k)] = ...` dynamic-key write went --
+            // four named fields, not a loop over a map whose keys had to
+            // match the array's by convention.
+            $rejected = $commentAction === 'reject';
 
-            if ($commentAction === 'reject') {
-                $postValues = [
-                    'content' => $pictureCommentSubmitRequest->content,
-                    'author' => $pictureCommentSubmitRequest->author,
-                    'website_url' => $pictureCommentSubmitRequest->websiteUrl,
-                    'email' => $pictureCommentSubmitRequest->email,
-                ];
-                foreach ($postValues as $k => $postValue) {
-                    $tplVar[strtoupper($k)] = $postValue !== null ? htmlspecialchars($postValue) : '';
-                }
-            }
-            $commentAdd = $tplVar;
+            $commentAdd = new CommentAddForm(
+                formAction: $url_self,
+                key: $key,
+                content: $rejected ? self::escapeSubmitted($pictureCommentSubmitRequest->content) : '',
+                showAuthor: ! $accessLevelChecker->isClassicUser(),
+                authorMandatory: $currentConfig->commentsAuthorMandatory,
+                author: $rejected ? self::escapeSubmitted($pictureCommentSubmitRequest->author) : '',
+                websiteUrl: $rejected ? self::escapeSubmitted($pictureCommentSubmitRequest->websiteUrl) : '',
+                showEmail: ! $accessLevelChecker->isClassicUser() || $userEmailEmpty,
+                emailMandatory: $currentConfig->commentsEmailMandatory,
+                email: $rejected ? self::escapeSubmitted($pictureCommentSubmitRequest->email) : '',
+                showWebsite: $currentConfig->commentsEnableWebsite,
+            );
         }
 
         $commentList = $renderer->render(new CommentListView(comments: $comments, commentDerivativeParams: null, rootUrl: $urlService->getRootUrl(), iconDir: ''));
@@ -345,5 +340,14 @@ final class PictureCommentRenderer
             commentAdd: $commentAdd,
             commentList: $commentList,
         );
+    }
+
+    /**
+     * The submitted value, HTML-escaped for the `value=` attribute it is
+     * about to be echoed back into, or '' when the field was not sent.
+     */
+    private static function escapeSubmitted(?string $value): string
+    {
+        return $value !== null ? htmlspecialchars($value) : '';
     }
 }

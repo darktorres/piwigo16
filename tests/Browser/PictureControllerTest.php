@@ -2411,3 +2411,42 @@ it('dispatches PicturePageRendered with the real requested image id', function (
         @unlink($markerFile);
     }
 });
+
+it('renders the add-comment form with the fields a classic user needs and without the ones the server already knows', function (): void {
+    // No fixture renders this block at all: picture-1.html is captured
+    // anonymously and the fixture config leaves comments_forall false, so
+    // `PictureCommentsResult::$commentAdd` is null there and every one of
+    // the template's eleven reads off it is unexercised. The Integration
+    // suite covers how the form is *built*; this covers that the template
+    // still renders what it builds.
+    $page = H::asAdmin($this);
+    $page = H::navigateOk($page, '/picture.php?/1/category/1');
+    $body = H::rawWebpage($page)->content();
+
+    $start = strpos($body, 'id="commentAdd"');
+    expect($start)
+        ->not->toBeFalse();
+    $form = substr($body, (int) $start, 1200);
+
+    expect($form)
+        // formAction
+        ->toContain('action="picture.php?/1/category/1"')
+        // showWebsite is on by default, so the field is offered...
+        ->and($form)
+        ->toContain('name="website_url"')
+        // ...while showAuthor and showEmail are both false for a classic
+        // user with a registered address: the server already knows both,
+        // so the inputs are omitted rather than pre-filled. An absent
+        // field is exactly what a snapshot cannot assert.
+        ->and($form)
+        ->not->toContain('name="author"')
+        ->and($form)
+        ->not->toContain('name="email"')
+        // the ephemeral key, whose three parts EphemeralKeyService builds
+        // as <timestamp>:<validAfterSeconds>:<hash>
+        ->and($form)
+        ->toMatch('/name="key" value="[0-9.]+:3:[0-9a-f]{64}"/');
+
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'picture.php add-comment form');
+});

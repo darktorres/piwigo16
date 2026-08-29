@@ -18,6 +18,11 @@ use Piwigo\Template\Latte\Attribute\Template;
  * template's own body never references any of them (confirmed against
  * `cat_list.js` too, which reads none of them via `pwg_getPageData()`
  * either).
+ *
+ * `$albumViewSelected` decides which of the three layout radios the
+ * server paints checked. Null means none of them: the cookie holds a
+ * value that is not one of the three. See
+ * {@see \Piwigo\Admin\CatListPageRenderer::albumViewSelected()}.
  */
 #[Template('cat_list.latte')]
 final readonly class CatListView implements View, HasPageAssets
@@ -30,6 +35,7 @@ final readonly class CatListView implements View, HasPageAssets
         public string $formAction,
         public string $csrfToken,
         public array $categories,
+        public ?string $albumViewSelected,
     ) {}
 
     /**

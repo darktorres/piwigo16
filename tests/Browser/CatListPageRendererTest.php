@@ -301,3 +301,64 @@ it('renders the visit-gallery link for an album the admin can access', function 
 
     $page->assertNoJavaScriptErrors();
 });
+
+/**
+ * The layout radio the server paints `checked` is load-bearing, not
+ * decoration: `cat_list.ts`'s own ready handler branches on
+ * `$("#displayCompact").is(":checked")` / `#displayLine` / `#displayTile`
+ * and applies the matching layout. It never checks a radio itself, so
+ * whatever `CatListPageRenderer::albumViewSelected()` decides is what the
+ * album manager actually looks like.
+ */
+function catListSetViewCookie(mixed $page, ?string $value): mixed
+{
+    $page = H::navigateOk($page, '/admin.php?page=cat_list');
+
+    // Deliberately no `path=`: that makes the browser scope this to the
+    // document's own directory, which is exactly what jQuery.cookie does
+    // with no options -- and cat_list.ts has already written
+    // `pwg_album_manager_view=tile` there by the time this runs. Writing
+    // with `path=/` instead creates a *second* cookie of the same name
+    // that the browser sends alongside the first, and the server reads
+    // the wrong one.
+    $page->script(
+        $value === null
+            ? "document.cookie = 'pwg_album_manager_view=; expires=Thu, 01 Jan 1970 00:00:00 GMT'"
+            : "document.cookie = 'pwg_album_manager_view=" . $value . "'"
+    );
+
+    return H::navigateOk($page, '/admin.php?page=cat_list');
+}
+
+it('checks the layout radio the pwg_album_manager_view cookie names', function (): void {
+    $page = catListSetViewCookie(H::asAdmin($this), 'line');
+
+    $page->assertChecked('#displayLine');
+    $page->assertNotChecked('#displayCompact');
+    $page->assertNotChecked('#displayTile');
+    $page->assertNoJavaScriptErrors();
+});
+
+it('falls back to the tile layout when the cookie has not been written yet', function (): void {
+    $page = catListSetViewCookie(H::asAdmin($this), null);
+
+    $page->assertChecked('#displayTile');
+    $page->assertNotChecked('#displayCompact');
+    $page->assertNotChecked('#displayLine');
+    $page->assertNoJavaScriptErrors();
+});
+
+it('checks no layout radio at all when the cookie holds a value none of them offer', function (): void {
+    // Preserved from the template's own `== 'compact'`/`== 'line'`/
+    // `== 'tile'` comparisons, which all three answered false for an
+    // unrecognised value -- so the page rendered with no radio checked and
+    // cat_list.ts applied no layout. Pinned rather than tidied: silently
+    // promoting it to tile would be a behaviour change smuggled in under a
+    // typing pass.
+    $page = catListSetViewCookie(H::asAdmin($this), 'mosaic');
+
+    $page->assertNotChecked('#displayCompact');
+    $page->assertNotChecked('#displayLine');
+    $page->assertNotChecked('#displayTile');
+    $page->assertNoJavaScriptErrors();
+});

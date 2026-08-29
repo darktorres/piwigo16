@@ -9,7 +9,7 @@
       name="layout"
       class="switchLayout"
       id="displayCompact"
-      {if ($_COOKIE['pwg_album_manager_view'] ?? null) == 'compact'}
+      {if $albumViewSelected === 'compact'}
       checked
       {/if}
     /><label for="displayCompact"><span
@@ -20,7 +20,7 @@
       name="layout"
       class="switchLayout tiptip"
       id="displayLine"
-      {if ($_COOKIE['pwg_album_manager_view'] ?? null) == 'line'}
+      {if $albumViewSelected === 'line'}
       checked
       {/if}
     /><label for="displayLine"><span
@@ -31,7 +31,7 @@
       name="layout"
       class="switchLayout"
       id="displayTile"
-      {if ($_COOKIE['pwg_album_manager_view'] ?? null) == 'tile' || !($_COOKIE['pwg_album_manager_view'] ?? null)}
+      {if $albumViewSelected === 'tile'}
       checked
       {/if}
     /><label for="displayTile"><span

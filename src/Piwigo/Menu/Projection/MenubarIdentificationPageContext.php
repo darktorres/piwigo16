@@ -17,6 +17,12 @@ use Piwigo\Core\TemplatePageContext;
  * or not), and `$uLogin`/`$uLostPassword`/`$authorizeRemembering`/
  * `$uRegister` are mutually exclusive with `$username`/`$uProfile`/
  * `$uLogout`/`$uAdmin` (guest vs. identified user).
+ *
+ * `$loginRedirect` is the exception: it is unconditional, because the
+ * login form's hidden `redirect` field is always rendered. It carries
+ * the raw request URI -- `menubar_identification.latte` applies its own
+ * `|urlencode`, the same way `HtmlService::accessDenied()` encodes at
+ * its own redirect boundary.
  */
 final readonly class MenubarIdentificationPageContext implements TemplatePageContext
 {
@@ -32,6 +38,7 @@ final readonly class MenubarIdentificationPageContext implements TemplatePageCon
         public ?string $uProfile,
         public ?string $uLogout,
         public ?string $uAdmin,
+        public string $loginRedirect,
     ) {}
 
     /**
@@ -40,7 +47,9 @@ final readonly class MenubarIdentificationPageContext implements TemplatePageCon
     #[Override]
     public function toArray(): array
     {
-        $result = [];
+        $result = [
+            'LOGIN_REDIRECT' => $this->loginRedirect,
+        ];
 
         if ($this->querySearch !== null) {
             $result['QUERY_SEARCH'] = $this->querySearch;

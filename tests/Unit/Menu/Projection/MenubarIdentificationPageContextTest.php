@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Menu\Projection\MenubarIdentificationPageContext;
 
-test('toArray is empty when every field is null', function (): void {
+test('toArray carries only the unconditional login redirect when every optional field is null', function (): void {
     $context = new MenubarIdentificationPageContext(
         querySearch: null,
         uStopFilter: null,
@@ -17,10 +17,13 @@ test('toArray is empty when every field is null', function (): void {
         uProfile: null,
         uLogout: null,
         uAdmin: null,
+        loginRedirect: '/index.php?/category/1',
     );
 
     expect($context->toArray())
-        ->toBe([]);
+        ->toBe([
+            'LOGIN_REDIRECT' => '/index.php?/category/1',
+        ]);
 });
 
 test('toArray includes the guest-branch keys when set', function (): void {
@@ -36,10 +39,12 @@ test('toArray includes the guest-branch keys when set', function (): void {
         uProfile: null,
         uLogout: null,
         uAdmin: null,
+        loginRedirect: '/index.php?/category/1',
     );
 
     expect($context->toArray())
         ->toBe([
+            'LOGIN_REDIRECT' => '/index.php?/category/1',
             'QUERY_SEARCH' => 'sunset',
             'U_START_FILTER' => '/index.php?filter=start-recent-30',
             'U_LOGIN' => '/identification.php',
@@ -62,10 +67,12 @@ test('toArray includes the identified-user-branch keys when set', function (): v
         uProfile: '/profile.php',
         uLogout: '/?act=logout',
         uAdmin: '/admin.php',
+        loginRedirect: '/index.php?/category/1',
     );
 
     expect($context->toArray())
         ->toBe([
+            'LOGIN_REDIRECT' => '/index.php?/category/1',
             'U_STOP_FILTER' => '/index.php?filter=stop',
             'USERNAME' => 'jane',
             'U_PROFILE' => '/profile.php',

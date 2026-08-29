@@ -286,3 +286,59 @@ it('joins real get_tag_alt_names hook results into a comma-separated alt_names v
         tagsPageRemoveFixturePlugin($pluginId);
     }
 });
+
+/**
+ * Which page-size link the *server* paints selected, read straight off
+ * the HTTP response rather than the DOM: `tags.ts`'s own
+ * `setPagination()` strips `.selected` and re-derives it from the same
+ * cookie on ready, so a DOM assertion here would be testing the script,
+ * not `TagsPageRenderer::tagsPerPageSelected()`. `H::rawGet()` fetches
+ * with the browser's cookies and never runs the response's scripts.
+ *
+ * @return list<string> the `id` of every selected link, in document order
+ */
+function tagsPageSelectedSizes(mixed $page, ?string $cookie): array
+{
+    $page = H::navigateOk($page, '/admin.php?page=tags');
+
+    // No `path=`, matching jQuery.cookie's own default (the document's
+    // directory) -- tags.ts has already written `pwg_tags_per_page=100`
+    // there, and a `path=/` write would add a second cookie of the same
+    // name rather than replacing it.
+    $page->script(
+        $cookie === null
+            ? "document.cookie = 'pwg_tags_per_page=; expires=Thu, 01 Jan 1970 00:00:00 GMT'"
+            : "document.cookie = 'pwg_tags_per_page=" . $cookie . "'"
+    );
+
+    $response = H::rawGet($page, '/admin.php?page=tags');
+    expect($response['status'])
+        ->toBe(200);
+
+    preg_match_all(
+        '/<a\s+id="(\d+)"[^>]*\bclass="selected"/',
+        $response['body'],
+        $matches
+    );
+
+    return $matches[1];
+}
+
+it('selects the page-size link the pwg_tags_per_page cookie names', function (): void {
+    expect(tagsPageSelectedSizes(H::asAdmin($this), '500'))
+        ->toBe(['500']);
+});
+
+it('selects the first page size when the cookie has not been written yet', function (): void {
+    expect(tagsPageSelectedSizes(H::asAdmin($this), null))
+        ->toBe(['100']);
+});
+
+it('selects no page size at all when the cookie holds a value none of the links offer', function (): void {
+    // Preserved from the template's own four `==` comparisons, which all
+    // answered false for a value that is not one of the four -- pinned
+    // rather than tidied into a fallback, since promoting it to 100 would
+    // be a behaviour change smuggled in under a typing pass.
+    expect(tagsPageSelectedSizes(H::asAdmin($this), '300'))
+        ->toBe([]);
+});

@@ -64,7 +64,7 @@
             <input
               type="hidden"
               name="redirect"
-              value="{($_SERVER['REQUEST_URI'] ?? '')|urlencode}"
+              value="{$LOGIN_REDIRECT|urlencode}"
             >
             <input type="submit" name="login" value="{='Submit'|translate}">
             <span class="categoryActions">

@@ -413,6 +413,7 @@ final class MenubarRenderer
             uProfile: $u_profile,
             uLogout: $u_logout,
             uAdmin: $u_admin,
+            loginRedirect: is_string($_SERVER['REQUEST_URI'] ?? null) ? $_SERVER['REQUEST_URI'] : '',
         ));
 
         $menu->apply();

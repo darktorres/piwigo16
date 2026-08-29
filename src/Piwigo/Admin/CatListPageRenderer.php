@@ -11,6 +11,7 @@ use Piwigo\Admin\Event\CatListPageRendering;
 use Piwigo\Admin\Projection\CategoryListRow;
 use Piwigo\Admin\Projection\CatListView;
 use Piwigo\Admin\Request\CatListRequest;
+use Piwigo\Auth\CookieService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\Event\RenderCategoryName;
@@ -243,11 +244,31 @@ final readonly class CatListPageRenderer
             csrfToken: $this->csrfService
                 ->getToken(),
             categories: $tpl_categories,
+            albumViewSelected: self::albumViewSelected(new CookieService()->getAlbumManagerView()),
         ));
 
         return new AdminPageResult(
             content: $adminContent,
             pageTitle: $this->lang->t('Album list management'),
         );
+    }
+
+    /**
+     * Which layout radio `cat_list.latte` paints checked, from the
+     * `pwg_album_manager_view` cookie.
+     *
+     * Absent, empty or `'0'` means no preference yet and the tile layout
+     * wins -- `cat_list.ts` writes `'tile'` on its own next tick. A value
+     * that is none of the three checks nothing at all, which is what the
+     * template's own `== 'compact'`/`== 'line'`/`== 'tile'` comparisons
+     * did with a value they did not recognise.
+     */
+    private static function albumViewSelected(?string $cookie): ?string
+    {
+        if ($cookie === null || $cookie === '' || $cookie === '0') {
+            return 'tile';
+        }
+
+        return in_array($cookie, ['compact', 'line', 'tile'], true) ? $cookie : null;
     }
 }

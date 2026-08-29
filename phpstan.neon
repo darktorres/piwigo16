@@ -428,9 +428,6 @@ parameters:
         # message-scoped codegen ignores that used to sit in group (1) -- the
         # stub makes those findings not exist rather than suppressing them.
         -
-            identifier: offsetAccess.nonOffsetAccessible
-            path: _analysis/phpstan-latte/*
-        -
             identifier: offsetAccess.notFound
             path: _analysis/phpstan-latte/*
         -

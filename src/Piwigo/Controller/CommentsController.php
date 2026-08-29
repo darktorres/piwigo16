@@ -625,7 +625,7 @@ final readonly class CommentsController implements ControllerInterface
                     author: $authorEvent->commentAuthor,
                     date: DateHelper::formatDate($date, ['day_name', 'day', 'month', 'year', 'time']),
                     content: $content,
-                    websiteUrl: $comment->websiteUrl,
+                    websiteUrl: $comment->websiteUrl === '' ? null : $comment->websiteUrl,
                     email: $emailForRow,
                     deleteUrl: $deleteUrl,
                     editUrl: $editUrl,

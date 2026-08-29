@@ -12,12 +12,13 @@
     n:foreach="$comments as $comment"
     class="commentElement {if $iterator->counter0 % 2 !== 0}odd{else}even{/if}"
   >
-    {if $comment->srcImage !== null}
-      {if isset($commentDerivativeParams)}
-        {var $derivative = $pwg->derivative($commentDerivativeParams, $comment->srcImage)}
-      {else}
-        {var $derivative = $pwg->derivative($derivative_params, $comment->srcImage)}
-      {/if}
+    {* The two are non-null together or not at all: $commentDerivativeParams
+       is null only for PictureCommentRenderer, whose rows never carry a
+       srcImage. The {else} arm this replaces reached for a
+       $derivative_params that nothing has assigned since CategoryDefaultResult
+       started returning its own. *}
+    {if $comment->srcImage !== null and $commentDerivativeParams !== null}
+      {var $derivative = $pwg->derivative($commentDerivativeParams, $comment->srcImage)}
       <div class="illustration">
         <a href="{$comment->pictureUrl|noescape}">
           <img
@@ -63,7 +64,7 @@
         </a>&nbsp;
       </div>
 
-      <span class="commentAuthor">{if $comment->websiteUrl}<a
+      <span class="commentAuthor">{if $comment->websiteUrl !== null}<a
             href="{$comment->websiteUrl}"
             class="external"
             target="_blank"
@@ -99,11 +100,7 @@
             ></p>
           <p><input type="hidden" name="key" value="{$comment->key}">
             <input type="hidden" name="pwg_token" value="{$comment->csrfToken}">
-            <input
-              type="hidden"
-              name="image_id"
-              value="{$comment->imageId ?? ($current['id'] ?? null)}"
-            >
+            <input type="hidden" name="image_id" value="{$comment->imageId}">
             <input type="submit" value="{='Submit'|translate}">
           </p>
         </form>

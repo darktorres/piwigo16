@@ -788,3 +788,62 @@ it('trigger_errors on an unrecognized comment_action from a real user_comment_ch
         commentsRemoveFixturePlugin($pluginId);
     }
 });
+
+/**
+ * comment_list.latte wraps the author in an external link only when the
+ * comment carries a website. The guard used to be a bare truthiness test
+ * on a `?string`, which treated the empty string as absent -- and '' is
+ * exactly what the add-comment form stores when the field is left blank.
+ * It is now a null check, with CommentRow's two producers normalizing ''
+ * to null so the type says what the template asks.
+ *
+ * No fixture comment has ever carried a website_url, so neither arm of
+ * that `{if}` had an assertion anywhere.
+ */
+it('links the author only for a comment that carries a website, not for a blank one', function (): void {
+    $page = H::asAdmin($this);
+
+    $album = H::createCategory($page, [
+        'name' => 'Comments Website Album ' . uniqid(),
+    ]);
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $album['id'];
+    $image = H::makeTestImage('Comments Website Photo');
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Comments Website Photo');
+    @unlink($image);
+
+    $linkedAuthor = 'website-linked-' . uniqid();
+    $blankAuthor = 'website-blank-' . uniqid();
+    $url = 'https://commenter.example.invalid/home';
+
+    $linkedId = commentsInsert($imageId, $linkedAuthor, 'Has a website.', true);
+    $blankId = commentsInsert($imageId, $blankAuthor, 'Left the website field blank.', true);
+
+    $db = commentsDbConnect();
+    // '' rather than NULL: what the add-comment form actually stores for an
+    // untouched website field, and the case the old truthiness guard hid.
+    H::dbQuery($db, sprintf("UPDATE comments SET website_url = '%s' WHERE id = %d", H::dbEscape($db, $url), $linkedId));
+    H::dbQuery($db, sprintf("UPDATE comments SET website_url = '' WHERE id = %d", $blankId));
+    H::dbClose($db);
+
+    try {
+        $page = H::navigateOk($page, '/comments.php');
+        $html = H::rawWebpage($page)->content();
+
+        // The one with a website: author inside the external anchor.
+        expect($html)
+            ->toContain($url);
+        expect($html)
+            ->toMatch('~<a[^>]*class="external"[^>]*>' . preg_quote($linkedAuthor, '~') . '</a>~');
+
+        // The one with '': author rendered bare inside the span.
+        expect($html)
+            ->toContain('<span class="commentAuthor">' . $blankAuthor . '</span>');
+    } finally {
+        $db = commentsDbConnect();
+        H::dbQuery($db, sprintf('DELETE FROM comments WHERE id IN (%d, %d)', $linkedId, $blankId));
+        H::dbClose($db);
+    }
+});

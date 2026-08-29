@@ -277,7 +277,10 @@ final class PictureCommentRenderer
                     author: $authorEvent->commentAuthor,
                     date: DateHelper::formatDate($rowDate, ['day_name', 'day', 'month', 'year', 'time']),
                     content: $content,
-                    websiteUrl: $row->websiteUrl,
+                    // '' is what an empty website field is stored as;
+                    // CommentRow treats absence as null so the template can
+                    // ask one question instead of two.
+                    websiteUrl: $row->websiteUrl === '' ? null : $row->websiteUrl,
                     email: $emailForRow,
                     deleteUrl: $deleteUrl,
                     editUrl: $editUrl,

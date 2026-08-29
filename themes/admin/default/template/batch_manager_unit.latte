@@ -275,11 +275,9 @@
               id="description"
             >{$element->description}</textarea>
           </div>
-          {if isset($PLUGINS_BATCH_MANAGER_UNIT_ELEMENT_SUBTEMPLATE)}
-            {foreach $PLUGINS_BATCH_MANAGER_UNIT_ELEMENT_SUBTEMPLATE as $PATH}
-              {include $PATH}
-            {/foreach}
-          {/if}
+          {foreach $pluginElementSubtemplates as $path}
+            {include $path}
+          {/foreach}
           {* Plugins anchor 1 *}
           <div class="validation-container">
             <div class="save-button-container">

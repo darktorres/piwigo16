@@ -56,6 +56,7 @@ function makeBatchManagerUnitView(array $elements): BatchManagerUnitView
         levelOptions: [],
         csrfToken: '',
         activePlugins: [],
+        pluginElementSubtemplates: [],
         perPage: 5,
         navbar: null,
         elementIds: null,

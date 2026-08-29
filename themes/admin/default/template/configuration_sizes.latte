@@ -37,7 +37,7 @@
             <input
               type="checkbox"
               name="original_resize"
-              {if (isset($sizes->originalResize) and $sizes->originalResize)}
+              {if $sizes->originalResize}
               checked="checked"
               {/if}
             >

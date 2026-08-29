@@ -1223,7 +1223,9 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             originalResizeMaxwidth: $raw['original_resize_maxwidth'] ?? null,
             originalResizeMaxheight: $raw['original_resize_maxheight'] ?? null,
             originalResizeQuality: $raw['original_resize_quality'] ?? null,
-            originalResize: $raw['original_resize'] ?? null,
+            // Presence is the whole value of a checkbox POST; $raw only
+            // ever holds strings, so the key is there iff it was ticked.
+            originalResize: isset($raw['original_resize']),
         );
 
         $this->sizesLoadedInTpl = true;

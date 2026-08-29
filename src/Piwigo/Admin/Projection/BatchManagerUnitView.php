@@ -59,6 +59,9 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
     /**
      * @param array<array-key, string> $levelOptions
      * @param list<string> $activePlugins
+     * @param list<string> $pluginElementSubtemplates template paths a plugin
+     *   adds to the per-element form, via {@see
+     *   \Piwigo\Admin\Event\GetBatchManagerUnitElementSubtemplates}
      * @param array<array-key, string> $cacheKeys
      * @param list<BatchManagerUnitElement> $elements
      * @param array<array-key, mixed> $associatedCategories
@@ -68,6 +71,7 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
         public array $levelOptions,
         public string $csrfToken,
         public array $activePlugins,
+        public array $pluginElementSubtemplates,
         public int $perPage,
         public ?Navbar $navbar,
         public ?string $elementIds,

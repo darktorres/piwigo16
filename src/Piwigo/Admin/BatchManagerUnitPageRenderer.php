@@ -12,6 +12,7 @@ use Piwigo\Admin\BatchManager\Projection\DimensionFilterOptions;
 use Piwigo\Admin\BatchManager\Projection\FilesizeFilterOptions;
 use Piwigo\Admin\Event\BatchManagerUnitRendered;
 use Piwigo\Admin\Event\BatchManagerUnitRendering;
+use Piwigo\Admin\Event\GetBatchManagerUnitElementSubtemplates;
 use Piwigo\Admin\Projection\BatchManagerUnitView;
 use Piwigo\Admin\Request\BatchManagerUnitRequest;
 use Piwigo\Cache\PermissionCacheInvalidator;
@@ -470,12 +471,15 @@ final readonly class BatchManagerUnitPageRenderer
         $jquery_code_raw = $this->lang->langInfo()['jquery_code'] ?? null;
         $jquery_code = is_string($jquery_code_raw) ? $jquery_code_raw : '';
 
+        $subtemplates = $this->eventDispatcher->dispatch(new GetBatchManagerUnitElementSubtemplates([]))->paths;
+
         $adminContent = $this->renderer->render(new BatchManagerUnitView(
             uElementsPage: $base_url . $this->urlService->getQueryStringDiff(['display', 'start']),
             levelOptions: PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang),
             csrfToken: $this->csrfService
                 ->getToken(),
             activePlugins: array_keys($this->loadedPlugins->get()),
+            pluginElementSubtemplates: $subtemplates,
             perPage: $nb_images,
             navbar: $nav_bar,
             elementIds: $element_ids_value,

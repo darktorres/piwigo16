@@ -327,14 +327,23 @@ parameters:
             # The `<mixed, mixed>` is the stub's doing (stubFiles above):
             # before it, the class was non-generic and this message named a
             # bare CachingIterator.
-            message: '#^Parameter \#2 \$parent of class Latte\\Essential\\CachingIterator constructor expects Latte\\Essential\\CachingIterator<mixed, mixed>\|null, mixed given\.$#'
+            #
+            # Both the expected and the given side are left open: as this
+            # campaign typed the collections these loops run over, Latte's
+            # own chaining started reporting concrete generics
+            # (`CachingIterator<int, list<int>>`) where it used to report
+            # `mixed`. Same codegen, better inference. Parameter #2 is the
+            # codegen one either way -- it is the `$ʟ_it ?? null` chain --
+            # and stays distinct from the Parameter #1 $iterator sibling
+            # this must not catch.
+            message: '#^Parameter \#2 \$parent of class Latte\\Essential\\CachingIterator constructor expects Latte\\Essential\\CachingIterator<.+>\|null, .+ given\.$#'
             path: _analysis/phpstan-latte/*
         -
             # The matching {foreach} epilogue for the same codegen:
             # `$iterator = $ʟ_it = $ʟ_it->getParent();` unwinds the chain on
             # loop exit. Same disposition, same class-naming guarantee.
             # 2 findings.
-            message: '#^Cannot call method getParent\(\) on Latte\\Essential\\CachingIterator<mixed, mixed>\|null\.$#'
+            message: '#^Cannot call method getParent\(\) on Latte\\Essential\\CachingIterator<.+>\|null\.$#'
             path: _analysis/phpstan-latte/*
         -
             # Latte's {capture} codegen. `{capture $x}...{/capture}` compiles
@@ -406,42 +415,33 @@ parameters:
         # source work, tracked as named follow-up campaigns; each batch of
         # fixes shrinks these until reportUnmatched forces the entry out.
         #
-        # Campaign A (docs/PLAN.md P58-A) -- values reaching a template as
-        # `mixed` because the View property they arrive through is typed
-        # `array<string, mixed>`. The dominant cause is a producer calling
-        # `->toArray()` on an already-typed VO one line before handing it to
-        # the View constructor, so the fix is usually deleting the flatten
-        # and letting the VO through, not writing a new docblock.
+        # Campaign A (docs/PLAN.md P58-A) -- CLOSED. It opened at 843
+        # findings: values reaching a template as `mixed` because the View
+        # property they arrived through was typed `array<string, mixed>`,
+        # overwhelmingly a producer calling `->toArray()` on an
+        # already-typed VO one line before handing it to the View. Twenty
+        # identifier-wide entries stood here; every one came out as its
+        # count reached zero, each forced by reportUnmatchedIgnoredErrors
+        # rather than noticed.
         #
-        # 527 findings, measured 2026-08-28 by tools/p58/census.php (which
-        # strips this block and re-runs PHPStan; with the block in place
-        # `composer analyse:phpstan` reports zero and says nothing about
-        # progress). P32's own ~1,400 figure predates P40's View migration,
-        # which has been shrinking this as a side effect. An earlier 711
-        # recorded here was wrong -- a cold-cache re-measure agrees with the
-        # warm one at 704.
+        # Nothing of Campaign A is suppressed any more. Its two residual
+        # findings are Latte's own {foreach} chaining and epilogue, filed
+        # by message in group (1) above with the rest of the codegen; as
+        # this campaign typed the collections those loops run over, Latte
+        # began reporting concrete generics there where it used to report
+        # `mixed`, which is why those two patterns no longer name
+        # `<mixed, mixed>`.
         #
-        # The largest single drop was not source work at all: 106 of these
+        # The largest single drop was not source work at all: 106 findings
         # were Latte's own CachingIterator erasing the element type of every
         # {foreach} in an $iterator-using template, fixed by the generic stub
-        # in stubFiles above. It also removed the need for the two
-        # message-scoped codegen ignores that used to sit in group (1) -- the
-        # stub makes those findings not exist rather than suppressing them.
-        -
-            identifier: offsetAccess.notFound
-            path: _analysis/phpstan-latte/*
-        -
-            identifier: argument.type
-            path: _analysis/phpstan-latte/*
-        -
-            identifier: logicalAnd.rightNotBoolean
-            path: _analysis/phpstan-latte/*
-        -
-            identifier: foreach.nonIterable
-            path: _analysis/phpstan-latte/*
-        -
-            identifier: method.nonObject
-            path: _analysis/phpstan-latte/*
+        # in stubFiles above -- which makes those findings not exist rather
+        # than suppressing them.
+        #
+        # tools/p58/census.php still measures both campaigns (it strips this
+        # block and re-runs PHPStan; with the block in place
+        # `composer analyse:phpstan` reports zero and says nothing about
+        # progress). It reads Campaign A: 0.
 
         # Campaign B -- template-source modernization: Smarty-conversion
         # legacy in the .latte files themselves (loose ==/!=, empty(),

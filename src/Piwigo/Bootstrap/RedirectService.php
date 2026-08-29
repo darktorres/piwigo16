@@ -244,7 +244,7 @@ final readonly class RedirectService implements RedirectServiceInterface
 
         PageTail::prepareContext();
 
-        $html = $this->renderer->render(new RedirectView(redirectMsg: $msg));
+        $html = $this->renderer->render(new RedirectView(redirectMsg: $msg, refreshUrl: $url_link));
         $body = $template->finalizeHtml((string) $html);
 
         throw new ResponseReadyException(ResponseFactory::html($body, $status));

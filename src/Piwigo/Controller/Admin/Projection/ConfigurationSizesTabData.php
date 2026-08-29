@@ -33,6 +33,8 @@ final readonly class ConfigurationSizesTabData
         public int|string|null $originalResizeMaxwidth,
         public int|string|null $originalResizeMaxheight,
         public int|string|null $originalResizeQuality,
-        public bool|string|null $originalResize,
+        // A checkbox: unlike the three text fields beside it, there is no
+        // "submitted but invalid" value to echo back, only checked or not.
+        public bool $originalResize,
     ) {}
 }

@@ -294,12 +294,10 @@ final readonly class PictureModifyPageRenderer
         $path = is_string($row['path']) ? $row['path'] : '';
         $tn_src = DerivativeImage::url(ImageStdParams::MEDIUM, $src_image);
         $file_src = DerivativeImage::url(ImageStdParams::LARGE, $src_image);
-        // width >= height, i.e. a wide image. The two CSS classes the
-        // template picks between are named the other way round and
-        // their rules are inverted to match, so the rendering is
-        // correct and only the names are wrong -- see
-        // BatchManagerUnitElement::$isWide, which carries the same
-        // flag for the batch manager's own copy of this markup.
+        // width >= height, i.e. a landscape image -- which is what the
+        // template's own `.is-landscape` now says. See
+        // BatchManagerUnitElement::$isWide, which carries the same flag
+        // for the batch manager's own copy of this markup.
         $is_wide = $row['width'] >= $row['height'];
         $date_creation = is_string($row['date_creation']) || is_int($row['date_creation']) ? $row['date_creation'] : null;
         $f_action = $this->urlService->getRootUrl() . 'admin.php'

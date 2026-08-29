@@ -40,13 +40,13 @@
       <img
         src="{$path}"
         alt="{='Thumbnail'|translate}"
-        class="svg-image other-image-format {if $isWide}is-portrait{else}is-landscape{/if}"
+        class="svg-image other-image-format {if $isWide}is-landscape{else}is-portrait{/if}"
       >
     {else}
       <img
         src="{$tnSrc|noescape}"
         alt="{='Thumbnail'|translate}"
-        class="other-image-format {if $isWide}is-portrait{else}is-landscape{/if}"
+        class="other-image-format {if $isWide}is-landscape{else}is-portrait{/if}"
       >
     {/if}
   </div>

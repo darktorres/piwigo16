@@ -740,22 +740,18 @@ it('swaps width/height and flips the FORMAT flag for a photo with a stored 90/27
     $result = H::rawGet($page, '/admin.php?page=photo&image_id=' . $imageId);
 
     expect($result['status'])->toBe(200);
-    // FORMAT is computed from $row['width']/$row['height'] AFTER this
-    // renderer's own swap, as `($row['width'] >= $row['height']) ? 1 : 0`
-    // (a faithful, byte-for-byte port of piwigo16's own
-    // admin/picture_modify.php -- its own comment, "0:horizontal,
-    // 1:vertical", is itself stale/inverted relative to what the
-    // expression actually computes; kept verbatim, not "fixed", per this
-    // codebase's own no-unrelated-changes-during-a-port precedent).
-    // picture_modify.latte renders a different CSS class for each value on
-    // the two preview <img> tags: {if $FORMAT}is-portrait{else}
-    // is-landscape{/if} -- .other-image-format.is-portrait{width:100%;
-    // max-height:100%} / .is-landscape{max-width:100%; height:100%}
-    // (themes/admin/default/css/pages/picture_modify.css). Unrotated, this
-    // 200x150 (width >= height) image is FORMAT=1 -- only a real
-    // width/height swap (150x200, width < height) flips it to FORMAT=0
-    // ("is-landscape").
-    expect($result['body'])->toContain('other-image-format is-landscape');
+    // $isWide is computed from $row['width']/$row['height'] AFTER this
+    // renderer's own swap, as `$row['width'] >= $row['height']`. This
+    // assertion is what pins the swap: unrotated, the image is 200x150
+    // and wide, so only a real width/height swap (150x200) makes it
+    // tall.
+    //
+    // The port kept piwigo16's own inverted "0:horizontal, 1:vertical"
+    // comment verbatim and this test recorded that it was stale; P58
+    // fixed it along with the two CSS class names, which said the
+    // opposite of what their rules did (`.is-portrait` set width:100%).
+    // A tall image is `.is-portrait` now, and that is what this asserts.
+    expect($result['body'])->toContain('other-image-format is-portrait');
 });
 
 it('resolves storage_category_id from a filesystem-synced photo, marks it unlinkable-storage, and lists its multi-format sizes', function (): void {

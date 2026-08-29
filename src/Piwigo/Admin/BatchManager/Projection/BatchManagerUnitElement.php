@@ -30,12 +30,11 @@ namespace Piwigo\Admin\BatchManager\Projection;
  * did before this was typed.
  *
  * `$isWide` is the old `format` flag, which was an int the template used
- * as a boolean. Its name is the honest one: the producer computes
- * `width >= height`, and the CSS classes it selects are named the other
- * way round (`is-portrait` styles a wide image, `is-landscape` a tall
- * one). Those class names are wrong in both this page and
- * `picture_modify.latte`, and their rules are right, so the rendering has
- * always been correct; renaming them is a CSS change, not this one.
+ * as a boolean: the producer computes `width >= height`, so a true value
+ * is a landscape image and the template picks `.is-landscape` for it.
+ * Both the flag's own name and the two CSS classes used to say the
+ * opposite of what they meant, while their rules were right, so the
+ * rendering was correct throughout -- see this page's own CSS.
  */
 final readonly class BatchManagerUnitElement
 {

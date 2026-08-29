@@ -50,12 +50,16 @@
   font-weight: bold;
 }
 
-.media-box-embed.is-portrait {
+/* Named for the shape they style: a landscape (wide) image fills the
+   box's width and is capped by its height, a portrait (tall) one the
+   other way round. The two names used to be swapped -- see
+   BatchManagerUnitElement::$isWide. */
+.media-box-embed.is-landscape {
   width: 100%;
   max-height: 100%;
 }
 
-.media-box-embed.is-landscape {
+.media-box-embed.is-portrait {
   max-width: 100%;
   height: 100%;
 }

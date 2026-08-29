@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Admin\Projection\TagRow;
 use Piwigo\Admin\Projection\TagsView;
 use Piwigo\Admin\Request\TagsActionRequest;
 use Piwigo\Auth\AccessControl;
@@ -113,32 +114,50 @@ final readonly class TagsPageRenderer
         // all tags
         $all_tags = [];
         foreach ($tagService->getAll() as $tag_obj) {
-            $tag = [
-                'name' => $tag_obj->name,
-                'id' => $tag_obj->id->value,
-                'url_name' => $tag_obj->urlName,
-            ];
             $raw_name = $tag_obj->name;
-            $tag['raw_name'] = $raw_name;
-            $tagNameEvent = $this->eventDispatcher->dispatch(new RenderTagName($raw_name, $tag));
-            $rendered_name = $tagNameEvent->tagName;
-            $tag['name'] = $rendered_name;
-
             $tag_id = $tag_obj->id->value;
-            $counter = $tag_counters[$tag_id] ?? 0;
-            if ($counter > 0) {
-                $tag['counter'] = $counter;
-            }
+
+            // RenderTagName carries the row as context. Its shape is the
+            // partial one this loop used to have built by this point:
+            // the raw name, before the event's own rendered name lands,
+            // and no counter or alt names yet.
+            $tagNameEvent = $this->eventDispatcher->dispatch(new RenderTagName($raw_name, [
+                'name' => $raw_name,
+                'id' => $tag_id,
+                'url_name' => $tag_obj->urlName,
+                'raw_name' => $raw_name,
+            ]));
+            $rendered_name = $tagNameEvent->tagName;
 
             $altNamesEvent = $this->eventDispatcher->dispatch(new GetTagAltNames([], $raw_name));
             $alt_names = array_filter($altNamesEvent->value, is_string(...));
             $alt_names = array_diff(array_unique($alt_names), [$rendered_name]);
-            if (count($alt_names) > 0) {
-                $tag['alt_names'] = implode(', ', $alt_names);
-            }
-            $all_tags[] = $tag;
+
+            $all_tags[] = new TagRow(
+                id: $tag_id,
+                name: $rendered_name,
+                rawName: $raw_name,
+                urlName: $tag_obj->urlName,
+                counter: $tag_counters[$tag_id] ?? 0,
+                altNames: $alt_names === [] ? null : implode(', ', $alt_names),
+            );
         }
-        usort($all_tags, $this->htmlRenderer->tagAlphaCompare(...));
+
+        // tagAlphaCompare() is the shared cross-domain row reader and takes
+        // arrays; 'name' is the only key it reads, so handing it that one
+        // key keeps this list on the same ProcessCache-backed
+        // transliteration every other tag listing sorts by.
+        usort(
+            $all_tags,
+            fn (TagRow $a, TagRow $b): int => $this->htmlRenderer->tagAlphaCompare(
+                [
+                    'name' => $a->name,
+                ],
+                [
+                    'name' => $b->name,
+                ],
+            )
+        );
 
         $adminContent = $this->renderer->render(new TagsView(
             pwgToken: $this->csrfService

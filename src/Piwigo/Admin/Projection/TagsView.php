@@ -16,17 +16,18 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `tags.latte`'s own typed view, constructed by {@see
  * \Piwigo\Admin\TagsPageRenderer::render()}. No `$formAction` field --
  * `F_ACTION` has zero real references in `tags.latte`'s own body (tag
- * management is entirely client-side). `$firstTags`/`$data` stay loose
- * row shapes -- each tag entry's own key set grows incrementally
- * (name/id/url_name plus more spliced on per row), not a fixed
- * structural shape worth minting its own DTO for here.
+ * management is entirely client-side).
+ *
+ * `$firstTags` is the first page of `$data`, not a different collection --
+ * the template renders that slice server-side and hands the whole list to
+ * `tags.ts` as JSON for the client-side pager.
  */
 #[Template('tags.latte')]
 final readonly class TagsView implements View, HasPageAssets, ExposesPageData
 {
     /**
-     * @param list<array<string, mixed>> $firstTags
-     * @param list<array<string, mixed>> $data
+     * @param list<TagRow> $firstTags
+     * @param list<TagRow> $data
      */
     public function __construct(
         public string $pwgToken,

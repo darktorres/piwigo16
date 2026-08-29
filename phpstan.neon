@@ -336,6 +336,39 @@ parameters:
             # 2 findings.
             message: '#^Cannot call method getParent\(\) on Latte\\Essential\\CachingIterator<mixed, mixed>\|null\.$#'
             path: _analysis/phpstan-latte/*
+        -
+            # Latte's {capture} codegen. `{capture $x}...{/capture}` compiles
+            # to an output-buffer round trip whose epilogue is
+            # `$ʟ_tmp = ob_get_length() ? new LR\Html(ob_get_clean())
+            # : ob_get_clean();` -- so the ternary condition is
+            # ob_get_length()'s own int|false, and the Html constructor is
+            # handed ob_get_clean()'s own string|false. Neither function
+            # appears in any template or app source: read directly at
+            # _analysis/phpstan-latte/themes-admin-default-template-rating_user.latte.php:320.
+            # One {capture} in the tree, one finding each.
+            #
+            # P58's plan called for restructuring that {capture} instead,
+            # because `ternary.condNotBoolean`'s message was then
+            # character-identical to a real finding on
+            # mainpage_categories.latte's `$cat['SELECTED'] ? ...`. That
+            # collision is gone -- typing the category row removed it -- so
+            # the message is now specific to the codegen and this is the
+            # same disposition as the entries above rather than a weaker
+            # substitute for the rewrite.
+            #
+            # count-pinned, unlike the entries above: `int|false` is a type
+            # a template expression could plausibly have one day (strpos(),
+            # say), which the class-naming guarantees elsewhere in this
+            # group rule out by construction. A second finding of either
+            # shape fails the build instead of being absorbed.
+            message: '#^Only booleans are allowed in a ternary operator condition, int\|false given\.$#'
+            path: _analysis/phpstan-latte/*
+            count: 1
+        -
+            # The other half of the same {capture} epilogue; see above.
+            message: '#^Parameter \#1 \$value of class Latte\\Runtime\\Html constructor expects string\|Stringable\|null, string\|false given\.$#'
+            path: _analysis/phpstan-latte/*
+            count: 1
 
         # (2) PERMANENT while the @var injection asserts presence -- the
         # compile step declares every known variable as defined (extract()
@@ -405,9 +438,6 @@ parameters:
             path: _analysis/phpstan-latte/*
         -
             identifier: if.condNotBoolean
-            path: _analysis/phpstan-latte/*
-        -
-            identifier: ternary.condNotBoolean
             path: _analysis/phpstan-latte/*
         -
             identifier: logicalAnd.rightNotBoolean

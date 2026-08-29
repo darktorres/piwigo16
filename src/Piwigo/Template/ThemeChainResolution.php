@@ -17,7 +17,7 @@ final readonly class ThemeChainResolution
 {
     /**
      * @param list<string> $dirs
-     * @param list<array<string, mixed>> $themes
+     * @param list<ThemeChainEntry> $themes parent-first
      * @param array<string, mixed> $themeconf
      */
     public function __construct(

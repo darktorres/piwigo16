@@ -55,6 +55,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\Event\CombinedScript;
 use Piwigo\Template\Latte\PiwigoExtension;
 use Piwigo\Template\Projection\LocalHeadView;
+use Piwigo\Template\Projection\ThemeChainPageContext;
 
 /**
  * The data_dir_checked write inside __construct() goes through
@@ -528,8 +529,10 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             $this->setTemplateDir($dir);
         }
 
-        $this->assign('themes', $resolution->themes);
-        $this->assign('themeconf', $resolution->themeconf);
+        $this->assignContext(new ThemeChainPageContext(
+            themes: $resolution->themes,
+            themeconf: $resolution->themeconf,
+        ));
 
         if ($applyThemeBase) {
             $this->applyThemeBaseAssets($root, $path, $resolution->themes);
@@ -549,7 +552,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * uses) -- those never render `layout.latte` at all, so none of this
      * applies.
      *
-     * @param list<array<string, mixed>> $themes
+     * @param list<ThemeChainEntry> $themes
      */
     private function applyThemeBaseAssets(string $root, string $path, array $themes): void
     {
@@ -560,7 +563,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $this->themeBaseApplied = true;
 
         $isAdmin = str_ends_with($root, 'themes/admin');
-        $isStandardPages = ! $isAdmin && $themes !== [] && ($themes[array_key_last($themes)]['id'] ?? null) === 'standard_pages';
+        $isStandardPages = ! $isAdmin && $themes !== [] && $themes[array_key_last($themes)]->id === 'standard_pages';
         $this->isAdminLayout = $isAdmin;
 
         if ($isAdmin) {
@@ -1034,12 +1037,11 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         }
 
         foreach ($themes as $theme) {
-            $localHead = is_array($theme) ? ($theme['local_head'] ?? null) : null;
-            if (! is_string($localHead) || $localHead !== $expected) {
+            if (! $theme instanceof ThemeChainEntry || $theme->localHead !== $expected) {
                 continue;
             }
 
-            $localHeadView = new LocalHeadView(load_css: (bool) ($theme['load_css'] ?? true));
+            $localHeadView = new LocalHeadView(load_css: $theme->loadCss);
             $this->registerPageAssets($localHeadView->pageAssets());
             $this->renderView('themes/default/local_head.latte', $localHeadView);
         }
@@ -1311,18 +1313,14 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * -- never from an admin template, matching this feature's original,
      * Smarty-era front-end-only scope.
      *
-     * @param array<int, array<string, mixed>> $themes
+     * @param list<ThemeChainEntry> $themes
      */
     public function localCssRules(array $themes): void
     {
         $siteLocalDir = substr($this->paths->siteLocal, strlen($this->paths->root));
 
         foreach ($themes as $theme) {
-            $id = $theme['id'] ?? null;
-            if (! is_string($id)) {
-                continue;
-            }
-            $f = $siteLocalDir . 'css/' . $id . '-rules.css';
+            $f = $siteLocalDir . 'css/' . $theme->id . '-rules.css';
             if (file_exists($this->paths->root . $f)) {
                 $this->pageAssets->add(AssetContribution::css($f, order: 10));
             }

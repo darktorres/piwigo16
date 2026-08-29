@@ -11,6 +11,7 @@ use Piwigo\Asset\LoadMode;
 use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
+use Piwigo\Template\ThemeChainEntry;
 
 /**
  * `install.latte`'s own typed view, constructed by {@see
@@ -36,7 +37,7 @@ final readonly class InstallView implements View, HasPageAssets, ExposesPageData
      * @param array<string, string> $languageOptions
      * @param array<int, string>|null $errors
      * @param array<int, string>|null $infos
-     * @param list<mixed> $themes
+     * @param list<ThemeChainEntry> $themes
      * @param list<string> $dedupErrorStrings
      * @param list<array{path: string, label: string, writable: bool}> $writableChecks
      */
@@ -69,7 +70,7 @@ final readonly class InstallView implements View, HasPageAssets, ExposesPageData
 
     /**
      * `install.latte`'s own `{foreach $themes as $theme}{if
-     * $theme['load_css']}{do combineCss(...)}{/if}{/foreach}` (a real
+     * $theme->loadCss}{do combineCss(...)}{/if}{/foreach}` (a real
      * loop+conditional, not a fixed literal list) plus 4 unconditional
      * `{do combineScript(...)}`x3/`{do combineCss(...)}`x1
      * (docs/PLAN.md's P42-B). Deliberately narrower than
@@ -85,13 +86,8 @@ final readonly class InstallView implements View, HasPageAssets, ExposesPageData
         $assets = [];
 
         foreach ($this->themes as $theme) {
-            if (! is_array($theme)) {
-                continue;
-            }
-
-            $id = $theme['id'] ?? null;
-            if (($theme['load_css'] ?? false) === true && is_string($id)) {
-                $assets[] = AssetContribution::css('themes/admin/' . $id . '/theme.css', order: -10);
+            if ($theme->loadCss) {
+                $assets[] = AssetContribution::css('themes/admin/' . $theme->id . '/theme.css', order: -10);
             }
         }
 

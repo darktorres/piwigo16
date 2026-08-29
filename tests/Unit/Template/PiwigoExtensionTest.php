@@ -114,20 +114,6 @@ test('isClassicUser reflects the given userStatus without needing the current us
         ->toBeFalse();
 });
 
-// --- defaultFilter -----------------------------------------------------
-
-test('defaultFilter returns the fallback for every empty sentinel value', function (): void {
-    foreach ([null, false, 0, '0', '', []] as $sentinel) {
-        expect(PiwigoExtension::defaultFilter($sentinel, 'fallback'))
-            ->toBe('fallback');
-    }
-});
-
-test('defaultFilter returns the original value when it is not empty', function (): void {
-    expect(PiwigoExtension::defaultFilter('real value', 'fallback'))
-        ->toBe('real value');
-});
-
 // --- replace / strReplace ---------------------------------------------
 
 test('replace does a plain scalar search/replacement, not a regex', function (): void {

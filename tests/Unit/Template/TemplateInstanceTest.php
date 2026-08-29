@@ -26,6 +26,7 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateAdapter;
+use Piwigo\Template\ThemeChainEntry;
 use Piwigo\Tests\Support\AdHocPageContext;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -139,10 +140,11 @@ function template_instance_test_write_themeconf(string $dir, array $vars): void
 }
 
 /**
- * Narrows Template::getTemplateVars()'s mixed return down to the "list of
- * per-theme arrays" shape setTheme() itself always appends.
+ * Narrows Template::getTemplateVars()'s mixed return down to the entries
+ * setTheme() appends. It used to rebuild each entry as a string-keyed
+ * array, key by key; ThemeChainEntry makes that an instanceof check.
  *
- * @return list<array<string, mixed>>
+ * @return list<ThemeChainEntry>
  */
 function template_instance_test_themes(Template $t): array
 {
@@ -153,7 +155,11 @@ function template_instance_test_themes(Template $t): array
 
     $narrowed = [];
     foreach ($themes as $theme) {
-        $narrowed[] = template_instance_test_assoc($theme);
+        if (! $theme instanceof ThemeChainEntry) {
+            throw new RuntimeException('Expected a ThemeChainEntry, got ' . get_debug_type($theme));
+        }
+
+        $narrowed[] = $theme;
     }
 
     return $narrowed;
@@ -597,8 +603,8 @@ test('setTheme recurses into a distinct parent theme', function (): void {
         // The parent's own recursive setTheme() call appends its themes
         // entry before this (outer, child) call resumes and appends its
         // own -- so the parent lands at index 0, the child at index 1.
-        ->and($themes[0]['id'])->toBe('parent-theme')
-        ->and($themes[1]['id'])->toBe('child-theme');
+        ->and($themes[0]->id)->toBe('parent-theme')
+        ->and($themes[1]->id)->toBe('child-theme');
 });
 
 test('setTheme does not recurse when a theme names itself as its own parent', function (): void {
@@ -625,8 +631,8 @@ test('setTheme records both the theme id and the load_css flag on the appended t
     $t->setTheme($root, ThemeId::from('plain-theme'), 'template', false);
 
     $themes = template_instance_test_themes($t);
-    expect($themes[0]['id'])->toBe('plain-theme')
-        ->and($themes[0]['load_css'])->toBeFalse();
+    expect($themes[0]->id)->toBe('plain-theme')
+        ->and($themes[0]->loadCss)->toBeFalse();
 });
 
 test('setTheme resolves local_head to a real file path when present and load_local_head is true', function (): void {
@@ -642,7 +648,7 @@ test('setTheme resolves local_head to a real file path when present and load_loc
     $t->setTheme($root, ThemeId::from('lh-theme'), 'template', true, true);
 
     $themes = template_instance_test_themes($t);
-    expect($themes[0]['local_head'])->toBe(realpath($root . '/lh-theme/local_head.tpl'));
+    expect($themes[0]->localHead)->toBe(realpath($root . '/lh-theme/local_head.tpl'));
 });
 
 test('setTheme treats a local_head value of "0" as absent, same as every other in_array sentinel', function (): void {
@@ -655,7 +661,7 @@ test('setTheme treats a local_head value of "0" as absent, same as every other i
 
     $t->setTheme($root, ThemeId::from('lh-zero-theme'), 'template', true, true);
 
-    expect(template_instance_test_themes($t)[0])->not->toHaveKey('local_head');
+    expect(template_instance_test_themes($t)[0]->localHead)->toBeNull();
 });
 
 test('setTheme treats an empty-string local_head as absent', function (): void {
@@ -668,7 +674,7 @@ test('setTheme treats an empty-string local_head as absent', function (): void {
 
     $t->setTheme($root, ThemeId::from('lh-empty-theme'), 'template', true, true);
 
-    expect(template_instance_test_themes($t)[0])->not->toHaveKey('local_head');
+    expect(template_instance_test_themes($t)[0]->localHead)->toBeNull();
 });
 
 test('setTheme defaults colorscheme to the given value when the theme does not already set one', function (): void {
@@ -1580,16 +1586,12 @@ test('localCssRules registers a css entry for a real theme-specific rules file',
     file_put_contents(CurrentPathsTestFactory::get()->root . '/local/css/mytheme-rules.css', 'body{}');
     $t = TemplateTestFactory::build();
 
+    // The third entry this used to pass -- one with no 'id' key at all --
+    // exercised a guard ThemeChainEntry makes unrepresentable, so it goes
+    // with the guard.
     $t->localCssRules([
-        [
-            'id' => 'mytheme',
-        ],
-        [
-            'id' => 'no-such-theme',
-        ],
-        [
-            'no-id' => true,
-        ],
+        new ThemeChainEntry(id: 'mytheme', loadCss: true),
+        new ThemeChainEntry(id: 'no-such-theme', loadCss: true),
     ]);
 
     $result = $t->finalizeHtml(Template::COMBINED_CSS_TAG);
@@ -1615,9 +1617,7 @@ test('localCssRules registers nothing when no local css files exist', function (
     $t = TemplateTestFactory::build();
 
     $t->localCssRules([
-        [
-            'id' => 'mytheme',
-        ],
+        new ThemeChainEntry(id: 'mytheme', loadCss: true),
     ]);
 
     $result = $t->finalizeHtml(Template::COMBINED_CSS_TAG);

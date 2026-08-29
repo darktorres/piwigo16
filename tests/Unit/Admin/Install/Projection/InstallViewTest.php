@@ -5,9 +5,10 @@ declare(strict_types=1);
 use Piwigo\Admin\Install\Projection\InstallView;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\LoadMode;
+use Piwigo\Template\ThemeChainEntry;
 
 /**
- * @param list<mixed> $themes
+ * @param list<ThemeChainEntry> $themes
  */
 function makeInstallView(array $themes): InstallView
 {
@@ -39,16 +40,10 @@ function makeInstallView(array $themes): InstallView
     );
 }
 
-test('pageAssets registers each theme\'s own theme.css when load_css is true', function (): void {
+test('pageAssets registers each theme\'s own theme.css when loadCss is true', function (): void {
     $view = makeInstallView([
-        [
-            'id' => 'clear',
-            'load_css' => true,
-        ],
-        [
-            'id' => 'dark',
-            'load_css' => true,
-        ],
+        new ThemeChainEntry(id: 'clear', loadCss: true),
+        new ThemeChainEntry(id: 'dark', loadCss: true),
     ]);
 
     $cssIds = array_map(
@@ -63,12 +58,9 @@ test('pageAssets registers each theme\'s own theme.css when load_css is true', f
         ]);
 });
 
-test('pageAssets skips a theme whose load_css is false', function (): void {
+test('pageAssets skips a theme whose loadCss is false', function (): void {
     $view = makeInstallView([
-        [
-            'id' => 'clear',
-            'load_css' => false,
-        ],
+        new ThemeChainEntry(id: 'clear', loadCss: false),
     ]);
 
     $themeCss = array_filter($view->pageAssets(), static fn (AssetContribution $c): bool => str_contains($c->path, 'theme.css'));

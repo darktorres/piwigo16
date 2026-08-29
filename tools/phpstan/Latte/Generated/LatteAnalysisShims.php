@@ -94,7 +94,6 @@ final class LatteAnalysisShims
         'str_replace',
         'nl2br',
         'str_repeat',
-        'default',
         'format_date',
         'time_since',
         'url_is_remote',
@@ -568,11 +567,6 @@ final class LatteAnalysisShims
     }
 
     public static function str_repeat(string $string, int $times): string
-    {
-        throw new \LogicException('Analysis-only shim; never executed.');
-    }
-
-    public static function default(mixed $value, mixed $fallback): mixed
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }

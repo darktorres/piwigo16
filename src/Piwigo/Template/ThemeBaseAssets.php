@@ -64,8 +64,8 @@ final readonly class ThemeBaseAssets
      * argument, so it calls the matching method directly instead of this
      * class re-deriving family identity from a string.
      *
-     * @param list<array<string, mixed>> $themes `ThemeChainResolution::$themes`'s
-     *   own shape -- parent-first, each entry's `id`/`load_css` keys.
+     * @param list<ThemeChainEntry> $themes `ThemeChainResolution::$themes`,
+     *   parent-first.
      * @return list<AssetContribution>
      */
     public static function forAdminLayout(array $themes): array
@@ -76,13 +76,12 @@ final readonly class ThemeBaseAssets
         ];
 
         foreach ($themes as $theme) {
-            if (($theme['load_css'] ?? false) !== true || ! is_string($theme['id'] ?? null)) {
+            if (! $theme->loadCss) {
                 continue;
             }
 
-            $id = $theme['id'];
-            $assets[] = AssetContribution::css('themes/admin/' . $id . '/theme.css', order: -10);
-            $assets[] = AssetContribution::css('themes/admin/' . $id . '/css/components/general.css', order: -9);
+            $assets[] = AssetContribution::css('themes/admin/' . $theme->id . '/theme.css', order: -10);
+            $assets[] = AssetContribution::css('themes/admin/' . $theme->id . '/css/components/general.css', order: -9);
         }
 
         $assets[] = AssetContribution::script('jquery', 'https://cdn.jsdelivr.net/npm/jquery@1.11.3/dist/jquery.min.js');
@@ -119,7 +118,7 @@ final readonly class ThemeBaseAssets
     }
 
     /**
-     * @param list<array<string, mixed>> $themes
+     * @param list<ThemeChainEntry> $themes
      * @return list<AssetContribution>
      */
     public static function forDefaultLayout(array $themes): array
@@ -132,7 +131,7 @@ final readonly class ThemeBaseAssets
     }
 
     /**
-     * @param list<array<string, mixed>> $themes
+     * @param list<ThemeChainEntry> $themes
      * @return list<AssetContribution>
      */
     public static function forStandardPagesLayout(array $themes): array
@@ -149,18 +148,18 @@ final readonly class ThemeBaseAssets
      * -- `admin`'s own loop additionally registers `components/general.css`
      * per theme, so it isn't factored in here.
      *
-     * @param list<array<string, mixed>> $themes
+     * @param list<ThemeChainEntry> $themes
      * @return list<AssetContribution>
      */
     private static function themeChainCss(array $themes): array
     {
         $assets = [];
         foreach ($themes as $theme) {
-            if (($theme['load_css'] ?? false) !== true || ! is_string($theme['id'] ?? null)) {
+            if (! $theme->loadCss) {
                 continue;
             }
 
-            $assets[] = AssetContribution::css('themes/' . $theme['id'] . '/theme.css', order: -10);
+            $assets[] = AssetContribution::css('themes/' . $theme->id . '/theme.css', order: -10);
         }
 
         return $assets;

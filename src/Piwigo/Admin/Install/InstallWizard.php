@@ -52,6 +52,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
 use Piwigo\Template\Template;
+use Piwigo\Template\ThemeChainEntry;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
 use Piwigo\Validation\InputValidator;
@@ -730,8 +731,12 @@ final class InstallWizard
             new InstallPostInstallSession($this->lang, $this->currentConfig, $this->currentUser, $this->eventDispatcher, $this->pageState, $this->paths, $this->connectedWithSession, $this->installServiceFactory)
                 ->run($conn, $this->language, $this->isNewsletterSubscribe, $this->adminName, $this->adminMail, $this->request->isSendCredentialsByMail);
         }
+        // getTemplateVars() is the untyped side of the template bag, so the
+        // entries ThemeChainPageContext put there come back as mixed.
         $rawThemes = $this->template->getTemplateVars('themes');
-        $themes = is_array($rawThemes) ? array_values($rawThemes) : [];
+        $themes = is_array($rawThemes)
+            ? array_values(array_filter($rawThemes, static fn (mixed $t): bool => $t instanceof ThemeChainEntry))
+            : [];
 
         $installView = new InstallView(
             languageSelection: $language_selection,

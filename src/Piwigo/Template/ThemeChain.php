@@ -61,7 +61,7 @@ final class ThemeChain
 
     /**
      * @param list<string> $dirs
-     * @param list<array<string, mixed>> $themes
+     * @param list<ThemeChainEntry> $themes
      * @param array<string, mixed> $themeconfAcc
      */
     private function walk(string $root, ThemeId $theme, string $path, CurrentConfig $currentConfig, bool $loadCss, bool $loadLocalHead, string $colorscheme, array &$dirs, array &$themes, array &$themeconfAcc): void
@@ -100,13 +100,19 @@ final class ThemeChain
             );
         }
 
-        $tplVar = [
-            'id' => $theme->value,
-            'load_css' => $loadCss,
-        ];
+        $localHead = null;
         if (! in_array($themeconf['local_head'] ?? null, [null, false, 0, '0', '', []], true) and $loadLocalHead and is_string($themeconf['local_head'])) {
-            $tplVar['local_head'] = realpath($root . '/' . $theme->value . '/' . $themeconf['local_head']);
+            // realpath() answers false for a declared file that is not on
+            // disk; that is the same "no local head" as never declaring one.
+            $resolved = realpath($root . '/' . $theme->value . '/' . $themeconf['local_head']);
+            $localHead = $resolved === false ? null : $resolved;
         }
+
+        $tplVar = new ThemeChainEntry(
+            id: $theme->value,
+            loadCss: $loadCss,
+            localHead: $localHead,
+        );
         $themeconf['id'] = $theme->value;
 
         if (! isset($themeconf['colorscheme'])) {

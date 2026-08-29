@@ -8,6 +8,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\TemplatePageContext;
 use Piwigo\Template\Template;
+use Piwigo\Template\ThemeChainEntry;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
@@ -76,10 +77,9 @@ function template_test_rrmdir(string $dir): void
 /**
  * Narrows Template::getTemplateVars('themes')'s mixed return (same
  * shape TemplateInstanceTest.php's own template_instance_test_themes()
- * narrows) down to the list of per-theme arrays setTheme() itself always
- * appends.
+ * narrows) down to the entries setTheme() itself always appends.
  *
- * @return list<array<string, mixed>>
+ * @return list<ThemeChainEntry>
  */
 function template_test_themes(Template $t): array
 {
@@ -90,20 +90,11 @@ function template_test_themes(Template $t): array
 
     $narrowed = [];
     foreach ($themes as $theme) {
-        if (! is_array($theme)) {
-            throw new RuntimeException('Expected a theme entry array, got ' . get_debug_type($theme));
+        if (! $theme instanceof ThemeChainEntry) {
+            throw new RuntimeException('Expected a ThemeChainEntry, got ' . get_debug_type($theme));
         }
 
-        $assoc = [];
-        foreach ($theme as $key => $value) {
-            if (! is_string($key)) {
-                throw new RuntimeException('Expected a string-keyed array, found key ' . get_debug_type($key));
-            }
-
-            $assoc[$key] = $value;
-        }
-
-        $narrowed[] = $assoc;
+        $narrowed[] = $theme;
     }
 
     return $narrowed;
@@ -197,15 +188,15 @@ test('setTheme lets a parent theme\'s own load_parent_css/load_parent_local_head
     // append('themes', ...)) runs during the child's recursive call,
     // before the child appends its own entry -- so the parent's entry
     // comes first.
-    expect($themes[0]['id'])->toBe('gap-parent');
+    expect($themes[0]->id)->toBe('gap-parent');
     // A CoalesceRemoveLeft or TernaryNegated mutation on either
     // load_parent_css or load_parent_local_head makes this recursive call
     // receive the caller's own load_css/load_local_head (both true)
     // instead of the themeconf-forced false.
-    expect($themes[0]['load_css'])->toBeFalse();
+    expect($themes[0]->loadCss)->toBeFalse();
     expect($themes[0])->not->toHaveKey('local_head');
-    expect($themes[1]['id'])->toBe('gap-child');
-    expect($themes[1]['load_css'])->toBeTrue();
+    expect($themes[1]->id)->toBe('gap-child');
+    expect($themes[1]->loadCss)->toBeTrue();
 
     template_test_rrmdir($root);
 });
@@ -241,7 +232,7 @@ test('setTheme does not recurse into a non-string parent themeconf value', funct
     $themes = template_test_themes($t);
     expect($themes)
         ->toHaveCount(1)
-        ->and($themes[0]['id'])->toBe('gap-child-nonstring-parent');
+        ->and($themes[0]->id)->toBe('gap-child-nonstring-parent');
 
     template_test_rrmdir($root);
 });

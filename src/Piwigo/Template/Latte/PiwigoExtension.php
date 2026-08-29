@@ -118,7 +118,6 @@ final class PiwigoExtension extends Extension
             // context) already migrated to |breakLines.
             'nl2br' => nl2br(...),
             'str_repeat' => str_repeat(...),
-            'default' => self::defaultFilter(...),
             'replace' => self::replace(...),
 
             // Date formatting. Registered so a row VO can carry the domain
@@ -289,15 +288,6 @@ final class PiwigoExtension extends Extension
         // return type is always string here -- no is_array() re-check
         // needed on the result.
         return str_replace($search, $replace, $subject);
-    }
-
-    /**
-     * Smarty `|default:'fallback'` modifier -- returns the fallback when the
-     * piped value is empty (null, '', 0, false, []).
-     */
-    public static function defaultFilter(mixed $value, mixed $fallback): mixed
-    {
-        return in_array($value, [null, false, 0, '0', '', []], true) ? $fallback : $value;
     }
 
     /**

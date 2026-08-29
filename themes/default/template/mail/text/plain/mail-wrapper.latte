@@ -3,7 +3,6 @@
 {varType string $ADMIN_PAGE_OBJECT_ID}
 {varType ?string|string $ADMIN_PAGE_TITLE}
 {varType string $APP_URL}
-{varType ?bool $AUTHORIZE_REMEMBERING}
 {varType list<string> $BODY_CLASSES}
 {varType string $BODY_ID}
 {varType \Latte\Runtime\Html $CATEGORIES}
@@ -22,7 +21,6 @@
 {varType ?string $INFO_AUTHOR}
 {varType string $INFO_FILE}
 {varType string $LEVEL_SEPARATOR}
-{varType string $LOGIN_REDIRECT}
 {varType \Latte\Runtime\Html $MAIL_CSS}
 {varType string $MAIL_SUBTITLE}
 {varType string $MAIL_TITLE}
@@ -51,7 +49,7 @@
 {varType ?string $TOGGLE_MOBILE_THEME_URL}
 {varType ?string|mixed $USERNAME}
 {varType string $U_ADD_PHOTOS}
-{varType ?string|string $U_ADMIN}
+{varType string $U_ADMIN}
 {varType string $U_ALBUMS}
 {varType string $U_BATCH}
 {varType string $U_CADDIE}
@@ -73,22 +71,16 @@
 {varType ?string $U_HELP}
 {varType string $U_HISTORY_STAT}
 {varType string $U_HOME}
-{varType ?string $U_LOGIN}
-{varType ?string|mixed|string $U_LOGOUT}
-{varType ?string $U_LOST_PASSWORD}
+{varType mixed|string $U_LOGOUT}
 {varType string $U_MAINTENANCE}
 {varType string $U_NOTIFICATION_BY_MAIL}
 {varType string $U_ORPHANS}
 {varType string $U_PLUGINS}
 {varType ?string $U_PREFETCH}
-{varType ?string $U_PROFILE}
 {varType string $U_RATING}
 {varType string $U_RECENT_SET}
-{varType ?string $U_REGISTER}
 {varType mixed|string $U_RETURN}
 {varType string $U_SITE_MANAGER}
-{varType ?string $U_START_FILTER}
-{varType ?string $U_STOP_FILTER}
 {varType string $U_TAGS}
 {varType string $U_UP}
 {varType ?string $U_UPDATES}
@@ -115,26 +107,28 @@
 {varType string $filter_category_selected_name}
 {varType array<int, string> $filter_level_options}
 {varType int $filter_level_options_selected}
+{varType ?string $filter_search_query}
 {varType array<int, array{name: mixed, id: string}> $filter_tags}
-{varType array<string, mixed>|null $first}
+{varType ?\Piwigo\Controller\Projection\PictureNavEntry $first}
 {varType list<string> $footer_elements}
 {varType list<string> $head_elements}
 {varType list<string> $header_msgs}
 {varType list<string>|null $header_notes}
 {varType array<array-key, string>|null $infos}
 {varType array<string, mixed> $lang_info}
-{varType array<string, mixed>|null $last}
+{varType ?\Piwigo\Controller\Projection\PictureNavEntry $last}
 {varType array<array-key, string>|null $messages}
 {varType ?int $meta_ref}
-{varType array<string, mixed>|null $next}
+{varType ?\Piwigo\Controller\Projection\PictureNavEntry $next}
 {varType list<string> $no_search_results}
 {varType array{TIME: string, U_REFRESH: string}|null $page_refresh}
 {varType list<array<mixed>> $prefilters}
-{varType array<string, mixed>|null $previous}
+{varType ?\Piwigo\Controller\Projection\PictureNavEntry $previous}
 {varType \Piwigo\Template\TemplateAdapter $pwg}
 {varType list<array<string, mixed>>|null $related_tags}
 {varType array<mixed> $selection}
 {varType array<string, mixed> $themeconf}
+{varType list<\Piwigo\Template\ThemeChainEntry> $themes}
 {varType array<array-key, string>|null $warnings}
 {* END varType *}
 {contentType text}

@@ -19,13 +19,27 @@
 # (see e.g. Playwright's own visual-testing guidance and
 # https://adequatica.medium.com/operating-system-independent-screenshot-testing-with-playwright-and-docker-6e2251a9eb32).
 #
+# --disable-font-subpixel-positioning is the one flag here that was added
+# from a measurement rather than from the standard list. Skia positions
+# glyphs at quarter-pixel offsets, so a text run whose device-space origin
+# lands on a quantum boundary rounds either way from one paint to the next.
+# admin-plugins-new's sort <select> and search <input> sit at x .40625 and
+# did exactly that: identical layout (rects equal to 1/64 px), identical
+# fonts, identical everything the DOM can report, and a text centroid that
+# moved 0.118 CSS px == 0.236 device px == one quarter of a device pixel.
+# Every text run at an integer x was unaffected by the same nudge, which is
+# what identified it as a rounding boundary rather than drift. Snapping
+# glyph origins to whole pixels removes the boundary; ten consecutive
+# zero-tolerance runs of all 80 baselines pass afterwards, where the route
+# had been failing roughly one run in five.
+#
 # `args` is a genuine, documented Playwright LaunchOptions field passed
 # straight through to the browser executable -- this is not a protocol
 # guess, it's the same launch-options plumbing already used two lines
 # above for headless/ignoreHTTPSErrors/bypassCSP.
 --- a/src/Playwright/Client.php	2026-04-08 18:04:12.000000000 -0300
 +++ b/src/Playwright/Client.php	2026-07-17 23:15:36.251053722 -0300
-@@ -55,6 +55,23 @@
+@@ -55,6 +55,24 @@
                  'headless' => Playwright::isHeadless(),
                  'ignoreHTTPSErrors' => true,
                  'bypassCSP' => true,
@@ -40,6 +54,7 @@
 +                // for any real determinism there.
 +                'args' => [
 +                    '--font-render-hinting=none',
++                    '--disable-font-subpixel-positioning',
 +                    '--disable-lcd-text',
 +                    '--force-color-profile=srgb',
 +                    '--disable-partial-raster',

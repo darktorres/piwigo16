@@ -1,5 +1,5 @@
 {
-    "_hash": "d5d24de76800b7dc5fcac38b0997a08a11e0a57e99432e065c86826db94a9a95",
+    "_hash": "e27c1dd64aba8bd9e044037cc8cdd1460e106f0e89945d0fd634f6dd380c785a",
     "patches": {
         "doctrine/dbal": [
             {
@@ -40,7 +40,7 @@
                 "package": "pestphp/pest-plugin-browser",
                 "description": "Add Chromium launch flags for deterministic screenshot rendering on Linux (font hinting/LCD text/color profile) -- the plugin's own maintainers don't trust screenshot assertions on Linux/CI without this class of mitigation, see PR pestphp/pest-plugin-browser#175",
                 "url": "patches/pest-plugin-browser-5.0.0-deterministic-screenshot-flags.patch",
-                "sha256": "e689bb2a394cfd1831f18ac30d13efeea83a874c9af03fa598afeae598c5d3d3",
+                "sha256": "bb200f673c9c3f37ed7e5f6ae717c304cda9b9b2508c8d92a8ba266bf83b3a53",
                 "depth": 1,
                 "extra": {
                     "provenance": "root"
@@ -51,6 +51,16 @@
                 "description": "Start `playwright run-server` with --unsafe, without which playwright-core's own filterLaunchOptions() silently discards every `args` entry the patch above sends (allowUnsafe gates args/executablePath/ignoreDefaultArgs; `headless` passes through regardless, so nothing looks broken). Confirmed by reading the live browser's argv: none of the five determinism flags was applied, LCD subpixel text anti-aliasing was on in every screenshot, and 5-14 of the 80 visual baselines differed between any two capture runs. With the flags actually reaching Chromium, three consecutive full captures are byte-identical",
                 "url": "patches/pest-plugin-browser-5.0.0-run-server-unsafe-launch-options.patch",
                 "sha256": "20def3e3c855546b5f79c2afea07a738ad37ca9812878322e1437c12223d8cad",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            },
+            {
+                "package": "pestphp/pest-plugin-browser",
+                "description": "Compare screenshots exactly (threshold 0, maxDiffPixels 0, no ratio bound). maxDiffPixelRatio was always inert -- playwright-core takes Math.min of the two bounds and the ratio one works out to 19298 pixels at this viewport -- and `threshold` at 0.3 is what hid three real regressions found on 2026-08-28: the dataTables sort arrows (806 pixels, one grey level each, so the 300-pixel bound never saw them), register.php's checkbox default (161), and admin-site-update's worktree-specific path (605). Viable only because the flags patch above now actually reaches Chromium: ten consecutive full runs of all 80 baselines pass with no regeneration. pixelmatch's own antialiasing exclusion still applies and is not exposed by playwright-core",
+                "url": "patches/pest-plugin-browser-5.0.0-exact-screenshot-comparison.patch",
+                "sha256": "c3f38a1877d508fa2fa6abd3c34f9f5476df4d3395fb665c86de060b96d15e6e",
                 "depth": 1,
                 "extra": {
                     "provenance": "root"

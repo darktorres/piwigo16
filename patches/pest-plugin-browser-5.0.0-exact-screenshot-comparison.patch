@@ -1,0 +1,52 @@
+# Compares screenshots exactly: every differing pixel counts, and none is
+# allowed.
+#
+# expectScreenshot() shipped with `threshold => 0.3, maxDiffPixels => 300,
+# maxDiffPixelRatio => 0.01`. Two of those three never did anything useful:
+# playwright-core takes Math.min(maxDiffPixels, width * height *
+# maxDiffPixelRatio), and at 1728x1117 the ratio bound is 19298, so 300 was
+# always the operative one. `threshold` is the one that hid real
+# regressions -- it is pixelmatch's per-pixel YIQ distance cutoff, and at
+# 0.3 a whole-glyph difference of one grey level is not a difference at all.
+# It hid, in this repo: the dataTables sort arrows disappearing from
+# admin.php?page=rating_user for five days after a vendored-asset purge
+# deleted the sprites the CSS still referenced (806 pixels, each one grey
+# level, so `maxDiffPixels => 300` never even saw them); register.php's
+# send_password_by_mail checkbox still rendering ticked a commit after its
+# unsafe default was fixed (161 pixels); and admin-site-update rendering one
+# worktree's own absolute path (605 pixels).
+#
+# Zero tolerance is only viable because the renderer underneath is now
+# genuinely deterministic -- see
+# pest-plugin-browser-5.0.0-run-server-unsafe-launch-options.patch, without
+# which none of the determinism flags reached Chromium at all. With them
+# applied, ten consecutive full runs of all 80 visual baselines pass with no
+# regeneration, and three consecutive --update-snapshots captures are
+# byte-identical.
+#
+# What still passes at these settings: pixelmatch's own antialiasing
+# detection, which playwright-core leaves at its default (includeAA false)
+# and does not expose. A pixel it classifies as antialiasing -- one with
+# both a lighter and a darker neighbour, i.e. an edge -- is excluded from
+# the count. That is a narrow, structural allowance, not a magnitude one:
+# verified by planting a single pixel one grey level off in a flat region of
+# a baseline, which fails, and the two-pixel bevel join of the gallery
+# menubar's fieldset, which passes.
+#
+# `detectAntialiasing` is left in place but is inert either way:
+# playwright-core's comparator calls pixelmatch with `{ threshold }` alone
+# and never reads it.
+--- a/src/Playwright/Page.php
++++ b/src/Playwright/Page.php
+@@ -521,9 +521,8 @@
+                     'timeout' => 30000,
+                     'isNot' => false,
+                     'comparisonMethod' => 'pixelmatch',
+-                    'threshold' => 0.3,
+-                    'maxDiffPixels' => 300,
+-                    'maxDiffPixelRatio' => 0.01,
++                    'threshold' => 0.0,
++                    'maxDiffPixels' => 0,
+                     'detectAntialiasing' => true,
+                     'forceSameDimensions' => true,
+                 ]

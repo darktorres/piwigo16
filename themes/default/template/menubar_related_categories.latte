@@ -23,7 +23,14 @@
       {='</ul></li>'|str_repeat:($ref_level - $cat->level)|noescape}
     {/if}
     {="<li>"|noescape}
-    {if $cat->title !== null}
+    {* No url means this row is only here to carry the tree's shape: an
+       ancestor holding none of the current page's own items, so there is
+       nothing to filter to. It renders as plain text rather than the
+       `<a href="">` it used to, which looked clickable and reloaded the
+       page. *}
+    {if $cat->url === null}
+      {$cat->name}
+    {elseif $cat->title !== null}
       <a
         href="{$cat->url|noescape}"
         title="{$cat->title}"

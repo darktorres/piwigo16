@@ -24,7 +24,7 @@ final readonly class MenubarRelatedCategoryRow
     public function __construct(
         public int $level,
         public string $name,
-        public string $url,
+        public ?string $url,
         public ?string $title,
         public ?int $countImages,
         public ?int $countCategories,

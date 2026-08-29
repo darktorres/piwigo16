@@ -202,7 +202,7 @@ final class MenubarRenderer
                 $relatedCategories[] = new MenubarRelatedCategoryRow(
                     level: is_int($relatedRow['LEVEL'] ?? null) ? $relatedRow['LEVEL'] : 1,
                     name: is_string($relatedRow['name'] ?? null) ? $relatedRow['name'] : '',
-                    url: is_string($relatedRow['url'] ?? null) ? $relatedRow['url'] : '',
+                    url: is_string($relatedRow['url'] ?? null) ? $relatedRow['url'] : null,
                     title: is_string($relatedRow['TITLE'] ?? null) ? $relatedRow['TITLE'] : null,
                     countImages: is_int($relatedRow['count_images'] ?? null) ? $relatedRow['count_images'] : null,
                     countCategories: is_int($relatedRow['count_categories'] ?? null) ? $relatedRow['count_categories'] : null,

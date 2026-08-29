@@ -2047,8 +2047,14 @@ it('renders the legend/author/creation-date info block for a photo with a real c
     expect($body)
         ->toContain($commentMarker);
 
-    // author
+    // author, in the body...
     $page->assertSee($authorName);
+    // ...and in the <head>, which reads INFO_AUTHOR off
+    // PictureHeaderPageContext rather than PictureView -- layout.latte
+    // renders before PictureView is ever constructed, so the two are
+    // separate assigns and only this assertion covers the second one.
+    expect($body)
+        ->toMatch('/<meta\s+name="author"\s+content="' . preg_quote($authorName, '/') . '"\s*>/');
 
     // creation date: DateHelper::formatDate() always includes the year,
     // and PictureController's own chronology link is built from

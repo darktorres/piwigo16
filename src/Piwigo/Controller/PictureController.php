@@ -1237,6 +1237,7 @@ final readonly class PictureController implements ControllerInterface
             navLast: $nav['last'] ?? null,
             uUp: $url_up,
             commentImg: $comment_img,
+            infoAuthor: $info_author,
             infoFile: $info_file,
             uPrefetch: $u_prefetch,
             relatedTags: $related_tags !== [] ? $related_tags : null,

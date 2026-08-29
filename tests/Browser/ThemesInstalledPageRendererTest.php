@@ -240,3 +240,76 @@ it('renders a real theme row, with every field it emits, when a non-excluded the
         @rmdir($dir);
     }
 });
+
+/**
+ * `{var $author = ...}` is assigned only inside `{if !empty($theme->author)}`,
+ * and the block sits inside the row `{foreach}` -- a Latte `{var}` is a plain
+ * PHP variable, so before it was reset per iteration a theme with no author
+ * rendered the *previous* theme's byline. Unreachable in this repo until now
+ * for the same reason the row loop itself was: every theme on disk is
+ * excluded, so the fixture never had two rows to leak between.
+ *
+ * The probe ids are deliberately ordered so the author-bearing theme is
+ * scanned first.
+ */
+it('does not carry one theme\'s author onto the next theme that has none', function (): void {
+    $root = dirname(__DIR__, 2) . '/themes/';
+    $withAuthor = 'p58_a_author_probe';
+    $withoutAuthor = 'p58_b_noauthor_probe';
+
+    foreach ([$withAuthor, $withoutAuthor] as $id) {
+        if (is_dir($root . $id)) {
+            throw new RuntimeException("{$root}{$id} already exists; refusing to overwrite it");
+        }
+    }
+
+    $manifest = static function (string $id, string $name, ?string $author): string {
+        $data = [
+            'id' => $id,
+            'name' => $name,
+            'version' => '1.0.0',
+            'description' => 'Temporary theme for the author-leak regression test.',
+            'license' => 'GPL-2.0-or-later',
+            'minPiwigo' => '16.3.0',
+            'main' => 'Piwigo\\Theme\\Probe\\Theme',
+        ];
+        if ($author !== null) {
+            $data['author'] = $author;
+        }
+
+        $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        if ($json === false) {
+            throw new RuntimeException('json_encode failed for a probe theme manifest');
+        }
+
+        return $json;
+    };
+
+    mkdir($root . $withAuthor, 0o755, true);
+    mkdir($root . $withoutAuthor, 0o755, true);
+
+    try {
+        file_put_contents($root . $withAuthor . '/theme.json', $manifest($withAuthor, 'P58 Has Author', 'P58 Leak Author'));
+        file_put_contents($root . $withoutAuthor . '/theme.json', $manifest($withoutAuthor, 'P58 No Author', null));
+
+        $page = H::asAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=themes');
+        $html = H::rawWebpage($page)->content();
+
+        // Both rows render, and the byline appears exactly once -- on the
+        // theme that declares it.
+        expect($html)
+            ->toContain('P58 Has Author')
+            ->and($html)
+            ->toContain('P58 No Author');
+        expect(substr_count($html, 'P58 Leak Author'))
+            ->toBe(1);
+
+        $page->assertNoJavaScriptErrors();
+    } finally {
+        foreach ([$withAuthor, $withoutAuthor] as $id) {
+            @unlink($root . $id . '/theme.json');
+            @rmdir($root . $id);
+        }
+    }
+});

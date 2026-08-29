@@ -90,6 +90,9 @@
     class="pluginContainer {if $viewSelector == 'classic'} classic-form {elseif $viewSelector == 'line'} line-form {elseif $viewSelector == 'compact'} compact-form {else} {/if}"
   >
     {foreach $plugins as $plugin}
+      {* Reset per iteration: {var} is a plain PHP variable, so a plugin
+         with no author would otherwise render the previous plugin's. *}
+      {var $author = null}
       {if !empty($plugin->author)}
         {if !empty($plugin->authorUrl)}
           {var $author = ("<a href='%s'>%s</a>"|sprintf:$plugin->authorUrl,$plugin->author)}
@@ -188,7 +191,7 @@
           <div class="PluginOptionsBlock dropdown">
             <div
               class="dropdown-option-content"
-            > {if !empty($author)}{='By %s'|translate:$author|noescape} | {/if}{='Version'|translate} {$version|noescape}</div>
+            > {if $author !== null}{='By %s'|translate:$author|noescape} | {/if}{='Version'|translate} {$version|noescape}</div>
             <div class="pluginDescCompact">
               {$plugin->desc}
             </div>

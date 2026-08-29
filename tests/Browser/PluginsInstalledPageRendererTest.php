@@ -700,3 +700,55 @@ it('links the author and the version when the manifest carries an author URI and
         pluginsInstalledRemoveFixturePlugin($pluginId);
     }
 });
+
+/**
+ * The plugins-page twin of ThemesInstalledPageRendererTest's own
+ * author-leak test. `{var $author = ...}` is assigned only inside
+ * `{if !empty($plugin->author)}` and the block sits inside the row
+ * `{foreach}`, so before it was reset per iteration a plugin with no
+ * author rendered the previous plugin's byline.
+ *
+ * The ids are ordered so the author-bearing plugin is scanned first.
+ */
+it('does not carry one plugin\'s author onto the next plugin that has none', function (): void {
+    $withAuthor = 'p58-a-authored-' . uniqid();
+    $withoutAuthor = 'p58-b-anonymous-' . uniqid();
+
+    pluginsInstalledWriteFixturePlugin($withAuthor, <<<'PHP'
+    <?php
+
+    /*
+    Plugin Name: P58 Has Author
+    Version: 1.0.0
+    Description: Test-only fixture plugin for the author-leak regression test.
+    Author: P58 Leak Author
+    */
+    PHP);
+    pluginsInstalledWriteFixturePlugin($withoutAuthor, <<<'PHP'
+    <?php
+
+    /*
+    Plugin Name: P58 No Author
+    Version: 1.0.0
+    Description: Test-only fixture plugin for the author-leak regression test.
+    */
+    PHP);
+
+    try {
+        $page = H::asAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=plugins');
+        $html = H::rawWebpage($page)->content();
+
+        expect($html)
+            ->toContain('P58 Has Author')
+            ->and($html)
+            ->toContain('P58 No Author');
+        expect(substr_count($html, 'P58 Leak Author'))
+            ->toBe(1);
+
+        $page->assertNoJavaScriptErrors();
+    } finally {
+        pluginsInstalledRemoveFixturePlugin($withAuthor);
+        pluginsInstalledRemoveFixturePlugin($withoutAuthor);
+    }
+});

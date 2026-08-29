@@ -38,6 +38,9 @@
       {var $field_name = $theme->state}
     {/if}
 
+    {* Reset per iteration: {var} is a plain PHP variable, so a theme with
+       no author would otherwise render the previous theme's. *}
+    {var $author = null}
     {if !empty($theme->author)}
       {if !empty($theme->authorUrl)}
         {var $author = ("<a href='%s'>%s</a>"|sprintf:$theme->authorUrl,$theme->author)}
@@ -71,7 +74,7 @@
       </div>
       <div class="showInfo-dropdown dropdown">
         <div class="showInfo-dropdown-header">
-          {if !empty($author)}
+          {if $author !== null}
             {='By %s'|translate:$author|noescape} |
           {/if}
           {='Version'|translate} {$version|noescape}

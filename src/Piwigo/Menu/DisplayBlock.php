@@ -33,8 +33,10 @@ final class DisplayBlock
     public ?string $template = null;
 
     /**
-     * @var string|null never assigned by any in-tree caller today -- stays
-     *   at its default null (see BlockManager::apply()'s own null check).
+     * @var string|null the block's rendered HTML. MenubarRenderer renders
+     *   each block it knows about through its own typed View into this;
+     *   a block nothing fills stays null and BlockManager::apply() hides
+     *   it rather than emitting an empty `<dl>`.
      */
     public ?string $raw_content = null;
 

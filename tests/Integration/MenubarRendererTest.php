@@ -339,4 +339,31 @@ final class MenubarRendererTest extends IntegrationTestCase
         self::assertInstanceOf(Html::class, $menubar);
         self::assertStringNotContainsString('Sample Album', (string) $menubar);
     }
+
+    /**
+     * BlockManager::apply() hides a registered block that nothing filled
+     * in, so the menubar never emits an empty `<dl>`. Asserted on the
+     * rendered markup rather than left to the golden/VR snapshots: both
+     * were generated while two such blocks *were* being emitted, and a
+     * snapshot records what is there rather than reporting what should
+     * not be. `mbLinks` is unfilled here because the fixture config
+     * carries no `links`, and `mbRelatedCategories` because a Categories
+     * section has no related albums.
+     */
+    public function testRenderEmitsNoEmptyBlockForARegisteredBlockNothingFilledIn(): void
+    {
+        $this->sectionContextRegistry->set(new SectionContext(section: Section::Categories));
+
+        $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager, new Renderer(CurrentTemplateTestFactory::get()));
+
+        $menubar = $this->template->getTemplateVars('MENUBAR');
+        self::assertInstanceOf(Html::class, $menubar);
+
+        self::assertStringNotContainsString('mbLinks', (string) $menubar);
+        self::assertStringNotContainsString('mbRelatedCategories', (string) $menubar);
+        self::assertDoesNotMatchRegularExpression(
+            '~<dl id="[^"]+">\s*</dl>~',
+            (string) $menubar,
+        );
+    }
 }

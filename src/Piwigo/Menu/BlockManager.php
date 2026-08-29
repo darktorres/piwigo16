@@ -169,7 +169,7 @@ final class BlockManager
         $this->eventDispatcher->dispatch(new BlockManagerApply($this));
 
         foreach ($this->display_blocks as $id => $block) {
-            if (in_array($block->raw_content, [''], true) and in_array($block->template, [''], true)) {
+            if (($block->raw_content ?? '') === '' and ($block->template ?? '') === '') {
                 $this->hideBlock($id);
             }
         }

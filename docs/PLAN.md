@@ -148,7 +148,7 @@ Three structural changes produced that drift:
 | P55 | Real quality gates | Not started | 0 |
 | P56 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P57 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
-| P58 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | In progress — A0/A0b done (103 findings refiled as Latte codegen); a generic `CachingIterator` stub removed the erasure hiding 133 more; **P58-A 843 → 270**, with techniques 1, 4 and 11 closed; P58-B 376 → 356. Nine live bugs found and fixed along the way | 1 |
+| P58 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | In progress — A0/A0b done (103 findings refiled as Latte codegen); a generic `CachingIterator` stub removed the erasure hiding 133 more; **P58-A 843 → 223**, with techniques 1, 4 and 11 closed and 3 nearly so; P58-B 376 → 356. Two of A's 20 identifier ignores retired from `phpstan.neon`. Twelve live bugs found and fixed along the way | 1 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -4516,12 +4516,14 @@ techniques. Re-run `phpstan-latte:compile` first — a stale compile
 changes the count.
 
 Opened at **P58-A 843** across 74 templates and 63 View classes and
-**P58-B 376** across 72 (P32 recorded ~1,400 and ~450). Now **A 270, B
+**P58-B 376** across 72 (P32 recorded ~1,400 and ~450). Now **A 223, B
 356** -- B's 20 were not B work, but `empty()`/`==` guards A had to restate
 on its way past, since `empty()` on an object is always false and a
-comparison against a newly-typed value can be written strictly. Two entries have already come out of the block
-(`booleanOr.leftNotBoolean`/`rightNotBoolean`), forced by
-`reportUnmatchedIgnoredErrors` rather than noticed.
+comparison against a newly-typed value can be written strictly. Four
+entries have come out of the block so far
+(`booleanOr.leftNotBoolean`/`rightNotBoolean`,
+`booleanAnd.rightNotBoolean`, `offsetAccess.invalidOffset`), each
+forced by `reportUnmatchedIgnoredErrors` rather than noticed.
 
 *P58-A0/A0b (done, `3e6255a4d9`, `fc763eaa57`).* 81 of A's raw 924 were
 `booleanNot.exprNotBoolean` reading `Latte\Runtime\Template|null` —
@@ -4553,11 +4555,11 @@ sorts every traced pair into eight fix techniques — these are techniques,
 not a partition, since one chain can need two:
 
 | # | technique | opened | now |
-|---|---|---|---|
-| 9 | template locals / fallback-union globals | 119 | 90 |
-| 3 | compose a row VO (incl. `array_merge` sites) | 160 | 71 |
+| --- | --- | --- | --- |
+| 9 | template locals / fallback-union globals | 119 | 85 |
 | 5 | polymorphic block data (`mixed` by design) | 52 | 51 |
 | 6 | picture family: untyped event payloads | 35 | 35 |
+| 3 | compose a row VO (incl. `array_merge` sites) | 160 | **28** |
 | 2 | tighten a leaf `*Result`/`*Data` property | 87 | **11** |
 | 11 | nullable/union used as if definite | 23 | **5** |
 | 4 | retire a flattening `TemplatePageContext` | 86 | **5** |
@@ -4586,6 +4588,40 @@ template rendered through `Renderer::render()` can carry a
 ambient producers instead of inventing a View. And
 `phpstan-latte:compile` must re-run after every template edit, or
 shipmonk reports every property of the newly-typed VO as never read.
+
+§3's row VOs each found something the loose shape was hiding: a
+manifest read with no `??` warned once per missing field per row for
+every pre-17.x catalog entry (`CatalogPluginRow`); an
+`explode(' ', $occuredOn)` destructured into a pair for a value that
+is
+`''` whenever the date could not be read (`ActivityLogRow`); a
+`?? null`
+bridged two blocks under the identical guard, feeding a template that
+calls `count()` on it with no null check (`SelectedTagRow`). Four
+producer keys were computed and read by nothing. And typing one
+property can close far more than its own count — `$activityChartData`
+carried six of `$activityLastWeeks`'s findings, because the keys it
+yields are what index into it.
+
+Not every shape should become a VO. `IntroView::$storageChartData`
+reaches `intro.ts` via `exposedPageData()`, which reads
+`total.filesize`/`nb_files` by name, so a readonly object would
+serialize as `nbFiles` and break that contract; it takes a precise
+array shape instead. The shape then has to be *inferable*: accreting a
+nested array in place infers `array<string, array<string, mixed>>`
+whatever the docblock claims, and PHPStan's own output says not to
+override its inference with an inline `@var`. Accumulate into flat
+typed arrays and assemble each entry in one expression instead.
+
+`RatingUserView::$ratings` was the campaign's one restructure rather
+than retype, and its comparators' own docblock had argued against a
+real shape ("would tie every comparator to render()'s own internal
+accumulation order, for no safety gain"). A `UserRatingAccumulator`
+whose `freeze()` computes the statistics settles it: the defensive
+narrowing in all five comparators goes away with the shape it was
+guarding against. Keep their expression shape, though — `<=>` is not
+faithful where the operands are `int` and the zero test is `=== 0.0`,
+nor where `sqrt()` of a float-error-negative variance can yield `NAN`.
 
 *P58-B — modernize the template source.* Ordered strictly after A: 154
 of B's 268 loose comparisons and 28 of its 103 `empty()` calls have

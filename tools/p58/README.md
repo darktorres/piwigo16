@@ -33,7 +33,7 @@ A finding's location is a line in a _compiled_ template, where the offending
 expression is usually a loop variable several `foreach` levels below the
 property that actually carries the wrong type. This walks it back:
 
-```
+```text
 compiled line -> root variable -> foreach bindings in the .latte source
               -> outermost template variable -> the {templateType} View property
 ```

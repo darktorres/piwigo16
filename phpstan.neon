@@ -425,13 +425,7 @@ parameters:
             identifier: foreach.nonIterable
             path: _analysis/phpstan-latte/*
         -
-            identifier: binaryOp.invalid
-            path: _analysis/phpstan-latte/*
-        -
             identifier: method.nonObject
-            path: _analysis/phpstan-latte/*
-        -
-            identifier: property.nonObject
             path: _analysis/phpstan-latte/*
         -
             identifier: isset.offset

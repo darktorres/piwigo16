@@ -7,14 +7,10 @@ use Piwigo\Menu\DisplayBlock;
 use Piwigo\Menu\Projection\MenubarView;
 use Piwigo\Menu\RegisteredBlock;
 
-/**
- * @param array<int|string, mixed> $data
- */
-function makeMenubarDisplayBlock(string $template, array|null $data = null): DisplayBlock
+function makeMenubarDisplayBlock(string $template): DisplayBlock
 {
     $block = new DisplayBlock(new RegisteredBlock('id', 'name', 'owner'));
     $block->template = $template;
-    $block->data = $data;
 
     return $block;
 }

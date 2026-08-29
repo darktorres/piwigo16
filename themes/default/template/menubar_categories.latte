@@ -1,19 +1,19 @@
-{templateType Piwigo\Menu\Projection\MenubarBlockView}
+{templateType Piwigo\Menu\Projection\MenubarCategoriesView}
 <dt>
   <a
-    n:if="isset($U_START_FILTER)"
-    href="{$U_START_FILTER|noescape}"
+    n:if="$startFilterUrl !== null"
+    href="{$startFilterUrl|noescape}"
     class="pwg-state-default pwg-button menubarFilter"
     title="{='display only recently posted photos'|translate}"
     rel="nofollow"
   ><span class="pwg-icon pwg-icon-filter"></span></a>
   <a
-    n:if="isset($U_STOP_FILTER)"
-    href="{$U_STOP_FILTER|noescape}"
+    n:if="$stopFilterUrl !== null"
+    href="{$stopFilterUrl|noescape}"
     class="pwg-state-default pwg-button menubarFilter"
     title="{='return to the display of all photos'|translate}"
   ><span class="pwg-icon pwg-icon-filter-del"></span></a>
-  <a href="{$block->data['U_CATEGORIES']|noescape}">{='Albums'|translate}</a>
+  <a href="{$categoriesUrl|noescape}">{='Albums'|translate}</a>
 </dt>
 <dd>
   {*
@@ -28,38 +28,38 @@
     HTML, since each of those opens and closes within one iteration.
   *}
   {var $ref_level = 0}
-  {foreach $block->data['MENU_CATEGORIES'] as $cat}
-    {if $cat['LEVEL'] > $ref_level}
+  {foreach $categories as $cat}
+    {if $cat->level > $ref_level}
       {="<ul>"|noescape}
     {else}
       {="</li>"|noescape}
-      {='</ul></li>'|str_repeat:($ref_level - $cat['LEVEL'])|noescape}
+      {='</ul></li>'|str_repeat:($ref_level - $cat->level)|noescape}
     {/if}
-    {="<li" . ($cat['SELECTED'] ? ' class="selected"' : '') . ">"|noescape}
+    {="<li" . ($cat->selected ? ' class="selected"' : '') . ">"|noescape}
     <a
-      href="{$cat['URL']|noescape}"
-      {if $cat['IS_UPPERCAT']}
+      href="{$cat->url|noescape}"
+      {if $cat->isUppercat}
       rel="up"
       {/if}
-      title="{$cat['TITLE']}"
-    >{$cat['NAME']}</a>
+      title="{$cat->title}"
+    >{$cat->name}</a>
     <span
-      n:if="$cat['count_images'] > 0"
-      class="{if $cat['nb_images'] > 0}menuInfoCat{else}menuInfoCatByChild{/if} badge"
-      title="{$cat['TITLE']}"
-    >{$cat['count_images']}</span>
+      n:if="$cat->countImages > 0"
+      class="{if $cat->nbImages > 0}menuInfoCat{else}menuInfoCatByChild{/if} badge"
+      title="{$cat->title}"
+    >{$cat->countImages}</span>
     <img
-      n:if="$cat['icon_ts'] !== null"
-      title="{$cat['icon_ts']->title}"
-      src="{$ROOT_URL}{$themeconf['icon_dir']}/recent{if $cat['icon_ts']->isChildDate}_by_child{/if}.png"
+      n:if="$cat->recentIcon !== null"
+      title="{$cat->recentIcon->title}"
+      src="{$rootUrl}{$iconDir}/recent{if $cat->recentIcon->isChildDate}_by_child{/if}.png"
       class="icon"
       alt="(!)"
     >
-    {var $ref_level = $cat['LEVEL']}
+    {var $ref_level = $cat->level}
   {/foreach}
   {='</li></ul>'|str_repeat:$ref_level|noescape}
 
   <p
     class="totalImages"
-  >{=$block->data['NB_PICTURE']|translate_dec:'%d photo','%d photos'}</p>
+  >{=$totalPhotos|translate_dec:'%d photo','%d photos'}</p>
 </dd>

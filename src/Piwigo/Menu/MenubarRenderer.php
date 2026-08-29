@@ -21,11 +21,14 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageFilterHelper;
+use Piwigo\Core\Projection\RecentIcon;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\TypedRepository;
 use Piwigo\Filter\FilterService;
 use Piwigo\Lang\Translator;
 use Piwigo\Menu\Event\CheckMenuLinkVisibility;
+use Piwigo\Menu\Projection\MenubarCategoriesView;
+use Piwigo\Menu\Projection\MenubarCategoryRow;
 use Piwigo\Menu\Projection\MenubarIdentificationPageContext;
 use Piwigo\Menu\Projection\MenubarLinkRow;
 use Piwigo\Menu\Projection\MenubarLinksView;
@@ -146,15 +149,36 @@ final class MenubarRenderer
         if ($block instanceof DisplayBlock) {
             $categoriesMenu = $categoryService->getCategoriesMenu($section_context?->category, new FilterService($filterState, $sessionService, $translator, $lang, $currentConfig, $eventDispatcher, $entityManager), $urlService, $filterState, $currentUser, $lang);
             $categoryCountCategories = $categoriesMenu['categoryCountCategories'];
-            $block->data = [
-                'NB_PICTURE' => $currentUser->get()
-                    ->rawAttributes['nb_total_images'] ?? null,
-                'MENU_CATEGORIES' => $categoriesMenu['menu'],
-                'U_CATEGORIES' => $urlService->makeIndexUrl([
+            $categoryRows = [];
+            foreach ($categoriesMenu['menu'] as $menuRow) {
+                $recentIcon = $menuRow['icon_ts'] ?? null;
+                $categoryRows[] = new MenubarCategoryRow(
+                    level: is_int($menuRow['LEVEL'] ?? null) ? $menuRow['LEVEL'] : 1,
+                    name: is_string($menuRow['NAME'] ?? null) ? $menuRow['NAME'] : '',
+                    url: is_string($menuRow['URL'] ?? null) ? $menuRow['URL'] : '',
+                    title: is_string($menuRow['TITLE'] ?? null) ? $menuRow['TITLE'] : '',
+                    selected: ($menuRow['SELECTED'] ?? false) === true,
+                    isUppercat: ($menuRow['IS_UPPERCAT'] ?? false) === true,
+                    countImages: is_numeric($menuRow['count_images'] ?? null) ? (int) $menuRow['count_images'] : 0,
+                    nbImages: is_numeric($menuRow['nb_images'] ?? null) ? (int) $menuRow['nb_images'] : 0,
+                    recentIcon: $recentIcon instanceof RecentIcon ? $recentIcon : null,
+                );
+            }
+
+            $nbTotalImages = $currentUser->get()
+                ->rawAttributes['nb_total_images'] ?? null;
+
+            $block->raw_content = (string) $renderer->render(new MenubarCategoriesView(
+                categories: $categoryRows,
+                categoriesUrl: $urlService->makeIndexUrl([
                     'section' => 'categories',
                 ]),
-            ];
-            $block->template = 'menubar_categories.latte';
+                totalPhotos: is_numeric($nbTotalImages) ? (int) $nbTotalImages : null,
+                startFilterUrl: $u_start_filter,
+                stopFilterUrl: $u_stop_filter,
+                rootUrl: $urlService->getRootUrl(),
+                iconDir: $template->themeConf('icon_dir'),
+            ));
         }
 
         $block = $menu->getBlock('mbRelatedCategories');

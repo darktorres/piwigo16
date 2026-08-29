@@ -456,14 +456,6 @@ final readonly class ContextVariableExtractor
         // which is how 'chronology_calendar' was declared
         // `?list<CalendarBarEntry>` (its $calendarBars argument) rather
         // than `CalendarChronologyCalendar`.
-        // `'key' => new SomeVo(...)` is exact, not an approximation: the
-        // assigned value is an instance of that class whatever its
-        // arguments are. Without this it fell through to the
-        // first-property-reference heuristic below and came back as the
-        // type of whichever constructor argument happened to be first --
-        // which is how 'chronology_calendar' was declared
-        // `?list<CalendarBarEntry>` (its $calendarBars argument) rather
-        // than `CalendarChronologyCalendar`.
         if ($expr instanceof New_ && $expr->class instanceof Name) {
             // Resolved through the context class's own name context, not
             // printed straight from the node: the AST this walks is parsed
@@ -473,6 +465,35 @@ final readonly class ContextVariableExtractor
             return '\\' . $this->buildNameContext($reflection)
                 ->getResolvedClassName($expr->class)
                 ->toString();
+        }
+
+        // `'key' => ['A' => $this->x, 'B' => $this->y]` is a shape, not an
+        // approximation either. Without this it fell through to the same
+        // heuristic and came back as the type of the first property the
+        // literal happens to mention -- which is how `chronology` reached
+        // index.latte as `string` rather than `array{TITLE: string}`, so
+        // `$chronology['TITLE']` read as an offset on a string. A literal
+        // whose keys are not all plain strings falls through unchanged.
+        if ($expr instanceof Array_ && $expr->items !== []) {
+            $fields = [];
+            foreach ($expr->items as $item) {
+                if (! $item->key instanceof String_ || $item->byRef || $item->unpack) {
+                    $fields = null;
+                    break;
+                }
+                $fields[] = $item->key->value . ': ' . $this->typeOfExpression(
+                    $item->value,
+                    $contextClass,
+                    $reflection,
+                    $propertyTypes,
+                    $key . '.' . $item->key->value,
+                    $notices,
+                );
+            }
+
+            if ($fields !== null) {
+                return 'array{' . implode(', ', $fields) . '}';
+            }
         }
 
         $fallback = new NodeFinder()

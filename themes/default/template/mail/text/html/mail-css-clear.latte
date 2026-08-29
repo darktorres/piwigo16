@@ -100,7 +100,7 @@
 {varType array<array-key, int|string|float|bool> $all_elements}
 {varType array<array-key, mixed> $associated_categories}
 {varType \Piwigo\Core\Projection\Navbar $cats_navbar}
-{varType string $chronology}
+{varType array{TITLE: string} $chronology}
 {varType \Piwigo\Calendar\Projection\CalendarChronologyCalendar $chronology_calendar}
 {varType list<\Piwigo\Calendar\Projection\ChronologyNavBarRow> $chronology_navigation_bars}
 {varType list<array{VALUE: string, CONTENT: string, SELECTED: bool}>|null $chronology_views}
@@ -108,7 +108,7 @@
 {varType \Piwigo\Page\Projection\DebugInfo $debug}
 {varType \Piwigo\Admin\BatchManager\Projection\DimensionFilterOptions $dimensions}
 {varType array<array-key, string>|null $errors}
-{varType string $favorite}
+{varType array{U_FAVORITE: string} $favorite}
 {varType \Piwigo\Admin\BatchManager\Projection\FilesizeFilterOptions $filesize}
 {varType array<string, mixed> $filter}
 {varType ?int $filter_category_selected}

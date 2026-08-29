@@ -7,6 +7,7 @@ use Piwigo\Calendar\Projection\CalendarChronologyPageContext;
 use Piwigo\Calendar\Projection\CalendarMonthlyCalendarPageContext;
 use Piwigo\Menu\DisplayBlock;
 use Piwigo\Template\TemplateAdapter;
+use Piwigo\Tests\Unit\Tools\ContextVariableExtractorTestArrayLiteralFixture;
 use Piwigo\Tests\Unit\Tools\ContextVariableExtractorTestDisplayBlocksFixture;
 use Piwigo\Tests\Unit\Tools\ContextVariableExtractorTestDynamicDimFixture;
 use Piwigo\Tests\Unit\Tools\ContextVariableExtractorTestNestedArrayShapeFixture;
@@ -23,6 +24,32 @@ it('maps a nested array-shape docblock', function (): void {
     expect($extracted->vars['cats_navbar'])->toContain('pages?:')
         ->and($extracted->notices)
         ->toBe([]);
+});
+
+it('types a toArray value built as an array literal by its real shape, not its first property', function (): void {
+    $extracted = $this->extractor->extract(ContextVariableExtractorTestArrayLiteralFixture::class);
+
+    // Without the array-literal branch this came back as `string` -- the
+    // type of whichever property the literal mentions first -- so a
+    // template reading `$wrapped['TITLE']` was an offset access on a
+    // string, and reading `$wrapped['COUNT']` did not exist at all.
+    expect($extracted->vars['wrapped'])
+        ->toBe('array{TITLE: string, COUNT: int}');
+});
+
+it('falls back to the approximation for a literal it cannot describe as a shape', function (): void {
+    $extracted = $this->extractor->extract(ContextVariableExtractorTestArrayLiteralFixture::class);
+
+    // An int key and a spread are both outside `array{...}`'s string-keyed
+    // form, so each keeps the old first-property-reference behaviour and
+    // says so in a notice rather than emitting a shape it cannot justify.
+    expect($extracted->vars['int_keyed'])
+        ->toBe('string')
+        ->and($extracted->vars['spread_built'])
+        ->toBe('list<string>')
+        ->and(implode(' ', $extracted->notices))
+        ->toContain("'int_keyed'")
+        ->toContain("'spread_built'");
 });
 
 it('FQCN-expands use-imported classes in docblock types', function (): void {

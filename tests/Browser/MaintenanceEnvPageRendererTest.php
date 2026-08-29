@@ -73,19 +73,49 @@ it('server-renders a real active plugin\'s name and badge count in the env tab p
     }
 });
 
-it('shows the time-since-last-calculation when a real cache_sizes config value is present', function (): void {
+it('shows the cache size and the time since it was last calculated', function (): void {
     $snapshot = H::snapshotConfig(['cache_sizes']);
-    // cache_sizes is a `[{name, value}, ...]` list persisted by
-    // CacheSizeCalculator -- index 3's own 'value' (a date
-    // string) is what MaintenanceEnvPageRenderer
-    // reads for its "time since last calculation" display. Hand-crafted
-    // here rather than triggering a real calculation, since only that one
-    // index/key matters to this branch.
-    H::setConfigValue('cache_sizes', '[{"name":"a","value":1},{"name":"b","value":2},{"name":"c","value":3},{"name":"d","value":"2020-01-01 00:00:00"}]');
+    // `cache_sizes` is the `[{name, value}, ...]` list CacheSizeCalculator
+    // persists, and CacheSizesSnapshot::fromArray() looks its four fields
+    // up BY NAME -- `cache_size`/`msizes`/`tsizes`/`last_date_calc` -- not
+    // by position. Hand-crafted rather than triggering a real
+    // calculation, but with the real names: a list of a/b/c/d decodes to a
+    // snapshot with every field null and proves nothing.
+    H::setConfigValue(
+        'cache_sizes',
+        '[{"name":"cache_size","value":5242880},{"name":"msizes","value":{"all":5242880}},'
+        . '{"name":"tsizes","value":1048576},{"name":"last_date_calc","value":"2020-01-01 00:00:00"}]'
+    );
 
     try {
         $page = H::asAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=maintenance&tab=env');
+
+        // Read off the HTTP response, not the DOM: maintenance.ts wires a
+        // "Refresh" button that rewrites these same two spans from an API
+        // call, and this is about what the renderer emits.
+        $response = H::rawGet($page, '/admin.php?page=maintenance&tab=env');
+        expect($response['status'])
+            ->toBe(200);
+
+        $start = strpos($response['body'], 'cache-size-text');
+        expect($start)
+            ->not->toBeFalse();
+        $block = substr($response['body'], (int) $start, 700);
+
+        expect($block)
+            // 5242880 bytes -> 5 Mo, not the "N/A" the else branch renders.
+            ->toMatch('/<span class="cache-size-value">\s*5 Mo\s*<\/span>/')
+            // The last-calculated pair: the label renders at all (its {if}
+            // emits nothing when the value is missing), and the value is a
+            // real elapsed-time phrase rather than the else branch's
+            // "never calculated".
+            ->and($block)
+            ->toContain('calculated')
+            ->and($block)
+            ->not->toContain('never calculated')
+            ->and($block)
+            ->toMatch('/cache-lastCalculated-value"\s*>\s*\d+ years?\b/');
 
         $page->assertNoJavaScriptErrors();
         H::assertNoServerErrors($page, 'maintenance env tab, cache_sizes present');

@@ -26,18 +26,18 @@
     <li>
       <span class="cache-size-text">{='Cache size'|translate}</span>
       <span class="cache-size-value">
-        {if isset($cache_sizes) and $cache_sizes->cacheSize !== null}
-          {=round($cache_sizes->cacheSize / 1024 / 1024, 2)} Mo
+        {if isset($cacheSizes) and $cacheSizes->cacheSize !== null}
+          {=round($cacheSizes->cacheSize / 1024 / 1024, 2)} Mo
         {else}
           {='N/A'|translate}
         {/if}
       </span>
       <span
         class="cache-lastCalculated-text"
-      >{if $time_elapsed_since_last_calc}&ThickSpace;{='calculated'|translate}{/if}</span>
+      >{if $timeElapsedSinceLastCalc !== null}&ThickSpace;{='calculated'|translate}{/if}</span>
       <span
         class="cache-lastCalculated-value"
-      >{if $time_elapsed_since_last_calc} {$time_elapsed_since_last_calc} {else} &ThickSpace;{='never calculated'|translate} {/if}</span>
+      >{if $timeElapsedSinceLastCalc !== null} {$timeElapsedSinceLastCalc} {else} &ThickSpace;{='never calculated'|translate} {/if}</span>
       <a class="refresh-cache-size"><span
           class="refresh-icon icon-arrows-cw"
         ></span>{='Refresh'|translate}</a>

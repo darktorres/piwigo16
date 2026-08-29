@@ -1,0 +1,36 @@
+Fixture Gallery
+ New photos added
+----
+
+  Notification
+  Hello Fixture Recipient,
+
+  New photos were added between 2026-07-01 00:00:00 and 2026-08-01 00:00:00.
+
+  
+    Sample Album: 3 photos
+    Nested Sub Album: 2 photos
+  
+
+  Fixture custom mail content.
+
+  Go to Fixture Gallery.
+  See you soon,
+  Fixture Gallery
+  
+  
+    To unsubscribe, click on nbm.php?unsubscribe=fixture-check-key
+    To subscribe, click on nbm.php?subscribe=fixture-check-key
+    If you encounter problems or have any question, please send a message to fixture_admin@example.test
+  
+  
+  
+    
+  Recent posts of 2026-08-01
+  Fixture recent-post body.
+
+
+----
+Sent by "Fixture Gallery" {{ABSOLUTE_ROOT_URL}}
+Powered by "Piwigo" https://upstream.example.invalid
+Contact: fixture_admin@example.test

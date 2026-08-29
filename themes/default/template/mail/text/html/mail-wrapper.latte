@@ -176,7 +176,7 @@
                 {* <!-- begin HEADER --> *}
                 <div id="title">{$MAIL_TITLE}</div>
                 <div
-                  n:if="!empty($MAIL_SUBTITLE)"
+                  n:if="$MAIL_SUBTITLE !== ''"
                   id="subtitle"
                 >{$MAIL_SUBTITLE}</div>
                 {* <!-- end HEADER --> *}
@@ -204,7 +204,7 @@ to show the origin of the script... --> *}
                   href="{$APP_URL}"
                   class="Piwigo"
                 >Piwigo</a>
-                {if !empty($VERSION)}{$VERSION}{/if}
+                {if $VERSION !== ''}{$VERSION}{/if}
 
                 - {='Contact'|translate}
                 <a

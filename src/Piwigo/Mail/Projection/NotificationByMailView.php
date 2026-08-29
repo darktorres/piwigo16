@@ -24,6 +24,11 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `Template::$vars` between them the way the old ambient mechanism
  * allowed. The subscribe/unsubscribe branch leaves the news-only
  * fields at their neutral defaults (`null`/`[]`) and vice versa.
+ * `$gotoGalleryTitle`/`$gotoGalleryUrl` are the pair both branches
+ * always supply, so neither is nullable: they were `?string` only
+ * because the template guarded them with `!empty()`, which reads as a
+ * nullability question but was really asking whether the gallery has a
+ * title to link to (P58-B2).
  *
  * `#[Template]` points at the `text/html` file for the same reason
  * {@see NotificationAdminView}'s own docblock explains -- this class is
@@ -55,8 +60,8 @@ final readonly class NotificationByMailView implements View
         public ?array $contentNewElementsSingle,
         public ?array $globalNewLines,
         public ?string $customMailContent,
-        public ?string $gotoGalleryTitle,
-        public ?string $gotoGalleryUrl,
+        public string $gotoGalleryTitle,
+        public string $gotoGalleryUrl,
         public array $recentPosts,
     ) {}
 }

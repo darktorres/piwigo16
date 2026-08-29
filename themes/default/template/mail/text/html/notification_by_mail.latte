@@ -22,13 +22,13 @@
     n:if="isset($contentNewElementsBetween)"
   >{='New photos were added'|translate} {='between'|translate} {$contentNewElementsBetween['DATE_BETWEEN_1']} {='and'|translate} {$contentNewElementsBetween['DATE_BETWEEN_2']}.</p>
 
-  <ul n:if="!empty($globalNewLines)" id="nbm_new_line">
+  <ul n:if="$globalNewLines !== null" id="nbm_new_line">
     <li n:foreach="$globalNewLines as $line">{$line|noescape}</li>
   </ul>
 
-  <p n:if="!empty($customMailContent)">{$customMailContent|noescape}</p>
+  <p n:if="$customMailContent !== null">{$customMailContent|noescape}</p>
 
-  <p n:if="!empty($gotoGalleryTitle)">{='Go to'|translate} <a
+  <p n:if="$gotoGalleryTitle !== ''">{='Go to'|translate} <a
       href="{$gotoGalleryUrl|noescape}"
     >{$gotoGalleryTitle}</a>.</p>
   <p>{='See you soon,'|translate}</p>
@@ -46,7 +46,7 @@
     >{$contactEmail}</a><br>
   </p>
   <hr>
-  {if !empty($recentPosts)}
+  {if $recentPosts !== []}
     {* Swaps into a new div mid-content: raw text, not a real tracked
        HTML tag pair -- the closing </div> here belongs to the single,
        lexically-real <div id="nbm_message"> opened at the top of this

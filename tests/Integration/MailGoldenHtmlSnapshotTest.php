@@ -285,6 +285,61 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
             )
         );
 
+        // The SECOND of notification_by_mail.latte's two mutually exclusive
+        // shapes -- the news branch, which is what the feature exists for
+        // and which no test rendered until P58-B2. The subscribe send above
+        // passes globalNewLines: null, customMailContent: null and
+        // recentPosts: [], so all three of the template's news-side blocks
+        // (#nbm_new_line, the custom-content paragraph, and the
+        // recent-posts section that re-opens #nbm_message) were unreachable
+        // in every baseline -- and the guards on them are exactly what B2
+        // rewrites. Mirrors NotificationByMailSender::doNotify()'s own
+        // constructor call: contentNewElementsBetween set (the "last send
+        // was X" case), globalNewLines non-null and non-empty (the sender
+        // only reaches this branch when count($news) > 0), a real
+        // customMailContent, and one recent-posts row.
+        $newsView = new NotificationByMailView(
+            username: 'Fixture Recipient',
+            sendAsName: 'Fixture Gallery',
+            unsubscribeLink: $this->rootUrl . 'nbm.php?unsubscribe=fixture-check-key',
+            subscribeLink: $this->rootUrl . 'nbm.php?subscribe=fixture-check-key',
+            contactEmail: 'fixture_admin@example.test',
+            subscribeByAdmin: false,
+            subscribeByHimself: false,
+            unsubscribeByAdmin: false,
+            unsubscribeByHimself: false,
+            contentNewElementsBetween: [
+                'DATE_BETWEEN_1' => '2026-07-01 00:00:00',
+                'DATE_BETWEEN_2' => '2026-08-01 00:00:00',
+            ],
+            contentNewElementsSingle: null,
+            globalNewLines: [
+                'Sample Album: 3 photos',
+                'Nested Sub Album: 2 photos',
+            ],
+            customMailContent: 'Fixture custom mail content.',
+            gotoGalleryTitle: 'Fixture Gallery',
+            gotoGalleryUrl: $this->rootUrl,
+            recentPosts: [
+                [
+                    'TITLE' => 'Recent posts of 2026-08-01',
+                    'HTML_DATA' => '<p>Fixture recent-post body.</p>',
+                ],
+            ],
+        );
+        $emails['notification-by-mail-news'] = $this->mailCaptureBeforeSend(
+            [
+                'name' => 'Fixture Recipient',
+                'email' => 'golden-html-nbm-news@example.test',
+            ],
+            new MailArgs(
+                subject: '[Fixture Gallery] New photos added',
+                emailFormat: 'text/html',
+                content: $mailTemplate->renderView('notification_by_mail.latte', $newsView),
+                contentFormat: 'text/html',
+            )
+        );
+
         $emails['dark-theme-css'] = $this->mailCaptureBeforeSend(
             [
                 'name' => 'Fixture Recipient',

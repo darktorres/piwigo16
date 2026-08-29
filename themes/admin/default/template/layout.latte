@@ -254,8 +254,8 @@
         {/foreach}
       {/if}
 
-      <div n:if="isset($debug['QUERIES_LIST'])" id="debug">
-        {$debug['QUERIES_LIST']|noescape}
+      <div n:if="$debug->queriesList !== null" id="debug">
+        {$debug->queriesList|noescape}
       </div>
 
       <div id="footer">
@@ -276,8 +276,8 @@
           </span>
         </div>
         <div id="pageInfos">
-          {if isset($debug['TIME'])}
-            {='Page generated in'|translate} {$debug['TIME']} ({$debug['NB_QUERIES']} {='SQL queries in'|translate} {$debug['SQL_TIME']}) -
+          {if $debug->time !== null}
+            {='Page generated in'|translate} {$debug->time} ({$debug->nbQueries} {='SQL queries in'|translate} {$debug->sqlTime}) -
           {/if}
 
           {='Contact'|translate}

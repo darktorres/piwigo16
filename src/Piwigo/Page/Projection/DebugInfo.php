@@ -10,9 +10,10 @@ namespace Piwigo\Page\Projection;
  * config flags: `$queriesList` under `CurrentConfig::$showQueries`;
  * `$time`/`$nbQueries`/`$sqlTime` together under `CurrentConfig::$showGt`.
  * All 4 fields are genuinely fixed (not a dynamic bag, despite this
- * class's own earlier docblock claiming otherwise) -- `footer.latte`
- * itself only ever reads these exact 4 keys, confirmed via
- * `{if isset($debug['TIME'])}`/`{if isset($debug['QUERIES_LIST'])}`.
+ * class's own earlier docblock claiming otherwise), and both layouts
+ * read them off this object directly -- the `toArray()` that used to
+ * flatten it one line before the template is gone with its only
+ * caller.
  */
 final readonly class DebugInfo
 {
@@ -22,24 +23,4 @@ final readonly class DebugInfo
         public ?int $nbQueries = null,
         public ?string $sqlTime = null,
     ) {}
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function toArray(): array
-    {
-        $result = [];
-
-        if ($this->queriesList !== null) {
-            $result['QUERIES_LIST'] = $this->queriesList;
-        }
-
-        if ($this->time !== null) {
-            $result['TIME'] = $this->time;
-            $result['NB_QUERIES'] = $this->nbQueries;
-            $result['SQL_TIME'] = $this->sqlTime;
-        }
-
-        return $result;
-    }
 }

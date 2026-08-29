@@ -37,7 +37,7 @@ final readonly class PageTailPageContext implements TemplatePageContext
             'VERSION' => $this->version,
             'APP_URL' => $this->phpwgUrl,
             'VITALS_SCRIPT_URL' => $this->vitalsScriptUrl,
-            'debug' => $this->debug->toArray(),
+            'debug' => $this->debug,
         ];
 
         if ($this->contactMail !== null) {

@@ -8,7 +8,14 @@ declare(strict_types=1);
  * migration's diff-and-classify verification). One literal array so the two
  * checks can never drift apart on which routes/auth requirements they cover.
  *
- * @return array<string, array{0: string, 1: bool}>
+ * A third element, when present and true, means "golden HTML only": the
+ * route renders a value that is real and external -- a database server's
+ * own clock, its build string -- which a byte snapshot can normalize the
+ * way it already normalizes `{{ROOT_PATH}}`, but a pixel baseline cannot.
+ * VisualRegressionTest.php filters those out; every other route is still
+ * covered by both, which is what keeps the two checks from drifting.
+ *
+ * @return array<string, array{0: string, 1: bool, 2?: bool}>
  */
 return [
     // ── Gallery (anonymous) ──────────────────────────────────────────────
@@ -162,12 +169,19 @@ return [
     // an untyped bag (P58, tools/p58), and its rows come from the fixture's
     // own activity table.
     //
-    // There is deliberately no 'env' route. That tab prints wall-clock
-    // timestamps next to its PHP/MySQL rows ("[2026-08-28 21:40:29]"), so
-    // every capture differs from the last -- the same reason
-    // calendar-posted-calendar was removed. Cover it with an assertion that
-    // names what it should contain, not a snapshot.
+    // 'env' is golden-HTML-only, and the reason is narrower than an
+    // earlier revision of this comment claimed. That tab prints two
+    // timestamps. The PHP one was `date()` rather than `Env::now()` --
+    // a real freeze gap, fixed at the source, and it now reads
+    // PIWIGO_TEST_NOW like every other clock in the app. The MySQL one is
+    // `SELECT NOW()` off the database server, which no PHP-side freeze
+    // can reach, and it sits on the same line as that server's build
+    // string ("8.4.10-0ubuntu0.26.04.1") -- machine-specific, the same
+    // class of value as the checkout path. Both are normalized in
+    // goldenHtmlNormalize(); neither can be normalized out of a
+    // screenshot.
     'admin-maintenance-sys' => ['/admin.php?page=maintenance&tab=sys', true],
+    'admin-maintenance-env' => ['/admin.php?page=maintenance&tab=env', true, true],
     'admin-history' => ['/admin.php?page=history', true],
     'admin-tags' => ['/admin.php?page=tags', true],
     'admin-comments' => ['/admin.php?page=comments', true],

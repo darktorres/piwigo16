@@ -99,8 +99,15 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 // Shared with GoldenHtmlSnapshotTest.php (P31 Smarty->Latte migration's
 // raw-HTML baseline) via Helpers/VisualRegressionRoutes.php -- one literal
 // array so the two checks can never drift apart on route/auth coverage.
-/** @var array<string, array{0: string, 1: bool}> $routes */
+/** @var array<string, array{0: string, 1: bool, 2?: bool}> $routes */
 $routes = require __DIR__ . '/Helpers/VisualRegressionRoutes.php';
+
+// Golden-HTML-only routes (a third `true` in the table) carry a value no
+// pixel baseline can be stable against -- a database server's own clock
+// and build string. GoldenHtmlSnapshotTest normalizes those the way it
+// normalizes the checkout path; a screenshot cannot, so they are skipped
+// here rather than left out of the shared table entirely.
+$routes = array_filter($routes, static fn (array $route): bool => ($route[2] ?? false) === false);
 
 foreach ($routes as $name => [$path, $needsAuth]) {
     it("{$name} matches its visual baseline", function () use ($name, $path, $needsAuth): void {

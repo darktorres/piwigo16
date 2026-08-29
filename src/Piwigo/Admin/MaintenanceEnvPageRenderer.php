@@ -22,6 +22,7 @@ use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ContainerDetector;
 use Piwigo\Core\DateHelper;
+use Piwigo\Core\Env;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LayoutState;
@@ -96,7 +97,13 @@ final readonly class MaintenanceEnvPageRenderer
         $url_format = $this->urlService->getRootUrl() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . $this->csrfService->getToken();
 
         $dbInfo = new DbInfo(DbConnection::build());
-        $php_current_timestamp = date('Y-m-d H:i:s');
+        // Env::now(), not date(): this is PHP's own clock as the page
+        // reports it, and every other reading of that clock in the
+        // codebase goes through Env::now() so a test run can freeze it.
+        // The MySQL timestamp beside it deliberately stays a real
+        // SELECT NOW() -- the pair exists to reveal PHP/DB clock skew,
+        // which a frozen DB side could not show.
+        $php_current_timestamp = Env::now()->format('Y-m-d H:i:s');
         $db_version = $dbInfo->version();
         $db_current_date = $dbInfo->currentDateTime();
 

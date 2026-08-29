@@ -249,6 +249,32 @@ function goldenHtmlNormalize(string $html): string
     // pulls along with it.
     $html = preg_replace('#(dist/assets/[A-Za-z0-9_.-]+?)-[A-Za-z0-9_-]{8}\.(js|css)#', '$1-{{ASSET_HASH}}.$2', $html) ?? $html;
 
+    // The maintenance env tab's database row: `MySQL: <server version>
+    // [<SELECT NOW()>]`. Both halves are real values from outside this
+    // process -- the server's own build string, which differs per machine
+    // exactly like the checkout path below, and its own clock, which no
+    // PHP-side PIWIGO_TEST_NOW freeze can reach. Distinct from the `psk-`
+    // date above, which is deliberately left un-normalized *because* it
+    // should be frozen and isn't: there is nothing to surface here, the
+    // PHP timestamp on the line above this one is the frozen one.
+    $html = preg_replace(
+        '#(<li>[A-Za-z]+: )[^<\[]+\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]#',
+        '$1{{DB_VERSION}} [{{DB_NOW}}]',
+        $html
+    ) ?? $html;
+
+    // The rest of that same fieldset describes the machine, not the app:
+    // the OS, the PHP build, the container runtime, and whichever
+    // ImageMagick/GD the host happens to have. All four differ per
+    // checkout exactly like `{{ROOT_PATH}}`, and none of them is a value
+    // the app decides. The 368 other lines of that page -- its storage
+    // and cache fieldsets, the plugin list, the whole admin shell -- are
+    // real markup and stay compared.
+    $html = preg_replace('#(<li>Operating system: )[^<]+#', '$1{{OS}}', $html) ?? $html;
+    $html = preg_replace('#(Container info: )[^<]+#', '$1{{CONTAINER}}', $html) ?? $html;
+    $html = preg_replace('#(<li>PHP: )[^ <]+#', '$1{{PHP_VERSION}}', $html) ?? $html;
+    $html = preg_replace('#(Graphics Library: )[^<]+#', '$1{{GRAPHICS_LIBRARY}}', $html) ?? $html;
+
     // This checkout's own absolute filesystem path, which real pages do
     // print: a site's `galleries_url` is seeded as an absolute path by
     // InstallWizard, so admin-site-manager/admin-site-update render it
@@ -389,7 +415,7 @@ function goldenHtmlAssertOrWrite(string $name, string $body): void
         ->toBe($normalizedExisting, $message);
 }
 
-/** @var array<string, array{0: string, 1: bool}> $routes */
+/** @var array<string, array{0: string, 1: bool, 2?: bool}> $routes */
 $routes = require __DIR__ . '/Helpers/VisualRegressionRoutes.php';
 
 foreach ($routes as $name => [$path, $needsAuth]) {

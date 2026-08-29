@@ -66,7 +66,9 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
             } else {
                 $permalink_service->setCatPermalink($post_cat_id, $permalink, $permalinksRequest->isSave, $this->entityManager);
             }
-            $selected_cat = [$post_cat_id];
+            // Normalized to string here rather than in the template: the
+            // option keys it compares against are stringified there too.
+            $selected_cat = [(string) $post_cat_id];
         } elseif ($permalinksRequest->deletePermanentPresent) {
             $this->csrfService
                 ->checkOrFail($htmlRenderer, $this->redirectService);

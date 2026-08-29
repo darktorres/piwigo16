@@ -12,7 +12,7 @@
         <option
           n:foreach="$categoryOptionTrue as $optKey => $optLabel"
           value="{$optKey}"
-          n:attr="selected: in_array((string) $optKey, array_map(strval(...), $categoryOptionTrueSelected), true) ? 'selected' : null"
+          n:attr="selected: in_array((string) $optKey, $categoryOptionTrueSelected, true) ? 'selected' : null"
         >{html_entity_decode(strval($optLabel))}</option>
       </select>
       <p><input class="submit" type="submit" value="&raquo;" name="falsify"></p>
@@ -29,7 +29,7 @@
         <option
           n:foreach="$categoryOptionFalse as $optKey => $optLabel"
           value="{$optKey}"
-          n:attr="selected: in_array((string) $optKey, array_map(strval(...), $categoryOptionFalseSelected), true) ? 'selected' : null"
+          n:attr="selected: in_array((string) $optKey, $categoryOptionFalseSelected, true) ? 'selected' : null"
         >{html_entity_decode(strval($optLabel))}</option>
       </select>
       <p><input class="submit" type="submit" value="&laquo;" name="trueify"></p>

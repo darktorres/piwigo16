@@ -434,7 +434,11 @@ final readonly class CommentsController implements ControllerInterface
 
         // Search in a particular category
         $categoriesOptions = $this->categoryService
-            ->displaySelectByCondition($this->permissionService->getPermissionCriteria(), [$commentsRequest->catDisplay], $this->htmlService);
+            ->displaySelectByCondition(
+                $this->permissionService->getPermissionCriteria(),
+                $commentsRequest->catDisplay === null ? [] : [$commentsRequest->catDisplay],
+                $this->htmlService,
+            );
 
         // Filter on recent comments...
         $since_options_tpl = [];

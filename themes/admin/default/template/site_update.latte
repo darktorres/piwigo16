@@ -179,7 +179,7 @@
           <option
             n:foreach="$categoryOptions->options as $optKey => $optLabel"
             value="{$optKey}"
-            n:attr="selected: in_array((string) $optKey, array_map(strval(...), $categoryOptions->selected), true) ? 'selected' : null"
+            n:attr="selected: in_array((string) $optKey, $categoryOptions->selected, true) ? 'selected' : null"
           >{html_entity_decode(strval($optLabel))}</option>
         </select>
       </li>

@@ -962,7 +962,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             $meta_empty_overrides_value = isset($post['meta_empty_overrides']);
 
             if (isset($post['cat']) and is_numeric($post['cat'])) {
-                $cat_selected = [$post['cat']];
+                $cat_selected = [(string) $post['cat']];
             } else {
                 $cat_selected = [];
             }

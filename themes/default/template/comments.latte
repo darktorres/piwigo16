@@ -46,7 +46,7 @@
               <option
                 n:foreach="$categories as $optKey => $optLabel"
                 value="{$optKey}"
-                n:attr="selected: in_array((string) $optKey, array_map(strval(...), $categoriesSelected), true) ? 'selected' : null"
+                n:attr="selected: in_array((string) $optKey, $categoriesSelected, true) ? 'selected' : null"
               >{html_entity_decode(strval($optLabel))}</option>
             </select>
           </li>

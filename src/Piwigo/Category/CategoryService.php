@@ -856,11 +856,13 @@ final readonly class CategoryService
     /**
      * Builds an {html_options}-ready shape from a list of categories.
      *
-     * $selecteds is passed straight through, matching this method's own
-     * by-design arbitrary-value contract.
+     * $selecteds is passed straight through. Every `displaySelect*()`
+     * wrapper here passes `[]`; the one caller that populates it is
+     * NotificationByMailSubController, whose values are
+     * UserMailNotification check keys -- strings.
      *
      * @param list<CategoryIdNameUppercatsRank|CategoryPermalinkDisplayRow> $categories
-     * @param array<int, mixed> $selecteds
+     * @param list<string> $selecteds
      * @param bool $fullname full breadcrumb or not
      */
     public function displaySelectCategories(
@@ -897,7 +899,7 @@ final readonly class CategoryService
      * ordered by rank first.
      *
      * @param  list<CategoryIdNameUppercatsRank|CategoryPermalinkDisplayRow>  $categories
-     * @param  array<int, mixed>  $selecteds
+     * @param  list<string>  $selecteds
      */
     private function sortAndDisplaySelectCategories(
         array $categories,
@@ -1002,7 +1004,7 @@ final readonly class CategoryService
     /**
      * Controller\CommentsController's own "search by album" category list.
      *
-     * @param  array<int, mixed>  $selecteds
+     * @param  list<string>  $selecteds
      */
     public function displaySelectByCondition(PermissionCriteria $criteria, array $selecteds, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
@@ -1016,7 +1018,7 @@ final readonly class CategoryService
     /**
      * Controller\Admin\PermalinksSubController's own category list.
      *
-     * @param  array<int, mixed>  $selecteds
+     * @param  list<string>  $selecteds
      */
     public function displaySelectForPermalinks(array $selecteds, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
@@ -1031,7 +1033,7 @@ final readonly class CategoryService
     /**
      * Controller\Admin\SiteUpdateSubController's own per-site category list.
      *
-     * @param  array<int, mixed>  $selecteds
+     * @param  list<string>  $selecteds
      */
     public function displaySelectBySite(int $siteId, array $selecteds, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {

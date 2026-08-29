@@ -8,7 +8,7 @@ test('constructs with distinct values for options and selected', function (): vo
     $result = new CategorySelectOptions(options: [
         1 => 'Holidays',
         2 => 'Travel',
-    ], selected: [2]);
+    ], selected: ['2']);
 
     expect($result->options)
         ->toBe([
@@ -16,5 +16,5 @@ test('constructs with distinct values for options and selected', function (): vo
             2 => 'Travel',
         ])
         ->and($result->selected)
-        ->toBe([2]);
+        ->toBe(['2']);
 });

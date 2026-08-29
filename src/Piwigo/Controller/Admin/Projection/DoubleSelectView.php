@@ -29,9 +29,9 @@ final readonly class DoubleSelectView implements View, HasPageAssets
      * (category ids), not just `string` ones.
      *
      * @param array<int|string, string> $categoryOptionTrue
-     * @param array<int, mixed> $categoryOptionTrueSelected
+     * @param list<string> $categoryOptionTrueSelected
      * @param array<int|string, string> $categoryOptionFalse
-     * @param array<int, mixed> $categoryOptionFalseSelected
+     * @param list<string> $categoryOptionFalseSelected
      */
     public function __construct(
         public string $lCatOptionsTrue,

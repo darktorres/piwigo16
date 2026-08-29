@@ -107,6 +107,13 @@ it('sets a category permalink, lists it among active permalinks, clears it into 
         // uppercats-narrowing + getCatDisplayNameCache() lines).
         expect($setResult['body'])->toContain($permalink);
 
+        // The album picker comes back with the just-edited album already
+        // chosen. `$selected_cat` carries the posted cat_id, and
+        // permalinks.latte compares it against `(string) $optKey` with a
+        // strict in_array -- so an int would silently select nothing.
+        // n:attr renders the bare HTML5 attribute, not selected="selected".
+        expect($setResult['body'])->toContain(sprintf('value="%d" selected', $catId));
+
         expect(permalinksCategoryPermalink($db, $catId))
             ->toBe($permalink);
 

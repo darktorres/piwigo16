@@ -31,7 +31,7 @@ final readonly class CommentsView implements View
      * @param array<string, string> $sortOrderOptions
      * @param array<int|string, int|string> $itemNumberOptions
      * @param array<int|string, string> $categories
-     * @param array<int, mixed> $categoriesSelected
+     * @param list<string> $categoriesSelected
      */
     public function __construct(
         public string $homeUrl,

@@ -19,7 +19,10 @@ final readonly class CategorySelectOptions
 {
     /**
      * @param array<int|string, string> $options
-     * @param array<int, mixed> $selected
+     * @param list<string> $selected the option keys to pre-select. Every
+     *   `displaySelect*()` wrapper passes `[]`; the one populating path is
+     *   NotificationByMailSubController, which pushes UserMailNotification
+     *   check keys.
      */
     public function __construct(
         public array $options,

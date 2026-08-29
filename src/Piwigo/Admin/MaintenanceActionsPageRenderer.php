@@ -138,7 +138,8 @@ final readonly class MaintenanceActionsPageRenderer
             $lounge_counter = $nb_lounge;
         }
 
-        // $advanced_features is array of array composed of CAPTION & URL
+        // Empty in-tree: nothing registers a handler, so this list is a
+        // plugin extension point and AdvancedFeatureLink is its contract.
         $advanced_features_event = $this->eventDispatcher->dispatch(new GetAdminAdvancedFeaturesLinks([]));
 
         $adminContent = $this->renderer->render(new MaintenanceActionsView(

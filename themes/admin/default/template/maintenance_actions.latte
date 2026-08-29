@@ -78,19 +78,16 @@
     </div>
   </fieldset>
 
-  <fieldset
-    n:if="isset($advancedFeatures) and !(count($advancedFeatures) < 1)"
-    class=""
-  >
+  <fieldset n:if="$advancedFeatures !== []" class="">
     <legend><span
         class="icon-puzzle icon-purple"
       ></span>{='Advanced features'|translate}</legend>
     <div class="maintenance-action-group">
       <a
-        n:foreach="$advancedFeatures as $key => $feature"
-        href="{$feature['URL']}"
-        class="{$feature['ICON']} maintenance-action"
-      >{$feature['CAPTION']}</a>
+        n:foreach="$advancedFeatures as $feature"
+        href="{$feature->url}"
+        class="{$feature->icon} maintenance-action"
+      >{$feature->caption}</a>
     </div>
   </fieldset>
 

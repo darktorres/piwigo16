@@ -36,7 +36,7 @@ final readonly class MaintenanceActionsView implements View, HasPageAssets, Expo
     /**
      * @param array<string, array{icon: string, label: string}> $maintActions
      * @param array<string, string> $purgeDerivatives
-     * @param array<mixed> $advancedFeatures
+     * @param list<AdvancedFeatureLink> $advancedFeatures
      */
     public function __construct(
         public array $maintActions,

@@ -79,14 +79,14 @@ final readonly class ImageUrlBuilder
         $derivatives = DerivativeImage::getAll($src_image);
         $derivatives_arr = [];
         foreach ($derivatives as $type => $derivative) {
+            // A derivative whose source dimensions could not be read
+            // reports 0x0 here, which is what the `[null, null]` this
+            // replaces cast to.
             $size = $derivative->getSize();
-            if ($size === null) {
-                $size = [null, null];
-            }
             $derivatives_arr[$type] = [
                 'url' => $derivative->getUrl(),
-                'width' => (int) $size[0],
-                'height' => (int) $size[1],
+                'width' => $size === null ? 0 : (int) $size->width,
+                'height' => $size === null ? 0 : (int) $size->height,
             ];
         }
         $ret['derivatives'] = $derivatives_arr;

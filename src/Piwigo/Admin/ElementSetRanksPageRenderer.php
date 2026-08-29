@@ -178,8 +178,8 @@ final readonly class ElementSetRanksPageRenderer
                     rank: $current_rank * 10,
                     // A photo whose dimensions are unknown has no size
                     // at all here, which is why both are nullable.
-                    width: $size[0] ?? null,
-                    height: $size[1] ?? null,
+                    width: $size === null ? null : (int) $size->width,
+                    height: $size === null ? null : (int) $size->height,
                 );
             }
         }

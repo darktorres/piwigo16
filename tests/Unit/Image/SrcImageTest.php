@@ -16,6 +16,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\TypedRepository;
+use Piwigo\Image\Dimensions;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\Projection\SrcImageInfo;
@@ -166,7 +167,7 @@ test('getSize() throws a RuntimeException carrying the untranslated message when
     ]));
     Kernel::reset();
 
-    expect(fn (): ?array => $src->getSize())
+    expect(fn (): ?Dimensions => $src->getSize())
         ->toThrow(RuntimeException::class, 'SrcImage dimensions required but not provided');
 });
 
@@ -182,7 +183,7 @@ test('getSize() delegates the fatal message to the installed HtmlRenderingInterf
             'file' => 'photo.jpg',
         ]));
 
-        expect(fn (): ?array => $src->getSize())
+        expect(fn (): ?Dimensions => $src->getSize())
             ->toThrow(SrcImageTestFatalSignal::class);
         expect($renderer->lastMessage)
             ->toBe('SrcImage dimensions required but not provided');
@@ -271,7 +272,7 @@ test('constructor swaps width/height for an odd rotation code but not for an eve
     expect($rotated->hasSize())
         ->toBeTrue();
     expect($rotated->getSize())
-        ->toBe([200, 300]);
+        ->toEqual(new Dimensions(200, 300));
 
     $unrotated = new SrcImage(SrcImageInfo::fromRow([
         'id' => 2,
@@ -284,7 +285,7 @@ test('constructor swaps width/height for an odd rotation code but not for an eve
     expect($unrotated->rotation)
         ->toBe(2);
     expect($unrotated->getSize())
-        ->toBe([300, 200]);
+        ->toEqual(new Dimensions(300, 200));
 });
 
 test('getPath() joins the current root with the resolved rel_path', function (): void {
@@ -332,7 +333,7 @@ test('constructor finds a real per-extension mimetype icon, and getUrl() embelli
             expect($src->hasSize())
                 ->toBeTrue();
             expect($src->getSize())
-                ->toBe([16, 12]);
+                ->toEqual(new Dimensions(16, 12));
             expect($src->getUrl())
                 ->toBe('/root/themes/default/icon/mimetypes/zzz.png');
         });
@@ -359,7 +360,7 @@ test('constructor falls back to the shared unknown.png icon when no icon exists 
         expect($src->rel_path)
             ->toBe('themes/default/icon/mimetypes/unknown.png');
         expect($src->getSize())
-            ->toBe([20, 10]);
+            ->toEqual(new Dimensions(20, 10));
     } finally {
         srcImageTestRrmdir($root);
     }
@@ -405,7 +406,7 @@ test('getSize() re-reads real dimensions from disk when width/height columns are
         expect($src->hasSize())
             ->toBeFalse();
         expect($src->getSize())
-            ->toBe([33, 22]);
+            ->toEqual(new Dimensions(33, 22));
         expect($src->hasSize())
             ->toBeTrue();
     } finally {
@@ -513,7 +514,7 @@ test('constructor never reads $infos[\'height\'] when only width is present, lea
         expect($src->hasSize())
             ->toBeFalse();
         expect($src->getSize())
-            ->toBe([55, 44]);
+            ->toEqual(new Dimensions(55, 44));
     } finally {
         srcImageTestRrmdir($root);
     }
@@ -536,7 +537,7 @@ test('constructor narrows a numeric-string width to a real int, and defaults a n
     ]));
 
     expect($src->getSize())
-        ->toBe([150, 0]);
+        ->toEqual(new Dimensions(150, 0));
 });
 
 test('constructor defaults a non-numeric width to exactly 0, and narrows a numeric-string height to a real int', function (): void {
@@ -558,7 +559,7 @@ test('constructor defaults a non-numeric width to exactly 0, and narrows a numer
     ]));
 
     expect($src->getSize())
-        ->toBe([0, 90]);
+        ->toEqual(new Dimensions(0, 90));
 });
 
 test('constructor defaults rotation to exactly 0 when the column is absent, not just non-numeric', function (): void {
@@ -578,7 +579,7 @@ test('constructor defaults rotation to exactly 0 when the column is absent, not 
     expect($src->rotation)
         ->toBe(0);
     expect($src->getSize())
-        ->toBe([300, 200]);
+        ->toEqual(new Dimensions(300, 200));
 });
 
 test('getUrl() for a real original image requests part "e" without download, through the non-mimetype branch', function (): void {
@@ -680,7 +681,7 @@ test('getSize() persists the real, correctly-ordered width/height back onto the 
             ]));
 
             expect($src->getSize())
-                ->toBe([77, 55]);
+                ->toEqual(new Dimensions(77, 55));
         });
 
         $row = $conn->fetchAssociative('SELECT width, height FROM images' . " WHERE id = {$imageId}");
@@ -796,7 +797,7 @@ test('constructor normalizes rotation via modulo 4, not modulo 3 or modulo 5', f
     expect($src->rotation)
         ->toBe(0);
     expect($src->getSize())
-        ->toBe([300, 200]);
+        ->toEqual(new Dimensions(300, 200));
 });
 
 test('getSize() re-read skips the persistence call when the container returns an unexpected type for ImageRepository', function (): void {
@@ -821,7 +822,7 @@ test('getSize() re-read skips the persistence call when the container returns an
         $size = KernelContainerOverride::with([
             Paths::class => Paths::fromRoot($root),
             ImageRepository::class => new stdClass(),
-        ], function (): ?array {
+        ], function (): ?Dimensions {
             $src = new SrcImage(SrcImageInfo::fromRow([
                 'id' => 1,
                 'path' => 'upload/2026/07/skip-persist.png',
@@ -834,7 +835,7 @@ test('getSize() re-read skips the persistence call when the container returns an
         });
 
         expect($size)
-            ->toBe([41, 31]);
+            ->toEqual(new Dimensions(41, 31));
     } finally {
         srcImageTestRrmdir($root);
     }

@@ -56,14 +56,16 @@ final class DerivativeParams
         $this->sizing->addUrlTokens($tokens);
     }
 
-    /**
-     * @param int[] $in_size
-     * @return int[]
-     */
-    public function computeFinalSize(array $in_size): array
+    public function computeFinalSize(Dimensions $in_size): Dimensions
     {
-        $this->sizing->compute(new Dimensions($in_size[0], $in_size[1]), null, $crop_rect, $scale_size);
-        return $scale_size instanceof Dimensions ? [(int) $scale_size->width, (int) $scale_size->height] : $in_size;
+        $this->sizing->compute($in_size, null, $crop_rect, $scale_size);
+
+        // compute()'s out-param is float-typed rectangle math; the sizes
+        // this returns are pixel counts, so they are narrowed back to int
+        // here rather than at each of the half-dozen read sites.
+        return $scale_size instanceof Dimensions
+            ? new Dimensions((int) $scale_size->width, (int) $scale_size->height)
+            : $in_size;
     }
 
     public function maxWidth(): int
@@ -78,27 +80,23 @@ final class DerivativeParams
 
     /**
      * @todo : description of DerivativeParams::isIdentity
-     * @param int[] $in_size
      */
-    public function isIdentity(array $in_size): bool
+    public function isIdentity(Dimensions $in_size): bool
     {
-        if ($in_size[0] > $this->sizing->ideal_size->width or
-            $in_size[1] > $this->sizing->ideal_size->height) {
+        if ($in_size->width > $this->sizing->ideal_size->width or
+            $in_size->height > $this->sizing->ideal_size->height) {
             return false;
         }
         return true;
     }
 
-    /**
-     * @param int[] $out_size
-     */
-    public function willWatermark(array $out_size, ImageStdParams $imageStdParams): bool
+    public function willWatermark(Dimensions $out_size, ImageStdParams $imageStdParams): bool
     {
         if ($this->use_watermark) {
             $min_size = $imageStdParams->getWatermark()
                 ->min_size;
-            return $min_size[0] <= $out_size[0]
-              || $min_size[1] <= $out_size[1];
+            return $min_size[0] <= $out_size->width
+              || $min_size[1] <= $out_size->height;
         }
         return false;
     }

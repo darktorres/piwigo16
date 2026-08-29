@@ -370,9 +370,9 @@ final class DerivativeImage
     }
 
     /**
-     * @return int[]|null null if the source image's own size failed to compute
+     * Null when the source image's own size failed to compute.
      */
-    public function getSize(): ?array
+    public function getSize(): ?Dimensions
     {
         $src_size = $this->src_image->getSize();
         if (! $this->params instanceof DerivativeParams || $src_size === null) {
@@ -387,8 +387,8 @@ final class DerivativeImage
     public function getSizeCss(): string
     {
         $size = $this->getSize();
-        if ((bool) $size) {
-            return 'width:' . $size[0] . 'px; height:' . $size[1] . 'px';
+        if ($size !== null) {
+            return 'width:' . $size->width . 'px; height:' . $size->height . 'px';
         }
 
         return '';
@@ -400,8 +400,8 @@ final class DerivativeImage
     public function getSizeHtm(): string
     {
         $size = $this->getSize();
-        if ((bool) $size) {
-            return 'width="' . $size[0] . '" height="' . $size[1] . '"';
+        if ($size !== null) {
+            return 'width="' . $size->width . '" height="' . $size->height . '"';
         }
 
         return '';
@@ -413,33 +413,29 @@ final class DerivativeImage
     public function getSizeHr(): string
     {
         $size = $this->getSize();
-        if ((bool) $size) {
-            return $size[0] . ' x ' . $size[1];
+        if ($size !== null) {
+            return $size->width . ' x ' . $size->height;
         }
 
         return '';
     }
 
-    /**
-     * @return int[]|null
-     */
-    public function getScaledSize(int $maxw, int $maxh): ?array
+    public function getScaledSize(int $maxw, int $maxh): ?Dimensions
     {
         $size = $this->getSize();
-        if ((bool) $size) {
-            $ratio_w = (float) $size[0] / (float) $maxw;
-            $ratio_h = (float) $size[1] / (float) $maxh;
-            if ($ratio_w > 1 || $ratio_h > 1) {
-                if ($ratio_w > $ratio_h) {
-                    $size[0] = $maxw;
-                    $size[1] = (int) floor((float) $size[1] / $ratio_w);
-                } else {
-                    $size[0] = (int) floor((float) $size[0] / $ratio_h);
-                    $size[1] = $maxh;
-                }
-            }
+        if ($size === null) {
+            return null;
         }
-        return $size;
+
+        $ratio_w = (float) $size->width / (float) $maxw;
+        $ratio_h = (float) $size->height / (float) $maxh;
+        if ($ratio_w <= 1 && $ratio_h <= 1) {
+            return $size;
+        }
+
+        return $ratio_w > $ratio_h
+            ? new Dimensions($maxw, (int) floor((float) $size->height / $ratio_w))
+            : new Dimensions((int) floor((float) $size->width / $ratio_h), $maxh);
     }
 
     /**
@@ -448,8 +444,8 @@ final class DerivativeImage
     public function getScaledSizeHtm(int $maxw = 9999, int $maxh = 9999): string
     {
         $size = $this->getScaledSize($maxw, $maxh);
-        if ((bool) $size) {
-            return 'width="' . $size[0] . '" height="' . $size[1] . '"';
+        if ($size !== null) {
+            return 'width="' . $size->width . '" height="' . $size->height . '"';
         }
 
         return '';

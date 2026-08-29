@@ -49,14 +49,16 @@ test('computeFinalSize returns the scaled-down size when scaling occurs', functi
     $params = new DerivativeParams(SizingParams::classic(100, 100));
     $params->sizing->max_crop = 0.0;
 
-    expect($params->computeFinalSize([300, 300]))->toBe([100, 100]);
+    expect($params->computeFinalSize(new Dimensions(300, 300)))
+        ->toEqual(new Dimensions(100, 100));
 });
 
 test('computeFinalSize returns the original input size unchanged when no scaling is needed', function (): void {
     $params = new DerivativeParams(SizingParams::classic(100, 100));
     $params->sizing->max_crop = 0.0;
 
-    expect($params->computeFinalSize([50, 50]))->toBe([50, 50]);
+    expect($params->computeFinalSize(new Dimensions(50, 50)))
+        ->toEqual(new Dimensions(50, 50));
 });
 
 test('maxWidth/maxHeight read the sizing object\'s ideal_size', function (): void {
@@ -71,10 +73,14 @@ test('maxWidth/maxHeight read the sizing object\'s ideal_size', function (): voi
 test('isIdentity is true only when the input fits within the ideal size on both dimensions', function (): void {
     $params = new DerivativeParams(SizingParams::classic(100, 100));
 
-    expect($params->isIdentity([50, 50]))->toBeTrue();
-    expect($params->isIdentity([100, 100]))->toBeTrue();
-    expect($params->isIdentity([200, 50]))->toBeFalse();
-    expect($params->isIdentity([50, 200]))->toBeFalse();
+    expect($params->isIdentity(new Dimensions(50, 50)))
+        ->toBeTrue();
+    expect($params->isIdentity(new Dimensions(100, 100)))
+        ->toBeTrue();
+    expect($params->isIdentity(new Dimensions(200, 50)))
+        ->toBeFalse();
+    expect($params->isIdentity(new Dimensions(50, 200)))
+        ->toBeFalse();
 });
 
 test('isIdentity compares width against width and height against height independently, not a swapped pair', function (): void {
@@ -90,18 +96,20 @@ test('isIdentity compares width against width and height against height independ
     // straight; a width<->height swap on the FIRST comparison would
     // instead check in_size[0] against ideal_size[1] (100), wrongly
     // failing this on width alone.
-    expect($params->isIdentity([150, 50]))->toBeTrue();
+    expect($params->isIdentity(new Dimensions(150, 50)))
+        ->toBeTrue();
     // Fits ideal height (100) but exceeds ideal width (200) when read
     // straight; a swap on the SECOND comparison would instead check
     // in_size[1] against ideal_size[0] (200), wrongly passing this.
-    expect($params->isIdentity([50, 150]))->toBeFalse();
+    expect($params->isIdentity(new Dimensions(50, 150)))
+        ->toBeFalse();
 });
 
 test('willWatermark is always false when use_watermark is off', function (): void {
     $params = new DerivativeParams(SizingParams::classic(800, 600));
     $params->use_watermark = false;
 
-    expect($params->willWatermark([600, 400], ImageStdParamsTestFactory::get()))->toBeFalse();
+    expect($params->willWatermark(new Dimensions(600, 400), ImageStdParamsTestFactory::get()))->toBeFalse();
 });
 
 test('__serialize exposes last_mod_time, sizing, and sharpen -- not type or use_watermark', function (): void {
@@ -143,8 +151,8 @@ test('willWatermark is true once the output is at least as large as the watermar
         $params = new DerivativeParams(SizingParams::classic(800, 600));
         $params->use_watermark = true;
 
-        expect($params->willWatermark([600, 400], ImageStdParamsTestFactory::get()))->toBeTrue();
-        expect($params->willWatermark([400, 400], ImageStdParamsTestFactory::get()))->toBeFalse();
+        expect($params->willWatermark(new Dimensions(600, 400), ImageStdParamsTestFactory::get()))->toBeTrue();
+        expect($params->willWatermark(new Dimensions(400, 400), ImageStdParamsTestFactory::get()))->toBeFalse();
     } finally {
         ImageStdParamsTestFactory::get()->setWatermark($originalWatermark);
     }
@@ -172,17 +180,17 @@ test('willWatermark compares each dimension independently, against exactly its o
         // comparison's `<=`->`<` (would now read 100<100, false) and its
         // min_size[0]->min_size[1] swap (would compare 300<=100, also
         // false), either of which would wrongly flip this to false.
-        expect($params->willWatermark([100, 50], ImageStdParamsTestFactory::get()))->toBeTrue();
+        expect($params->willWatermark(new Dimensions(100, 50), ImageStdParamsTestFactory::get()))->toBeTrue();
         // Exactly meets the HEIGHT condition (300 <= 300) at the
         // boundary; fails the width condition outright -- kills the
         // second comparison's `<=`->`<` and its out_size[1]->out_size[0]
         // swap (would compare 300<=50, false), either of which would
         // wrongly flip this to false.
-        expect($params->willWatermark([50, 300], ImageStdParamsTestFactory::get()))->toBeTrue();
+        expect($params->willWatermark(new Dimensions(50, 300), ImageStdParamsTestFactory::get()))->toBeTrue();
         // Fails both conditions when read straight -- but the second
         // comparison's min_size[1]->min_size[0] swap would instead check
         // 100<=150 (true), wrongly flipping this to true.
-        expect($params->willWatermark([50, 150], ImageStdParamsTestFactory::get()))->toBeFalse();
+        expect($params->willWatermark(new Dimensions(50, 150), ImageStdParamsTestFactory::get()))->toBeFalse();
     } finally {
         ImageStdParamsTestFactory::get()->setWatermark($originalWatermark);
     }

@@ -37,19 +37,19 @@
 {/if}
 
 {foreach $sizeOptions as $derivative_type => $derivative}{spaceless}
-    <map name="map{$derivative->getType()}">
-      {var $size = $derivative->getSize()}
+    {var $size = $derivative->getSize()}
+    <map n:if="$size !== null" name="map{$derivative->getType()}">
       <area
         n:if="isset($previous)"
         shape="rect"
-        coords="0,0,{($size[0] / 4)|intval},{$size[1]}"
+        coords="0,0,{($size->width / 4)|intval},{$size->height}"
         href="{$previous->imgUrl|noescape}"
         title="{='Previous'|translate} : {$previous->element->titleEsc|noescape}"
         alt="{$previous->element->titleEsc|noescape}"
       >
       <area
         shape="rect"
-        coords="{($size[0] / 4)|intval},0,{($size[0] / 1.34)|intval},{($size[1] / 4)|intval}"
+        coords="{($size->width / 4)|intval},0,{($size->width / 1.34)|intval},{($size->height / 4)|intval}"
         href="{$U_UP|noescape}"
         title="{='Thumbnails'|translate}"
         alt="{='Thumbnails'|translate}"
@@ -57,7 +57,7 @@
       <area
         n:if="isset($next)"
         shape="rect"
-        coords="{($size[0] / 1.33)|intval},0,{$size[0]},{$size[1]}"
+        coords="{($size->width / 1.33)|intval},0,{$size->width},{$size->height}"
         href="{$next->imgUrl|noescape}"
         title="{='Next'|translate} : {$next->element->titleEsc|noescape}"
         alt="{$next->element->titleEsc|noescape}"

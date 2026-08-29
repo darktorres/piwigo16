@@ -269,13 +269,13 @@ final class ImageDerivativeController implements ControllerInterface
         }
 
         // Crop & scale
-        $o_size = $d_size = [(int) $image->getWidth(), (int) $image->getHeight()];
+        $o_size = $d_size = new Dimensions((int) $image->getWidth(), (int) $image->getHeight());
         // $crop_rect/$scaled_size are by-ref out-params; pre-declare as null so the
         // call site's argument type matches SizingParams::compute()'s ?ImageRect/
         // ?array parameter types (an undefined variable is otherwise seen as mixed).
         $crop_rect = null;
         $scaled_size = null;
-        $params->sizing->compute(new Dimensions($o_size[0], $o_size[1]), $this->coi, $crop_rect, $scaled_size);
+        $params->sizing->compute($o_size, $this->coi, $crop_rect, $scaled_size);
         if ((bool) $crop_rect) {
             $changes++;
             $image->crop($crop_rect->width(), $crop_rect->height(), $crop_rect->l, $crop_rect->t);
@@ -285,7 +285,7 @@ final class ImageDerivativeController implements ControllerInterface
         if ($scaled_size instanceof Dimensions) {
             $changes++;
             $image->resize($scaled_size->width, $scaled_size->height);
-            $d_size = [(int) $scaled_size->width, (int) $scaled_size->height];
+            $d_size = new Dimensions((int) $scaled_size->width, (int) $scaled_size->height);
             $timing['scale'] = $this->timeStep($step);
         }
 
@@ -300,8 +300,8 @@ final class ImageDerivativeController implements ControllerInterface
             $wm = $this->imageStdParams->getWatermark();
             $wm_image = new ImageBackend($this->paths->root . $wm->file, $this->currentLogger, $this->currentConfig);
             $wm_size = [(int) $wm_image->getWidth(), (int) $wm_image->getHeight()];
-            if ($d_size[0] < $wm_size[0] or $d_size[1] < $wm_size[1]) {
-                $wm_scaling_params = SizingParams::classic($d_size[0], $d_size[1]);
+            if ($d_size->width < $wm_size[0] or $d_size->height < $wm_size[1]) {
+                $wm_scaling_params = SizingParams::classic((int) $d_size->width, (int) $d_size->height);
                 // $tmp/$wm_scaled_size are by-ref out-params; pre-declare as null
                 // (see the analogous compute() call above).
                 $tmp = null;
@@ -320,8 +320,8 @@ final class ImageDerivativeController implements ControllerInterface
                 $wm_size = [(int) $wm_scaled_size->width, (int) $wm_scaled_size->height];
                 $wm_image->resize($wm_scaled_size->width, $wm_scaled_size->height);
             }
-            $x = round(((float) $wm->xpos / 100.0) * ((float) $d_size[0] - (float) $wm_size[0]));
-            $y = round(((float) $wm->ypos / 100.0) * ((float) $d_size[1] - (float) $wm_size[1]));
+            $x = round(((float) $wm->xpos / 100.0) * ((float) $d_size->width - (float) $wm_size[0]));
+            $y = round(((float) $wm->ypos / 100.0) * ((float) $d_size->height - (float) $wm_size[1]));
             if ($image->compose($wm_image, $x, $y, $wm->opacity)) {
                 $changes++;
                 if ((bool) $wm->xrepeat || (bool) $wm->yrepeat) {
@@ -335,8 +335,8 @@ final class ImageDerivativeController implements ControllerInterface
                             }
                             $x2 = $x + (float) $i * $xpad;
                             $y2 = $y + (float) $j * $ypad;
-                            if ($x2 >= 0 && $x2 + (float) $wm_size[0] < $d_size[0] &&
-                                $y2 >= 0 && $y2 + (float) $wm_size[1] < $d_size[1]) {
+                            if ($x2 >= 0 && $x2 + (float) $wm_size[0] < $d_size->width &&
+                                $y2 >= 0 && $y2 + (float) $wm_size[1] < $d_size->height) {
                                 if (! $image->compose($wm_image, $x2, $y2, $wm->opacity)) {
                                     break;
                                 }
@@ -374,7 +374,7 @@ final class ImageDerivativeController implements ControllerInterface
             ]);
         }
 
-        if ($this->currentConfig->derivativesStripMetadataThreshold > $d_size[0] * $d_size[1]) {// strip metadata for small images
+        if ($this->currentConfig->derivativesStripMetadataThreshold > $d_size->width * $d_size->height) {// strip metadata for small images
             $image->strip();
         }
 
@@ -399,8 +399,8 @@ final class ImageDerivativeController implements ControllerInterface
             $logger->debug('', 'i.php', [
                 'src_path' => basename($this->srcPath),
                 'derivative_path' => basename($this->derivativePath),
-                'o_size' => $o_size[0] . ' ' . $o_size[1] . ' ' . ($o_size[0] * $o_size[1]),
-                'd_size' => $d_size[0] . ' ' . $d_size[1] . ' ' . ($d_size[0] * $d_size[1]),
+                'o_size' => $o_size->width . ' ' . $o_size->height . ' ' . ($o_size->width * $o_size->height),
+                'd_size' => $d_size->width . ' ' . $d_size->height . ' ' . ($d_size->width * $d_size->height),
                 'mem_usage' => function_exists('memory_get_peak_usage') ? round(memory_get_peak_usage() / (1024 * 1024), 1) : '',
                 'timing' => $timing,
                 'quality' => $compression_quality,
@@ -656,12 +656,10 @@ final class ImageDerivativeController implements ControllerInterface
         if ($height === null) {
             return false;
         }
-        $original_size = [$width, $height];
+        $original_size = new Dimensions($width, $height);
 
         if ($this->rotationAngle === 90 || $this->rotationAngle === 270) {
-            $tmp = $original_size[0];
-            $original_size[0] = $original_size[1];
-            $original_size[1] = $tmp;
+            $original_size = new Dimensions($original_size->height, $original_size->width);
         }
         $dsize = $params->computeFinalSize($original_size);
 
@@ -682,7 +680,14 @@ final class ImageDerivativeController implements ControllerInterface
                 continue;
             }
             $candidate_size = $candidate->computeFinalSize($original_size);
-            if ($dsize !== $params->computeFinalSize($candidate_size)) {
+            // Compared field by field, not with `!==`: these were arrays
+            // until Dimensions replaced them, and `!==` on two readonly
+            // objects compares identity -- it would be true for every
+            // candidate and silently stop this loop ever reusing an
+            // equivalent derivative. `!=` would be correct but the
+            // project's strict rules disallow it, and this is clearer.
+            $recomputed = $params->computeFinalSize($candidate_size);
+            if ($dsize->width !== $recomputed->width || $dsize->height !== $recomputed->height) {
                 continue;
             }
 
@@ -721,7 +726,7 @@ final class ImageDerivativeController implements ControllerInterface
                 if ($minSize === null) {
                     continue;
                 }
-                if ($candidate_size[0] < $minSize->width || $candidate_size[1] < $minSize->height) {
+                if ($candidate_size->width < $minSize->width || $candidate_size->height < $minSize->height) {
                     continue;
                 }
             }

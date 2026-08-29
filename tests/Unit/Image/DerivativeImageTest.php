@@ -11,6 +11,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\Dimensions;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Image\SizingParams;
@@ -997,7 +998,7 @@ test('getSizeCss()/getSizeHtm()/getSizeHr() render the computed size, or an empt
         // 400x300 scaled to fit within 100x100: width is the binding
         // dimension (ratio 4 vs 3), so height scales proportionally to 75.
         expect($derivative->getSize())
-            ->toBe([100, 75]);
+            ->toEqual(new Dimensions(100, 75));
         expect($derivative->getSizeCss())
             ->toBe('width:100px; height:75px');
         expect($derivative->getSizeHtm())
@@ -1057,9 +1058,9 @@ test('getScaledSize()/getScaledSizeHtm() scale down proportionally, binding on w
     ]));
     $landscape = new DerivativeImage(new DerivativeParams(SizingParams::classic(100, 100)), $landscapeSrc, CurrentConfigTestFactory::get());
     expect($landscape->getSize())
-        ->toBe([100, 75]);
+        ->toEqual(new Dimensions(100, 75));
     expect($landscape->getScaledSize(50, 50))
-        ->toBe([50, 37]);
+        ->toEqual(new Dimensions(50, 37));
     expect($landscape->getScaledSizeHtm(50, 50))
         ->toBe('width="50" height="37"');
 
@@ -1074,16 +1075,16 @@ test('getScaledSize()/getScaledSizeHtm() scale down proportionally, binding on w
     ]));
     $portrait = new DerivativeImage(new DerivativeParams(SizingParams::classic(100, 100)), $portraitSrc, CurrentConfigTestFactory::get());
     expect($portrait->getSize())
-        ->toBe([75, 100]);
+        ->toEqual(new Dimensions(75, 100));
     expect($portrait->getScaledSize(50, 50))
-        ->toBe([37, 50]);
+        ->toEqual(new Dimensions(37, 50));
     expect($portrait->getScaledSizeHtm(50, 50))
         ->toBe('width="37" height="50"');
 
     // Within bounds already (no dimension overflows maxw/maxh): returned
     // unchanged, same shape as the un-scaled getSize().
     expect($landscape->getScaledSize(200, 200))
-        ->toBe([100, 75]);
+        ->toEqual(new Dimensions(100, 75));
 });
 
 test('getScaledSize() still scales when only ONE dimension overflows, not just when both do', function (): void {
@@ -1114,11 +1115,11 @@ test('getScaledSize() still scales when only ONE dimension overflows, not just w
     // returns the real dimensions unscaled.
     $wide = new DerivativeImage(new DerivativeParams(SizingParams::classic(1000, 1000)), $wideSrc, CurrentConfigTestFactory::get());
     expect($wide->getSize())
-        ->toBe([150, 50]);
+        ->toEqual(new Dimensions(150, 50));
     // ratio_w = 150/100 = 1.5 (overflows, but not > 2); ratio_h = 50/100
     // = 0.5 (comfortably within bounds).
     expect($wide->getScaledSize(100, 100))
-        ->toBe([100, 33]);
+        ->toEqual(new Dimensions(100, 33));
 
     $tallSrc = new SrcImage(SrcImageInfo::fromRow([
         'id' => 2,
@@ -1129,11 +1130,11 @@ test('getScaledSize() still scales when only ONE dimension overflows, not just w
     ]));
     $tall = new DerivativeImage(new DerivativeParams(SizingParams::classic(1000, 1000)), $tallSrc, CurrentConfigTestFactory::get());
     expect($tall->getSize())
-        ->toBe([50, 150]);
+        ->toEqual(new Dimensions(50, 150));
     // ratio_w = 50/100 = 0.5 (within bounds); ratio_h = 150/100 = 1.5
     // (overflows, but not > 2).
     expect($tall->getScaledSize(100, 100))
-        ->toBe([33, 100]);
+        ->toEqual(new Dimensions(33, 100));
 });
 
 /**

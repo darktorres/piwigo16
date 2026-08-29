@@ -153,10 +153,7 @@ final class SrcImage
 
     public int $rotation = 0;
 
-    /**
-     * @var int[]|null
-     */
-    private ?array $size = null;
+    private ?Dimensions $size = null;
 
     private int $flags = 0;
 
@@ -202,10 +199,10 @@ final class SrcImage
                     throw new Exception('SrcImage: unable to read size of fallback icon ' . $this->rel_path);
                 }
             }
-            $this->size = [$size[0], $size[1]];
+            $this->size = new Dimensions($size[0], $size[1]);
         }
 
-        if (! (bool) $this->size) {
+        if ($this->size === null) {
             if ($infos->width !== null && $infos->height !== null) {
                 $width = $infos->width;
                 $height = $infos->height;
@@ -217,7 +214,7 @@ final class SrcImage
                     [$width, $height] = [$height, $width];
                 }
 
-                $this->size = [$width, $height];
+                $this->size = new Dimensions($width, $height);
             } elseif ($infos->dimensionsUnavailable) {
                 $this->flags |= self::DIM_NOT_GIVEN;
             }
@@ -274,9 +271,10 @@ final class SrcImage
     }
 
     /**
-     * @return int[]|null 0=width, 1=height or null if fail to compute size
+     * Null when the dimensions could neither be read from the row nor
+     * computed from the file on disk.
      */
-    public function getSize(): ?array
+    public function getSize(): ?Dimensions
     {
         if ($this->size === null) {
             if ((bool) ($this->flags & self::DIM_NOT_GIVEN)) {
@@ -284,7 +282,7 @@ final class SrcImage
             }
             // probably not metadata synced
             if (($size = getimagesize($this->getPath())) !== false) {
-                $this->size = [$size[0], $size[1]];
+                $this->size = new Dimensions($size[0], $size[1]);
                 if (Kernel::isBooted()) {
                     $imageRepository = Kernel::container()->get(ImageRepository::class);
                     if ($imageRepository instanceof ImageRepository) {

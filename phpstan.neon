@@ -410,9 +410,6 @@ parameters:
             identifier: ternary.condNotBoolean
             path: _analysis/phpstan-latte/*
         -
-            identifier: booleanNot.exprNotBoolean
-            path: _analysis/phpstan-latte/*
-        -
             identifier: logicalAnd.rightNotBoolean
             path: _analysis/phpstan-latte/*
         -

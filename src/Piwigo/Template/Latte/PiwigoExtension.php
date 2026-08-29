@@ -101,7 +101,7 @@ final class PiwigoExtension extends Extension
             // spaces), e.g. footer.latte's mailto subject.
             'rawurlencode' => rawurlencode(...),
             'intval' => intval(...),
-            'json_encode' => json_encode(...),
+            'json_encode' => self::jsonEncode(...),
             'htmlspecialchars' => htmlspecialchars(...),
             'in_array' => in_array(...),
             'ucfirst' => ucfirst(...),
@@ -252,6 +252,24 @@ final class PiwigoExtension extends Extension
     public function isClassicUser(string $userStatus = ''): bool
     {
         return $this->accessLevelChecker->isClassicUser($userStatus);
+    }
+
+    /**
+     * `|json_encode`, which every call site pipes straight into an HTML
+     * attribute -- three of them through `|htmlspecialchars`, which takes
+     * a `string`. Bare `json_encode()` returns `string|false`, and the
+     * `false` reached those sites as an empty attribute for the browser to
+     * `JSON.parse('')` on: an encoding failure turned into a JavaScript
+     * error one layer away from its cause. `JSON_THROW_ON_ERROR` makes the
+     * return type `string` and reports the failure where it happens.
+     *
+     * Nothing here can legitimately fail -- the piped values are ints and
+     * arrays of database strings, and the columns are utf8mb4 -- so the
+     * throw is the unreachable branch, not a new failure mode.
+     */
+    public static function jsonEncode(mixed $value): string
+    {
+        return json_encode($value, JSON_THROW_ON_ERROR);
     }
 
     /**

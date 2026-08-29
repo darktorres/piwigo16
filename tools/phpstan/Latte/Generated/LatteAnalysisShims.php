@@ -525,7 +525,7 @@ final class LatteAnalysisShims
         throw new \LogicException('Analysis-only shim; never executed.');
     }
 
-    public static function json_encode(mixed $value, int $flags = 0, int $depth = 512): string|false
+    public static function json_encode(mixed $value): string
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }

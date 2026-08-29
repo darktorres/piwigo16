@@ -61,6 +61,7 @@ final readonly class BatchManagerFilterView implements View
     public function __construct(
         public array $filter,
         public ?int $filter_category_selected,
+        public ?string $filter_search_query,
         public string $filter_category_selected_name,
         public array $filter_level_options,
         public int $filter_level_options_selected,

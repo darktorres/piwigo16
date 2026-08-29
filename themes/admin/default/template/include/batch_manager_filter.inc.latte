@@ -158,7 +158,7 @@
         data-default="first" name="filter_category"></select> *}
         <div
           id="selectedAlbumFilterArea"
-          {if !$filter_category_selected}
+          {if $filter_category_selected === null}
           class="u-hidden"
           {/if}
         >
@@ -184,7 +184,7 @@
             > {='include child albums'|translate}</label>
         </div>
         <p
-          class="head-button-1{if $filter_category_selected} u-hidden{/if}"
+          class="head-button-1{if $filter_category_selected !== null} u-hidden{/if}"
           id="selectAlbumFilter"
         >
           {="Select an album"|translate}
@@ -433,7 +433,7 @@
         <input
           name="q"
           size="40"
-          value="{if isset($filter['search'])} {$filter['search']['q']}{/if}"
+          value="{if $filter_search_query !== null} {$filter_search_query}{/if}"
         >
         <p title="{='Help'|translate}" class="help-popin-search">
           <i class="icon-help-circled"></i>

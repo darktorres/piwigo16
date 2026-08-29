@@ -186,3 +186,27 @@ test('the time_since filter is registered and reproduces DateHelper::timeSince e
     expect($filter('2024-06-15 12:34:56', 'day'))
         ->toBe(DateHelper::timeSince('2024-06-15 12:34:56', 'day'));
 });
+
+/**
+ * `|json_encode` used to be a bare `json_encode(...)` delegate returning
+ * `string|false`, and three call sites pipe it straight into
+ * `|htmlspecialchars`, which takes a `string`. The `false` would have
+ * reached those as an empty attribute for the browser to `JSON.parse('')`
+ * on -- an encoding failure surfacing as a JavaScript error a layer away.
+ */
+test('jsonEncode returns a string for the values the templates actually pipe through it', function (): void {
+    expect(PiwigoExtension::jsonEncode(5))->toBe('5');
+    expect(PiwigoExtension::jsonEncode(null))->toBe('null');
+    expect(PiwigoExtension::jsonEncode([[
+        'name' => 'Holidays',
+        'id' => '3',
+    ]]))
+        ->toBe('[{"name":"Holidays","id":"3"}]');
+});
+
+test('jsonEncode throws rather than returning false when a value cannot be encoded', function (): void {
+    // Invalid UTF-8: json_encode()'s own documented failure case, and the
+    // one that used to yield false.
+    expect(static fn (): string => PiwigoExtension::jsonEncode("\xB1\x31"))
+        ->toThrow(JsonException::class);
+});

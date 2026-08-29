@@ -198,6 +198,7 @@ final class FilterPanelRenderer
             filterTags: $filter_tags,
             filterCategorySelectedName: strip_tags($selected_category_name),
             filterCategorySelected: $selected_category,
+            filterSearchQuery: $filter->searchQuery,
             associatedCategories: $associated_categories,
         ));
 

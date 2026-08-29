@@ -39,6 +39,7 @@ final readonly class FilterPanelPageContext implements TemplatePageContext
         public array $filterTags,
         public string $filterCategorySelectedName,
         public ?int $filterCategorySelected,
+        public ?string $filterSearchQuery,
         public array $associatedCategories,
     ) {}
 
@@ -65,6 +66,7 @@ final readonly class FilterPanelPageContext implements TemplatePageContext
             'filter_tags' => $this->filterTags,
             'filter_category_selected_name' => $this->filterCategorySelectedName,
             'filter_category_selected' => $this->filterCategorySelected,
+            'filter_search_query' => $this->filterSearchQuery,
             'associated_categories' => $this->associatedCategories,
         ];
     }

@@ -148,7 +148,7 @@ Three structural changes produced that drift:
 | P55 | Real quality gates | Not started | 0 |
 | P56 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P57 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
-| P58 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | In progress — A0/A0b done (103 findings refiled as Latte codegen); a generic `CachingIterator` stub removed the erasure hiding 133 more; **P58-A 843 → 16**, with techniques 1, 4, 5 and 6 closed; P58-B 376 → 314. Ten of A's 20 identifier ignores retired from `phpstan.neon`. Nineteen live bugs found and fixed along the way, and three gaps closed in the compile step itself | 1 |
+| P58 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | In progress — A0/A0b done (103 findings refiled as Latte codegen); a generic `CachingIterator` stub removed the erasure hiding 133 more; **P58-A 843 → 0, closed**; P58-B 376 → 314. All 20 of A's identifier ignores retired from `phpstan.neon`. Nineteen live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -4516,16 +4516,19 @@ techniques. Re-run `phpstan-latte:compile` first — a stale compile
 changes the count.
 
 Opened at **P58-A 843** across 74 templates and 63 View classes and
-**P58-B 376** across 72 (P32 recorded ~1,400 and ~450). Now **A 16, B
-314** -- B's 62 were not B work, but `empty()`/`==` guards A had to restate
-on its way past, since `empty()` on an object is always false and a
-comparison against a newly-typed value can be written strictly. Ten
-entries have come out of the block so far, each forced by
-`reportUnmatchedIgnoredErrors` rather than noticed.
+**P58-B 376** across 72 (P32 recorded ~1,400 and ~450). **A is closed at
+0**; B stands at **314** -- the 62 that have gone were not B work, but
+`empty()`/`==` guards A had to restate on its way past, since `empty()` on
+an object is always false and a comparison against a newly-typed value can
+be written strictly.
 
-Techniques 1, 4, 5 and 6 are closed. **2 of the 16 that remain are
-permanent**: the `{foreach}` epilogue pair on `rating_user.latte`, already
-message-scoped in the codegen group. §5 ended by deleting what
+All twenty of A's identifier-wide entries have come out of `phpstan.neon`,
+each forced by `reportUnmatchedIgnoredErrors` rather than noticed, and
+nothing of A is suppressed in their place: its two residual findings are
+Latte's own `{foreach}` chaining and epilogue, filed by message with the
+rest of the codegen. Those two patterns had to be widened at the end --
+they named `CachingIterator<mixed, mixed>`, and typing the collections
+those loops run over made Latte report concrete generics instead. §5 ended by deleting what
 made it an archetype rather than by typing around it: `menubar.latte`'s
 `{include $block->template, ...}` was a dynamic-filename include, so none
 of its seven sub-templates could carry a `{templateType}` and the compile
@@ -4565,14 +4568,14 @@ not a partition, since one chain can need two:
 
 | # | technique | opened | now |
 | --- | --- | --- | --- |
-| 9 | template locals / fallback-union globals | 119 | 6 |
-| 3 | compose a row VO (incl. `array_merge` sites) | 160 | **6** |
-| 2 | tighten a leaf `*Result`/`*Data` property | 87 | **1** |
-| 11 | nullable/union used as if definite | 23 | **1** |
 | 1 | delete a `->toArray()` flatten | 118 | **0** |
+| 2 | tighten a leaf `*Result`/`*Data` property | 87 | **0** |
+| 3 | compose a row VO (incl. `array_merge` sites) | 160 | **0** |
 | 4 | retire a flattening `TemplatePageContext` | 86 | **0** |
 | 5 | polymorphic block data (`mixed` by design) | 52 | **0** |
 | 6 | picture family: untyped event payloads | 35 | **0** |
+| 9 | template locals / fallback-union globals | 119 | **0** |
+| 11 | nullable/union used as if definite | 23 | **0** |
 
 §1 and §11 are finished and §4 all but; what is still filed under them is
 residue of `assign.php`'s single-assignment rule, verified expression by
@@ -4787,6 +4790,15 @@ Nineteen live bugs have surfaced this way, none of them type work:
     it. Neither page could show it -- every theme on disk is excluded from
     the list by the renderer's own `continue`, and the plugins fixture has
     no rows -- so both loops render at most one entry here.
+
+A twentieth is the compile step's own: `VariableMapBuilder` joined a
+variable's declarations by imploding type strings, so a name one context
+declares `?string` and another declares `string` became `?string|string` --
+not valid PHPDoc, since the `?` shorthand cannot take part in a union.
+PHPStan discarded the annotation and every read of that variable analysed
+as `mixed`. `$ADMIN_PAGE_TITLE` is the case that surfaced it; the
+annotation was present and looked right in the compiled output, which is
+why it read as a template problem rather than a tool one.
 
 ## Greenfield tracks (T3, cuttable — outside the P0–P58 backbone)
 

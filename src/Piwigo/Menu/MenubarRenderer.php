@@ -29,6 +29,8 @@ use Piwigo\Menu\Event\CheckMenuLinkVisibility;
 use Piwigo\Menu\Projection\MenubarIdentificationPageContext;
 use Piwigo\Menu\Projection\MenubarLinkRow;
 use Piwigo\Menu\Projection\MenubarLinksView;
+use Piwigo\Menu\Projection\MenubarSpecialRow;
+use Piwigo\Menu\Projection\MenubarSpecialsView;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContext;
@@ -220,79 +222,73 @@ final class MenubarRenderer
         }
 
         if (($block = $menu->getBlock('mbSpecials')) instanceof DisplayBlock) {
-            $block->data = [];
+            $specials = [];
             if (! $accessLevelChecker->isAGuest()) {// favorites
-                $block->data['favorites'] =
-                  [
-                      'URL' => $urlService->makeIndexUrl([
-                          'section' => 'favorites',
-                      ]),
-                      'TITLE' => $lang->t('display your favorites photos'),
-                      'NAME' => $lang->t('Your favorites'),
-                  ];
+                $specials[] = new MenubarSpecialRow(
+                    url: $urlService->makeIndexUrl([
+                        'section' => 'favorites',
+                    ]),
+                    title: $lang->t('display your favorites photos'),
+                    name: $lang->t('Your favorites'),
+                );
             }
 
-            $block->data['most_visited'] =
-              [
-                  'URL' => $urlService->makeIndexUrl([
-                      'section' => 'most_visited',
-                  ]),
-                  'TITLE' => $lang->t('display most visited photos'),
-                  'NAME' => $lang->t('Most visited'),
-              ];
+            $specials[] = new MenubarSpecialRow(
+                url: $urlService->makeIndexUrl([
+                    'section' => 'most_visited',
+                ]),
+                title: $lang->t('display most visited photos'),
+                name: $lang->t('Most visited'),
+            );
 
             if ($currentConfig->rateEnabled) {
-                $block->data['best_rated'] =
-                 [
-                     'URL' => $urlService->makeIndexUrl([
-                         'section' => 'best_rated',
-                     ]),
-                     'TITLE' => $lang->t('display best rated photos'),
-                     'NAME' => $lang->t('Best rated'),
-                 ];
+                $specials[] = new MenubarSpecialRow(
+                    url: $urlService->makeIndexUrl([
+                        'section' => 'best_rated',
+                    ]),
+                    title: $lang->t('display best rated photos'),
+                    name: $lang->t('Best rated'),
+                );
             }
 
-            $block->data['recent_pics'] =
-              [
-                  'URL' => $urlService->makeIndexUrl([
-                      'section' => 'recent_pics',
-                  ]),
-                  'TITLE' => $lang->t('display most recent photos'),
-                  'NAME' => $lang->t('Recent photos'),
-              ];
+            $specials[] = new MenubarSpecialRow(
+                url: $urlService->makeIndexUrl([
+                    'section' => 'recent_pics',
+                ]),
+                title: $lang->t('display most recent photos'),
+                name: $lang->t('Recent photos'),
+            );
 
-            $block->data['recent_cats'] =
-              [
-                  'URL' => $urlService->makeIndexUrl([
-                      'section' => 'recent_cats',
-                  ]),
-                  'TITLE' => $lang->t('display recently updated albums'),
-                  'NAME' => $lang->t('Recent albums'),
-              ];
+            $specials[] = new MenubarSpecialRow(
+                url: $urlService->makeIndexUrl([
+                    'section' => 'recent_cats',
+                ]),
+                title: $lang->t('display recently updated albums'),
+                name: $lang->t('Recent albums'),
+            );
 
-            $block->data['random'] =
-              [
-                  'URL' => $urlService->getRootUrl() . 'random.php',
-                  'TITLE' => $lang->t('display a set of random photos'),
-                  'NAME' => $lang->t('Random photos'),
-                  'REL' => 'rel="nofollow"',
-              ];
+            $specials[] = new MenubarSpecialRow(
+                url: $urlService->getRootUrl() . 'random.php',
+                title: $lang->t('display a set of random photos'),
+                name: $lang->t('Random photos'),
+                noFollow: true,
+            );
 
-            $block->data['calendar'] =
-              [
-                  'URL' => $urlService->makeIndexUrl(
-                      [
-                          'chronology_field' => ($currentConfig->calendarDatefield === 'date_available'
-                                                  ? 'posted' : 'created'),
-                          'chronology_style' => 'monthly',
-                          'chronology_view' => 'calendar',
-                      ]
-                  ),
-                  'TITLE' => $lang->t('display each day with photos, month per month'),
-                  'NAME' => $lang->t('Calendar'),
-                  'REL' => 'rel="nofollow"',
-              ];
-            $block->template = 'menubar_specials.latte';
+            $specials[] = new MenubarSpecialRow(
+                url: $urlService->makeIndexUrl(
+                    [
+                        'chronology_field' => ($currentConfig->calendarDatefield === 'date_available'
+                                                ? 'posted' : 'created'),
+                        'chronology_style' => 'monthly',
+                        'chronology_view' => 'calendar',
+                    ]
+                ),
+                title: $lang->t('display each day with photos, month per month'),
+                name: $lang->t('Calendar'),
+                noFollow: true,
+            );
+
+            $block->raw_content = (string) $renderer->render(new MenubarSpecialsView($specials));
         }
 
         if (($block = $menu->getBlock('mbMenu')) instanceof DisplayBlock) {

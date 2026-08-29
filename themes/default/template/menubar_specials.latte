@@ -1,13 +1,13 @@
-{templateType Piwigo\Menu\Projection\MenubarBlockView}
+{templateType Piwigo\Menu\Projection\MenubarSpecialsView}
 <dt>{='Specials'|translate}</dt>
 <dd>
   <ul>{spaceless}
-      <li n:foreach="$block->data as $link"><a
-          href="{$link['URL']|noescape}"
-          title="{$link['TITLE']}"
-          {if isset($link['REL'])}
-          {$link['REL']|noescape}
+      <li n:foreach="$specials as $link"><a
+          href="{$link->url|noescape}"
+          title="{$link->title}"
+          {if $link->noFollow}
+          rel="nofollow"
           {/if}
-        >{$link['NAME']}</a></li>
+        >{$link->name}</a></li>
     {/spaceless}</ul>
 </dd>

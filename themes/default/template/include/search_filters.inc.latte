@@ -324,7 +324,7 @@
   {/if}
 
   {* For post date *}
-  {if isset($datePosted) or isset($listDatePosted)}
+  {if $datePostedFilter !== null}
     <div class="filter filter-date_posted">
       <span class="mcs-icon gallery-icon-calendar-plus filter-icon"></span>
       <span class="search-words">{='Post date'|translate}</span>
@@ -346,11 +346,11 @@
         </div>
         <div class="date_posted-option-container">
           <div class="preset_posted_date">
-            {foreach $datePosted as $k => $date_posted}
+            {foreach $datePostedFilter->counters as $k => $date_posted}
               <div
-                class="date_posted-option {if 0 == $date_posted['counter']}disabled{/if}"
+                class="date_posted-option {if 0 === $date_posted->counter}disabled{/if}"
               >
-                {if 0 != $date_posted['counter']}<input
+                {if 0 !== $date_posted->counter}<input
                     type="radio"
                     id="date_posted-{$k}"
                     value="{$k}"
@@ -360,10 +360,10 @@
                   <span
                     class="mcs-icon gallery-icon-checkmark checked-icon"
                   ></span>
-                  <span class="date-period">{$date_posted['label']}</span>
-                  {if 0 != $date_posted['counter']}<span
+                  <span class="date-period">{$date_posted->label}</span>
+                  {if 0 !== $date_posted->counter}<span
                       class="date_posted-badge"
-                    >{$date_posted['counter']}</span>{/if}
+                    >{$date_posted->counter}</span>{/if}
                 </label>
               </div>
             {/foreach}
@@ -384,7 +384,7 @@
           </div>
 
           <div class="custom_posted_date">
-            {foreach $listDatePosted as $y => $year}
+            {foreach $datePostedFilter->listOfDates as $y => $year}
               <div class="date_posted-option year" id="container_{$y}">
                 <div class="year_input">
                   <input
@@ -476,7 +476,7 @@
   {/if}
 
   {* For creation date *}
-  {if isset($dateCreated) or isset($listDateCreated)}
+  {if $dateCreatedFilter !== null}
     <div class="filter filter-date_created">
       <span class="mcs-icon gallery-icon-calendar filter-icon"></span>
       <span class="search-words">{='Creation date'|translate}</span>
@@ -496,18 +496,18 @@
             title="{='Clear'|translate}"
           ></span>
         </div>
-        {if empty($listDateCreated)}
+        {if $dateCreatedFilter->listOfDates === []}
           <p
             class="no_filtered_photos"
           >{='There are no creation dates available for the photos currently filtered'|translate}</p>
         {else}
           <div class="date_created-option-container">
             <div class="preset_created_date">
-              {foreach $dateCreated as $k => $date_created}
+              {foreach $dateCreatedFilter->counters as $k => $date_created}
                 <div
-                  class="date_created-option {if 0 == $date_created['counter']}disabled{/if}"
+                  class="date_created-option {if 0 === $date_created->counter}disabled{/if}"
                 >
-                  {if 0 != $date_created['counter']}<input
+                  {if 0 !== $date_created->counter}<input
                       type="radio"
                       id="date_created-{$k}"
                       value="{$k}"
@@ -517,10 +517,10 @@
                     <span
                       class="mcs-icon gallery-icon-checkmark checked-icon"
                     ></span>
-                    <span class="date-period">{$date_created['label']}</span>
-                    {if 0 != $date_created['counter']}<span
+                    <span class="date-period">{$date_created->label}</span>
+                    {if 0 !== $date_created->counter}<span
                         class="date_created-badge"
-                      >{$date_created['counter']}</span>{/if}
+                      >{$date_created->counter}</span>{/if}
                   </label>
                 </div>
               {/foreach}
@@ -544,87 +544,85 @@
             </div>
 
             <div class="custom_created_date">
-              {if !empty($listDateCreated)}
-                {foreach $listDateCreated as $y => $year}
-                  <div class="date_created-option year" id="container_{$y}">
-                    <div class="year_input">
-                      <input
-                        type="checkbox"
-                        id="date_created_{$y}"
-                        value='y{$y}'
-                        data-year="{$y}"
-                      >
-                      <i
-                        class="gallery-icon-up-open accordion-toggle"
-                        data-type='year'
-                      ></i>
-                      <label for="date_created_{$y}" id="{$y}">
-                        <span class="date-period">{$year->label}</span>
-                        <span class="date_created-badge">{$year->count}</span>
-                        <span
-                          class="mcs-icon gallery-icon-checkmark checked-icon"
-                        ></span>
-                      </label>
-                    </div>
-
-                    <div class="months_container">
-                      {foreach $year->months as $m => $month}
-                        <div
-                          class="date_created-option month"
-                          id="container_{$m}"
-                        >
-                          <div class="month_input">
-                            <input
-                              type="checkbox"
-                              id="date_created_{$m}"
-                              value='m{$m}'
-                              data-year="{$y}"
-                            >
-                            <i
-                              class="gallery-icon-up-open accordion-toggle"
-                              data-type='month'
-                            ></i>
-                            <label for="date_created_{$m}" id="{$m}">
-                              <span class="date-period">{$month->label}</span>
-                              <span
-                                class="date_created-badge"
-                              >{$month->count}</span>
-                              <span
-                                class="mcs-icon gallery-icon-checkmark checked-icon"
-                              ></span>
-                            </label>
-                          </div>
-
-                          <div class="days_container">
-                            {foreach $month->days as $d => $day}
-                              <div
-                                class="date_created-option day"
-                                id="container_{$d}"
-                              >
-                                <input
-                                  type="checkbox"
-                                  id="date_created_{$d}"
-                                  value='d{$d}'
-                                  data-year="{$y}"
-                                >
-                                <label for="date_created_{$d}" id="{$d}">
-                                  <span class="date-period">{$day->label}</span>
-                                  <span
-                                    class="date_created-badge"
-                                  >{$day->count}</span>
-                                  <span
-                                    class="mcs-icon gallery-icon-checkmark checked-icon"
-                                  ></span>
-                                </label>
-                              </div>
-                            {/foreach}
-                          </div>
-                        </div>
-                      {/foreach}
-                    </div>
+              {foreach $dateCreatedFilter->listOfDates as $y => $year}
+                <div class="date_created-option year" id="container_{$y}">
+                  <div class="year_input">
+                    <input
+                      type="checkbox"
+                      id="date_created_{$y}"
+                      value='y{$y}'
+                      data-year="{$y}"
+                    >
+                    <i
+                      class="gallery-icon-up-open accordion-toggle"
+                      data-type='year'
+                    ></i>
+                    <label for="date_created_{$y}" id="{$y}">
+                      <span class="date-period">{$year->label}</span>
+                      <span class="date_created-badge">{$year->count}</span>
+                      <span
+                        class="mcs-icon gallery-icon-checkmark checked-icon"
+                      ></span>
+                    </label>
                   </div>
-                {/foreach}
-              {/if}
+
+                  <div class="months_container">
+                    {foreach $year->months as $m => $month}
+                      <div
+                        class="date_created-option month"
+                        id="container_{$m}"
+                      >
+                        <div class="month_input">
+                          <input
+                            type="checkbox"
+                            id="date_created_{$m}"
+                            value='m{$m}'
+                            data-year="{$y}"
+                          >
+                          <i
+                            class="gallery-icon-up-open accordion-toggle"
+                            data-type='month'
+                          ></i>
+                          <label for="date_created_{$m}" id="{$m}">
+                            <span class="date-period">{$month->label}</span>
+                            <span
+                              class="date_created-badge"
+                            >{$month->count}</span>
+                            <span
+                              class="mcs-icon gallery-icon-checkmark checked-icon"
+                            ></span>
+                          </label>
+                        </div>
+
+                        <div class="days_container">
+                          {foreach $month->days as $d => $day}
+                            <div
+                              class="date_created-option day"
+                              id="container_{$d}"
+                            >
+                              <input
+                                type="checkbox"
+                                id="date_created_{$d}"
+                                value='d{$d}'
+                                data-year="{$y}"
+                              >
+                              <label for="date_created_{$d}" id="{$d}">
+                                <span class="date-period">{$day->label}</span>
+                                <span
+                                  class="date_created-badge"
+                                >{$day->count}</span>
+                                <span
+                                  class="mcs-icon gallery-icon-checkmark checked-icon"
+                                ></span>
+                              </label>
+                            </div>
+                          {/foreach}
+                        </div>
+                      </div>
+                    {/foreach}
+                  </div>
+                </div>
+              {/foreach}
             </div>
           </div>
           <div>

@@ -26,8 +26,10 @@ use Piwigo\Search\Projection\AddedByFilterCount;
 use Piwigo\Search\Projection\AuthorFilterCount;
 use Piwigo\Search\Projection\AuthorRule;
 use Piwigo\Search\Projection\CategoryRule;
+use Piwigo\Search\Projection\DateFilterCounter;
 use Piwigo\Search\Projection\DateFilterDay;
 use Piwigo\Search\Projection\DateFilterMonth;
+use Piwigo\Search\Projection\DateFilterOptions;
 use Piwigo\Search\Projection\DateFilterYear;
 use Piwigo\Search\Projection\RangeBounds;
 use Piwigo\Search\Projection\RangeFilterOptions;
@@ -166,10 +168,8 @@ final readonly class SearchFilterRenderer
         $ratios = null;
         $height = null;
         $width = null;
-        $listDatePosted = null;
-        $datePosted = null;
-        $listDateCreated = null;
-        $dateCreated = null;
+        $datePostedFilter = null;
+        $dateCreatedFilter = null;
 
         $langMonth = $this->lang->months();
 
@@ -339,8 +339,7 @@ final readonly class SearchFilterRenderer
                 ],
                 $page
             );
-            $listDatePosted = $dateFilterResult['listOfDates'];
-            $datePosted = $dateFilterResult['counters'];
+            $datePostedFilter = $dateFilterResult;
         } elseif ($rules->datePosted !== null) {
             $rules->datePosted = null;
         }
@@ -360,8 +359,7 @@ final readonly class SearchFilterRenderer
                 ],
                 $page
             );
-            $listDateCreated = $dateFilterResult['listOfDates'];
-            $dateCreated = $dateFilterResult['counters'];
+            $dateCreatedFilter = $dateFilterResult;
         } elseif ($rules->dateCreated !== null) {
             $rules->dateCreated = null;
         }
@@ -824,10 +822,8 @@ final readonly class SearchFilterRenderer
                 width: $width,
                 albumsFound: $albumsFound,
                 tagsFound: $tagsFound,
-                listDatePosted: $listDatePosted,
-                datePosted: $datePosted,
-                listDateCreated: $listDateCreated,
-                dateCreated: $dateCreated,
+                datePostedFilter: $datePostedFilter,
+                dateCreatedFilter: $dateCreatedFilter,
             ),
         );
     }
@@ -976,7 +972,6 @@ final readonly class SearchFilterRenderer
      * @param array<string, string> $labelForThreshold keyed by threshold id
      *   (e.g. '24h', '7d'), in display order
      * @param array<string, mixed> $page see render()'s own docblock
-     * @return array{listOfDates: array<array-key, DateFilterYear>, counters: array<string, array{label: string, counter: mixed}>}
      */
     private function renderDateFilter(
         array $langMonth,
@@ -985,7 +980,7 @@ final readonly class SearchFilterRenderer
         string $dqlField,
         array $labelForThreshold,
         array $page
-    ): array {
+    ): DateFilterOptions {
         $filterClause = $this->getClauseForFilter($filterName, $page);
         $filterCondition = $filterClause->condition;
         $cacheKey = 'filter_' . $filterName . '_' . $userId;
@@ -1057,10 +1052,16 @@ final readonly class SearchFilterRenderer
 
         $counters = [];
         foreach (array_keys($labelForThreshold) as $threshold) {
-            $counters[$threshold] = [
-                'label' => $labelForThreshold[$threshold],
-                'counter' => $preCounters[$threshold] ?? 0,
-            ];
+            // $preCounters is an int-valued map when this method counted
+            // it, but comes back from the persistent cache pool as an
+            // untyped array, so the value is narrowed here rather than
+            // carried as mixed into DateFilterCounter (and from there
+            // into the two `0 ==` comparisons the template makes per row).
+            $preCounter = $preCounters[$threshold] ?? 0;
+            $counters[$threshold] = new DateFilterCounter(
+                label: $labelForThreshold[$threshold],
+                counter: is_int($preCounter) ? $preCounter : 0,
+            );
         }
 
         // $listOfDates may have come from the persistent cache above, which
@@ -1119,10 +1120,10 @@ final readonly class SearchFilterRenderer
         }
         krsort($years);
 
-        return [
-            'listOfDates' => $years,
-            'counters' => $counters,
-        ];
+        return new DateFilterOptions(
+            counters: $counters,
+            listOfDates: $years,
+        );
     }
 
     /**

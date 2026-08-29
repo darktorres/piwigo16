@@ -33,10 +33,6 @@ final readonly class SearchFilterData
      * @param array<array-key, mixed>|null $ratios
      * @param list<string>|null $albumsFound
      * @param list<string>|null $tagsFound
-     * @param array<array-key, DateFilterYear>|null $listDatePosted
-     * @param array<string, array{label: string, counter: mixed}>|null $datePosted
-     * @param array<array-key, DateFilterYear>|null $listDateCreated
-     * @param array<string, array{label: string, counter: mixed}>|null $dateCreated
      */
     public function __construct(
         public array $displayFilter,
@@ -55,9 +51,7 @@ final readonly class SearchFilterData
         public ?RangeFilterOptions $width,
         public ?array $albumsFound,
         public ?array $tagsFound,
-        public ?array $listDatePosted,
-        public ?array $datePosted,
-        public ?array $listDateCreated,
-        public ?array $dateCreated,
+        public ?DateFilterOptions $datePostedFilter,
+        public ?DateFilterOptions $dateCreatedFilter,
     ) {}
 }

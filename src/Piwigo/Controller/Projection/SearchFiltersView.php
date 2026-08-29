@@ -14,7 +14,7 @@ use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Search\Projection\AddedByFilterCount;
 use Piwigo\Search\Projection\AuthorFilterCount;
-use Piwigo\Search\Projection\DateFilterYear;
+use Piwigo\Search\Projection\DateFilterOptions;
 use Piwigo\Search\Projection\RangeFilterOptions;
 use Piwigo\Template\Latte\Attribute\Template;
 use Piwigo\Template\Projection\QuickSearchView;
@@ -50,10 +50,6 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
      * @param array<array-key, mixed>|null $ratios
      * @param list<string>|null $albumsFound
      * @param list<string>|null $tagsFound
-     * @param array<array-key, DateFilterYear>|null $listDatePosted
-     * @param array<string, array{label: string, counter: mixed}>|null $datePosted
-     * @param array<array-key, DateFilterYear>|null $listDateCreated
-     * @param array<string, array{label: string, counter: mixed}>|null $dateCreated
      */
     public function __construct(
         public array $displayFilter,
@@ -72,10 +68,8 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
         public ?RangeFilterOptions $width,
         public ?array $albumsFound,
         public ?array $tagsFound,
-        public ?array $listDatePosted,
-        public ?array $datePosted,
-        public ?array $listDateCreated,
-        public ?array $dateCreated,
+        public ?DateFilterOptions $datePostedFilter,
+        public ?DateFilterOptions $dateCreatedFilter,
         public string $colorscheme,
         public string $userRank,
         public string $csrfToken,

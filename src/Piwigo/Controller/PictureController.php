@@ -31,7 +31,9 @@ use Piwigo\Controller\Event\RenderElementContent;
 use Piwigo\Controller\Projection\CanonicalUrlPageContext;
 use Piwigo\Controller\Projection\DerivativeChoice;
 use Piwigo\Controller\Projection\PictureContentView;
+use Piwigo\Controller\Projection\PictureElement;
 use Piwigo\Controller\Projection\PictureHeaderPageContext;
+use Piwigo\Controller\Projection\PictureNavEntry;
 use Piwigo\Controller\Projection\PictureView;
 use Piwigo\Controller\Projection\SlideshowView;
 use Piwigo\Controller\Request\PictureRequest;
@@ -57,7 +59,6 @@ use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageEntity;
-use Piwigo\Image\ImagePathHelper;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
@@ -170,16 +171,14 @@ final readonly class PictureController implements ControllerInterface
      * `defaultPictureContent()` (its own real owner) and `__invoke()`
      * (which needs the same value for `PictureView::$uOriginal` -- see
      * that class's own docblock for why).
-     *
-     * @param array{derivatives: array<string, DerivativeImage>, element_url?: string, ...} $element_info
      */
-    private function computeUOriginal(array $element_info): ?string
+    private function computeUOriginal(PictureElement $element): ?string
     {
-        if (! isset($element_info['element_url'])) {
+        if ($element->elementUrl === null) {
             return null;
         }
 
-        foreach ($element_info['derivatives'] as $type => $derivative) {
+        foreach ($element->derivatives as $type => $derivative) {
             if ($type === ImageStdParams::SQUARE || $type === ImageStdParams::THUMB) {
                 continue;
             }
@@ -191,7 +190,7 @@ final readonly class PictureController implements ControllerInterface
             }
         }
 
-        return $element_info['element_url'];
+        return $element->elementUrl;
     }
 
     #[Override]
@@ -649,41 +648,44 @@ final readonly class PictureController implements ControllerInterface
                 $i = 'current';
             }
 
-            $row['src_image'] = new SrcImage(SrcImageInfo::fromRow($row));
-            $row['derivatives'] = DerivativeImage::getAll($row['src_image']);
+            $src_image = new SrcImage(SrcImageInfo::fromRow($row));
 
-            $row['path_ext'] = strtolower(StringHelper::getExtension($row['path']));
-            $row['file_ext'] = strtolower(StringHelper::getExtension($row['file']));
-
+            $element_url = null;
+            $download_url = null;
             if ($i === 'current') {
-                $row['element_path'] = ImagePathHelper::getElementPath($imageRow->path, $urlService, $this->paths);
-
-                $row_id = $row['id'];
-
-                if ($row['src_image']->isOriginal()) {// we have a photo
+                if ($src_image->isOriginal()) {// we have a photo
                     if ($this->currentUser->get()->enabledHigh) {
-                        $row['element_url'] = $row['src_image']->getUrl();
-                        $row['download_url'] = $urlService->getActionUrl($row_id, 'e', true);
+                        $element_url = $src_image->getUrl();
+                        $download_url = $urlService->getActionUrl($imageRow->id->value, 'e', true);
                     }
                 } else { // not a pic - need download link
-                    $row['element_url'] = $urlService->getElementUrl($row);
-                    $row['download_url'] = $urlService->getActionUrl($row_id, 'e', true);
+                    $element_url = $urlService->getElementUrl($row);
+                    $download_url = $urlService->getActionUrl($imageRow->id->value, 'e', true);
                 }
             }
 
-            $row['url'] = $urlService->duplicatePictureUrl(
-                [
-                    'image_id' => $row['id'],
-                    'image_file' => $row['file'],
-                ],
-                [
-                    'start',
-                ]
-            );
+            $title = $this->htmlService->renderElementName($row);
 
-            $picture[$i] = $row;
-            $picture[$i]['TITLE'] = $this->htmlService->renderElementName($row);
-            $picture[$i]['TITLE_ESC'] = str_replace('"', '&quot;', $picture[$i]['TITLE']);
+            $picture[$i] = new PictureElement(
+                image: $imageRow,
+                srcImage: $src_image,
+                derivatives: DerivativeImage::getAll($src_image),
+                pathExt: strtolower(StringHelper::getExtension($imageRow->path)),
+                fileExt: strtolower(StringHelper::getExtension($imageRow->file)),
+                url: $urlService->duplicatePictureUrl(
+                    [
+                        'image_id' => $imageRow->id->value,
+                        'image_file' => $imageRow->file,
+                    ],
+                    [
+                        'start',
+                    ]
+                ),
+                title: $title,
+                titleEsc: str_replace('"', '&quot;', $title),
+                elementUrl: $element_url,
+                downloadUrl: $download_url,
+            );
 
             if ($i === 'previous' and (string) $previous_item === (string) $first_item) {
                 $picture['first'] = $picture[$i];
@@ -733,7 +735,7 @@ final readonly class PictureController implements ControllerInterface
                     // at print time, so pre-encoding '&' here would
                     // double-escape it.
                     $url_link = $urlService->addUrlParams(
-                        $picture[$id_pict_redirect]['url'],
+                        $picture[$id_pict_redirect]->url,
                         $slideshow_url_params,
                         argSeparator: '&'
                     );
@@ -746,7 +748,7 @@ final readonly class PictureController implements ControllerInterface
         // always hits the while loop's final `else { $i =
         // 'current'; }` branch
         assert(isset($picture['current']));
-        $title = $picture['current']['TITLE'];
+        $title = $picture['current']->title;
         $title_nb = ($current_rank + 1) . '/' . count($items);
 
         // metadata
@@ -760,7 +762,7 @@ final readonly class PictureController implements ControllerInterface
         $metadata_showable = $this->eventDispatcher->dispatch(new GetElementMetadataAvailable(
             (
                 ($this->currentConfig->showExif or $this->currentConfig->showIptc)
-                and ! $picture['current']['src_image']->isMimetype()
+                and ! $picture['current']->srcImage->isMimetype()
             ),
             $picture['current']
         ))->available;
@@ -776,67 +778,16 @@ final readonly class PictureController implements ControllerInterface
 
         // allow plugins to change what we computed before passing data
         // to template
-        /**
-         * PicturePicturesData::$picture is deliberately loose
-         * (array<mixed>, matching the reference) -- restate the shape a
-         * well-behaved plugin is expected to preserve: one images-table
-         * row (matching Image\Projection\Image::toArray()'s own real,
-         * authoritative return shape -- id/hit/width/height/filesize are
-         * genuinely typed int|null there, not the string|null a raw DB
-         * row would have; this docblock previously claimed the latter,
-         * a stale mismatch real enough to hide a live bug: PictureView
-         * ::$infoVisits expects a string, and PHPStan trusted this
-         * docblock's wrong `hit: string` claim instead of flagging the
-         * real int flowing in uncast) per navigation slot, plus the
-         * computed fields set on $row above.
-         *
-         * @var array<string, array{
-         *     id: int,
-         *     file: string,
-         *     path: string,
-         *     comment: string|null,
-         *     author: string|null,
-         *     date_creation: string|null,
-         *     date_available: string|null,
-         *     width: int|null,
-         *     height: int|null,
-         *     hit: int,
-         *     filesize: int|null,
-         *     src_image: SrcImage,
-         *     derivatives: array<string, DerivativeImage>,
-         *     url: string,
-         *     download_url?: string,
-         *     TITLE: string,
-         *     TITLE_ESC: string,
-         *     ...
-         * }> $picture
-         */
         $picture = $this->eventDispatcher->dispatch(new PicturePicturesData($picture))
             ->picture;
 
-        $nav = [];
-        foreach (['first', 'previous', 'next', 'last', 'current'] as $which_image) {
-            if (isset($picture[$which_image])) {
-                $nav[$which_image] = array_merge(
-                    $picture[$which_image],
-                    [
-                        // Params slideshow was transmit to
-                        // navigation buttons
-                        'U_IMG' => $urlService->addUrlParams(
-                            $picture[$which_image]['url'],
-                            $slideshow_url_params
-                        ),
-                    ]
-                );
-            }
-        }
-        $download_url = $picture['current']['download_url'] ?? null;
+        $download_url = $picture['current']->downloadUrl ?? null;
         $download_url_present = is_string($download_url) && $download_url !== '' && $download_url !== '0';
         /** @var list<array<string, mixed>> $formats */
         $formats = [];
         if ($this->currentConfig->pictureDownloadIcon and $download_url_present and $this->currentUser->get()->enabledHigh) {
             if ($this->currentConfig->isFormatsEnabled) {
-                $picture_id = $picture['current']['id'];
+                $picture_id = $picture['current']->image->id->value;
                 $formats = array_map(
                     static fn (ImageFormat $format): array => $format->toArray(),
                     TypedRepository::narrow($this->entityManager->getRepository(ImageEntity::class), ImageRepository::class)
@@ -849,8 +800,8 @@ final readonly class PictureController implements ControllerInterface
                     $formats,
                     [
                         'download_url' => $download_url,
-                        'ext' => StringHelper::getExtension($picture['current']['file']),
-                        'filesize' => $picture['current']['filesize'],
+                        'ext' => StringHelper::getExtension($picture['current']->image->file),
+                        'filesize' => $picture['current']->image->filesize,
                     ]
                 );
 
@@ -879,19 +830,41 @@ final readonly class PictureController implements ControllerInterface
             }
         }
 
-        // U_DOWNLOAD/formats are picture.latte's own $current.U_DOWNLOAD/
-        // $current.formats -- merged straight into $nav['current'] (built
-        // above, always set whenever $download_url_present can be true,
-        // since that itself reads $picture['current']) rather than through
-        // a separate Template::append('current', ..., merge: true) call,
-        // now that PictureView owns 'current' entirely via navCurrent.
-        if ($this->currentConfig->pictureDownloadIcon and $download_url_present and $this->currentUser->get()->enabledHigh) {
-            $nav['current']['U_DOWNLOAD'] = $download_url;
+        // Built here rather than right after the PicturePicturesData
+        // dispatch: the current slot carries the download URL and the
+        // format list computed just above, and PictureNavEntry is
+        // readonly, so there is no second pass to append them in. That
+        // also collapses what used to be the same three-clause download
+        // condition written out twice.
+        $downloadable = $this->currentConfig->pictureDownloadIcon
+            and $download_url_present
+            and $this->currentUser->get()
+                ->enabledHigh;
 
-            if ($this->currentConfig->isFormatsEnabled) {
-                $nav['current']['formats'] = $formats;
+        $nav = [];
+        foreach (['first', 'previous', 'next', 'last', 'current'] as $which_image) {
+            if (! isset($picture[$which_image])) {
+                continue;
             }
+
+            $element = $picture[$which_image];
+            $isCurrent = $which_image === 'current';
+            $nav[$which_image] = new PictureNavEntry(
+                element: $element,
+                // Params slideshow was transmit to navigation buttons
+                imgUrl: $urlService->addUrlParams($element->url, $slideshow_url_params),
+                downloadUrl: $isCurrent && $downloadable ? $download_url : null,
+                formats: $isCurrent && $downloadable && $this->currentConfig->isFormatsEnabled ? $formats : [],
+            );
         }
+
+        // Same invariant as `assert(isset($picture['current']))` above:
+        // the loop builds an entry for every slot $picture has, and
+        // $picture always has 'current'. Stated so PictureView can take a
+        // non-nullable navCurrent -- picture.latte and slideshow.latte
+        // both read its title unguarded, which is only honest if the
+        // property says it is always there.
+        assert(isset($nav['current']));
 
         $u_slideshow_stop = null;
         $u_slideshow_start = null;
@@ -900,7 +873,7 @@ final readonly class PictureController implements ControllerInterface
             $tpl_slideshow = [];
 
             // slideshow end
-            $u_slideshow_stop = $picture['current']['url'];
+            $u_slideshow_stop = $picture['current']->url;
 
             foreach (['repeat', 'play'] as $p) {
                 $var_name =
@@ -910,7 +883,7 @@ final readonly class PictureController implements ControllerInterface
 
                 $tpl_slideshow[$var_name] =
                       $urlService->addUrlParams(
-                          $picture['current']['url'],
+                          $picture['current']->url,
                           [
                               'slideshow' => $this->imageService
                                   ->encodeSlideshowParams(
@@ -949,7 +922,7 @@ final readonly class PictureController implements ControllerInterface
                     $var_name = 'U_' . strtoupper($op) . '_PERIOD';
                     $tpl_slideshow[$var_name] =
                           $urlService->addUrlParams(
-                              $picture['current']['url'],
+                              $picture['current']->url,
                               [
                                   'slideshow' => $this->imageService
                                       ->encodeSlideshowParams($new_slideshow_params),
@@ -960,7 +933,7 @@ final readonly class PictureController implements ControllerInterface
             $slideshow_nav = $tpl_slideshow;
         } elseif ($this->currentConfig->pictureSlideshowIcon) {
             $u_slideshow_start = $urlService->addUrlParams(
-                $picture['current']['url'],
+                $picture['current']->url,
                 [
                     'slideshow' => '',
                 ]
@@ -1031,20 +1004,20 @@ final readonly class PictureController implements ControllerInterface
         $comment_img = null;
 
         // legend
-        $current_comment = $picture['current']['comment'] ?? null;
+        $current_comment = $picture['current']->image->comment ?? null;
         if (is_string($current_comment) && $current_comment !== '' && $current_comment !== '0') {
             $descriptionEvent = $this->eventDispatcher->dispatch(new RenderElementDescription($current_comment, 'picture_page_element_description'));
             $comment_img = $descriptionEvent->elementDescription;
         }
 
         // author
-        $current_author = $picture['current']['author'] ?? null;
+        $current_author = $picture['current']->image->author ?? null;
         if (is_string($current_author) && $current_author !== '' && $current_author !== '0') {
-            $info_author = $picture['current']['author'];
+            $info_author = $picture['current']->image->author;
         }
 
         // creation date
-        $date_creation = $picture['current']['date_creation'] ?? null;
+        $date_creation = $picture['current']->image->dateCreation ?? null;
         if (is_string($date_creation) && $date_creation !== '' && $date_creation !== '0') {
             $val = DateHelper::formatDate($date_creation);
             $url = $urlService->makeIndexUrl(
@@ -1070,7 +1043,7 @@ final readonly class PictureController implements ControllerInterface
         // historical risk (a raw MySQL zero-date sentinel) is closed at
         // the write side instead, by Db\DbConnection::SQL_MODE's
         // NO_ZERO_DATE/NO_ZERO_IN_DATE.
-        $date_available = $picture['current']['date_available'];
+        $date_available = $picture['current']->image->dateAvailable;
         if (is_string($date_available) && $date_available !== '' && $date_available !== '0') {
             $val = DateHelper::formatDate($date_available);
             $url = $urlService->makeIndexUrl(
@@ -1087,15 +1060,15 @@ final readonly class PictureController implements ControllerInterface
         }
 
         // size in pixels
-        if ($picture['current']['src_image']->isOriginal() and isset($picture['current']['width'], $picture['current']['height'])) {
+        if ($picture['current']->srcImage->isOriginal() and isset($picture['current']->image->width, $picture['current']->image->height)) {
             $info_dimensions =
-              $picture['current']['width'] . '*' . $picture['current']['height'];
+              $picture['current']->image->width . '*' . $picture['current']->image->height;
         }
 
         // filesize
-        $current_filesize = $picture['current']['filesize'] ?? null;
+        $current_filesize = $picture['current']->image->filesize ?? null;
         if (is_numeric($current_filesize) && (float) $current_filesize !== 0.0) {
-            $info_filesize = $this->lang->t('%d Kb', $picture['current']['filesize']);
+            $info_filesize = $this->lang->t('%d Kb', $picture['current']->image->filesize);
         }
 
         // number of visits -- ImageEntity::$hit is a real int
@@ -1107,10 +1080,10 @@ final readonly class PictureController implements ControllerInterface
         // once threw "PicturePageContext::__construct(): Argument #27
         // ($infoVisits) must be of type string, int given" before this
         // cast existed).
-        $info_visits = (string) $picture['current']['hit'];
+        $info_visits = (string) $picture['current']->image->hit;
 
         // file
-        $info_file = $picture['current']['file'];
+        $info_file = $picture['current']->image->file;
 
         $display_info = $this->currentConfig->pictureInformations;
         $display_info = $this->eventDispatcher->dispatch(new FilterPictureDisplayInfo($display_info, $image_id))
@@ -1185,8 +1158,8 @@ final readonly class PictureController implements ControllerInterface
 
         $pdf_nb_pages = null;
 
-        if (in_array(strtolower(StringHelper::getExtension($picture['current']['file'])), ['pdf'], true)) {
-            // $picture['current']['path'] is the raw images.path
+        if (in_array(strtolower(StringHelper::getExtension($picture['current']->image->file)), ['pdf'], true)) {
+            // $picture['current']->image->path is the raw images.path
             // column, root-relative (e.g. 'upload/2026/07/x.pdf'),
             // same as every other real filesystem read of this
             // column elsewhere in this codebase (e.g. SrcImage::
@@ -1201,7 +1174,7 @@ final readonly class PictureController implements ControllerInterface
             // returning false (never a real page count) on every
             // live request.
             $pdf_nb_pages = $this->imageService
-                ->countPdfPages($this->paths->root . $picture['current']['path']);
+                ->countPdfPages($this->paths->root . $picture['current']->image->path);
         }
 
         // maybe someone wants a special display (call it before
@@ -1213,24 +1186,24 @@ final readonly class PictureController implements ControllerInterface
         // own cookie-to-session write is what settles which type is
         // selected, and picture.latte's sizes switcher has to agree with
         // the <img> picture_content.latte just rendered.
-        $derivativeChoice = $this->selectDerivatives($picture['current']['derivatives']);
+        $derivativeChoice = $this->selectDerivatives($picture['current']->derivatives);
 
         $u_prefetch = null;
 
         $http_user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
         $http_user_agent = is_string($http_user_agent) ? $http_user_agent : '';
         if (isset($picture['next'])
-            and $picture['next']['src_image']->isOriginal()
+            and $picture['next']->srcImage->isOriginal()
             and $template->getTemplateVars('U_PREFETCH') === null
             and ! str_contains($http_user_agent, 'Chrome/')) {
             $prefetch_deriv_type = $this->sessionService->getPictureDeriv() ?? $this->currentConfig->derivativeDefaultSize;
-            $u_prefetch = $picture['next']['derivatives'][$prefetch_deriv_type]->getUrl();
+            $u_prefetch = $picture['next']->derivatives[$prefetch_deriv_type]->getUrl();
         }
 
         $u_canonical = $urlService->makePictureUrl(
             [
-                'image_id' => $picture['current']['id'],
-                'image_file' => $picture['current']['file'],
+                'image_id' => $picture['current']->image->id->value,
+                'image_file' => $picture['current']->image->file,
             ]
         );
 
@@ -1251,7 +1224,7 @@ final readonly class PictureController implements ControllerInterface
         ));
 
         $rateResult = $this->pictureRateRenderer
-            ->render($image_id, $urlService, $picture, $url_self);
+            ->render($image_id, $urlService, $picture['current'], $url_self);
         $commentsResult = PictureCommentsResult::empty();
         if ($this->currentConfig->activateComments) {
             $commentsResult = new PictureCommentRenderer()
@@ -1260,7 +1233,7 @@ final readonly class PictureController implements ControllerInterface
         $metadata = null;
         if ($metadata_showable and $this->sessionService->isShowMetadataEnabled()) {
             $metadata = new PictureMetadataRenderer()
-                ->render($this->lang, $picture, $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->paths, $this->entityManager);
+                ->render($this->lang, $picture['current'], $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->paths, $this->entityManager);
         }
 
         // include menubar
@@ -1282,27 +1255,14 @@ final readonly class PictureController implements ControllerInterface
         $this->htmlService
             ->flushPageMessages();
 
-        // $picture['current']['element_url'], when present, is always a
-        // string (assigned only from SrcImage::getUrl()/UrlServiceInterface::
-        // getElementUrl(), both string-returning) -- but that fact isn't
-        // visible to static analysis through $row's own progressive,
-        // conditional mutation inside the findByIds() loop above.
-        $current_element_url = $picture['current']['element_url'] ?? null;
-        $u_original = $this->computeUOriginal(is_string($current_element_url)
-            ? [
-                'derivatives' => $picture['current']['derivatives'],
-                'element_url' => $current_element_url,
-            ]
-            : [
-                'derivatives' => $picture['current']['derivatives'],
-            ]);
+        $u_original = $this->computeUOriginal($picture['current']);
 
         $commonPictureViewArgs = [
             'navFirst' => $nav['first'] ?? null,
             'navPrevious' => $nav['previous'] ?? null,
             'navNext' => $nav['next'] ?? null,
             'navLast' => $nav['last'] ?? null,
-            'navCurrent' => $nav['current'] ?? null,
+            'navCurrent' => $nav['current'],
             'sizeOptions' => $derivativeChoice->unique,
             'selectedSizeType' => $derivativeChoice->selected->getType(),
             'uSlideshowStop' => $u_slideshow_stop,
@@ -1350,7 +1310,7 @@ final readonly class PictureController implements ControllerInterface
             'commentList' => $commentsResult->commentList,
         ];
 
-        $current_image_id = $picture['current']['id'];
+        $current_image_id = $picture['current']->image->id->value;
         $this->historyService
             ->logVisit(
                 $current_image_id,
@@ -1387,14 +1347,6 @@ final readonly class PictureController implements ControllerInterface
             return $event;
         }
 
-        /**
-         * @var array{
-         *     file: string,
-         *     derivatives: array<string, DerivativeImage>,
-         *     element_url?: string,
-         *     ...
-         * } $element_info
-         */
         $element_info = $event->currentPicture;
 
         if (isset($_COOKIE['picture_deriv'])) {
@@ -1408,43 +1360,29 @@ final readonly class PictureController implements ControllerInterface
                     ->cookiePath(),
             ]);
         }
-        $derivativeChoice = $this->selectDerivatives($element_info['derivatives']);
+        $derivativeChoice = $this->selectDerivatives($element_info->derivatives);
         $selected_derivative = $derivativeChoice->selected;
         $unique_derivatives = $derivativeChoice->unique;
 
-        // $element_info['element_url'], when present, is always a string --
-        // see __invoke()'s own identical narrowing above for why static
-        // analysis can't see that through $element_info's own progressive,
-        // conditional construction.
-        $element_url = $element_info['element_url'] ?? null;
-        $u_original = $this->computeUOriginal(is_string($element_url)
-            ? [
-                'derivatives' => $element_info['derivatives'],
-                'element_url' => $element_url,
-            ]
-            : [
-                'derivatives' => $element_info['derivatives'],
-            ]);
+        $u_original = $this->computeUOriginal($element_info);
 
         $pdf_viewer_filesize_threshold = null;
-        if (in_array(strtolower(StringHelper::getExtension($element_info['file'])), ['pdf'], true)) {
+        if (in_array(strtolower(StringHelper::getExtension($element_info->image->file)), ['pdf'], true)) {
             $pdf_viewer_filesize_threshold = $this->currentConfig->pdfViewerFilesizeThreshold * 1024;
         }
 
         $pictureContentView = new PictureContentView(
             uOriginal: $u_original,
-            altImg: $element_info['file'],
+            altImg: $element_info->image->file,
             cookiePath: new CookieService()
                 ->cookiePath(),
             pdfViewerFilesizeThreshold: $pdf_viewer_filesize_threshold,
             rootUrl: $this->urlService->getRootUrl(),
             iconDir: $this->currentTemplate->get()
                 ->themeConf('icon_dir'),
-            current: [
-                ...$element_info,
-                'selected_derivative' => $selected_derivative,
-                'unique_derivatives' => $unique_derivatives,
-            ],
+            current: $element_info,
+            selectedDerivative: $selected_derivative,
+            sizeOptions: $unique_derivatives,
         );
         $event->content = (string) $this->renderer->render($pictureContentView);
 

@@ -2245,8 +2245,7 @@ it('short-circuits the default element-content renderer when an earlier render_e
         \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addTypedHandler(
             \\Piwigo\\Controller\\Event\\RenderElementContent::class,
             static function (\\Piwigo\\Controller\\Event\\RenderElementContent \$event): \\Piwigo\\Controller\\Event\\RenderElementContent {
-                \$id = \$event->currentPicture['id'] ?? null;
-                if (is_numeric(\$id) && (int) \$id === {$imageId}) {
+                if (\$event->currentPicture->image->id->value === {$imageId}) {
                     \$event->content = '{$marker}';
                 }
 

@@ -11,7 +11,7 @@
       <div class="browsePath">
         {$sectionTitle|noescape}<span
           class="browsePathSeparator"
-        >{$levelSeparator|noescape}</span><h2>{$navCurrent['TITLE']|noescape}</h2>
+        >{$levelSeparator|noescape}</span><h2>{$navCurrent->element->title|noescape}</h2>
       </div>
     </div>
 
@@ -84,10 +84,10 @@
               >{='Show file metadata'|translate}</span>
             </a>
           {/if}{/spaceless}
-        {spaceless}{if isset($navCurrent['U_DOWNLOAD'])}
+        {spaceless}{if isset($navCurrent->downloadUrl)}
             <a
               id="downloadSwitchLink"
-              href="{$navCurrent['U_DOWNLOAD']|noescape}"
+              href="{$navCurrent->downloadUrl|noescape}"
               title="{='Download this file'|translate}"
               class="pwg-state-default pwg-button"
               rel="nofollow"
@@ -97,13 +97,13 @@
               >{='Download'|translate}</span>
             </a>
 
-            {if !empty($navCurrent['formats'])}
+            {if !empty($navCurrent->formats)}
               <div id="downloadSwitchBox" class="switchBox">
                 <div
                   class="switchBoxTitle"
                 >{='Download'|translate} - {='Formats'|translate}</div>
                 <ul>
-                  {foreach $navCurrent['formats'] as $format}
+                  {foreach $navCurrent->formats as $format}
                     <li><a
                         href="{$format['download_url']|noescape}"
                         rel="nofollow"
@@ -208,7 +208,8 @@
     </div>{* imageToolBar *}
 
     <div id="theImageAndInfos">
-      <div id="theImage" n:attr="data-image-id: $navCurrent['id'] ?? null">
+      {var $imageId = $navCurrent->element->image->id->value}
+      <div id="theImage" data-image-id="{$imageId}">
         {$elementContent|noescape}
 
         {if isset($commentImg)}
@@ -232,15 +233,15 @@
               <a
                 class="navThumb"
                 id="linkPrev"
-                href="{$navPrevious['U_IMG']|noescape}"
-                title="{='Previous'|translate} : {$navPrevious['TITLE_ESC']|noescape}"
+                href="{$navPrevious->imgUrl|noescape}"
+                title="{='Previous'|translate} : {$navPrevious->element->titleEsc|noescape}"
                 rel="prev"
               >
                 <span class="thumbHover prevThumbHover"></span>
                 <img
-                  class="{if (isset($navPrevious['path_ext']) and $navPrevious['path_ext'] == 'svg')}svgImg{/if}"
-                  src="{if (isset($navPrevious['path_ext']) and $navPrevious['path_ext'] == 'svg')}{$navPrevious['path']|noescape}{else}{$navPrevious['derivatives']['square']->getUrl()|noescape}{/if}"
-                  alt="{$navPrevious['TITLE_ESC']|noescape}"
+                  class="{if $navPrevious->element->pathExt === 'svg'}svgImg{/if}"
+                  src="{if $navPrevious->element->pathExt === 'svg'}{$navPrevious->element->image->path|noescape}{else}{$navPrevious->element->derivatives['square']->getUrl()|noescape}{/if}"
+                  alt="{$navPrevious->element->titleEsc|noescape}"
                 >
               </a>
             {elseif isset($uUp)}
@@ -259,15 +260,15 @@
               <a
                 class="navThumb"
                 id="linkNext"
-                href="{$navNext['U_IMG']|noescape}"
-                title="{='Next'|translate} : {$navNext['TITLE_ESC']|noescape}"
+                href="{$navNext->imgUrl|noescape}"
+                title="{='Next'|translate} : {$navNext->element->titleEsc|noescape}"
                 rel="next"
               >
                 <span class="thumbHover nextThumbHover"></span>
                 <img
-                  class="{if (isset($navNext['path_ext']) and $navNext['path_ext'] == 'svg')}svgImg{/if}"
-                  src="{if (isset($navNext['path_ext']) and $navNext['path_ext'] == 'svg')}{$navNext['path']|noescape}{else}{$navNext['derivatives']['square']->getUrl()|noescape}{/if}"
-                  alt="{$navNext['TITLE_ESC']|noescape}"
+                  class="{if $navNext->element->pathExt === 'svg'}svgImg{/if}"
+                  src="{if $navNext->element->pathExt === 'svg'}{$navNext->element->image->path|noescape}{else}{$navNext->element->derivatives['square']->getUrl()|noescape}{/if}"
+                  alt="{$navNext->element->titleEsc|noescape}"
                 >
               </a>
             {elseif isset($uUp)}
@@ -352,7 +353,7 @@
               </div>
             {/if}
 
-            {if isset($pdfNbPages) and $navCurrent['path_ext'] == "pdf"}
+            {if isset($pdfNbPages) and $navCurrent->element->pathExt == "pdf"}
               <div id="Pages" class="imageInfo">
                 <dt>{='Pages'|translate}</dt>
                 <dd>{$pdfNbPages}</dd>

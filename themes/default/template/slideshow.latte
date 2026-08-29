@@ -9,7 +9,7 @@
             href="{$uSlideshowStop|noescape}"
           >{='stop the slideshow'|translate}</a> ]
         {/if}
-        <h2 class="showtitle">{$navCurrent['TITLE']}</h2>
+        <h2 class="showtitle">{$navCurrent->element->title}</h2>
       </div>
     </div>
 
@@ -19,7 +19,8 @@
     </div>
 
     <div id="content">
-      <div id="theImage" n:attr="data-image-id: $navCurrent['id'] ?? null">
+      {var $imageId = $navCurrent->element->image->id->value}
+      <div id="theImage" data-image-id="{$imageId}">
         {$elementContent|noescape}
         <p
           n:if="isset($commentImg)"

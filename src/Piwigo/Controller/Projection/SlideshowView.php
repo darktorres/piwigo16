@@ -43,12 +43,7 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class SlideshowView implements View, HasPageAssets, ExposesPageData
 {
     /**
-     * @param array<string, mixed>|null $navFirst
-     * @param array<string, mixed>|null $navPrevious
-     * @param array<string, mixed>|null $navNext
-     * @param array<string, mixed>|null $navLast
      * @param array<string, DerivativeImage> $sizeOptions
-     * @param array<string, mixed>|null $navCurrent
      * @param array<string, string>|null $slideshowNav
      * @param array<string, bool> $displayInfo
      * @param array{IS_FAVORITE: bool, U_FAVORITE: string}|null $favorite
@@ -59,11 +54,11 @@ final readonly class SlideshowView implements View, HasPageAssets, ExposesPageDa
      * @param list<CommentRow>|null $comments
      */
     public function __construct(
-        public ?array $navFirst,
-        public ?array $navPrevious,
-        public ?array $navNext,
-        public ?array $navLast,
-        public ?array $navCurrent,
+        public ?PictureNavEntry $navFirst,
+        public ?PictureNavEntry $navPrevious,
+        public ?PictureNavEntry $navNext,
+        public ?PictureNavEntry $navLast,
+        public PictureNavEntry $navCurrent,
         public array $sizeOptions,
         public string $selectedSizeType,
         public ?string $uSlideshowStop,

@@ -10,6 +10,7 @@ use Override;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Projection\PictureElement;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
@@ -23,6 +24,7 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\PictureElementTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 
 /**
@@ -170,21 +172,17 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         return substr($base, 0, 2) . implode('', $segments) . substr($base, 2);
     }
 
-    /**
-     * @return array<string, array{src_image: SrcImage}>
-     */
-    private function makePicture(string $relativePath): array
+    private function makePicture(string $relativePath): PictureElement
     {
-        return [
-            'current' => [
-                'src_image' => new SrcImage(new SrcImageInfo(
-                    id: 1,
-                    path: $relativePath,
-                    width: 6,
-                    height: 6,
-                )),
-            ],
-        ];
+        return PictureElementTestFactory::build(
+            id: 1,
+            srcImage: new SrcImage(new SrcImageInfo(
+                id: 1,
+                path: $relativePath,
+                width: 6,
+                height: 6,
+            )),
+        );
     }
 
     public function testRenderAppendsExifMetadataWithDirectAndNestedFieldTokens(): void

@@ -26,27 +26,30 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class PictureContentView implements View, HasPageAssets, ExposesPageData
 {
     /**
-     * @param array<string, mixed> $current
+     * @param array<string, DerivativeImage> $sizeOptions the sizes the
+     *    "Photo sizes" switcher offers, keyed by IMG_* type
      */
     public function __construct(
         public ?string $uOriginal,
         public string $altImg,
         public string $cookiePath,
         public ?int $pdfViewerFilesizeThreshold,
-        public array $current,
+        public PictureElement $current,
+        public DerivativeImage $selectedDerivative,
+        public array $sizeOptions,
         public string $rootUrl,
         public string $iconDir,
     ) {}
 
     /**
-     * `picture_content.latte`'s own `{if !$current['selected_derivative']->
-     * isCached()}`-gated `{do combineScript(...)}` pair -- unlike
-     * `CommentListView`/`CategoryCatsView`/`ThumbnailsView`'s own
-     * identical-looking pattern, `$current['selected_derivative']` is
-     * already a real, fully-constructed `DerivativeImage` sitting on
-     * this View's own constructor data (not a per-item `$pwg->
-     * derivative(...)` service call), so this stays a real, exact
-     * conditional -- no widening needed (docs/PLAN.md's P42-B).
+     * `picture_content.latte`'s own `{if !$selectedDerivative->isCached()}`-
+     * gated `{do combineScript(...)}` pair -- unlike `CommentListView`/
+     * `CategoryCatsView`/`ThumbnailsView`'s own identical-looking pattern,
+     * `$selectedDerivative` is already a real, fully-constructed
+     * `DerivativeImage` sitting on this View's own constructor data (not a
+     * per-item `$pwg->derivative(...)` service call), so this stays a
+     * real, exact conditional -- no widening needed (docs/PLAN.md's
+     * P42-B).
      */
     #[Override]
     public function pageAssets(): array
@@ -81,8 +84,6 @@ final readonly class PictureContentView implements View, HasPageAssets, ExposesP
 
     private function isSelectedDerivativeCached(): bool
     {
-        $selectedDerivative = $this->current['selected_derivative'] ?? null;
-
-        return ! $selectedDerivative instanceof DerivativeImage || $selectedDerivative->isCached();
+        return $this->selectedDerivative->isCached();
     }
 }

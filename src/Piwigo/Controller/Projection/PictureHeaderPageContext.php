@@ -26,17 +26,13 @@ use Piwigo\Core\TemplatePageContext;
 final readonly class PictureHeaderPageContext implements TemplatePageContext
 {
     /**
-     * @param array<string, mixed>|null $navFirst
-     * @param array<string, mixed>|null $navPrevious
-     * @param array<string, mixed>|null $navNext
-     * @param array<string, mixed>|null $navLast
      * @param list<array<string, mixed>>|null $relatedTags
      */
     public function __construct(
-        public ?array $navFirst,
-        public ?array $navPrevious,
-        public ?array $navNext,
-        public ?array $navLast,
+        public ?PictureNavEntry $navFirst,
+        public ?PictureNavEntry $navPrevious,
+        public ?PictureNavEntry $navNext,
+        public ?PictureNavEntry $navLast,
         public string $uUp,
         public ?string $commentImg,
         public ?string $infoAuthor,

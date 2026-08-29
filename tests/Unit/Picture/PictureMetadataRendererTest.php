@@ -14,6 +14,7 @@ use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\PictureElementTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 
 /**
@@ -94,7 +95,7 @@ test('render appends nothing when both show_exif and show_iptc are disabled', fu
         ->showIptc = false;
     $renderer = new PictureMetadataRenderer();
 
-    $metadata = $renderer->render(LangTestFactory::get(), [], new CurrentLogger(), new EventDispatcher(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), CurrentPathsTestFactory::get(), picture_metadata_test_entity_manager());
+    $metadata = $renderer->render(LangTestFactory::get(), PictureElementTestFactory::build(), new CurrentLogger(), new EventDispatcher(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), CurrentPathsTestFactory::get(), picture_metadata_test_entity_manager());
 
     expect($metadata)
         ->toBeNull();

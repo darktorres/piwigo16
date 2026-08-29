@@ -5,13 +5,25 @@ declare(strict_types=1);
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\LoadMode;
 use Piwigo\Controller\Projection\PictureNavButtonsView;
+use Piwigo\Controller\Projection\PictureNavEntry;
+use Piwigo\Core\Kernel;
+use Piwigo\Tests\Support\PictureElementTestFactory;
+
+// Building a PictureNavEntry means building a real SrcImage, which
+// resolves CurrentConfig out of the container.
+beforeEach(function (): void {
+    PictureElementTestFactory::boot();
+});
+
+afterEach(function (): void {
+    Kernel::reset();
+});
 
 /**
- * @param array<string, mixed>|null $navNext
  * @param array<string, string>|null $slideshowNav
  */
 function makePictureNavButtonsView(
-    ?array $navNext = null,
+    ?PictureNavEntry $navNext = null,
     ?array $slideshowNav = null,
 ): PictureNavButtonsView {
     return new PictureNavButtonsView(
@@ -44,9 +56,9 @@ test('exposedPageData omits every nav key when everything is null', function ():
 });
 
 test('exposedPageData includes nav_next_url when navNext is set', function (): void {
-    $view = makePictureNavButtonsView(navNext: [
-        'U_IMG' => 'http://example.com/next',
-    ]);
+    $view = makePictureNavButtonsView(
+        navNext: PictureElementTestFactory::navEntry(imgUrl: 'http://example.com/next'),
+    );
 
     expect($view->exposedPageData())
         ->toBe([

@@ -3,18 +3,29 @@
 declare(strict_types=1);
 
 use Piwigo\Controller\Projection\PictureHeaderPageContext;
+use Piwigo\Controller\Projection\PictureNavEntry;
+use Piwigo\Core\Kernel;
+use Piwigo\Tests\Support\PictureElementTestFactory;
+
+// A PictureNavEntry carries a real SrcImage, which resolves CurrentConfig
+// out of the container.
+beforeEach(function (): void {
+    PictureElementTestFactory::boot();
+});
+
+afterEach(function (): void {
+    Kernel::reset();
+});
 
 /**
- * @param array<string, mixed>|null $navFirst
- * @param array<string, mixed>|null $navNext
  * @param list<array<string, mixed>>|null $relatedTags
  */
 function picture_header_context(
     ?string $commentImg = null,
     ?string $infoAuthor = null,
     ?array $relatedTags = null,
-    ?array $navFirst = null,
-    ?array $navNext = null,
+    ?PictureNavEntry $navFirst = null,
+    ?PictureNavEntry $navNext = null,
     ?string $uPrefetch = null,
 ): PictureHeaderPageContext {
     return new PictureHeaderPageContext(
@@ -73,23 +84,15 @@ test('an author with no caption and no tags still reaches the template', functio
 
 test('each navigation neighbour is assigned under its own bare key', function (): void {
     expect(picture_header_context(
-        navFirst: [
-            'U_IMG' => 'index.php?/picture/1',
-        ],
-        navNext: [
-            'U_IMG' => 'index.php?/picture/3',
-        ],
+        navFirst: PictureElementTestFactory::navEntry(1, 'index.php?/picture/1'),
+        navNext: PictureElementTestFactory::navEntry(3, 'index.php?/picture/3'),
         uPrefetch: 'index.php?/picture/3.jpg',
     )->toArray())
-        ->toBe([
+        ->toEqual([
             'U_UP' => 'index.php?/category/1',
             'INFO_FILE' => 'photo.jpg',
-            'first' => [
-                'U_IMG' => 'index.php?/picture/1',
-            ],
-            'next' => [
-                'U_IMG' => 'index.php?/picture/3',
-            ],
+            'first' => PictureElementTestFactory::navEntry(1, 'index.php?/picture/1'),
+            'next' => PictureElementTestFactory::navEntry(3, 'index.php?/picture/3'),
             'U_PREFETCH' => 'index.php?/picture/3.jpg',
         ]);
 });

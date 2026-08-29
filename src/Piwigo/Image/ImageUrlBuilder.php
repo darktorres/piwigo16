@@ -83,7 +83,7 @@ final readonly class ImageUrlBuilder
             if ($size === null) {
                 $size = [null, null];
             }
-            $derivatives_arr[(string) $type] = [
+            $derivatives_arr[$type] = [
                 'url' => $derivative->getUrl(),
                 'width' => (int) $size[0],
                 'height' => (int) $size[1],

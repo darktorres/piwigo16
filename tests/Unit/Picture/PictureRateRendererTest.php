@@ -14,6 +14,7 @@ use Piwigo\Rate\RateRepository;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\PictureElementTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 
@@ -72,7 +73,7 @@ test('render does nothing when rating is disabled', function (): void {
     }
     $renderer = new PictureRateRenderer($accessControl, TypedRepository::narrow(EntityManagerFactory::build(DbConnection::build())->getRepository(RateEntity::class), RateRepository::class), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
 
-    $result = $renderer->render(42, UrlServiceTestFactory::build(), [], '/picture.php');
+    $result = $renderer->render(42, UrlServiceTestFactory::build(), PictureElementTestFactory::build(), '/picture.php');
 
     expect($result->rateSummary)
         ->toBeNull()

@@ -1,51 +1,51 @@
 {templateType Piwigo\Controller\Projection\PictureContentView}
-{if isset($current['path_ext']) and $current['path_ext'] == 'pdf' and $current['filesize'] < $pdfViewerFilesizeThreshold}
+{if $current->pathExt === 'pdf' and $current->image->filesize < $pdfViewerFilesizeThreshold}
   <div>
     <embed
-      src="{$ROOT_URL}{$current['path']|noescape}"
+      src="{$ROOT_URL}{$current->image->path|noescape}"
       type="application/pdf"
     />
   </div>
 {else}
   <img
-    class="file-ext-{if isset($current['file_ext'])}{$current['file_ext']}{/if} path-ext-{if isset($current['path_ext'])}{$current['path_ext']}{/if}"
-    {if (isset($current['path_ext']) and $current['path_ext'] == 'svg')}
-    src="{$current['path']|noescape}"
-    {elseif $current['selected_derivative']->isCached()}
-    src="{$current['selected_derivative']->getUrl()|noescape}"
-    {$current['selected_derivative']->getSizeHtm()|noescape}
+    class="file-ext-{$current->fileExt} path-ext-{$current->pathExt}"
+    {if $current->pathExt === 'svg'}
+    src="{$current->image->path|noescape}"
+    {elseif $selectedDerivative->isCached()}
+    src="{$selectedDerivative->getUrl()|noescape}"
+    {$selectedDerivative->getSizeHtm()|noescape}
     {else}
     src="{$ROOT_URL}{$themeconf['img_dir']}/ajax_loader.gif"
-    data-src="{$current['selected_derivative']->getUrl()|noescape}"
+    data-src="{$selectedDerivative->getUrl()|noescape}"
     {/if}
     alt="{$altImg}"
     id="theMainImage"
-    usemap="#map{$current['selected_derivative']->getType()}"
-    title="{if isset($COMMENT_IMG)}{$COMMENT_IMG|replace:'"',' '|stripTags}{else}{$current['TITLE_ESC']|noescape} - {$altImg}{/if}"
+    usemap="#map{$selectedDerivative->getType()}"
+    title="{if isset($COMMENT_IMG)}{$COMMENT_IMG|replace:'"',' '|stripTags}{else}{$current->titleEsc|noescape} - {$altImg}{/if}"
   >
 
   <div
-    n:if="isset($current['path_ext']) and $current['path_ext'] == 'pdf' and $current['filesize'] > $pdfViewerFilesizeThreshold"
+    n:if="$current->pathExt === 'pdf' and $current->image->filesize > $pdfViewerFilesizeThreshold"
     class="pdf-too-heavy"
   >
     {='The PDF you requested is too large to display on this page.'|translate}
     <a
-      href="{$ROOT_URL}{$current['path']|noescape}"
+      href="{$ROOT_URL}{$current->image->path|noescape}"
       target="_blank"
     >{='Click here to display it'|translate}</a>
   </div>
 {/if}
 
-{foreach $current['unique_derivatives'] as $derivative_type => $derivative}{spaceless}
+{foreach $sizeOptions as $derivative_type => $derivative}{spaceless}
     <map name="map{$derivative->getType()}">
       {var $size = $derivative->getSize()}
       <area
         n:if="isset($previous)"
         shape="rect"
         coords="0,0,{($size[0] / 4)|intval},{$size[1]}"
-        href="{$previous['U_IMG']|noescape}"
-        title="{='Previous'|translate} : {$previous['TITLE_ESC']|noescape}"
-        alt="{$previous['TITLE_ESC']|noescape}"
+        href="{$previous->imgUrl|noescape}"
+        title="{='Previous'|translate} : {$previous->element->titleEsc|noescape}"
+        alt="{$previous->element->titleEsc|noescape}"
       >
       <area
         shape="rect"
@@ -58,9 +58,9 @@
         n:if="isset($next)"
         shape="rect"
         coords="{($size[0] / 1.33)|intval},0,{$size[0]},{$size[1]}"
-        href="{$next['U_IMG']|noescape}"
-        title="{='Next'|translate} : {$next['TITLE_ESC']|noescape}"
-        alt="{$next['TITLE_ESC']|noescape}"
+        href="{$next->imgUrl|noescape}"
+        title="{='Next'|translate} : {$next->element->titleEsc|noescape}"
+        alt="{$next->element->titleEsc|noescape}"
       >
     </map>
   {/spaceless}{/foreach}

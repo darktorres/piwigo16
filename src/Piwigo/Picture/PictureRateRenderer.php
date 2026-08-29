@@ -8,6 +8,7 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Projection\PictureElement;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Picture\Projection\PictureRateResult;
@@ -44,31 +45,21 @@ final readonly class PictureRateRenderer
      * TITLE/download_url/id/file/filesize/url) -- same "$page-shaped
      * accumulator" rationale as Search\SearchFilterRenderer's own $page,
      * not a single reusable domain shape.
-     *
-     * @param array<string, array<string, mixed>> $picture
      */
-    public function render(int $imageId, UrlServiceInterface $urlService, array $picture, string $url_self): PictureRateResult
+    public function render(int $imageId, UrlServiceInterface $urlService, PictureElement $picture, string $url_self): PictureRateResult
     {
         if (! $this->currentConfig->rateEnabled) {
             return new PictureRateResult(rateSummary: null, rating: null);
         }
 
-        // `Image::toArray()` declares this `?float`; the is_numeric()
-        // form matches Image::fromRow()'s own guard and keeps a numeric
-        // string -- which a plugin filtering PicturePicturesData could
-        // still put here -- on the same side of the null test it is on
-        // today.
-        $rating_score_raw = $picture['current']['rating_score'] ?? null;
-        $rating_score = is_numeric($rating_score_raw) ? (float) $rating_score_raw : null;
+        $rating_score = $picture->image->ratingScore;
 
         $rate_count = 0;
         if ($rating_score !== null) {
             // images.id is the NOT NULL primary key, always a numeric string
             // once fetched (see the matching assert in picture.php).
-            $picture_current_id = $picture['current']['id'];
-            assert(is_numeric($picture_current_id));
-
-            $rate_count = $this->repo->findRateSummaryForElement(ImageId::from((int) $picture_current_id))->count;
+            $rate_count = $this->repo->findRateSummaryForElement($picture->image->id)
+                ->count;
         }
 
         $rate_summary = new RateSummary(count: $rate_count, score: $rating_score);

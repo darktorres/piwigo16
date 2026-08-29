@@ -15,6 +15,7 @@ use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Projection\PictureElement;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -28,6 +29,7 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\DbTransactionTestOverride;
+use Piwigo\Tests\Support\PictureElementTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Url\UrlService;
@@ -107,17 +109,9 @@ final class PictureRateRendererTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    /**
-     * @return array<string, array<string, mixed>>
-     */
-    private function picture(int $imageId, float $ratingScore): array
+    private function picture(int $imageId, float $ratingScore): PictureElement
     {
-        return [
-            'current' => [
-                'id' => (string) $imageId,
-                'rating_score' => $ratingScore,
-            ],
-        ];
+        return PictureElementTestFactory::build($imageId, ratingScore: $ratingScore);
     }
 
     private function urlService(): UrlService

@@ -4,21 +4,32 @@ declare(strict_types=1);
 
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\LoadMode;
+use Piwigo\Controller\Projection\PictureNavEntry;
 use Piwigo\Controller\Projection\PictureView;
+use Piwigo\Core\Kernel;
+use Piwigo\Tests\Support\PictureElementTestFactory;
+
+// navCurrent carries a real SrcImage, which resolves CurrentConfig out of
+// the container.
+beforeEach(function (): void {
+    PictureElementTestFactory::boot();
+});
+
+afterEach(function (): void {
+    Kernel::reset();
+});
 
 /**
- * @param array{id: int}|null $navCurrent
  * @param array{F_ACTION: string, USER_RATE: ?int, marks: list<int>}|null $rating
- * @param array<string, mixed>|null $navNext
  */
 function makePictureView(
-    ?array $navCurrent = [
-        'id' => 42,
-    ],
+    ?PictureNavEntry $navCurrent = null,
     ?string $uOriginal = null,
     ?array $rating = null,
-    ?array $navNext = null,
+    ?PictureNavEntry $navNext = null,
 ): PictureView {
+    $navCurrent ??= PictureElementTestFactory::navEntry();
+
     return new PictureView(
         navFirst: null,
         navPrevious: null,
@@ -112,9 +123,9 @@ test('pageAssets registers rating when rating is set (no separate core.scripts d
 });
 
 test('exposedPageData includes image_id and merges in picture_nav_buttons data', function (): void {
-    $view = makePictureView(navNext: [
-        'U_IMG' => 'http://example.com/next',
-    ]);
+    $view = makePictureView(
+        navNext: PictureElementTestFactory::navEntry(43, 'http://example.com/next'),
+    );
 
     expect($view->exposedPageData())
         ->toBe([

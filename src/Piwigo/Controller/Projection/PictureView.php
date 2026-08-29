@@ -46,12 +46,7 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class PictureView implements View, HasPageAssets, ExposesPageData
 {
     /**
-     * @param array<string, mixed>|null $navFirst
-     * @param array<string, mixed>|null $navPrevious
-     * @param array<string, mixed>|null $navNext
-     * @param array<string, mixed>|null $navLast
      * @param array<string, DerivativeImage> $sizeOptions the sizes the "Photo sizes" switcher offers
-     * @param array<string, mixed>|null $navCurrent
      * @param array<string, string>|null $slideshowNav
      * @param array<string, bool> $displayInfo
      * @param array{IS_FAVORITE: bool, U_FAVORITE: string}|null $favorite
@@ -65,11 +60,11 @@ final readonly class PictureView implements View, HasPageAssets, ExposesPageData
      * @param list<CommentRow>|null $comments
      */
     public function __construct(
-        public ?array $navFirst,
-        public ?array $navPrevious,
-        public ?array $navNext,
-        public ?array $navLast,
-        public ?array $navCurrent,
+        public ?PictureNavEntry $navFirst,
+        public ?PictureNavEntry $navPrevious,
+        public ?PictureNavEntry $navNext,
+        public ?PictureNavEntry $navLast,
+        public PictureNavEntry $navCurrent,
         public array $sizeOptions,
         public string $selectedSizeType,
         public ?string $uSlideshowStop,
@@ -161,13 +156,14 @@ final readonly class PictureView implements View, HasPageAssets, ExposesPageData
     #[Override]
     public function exposedPageData(): array
     {
-        $navCurrentIdRaw = $this->navCurrent['id'] ?? null;
-        $navCurrentId = is_string($navCurrentIdRaw) || is_int($navCurrentIdRaw) ? $navCurrentIdRaw : '';
-
+        // The narrowing this used to carry (is_string() || is_int(), else
+        // '') was guarding a `mixed` offset off an untyped bag. There is
+        // always a current slot -- see the assert in PictureController --
+        // and its id is an ImageId, so neither half is a question now.
         return [
             'cookie_path' => $this->cookiePath,
             'root_url' => $this->rootUrl,
-            'image_id' => $navCurrentId,
+            'image_id' => $this->navCurrent->element->image->id->value,
             'csrf_token' => $this->csrfToken,
             ...$this->pictureNavButtonsView()
                 ->exposedPageData(),

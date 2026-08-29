@@ -58,7 +58,7 @@
       >{='Not repeat the slideshow'|translate}</span>
     </a>
     {*<!--{spaceless}{if isset($navFirst)}
-  <a href="{$navFirst['U_IMG']}" title="{='First'|translate} : {$navFirst['TITLE']}" class="pwg-state-default pwg-button">
+  <a href="{$navFirst->imgUrl}" title="{='First'|translate} : {$navFirst->element->title}" class="pwg-state-default pwg-button">
     <span class="pwg-icon pwg-icon-arrowstop-w">&nbsp;</span><span class="pwg-button-text">{='First'|translate}</span>
   </a>
 {else}
@@ -78,8 +78,8 @@
       </a>{/spaceless}
     {spaceless}{if isset($navPrevious)}
         <a
-          href="{$navPrevious['U_IMG']|noescape}"
-          title="{='Previous'|translate} : {$navPrevious['TITLE_ESC']|noescape}"
+          href="{$navPrevious->imgUrl|noescape}"
+          title="{='Previous'|translate} : {$navPrevious->element->titleEsc|noescape}"
           class="pwg-state-default pwg-button"
         >
           <span class="pwg-icon pwg-icon-arrow-w"></span><span
@@ -115,8 +115,8 @@
     </a>
     {spaceless}{if isset($navNext)}
         <a
-          href="{$navNext['U_IMG']|noescape}"
-          title="{='Next'|translate} : {$navNext['TITLE_ESC']|noescape}"
+          href="{$navNext->imgUrl|noescape}"
+          title="{='Next'|translate} : {$navNext->element->titleEsc|noescape}"
           class="pwg-state-default pwg-button pwg-button-icon-right"
         >
           <span class="pwg-icon pwg-icon-arrow-e"></span><span
@@ -131,7 +131,7 @@
         </span>
       {/if}{/spaceless}
     {*<!--{spaceless}{if isset($navLast)}
-  <a href="{$navLast['U_IMG']}" title="{='Last'|translate} : {$navLast['TITLE']}" class="pwg-state-default pwg-button pwg-button-icon-right">
+  <a href="{$navLast->imgUrl}" title="{='Last'|translate} : {$navLast->element->title}" class="pwg-state-default pwg-button pwg-button-icon-right">
     <span class="pwg-icon pwg-icon-arrowstop-e"></span><span class="pwg-button-text">{='Last'|translate}</span>
   </a>
 {else}

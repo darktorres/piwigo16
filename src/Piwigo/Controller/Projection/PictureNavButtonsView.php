@@ -31,17 +31,13 @@ use Piwigo\Core\ExposesPageData;
 final readonly class PictureNavButtonsView implements HasPageAssets, ExposesPageData
 {
     /**
-     * @param array<string, mixed>|null $navFirst
-     * @param array<string, mixed>|null $navPrevious
-     * @param array<string, mixed>|null $navNext
-     * @param array<string, mixed>|null $navLast
      * @param array<string, string>|null $slideshowNav
      */
     public function __construct(
-        public ?array $navFirst,
-        public ?array $navPrevious,
-        public ?array $navNext,
-        public ?array $navLast,
+        public ?PictureNavEntry $navFirst,
+        public ?PictureNavEntry $navPrevious,
+        public ?PictureNavEntry $navNext,
+        public ?PictureNavEntry $navLast,
         public string $uUp,
         public bool $displayNavButtons,
         public ?array $slideshowNav,
@@ -71,16 +67,16 @@ final readonly class PictureNavButtonsView implements HasPageAssets, ExposesPage
         $data = [];
 
         if ($this->navNext !== null) {
-            $data['nav_next_url'] = is_string($this->navNext['U_IMG'] ?? null) ? $this->navNext['U_IMG'] : '';
+            $data['nav_next_url'] = $this->navNext->imgUrl;
         }
         if ($this->navPrevious !== null) {
-            $data['nav_previous_url'] = is_string($this->navPrevious['U_IMG'] ?? null) ? $this->navPrevious['U_IMG'] : '';
+            $data['nav_previous_url'] = $this->navPrevious->imgUrl;
         }
         if ($this->navFirst !== null) {
-            $data['nav_first_url'] = is_string($this->navFirst['U_IMG'] ?? null) ? $this->navFirst['U_IMG'] : '';
+            $data['nav_first_url'] = $this->navFirst->imgUrl;
         }
         if ($this->navLast !== null) {
-            $data['nav_last_url'] = is_string($this->navLast['U_IMG'] ?? null) ? $this->navLast['U_IMG'] : '';
+            $data['nav_last_url'] = $this->navLast->imgUrl;
         }
         if ($this->slideshowNav === null) {
             $data['nav_up_url'] = $this->uUp;

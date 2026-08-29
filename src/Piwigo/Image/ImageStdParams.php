@@ -94,7 +94,10 @@ final class ImageStdParams
     private array $disabled_type_map = [];
 
     /**
-     * @var string[]
+     * Keyed by the IMG_* type the install does not define, valued with the
+     * defined type it falls back to -- both from self::ALL_TYPES.
+     *
+     * @var array<string, string>
      */
     private array $undefined_type_map = [];
 
@@ -188,7 +191,7 @@ final class ImageStdParams
     }
 
     /**
-     * @return string[]
+     * @return array<string, string>
      */
     public function getUndefinedTypeMap(): array
     {

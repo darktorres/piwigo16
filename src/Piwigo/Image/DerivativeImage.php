@@ -190,7 +190,8 @@ final class DerivativeImage
      * the XLARGE is disabled.
      *
      * @param SrcImageInfo|SrcImage $src_image info from db or SrcImage
-     * @return DerivativeImage[]
+     * @return array<string, DerivativeImage> keyed by IMG_* type, both maps
+     *    below being string-keyed from ImageStdParams::ALL_TYPES
      */
     public static function getAll(SrcImageInfo|SrcImage $src_image): array
     {

@@ -202,28 +202,28 @@
     >
 
     <link
-      n:if="isset($first['U_IMG'])"
+      n:if="isset($first)"
       rel="first"
       title="{='First'|translate}"
-      href="{$first['U_IMG']|noescape}"
+      href="{$first->imgUrl|noescape}"
     >
     <link
-      n:if="isset($previous['U_IMG'])"
+      n:if="isset($previous)"
       rel="prev"
       title="{='Previous'|translate}"
-      href="{$previous['U_IMG']|noescape}"
+      href="{$previous->imgUrl|noescape}"
     >
     <link
-      n:if="isset($next['U_IMG'])"
+      n:if="isset($next)"
       rel="next"
       title="{='Next'|translate}"
-      href="{$next['U_IMG']|noescape}"
+      href="{$next->imgUrl|noescape}"
     >
     <link
-      n:if="isset($last['U_IMG'])"
+      n:if="isset($last)"
       rel="last"
       title="{='Last'|translate}"
-      href="{$last['U_IMG']|noescape}"
+      href="{$last->imgUrl|noescape}"
     >
     <link
       n:if="isset($U_UP)"

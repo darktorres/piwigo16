@@ -6,10 +6,10 @@ namespace Piwigo\Picture;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Projection\PictureElement;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
-use Piwigo\Image\SrcImage;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Picture\Projection\MetadataPanel;
@@ -26,10 +26,9 @@ use Piwigo\Users\CurrentUser;
 final class PictureMetadataRenderer
 {
     /**
-     * @param array<string, array{src_image: SrcImage, ...}> $picture
      * @return list<MetadataPanel>|null
      */
-    public function render(Lang $lang, array $picture, CurrentLogger $currentLogger, EventDispatcher $eventDispatcher, CurrentConfig $currentConfig, CurrentUser $currentUser, Paths $paths, EntityManagerInterface $entityManager): ?array
+    public function render(Lang $lang, PictureElement $picture, CurrentLogger $currentLogger, EventDispatcher $eventDispatcher, CurrentConfig $currentConfig, CurrentUser $currentUser, Paths $paths, EntityManagerInterface $entityManager): ?array
     {
         $metadataService = new MetadataService($lang, new MetadataRepository($entityManager), $currentLogger, $eventDispatcher, $currentConfig, $currentUser, $paths);
 
@@ -43,7 +42,7 @@ final class PictureMetadataRenderer
                 $exifMapping[$field] = $field;
             }
 
-            $exif = $metadataService->getExifData($picture['current']['src_image']->getPath(), $exifMapping);
+            $exif = $metadataService->getExifData($picture->srcImage->getPath(), $exifMapping);
 
             if (count($exif) > 0) {
                 $lines = [];
@@ -75,7 +74,7 @@ final class PictureMetadataRenderer
         if ($currentConfig->showIptc) {
             $showIptcMapping = $currentConfig->showIptcMapping;
 
-            $iptc = $metadataService->getIptcData($picture['current']['src_image']->getPath(), $showIptcMapping, ', ');
+            $iptc = $metadataService->getIptcData($picture->srcImage->getPath(), $showIptcMapping, ', ');
 
             if (count($iptc) > 0) {
                 $lines = [];

@@ -148,7 +148,7 @@ Three structural changes produced that drift:
 | P55 | Real quality gates | Not started | 0 |
 | P56 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P57 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
-| P58 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | In progress — A0/A0b done (103 findings refiled as Latte codegen); a generic `CachingIterator` stub removed the erasure hiding 133 more; **P58-A 843 → 51**, with techniques 1, 5, 6 and 11 closed and 4 nearly so; P58-B 376 → 336. Eight of A's 20 identifier ignores retired from `phpstan.neon`. Seventeen live bugs found and fixed along the way, and three gaps closed in the compile step itself | 1 |
+| P58 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | In progress — A0/A0b done (103 findings refiled as Latte codegen); a generic `CachingIterator` stub removed the erasure hiding 133 more; **P58-A 843 → 28**, with techniques 1, 4, 5 and 6 closed; P58-B 376 → 316. Nine of A's 20 identifier ignores retired from `phpstan.neon`. Eighteen live bugs found and fixed along the way, and three gaps closed in the compile step itself | 1 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -4516,14 +4516,14 @@ techniques. Re-run `phpstan-latte:compile` first — a stale compile
 changes the count.
 
 Opened at **P58-A 843** across 74 templates and 63 View classes and
-**P58-B 376** across 72 (P32 recorded ~1,400 and ~450). Now **A 51, B
-336** -- B's 40 were not B work, but `empty()`/`==` guards A had to restate
+**P58-B 376** across 72 (P32 recorded ~1,400 and ~450). Now **A 28, B
+316** -- B's 60 were not B work, but `empty()`/`==` guards A had to restate
 on its way past, since `empty()` on an object is always false and a
-comparison against a newly-typed value can be written strictly. Eight
+comparison against a newly-typed value can be written strictly. Nine
 entries have come out of the block so far, each forced by
 `reportUnmatchedIgnoredErrors` rather than noticed.
 
-Techniques 1, 5, 6 and 11 are closed; 4 all but. §5 ended by deleting what
+Techniques 1, 4, 5 and 6 are closed. §5 ended by deleting what
 made it an archetype rather than by typing around it: `menubar.latte`'s
 `{include $block->template, ...}` was a dynamic-filename include, so none
 of its seven sub-templates could carry a `{templateType}` and the compile
@@ -4563,12 +4563,12 @@ not a partition, since one chain can need two:
 
 | # | technique | opened | now |
 | --- | --- | --- | --- |
-| 9 | template locals / fallback-union globals | 119 | 20 |
-| 2 | tighten a leaf `*Result`/`*Data` property | 87 | **11** |
-| 3 | compose a row VO (incl. `array_merge` sites) | 160 | **9** |
-| 4 | retire a flattening `TemplatePageContext` | 86 | **5** |
-| 11 | nullable/union used as if definite | 23 | **4** |
+| 9 | template locals / fallback-union globals | 119 | 13 |
+| 3 | compose a row VO (incl. `array_merge` sites) | 160 | **7** |
+| 2 | tighten a leaf `*Result`/`*Data` property | 87 | **4** |
+| 11 | nullable/union used as if definite | 23 | **2** |
 | 1 | delete a `->toArray()` flatten | 118 | **0** |
+| 4 | retire a flattening `TemplatePageContext` | 86 | **0** |
 | 5 | polymorphic block data (`mixed` by design) | 52 | **0** |
 | 6 | picture family: untyped event payloads | 35 | **0** |
 
@@ -4706,7 +4706,7 @@ padding cells to the wrong branch, and the only thing that caught it was a
 golden fixture built one commit earlier. Every `{if !empty($x)}` whose
 `$x` becomes an object has to be read by hand.
 
-Seventeen live bugs have surfaced this way, none of them type work:
+Eighteen live bugs have surfaced this way, none of them type work:
 
 1. Saving the Main, Comments or Display config tab turned off every
    checkbox on it. The tabs normalized to `'true'`/`'false'` strings and
@@ -4771,6 +4771,13 @@ Seventeen live bugs have surfaced this way, none of them type work:
     baked into 25 and 20 golden fixtures because both snapshot
     instruments record what is present rather than reporting what should
     be absent.
+18. The standard_pages theme never showed a page-level error on its
+    login, password-reset or registration pages: all three rendered
+    `$errors['..._page_error']` -- a single translated string -- through a
+    `{foreach}`, so the container rendered and the message inside it did
+    not. "You are not authorized to access the requested page", "Invalid
+    key" and "Invalid/expired form key" were all silently dropped, while
+    the `*_form_error` sibling in each same file rendered correctly.
 
 ## Greenfield tracks (T3, cuttable — outside the P0–P58 backbone)
 

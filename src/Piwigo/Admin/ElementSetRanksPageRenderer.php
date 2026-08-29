@@ -168,12 +168,18 @@ final readonly class ElementSetRanksPageRenderer
                     $thumbnail_name = str_replace('_', ' ', $file_wo_ext);
                 }
                 $current_rank++;
+                // Resolved once: getSize() recomputes the derivative's
+                // final size on every call.
+                $size = $derivative->getSize();
                 $thumbnails[] = new ElementSetThumbnailRow(
                     id: is_numeric($row['id']) ? (int) $row['id'] : 0,
                     name: $thumbnail_name,
                     tnSrc: $derivative->getUrl(),
                     rank: $current_rank * 10,
-                    size: $derivative->getSize(),
+                    // A photo whose dimensions are unknown has no size
+                    // at all here, which is why both are nullable.
+                    width: $size[0] ?? null,
+                    height: $size[1] ?? null,
                 );
             }
         }

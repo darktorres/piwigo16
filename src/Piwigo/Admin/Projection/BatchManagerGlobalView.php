@@ -48,8 +48,9 @@ use Piwigo\Template\Projection\QuickSearchView;
  * `BatchManagerUnitView`'s own docblock for why. `$thumbnails` is
  * always included (even empty) since
  * the template reads it with `{if !empty($thumbnails)}`, not `isset()`.
- * Each `$thumbnails` row stays a loose, dynamically `array_merge()`-built
- * shape, same precedent as `PluginsInstalledView::$plugins`. `$csrfToken`
+ * Each `$thumbnails` row is a {@see BatchManagerThumbnail}: the
+ * producer used to merge the whole `images` row into it, of which the
+ * template read three columns. `$csrfToken`
  * is a real constructor property (not read back from the ambient bag
  * like the 5 above) -- that bag only ever fed the Latte template's own
  * direct reads, never this class's own `exposedPageData()` JSON island,
@@ -67,7 +68,7 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
      * @param array<string, string> $delDerivativesTypes
      * @param array<string, string> $generateDerivativesTypes
      * @param array<array-key, string> $cacheKeys
-     * @param list<array<string, mixed>> $thumbnails
+     * @param list<BatchManagerThumbnail> $thumbnails
      * @param array<array-key, mixed> $associatedCategories
      * @param array<array-key, mixed> $allElements
      */

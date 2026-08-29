@@ -46,14 +46,14 @@
           style="--tn-width:{$thumbParams->maxWidth() + 2}px; --tn-height:{$thumbParams->maxHeight() + 25}px;"
         >
           {foreach $thumbnails as $thumbnail}
-            {var $isSelected = ($thumbnail['id']|in_array:$selection)}
+            {var $isSelected = ($thumbnail->id|in_array:$selection)}
             <li {if $isSelected} class="thumbSelected" {/if}>
               <span class="wrap1">
                 <label class="font-checkbox">
                   <span class="icon-check"></span><input
                     type="checkbox"
                     name="selection[]"
-                    value="{$thumbnail['id']}"
+                    value="{$thumbnail->id}"
                     {if $isSelected}
                     checked="checked"
                     {/if}
@@ -61,27 +61,27 @@
                   <span class="wrap2">
                     <div class="actions">
                       <a
-                        href="{$thumbnail['U_EDIT']}"
+                        href="{$thumbnail->editUrl}"
                         target="_blank"
                         class="icon-pencil"
                         title="{='Edit photo'|translate}"
                       ></a>
                       <a
-                        href="{$thumbnail['FILE_SRC']|noescape}"
+                        href="{$thumbnail->fileSrc|noescape}"
                         class="preview-box icon-zoom-square"
                         title="{='Zoom'|translate}"
                       ></a>
                     </div>
                     <em
-                      n:if="$thumbnail['level'] > 0"
+                      n:if="$thumbnail->level > 0"
                       class="levelIndicatorF"
                       title="{='Who can see these photos?'|translate} : "
-                    >{='Level %d'|sprintf:$thumbnail['level']|translate}</em>
+                    >{='Level %d'|sprintf:$thumbnail->level|translate}</em>
                     <img
-                      src="{$thumbnail['thumb']->getUrl()}"
-                      alt="{$thumbnail['file']}"
-                      title="{$thumbnail['TITLE']}"
-                      {$thumbnail['thumb']->getSizeHtm()|noescape}
+                      src="{$thumbnail->thumb->getUrl()}"
+                      alt="{$thumbnail->file}"
+                      title="{$thumbnail->title}"
+                      {$thumbnail->thumb->getSizeHtm()|noescape}
                     >
                   </span>
                 </label>

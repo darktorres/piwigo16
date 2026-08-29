@@ -14,6 +14,7 @@ use Piwigo\Admin\Event\BatchManagerGlobalRendered;
 use Piwigo\Admin\Event\BatchManagerGlobalRendering;
 use Piwigo\Admin\Event\ElementSetGlobalAction;
 use Piwigo\Admin\Projection\BatchManagerGlobalView;
+use Piwigo\Admin\Projection\BatchManagerThumbnail;
 use Piwigo\Admin\Request\BatchManagerGlobalRequest;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Caddie\CaddieEntity;
@@ -573,15 +574,15 @@ final readonly class BatchManagerGlobalPageRenderer
                 $row_height = is_scalar($row['height']) ? (string) $row['height'] : '';
                 $ttitle .= '<br>' . $row_width . '&times;' . $row_height . ' pixels, ' . sprintf('%.2f', $row_filesize / 1024.0) . 'MB';
 
-                $row_id = is_scalar($row['id']) ? (string) $row['id'] : '';
-                $thumbnails[] = array_merge(
-                    $row,
-                    [
-                        'thumb' => new DerivativeImage($thumb_params, $src_image, $this->currentConfig),
-                        'TITLE' => $ttitle,
-                        'FILE_SRC' => DerivativeImage::url(ImageStdParams::LARGE, $src_image),
-                        'U_EDIT' => $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $row_id,
-                    ]
+                $row_id = is_numeric($row['id']) ? (int) $row['id'] : 0;
+                $thumbnails[] = new BatchManagerThumbnail(
+                    id: $row_id,
+                    file: $row_file,
+                    level: is_numeric($row['level']) ? (int) $row['level'] : 0,
+                    thumb: new DerivativeImage($thumb_params, $src_image, $this->currentConfig),
+                    title: $ttitle,
+                    fileSrc: DerivativeImage::url(ImageStdParams::LARGE, $src_image),
+                    editUrl: $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $row_id,
                 );
             }
         }

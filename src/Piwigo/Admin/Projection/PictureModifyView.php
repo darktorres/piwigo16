@@ -48,7 +48,7 @@ final readonly class PictureModifyView implements View, HasPageAssets, ExposesPa
         public string $tnSrc,
         public string $fileSrc,
         public string $name,
-        public int $format,
+        public bool $isWide,
         public string $author,
         public string|int|null $dateCreation,
         public string $description,

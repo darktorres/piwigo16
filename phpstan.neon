@@ -437,9 +437,6 @@ parameters:
             identifier: logicalAnd.rightNotBoolean
             path: _analysis/phpstan-latte/*
         -
-            identifier: echo.nonString
-            path: _analysis/phpstan-latte/*
-        -
             identifier: foreach.nonIterable
             path: _analysis/phpstan-latte/*
         -

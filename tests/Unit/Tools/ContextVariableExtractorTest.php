@@ -238,3 +238,88 @@ it('types a new-expression value as that class, not its first argument', functio
         static fn (string $n): bool => str_contains($n, 'chronology_calendar'),
     ))->toBe([]);
 });
+
+/**
+ * `?T` and `T|null` denote the same type but not the same string, so a
+ * variable one context declares `?string` and another declares `string`
+ * used to join into `?string|string`. That is not valid PHPDoc at all --
+ * the `?` shorthand cannot take part in a union -- so PHPStan discarded
+ * the annotation and every read of the variable reported as `mixed`.
+ * $ADMIN_PAGE_TITLE is the case that surfaced it: four contexts assign it,
+ * three as `string` and AdminContentPageContext as `?string`.
+ */
+it('folds a nullable and a non-nullable declaration into one valid union', function (): void {
+    $map = new VariableMapBuilder(
+        templatesByClass: [
+            'App\\A' => ['/t/shared.latte'],
+            'App\\B' => ['/t/shared.latte'],
+        ],
+        contextsByClass: [
+            'App\\A' => ['App\\ACtx'],
+            'App\\B' => ['App\\BCtx'],
+        ],
+        varsByContext: [
+            'App\\ACtx' => [
+                'title' => '?string',
+            ],
+            'App\\BCtx' => [
+                'title' => 'string',
+            ],
+        ],
+        extractor: $this->extractor,
+    )->build();
+
+    expect($map->byTemplate['/t/shared.latte']['title'])->toBe('string|null');
+});
+
+it('absorbs the union into mixed rather than listing types mixed already covers', function (): void {
+    $map = new VariableMapBuilder(
+        templatesByClass: [
+            'App\\A' => ['/t/shared.latte'],
+            'App\\B' => ['/t/shared.latte'],
+        ],
+        contextsByClass: [
+            'App\\A' => ['App\\ACtx'],
+            'App\\B' => ['App\\BCtx'],
+        ],
+        varsByContext: [
+            'App\\ACtx' => [
+                'val' => '?string',
+            ],
+            'App\\BCtx' => [
+                'val' => 'mixed',
+            ],
+        ],
+        extractor: $this->extractor,
+    )->build();
+
+    expect($map->byTemplate['/t/shared.latte']['val'])->toBe('mixed');
+});
+
+/**
+ * The `|` inside a generic is not a union separator at this level; splitting
+ * on it blindly would emit `array<string, string` and `null>`.
+ */
+it('leaves a pipe nested inside a generic alone', function (): void {
+    $map = new VariableMapBuilder(
+        templatesByClass: [
+            'App\\A' => ['/t/shared.latte'],
+            'App\\B' => ['/t/shared.latte'],
+        ],
+        contextsByClass: [
+            'App\\A' => ['App\\ACtx'],
+            'App\\B' => ['App\\BCtx'],
+        ],
+        varsByContext: [
+            'App\\ACtx' => [
+                'rows' => '?array<string, string|null>',
+            ],
+            'App\\BCtx' => [
+                'rows' => 'array<string, string|null>',
+            ],
+        ],
+        extractor: $this->extractor,
+    )->build();
+
+    expect($map->byTemplate['/t/shared.latte']['rows'])->toBe('array<string, string|null>|null');
+});

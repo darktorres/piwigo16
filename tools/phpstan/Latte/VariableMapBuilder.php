@@ -132,12 +132,97 @@ final readonly class VariableMapBuilder
     {
         $joined = [];
         foreach ($sets as $name => $types) {
-            $parts = array_keys($types);
-            sort($parts);
-            $joined[$name] = implode('|', $parts);
+            $joined[$name] = self::normalizeUnion(array_keys($types));
         }
         ksort($joined);
 
         return $joined;
+    }
+
+    /**
+     * `?T` and `T|null` are the same type but not the same string, so a
+     * variable one producer declares `?string` and another declares
+     * `string` used to join into `?string|string`. That is not valid
+     * PHPDoc -- the `?` shorthand cannot take part in a union -- so
+     * PHPStan discarded the whole annotation and every read of the
+     * variable reported as `mixed`. `$ADMIN_PAGE_TITLE` is the case that
+     * surfaced it: four contexts assign it, three as `string` and
+     * `AdminContentPageContext` as `?string`.
+     *
+     * Nullability is collected and re-emitted once as a trailing `null`,
+     * and `mixed` absorbs the union rather than being listed beside the
+     * types it already covers.
+     *
+     * @param list<string> $types
+     */
+    private static function normalizeUnion(array $types): string
+    {
+        $atoms = [];
+        $nullable = false;
+
+        foreach ($types as $type) {
+            foreach (self::splitTopLevelUnion($type) as $atom) {
+                $atom = trim($atom);
+                if (str_starts_with($atom, '?')) {
+                    $nullable = true;
+                    $atom = substr($atom, 1);
+                }
+                if ($atom === 'null') {
+                    $nullable = true;
+
+                    continue;
+                }
+                if ($atom === '') {
+                    continue;
+                }
+
+                $atoms[$atom] = true;
+            }
+        }
+
+        if (isset($atoms['mixed'])) {
+            return 'mixed';
+        }
+
+        $parts = array_keys($atoms);
+        sort($parts);
+        if ($nullable) {
+            $parts[] = 'null';
+        }
+
+        return $parts === [] ? 'mixed' : implode('|', $parts);
+    }
+
+    /**
+     * Splits on `|` at nesting depth 0 only, so the `|` inside
+     * `array<string, string|null>` or `list<int|string>` is left alone.
+     *
+     * @return list<string>
+     */
+    private static function splitTopLevelUnion(string $type): array
+    {
+        $parts = [];
+        $current = '';
+        $depth = 0;
+        $length = strlen($type);
+
+        for ($i = 0; $i < $length; $i++) {
+            $char = $type[$i];
+            if (in_array($char, ['<', '[', '{', '('], true)) {
+                $depth++;
+            } elseif (in_array($char, ['>', ']', '}', ')'], true)) {
+                $depth--;
+            } elseif ($char === '|' && $depth === 0) {
+                $parts[] = $current;
+                $current = '';
+
+                continue;
+            }
+
+            $current .= $char;
+        }
+        $parts[] = $current;
+
+        return $parts;
     }
 }

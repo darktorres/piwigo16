@@ -33,6 +33,8 @@ use Piwigo\Menu\Projection\MenubarMenuRow;
 use Piwigo\Menu\Projection\MenubarMenuView;
 use Piwigo\Menu\Projection\MenubarSpecialRow;
 use Piwigo\Menu\Projection\MenubarSpecialsView;
+use Piwigo\Menu\Projection\MenubarTagRow;
+use Piwigo\Menu\Projection\MenubarTagsView;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContext;
@@ -202,24 +204,29 @@ final class MenubarRenderer
 
         $block = $menu->getBlock('mbTags');
         if ($block instanceof DisplayBlock and PageFilterHelper::scriptBasename($currentConfig) !== 'picture') {
-            $block->data = [];
             $tags = $tagService->getAvailableTags();
             usort($tags, $tagService->tagsCounterCompare(...));
             $tag_cloud_items_number = $currentConfig->menubarTagCloudItemsNumber;
-            $tags = array_slice($tags, 0, $tag_cloud_items_number);
+            // Level after the slice, so each tag is sized against the set
+            // actually shown -- the same order TagsController uses. This
+            // call was missing entirely: getAvailableTags() returns no
+            // `level`, so every tag rendered `class="tagLevel "` and the
+            // cloud had no size variation at all.
+            $tags = $tagService->addLevelToTags(array_slice($tags, 0, $tag_cloud_items_number));
+
+            $tagRows = [];
             foreach ($tags as $tag) {
-                $block->data[] = array_merge(
-                    $tag,
-                    [
-                        'URL' => $urlService->makeIndexUrl([
-                            'tags' => [$tag],
-                        ]),
-                    ]
+                $tagRows[] = new MenubarTagRow(
+                    url: $urlService->makeIndexUrl([
+                        'tags' => [$tag],
+                    ]),
+                    name: is_string($tag['name']) ? $tag['name'] : '',
+                    level: is_int($tag['level']) ? $tag['level'] : 1,
                 );
             }
 
-            if (! self::emptyValue($block->data)) {
-                $block->template = 'menubar_tags.latte';
+            if ($tagRows !== []) {
+                $block->raw_content = (string) $renderer->render(new MenubarTagsView($tagRows));
             }
         }
 

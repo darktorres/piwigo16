@@ -21,7 +21,7 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class LanguagesNewView implements View, HasPageAssets
 {
     /**
-     * @param list<array<string, mixed>> $languages
+     * @param list<CatalogLanguageRow> $languages
      */
     public function __construct(
         public int $isWebmaster,

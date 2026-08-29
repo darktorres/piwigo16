@@ -12,6 +12,7 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Admin\Projection\CatalogLanguageRow;
 use Piwigo\Admin\Projection\LanguagesNewView;
 use Piwigo\Admin\Request\LanguagesNewInstallRequest;
 use Piwigo\Auth\AccessControl;
@@ -180,17 +181,17 @@ final readonly class LanguagesNewPageRenderer
                   . '&amp;pwg_token=' . $this->csrfService->getToken()
                 ;
 
-                $tpl_languages[] = [
-                    'EXT_NAME' => $language['extension_name'],
-                    'EXT_DESC' => $language['extension_description'],
-                    'EXT_URL' => $pem_base_url . '/extension_view.php?eid=' . $extension_id,
-                    'VERSION' => $language['revision_name'],
-                    'VER_DESC' => $language['revision_description'],
-                    'DATE' => $date,
-                    'AUTHOR' => $language['author_name'],
-                    'URL_INSTALL' => $url_auto_install,
-                    'URL_DOWNLOAD' => $download_url . '&amp;origin=piwigo_download',
-                ];
+                $tpl_languages[] = new CatalogLanguageRow(
+                    name: self::text($language['extension_name'] ?? null),
+                    description: self::text($language['extension_description'] ?? null),
+                    url: $pem_base_url . '/extension_view.php?eid=' . $extension_id,
+                    version: self::text($language['revision_name'] ?? null),
+                    versionDescription: self::text($language['revision_description'] ?? null),
+                    date: $date,
+                    author: self::text($language['author_name'] ?? null),
+                    installUrl: $url_auto_install,
+                    downloadUrl: $download_url . '&amp;origin=piwigo_download',
+                );
             }
         } else {
             $this->pageState->addError($this->lang->t('Can\'t connect to server.'));
@@ -204,5 +205,14 @@ final readonly class LanguagesNewPageRenderer
             content: $adminContent,
             pageTitle: $this->lang->t('Languages'),
         );
+    }
+
+    /**
+     * A manifest value is whatever the mirrored JSON happened to hold, so
+     * a field this page renders as text is a string only by convention.
+     */
+    private static function text(mixed $value): string
+    {
+        return is_scalar($value) ? (string) $value : '';
     }
 }

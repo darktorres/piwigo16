@@ -27,6 +27,7 @@ use Piwigo\Controller\Projection\ImageOrderOption;
 use Piwigo\Controller\Projection\IndexView;
 use Piwigo\Controller\Projection\SearchFiltersHtmlPageContext;
 use Piwigo\Controller\Projection\SearchFiltersView;
+use Piwigo\Controller\Projection\SelectedTagRow;
 use Piwigo\Controller\Projection\SelectedTagsView;
 use Piwigo\Controller\Projection\ThumbnailsHtmlPageContext;
 use Piwigo\Controller\Projection\ThumbnailsView;
@@ -328,6 +329,13 @@ final readonly class GalleryController implements ControllerInterface
 
         $bodyData = $this->pageState->bodyData;
         $related_tags = [];
+        // Declared out here, not inside the block below, because the render
+        // that reads it sits in a *second* block under the identical
+        // condition -- so it was always assigned by the time the view was
+        // built, and the `?? null` that used to bridge the two was
+        // unreachable. It also could not have worked: selected_tags.inc.latte
+        // calls count() on this without a null guard.
+        $select_related_tags = [];
         if (isset($bodyData['tag_ids']) and is_array($bodyData['tag_ids'])) {
             // get tags for related tags "button", with the
             // possibility to combine them
@@ -382,8 +390,6 @@ final readonly class GalleryController implements ControllerInterface
                     <=> (is_numeric($a['counter'] ?? null) ? (int) $a['counter'] : 0)
             );
 
-            $selected_related_tags_info = [];
-
             $selectedTags = $section_context->tags;
 
             foreach ($selectedTags as $selectedTagKey => $selectedTag) {
@@ -391,24 +397,20 @@ final readonly class GalleryController implements ControllerInterface
                 unset($otherSelectedTags[$selectedTagKey]);
 
                 $selectedTagNameEvent = $this->eventDispatcher->dispatch(new RenderTagName(is_string($selectedTag['name']) ? $selectedTag['name'] : '', $selectedTag));
-                $selected_related_tags_info[$selectedTagKey] =
-                [
-                    'tag_name' => $selectedTagNameEvent->tagName,
-                    'item_count' => '',
-                    'index_url' => $urlService->makeIndexUrl(
+                $select_related_tags[] = new SelectedTagRow(
+                    tagName: $selectedTagNameEvent->tagName,
+                    indexUrl: $urlService->makeIndexUrl(
                         [
                             'tags' => [$selectedTag],
                         ]
                     ),
-                    'remove_url' => $urlService->makeIndexUrl(
+                    removeUrl: $urlService->makeIndexUrl(
                         [
                             'tags' => $otherSelectedTags,
                         ]
                     ),
-                ];
+                );
             }
-
-            $select_related_tags = $selected_related_tags_info;
         }
 
         $search_in_set_button_tags = null;
@@ -418,7 +420,7 @@ final readonly class GalleryController implements ControllerInterface
         $selected_tags_template = new Html('');
 
         if (isset($bodyData['tag_ids']) and is_array($bodyData['tag_ids'])) {
-            $selected_tags_template = $this->renderer->render(new SelectedTagsView($select_related_tags ?? null));
+            $selected_tags_template = $this->renderer->render(new SelectedTagsView($select_related_tags));
 
             $body_data_tag_ids = array_values(array_filter($bodyData['tag_ids'], is_scalar(...)));
 

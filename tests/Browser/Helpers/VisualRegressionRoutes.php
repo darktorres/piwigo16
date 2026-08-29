@@ -18,6 +18,18 @@ return [
     'password' => ['/password.php', false],
     'about' => ['/about.php', false],
     'tags' => ['/tags.php', false],
+    // include/selected_tags.inc.latte -- the gallery's "selected tags" strip
+    // -- rendered in no fixture and no VR baseline before these two, so its
+    // six findings sat on markup nothing ever compared. It only renders on a
+    // tags section (GalleryController guards both the build and the render on
+    // `isset($bodyData['tag_ids'])`), and its two arms are decided purely by
+    // how many tags the URL selects: one tag takes the `unique-tag` class and
+    // suppresses the remove link, two or more drop that class and emit a
+    // remove link per chip. Both routes are static and the fixture's tag ids
+    // are fixed by tests/Fixtures/piwigo-17.0.sql, so neither depends on
+    // ordering (P58, tools/p58).
+    'tags-selected-single' => ['/index.php?/tags/1-nature', false],
+    'tags-selected-pair' => ['/index.php?/tags/1-nature/2-travel', false],
     'notification' => ['/notification.php', false],
     'nbm' => ['/nbm.php', false],
     'search' => ['/search.php', false],

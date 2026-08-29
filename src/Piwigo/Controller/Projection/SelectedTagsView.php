@@ -20,10 +20,11 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class SelectedTagsView implements View, HasPageAssets
 {
     /**
-     * @param array<array-key, mixed>|null $selectRelatedTags
+     * @param list<SelectedTagRow> $selectRelatedTags empty whenever the
+     *   section carries no selected tag; the template renders nothing then.
      */
     public function __construct(
-        public ?array $selectRelatedTags,
+        public array $selectRelatedTags,
     ) {}
 
     /**

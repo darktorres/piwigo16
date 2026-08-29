@@ -78,7 +78,7 @@ it('plugins add-new tab lists the mirror\'s 17.0-compatible mock plugin', functi
     // piwigo16-plugins' "revert: remove all 27 ported *_17.0.0 plugins,
     // re-port fresh" left the mirror with no 17.0-compatible entry at all,
     // so this used to assert the genuinely-empty state. That state is no
-    // longer real: MockTestPlugin_1.0.0 declares `"piwigo_compat": ["17.0"]`
+    // longer real: MockTestPlugin_17.0.0 declares `"piwigo_compat": ["17.0"]`
     // and exists precisely so this tab has a row to render -- it is not a
     // port of anything and does nothing at runtime. Asserting the row, the
     // same way the languages test above asserts on af_ZA, is what makes
@@ -94,7 +94,7 @@ it('plugins add-new tab lists the mirror\'s 17.0-compatible mock plugin', functi
 });
 
 it('themes add-new tab lists the mirror\'s 17.0-compatible mock theme', function (): void {
-    // Same as the plugins test above: MockTestTheme_1.0.0 is the mirror's
+    // Same as the plugins test above: MockTestTheme_17.0.0 is the mirror's
     // one 17.0-compatible theme entry, added so this tab renders a row.
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=themes&tab=new');

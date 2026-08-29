@@ -10,6 +10,7 @@ use Piwigo\Asset\HasPageAssets;
 use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\Projection\Navbar;
 use Piwigo\Core\View;
+use Piwigo\Image\DerivativeImage;
 use Piwigo\Picture\Projection\CommentAddForm;
 use Piwigo\Picture\Projection\CommentRow;
 use Piwigo\Picture\Projection\RateSummary;
@@ -46,6 +47,7 @@ final readonly class SlideshowView implements View, HasPageAssets, ExposesPageDa
      * @param array<string, mixed>|null $navPrevious
      * @param array<string, mixed>|null $navNext
      * @param array<string, mixed>|null $navLast
+     * @param array<string, DerivativeImage> $sizeOptions
      * @param array<string, mixed>|null $navCurrent
      * @param array<string, string>|null $slideshowNav
      * @param array<string, bool> $displayInfo
@@ -62,6 +64,8 @@ final readonly class SlideshowView implements View, HasPageAssets, ExposesPageDa
         public ?array $navNext,
         public ?array $navLast,
         public ?array $navCurrent,
+        public array $sizeOptions,
+        public string $selectedSizeType,
         public ?string $uSlideshowStop,
         public ?array $slideshowNav,
         public ?string $uSlideshowStart,

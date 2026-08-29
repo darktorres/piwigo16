@@ -2480,10 +2480,20 @@ final class BrowserTestHelpers
     /**
      * Generates a small solid-color JPEG (via GD) for upload tests. Caller
      * is responsible for unlink()-ing the returned path.
+     *
+     * The default 200x150 is below every configured derivative width, so
+     * ImageStdParams resolves all of them to the original and they dedupe
+     * to a single entry -- fine for the upload tests this exists for, but
+     * it means a photo made this way can never exercise anything that
+     * depends on having more than one distinct size. Pass a larger
+     * $width/$height for that.
+     *
+     * @param positive-int $width
+     * @param positive-int $height
      */
-    public static function makeTestImage(string $label = 'Test Photo'): string
+    public static function makeTestImage(string $label = 'Test Photo', int $width = 200, int $height = 150): string
     {
-        $img = imagecreatetruecolor(200, 150);
+        $img = imagecreatetruecolor($width, $height);
         if ($img === false) {
             throw new ExpectationFailedException('imagecreatetruecolor failed');
         }

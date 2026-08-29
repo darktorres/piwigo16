@@ -25,6 +25,8 @@ function makePictureView(
         navNext: $navNext,
         navLast: null,
         navCurrent: $navCurrent,
+        sizeOptions: [],
+        selectedSizeType: 'medium',
         uSlideshowStop: null,
         slideshowNav: null,
         uSlideshowStart: null,

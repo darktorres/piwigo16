@@ -29,6 +29,7 @@ use Piwigo\Controller\Event\PicturePageRendering;
 use Piwigo\Controller\Event\PicturePicturesData;
 use Piwigo\Controller\Event\RenderElementContent;
 use Piwigo\Controller\Projection\CanonicalUrlPageContext;
+use Piwigo\Controller\Projection\DerivativeChoice;
 use Piwigo\Controller\Projection\PictureContentView;
 use Piwigo\Controller\Projection\PictureHeaderPageContext;
 use Piwigo\Controller\Projection\PictureView;
@@ -1208,6 +1209,12 @@ final readonly class PictureController implements ControllerInterface
         $contentEvent = $this->eventDispatcher->dispatch(new RenderElementContent('', $picture['current']));
         $element_content = $contentEvent->content;
 
+        // After the dispatch above, not before: defaultPictureContent()'s
+        // own cookie-to-session write is what settles which type is
+        // selected, and picture.latte's sizes switcher has to agree with
+        // the <img> picture_content.latte just rendered.
+        $derivativeChoice = $this->selectDerivatives($picture['current']['derivatives']);
+
         $u_prefetch = null;
 
         $http_user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
@@ -1296,6 +1303,8 @@ final readonly class PictureController implements ControllerInterface
             'navNext' => $nav['next'] ?? null,
             'navLast' => $nav['last'] ?? null,
             'navCurrent' => $nav['current'] ?? null,
+            'sizeOptions' => $derivativeChoice->unique,
+            'selectedSizeType' => $derivativeChoice->selected->getType(),
             'uSlideshowStop' => $u_slideshow_stop,
             'slideshowNav' => $slideshow_nav ?? null,
             'uSlideshowStart' => $u_slideshow_start,
@@ -1399,30 +1408,9 @@ final readonly class PictureController implements ControllerInterface
                     ->cookiePath(),
             ]);
         }
-        $deriv_type = $this->sessionService->getPictureDeriv() ?? $this->currentConfig->derivativeDefaultSize;
-        $selected_derivative = $element_info['derivatives'][$deriv_type];
-
-        $unique_derivatives = [];
-        $added = [];
-        foreach ($element_info['derivatives'] as $type => $derivative) {
-            if ($type === ImageStdParams::SQUARE || $type === ImageStdParams::THUMB) {
-                continue;
-            }
-            if (! array_key_exists($type, $this->imageStdParams->getDefinedTypeMap())) {
-                continue;
-            }
-            $url = $derivative->getUrl();
-            if (isset($added[$url])) {
-                continue;
-            }
-            $added[$url] = 1;
-
-            // in case we do not display the sizes icon, we only add the
-            // selected size to unique_derivatives
-            if ($this->currentConfig->pictureSizesIcon or $type === $deriv_type) {
-                $unique_derivatives[$type] = $derivative;
-            }
-        }
+        $derivativeChoice = $this->selectDerivatives($element_info['derivatives']);
+        $selected_derivative = $derivativeChoice->selected;
+        $unique_derivatives = $derivativeChoice->unique;
 
         // $element_info['element_url'], when present, is always a string --
         // see __invoke()'s own identical narrowing above for why static
@@ -1461,5 +1449,50 @@ final readonly class PictureController implements ControllerInterface
         $event->content = (string) $this->renderer->render($pictureContentView);
 
         return $event;
+    }
+
+    /**
+     * The selected derivative and the sizes the switcher offers, from a
+     * photo's full derivative map.
+     *
+     * Pure: the cookie-to-session write that decides which type is
+     * selected stays in defaultPictureContent(), where it happens exactly
+     * once per request, and this reads the settled session value. Called
+     * from both there and __invoke(), which is what lets picture.latte and
+     * picture_content.latte agree on one answer again -- see
+     * {@see DerivativeChoice}.
+     *
+     * @param array<string, DerivativeImage> $derivatives
+     */
+    private function selectDerivatives(array $derivatives): DerivativeChoice
+    {
+        $deriv_type = $this->sessionService->getPictureDeriv() ?? $this->currentConfig->derivativeDefaultSize;
+
+        $unique_derivatives = [];
+        $added = [];
+        foreach ($derivatives as $type => $derivative) {
+            if ($type === ImageStdParams::SQUARE || $type === ImageStdParams::THUMB) {
+                continue;
+            }
+            if (! array_key_exists($type, $this->imageStdParams->getDefinedTypeMap())) {
+                continue;
+            }
+            $url = $derivative->getUrl();
+            if (isset($added[$url])) {
+                continue;
+            }
+            $added[$url] = 1;
+
+            // in case we do not display the sizes icon, we only add the
+            // selected size to unique_derivatives
+            if ($this->currentConfig->pictureSizesIcon or $type === $deriv_type) {
+                $unique_derivatives[$type] = $derivative;
+            }
+        }
+
+        return new DerivativeChoice(
+            selected: $derivatives[$deriv_type],
+            unique: $unique_derivatives,
+        );
     }
 }

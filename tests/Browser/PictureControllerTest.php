@@ -2450,3 +2450,57 @@ it('renders the add-comment form with the fields a classic user needs and withou
     $page->assertNoJavaScriptErrors();
     H::assertNoServerErrors($page, 'picture.php add-comment form');
 });
+
+it('offers the photo-sizes switcher when a photo has more than one distinct derivative', function (): void {
+    // Dead markup until this was fixed: `selected_derivative`/
+    // `unique_derivatives` used to reach picture.tpl by being appended
+    // into the shared ambient `current` template variable, and when P40
+    // split that into PictureView::$navCurrent and
+    // PictureContentView::$current only the second half kept receiving
+    // them. `$navCurrent['unique_derivatives']` was never set by anything
+    // after that, so the isset() guard on this block was permanently
+    // false and the switcher never rendered on any picture page.
+    //
+    // No fixture can catch it either way: every fixture photo is 200x150,
+    // below every configured derivative width, so ImageStdParams resolves
+    // them all to the original and the URL dedupe leaves exactly one
+    // entry. Hence the deliberately large upload here.
+    $page = H::asAdmin($this);
+    $album = H::createCategory($page, [
+        'name' => 'Photo Sizes Album ' . uniqid(),
+    ]);
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $album['id'];
+    $image = H::makeTestImage('sizes', 1600, 1200);
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Photo Sizes Photo');
+    @unlink($image);
+
+    $page = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId);
+    $body = H::rawWebpage($page)->content();
+
+    expect($body)
+        ->toContain('id="derivativeSwitchLink"')
+        ->and($body)
+        ->toContain('id="derivativeSwitchBox"')
+        // More than one size on offer is the whole precondition, and each
+        // carries the type its link switches to.
+        ->and($body)
+        ->toContain('data-derivative-type-save="2small"')
+        ->and($body)
+        ->toContain('data-derivative-type-save="xsmall"');
+
+    // Exactly one size is marked current: every other entry carries
+    // u-invisible on its checkmark. This is the half that reads
+    // $selectedSizeType, and it is why that value is the *resolved*
+    // getType() rather than the key `unique` is stored under.
+    $marks = preg_match_all('/<span class="switchCheck( u-invisible)?"/', $body, $matches);
+    expect($marks)
+        ->toBeGreaterThan(1);
+    expect(count(array_filter($matches[1], static fn (string $m): bool => $m === '')))
+        ->toBe(1);
+
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'picture.php photo-sizes switcher');
+});

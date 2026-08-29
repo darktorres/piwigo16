@@ -20,7 +20,7 @@
       {include 'picture_nav_buttons.latte'}
 
       <div class="actionButtons">
-        {if isset($navCurrent['unique_derivatives']) && count($navCurrent['unique_derivatives']) > 1}
+        {if count($sizeOptions) > 1}
           {spaceless}<a
               id="derivativeSwitchLink"
               title="{='Photo sizes'|translate}"
@@ -33,9 +33,9 @@
             </a>
             <div id="derivativeSwitchBox" class="switchBox">
               <div class="switchBoxTitle">{='Photo sizes'|translate}</div>
-              {foreach $navCurrent['unique_derivatives'] as $derivative_type => $derivative}
+              {foreach $sizeOptions as $derivative_type => $derivative}
                 <span
-                  class="switchCheck{if $derivative->getType() != $navCurrent['selected_derivative']->getType()} u-invisible{/if}"
+                  class="switchCheck{if $derivative->getType() !== $selectedSizeType} u-invisible{/if}"
                   id="derivativeChecked{$derivative->getType()}"
                 >&#x2714; </span>
                 <a

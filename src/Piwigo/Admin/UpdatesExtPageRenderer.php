@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Latte\Runtime\Html;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
+use Piwigo\Admin\Projection\ExtensionUpdateRow;
 use Piwigo\Admin\Projection\UpdatesExtView;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\RequestBootstrap;
@@ -122,18 +123,23 @@ final class UpdatesExtPageRenderer
                 $revision_description_raw = $ext_info['revision_description'] ?? null;
                 $revision_description = is_string($revision_description_raw) ? $revision_description_raw : '';
 
-                $type_updates[] = [
-                    'ID' => $extension_id,
-                    'REVISION_ID' => $ext_info['revision_id'],
-                    'EXT_ID' => $ext_id,
-                    'EXT_NAME' => $fs_ext->name,
-                    'EXT_URL' => $pem_base_url . '/extension_view.php?eid=' . $extension_id . '#changelog',
-                    'REV_DESC' => trim($revision_description, " \n\r"),
-                    'CURRENT_VERSION' => $fs_version,
-                    'NEW_VERSION' => $revision_name,
-                    'URL_DOWNLOAD' => $download_url . '&amp;origin=piwigo_download',
-                    'IGNORED' => in_array($ext_id, $ignored_ids, true),
-                ];
+                // Narrowed the same way LanguagesNewPageRenderer,
+                // ThemesNewPageRenderer and PluginsNewPageRenderer narrow
+                // this field; the update API only accepts a string.
+                $revision_id_raw = $ext_info['revision_id'] ?? null;
+
+                $type_updates[] = new ExtensionUpdateRow(
+                    id: (string) $extension_id,
+                    revisionId: is_scalar($revision_id_raw) ? (string) $revision_id_raw : '',
+                    extId: $ext_id,
+                    name: $fs_ext->name,
+                    url: $pem_base_url . '/extension_view.php?eid=' . $extension_id . '#changelog',
+                    revisionDescription: trim($revision_description, " \n\r"),
+                    currentVersion: $fs_version,
+                    newVersion: $revision_name,
+                    downloadUrl: $download_url . '&amp;origin=piwigo_download',
+                    ignored: in_array($ext_id, $ignored_ids, true),
+                );
             }
 
             $updates_extension[$type] = $type_updates;

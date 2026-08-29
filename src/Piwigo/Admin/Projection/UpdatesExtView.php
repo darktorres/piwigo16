@@ -25,7 +25,8 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class UpdatesExtView implements View, HasPageAssets, ExposesPageData
 {
     /**
-     * @param array<string, list<array<string, mixed>>> $updatesExtension
+     * @param array<string, list<ExtensionUpdateRow>> $updatesExtension keyed by
+     *   plural extension type ('plugins'/'themes'/'languages')
      */
     public function __construct(
         public array $updatesExtension,

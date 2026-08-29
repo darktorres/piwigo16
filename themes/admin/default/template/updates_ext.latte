@@ -48,31 +48,31 @@
 
       <div
         n:foreach="$updates as $extension"
-        class="pluginBox pluginMiniBox{if $extension['IGNORED']} u-hidden{/if}"
-        id="{$type}_{$extension['EXT_ID']}"
-        {if $extension['IGNORED']}
+        class="pluginBox pluginMiniBox{if $extension->ignored} u-hidden{/if}"
+        id="{$type}_{$extension->extId}"
+        {if $extension->ignored}
         data-ignored="true"
         {/if}
       >
         <div class="pluginContent">
           <div class="pluginName">
-            {$extension['EXT_NAME']}
+            {$extension->name}
           </div>
-          <div class="pluginDesc" id="desc_{$extension['ID']}">
+          <div class="pluginDesc" id="desc_{$extension->id}">
             <span
               class="plugin-version plugin-version-old icon-flow-branch"
               title="{='Current Version'|translate}"
-            >{$extension['CURRENT_VERSION']}</span> <i
+            >{$extension->currentVersion}</span> <i
               class="icon-right"
             ></i> <span
               class="plugin-version icon-flow-branch"
               title="{='New Version'|translate}"
-            >{$extension['NEW_VERSION']}</span>
+            >{$extension->newVersion}</span>
             <div
               class="plugin-revision-info"
-            ><span>{$extension['REV_DESC']}</span></div>
+            ><span>{$extension->revisionDescription}</span></div>
             <a
-              href='{$extension['EXT_URL']|noescape}'
+              href='{$extension->url|noescape}'
               target="_blank"
               class="plugin-update-link icon-info-circled-1"
             >{='More information'|translate}</a>
@@ -80,16 +80,16 @@
           <div class="pluginActions">
             <a
               href="#"
-              onClick="updateExtension({$type}, {$extension['EXT_ID']}, {$extension['REVISION_ID']});"
+              onClick="updateExtension({$type}, {$extension->extId}, {$extension->revisionId});"
               class="updateExtension pluginActionLevel1"
             > <i class="icon-ok-circled"></i> {='Install'|translate}</a>
             <a
-              href="{$extension['URL_DOWNLOAD']|noescape}"
+              href="{$extension->downloadUrl|noescape}"
               class="pluginActionLevel2"
             > <i class="icon-download"></i> {='Download'|translate}</a>
             <a
               href="#"
-              onClick="ignoreExtension({$type}, {$extension['EXT_ID']}); return false;"
+              onClick="ignoreExtension({$type}, {$extension->extId}); return false;"
               class="ignoreExtension pluginActionLevel2"
             ><i class="icon-block"></i>{='Ignore this update'|translate}</a>
           </div>

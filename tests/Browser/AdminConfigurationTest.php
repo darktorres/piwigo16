@@ -975,6 +975,117 @@ it('rejects an out-of-range watermark xpos, without saving', function (): void {
     }
 });
 
+/**
+ * minw/minh/xrepeat/yrepeat went through no validation at all: every value
+ * reached WatermarkParams through a bare intval(), so 'abc' became 0 and a
+ * negative was stored as-is. configuration_watermark.latte has always
+ * carried error markup for all four, and because nothing wrote those error
+ * keys the branches could not render -- which is how P58 found the gap.
+ *
+ * What each bad value would have done, from the code that consumes it:
+ *
+ *  - a negative repeat makes ImageDerivativeController's
+ *    `for ($i = -$r; $i <= $r; $i++)` skip its body while the enclosing
+ *    `if ((bool) $wm->xrepeat || ...)` is still true, so the page promises
+ *    repeats and draws none;
+ *  - an oversized repeat costs (2x+1)(2y+1) iterations on every derivative
+ *    generated, whatever the canvas can actually hold;
+ *  - a negative min size makes DerivativeParams::willWatermark()'s
+ *    `$min_size[0] <= $out_size->width` true for everything, watermarking
+ *    images the setting was meant to exclude.
+ */
+it('rejects each watermark field that had no validation, without saving', function (): void {
+    $cases = [
+        'a non-numeric minimum width' => ['minw', 'abc'],
+        'a negative minimum width' => ['minw', '-1'],
+        'a negative minimum height' => ['minh', '-10'],
+        'a negative x repeat' => ['xrepeat', '-1'],
+        'a negative y repeat' => ['yrepeat', '-1'],
+        'an x repeat past what any canvas can place' => ['xrepeat', '999'],
+        'a non-numeric y repeat' => ['yrepeat', 'abc'],
+    ];
+
+    $snapshot = H::snapshotDerivativeConfig();
+
+    try {
+        $page = H::asAdmin($this);
+
+        foreach ($cases as $label => [$field, $value]) {
+            $token = H::pwgToken($page);
+
+            $result = H::adminPost($page, ctConfigSection('watermark'), [
+                'pwg_token' => $token,
+                'submit' => '1',
+                'w' => array_merge([
+                    'file' => '',
+                    'position' => 'custom',
+                    'xpos' => '25',
+                    'ypos' => '25',
+                    'xrepeat' => '0',
+                    'yrepeat' => '0',
+                    'opacity' => '50',
+                    'minw' => '10',
+                    'minh' => '10',
+                ], [
+                    $field => $value,
+                ]),
+            ]);
+
+            expect($result['status'])->toBe(200);
+            expect($result['body'])
+                ->not->toContain('Your configuration settings are saved');
+            // The tab comes back with that field marked, which is the
+            // markup this gap had left unreachable.
+            expect($result['body'])
+                ->toContain('dErrorDesc');
+        }
+    } finally {
+        H::restoreDerivativeConfig($snapshot);
+    }
+});
+
+/**
+ * The counterpart: the bounds accept what the renderer can actually use, so
+ * a legitimate repeat and minimum size still save.
+ */
+it('saves a watermark whose repeat and minimum size sit inside the accepted range', function (): void {
+    $snapshot = H::snapshotDerivativeConfig();
+
+    try {
+        $page = H::asAdmin($this);
+        $token = H::pwgToken($page);
+
+        $result = H::adminPost($page, ctConfigSection('watermark'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'w' => [
+                'file' => '',
+                'position' => 'custom',
+                'xpos' => '25',
+                'ypos' => '25',
+                'xrepeat' => '3',
+                'yrepeat' => '2',
+                'opacity' => '50',
+                'minw' => '0',
+                'minh' => '640',
+            ],
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->toContain('Your configuration settings are saved');
+
+        $saved = ctDecodedDerivatives()['w'];
+        expect($saved->xrepeat)
+            ->toBe(3);
+        expect($saved->yrepeat)
+            ->toBe(2);
+        expect($saved->min_size)
+            ->toBe([0, 640]);
+    } finally {
+        H::restoreDerivativeConfig($snapshot);
+    }
+});
+
 it('saves the watermark tab with each named position, deriving the matching xpos/ypos', function (): void {
     $snapshot = H::snapshotDerivativeConfig();
 

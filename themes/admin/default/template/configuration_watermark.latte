@@ -66,7 +66,15 @@
               type="text"
               name="w[minw]"
               value="{$watermark['minw']}"
+              {if $ferrors?->minw !== null}
+              class="dError"
+              {/if}
             >
+            <span
+              n:if="$ferrors?->minw !== null"
+              class="dErrorDesc"
+              title="{$ferrors->minw}"
+            >!</span>
           </label>
           {='pixels'|translate}
         </li>
@@ -80,7 +88,15 @@
               type="text"
               name="w[minh]"
               value="{$watermark['minh']}"
+              {if $ferrors?->minh !== null}
+              class="dError"
+              {/if}
             >
+            <span
+              n:if="$ferrors?->minh !== null"
+              class="dErrorDesc"
+              title="{$ferrors->minh}"
+            >!</span>
           </label>
           {='pixels'|translate}
         </li>
@@ -202,7 +218,15 @@
                 type="text"
                 name="w[xrepeat]"
                 value="{$watermark['xrepeat']}"
+                {if $ferrors?->xrepeat !== null}
+                class="dError"
+                {/if}
               >
+              <span
+                n:if="$ferrors?->xrepeat !== null"
+                class="dErrorDesc"
+                title="{$ferrors->xrepeat}"
+              >!</span>
             </label>
 
             <br>
@@ -213,7 +237,15 @@
                 type="text"
                 name="w[yrepeat]"
                 value="{$watermark['yrepeat']}"
+                {if $ferrors?->yrepeat !== null}
+                class="dError"
+                {/if}
               >
+              <span
+                n:if="$ferrors?->yrepeat !== null"
+                class="dErrorDesc"
+                title="{$ferrors->yrepeat}"
+              >!</span>
             </label>
           </div>
         </li>

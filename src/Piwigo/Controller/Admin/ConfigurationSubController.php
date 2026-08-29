@@ -112,6 +112,25 @@ use Psr\Http\Message\ServerRequestInterface;
 final class ConfigurationSubController implements AdminSubControllerInterface
 {
     /**
+     * The range each watermark form field accepts, in the notation
+     * configuration_watermark.latte puts in the error marker's `title`.
+     * Every one of the seven is numeric; the four without an upper bound
+     * in their label are bounded by what the renderer can use, not by a
+     * round number -- see processWatermark()'s own comments.
+     *
+     * @var array<string, string>
+     */
+    private const array WATERMARK_FIELD_RANGES = [
+        'xpos' => '[0..100]',
+        'ypos' => '[0..100]',
+        'opacity' => '(0..100]',
+        'minw' => '>= 0',
+        'minh' => '>= 0',
+        'xrepeat' => '[0..100]',
+        'yrepeat' => '[0..100]',
+    ];
+
+    /**
      * Matches empty()'s exact truthiness semantics -- required since
      * empty() itself is disallowed by this project's strict PHPStan rules.
      */
@@ -1425,6 +1444,18 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // from raw user input when position=custom -- see configuration_watermark.latte
         // -- so out-of-range values are a real, reachable case, not dead code.)
         $watermark_errors = [];
+
+        // Every field here is numeric, so a non-numeric submission is
+        // invalid input rather than something to coerce: intval('abc') is
+        // 0, which silently passed the xpos/ypos range checks and stored a
+        // top-left position the user never asked for. Only `opacity`
+        // caught it, and only because 0 is out of its range anyway.
+        foreach (['xpos', 'ypos', 'opacity', 'minw', 'minh', 'xrepeat', 'yrepeat'] as $numericField) {
+            if (! is_numeric($pwatermark[$numericField])) {
+                $watermark_errors[$numericField] = self::WATERMARK_FIELD_RANGES[$numericField];
+            }
+        }
+
         $v = intval($pwatermark['xpos']);
         if ($v < 0 or $v > 100) {
             $watermark_errors['xpos'] = '[0..100]';
@@ -1438,6 +1469,40 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         $v = intval($pwatermark['opacity']);
         if ($v <= 0 or $v > 100) {
             $watermark_errors['opacity'] = '(0..100]';
+        }
+
+        // minw/minh are the pixel threshold DerivativeParams::willWatermark()
+        // compares a derivative against (`$min_size[0] <= $out_size->width`),
+        // so a negative one means the same as 0 -- watermark everything --
+        // while reading as a deliberate setting. No upper bound is
+        // derivable: a value above every configured size legitimately means
+        // "never watermark", and those sizes are the admin's own.
+        foreach (['minw', 'minh'] as $sizeField) {
+            if (intval($pwatermark[$sizeField]) < 0) {
+                $watermark_errors[$sizeField] = self::WATERMARK_FIELD_RANGES[$sizeField];
+            }
+        }
+
+        // xrepeat/yrepeat drive `for ($i = -$r; $i <= $r; $i++)` in
+        // ImageDerivativeController, nested one inside the other:
+        //
+        //  - a negative never enters the loop body, yet the enclosing
+        //    `if ((bool) $wm->xrepeat || (bool) $wm->yrepeat)` is true for
+        //    it, so the page promises repeats and draws none;
+        //  - the pair costs (2x+1)(2y+1) iterations whatever the canvas can
+        //    hold, so a large one hangs every derivative that is generated.
+        //
+        // The ceiling is 100 rather than a guess: a repeat only composes
+        // when its stamp lands inside the canvas, at `x + $i * $xpad` with
+        // $xpad at least 30px, which caps the useful |$i| near 66 on a
+        // 2000px derivative. 100 clears that with room to spare and keeps
+        // the worst case at 201*201 = 40,401 iterations, where 1000 would be
+        // four million.
+        foreach (['xrepeat', 'yrepeat'] as $repeatField) {
+            $v = intval($pwatermark[$repeatField]);
+            if ($v < 0 or $v > 100) {
+                $watermark_errors[$repeatField] = self::WATERMARK_FIELD_RANGES[$repeatField];
+            }
         }
 
         if ($watermark_errors !== []) {
@@ -1525,6 +1590,10 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 xpos: $watermarkFieldErrors['xpos'] ?? null,
                 ypos: $watermarkFieldErrors['ypos'] ?? null,
                 opacity: $watermarkFieldErrors['opacity'] ?? null,
+                minw: $watermarkFieldErrors['minw'] ?? null,
+                minh: $watermarkFieldErrors['minh'] ?? null,
+                xrepeat: $watermarkFieldErrors['xrepeat'] ?? null,
+                yrepeat: $watermarkFieldErrors['yrepeat'] ?? null,
             ),
         );
     }

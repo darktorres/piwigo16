@@ -4746,9 +4746,20 @@ Nineteen live bugs have surfaced this way, none of them type work:
 8. `Image\ImagePathHelper` built paths out of `strrpos()`'s `false` --
    `false + 1` is `1`, so a path with no directory or no extension was
    rebuilt from its own offset 1. Found by enabling `zend.assertions`.
-9. Four watermark form fields (`minw`, `minh`, `xrepeat`, `yrepeat`) go
-   through no validation at all. Not fixed -- that is new behaviour -- but
-   their unreachable error markup is removed.
+9. Four watermark form fields (`minw`, `minh`, `xrepeat`, `yrepeat`) went
+   through no validation at all -- every value reached `WatermarkParams`
+   through a bare `intval()`, so `'abc'` became 0 and a negative was stored
+   as-is. The template had always carried error markup for all four, and
+   because nothing wrote those error keys the branches could not render,
+   which is how the gap surfaced. The dead markup was removed first and the
+   gap recorded; the validation landed afterwards, with the markup restored
+   and the bounds taken from what the renderer can use -- a negative repeat
+   makes `ImageDerivativeController`'s `for ($i = -$r; $i <= $r; $i++)` skip
+   its body while the enclosing `if` still says repeats are on, an oversized
+   one costs `(2x+1)(2y+1)` iterations per derivative, and a negative
+   minimum makes `willWatermark()` true for everything. `xpos`/`ypos` gained
+   the same numeric check on the way past: they were range-checked but
+   `intval('abc')` is 0, which passed.
 10. The related-tags panel rendered its heading above zero tags on every
     picture page: P40 Batch 2 renamed the ambient `$COMBINABLE_TAGS` its
     `{foreach}` reads, and nothing read the new name.

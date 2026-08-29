@@ -419,9 +419,6 @@ parameters:
             identifier: booleanNot.exprNotBoolean
             path: _analysis/phpstan-latte/*
         -
-            identifier: booleanAnd.rightNotBoolean
-            path: _analysis/phpstan-latte/*
-        -
             identifier: logicalAnd.rightNotBoolean
             path: _analysis/phpstan-latte/*
         -

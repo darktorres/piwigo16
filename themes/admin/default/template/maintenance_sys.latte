@@ -21,40 +21,40 @@
 
     <div
       n:foreach="$activityLogEntries as $entry"
-      id="{$entry['id']}"
-      class="tab-body line{if $entry['major_infos']} major-infos{/if}"
+      id="{$entry->id}"
+      class="tab-body line{if $entry->majorInfos} major-infos{/if}"
     >
       <div class="tab-body-object">
         <p>
-          <span class="icon_object {$entry['object_icon']}"></span>
+          <span class="icon_object {$entry->objectIcon}"></span>
           <span
             class="text_object"
-            title="{$entry['object']}"
-          >{$entry['object']}</span>
+            title="{$entry->object}"
+          >{$entry->object}</span>
         </p>
       </div>
       <div class="tab-body-action">
-        <p class="color_action {$entry['action_color']}">
-          <span class="icon_action {$entry['action_icon']}"></span>
+        <p class="color_action {$entry->actionColor}">
+          <span class="icon_action {$entry->actionIcon}"></span>
           <span
             class="text_action"
-            title="{$entry['action']}"
-          >{$entry['action']}</span>
+            title="{$entry->action}"
+          >{$entry->action}</span>
         </p>
       </div>
       <div class="tab-body-users">
         <p>
-          {if $entry['username'] === 'System'}
+          {if $entry->username === 'System'}
             <span class="icon_user icon-robot-head"></span>
           {else}
             <span
-              class="icon_user {=['icon-red', 'icon-blue', 'icon-yellow', 'icon-purple', 'icon-green'][$entry['user_id'] % 5]}"
-            >{$entry['initial']}</span>
+              class="icon_user {=['icon-red', 'icon-blue', 'icon-yellow', 'icon-purple', 'icon-green'][$entry->userId % 5]}"
+            >{$entry->initial}</span>
           {/if}
           <span
             class="text_username"
-            title="{$entry['username']}"
-          >{$entry['username']}</span>
+            title="{$entry->username}"
+          >{$entry->username}</span>
         </p>
       </div>
       <div class="tab-body-date">
@@ -62,22 +62,22 @@
           <span class="icon icon-clock"></span>
           <span
             class="text_date"
-            title="{$entry['date']} {$entry['hour']}"
-          >{$entry['date']}</span>
-          <span class="text_hour">{$entry['hour']}</span>
+            title="{$entry->date|format_date} {$entry->hour}"
+          >{$entry->date|format_date}</span>
+          <span class="text_hour">{$entry->hour}</span>
         </p>
       </div>
       <div class="tab-body-details">
-        {foreach $entry['detailItems'] as $i => $item}
-          {if $i > 0 && $entry['detailArrow']}<span
+        {foreach $entry->detailItems as $i => $item}
+          {if $i > 0 && $entry->detailArrow}<span
               class="icon-right"
             >&nbsp;</span>{/if}
           <p class="detail-item">
-            <span class="icon_details {$item['icon']}"></span>
+            <span class="icon_details {$item->icon}"></span>
             <span
               class="text_details"
-              title="{$item['text']}"
-            >{$item['text']}</span>
+              title="{$item->text}"
+            >{$item->text}</span>
           </p>
         {/foreach}
       </div>

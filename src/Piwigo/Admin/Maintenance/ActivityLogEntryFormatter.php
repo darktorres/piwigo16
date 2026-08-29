@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Maintenance;
 
 use Piwigo\Activity\Projection\SystemActivityLogEntry;
+use Piwigo\Admin\Maintenance\Projection\ActivityLogDetail;
+use Piwigo\Admin\Maintenance\Projection\ActivityLogRow;
 use Piwigo\Core\ActivitySystem;
-use Piwigo\Core\DateHelper;
 use Piwigo\Core\Lang;
 
 /**
@@ -30,15 +31,15 @@ final class ActivityLogEntryFormatter
      * `detailArrow` flag (only the from_to case renders an arrow between
      * its exactly-2 items), since the template rendering this needs a
      * uniform shape, not the type-discriminated one a JS switch statement
-     * used to branch on.
+     * used to branch on. Normalized here means normalized into
+     * {@see ActivityLogDetail}: the polymorphism is in what the payload
+     * *says*, not in the shape the template reads.
      *
      * @param array<string, array{icon: string, label: string}> $maintActions
      *   matches MaintenanceSysPageRenderer::render()'s own already-precise
      *   param shape (this method's only real caller passes it straight through)
-     *
-     * @return array<string, mixed>
      */
-    public function format(Lang $lang, SystemActivityLogEntry $row, array $maintActions): array
+    public function format(Lang $lang, SystemActivityLogEntry $row, array $maintActions): ActivityLogRow
     {
         $major_infos = false;
         $object = '';
@@ -47,6 +48,7 @@ final class ActivityLogEntryFormatter
         $action_color = '';
         $action = $row->action;
         $details = $row->details ?? [];
+        /** @var list<ActivityLogDetail> $detailItems */
         $detailItems = [];
         $detailArrow = false;
 
@@ -92,10 +94,10 @@ final class ActivityLogEntryFormatter
                                     $c_text = $lang->t('Photo sizes');
                                     // sizes have 2 params always Photo sizes and sometimes config_action
                                     if (isset($details['config_action']) && $details['config_action'] === 'restore_settings') {
-                                        $detailItems[] = [
-                                            'icon' => 'icon-back-in-time',
-                                            'text' => $lang->t('Set as default'),
-                                        ];
+                                        $detailItems[] = new ActivityLogDetail(
+                                            icon: 'icon-back-in-time',
+                                            text: $lang->t('Set as default'),
+                                        );
                                     }
                                     break;
 
@@ -111,14 +113,18 @@ final class ActivityLogEntryFormatter
 
                                 default:
                                     $c_icon = 'icon-cog-alt';
-                                    $c_text = $details['config_section'];
+                                    // An unrecognised section name renders
+                                    // as itself; `details` is an
+                                    // entity-agnostic payload, so that name
+                                    // is only a string by convention.
+                                    $c_text = self::text($details['config_section']);
                                     break;
                             }
 
-                            $detailItems[] = [
-                                'icon' => $c_icon,
-                                'text' => $c_text,
-                            ];
+                            $detailItems[] = new ActivityLogDetail(
+                                icon: $c_icon,
+                                text: $c_text,
+                            );
                         }
                         break;
 
@@ -134,10 +140,10 @@ final class ActivityLogEntryFormatter
                             // to an empty-string key, which simply misses the lookup.
                             $action_detail_key = is_string($action_detail) || is_int($action_detail) ? $action_detail : '';
                             $maint_action_entry = $maintActions[$action_detail_key] ?? null;
-                            $detailItems = [[
-                                'icon' => $maint_action_entry['icon'] ?? 'icon-cone',
-                                'text' => $maint_action_entry['label'] ?? $action_detail,
-                            ]];
+                            $detailItems = [new ActivityLogDetail(
+                                icon: $maint_action_entry['icon'] ?? 'icon-cone',
+                                text: $maint_action_entry['label'] ?? (is_string($action_detail) ? $action_detail : ''),
+                            )];
                         }
                         break;
 
@@ -211,16 +217,16 @@ final class ActivityLogEntryFormatter
                         $action = $lang->t('Delete');
                         // for delete we need to specific format details
                         if (isset($details['db_version']) && is_string($details['db_version'])) {
-                            $detailItems[] = [
-                                'icon' => 'icon-flow-branch',
-                                'text' => 'database : ' . $details['db_version'],
-                            ];
+                            $detailItems[] = new ActivityLogDetail(
+                                icon: 'icon-flow-branch',
+                                text: 'database : ' . $details['db_version'],
+                            );
                         }
                         if (isset($details['fs_version']) && is_string($details['fs_version'])) {
-                            $detailItems[] = [
-                                'icon' => 'icon-flow-branch',
-                                'text' => 'filesystem : ' . $details['fs_version'],
-                            ];
+                            $detailItems[] = new ActivityLogDetail(
+                                icon: 'icon-flow-branch',
+                                text: 'filesystem : ' . $details['fs_version'],
+                            );
                         }
                         break;
 
@@ -295,45 +301,64 @@ final class ActivityLogEntryFormatter
         // For each lines we need to format theirs details (general details)
         if (isset($details['from_version'])) {
             $detailItems = [
-                [
-                    'icon' => 'icon-flow-branch',
-                    'text' => $details['from_version'],
-                ],
-                [
-                    'icon' => isset($details['to_version']) ? 'icon-flow-branch' : 'icon-block',
-                    'text' => $details['to_version'] ?? ($details['result'] ?? ''),
-                ],
+                new ActivityLogDetail(
+                    icon: 'icon-flow-branch',
+                    text: self::text($details['from_version']),
+                ),
+                new ActivityLogDetail(
+                    icon: isset($details['to_version']) ? 'icon-flow-branch' : 'icon-block',
+                    text: self::text($details['to_version'] ?? ($details['result'] ?? '')),
+                ),
             ];
             $detailArrow = true;
         } elseif (isset($details['version'])) {
-            $detailItems = [[
-                'icon' => 'icon-flow-branch',
-                'text' => $details['version'],
-            ]];
+            $detailItems = [new ActivityLogDetail(
+                icon: 'icon-flow-branch',
+                text: self::text($details['version']),
+            )];
         } elseif (isset($details['result'])) {
-            $detailItems = [[
-                'icon' => 'icon-block',
-                'text' => $details['result'],
-            ]];
+            $detailItems = [new ActivityLogDetail(
+                icon: 'icon-block',
+                text: self::text($details['result']),
+            )];
         }
 
-        [$date, $hour] = explode(' ', $row->occuredOn);
+        // occuredOn is always 'Y-m-d H:i:s' (SqlDateTime), but a row that
+        // reached SystemActivityLogEntry::fromRow() with no usable value at
+        // all carries '' -- explode() then yields a single element, so take
+        // the halves positionally rather than by destructuring a pair.
+        $parts = explode(' ', $row->occuredOn);
+        $date = $parts[0];
+        $hour = $parts[1] ?? '';
 
-        return [
-            'major_infos' => $major_infos,
-            'id' => $row->activityId,
-            'object_icon' => $object_icon,
-            'object' => ucwords($object),
-            'action_icon' => $action_icon,
-            'action_color' => $action_color,
-            'action' => $action,
-            'user_id' => $row->performedBy,
-            'username' => $row->username,
-            'initial' => mb_strtoupper(mb_substr($row->username ?? '', 0, 1)),
-            'date' => DateHelper::formatDate($date),
-            'hour' => $hour,
-            'detailItems' => $detailItems,
-            'detailArrow' => $detailArrow,
-        ];
+        return new ActivityLogRow(
+            id: $row->activityId,
+            majorInfos: $major_infos,
+            objectIcon: $object_icon,
+            object: ucwords($object),
+            actionIcon: $action_icon,
+            actionColor: $action_color,
+            action: $action,
+            // 0 exactly when the query said 'System' -- see ActivityLogRow's
+            // own docblock for why the template never divides by it.
+            userId: $row->performedBy ?? 0,
+            username: $row->username,
+            initial: mb_strtoupper(mb_substr($row->username ?? '', 0, 1)),
+            date: $date,
+            hour: $hour,
+            detailItems: $detailItems,
+            detailArrow: $detailArrow,
+        );
+    }
+
+    /**
+     * `details` is an entity-agnostic payload, so a version/result value
+     * that should be a string can be anything a caller once wrote. Rendering
+     * one is a string context either way; this makes that explicit instead of
+     * leaving it to an implicit cast the template would have to absorb.
+     */
+    private static function text(mixed $value): string
+    {
+        return is_scalar($value) ? (string) $value : '';
     }
 }

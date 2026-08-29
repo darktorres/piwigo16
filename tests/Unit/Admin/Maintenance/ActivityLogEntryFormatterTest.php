@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Admin\Maintenance\ActivityLogEntryFormatter;
+use Piwigo\Admin\Maintenance\Projection\ActivityLogDetail;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\Kernel;
@@ -71,12 +72,18 @@ test('core install action gets the green download icon', function (): void {
     $entry = new ActivityLogEntryFormatter()
         ->format(activityLogEntryFormatterLang(), makeActivityRow(), []);
 
-    expect($entry['object_icon'])->toBe('icon-piwigo')
-        ->and($entry['object'])->toBe('Core')
-        ->and($entry['action_icon'])->toBe('icon-download')
-        ->and($entry['action_color'])->toBe('icon-green')
-        ->and($entry['action'])->toBe('Install')
-        ->and($entry['major_infos'])->toBeFalse();
+    expect($entry->objectIcon)
+        ->toBe('icon-piwigo')
+        ->and($entry->object)
+        ->toBe('Core')
+        ->and($entry->actionIcon)
+        ->toBe('icon-download')
+        ->and($entry->actionColor)
+        ->toBe('icon-green')
+        ->and($entry->action)
+        ->toBe('Install')
+        ->and($entry->majorInfos)
+        ->toBeFalse();
 });
 
 test('core update action is flagged as major_infos', function (): void {
@@ -89,8 +96,10 @@ test('core update action is flagged as major_infos', function (): void {
             []
         );
 
-    expect($entry['major_infos'])->toBeTrue()
-        ->and($entry['action'])->toBe('Update');
+    expect($entry->majorInfos)
+        ->toBeTrue()
+        ->and($entry->action)
+        ->toBe('Update');
 });
 
 test('core maintenance action looks up its icon/label from maint_actions', function (): void {
@@ -112,11 +121,13 @@ test('core maintenance action looks up its icon/label from maint_actions', funct
             $maintActions
         );
 
-    expect($entry['detailItems'])->toBe([[
-        'icon' => 'icon-user-1',
-        'text' => 'Purge user cache',
-    ]])
-        ->and($entry['detailArrow'])->toBeFalse();
+    expect($entry->detailItems)
+        ->toEqual([new ActivityLogDetail(
+            icon: 'icon-user-1',
+            text: 'Purge user cache',
+        )])
+        ->and($entry->detailArrow)
+        ->toBeFalse();
 });
 
 test('core maintenance action falls back to the raw action name when unknown to maint_actions', function (): void {
@@ -134,10 +145,11 @@ test('core maintenance action falls back to the raw action name when unknown to 
             // maintenance action not in the built-in list).
         );
 
-    expect($entry['detailItems'])->toBe([[
-        'icon' => 'icon-cone',
-        'text' => 'some_future_action',
-    ]]);
+    expect($entry->detailItems)
+        ->toEqual([new ActivityLogDetail(
+            icon: 'icon-cone',
+            text: 'some_future_action',
+        )]);
 });
 
 test('core maintenance action with a non-string/non-int maintenance_action falls back to an empty lookup key', function (): void {
@@ -164,10 +176,11 @@ test('core maintenance action with a non-string/non-int maintenance_action falls
             $maintActions
         );
 
-    expect($entry['detailItems'])->toBe([[
-        'icon' => 'icon-fallback-key',
-        'text' => 'Fallback key label',
-    ]]);
+    expect($entry->detailItems)
+        ->toEqual([new ActivityLogDetail(
+            icon: 'icon-fallback-key',
+            text: 'Fallback key label',
+        )]);
 });
 
 test('core config action with a known section', function (): void {
@@ -183,10 +196,11 @@ test('core config action with a known section', function (): void {
             []
         );
 
-    expect($entry['detailItems'])->toBe([[
-        'icon' => 'icon-file-image',
-        'text' => 'Watermark',
-    ]]);
+    expect($entry->detailItems)
+        ->toEqual([new ActivityLogDetail(
+            icon: 'icon-file-image',
+            text: 'Watermark',
+        )]);
 });
 
 test('plugin delete action reports db and filesystem version details', function (): void {
@@ -205,21 +219,26 @@ test('plugin delete action reports db and filesystem version details', function 
             []
         );
 
-    expect($entry['object'])->toBe('My Plugin')
-        ->and($entry['action_icon'])->toBe('icon-trash-1')
-        ->and($entry['action_color'])->toBe('icon-red')
+    expect($entry->object)
+        ->toBe('My Plugin')
+        ->and($entry->actionIcon)
+        ->toBe('icon-trash-1')
+        ->and($entry->actionColor)
+        ->toBe('icon-red')
         // db_version and fs_version each push their own item, in order.
-        ->and($entry['detailItems'])->toBe([
-            [
-                'icon' => 'icon-flow-branch',
-                'text' => 'database : 1.2.3',
-            ],
-            [
-                'icon' => 'icon-flow-branch',
-                'text' => 'filesystem : 1.2.4',
-            ],
+        ->and($entry->detailItems)
+        ->toEqual([
+            new ActivityLogDetail(
+                icon: 'icon-flow-branch',
+                text: 'database : 1.2.3',
+            ),
+            new ActivityLogDetail(
+                icon: 'icon-flow-branch',
+                text: 'filesystem : 1.2.4',
+            ),
         ])
-        ->and($entry['detailArrow'])->toBeFalse();
+        ->and($entry->detailArrow)
+        ->toBeFalse();
 });
 
 test('plugin_id present but non-string is left unused, not passed to str_replace', function (): void {
@@ -238,7 +257,8 @@ test('plugin_id present but non-string is left unused, not passed to str_replace
             []
         );
 
-    expect($entry['object'])->toBe('Plugin');
+    expect($entry->object)
+        ->toBe('Plugin');
 });
 
 test('db_version present but non-string is left out of the delete detail', function (): void {
@@ -256,7 +276,8 @@ test('db_version present but non-string is left out of the delete detail', funct
             []
         );
 
-    expect($entry['detailItems'])->toBe([]);
+    expect($entry->detailItems)
+        ->toBe([]);
 });
 
 test('fs_version present but non-string is left out of the delete detail', function (): void {
@@ -274,7 +295,8 @@ test('fs_version present but non-string is left out of the delete detail', funct
             []
         );
 
-    expect($entry['detailItems'])->toBe([]);
+    expect($entry->detailItems)
+        ->toBe([]);
 });
 
 test('theme_id present but non-string is left unused, not passed to str_replace', function (): void {
@@ -290,7 +312,8 @@ test('theme_id present but non-string is left unused, not passed to str_replace'
             []
         );
 
-    expect($entry['object'])->toBe('Theme');
+    expect($entry->object)
+        ->toBe('Theme');
 });
 
 test('theme_id with both an underscore and a hyphen gets both replaced with spaces', function (): void {
@@ -306,7 +329,8 @@ test('theme_id with both an underscore and a hyphen gets both replaced with spac
             []
         );
 
-    expect($entry['object'])->toBe('My Theme Name');
+    expect($entry->object)
+        ->toBe('My Theme Name');
 });
 
 test('theme set_default action', function (): void {
@@ -323,9 +347,12 @@ test('theme set_default action', function (): void {
             []
         );
 
-    expect($entry['object'])->toBe('My Theme')
-        ->and($entry['action_icon'])->toBe('icon-star')
-        ->and($entry['action'])->toBe('Set as default');
+    expect($entry->object)
+        ->toBe('My Theme')
+        ->and($entry->actionIcon)
+        ->toBe('icon-star')
+        ->and($entry->action)
+        ->toBe('Set as default');
 });
 
 test('unknown object_id falls through to empty icon/object/color and the default empty detail', function (): void {
@@ -338,11 +365,16 @@ test('unknown object_id falls through to empty icon/object/color and the default
             []
         );
 
-    expect($entry['object_icon'])->toBe('')
-        ->and($entry['object'])->toBe('')
-        ->and($entry['action_icon'])->toBe('')
-        ->and($entry['action_color'])->toBe('')
-        ->and($entry['detailItems'])->toBe([]);
+    expect($entry->objectIcon)
+        ->toBe('')
+        ->and($entry->object)
+        ->toBe('')
+        ->and($entry->actionIcon)
+        ->toBe('')
+        ->and($entry->actionColor)
+        ->toBe('')
+        ->and($entry->detailItems)
+        ->toBe([]);
 });
 
 test('from_version detail overrides the object/action-specific detail', function (): void {
@@ -361,16 +393,18 @@ test('from_version detail overrides the object/action-specific detail', function
             []
         );
 
-    expect($entry['detailArrow'])->toBeTrue()
-        ->and($entry['detailItems'])->toBe([
-            [
-                'icon' => 'icon-flow-branch',
-                'text' => '1.0',
-            ],
-            [
-                'icon' => 'icon-flow-branch',
-                'text' => '2.0',
-            ],
+    expect($entry->detailArrow)
+        ->toBeTrue()
+        ->and($entry->detailItems)
+        ->toEqual([
+            new ActivityLogDetail(
+                icon: 'icon-flow-branch',
+                text: '1.0',
+            ),
+            new ActivityLogDetail(
+                icon: 'icon-flow-branch',
+                text: '2.0',
+            ),
         ]);
 });
 
@@ -387,11 +421,10 @@ test('from_version detail with no to_version falls back to the result value', fu
             []
         );
 
-    $detailItems = is_array($entry['detailItems']) ? $entry['detailItems'] : [];
-    expect($detailItems[1])->toBe([
-        'icon' => 'icon-block',
-        'text' => 'failed',
-    ]);
+    expect($entry->detailItems[1])->toEqual(new ActivityLogDetail(
+        icon: 'icon-block',
+        text: 'failed',
+    ));
 });
 
 test('from_version detail with neither to_version nor result falls back to an empty text', function (): void {
@@ -406,11 +439,10 @@ test('from_version detail with neither to_version nor result falls back to an em
             []
         );
 
-    $detailItems = is_array($entry['detailItems']) ? $entry['detailItems'] : [];
-    expect($detailItems[1])->toBe([
-        'icon' => 'icon-block',
-        'text' => '',
-    ]);
+    expect($entry->detailItems[1])->toEqual(new ActivityLogDetail(
+        icon: 'icon-block',
+        text: '',
+    ));
 });
 
 test('version-only detail is formatted as a version badge', function (): void {
@@ -425,11 +457,13 @@ test('version-only detail is formatted as a version badge', function (): void {
             []
         );
 
-    expect($entry['detailItems'])->toBe([[
-        'icon' => 'icon-flow-branch',
-        'text' => '3.1.4',
-    ]])
-        ->and($entry['detailArrow'])->toBeFalse();
+    expect($entry->detailItems)
+        ->toEqual([new ActivityLogDetail(
+            icon: 'icon-flow-branch',
+            text: '3.1.4',
+        )])
+        ->and($entry->detailArrow)
+        ->toBeFalse();
 });
 
 test('result-only detail is formatted as an error badge', function (): void {
@@ -444,11 +478,13 @@ test('result-only detail is formatted as an error badge', function (): void {
             []
         );
 
-    expect($entry['detailItems'])->toBe([[
-        'icon' => 'icon-block',
-        'text' => 'failed',
-    ]])
-        ->and($entry['detailArrow'])->toBeFalse();
+    expect($entry->detailItems)
+        ->toEqual([new ActivityLogDetail(
+            icon: 'icon-block',
+            text: 'failed',
+        )])
+        ->and($entry->detailArrow)
+        ->toBeFalse();
 });
 
 test('core config action with an unknown section falls back to the raw section name', function (): void {
@@ -464,10 +500,11 @@ test('core config action with an unknown section falls back to the raw section n
             []
         );
 
-    expect($entry['detailItems'])->toBe([[
-        'icon' => 'icon-cog-alt',
-        'text' => 'totally-unknown-section',
-    ]]);
+    expect($entry->detailItems)
+        ->toEqual([new ActivityLogDetail(
+            icon: 'icon-cog-alt',
+            text: 'totally-unknown-section',
+        )]);
 });
 
 test('core autoupdate action is flagged as major_infos with the blue update icon', function (): void {
@@ -480,10 +517,14 @@ test('core autoupdate action is flagged as major_infos with the blue update icon
             []
         );
 
-    expect($entry['action_icon'])->toBe('icon-arrows-cw')
-        ->and($entry['action_color'])->toBe('icon-blue')
-        ->and($entry['action'])->toBe('Auto-update')
-        ->and($entry['major_infos'])->toBeTrue();
+    expect($entry->actionIcon)
+        ->toBe('icon-arrows-cw')
+        ->and($entry->actionColor)
+        ->toBe('icon-blue')
+        ->and($entry->action)
+        ->toBe('Auto-update')
+        ->and($entry->majorInfos)
+        ->toBeTrue();
 });
 
 test('core unknown action falls back to the default yellow download icon', function (): void {
@@ -496,12 +537,15 @@ test('core unknown action falls back to the default yellow download icon', funct
             []
         );
 
-    expect($entry['action_icon'])->toBe('icon-download')
-        ->and($entry['action_color'])->toBe('icon-yellow')
+    expect($entry->actionIcon)
+        ->toBe('icon-download')
+        ->and($entry->actionColor)
+        ->toBe('icon-yellow')
         // Core's default arm never overwrites $action -- it stays the raw
         // action string from the row, distinct from every named arm above
         // which replaces it with a translated label.
-        ->and($entry['action'])->toBe('some-future-core-action');
+        ->and($entry->action)
+        ->toBe('some-future-core-action');
 });
 
 test('plugin install action gets the green download icon', function (): void {
@@ -518,10 +562,14 @@ test('plugin install action gets the green download icon', function (): void {
             []
         );
 
-    expect($entry['object'])->toBe('Plugin One')
-        ->and($entry['action_icon'])->toBe('icon-download')
-        ->and($entry['action_color'])->toBe('icon-green')
-        ->and($entry['action'])->toBe('Install');
+    expect($entry->object)
+        ->toBe('Plugin One')
+        ->and($entry->actionIcon)
+        ->toBe('icon-download')
+        ->and($entry->actionColor)
+        ->toBe('icon-green')
+        ->and($entry->action)
+        ->toBe('Install');
 });
 
 test('plugin activate action gets the green check icon', function (): void {
@@ -538,9 +586,12 @@ test('plugin activate action gets the green check icon', function (): void {
             []
         );
 
-    expect($entry['action_icon'])->toBe('icon-check')
-        ->and($entry['action_color'])->toBe('icon-green')
-        ->and($entry['action'])->toBe('Activate');
+    expect($entry->actionIcon)
+        ->toBe('icon-check')
+        ->and($entry->actionColor)
+        ->toBe('icon-green')
+        ->and($entry->action)
+        ->toBe('Activate');
 });
 
 test('plugin deactivate action gets the purple block icon', function (): void {
@@ -557,9 +608,12 @@ test('plugin deactivate action gets the purple block icon', function (): void {
             []
         );
 
-    expect($entry['action_icon'])->toBe('icon-block')
-        ->and($entry['action_color'])->toBe('icon-purple')
-        ->and($entry['action'])->toBe('Deactivate');
+    expect($entry->actionIcon)
+        ->toBe('icon-block')
+        ->and($entry->actionColor)
+        ->toBe('icon-purple')
+        ->and($entry->action)
+        ->toBe('Deactivate');
 });
 
 test('plugin uninstall action gets the red trash icon', function (): void {
@@ -576,9 +630,12 @@ test('plugin uninstall action gets the red trash icon', function (): void {
             []
         );
 
-    expect($entry['action_icon'])->toBe('icon-trash-1')
-        ->and($entry['action_color'])->toBe('icon-red')
-        ->and($entry['action'])->toBe('Uninstall');
+    expect($entry->actionIcon)
+        ->toBe('icon-trash-1')
+        ->and($entry->actionColor)
+        ->toBe('icon-red')
+        ->and($entry->action)
+        ->toBe('Uninstall');
 });
 
 test('plugin restore action gets the blue back-in-time icon', function (): void {
@@ -595,9 +652,12 @@ test('plugin restore action gets the blue back-in-time icon', function (): void 
             []
         );
 
-    expect($entry['action_icon'])->toBe('icon-back-in-time')
-        ->and($entry['action_color'])->toBe('icon-blue')
-        ->and($entry['action'])->toBe('Restore');
+    expect($entry->actionIcon)
+        ->toBe('icon-back-in-time')
+        ->and($entry->actionColor)
+        ->toBe('icon-blue')
+        ->and($entry->action)
+        ->toBe('Restore');
 });
 
 test('plugin autoupdate action gets the blue update icon, not flagged major_infos', function (): void {
@@ -614,12 +674,16 @@ test('plugin autoupdate action gets the blue update icon, not flagged major_info
             []
         );
 
-    expect($entry['action_icon'])->toBe('icon-arrows-cw')
-        ->and($entry['action_color'])->toBe('icon-blue')
-        ->and($entry['action'])->toBe('Auto-update')
+    expect($entry->actionIcon)
+        ->toBe('icon-arrows-cw')
+        ->and($entry->actionColor)
+        ->toBe('icon-blue')
+        ->and($entry->action)
+        ->toBe('Auto-update')
         // Unlike Core's own 'autoupdate'/'update' arms, the Plugin arm never
         // sets major_infos.
-        ->and($entry['major_infos'])->toBeFalse();
+        ->and($entry->majorInfos)
+        ->toBeFalse();
 });
 
 test('plugin unknown action falls back to the default yellow puzzle icon', function (): void {
@@ -636,9 +700,12 @@ test('plugin unknown action falls back to the default yellow puzzle icon', funct
             []
         );
 
-    expect($entry['action_icon'])->toBe('icon-puzzle')
-        ->and($entry['action_color'])->toBe('icon-yellow')
-        ->and($entry['action'])->toBe('some-future-plugin-action');
+    expect($entry->actionIcon)
+        ->toBe('icon-puzzle')
+        ->and($entry->actionColor)
+        ->toBe('icon-yellow')
+        ->and($entry->action)
+        ->toBe('some-future-plugin-action');
 });
 
 test('theme install action gets the green download icon', function (): void {
@@ -655,10 +722,14 @@ test('theme install action gets the green download icon', function (): void {
             []
         );
 
-    expect($entry['object'])->toBe('Theme One')
-        ->and($entry['action_icon'])->toBe('icon-download')
-        ->and($entry['action_color'])->toBe('icon-green')
-        ->and($entry['action'])->toBe('Install');
+    expect($entry->object)
+        ->toBe('Theme One')
+        ->and($entry->actionIcon)
+        ->toBe('icon-download')
+        ->and($entry->actionColor)
+        ->toBe('icon-green')
+        ->and($entry->action)
+        ->toBe('Install');
 });
 
 test('theme deactivate action gets the purple block icon', function (): void {
@@ -675,9 +746,12 @@ test('theme deactivate action gets the purple block icon', function (): void {
             []
         );
 
-    expect($entry['action_icon'])->toBe('icon-block')
-        ->and($entry['action_color'])->toBe('icon-purple')
-        ->and($entry['action'])->toBe('Deactivate');
+    expect($entry->actionIcon)
+        ->toBe('icon-block')
+        ->and($entry->actionColor)
+        ->toBe('icon-purple')
+        ->and($entry->action)
+        ->toBe('Deactivate');
 });
 
 test('theme delete action gets the red trash icon', function (): void {
@@ -694,9 +768,12 @@ test('theme delete action gets the red trash icon', function (): void {
             []
         );
 
-    expect($entry['action_icon'])->toBe('icon-trash-1')
-        ->and($entry['action_color'])->toBe('icon-red')
-        ->and($entry['action'])->toBe('Delete');
+    expect($entry->actionIcon)
+        ->toBe('icon-trash-1')
+        ->and($entry->actionColor)
+        ->toBe('icon-red')
+        ->and($entry->action)
+        ->toBe('Delete');
 });
 
 test('theme update action gets the blue update icon', function (): void {
@@ -713,9 +790,12 @@ test('theme update action gets the blue update icon', function (): void {
             []
         );
 
-    expect($entry['action_icon'])->toBe('icon-arrows-cw')
-        ->and($entry['action_color'])->toBe('icon-blue')
-        ->and($entry['action'])->toBe('Update');
+    expect($entry->actionIcon)
+        ->toBe('icon-arrows-cw')
+        ->and($entry->actionColor)
+        ->toBe('icon-blue')
+        ->and($entry->action)
+        ->toBe('Update');
 });
 
 test('theme unknown action falls back to the default yellow brush icon', function (): void {
@@ -732,9 +812,12 @@ test('theme unknown action falls back to the default yellow brush icon', functio
             []
         );
 
-    expect($entry['action_icon'])->toBe('icon-brush')
-        ->and($entry['action_color'])->toBe('icon-yellow')
-        ->and($entry['action'])->toBe('some-future-theme-action');
+    expect($entry->actionIcon)
+        ->toBe('icon-brush')
+        ->and($entry->actionColor)
+        ->toBe('icon-yellow')
+        ->and($entry->action)
+        ->toBe('some-future-theme-action');
 });
 
 test('date and hour are split from occured_on and id/user/username pass through', function (): void {
@@ -750,12 +833,26 @@ test('date and hour are split from occured_on and id/user/username pass through'
             []
         );
 
-    expect($entry['id'])->toBe(7)
-        ->and($entry['user_id'])->toBe(3)
-        ->and($entry['username'])->toBe('someone')
-        ->and($entry['initial'])->toBe('S')
-        ->and($entry['date'])->toBe(DateHelper::formatDate('2026-08-01'))
-        ->and($entry['hour'])->toBe('09:15:30');
+    expect($entry->id)
+        ->toBe(7)
+        ->and($entry->userId)
+        ->toBe(3)
+        ->and($entry->username)
+        ->toBe('someone')
+        ->and($entry->initial)
+        ->toBe('S')
+        // The raw halves, not rendered ones: maintenance_sys.latte runs
+        // $date through the `format_date` filter, which is
+        // DateHelper::formatDate() itself. Asserting the raw value here is
+        // what makes that move visible -- the previous assertion compared
+        // against formatDate() on both sides and so would have passed
+        // whichever side did the formatting.
+        ->and($entry->date)
+        ->toBe('2026-08-01')
+        ->and($entry->hour)
+        ->toBe('09:15:30')
+        ->and(DateHelper::formatDate($entry->date))
+        ->toBe('Saturday, August 1, 2026');
 });
 
 test('a null username (a deleted user) gets an empty initial, not a crash', function (): void {
@@ -777,6 +874,8 @@ test('a null username (a deleted user) gets an empty initial, not a crash', func
             []
         );
 
-    expect($entry['username'])->toBeNull()
-        ->and($entry['initial'])->toBe('');
+    expect($entry->username)
+        ->toBeNull()
+        ->and($entry->initial)
+        ->toBe('');
 });

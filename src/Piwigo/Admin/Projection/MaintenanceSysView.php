@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Projection;
 
 use Override;
+use Piwigo\Admin\Maintenance\Projection\ActivityLogRow;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Core\View;
@@ -18,7 +19,7 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class MaintenanceSysView implements View, HasPageAssets
 {
     /**
-     * @param list<array<string, mixed>> $activityLogEntries each shaped by
+     * @param list<ActivityLogRow> $activityLogEntries built by
      *   {@see \Piwigo\Admin\Maintenance\ActivityLogEntryFormatter::format()};
      *   empty when not webmaster.
      */

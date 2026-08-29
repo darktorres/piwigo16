@@ -10,6 +10,7 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Admin\Projection\CatalogPluginRow;
 use Piwigo\Admin\Projection\PluginsNewView;
 use Piwigo\Admin\Request\PluginsNewRequest;
 use Piwigo\Auth\AccessControl;
@@ -19,7 +20,6 @@ use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\DateHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -194,7 +194,6 @@ final readonly class PluginsNewPageRenderer
                 // than trusting the external payload's shape.
                 $ext_desc_raw = $plugin['extension_description'] ?? null;
                 $ext_desc = is_scalar($ext_desc_raw) ? trim((string) $ext_desc_raw, " \n\r") : '';
-                [$small_desc] = explode("\n", wordwrap($ext_desc, 200));
 
                 $revision_id_raw = $plugin['revision_id'] ?? null;
                 $revision_id = is_scalar($revision_id_raw) ? (string) $revision_id_raw : '';
@@ -262,24 +261,33 @@ final readonly class PluginsNewPageRenderer
                     ? $pem_base_url . '/' . $thumbnail_raw
                     : '';
 
-                $tpl_plugins[] = [
-                    'ID' => $plugin['extension_id'],
-                    'EXT_NAME' => $plugin['extension_name'],
-                    'EXT_URL' => $pem_base_url . '/extension_view.php?eid=' . $extension_id,
-                    'SMALL_DESC' => trim($small_desc, " \r\n"),
-                    'BIG_DESC' => $ext_desc,
-                    'VERSION' => $plugin['revision_name'],
-                    'REVISION_DATE' => preg_replace('/[^0-9]/', '', (string) strtotime($revision_date_str)),
-                    'REVISION_FORMATED_DATE' => DateHelper::formatDate($revision_date_str, ['day', 'month', 'year']) . ', ' . DateHelper::timeSince($revision_date_str, 'day'),
-                    'AUTHOR' => $plugin['author_name'],
-                    'DOWNLOADS' => $plugin['extension_nb_downloads'],
-                    'URL_INSTALL' => $url_auto_install,
-                    'CERTIFICATION' => $certification,
-                    'RATING' => $plugin['rating_score'],
-                    'NB_RATINGS' => $plugin['nb_ratings'],
-                    'SCREENSHOT' => $screenshot,
-                    'TAGS' => $plugin['tags'],
-                ];
+                // Every one of these was read straight off the manifest
+                // with no `??`, so a catalog entry omitting any of
+                // extension_nb_downloads/rating_score/nb_ratings/tags --
+                // which the mirror's own pre-17.x entries all do -- raised
+                // an "Undefined array key" warning per field, per row. The
+                // fixture never showed it because only the one 17.0-compatible
+                // mock renders here.
+                $rating_raw = $plugin['rating_score'] ?? null;
+                $tags_raw = $plugin['tags'] ?? null;
+
+                $tpl_plugins[] = new CatalogPluginRow(
+                    id: (int) $extension_id,
+                    name: self::text($plugin['extension_name'] ?? null),
+                    url: $pem_base_url . '/extension_view.php?eid=' . $extension_id,
+                    description: $ext_desc,
+                    version: self::text($plugin['revision_name'] ?? null),
+                    revisionSort: preg_replace('/[^0-9]/', '', (string) strtotime($revision_date_str)) ?? '',
+                    revisionDate: $revision_date_str,
+                    author: self::text($plugin['author_name'] ?? null),
+                    downloads: (int) self::text($plugin['extension_nb_downloads'] ?? null),
+                    installUrl: $url_auto_install,
+                    certification: $certification,
+                    rating: is_numeric($rating_raw) ? (float) $rating_raw : null,
+                    nbRatings: (int) self::text($plugin['nb_ratings'] ?? null),
+                    screenshot: $screenshot,
+                    tags: is_array($tags_raw) ? array_map(self::text(...), $tags_raw) : [],
+                );
             }
 
         } else {
@@ -304,5 +312,14 @@ final readonly class PluginsNewPageRenderer
             content: $adminContent,
             pageTitle: $this->lang->t('Plugins'),
         );
+    }
+
+    /**
+     * A manifest value is whatever the mirrored JSON happened to hold, so a
+     * field this page renders as text is a string only by convention.
+     */
+    private static function text(mixed $value): string
+    {
+        return is_scalar($value) ? (string) $value : '';
     }
 }

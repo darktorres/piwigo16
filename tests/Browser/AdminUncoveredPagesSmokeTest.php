@@ -74,44 +74,34 @@ it('languages add-new tab connects to the real mirror and lists a real 17.0.0-co
     $page->assertDontSee('Connection to server unavailable.');
 });
 
-it('plugins add-new tab connects to the real mirror but currently lists no 17.0.0-compatible plugin', function (): void {
-    // piwigo16-plugins' own most recent commit ("revert: remove all 27
-    // ported *_17.0.0 plugins, re-port fresh") deleted every entry this
-    // test used to assert on (language_switch_17.0.0, the first plugin
-    // ever ported to this fork's PluginConfig\ExtensionInterface
-    // contract) -- a real, deliberate, in-flight reset of a separate
-    // re-porting effort in that repo, not a P48 regression here.
-    // PemCatalog::isCompatible() filters every mirror entry by its own
-    // declared `piwigo_compat` (confirmed directly:
-    // language_switch_16.3.0, the only remaining same-named entry,
-    // declares `"piwigo_compat": ["16"]`, not 17), so with zero
-    // 17.0.0-declared entries left in the mirror, the tab now
-    // genuinely has nothing compatible to list -- this asserts that
-    // real, current state (the mirror itself is reachable, matching
-    // the languages test's own "There is no other language available."
-    // precedent from before *that* mirror was ported) rather than a
-    // specific entry name. Revisit once the separate re-porting effort
-    // lands a new real 17.0.0-compatible plugin.
+it('plugins add-new tab lists the mirror\'s 17.0-compatible mock plugin', function (): void {
+    // piwigo16-plugins' "revert: remove all 27 ported *_17.0.0 plugins,
+    // re-port fresh" left the mirror with no 17.0-compatible entry at all,
+    // so this used to assert the genuinely-empty state. That state is no
+    // longer real: MockTestPlugin_1.0.0 declares `"piwigo_compat": ["17.0"]`
+    // and exists precisely so this tab has a row to render -- it is not a
+    // port of anything and does nothing at runtime. Asserting the row, the
+    // same way the languages test above asserts on af_ZA, is what makes
+    // PemCatalog::isCompatible()'s branch match observable; the empty-state
+    // assertion could not tell "the filter works" from "the mirror is
+    // unreachable".
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=plugins&tab=new');
 
-    $page->assertSee('There is no other plugin available.');
+    $page->assertSee('Mock Test Plugin');
+    $page->assertDontSee('There is no other plugin available.');
     $page->assertDontSee('Connection to server unavailable.');
 });
 
-it('themes add-new tab connects to the real mirror but currently lists no 17.0.0-compatible theme', function (): void {
-    // Same real, in-flight mirror reset as the plugins test above --
-    // piwigo16-themes' own most recent commit removed every ported
-    // *_17.0.0 theme (clear_17.0.0 included), and PemCatalog::
-    // isCompatible() filters out every remaining (pre-fork-version)
-    // entry by its own declared `piwigo_compat`. Revisit once the
-    // separate re-porting effort lands a new real 17.0.0-compatible
-    // theme.
+it('themes add-new tab lists the mirror\'s 17.0-compatible mock theme', function (): void {
+    // Same as the plugins test above: MockTestTheme_1.0.0 is the mirror's
+    // one 17.0-compatible theme entry, added so this tab renders a row.
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=themes&tab=new');
 
     $page->assertSee('Add a new theme');
-    $page->assertSee('There is no other theme available.');
+    $page->assertSee('Mock Test Theme');
+    $page->assertDontSee('There is no other theme available.');
     $page->assertDontSee('Connection to server unavailable.');
 });
 

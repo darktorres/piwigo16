@@ -31,7 +31,7 @@ final readonly class PluginsNewView implements View, HasPageAssets, ExposesPageD
 {
     /**
      * @param array<string, string> $orderOptions
-     * @param list<array<string, mixed>> $plugins
+     * @param list<CatalogPluginRow> $plugins
      */
     public function __construct(
         public array $orderOptions,

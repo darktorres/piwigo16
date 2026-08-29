@@ -27,6 +27,8 @@ use Piwigo\Filter\FilterService;
 use Piwigo\Lang\Translator;
 use Piwigo\Menu\Event\CheckMenuLinkVisibility;
 use Piwigo\Menu\Projection\MenubarIdentificationPageContext;
+use Piwigo\Menu\Projection\MenubarLinkRow;
+use Piwigo\Menu\Projection\MenubarLinksView;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContext;
@@ -98,26 +100,19 @@ final class MenubarRenderer
         }
 
         if ((bool) ($block = $menu->getBlock('mbLinks')) and ! self::emptyValue($currentConfig->links)) {
-            $block->data = [];
+            $links = [];
             foreach ($currentConfig->links as $url => $link) {
                 if ($link->visibilityLinkId === null or $eventDispatcher->dispatch(new CheckMenuLinkVisibility($link->visibilityLinkId))->visible) {
-                    $tpl_var = [
-                        'URL' => $url,
-                        'LABEL' => $link->label,
-                    ];
-
-                    if ($link->newWindow) {
-                        $tpl_var['new_window'] =
-                          [
-                              'NAME' => $link->nwName,
-                              'FEATURES' => $link->nwFeatures,
-                          ];
-                    }
-                    $block->data[] = $tpl_var;
+                    $links[] = new MenubarLinkRow(
+                        url: $url,
+                        label: $link->label,
+                        windowName: $link->newWindow ? $link->nwName : null,
+                        windowFeatures: $link->newWindow ? $link->nwFeatures : null,
+                    );
                 }
             }
-            if (! self::emptyValue($block->data)) {
-                $block->template = 'menubar_links.latte';
+            if ($links !== []) {
+                $block->raw_content = (string) $renderer->render(new MenubarLinksView($links));
             }
         }
 

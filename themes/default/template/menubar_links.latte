@@ -1,17 +1,17 @@
-{templateType Piwigo\Menu\Projection\MenubarBlockView}
+{templateType Piwigo\Menu\Projection\MenubarLinksView}
 <dt>{='Links'|translate}</dt>
 <dd>
   <ul>{spaceless}
-      <li n:foreach="$block->data as $link">
+      <li n:foreach="$links as $link">
         <a
-          href="{$link['URL']}"
+          href="{$link->url}"
           class="external"
-          {if isset($link['new_window'])}
-          data-window-name="{$link['new_window']['NAME']}"
-          data-window-features="{$link['new_window']['FEATURES']}"
+          {if $link->windowName !== null}
+          data-window-name="{$link->windowName}"
+          data-window-features="{$link->windowFeatures}"
           {/if}
         >
-          {$link['LABEL']}
+          {$link->label}
         </a>
       </li>
     {/spaceless}</ul>

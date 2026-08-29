@@ -61,7 +61,7 @@
       <a class="cancelAddAlbum">{='Cancel'|translate}</a>
     </form>
   </div>
-  {if count($categories)}
+  {if $categories !== []}
     <div
       n:foreach="$categories as $category"
       class="categoryBox{if $category->isVirtual} virtual_cat{/if}"

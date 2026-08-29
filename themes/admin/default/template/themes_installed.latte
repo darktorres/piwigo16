@@ -105,7 +105,7 @@
       {if $isWebmaster == 1}
         <div class="themeActions">
           {if $theme->state == 'active'}
-            {if $theme->adminUri}
+            {if $theme->adminUri !== null}
               <a
                 href="{$theme->adminUri|noescape}"
                 class="icon-cog"

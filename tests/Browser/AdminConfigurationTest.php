@@ -1219,6 +1219,18 @@ it('uploads a real PNG watermark image and rejects a non-PNG upload', function (
         $uploadedPath = __DIR__ . '/../../' . ltrim($watermarkFile, '/');
         expect(file_exists($uploadedPath))
             ->toBeTrue();
+
+        // Reloading the tab must come back with that file chosen in the
+        // picker. configuration_watermark.latte compares each option key
+        // against `$watermark['file']` strictly, and nothing asserted
+        // either arm of that before: the fixture ships no watermark, so
+        // admin-config-watermark.html renders the select with no option
+        // selected at all.
+        $reload = $curl($watermarkUrl, []);
+        expect($reload['status'])->toBe(200);
+        expect($reload['body'])
+            ->toMatch('~<option[^>]*value="' . preg_quote($watermarkFile, '~') . '"[^>]*selected~');
+
         @unlink($uploadedPath);
     } finally {
         @unlink($cookieJar);

@@ -1,5 +1,5 @@
 {templateType Piwigo\Admin\Projection\TabsheetView}
-<div n:if="isset($sheets) and count($sheets)" id="tabsheet">
+<div n:if="isset($sheets) and $sheets !== []" id="tabsheet">
   <ul class="tabsheet">
     <li
       n:foreach="$sheets as $name => $sheet"

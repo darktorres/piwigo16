@@ -434,9 +434,6 @@ parameters:
             identifier: argument.type
             path: _analysis/phpstan-latte/*
         -
-            identifier: if.condNotBoolean
-            path: _analysis/phpstan-latte/*
-        -
             identifier: logicalAnd.rightNotBoolean
             path: _analysis/phpstan-latte/*
         -

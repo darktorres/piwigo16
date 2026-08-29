@@ -31,6 +31,8 @@ use Piwigo\Menu\Projection\MenubarLinkRow;
 use Piwigo\Menu\Projection\MenubarLinksView;
 use Piwigo\Menu\Projection\MenubarMenuRow;
 use Piwigo\Menu\Projection\MenubarMenuView;
+use Piwigo\Menu\Projection\MenubarRelatedCategoriesView;
+use Piwigo\Menu\Projection\MenubarRelatedCategoryRow;
 use Piwigo\Menu\Projection\MenubarSpecialRow;
 use Piwigo\Menu\Projection\MenubarSpecialsView;
 use Piwigo\Menu\Projection\MenubarTagRow;
@@ -185,20 +187,30 @@ final class MenubarRenderer
             // this pass's scope -- its internal dynamic-$parentIdx mutation
             // loop defeats PHPStan's shape tracking regardless of the
             // written value's own type) -- convert at this one boundary.
-            $block->data = [
-                'MENU_CATEGORIES' => $categoryService->getRelatedCategoriesMenuWithUrls(
-                    $related_items,
-                    $urlService,
-                    $exclude_cat_ids,
-                    $page_category?->toArray(),
-                    $combined_categories !== null
-                        ? array_map(static fn (CategoryInfo $category): array => $category->toArray(), $combined_categories)
-                        : null,
-                ),
-            ];
+            $relatedRows = $categoryService->getRelatedCategoriesMenuWithUrls(
+                $related_items,
+                $urlService,
+                $exclude_cat_ids,
+                $page_category?->toArray(),
+                $combined_categories !== null
+                    ? array_map(static fn (CategoryInfo $category): array => $category->toArray(), $combined_categories)
+                    : null,
+            );
 
-            if (! self::emptyValue($block->data['MENU_CATEGORIES'])) {
-                $block->template = 'menubar_related_categories.latte';
+            $relatedCategories = [];
+            foreach ($relatedRows as $relatedRow) {
+                $relatedCategories[] = new MenubarRelatedCategoryRow(
+                    level: is_int($relatedRow['LEVEL'] ?? null) ? $relatedRow['LEVEL'] : 1,
+                    name: is_string($relatedRow['name'] ?? null) ? $relatedRow['name'] : '',
+                    url: is_string($relatedRow['url'] ?? null) ? $relatedRow['url'] : '',
+                    title: is_string($relatedRow['TITLE'] ?? null) ? $relatedRow['TITLE'] : null,
+                    countImages: is_int($relatedRow['count_images'] ?? null) ? $relatedRow['count_images'] : null,
+                    countCategories: is_int($relatedRow['count_categories'] ?? null) ? $relatedRow['count_categories'] : null,
+                );
+            }
+
+            if ($relatedCategories !== []) {
+                $block->raw_content = (string) $renderer->render(new MenubarRelatedCategoriesView($relatedCategories));
             }
         }
 

@@ -1,4 +1,4 @@
-{templateType Piwigo\Menu\Projection\MenubarBlockView}
+{templateType Piwigo\Menu\Projection\MenubarRelatedCategoriesView}
 <dt>
   {='Related albums'|translate}
 </dt>
@@ -15,37 +15,34 @@
     since each of those opens and closes within one iteration.
   *}
   {var $ref_level = 0}
-  {foreach $block->data['MENU_CATEGORIES'] as $cat}
-    {if $cat['LEVEL'] > $ref_level}
+  {foreach $categories as $cat}
+    {if $cat->level > $ref_level}
       {="<ul>"|noescape}
     {else}
       {="</li>"|noescape}
-      {='</ul></li>'|str_repeat:($ref_level - $cat['LEVEL'])|noescape}
+      {='</ul></li>'|str_repeat:($ref_level - $cat->level)|noescape}
     {/if}
     {="<li>"|noescape}
-    {if isset($cat['TITLE'])}
+    {if $cat->title !== null}
       <a
-        href="{if isset($cat['url'])}{$cat['url']|noescape}{/if}"
-        title="{$cat['TITLE']}"
+        href="{$cat->url|noescape}"
+        title="{$cat->title}"
         rel="nofollow"
-      >{$cat['name']}</a>
+      >{$cat->name}</a>
     {else}
-      <a
-        href="{if isset($cat['url'])}{$cat['url']|noescape}{/if}"
-        rel="nofollow"
-      >{$cat['name']}</a>
+      <a href="{$cat->url|noescape}" rel="nofollow">{$cat->name}</a>
     {/if}
     <span
-      n:if="isset($cat['count_images']) and $cat['count_images'] > 0"
+      n:if="$cat->countImages !== null and $cat->countImages > 0"
       class="badge"
-      title="{$cat['count_images']|translate_dec:'%d photo','%d photos'}"
-    >{$cat['count_images']}</span>
+      title="{$cat->countImages|translate_dec:'%d photo','%d photos'}"
+    >{$cat->countImages}</span>
     <span
-      n:if="isset($cat['count_categories']) and $cat['count_categories'] > 0"
+      n:if="$cat->countCategories !== null and $cat->countCategories > 0"
       class="badge badgeCategories"
       title="{='sub-albums'|translate}"
-    >{$cat['count_categories']}</span>
-    {var $ref_level = $cat['LEVEL']}
+    >{$cat->countCategories}</span>
+    {var $ref_level = $cat->level}
   {/foreach}
   {='</li></ul>'|str_repeat:$ref_level|noescape}
 </dd>

@@ -20,6 +20,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\TypedRepository;
 use Piwigo\Picture\PictureRateRenderer;
+use Piwigo\Picture\Projection\RateSummary;
 use Piwigo\Rate\RateEntity;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
@@ -141,11 +142,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
 
         $result = $this->renderer->render(1, $this->urlService(), $this->picture(1, 87.5), '/picture.php?/1');
 
-        self::assertSame([
-            'count' => 3,
-            'score' => 87.5,
-            'average' => 4.0,
-        ], $result->rateSummary);
+        self::assertEquals(new RateSummary(count: 3, score: 87.5), $result->rateSummary);
 
         self::assertIsArray($result->rating);
         // Classic user (not anonymous) -- user_id=3's own vote (3), matched
@@ -199,15 +196,15 @@ final class PictureRateRendererTest extends IntegrationTestCase
         // guard doesn't treat 0.0 as absent) -- findRateSummaryForElement()
         // still runs its real COUNT/AVG query, just against zero matching
         // rows (tearDown() clears element_id=1's rate rows, and this test
-        // inserts none), so count=0/average=null come from real aggregate
-        // SQL semantics, not the method's own `$row === false` fallback.
+        // inserts none), so count=0 comes from real aggregate SQL
+        // semantics, not the method's own `$row === false` fallback. The
+        // AVG half of that pair is pinned where it belongs, on
+        // findRateSummaryForElement() itself (RateRepositoryTest's own
+        // `new RateSummaryForElement(0, null)`), which is why RateSummary
+        // no longer carries an average nothing read.
         $result = $this->renderer->render(1, $this->urlService(), $this->picture(1, 0.0), '/picture.php?/1');
 
-        self::assertSame([
-            'count' => 0,
-            'score' => 0.0,
-            'average' => null,
-        ], $result->rateSummary);
+        self::assertEquals(new RateSummary(count: 0, score: 0.0), $result->rateSummary);
 
         self::assertIsArray($result->rating);
         // count === 0 -- findUserRate() is never even called.

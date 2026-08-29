@@ -14,11 +14,10 @@ namespace Piwigo\Picture\Projection;
 final readonly class PictureRateResult
 {
     /**
-     * @param array<string, mixed>|null $rateSummary
      * @param array{F_ACTION: string, USER_RATE: ?int, marks: list<int>}|null $rating
      */
     public function __construct(
-        public ?array $rateSummary,
+        public ?RateSummary $rateSummary,
         public ?array $rating,
     ) {}
 }

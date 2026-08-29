@@ -11,6 +11,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Picture\Projection\PictureRateResult;
+use Piwigo\Picture\Projection\RateSummary;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Users\CurrentUser;
 
@@ -52,25 +53,29 @@ final readonly class PictureRateRenderer
             return new PictureRateResult(rateSummary: null, rating: null);
         }
 
-        $rate_summary = [
-            'count' => 0,
-            'score' => $picture['current']['rating_score'],
-            'average' => null,
-        ];
-        if ($rate_summary['score'] !== null) {
+        // `Image::toArray()` declares this `?float`; the is_numeric()
+        // form matches Image::fromRow()'s own guard and keeps a numeric
+        // string -- which a plugin filtering PicturePicturesData could
+        // still put here -- on the same side of the null test it is on
+        // today.
+        $rating_score_raw = $picture['current']['rating_score'] ?? null;
+        $rating_score = is_numeric($rating_score_raw) ? (float) $rating_score_raw : null;
+
+        $rate_count = 0;
+        if ($rating_score !== null) {
             // images.id is the NOT NULL primary key, always a numeric string
             // once fetched (see the matching assert in picture.php).
             $picture_current_id = $picture['current']['id'];
             assert(is_numeric($picture_current_id));
 
-            $summary = $this->repo->findRateSummaryForElement(ImageId::from((int) $picture_current_id));
-            $rate_summary['count'] = $summary->count;
-            $rate_summary['average'] = $summary->average;
+            $rate_count = $this->repo->findRateSummaryForElement(ImageId::from((int) $picture_current_id))->count;
         }
+
+        $rate_summary = new RateSummary(count: $rate_count, score: $rating_score);
 
         $user_rate = null;
         if ($this->currentConfig->rateAnonymous or $this->accessControl->isAuthorizeStatus(AccessLevel::Classic)) {
-            if ($rate_summary['count'] > 0) {
+            if ($rate_summary->count > 0) {
                 $rate_image_id = ImageId::from($imageId);
                 $rate_user_id = $this->currentUser->get()
                     ->id;

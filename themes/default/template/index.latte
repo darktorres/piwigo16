@@ -312,7 +312,33 @@
       </div>
 
       {if isset($combinableTags)}
-        {include 'include/related_tags.inc.latte'}
+        <h3 class="related-tags-title">{='Related tags'|translate}</h3>
+
+        {foreach $combinableTags as $tag}
+          {spaceless}
+            <span class="related-tags">
+              {if isset($tag['U_ADD'])}
+                <a
+                  class="tagLevel {if isset($tag['level'])}{$tag['level']}{/if}"
+                  href="{$tag['U_ADD']|noescape}"
+                  title="{$tag['counter']|translate_dec:'%d photo is also linked to current tags','%d photos are also linked to current tags'}"
+                  rel="nofollow"
+                >
+                  + {$tag['name']}<div
+                    class="tag-counter"
+                  >{$tag['counter']}</div></a>
+              {else}
+                <a
+                  class="tagLevel {if isset($tag['level'])}{$tag['level']}{/if}"
+                  href="{$tag['URL']|noescape}"
+                  title="{='display photos linked to this tag'|translate}"
+                >
+                  + {$tag['name']}<div
+                    class="tag-counter"
+                  >{$tag['counter']}</div></a>
+              {/if}
+            </span>{/spaceless}
+        {/foreach}
       {/if}
     </div>
 

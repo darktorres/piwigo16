@@ -148,7 +148,7 @@ Three structural changes produced that drift:
 | P55 | Real quality gates | Not started | 0 |
 | P56 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P57 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
-| P58 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | In progress — A0/A0b done (103 findings refiled as Latte codegen); a generic `CachingIterator` stub removed the erasure hiding 133 more; **P58-A 843 → 223**, with techniques 1, 4 and 11 closed and 3 nearly so; P58-B 376 → 356. Two of A's 20 identifier ignores retired from `phpstan.neon`. Twelve live bugs found and fixed along the way | 1 |
+| P58 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | In progress — A0/A0b done (103 findings refiled as Latte codegen); a generic `CachingIterator` stub removed the erasure hiding 133 more; **P58-A 843 → 160**, with techniques 1, 4 and 11 closed and 3 nearly so; P58-B 376 → 348. Six of A's 20 identifier ignores retired from `phpstan.neon`. Fifteen live bugs found and fixed along the way, and three gaps closed in the compile step itself | 1 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -4516,14 +4516,12 @@ techniques. Re-run `phpstan-latte:compile` first — a stale compile
 changes the count.
 
 Opened at **P58-A 843** across 74 templates and 63 View classes and
-**P58-B 376** across 72 (P32 recorded ~1,400 and ~450). Now **A 223, B
-356** -- B's 20 were not B work, but `empty()`/`==` guards A had to restate
+**P58-B 376** across 72 (P32 recorded ~1,400 and ~450). Now **A 160, B
+348** -- B's 28 were not B work, but `empty()`/`==` guards A had to restate
 on its way past, since `empty()` on an object is always false and a
-comparison against a newly-typed value can be written strictly. Four
-entries have come out of the block so far
-(`booleanOr.leftNotBoolean`/`rightNotBoolean`,
-`booleanAnd.rightNotBoolean`, `offsetAccess.invalidOffset`), each
-forced by `reportUnmatchedIgnoredErrors` rather than noticed.
+comparison against a newly-typed value can be written strictly. Six
+entries have come out of the block so far, each forced by
+`reportUnmatchedIgnoredErrors` rather than noticed.
 
 *P58-A0/A0b (done, `3e6255a4d9`, `fc763eaa57`).* 81 of A's raw 924 were
 `booleanNot.exprNotBoolean` reading `Latte\Runtime\Template|null` —
@@ -4556,11 +4554,11 @@ not a partition, since one chain can need two:
 
 | # | technique | opened | now |
 | --- | --- | --- | --- |
-| 9 | template locals / fallback-union globals | 119 | 85 |
 | 5 | polymorphic block data (`mixed` by design) | 52 | 51 |
+| 9 | template locals / fallback-union globals | 119 | 42 |
 | 6 | picture family: untyped event payloads | 35 | 35 |
-| 3 | compose a row VO (incl. `array_merge` sites) | 160 | **28** |
 | 2 | tighten a leaf `*Result`/`*Data` property | 87 | **11** |
+| 3 | compose a row VO (incl. `array_merge` sites) | 160 | **9** |
 | 11 | nullable/union used as if definite | 23 | **5** |
 | 4 | retire a flattening `TemplatePageContext` | 86 | **5** |
 | 1 | delete a `->toArray()` flatten | 118 | **0** |
@@ -4622,6 +4620,52 @@ narrowing in all five comparators goes away with the shape it was
 guarding against. Keep their expression shape, though — `<=>` is not
 faithful where the operands are `int` and the zero test is `=== 0.0`,
 nor where `sqrt()` of a float-error-negative variance can yield `NAN`.
+
+§9's tail turned out to hold two distinct failure modes, and telling them
+apart is what the technique's own name obscures. Four of its roots were
+template variables **no producer assigns at all** — a rename that missed a
+file (`$COMBINABLE_TAGS`, so the related-tags panel rendered its heading
+and nothing else since P40 Batch 2), a pair the View supplies in
+camelCase while the template still reads snake_case
+(`$cache_sizes`/`$time_elapsed_since_last_calc`, so the maintenance env
+tab printed "N/A" and "never calculated" whatever the real state), a meta
+tag whose value moved onto `PictureView` while `layout.latte` renders
+before that View exists (`$INFO_AUTHOR`), and markup superseded five years
+ago upstream (`$search_summary`). A `mixed` root with no View property
+behind it is the signature: the census finds these because nothing types
+them, and no snapshot can, because a fixture generated after the fact
+records the absence as correct.
+
+The other mode is the compile step under-describing code that was already
+right, and three gaps closed there moved the census without touching
+application source. Latte discards the types a `{define}` declares —
+`TemplateGenerator::buildParams()` emits `$x = $ʟ_args[0] ?? … ?? null`
+and never reads `ParameterNode::$type` — so declared block parameters
+reached PHPStan as `mixed` and `{define}`'s type syntax was decorative;
+transform #4 injects the missing `@var`, cross-checking the names it parses
+out of Latte's own emitted tag comment against the assignments underneath.
+And `ContextVariableExtractor` typed an array literal in `toArray()` by
+"the first property it mentions", so `'chronology' => ['TITLE' => $title]`
+arrived as `string` and `'footer_elements' => [$debug]` likewise —
+*worse* than `mixed`, since the resulting findings accused the template of
+an offset access on a string. Keyed literals now yield `array{…}`, keyless
+ones `list<…>`, and three shapes still refuse to guess (an int key, a
+spread, a literal mixing both forms). The compile step emits no
+"computed expression" notices now.
+
+Not everything volatile is unfreezable, and the difference is worth
+measuring rather than asserting. The maintenance env tab was recorded as
+uncapturable because it "prints wall-clock timestamps"; two renders three
+seconds apart differ on exactly two lines, and only one had to. The PHP
+one was `date('Y-m-d H:i:s')` — the single clock read in that file not
+going through `Env::now()`, against 157 sites in `src/` that do — so
+`PIWIGO_TEST_NOW` freezes it. The MySQL one is `SELECT NOW()` off the
+database server and the pair exists to reveal PHP/DB skew, which is real
+here. Hence a third element in the shared route table meaning "golden HTML
+only": a byte snapshot normalizes an external value the way it already
+normalizes the checkout path, a pixel baseline cannot. That table's shape
+lives in three places — the file's own docblock and a `@var` over each
+consumer's `require` — and all three must move together.
 
 *P58-B — modernize the template source.* Ordered strictly after A: 154
 of B's 268 loose comparisons and 28 of its 103 `empty()` calls have

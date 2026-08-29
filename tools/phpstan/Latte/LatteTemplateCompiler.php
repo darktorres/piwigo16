@@ -55,6 +55,17 @@ use Piwigo\Tools\PhpStan\Latte\Generated\LatteAnalysisShims;
  *    aren't in that map, from Latte's own generated code shape instead
  *    of a guessed or hand-asserted type.
  *
+ * 4. `/** @var Type $name *``/` docblocks after each parameter a
+ *    `{define}` declares. Latte parses those types and discards them --
+ *    `TemplateGenerator::buildParams()` emits
+ *    `$x = $ʟ_args[0] ?? $ʟ_args['x'] ?? null;` and never reads
+ *    `ParameterNode::$type` -- so without this a declared block
+ *    parameter is `mixed` however it was written, and `{define}`'s type
+ *    syntax is decorative. The declaration survives verbatim in the
+ *    `/** {define ...} on line N *``/` comment Latte emits above the
+ *    block method; the names read out of it must line up by index with
+ *    the assignments underneath, which is what keeps this honest.
+ *
  * All transforms are textual, deliberately not parse-and-reprint:
  * every generated line and its `/* pos L:C *``/` comment stays
  * byte-identical to Latte's own output (injection only inserts lines),
@@ -99,6 +110,7 @@ final readonly class LatteTemplateCompiler
         $code = $this->rewriteInvocations($code, $templateRealPath);
         [$code, $notices] = $this->injectVarDocblocks($code, $vars, $templateRealPath);
         $code = $this->injectCaptureVarDocblocks($code);
+        $code = $this->injectBlockParamDocblocks($code, $templateRealPath);
 
         $outputPath = $this->outputDir . '/' . $this->outputBasename($templateRealPath);
         $changed = ! is_file($outputPath) || file_get_contents($outputPath) !== $code;
@@ -227,6 +239,147 @@ final readonly class LatteTemplateCompiler
         }
 
         return implode("\n", $out);
+    }
+
+    /**
+     * See class docblock transform #4: types every parameter a `{define}`
+     * declares.
+     *
+     * Latte parses those types and then throws them away --
+     * `TemplateGenerator::buildParams()` emits
+     * `$x = $ʟ_args[0] ?? $ʟ_args['x'] ?? null;` and never reads
+     * `ParameterNode::$type` -- so a declared block parameter reaches
+     * PHPStan as `mixed` however carefully it was written. The
+     * declaration does survive verbatim in the
+     * `/** {define ...} on line N *``/` comment Latte emits above the
+     * block method, which is what this reads.
+     *
+     * Two independent halves of Latte's own output cross-check each
+     * other: the names parsed out of that comment must line up
+     * one-for-one, by index, with the generated assignments underneath
+     * it. A mismatch hard-fails rather than typing the wrong variable.
+     */
+    private function injectBlockParamDocblocks(string $code, string $templateRealPath): string
+    {
+        $out = [];
+        /** @var list<array{type: ?string, name: string}> $params */
+        $params = [];
+        foreach (explode("\n", $code) as $line) {
+            if (preg_match('/^\s*\/\*\* \{(?:define|block) (.*)\} on line \d+ \*\/$/u', $line, $m) === 1) {
+                $params = $this->parseBlockParameters($m[1], $templateRealPath);
+                $out[] = $line;
+                continue;
+            }
+
+            // A block with no declared parameters compiles to
+            // `extract($ʟ_args);` instead, so indexed assignments only
+            // ever appear under a `{define}` that declared some.
+            if ($params !== []
+                && preg_match('/^(\s*)\$([a-zA-Z_][a-zA-Z0-9_]*) = \$ʟ_args\[(\d+)\] \?\? /u', $line, $m) === 1) {
+                $index = (int) $m[3];
+                $declared = $params[$index] ?? null;
+                if ($declared === null || $declared['name'] !== $m[2]) {
+                    throw new LogicException(
+                        "Block parameter mismatch in the compiled output of {$templateRealPath}: Latte generated "
+                        . "`\${$m[2]}` at index {$index}, but the {define} tag above it declares "
+                        . ($declared === null ? 'no parameter there' : "`\${$declared['name']}`")
+                        . '. Extend LatteTemplateCompiler::parseBlockParameters() rather than letting it type '
+                        . 'the wrong variable.',
+                    );
+                }
+
+                $out[] = $line;
+                if ($declared['type'] !== null) {
+                    $out[] = $m[1] . "/** @var {$declared['type']} \${$m[2]} */";
+                }
+
+                continue;
+            }
+
+            $out[] = $line;
+        }
+
+        return implode("\n", $out);
+    }
+
+    /**
+     * `name, string $a, int|string $b = 0` -> the two declarations, with
+     * the block's own name and any defaults dropped. A parameter written
+     * without a type yields `type: null` and is left as Latte typed it.
+     *
+     * @return list<array{type: ?string, name: string}>
+     */
+    private function parseBlockParameters(string $tag, string $templateRealPath): array
+    {
+        $comma = strpos($tag, ',');
+        if ($comma === false) {
+            return [];
+        }
+
+        $params = [];
+        foreach ($this->splitTopLevel(substr($tag, $comma + 1)) as $declaration) {
+            $declaration = trim($declaration);
+            if ($declaration === '') {
+                continue;
+            }
+            if (preg_match('/^(?:(.+?)\s+)?\$([a-zA-Z_][a-zA-Z0-9_]*)\s*(?:=.*)?$/su', $declaration, $m) !== 1) {
+                throw new LogicException(
+                    "Cannot read block parameter `{$declaration}` in {$templateRealPath}. "
+                    . 'Extend LatteTemplateCompiler::parseBlockParameters().',
+                );
+            }
+            $type = trim($m[1]);
+            $params[] = [
+                'type' => $type === '' ? null : $type,
+                'name' => $m[2],
+            ];
+        }
+
+        return $params;
+    }
+
+    /**
+     * Splits on the commas that separate parameters, not the ones inside
+     * a type (`array{a: int, b: int}`) or a string default.
+     *
+     * @return list<string>
+     */
+    private function splitTopLevel(string $list): array
+    {
+        $parts = [];
+        $current = '';
+        $depth = 0;
+        $quote = null;
+        $length = strlen($list);
+        for ($i = 0; $i < $length; $i++) {
+            $char = $list[$i];
+            if ($quote !== null) {
+                $current .= $char;
+                if ($char === '\\' && $i + 1 < $length) {
+                    $current .= $list[++$i];
+                } elseif ($char === $quote) {
+                    $quote = null;
+                }
+
+                continue;
+            }
+            if ($char === "'" || $char === '"') {
+                $quote = $char;
+            } elseif (in_array($char, ['<', '[', '{', '('], true)) {
+                $depth++;
+            } elseif (in_array($char, ['>', ']', '}', ')'], true)) {
+                $depth--;
+            } elseif ($char === ',' && $depth === 0) {
+                $parts[] = $current;
+                $current = '';
+
+                continue;
+            }
+            $current .= $char;
+        }
+        $parts[] = $current;
+
+        return $parts;
     }
 
     /**

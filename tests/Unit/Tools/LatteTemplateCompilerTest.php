@@ -154,6 +154,61 @@ it('injects a Html|string|false @var docblock after every {capture} target assig
         ->toContain('@var \Latte\Runtime\Html|string|false $rate_over');
 });
 
+it('types every parameter a {define} declares, which Latte itself throws away', function (): void {
+    $fixture = $this->root . '/define-fixture.latte';
+    file_put_contents($fixture, <<<'LATTE'
+        {define row, string $label, int $count, $untyped}
+          {$label}{$count}{$untyped}
+        {/define}
+        {include row, label: 'x', count: 1, untyped: 'y'}
+        LATTE);
+
+    $result = $this->compiler->compile($fixture, []);
+
+    $code = (string) file_get_contents($result->outputPath);
+    expect($code)
+        // Latte's own codegen, unchanged -- the type is nowhere in it.
+        ->toContain("\$label = \$ʟ_args[0] ?? \$ʟ_args['label'] ?? null;")
+        ->toContain('@var string $label')
+        ->toContain('@var int $count')
+        // A parameter declared without a type stays as Latte typed it.
+        ->not->toContain('$untyped */');
+});
+
+it('splits parameters on the commas that separate them, not the ones inside a type or a default', function (): void {
+    $fixture = $this->root . '/define-commas-fixture.latte';
+    file_put_contents($fixture, <<<'LATTE'
+        {define row, array{a: int, b: int} $pair, string $sep = 'a, b'}
+          {$pair['a']}{$sep}
+        {/define}
+        {include row, pair: [a => 1, b => 2]}
+        LATTE);
+
+    $result = $this->compiler->compile($fixture, []);
+
+    expect((string) file_get_contents($result->outputPath))
+        ->toContain('@var array{a: int, b: int} $pair')
+        ->toContain('@var string $sep');
+});
+
+it('hard-fails rather than typing the wrong variable when the {define} tag and the generated assignments disagree', function (): void {
+    $engine = new class() extends Engine {
+        #[\Override]
+        public function compile(string $name): string
+        {
+            return "<?php\n\t/** {define row, string \$label, int \$count} on line 1 */\n"
+                . "\tpublic function blockRow(array \$ʟ_args): void\n\t{\n"
+                . "\t\t\$label = \$ʟ_args[0] ?? \$ʟ_args['label'] ?? null;\n"
+                . "\t\t\$somethingElse = \$ʟ_args[1] ?? \$ʟ_args['somethingElse'] ?? null;\n\t}\n";
+        }
+    };
+
+    $compiler = new LatteTemplateCompiler($engine, $this->repoRoot, $this->outputDir);
+
+    expect(fn (): mixed => $compiler->compile($this->root . '/whatever.latte', []))
+        ->toThrow(LogicException::class, 'Block parameter mismatch');
+});
+
 it('skips invalid PHP identifiers with a notice instead of emitting broken docblocks', function (): void {
     $result = $this->compiler->compile(
         $this->repoRoot . '/themes/admin/default/template/comments.latte',

@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Menu\Projection;
 
+use Override;
+use Piwigo\Asset\AssetContribution;
+use Piwigo\Asset\HasPageAssets;
+use Piwigo\Asset\LoadMode;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -19,7 +23,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `index.latte` for the same reason.
  */
 #[Template('menubar_links.latte')]
-final readonly class MenubarLinksView implements View
+final readonly class MenubarLinksView implements View, HasPageAssets
 {
     /**
      * @param list<MenubarLinkRow> $links never empty -- the block is only
@@ -28,4 +32,21 @@ final readonly class MenubarLinksView implements View
     public function __construct(
         public array $links,
     ) {}
+
+    /**
+     * Declared here rather than in `MenubarView::pageAssets()`'s own
+     * `match ($block->template)`: that dispatch keys off a field this
+     * block no longer sets, and a View that owns its markup should own
+     * its assets. `Renderer::render()` registers these when it renders
+     * this view into the block's raw_content.
+     *
+     * @return list<AssetContribution>
+     */
+    #[Override]
+    public function pageAssets(): array
+    {
+        return [
+            AssetContribution::script('menubar-links', 'themes/default/js/menubar-links.ts', loadMode: LoadMode::Footer),
+        ];
+    }
 }

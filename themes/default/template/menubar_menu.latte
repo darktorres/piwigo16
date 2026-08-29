@@ -1,8 +1,8 @@
-{templateType Piwigo\Menu\Projection\MenubarBlockView}
+{templateType Piwigo\Menu\Projection\MenubarMenuView}
 <dt>{='Menu'|translate}</dt>
 <dd>
-  {if isset($block->data['qsearch']) and $block->data['qsearch'] == true}
-    <form action="{$ROOT_URL}qsearch.php" method="get" id="quicksearch">
+  {if $quickSearch}
+    <form action="{$rootUrl}qsearch.php" method="get" id="quicksearch">
       <p
         class="quicksearch-form-p"
         {*this <p> is for html validation only - does not affect positioning*}
@@ -11,24 +11,24 @@
           type="text"
           name="q"
           id="qsearchInput"
-          {if !empty($QUERY_SEARCH)}
-          value="{$QUERY_SEARCH|noescape}"
+          {if $querySearch !== null && $querySearch !== ''}
+          value="{$querySearch|noescape}"
           {/if}
         >
       </p>
     </form>
   {/if}
   <ul>{spaceless}
-      {foreach $block->data as $link}
-        <li n:if="is_array($link)"><a
-            href="{$link['URL']|noescape}"
-            {if isset($link['TITLE'])}
-            title="{$link['TITLE']}"
+      {foreach $links as $link}
+        <li><a
+            href="{$link->url|noescape}"
+            {if $link->title !== null}
+            title="{$link->title}"
             {/if}
-            {if isset($link['REL'])}
-            {$link['REL']|noescape}
+            {if $link->rel !== null}
+            rel="{$link->rel}"
             {/if}
-          >{$link['NAME']}</a>{if isset($link['COUNTER'])} ({$link['COUNTER']}){/if}</li>
+          >{$link->name}</a>{if $link->counter !== null} ({$link->counter}){/if}</li>
       {/foreach}
     {/spaceless}</ul>
 </dd>

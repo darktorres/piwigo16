@@ -29,6 +29,8 @@ use Piwigo\Menu\Event\CheckMenuLinkVisibility;
 use Piwigo\Menu\Projection\MenubarIdentificationPageContext;
 use Piwigo\Menu\Projection\MenubarLinkRow;
 use Piwigo\Menu\Projection\MenubarLinksView;
+use Piwigo\Menu\Projection\MenubarMenuRow;
+use Piwigo\Menu\Projection\MenubarMenuView;
 use Piwigo\Menu\Projection\MenubarSpecialRow;
 use Piwigo\Menu\Projection\MenubarSpecialsView;
 use Piwigo\Permission\PermissionService;
@@ -292,68 +294,64 @@ final class MenubarRenderer
         }
 
         if (($block = $menu->getBlock('mbMenu')) instanceof DisplayBlock) {
-            $block->data = [];
-            // quick search block will be displayed only if data['qsearch'] is set
-            // to "yes"
-            $block->data['qsearch'] = true;
-
-            // tags link
-            $block->data['tags'] =
-              [
-                  'TITLE' => $lang->t('display available tags'),
-                  'NAME' => $lang->t('Tags'),
-                  'URL' => $urlService->getRootUrl() . 'tags.php',
-                  'COUNTER' => $tagService->getNbAvailableTags(),
-              ];
-
-            // search link
-            $block->data['search'] =
-              [
-                  'TITLE' => $lang->t('search'),
-                  'NAME' => $lang->t('Search'),
-                  'URL' => $urlService->getRootUrl() . 'search.php',
-                  'REL' => 'rel="search"',
-              ];
+            $menuLinks = [
+                // tags link
+                new MenubarMenuRow(
+                    url: $urlService->getRootUrl() . 'tags.php',
+                    name: $lang->t('Tags'),
+                    title: $lang->t('display available tags'),
+                    counter: $tagService->getNbAvailableTags(),
+                ),
+                // search link
+                new MenubarMenuRow(
+                    url: $urlService->getRootUrl() . 'search.php',
+                    name: $lang->t('Search'),
+                    title: $lang->t('search'),
+                    rel: 'search',
+                ),
+            ];
 
             if ($currentConfig->activateComments) {
                 // comments link
-                $block->data['comments'] =
-                  [
-                      'TITLE' => $lang->t('display last user comments'),
-                      'NAME' => $lang->t('Comments'),
-                      'URL' => $urlService->getRootUrl() . 'comments.php',
-                      'COUNTER' => new AvailableCommentsCounter($currentUser, $accessLevelChecker)
-                          ->count($permissionService, $entityManager),
-                  ];
+                $menuLinks[] = new MenubarMenuRow(
+                    url: $urlService->getRootUrl() . 'comments.php',
+                    name: $lang->t('Comments'),
+                    title: $lang->t('display last user comments'),
+                    counter: new AvailableCommentsCounter($currentUser, $accessLevelChecker)
+                        ->count($permissionService, $entityManager),
+                );
             }
 
             // about link
-            $block->data['about'] =
-              [
-                  'TITLE' => $lang->t('About Piwigo'),
-                  'NAME' => $lang->t('About'),
-                  'URL' => $urlService->getRootUrl() . 'about.php',
-              ];
+            $menuLinks[] = new MenubarMenuRow(
+                url: $urlService->getRootUrl() . 'about.php',
+                name: $lang->t('About'),
+                title: $lang->t('About Piwigo'),
+            );
 
             // notification
-            $block->data['rss'] =
-              [
-                  'TITLE' => $lang->t('RSS feed'),
-                  'NAME' => $lang->t('Notification'),
-                  'URL' => $urlService->getRootUrl() . 'notification.php',
-                  'REL' => 'rel="nofollow"',
-              ];
+            $menuLinks[] = new MenubarMenuRow(
+                url: $urlService->getRootUrl() . 'notification.php',
+                name: $lang->t('Notification'),
+                title: $lang->t('RSS feed'),
+                rel: 'nofollow',
+            );
 
             foreach ($template->menuItems() as $item) {
-                $block->data[] = [
-                    'URL' => $item->url,
-                    'TITLE' => $item->title,
-                    'NAME' => $item->label,
-                    'COUNTER' => $item->counter,
-                ];
+                $menuLinks[] = new MenubarMenuRow(
+                    url: $item->url,
+                    name: $item->label,
+                    title: $item->title,
+                    counter: $item->counter,
+                );
             }
 
-            $block->template = 'menubar_menu.latte';
+            $block->raw_content = (string) $renderer->render(new MenubarMenuView(
+                quickSearch: true,
+                links: $menuLinks,
+                rootUrl: $urlService->getRootUrl(),
+                querySearch: $query_search,
+            ));
         }
 
         $u_login = null;

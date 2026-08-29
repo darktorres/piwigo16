@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Piwigo\Asset\AssetContribution;
-use Piwigo\Asset\LoadMode;
 use Piwigo\Menu\DisplayBlock;
 use Piwigo\Menu\Projection\MenubarView;
 use Piwigo\Menu\RegisteredBlock;
@@ -31,48 +30,6 @@ test('pageAssets registers menubar_identification.latte\'s own CSS when that blo
         ]);
 });
 
-test('pageAssets registers menubar_links.latte\'s own script when that block is present', function (): void {
-    $view = new MenubarView([
-        makeMenubarDisplayBlock('menubar_links.latte'),
-    ]);
-
-    expect($view->pageAssets())
-        ->toEqual([
-            AssetContribution::script('menubar-links', 'themes/default/js/menubar-links.ts', loadMode: LoadMode::Footer),
-        ]);
-});
-
-test('pageAssets registers menubar_menu.latte\'s quicksearch assets when qsearch is true', function (): void {
-    $view = new MenubarView([
-        makeMenubarDisplayBlock('menubar_menu.latte', [
-            'qsearch' => true,
-        ]),
-    ]);
-
-    expect($view->pageAssets())
-        ->toEqual([
-            AssetContribution::script('menubar-quicksearch', 'themes/default/js/menubar-quicksearch.ts', loadMode: LoadMode::Footer),
-            AssetContribution::css('themes/default/css/components/menubar_menu.css', id: 'menubar_menu'),
-        ]);
-
-    expect($view->exposedStrings())
-        ->toBe(['Quick search']);
-});
-
-test('pageAssets skips menubar_menu.latte\'s quicksearch assets when qsearch is absent', function (): void {
-    $view = new MenubarView([
-        makeMenubarDisplayBlock('menubar_menu.latte', [
-            'tags' => [],
-        ]),
-    ]);
-
-    expect($view->pageAssets())
-        ->toEqual([]);
-
-    expect($view->exposedStrings())
-        ->toBe([]);
-});
-
 test('pageAssets ignores an unrecognized (plugin) block template', function (): void {
     $view = new MenubarView([
         makeMenubarDisplayBlock('menubar_categories.latte'),
@@ -81,17 +38,4 @@ test('pageAssets ignores an unrecognized (plugin) block template', function (): 
 
     expect($view->pageAssets())
         ->toEqual([]);
-});
-
-test('pageAssets preserves block iteration order across multiple recognized blocks', function (): void {
-    $view = new MenubarView([
-        makeMenubarDisplayBlock('menubar_links.latte'),
-        makeMenubarDisplayBlock('menubar_identification.latte'),
-    ]);
-
-    expect($view->pageAssets())
-        ->toEqual([
-            AssetContribution::script('menubar-links', 'themes/default/js/menubar-links.ts', loadMode: LoadMode::Footer),
-            AssetContribution::css('themes/default/css/components/menubar_identification.css', id: 'menubar_identification'),
-        ]);
 });

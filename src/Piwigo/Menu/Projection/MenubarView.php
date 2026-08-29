@@ -7,7 +7,6 @@ namespace Piwigo\Menu\Projection;
 use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
-use Piwigo\Asset\LoadMode;
 use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Menu\DisplayBlock;
@@ -66,17 +65,6 @@ final readonly class MenubarView implements View, HasPageAssets, ExposesPageData
                     ...$assets,
                     AssetContribution::css('themes/default/css/components/menubar_identification.css', id: 'menubar_identification'),
                 ],
-                'menubar_links.latte' => [
-                    ...$assets,
-                    AssetContribution::script('menubar-links', 'themes/default/js/menubar-links.ts', loadMode: LoadMode::Footer),
-                ],
-                'menubar_menu.latte' => [
-                    ...$assets,
-                    ...(self::hasQuickSearch($block) ? [
-                        AssetContribution::script('menubar-quicksearch', 'themes/default/js/menubar-quicksearch.ts', loadMode: LoadMode::Footer),
-                        AssetContribution::css('themes/default/css/components/menubar_menu.css', id: 'menubar_menu'),
-                    ] : []),
-                ],
                 default => $assets,
             };
         }
@@ -94,33 +82,11 @@ final readonly class MenubarView implements View, HasPageAssets, ExposesPageData
     }
 
     /**
-     * `menubar_menu.latte`'s own `{if isset($block->data['qsearch']) and
-     * $block->data['qsearch'] == true}` guard is a real branch (today
-     * always true whenever `mbMenu` is active --
-     * `MenubarRenderer::render()` sets it unconditionally -- but
-     * `$block->data` is genuinely plugin-mutable via
-     * `Menu\Event\BlockManagerPrepareDisplay`, so this replicates the
-     * real check rather than assuming it -- `===` here, not the
-     * template's own loose `==`, since this project's strict rules
-     * disallow loose comparison in real PHP source and the real value
-     * is always a genuine `bool`), covered by its own unit test.
-     *
      * @return list<string>
      */
     #[Override]
     public function exposedStrings(): array
     {
-        foreach ($this->blocks as $block) {
-            if ($block->template === 'menubar_menu.latte' && self::hasQuickSearch($block)) {
-                return ['Quick search'];
-            }
-        }
-
         return [];
-    }
-
-    private static function hasQuickSearch(DisplayBlock $block): bool
-    {
-        return is_array($block->data) && ($block->data['qsearch'] ?? null) === true;
     }
 }

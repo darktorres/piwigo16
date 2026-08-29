@@ -28,10 +28,22 @@ final readonly class IntroView implements View, HasPageAssets, ExposesPageData
 {
     /**
      * @param list<string> $activityWeekNumber
-     * @param array<array-key, array<array-key, ActivityDay>> $activityLastWeeks
-     * @param array<array-key, mixed> $activityChartData
+     * @param array<int, array<int, ActivityDay>> $activityLastWeeks one
+     *   entry per rendered day cell, keyed [week index][ISO weekday]
+     * @param array<int, array<int, int>> $activityChartData the same
+     *   keying, holding each cell's circle size rather than its activity --
+     *   `intro.latte` iterates this one and reads $activityLastWeeks at
+     *   its keys, so the two shapes have to agree
      * @param list<string> $dayLabels
-     * @param array<string, array<string, array<string, mixed>>> $storageChartData
+     * @param array<string, array{total: array{filesize: float, nb_files?: int},
+     *   details?: array<string, array{filesize: float, nb_files: int}>}> $storageChartData keyed by storage
+     *   type ('Photos'/'Videos'/'Other'/'Formats'/'Cache'). The
+     *   'Cache' entry is the odd one: it carries a filesize and
+     *   nothing else, so both 'nb_files' and 'details' are
+     *   genuinely optional here. Key names are the wire contract
+     *   with intro.ts's own StorageDetails (build/jquery-plugins.d.ts),
+     *   which reads them through pwg_getPageData('storage_chart_data')
+     *   -- they are snake_case for that reason and must stay so.
      */
     public function __construct(
         public ?string $email,

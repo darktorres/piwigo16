@@ -5,7 +5,11 @@ declare(strict_types=1);
 use Piwigo\Controller\Admin\Projection\IntroView;
 
 /**
- * @param array<string, array<string, array<string, mixed>>> $storageChartData
+ * @param array<string, array{total: array{filesize: float, nb_files?: int}, details?: array<string, array{filesize: float, nb_files: int}>}> $storageChartData
+ *   only the keys matter to exposedStrings(), which names one string
+ *   per storage type, so each entry here carries the minimum a real
+ *   one does: a total filesize and nothing else, the shape the
+ *   'Cache' type genuinely has.
  */
 function makeIntroView(?string $subscribeBaseUrl, array $storageChartData): IntroView
 {
@@ -38,7 +42,11 @@ function makeIntroView(?string $subscribeBaseUrl, array $storageChartData): Intr
 
 test('exposedStrings excludes the newsletter-promo strings when subscribeBaseUrl is null', function (): void {
     $view = makeIntroView(subscribeBaseUrl: null, storageChartData: [
-        'Photos' => [],
+        'Photos' => [
+            'total' => [
+                'filesize' => 0.0,
+            ],
+        ],
     ]);
 
     expect($view->exposedStrings())
@@ -75,8 +83,16 @@ test('exposedStrings includes the newsletter-promo strings when subscribeBaseUrl
 
 test('exposedStrings exposes every storageChartData key', function (): void {
     $view = makeIntroView(subscribeBaseUrl: null, storageChartData: [
-        'Photos' => [],
-        'Videos' => [],
+        'Photos' => [
+            'total' => [
+                'filesize' => 0.0,
+            ],
+        ],
+        'Videos' => [
+            'total' => [
+                'filesize' => 0.0,
+            ],
+        ],
     ]);
 
     expect($view->exposedStrings())

@@ -258,6 +258,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
         // Get mondays number for the chart legend
         $week_number = [];
         // Array for sorting days in circle size
+        /** @var list<array{x: int, d: int, w: int}> $temp_data */
         $temp_data = [];
 
         $activity_last_weeks = [];
@@ -328,12 +329,21 @@ final readonly class IntroSubController implements AdminSubControllerInterface
         $activity_last_weeks = [];
 
         foreach ($raw_activity_last_weeks as $week => $i) {
-            if (! is_array($i)) {
+            // Both levels were written under keys this method itself
+            // produced -- $week from the for() below, $day from
+            // DateTime::format('N') -- and PHP normalizes a numeric-string
+            // key to an int on write, so a non-int key here means the
+            // session held something this code did not put there. Skipping
+            // it is what lets the chart and the tooltips share one
+            // int-keyed shape, which is in turn what makes
+            // $activityChartData's keys usable as offsets into
+            // $activityLastWeeks in intro.latte.
+            if (! is_int($week) || ! is_array($i)) {
                 continue;
             }
 
             foreach ($i as $day => $j) {
-                if (! is_array($j)) {
+                if (! is_int($day) || ! is_array($j)) {
                     continue;
                 }
 
@@ -416,6 +426,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
         }
 
         // Fill empty chart data for the template
+        /** @var array<int, array<int, int>> $chart_data */
         $chart_data = [];
         for ($i = 0; $i < $nb_weeks; $i++) {
             for ($j = 1; $j <= 7; $j++) {
@@ -425,8 +436,6 @@ final readonly class IntroSubController implements AdminSubControllerInterface
 
         $size = 1;
 
-        // 'w'/'d' are always the $week/$day foreach keys built earlier, always
-        // int|string (PHP's own array-key invariant).
         if (isset($temp_data[0])) {
             $chart_w = $temp_data[0]['w'];
             $chart_d = $temp_data[0]['d'];
@@ -454,8 +463,18 @@ final readonly class IntroSubController implements AdminSubControllerInterface
         }
 
         $video_format = ['webm', 'webmv', 'ogg', 'ogv', 'mp4', 'm4v', 'mov'];
-        /** @var array<string, array<string, array<string, mixed>>> $data_storage */
-        $data_storage = [];
+        // Accumulated per type first, then assembled into the shape
+        // the template and intro.ts read. Accreting the nested shape
+        // in place instead leaves it inferred as
+        // array<string, array<string, array<string, mixed>>>, which is
+        // what put a `mixed` under intro.latte's own
+        // $details['total']['filesize'].
+        /** @var array<string, float> $type_filesize */
+        $type_filesize = [];
+        /** @var array<string, int> $type_nb_files */
+        $type_nb_files = [];
+        /** @var array<string, array<string, array{filesize: float, nb_files: int}>> $type_details */
+        $type_details = [];
 
         $picture_ext = $this->currentConfig->pictureExtensions;
 
@@ -476,15 +495,10 @@ final readonly class IntroSubController implements AdminSubControllerInterface
             $ext_filesize = (float) $ext_details->filesize;
             $ext_counter = $ext_details->counter;
 
-            $current_filesize = $data_storage[$type]['total']['filesize'] ?? 0;
-            $current_filesize = is_numeric($current_filesize) ? (float) $current_filesize : 0.0;
-            $data_storage[$type]['total']['filesize'] = $current_filesize + $ext_filesize;
+            $type_filesize[$type] = ($type_filesize[$type] ?? 0.0) + $ext_filesize;
+            $type_nb_files[$type] = ($type_nb_files[$type] ?? 0) + $ext_counter;
 
-            $current_nb_files = $data_storage[$type]['total']['nb_files'] ?? 0;
-            $current_nb_files = is_numeric($current_nb_files) ? (int) $current_nb_files : 0;
-            $data_storage[$type]['total']['nb_files'] = $current_nb_files + $ext_counter;
-
-            $data_storage[$type]['details'][strtoupper($ext)] = [
+            $type_details[$type][strtoupper($ext)] = [
                 'filesize' => $ext_filesize,
                 'nb_files' => $ext_counter,
             ];
@@ -498,35 +512,63 @@ final readonly class IntroSubController implements AdminSubControllerInterface
             $ext_filesize = (float) $ext_details->filesize;
             $ext_counter = $ext_details->counter;
 
-            $current_filesize = $data_storage[$type]['total']['filesize'] ?? 0;
-            $current_filesize = is_numeric($current_filesize) ? (float) $current_filesize : 0.0;
-            $data_storage[$type]['total']['filesize'] = $current_filesize + $ext_filesize;
+            $type_filesize[$type] = ($type_filesize[$type] ?? 0.0) + $ext_filesize;
+            $type_nb_files[$type] = ($type_nb_files[$type] ?? 0) + $ext_counter;
 
-            $current_nb_files = $data_storage[$type]['total']['nb_files'] ?? 0;
-            $current_nb_files = is_numeric($current_nb_files) ? (int) $current_nb_files : 0;
-            $data_storage[$type]['total']['nb_files'] = $current_nb_files + $ext_counter;
-
-            $data_storage[$type]['details'][strtoupper($ext)] = [
+            $type_details[$type][strtoupper($ext)] = [
                 'filesize' => $ext_filesize,
                 'nb_files' => $ext_counter,
             ];
         }
 
-        // Add cache size if requested and known.
+        // Add cache size if requested and known. It is the one type
+        // with no per-extension breakdown and no file count of its
+        // own, which is why 'nb_files' and 'details' are optional in
+        // the shape below rather than merely filled in later.
         if ($this->currentConfig->addCacheToStorageChart) {
             $cache_sizes = $this->currentConfig->cacheSizes;
 
             if ($cache_sizes instanceof CacheSizesSnapshot && $cache_sizes->cacheSize !== null) {
-                @$data_storage['Cache']['total']['filesize'] = (float) $cache_sizes->cacheSize / 1024.0;
+                $type_filesize['Cache'] = (float) $cache_sizes->cacheSize / 1024.0;
             }
+        }
+
+        // Insertion order is render order -- the template emits one
+        // span per entry -- so Photos/Videos/Other, then Formats,
+        // then Cache, exactly as the accumulation above filled them.
+        //
+        // The snake_case keys are intro.ts's own wire contract
+        // (StorageDetails in build/jquery-plugins.d.ts, read through
+        // pwg_getPageData('storage_chart_data')), so this stays an
+        // array shape rather than becoming a value object.
+        $data_storage = [];
+        foreach ($type_filesize as $type => $filesize) {
+            $total = [
+                'filesize' => $filesize,
+            ];
+
+            if (isset($type_nb_files[$type])) {
+                $total['nb_files'] = $type_nb_files[$type];
+            }
+
+            // Assembled in one expression rather than mutated into
+            // shape: writing 'details' into an existing $entry widens
+            // the whole thing back to array<string, mixed> and
+            // takes intro.latte's $details['total']['filesize'] with it.
+            $data_storage[$type] = isset($type_details[$type])
+                ? [
+                    'total' => $total,
+                    'details' => $type_details[$type],
+                ]
+                : [
+                    'total' => $total,
+                ];
         }
 
         // Calculate total storage
         $total_storage = 0.0;
         foreach ($data_storage as $value) {
-            $storage_filesize = $value['total']['filesize'] ?? 0;
-            $storage_filesize = is_numeric($storage_filesize) ? (float) $storage_filesize : 0.0;
-            $total_storage += $storage_filesize;
+            $total_storage += $value['total']['filesize'];
         }
 
         // Pass data to HTML

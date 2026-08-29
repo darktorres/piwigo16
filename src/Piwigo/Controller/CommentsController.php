@@ -52,6 +52,7 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Picture\Event\RenderCommentAuthor;
 use Piwigo\Picture\Projection\CommentListView;
+use Piwigo\Picture\Projection\CommentRow;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
@@ -552,23 +553,27 @@ final readonly class CommentsController implements ControllerInterface
 
                 $contentEvent = $this->eventDispatcher->dispatch(new RenderCommentContent(is_string($comment->content) ? $comment->content : ''));
 
-                $tpl_comment = [
-                    'ID' => $comment->commentId,
-                    'U_PICTURE' => $url,
-                    'src_image' => $src_image,
-                    'ALT' => $name,
-                    'AUTHOR' => $authorEvent->commentAuthor,
-                    'WEBSITE_URL' => $comment->websiteUrl,
-                    'DATE' => DateHelper::formatDate($date, ['day_name', 'day', 'month', 'year', 'time']),
-                    'CONTENT' => $contentEvent->commentContent,
-                ];
+                // Collected first, then handed to one constructor call:
+                // see CommentRow's own docblock for why each of these is
+                // a nullable field rather than a key the template has to
+                // ask about with isset().
+                $emailForRow = null;
+                $deleteUrl = null;
+                $editUrl = null;
+                $cancelUrl = null;
+                $validateUrl = null;
+                $inEdit = false;
+                $key = null;
+                $csrfToken = null;
+                $rowImageId = null;
+                $content = $contentEvent->commentContent;
 
                 if ($this->accessControl->isAdmin()) {
-                    $tpl_comment['EMAIL'] = $email;
+                    $emailForRow = $email;
                 }
 
                 if ($this->accessControl->canManageComment('delete', $author_id)) {
-                    $tpl_comment['U_DELETE'] = $urlService->addUrlParams(
+                    $deleteUrl = $urlService->addUrlParams(
                         $url_self,
                         [
                             'delete' => $comment->commentId,
@@ -579,7 +584,7 @@ final readonly class CommentsController implements ControllerInterface
                 }
 
                 if ($this->accessControl->canManageComment('edit', $author_id)) {
-                    $tpl_comment['U_EDIT'] = $urlService->addUrlParams(
+                    $editUrl = $urlService->addUrlParams(
                         $url_self,
                         [
                             'edit' => $comment->commentId,
@@ -588,20 +593,19 @@ final readonly class CommentsController implements ControllerInterface
 
                     $comment_id_str = (string) $comment->commentId;
                     if ($edit_comment !== null and $comment_id_str === (string) $edit_comment) {
-                        $tpl_comment['IN_EDIT'] = true;
+                        $inEdit = true;
                         $key = new EphemeralKeyService($this->currentConfig)
                             ->generate(2, $image_id);
-                        $tpl_comment['KEY'] = $key;
-                        $tpl_comment['IMAGE_ID'] = $image_id;
-                        $tpl_comment['CONTENT'] = $comment->content;
-                        $tpl_comment['CSRF_TOKEN'] = $this->csrfService->getToken();
-                        $tpl_comment['U_CANCEL'] = $url_self;
+                        $rowImageId = $image_id;
+                        $content = $comment->content;
+                        $csrfToken = $this->csrfService->getToken();
+                        $cancelUrl = $url_self;
                     }
                 }
 
                 if ($this->accessControl->canManageComment('validate', $author_id)) {
                     if (! SqlDialect::getBoolean($comment->validated)) {
-                        $tpl_comment['U_VALIDATE'] = $urlService->addUrlParams(
+                        $validateUrl = $urlService->addUrlParams(
                             $url_self,
                             [
                                 'validate' => $comment->commentId,
@@ -611,7 +615,26 @@ final readonly class CommentsController implements ControllerInterface
                         );
                     }
                 }
-                $tpl_comments[] = $tpl_comment;
+
+                $tpl_comments[] = new CommentRow(
+                    id: $comment->commentId,
+                    author: $authorEvent->commentAuthor,
+                    date: DateHelper::formatDate($date, ['day_name', 'day', 'month', 'year', 'time']),
+                    content: $content,
+                    websiteUrl: $comment->websiteUrl,
+                    email: $emailForRow,
+                    deleteUrl: $deleteUrl,
+                    editUrl: $editUrl,
+                    cancelUrl: $cancelUrl,
+                    validateUrl: $validateUrl,
+                    inEdit: $inEdit,
+                    key: $key,
+                    csrfToken: $csrfToken,
+                    imageId: $rowImageId,
+                    pictureUrl: $url,
+                    srcImage: $src_image,
+                    alt: $name,
+                );
             }
         }
 

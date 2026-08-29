@@ -21,7 +21,7 @@ use Piwigo\Core\Projection\Navbar;
 final readonly class PictureCommentsResult
 {
     /**
-     * @param list<array<string, mixed>>|null $comments
+     * @param list<CommentRow>|null $comments
      * @param array<string, mixed>|null $commentAdd
      */
     public function __construct(

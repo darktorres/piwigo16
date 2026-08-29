@@ -38,7 +38,7 @@ use Piwigo\Template\Latte\Attribute\Template;
 final readonly class CommentListView implements View, HasPageAssets, ExposesPageData
 {
     /**
-     * @param list<array<string, mixed>> $comments
+     * @param list<CommentRow> $comments
      */
     public function __construct(
         public array $comments,
@@ -57,7 +57,7 @@ final readonly class CommentListView implements View, HasPageAssets, ExposesPage
      * that goes unused on a page where every derivative happens to
      * already be cached is a safe, deliberate widening, not a
      * correctness break (docs/PLAN.md's P42-B). Its third conditional
-     * `{if isset($comment['U_DELETE'])}` call IS fully derivable from
+     * `{if $comment->deleteUrl !== null}` call IS fully derivable from
      * `$comments` without any service call, so it stays a real
      * conditional.
      */
@@ -71,7 +71,7 @@ final readonly class CommentListView implements View, HasPageAssets, ExposesPage
         ];
 
         foreach ($this->comments as $comment) {
-            if (isset($comment['U_DELETE'])) {
+            if ($comment->deleteUrl !== null) {
                 // Real shared per-page bundle entry (docs/PLAN.md's
                 // P48) -- folds scripts.ts's own code in via a real
                 // direct import instead of the separate `core.scripts`

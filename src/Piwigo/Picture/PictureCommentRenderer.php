@@ -31,6 +31,7 @@ use Piwigo\Http\ResponseReadyException;
 use Piwigo\Picture\Event\RenderCommentAuthor;
 use Piwigo\Picture\Event\UserCommentInsertion;
 use Piwigo\Picture\Projection\CommentListView;
+use Piwigo\Picture\Projection\CommentRow;
 use Piwigo\Picture\Projection\PictureCommentsResult;
 use Piwigo\Picture\Request\PictureCommentSubmitRequest;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -206,14 +207,20 @@ final class PictureCommentRenderer
 
                 $contentEvent = $eventDispatcher->dispatch(new RenderCommentContent($row->content ?? ''));
 
-                $tplComment =
-                  [
-                      'ID' => $row->id->value,
-                      'AUTHOR' => $authorEvent->commentAuthor,
-                      'DATE' => DateHelper::formatDate($rowDate, ['day_name', 'day', 'month', 'year', 'time']),
-                      'CONTENT' => $contentEvent->commentContent,
-                      'WEBSITE_URL' => $row->websiteUrl,
-                  ];
+                // Every conditional field below is collected first and
+                // handed to one constructor call, rather than written
+                // onto a growing array: the template asks about each of
+                // them, and a readonly row is what makes those questions
+                // answerable without isset().
+                $deleteUrl = null;
+                $editUrl = null;
+                $cancelUrl = null;
+                $validateUrl = null;
+                $inEdit = false;
+                $key = null;
+                $csrfToken = null;
+                $emailForRow = null;
+                $content = $contentEvent->commentContent;
 
                 // com.author_id allows NULL (anonymous/guest comments); no
                 // real user id is ever negative, so -1 is a safe
@@ -221,7 +228,7 @@ final class PictureCommentRenderer
                 $commentAuthorId = $row->authorId ?? -1;
 
                 if ($accessLevelChecker->canManageComment('delete', $commentAuthorId)) {
-                    $tplComment['U_DELETE'] = $urlService->addUrlParams(
+                    $deleteUrl = $urlService->addUrlParams(
                         $url_self,
                         [
                             'action' => 'delete_comment',
@@ -232,7 +239,7 @@ final class PictureCommentRenderer
                     );
                 }
                 if ($accessLevelChecker->canManageComment('edit', $commentAuthorId)) {
-                    $tplComment['U_EDIT'] = $urlService->addUrlParams(
+                    $editUrl = $urlService->addUrlParams(
                         $url_self,
                         [
                             'action' => 'edit_comment',
@@ -240,20 +247,19 @@ final class PictureCommentRenderer
                         ]
                     );
                     if ($editCommentId instanceof CommentId and $row->id->equals($editCommentId)) {
-                        $tplComment['IN_EDIT'] = true;
+                        $inEdit = true;
                         $key = new EphemeralKeyService($currentConfig)
                             ->generate(2, (string) $imageId);
-                        $tplComment['KEY'] = $key;
-                        $tplComment['CONTENT'] = $row->content;
-                        $tplComment['CSRF_TOKEN'] = $csrfService->getToken();
-                        $tplComment['U_CANCEL'] = $url_self;
+                        $content = $row->content;
+                        $csrfToken = $csrfService->getToken();
+                        $cancelUrl = $url_self;
                     }
                 }
                 if ($accessLevelChecker->isAdmin()) {
-                    $tplComment['EMAIL'] = $email;
+                    $emailForRow = $email;
 
                     if (! $row->validated) {
-                        $tplComment['U_VALIDATE'] = $urlService->addUrlParams(
+                        $validateUrl = $urlService->addUrlParams(
                             $url_self,
                             [
                                 'action' => 'validate_comment',
@@ -264,7 +270,22 @@ final class PictureCommentRenderer
                         );
                     }
                 }
-                $comments[] = $tplComment;
+
+                $comments[] = new CommentRow(
+                    id: $row->id->value,
+                    author: $authorEvent->commentAuthor,
+                    date: DateHelper::formatDate($rowDate, ['day_name', 'day', 'month', 'year', 'time']),
+                    content: $content,
+                    websiteUrl: $row->websiteUrl,
+                    email: $emailForRow,
+                    deleteUrl: $deleteUrl,
+                    editUrl: $editUrl,
+                    cancelUrl: $cancelUrl,
+                    validateUrl: $validateUrl,
+                    inEdit: $inEdit,
+                    key: $key,
+                    csrfToken: $csrfToken,
+                );
             }
         }
 

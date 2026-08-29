@@ -15,6 +15,7 @@ use Piwigo\Contribution\PictureInfoRow;
 use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\Projection\Navbar;
 use Piwigo\Core\View;
+use Piwigo\Picture\Projection\CommentRow;
 use Piwigo\Template\Latte\Attribute\Template;
 
 /**
@@ -58,7 +59,7 @@ final readonly class PictureView implements View, HasPageAssets, ExposesPageData
      * @param list<array{TITLE: string, lines: array<string, mixed>}>|null $metadata
      * @param array<string, mixed>|null $rateSummary
      * @param array{F_ACTION: string, USER_RATE: ?int, marks: list<int>}|null $rating
-     * @param list<array<string, mixed>>|null $comments
+     * @param list<CommentRow>|null $comments
      * @param array<string, mixed>|null $commentAdd
      */
     public function __construct(

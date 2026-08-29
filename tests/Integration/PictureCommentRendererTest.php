@@ -35,6 +35,7 @@ use Piwigo\Http\ResponseReadyException;
 use Piwigo\Mail\MailService;
 use Piwigo\Picture\Event\UserCommentInsertion;
 use Piwigo\Picture\PictureCommentRenderer;
+use Piwigo\Picture\Projection\CommentRow;
 use Piwigo\Picture\Projection\PictureCommentsResult;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContext;
@@ -302,9 +303,9 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $rowA = $this->findRenderedRow($rows, $commentIdA);
         $rowB = $this->findRenderedRow($rows, $commentIdB);
 
-        self::assertArrayNotHasKey('IN_EDIT', $rowA, 'the non-matching comment must never be prefilled');
-        self::assertTrue($rowB['IN_EDIT'] ?? false, 'the matching comment must be prefilled');
-        self::assertSame('Second comment.', $rowB['CONTENT']);
+        self::assertFalse($rowA->inEdit, 'the non-matching comment must never be prefilled');
+        self::assertTrue($rowB->inEdit, 'the matching comment must be prefilled');
+        self::assertSame('Second comment.', $rowB->content);
     }
 
     public function testRenderExposesEditAndDeleteLinksOnlyToTheCommentOwner(): void
@@ -328,10 +329,10 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             $commentId
         );
 
-        self::assertArrayHasKey('U_EDIT', $ownerRow);
-        self::assertArrayHasKey('U_DELETE', $ownerRow);
-        self::assertArrayNotHasKey('U_EDIT', $otherRow);
-        self::assertArrayNotHasKey('U_DELETE', $otherRow);
+        self::assertNotNull($ownerRow->editUrl);
+        self::assertNotNull($ownerRow->deleteUrl);
+        self::assertNull($otherRow->editUrl);
+        self::assertNull($otherRow->deleteUrl);
     }
 
     public function testRenderRejectsAGuestSubmissionWithSessionExpiredWhenCommentsForAllIsDisabled(): void
@@ -521,8 +522,8 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             $rowWithUserEmail = $this->findRenderedRow($rows, $commentIdWithUserEmail);
             $rowWithOwnEmail = $this->findRenderedRow($rows, $commentIdWithOwnEmail);
 
-            self::assertSame('fixture_admin@example.test', $rowWithUserEmail['EMAIL']);
-            self::assertSame('anon@example.test', $rowWithOwnEmail['EMAIL']);
+            self::assertSame('fixture_admin@example.test', $rowWithUserEmail->email);
+            self::assertSame('anon@example.test', $rowWithOwnEmail->email);
         } finally {
             $this->conn->executeStatement('DELETE FROM comments WHERE id IN (?, ?)', [$commentIdWithUserEmail->value, $commentIdWithOwnEmail->value]);
         }
@@ -542,8 +543,8 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             $commentId
         );
 
-        self::assertArrayHasKey('U_EDIT', $adminRow);
-        self::assertArrayHasKey('U_DELETE', $adminRow);
+        self::assertNotNull($adminRow->editUrl);
+        self::assertNotNull($adminRow->deleteUrl);
     }
 
     public function testRenderShowsUnvalidatedCommentsOnlyToAnAdmin(): void
@@ -1026,7 +1027,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
     }
 
     /**
-     * @return list<mixed>
+     * @return list<CommentRow>
      */
     private function renderComments(int $imageId): array
     {
@@ -1107,8 +1108,8 @@ final class PictureCommentRendererTest extends IntegrationTestCase
     }
 
     /**
-     * @param list<array<string, mixed>>|null $comments
-     * @return list<mixed>
+     * @param list<CommentRow>|null $comments
+     * @return list<CommentRow>
      */
     private function renderedComments(?array $comments): array
     {
@@ -1116,13 +1117,12 @@ final class PictureCommentRendererTest extends IntegrationTestCase
     }
 
     /**
-     * @param list<mixed> $rows
-     * @return array<int|string, mixed>
+     * @param list<CommentRow> $rows
      */
-    private function findRenderedRow(array $rows, CommentId $commentId): array
+    private function findRenderedRow(array $rows, CommentId $commentId): CommentRow
     {
         foreach ($rows as $row) {
-            if (is_array($row) && ($row['ID'] ?? null) === $commentId->value) {
+            if ($row->id === $commentId->value) {
                 return $row;
             }
         }

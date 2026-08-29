@@ -5,13 +5,28 @@ declare(strict_types=1);
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\LoadMode;
 use Piwigo\Picture\Projection\CommentListView;
+use Piwigo\Picture\Projection\CommentRow;
 
-test('pageAssets registers only the 3 unconditional entries when no comment has U_DELETE', function (): void {
+/**
+ * pageAssets() reads exactly one field off a row -- whether the viewer
+ * may delete it -- so everything else here is filler.
+ */
+function commentListViewRow(string $author, ?string $deleteUrl = null): CommentRow
+{
+    return new CommentRow(
+        id: 1,
+        author: $author,
+        date: '',
+        content: '',
+        websiteUrl: null,
+        deleteUrl: $deleteUrl,
+    );
+}
+
+test('pageAssets registers only the 3 unconditional entries when no comment is deletable', function (): void {
     $view = new CommentListView(
         comments: [
-            [
-                'AUTHOR' => 'alice',
-            ],
+            commentListViewRow('alice'),
         ],
         commentDerivativeParams: null,
         rootUrl: 'http://example.com/',
@@ -26,16 +41,11 @@ test('pageAssets registers only the 3 unconditional entries when no comment has 
         ]);
 });
 
-test('pageAssets registers core_scripts_page when any comment has U_DELETE', function (): void {
+test('pageAssets registers core_scripts_page when any comment is deletable', function (): void {
     $view = new CommentListView(
         comments: [
-            [
-                'AUTHOR' => 'alice',
-            ],
-            [
-                'AUTHOR' => 'bob',
-                'U_DELETE' => 'http://example.com/delete',
-            ],
+            commentListViewRow('alice'),
+            commentListViewRow('bob', deleteUrl: 'http://example.com/delete'),
         ],
         commentDerivativeParams: null,
         rootUrl: 'http://example.com/',

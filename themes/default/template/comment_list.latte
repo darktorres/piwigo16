@@ -12,14 +12,14 @@
     n:foreach="$comments as $comment"
     class="commentElement {if $iterator->counter0 % 2 !== 0}odd{else}even{/if}"
   >
-    {if isset($comment['src_image'])}
+    {if $comment->srcImage !== null}
       {if isset($commentDerivativeParams)}
-        {var $derivative = $pwg->derivative($commentDerivativeParams, $comment['src_image'])}
+        {var $derivative = $pwg->derivative($commentDerivativeParams, $comment->srcImage)}
       {else}
-        {var $derivative = $pwg->derivative($derivative_params, $comment['src_image'])}
+        {var $derivative = $pwg->derivative($derivative_params, $comment->srcImage)}
       {/if}
       <div class="illustration">
-        <a href="{$comment['U_PICTURE']|noescape}">
+        <a href="{$comment->pictureUrl|noescape}">
           <img
             {if $derivative->isCached()}
             src="{$derivative->getUrl()|noescape}"
@@ -27,57 +27,57 @@
             src="{$ROOT_URL}{$themeconf['icon_dir']}/img_small.png"
             data-src="{$derivative->getUrl()|noescape}"
             {/if}
-            alt="{$comment['ALT']}"
+            alt="{$comment->alt}"
           >
         </a>
       </div>
     {/if}
     <div class="description">
       <div
-        n:if="isset($comment['U_DELETE']) or isset($comment['U_VALIDATE']) or isset($comment['U_EDIT'])"
+        n:if="$comment->deleteUrl !== null or $comment->validateUrl !== null or $comment->editUrl !== null"
         class="actions"
       >
-        {if isset($comment['U_DELETE'])}
-          <a href="{$comment['U_DELETE']|noescape}" data-confirm>
+        {if $comment->deleteUrl !== null}
+          <a href="{$comment->deleteUrl|noescape}" data-confirm>
             {='Delete'|translate}
-          </a>{if isset($comment['U_VALIDATE']) or isset($comment['U_EDIT']) or isset($comment['U_CANCEL'])} | {/if}
+          </a>{if $comment->validateUrl !== null or $comment->editUrl !== null or $comment->cancelUrl !== null} | {/if}
         {/if}
-        {if isset($comment['U_CANCEL'])}
-          <a href="{$comment['U_CANCEL']|noescape}">
+        {if $comment->cancelUrl !== null}
+          <a href="{$comment->cancelUrl|noescape}">
             {='Cancel'|translate}
-          </a>{if isset($comment['U_VALIDATE'])} | {/if}
+          </a>{if $comment->validateUrl !== null} | {/if}
         {/if}
-        {if isset($comment['U_EDIT']) and !isset($comment['IN_EDIT'])}
+        {if $comment->editUrl !== null and !$comment->inEdit}
           <a
             class="editComment"
-            href="{$comment['U_EDIT']|noescape}#edit_comment"
+            href="{$comment->editUrl|noescape}#edit_comment"
           >
             {='Edit'|translate}
-          </a>{if isset($comment['U_VALIDATE'])} | {/if}
+          </a>{if $comment->validateUrl !== null} | {/if}
         {/if}
         <a
-          n:if="isset($comment['U_VALIDATE'])"
-          href="{$comment['U_VALIDATE']|noescape}"
+          n:if="$comment->validateUrl !== null"
+          href="{$comment->validateUrl|noescape}"
         >
           {='Validate'|translate}
         </a>&nbsp;
       </div>
 
-      <span class="commentAuthor">{if $comment['WEBSITE_URL']}<a
-            href="{$comment['WEBSITE_URL']}"
+      <span class="commentAuthor">{if $comment->websiteUrl}<a
+            href="{$comment->websiteUrl}"
             class="external"
             target="_blank"
             rel="nofollow"
-          >{$comment['AUTHOR']}</a>{else}{$comment['AUTHOR']}{/if}</span>
-      {if isset($comment['EMAIL'])}- <a
-          href="mailto:{$comment['EMAIL']}"
-        >{$comment['EMAIL']}</a>{/if}
-      - <span class="commentDate">{$comment['DATE']}</span>
-      {if isset($comment['IN_EDIT'])}
+          >{$comment->author}</a>{else}{$comment->author}{/if}</span>
+      {if $comment->email !== null}- <a
+          href="mailto:{$comment->email}"
+        >{$comment->email}</a>{/if}
+      - <span class="commentDate">{$comment->date}</span>
+      {if $comment->inEdit}
         <a name="edit_comment"></a>
         <form
           method="post"
-          action="{$comment['U_EDIT']|noescape}"
+          action="{$comment->editUrl|noescape}"
           id="editComment"
         >
           <p><label
@@ -88,31 +88,31 @@
               id="contenteditid"
               rows="5"
               cols="80"
-            >{$comment['CONTENT']}</textarea></p>
+            >{$comment->content}</textarea></p>
           <p><label for="website_url">{='Website'|translate} :</label></p>
           <p><input
               type="text"
               name="website_url"
               id="website_url"
-              value="{$comment['WEBSITE_URL']}"
+              value="{$comment->websiteUrl}"
               size="40"
             ></p>
-          <p><input type="hidden" name="key" value="{$comment['KEY']}">
+          <p><input type="hidden" name="key" value="{$comment->key}">
             <input
               type="hidden"
               name="pwg_token"
-              value="{$comment['CSRF_TOKEN']}"
+              value="{$comment->csrfToken}"
             >
             <input
               type="hidden"
               name="image_id"
-              value="{$comment['IMAGE_ID'] ?? ($current['id'] ?? null)}"
+              value="{$comment->imageId ?? ($current['id'] ?? null)}"
             >
             <input type="submit" value="{='Submit'|translate}">
           </p>
         </form>
       {else}
-        <blockquote><div>{$comment['CONTENT']|noescape}</div></blockquote>
+        <blockquote><div>{$comment->content|noescape}</div></blockquote>
       {/if}
     </div>
   </li>

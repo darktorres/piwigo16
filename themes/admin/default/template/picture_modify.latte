@@ -1,7 +1,10 @@
 {templateType Piwigo\Admin\Projection\PictureModifyView}
 
 <form action="{$fAction|noescape}" method="post" id="pictureModify">
-  <div id='picture-preview' n:class="$introVars->isSvg ? svg-container">
+  <div
+    id='picture-preview'
+    n:attr="class: $introVars->isSvg ? 'svg-container' : null"
+  >
     <div class='picture-preview-actions'>
       <a
         class="preview-box icon-zoom-square"

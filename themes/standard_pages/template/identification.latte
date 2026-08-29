@@ -13,28 +13,25 @@
           n:if="isset($errors['login_page_error'])"
           class="error_block_container"
         >
-          <div
-            n:foreach="$errors['login_page_error'] as $error"
-            class="error_block"
-          >
+          <div class="error_block">
             <i class="gallery-icon-cancel"></i>
-            <p>{$error}</p>
+            <p>{$errors['login_page_error']}</p>
           </div>
         </div>
       </div>
     </section>
 
-    <section n:if="'none' != $STD_PGS_SELECTED_LOGO" id="logo-section">
-      {if 'piwigo_logo' == $STD_PGS_SELECTED_LOGO}
+    <section n:if="'none' !== $STD_PGS_SELECTED_LOGO" id="logo-section">
+      {if 'piwigo_logo' === $STD_PGS_SELECTED_LOGO}
         <img
           id="piwigo-logo"
           src="{$ROOT_URL}themes/standard_pages/images/piwigo_logo.svg"
           data-logo-light="{$ROOT_URL}themes/standard_pages/images/piwigo_logo.svg"
           data-logo-dark="{$ROOT_URL}themes/standard_pages/images/piwigo_logo_dark.svg"
         >
-      {elseif 'custom_logo' == $STD_PGS_SELECTED_LOGO}
+      {elseif 'custom_logo' === $STD_PGS_SELECTED_LOGO}
         <img id="custom-logo" src="{$ROOT_URL}logo.php">
-      {elseif 'gallery_title'}
+      {elseif 'gallery_title' === $STD_PGS_SELECTED_LOGO}
         <h1>{$GALLERY_TITLE}</h1>
       {/if}
     </section>

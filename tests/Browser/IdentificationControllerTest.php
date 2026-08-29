@@ -356,3 +356,35 @@ it("applies a valid, different lang cookie: switches CurrentUser's language, loa
         identRemoveLanguage('fr_FR');
     }
 });
+
+/**
+ * standard_pages' identification.latte rendered its `login_page_error`
+ * through `{foreach $errors['login_page_error'] as $error}`, but that key
+ * holds a single translated string (IdentificationController assigns it
+ * with `=`, and HtmlService types the bag `array<array-key, string>`), so
+ * the loop iterated a string: the container div rendered and the message
+ * inside it never did. The sibling `login_form_error` two hundred lines
+ * down renders the same kind of value directly and always worked.
+ *
+ * No fixture caught it because every golden/VR capture of these pages is
+ * the happy path -- the error state has no snapshot, so there was nothing
+ * for a snapshot to disagree with. `?redirect=` with guest_access on (the
+ * fixture default) is the branch that sets the key.
+ */
+it("renders standard_pages' login page error, which is a string and not a list", function (): void {
+    H::setGuestTheme('standard_pages');
+
+    try {
+        $page = H::visitPwg($this, '/identification.php?redirect=%2Findex.php%3F%2Fcategory%2F1');
+        H::assertNoServerErrors($page, 'identification page with a redirect');
+
+        $page->assertSee('You are not authorized to access the requested page');
+        // The message renders inside the block the container wraps, not
+        // just anywhere on the page -- an empty error_block_container was
+        // exactly the old behaviour.
+        expect($page->content())
+            ->toMatch('~error_block_container.*?error_block.*?You are not authorized~s');
+    } finally {
+        H::setGuestTheme('default');
+    }
+});

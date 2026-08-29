@@ -407,9 +407,6 @@ parameters:
             identifier: if.condNotBoolean
             path: _analysis/phpstan-latte/*
         -
-            identifier: elseif.condNotBoolean
-            path: _analysis/phpstan-latte/*
-        -
             identifier: ternary.condNotBoolean
             path: _analysis/phpstan-latte/*
         -

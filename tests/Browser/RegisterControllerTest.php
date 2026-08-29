@@ -665,3 +665,34 @@ it("applies a valid, different lang cookie: switches CurrentUser's language, loa
         registerRemoveLanguage('fr_FR');
     }
 });
+
+/**
+ * The third of the standard_pages templates whose page-error block
+ * iterated a string instead of rendering it. A submitted registration
+ * with a bad ephemeral form key is the branch that sets
+ * `register_page_error`, and it answers 403 -- so before the fix the user
+ * got a rejected form with no stated reason.
+ */
+it("renders standard_pages' register page error, which is a string and not a list", function (): void {
+    H::setGuestTheme('standard_pages');
+    $jar = registerFreshCookieJar();
+
+    try {
+        $result = registerCurl($jar, '/register.php', [
+            'login' => 'sp_register_' . uniqid(),
+            'password' => 'a-strong-test-password-1',
+            'password_conf' => 'a-strong-test-password-1',
+            'mail_address' => 'sp-register@example.invalid',
+            'key' => 'definitely-not-a-valid-ephemeral-key',
+            'submit' => 'Register',
+        ]);
+
+        expect($result['status'])->toBe(403);
+        expect($result['body'])->toContain('Invalid/expired form key');
+        expect($result['body'])
+            ->toMatch('~error_block_container.*?error_block.*?Invalid/expired form key~s');
+    } finally {
+        H::setGuestTheme('default');
+        @unlink($jar);
+    }
+});

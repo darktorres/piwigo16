@@ -1130,3 +1130,26 @@ it('rejects a "reset" submission with a well-formed but unmatched key, reporting
         @unlink($jar);
     }
 });
+
+/**
+ * The standard_pages counterpart of the login-page-error fix: this
+ * template rendered `$errors['password_page_error']` -- a single string --
+ * through a `{foreach}`, so the container rendered empty and the reason
+ * the reset failed was never shown. An invalid `?key=` is the cheapest of
+ * the three branches that set it (checkPasswordResetKey()'s own regex
+ * guard, before any DB lookup).
+ */
+it("renders standard_pages' password page error, which is a string and not a list", function (): void {
+    H::setGuestTheme('standard_pages');
+
+    try {
+        $page = H::visitPwg($this, '/password.php?key=not-a-valid-reset-key');
+        H::assertNoServerErrors($page, 'password page with an invalid key');
+
+        $page->assertSee('Invalid key');
+        expect($page->content())
+            ->toMatch('~error_block_container.*?error_block.*?Invalid key~s');
+    } finally {
+        H::setGuestTheme('default');
+    }
+});

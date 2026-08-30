@@ -1,4 +1,5 @@
 import { pwg_getPageData } from "../../../default/js/page-data";
+import { height, setVal, width } from "../../../default/js/vendor/dom";
 export {};
 
 function from_coi(f: number, total: number) {
@@ -16,21 +17,37 @@ interface JcropSelection {
   y2: number;
 }
 
+/**
+ * The crop image, as a real element. width()/height() below are the
+ * helper's, which reproduce jQuery's CONTENT-box semantics -- not
+ * offsetWidth, which includes padding and border and would shift every
+ * stored coordinate.
+ */
+function cropImage(): HTMLElement | null {
+  return document.querySelector<HTMLElement>("#jcrop");
+}
+
 function jOnChange(sel: JcropSelection) {
-  const $img = jQuery("#jcrop");
-  jQuery("#l").val(to_coi(sel.x, $img.width()!));
-  jQuery("#t").val(to_coi(sel.y, $img.height()!));
-  jQuery("#r").val(to_coi(sel.x2, $img.width()!));
-  jQuery("#b").val(to_coi(sel.y2, $img.height()!));
+  const img = cropImage();
+  if (img === null) {
+    return;
+  }
+
+  // setVal takes a string; jQuery coerced the number itself.
+  setVal(document.querySelectorAll("#l"), String(to_coi(sel.x, width(img))));
+  setVal(document.querySelectorAll("#t"), String(to_coi(sel.y, height(img))));
+  setVal(document.querySelectorAll("#r"), String(to_coi(sel.x2, width(img))));
+  setVal(document.querySelectorAll("#b"), String(to_coi(sel.y2, height(img))));
 }
 function jOnRelease() {
-  jQuery("#l,#t,#r,#b").val("");
+  setVal(document.querySelectorAll("#l,#t,#r,#b"), "");
 }
 
 const coi = pwg_getPageData<
   { l: number; t: number; r: number; b: number } | undefined
 >("coi");
 
+// Still jQuery: Jcrop is a library, ported in P49-B group 6.
 jQuery("#jcrop").Jcrop(
   {
     boxWidth: 500,
@@ -40,12 +57,16 @@ jQuery("#jcrop").Jcrop(
   },
   coi
     ? function (this: { animateTo(coords: number[]): void }) {
-        const $img = jQuery("#jcrop");
+        const img = cropImage();
+        if (img === null) {
+          return;
+        }
+
         this.animateTo([
-          from_coi(coi.l, $img.width()!),
-          from_coi(coi.t, $img.height()!),
-          from_coi(coi.r, $img.width()!),
-          from_coi(coi.b, $img.height()!),
+          from_coi(coi.l, width(img)),
+          from_coi(coi.t, height(img)),
+          from_coi(coi.r, width(img)),
+          from_coi(coi.b, height(img)),
         ]);
       }
     : undefined,

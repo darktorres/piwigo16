@@ -192,6 +192,7 @@
       "@php vendor/bin/gesso coverage:merge --spec-base-path=openapi --specs=openapi --strip-prefixes=/api/v1"
     ],
     "test:browser": [
+      "bun run build",
       "bash tools/reimport-fixture.sh",
       "@php vendor/bin/pest --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression --exclude-group=golden-html-snapshot --exclude-group=install-flow"
     ],

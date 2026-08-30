@@ -9,7 +9,28 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { albumBreadcrumbHtml } from "../../../default/js/vendor/dom";
+import {
+  addClass,
+  albumBreadcrumbHtml,
+  append,
+  attr,
+  escapeId,
+  fadeToggle,
+  find,
+  hide,
+  html,
+  isVisible,
+  on,
+  ready,
+  removeClass,
+  setVal,
+  show,
+  text,
+  textOf,
+  toggle,
+  trigger,
+  val,
+} from "../../../default/js/vendor/dom";
 import { ajax } from "../../../default/js/vendor/ajax";
 export {};
 
@@ -57,7 +78,7 @@ const str_album_comment_disallow = pwg_getPageString(
 );
 const str_modal_ab = pwg_getPageString("New parent album");
 
-jQuery(document).ready(function () {
+ready(function () {
   activateCommentDropdown();
   checkAlbumLock();
   const ab = new AlbumSelector({
@@ -69,7 +90,7 @@ jQuery(document).ready(function () {
     modalTitle: str_modal_ab,
   });
 
-  $(".unlock-album").on("click", function () {
+  on(document.querySelectorAll(".unlock-album"), "click", function () {
     void ajax({
       url: "api/v1/categories/" + album_id,
       type: "PATCH",
@@ -83,13 +104,16 @@ jQuery(document).ready(function () {
         _data: operations["categoryUpdate"]["responses"][200]["content"]["application/json"],
       ) {
         is_visible = "true";
-        if ($("#cat-locked").is(":checked")) {
-          $("input[id='cat-locked']").trigger("click");
+        const catLocked = document.getElementById(
+          "cat-locked",
+        ) as HTMLInputElement | null;
+        if (catLocked !== null && catLocked.checked) {
+          trigger([catLocked], "click");
         }
         checkAlbumLock();
 
         setTimeout(function () {
-          $(".info-message").hide();
+          hide(document.querySelectorAll(".info-message"));
         }, 5000);
       },
       error: function (
@@ -99,24 +123,25 @@ jQuery(document).ready(function () {
       ) {
         save_button_set_loading(false);
 
-        $(".info-error").show();
+        show(document.querySelectorAll(".info-error"));
         setTimeout(function () {
-          $(".info-error").hide();
+          hide(document.querySelectorAll(".info-error"));
         }, 5000);
         console.log(errorThrows);
       },
     });
   });
 
+  // Still jQuery: tipTip is a library, ported in P49-B group 2.
   jQuery(".tiptip").tipTip({
     delay: 0,
     fadeIn: 200,
     fadeOut: 200,
   });
 
-  $("#cat-properties-save").click(() => {
+  on(document.querySelectorAll("#cat-properties-save"), "click", () => {
     save_button_set_loading(true);
-    $(".info-error,.info-message").hide();
+    hide(document.querySelectorAll(".info-error,.info-message"));
 
     void ajax({
       url: "api/v1/categories/" + album_id,
@@ -125,25 +150,41 @@ jQuery(document).ready(function () {
       contentType: "application/json",
       headers: { "X-CSRF-Token": pwg_token },
       data: JSON.stringify({
-        name: $("#cat-name").val(),
-        comment: $("#cat-comment").val(),
-        visible: !$("#cat-locked").is(":checked"),
-        commentable: $("#cat-commentable").is(":checked"),
+        name: val(document.querySelectorAll("#cat-name")),
+        comment: val(document.querySelectorAll("#cat-comment")),
+        visible: !(document.getElementById("cat-locked") as HTMLInputElement)
+          .checked,
+        commentable: (
+          document.getElementById("cat-commentable") as HTMLInputElement
+        ).checked,
       }),
       success: function (
         _data: operations["categoryUpdate"]["responses"][200]["content"]["application/json"],
       ) {
         save_button_set_loading(false);
 
-        $(".info-message").show();
-        $(".cat-modification .cat-modify-info-subcontent").html(str_just_now);
-        $(".cat-modification .cat-modify-info-content").html(str_just_now);
+        show(document.querySelectorAll(".info-message"));
+        html(
+          document.querySelectorAll(
+            ".cat-modification .cat-modify-info-subcontent",
+          ),
+          str_just_now,
+        );
+        html(
+          document.querySelectorAll(
+            ".cat-modification .cat-modify-info-content",
+          ),
+          str_just_now,
+        );
 
-        is_visible = $("#cat-locked").is(":checked") ? "false" : "true";
+        is_visible = (document.getElementById("cat-locked") as HTMLInputElement)
+          .checked
+          ? "false"
+          : "true";
         checkAlbumLock();
 
         setTimeout(function () {
-          $(".info-message").hide();
+          hide(document.querySelectorAll(".info-message"));
         }, 5000);
       },
       error: function (
@@ -153,9 +194,9 @@ jQuery(document).ready(function () {
       ) {
         save_button_set_loading(false);
 
-        $(".info-error").show();
+        show(document.querySelectorAll(".info-error"));
         setTimeout(function () {
-          $(".info-error").hide();
+          hide(document.querySelectorAll(".info-error"));
         }, 5000);
         console.log(errorThrows);
       },
@@ -175,13 +216,16 @@ jQuery(document).ready(function () {
         success: function (
           data: operations["categoryMove"]["responses"][200]["content"]["application/json"],
         ) {
-          $(".cat-modify-ariane").html(data.newArianeString);
+          html(
+            document.querySelectorAll(".cat-modify-ariane"),
+            data.newArianeString,
+          );
           default_parent_album = parent_album;
         },
         error: function (e) {
-          $(".info-error").show();
+          show(document.querySelectorAll(".info-error"));
           setTimeout(function () {
-            $(".info-error").hide();
+            hide(document.querySelectorAll(".info-error"));
           }, 5000);
           console.log(e.responseText);
         },
@@ -190,17 +234,23 @@ jQuery(document).ready(function () {
   });
 
   function save_button_set_loading(state: boolean = true) {
-    if (state) {
-      $("#cat-properties-save i").removeClass("icon-floppy");
-      $("#cat-properties-save i").addClass("icon-spin6");
-      $("#cat-properties-save i").addClass("animate-spin");
-    } else {
-      $("#cat-properties-save i").addClass("icon-floppy");
-      $("#cat-properties-save i").removeClass("icon-spin6");
-      $("#cat-properties-save i").removeClass("animate-spin");
+    const icon = document.querySelector("#cat-properties-save i");
+    if (icon !== null) {
+      if (state) {
+        removeClass(icon, "icon-floppy");
+        addClass(icon, "icon-spin6");
+        addClass(icon, "animate-spin");
+      } else {
+        addClass(icon, "icon-floppy");
+        removeClass(icon, "icon-spin6");
+        removeClass(icon, "animate-spin");
+      }
     }
 
-    $("#cat-properties-save").prop("disabled", state);
+    const button = document.getElementById(
+      "cat-properties-save",
+    ) as HTMLButtonElement | null;
+    if (button !== null) button.disabled = state;
   }
 
   // jquery-confirm's own modal instance -- no real type source (this
@@ -212,7 +262,8 @@ jQuery(document).ready(function () {
     close(): void;
   }
 
-  $(".deleteAlbum").on("click", function () {
+  on(document.querySelectorAll(".deleteAlbum"), "click", function () {
+    // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
     $.confirm({
       title: str_delete_album,
       content: function (this: JConfirmModalInstance) {
@@ -267,9 +318,10 @@ jQuery(document).ready(function () {
           btnClass: "btn-red",
           action: function (this: JConfirmModalInstance) {
             this.showLoading();
-            const deletionMode = String(
-              $('input[name="deletion-mode"]:checked').val(),
+            const checked = document.querySelector(
+              'input[name="deletion-mode"]:checked',
             );
+            const deletionMode = String(checked !== null ? val([checked]) : "");
             delete_album(deletionMode)
               .then(() => (window.location.href = u_delete))
               .catch((err: unknown) => {
@@ -310,53 +362,72 @@ jQuery(document).ready(function () {
     });
   }
 
-  $("#refreshRepresentative").on("click", function (e) {
-    $("#refreshRepresentative i")
-      .removeClass("icon-ccw")
-      .addClass("icon-spin6")
-      .addClass("animate-spin");
+  on(
+    document.querySelectorAll("#refreshRepresentative"),
+    "click",
+    function (e) {
+      const icon = document.querySelector("#refreshRepresentative i");
+      if (icon !== null) {
+        removeClass(icon, "icon-ccw");
+        addClass(icon, "icon-spin6");
+        addClass(icon, "animate-spin");
+      }
 
-    void ajax({
-      url: "api/v1/categories/" + album_id + "/actions/refresh-representative",
-      type: "POST",
-      contentType: "application/json",
-      headers: { "X-CSRF-Token": pwg_token },
-      dataType: "json",
-      success: function (
-        data: operations["categoryRefreshRepresentative"]["responses"][200]["content"]["application/json"],
-      ) {
-        jQuery("#deleteRepresentative").show();
+      void ajax({
+        url:
+          "api/v1/categories/" + album_id + "/actions/refresh-representative",
+        type: "POST",
+        contentType: "application/json",
+        headers: { "X-CSRF-Token": pwg_token },
+        dataType: "json",
+        success: function (
+          data: operations["categoryRefreshRepresentative"]["responses"][200]["content"]["application/json"],
+        ) {
+          show(document.querySelectorAll("#deleteRepresentative"));
 
-        jQuery(".cat-modify-representative")
-          .attr("style", `background-image:url('${String(data.src)}')`)
-          .removeClass("icon-dice-solid");
+          attr(
+            document.querySelectorAll(".cat-modify-representative"),
+            "style",
+            `background-image:url('${String(data.src)}')`,
+          );
+          removeClass(
+            document.querySelectorAll(".cat-modify-representative"),
+            "icon-dice-solid",
+          );
 
-        $("#refreshRepresentative i")
-          .addClass("icon-ccw")
-          .removeClass("icon-spin6")
-          .removeClass("animate-spin");
-      },
-      error: function (
-        XMLHttpRequest,
-        textStatus: string,
-        errorThrows: string,
-      ) {
-        console.error(errorThrows);
-        $("#refreshRepresentative i")
-          .addClass("icon-ccw")
-          .removeClass("icon-spin6")
-          .removeClass("animate-spin");
-      },
-    });
+          const doneIcon = document.querySelector("#refreshRepresentative i");
+          if (doneIcon !== null) {
+            addClass(doneIcon, "icon-ccw");
+            removeClass(doneIcon, "icon-spin6");
+            removeClass(doneIcon, "animate-spin");
+          }
+        },
+        error: function (
+          XMLHttpRequest,
+          textStatus: string,
+          errorThrows: string,
+        ) {
+          console.error(errorThrows);
+          const errorIcon = document.querySelector("#refreshRepresentative i");
+          if (errorIcon !== null) {
+            addClass(errorIcon, "icon-ccw");
+            removeClass(errorIcon, "icon-spin6");
+            removeClass(errorIcon, "animate-spin");
+          }
+        },
+      });
 
-    e.preventDefault();
-  });
+      e.preventDefault();
+    },
+  );
 
-  $("#deleteRepresentative").on("click", function (e) {
-    $("#deleteRepresentative i")
-      .removeClass("icon-cancel")
-      .addClass("icon-spin6")
-      .addClass("animate-spin");
+  on(document.querySelectorAll("#deleteRepresentative"), "click", function (e) {
+    const icon = document.querySelector("#deleteRepresentative i");
+    if (icon !== null) {
+      removeClass(icon, "icon-cancel");
+      addClass(icon, "icon-spin6");
+      addClass(icon, "animate-spin");
+    }
 
     void ajax({
       url: "api/v1/categories/" + album_id + "/representative",
@@ -366,15 +437,23 @@ jQuery(document).ready(function () {
       dataType: "json",
       // 204 No Content -- categoryDeleteRepresentative's real response has no body.
       success: function (_data: unknown) {
-        jQuery("#deleteRepresentative").hide();
-        jQuery(".cat-modify-representative")
-          .attr("style", ``)
-          .addClass("icon-dice-solid");
+        hide(document.querySelectorAll("#deleteRepresentative"));
+        attr(
+          document.querySelectorAll(".cat-modify-representative"),
+          "style",
+          ``,
+        );
+        addClass(
+          document.querySelectorAll(".cat-modify-representative"),
+          "icon-dice-solid",
+        );
 
-        $("#deleteRepresentative i")
-          .addClass("icon-cancel")
-          .removeClass("icon-spin6")
-          .removeClass("animate-spin");
+        const doneIcon = document.querySelector("#deleteRepresentative i");
+        if (doneIcon !== null) {
+          addClass(doneIcon, "icon-cancel");
+          removeClass(doneIcon, "icon-spin6");
+          removeClass(doneIcon, "animate-spin");
+        }
       },
       error: function (
         XMLHttpRequest,
@@ -382,10 +461,12 @@ jQuery(document).ready(function () {
         errorThrows: string,
       ) {
         console.error(errorThrows);
-        $("#deleteRepresentative i")
-          .addClass("icon-cancel")
-          .removeClass("icon-spin6")
-          .removeClass("animate-spin");
+        const errorIcon = document.querySelector("#deleteRepresentative i");
+        if (errorIcon !== null) {
+          addClass(errorIcon, "icon-cancel");
+          removeClass(errorIcon, "icon-spin6");
+          removeClass(errorIcon, "animate-spin");
+        }
       },
     });
 
@@ -393,14 +474,18 @@ jQuery(document).ready(function () {
   });
 
   // Parent album popin
-  $("#cat-parent.icon-pencil").on("click", function (e) {
-    // Don't open the popin if you click on the album link
-    if (e.target.localName != "a") {
-      ab.open();
-    }
-  });
+  on(
+    document.querySelectorAll("#cat-parent.icon-pencil"),
+    "click",
+    function (e) {
+      // Don't open the popin if you click on the album link
+      if ((e.target as Element).localName != "a") {
+        ab.open();
+      }
+    },
+  );
 
-  $(".allow-comments").on("click", function () {
+  on(document.querySelectorAll(".allow-comments"), "click", function () {
     void ajax({
       url: "api/v1/categories/" + album_id,
       type: "PATCH",
@@ -418,30 +503,36 @@ jQuery(document).ready(function () {
         _data: operations["categoryUpdate"]["responses"][200]["content"]["application/json"],
       ) {
         save_button_set_loading(false);
-        if (!$("#cat-commentable").is(":checked")) {
-          $("#cat-commentable").trigger("click");
+        const commentable = document.getElementById(
+          "cat-commentable",
+        ) as HTMLInputElement | null;
+        if (commentable !== null && !commentable.checked) {
+          trigger([commentable], "click");
         }
 
-        temp_txt = $(".info-message").text();
-        $(".info-message").text(str_album_comment_allow);
-        $(".info-message").show();
+        temp_txt = textOf(document.querySelectorAll(".info-message"));
+        text(
+          document.querySelectorAll(".info-message"),
+          str_album_comment_allow,
+        );
+        show(document.querySelectorAll(".info-message"));
 
         setTimeout(function () {
-          $(".info-message").hide();
-          $(".info-message").text(temp_txt);
+          hide(document.querySelectorAll(".info-message"));
+          text(document.querySelectorAll(".info-message"), temp_txt);
         }, 5000);
       },
       error: function (e) {
         console.log(e);
         save_button_set_loading(false);
-        $(".info-error").show();
+        show(document.querySelectorAll(".info-error"));
         setTimeout(function () {
-          $(".info-error").hide();
+          hide(document.querySelectorAll(".info-error"));
         }, 5000);
       },
     });
   });
-  $(".disallow-comments").on("click", function () {
+  on(document.querySelectorAll(".disallow-comments"), "click", function () {
     void ajax({
       url: "api/v1/categories/" + album_id,
       type: "PATCH",
@@ -459,25 +550,31 @@ jQuery(document).ready(function () {
         _data: operations["categoryUpdate"]["responses"][200]["content"]["application/json"],
       ) {
         save_button_set_loading(false);
-        if ($("#cat-commentable").is(":checked")) {
-          $("#cat-commentable").trigger("click");
+        const commentable = document.getElementById(
+          "cat-commentable",
+        ) as HTMLInputElement | null;
+        if (commentable !== null && commentable.checked) {
+          trigger([commentable], "click");
         }
 
-        temp_txt = $(".info-message").text();
-        $(".info-message").text(str_album_comment_disallow);
-        $(".info-message").show();
+        temp_txt = textOf(document.querySelectorAll(".info-message"));
+        text(
+          document.querySelectorAll(".info-message"),
+          str_album_comment_disallow,
+        );
+        show(document.querySelectorAll(".info-message"));
 
         setTimeout(function () {
-          $(".info-message").hide();
-          $(".info-message").text(temp_txt);
+          hide(document.querySelectorAll(".info-message"));
+          text(document.querySelectorAll(".info-message"), temp_txt);
         }, 5000);
       },
       error: function (e) {
         console.log(e);
         save_button_set_loading(false);
-        $(".info-error").show();
+        show(document.querySelectorAll(".info-error"));
         setTimeout(function () {
-          $(".info-error").hide();
+          hide(document.querySelectorAll(".info-error"));
         }, 5000);
       },
     });
@@ -491,32 +588,43 @@ jQuery(document).ready(function () {
   // accidental `window.temp_txt`). Declared here, scoped to this ready
   // callback, since strict TS refuses a bare undeclared assignment.
   let temp_txt: string;
-  const desc_modal = $("#desc-modal");
-  const textareas = $(".sync-textarea");
-  $("#desc-zoom-square, #desc-modal-close").on("click", function () {
-    desc_modal.fadeToggle();
+  const descModal = document.getElementById("desc-modal");
+  const textareas = document.querySelectorAll(".sync-textarea");
+  on(
+    document.querySelectorAll("#desc-zoom-square, #desc-modal-close"),
+    "click",
+    function () {
+      if (descModal !== null) fadeToggle([descModal]);
+    },
+  );
+  on(textareas, "keyup", function (event: Event) {
+    const value = val([event.currentTarget as Element]) ?? "";
+    setVal(textareas, value);
   });
-  textareas.keyup(function () {
-    textareas.val($(this).val() as string);
-  });
-  $(window).on("click", function (e) {
-    if ((e.target as unknown as Element) == desc_modal[0]) {
-      desc_modal.fadeToggle();
+  on(window, "click", function (e: Event) {
+    if (e.target == descModal) {
+      if (descModal !== null) fadeToggle([descModal]);
     }
   });
-  $(document).on("keyup", function (e) {
+  on(document, "keyup", function (e: Event) {
     // 27 is 'Escape'
-    if (e.keyCode === 27 && desc_modal.is(":visible")) {
-      desc_modal.fadeToggle();
+    if (
+      (e as KeyboardEvent).keyCode === 27 &&
+      descModal !== null &&
+      isVisible(descModal)
+    ) {
+      fadeToggle([descModal]);
     }
   });
 });
 
 function checkAlbumLock() {
   if (is_visible == "true") {
-    $(".warnings").hide();
+    hide(document.querySelectorAll(".warnings"));
   } else {
-    $(".warnings").css("display", "flex");
+    document.querySelectorAll(".warnings").forEach((el) => {
+      (el as HTMLElement).style.display = "flex";
+    });
   }
 }
 
@@ -533,14 +641,19 @@ function add_related_category({
     // page load (`getCatDisplayNameCache($uppercats, 'admin.php?page=album-')`
     // via `categoriesParentNav`). `album.root` is the "Root" label the
     // put-at-root button passes instead of an album.
-    $("#cat-parent").html(
+    html(
+      document.querySelectorAll("#cat-parent"),
       album.breadcrumb !== undefined
         ? albumBreadcrumbHtml(album.breadcrumb, levelSeparator)
         : (album.root ?? ""),
     );
 
-    $(".search-result-item #" + album.id).addClass("notClickable");
-    $(".invisible-related-categories-select").append(
+    addClass(
+      document.querySelectorAll(".search-result-item #" + escapeId(album.id)),
+      "notClickable",
+    );
+    append(
+      document.querySelectorAll(".invisible-related-categories-select"),
       "<option selected value=" + album.id + "></option>",
     );
 
@@ -550,25 +663,39 @@ function add_related_category({
 }
 
 function activateCommentDropdown() {
-  $(".toggle-comment-option").find(".comment-option").hide();
+  hide(
+    find(
+      document.querySelectorAll(".toggle-comment-option"),
+      ".comment-option",
+    ),
+  );
 
   /* Display the option on the click on "..." */
-  $(".toggle-comment-option").on("click", function () {
-    $(this).find(".comment-option").toggle();
-  });
+  on(
+    document.querySelectorAll(".toggle-comment-option"),
+    "click",
+    function (event: Event) {
+      toggle(find([event.currentTarget as Element], ".comment-option"));
+    },
+  );
 
   /* Hide img options and rename field on click on the screen */
 
-  $(document).mouseup(function (e) {
+  on(document, "mouseup", function (e: Event) {
     e.stopPropagation();
     let option_is_clicked = false;
-    $(".comment-option span").each(function () {
-      if (!($(this).has(e.target as unknown as Element).length === 0)) {
+    document.querySelectorAll(".comment-option span").forEach((el) => {
+      if (el.contains(e.target as Node)) {
         option_is_clicked = true;
       }
     });
     if (!option_is_clicked) {
-      $(".toggle-comment-option").find(".comment-option").hide();
+      hide(
+        find(
+          document.querySelectorAll(".toggle-comment-option"),
+          ".comment-option",
+        ),
+      );
     }
   });
 }

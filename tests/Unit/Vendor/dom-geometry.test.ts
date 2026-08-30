@@ -291,6 +291,36 @@ describe("css", () => {
       Array.from(all).every((el) => el.style.visibility === "hidden")
     ).toBe(true);
   });
+
+  it("sets every property of an object in one call", () => {
+    const el = box("");
+
+    css(el, {
+      minWidth: "250px",
+      flexDirection: "column",
+      marginTop: 6,
+      opacity: 0.5,
+    });
+
+    expect(el.style.minWidth).toBe("250px");
+    expect(el.style.flexDirection).toBe("column");
+    expect(el.style.marginTop).toBe("6px");
+    expect(el.style.opacity).toBe("0.5");
+  });
+
+  it("applies an object's properties to every element of a set", () => {
+    document.body.innerHTML =
+      '<i class="t"></i><i class="t"></i><i class="t"></i>';
+    const all = document.querySelectorAll<HTMLElement>(".t");
+
+    css(all, { color: "red", left: 4 });
+
+    expect(
+      Array.from(all).every(
+        (el) => el.style.color === "red" && el.style.left === "4px"
+      )
+    ).toBe(true);
+  });
 });
 
 describe("css NaN guard", () => {

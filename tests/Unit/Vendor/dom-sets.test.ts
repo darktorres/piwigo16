@@ -7,6 +7,7 @@ import {
   append,
   attr,
   attrOf,
+  children,
   empty,
   escapeId,
   find,
@@ -391,5 +392,33 @@ describe("text", () => {
 
   it("returns an empty string for an empty set", () => {
     expect(textOf(document.querySelectorAll(".absent"))).toBe("");
+  });
+});
+
+describe("children", () => {
+  it("returns only direct children, not every descendant", () => {
+    document.body.innerHTML =
+      '<div class="t"><a>direct</a><span><a>nested</a></span></div>';
+    const el = document.querySelector(".t") as HTMLElement;
+
+    const result = children(el, "a");
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.textContent).toBe("direct");
+  });
+
+  it("returns every direct child when no selector is given", () => {
+    document.body.innerHTML = '<div class="t"><a></a><span></span></div>';
+    const el = document.querySelector(".t") as HTMLElement;
+
+    expect(children(el)).toHaveLength(2);
+  });
+
+  it("unions and dedupes across a set, like find()", () => {
+    document.body.innerHTML =
+      '<div class="t"><a class="x"></a></div><div class="t"><a class="x"></a><b></b></div>';
+    const set = document.querySelectorAll<HTMLElement>(".t");
+
+    expect(children(set, "a")).toHaveLength(2);
   });
 });

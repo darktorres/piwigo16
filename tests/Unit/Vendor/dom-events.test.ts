@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   delegate,
+  hover,
   off,
   on,
   parseEventSpec,
@@ -407,5 +408,30 @@ describe("binding to a whole set", () => {
     (first as HTMLElement).click();
 
     expect(handler).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("hover", () => {
+  it("binds separate mouseenter/mouseleave handlers", () => {
+    const onIn = vi.fn();
+    const onOut = vi.fn();
+    hover(el, onIn, onOut);
+
+    el.dispatchEvent(new MouseEvent("mouseenter"));
+    expect(onIn).toHaveBeenCalledTimes(1);
+    expect(onOut).not.toHaveBeenCalled();
+
+    el.dispatchEvent(new MouseEvent("mouseleave"));
+    expect(onOut).toHaveBeenCalledTimes(1);
+  });
+
+  it("binds the same handler to both when only one is given", () => {
+    const handler = vi.fn();
+    hover(el, handler);
+
+    el.dispatchEvent(new MouseEvent("mouseenter"));
+    el.dispatchEvent(new MouseEvent("mouseleave"));
+
+    expect(handler).toHaveBeenCalledTimes(2);
   });
 });

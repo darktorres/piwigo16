@@ -401,6 +401,20 @@ export function on(
   }
 }
 
+/**
+ * `.hover(handlerIn, handlerOut)` -- shorthand for
+ * `.on("mouseenter", handlerIn).on("mouseleave", handlerOut)`. A single
+ * argument binds the same handler to both, as jQuery does.
+ */
+export function hover(
+  target: EventTarget | ArrayLike<Element>,
+  handlerIn: EventListener,
+  handlerOut?: EventListener
+): void {
+  on(target, "mouseenter", handlerIn);
+  on(target, "mouseleave", handlerOut ?? handlerIn);
+}
+
 function onOne(
   target: EventTarget,
   spec: string,
@@ -1428,24 +1442,40 @@ export function css(
   target: Element | ArrayLike<Element>,
   name: string,
   value: string | number
+): void;
+export function css(
+  target: Element | ArrayLike<Element>,
+  styles: Record<string, string | number>
+): void;
+export function css(
+  target: Element | ArrayLike<Element>,
+  nameOrStyles: string | Record<string, string | number>,
+  value?: string | number
 ): void {
-  // `jQuery.style` bails on NaN rather than writing "NaNpx" (its #7116). The
-  // guard is load-bearing, not defensive: switchbox computes a coordinate
-  // from a measurement that is legitimately absent when its popup is not in
-  // the document yet.
-  if (typeof value === "number" && Number.isNaN(value)) {
-    return;
-  }
+  const styles =
+    typeof nameOrStyles === "string"
+      ? { [nameOrStyles]: value as string | number }
+      : nameOrStyles;
 
-  const property = cssPropertyName(name);
-  const resolved =
-    typeof value === "number" && !CSS_NUMBER.has(name)
-      ? `${value}px`
-      : String(value);
+  for (const [name, propValue] of Object.entries(styles)) {
+    // `jQuery.style` bails on NaN rather than writing "NaNpx" (its #7116).
+    // The guard is load-bearing, not defensive: switchbox computes a
+    // coordinate from a measurement that is legitimately absent when its
+    // popup is not in the document yet.
+    if (typeof propValue === "number" && Number.isNaN(propValue)) {
+      continue;
+    }
 
-  for (const el of toElements(target)) {
-    if (el instanceof HTMLElement) {
-      el.style.setProperty(property, resolved);
+    const property = cssPropertyName(name);
+    const resolved =
+      typeof propValue === "number" && !CSS_NUMBER.has(name)
+        ? `${propValue}px`
+        : String(propValue);
+
+    for (const el of toElements(target)) {
+      if (el instanceof HTMLElement) {
+        el.style.setProperty(property, resolved);
+      }
     }
   }
 }
@@ -1652,6 +1682,21 @@ export function find(
 ): Element[] {
   return toElements(target).flatMap((el) =>
     Array.from(el.querySelectorAll(selector))
+  );
+}
+
+/**
+ * `.children([selector])` -- direct children only (not every descendant,
+ * unlike `find()`), optionally filtered.
+ */
+export function children(
+  target: Element | ArrayLike<Element>,
+  selector?: string
+): Element[] {
+  return toElements(target).flatMap((el) =>
+    Array.from(el.children).filter((child) =>
+      selector === undefined ? true : child.matches(selector)
+    )
   );
 }
 

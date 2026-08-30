@@ -458,13 +458,6 @@ interface JQuery {
     alert_content?: string;
   }): void;
 
-  // admin.ts's own first-party `jQuery.fn.lightAccordion` extension --
-  // declared and consumed within the same file, no other real call
-  // site found. Options interface lives here (not in admin.ts itself)
-  // since admin.ts is a module (`export {}`) and this ambient
-  // declaration needs the same shape (P47).
-  lightAccordion(options?: LightAccordionOptions): JQuery;
-
   // jQuery UI's own `slider` widget (vendored -- the one full-bundle
   // `jquery.ui` id) is now real, verified types from `@types/jqueryui`
   // (P47) -- deleted here (method-shorthand on both sides, harmless to
@@ -571,16 +564,6 @@ interface JQuery {
   // (P47) -- deleted here (method-shorthand on both sides, harmless to
   // leave, but redundant). `menubar.ts`'s own drag-to-reorder menu
   // setup is the one real first-party call site.
-}
-
-// admin.ts's own `jQuery.fn.lightAccordion` options shape (P47) --
-// declared here rather than in admin.ts itself, since admin.ts is a
-// module (`export {}`) and the `interface JQuery` augmentation above
-// needs the same type.
-interface LightAccordionOptions {
-  header?: string;
-  content?: string;
-  active?: number;
 }
 
 // `album_selector.ts`'s own real `class AlbumSelector` public surface

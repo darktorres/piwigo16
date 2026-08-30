@@ -1,52 +1,88 @@
 import { pwg_getPageData } from "../../../default/js/page-data";
+import {
+  css,
+  delegate,
+  hide,
+  html,
+  htmlOf,
+  ready,
+  slideDown,
+  slideUp,
+} from "../../../default/js/vendor/dom";
 export {};
 
-jQuery.fn.lightAccordion = function (
-  this: JQuery,
+interface LightAccordionOptions {
+  header?: string;
+  content?: string;
+  active?: number;
+}
+
+// Real declarer of the accordion this page's own #menubar sidebar uses --
+// this file is its one real call site (build/jquery-plugins.d.ts's own
+// former jQuery.fn.lightAccordion, before this conversion), so it converts
+// to a plain function scoped to that one container rather than keeping the
+// jQuery-plugin "runs per matched element" shape a set of callers would need.
+function lightAccordion(
+  container: Element,
   options?: LightAccordionOptions,
-) {
-  const settings = $.extend(
-    {
-      header: "dt",
-      content: "dd",
-      active: 0,
-    },
-    options,
-  );
+): void {
+  const settings = { header: "dt", content: "dd", active: 0, ...options };
 
-  return this.each(function () {
-    const self = jQuery(this);
+  const contents = Array.from(container.querySelectorAll(settings.content));
+  const activeContent = contents[settings.active];
 
-    const contents = self.find(settings.content);
+  contents.forEach((content) => {
+    if (content !== activeContent) {
+      hide(content);
+    }
+  });
 
-    contents.not(contents[settings.active ?? 0]!).hide();
+  // Delegated, as the original was: a click anywhere inside a header
+  // (not just on the header element itself) still opens its content.
+  delegate(container, "click", settings.header, function (this: Element): void {
+    const next = this.nextElementSibling;
+    if (next === null || !next.matches(settings.content)) {
+      return;
+    }
 
-    self.on("click", settings.header, function () {
-      const content = jQuery(this).next(settings.content);
-      content.slideDown();
-      contents.not(content).slideUp();
+    slideDown(next);
+    contents.forEach((content) => {
+      if (content !== next) {
+        slideUp(content);
+      }
     });
   });
-};
+}
 
-$("#menubar").lightAccordion({
-  active: pwg_getPageData<number>("active_menu"),
-});
+const menubar = document.getElementById("menubar");
+if (menubar !== null) {
+  lightAccordion(menubar, {
+    active: pwg_getPageData<number>("active_menu"),
+  });
+}
 
 /* in case we have several infos/errors/warnings display bullets */
-jQuery(document).ready(function () {
+ready(function () {
   const eiw = ["infos", "erros", "warnings", "messages"];
 
   for (let i = 0; i < eiw.length; i++) {
     const boxType = eiw[i];
 
-    if (jQuery("." + boxType + " ul li").length > 1) {
-      jQuery("." + boxType + " ul li").css("list-style-type", "square");
-      jQuery("." + boxType + " .eiw-icon").css("margin-right", "20px");
+    const items = document.querySelectorAll("." + boxType + " ul li");
+    if (items.length > 1) {
+      css(items, "list-style-type", "square");
+      css(
+        document.querySelectorAll("." + boxType + " .eiw-icon"),
+        "margin-right",
+        "20px",
+      );
     }
   }
 
-  if (jQuery("h2").length > 0) {
-    jQuery("h1").html(jQuery("h2").html());
+  if (document.querySelectorAll("h2").length > 0) {
+    html(
+      document.querySelectorAll("h1"),
+      htmlOf(document.querySelectorAll("h2")) ?? "",
+    );
   }
 });

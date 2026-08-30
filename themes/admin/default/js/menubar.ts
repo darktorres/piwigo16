@@ -1,24 +1,47 @@
 import "./common";
 
+import {
+  addClass,
+  css,
+  hide,
+  on,
+  ready,
+  removeClass,
+  show,
+} from "../../../default/js/vendor/dom";
+
 export {};
 
-jQuery(document).ready(function () {
-  jQuery(".menuPos").hide();
-  jQuery(".drag_button").show();
-  jQuery(".menuLi").css("cursor", "move");
+ready(function () {
+  hide(document.querySelectorAll(".menuPos"));
+  show(document.querySelectorAll(".drag_button"));
+  css(document.querySelectorAll(".menuLi"), "cursor", "move");
+  // Still jQuery: sortable is a jQuery-UI widget, ported in P49-B group 4.
   jQuery(".menuUl").sortable({
     axis: "y",
     opacity: 0.8,
   });
-  jQuery("input[name^='hide_']").click(function () {
-    const men = (this as HTMLInputElement).name.split("hide_");
-    if ((this as HTMLInputElement).checked) {
-      jQuery("#menu_" + men[1]!).addClass("menuLi_hidden");
-    } else {
-      jQuery("#menu_" + men[1]!).removeClass("menuLi_hidden");
-    }
-  });
-  jQuery("#menuOrdering").submit(function () {
+  on(
+    document.querySelectorAll("input[name^='hide_']"),
+    "click",
+    function (event: Event): void {
+      const input = event.currentTarget as HTMLInputElement;
+      const men = input.name.split("hide_");
+      if (input.checked) {
+        addClass(
+          document.querySelectorAll("#menu_" + men[1]!),
+          "menuLi_hidden",
+        );
+      } else {
+        removeClass(
+          document.querySelectorAll("#menu_" + men[1]!),
+          "menuLi_hidden",
+        );
+      }
+    },
+  );
+  on(document.querySelectorAll("#menuOrdering"), "submit", function (): void {
+    // Still jQuery: reads the sortable widget's own current DOM order.
     const ar = jQuery(".menuUl").sortable("toArray");
     for (let i = 0; i < ar.length; i++) {
       const men = ar[i]!.split("menu_");

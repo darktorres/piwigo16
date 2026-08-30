@@ -5,6 +5,32 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
+import {
+  addClass,
+  append,
+  attr,
+  data,
+  empty,
+  escapeId,
+  fadeIn,
+  fadeOut,
+  find,
+  hide,
+  html,
+  off,
+  on,
+  parseHtml,
+  ready,
+  remove,
+  removeClass,
+  setData,
+  setVal,
+  show,
+  text,
+  toggle,
+  trigger,
+  val,
+} from "../../../default/js/vendor/dom";
 export {};
 
 const str_yes_delete_confirmation = pwg_getPageString("Yes, delete");
@@ -27,22 +53,34 @@ const str_comments_validated = pwg_getPageString(
 );
 const str_and_others = pwg_getPageString("and %s others");
 
-const advancedFilters = $("#advancedFilters");
-const switchMode = $("#toggleSelectionMode");
-const commentContainer = $("#commentContainer");
-const commentsAll = $("#commentsAll");
-const commentsValidated = $("#commentsValidated");
-const commentsPending = $("#commentsPending");
-const commentsList = $("#commentsList");
-const commentsNb = $("#commentsNb a");
-const filterAuthor = $("#filter_author");
-const filterDateStart = $("#filter_date_start");
-const filterDateEnd = $("#filter_date_end");
-const commentsSelectController = $("#commentsSelectController");
-const tabFilters = $("#tabFilters");
-const commentsSelectedArea = $("#commentsSelected");
-const commentsSelectedOthers = $("#commentsSelectedOthers");
-const modalViewComment = $("#modalViewComment");
+const advancedFilters = document.getElementById("advancedFilters");
+const switchMode = document.getElementById(
+  "toggleSelectionMode",
+) as HTMLInputElement | null;
+const commentContainer = document.getElementById("commentContainer");
+const commentsAll = document.getElementById("commentsAll");
+const commentsValidated = document.getElementById("commentsValidated");
+const commentsPending = document.getElementById("commentsPending");
+const commentsList = document.getElementById("commentsList");
+const commentsNb = document.querySelectorAll("#commentsNb a");
+const filterAuthor = document.getElementById(
+  "filter_author",
+) as HTMLSelectElement | null;
+const filterDateStart = document.getElementById(
+  "filter_date_start",
+) as HTMLInputElement | null;
+const filterDateEnd = document.getElementById(
+  "filter_date_end",
+) as HTMLInputElement | null;
+const commentsSelectController = document.getElementById(
+  "commentsSelectController",
+);
+const tabFilters = document.getElementById("tabFilters");
+const commentsSelectedArea = document.getElementById("commentsSelected");
+const commentsSelectedOthers = document.getElementById(
+  "commentsSelectedOthers",
+);
+const modalViewComment = document.getElementById("modalViewComment");
 
 const commentsPaginElipsis = "<span>...</span>";
 const commentsPaginItems =
@@ -89,86 +127,120 @@ let searchTimeOut: ReturnType<typeof setTimeout> | undefined;
 let selectionMode = false;
 let commentsSelected: (string | number)[] = [];
 
-$(function () {
-  $("#commentFilters").on("click", function () {
-    $(this).toggleClass("advanced-filter-open");
-    advancedFilters.toggle();
-  });
+ready(function () {
+  on(
+    document.querySelectorAll("#commentFilters"),
+    "click",
+    function (event: Event) {
+      (event.currentTarget as Element).classList.toggle("advanced-filter-open");
+      if (advancedFilters !== null) {
+        toggle(advancedFilters);
+      }
+    },
+  );
 
-  switchMode.on("change", function () {
-    $("#contentSelectMode").toggle();
-    $("#headerSelectMode, #contentSelectMode").toggleClass("selection-mode");
-    commentContainer.toggleClass("active");
+  if (switchMode !== null) {
+    on(switchMode, "change", function () {
+      const contentSelectMode = document.getElementById("contentSelectMode");
+      if (contentSelectMode !== null) {
+        toggle(contentSelectMode);
+      }
+      document
+        .querySelectorAll("#headerSelectMode, #contentSelectMode")
+        .forEach((el) => {
+          el.classList.toggle("selection-mode");
+        });
+      if (commentContainer !== null) {
+        commentContainer.classList.toggle("active");
+      }
 
-    if (!commentContainer.hasClass("active")) {
-      selectionMode = false;
-      $(".comment-select-checkbox").hide();
+      if (
+        commentContainer === null ||
+        !commentContainer.classList.contains("active")
+      ) {
+        selectionMode = false;
+        hide(document.querySelectorAll(".comment-select-checkbox"));
 
-      $(".comment-buttons").show();
-      commentsSelectController.removeClass("show");
-      tabFilters.show();
-      commentsUnselectAll();
-    } else {
-      selectionMode = true;
-      $(".comment-select-checkbox").show();
+        show(document.querySelectorAll(".comment-buttons"));
+        if (commentsSelectController !== null) {
+          removeClass(commentsSelectController, "show");
+        }
+        if (tabFilters !== null) show(tabFilters);
+        commentsUnselectAll();
+      } else {
+        selectionMode = true;
+        show(document.querySelectorAll(".comment-select-checkbox"));
 
-      $(".comment-buttons").hide();
-      tabFilters.hide();
-      commentsSelectController.addClass("show");
-    }
-  });
+        hide(document.querySelectorAll(".comment-buttons"));
+        if (tabFilters !== null) hide(tabFilters);
+        if (commentsSelectController !== null) {
+          addClass(commentsSelectController, "show");
+        }
+      }
+    });
+  }
 
-  $("#selectAll").on("click", function () {
+  on(document.querySelectorAll("#selectAll"), "click", function () {
     commentsSelectAll();
   });
 
-  $("#selectNone").on("click", function () {
+  on(document.querySelectorAll("#selectNone"), "click", function () {
     commentsUnselectAll();
   });
 
-  $("#selectInvert").on("click", function () {
+  on(document.querySelectorAll("#selectInvert"), "click", function () {
     commentsInvertSelect();
   });
 
-  $(".tab-filters input").on("change", function () {
-    commentsParams.status = $(this).attr("data-status")!;
-    commentsParams.page = 0;
-    getComments(commentsParams);
-  });
+  on(
+    document.querySelectorAll(".tab-filters input"),
+    "change",
+    function (event: Event) {
+      const target = event.currentTarget as Element;
+      commentsParams.status = target.getAttribute("data-status")!;
+      commentsParams.page = 0;
+      getComments(commentsParams);
+    },
+  );
 
-  commentsNb.on("click", function () {
-    const nb = $(this).text();
+  on(commentsNb, "click", function (event: Event) {
+    const nb = (event.currentTarget as Element).textContent ?? "";
     updateNbComments(nb);
     commentsParams.page = 0;
     getComments(commentsParams);
   });
 
-  $("#closeModalViewComment").on("click", function () {
+  on(document.querySelectorAll("#closeModalViewComment"), "click", function () {
     closeModalViewComment();
   });
 
-  $("#commentSearchInput").on("input", function () {
-    clearTimeout(searchTimeOut);
-    searchTimeOut = setTimeout(() => {
-      // Real #commentSearchInput's own value: a plain text input, always
-      // a string.
-      const search = $(this).val() as string;
+  on(
+    document.querySelectorAll("#commentSearchInput"),
+    "input",
+    function (event: Event) {
+      clearTimeout(searchTimeOut);
+      const target = event.currentTarget as HTMLInputElement;
+      searchTimeOut = setTimeout(() => {
+        // Real #commentSearchInput's own value: a plain text input, always
+        // a string.
+        const search = target.value;
 
-      delete commentsParams.author_id;
-      delete commentsParams.f_min_date;
-      delete commentsParams.f_max_date;
+        delete commentsParams.author_id;
+        delete commentsParams.f_min_date;
+        delete commentsParams.f_max_date;
 
-      commentsParams.search = search;
-      getComments(commentsParams);
-    }, 300);
-  });
+        commentsParams.search = search;
+        getComments(commentsParams);
+      }, 300);
+    },
+  );
 
-  $("#commentsResetFilters").on("click", function () {
+  on(document.querySelectorAll("#commentsResetFilters"), "click", function () {
     commentsClearFilters();
   });
 
-  $(window).on("keydown", function (e) {
-    if (e.key === "Escape") {
+  on(window, "keydown", function (e: Event) {
+    if ((e as KeyboardEvent).key === "Escape") {
       closeModalViewComment();
     }
   });
@@ -207,6 +279,7 @@ function getComments(params: CommentsFilterParams) {
     },
     error: (e) => {
       console.log(e);
+      // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
       $.alert({
         title: str_an_error_has,
         content: "",
@@ -217,19 +290,24 @@ function getComments(params: CommentsFilterParams) {
 }
 
 function commentsDisplaySummary(summary: CommentListResponse["summary"]) {
-  commentsAll.text(summary.allComments);
-  commentsValidated.text(summary.validated);
-  commentsPending.text(summary.pending);
+  if (commentsAll !== null) text([commentsAll], String(summary.allComments));
+  if (commentsValidated !== null)
+    text([commentsValidated], String(summary.validated));
+  if (commentsPending !== null)
+    text([commentsPending], String(summary.pending));
 }
 
 function displayComments(comments: CommentListResponse["comments"]) {
-  commentsList.empty();
+  const template = document.querySelector(".comment-template");
+  if (commentsList !== null) empty(commentsList);
   comments.forEach((comment: CommentEntry) => {
-    const clone = $(".comment-template").clone();
-    clone.removeClass("comment-template").addClass("comment");
+    if (template === null || commentsList === null) return;
+    const clone = template.cloneNode(true) as Element;
+    removeClass(clone, "comment-template");
+    addClass(clone, "comment");
 
-    clone.attr("id", comment.id);
-    clone.find(".comment-img").attr("src", comment.mediumUrl);
+    attr(clone, "id", String(comment.id));
+    attr(find(clone, ".comment-img"), "src", comment.mediumUrl);
     // contentRaw is genuinely nullable (CommentEntity::$content is
     // `?string`) -- a null raw comment previously threw here
     // (`.length` on null) under the old `any` typing. Treated as empty,
@@ -238,78 +316,102 @@ function displayComments(comments: CommentListResponse["comments"]) {
     const raw_lenght = rawContent.length;
     const preview =
       raw_lenght > 50 ? rawContent.substring(0, 50) + "..." : rawContent;
-    clone.find(".comment-msg").text('"' + preview + '"');
-    clone.find(".comment-author-name").text(comment.author);
-    clone.find(".comment-datetime").text(comment.date);
-    clone.find(".comment-delete").data("idx", comment.id);
-    clone.find(".comment-validate").data("idx", comment.id);
-    clone.find(".comment-content").data("idx", comment.id);
-    clone.find(".comment-hash").text(`#${comment.id}`);
-    clone.find(".comment-select-checkbox").val(comment.id);
-    clone.find(".comment-link").attr("href", comment.adminLink);
-    const authorIcons = clone.find(".comment-author-icon");
+    text(find(clone, ".comment-msg"), '"' + preview + '"');
+    text(find(clone, ".comment-author-name"), comment.author);
+    text(find(clone, ".comment-datetime"), comment.date);
+    find(clone, ".comment-delete").forEach((el) => {
+      setData(el, "idx", comment.id);
+    });
+    find(clone, ".comment-validate").forEach((el) => {
+      setData(el, "idx", comment.id);
+    });
+    find(clone, ".comment-content").forEach((el) => {
+      setData(el, "idx", comment.id);
+    });
+    text(find(clone, ".comment-hash"), `#${comment.id}`);
+    setVal(find(clone, ".comment-select-checkbox"), String(comment.id));
+    attr(find(clone, ".comment-link"), "href", comment.adminLink);
+    const authorIcons = find(clone, ".comment-author-icon");
 
     switch (comment.authorStatus) {
       case "guest":
-        authorIcons.addClass("icon-user-secret icon-yellow");
+        addClass(authorIcons, "icon-user-secret icon-yellow");
         break;
 
       case "webmaster":
-        authorIcons.addClass("icon-user icon-purple");
+        addClass(authorIcons, "icon-user icon-purple");
         break;
 
       case "admin":
-        authorIcons.addClass("icon-user icon-green");
+        addClass(authorIcons, "icon-user icon-green");
         break;
 
       case "main_user":
-        authorIcons.addClass("icon-king icon-blue");
+        addClass(authorIcons, "icon-king icon-blue");
         break;
 
       default:
-        authorIcons.addClass("icon-user icon-yellow");
+        addClass(authorIcons, "icon-user icon-yellow");
         break;
     }
 
     if (comment.isPending) {
-      clone.find(".comment-validate").show();
+      show(find(clone, ".comment-validate"));
     } else {
-      clone.find(".comment-container").addClass("comment-validated");
+      addClass(find(clone, ".comment-container"), "comment-validated");
     }
 
-    commentsList.append(clone);
+    commentsList.appendChild(clone);
   });
 
-  $(".comment-delete")
-    .off("click")
-    .on("click", function (e) {
+  off(document.querySelectorAll(".comment-delete"), "click");
+  on(
+    document.querySelectorAll(".comment-delete"),
+    "click",
+    function (e: Event) {
       e.stopPropagation();
-      const id = $(this).data("idx") as string | number;
+      const id = data(e.currentTarget as Element, "idx") as string | number;
       deleteComment([id]);
-    });
+    },
+  );
 
-  $(".comment-validate")
-    .off("click")
-    .on("click", function (e) {
+  off(document.querySelectorAll(".comment-validate"), "click");
+  on(
+    document.querySelectorAll(".comment-validate"),
+    "click",
+    function (e: Event) {
       e.stopPropagation();
-      const id = $(this).data("idx") as string | number;
+      const id = data(e.currentTarget as Element, "idx") as string | number;
       validateComment([id]);
-    });
+    },
+  );
 
-  $(".comment-content")
-    .off("click")
-    .on("click", function () {
-      const id = $(this).data("idx") as string | number;
+  off(document.querySelectorAll(".comment-content"), "click");
+  on(
+    document.querySelectorAll(".comment-content"),
+    "click",
+    function (event: Event) {
+      const el = event.currentTarget as Element;
+      const id = data(el, "idx") as string | number;
       if (selectionMode) {
-        const checkbox = $(this).find(".comment-select-checkbox");
+        const checkbox = find(el, ".comment-select-checkbox")[0];
+        if (checkbox === undefined) return;
 
-        if (checkbox.hasClass("icon-circle-empty")) {
-          checkbox.removeClass("icon-circle-empty").addClass("icon-ok-circled");
-          $(`#${id}`).addClass("comment-selected");
+        if (checkbox.classList.contains("icon-circle-empty")) {
+          checkbox.classList.remove("icon-circle-empty");
+          checkbox.classList.add("icon-ok-circled");
+          addClass(
+            document.querySelectorAll("#" + escapeId(id)),
+            "comment-selected",
+          );
           commentsSelected.push(id);
         } else {
-          checkbox.removeClass("icon-ok-circled").addClass("icon-circle-empty");
-          $(`#${id}`).removeClass("comment-selected");
+          checkbox.classList.remove("icon-ok-circled");
+          checkbox.classList.add("icon-circle-empty");
+          removeClass(
+            document.querySelectorAll("#" + escapeId(id)),
+            "comment-selected",
+          );
 
           commentsSelected = commentsSelected.filter((idx) => idx != id);
         }
@@ -319,23 +421,32 @@ function displayComments(comments: CommentListResponse["comments"]) {
       }
 
       showModalViewComment(id);
-    });
+    },
+  );
 }
 
 function commentsDiplayPagination(paging: CommentListResponse["paging"]) {
-  const container = $(".pagination-item-container");
-  container.empty();
+  const container = document.querySelector(".pagination-item-container");
+  if (container === null) return;
+  empty(container);
 
   if (paging.totalPages == 0) {
     const pageNumbers = paging.totalPages + 1;
     const page = commentsPaginItems.replace(/%d/g, String(pageNumbers));
-    $(page).addClass("actual").appendTo(container);
+    const pageEl = parseHtml(page)[0]!;
+    addClass(pageEl, "actual");
+    container.appendChild(pageEl);
   } else if (paging.totalPages <= 2) {
     Array.from(Array(paging.totalPages + 1)).forEach((_, i) => {
       const page = commentsPaginItems.replace(/%d/g, String(i + 1));
-      $(page).appendTo(container);
+      container.appendChild(parseHtml(page)[0]!);
     });
-    $(`#comments_page_${paging.page + 1}`).addClass("actual");
+    addClass(
+      document.querySelectorAll(
+        "#" + escapeId("comments_page_" + (paging.page + 1)),
+      ),
+      "actual",
+    );
   } else {
     const pageOne = commentsPaginItems.replace(/%d/g, String(1));
     const pageLast = commentsPaginItems.replace(
@@ -349,50 +460,56 @@ function commentsDiplayPagination(paging: CommentListResponse["paging"]) {
 
     switch (paging.page) {
       case 0:
-        container.append(pageCurrent, commentsPaginElipsis, pageLast);
+        append(container, pageCurrent + commentsPaginElipsis + pageLast);
         break;
 
       case paging.totalPages:
-        container.append(pageOne, commentsPaginElipsis, pageCurrent);
+        append(container, pageOne + commentsPaginElipsis + pageCurrent);
         break;
 
       default:
-        container.append(
-          pageOne,
-          commentsPaginElipsis,
-          pageCurrent,
-          commentsPaginElipsis,
-          pageLast,
+        append(
+          container,
+          pageOne +
+            commentsPaginElipsis +
+            pageCurrent +
+            commentsPaginElipsis +
+            pageLast,
         );
         break;
     }
 
-    $(".pagination-arrow")
-      .removeClass("unavailable")
-      .off("click")
-      .on("click", function () {
-        let newPage = commentsParams.page;
-        if ($(this).hasClass("left")) {
-          newPage = newPage - 1;
-        } else {
-          newPage = newPage + 1;
-        }
+    const arrows = document.querySelectorAll(".pagination-arrow");
+    removeClass(arrows, "unavailable");
+    off(arrows, "click");
+    on(arrows, "click", function (event: Event) {
+      const el = event.currentTarget as Element;
+      let newPage = commentsParams.page;
+      if (el.classList.contains("left")) {
+        newPage = newPage - 1;
+      } else {
+        newPage = newPage + 1;
+      }
 
-        if (newPage == -1 || newPage > commentsState.paging.totalPages) {
-          return;
-        }
-        commentsParams.page = newPage;
-        getComments(commentsParams);
-      });
-  }
-
-  $(".comments-paging")
-    .off("click")
-    .on("click", function () {
-      const newPage = Number($(this).attr("data-page")) - 1;
+      if (newPage == -1 || newPage > commentsState.paging.totalPages) {
+        return;
+      }
       commentsParams.page = newPage;
       getComments(commentsParams);
     });
+  }
+
+  off(document.querySelectorAll(".comments-paging"), "click");
+  on(
+    document.querySelectorAll(".comments-paging"),
+    "click",
+    function (event: Event) {
+      const el = event.currentTarget as Element;
+      const newPage = Number(el.getAttribute("data-page")) - 1;
+      commentsParams.page = newPage;
+      getComments(commentsParams);
+    },
+  );
 }
 
 function commentsDisplayFilters(filters: CommentListResponse["filters"]) {
@@ -404,62 +521,81 @@ function commentsDisplayFilters(filters: CommentListResponse["filters"]) {
 
   const minDate = filters.startedAt?.split(" ")[0] ?? "";
   const maxDate = filters.endedAt?.split(" ")[0] ?? "";
-  filterDateStart.val(minDate).attr({ min: minDate, max: maxDate });
-  filterDateEnd.val(maxDate).attr({ max: maxDate, min: minDate });
+  if (filterDateStart !== null) {
+    filterDateStart.value = minDate;
+    filterDateStart.min = minDate;
+    filterDateStart.max = maxDate;
+  }
+  if (filterDateEnd !== null) {
+    filterDateEnd.value = maxDate;
+    filterDateEnd.max = maxDate;
+    filterDateEnd.min = minDate;
+  }
 
-  filterDateStart.off("change").on("change", function () {
-    const min = $(this).val();
+  if (filterDateStart !== null) {
+    off(filterDateStart, "change");
+    on(filterDateStart, "change", function () {
+      const min = val([filterDateStart]);
 
-    if (!min) {
-      delete commentsParams.f_min_date;
-    } else {
-      // Real filter_date_start's own value: a plain date input, always
-      // a string.
-      commentsParams.f_min_date = min as string;
-    }
+      if (!min) {
+        delete commentsParams.f_min_date;
+      } else {
+        // Real filter_date_start's own value: a plain date input, always
+        // a string.
+        commentsParams.f_min_date = min;
+      }
 
-    filterDateEnd.attr({ min: min });
-    commentsParams.page = 0;
-    getComments(commentsParams);
-  });
+      if (filterDateEnd !== null) filterDateEnd.min = min ?? "";
+      commentsParams.page = 0;
+      getComments(commentsParams);
+    });
+  }
 
-  filterDateEnd.off("change").on("change", function () {
-    const max = $(this).val();
+  if (filterDateEnd !== null) {
+    off(filterDateEnd, "change");
+    on(filterDateEnd, "change", function () {
+      const max = val([filterDateEnd]);
 
-    if (!max) {
-      delete commentsParams.f_max_date;
-    } else {
-      // Real filter_date_end's own value: a plain date input, always a
-      // string.
-      commentsParams.f_max_date = max as string;
-    }
+      if (!max) {
+        delete commentsParams.f_max_date;
+      } else {
+        // Real filter_date_end's own value: a plain date input, always a
+        // string.
+        commentsParams.f_max_date = max;
+      }
 
-    filterDateStart.attr({ max: max });
-    commentsParams.page = 0;
-    getComments(commentsParams);
-  });
+      if (filterDateStart !== null) filterDateStart.max = max ?? "";
+      commentsParams.page = 0;
+      getComments(commentsParams);
+    });
+  }
 }
 
 function commentsDisplayAuthors(
   nb_authors: CommentListResponse["filters"]["nbAuthors"],
 ) {
-  filterAuthor.empty();
-  filterAuthor.append(commentsOptionsFiltersAuthor);
+  if (filterAuthor === null) return;
+  empty(filterAuthor);
+  append([filterAuthor], commentsOptionsFiltersAuthor);
 
   nb_authors.forEach((a) => {
-    filterAuthor.append(`
+    append(
+      [filterAuthor],
+      `
       <option value="${a.author_id}">${a.author} (${a.nb_authors})</option>
-      `);
+      `,
+    );
   });
 
-  filterAuthor.off("change").on("change", function () {
-    const authorId = $(this).val();
+  off(filterAuthor, "change");
+  on(filterAuthor, "change", function () {
+    const authorId = filterAuthor.value;
 
     if (!authorId) {
       delete commentsParams.author_id;
     } else {
       // Real filter_author's own value: a plain <select>, always a string.
-      commentsParams.author_id = authorId as string;
+      commentsParams.author_id = authorId;
     }
 
     commentsParams.page = 0;
@@ -469,8 +605,11 @@ function commentsDisplayAuthors(
 }
 
 function updateNbComments(nb: string | number) {
-  commentsNb.removeClass("selected-pagination");
-  $(`#pagination-per-page-${nb}`).addClass("selected-pagination");
+  removeClass(commentsNb, "selected-pagination");
+  addClass(
+    document.querySelectorAll("#" + escapeId("pagination-per-page-" + nb)),
+    "selected-pagination",
+  );
 
   commentsParams.per_page = nb;
   window.localStorage.setItem("adminCommentsNB", String(nb));
@@ -478,48 +617,60 @@ function updateNbComments(nb: string | number) {
 
 function showModalViewComment(id: string | number) {
   const comment = commentsState.comments.filter((c) => c.id == id)[0] ?? null;
-  if (!comment) return;
+  if (!comment || modalViewComment === null) return;
 
-  const item = $(`#${id}`);
-  modalViewComment.find(".comment-datetime").text(comment.date);
-  modalViewComment.find(".comment-author").remove();
-  modalViewComment
-    .find(".comments-modal-infos")
-    .prepend(item.find(".comment-author").clone());
-  modalViewComment.find(".comments-modal-img").attr("src", comment.mediumUrl);
-  modalViewComment.find(".comments-modal-img-i").empty().append(`
+  const item = document.querySelector("#" + escapeId(id));
+  text(find(modalViewComment, ".comment-datetime"), comment.date);
+  remove(find(modalViewComment, ".comment-author"));
+  const infos = find(modalViewComment, ".comments-modal-infos")[0];
+  const authorClone =
+    item !== null ? find(item, ".comment-author")[0] : undefined;
+  if (infos !== undefined && authorClone !== undefined) {
+    infos.insertBefore(authorClone.cloneNode(true), infos.firstChild);
+  }
+  attr(find(modalViewComment, ".comments-modal-img"), "src", comment.mediumUrl);
+  const imgI = find(modalViewComment, ".comments-modal-img-i")[0];
+  if (imgI !== undefined) {
+    empty(imgI);
+    append(
+      imgI,
+      `
     <p class="comments-modal-filename">${comment.file}</p>
     <p class="icon-calendar">${comment.imageDateAvailable}</p>
-  `);
-  modalViewComment.find(".comments-modal-body").html(comment.content);
+  `,
+    );
+  }
+  html(find(modalViewComment, ".comments-modal-body"), comment.content);
 
-  const validBtn = modalViewComment.find(".comments-modal-validate");
+  const validBtn = find(modalViewComment, ".comments-modal-validate");
   if (comment.isPending) {
-    validBtn.show();
-    $("#commentsModalValidate")
-      .off("click")
-      .on("click", function () {
+    show(validBtn);
+    off(document.querySelectorAll("#commentsModalValidate"), "click");
+    on(
+      document.querySelectorAll("#commentsModalValidate"),
+      "click",
+      function () {
         validateComment([id]);
         closeModalViewComment();
-      });
+      },
+    );
   } else {
-    validBtn.hide();
+    hide(validBtn);
   }
 
-  $("#commentsModalDelete")
-    .off("click")
-    .on("click", function () {
-      deleteComment([id]);
-      closeModalViewComment();
-    });
+  off(document.querySelectorAll("#commentsModalDelete"), "click");
+  on(document.querySelectorAll("#commentsModalDelete"), "click", function () {
+    deleteComment([id]);
+    closeModalViewComment();
+  });
 
-  modalViewComment.fadeIn();
+  fadeIn([modalViewComment]);
 }
 
 function closeModalViewComment() {
-  modalViewComment.fadeOut();
-  $("#commentsModalValidate").off("click");
-  $("#commentsModalDelete").off("click");
+  if (modalViewComment !== null) fadeOut([modalViewComment]);
+  off(document.querySelectorAll("#commentsModalValidate"), "click");
+  off(document.querySelectorAll("#commentsModalDelete"), "click");
 }
 
 function validateComment(id: (string | number)[]) {
@@ -539,11 +690,10 @@ function validateComment(id: (string | number)[]) {
     success: function (
       _data: import("../../../../openapi/client/schema").operations["commentValidate"]["responses"][200]["content"]["application/json"],
     ) {
+      // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
       $.alert({
-        ...{
-          title: idLenght > 1 ? str_comments_validated : str_comment_validated,
-          content: "",
-        },
+        title: idLenght > 1 ? str_comments_validated : str_comment_validated,
+        content: "",
         ...jConfirm_alert_options,
       });
       getComments(commentsParams);
@@ -551,10 +701,8 @@ function validateComment(id: (string | number)[]) {
     error: function (e) {
       console.log(e);
       $.alert({
-        ...{
-          title: str_an_error_has,
-          content: "",
-        },
+        title: str_an_error_has,
+        content: "",
         ...jConfirm_warning_options,
       });
     },
@@ -564,6 +712,7 @@ function validateComment(id: (string | number)[]) {
 function deleteComment(id: (string | number)[]) {
   const idLenght = id.length ?? 1;
 
+  // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
   $.confirm({
     title:
       idLenght > 1
@@ -615,38 +764,41 @@ function deleteComment(id: (string | number)[]) {
 }
 
 function commentsUnselectAll() {
-  $(".comment").removeClass("comment-selected");
-  $(".comment-select-checkbox")
-    .removeClass("icon-ok-circled")
-    .addClass("icon-circle-empty");
+  removeClass(document.querySelectorAll(".comment"), "comment-selected");
+  const checkboxes = document.querySelectorAll(".comment-select-checkbox");
+  removeClass(checkboxes, "icon-ok-circled");
+  addClass(checkboxes, "icon-circle-empty");
 
   commentsSelected = [];
   commentsUpdateSelection();
 }
 
 function commentsSelectAll() {
-  $(".comment").addClass("comment-selected");
-  $(".comment-select-checkbox")
-    .removeClass("icon-circle-empty")
-    .addClass("icon-ok-circled");
+  addClass(document.querySelectorAll(".comment"), "comment-selected");
+  const checkboxes = document.querySelectorAll(".comment-select-checkbox");
+  removeClass(checkboxes, "icon-circle-empty");
+  addClass(checkboxes, "icon-ok-circled");
 
   commentsSelected = [];
-  $(".comment-selected").each((i, el) => {
-    const id = $(el).attr("id")!;
+  document.querySelectorAll(".comment-selected").forEach((el) => {
+    const id = el.id;
     commentsSelected.push(id);
   });
   commentsUpdateSelection();
 }
 
 function commentsInvertSelect() {
-  $(".comment").toggleClass("comment-selected");
-  $(".comment-select-checkbox")
-    .toggleClass("icon-ok-circled")
-    .toggleClass("icon-circle-empty");
+  document.querySelectorAll(".comment").forEach((el) => {
+    el.classList.toggle("comment-selected");
+  });
+  document.querySelectorAll(".comment-select-checkbox").forEach((el) => {
+    el.classList.toggle("icon-ok-circled");
+    el.classList.toggle("icon-circle-empty");
+  });
 
   commentsSelected = [];
-  $(".comment-selected").each((i, el) => {
-    const id = $(el).attr("id")!;
+  document.querySelectorAll(".comment-selected").forEach((el) => {
+    const id = el.id;
     commentsSelected.push(id);
   });
   commentsUpdateSelection();
@@ -654,54 +806,61 @@ function commentsInvertSelect() {
 
 function commentsUpdateSelection() {
   if (commentsSelected.length === 0) {
-    $("#commentsSelection").hide();
-    $("#commentsNoSelection").show();
-    $(".comments-selected-remove").off("click");
-    $("#ValisateSelectionMode").off("click");
-    $("#DeleteSelectionMode").off("click");
+    hide(document.querySelectorAll("#commentsSelection"));
+    show(document.querySelectorAll("#commentsNoSelection"));
+    off(document.querySelectorAll(".comments-selected-remove"), "click");
+    off(document.querySelectorAll("#ValisateSelectionMode"), "click");
+    off(document.querySelectorAll("#DeleteSelectionMode"), "click");
 
     return;
   }
 
-  commentsSelectedArea.empty();
+  if (commentsSelectedArea !== null) empty(commentsSelectedArea);
   let count = 0;
   commentsSelected.forEach((id) => {
     if (count === 5) {
-      commentsSelectedOthers.text(
-        str_and_others.replace(/%s/g, String(commentsSelected.length - 5)),
-      );
+      if (commentsSelectedOthers !== null) {
+        text(
+          [commentsSelectedOthers],
+          str_and_others.replace(/%s/g, String(commentsSelected.length - 5)),
+        );
+      }
       return;
     }
-    commentsSelectedOthers.text("");
+    if (commentsSelectedOthers !== null) text([commentsSelectedOthers], "");
     const item = commentsSelectedList.replace(/%d/g, String(id));
-    commentsSelectedArea.append(item);
+    if (commentsSelectedArea !== null) append([commentsSelectedArea], item);
     count++;
   });
 
-  $(".comments-selected-remove")
-    .off("click")
-    .on("click", function () {
-      const id = $(this).attr("id")!.split("_")[1];
+  off(document.querySelectorAll(".comments-selected-remove"), "click");
+  on(
+    document.querySelectorAll(".comments-selected-remove"),
+    "click",
+    function (event: Event) {
+      const id = (event.currentTarget as Element).id.split("_")[1];
       if (!id) return;
-      $(`#${id} .comment-content`).trigger("click");
-    });
+      const target = document.querySelector(
+        "#" + escapeId(id) + " .comment-content",
+      );
+      if (target !== null) trigger([target], "click");
+    },
+  );
 
-  $("#ValisateSelectionMode")
-    .off("click")
-    .on("click", function () {
-      validateComment(commentsSelected);
-      commentsUnselectAll();
-    });
+  off(document.querySelectorAll("#ValisateSelectionMode"), "click");
+  on(document.querySelectorAll("#ValisateSelectionMode"), "click", function () {
+    validateComment(commentsSelected);
+    commentsUnselectAll();
+  });
 
-  $("#DeleteSelectionMode")
-    .off("click")
-    .on("click", function () {
-      deleteComment(commentsSelected);
-      commentsUnselectAll();
-    });
+  off(document.querySelectorAll("#DeleteSelectionMode"), "click");
+  on(document.querySelectorAll("#DeleteSelectionMode"), "click", function () {
+    deleteComment(commentsSelected);
+    commentsUnselectAll();
+  });
 
-  $("#commentsNoSelection").hide();
-  $("#commentsSelection").show();
+  hide(document.querySelectorAll("#commentsNoSelection"));
+  show(document.querySelectorAll("#commentsSelection"));
 }
 
 function commentsClearFilters() {

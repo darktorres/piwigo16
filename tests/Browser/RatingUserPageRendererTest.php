@@ -162,3 +162,87 @@ it('renders a zero consensus-deviation-top as 0.000 rather than an empty cell', 
         H::dbClose($db);
     }
 });
+
+/**
+ * P49-A conversion of themes/admin/default/js/rating_user.ts's own delete
+ * flow -- 0% JS coverage before this: every other test in this file only
+ * asserts the rendered page. This drives the full round trip: the
+ * delegated .del click (reading the username via `this.closest("tr")`),
+ * the still-jQuery jquery-confirm dialog it opens, its confirm button
+ * (which reads `event.target` from the ORIGINAL click, not `this`, since
+ * the action callback runs later against the dialog's own click), the
+ * real ajax delete, and the dataTables row removal
+ * (`oTable.row(tr).remove().draw()`).
+ *
+ * `.dataTable()`/`.DataTable()` and `.confirm()` stay jQuery (P49-B groups
+ * 7 and 5) -- only the DOM work around them converted.
+ */
+it('deletes a user\'s ratings via the trash icon and its confirm dialog', function (): void {
+    $page = H::asAdmin($this);
+    $album = H::createCategory($page, [
+        'name' => 'Rating User Delete Album ' . uniqid(),
+    ]);
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $album['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Rating User Delete Photo');
+    @unlink($image);
+
+    $anonymousId = 'del-' . uniqid();
+    ratingUserInsertRate($imageId, 2, $anonymousId, 4);
+
+    try {
+        $page = H::navigateOk($page, '/admin.php?page=rating_user&f_min_rates=0');
+        $page->assertSee($anonymousId);
+
+        $page->click('tr:has-text("' . $anonymousId . '") a.del');
+
+        $page->assertPresent('.jconfirm');
+        // Scoped to .jconfirm itself, not the whole page -- the row behind
+        // the dialog still shows the anonymous id regardless of whether
+        // the dialog's own title interpolated it correctly, so a
+        // page-wide assertSee()/assertSeeSettled() would pass even if the
+        // title were built from the wrong (or no) username.
+        $dialogText = $page->script(
+            "document.querySelector('.jconfirm').textContent"
+        );
+        expect($dialogText)
+            ->toContain($anonymousId);
+
+        $page->click('.jconfirm button.btn-red');
+
+        $page->script(<<<JS
+            new Promise((resolve, reject) => {
+                const deadline = Date.now() + 5000;
+                const check = () => {
+                    if (!document.body.textContent.includes('{$anonymousId}')) {
+                        return resolve(true);
+                    }
+                    if (Date.now() > deadline) {
+                        return reject(new Error('row for {$anonymousId} was never removed'));
+                    }
+                    setTimeout(check, 100);
+                };
+                check();
+            })
+            JS);
+
+        $page->assertNoJavaScriptErrors();
+        H::assertNoServerErrors($page, 'rating_user delete via trash icon');
+
+        $remaining = ratingUserDbConnect();
+        $count = H::fetchAssocOrFail($remaining, sprintf(
+            "SELECT COUNT(*) AS c FROM rate WHERE element_id = %d AND anonymous_id = '%s'",
+            $imageId,
+            H::dbEscape($remaining, $anonymousId)
+        ));
+        H::dbClose($remaining);
+        expect((int) $count['c'])->toBe(0);
+    } finally {
+        $db = ratingUserDbConnect();
+        H::dbQuery($db, sprintf('DELETE FROM rate WHERE element_id = %d', $imageId));
+        H::dbClose($db);
+    }
+});

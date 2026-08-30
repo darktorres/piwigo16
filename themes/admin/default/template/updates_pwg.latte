@@ -168,30 +168,28 @@
       <legend><span
           class="icon-cog icon-purple"
         ></span>{='Update to Piwigo %s'|translate:$upgradeTo}</legend>
-      {if !empty($missing['plugins'])}
+      {if $missingPlugins !== []}
         <p><i>{='Following plugins may not be compatible with the new version of Piwigo:'|translate}</i></p>
-        <p><ul><li n:foreach="$missing['plugins'] as $plugin"><a
+        <p><ul><li n:foreach="$missingPlugins as $plugin"><a
                 href="{$plugin['uri']}"
                 class="externalLink"
               >{$plugin['name']}</a></li></ul><br></p>
       {/if}
-      {if !empty($missing['themes'])}
+      {if $missingThemes !== []}
         <p><i>{='Following themes may not be compatible with the new version of Piwigo:'|translate}</i></p>
-        <p><ul><li n:foreach="$missing['themes'] as $theme"><a
+        <p><ul><li n:foreach="$missingThemes as $theme"><a
                 href="{$theme['uri']}"
                 class="externalLink"
               >{$theme['name']}</a></li></ul><br></p>
       {/if}
       <p>
-        <p
-          n:if="!empty($missing['plugins']) or !empty($missing['themes'])"
-        ><label><input
+        <p n:if="$missingPlugins !== [] or $missingThemes !== []"><label><input
               type="checkbox"
               name="understand"
             > &nbsp;{='I decide to update anyway'|translate}</label></p>
         {if isset($containerVersion)}
           <p><a
-              class="icon-right goto-update-guide {if !empty($missing['plugins']) or !empty($missing['themes'])} goto-update-guide-disabled{/if}"
+              class="icon-right goto-update-guide {if $missingPlugins !== [] or $missingThemes !== []} goto-update-guide-disabled{/if}"
               href="{$dockerUpdateGuideUrl}"
               target="_blank"
             > {='Follow the update guide'|translate}</a></p>
@@ -200,7 +198,7 @@
               type="submit"
               name="submit"
               value="{='Update to Piwigo %s'|translate:$upgradeTo}"
-              {if !empty($missing['plugins']) or !empty($missing['themes']) or isset($majorReleasePhpRequired)}
+              {if $missingPlugins !== [] or $missingThemes !== [] or isset($majorReleasePhpRequired)}
               disabled="disabled"
               {/if}
             ></p>

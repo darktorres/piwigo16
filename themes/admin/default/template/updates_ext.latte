@@ -29,7 +29,7 @@
 
   {foreach $updatesExtension as $type => $updates}
     <fieldset
-      n:if="!empty($updates)"
+      n:if="$updates !== []"
       id="{$type}"
       class="pluginContainer pluginUpdateContainer line-form"
       data-type="{$type}"

@@ -1,6 +1,6 @@
 {templateType Piwigo\Admin\Projection\LanguagesNewView}
 {if $isWebmaster == 1}
-  {if !empty($languages)}
+  {if $languages !== []}
     <table class="table2 languages">
       <thead>
         <tr class="throw">

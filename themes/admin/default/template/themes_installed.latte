@@ -41,14 +41,14 @@
     {* Reset per iteration: {var} is a plain PHP variable, so a theme with
        no author would otherwise render the previous theme's. *}
     {var $author = null}
-    {if !empty($theme->author)}
-      {if !empty($theme->authorUrl)}
+    {if $theme->author !== ''}
+      {if $theme->authorUrl !== null}
         {var $author = ("<a href='%s'>%s</a>"|sprintf:$theme->authorUrl,$theme->author)}
       {else}
         {var $author = ('<u>' . $theme->author . '</u>')}
       {/if}
     {/if}
-    {if !empty($theme->visitUrl)}
+    {if $theme->visitUrl !== ''}
       {var $version = ("<a class='externalLink' href='" . $theme->visitUrl . "'>" . $theme->version . "</a>")}
     {else}
       {var $version = $theme->version}

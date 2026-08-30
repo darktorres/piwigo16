@@ -157,28 +157,22 @@ final readonly class UpdatesPwgPageRenderer
             }
         }
 
-        $missing = null;
+        // Two flat lists, not the type-keyed bag: that bag has three ways
+        // to say "nothing missing" -- absent key, empty list, or no bag at
+        // all off step 3 -- which is what forced updates_pwg.latte to
+        // collapse five reads through empty(). The key lookup itself lives
+        // in ExtensionUpdateChecker, where it can be tested; asking for the
+        // wrong key here is silent by construction (P58-B2).
+        $missing_plugins = [];
+        $missing_themes = [];
         if ($step === 3 and $this->accessControl->isWebmaster()) {
             if ($updatesPwgRequest->isUpgradeSubmitted) {
                 $core_update_service->upgradeTo($updatesPwgRequest->upgradeToSubmitted, $step);
             }
 
             $extension_update_checker = $this->extensionUpdateChecker;
-            // updates_pwg.latte only ever reads ['uri']/['name'] off each
-            // row (the "may not be compatible" plugin/theme link lists) --
-            // the template boundary, converted here rather than carrying
-            // the real PluginScanRow|ThemeScanRow|LanguageScanRow objects
-            // any further.
-            $missing = array_map(
-                static fn (array $rows): array => array_map(
-                    static fn (PluginScanRow|ThemeScanRow|LanguageScanRow $row): array => [
-                        'uri' => $row->uri,
-                        'name' => $row->name,
-                    ],
-                    $rows
-                ),
-                $extension_update_checker->getMissingExtensions($upgrade_to)
-            );
+            $missing_plugins = self::toMissingRows($extension_update_checker->getMissingPlugins($upgrade_to));
+            $missing_themes = self::toMissingRows($extension_update_checker->getMissingThemes($upgrade_to));
         }
 
         $minor_release_php_required = null;
@@ -220,7 +214,8 @@ final readonly class UpdatesPwgPageRenderer
             dockerUpdateGuideUrl: $docker_update_guide_url,
             checkVersion: $check_version,
             devVersion: $dev_version,
-            missing: $missing,
+            missingPlugins: $missing_plugins,
+            missingThemes: $missing_themes,
             minorReleasePhpRequired: $minor_release_php_required,
             majorReleasePhpRequired: $major_release_php_required,
             step: $step,
@@ -238,6 +233,25 @@ final readonly class UpdatesPwgPageRenderer
         return new AdminPageResult(
             content: $adminContent,
             pageTitle: $this->lang->t('Updates'),
+        );
+    }
+
+    /**
+     * `updates_pwg.latte` only ever reads `uri`/`name` off each row (the
+     * "may not be compatible" link lists), so the scan rows are converted
+     * at the template boundary rather than carried further.
+     *
+     * @param list<PluginScanRow|ThemeScanRow|LanguageScanRow> $rows
+     * @return list<array{uri: string, name: string}>
+     */
+    private static function toMissingRows(array $rows): array
+    {
+        return array_map(
+            static fn (PluginScanRow|ThemeScanRow|LanguageScanRow $row): array => [
+                'uri' => $row->uri,
+                'name' => $row->name,
+            ],
+            $rows
         );
     }
 }

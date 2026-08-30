@@ -266,6 +266,35 @@ final readonly class ExtensionUpdateChecker
     }
 
     /**
+     * The plugins {@see getMissingExtensions()} found, as the flat list
+     * `updates_pwg.latte` reads.
+     *
+     * The key lookup lives here rather than at the caller because getting
+     * it wrong is invisible: `$missing[$type][]` is only created when
+     * something is missing, so a wrong key is indistinguishable from
+     * "nothing missing". That is exactly what happened between the P23
+     * port and P58-B2 -- the template asked for `$missing['plugins']`,
+     * plural, which is what the pre-conversion updates.class.php used
+     * (`$this->types = ['plugins', 'themes', 'languages']`), while this
+     * class keys by ExtensionType::value, singular. Neither side was
+     * untested; nothing tested the join.
+     *
+     * @return list<PluginScanRow|ThemeScanRow|LanguageScanRow>
+     */
+    public function getMissingPlugins(string $version): array
+    {
+        return $this->getMissingExtensions($version)[ExtensionType::Plugin->value] ?? [];
+    }
+
+    /**
+     * @return list<PluginScanRow|ThemeScanRow|LanguageScanRow>
+     */
+    public function getMissingThemes(string $version): array
+    {
+        return $this->getMissingExtensions($version)[ExtensionType::Theme->value] ?? [];
+    }
+
+    /**
      * Installed extensions with no known-compatible PEM revision for
      * $version, excluding core-bundled defaults (ExtensionType::defaultIds())
      * and extensions merged into core by $version (getMergedExtensions()) --

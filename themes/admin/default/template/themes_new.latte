@@ -1,6 +1,6 @@
 {templateType Piwigo\Admin\Projection\ThemesNewView}
 
-{if !empty($newThemes)}
+{if $newThemes !== []}
   <div class="themeBoxes">
     <div n:foreach="$newThemes as $theme" class="themeBox">
       <div class="themeShot"><a

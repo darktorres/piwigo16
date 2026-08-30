@@ -323,6 +323,48 @@ test('getMissingExtensions excludes a bundled default plugin id but flags a genu
         ->and($missing['plugin'][0]->extension)->toBe('777');
 });
 
+// The join between this class's keys and what updates_pwg.latte renders.
+// Both sides were already tested in isolation -- the test above pins the
+// key as 'plugin', singular, and the template's own reads were covered by
+// nothing at all -- and between the P23 port and P58-B2 they disagreed:
+// the template asked for $missing['plugins'], plural, which is what the
+// pre-conversion updates.class.php used ($this->types = ['plugins',
+// 'themes', 'languages']). Five reads matched nothing, and because
+// $missing[$type][] is only created when something IS missing, a wrong key
+// is indistinguishable from "nothing missing" -- which empty() then made
+// silent. getMissingPlugins()/getMissingThemes() exist so the lookup has
+// one home and a test can stand on it.
+test('getMissingPlugins returns what getMissingExtensions filed under the plugin key', function () use (&$fixtureRoot): void {
+    fixturePlugin(requireFixtureRoot($fixtureRoot), 'zzz_custom_plugin', '0.9.2', '777', 'Custom Gallery Widget');
+
+    $checker = extensionUpdateChecker();
+    $missing = $checker->getMissingExtensions('16.3.0');
+
+    // toEqual, not toBe: each call re-scans the fixture directory and
+    // mints fresh row objects, so identity would compare object handles.
+    expect($checker->getMissingPlugins('16.3.0'))
+        ->toEqual($missing[ExtensionType::Plugin->value])
+        ->and($checker->getMissingPlugins('16.3.0'))
+        ->toHaveCount(1);
+    expect($checker->getMissingPlugins('16.3.0')[0]->name)
+        ->toBe('Custom Gallery Widget');
+});
+
+// The absent-key case, which is the one the plural spelling used to hit on
+// every call: a list, not a warning and not null.
+test('getMissingPlugins and getMissingThemes return an empty list when their key is absent', function () use (&$fixtureRoot): void {
+    fixtureLanguage(requireFixtureRoot($fixtureRoot), 'xx_ZZ', 'Test Language');
+
+    $checker = extensionUpdateChecker();
+
+    expect($checker->getMissingExtensions('16.3.0'))
+        ->not->toHaveKey(ExtensionType::Plugin->value)
+        ->and($checker->getMissingPlugins('16.3.0'))
+        ->toBe([])
+        ->and($checker->getMissingThemes('16.3.0'))
+        ->toBe([]);
+});
+
 test('getMissingExtensions never reports a language type at all -- language entries carry no PEM extension id', function () use (&$fixtureRoot): void {
     fixtureLanguage(requireFixtureRoot($fixtureRoot), 'xx_ZZ', 'Test Language');
 

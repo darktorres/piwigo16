@@ -93,15 +93,15 @@
       {* Reset per iteration: {var} is a plain PHP variable, so a plugin
          with no author would otherwise render the previous plugin's. *}
       {var $author = null}
-      {if !empty($plugin->author)}
-        {if !empty($plugin->authorUrl)}
+      {if $plugin->author !== ''}
+        {if $plugin->authorUrl !== null}
           {var $author = ("<a href='%s'>%s</a>"|sprintf:$plugin->authorUrl,$plugin->author)}
         {else}
           {var $author = ('<u>' . $plugin->author . '</u>')}
         {/if}
       {/if}
 
-      {if !empty($plugin->visitUrl)}
+      {if $plugin->visitUrl !== ''}
         {var $version = ("<a class='externalLink' href='" . $plugin->visitUrl . "'>" . $plugin->version . "</a>")}
       {else}
         {var $version = $plugin->version}

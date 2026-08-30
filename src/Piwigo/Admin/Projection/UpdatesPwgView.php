@@ -34,19 +34,32 @@ use Piwigo\Template\Latte\Attribute\Template;
  *   meant to. The two blocks that read it say so themselves
  *   (`$step == 1 && $majorReleaseUrl !== null`) rather than relying on a
  *   correlation established eighty lines away in the renderer.
+ *
+ * `$missingPlugins`/`$missingThemes` replace a single `?array $missing`
+ * keyed by extension type (P58-B2). The template read exactly two of its
+ * keys and never distinguished the three ways that bag could say "no
+ * missing extensions" -- `null` off step 3, a key absent because
+ * `ExtensionUpdateChecker::getMissingExtensions()` only creates
+ * `$missing[$type][]` when it finds one, or an empty list -- so all five
+ * reads went through `empty()`, which was load-bearing only because it
+ * suppresses the null-offset and undefined-key warnings the bag could
+ * otherwise raise. Two lists say the same thing with no way to be
+ * absent, and the row shape is pinned rather than `array<string, mixed>`.
  */
 #[Template('updates_pwg.latte')]
 final readonly class UpdatesPwgView implements View, HasPageAssets
 {
     /**
-     * @param array<string, list<array<string, mixed>>>|null $missing
+     * @param list<array{uri: string, name: string}> $missingPlugins
+     * @param list<array{uri: string, name: string}> $missingThemes
      */
     public function __construct(
         public ?string $containerVersion,
         public ?string $dockerUpdateGuideUrl,
         public bool $checkVersion,
         public bool $devVersion,
-        public ?array $missing,
+        public array $missingPlugins,
+        public array $missingThemes,
         public ?string $minorReleasePhpRequired,
         public ?string $majorReleasePhpRequired,
         public int $step,

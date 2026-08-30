@@ -125,3 +125,45 @@ it('rejects a submission without a valid CSRF token', function (): void {
 
     expect($result['status'])->toBe(400);
 });
+
+/**
+ * site_manager.ts's own "create a new site" toggle, the file's only
+ * behaviour outside the delete-confirm plugin. Converted off jQuery in
+ * P49-A, and this is what makes that conversion checkable: the form starts
+ * hidden by a CSS class (`u-hidden`), not an inline style, so `show()` has
+ * to notice the stylesheet is what is hiding it and write an inline
+ * display of its own -- the exact case jQuery's show() handles and a naive
+ * `style.display = ""` does not.
+ *
+ * Neither golden-html nor a pixel baseline can see this: both capture the
+ * page at rest, before any click.
+ */
+it('reveals the create-site form and hides its own trigger on click', function (): void {
+    $snapshot = H::snapshotConfig(['enable_synchronization']);
+    H::setConfigValue('enable_synchronization', 'true');
+
+    try {
+        $page = H::asAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=site_manager');
+
+        // Computed display rather than an assertVisible()/assertMissing()
+        // pair: both nodes stay in the DOM throughout, and what the
+        // conversion changes is precisely which of them the browser is
+        // laying out. This is jQuery's own `:visible` test.
+        $visible = static fn (string $selector): string => sprintf(
+            'getComputedStyle(document.querySelector(%s)).display',
+            json_encode($selector, JSON_THROW_ON_ERROR)
+        );
+
+        expect($page->script($visible('#showCreateSite')))->not->toBe('none');
+        expect($page->script($visible('#createSite')))->toBe('none');
+
+        $page->click('#showCreateSite a');
+
+        expect($page->script($visible('#showCreateSite')))->toBe('none');
+        expect($page->script($visible('#createSite')))->not->toBe('none');
+        $page->assertNoJavaScriptErrors();
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});

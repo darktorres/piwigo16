@@ -148,7 +148,7 @@ Three structural changes produced that drift:
 | P55 | Real quality gates | Not started | 0 |
 | P56 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P57 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
-| P58 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | In progress — A0/A0b done (103 findings refiled as Latte codegen); a generic `CachingIterator` stub removed the erasure hiding 133 more; **P58-A 843 → 0, closed**; P58-B 376 → 309, B1 (the always-true/false set) done. All 20 of A's identifier ignores retired from `phpstan.neon`, and 3 of B's 6. Twenty live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
+| P58 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | In progress — A0/A0b done (103 findings refiled as Latte codegen); a generic `CachingIterator` stub removed the erasure hiding 133 more; **P58-A 843 → 0, closed**; P58-B 376 → 231, with B1 (always-true/false) and B2 (every `empty()`) done and only the loose comparisons left. All 20 of A's identifier ignores retired from `phpstan.neon`, plus 4 of B's 6 and one from the permanent group. Twenty-two live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -4701,14 +4701,48 @@ ignores (`if.alwaysTrue`, `booleanOr.rightAlwaysFalse`,
 `identical.alwaysFalse`) retired; **314 → 309**, 3 entries left in the
 CAMPAIGN-PENDING block.
 
-Then `empty()`, then the comparisons. `===` is not a mechanical
-substitution: `int == int` is the only always-safe pair, `'10' == '1e1'`
-is true for numeric strings, and `'' == null` is true.
+*B2 (done).* All 78 `empty()` calls, in five commits grouped by area.
+**No `empty()` survives anywhere in the template tree**, and that retired
+two `phpstan.neon` entries rather than one: `empty.notAllowed` from
+CAMPAIGN-PENDING, and `empty.variable` from the **permanent** group, since
+every presence check left is spelled `isset()`.
+
+The plan's rule -- array to `!== []`, string to `!== ''`, nullable to
+`!== null` -- turned out to be the *second* question. The first is whether
+the variable exists at all, because several of these calls are presence
+tests wearing an emptiness test's clothes. `PageMessagesContext` and
+`HeaderMessagesPageContext` emit a key only when they have a value, so
+`$infos`/`$header_msgs` are genuinely *undefined* on most pages and only
+`isset()` is correct. The same shape needed opposite answers twice:
+`$tags`/`$authors` keep their nullability, because `{if isset($tags)}`
+wraps them and `null` ("no filter section") differs from `[]` ("section,
+empty"); `$items`/`$calendarBars` lose theirs, because no outer `isset`
+guards them and both producers can return `[]`, so neither `!== null` nor
+`!== []` was correct alone.
+
+Three flattening contexts stopped omitting their null keys
+(`PageHeaderPageContext`'s `header_notes`/`meta_ref`/`page_refresh`),
+which is what let those read `!== null` at all: an omitted key leaves the
+variable undefined, and that is the only reason the templates reached for
+`empty()` there. A missing key was Smarty's way of spelling "no value" and
+nothing else.
+
+Then the comparisons. `===` is not a mechanical substitution:
+`int == int` is the only always-safe pair, `'10' == '1e1'` is true for
+numeric strings, and `'' == null` is true. **B3 opens at 231**, not the
+268 this plan first recorded -- Campaign A's typing resolved the rest --
+and its operand mix is now `string`/`string` 104, `mixed`/`string` 53,
+`int`/`int` 37, `string|null`/`string` 12, with ~25 in narrowed integer
+ranges.
 
 *Gate.* Each identifier's ignore comes out of `phpstan.neon` in the
 commit that takes its count to zero; `reportUnmatchedIgnoredErrors`
-forces it. A ends with 20 entries removed, B with 6 (3 gone with B1), and the
-CAMPAIGN-PENDING block gone. Output is invariant across A by
+forces it. A ends with 20 entries removed, B with 6 (3 gone with B1, 1 with B2),
+and the CAMPAIGN-PENDING block gone. B2 also retired `empty.variable`
+from the permanent group and added `nullCoalesce.property` to it, which
+is the same trade one level down: `month_calendar.latte`'s
+`$chronology_calendar` is only assigned for a calendar view, and the
+template renders for the list view too. Output is invariant across A by
 construction, so golden-html (83) and VR (75) staying green with no
 regeneration is the proof, not a chore; in B a changed byte means the
 loose comparison was load-bearing.
@@ -4724,7 +4758,7 @@ padding cells to the wrong branch, and the only thing that caught it was a
 golden fixture built one commit earlier. Every `{if !empty($x)}` whose
 `$x` becomes an object has to be read by hand.
 
-Twenty live bugs have surfaced this way, none of them type work:
+Twenty-two live bugs have surfaced this way, none of them type work:
 
 1. Saving the Main, Comments or Display config tab turned off every
    checkbox on it. The tabs normalized to `'true'`/`'false'` strings and
@@ -4827,7 +4861,27 @@ Twenty live bugs have surfaced this way, none of them type work:
     through the public API alone: `PUT /categories/{id}/representative`
     checks that both ids exist, not that the image is in the category.
 
-A twenty-first is the compile step's own: `VariableMapBuilder` joined a
+21. **The core-upgrade page never listed incompatible extensions.**
+    `updates_pwg.latte` step 3 read `$missing['plugins']`/`$missing['themes']`
+    -- plural, which is what the pre-conversion `updates.class.php` used
+    (`$this->types = ['plugins', 'themes', 'languages']`) -- while the P23
+    port re-keyed the bag by `ExtensionType::value`, singular. Five reads
+    matching nothing, so no incompatibility warning, no "I decide to update
+    anyway" checkbox, and an update button that was never disabled.
+    `empty()` made it silent: `$missing[$type][]` exists only when
+    something IS missing, so a wrong key and "nothing missing" are the same
+    answer, and off step 3 the same expression is a null offset that
+    `empty()` also swallows. Both sides had tests; nothing tested the join.
+22. **A zero consensus deviation rendered as an empty cell.**
+    `rating_user.latte` guarded its "consensus deviation (top)" column with
+    `!empty($rating->cdTop)` on a `?float`, and `empty()` swallows a real
+    `0.0` alongside the null. `0.0` is not exotic: `abs($rate - $average)`
+    is exactly zero whenever the user is the sole rater of an element, so
+    "agreed exactly with the consensus" and "no top-rated element to
+    average" showed as the same blank cell. The committed golden fixture
+    had it baked in -- `power_user`'s cell goes from blank to `0.000`.
+
+A twenty-third is the compile step's own: `VariableMapBuilder` joined a
 variable's declarations by imploding type strings, so a name one context
 declares `?string` and another declares `string` became `?string|string` --
 not valid PHPDoc, since the `?` shorthand cannot take part in a union.

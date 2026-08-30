@@ -29,6 +29,20 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
+import {
+  addClass,
+  css,
+  hide,
+  is,
+  on,
+  ready,
+  setVal,
+  show,
+  text,
+  toggle,
+  trigger,
+  val,
+} from "../../../default/js/vendor/dom";
 
 export const lang = {
   Cancel: pwg_getPageString("Cancel"),
@@ -38,6 +52,18 @@ export const lang = {
   generateMsg: pwg_getPageString("Generate multiple size images"),
 };
 
+// Still jQuery: registration only, and genuinely so -- this whole block is
+// selectize interop (the still-jQuery library, P49-B group 6), not P49-A
+// DOM work: no native dom.ts call appears in it at all. Confirmed live,
+// not just reasoned: swapping this to dom.ts's own `ready()` produced a
+// real, reproducible page-load-time error (a cross-origin-masked "Script
+// error." from inside the selectize CDN script itself, confirmed via
+// `window.__pestBrowser.jsErrors` and absent on both the unconverted
+// original and a `jQuery(document).ready()`-wrapped version) -- jQuery's
+// own `.ready(fn)` runs `fn` synchronously, in the same tick, once the
+// document is already ready, whereas dom.ts's `ready()` always defers via
+// `setTimeout()`; delaying this block by a tick broke selectize's own
+// initialization.
 jQuery(document).ready(function () {
   // <!-- TAGS -->
   const tagsCache = new TagsCache({
@@ -46,6 +72,7 @@ jQuery(document).ready(function () {
     rootUrl: pwg_getPageData<string>("root_url"),
   });
 
+  // Still jQuery: selectize is a library, ported in P49-B group 6.
   tagsCache.selectize(jQuery("[data-selectize=tags]"), {
     lang: {
       Add: pwg_getPageString("Create"),
@@ -67,6 +94,7 @@ jQuery(document).ready(function () {
     id: string | number;
   }
 
+  // Still jQuery: selectize is a library, ported in P49-B group 6.
   categoriesCache.selectize(jQuery("[data-selectize=categories]"), {
     filter: function (
       this: { name: string },
@@ -74,9 +102,9 @@ jQuery(document).ready(function () {
       options: { default?: string | number },
     ) {
       if (this.name === "dissociate") {
-        const filtered = jQuery.grep(categories, function (cat) {
-          return Boolean(associated_categories[cat.id]);
-        });
+        const filtered = categories.filter((cat) =>
+          Boolean(associated_categories[cat.id]),
+        );
 
         if (filtered.length > 0) {
           options.default = filtered[0]!.id;
@@ -104,166 +132,268 @@ const selectedMessage_all = pwg_getPageString("All %d photos are selected");
 export const str_add_alb_associate = pwg_getPageString("Add Album");
 export const str_select_alb_associate = pwg_getPageString("Select an album");
 
-$(document).ready(function () {
-  function checkPermitAction() {
-    let nbSelected;
-    if ($("input[name=setSelected]").is(":checked")) {
+ready(function () {
+  function checkPermitAction(): void {
+    let nbSelected: number;
+    if (is(document.querySelectorAll("input[name=setSelected]"), ":checked")) {
       nbSelected = nb_thumbs_set;
     } else {
-      nbSelected = $(".thumbnails input[type=checkbox]").filter(
-        ":checked",
+      nbSelected = document.querySelectorAll(
+        ".thumbnails input[type=checkbox]:checked",
       ).length;
     }
 
     if (nbSelected === 0) {
-      $("#permitAction").hide();
-      $("#forbidAction").show();
+      hide(document.querySelectorAll("#permitAction"));
+      show(document.querySelectorAll("#forbidAction"));
     } else {
-      $("#permitAction").show();
-      $("#forbidAction").hide();
+      show(document.querySelectorAll("#permitAction"));
+      hide(document.querySelectorAll("#forbidAction"));
     }
 
-    $("#applyOnDetails").text(sprintf(applyOnDetails_pattern, nbSelected));
+    text(
+      document.querySelectorAll("#applyOnDetails"),
+      sprintf(applyOnDetails_pattern, nbSelected),
+    );
 
     // display the number of currently selected photos in the "Selection" fieldset
     if (nbSelected === 0) {
-      $("#selectedMessage").text(sprintf(selectedMessage_none, nb_thumbs_set));
+      text(
+        document.querySelectorAll("#selectedMessage"),
+        sprintf(selectedMessage_none, nb_thumbs_set),
+      );
     } else if (nbSelected === nb_thumbs_set) {
-      $("#selectedMessage").text(sprintf(selectedMessage_all, nb_thumbs_set));
+      text(
+        document.querySelectorAll("#selectedMessage"),
+        sprintf(selectedMessage_all, nb_thumbs_set),
+      );
     } else {
-      $("#selectedMessage").text(
+      text(
+        document.querySelectorAll("#selectedMessage"),
         sprintf(selectedMessage_pattern, nbSelected, nb_thumbs_set),
       );
     }
   }
 
-  $("[id^=action_]").hide();
+  hide(document.querySelectorAll("[id^=action_]"));
 
-  $("select[name=selectAction]").change(function () {
-    $("[id^=action_]").hide();
+  on(
+    document.querySelectorAll("select[name=selectAction]"),
+    "change",
+    function (event: Event) {
+      hide(document.querySelectorAll("[id^=action_]"));
 
-    const action = $(this).prop("value") as string;
-    // if (action == 'move') {
-    //   action = 'associate';
-    // }
+      const el = event.currentTarget as HTMLSelectElement;
+      const action = el.value;
+      // if (action == 'move') {
+      //   action = 'associate';
+      // }
 
-    $("#action_" + action).show();
+      show(document.querySelectorAll("#action_" + action));
 
-    if ($(this).val() != -1) {
-      $("#applyActionBlock").show();
-    } else {
-      $("#applyActionBlock").hide();
-    }
-    if ($(this).val() === "delete" || $(this).val() === "delete_derivatives") {
-      $("#confirmDel").css("visibility", "visible");
-    } else {
-      $("#confirmDel").css("visibility", "hidden");
-    }
-  });
+      if (el.value != "-1") {
+        show(document.querySelectorAll("#applyActionBlock"));
+      } else {
+        hide(document.querySelectorAll("#applyActionBlock"));
+      }
+      if (el.value === "delete" || el.value === "delete_derivatives") {
+        css(document.querySelectorAll("#confirmDel"), "visibility", "visible");
+      } else {
+        css(document.querySelectorAll("#confirmDel"), "visibility", "hidden");
+      }
+    },
+  );
 
-  $(".wrap1 label").click(function (event) {
-    $("input[name=setSelected]").prop("checked", false).trigger("change");
+  on(
+    document.querySelectorAll(".wrap1 label"),
+    "click",
+    function (event: Event) {
+      document.querySelectorAll("input[name=setSelected]").forEach((el) => {
+        (el as HTMLInputElement).checked = false;
+      });
+      trigger(document.querySelectorAll("input[name=setSelected]"), "change");
 
-    const li = $(this).closest("li");
-    const checkbox = $(this).children("input[type=checkbox]");
+      const label = event.currentTarget as Element;
+      const li = label.closest("li");
+      const checkbox = Array.from(label.children).find((child) =>
+        child.matches("input[type=checkbox]"),
+      ) as HTMLInputElement | undefined;
 
-    checkbox.triggerHandler("shclick", event);
+      if (checkbox !== undefined) {
+        // Still jQuery: triggerHandler("shclick", ...) reaches
+        // batchManagerGlobal.ts's own enableShiftClick() plugin, bound
+        // through jQuery's own event system -- that file converts last
+        // (P49-A's own documented module-cycle exception, see this
+        // file's leading comment).
+        jQuery(checkbox).triggerHandler("shclick", event);
 
-    if ($(checkbox).is(":checked")) {
-      $(li).addClass("thumbSelected");
-    } else {
-      $(li).removeClass("thumbSelected");
-    }
+        if (checkbox.checked) {
+          li?.classList.add("thumbSelected");
+        } else {
+          li?.classList.remove("thumbSelected");
+        }
+      }
 
-    checkPermitAction();
-  });
+      checkPermitAction();
+    },
+  );
 
-  $("#selectAll").click(function () {
-    $("input[name=setSelected]").prop("checked", false).trigger("change");
+  on(document.querySelectorAll("#selectAll"), "click", function (event: Event) {
+    document.querySelectorAll("input[name=setSelected]").forEach((el) => {
+      (el as HTMLInputElement).checked = false;
+    });
+    trigger(document.querySelectorAll("input[name=setSelected]"), "change");
     selectPageThumbnails();
     checkPermitAction();
-    return false;
+    event.preventDefault();
+    event.stopPropagation();
   });
 
-  function selectPageThumbnails() {
-    $(".thumbnails label").each(function () {
-      const checkbox = $(this).children("input[type=checkbox]");
+  function selectPageThumbnails(): void {
+    document.querySelectorAll(".thumbnails label").forEach((label) => {
+      const checkbox = Array.from(label.children).find((child) =>
+        child.matches("input[type=checkbox]"),
+      ) as HTMLInputElement | undefined;
 
-      $(checkbox).prop("checked", true).trigger("change");
-      $(this).closest("li").addClass("thumbSelected");
+      if (checkbox !== undefined) {
+        checkbox.checked = true;
+        trigger(checkbox, "change");
+      }
+      label.closest("li")?.classList.add("thumbSelected");
     });
   }
 
-  $("#selectNone").click(function () {
-    $("input[name=setSelected]").prop("checked", false).trigger("change");
+  on(
+    document.querySelectorAll("#selectNone"),
+    "click",
+    function (event: Event) {
+      document.querySelectorAll("input[name=setSelected]").forEach((el) => {
+        (el as HTMLInputElement).checked = false;
+      });
+      trigger(document.querySelectorAll("input[name=setSelected]"), "change");
 
-    $(".thumbnails label").each(function () {
-      const checkbox = $(this).children("input[type=checkbox]");
+      document.querySelectorAll(".thumbnails label").forEach((label) => {
+        const checkbox = Array.from(label.children).find((child) =>
+          child.matches("input[type=checkbox]"),
+        ) as HTMLInputElement | undefined;
 
-      if (jQuery(checkbox).is(":checked")) {
-        $(checkbox).prop("checked", false).trigger("change");
-      }
+        if (checkbox !== undefined) {
+          if (checkbox.checked) {
+            checkbox.checked = false;
+            trigger(checkbox, "change");
+          }
+          label.closest("li")?.classList.remove("thumbSelected");
+        }
+      });
+      checkPermitAction();
+      event.preventDefault();
+      event.stopPropagation();
+    },
+  );
 
-      $(this).closest("li").removeClass("thumbSelected");
-    });
-    checkPermitAction();
-    return false;
-  });
+  on(
+    document.querySelectorAll("#selectInvert"),
+    "click",
+    function (event: Event) {
+      document.querySelectorAll("input[name=setSelected]").forEach((el) => {
+        (el as HTMLInputElement).checked = false;
+      });
+      trigger(document.querySelectorAll("input[name=setSelected]"), "change");
 
-  $("#selectInvert").click(function () {
-    $("input[name=setSelected]").prop("checked", false).trigger("change");
+      document.querySelectorAll(".thumbnails label").forEach((label) => {
+        const checkbox = Array.from(label.children).find((child) =>
+          child.matches("input[type=checkbox]"),
+        ) as HTMLInputElement | undefined;
 
-    $(".thumbnails label").each(function () {
-      const checkbox = $(this).children("input[type=checkbox]");
+        if (checkbox !== undefined) {
+          checkbox.checked = !checkbox.checked;
+          trigger(checkbox, "change");
 
-      $(checkbox)
-        .prop("checked", !$(checkbox).is(":checked"))
-        .trigger("change");
+          if (checkbox.checked) {
+            label.closest("li")?.classList.add("thumbSelected");
+          } else {
+            label.closest("li")?.classList.remove("thumbSelected");
+          }
+        }
+      });
+      checkPermitAction();
+      event.preventDefault();
+      event.stopPropagation();
+    },
+  );
 
-      if ($(checkbox).is(":checked")) {
-        $(this).closest("li").addClass("thumbSelected");
-      } else {
-        $(this).closest("li").removeClass("thumbSelected");
-      }
-    });
-    checkPermitAction();
-    return false;
-  });
-
-  $("#selectSet").click(function () {
+  on(document.querySelectorAll("#selectSet"), "click", function (event: Event) {
     selectPageThumbnails();
-    $("input[name=setSelected]").prop("checked", true).trigger("change");
+    document.querySelectorAll("input[name=setSelected]").forEach((el) => {
+      (el as HTMLInputElement).checked = true;
+    });
+    trigger(document.querySelectorAll("input[name=setSelected]"), "change");
     checkPermitAction();
-    return false;
+    event.preventDefault();
+    event.stopPropagation();
   });
 
-  $("input[name=setSelected]").change(function () {
-    $("input[name=whole_set]").val(
-      (this as HTMLInputElement).checked ? all_elements.join(",") : "",
-    );
-  });
+  on(
+    document.querySelectorAll("input[name=setSelected]"),
+    "change",
+    function (event: Event) {
+      const el = event.currentTarget as HTMLInputElement;
+      setVal(
+        document.querySelectorAll("input[name=whole_set]"),
+        el.checked ? all_elements.join(",") : "",
+      );
+    },
+  );
 
   // if the whole set is selected on page load (after a first action has been applied),
   // trigger a change to make sure input[name=whole_set] is updated
-  if ($('input[name="setSelected"]').is(":checked")) {
-    $("input[name=setSelected]").trigger("change");
+  if (is(document.querySelectorAll('input[name="setSelected"]'), ":checked")) {
+    trigger(document.querySelectorAll("input[name=setSelected]"), "change");
   }
 
-  jQuery("input[name=confirm_deletion]").change(function () {
-    jQuery("#confirmDel span.errors").css("visibility", "hidden");
-  });
+  on(
+    document.querySelectorAll("input[name=confirm_deletion]"),
+    "change",
+    function () {
+      css(
+        document.querySelectorAll("#confirmDel span.errors"),
+        "visibility",
+        "hidden",
+      );
+    },
+  );
 
+  // Still jQuery: registration only. batchManagerGlobal.ts (not yet
+  // converted -- P49-A's own documented last-file exception, a real
+  // module cycle) synthetically fires this button's click via jQuery's
+  // own `.trigger("click")`/`.click()` shorthand more than once, and
+  // jQuery's own trigger walks its own internal handler registry rather
+  // than dispatching a real DOM event (see history.ts's own finding for
+  // the exact mechanism) -- a native listener here would never see it.
   jQuery("#applyAction").click(function () {
-    const action = jQuery('[name="selectAction"]').val();
+    const action = val(document.querySelectorAll('[name="selectAction"]'));
     if (action === "delete_derivatives") {
-      const _d_count = $("#confirmDel input[type=checkbox]").filter(
-        ":checked",
+      const _d_count = document.querySelectorAll(
+        "#confirmDel input[type=checkbox]:checked",
       ).length;
-      const _e_count = $('input[name="setSelected"]').is(":checked")
+      const _e_count = is(
+        document.querySelectorAll('input[name="setSelected"]'),
+        ":checked",
+      )
         ? nb_thumbs_set
-        : $(".thumbnails input[type=checkbox]").filter(":checked").length;
-      if (!jQuery("#confirmDel input[name=confirm_deletion]").is(":checked")) {
-        jQuery("#confirmDel span.errors").css("visibility", "visible");
+        : document.querySelectorAll(".thumbnails input[type=checkbox]:checked")
+            .length;
+      if (
+        !is(
+          document.querySelectorAll("#confirmDel input[name=confirm_deletion]"),
+          ":checked",
+        )
+      ) {
+        css(
+          document.querySelectorAll("#confirmDel span.errors"),
+          "visibility",
+          "visible",
+        );
         return false;
       } else {
         return true;
@@ -274,7 +404,7 @@ $(document).ready(function () {
       return true;
     }
 
-    jQuery(".bulkAction").hide();
+    hide(document.querySelectorAll(".bulkAction"));
 
     const _queuedManager = jQuery.manageAjax.create("queued", {
       queue: true,
@@ -283,21 +413,27 @@ $(document).ready(function () {
     });
 
     derivatives.elements = [];
-    if (jQuery('input[name="setSelected"]').is(":checked"))
+    if (
+      is(document.querySelectorAll('input[name="setSelected"]'), ":checked")
+    ) {
       derivatives.elements = all_elements;
-    else
-      jQuery(".thumbnails input[type=checkbox]").each(function () {
-        if (jQuery(this).is(":checked")) {
-          // Checkbox `.val()` is always its plain `value` attribute string
+    } else {
+      document
+        .querySelectorAll(".thumbnails input[type=checkbox]:checked")
+        .forEach((el) => {
+          // Checkbox `.value` is always its plain `value` attribute string
           // (never string[]/undefined) -- never a multi-select.
-          derivatives.elements!.push(jQuery(this).val() as string);
-        }
-      });
+          derivatives.elements!.push((el as HTMLInputElement).value);
+        });
+    }
 
-    jQuery("#applyActionBlock").hide();
-    jQuery('select[name="selectAction"]').hide();
-    jQuery(".permitActionListButton div").addClass("hidden");
-    jQuery("#regenerationMsg").show();
+    hide(document.querySelectorAll("#applyActionBlock"));
+    hide(document.querySelectorAll('select[name="selectAction"]'));
+    addClass(
+      document.querySelectorAll(".permitActionListButton div"),
+      "hidden",
+    );
+    show(document.querySelectorAll("#regenerationMsg"));
 
     progress_start();
     progress();
@@ -307,10 +443,25 @@ $(document).ready(function () {
 
   checkPermitAction();
 
-  jQuery("select[name=filter_prefilter]").change(function () {
-    jQuery("#empty_caddie").toggle(jQuery(this).val() === "caddie");
-    jQuery("#duplicates_options").toggle(jQuery(this).val() === "duplicates");
-    jQuery("#delete_orphans").toggle(jQuery(this).val() === "no_album");
-    jQuery("#sync_md5sum").toggle(jQuery(this).val() === "no_sync_md5sum");
-  });
+  on(
+    document.querySelectorAll("select[name=filter_prefilter]"),
+    "change",
+    function (event: Event) {
+      const el = event.currentTarget as HTMLSelectElement;
+
+      toggle(document.querySelectorAll("#empty_caddie"), el.value === "caddie");
+      toggle(
+        document.querySelectorAll("#duplicates_options"),
+        el.value === "duplicates",
+      );
+      toggle(
+        document.querySelectorAll("#delete_orphans"),
+        el.value === "no_album",
+      );
+      toggle(
+        document.querySelectorAll("#sync_md5sum"),
+        el.value === "no_sync_md5sum",
+      );
+    },
+  );
 });

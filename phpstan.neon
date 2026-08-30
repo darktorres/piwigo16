@@ -385,11 +385,15 @@ parameters:
         # defensive isset()/??/empty() checks for genuinely-conditional
         # variables read as dead code. The defensive template code is
         # CORRECT; the assertion is the approximation.
+        #
+        # `empty.variable` is no longer among them: P58-B2 removed the last
+        # empty() from the template tree, so the presence checks that remain
+        # are all spelled isset(), which is the honest spelling anyway --
+        # empty() answers two questions at once and the campaign's job was
+        # to separate them. A new empty() on a conditional variable now
+        # fails the build rather than landing here silently.
         -
             identifier: isset.variable
-            path: _analysis/phpstan-latte/*
-        -
-            identifier: empty.variable
             path: _analysis/phpstan-latte/*
         -
             identifier: nullCoalesce.expr
@@ -399,6 +403,16 @@ parameters:
             path: _analysis/phpstan-latte/*
         -
             identifier: nullCoalesce.unnecessary
+            path: _analysis/phpstan-latte/*
+        # month_calendar.latte's `$chronology_calendar->calendarBars ?? []`.
+        # Same approximation one level down: the property really is
+        # non-nullable, but the VARIABLE holding it is only assigned for a
+        # calendar view, and month_calendar.latte also renders for the list
+        # view -- so the ?? is suppressing an undefined variable, not a null
+        # property. It replaced an empty() doing the same job less legibly
+        # (P58-B2).
+        -
+            identifier: nullCoalesce.property
             path: _analysis/phpstan-latte/*
 
         # (3) Variables the static model cannot see yet: {include}-passed
@@ -471,9 +485,6 @@ parameters:
             path: _analysis/phpstan-latte/*
         -
             identifier: notEqual.notAllowed
-            path: _analysis/phpstan-latte/*
-        -
-            identifier: empty.notAllowed
             path: _analysis/phpstan-latte/*
 
 services:

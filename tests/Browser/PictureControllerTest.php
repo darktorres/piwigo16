@@ -1136,7 +1136,18 @@ it('shows "requested image is filtered" for a backdated photo excluded by an act
     $oldImage = H::makeTestImage(uniqid());
     $oldImageId = H::uploadPhotoViaApi($oldImage, $ownAlbumId, 'Filter Old Photo');
     @unlink($oldImage);
-    pictureSetImageDateAvailable($oldImageId, date('Y-m-d H:i:s', strtotime('-30 days')));
+    // Dated 30 days before the app's OWN clock, not the machine's. The
+    // recent-period window is SQL built by SqlDialect::
+    // getRecentPeriodExpression(), which resolves CURRENT_DATE through
+    // Env::now() -- i.e. PIWIGO_TEST_NOW -- precisely so fixture data dated
+    // relative to the frozen instant does not drift out from under it. A
+    // real strtotime('-30 days') here reintroduced exactly that drift from
+    // the other side: it walks forward every day while the window stays
+    // pinned, so the "old" photo eventually lands inside it and the page
+    // stops being filtered. Found as a deterministic failure, not a flake.
+    $frozenNow = getenv('PIWIGO_TEST_NOW');
+    $frozenNow = $frozenNow !== false && $frozenNow !== '' ? $frozenNow : 'now';
+    pictureSetImageDateAvailable($oldImageId, date('Y-m-d H:i:s', strtotime('-30 days', (int) strtotime($frozenNow))));
 
     // Activates FilterService::initializeFromRequest()'s session-persisted
     // recent-content filter (start-recent-1 -> a real 1-day window):

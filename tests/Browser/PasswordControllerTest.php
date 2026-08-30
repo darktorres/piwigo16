@@ -1153,3 +1153,46 @@ it("renders standard_pages' password page error, which is a string and not a lis
         H::setGuestTheme('default');
     }
 });
+
+/**
+ * infos_errors.latte's `$infos` guard, on the branch where there is
+ * nothing to show. `PageMessagesContext::toArray()` emits a key only for
+ * a non-null field -- deliberately, because the context is assigned more
+ * than once per request and a null must not clobber an earlier value --
+ * so `$infos` is genuinely UNDEFINED on a page with no info message, and
+ * the guard has to be `isset()`, not `!== null`.
+ *
+ * The trap is that both spellings render identically: `!== null` on an
+ * undefined variable is still false, so the div is correctly absent and
+ * every snapshot passes. What it also does is raise "Undefined variable
+ * $infos" on every page in the gallery, which no fixture and no pixel
+ * baseline can see. P58-B2 shipped that wrong guard briefly and it was
+ * caught only because a DIFFERENT template turned the same mistake into a
+ * fatal. This asserts the thing snapshots cannot: that rendering the page
+ * raises nothing.
+ *
+ * The true branch needs no separate test -- the info text is itself inside
+ * the guarded div, so the "verification code has been sent" assertion
+ * above fails if the guard ever stops opening.
+ */
+it('renders a page carrying no info message without raising an undefined-variable warning', function (): void {
+    $logPath = dirname(__DIR__, 2) . '/_data/logs/test_errors.log';
+    // ErrorCollector::writeTestErrorsLog() appends synchronously inside
+    // handleError(), so only what arrives after this point is ours.
+    $before = is_file($logPath) ? (string) filesize($logPath) : '0';
+
+    $page = H::gotoOk($this, '/password.php');
+
+    // No info message on a first visit, so the div must be absent...
+    $page->assertMissing('.infos');
+
+    $log = is_file($logPath) ? file_get_contents($logPath) : '';
+    if (! is_string($log)) {
+        throw new RuntimeException("Could not read {$logPath}");
+    }
+    $fresh = substr($log, (int) $before);
+
+    // ...and its absence must be silent.
+    expect($fresh)
+        ->not->toContain('Undefined variable $infos');
+});

@@ -481,7 +481,14 @@ final readonly class GalleryController implements ControllerInterface
                 if (is_array($unmatched_terms) && $unmatched_terms !== []) {
                     /** @var list<string> $unmatched_terms */
                     $unmatched_terms = array_values(array_filter($unmatched_terms, is_string(...)));
-                    $no_search_results = array_map(htmlspecialchars(...), $unmatched_terms);
+                    // Re-checked after the is_string filter, not just before
+                    // it: a term set that is entirely non-string leaves []
+                    // here, and the template's guard is `!== null` now, so an
+                    // empty list would render the "no results for" panel with
+                    // nothing in it (P58-B2).
+                    if ($unmatched_terms !== []) {
+                        $no_search_results = array_map(htmlspecialchars(...), $unmatched_terms);
+                    }
                 }
             }
         }

@@ -5,7 +5,7 @@
   </ul>
 </div>
 
-<div n:if="!empty($infos)" class="infos">
+<div n:if="isset($infos)" class="infos">
   <ul>
     <li n:foreach="$infos as $info">{$info|noescape}</li>
   </ul>

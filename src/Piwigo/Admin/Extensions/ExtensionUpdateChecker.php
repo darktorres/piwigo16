@@ -283,7 +283,8 @@ final readonly class ExtensionUpdateChecker
      */
     public function getMissingPlugins(string $version): array
     {
-        return $this->getMissingExtensions($version)[ExtensionType::Plugin->value] ?? [];
+        return $this->getMissingExtensions($version)[ExtensionType::Plugin
+            ->value] ?? [];
     }
 
     /**
@@ -291,7 +292,8 @@ final readonly class ExtensionUpdateChecker
      */
     public function getMissingThemes(string $version): array
     {
-        return $this->getMissingExtensions($version)[ExtensionType::Theme->value] ?? [];
+        return $this->getMissingExtensions($version)[ExtensionType::Theme
+            ->value] ?? [];
     }
 
     /**

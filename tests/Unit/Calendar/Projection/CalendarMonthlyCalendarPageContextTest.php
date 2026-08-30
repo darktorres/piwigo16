@@ -47,7 +47,7 @@ test('toArray carries the month view into chronology_calendar unflattened', func
         ],
     );
 
-    $context = new CalendarMonthlyCalendarPageContext(calendarBars: null, monthView: $monthView);
+    $context = new CalendarMonthlyCalendarPageContext(calendarBars: [], monthView: $monthView);
 
     $calendar = $context->toArray()['chronology_calendar'];
     expect($calendar)
@@ -58,12 +58,16 @@ test('toArray carries the month view into chronology_calendar unflattened', func
 
     expect($calendar->monthView)
         ->toBe($monthView);
+    // Empty, not null: the two producers of $calendarBars can both hand
+    // back an empty list, so month_calendar.latte's guard is `!== []` and
+    // the nullable would have made neither `!== null` nor `!== []` correct
+    // on its own (P58-B2).
     expect($calendar->calendarBars)
-        ->toBeNull();
+        ->toBe([]);
 });
 
-test('toArray still assigns chronology_calendar when both calendarBars and monthView are null', function (): void {
-    $context = new CalendarMonthlyCalendarPageContext(calendarBars: null, monthView: null);
+test('toArray still assigns chronology_calendar when there are neither bars nor a month view', function (): void {
+    $context = new CalendarMonthlyCalendarPageContext(calendarBars: [], monthView: null);
 
     // The key is assigned unconditionally -- month_calendar.latte branches
     // on the two members, not on the variable's own presence.
@@ -75,7 +79,7 @@ test('toArray still assigns chronology_calendar when both calendarBars and month
     }
 
     expect($calendar->calendarBars)
-        ->toBeNull();
+        ->toBe([]);
     expect($calendar->monthView)
         ->toBeNull();
 });

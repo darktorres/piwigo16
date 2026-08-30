@@ -94,7 +94,7 @@ final class CalendarMonthly extends CalendarBase
             if ($nb_date_parts === 2) {// case C: year+month given - display a nice month calendar
                 $monthView = $this->buildMonthCalendar();
                 if ($monthView !== null) {
-                    $template->assignContext(new CalendarMonthlyCalendarPageContext(calendarBars: null, monthView: $monthView));
+                    $template->assignContext(new CalendarMonthlyCalendarPageContext(calendarBars: [], monthView: $monthView));
                 }
                 $this->buildNextPrev();
                 return true;

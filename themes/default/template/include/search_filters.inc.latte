@@ -280,12 +280,12 @@
             class="clear mcs-icon gallery-icon-arrow-rotate-left"
           >{='Clear'|translate}</span>
         </div>
-        {if empty($tags)}
+        {if $tags === []}
           <p
             class="no_filtered_photos"
           >{='There are no tags available for the photos currently filtered'|translate}</p>
         {/if}
-        <div class="search-params {if empty($tags)}mcs_hide{/if}">
+        <div class="search-params {if $tags === []}mcs_hide{/if}">
           <div>
             <input
               type="radio"
@@ -301,7 +301,7 @@
             <label for="tag-one">{='Any tag'|translate}</label>
           </div>
         </div>
-        <div class="form-container {if empty($tags)}mcs_hide{/if}">
+        <div class="form-container {if $tags === []}mcs_hide{/if}">
           <select
             id="tag-search"
             placeholder="{='Type in a search term'|translate}"
@@ -697,12 +697,12 @@
             class="clear mcs-icon gallery-icon-arrow-rotate-left"
           >{='Clear'|translate}</span>
         </div>
-        {if empty($authors)}
+        {if $authors === []}
           <p
             class="no_filtered_photos"
           >{='There are no authors available for the photos currently filtered'|translate}</p>
         {/if}
-        <div class="form-container {if empty($authors)}mcs_hide{/if}">
+        <div class="form-container {if $authors === []}mcs_hide{/if}">
           <select
             id="authors"
             placeholder="{='Type in a search term'|translate}"

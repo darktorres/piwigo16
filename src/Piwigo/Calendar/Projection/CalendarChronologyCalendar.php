@@ -18,10 +18,10 @@ namespace Piwigo\Calendar\Projection;
 final readonly class CalendarChronologyCalendar
 {
     /**
-     * @param ?list<CalendarBarEntry> $calendarBars
+     * @param list<CalendarBarEntry> $calendarBars
      */
     public function __construct(
-        public ?array $calendarBars = null,
+        public array $calendarBars = [],
         public ?CalendarMonthView $monthView = null,
     ) {}
 }

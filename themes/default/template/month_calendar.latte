@@ -1,5 +1,5 @@
 {templateType Piwigo\Calendar\Projection\MonthCalendarView}
-{if !empty($chronology_navigation_bars)}
+{if $chronology_navigation_bars !== []}
   <div n:foreach="$chronology_navigation_bars as $bar" class="calendarBar">
     <div n:if="isset($bar->previous)" class="calendar-nav-prev">&laquo; <a
         href="{$bar->previous->url|noescape}"
@@ -7,7 +7,7 @@
     <div n:if="isset($bar->next)" class="calendar-nav-next"><a
         href="{$bar->next->url|noescape}"
       >{$bar->next->label}</a> &raquo;</div>
-    {if empty($bar->items)}
+    {if $bar->items === []}
       &nbsp;
     {else}
       {foreach $bar->items as $item}
@@ -27,7 +27,7 @@
   </div>
 {/if}
 
-{if !empty($chronology_calendar->calendarBars)}
+{if ($chronology_calendar->calendarBars ?? []) !== []}
   <div
     n:foreach="$chronology_calendar->calendarBars as $bar"
     class="calendarCalBar"

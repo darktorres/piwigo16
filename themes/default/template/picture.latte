@@ -3,7 +3,7 @@
 {block content}
   {if isset($MENUBAR)}{$MENUBAR}{/if}
   <div id="content" {if isset($MENUBAR)} class="contentWithMenu" {/if}>
-    {if isset($errors) or !empty($infos)}
+    {if isset($errors) or isset($infos)}
       {include 'infos_errors.latte'}
     {/if}
 
@@ -97,7 +97,7 @@
               >{='Download'|translate}</span>
             </a>
 
-            {if !empty($navCurrent->formats)}
+            {if $navCurrent->formats !== []}
               <div id="downloadSwitchBox" class="switchBox">
                 <div
                   class="switchBoxTitle"

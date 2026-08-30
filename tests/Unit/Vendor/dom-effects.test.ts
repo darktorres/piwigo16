@@ -4,6 +4,7 @@ import {
   fadeIn,
   fadeOut,
   fadeTo,
+  fadeToggle,
   hide,
   show,
   slideDown,
@@ -115,6 +116,18 @@ describe("fadeIn", () => {
     vi.advanceTimersByTime(200);
     expect(el.style.display).not.toBe("none");
     expect(el.style.opacity).toBe("1");
+  });
+});
+
+describe("fadeToggle", () => {
+  it("flips in both directions, same as slideToggle", () => {
+    fadeToggle(el, 50);
+    vi.advanceTimersByTime(200);
+    expect(el.style.display).toBe("none");
+
+    fadeToggle(el, 50);
+    vi.advanceTimersByTime(200);
+    expect(el.style.display).not.toBe("none");
   });
 });
 

@@ -1,63 +1,90 @@
 import "./common";
 
 import { pwg_getPageString } from "../../../default/js/page-data";
+import {
+  attrOf,
+  css,
+  fadeOut,
+  fadeToggle,
+  hasClass,
+  innerHeight,
+  innerWidth,
+  on,
+  ready,
+} from "../../../default/js/vendor/dom";
 export {};
 
 const confirm_msg = pwg_getPageString("Yes, I am sure");
 const cancel_msg = pwg_getPageString("No, I have changed my mind");
-$(".delete-theme-button").each(function () {
-  const theme_name = $(this)
-    .closest(".themeBox")
-    .find(".themeName")
-    .attr("title");
+document.querySelectorAll(".delete-theme-button").forEach(function (button) {
+  const theme_name = attrOf(
+    button.closest(".themeBox")?.querySelectorAll(".themeName") ?? [],
+    "title",
+  );
   const title = pwg_getPageString(
     'Are you sure you want to delete the theme "%s"?',
   );
-  $(this).pwg_jconfirm_follow_href({
+  // Still jQuery: pwg_jconfirm_follow_href wraps jquery-confirm, ported in
+  // P49-B group 5.
+  jQuery(button).pwg_jconfirm_follow_href({
     alert_title: title.replace("%s", theme_name!),
     alert_confirm: confirm_msg,
     alert_cancel: cancel_msg,
   });
 });
 
-jQuery(document).ready(function () {
-  $("a.preview-box").colorbox();
+ready(function () {
+  // Still jQuery: colorbox is a library, ported in P49-B group 3.
+  jQuery("a.preview-box").colorbox();
 
-  $(document).mouseup(function (e) {
+  on(document, "mouseup", function (e: Event): void {
     e.stopPropagation();
-    if (!$(event!.target as unknown as Element).hasClass("showInfo")) {
-      $(".showInfo-dropdown").fadeOut();
+    // `event`, not `e`: a genuine pre-existing quirk (the global Event
+    // object, not this handler's own normalized parameter), preserved
+    // rather than tidied to `e.target` -- both name the same currently-
+    // dispatching event in every browser this runs in.
+    if (!hasClass(event!.target as Element, "showInfo")) {
+      fadeOut(document.querySelectorAll(".showInfo-dropdown"));
     }
   });
 });
 
-$(window).bind("load", function () {
-  $(".themeBox").each(function () {
-    const box = $(this);
-    box.find(".showInfo").on("click", function () {
-      const dropdown = box.find(".showInfo-dropdown");
-      $(".showInfo-dropdown").each(function () {
-        if ($(this) !== dropdown) {
-          $(this).fadeOut();
-        }
-      });
-      box.find(".showInfo-dropdown").fadeToggle();
+window.addEventListener("load", function () {
+  document.querySelectorAll(".themeBox").forEach(function (box) {
+    on(box.querySelectorAll(".showInfo"), "click", function (): void {
+      // The original's own `if ($(this) !== dropdown)` guard here compared
+      // two freshly-constructed jQuery wrapper objects by reference, which
+      // is never true -- `$(x) !== $(x)` always, even wrapping the exact
+      // same element -- so every `.showInfo-dropdown` (this box's own
+      // included) was already unconditionally faded out here, before the
+      // fadeToggle() below. Preserved as the unconditional fade it actually
+      // is, not "fixed" into the filtered version the broken comparison
+      // only looked like it intended: a real behaviour change, out of
+      // this phase's scope.
+      fadeOut(document.querySelectorAll(".showInfo-dropdown"));
+      fadeToggle(box.querySelectorAll(".showInfo-dropdown"));
     });
 
-    const screenImage = $(this).find(".preview-box img");
-    const imageW = screenImage.innerWidth()!;
-    const imageH = screenImage.innerHeight()!;
-    const size = $(this).find(".preview-box").innerWidth();
+    const screenImage = box.querySelectorAll<HTMLElement>(".preview-box img");
+    const first = screenImage[0];
+    const previewBox = box.querySelector<HTMLElement>(".preview-box");
+    if (first === undefined || previewBox === null) {
+      return;
+    }
+
+    const imageW = innerWidth(first);
+    const imageH = innerHeight(first);
+    const size = innerWidth(previewBox);
 
     if (imageW > imageH) {
-      screenImage.css("height", size + "px");
-      screenImage.css("width", (imageW * size!) / imageH + "px");
+      css(screenImage, "height", size + "px");
+      css(screenImage, "width", (imageW * size) / imageH + "px");
     } else {
-      screenImage.css("width", size + "px");
+      css(screenImage, "width", size + "px");
       // "heigth" (sic) -- same genuine pre-existing typo already
       // preserved in themes_new.ts's own copy of this scaling logic;
       // jQuery.css() silently no-ops on an unrecognized property.
-      screenImage.css("heigth", (imageH * size!) / imageW + "px");
+      css(screenImage, "heigth", (imageH * size) / imageW + "px");
     }
   });
 });

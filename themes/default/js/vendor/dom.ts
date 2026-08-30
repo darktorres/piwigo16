@@ -1036,6 +1036,15 @@ export function fadeOut(
   runEffect(target, ["opacity"], "hide", duration, complete);
 }
 
+/** `$(el).fadeToggle(duration, complete)`. */
+export function fadeToggle(
+  target: Element | ArrayLike<Element>,
+  duration?: number | string | (() => void),
+  complete?: () => void
+): void {
+  runEffect(target, ["opacity"], "toggle", duration, complete);
+}
+
 /**
  * `$(el).fadeTo(duration, opacity, complete)` -- animates to an arbitrary
  * opacity. Unlike fadeOut it never hides the element, and unlike fadeIn it

@@ -211,16 +211,24 @@
       "@php vendor/bin/pest --testsuite Integration --coverage-php _data/coverage-raw/integration.cov"
     ],
     "test:coverage:web": [
+      "bun run build",
       "rm -rf _data/coverage-raw/web",
       "bash tools/reimport-fixture.sh",
       "PIWIGO_COVERAGE=1 php vendor/bin/pest --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression --exclude-group=golden-html-snapshot --exclude-group=install-flow"
     ],
-    "test:fixture-regen": "@php vendor/bin/pest --testsuite Browser --group=fixture-regen",
+    "test:fixture-regen": [
+      "bun run build",
+      "@php vendor/bin/pest --testsuite Browser --group=fixture-regen"
+    ],
     "test:golden-html": [
+      "bun run build",
       "bash tools/reimport-fixture.sh",
       "@php vendor/bin/pest --testsuite Browser --group=golden-html-snapshot"
     ],
-    "test:install": "@php vendor/bin/pest --testsuite Browser --group=install-flow",
+    "test:install": [
+      "bun run build",
+      "@php vendor/bin/pest --testsuite Browser --group=install-flow"
+    ],
     "test:integration": [
       "bash tools/reimport-fixture.sh",
       "@php vendor/bin/pest --testsuite Integration"
@@ -231,6 +239,7 @@
       "@php -d memory_limit=1024M vendor/bin/pest --testsuite Unit,Arch --profile"
     ],
     "test:profile:browser": [
+      "bun run build",
       "bash tools/reimport-fixture.sh",
       "@php -d memory_limit=1024M vendor/bin/pest --testsuite Browser --exclude-group=fixture-regen --exclude-group=visual-regression --exclude-group=golden-html-snapshot --exclude-group=install-flow --profile"
     ],
@@ -239,6 +248,7 @@
       "@php -d memory_limit=1024M vendor/bin/pest --testsuite Integration --profile"
     ],
     "test:visual": [
+      "bun run build",
       "bash tools/reimport-fixture.sh",
       "@php vendor/bin/pest --testsuite Browser --group=visual-regression"
     ],

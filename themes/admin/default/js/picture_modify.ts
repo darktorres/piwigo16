@@ -8,7 +8,20 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { albumBreadcrumbHtml } from "../../../default/js/vendor/dom";
+import {
+  addClass,
+  albumBreadcrumbHtml,
+  append,
+  attrOf,
+  escapeId,
+  hide,
+  html,
+  on,
+  ready,
+  remove,
+  removeClass,
+  show,
+} from "../../../default/js/vendor/dom";
 export {};
 //
 // `add_related_category`/`remove_related_category` are declared here
@@ -29,6 +42,8 @@ const str_orphan = pwg_getPageString("This photo is an orphan");
     rootUrl: pwg_getPageData<string>("root_url"),
   });
 
+  // Still jQuery: selectize() takes a JQuery object, ported in P49-B
+  // group 6.
   categoriesCache.selectize(jQuery("[data-selectize=categories]"));
 
   // <!-- TAGS -->
@@ -45,8 +60,10 @@ const str_orphan = pwg_getPageString("This photo is an orphan");
   });
 
   // <!-- DATEPICKER -->
-  jQuery(function () {
+  ready(function () {
     // onLoad needed to wait localization loads
+    // Still jQuery: pwgDatepicker wraps jQuery-UI datepicker +
+    // timepicker-addon, ported in P49-B group 5.
     jQuery("[data-datepicker]").pwgDatepicker({
       showTimepicker: true,
       cancelButton: pwg_getPageString("Cancel"),
@@ -54,6 +71,7 @@ const str_orphan = pwg_getPageString("This photo is an orphan");
   });
 
   // <!-- THUMBNAILS -->
+  // Still jQuery: colorbox is a library, ported in P49-B group 3.
   jQuery("a.preview-box").colorbox({
     photo: true,
   });
@@ -63,37 +81,42 @@ const str_orphan = pwg_getPageString("This photo is an orphan");
   const str_no = pwg_getPageString("No, I have changed my mind");
   const url_delete = pwg_getPageData<string>("u_delete");
 
-  $("#action-delete-picture").on("click", function () {
-    $.confirm({
-      title: str_are_you_sure,
-      draggable: false,
-      titleClass: "groupDeleteConfirm",
-      theme: "modern",
-      content: "",
-      animation: "zoom",
-      boxWidth: "30%",
-      useBootstrap: false,
-      type: "red",
-      animateFromElement: false,
-      backgroundDismiss: true,
-      typeAnimated: false,
-      buttons: {
-        confirm: {
-          text: str_yes,
-          btnClass: "btn-red",
-          action: function () {
-            window.location.href = url_delete.replaceAll("amp;", "");
+  on(
+    document.querySelectorAll("#action-delete-picture"),
+    "click",
+    function (): void {
+      // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
+      jQuery.confirm({
+        title: str_are_you_sure,
+        draggable: false,
+        titleClass: "groupDeleteConfirm",
+        theme: "modern",
+        content: "",
+        animation: "zoom",
+        boxWidth: "30%",
+        useBootstrap: false,
+        type: "red",
+        animateFromElement: false,
+        backgroundDismiss: true,
+        typeAnimated: false,
+        buttons: {
+          confirm: {
+            text: str_yes,
+            btnClass: "btn-red",
+            action: function () {
+              window.location.href = url_delete.replaceAll("amp;", "");
+            },
+          },
+          cancel: {
+            text: str_no,
           },
         },
-        cancel: {
-          text: str_no,
-        },
-      },
-    });
-  });
+      });
+    },
+  );
 })();
 
-$(document).ready(function () {
+ready(function () {
   const ab = new AlbumSelector({
     selectedCategoriesIds: related_categories_ids,
     selectAlbum: add_related_category,
@@ -102,38 +125,57 @@ $(document).ready(function () {
     modalTitle: str_assoc_album_ab,
   });
 
-  $(".linked-albums.add-item").on("click", function () {
-    ab.open();
-  });
+  on(
+    document.querySelectorAll(".linked-albums.add-item"),
+    "click",
+    function (): void {
+      ab.open();
+    },
+  );
 
-  $(".related-categories-container").on("click", (e) => {
-    if (e.target.classList.contains("remove-item")) {
-      ab.remove_selected_album($(e.target).attr("id")!);
-    }
-  });
+  on(
+    document.querySelectorAll(".related-categories-container"),
+    "click",
+    (e: Event) => {
+      if ((e.target as Element).classList.contains("remove-item")) {
+        ab.remove_selected_album(attrOf(e.target as Element, "id")!);
+      }
+    },
+  );
+
+  // `:input` is jQuery/Sizzle's own pseudo-selector (matches input,
+  // select, textarea and button elements) -- not real CSS, and
+  // querySelectorAll throws on it.
+  const inputSelector =
+    "#pictureModify input, #pictureModify select, #pictureModify textarea, #pictureModify button";
 
   // Unsaved settings message before leave this page
   let form_unsaved = false;
   let user_interacted = false;
-  $("#pictureModify")
-    .find(":input")
-    .on("focus", function () {
-      user_interacted = true;
-    });
-  $("#pictureModify")
-    .find(":input")
-    .on("change", function () {
+  on(document.querySelectorAll(inputSelector), "focus", function (): void {
+    user_interacted = true;
+  });
+  on(
+    document.querySelectorAll(inputSelector),
+    "change",
+    function (event: Event): void {
       if (user_interacted) {
         form_unsaved = true;
-        console.log(($(this)[0] as HTMLInputElement).name, $(this));
+        console.log(
+          (event.currentTarget as HTMLInputElement).name,
+          event.currentTarget,
+        );
       }
-    });
-  $(window).on("beforeunload", function () {
+    },
+  );
+  on(window, "beforeunload", function (): string | undefined {
     if (form_unsaved) {
       return "Somes changes are not registered";
     }
+
+    return undefined;
   });
-  $("#pictureModify").on("submit", function () {
+  on(document.querySelectorAll("#pictureModify"), "submit", function (): void {
     form_unsaved = false;
   });
 });
@@ -142,13 +184,20 @@ function remove_related_category({
   id_album,
   getSelectedAlbum,
 }: AlbumSelectorRemoveCallbackArgs) {
-  $(
-    ".invisible-related-categories-select option[value=" + id_album + "]",
-  ).remove();
-  $(".invisible-related-categories-select").trigger("change");
-  $("#" + id_album)
-    .parent()
-    .remove();
+  remove(
+    document.querySelectorAll(
+      '.invisible-related-categories-select option[value="' + id_album + '"]',
+    ),
+  );
+  document
+    .querySelectorAll(".invisible-related-categories-select")
+    .forEach((select) => {
+      select.dispatchEvent(new Event("change"));
+    });
+  const el = document.getElementById(String(id_album));
+  if (el?.parentElement) {
+    el.parentElement.remove();
+  }
   check_related_categories(getSelectedAlbum());
 }
 
@@ -159,16 +208,26 @@ function add_related_category({
   getSelectedAlbum,
 }: AlbumSelectorCallbackArgs) {
   if (!getSelectedAlbum().includes(String(album.id))) {
-    $(".related-categories-container").append(
+    append(
+      document.querySelectorAll(".related-categories-container"),
       `<div class="breadcrumb-item">
         <span class="link-path">${albumBreadcrumbHtml(album.breadcrumb, levelSeparator)}</span><span id="${album.id}" class="icon-cancel-circled remove-item"></span>
       </div>`,
     );
 
-    $(".search-result-item #" + album.id).addClass("notClickable");
-    $(".invisible-related-categories-select")
-      .append("<option selected value=" + album.id + "></option>")
-      .trigger("change");
+    addClass(
+      document.querySelectorAll(".search-result-item #" + escapeId(album.id)),
+      "notClickable",
+    );
+    append(
+      document.querySelectorAll(".invisible-related-categories-select"),
+      "<option selected value=" + album.id + "></option>",
+    );
+    document
+      .querySelectorAll(".invisible-related-categories-select")
+      .forEach((select) => {
+        select.dispatchEvent(new Event("change"));
+      });
     addSelectedAlbum();
   }
 
@@ -176,15 +235,22 @@ function add_related_category({
 }
 
 function check_related_categories(selected_cat: (string | number)[]) {
-  $(".linked-albums-badge").html(String(selected_cat.length));
+  html(
+    document.querySelectorAll(".linked-albums-badge"),
+    String(selected_cat.length),
+  );
 
   if (selected_cat.length == 0) {
-    $(".linked-albums-badge").addClass("badge-red");
-    $(".add-item").addClass("highlight");
-    $(".orphan-photo").html(str_orphan).show();
+    addClass(document.querySelectorAll(".linked-albums-badge"), "badge-red");
+    addClass(document.querySelectorAll(".add-item"), "highlight");
+    html(document.querySelectorAll(".orphan-photo"), str_orphan);
+    show(document.querySelectorAll(".orphan-photo"));
   } else {
-    $(".linked-albums-badge.badge-red").removeClass("badge-red");
-    $(".add-item.highlight").removeClass("highlight");
-    $(".orphan-photo").hide();
+    removeClass(
+      document.querySelectorAll(".linked-albums-badge.badge-red"),
+      "badge-red",
+    );
+    removeClass(document.querySelectorAll(".add-item.highlight"), "highlight");
+    hide(document.querySelectorAll(".orphan-photo"));
   }
 }

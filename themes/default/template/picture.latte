@@ -392,7 +392,7 @@
                   >
                     <div>
                       {foreach $rating['marks'] as $mark}
-                        {if isset($rating['USER_RATE']) && $mark == $rating['USER_RATE']}
+                        {if isset($rating['USER_RATE']) && $mark === $rating['USER_RATE']}
                           <input
                             type="button"
                             name="rate"
@@ -448,7 +448,7 @@
     {if isset($commentCount)}
       <div
         id="comments"
-        {if (!isset($commentAdd) && ($commentCount == 0))}
+        {if (!isset($commentAdd) && ($commentCount === 0))}
         class="noCommentContent"
         {else}
         class="commentContent"

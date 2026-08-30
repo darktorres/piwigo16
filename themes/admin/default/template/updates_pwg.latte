@@ -20,7 +20,7 @@
     ></i> {='Currently running version %s'|translate:$containerVersion} (Docker)</p>
 {/if}
 
-{if $step == 0}
+{if $step === 0}
   {if $checkVersion}
     <p>{='You are running the latest version of Piwigo.'|translate}</p>
   {elseif $devVersion}
@@ -30,7 +30,7 @@
   {/if}
 {/if}
 
-<fieldset n:if="$step == 1 && $majorReleaseUrl !== null">
+<fieldset n:if="$step === 1 && $majorReleaseUrl !== null">
   {if isset($containerVersion)}
     <legend><span
         class="icon-ok icon-purple"
@@ -92,7 +92,7 @@
   </p>
 </fieldset>
 
-{if $step == 2}
+{if $step === 2}
   <p>
     <a
       href="{$minorReleaseUrl}"
@@ -140,7 +140,7 @@
   </form>
 {/if}
 
-{if $step == 3 && $majorReleaseUrl !== null}
+{if $step === 3 && $majorReleaseUrl !== null}
   <p>
     <a
       href="{if isset($containerVersion)} {$majorDockerReleaseUrl} {else} {$majorReleaseUrl} {/if}"

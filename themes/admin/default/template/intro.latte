@@ -93,9 +93,9 @@
         <span
           n:foreach="$WEEK_ACTIVITY as $DAY_NUMBER => $SIZE"
           class="activity_tooltips"
-          style="{if $SIZE != 0}--size-in-unit: {=$SIZE / $activityChartNumberSizes * 5 + 1}vw{/if}"
+          style="{if $SIZE !== 0}--size-in-unit: {=$SIZE / $activityChartNumberSizes * 5 + 1}vw{/if}"
         >
-          {if $SIZE != 0}
+          {if $SIZE !== 0}
             {var $SIZE_IN_UNIT = $SIZE / $activityChartNumberSizes * 5 + 1}
             {var $OPACITY_IN_UNIT = $SIZE / $activityChartNumberSizes * 0.6 + 0.2}
             <div
@@ -103,7 +103,7 @@
               class="activity-day-cell"
             ></div>
             <p
-              n:if="$activityLastWeeks[$WEEK_NUMBER][$DAY_NUMBER]->number != 0"
+              n:if="$activityLastWeeks[$WEEK_NUMBER][$DAY_NUMBER]->number !== 0"
               class="tooltip"
             >
               <span class="tooltip-arrow"></span>

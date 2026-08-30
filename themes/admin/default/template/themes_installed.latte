@@ -70,7 +70,7 @@
           class="icon-mobile"
           title="{='Mobile'|translate}"
         ></i>
-        <a n:if="$isWebmaster == 1" class="icon-ellipsis-v showInfo"></a>
+        <a n:if="$isWebmaster === 1" class="icon-ellipsis-v showInfo"></a>
       </div>
       <div class="showInfo-dropdown dropdown">
         <div class="showInfo-dropdown-header">
@@ -102,7 +102,7 @@
           title="{='Forbid this theme to users'|translate}"
         >{='Deactivate'|translate}</a>
       </div>
-      {if $isWebmaster == 1}
+      {if $isWebmaster === 1}
         <div class="themeActions">
           {if $theme->state == 'active'}
             {if $theme->adminUri !== null}

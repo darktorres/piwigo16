@@ -1,16 +1,16 @@
 {templateType Piwigo\Admin\Projection\PictureFormatsView}
 <div class="formats-header">
   <a
-    class="{if count($formats) != 0}head-button-1{else}head-button-2{/if} icon-plus-circled"
+    class="{if count($formats) !== 0}head-button-1{else}head-button-2{/if} icon-plus-circled"
     href="{$addFormatsUrl}"
   >{='Add formats'|translate}</a>
 </div>
 <div class="formats-content">
-  <div class="no-formats{if count($formats) != 0} u-hidden{/if}">
+  <div class="no-formats{if count($formats) !== 0} u-hidden{/if}">
     {='No format for this picture'|translate}
   </div>
 
-  <div class="formats-list{if count($formats) == 0} u-hidden{/if}">
+  <div class="formats-list{if count($formats) === 0} u-hidden{/if}">
     <div
       n:foreach="$formats as $format"
       class="format-card"

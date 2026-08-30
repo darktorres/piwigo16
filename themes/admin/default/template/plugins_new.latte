@@ -168,15 +168,15 @@
               <i
                 class="certification tiptip"
                 data-certification="{$plugin->certification}"
-                {if $plugin->certification == 3}
+                {if $plugin->certification === 3}
                 title="{='This plugin have been updated recently'|translate}"
-                {elseif $plugin->certification == 2}
+                {elseif $plugin->certification === 2}
                 title="{='This plugin was updated less than 6 months ago'|translate}"
-                {elseif $plugin->certification == 1}
+                {elseif $plugin->certification === 1}
                 title="{='This plugin has no recent update'|translate}"
-                {elseif $plugin->certification == 0}
+                {elseif $plugin->certification === 0}
                 title="{='This plugin have no update since 3 years ! It may be outdated'|translate}"
-                {elseif $plugin->certification == -1}
+                {elseif $plugin->certification === -1}
                 title="{='This plugin is incompatible with your version'|translate}"
                 {/if}
               ></i>

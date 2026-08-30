@@ -15,7 +15,7 @@
           <div class="languageName">{$language->name}<em
               n:if="$language->isDefault"
             >({='default'|translate})</em></div>
-          {if $isWebmaster == 1}
+          {if $isWebmaster === 1}
             <div class="languageActions">
               <div>
                 {if $language_state == 'active'}

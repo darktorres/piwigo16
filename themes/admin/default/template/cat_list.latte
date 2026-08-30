@@ -71,7 +71,7 @@
         <div class="albumIcon">
           <span
             class="
-        {if $category->nbSubAlbums == 0}icon-folder-open{else}icon-sitemap{/if}
+        {if $category->nbSubAlbums === 0}icon-folder-open{else}icon-sitemap{/if}
         {$color_tab[$category->id % 5]}
         "
           ></span>

@@ -191,7 +191,7 @@
               <option
                 n:foreach="$groupsForFilter as $group"
                 value="{$group['id']}"
-                {if $group['counter'] == 0}
+                {if $group['counter'] === 0}
                 disabled
                 {/if}
               >

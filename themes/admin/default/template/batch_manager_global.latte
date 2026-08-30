@@ -34,7 +34,7 @@
             type="checkbox"
             name="setSelected"
             class="u-hidden"
-            {if count($selection) == $nbThumbsSet}
+            {if count($selection) === $nbThumbsSet}
             checked="checked"
             {/if}
           >
@@ -119,11 +119,16 @@
         ></span>{='Action'|translate}</legend>
       <div
         id="forbidAction"
-        {if count($selection) != 0}
+        {if count($selection) !== 0}
         class="u-hidden"
         {/if}
       >{='No photos selected, no actions possible.'|translate}</div>
-      <div id="permitAction" {if count($selection) == 0} class="u-hidden" {/if}>
+      <div
+        id="permitAction"
+        {if count($selection) === 0}
+        class="u-hidden"
+        {/if}
+      >
         <div class="permitActionListButton">
           <div>
             <select name="selectAction">

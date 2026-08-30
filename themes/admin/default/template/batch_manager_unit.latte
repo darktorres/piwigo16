@@ -22,15 +22,15 @@
         <span>{='photos per page'|translate} :</span>
         <a
           href="{$uElementsPage|noescape}&amp;display=5"
-          class="{if $perPage == 5}selected-pagination{/if}"
+          class="{if $perPage === 5}selected-pagination{/if}"
         >5</a>
         <a
           href="{$uElementsPage|noescape}&amp;display=10"
-          class="{if $perPage == 10}selected-pagination{/if}"
+          class="{if $perPage === 10}selected-pagination{/if}"
         >10</a>
         <a
           href="{$uElementsPage|noescape}&amp;display=50"
-          class="{if $perPage == 50}selected-pagination{/if}"
+          class="{if $perPage === 50}selected-pagination{/if}"
         >50</a>
       </div>
 
@@ -313,15 +313,15 @@
         <span>{='photos per page'|translate} :</span>
         <a
           href="{$uElementsPage|noescape}&amp;display=5"
-          class="{if $perPage == 5}selected-pagination{/if}"
+          class="{if $perPage === 5}selected-pagination{/if}"
         >5</a>
         <a
           href="{$uElementsPage|noescape}&amp;display=10"
-          class="{if $perPage == 10}selected-pagination{/if}"
+          class="{if $perPage === 10}selected-pagination{/if}"
         >10</a>
         <a
           href="{$uElementsPage|noescape}&amp;display=50"
-          class="{if $perPage == 50}selected-pagination{/if}"
+          class="{if $perPage === 50}selected-pagination{/if}"
         >50</a>
       </div>
 

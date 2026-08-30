@@ -101,7 +101,7 @@
 
   <form
     id="uploadForm"
-    class="{if $displayFormats}format-mode{/if}{if $nbAlbums == 0} u-hidden{/if}"
+    class="{if $displayFormats}format-mode{/if}{if $nbAlbums === 0} u-hidden{/if}"
     enctype="multipart/form-data"
     method="post"
     action="{$formAction|noescape}"

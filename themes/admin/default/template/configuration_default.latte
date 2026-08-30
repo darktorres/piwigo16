@@ -85,7 +85,7 @@
         type="submit"
         name="validate"
         value="{='Submit'|translate}"
-        {if $isWebmaster != 1}
+        {if $isWebmaster !== 1}
         disabled
         {/if}
       >
@@ -94,7 +94,7 @@
         type="reset"
         name="reset"
         value="{='Reset'|translate}"
-        {if $isWebmaster != 1}
+        {if $isWebmaster !== 1}
         disabled
         {/if}
       >

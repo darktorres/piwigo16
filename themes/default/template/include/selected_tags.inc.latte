@@ -2,7 +2,7 @@
 <span id="selected-tags-container">
   <span
     n:foreach="$selectRelatedTags as $TAG"
-    class="selected-related-tag {if 1 == count($selectRelatedTags)}unique-tag{/if}"
+    class="selected-related-tag {if 1 === count($selectRelatedTags)}unique-tag{/if}"
   >
     <a
       href="{$TAG->indexUrl|noescape}"

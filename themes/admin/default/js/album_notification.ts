@@ -1,40 +1,54 @@
 import "./common";
 
+import { hide, on, ready, show, val } from "../../../default/js/vendor/dom";
 export {};
 
-jQuery(document).ready(function () {
-  jQuery("input[name=who]").change(function () {
+ready(function () {
+  on(document.querySelectorAll("input[name=who]"), "change", function (): void {
     checkWhoOptions();
   });
 
   checkWhoOptions();
 
   function checkWhoOptions() {
-    const option = String(jQuery("input[name=who]:checked").val());
-    jQuery(".who_option").hide();
-    jQuery(".who_" + option).show();
+    const option = String(
+      val(document.querySelectorAll("input[name=who]:checked")),
+    );
+    hide(document.querySelectorAll(".who_option"));
+    show(document.querySelectorAll(".who_" + option));
   }
 
+  // Still jQuery: selectize is a library, ported in P49-B group 6.
   jQuery(".who_option select").selectize({
     plugins: ["remove_button"],
   });
 
-  jQuery("form#categoryNotify").submit(function (e) {
-    let who_selected = false;
-    const who_option = String(jQuery("input[name=who]:checked").val());
+  on(
+    document.querySelectorAll("form#categoryNotify"),
+    "submit",
+    function (event: Event): void {
+      let who_selected = false;
+      const who_option = String(
+        val(document.querySelectorAll("input[name=who]:checked")),
+      );
 
-    if (jQuery(".who_" + who_option + " select").length > 0) {
-      if (jQuery(".who_" + who_option + " select option:selected").length > 0) {
+      // `option:selected` is jQuery/Sizzle's own extension -- not a real
+      // CSS selector, and querySelectorAll throws a SyntaxError on it.
+      // `HTMLSelectElement.selectedOptions` is the native equivalent.
+      const whoSelect = document.querySelector<HTMLSelectElement>(
+        ".who_" + who_option + " select",
+      );
+      if (whoSelect !== null && whoSelect.selectedOptions.length > 0) {
         who_selected = true;
       }
-    }
 
-    if (!who_selected) {
-      jQuery(".actionButtons .errors").show();
-      e.preventDefault();
-    } else {
-      jQuery(".actionButtons .errors").hide();
-      console.log("form can be submited");
-    }
-  });
+      if (!who_selected) {
+        show(document.querySelectorAll(".actionButtons .errors"));
+        event.preventDefault();
+      } else {
+        hide(document.querySelectorAll(".actionButtons .errors"));
+        console.log("form can be submited");
+      }
+    },
+  );
 });

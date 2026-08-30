@@ -157,7 +157,7 @@
     <meta charset="{$CONTENT_ENCODING}">
     <meta name="generator" content="Piwigo (aka PWG), see piwigo.org">
 
-    {if isset($meta_ref)}
+    {if $meta_ref !== null}
       <meta
         n:if="isset($INFO_AUTHOR)"
         name="author"
@@ -238,7 +238,7 @@
     >
 
     <meta
-      n:if="!empty($page_refresh)"
+      n:if="$page_refresh !== null"
       http-equiv="refresh"
       content="{$page_refresh['TIME']};url={$page_refresh['U_REFRESH']}"
     >
@@ -247,7 +247,7 @@
 
     {=getCombinedScripts('header')}
 
-    {if !empty($head_elements)}
+    {if $head_elements !== []}
       {foreach $head_elements as $elt}
         {$elt|noescape}
       {/foreach}
@@ -259,7 +259,7 @@
     class="{foreach $BODY_CLASSES as $class}{$class} {/foreach}"
   >
     <div id="the_page">
-      <div n:if="!empty($header_msgs)" class="header_msgs">
+      <div n:if="isset($header_msgs)" class="header_msgs">
         {foreach $header_msgs as $elt}
           {$elt}<br>
         {/foreach}
@@ -267,7 +267,7 @@
 
       <div id="theHeader">{$PAGE_BANNER|noescape}</div>
 
-      <div n:if="!empty($header_notes)" class="header_notes">
+      <div n:if="$header_notes !== null" class="header_notes">
         <p n:foreach="$header_notes as $elt">{$elt}</p>
       </div>
 

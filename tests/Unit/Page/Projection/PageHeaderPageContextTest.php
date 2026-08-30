@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 use Piwigo\Page\Projection\PageHeaderPageContext;
 
-test('toArray flattens every fixed property, and omits the 3 optional keys when null', function (): void {
+// The 3 nullable keys are emitted with their null rather than omitted
+// (P58-B2): an omitted key leaves the template variable undefined, which
+// forced layout.latte to guard them with empty()/isset() instead of
+// asking the nullable question directly. Pinned here because a key
+// silently going missing again would put those guards back.
+test('toArray emits all 13 keys, the 3 nullable ones as null', function (): void {
     $context = new PageHeaderPageContext(
         galleryTitle: 'My Gallery',
         pageBanner: 'My Gallery',
@@ -33,6 +38,9 @@ test('toArray flattens every fixed property, and omits the 3 optional keys when 
             'SHOW_MOBILE_APP_BANNER' => true,
             'BODY_CLASSES' => ['theme-dark'],
             'head_elements' => [],
+            'header_notes' => null,
+            'meta_ref' => null,
+            'page_refresh' => null,
         ]);
 });
 

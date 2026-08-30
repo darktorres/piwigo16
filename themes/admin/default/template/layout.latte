@@ -177,7 +177,7 @@
 
     {=getCombinedScripts('header')}
 
-    {if !empty($head_elements)}
+    {if $head_elements !== []}
       {foreach $head_elements as $elt}
         {$elt|noescape}
       {/foreach}
@@ -186,7 +186,7 @@
 
   <body id="{$BODY_ID}">
     <div id="the_page">
-      <div n:if="!empty($header_msgs)" class="header_msgs">
+      <div n:if="isset($header_msgs)" class="header_msgs">
         {foreach $header_msgs as $elt}
           {$elt}
         {/foreach}
@@ -234,7 +234,7 @@
 
       <div class="u-clear-both"></div>
 
-      <div n:if="!empty($header_notes)" class="header_notes">
+      <div n:if="$header_notes !== null" class="header_notes">
         {foreach $header_notes as $elt}
           {$elt}
         {/foreach}

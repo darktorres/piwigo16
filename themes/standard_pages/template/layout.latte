@@ -176,7 +176,7 @@
 
     {=getCombinedScripts('header')}
 
-    {if !empty($head_elements)}
+    {if $head_elements !== []}
       {foreach $head_elements as $elt}
         {$elt|noescape}
       {/foreach}

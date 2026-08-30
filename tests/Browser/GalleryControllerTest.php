@@ -548,3 +548,46 @@ it('dispatches IndexRendered with null category fields on a tag page (not a sing
         galRemoveFixturePlugin($pluginDir);
     }
 });
+
+// The gallery layout's own `header_msgs` banner, which nothing asserted
+// before P58-B2. RequestBootstrap::boot() calls
+// LayoutState::addHeaderMessage() when the gallery is locked, then assigns
+// HeaderMessagesPageContext only if the list is non-empty -- so the
+// template variable is either absent or a non-empty list, which is why the
+// guard over the div reads `isset($header_msgs)` rather than `!== []`.
+//
+// It has to be an admin: a locked gallery 503s every other visitor before
+// the page renders at all. The message is deliberately asserted through
+// the rendered div rather than the config value, since a config that took
+// effect but never reached the layout is exactly the failure this covers.
+it('shows the gallery-locked banner in the layout header for an admin', function (): void {
+    // Log in BEFORE locking: H::asAdmin() finishes by asserting the logout
+    // link on a gallery page, and a locked gallery 503s that page for
+    // anyone the admin check has not yet seen.
+    $page = H::asAdmin($this);
+
+    $snapshot = H::snapshotConfig(['gallery_locked']);
+    H::setConfigValue('gallery_locked', 'true');
+
+    try {
+        $page = H::navigateOk($page, '/index.php?/category/1');
+
+        $page->assertSeeIn('.header_msgs', 'The gallery is locked for maintenance.');
+        $page->assertNoJavaScriptErrors();
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+// The counterpart: with the gallery unlocked the div must not be there at
+// all. HeaderMessagesPageContext is not assigned, so `$header_msgs` is an
+// undefined variable -- the case that makes `empty()`/`isset()` the only
+// workable guards here, and the reason `$header_msgs !== []` would emit an
+// "Undefined variable" warning instead.
+it('renders no header_msgs div when the gallery is not locked', function (): void {
+    $page = H::asAdmin($this);
+    $page = H::navigateOk($page, '/index.php?/category/1');
+
+    $page->assertMissing('.header_msgs');
+    $page->assertNoJavaScriptErrors();
+});

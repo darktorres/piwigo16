@@ -9,13 +9,22 @@ use Piwigo\Core\TemplatePageContext;
 
 /**
  * The template variable set assigned by
- * {@see \Piwigo\Page\PageHeaderRenderer::render()}. `$headerNotes`,
- * `$metaRef`, and `$pageRefresh` are genuinely optional -- the original
- * code only ever assigns those 3 template keys under their own runtime
- * condition, omitted here (not present as a null value) to match that
- * exact original behavior. `$headElements` is always included (even
- * empty) since `header.latte` reads it with `{if !empty($head_elements)}`,
- * not `isset()`.
+ * {@see \Piwigo\Page\PageHeaderRenderer::render()}.
+ *
+ * All 13 keys are always present. `$headerNotes`, `$metaRef` and
+ * `$pageRefresh` used to be omitted when null, to match the key-presence
+ * behaviour of the pre-conversion Smarty -- but a missing key was only
+ * ever Smarty's way of spelling "no value", and it costs the templates
+ * their ability to ask the question directly: an omitted key leaves the
+ * variable *undefined*, so `{if $page_refresh !== null}` would read an
+ * undefined variable and the template had to reach for `empty()` or
+ * `isset()` instead (P58-B2). Emitting the key with its null makes the
+ * nullable property the single source of truth, and `Template::
+ * getTemplateVars()` resolves a missing key through `?? null` anyway, so
+ * its two readers in `HtmlService` cannot tell the difference. This
+ * class is assigned exactly once per request, by the single caller
+ * above, so there is no later context that an always-present key could
+ * overwrite.
  */
 final readonly class PageHeaderPageContext implements TemplatePageContext
 {
@@ -47,7 +56,7 @@ final readonly class PageHeaderPageContext implements TemplatePageContext
     #[Override]
     public function toArray(): array
     {
-        $result = [
+        return [
             'GALLERY_TITLE' => $this->galleryTitle,
             'PAGE_BANNER' => $this->pageBanner,
             'BODY_ID' => $this->bodyId,
@@ -58,20 +67,9 @@ final readonly class PageHeaderPageContext implements TemplatePageContext
             'SHOW_MOBILE_APP_BANNER' => $this->showMobileAppBanner,
             'BODY_CLASSES' => $this->bodyClasses,
             'head_elements' => $this->headElements,
+            'header_notes' => $this->headerNotes,
+            'meta_ref' => $this->metaRef,
+            'page_refresh' => $this->pageRefresh,
         ];
-
-        if ($this->headerNotes !== null) {
-            $result['header_notes'] = $this->headerNotes;
-        }
-
-        if ($this->metaRef !== null) {
-            $result['meta_ref'] = $this->metaRef;
-        }
-
-        if ($this->pageRefresh !== null) {
-            $result['page_refresh'] = $this->pageRefresh;
-        }
-
-        return $result;
     }
 }

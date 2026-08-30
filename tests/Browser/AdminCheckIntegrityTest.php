@@ -104,6 +104,16 @@ it('renders the integrity panel and loads its bundle when a real anomaly exists'
                 . ' Automatic correction'
             );
 
+        // ---- P58-B2 ------------------------------------------------------
+        // The admin layout's own `header_notes` chrome, which this page is
+        // the only in-tree way to reach: CheckIntegrity::__construct() calls
+        // LayoutState::addHeaderNote() whenever it finds an anomaly, and
+        // nothing else in src/ adds one outside the (config-gated) filter
+        // feature. The div was rendered but never asserted, so the guard
+        // over it -- rewritten from `!empty($header_notes)` to
+        // `$header_notes !== null` -- had no instrument behind it.
+        $page->assertSeeIn('.header_notes', '1 anomaly has been detected.');
+
         // The ignore branch: show_ignore_msg true and can_select false, the
         // only other state this anomaly can reach. Driven by ticking the real
         // checkbox and pressing the real button, which is the whole point --

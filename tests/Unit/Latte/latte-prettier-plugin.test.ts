@@ -171,7 +171,7 @@ describe("Latte Prettier plugin (tools/latte-prettier/)", () => {
   // This pins the operator itself, on both a property read and a call.
   it("round-trips the nullsafe operator rather than flattening it to ->", async () => {
     const src =
-      '{if $ferrors?->opacity !== null}{$ferrors?->opacity}{$a?->b()}{/if}\n';
+      "{if $ferrors?->opacity !== null}{$ferrors?->opacity}{$a?->b()}{/if}\n";
     const formatted = await format(src);
 
     expect(formatted).toContain("$ferrors?->opacity !== null");

@@ -363,7 +363,8 @@ function parsePostfix(es) {
     // `->` and its nullsafe form `?->`. Templates reach for the latter
     // wherever a View property is a nullable value object, which P58's
     // typing work produces steadily.
-    const nullsafe = es.peek() === "?" && es.peek(1) === "-" && es.peek(2) === ">";
+    const nullsafe =
+      es.peek() === "?" && es.peek(1) === "-" && es.peek(2) === ">";
     if (nullsafe || (es.peek() === "-" && es.peek(1) === ">")) {
       es.advance(nullsafe ? 3 : 2);
       es.skipSpace();

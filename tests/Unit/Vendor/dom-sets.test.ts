@@ -16,6 +16,7 @@ import {
   is,
   prepend,
   remove,
+  removeAttr,
   removeClass,
   setVal,
   text,
@@ -146,6 +147,18 @@ describe("attributes", () => {
 
     expect(attrOf(set, "href")).toBeNull();
     expect(attrOf(document.querySelectorAll(".absent"), "href")).toBeUndefined();
+  });
+
+  it("removeAttr removes an attribute from every element", () => {
+    const set = mount(
+      '<input class="t" disabled><input class="t" disabled>'
+    );
+
+    removeAttr(set, "disabled");
+
+    expect(
+      Array.from(set).map((el) => el.hasAttribute("disabled"))
+    ).toEqual([false, false]);
   });
 });
 

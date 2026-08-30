@@ -1575,6 +1575,16 @@ export function attr(
   }
 }
 
+/** `.removeAttr(name)` -- removes an attribute from every element. */
+export function removeAttr(
+  target: Element | ArrayLike<Element>,
+  name: string
+): void {
+  for (const el of toElements(target)) {
+    el.removeAttribute(name);
+  }
+}
+
 /** `.empty()` -- removes every child, of every element. */
 export function empty(target: Element | ArrayLike<Element>): void {
   for (const el of toElements(target)) {

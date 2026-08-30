@@ -6,6 +6,31 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
+import {
+  addClass,
+  append,
+  attr,
+  attrOf,
+  css,
+  data,
+  delegate,
+  empty,
+  hide,
+  html,
+  htmlOf,
+  find,
+  on,
+  ready,
+  remove,
+  removeAttr,
+  removeClass,
+  removeData,
+  setData,
+  show,
+  textOf,
+  toggle,
+  trigger,
+} from "../../../default/js/vendor/dom";
 export {};
 
 type HistorySearchResponse =
@@ -19,7 +44,7 @@ interface HistoryFilterParams {
   end: string;
   types: Record<number, string>;
   user_id: string | number;
-  image_id: string | number;
+  image_id: string | number | null;
   filename: string;
   ip: string;
   pageNumber: number;
@@ -82,7 +107,14 @@ const str_and_more = pwg_getPageString("and %d more");
 
 const guest_id = pwg_getPageData<number>("guest_id");
 
-$(document).ready(() => {
+/** `$("<div>").html(markup).text().trim()` -- strips tags down to plain text. */
+function stripHtml(markup: string): string {
+  const tempDiv = document.createElement("div");
+  tempDiv.innerHTML = markup;
+  return (tempDiv.textContent ?? "").trim();
+}
+
+ready(() => {
   activateLineOptions();
   checkFilters();
 
@@ -96,17 +128,19 @@ $(document).ready(() => {
     addUserFilter(filter_user_name);
   }
 
-  $(".elem-type-select").on("change", function () {
-    console.log($(".elem-type-select option:selected").attr("value"));
+  on(document.querySelectorAll(".elem-type-select"), "change", function () {
+    const selectedType = attrOf(
+      document.querySelectorAll(".elem-type-select option:checked"),
+      "value",
+    );
+    console.log(selectedType);
 
-    if ($(".elem-type-select option:selected").attr("value") == "visited") {
+    if (selectedType == "visited") {
       current_param.types = {
         0: "none",
         1: "picture",
       };
-    } else if (
-      $(".elem-type-select option:selected").attr("value") == "downloaded"
-    ) {
+    } else if (selectedType == "downloaded") {
       current_param.types = {
         0: "high",
         1: "other",
@@ -123,21 +157,36 @@ $(document).ready(() => {
     fillHistoryResult(current_param);
   });
 
-  $(".date-start").on("change", function () {
-    if (
-      current_param.start != $('.date-start input[name="start"]').attr("value")
-    ) {
-      current_param.start =
-        $('.date-start input[name="start"]').attr("value") ?? "";
+  // Still jQuery: registration only. pwgDatepicker (jQuery-UI datepicker +
+  // timepicker-addon, P49-B group 5) fires its own linked-field update via
+  // `this.$input.trigger("change")` on init -- and jQuery's own `.trigger()`
+  // does NOT dispatch a real DOM event. It manually walks the ancestor
+  // chain and calls only handlers it finds in its own internal registry (or
+  // a bare `el.onchange` property), so a native `addEventListener` listener
+  // on `.date-start`/`.date-end` is invisible to it and this handler would
+  // never fire on page load, leaving the initial search never run. The
+  // handler body is free to use native helpers; only the binding itself
+  // has to stay jQuery so the datepicker's own trigger can reach it.
+  jQuery(".date-start").on("change", function () {
+    const value = attrOf(
+      document.querySelectorAll('.date-start input[name="start"]'),
+      "value",
+    );
+    if (current_param.start != value) {
+      current_param.start = value ?? "";
       current_param.pageNumber = 0;
       fillHistoryResult(current_param);
     }
   });
 
-  $(".date-end").on("change", function () {
-    const newValue = $('.date-end input[name="end"]').attr("value");
+  // Still jQuery: registration only -- same reason as `.date-start` above.
+  jQuery(".date-end").on("change", function () {
+    const newValue = attrOf(
+      document.querySelectorAll('.date-end input[name="end"]'),
+      "value",
+    );
     if (current_param.end != newValue) {
-      current_param.end = $('.date-end input[name="end"]').attr("value") ?? "";
+      current_param.end = newValue ?? "";
       current_param.pageNumber = 0;
       // The datepicker first fills the end-date with '1899-12-31',
       // which triggers an unnecessary ajax request
@@ -148,7 +197,7 @@ $(document).ready(() => {
     }
   });
 
-  $("#start_unset").on("click", function () {
+  on(document.querySelectorAll("#start_unset"), "click", function () {
     console.log("here" + current_param.start);
     // Genuine pre-existing bug found only by strict typechecking:
     // `!current_param.start == ""` compares a boolean to a string,
@@ -163,7 +212,7 @@ $(document).ready(() => {
     }
   });
 
-  $("#end_unset").on("click", function () {
+  on(document.querySelectorAll("#end_unset"), "click", function () {
     // Same class of bug as #start_unset above, plus a copy-paste typo:
     // compared `current_param.start` (always false either way) instead
     // of `current_param.end`, the field this handler actually resets
@@ -176,110 +225,136 @@ $(document).ready(() => {
     }
   });
 
-  $(".pagination-arrow.rigth").on("click", () => {
+  on(document.querySelectorAll(".pagination-arrow.rigth"), "click", () => {
     current_param.pageNumber += 1;
     fillHistoryResult(current_param);
   });
 
-  $(".pagination-arrow.left").on("click", () => {
+  on(document.querySelectorAll(".pagination-arrow.left"), "click", () => {
     current_param.pageNumber -= 1;
     fillHistoryResult(current_param);
   });
 
-  $(".refresh-results").on("click", function () {
+  on(document.querySelectorAll(".refresh-results"), "click", function () {
     fillHistoryResult(current_param);
   });
 });
 
 // onLoad needed to wait localization loads
-jQuery(function () {
+ready(function () {
+  // Still jQuery: pwgDatepicker wraps jQuery-UI datepicker +
+  // timepicker-addon, ported in P49-B group 5.
   jQuery("[data-datepicker]").pwgDatepicker();
 });
 
 function activateLineOptions() {
-  $(".search-line").find(".img-option").hide();
+  hide(find(document.querySelectorAll(".search-line"), ".img-option"));
 
   /* Display the option on the click on "..." */
-  $(".search-line")
-    .find(".toggle-img-option")
-    .on("click", function () {
-      $(this).find(".img-option").toggle();
-    });
+  on(
+    find(document.querySelectorAll(".search-line"), ".toggle-img-option"),
+    "click",
+    function (event: Event) {
+      const el = event.currentTarget as Element;
+      // jQuery's own `.toggle()` display-memory semantics apply here too --
+      // use dom.ts's `toggle()` rather than a hand-rolled inline-style
+      // check (see comments.ts's own finding for why the naive version is
+      // wrong the moment the element starts hidden via a CSS class rule).
+      toggle(find(el, ".img-option"));
+    },
+  );
 
   /* Hide img options and rename field on click on the screen */
 
-  $(document).mouseup(function (e) {
+  on(document, "mouseup", function (e: Event) {
     e.stopPropagation();
     let option_is_clicked = false;
-    $(".img-option span").each(function () {
-      if (!($(this).has(e.target as unknown as Element).length === 0)) {
+    document.querySelectorAll(".img-option span").forEach((span) => {
+      if (span !== e.target && span.contains(e.target as Node | null)) {
         option_is_clicked = true;
       }
     });
     if (!option_is_clicked) {
-      $(".search-line").find(".img-option").hide();
+      hide(find(document.querySelectorAll(".search-line"), ".img-option"));
     }
   });
 }
 
 function fillSummaryResult(summary: HistorySummary) {
-  $(".user-list").empty();
+  empty(document.querySelectorAll(".user-list"));
 
-  $(".summary-lines .summary-data").html(summary.nbLinesText);
-  $(".summary-weight .summary-data").html(
+  html(
+    find(document.querySelectorAll(".summary-lines"), ".summary-data"),
+    summary.nbLinesText,
+  );
+  html(
+    find(document.querySelectorAll(".summary-weight"), ".summary-data"),
     unit_MB.replace("%s", String(summary.filesizeMb)),
   );
-  $(".summary-users .summary-data").html(summary.usersText);
-  $(".summary-guests .summary-data").html(summary.guestsText);
+  html(
+    find(document.querySelectorAll(".summary-users"), ".summary-data"),
+    summary.usersText,
+  );
+  html(
+    find(document.querySelectorAll(".summary-guests"), ".summary-data"),
+    summary.guestsText,
+  );
 
   if (summary.nbGuests > 0) {
-    $(".summary-guests .summary-data")
-      .addClass("icon-plus-circled")
-      .on("click", function () {
-        if (current_param.user_id == "-1") {
-          current_param.user_id = guest_id;
-          addGuestFilter(str_guest);
-          fillHistoryResult(current_param);
-        }
-      })
-      .hover(function () {
-        $(this).css({
-          cursor: "pointer",
-        });
-      });
+    const summaryGuestsData = find(
+      document.querySelectorAll(".summary-guests"),
+      ".summary-data",
+    );
+    addClass(summaryGuestsData, "icon-plus-circled");
+    on(summaryGuestsData, "click", function () {
+      if (current_param.user_id == "-1") {
+        current_param.user_id = guest_id;
+        addGuestFilter(str_guest);
+        fillHistoryResult(current_param);
+      }
+    });
+    // `.hover(fn)` with a single argument binds the same handler to both
+    // mouseenter and mouseleave.
+    on(summaryGuestsData, "mouseenter mouseleave", function (event: Event) {
+      css(event.currentTarget as Element, "cursor", "pointer");
+    });
 
-    $(".summary-guests").show();
+    show(document.querySelectorAll(".summary-guests"));
   } else {
-    $(".summary-guests").hide();
+    hide(document.querySelectorAll(".summary-guests"));
   }
 
   const user_dot_title = summary.members
     .map((member) => member.username)
     .join(", ");
-  $(".user-dot").attr("title", user_dot_title).addClass("tiptip");
+  attr(document.querySelectorAll(".user-dot"), "title", user_dot_title);
+  addClass(document.querySelectorAll(".user-dot"), "tiptip");
 
   let tmp = 0;
-  $(".user-dot").hide();
+  hide(document.querySelectorAll(".user-dot"));
   // summary.members is already ordered most-active-first
   summary.members.forEach((member) => {
     if (tmp < 5) {
-      const new_user_item = $("#-2").clone();
+      const new_user_item = document
+        .getElementById("-2")!
+        .cloneNode(true) as Element;
 
-      new_user_item.removeClass("hide");
-      new_user_item.find(".user-item-name").html(member.username ?? "");
-      new_user_item.data("user-id", member.userId);
+      removeClass(new_user_item, "hide");
+      html(find(new_user_item, ".user-item-name"), member.username ?? "");
+      setData(new_user_item, "user-id", member.userId);
 
-      new_user_item.on("click", function () {
+      on(new_user_item, "click", function (event: Event) {
+        const el = event.currentTarget as Element;
         if (current_param.user_id != member.userId) {
-          current_param.user_id = $(this).data("user-id");
+          current_param.user_id = data(el, "user-id") as string | number;
           addUserFilter(member.username);
           fillHistoryResult(current_param);
         }
       });
-      $(".user-list").append(new_user_item);
+      document.querySelector(".user-list")?.appendChild(new_user_item);
       tmp++;
     } else {
-      $(".user-dot").show();
+      show(document.querySelectorAll(".user-dot"));
     }
   });
 }
@@ -287,11 +362,11 @@ function fillSummaryResult(summary: HistorySummary) {
 function showResults(doShow: boolean) {
   console.log("EMPTY");
   if (doShow) {
-    $(".search-summary").show();
-    $(".container").show();
+    show(document.querySelectorAll(".search-summary"));
+    show(document.querySelectorAll(".container"));
   } else {
-    $(".search-summary").hide();
-    $(".container").hide();
+    hide(document.querySelectorAll(".search-summary"));
+    hide(document.querySelectorAll(".container"));
   }
 }
 
@@ -302,9 +377,9 @@ function fillHistoryResult(ajaxParam: HistoryFilterParams) {
     data: ajaxParam,
     beforeSend: function () {
       showResults(false);
-      $(".loading").removeClass("hide");
-      $(".noResults").hide();
-      $(".tab").empty();
+      removeClass(document.querySelectorAll(".loading"), "hide");
+      hide(document.querySelectorAll(".noResults"));
+      empty(document.querySelectorAll(".tab"));
     },
     success: function (raw_data: HistorySearchResponse) {
       const data = raw_data.lines;
@@ -322,10 +397,10 @@ function fillHistoryResult(ajaxParam: HistoryFilterParams) {
 
         fillSummaryResult(summary);
         showResults(true);
-        $(".noResults").hide();
+        hide(document.querySelectorAll(".noResults"));
       } else {
         showResults(false);
-        $(".noResults").show();
+        show(document.querySelectorAll(".noResults"));
       }
     },
     error: function (e) {
@@ -333,9 +408,10 @@ function fillHistoryResult(ajaxParam: HistoryFilterParams) {
     },
   }).done(() => {
     activateLineOptions();
-    $(".loading").addClass("hide");
+    addClass(document.querySelectorAll(".loading"), "hide");
     updatePagination(maxPage);
-    $(".tiptip").tipTip({
+    // Still jQuery: tipTip is a library, ported in P49-B group 2.
+    jQuery(".tiptip").tipTip({
       delay: 0,
       fadeIn: 200,
       fadeOut: 200,
@@ -345,7 +421,7 @@ function fillHistoryResult(ajaxParam: HistoryFilterParams) {
 }
 
 function lineConstructor(line: HistoryLine, id: number) {
-  const newLine = $("#-1").clone();
+  const newLine = document.getElementById("-1")!.cloneNode(true) as Element;
 
   const sections = [
     "categories",
@@ -373,64 +449,69 @@ function lineConstructor(line: HistoryLine, id: number) {
     "line-icon icon-heart icon-red",
   ];
 
-  newLine.removeClass("hide");
+  removeClass(newLine, "hide");
 
   /* console log to help debug */
   // console.log(line);
-  newLine.attr("id", id);
+  attr(newLine, "id", String(id));
   // console.log(id);
 
-  newLine.find(".date-day").html(line.dateFormatted ?? "");
-  newLine.find(".date-hour").html(line.time);
+  html(find(newLine, ".date-day"), line.dateFormatted ?? "");
+  html(find(newLine, ".date-hour"), line.time);
 
-  newLine
-    .find(".user-name")
-    .html(line.username + '<i class="add-filter icon-plus-circled"></i>');
+  html(
+    find(newLine, ".user-name"),
+    line.username + '<i class="add-filter icon-plus-circled"></i>',
+  );
 
-  newLine.find(".user-name").attr("id", line.userId);
+  attr(find(newLine, ".user-name"), "id", String(line.userId));
   if (current_param.user_id == "-1") {
-    newLine.find(".user-name").on("click", function () {
-      current_param.user_id = String($(this).attr("id"));
+    on(find(newLine, ".user-name"), "click", function (event: Event) {
+      const el = event.currentTarget as Element;
+      current_param.user_id = String(attrOf(el, "id"));
       current_param.pageNumber = 0;
-      addUserFilter($(this).html());
+      addUserFilter(htmlOf(el) ?? "");
       fillHistoryResult(current_param);
     });
   }
 
-  newLine
-    .find(".user-ip")
-    .html(line.ip + '<i class="add-filter icon-plus-circled"></i>');
-  newLine.find(".user-ip").data("ip", line.ip);
+  html(
+    find(newLine, ".user-ip"),
+    line.ip + '<i class="add-filter icon-plus-circled"></i>',
+  );
+  setData(find(newLine, ".user-ip")[0]!, "ip", line.ip);
   if (current_param.ip == "") {
-    newLine.find(".user-ip").on("click", function () {
-      current_param.ip = $(this).data("ip");
+    on(find(newLine, ".user-ip"), "click", function (event: Event) {
+      const el = event.currentTarget as Element;
+      current_param.ip = (data(el, "ip") as string | undefined) ?? "";
       current_param.pageNumber = 0;
-      addIpFilter($(this).html());
+      addIpFilter(htmlOf(el) ?? "");
       fillHistoryResult(current_param);
     });
   }
 
-  newLine.find(".add-img-as-filter").data("img-id", line.imageId);
+  setData(find(newLine, ".add-img-as-filter")[0]!, "img-id", line.imageId);
   if (current_param.image_id == "") {
-    newLine.find(".add-img-as-filter").on("click", function () {
-      current_param.image_id = $(this).data("img-id");
+    on(find(newLine, ".add-img-as-filter"), "click", function (event: Event) {
+      const el = event.currentTarget as Element;
+      const imgId = data(el, "img-id") as string | number | null;
+      current_param.image_id = imgId;
       current_param.pageNumber = 0;
-      addImageFilter($(this).data("img-id"));
+      addImageFilter(imgId);
       fillHistoryResult(current_param);
     });
   }
 
   if (line.imageEditUrl) {
-    newLine.find(".edit-img").attr("href", line.imageEditUrl);
+    attr(find(newLine, ".edit-img"), "href", line.imageEditUrl);
   } else {
-    newLine
-      .find(".edit-img")
-      .attr("href", "#")
-      .addClass("notClickable tiptip")
-      .attr("title", str_no_longer_exist_photo)
-      .on("click", (e) => {
-        e.preventDefault();
-      });
+    const editImg = find(newLine, ".edit-img");
+    attr(editImg, "href", "#");
+    addClass(editImg, "notClickable tiptip");
+    attr(editImg, "title", str_no_longer_exist_photo);
+    on(editImg, "click", (e: Event) => {
+      e.preventDefault();
+    });
   }
 
   // Genuine pre-existing bug found via strict typing: this read
@@ -445,37 +526,37 @@ function lineConstructor(line: HistoryLine, id: number) {
   switch (line.section) {
     case "tags": {
       if (line.tagNames.length > 1 && line.tagNames.length <= 2) {
-        newLine
-          .find(".type-name")
-          .html(line.tagNames[0] + ", " + line.tagNames[1] + ", ...");
-        newLine
-          .find(".type-id")
-          .html("#" + line.tagIds[0] + ", " + line.tagIds[1] + ", ...");
+        html(
+          find(newLine, ".type-name"),
+          line.tagNames[0] + ", " + line.tagNames[1] + ", ...",
+        );
+        html(
+          find(newLine, ".type-id"),
+          "#" + line.tagIds[0] + ", " + line.tagIds[1] + ", ...",
+        );
       } else if (line.tagNames.length > 2) {
-        newLine
-          .find(".type-name")
-          .html(
-            line.tagNames[0] +
-              ", " +
-              line.tagNames[1] +
-              ", " +
-              line.tagNames[2] +
-              ", ...",
-          );
-        newLine
-          .find(".type-id")
-          .html(
-            "#" +
-              line.tagIds[0] +
-              ", " +
-              line.tagIds[1] +
-              ", " +
-              line.tagIds[2] +
-              ", ...",
-          );
+        html(
+          find(newLine, ".type-name"),
+          line.tagNames[0] +
+            ", " +
+            line.tagNames[1] +
+            ", " +
+            line.tagNames[2] +
+            ", ...",
+        );
+        html(
+          find(newLine, ".type-id"),
+          "#" +
+            line.tagIds[0] +
+            ", " +
+            line.tagIds[1] +
+            ", " +
+            line.tagIds[2] +
+            ", ...",
+        );
       } else {
-        newLine.find(".type-name").html(line.tagNames[0] ?? "");
-        newLine.find(".type-id").html("#" + line.tagIds[0]);
+        html(find(newLine, ".type-name"), line.tagNames[0] ?? "");
+        html(find(newLine, ".type-id"), "#" + line.tagIds[0]);
       }
 
       let detail_str = "";
@@ -483,32 +564,40 @@ function lineConstructor(line: HistoryLine, id: number) {
         detail_str += tag + ", ";
       });
       detail_str = detail_str.slice(0, -2);
-      newLine.find(".detail-item-1").html(detail_str);
-      newLine
-        .find(".detail-item-1")
-        .attr("title", detail_str)
-        .removeClass("hide")
-        .addClass("icon-tags");
+      const detailItem1 = find(newLine, ".detail-item-1");
+      html(detailItem1, detail_str);
+      attr(detailItem1, "title", detail_str);
+      removeClass(detailItem1, "hide");
+      addClass(detailItem1, "icon-tags");
       break;
     }
 
     case "most_visited":
-      newLine.find(".type-name").html(str_most_visited);
-      newLine
-        .find(".detail-item-1")
-        .html(str_most_visited)
-        .addClass("icon-fire");
-      newLine.find(".type-id").hide();
+      html(find(newLine, ".type-name"), str_most_visited);
+      {
+        const detailItem1 = find(newLine, ".detail-item-1");
+        html(detailItem1, str_most_visited);
+        addClass(detailItem1, "icon-fire");
+      }
+      hide(find(newLine, ".type-id"));
       break;
     case "best_rated":
-      newLine.find(".type-name").html(str_best_rated);
-      newLine.find(".detail-item-1").html(str_best_rated).addClass("icon-star");
-      newLine.find(".type-id").hide();
+      html(find(newLine, ".type-name"), str_best_rated);
+      {
+        const detailItem1 = find(newLine, ".detail-item-1");
+        html(detailItem1, str_best_rated);
+        addClass(detailItem1, "icon-star");
+      }
+      hide(find(newLine, ".type-id"));
       break;
     case "list":
-      newLine.find(".type-name").html(str_list);
-      newLine.find(".detail-item-1").html(str_list).addClass("icon-dice-solid");
-      newLine.find(".type-id").hide();
+      html(find(newLine, ".type-name"), str_list);
+      {
+        const detailItem1 = find(newLine, ".detail-item-1");
+        html(detailItem1, str_list);
+        addClass(detailItem1, "icon-dice-solid");
+      }
+      hide(find(newLine, ".type-id"));
       break;
     case "search": {
       // for debug
@@ -529,14 +618,14 @@ function lineConstructor(line: HistoryLine, id: number) {
         addedBy: "gallery-icon-user",
         filetypes: "gallery-icon-file-image",
       };
-      newLine.find(".type-name").html(line.section ?? "");
-      newLine.find(".type-id").html("#" + line.searchId);
+      html(find(newLine, ".type-name"), line.section ?? "");
+      html(find(newLine, ".type-id"), "#" + line.searchId);
       if (!line.searchId) {
-        newLine.find(".type-id").hide();
+        hide(find(newLine, ".type-id"));
       }
 
       if (!search_details) {
-        newLine.find(".detail-item-1").hide();
+        hide(find(newLine, ".detail-item-1"));
         break;
       }
       const active_search_details: Record<string, any> = {};
@@ -551,54 +640,50 @@ function lineConstructor(line: HistoryLine, id: number) {
       const active_items = Object.keys(active_search_details);
       if (active_items.length > 0) {
         if (active_search_details.allwords) {
-          newLine
-            .find(".detail-item-" + count_item)
-            .html(active_search_details.allwords.join(" "))
-            .addClass(search_icons.allwords + " tiptip");
-          newLine
-            .find(".detail-item-" + count_item)
-            .attr(
-              "title",
-              "<b>" +
-                str_search_details["allwords"] +
-                " :</b> " +
-                active_search_details.allwords.join(" "),
-            );
+          const item = find(newLine, ".detail-item-" + count_item);
+          html(item, active_search_details.allwords.join(" "));
+          addClass(item, search_icons.allwords + " tiptip");
+          attr(
+            item,
+            "title",
+            "<b>" +
+              str_search_details["allwords"] +
+              " :</b> " +
+              active_search_details.allwords.join(" "),
+          );
           count_item++;
           active_more.push("allwords");
         }
         if (active_search_details.cat) {
           const array_cat = Object.values(active_search_details.cat);
           const cat = array_cat.join(" + ");
-          const temp_div = $("<div>").html(cat);
-          const text = temp_div.text().trim();
-          newLine
-            .find(".detail-item-" + count_item)
-            .html(cat)
-            .addClass(search_icons.cat + " tiptip");
-          newLine
-            .find(".detail-item-" + count_item)
-            .attr("title", "<b>" + str_search_details["cat"] + " :</b> " + text)
-            .removeClass("hide");
+          const text = stripHtml(cat);
+          const item = find(newLine, ".detail-item-" + count_item);
+          html(item, cat);
+          addClass(item, search_icons.cat + " tiptip");
+          attr(
+            item,
+            "title",
+            "<b>" + str_search_details["cat"] + " :</b> " + text,
+          );
+          removeClass(item, "hide");
           count_item++;
           active_more.push("cat");
         }
         if (count_item <= 2 && active_search_details.tags) {
           const array_tags = Object.values(active_search_details.tags);
-          newLine
-            .find(".detail-item-" + count_item)
-            .html(array_tags.join(" + "))
-            .addClass(search_icons.tags + " tiptip");
-          newLine
-            .find(".detail-item-" + count_item)
-            .attr(
-              "title",
-              "<b>" +
-                str_search_details["tags"] +
-                " :</b> " +
-                array_tags.join(" + "),
-            )
-            .removeClass("hide");
+          const item = find(newLine, ".detail-item-" + count_item);
+          html(item, array_tags.join(" + "));
+          addClass(item, search_icons.tags + " tiptip");
+          attr(
+            item,
+            "title",
+            "<b>" +
+              str_search_details["tags"] +
+              " :</b> " +
+              array_tags.join(" + "),
+          );
+          removeClass(item, "hide");
           count_item++;
           active_more.push("tags");
         }
@@ -618,20 +703,18 @@ function lineConstructor(line: HistoryLine, id: number) {
               } else {
                 array_key = [active_search_details[key]];
               }
-              newLine
-                .find(".detail-item-" + count_item)
-                .html(array_key.join(" + "))
-                .addClass(search_icons[key] + " tiptip");
-              newLine
-                .find(".detail-item-" + count_item)
-                .attr(
-                  "title",
-                  "<b>" +
-                    str_search_details[key] +
-                    " :</b> " +
-                    array_key.join(" + "),
-                )
-                .removeClass("hide");
+              const item = find(newLine, ".detail-item-" + count_item);
+              html(item, array_key.join(" + "));
+              addClass(item, search_icons[key] + " tiptip");
+              attr(
+                item,
+                "title",
+                "<b>" +
+                  str_search_details[key] +
+                  " :</b> " +
+                  array_key.join(" + "),
+              );
+              removeClass(item, "hide");
               count_item++;
               badge_added++;
               active_more.push(key);
@@ -643,7 +726,7 @@ function lineConstructor(line: HistoryLine, id: number) {
           });
         }
       } else {
-        newLine.find(".detail-item-1").hide();
+        hide(find(newLine, ".detail-item-1"));
       }
       if (active_items.length >= 3) {
         let count_more = 0;
@@ -662,158 +745,177 @@ function lineConstructor(line: HistoryLine, id: number) {
             }
 
             if (key == "cat") {
-              const temp_div = $("<div>").html(value_str);
-              const text = temp_div.text().trim();
-              value_str = text;
+              value_str = stripHtml(value_str);
             }
             count_more++;
             return `<b>${str_search_details[key]}</b> : ${value_str}`;
           })
           .join(" <br />");
-        newLine
-          .find(".detail-item-3")
-          .html(sprintf(str_and_more, count_more))
-          .addClass("icon-info-circled-1 tiptip");
-        newLine
-          .find(".detail-item-3")
-          .attr("title", search_details_str)
-          .removeClass("hide");
+        const item3 = find(newLine, ".detail-item-3");
+        html(item3, sprintf(str_and_more, count_more));
+        addClass(item3, "icon-info-circled-1 tiptip");
+        attr(item3, "title", search_details_str);
+        removeClass(item3, "hide");
       }
       break;
     }
     case "favorites":
-      newLine.find(".type-name").html(str_favorites);
-      newLine.find(".detail-item-1").html(str_favorites).addClass("icon-heart");
-      newLine.find(".type-id").hide();
+      html(find(newLine, ".type-name"), str_favorites);
+      {
+        const detailItem1 = find(newLine, ".detail-item-1");
+        html(detailItem1, str_favorites);
+        addClass(detailItem1, "icon-heart");
+      }
+      hide(find(newLine, ".type-id"));
       break;
     case "recent_cats":
-      newLine.find(".type-name").html(str_recent_cats);
-      newLine
-        .find(".detail-item-1")
-        .html(str_recent_cats)
-        .addClass("icon-clock");
-      newLine.find(".type-id").hide();
+      html(find(newLine, ".type-name"), str_recent_cats);
+      {
+        const detailItem1 = find(newLine, ".detail-item-1");
+        html(detailItem1, str_recent_cats);
+        addClass(detailItem1, "icon-clock");
+      }
+      hide(find(newLine, ".type-id"));
       break;
     case "recent_pics":
-      newLine.find(".type-name").html(str_recent_pics);
-      newLine
-        .find(".detail-item-1")
-        .html(str_recent_pics)
-        .addClass("icon-clock");
-      newLine.find(".type-id").hide();
+      html(find(newLine, ".type-name"), str_recent_pics);
+      {
+        const detailItem1 = find(newLine, ".detail-item-1");
+        html(detailItem1, str_recent_pics);
+        addClass(detailItem1, "icon-clock");
+      }
+      hide(find(newLine, ".type-id"));
       break;
-    case "categories":
-      newLine.find(".type-name").html(line.categoryName ?? "");
-      newLine
-        .find(".detail-item-1")
-        .html(line.categoryName ?? "")
-        .addClass("icon-folder-open tiptip")
-        .attr("title", line.categoryPath);
+    case "categories": {
+      html(find(newLine, ".type-name"), line.categoryName ?? "");
+      const detailItem1 = find(newLine, ".detail-item-1");
+      html(detailItem1, line.categoryName ?? "");
+      addClass(detailItem1, "icon-folder-open tiptip");
+      if (line.categoryPath === null) {
+        removeAttr(detailItem1, "title");
+      } else {
+        attr(detailItem1, "title", line.categoryPath);
+      }
       if (!line.imageThumbnailUrl) {
-        newLine.find(".type-id").hide();
+        hide(find(newLine, ".type-id"));
       }
       break;
+    }
     case "memories-1-year-ago":
-      newLine.find(".type-name").html(str_memories);
-      newLine.find(".detail-item-1").html(str_memories).addClass("icon-clock");
-      newLine.find(".type-id").hide();
+      html(find(newLine, ".type-name"), str_memories);
+      {
+        const detailItem1 = find(newLine, ".detail-item-1");
+        html(detailItem1, str_memories);
+        addClass(detailItem1, "icon-clock");
+      }
       break;
     case "contact":
-      newLine
-        .find(".type-icon i")
-        .addClass("line-icon icon-mail-1 icon-yellow");
-      newLine.find(".type-name").html(str_contact_form);
-      newLine.find(".detail-item-1").html(str_contact_form);
-      newLine.find(".type-id").hide();
+      addClass(
+        find(newLine, ".type-icon i"),
+        "line-icon icon-mail-1 icon-yellow",
+      );
+      html(find(newLine, ".type-name"), str_contact_form);
+      html(find(newLine, ".detail-item-1"), str_contact_form);
+      hide(find(newLine, ".type-id"));
       break;
     default:
-      newLine
-        .find(".type-icon i")
-        .addClass("line-icon icon-help-puzzle icon-grey");
-      newLine.find(".type-name").html(line.section ?? "");
-      newLine.find(".type-id").hide();
+      addClass(
+        find(newLine, ".type-icon i"),
+        "line-icon icon-help-puzzle icon-grey",
+      );
+      html(find(newLine, ".type-name"), line.section ?? "");
+      hide(find(newLine, ".type-id"));
       break;
   }
 
   if (line.imageThumbnailUrl) {
-    const img = $("<img>")
-      .attr("src", line.imageThumbnailUrl)
-      .attr("alt", line.imageLabel || "")
-      .attr("title", line.imageLabel || "");
-    newLine.find(".type-name").html(line.imageLabel ?? "");
-    newLine.find(".type-icon").empty().append(img);
-    newLine.find(".type-id").html("#" + line.imageId);
-    newLine
-      .find(".type-icon")
-      .attr("href", line.imageEditUrl)
-      .removeClass("no-img");
-    newLine
-      .find(".type-icon img")
-      .attr("title", str_edit_img)
-      .addClass("tiptip");
-    newLine.find(".type-id").show();
+    const img = document.createElement("img");
+    attr(img, "src", line.imageThumbnailUrl);
+    attr(img, "alt", line.imageLabel || "");
+    attr(img, "title", line.imageLabel || "");
+
+    html(find(newLine, ".type-name"), line.imageLabel ?? "");
+    const typeIcon = find(newLine, ".type-icon");
+    empty(typeIcon);
+    typeIcon[0]?.appendChild(img);
+    html(find(newLine, ".type-id"), "#" + line.imageId);
+    if (line.imageEditUrl === null) {
+      removeAttr(typeIcon, "href");
+    } else {
+      attr(typeIcon, "href", line.imageEditUrl);
+    }
+    removeClass(typeIcon, "no-img");
+    attr(find(newLine, ".type-icon img"), "title", str_edit_img);
+    addClass(find(newLine, ".type-icon img"), "tiptip");
+    show(find(newLine, ".type-id"));
   } else {
-    newLine.find(".type-icon .icon-file-image").removeClass("icon-file-image");
-    newLine.find(".toggle-img-option").hide();
+    removeClass(
+      find(newLine, ".type-icon .icon-file-image"),
+      "icon-file-image",
+    );
+    hide(find(newLine, ".toggle-img-option"));
 
     if (sections.indexOf(line.section ?? "") != -1) {
       const lineIconClass = icons[sections.indexOf(line.section ?? "")]!;
-      newLine.find(".type-icon i").addClass(lineIconClass);
+      addClass(find(newLine, ".type-icon i"), lineIconClass);
     } else {
       console.log("Unhandled section : " + line.section);
     }
   }
 
-  newLine.find(".detail-item-1").removeClass("hide");
+  removeClass(find(newLine, ".detail-item-1"), "hide");
   if (line.imageType == "high") {
-    newLine
-      .find(".detail-item-1")
-      .html(str_dwld)
-      .addClass("icon-blue")
-      .removeClass("detail-item-1")
-      .removeClass("hide");
-    newLine.find(".date-dwld-icon").addClass("icon-blue icon-floppy");
+    const detailItem1 = find(newLine, ".detail-item-1");
+    html(detailItem1, str_dwld);
+    addClass(detailItem1, "icon-blue");
+    removeClass(detailItem1, "detail-item-1");
+    removeClass(detailItem1, "hide");
+    addClass(find(newLine, ".date-dwld-icon"), "icon-blue icon-floppy");
   } else {
-    newLine.find(".date-dwld-icon").remove();
+    remove(find(newLine, ".date-dwld-icon"));
   }
   displayLine(newLine);
 }
 
-function displayLine(line: JQuery) {
-  $(".tab").append(line);
+function displayLine(line: Element) {
+  document.querySelector(".tab")?.appendChild(line);
 }
 
 function addUserFilter(username: string | null) {
-  const newFilter = $("#default-filter").clone();
-  newFilter.removeClass("hide");
+  const newFilter = document
+    .getElementById("default-filter")!
+    .cloneNode(true) as Element;
+  removeClass(newFilter, "hide");
 
-  newFilter.find(".filter-title").html(username ?? "");
-  newFilter.find(".filter-icon").addClass("icon-user");
+  html(find(newFilter, ".filter-title"), username ?? "");
+  addClass(find(newFilter, ".filter-icon"), "icon-user");
 
-  newFilter.find(".remove-filter").on("click", function () {
-    $(this).parent().remove();
+  on(find(newFilter, ".remove-filter"), "click", function (event: Event) {
+    (event.currentTarget as Element).parentElement?.remove();
 
     current_param.user_id = "-1";
     current_param.pageNumber = 0;
     fillHistoryResult(current_param);
     checkFilters();
-    $(".summary-guests").show();
+    show(document.querySelectorAll(".summary-guests"));
   });
 
-  $(".summary-guests").hide();
-  $(".filter-container").append(newFilter);
+  hide(document.querySelectorAll(".summary-guests"));
+  document.querySelector(".filter-container")?.appendChild(newFilter);
   checkFilters();
 }
 
 function addGuestFilter(username: string) {
-  const newFilter = $("#default-filter").clone();
-  newFilter.removeClass("hide");
+  const newFilter = document
+    .getElementById("default-filter")!
+    .cloneNode(true) as Element;
+  removeClass(newFilter, "hide");
 
-  newFilter.find(".filter-title").html(username);
-  newFilter.find(".filter-icon").addClass("icon-user-secret");
+  html(find(newFilter, ".filter-title"), username);
+  addClass(find(newFilter, ".filter-icon"), "icon-user-secret");
 
-  newFilter.find(".remove-filter").on("click", function () {
-    $(this).parent().remove();
+  on(find(newFilter, ".remove-filter"), "click", function (event: Event) {
+    (event.currentTarget as Element).parentElement?.remove();
 
     current_param.user_id = "-1";
     current_param.pageNumber = 0;
@@ -821,19 +923,22 @@ function addGuestFilter(username: string) {
     checkFilters();
   });
 
-  $(".filter-container").append(newFilter);
+  document.querySelector(".filter-container")?.appendChild(newFilter);
   checkFilters();
 }
 
 function addIpFilter(ip: string) {
-  const newFilter = $("#default-filter").clone();
-  newFilter.removeClass("hide");
+  const newFilter = document
+    .getElementById("default-filter")!
+    .cloneNode(true) as Element;
+  removeClass(newFilter, "hide");
 
-  newFilter.find(".filter-title").html(ip);
-  newFilter.find(".filter-icon").html("IP ").addClass("bold");
+  html(find(newFilter, ".filter-title"), ip);
+  html(find(newFilter, ".filter-icon"), "IP ");
+  addClass(find(newFilter, ".filter-icon"), "bold");
 
-  newFilter.find(".remove-filter").on("click", function () {
-    $(this).parent().remove();
+  on(find(newFilter, ".remove-filter"), "click", function (event: Event) {
+    (event.currentTarget as Element).parentElement?.remove();
 
     current_param.ip = "";
     current_param.pageNumber = 0;
@@ -841,19 +946,21 @@ function addIpFilter(ip: string) {
     checkFilters();
   });
 
-  $(".filter-container").append(newFilter);
+  document.querySelector(".filter-container")?.appendChild(newFilter);
   checkFilters();
 }
 
-function addImageFilter(img_id: string | number) {
-  const newFilter = $("#default-filter").clone();
-  newFilter.removeClass("hide");
+function addImageFilter(img_id: string | number | null) {
+  const newFilter = document
+    .getElementById("default-filter")!
+    .cloneNode(true) as Element;
+  removeClass(newFilter, "hide");
 
-  newFilter.find(".filter-title").html("Image #" + img_id);
-  newFilter.find(".filter-icon").addClass("icon-picture");
+  html(find(newFilter, ".filter-title"), "Image #" + img_id);
+  addClass(find(newFilter, ".filter-icon"), "icon-picture");
 
-  newFilter.find(".remove-filter").on("click", function () {
-    $(this).parent().remove();
+  on(find(newFilter, ".remove-filter"), "click", function (event: Event) {
+    (event.currentTarget as Element).parentElement?.remove();
 
     current_param.image_id = "";
     current_param.pageNumber = 0;
@@ -861,29 +968,42 @@ function addImageFilter(img_id: string | number) {
     checkFilters();
   });
 
-  $(".filter-container").append(newFilter);
+  document.querySelector(".filter-container")?.appendChild(newFilter);
   checkFilters();
 }
 
 function updateArrows(actualPage: number, maxPage: number) {
   if (actualPage == 0) {
-    $(".pagination-arrow.left").addClass("unavailable");
+    addClass(
+      document.querySelectorAll(".pagination-arrow.left"),
+      "unavailable",
+    );
   } else {
-    $(".pagination-arrow.left").removeClass("unavailable");
+    removeClass(
+      document.querySelectorAll(".pagination-arrow.left"),
+      "unavailable",
+    );
   }
 
   if (actualPage == maxPage - 1) {
-    $(".pagination-arrow.rigth").addClass("unavailable");
+    addClass(
+      document.querySelectorAll(".pagination-arrow.rigth"),
+      "unavailable",
+    );
   } else {
-    $(".pagination-arrow.rigth").removeClass("unavailable");
+    removeClass(
+      document.querySelectorAll(".pagination-arrow.rigth"),
+      "unavailable",
+    );
   }
 }
 
 function updatePagination(maxPage: number) {
   updateArrows(current_param.pageNumber, maxPage);
 
-  $(".pagination-item-container").empty();
-  $(".pagination-item-container").append(
+  empty(document.querySelectorAll(".pagination-item-container"));
+  append(
+    document.querySelectorAll(".pagination-item-container"),
     "<a class='actual'>" +
       (current_param.pageNumber + 1) +
       "/" +
@@ -893,11 +1013,14 @@ function updatePagination(maxPage: number) {
 }
 
 function checkFilters() {
-  if ($(".filter-container")[0]!.childElementCount - 1 > 0) {
+  if (
+    document.querySelectorAll(".filter-container")[0]!.childElementCount - 1 >
+    0
+  ) {
     //Check if there are filters
-    $(".filter-tags label").show();
+    show(find(document.querySelectorAll(".filter-tags"), "label"));
   } else {
-    $(".filter-tags label").hide();
+    hide(find(document.querySelectorAll(".filter-tags"), "label"));
   }
 }
 
@@ -912,52 +1035,80 @@ interface GeoIpResult {
   region_name?: string;
 }
 
-jQuery(document).ready(function () {
-  jQuery(".IP").one("mouseenter", function () {
-    const that = $(this);
-    that.data("isOver", true).one("mouseleave", function () {
-      that.removeData("isOver");
-    });
-    GeoIp.get(that.text(), function (data: GeoIpResult) {
-      if (!data.fullName) return;
+ready(function () {
+  document.querySelectorAll(".IP").forEach((ipEl) => {
+    on(
+      ipEl,
+      "mouseenter",
+      function (): void {
+        setData(ipEl, "isOver", true);
+        on(
+          ipEl,
+          "mouseleave",
+          function (): void {
+            removeData(ipEl, "isOver");
+          },
+          { once: true },
+        );
 
-      let content = data.fullName;
-      if (data.latitude && data.region_name) {
-        content +=
-          '\x3Cbr>\x3Ca class="ipGeoOpen" data-lat="' +
-          data.latitude +
-          '" data-lon="' +
-          data.longitude +
-          '"';
-        content += ' href="#">show on a Google Map</a>';
+        // Renamed from the original callback's own `data` parameter name
+        // (rating_user.ts's own GeoIp.get callback hit the identical
+        // shadowing problem against this file's imported `data()` helper
+        // and was renamed the same way).
+        GeoIp.get(textOf(ipEl), function (geoData: GeoIpResult) {
+          if (!geoData.fullName) return;
+
+          let content = geoData.fullName;
+          if (geoData.latitude && geoData.region_name) {
+            content +=
+              '\x3Cbr>\x3Ca class="ipGeoOpen" data-lat="' +
+              geoData.latitude +
+              '" data-lon="' +
+              geoData.longitude +
+              '"';
+            content += ' href="#">show on a Google Map</a>';
+          }
+
+          // Still jQuery: tipTip is a library, ported in P49-B group 2.
+          jQuery(ipEl).tipTip({
+            content: content,
+            keepAlive: true,
+            defaultPosition: "right",
+            maxWidth: 320,
+          });
+          if (data(ipEl, "isOver")) trigger(ipEl, "mouseenter");
+        });
+      },
+      { once: true },
+    );
+  });
+
+  delegate(
+    document,
+    "click",
+    ".ipGeoOpen",
+    function (this: Element, event: Event): void {
+      const lat = data(this, "lat");
+      const lon = data(this, "lon");
+      const parent = this.parentElement;
+      this.remove();
+
+      let appendHtml =
+        '\x3Cbr>\x3Cimg width=300 height=220 src="http://maps.googleapis.com/maps/api/staticmap';
+      appendHtml +=
+        "?sensor=false&size=300x220&zoom=6&markers=size:tiny%7C" +
+        lat +
+        "," +
+        lon +
+        '">';
+
+      if (parent !== null) {
+        append(parent, appendHtml);
       }
 
-      that.tipTip({
-        content: content,
-        keepAlive: true,
-        defaultPosition: "right",
-        maxWidth: 320,
-      });
-      if (that.data("isOver")) that.trigger("mouseenter");
-    });
-  });
-
-  jQuery(document).on("click", ".ipGeoOpen", function () {
-    const lat = jQuery(this).data("lat");
-    const lon = jQuery(this).data("lon");
-    const parent = jQuery(this).parent();
-    jQuery(this).remove();
-
-    let append =
-      '\x3Cbr>\x3Cimg width=300 height=220 src="http://maps.googleapis.com/maps/api/staticmap';
-    append +=
-      "?sensor=false&size=300x220&zoom=6&markers=size:tiny%7C" +
-      lat +
-      "," +
-      lon +
-      '">';
-
-    jQuery(parent).append(append);
-    return false;
-  });
+      // `return false` from a jQuery handler.
+      event.preventDefault();
+      event.stopPropagation();
+    },
+  );
 });

@@ -108,28 +108,55 @@ function paramValue(value: unknown): string {
   }
 }
 
-export function param(data: Record<string, unknown>): string {
-  const parts: string[] = [];
-
-  for (const [key, value] of Object.entries(data)) {
-    if (Array.isArray(value)) {
-      for (const item of value) {
-        parts.push(
-          encodeURIComponent(key + "[]") + "=" + encodeURIComponent(paramValue(item))
-        );
-      }
-      continue;
-    }
-    parts.push(encodeURIComponent(key) + "=" + encodeURIComponent(paramValue(value)));
-  }
-
-  return parts.join("&");
-}
-
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return (
     typeof value === "object" && value !== null && !Array.isArray(value)
   );
+}
+
+/**
+ * jQuery's own `buildParams()` (`src/serialize.js`), non-traditional mode
+ * (this app never sets `ajaxSettings.traditional`): an array repeats the
+ * key with empty brackets for a scalar item, or recurses with its numeric
+ * index for an object/array item; a plain (non-array) object recurses with
+ * each of its own keys bracketed on. Needed for real object-shaped values
+ * like history.ts's own `current_param.types` (`{0: "high", 1: "other"}`,
+ * a plain object, not a real array -- jQuery serialises it as
+ * `types[0]=high&types[1]=other`) -- the previous version here only
+ * special-cased `Array.isArray()` and fell through to `paramValue()`'s
+ * `[object Object]` default for anything else, silently sending a garbage
+ * query value for that shape.
+ */
+function buildParams(prefix: string, obj: unknown, parts: string[]): void {
+  if (Array.isArray(obj)) {
+    obj.forEach((item: unknown, i: number) => {
+      const segment =
+        typeof item === "object" && item !== null ? String(i) : "";
+      buildParams(prefix + "[" + segment + "]", item, parts);
+    });
+
+    return;
+  }
+
+  if (isPlainObject(obj)) {
+    for (const [name, value] of Object.entries(obj)) {
+      buildParams(prefix + "[" + name + "]", value, parts);
+    }
+
+    return;
+  }
+
+  parts.push(encodeURIComponent(prefix) + "=" + encodeURIComponent(paramValue(obj)));
+}
+
+export function param(data: Record<string, unknown>): string {
+  const parts: string[] = [];
+
+  for (const [key, value] of Object.entries(data)) {
+    buildParams(key, value, parts);
+  }
+
+  return parts.join("&");
 }
 
 /**

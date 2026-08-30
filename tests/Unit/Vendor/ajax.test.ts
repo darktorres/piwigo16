@@ -55,6 +55,16 @@ describe("param()", () => {
   it("repeats an array key with []", () => {
     expect(param({ ids: [1, 2] })).toBe("ids%5B%5D=1&ids%5B%5D=2");
   });
+
+  it("recurses into a plain (non-array) object value, bracketing each key", () => {
+    // history.ts's own current_param.types shape -- a plain object with
+    // numeric-looking keys, not a real array, so jQuery's own
+    // buildParams() takes its object branch (types[0]=high&types[1]=other),
+    // not its array branch (types[]=high&types[]=other).
+    expect(param({ types: { 0: "high", 1: "other" } })).toBe(
+      "types%5B0%5D=high&types%5B1%5D=other"
+    );
+  });
 });
 
 describe("ajax() request shaping", () => {

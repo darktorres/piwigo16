@@ -1,0 +1,118 @@
+<?php
+
+declare(strict_types=1);
+
+use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
+
+/**
+ * P49-A conversion of themes/admin/default/js/photos_add_direct.ts -- 0%
+ * prior live-interaction coverage (PhotosAddDirectPageRendererTest.php
+ * only ever asserts the rendered page, or drives a preference/config
+ * change directly through the server rather than the client-side handler
+ * that would normally trigger it).
+ *
+ * Three handlers this file wires up have no reachable template call
+ * site at all (confirmed by grep across every admin template, matching
+ * the same class of finding already recorded for cat_modify.ts's
+ * `.unlock-album`): `#showPermissions`/`.showFieldset`,
+ * `#uploadWarningsSummary a.showInfo` + its `#uploadWarnings` target,
+ * and (unreachably in this fixture, since it always has albums)
+ * the "add your first album" onboarding flow (`#btnFirstAlbum` and
+ * friends, gated on `nb_albums === 0`). None are fixed here -- P49 is
+ * translation-only, and a handler binding zero elements is harmless.
+ *
+ * `.pluploadQueue()` (P49-B group 7, live subset) stays jQuery; only the
+ * DOM work inside its own preinit/init callbacks converted. `$.alert()`
+ * (jquery-confirm, group 5) is untouched and unexercised here (it needs a
+ * real ambiguous-filename detection during a real upload).
+ */
+it('follows the format-mode switch\'s data-url and marks the slider loading', function (): void {
+    $snapshot = H::snapshotConfig(['enable_formats']);
+    H::setConfigValue('enable_formats', 'true');
+
+    try {
+        $page = H::asAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=photos_add&album=1');
+        $page->assertPresent('.format-mode-group-manager .switch');
+
+        $url = $page->script(
+            "document.querySelector('.format-mode-group-manager .switch').dataset.switchFormatModeUrl"
+        );
+        expect($url)
+            ->toContain('formats');
+
+        // Overwrite the data-url to a same-document hash first -- proves
+        // the handler's own logic (read data-switch-format-mode-url, add
+        // the loading class, hand off to window.location.replace()) by
+        // driving it through a real `location.replace()` call that
+        // doesn't leave the page, rather than either following the real
+        // destination (which needs its own album/most-recent-image
+        // context this test doesn't control) or trying to stub
+        // `location.replace` itself (non-writable in a real browser).
+        $page->script(
+            "document.querySelector('.format-mode-group-manager .switch').dataset.switchFormatModeUrl = '#stub-format-mode'"
+        );
+
+        $page->click('.format-mode-group-manager .switch');
+
+        expect($page->script('window.location.hash'))
+            ->toBe('#stub-format-mode');
+        expect($page->script("document.querySelector('.switch .slider').classList.contains('loading')"))
+            ->toBeTrue();
+
+        H::assertNoServerErrors($page, 'photos_add_direct format-mode switch');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('toggles the upload-options panel open and closed', function (): void {
+    $page = H::asAdmin($this);
+    $page = H::navigateOk($page, '/admin.php?page=photos_add&album=1');
+    $page->assertPresent('#uploadOptionsContent');
+
+    $waitForDisplay = static function (mixed $page, string $expected, string $failMessage): void {
+        $page->script(
+            <<<JS
+            new Promise((resolve, reject) => {
+                const deadline = Date.now() + 5000;
+                const check = () => {
+                    if (getComputedStyle(document.getElementById('uploadOptionsContent')).display === '{$expected}') {
+                        return resolve(true);
+                    }
+                    if (Date.now() > deadline) {
+                        return reject(new Error('{$failMessage}'));
+                    }
+                    setTimeout(check, 100);
+                };
+                check();
+            })
+            JS
+            ,
+        );
+    };
+    $sleep = static function (mixed $page, int $ms): void {
+        $page->script("new Promise((resolve) => setTimeout(resolve, {$ms}))");
+    };
+
+    expect($page->script("getComputedStyle(document.getElementById('uploadOptionsContent')).display"))
+        ->toBe('none');
+
+    $page->click('#uploadOptions');
+    $waitForDisplay($page, 'block', 'upload options panel never opened');
+    expect($page->script("document.getElementById('uploadOptions').classList.contains('options-open')"))
+        ->toBeTrue();
+
+    // slideToggle() has no completion callback here, but the same
+    // animation-duration race documented in user_activity.ts's own test
+    // applies: give it time to fully settle before toggling again.
+    $sleep($page, 500);
+
+    $page->click('#uploadOptions');
+    $waitForDisplay($page, 'none', 'upload options panel never closed');
+    expect($page->script("document.getElementById('uploadOptions').classList.contains('options-open')"))
+        ->toBeFalse();
+
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'photos_add_direct upload-options toggle');
+});

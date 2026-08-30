@@ -183,7 +183,7 @@ final class FilterPanelRenderer
         $template->assignContext(new FilterPanelPageContext(
             confChecksumComputeBlocksize: $currentConfig->checksumComputeBlocksize,
             prefilters: $prefilters,
-            filter: $bulk_manager_filter,
+            filter: $filter,
             selection: $collection,
             allElements: $catElementsId,
             start: $pageStart,

@@ -12,7 +12,7 @@
     <ul id="filterList">
       <li
         id="filter_prefilter"
-        {if !isset($filter['prefilter'])}
+        {if $filter->prefilter === null}
         class="u-hidden"
         {/if}
       >
@@ -20,7 +20,7 @@
           type="checkbox"
           name="filter_prefilter_use"
           class="useFilterCheckbox"
-          {if isset($filter['prefilter'])}
+          {if $filter->prefilter !== null}
           checked="checked"
           {/if}
         >
@@ -39,7 +39,7 @@
             <option
               value="{$prefilter['ID']}"
               class="{$optionClass}"
-              {if isset($filter['prefilter']) && $filter['prefilter'] == $prefilter['ID']}
+              {if $filter->prefilter !== null && $filter->prefilter === $prefilter['ID']}
               selected="selected"
               {/if}
             >{$prefilter['NAME']}</option>
@@ -48,19 +48,19 @@
         <a
           id="empty_caddie"
           href="admin.php?page=batch_manager&amp;action=empty_caddie&amp;pwg_token={$CSRF_TOKEN}"
-          class="{if !isset($filter['prefilter']) || $filter['prefilter'] != 'caddie'}u-hidden{/if}"
+          class="{if $filter->prefilter === null || $filter->prefilter !== 'caddie'}u-hidden{/if}"
         >{='Empty caddie'|translate}</a>
         <a
           n:if="$NB_ORPHANS > 0"
           id="delete_orphans"
           href="#"
-          class="icon-trash{if !isset($filter['prefilter']) || $filter['prefilter'] != 'no_album'} u-hidden{/if}"
+          class="icon-trash{if $filter->prefilter === null || $filter->prefilter !== 'no_album'} u-hidden{/if}"
         >{='Delete %d orphan photos'|translate:$NB_ORPHANS}</a>
         <a
           n:if="$NB_NO_MD5SUM > 0"
           id="sync_md5sum"
           href="#"
-          class="icon-arrows-cw{if !isset($filter['prefilter']) || $filter['prefilter'] != 'no_sync_md5sum'} u-hidden{/if}"
+          class="icon-arrows-cw{if $filter->prefilter === null || $filter->prefilter !== 'no_sync_md5sum'} u-hidden{/if}"
         >{='Compute %d missing checksums'|translate:$NB_NO_MD5SUM}</a>
 
         <span id="add_md5sum" class="u-hidden">
@@ -95,13 +95,13 @@
 
         <span
           id="duplicates_options"
-          class="{if !isset($filter['prefilter']) || $filter['prefilter'] != 'duplicates'}u-hidden{/if}"
+          class="{if $filter->prefilter === null || $filter->prefilter !== 'duplicates'}u-hidden{/if}"
         >
           {='based on'|translate}
           <label class="font-checkbox"><span class="icon-check"></span><input
               type="checkbox"
               name="filter_duplicates_filename"
-              {if isset($filter['duplicates_filename'])}
+              {if $filter->duplicateFlags->filename}
               checked="checked"
               {/if}
             > {='file name'|translate}</label>
@@ -110,7 +110,7 @@
             ></span><input
               type="checkbox"
               name="filter_duplicates_checksum"
-              {if isset($filter['duplicates_checksum'])}
+              {if $filter->duplicateFlags->checksum}
               checked="checked"
               {/if}
             > {='checksum'|translate} <i
@@ -120,14 +120,14 @@
           <label class="font-checkbox"><span class="icon-check"></span><input
               type="checkbox"
               name="filter_duplicates_date"
-              {if isset($filter['duplicates_date']) || (isset($filter['prefilter']) && $filter['prefilter'] != 'duplicates')}
+              {if $filter->duplicateFlags->date || ($filter->prefilter !== null && $filter->prefilter !== 'duplicates')}
               checked="checked"
               {/if}
             > {='date & time'|translate}</label>
           <label class="font-checkbox"><span class="icon-check"></span><input
               type="checkbox"
               name="filter_duplicates_dimensions"
-              {if isset($filter['duplicates_dimensions'])}
+              {if $filter->duplicateFlags->dimensions}
               checked="checked"
               {/if}
             > {='width & height'|translate}</label>
@@ -136,7 +136,7 @@
       {* categories *}
       <li
         id="filter_category"
-        {if !isset($filter['category'])}
+        {if $filter->category === null}
         class="u-hidden"
         {/if}
       >
@@ -144,7 +144,7 @@
           type="checkbox"
           name="filter_category_use"
           class="useFilterCheckbox"
-          {if isset($filter['category'])}
+          {if $filter->category !== null}
           checked="checked"
           {/if}
         >
@@ -178,7 +178,7 @@
           <label class="font-checkbox"><span class="icon-check"></span><input
               type="checkbox"
               name="filter_category_recursive"
-              {if isset($filter['category_recursive'])}
+              {if $filter->categoryRecursive}
               checked="checked"
               {/if}
             > {='include child albums'|translate}</label>
@@ -191,12 +191,12 @@
         </p>
       </li>
 
-      <li id="filter_tags" {if !isset($filter['tags'])} class="u-hidden" {/if}>
+      <li id="filter_tags" {if !$filter->tagsUsed} class="u-hidden" {/if}>
         <input
           type="checkbox"
           name="filter_tags_use"
           class="useFilterCheckbox"
-          {if isset($filter['tags'])}
+          {if $filter->tagsUsed}
           checked="checked"
           {/if}
         >
@@ -219,7 +219,7 @@
               type="radio"
               name="tag_mode"
               value="AND"
-              {if !isset($filter['tag_mode']) || $filter['tag_mode'] == 'AND'}
+              {if $filter->tagMode === null || $filter->tagMode === 'AND'}
               checked="checked"
               {/if}
             > {='All tags'|translate}</span></label>
@@ -229,23 +229,18 @@
               type="radio"
               name="tag_mode"
               value="OR"
-              {if isset($filter['tag_mode']) && $filter['tag_mode'] == 'OR'}
+              {if $filter->tagMode !== null && $filter->tagMode === 'OR'}
               checked="checked"
               {/if}
             > {='Any tag'|translate}</span></label>
       </li>
 
-      <li
-        id="filter_level"
-        {if !isset($filter['level'])}
-        class="u-hidden"
-        {/if}
-      >
+      <li id="filter_level" {if $filter->level === null} class="u-hidden" {/if}>
         <input
           type="checkbox"
           name="filter_level_use"
           class="useFilterCheckbox"
-          {if isset($filter['level'])}
+          {if $filter->level !== null}
           checked="checked"
           {/if}
         >
@@ -265,7 +260,7 @@
         <label class="font-checkbox"><span class="icon-check"></span><input
             type="checkbox"
             name="filter_level_include_lower"
-            {if isset($filter['level_include_lower'])}
+            {if $filter->levelIncludeLower}
             checked="checked"
             {/if}
           > {='include photos with lower privacy level'|translate}</label>
@@ -273,7 +268,7 @@
 
       <li
         id="filter_dimension"
-        {if !isset($filter['dimension'])}
+        {if !$filter->dimensionUsed}
         class="u-hidden"
         {/if}
       >
@@ -281,7 +276,7 @@
           type="checkbox"
           name="filter_dimension_use"
           class="useFilterCheckbox"
-          {if isset($filter['dimension'])}
+          {if $filter->dimensionUsed}
           checked="checked"
           {/if}
         >
@@ -410,17 +405,12 @@
         </blockquote>
       </li>
 
-      <li
-        id="filter_search"
-        {if !isset($filter['search'])}
-        class="u-hidden"
-        {/if}
-      >
+      <li id="filter_search" {if !$filter->searchUsed} class="u-hidden" {/if}>
         <input
           type="checkbox"
           name="filter_search_use"
           class="useFilterCheckbox"
-          {if isset($filter['search'])}
+          {if $filter->searchUsed}
           checked="checked"
           {/if}
         >
@@ -451,7 +441,7 @@
 
       <li
         id="filter_filesize"
-        {if !isset($filter['filesize'])}
+        {if !$filter->filesizeUsed}
         class="u-hidden"
         {/if}
       >
@@ -459,7 +449,7 @@
           type="checkbox"
           name="filter_filesize_use"
           class="useFilterCheckbox"
-          {if isset($filter['filesize'])}
+          {if $filter->filesizeUsed}
           checked="checked"
           {/if}
         >
@@ -508,43 +498,43 @@
         <div class="addFilter-dropdown">
           <a
             data-value="filter_prefilter"
-            {if isset($filter['prefilter'])}
+            {if $filter->prefilter !== null}
             class="disabled"
             {/if}
           >{='Predefined filter'|translate}</a>
           <a
             data-value="filter_category"
-            {if isset($filter['category'])}
+            {if $filter->category !== null}
             class="disabled"
             {/if}
           >{='Album'|translate}</a>
           <a
             data-value="filter_tags"
-            {if isset($filter['tags'])}
+            {if $filter->tagsUsed}
             class="disabled"
             {/if}
           >{='Tags'|translate}</a>
           <a
             data-value="filter_level"
-            {if isset($filter['level'])}
+            {if $filter->level !== null}
             class="disabled"
             {/if}
           >{='Privacy level'|translate}</a>
           <a
             data-value="filter_dimension"
-            {if isset($filter['dimension'])}
+            {if $filter->dimensionUsed}
             class="disabled"
             {/if}
           >{='Dimensions'|translate}</a>
           <a
             data-value="filter_filesize"
-            {if isset($filter['filesize'])}
+            {if $filter->filesizeUsed}
             class="disabled"
             {/if}
           >{='Filesize'|translate}</a>
           <a
             data-value="filter_search"
-            {if isset($filter['search'])}
+            {if $filter->searchUsed}
             class="disabled"
             {/if}
           >{='Search'|translate}</a>

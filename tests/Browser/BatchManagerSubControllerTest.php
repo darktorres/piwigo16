@@ -1429,3 +1429,51 @@ it('aggregates portrait/square/panorama ratio buckets from real distinct image d
     expect($resetMatch[2])
         ->toBe($ratioValues[count($ratioValues) - 1]);
 });
+
+/**
+ * The filter panel's own checkbox/expanded state, which is what
+ * BulkManagerFilter's four `*Used` flags exist for.
+ *
+ * Every `$filter['xxx']` read in batch_manager_filter.inc.latte used to be
+ * a raw key-presence test, and P58-B3 replaced the bag with the VO that was
+ * already being built one line away. Nine of the eleven fields answer "did
+ * the user enable this filter" through their own null/empty default. Four
+ * cannot: `dimension`, `filesize`, `tags` and `search` are each written by
+ * their own `filter_*_use` checkbox, and the writer commits the key even
+ * when the fields underneath come back empty -- so "enabled but blank" is a
+ * real state that `isEmpty()` cannot tell from "not enabled".
+ *
+ * That is the state asserted here, because it is the one where the obvious
+ * conversion is wrong: with `!$filter->dimension->isEmpty()` in place of
+ * `$filter->dimensionUsed`, the panel collapses the section the admin just
+ * ticked. No golden fixture reaches it -- admin-batch.html captures the
+ * default, unfiltered page, where every one of these guards is false.
+ */
+it('keeps a filter section expanded and ticked when it is enabled with no values filled in', function (): void {
+    $page = H::asAdmin($this);
+
+    // filter_dimension_use with every dimension field blank: the writer
+    // stores $bulk_manager_filter['dimension'] = [], so the key is present
+    // and DimensionFilter::isEmpty() is true at the same time.
+    $result = bmPost($page, [
+        'submitFilter' => '1',
+        'filter_dimension_use' => '1',
+        'filter_dimension_min_width' => '',
+        'filter_dimension_max_width' => '',
+        'filter_dimension_min_height' => '',
+        'filter_dimension_max_height' => '',
+        'filter_dimension_min_ratio' => '',
+        'filter_dimension_max_ratio' => '',
+    ]);
+    expect($result['status'])->toBe(200);
+
+    $page = H::navigateOk($page, '/admin.php?page=batch_manager');
+    $html = H::rawWebpage($page)->content();
+
+    // The section is shown...
+    expect($html)
+        ->toMatch('~<li\s+id="filter_dimension"(?![^>]*u-hidden)~');
+    // ...and its own "use this filter" box is ticked.
+    $page->assertChecked('input[name="filter_dimension_use"]');
+    $page->assertNoJavaScriptErrors();
+});

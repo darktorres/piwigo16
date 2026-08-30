@@ -14,17 +14,25 @@ namespace Piwigo\Admin\BatchManager\Projection;
  * \Piwigo\Admin\BatchManager\FilterPanelRenderer}) immediately after
  * reading the raw session array, via {@see self::fromArray()}.
  *
- * The session bag itself deliberately stays a raw array -- two real,
- * separately-confirmed boundaries, unaffected by this VO: (1)
- * `Controller\Admin\Event\BatchManagerRegisterFilters`'s own array payload,
- * a genuine plugin-extensibility dispatch point (no registered handler
- * today, but the event exists specifically so a plugin could splice in an
- * unknown key `fromArray()` wouldn't know to preserve); (2) {@see
- * \Piwigo\Admin\BatchManager\Projection\FilterPanelPageContext::$filter},
- * whose own Latte template drives checkbox/selected state off raw
- * `isset($filter['xxx'])` key-presence checks for nearly every field --
- * unlike other `*PageContext` list-of-rows conversions, that's not a stale
- * `toArray()` round trip, the template genuinely wants the raw shape.
+ * The session bag itself deliberately stays a raw array at ONE remaining
+ * boundary: `Controller\Admin\Event\BatchManagerRegisterFilters`'s own
+ * array payload, a genuine plugin-extensibility dispatch point (no
+ * registered handler today, but the event exists specifically so a plugin
+ * could splice in an unknown key `fromArray()` wouldn't know to preserve).
+ *
+ * {@see \Piwigo\Admin\BatchManager\Projection\FilterPanelPageContext::$filter}
+ * used to be a second such boundary, on the grounds that its Latte
+ * template drives checkbox/selected state off raw `isset($filter['xxx'])`
+ * key-presence checks. That was true and is no longer a reason (P58-B3):
+ * the question those checks ask is "did the user enable this filter", and
+ * key presence was only how an array could say it. Nine of the eleven
+ * fields already answered it through their own null/empty default; the
+ * four that could not -- `dimension`, `filesize`, `tags` and `search`, each
+ * written by its own `filter_*_use` checkbox and therefore present-but-empty
+ * whenever the box is ticked with nothing filled in -- now carry an
+ * explicit `*Used` bool. That is a gap in the model being closed, not a
+ * Smarty idiom being preserved: without it the VO could not represent
+ * "enabled but blank" at all.
  * {@see \Piwigo\Controller\Admin\BatchManagerSubController::
  * resolveSessionFilter()} (the write side) is untouched for the same
  * reason its own docblock already gives: it can't keep a precise array
@@ -50,6 +58,10 @@ final readonly class BulkManagerFilter
         public DimensionFilter $dimension = new DimensionFilter(),
         public FilesizeFilter $filesize = new FilesizeFilter(),
         public ?string $searchQuery = null,
+        public bool $dimensionUsed = false,
+        public bool $filesizeUsed = false,
+        public bool $tagsUsed = false,
+        public bool $searchUsed = false,
     ) {}
 
     /**
@@ -83,6 +95,10 @@ final readonly class BulkManagerFilter
             dimension: DimensionFilter::fromArray(self::stringKeyedSubArray($bulkFilter['dimension'] ?? null)),
             filesize: FilesizeFilter::fromArray(self::stringKeyedSubArray($bulkFilter['filesize'] ?? null)),
             searchQuery: $searchQuery,
+            dimensionUsed: isset($bulkFilter['dimension']),
+            filesizeUsed: isset($bulkFilter['filesize']),
+            tagsUsed: isset($bulkFilter['tags']),
+            searchUsed: isset($bulkFilter['search']),
         );
     }
 

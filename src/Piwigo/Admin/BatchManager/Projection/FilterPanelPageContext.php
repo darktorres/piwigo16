@@ -15,7 +15,6 @@ final readonly class FilterPanelPageContext implements TemplatePageContext
 {
     /**
      * @param list<array<mixed>> $prefilters
-     * @param array<string, mixed> $filter
      * @param array<mixed> $selection
      * @param array<array-key, int|string|float|bool> $allElements
      * @param array<int, string> $filterLevelOptions
@@ -25,7 +24,7 @@ final readonly class FilterPanelPageContext implements TemplatePageContext
     public function __construct(
         public int $confChecksumComputeBlocksize,
         public array $prefilters,
-        public array $filter,
+        public BulkManagerFilter $filter,
         public array $selection,
         public array $allElements,
         public int $start,

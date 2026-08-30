@@ -16,7 +16,7 @@
     {='List'|translate}
     <span class="count-badge"> {count($all_elements)}</span>
   </legend>
-  {if !empty($elements)}
+  {if $elements !== []}
     <div class="pagination-bar">
       <div class="pagination-per-page">
         <span>{='photos per page'|translate} :</span>

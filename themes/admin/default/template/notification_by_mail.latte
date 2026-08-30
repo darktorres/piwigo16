@@ -123,7 +123,7 @@
   </fieldset>{* isset $subscribe*}
 
   {if isset($send)}
-    {if empty($send['users'])}
+    {if $send['users'] === []}
       <p>{='There is no available subscribers to mail.'|translate}</p>
       <p>
         {='Subscribers could be listed (available) only if there is new elements to notify.'|translate}<br>

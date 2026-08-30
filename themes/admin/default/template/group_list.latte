@@ -213,7 +213,7 @@
 
     {var $color_tab = ["icon-red", "icon-blue", "icon-yellow", "icon-purple", "icon-green"]}
 
-    {if !empty($groups)}
+    {if $groups !== []}
       {foreach $groups as $group}
         {var $color_id = $group['id'] % 5}
         {include groupContent, grp_id: $group['id'], grp_name: $group['name'], grp_members: $group['members'], grp_color: $color_tab[$color_id], grp_is_default: $group['isDefault']}

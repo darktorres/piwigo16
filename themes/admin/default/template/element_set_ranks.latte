@@ -1,30 +1,31 @@
 {templateType Piwigo\Admin\Projection\ElementSetRanksView}
 <form action="{$formAction|noescape}" method="post" id="element_set_ranks">
   <input type="hidden" name="pwg_token" value="{$csrfToken}">
-  <fieldset n:if="!empty($thumbnails)">
+  <fieldset n:if="$thumbnails !== []">
     <legend><span
         class="icon-sort-alt-down icon-blue"
       ></span>{='Manual order'|translate}</legend>
-    {if !empty($thumbnails)}
-      <p>{='Drag to re-order'|translate}</p>
-      <ul class="thumbnails">
-        <li n:foreach="$thumbnails as $thumbnail" class="rank-of-image">
-          <img
-            src="{$thumbnail->tnSrc|noescape}"
-            class="thumbnail"
-            alt="{$thumbnail->name}"
-            title="{$thumbnail->name}"
-            style="--tn-width:{$thumbnail->width}px; --tn-height:{$thumbnail->height}px;"
-          >
-          <input
-            type="text"
-            name="rank_of_image[{$thumbnail->id}]"
-            value="{$thumbnail->rank}"
-            class="u-hidden"
-          >
-        </li>
-      </ul>
-    {/if}
+    {* No second $thumbnails guard: the fieldset above already carries it,
+       and Latte emits nothing between the two, so the inner {if} was a
+       duplicate the empty() spelling hid (P58-B2). *}
+    <p>{='Drag to re-order'|translate}</p>
+    <ul class="thumbnails">
+      <li n:foreach="$thumbnails as $thumbnail" class="rank-of-image">
+        <img
+          src="{$thumbnail->tnSrc|noescape}"
+          class="thumbnail"
+          alt="{$thumbnail->name}"
+          title="{$thumbnail->name}"
+          style="--tn-width:{$thumbnail->width}px; --tn-height:{$thumbnail->height}px;"
+        >
+        <input
+          type="text"
+          name="rank_of_image[{$thumbnail->id}]"
+          value="{$thumbnail->rank}"
+          class="u-hidden"
+        >
+      </li>
+    </ul>
   </fieldset>
 
   <fieldset>

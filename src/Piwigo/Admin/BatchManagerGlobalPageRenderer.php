@@ -474,7 +474,7 @@ final readonly class BatchManagerGlobalPageRenderer
 
         $in_caddie = $prefilter_value === 'caddie';
 
-        $associated_tags = null;
+        $associated_tags = [];
         if (count($cat_elements_id) > 0) {
             // remove tags
             $associated_tags = $this->tagService

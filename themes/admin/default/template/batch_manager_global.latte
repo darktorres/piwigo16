@@ -17,7 +17,7 @@
           class='icon-check icon-blue '
         ></span>{='Selection'|translate}</legend>
 
-      {if !empty($thumbnails)}
+      {if $thumbnails !== []}
         <p id="checkActions">
           {if $nbThumbsSet > $nbThumbsPage}
             <a href="#" id="selectAll">{='The whole page'|translate}</a>
@@ -138,12 +138,12 @@
               >{='Associate to album'|translate}</option>
               <option value="move">{='Move to album'|translate}</option>
               <option
-                n:if="!empty($associated_categories)"
+                n:if="$associated_categories !== []"
                 value="dissociate"
               >{='Dissociate from album'|translate}</option>
               <option value="add_tags">{='Add tags'|translate}</option>
               <option
-                n:if="!empty($associatedTags)"
+                n:if="$associatedTags !== []"
                 value="del_tags"
               >{='remove tags'|translate}</option>
               <option value="author">{='Set author'|translate}</option>
@@ -252,7 +252,7 @@
           <!-- del_tags -->
           <div id="action_del_tags" class="bulkAction">
             <select
-              n:if="!empty($associatedTags)"
+              n:if="$associatedTags !== []"
               data-selectize="tags"
               name="del_tags[]"
               multiple

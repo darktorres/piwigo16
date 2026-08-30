@@ -1,5 +1,5 @@
 {templateType Piwigo\Controller\Admin\Projection\SiteManagerView}
-<table n:if="!empty($sites)" class="table2">
+<table n:if="$sites !== []" class="table2">
   <tr class="throw">
     <td>{='Directory'|translate}</td>
     <td>{='Actions'|translate}</td>
@@ -23,7 +23,7 @@
           title="{='delete this site and all its attached elements'|translate}"
         >{='delete'|translate}</a>]
       {/if}
-      {if !empty($site->pluginLinks)}
+      {if $site->pluginLinks !== []}
         <br>
         {foreach $site->pluginLinks as $plugin_link}
           [<a

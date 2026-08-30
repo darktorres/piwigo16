@@ -20,9 +20,13 @@ use Piwigo\Template\Projection\QuickSearchView;
 /**
  * `batch_manager_global.latte`'s own typed view, constructed by {@see
  * \Piwigo\Admin\BatchManagerGlobalPageRenderer::render()}.
- * `$associatedTags` and `$navbar` are genuinely optional -- both are
- * only ever computed inside the renderer's own
- * `count($cat_elements_id) > 0` branch. `$thumbParams` used to be too,
+ * `$navbar` is genuinely optional -- only ever computed inside the
+ * renderer's own `count($cat_elements_id) > 0` branch. `$associatedTags`
+ * was too, and is a plain list now: its two readers both ask only
+ * whether there is a tag to offer removing, so `null` (no elements) and
+ * `[]` (elements with no tag in common) were the same answer wearing two
+ * spellings, and the only thing the nullable bought was an `!empty()`
+ * that had to cover both (P58-B2). `$thumbParams` used to be too,
  * and the template called `->maxWidth()` on it unguarded; it is
  * non-nullable now, its `ImageStdParams::getByType()` lookup hoisted out
  * of that branch, since the lookup never depended on the element set
@@ -63,7 +67,7 @@ use Piwigo\Template\Projection\QuickSearchView;
 final readonly class BatchManagerGlobalView implements View, HasPageAssets, ExposesPageData
 {
     /**
-     * @param list<array{id: int, name: string, url_name: string, lastmodified: string, counter: int}>|null $associatedTags
+     * @param list<array{id: int, name: string, url_name: string, lastmodified: string, counter: int}> $associatedTags
      * @param array<array-key, string> $levelOptions
      * @param array<string, string> $delDerivativesTypes
      * @param array<string, string> $generateDerivativesTypes
@@ -74,7 +78,7 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
      */
     public function __construct(
         public bool $inCaddie,
-        public ?array $associatedTags,
+        public array $associatedTags,
         public string $dateCreation,
         public array $levelOptions,
         public int $levelOptionsSelected,

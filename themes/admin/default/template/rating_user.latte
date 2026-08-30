@@ -67,9 +67,9 @@
           title="First: {$rating->firstDate}"
         >{$rating->lastDate}</td>
         <td>{$rating->count}</td><td>{$rating->avg|number:2}</td>
-        <td>{$rating->cv|number:3}</td><td>{$rating->cd|number:3}</td><td>{if !empty($rating->cdTop)}{$rating->cdTop|number:3}{/if}</td>
+        <td>{$rating->cv|number:3}</td><td>{$rating->cd|number:3}</td><td>{if $rating->cdTop !== null}{$rating->cdTop|number:3}{/if}</td>
         {foreach $rating->rates as $rate => $rates}
-          <td>{if !empty($rates)}
+          <td>{if $rates !== []}
               {capture $rate_over}{foreach $rates as $rate_arr}{breakIf $iterator->counter0 > 29}<img src="{$imageUrls[$rate_arr]->tn|noescape}" alt="thumb-{$rate_arr}" width="{$tnWidth}" height="{$tnWidth}">{/foreach}{/capture}
               <a
                 title="{=(string) $rate_over|htmlspecialchars|noescape}"

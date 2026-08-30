@@ -1,6 +1,15 @@
 import "./common";
 
 import { pwg_getPageString } from "../../../default/js/page-data";
+import {
+  css,
+  hide,
+  html,
+  is,
+  on,
+  show,
+  toggle,
+} from "../../../default/js/vendor/dom";
 export {};
 
 const title_msg = pwg_getPageString(
@@ -9,13 +18,17 @@ const title_msg = pwg_getPageString(
 const confirm_msg = pwg_getPageString("Yes, I am sure");
 const cancel_msg = pwg_getPageString("No, I have changed my mind");
 
-$(".restore-settings-button").each(function () {
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title_msg,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg,
+document
+  .querySelectorAll(".restore-settings-button")
+  .forEach(function (button) {
+    // Still jQuery: pwg_jconfirm_follow_href wraps jquery-confirm, ported
+    // in P49-B group 5.
+    jQuery(button).pwg_jconfirm_follow_href({
+      alert_title: title_msg,
+      alert_confirm: confirm_msg,
+      alert_cancel: cancel_msg,
+    });
   });
-});
 
 (function () {
   const labelMaxWidth = pwg_getPageString("Maximum width"),
@@ -24,48 +37,67 @@ $(".restore-settings-button").each(function () {
     labelHeight = pwg_getPageString("Height");
 
   function toggleResizeFields(_size: string) {
-    const checkbox = jQuery("[name=original_resize]");
-    const needToggle = jQuery("#sizeEdit-original");
+    const checkbox = document.querySelectorAll("[name=original_resize]");
+    const needToggle = document.querySelectorAll("#sizeEdit-original");
 
-    if (jQuery(checkbox).is(":checked")) {
-      needToggle.show();
+    if (is(checkbox, ":checked")) {
+      show(needToggle);
     } else {
-      needToggle.hide();
+      hide(needToggle);
     }
   }
 
   toggleResizeFields("original");
-  jQuery("[name=original_resize]").click(function () {
-    toggleResizeFields("original");
-  });
+  on(
+    document.querySelectorAll("[name=original_resize]"),
+    "click",
+    function (): void {
+      toggleResizeFields("original");
+    },
+  );
 
-  jQuery("a[id^='sizeEditOpen-']").click(function () {
-    const sizeName = jQuery(this).attr("id")!.split("-")[1];
-    jQuery("#sizeEdit-" + sizeName).toggle();
-    jQuery(this).hide();
-    return false;
-  });
+  on(
+    document.querySelectorAll("a[id^='sizeEditOpen-']"),
+    "click",
+    function (event: Event): void {
+      const link = event.currentTarget as HTMLElement;
+      const sizeName = link.id.split("-")[1];
+      toggle(document.querySelectorAll("#sizeEdit-" + sizeName));
+      hide(link);
+      event.preventDefault();
+      event.stopPropagation();
+    },
+  );
 
-  jQuery(".cropToggle").click(function () {
-    const labelBoxWidth = jQuery(this)
-      .parents("table.sizeEditForm")
-      .find("td.sizeEditWidth");
-    const labelBoxHeight = jQuery(this)
-      .parents("table.sizeEditForm")
-      .find("td.sizeEditHeight");
+  on(
+    document.querySelectorAll(".cropToggle"),
+    "click",
+    function (event: Event): void {
+      const checkbox = event.currentTarget as HTMLElement;
+      const table = checkbox.closest("table.sizeEditForm");
+      const labelBoxWidth =
+        table === null ? [] : table.querySelectorAll("td.sizeEditWidth");
+      const labelBoxHeight =
+        table === null ? [] : table.querySelectorAll("td.sizeEditHeight");
 
-    if (jQuery(this).is(":checked")) {
-      jQuery(labelBoxWidth).html(labelWidth);
-      jQuery(labelBoxHeight).html(labelHeight);
-    } else {
-      jQuery(labelBoxWidth).html(labelMaxWidth);
-      jQuery(labelBoxHeight).html(labelMaxHeight);
-    }
-  });
+      if (is(checkbox, ":checked")) {
+        html(labelBoxWidth, labelWidth);
+        html(labelBoxHeight, labelHeight);
+      } else {
+        html(labelBoxWidth, labelMaxWidth);
+        html(labelBoxHeight, labelMaxHeight);
+      }
+    },
+  );
 
-  jQuery("#showDetails").click(function () {
-    jQuery(".sizeDetails").show();
-    jQuery(this).css("visibility", "hidden");
-    return false;
-  });
+  on(
+    document.querySelectorAll("#showDetails"),
+    "click",
+    function (event: Event): void {
+      show(document.querySelectorAll(".sizeDetails"));
+      css(event.currentTarget as Element, "visibility", "hidden");
+      event.preventDefault();
+      event.stopPropagation();
+    },
+  );
 })();

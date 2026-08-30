@@ -113,7 +113,7 @@
                 name="w[position]"
                 type="radio"
                 value="topright"
-                {if $watermark['position'] == 'topright'}
+                {if $watermark['position'] === 'topright'}
                 checked="checked"
                 {/if}
               ></label>
@@ -123,7 +123,7 @@
                 name="w[position]"
                 type="radio"
                 value="topleft"
-                {if $watermark['position'] == 'topleft'}
+                {if $watermark['position'] === 'topleft'}
                 checked="checked"
                 {/if}
               > {='top left corner'|translate}</label>
@@ -133,7 +133,7 @@
                 name="w[position]"
                 type="radio"
                 value="middle"
-                {if $watermark['position'] == 'middle'}
+                {if $watermark['position'] === 'middle'}
                 checked="checked"
                 {/if}
               > {='middle'|translate}</label>
@@ -145,7 +145,7 @@
                 name="w[position]"
                 type="radio"
                 value="bottomright"
-                {if $watermark['position'] == 'bottomright'}
+                {if $watermark['position'] === 'bottomright'}
                 checked="checked"
                 {/if}
               ></label>
@@ -155,7 +155,7 @@
                 name="w[position]"
                 type="radio"
                 value="bottomleft"
-                {if $watermark['position'] == 'bottomleft'}
+                {if $watermark['position'] === 'bottomleft'}
                 checked="checked"
                 {/if}
               > {='bottom left corner'|translate}</label>
@@ -167,7 +167,7 @@
               name="w[position]"
               type="radio"
               value="custom"
-              {if $watermark['position'] == 'custom'}
+              {if $watermark['position'] === 'custom'}
               checked="checked"
               {/if}
             > {='custom'|translate}</label>

@@ -13,7 +13,7 @@
     >{='Installed on %s, %s'|translate:$installedOn,$installedSince}</li>
     <li>{='Operating system'|translate}: {$os}</li>
     <li
-      n:if="$containerInfo != 'none'"
+      n:if="$containerInfo !== 'none'"
     >{='Container info'|translate}: {$containerInfo}</li>
     <li>PHP: {$phpVersion} (<a
         href="{$phpinfoUrl|noescape}"

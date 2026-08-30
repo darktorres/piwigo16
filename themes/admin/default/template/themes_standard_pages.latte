@@ -67,7 +67,7 @@
                 type="radio"
                 name="std_pgs_display_logo"
                 value="piwigo_logo"
-                {if "piwigo_logo" == $stdPgsSelectedLogo}
+                {if "piwigo_logo" === $stdPgsSelectedLogo}
                 checked="checked"
                 {/if}
               >
@@ -80,13 +80,13 @@
                 type="radio"
                 name="std_pgs_display_logo"
                 value="custom_logo"
-                {if "custom_logo" == $stdPgsSelectedLogo}
+                {if "custom_logo" === $stdPgsSelectedLogo}
                 checked="checked"
                 {/if}
               >
               {='Use custom logo (png, jpeg or svg)'|translate}
               <div
-                class="custom_logo_preview {if "custom_logo" == $stdPgsSelectedLogo}show{else}hide{/if}"
+                class="custom_logo_preview {if "custom_logo" === $stdPgsSelectedLogo}show{else}hide{/if}"
               >
                 <div
                   n:if="isset($stdPgsSelectedLogoPath)"
@@ -116,7 +116,7 @@
                 type="radio"
                 name="std_pgs_display_logo"
                 value="gallery_title"
-                {if "gallery_title" == $stdPgsSelectedLogo}
+                {if "gallery_title" === $stdPgsSelectedLogo}
                 checked="checked"
                 {/if}
               >
@@ -129,7 +129,7 @@
                 type="radio"
                 name="std_pgs_display_logo"
                 value="none"
-                {if "none" == $stdPgsSelectedLogo}
+                {if "none" === $stdPgsSelectedLogo}
                 checked="checked"
                 {/if}
               >
@@ -151,7 +151,7 @@
               <div class="std_pgs_mini_previews">
                 <img
                   n:foreach="$stdPgsSkinOptions as $std_pgs_skin_option"
-                  class="{if $stdPgsSelectedSkin == $std_pgs_skin_option}selected{/if}"
+                  class="{if $stdPgsSelectedSkin === $std_pgs_skin_option}selected{/if}"
                   id="{$std_pgs_skin_option}"
                   src="themes/standard_pages/skins/light-{$std_pgs_skin_option}.jpg"
                 >

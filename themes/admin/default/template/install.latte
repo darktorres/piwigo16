@@ -98,13 +98,13 @@
                     >
                       <option
                         value="mysqli"
-                        {if $fDbDriver != 'pgsql'}
+                        {if $fDbDriver !== 'pgsql'}
                         selected
                         {/if}
                       >MySQL / MariaDB</option>
                       <option
                         value="pgsql"
-                        {if $fDbDriver == 'pgsql'}
+                        {if $fDbDriver === 'pgsql'}
                         selected
                         {/if}
                       >PostgreSQL</option>
@@ -138,7 +138,7 @@
                       name="dbport"
                       id="dbport"
                       value="{$fDbPort}"
-                      placeholder="{if $fDbDriver == 'pgsql'}5432{else}3306{/if}"
+                      placeholder="{if $fDbDriver === 'pgsql'}5432{else}3306{/if}"
                       min="1"
                       max="65535"
                     ></td>

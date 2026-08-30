@@ -35,11 +35,11 @@
       data-type="{$type}"
     >
       <legend>
-        {if $type == 'plugins'}
+        {if $type === 'plugins'}
           <span class="icon-puzzle icon-green"></span>{='Plugins'|translate}
-        {elseif $type == 'themes'}
+        {elseif $type === 'themes'}
           <span class="icon-brush icon-blue"></span>{='Themes'|translate}
-        {elseif $type == 'languages'}
+        {elseif $type === 'languages'}
           <span
             class="icon-language icon-purple"
           ></span>{='Languages'|translate}

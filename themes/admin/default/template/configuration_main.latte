@@ -120,7 +120,7 @@
                   type="radio"
                   name="email_admin_on_new_user_filter"
                   value="all"
-                  {if ($main->emailAdminOnNewUserFilter == 'all')}
+                  {if ($main->emailAdminOnNewUserFilter === 'all')}
                   checked
                   {/if}
                 >
@@ -133,7 +133,7 @@
                   type="radio"
                   name="email_admin_on_new_user_filter"
                   value="group"
-                  {if ($main->emailAdminOnNewUserFilter == 'group')}
+                  {if ($main->emailAdminOnNewUserFilter === 'group')}
                   checked
                   {/if}
                 >
@@ -142,7 +142,7 @@
 
               <span
                 id="email_admin_on_new_user_filter_group_options"
-                class="{if $main->emailAdminOnNewUserFilter != 'group'}u-hidden{/if}"
+                class="{if $main->emailAdminOnNewUserFilter !== 'group'}u-hidden{/if}"
               >
                 {if count($groupOptions) > 0}
                   <select name="email_admin_on_new_user_filter_group">
@@ -307,7 +307,7 @@
           <div class="themeBoxes font-checkbox">
             <div
               n:foreach="$main->mailThemeOptions as $theme => $name"
-              class="themeSelect {if $main->mailTheme == $theme}themeDefault{/if}"
+              class="themeSelect {if $main->mailTheme === $theme}themeDefault{/if}"
             >
               <label class="font-checkbox">
                 <div class="themeName">
@@ -316,7 +316,7 @@
                     type="radio"
                     name="mail_theme"
                     value="{$theme}"
-                    {if $main->mailTheme == $theme}
+                    {if $main->mailTheme === $theme}
                     checked
                     {/if}
                   >

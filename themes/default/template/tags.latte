@@ -5,7 +5,7 @@
   <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
     <div class="titrePage">
       <ul class="categoryActions">
-        <li n:if="$displayMode == 'letters'"><a
+        <li n:if="$displayMode === 'letters'"><a
             href="{$cloudUrl|noescape}"
             title="{='show tag cloud'|translate}"
             class="pwg-state-default pwg-button"
@@ -14,7 +14,7 @@
               class="pwg-button-text"
             >{='cloud'|translate}</span>
           </a></li>
-        <li n:if="$displayMode == 'cloud'"><a
+        <li n:if="$displayMode === 'cloud'"><a
             href="{$lettersUrl|noescape}"
             title="{='group by letters'|translate}"
             class="pwg-state-default pwg-button"
@@ -32,7 +32,7 @@
 
     {include 'infos_errors.latte'}
 
-    <div n:if="$displayMode == 'cloud' and isset($tags)" id="fullTagCloud">
+    <div n:if="$displayMode === 'cloud' and isset($tags)" id="fullTagCloud">
       <span n:foreach="$tags as $tag"><a
           href="{$tag['URL']|noescape}"
           class="tagLevel{$tag['level']}"
@@ -40,7 +40,7 @@
         >{$tag['name']}</a></span>
     </div>
 
-    <table n:if="$displayMode == 'letters' and isset($letters)">
+    <table n:if="$displayMode === 'letters' and isset($letters)">
       <tr>
         <td valign="top">
           {foreach $letters as $letter}

@@ -3,8 +3,8 @@
 <div id="themesContent">
   {var $field_name = 'null'} {* <!-- 'counter' for fieldset management --> *}
   {foreach $tplThemes as $theme}
-    {if $field_name != $theme->state}
-      {if $field_name != 'null'}
+    {if $field_name !== $theme->state}
+      {if $field_name !== 'null'}
         {* Closes the PREVIOUS group's <div class="themeBoxes">/<fieldset>
            (opened further down, once per group, at the loop's real,
            lexically-single opening point) -- printed as raw text, not
@@ -24,7 +24,7 @@
          Latte's HTML-aware parser can't verify statically either. *}
       {="<fieldset>"|noescape}
       <legend>
-        {if $theme->state == 'active'}
+        {if $theme->state === 'active'}
           <span
             class="icon-purple icon-toggle-on"
           ></span>{='Active Themes'|translate}
@@ -82,7 +82,7 @@
         <div class="showInfo-dropdown-content">
           {$theme->desc}
         </div>
-        {if $theme->state != "active" and $enableExtensionsInstall}
+        {if $theme->state !== "active" and $enableExtensionsInstall}
           {if $theme->deletable}
             <a
               class="dropdown-option icon-trash delete-plugin-button delete-theme-button"
@@ -104,7 +104,7 @@
       </div>
       {if $isWebmaster === 1}
         <div class="themeActions">
-          {if $theme->state == 'active'}
+          {if $theme->state === 'active'}
             {if $theme->adminUri !== null}
               <a
                 href="{$theme->adminUri|noescape}"

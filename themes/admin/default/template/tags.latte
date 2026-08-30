@@ -109,11 +109,11 @@
     <a id="selectInvert">{='Invert'|translate}</a>
   </div>
   <div
-    n:if='$warningTags != ""'
+    n:if='$warningTags !== ""'
     class='info-warning tag-info icon-attention not-in-selection-mode'
   ><p> {$warningTags|noescape} </p></div>
   <div
-    class='info-message tag-info  icon-ok not-in-selection-mode{if $messageTags != ""} u-flex{/if}'
+    class='info-message tag-info  icon-ok not-in-selection-mode{if $messageTags !== ""} u-flex{/if}'
   > <p> {$messageTags} </p> </div>
   <div
     class='info-error tag-info icon-cancel not-in-selection-mode'

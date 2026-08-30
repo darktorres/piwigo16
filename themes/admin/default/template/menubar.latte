@@ -28,7 +28,7 @@
         <strong>{$block->reg->getName()|translate}</strong> ({$block->reg->getId()})
       </p>
 
-      <p n:if="$block->reg->getOwner() != 'piwigo'" class="menuAuthor">
+      <p n:if="$block->reg->getOwner() !== 'piwigo'" class="menuAuthor">
         {='Author'|translate}: <i>{$block->reg->getOwner()}</i>
       </p>
 

@@ -7,7 +7,7 @@
   class="properties"
 >
   <div id="configContent">
-    <fieldset n:if="$username != 'guest'">
+    <fieldset n:if="$username !== 'guest'">
       {='The settings for the guest are from the %s user'|translate:$username}
     </fieldset>
 

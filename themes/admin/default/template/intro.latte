@@ -120,19 +120,19 @@
                   n:foreach="$activityLastWeeks[$WEEK_NUMBER][$DAY_NUMBER]->details as $cat => $actions"
                   class="tooltip-details-cont"
                 >
-                  {if $cat == "Group"} <span
+                  {if $cat === "Group"} <span
                       class="icon-group icon-purple tooltip-details-title"
                     >{$cat|translate}</span>
-                  {elseif $cat == "User"} <span
+                  {elseif $cat === "User"} <span
                       class="icon-users icon-purple tooltip-details-title"
                     > {$cat|translate}</span>
-                  {elseif $cat == "Album"} <span
+                  {elseif $cat === "Album"} <span
                       class="icon-sitemap icon-red tooltip-details-title"
                     >{$cat|translate}</span>
-                  {elseif $cat == "Photo"} <span
+                  {elseif $cat === "Photo"} <span
                       class="icon-picture icon-yellow tooltip-details-title"
                     >{$cat|translate} </span>
-                  {elseif $cat == "Tag"} <span
+                  {elseif $cat === "Tag"} <span
                       class="icon-tags icon-green tooltip-details-title"
                     >{$cat|translate} </span>
                   {else} <span
@@ -140,27 +140,27 @@
                     > {$cat|translate} </span> {/if}
 
                   {foreach $actions as $action => $number}
-                    {if $action == "Edit"} <span
+                    {if $action === "Edit"} <span
                         class="icon-pencil tooltip-detail"
                         title="{='%s editions'|translate:$number}"
                       >{$number}</span>
-                    {elseif $action == "Add"} <span
+                    {elseif $action === "Add"} <span
                         class="icon-plus tooltip-detail"
                         title="{='%s additions'|translate:$number}"
                       >{$number}</span>
-                    {elseif $action == "Delete"} <span
+                    {elseif $action === "Delete"} <span
                         class="icon-trash tooltip-detail"
                         title="{='%s deletions'|translate:$number}"
                       >{$number}</span>
-                    {elseif $action == "Login"} <span
+                    {elseif $action === "Login"} <span
                         class="icon-key tooltip-detail"
                         title="{='%s login'|translate:$number}"
                       >{$number}</span>
-                    {elseif $action == "Logout"} <span
+                    {elseif $action === "Logout"} <span
                         class="icon-logout tooltip-detail"
                         title="{='%s logout'|translate:$number}"
                       >{$number} </span>
-                    {elseif $action == "Move"} <span
+                    {elseif $action === "Move"} <span
                         class="icon-move tooltip-detail"
                         title="{='%s movement'|translate:$number}"
                       >{$number} </span>

@@ -353,7 +353,7 @@
               </div>
             {/if}
 
-            {if isset($pdfNbPages) and $navCurrent->element->pathExt == "pdf"}
+            {if isset($pdfNbPages) and $navCurrent->element->pathExt === "pdf"}
               <div id="Pages" class="imageInfo">
                 <dt>{='Pages'|translate}</dt>
                 <dd>{$pdfNbPages}</dd>

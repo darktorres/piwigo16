@@ -43,7 +43,7 @@
             <span class='action_filter'>
               {=ucfirst($action['object'])|translate}
               /
-              {if $action['action'] == 'delete'}
+              {if $action['action'] === 'delete'}
                 {='deletion'|translate:$action['object']}
               {else}
                 {$action['action']|translate}
@@ -87,9 +87,9 @@
         </div>
         <div class="additional-filters">
           <div class="activity-filter-container">
-            {if $additionalFiltType == 'photo'}
+            {if $additionalFiltType === 'photo'}
               <span class="icon-picture">{$additionalFiltName}</span>
-            {elseif $additionalFiltType == 'album'}
+            {elseif $additionalFiltType === 'album'}
               <span class="icon-folder-open">{$additionalFiltName}</span>
             {else}
               <span class="icon-group">{$additionalFiltName}</span>

@@ -17,18 +17,18 @@
               class="filters-icon-check"
               name="filters_views_box[{$filter_name}]"
               id="{$filter_name}Filters"
-              {if ($search->filtersViews[$filter_name]->access != 'nobody' and !($filter_name == 'rating' and !$showFilterRatings))}
+              {if ($search->filtersViews[$filter_name]->access !== 'nobody' and !($filter_name === 'rating' and !$showFilterRatings))}
               checked="checked"
               {/if}
-              {if ($filter_name == 'rating' and !$showFilterRatings)}
+              {if ($filter_name === 'rating' and !$showFilterRatings)}
               disabled
               {/if}
             >
-            {if $filter_name == 'words'}
+            {if $filter_name === 'words'}
               {='Search for words'|translate}
-            {elseif $filter_name == 'expert'}
+            {elseif $filter_name === 'expert'}
               {='Expert mode'|translate}
-            {elseif $filter_name == 'file_size'}
+            {elseif $filter_name === 'file_size'}
               {='Filesize'|translate}
             {else}
               {=ucfirst(str_replace('_', ' ', $filter_name))|translate}
@@ -45,20 +45,20 @@
           >
             <option
               value="everybody"
-              {if ($search->filtersViews[$filter_name]->access == "everybody")}
+              {if ($search->filtersViews[$filter_name]->access === "everybody")}
               selected
               {/if}
             >{='Everybody'|translate}</option>
             <option
               value="registered-users"
-              {if ($search->filtersViews[$filter_name]->access == "registered-users")}
+              {if ($search->filtersViews[$filter_name]->access === "registered-users")}
               selected
               {/if}
             >{='registered users'|translate|ucfirst}</option>
             <option
               value="admins-only"
               id="{$filter_name}Admin"
-              {if ($search->filtersViews[$filter_name]->access == "admins-only")}
+              {if ($search->filtersViews[$filter_name]->access === "admins-only")}
               selected
               {/if}
             >{='Admins only'|translate}</option>

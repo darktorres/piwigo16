@@ -2,15 +2,15 @@
 
 <fieldset n:foreach="['active', 'inactive'] as $language_state">
   <legend>
-    {if $language_state == 'active'}
+    {if $language_state === 'active'}
       {='Active Languages'|translate}
-    {elseif $language_state == 'inactive'}
+    {elseif $language_state === 'inactive'}
       {='Inactive Languages'|translate}
     {/if}
   </legend>
   <div class="languageBoxes">
     {foreach $languages as $language}
-      {if $language->state == $language_state}
+      {if $language->state === $language_state}
         <div class="languageBox{if $language->isDefault} languageDefault{/if}">
           <div class="languageName">{$language->name}<em
               n:if="$language->isDefault"
@@ -18,7 +18,7 @@
           {if $isWebmaster === 1}
             <div class="languageActions">
               <div>
-                {if $language_state == 'active'}
+                {if $language_state === 'active'}
                   {if $language->deactivable}
                     <a
                       href="{$language->uAction|noescape}&amp;action=deactivate"
@@ -40,7 +40,7 @@
                   {/if}
                 {/if}
 
-                {if $language_state == 'inactive'}
+                {if $language_state === 'inactive'}
                   <a
                     href="{$language->uAction|noescape}&amp;action=activate"
                     class="tiptip"

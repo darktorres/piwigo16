@@ -82,7 +82,7 @@
             type="radio"
             name="sync"
             value="dirs"
-            {if $introduction['sync'] == 'dirs'}
+            {if $introduction['sync'] === 'dirs'}
             checked="checked"
             {/if}
           > {='only directories'|translate}</label></li>
@@ -91,7 +91,7 @@
             type="radio"
             name="sync"
             value="files"
-            {if $introduction['sync'] == 'files'}
+            {if $introduction['sync'] === 'files'}
             checked="checked"
             {/if}
           > {='directories + files'|translate}</label>

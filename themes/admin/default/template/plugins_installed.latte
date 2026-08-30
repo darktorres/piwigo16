@@ -55,7 +55,7 @@
       name="layout"
       class="switchLayout"
       id="displayClassic"
-      {if $viewSelector == 'classic'}
+      {if $viewSelector === 'classic'}
       checked
       {/if}
     /><label for="displayClassic"><span
@@ -66,7 +66,7 @@
       name="layout"
       class="switchLayout"
       id="displayLine"
-      {if $viewSelector == 'line'}
+      {if $viewSelector === 'line'}
       checked
       {/if}
     /><label for="displayLine"><span
@@ -77,7 +77,7 @@
       name="layout"
       class="switchLayout"
       id="displayCompact"
-      {if $viewSelector == 'compact'}
+      {if $viewSelector === 'compact'}
       checked
       {/if}
     /><label for="displayCompact"><span
@@ -87,7 +87,7 @@
   </div>
 
   <div
-    class="pluginContainer {if $viewSelector == 'classic'} classic-form {elseif $viewSelector == 'line'} line-form {elseif $viewSelector == 'compact'} compact-form {else} {/if}"
+    class="pluginContainer {if $viewSelector === 'classic'} classic-form {elseif $viewSelector === 'line'} line-form {elseif $viewSelector === 'compact'} compact-form {else} {/if}"
   >
     {foreach $plugins as $plugin}
       {* Reset per iteration: {var} is a plain PHP variable, so a plugin
@@ -138,12 +138,12 @@
         <div class="pluginContent">
           <div class="PluginOptionsIcons">
             <a
-              n:if="$plugin->state == 'active' || $plugin->state == 'inactive'"
+              n:if="$plugin->state === 'active' || $plugin->state === 'inactive'"
               class="icon-ellipsis-v showOptions showInfo"
             ></a>
           </div>
           <label
-            n:if="$plugin->state == 'active' || $plugin->state == 'inactive'"
+            n:if="$plugin->state === 'active' || $plugin->state === 'inactive'"
             class="switch"
           >
             <input
@@ -157,8 +157,8 @@
           </label>
 
           <div class="pluginActionsSmallIcons">
-            {if $plugin->state == 'active'}
-              {if $plugin->settingsUrl != ''}
+            {if $plugin->state === 'active'}
+              {if $plugin->settingsUrl !== ''}
                 <div class="tiptip" title="{='Settings'|translate}">
                   <a href="{$plugin->settingsUrl|noescape}"><span
                       class="icon-cog"
@@ -169,8 +169,8 @@
                   <a><i class="icon-cog"></i></a>
                 </div>
               {/if}
-            {elseif $plugin->state == 'inactive'}
-              {if $plugin->settingsUrl != ''}
+            {elseif $plugin->state === 'inactive'}
+              {if $plugin->settingsUrl !== ''}
                 <div class="tiptip" title="{='Settings'|translate}">
                   <a href="{$plugin->settingsUrl|noescape}"><span
                       class="icon-cog"
@@ -181,7 +181,7 @@
                   <a><i class="icon-cog"></i></a>
                 </div>
               {/if}
-            {elseif $plugin->state == 'missing'}
+            {elseif $plugin->state === 'missing'}
               <div class="tiptip" title="{='Uninstall'|translate}">
                 <a class="uninstall-plugin-button">{='Uninstall'|translate}</a>
               </div>
@@ -211,8 +211,8 @@
             {$plugin->desc}
           </div>
           <div class="pluginActions">
-            {if $plugin->state == 'active'}
-              {if $plugin->settingsUrl != ''}
+            {if $plugin->state === 'active'}
+              {if $plugin->settingsUrl !== ''}
                 <a
                   href="{$plugin->settingsUrl|noescape}"
                   class="pluginActionLevel1 icon-cog"
@@ -223,8 +223,8 @@
                   title="{='N/A'|translate}"
                 >{='Settings'|translate}</a>
               {/if}
-            {elseif $plugin->state == 'inactive'}
-              {if $plugin->settingsUrl != ''}
+            {elseif $plugin->state === 'inactive'}
+              {if $plugin->settingsUrl !== ''}
                 <a
                   href="{$plugin->settingsUrl|noescape}"
                   class="pluginUnavailableAction icon-cog"
@@ -235,7 +235,7 @@
                   title="{='N/A'|translate}"
                 >{='Settings'|translate}</a>
               {/if}
-            {elseif $plugin->state == 'missing'}
+            {elseif $plugin->state === 'missing'}
               <a
                 class="pluginActionLevel3 uninstall-plugin-button"
               >{='Uninstall'|translate}</a>

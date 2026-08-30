@@ -3,7 +3,7 @@
   <ul class="tabsheet">
     <li
       n:foreach="$sheets as $name => $sheet"
-      class="{if ($name == $selected)}selected_tab{else}normal_tab{/if}"
+      class="{if ($name === $selected)}selected_tab{else}normal_tab{/if}"
     >
       <a
         href="{$sheet->url|noescape}"

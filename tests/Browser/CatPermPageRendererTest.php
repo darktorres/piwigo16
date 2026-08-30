@@ -131,13 +131,15 @@ it('hides the private options for a public album and reveals them on selecting p
         json_encode($selector, JSON_THROW_ON_ERROR)
     );
 
-    expect($page->script($display('#privateOptions')))->toBe('none');
+    expect($page->script($display('#privateOptions')))
+        ->toBe('none');
 
     // The radio itself is visually replaced by the theme's own
     // `font-checkbox` control, so it is not clickable; a user clicks the
     // label, which is what actually drives the change event.
     $page->click('#selectStatus label:has(input[value="private"])');
 
-    expect($page->script($display('#privateOptions')))->not->toBe('none');
+    expect($page->script($display('#privateOptions')))
+        ->not->toBe('none');
     $page->assertNoJavaScriptErrors();
 });

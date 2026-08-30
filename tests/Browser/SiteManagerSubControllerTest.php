@@ -155,13 +155,17 @@ it('reveals the create-site form and hides its own trigger on click', function (
             json_encode($selector, JSON_THROW_ON_ERROR)
         );
 
-        expect($page->script($visible('#showCreateSite')))->not->toBe('none');
-        expect($page->script($visible('#createSite')))->toBe('none');
+        expect($page->script($visible('#showCreateSite')))
+            ->not->toBe('none');
+        expect($page->script($visible('#createSite')))
+            ->toBe('none');
 
         $page->click('#showCreateSite a');
 
-        expect($page->script($visible('#showCreateSite')))->toBe('none');
-        expect($page->script($visible('#createSite')))->not->toBe('none');
+        expect($page->script($visible('#showCreateSite')))
+            ->toBe('none');
+        expect($page->script($visible('#createSite')))
+            ->not->toBe('none');
         $page->assertNoJavaScriptErrors();
     } finally {
         H::restoreConfig($snapshot);

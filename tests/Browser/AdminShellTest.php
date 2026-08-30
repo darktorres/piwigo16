@@ -299,16 +299,18 @@ it('shows the whats-new popin on load and hides it from the close control', func
         ))->toBeTrue();
 
         $display = 'getComputedStyle(document.querySelector("#whats_new")).display';
-        expect($page->script($display))->not->toBe('none');
+        expect($page->script($display))
+            ->not->toBe('none');
 
         $page->click('.close_whats_new');
 
-        expect($page->script($display))->toBe('none');
+        expect($page->script($display))
+            ->toBe('none');
         $page->assertNoJavaScriptErrors();
     } finally {
         $restore = H::connect();
         H::dbQuery($restore, sprintf(
-            "UPDATE user_infos SET registration_date = %s, preferences = %s WHERE user_id = 1",
+            'UPDATE user_infos SET registration_date = %s, preferences = %s WHERE user_id = 1',
             $originalDate === null ? 'NULL' : "'" . H::dbEscape($restore, (string) $originalDate) . "'",
             $originalPrefs === null ? 'NULL' : "'" . H::dbEscape($restore, (string) $originalPrefs) . "'"
         ));

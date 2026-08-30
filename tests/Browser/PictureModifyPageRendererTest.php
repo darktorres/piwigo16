@@ -844,7 +844,8 @@ it('applies autosize\'s inline overflow-y to every textarea on load', function (
         'Array.from(document.querySelectorAll("textarea")).map((t) => t.style.overflowY)'
     );
 
-    expect($overflows)->not->toBe([]);
+    expect($overflows)
+        ->not->toBe([]);
     foreach ((array) $overflows as $value) {
         expect($value)->toBe('hidden');
     }

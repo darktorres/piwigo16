@@ -139,7 +139,9 @@ it('binds colorbox to the application illustrations on load', function (): void 
     );
     $all = $page->script('document.querySelectorAll(".illustration a").length');
 
-    expect($all)->toBeGreaterThan(0);
-    expect($bound)->toBe($all);
+    expect($all)
+        ->toBeGreaterThan(0);
+    expect($bound)
+        ->toBe($all);
     $page->assertNoJavaScriptErrors();
 });

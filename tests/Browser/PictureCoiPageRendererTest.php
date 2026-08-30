@@ -208,7 +208,12 @@ it('round-trips a stored center of interest back into the coordinate inputs', fu
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Picture Coi Roundtrip Photo');
     @unlink($image);
 
-    $stored = ['l' => 0.1, 't' => 0.2, 'r' => 0.8, 'b' => 0.9];
+    $stored = [
+        'l' => 0.1,
+        't' => 0.2,
+        'r' => 0.8,
+        'b' => 0.9,
+    ];
     $result = H::adminPost($page, '/admin.php?page=picture_coi&image_id=' . $imageId, [
         'submit' => '1',
         'l' => (string) $stored['l'],
@@ -251,7 +256,8 @@ it('round-trips a stored center of interest back into the coordinate inputs', fu
         $previous = $current;
         usleep(100_000);
     }
-    expect($settled)->not->toBeNull('the coordinate inputs never settled');
+    expect($settled)
+        ->not->toBeNull('the coordinate inputs never settled');
 
     $read = array_map(static fn (string $v): float => (float) $v, $settled);
 
@@ -262,8 +268,10 @@ it('round-trips a stored center of interest back into the coordinate inputs', fu
         // naive offsetWidth of the original is 0.
         expect(is_numeric($actual) && is_finite((float) $actual))
             ->toBeTrue("#{$field} came back non-finite ({$actual}) -- the image was measured while it had no box");
-        expect((float) $actual)->toBeGreaterThanOrEqual(0.0);
-        expect((float) $actual)->toBeLessThanOrEqual(1.0);
+        expect((float) $actual)
+            ->toBeGreaterThanOrEqual(0.0);
+        expect((float) $actual)
+            ->toBeLessThanOrEqual(1.0);
     }
 
     // ...and the rectangle survives as a rectangle.
@@ -271,12 +279,13 @@ it('round-trips a stored center of interest back into the coordinate inputs', fu
     expect((float) $read['t'])->toBeLessThan((float) $read['b']);
 
     // The exact settled round trip, off a 200x150 image in a 500x400 box.
-    expect($read)->toBe([
-        'l' => 0.12,
-        't' => 0.2,
-        'r' => 0.8,
-        'b' => 0.92,
-    ]);
+    expect($read)
+        ->toBe([
+            'l' => 0.12,
+            't' => 0.2,
+            'r' => 0.8,
+            'b' => 0.92,
+        ]);
 
     $page->assertNoJavaScriptErrors();
 });

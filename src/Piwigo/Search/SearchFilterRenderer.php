@@ -129,7 +129,13 @@ final readonly class SearchFilterRenderer
         // own field -- so every entry here is already a real per-filter
         // definition; no filtering needed, just the VO -> array unwrap this
         // method's own boolean-access rewrite below needs.
-        $filtersViews = array_map(static fn (FilterViewDefinition $d): array => $d->toArray(), $filtersViewsRaw);
+        // Kept as FilterViewDefinition objects. The former toArray() unwrap
+        // existed only to let the access-resolution loop below overwrite
+        // 'access' in place; that loop builds its own bool map now, so the
+        // flatten has no remaining purpose and its `array<string, mixed>`
+        // was what typed all 42 template reads of `access` as mixed
+        // (P58-B3).
+        $filtersViews = $filtersViewsRaw;
 
         // we add the search_details emptiness check in this condition
         // because it only applies to regular search, not the legacy
@@ -142,17 +148,18 @@ final readonly class SearchFilterRenderer
             return new SearchFilterResult(resolvedSearchId: null, data: null);
         }
 
-        $displayFilters = $filtersViews;
-
-        // Every entry has an 'access' key -- toArray() above always
-        // produces both fields, unlike the old raw config-array shape this
-        // isset() guard used to defend against.
-        foreach ($filtersViews as $filtName => $filtConf) {
-            if ($filtConf['access'] === 'everybody' or ($filtConf['access'] === 'admins-only' and $this->accessControl->isAdmin()) or ($filtConf['access'] === 'registered-users' and $this->accessControl->isClassicUser())) {
-                $displayFilters[$filtName]['access'] = true;
-            } else {
-                $displayFilters[$filtName]['access'] = false;
-            }
+        // A separate name -> bool map, not a copy of $filtersViews with its
+        // own 'access' overwritten. The old shape existed only because an
+        // array lets you swap a string field for a bool in place, which is
+        // exactly what forced the flatten above and left every template
+        // read of `access` typed mixed (P58-B3). This map answers "may the
+        // current user see this filter"; $filtersViews keeps answering
+        // "who is it configured for", and the two no longer share a slot.
+        $displayFilters = [];
+        foreach ($filtersViewsRaw as $filtName => $filtConf) {
+            $displayFilters[$filtName] = $filtConf->access === 'everybody'
+                || ($filtConf->access === 'admins-only' && $this->accessControl->isAdmin())
+                || ($filtConf->access === 'registered-users' && $this->accessControl->isClassicUser());
         }
 
         $userId = (string) $this->currentUser->get()
@@ -201,11 +208,11 @@ final readonly class SearchFilterRenderer
         // 4-call combination here.
         $page['search_details']['forbidden'] = $this->searchService->forbiddenCondition();
 
-        if ($rules->allwords !== null and ! ((bool) $displayFilters['words']['access'])) {
+        if ($rules->allwords !== null and ! ($displayFilters['words'])) {
             $rules->allwords = null;
         }
 
-        if ($rules->tags instanceof TagsRule and (bool) $displayFilters['tags']['access']) {
+        if ($rules->tags instanceof TagsRule and $displayFilters['tags']) {
             $filterTags = [];
 
             // Known limitation: TagService::getAvailableTags() below isn't
@@ -271,14 +278,14 @@ final readonly class SearchFilterRenderer
         }
 
         if ($rules->expert !== null) {
-            if (! (bool) $displayFilters['expert']['access']) {
+            if (! $displayFilters['expert']) {
                 $rules->expert = null;
             } else {
                 $this->lang->load('help_quick_search.lang');
             }
         }
 
-        if ($rules->author instanceof AuthorRule and (bool) $displayFilters['author']['access']) {
+        if ($rules->author instanceof AuthorRule and $displayFilters['author']) {
             $filterClause = $this->getClauseForFilter('author', $page);
             $filterCondition = $filterClause->condition;
             $groupCondition = SqlCondition::combine('AND', $filterCondition, SqlCondition::fromRawSql('i.author IS NOT NULL'));
@@ -324,7 +331,7 @@ final readonly class SearchFilterRenderer
             $rules->author = null;
         }
 
-        if ($rules->datePosted !== null and (bool) $displayFilters['post_date']['access']) {
+        if ($rules->datePosted !== null and $displayFilters['post_date']) {
             $dateFilterResult = $this->renderDateFilter(
                 $langMonth,
                 $userId,
@@ -344,7 +351,7 @@ final readonly class SearchFilterRenderer
             $rules->datePosted = null;
         }
 
-        if ($rules->dateCreated !== null and (bool) $displayFilters['creation_date']['access']) {
+        if ($rules->dateCreated !== null and $displayFilters['creation_date']) {
             $dateFilterResult = $this->renderDateFilter(
                 $langMonth,
                 $userId,
@@ -364,7 +371,7 @@ final readonly class SearchFilterRenderer
             $rules->dateCreated = null;
         }
 
-        if ($rules->addedBy !== null and (bool) $displayFilters['added_by']['access']) {
+        if ($rules->addedBy !== null and $displayFilters['added_by']) {
             $filterClause = $this->getClauseForFilter('added_by', $page);
             $filterCondition = $filterClause->condition;
 
@@ -437,7 +444,7 @@ final readonly class SearchFilterRenderer
             $rules->addedBy = null;
         }
 
-        if ($rules->cat instanceof CategoryRule and (bool) $displayFilters['album']['access']) {
+        if ($rules->cat instanceof CategoryRule and $displayFilters['album']) {
             $catWords = $rules->cat->words;
 
             if (count($catWords) > 0) {
@@ -488,7 +495,7 @@ final readonly class SearchFilterRenderer
             $rules->cat = null;
         }
 
-        if ($rules->filetypes !== null and (bool) $displayFilters['file_type']['access']) {
+        if ($rules->filetypes !== null and $displayFilters['file_type']) {
             $filterClause = $this->getClauseForFilter('filetypes', $page);
             $filterCondition = $filterClause->condition;
 
@@ -548,7 +555,7 @@ final readonly class SearchFilterRenderer
         if ($this->currentConfig->rateEnabled) {
             $show_filter_ratings = true;
 
-            if ($rules->ratings !== null and (bool) $displayFilters['rating']['access']) {
+            if ($rules->ratings !== null and $displayFilters['rating']) {
                 $filterClause = $this->getClauseForFilter('ratings', $page);
                 $filterCondition = $filterClause->condition;
 
@@ -597,7 +604,7 @@ final readonly class SearchFilterRenderer
         }
 
         // For filesize
-        if ($rules->filesizeMin !== null && $rules->filesizeMax !== null and (bool) $displayFilters['file_size']['access']) {
+        if ($rules->filesizeMin !== null && $rules->filesizeMax !== null and $displayFilters['file_size']) {
             $filterClause = $this->getClauseForFilter('filesize', $page);
             $filterCondition = $filterClause->condition;
 
@@ -640,12 +647,12 @@ final readonly class SearchFilterRenderer
                 ),
             );
 
-        } elseif ($rules->filesizeMin !== null && $rules->filesizeMax !== null and ! ((bool) $displayFilters['file_size']['access'])) {
+        } elseif ($rules->filesizeMin !== null && $rules->filesizeMax !== null and ! ($displayFilters['file_size'])) {
             $rules->filesizeMin = null;
             $rules->filesizeMax = null;
         }
 
-        if ($rules->ratios !== null and (bool) $displayFilters['ratio']['access']) {
+        if ($rules->ratios !== null and $displayFilters['ratio']) {
             $filterClause = $this->getClauseForFilter('ratios', $page);
             $filterCondition = $filterClause->condition;
 
@@ -700,7 +707,7 @@ final readonly class SearchFilterRenderer
             $rules->ratios = null;
         }
 
-        if ($rules->heightMin !== null and $rules->heightMax !== null and (bool) $displayFilters['height']['access']) {
+        if ($rules->heightMin !== null and $rules->heightMax !== null and $displayFilters['height']) {
             $filterClause = $this->getClauseForFilter('height', $page);
             $filterCondition = $filterClause->condition;
 
@@ -739,12 +746,12 @@ final readonly class SearchFilterRenderer
                 ),
             );
 
-        } elseif ($rules->heightMin !== null && $rules->heightMax !== null and ! ((bool) $displayFilters['height']['access'])) {
+        } elseif ($rules->heightMin !== null && $rules->heightMax !== null and ! ($displayFilters['height'])) {
             $rules->heightMin = null;
             $rules->heightMax = null;
         }
 
-        if ($rules->widthMin !== null and $rules->widthMax !== null and (bool) $displayFilters['width']['access']) {
+        if ($rules->widthMin !== null and $rules->widthMax !== null and $displayFilters['width']) {
             $filterClause = $this->getClauseForFilter('width', $page);
             $filterCondition = $filterClause->condition;
 
@@ -783,7 +790,7 @@ final readonly class SearchFilterRenderer
                 ),
             );
 
-        } elseif ($rules->widthMin !== null && $rules->widthMax !== null and ! ((bool) $displayFilters['width']['access'])) {
+        } elseif ($rules->widthMin !== null && $rules->widthMax !== null and ! ($displayFilters['width'])) {
             $rules->widthMin = null;
             $rules->widthMax = null;
         }

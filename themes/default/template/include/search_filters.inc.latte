@@ -7,7 +7,7 @@
       <div class="mcs-popin-title">{='Choose filters'|translate}</div>
 
       <div class="filter-manager-controller-container">
-        {if $displayFilter['words']['access'] == 'everybody' or ($displayFilter['words']['access'] == 'admins-only' and is_admin('')) or ($displayFilter['words']['access'] == 'registered-users' and is_classic_user(''))}
+        {if $displayFilter['words']->access === 'everybody' or ($displayFilter['words']->access === 'admins-only' and is_admin('')) or ($displayFilter['words']->access === 'registered-users' and is_classic_user(''))}
           <label>
             <input
               data-wid='word'
@@ -19,7 +19,7 @@
             >{='Search for words'|translate}</span>
           </label>
         {/if}
-        {if $displayFilter['tags']['access'] == 'everybody' or ($displayFilter['tags']['access'] == 'admins-only' and is_admin('')) or ($displayFilter['tags']['access'] == 'registered-users' and is_classic_user(''))}
+        {if $displayFilter['tags']->access === 'everybody' or ($displayFilter['tags']->access === 'admins-only' and is_admin('')) or ($displayFilter['tags']->access === 'registered-users' and is_classic_user(''))}
           <label>
             <input
               data-wid='tag'
@@ -29,7 +29,7 @@
             <span class="mcs-icon gallery-icon-tag">{='Tag'|translate}</span>
           </label>
         {/if}
-        {if $displayFilter['post_date']['access'] == 'everybody' or ($displayFilter['post_date']['access'] == 'admins-only' and is_admin('')) or ($displayFilter['post_date']['access'] == 'registered-users' and is_classic_user(''))}
+        {if $displayFilter['post_date']->access === 'everybody' or ($displayFilter['post_date']->access === 'admins-only' and is_admin('')) or ($displayFilter['post_date']->access === 'registered-users' and is_classic_user(''))}
           <label>
             <input
               data-wid='date_posted'
@@ -41,7 +41,7 @@
             >{='Post date'|translate}</span>
           </label>
         {/if}
-        {if $displayFilter['creation_date']['access'] == 'everybody' or ($displayFilter['creation_date']['access'] == 'admins-only' and is_admin('')) or ($displayFilter['creation_date']['access'] == 'registered-users' and is_classic_user(''))}
+        {if $displayFilter['creation_date']->access === 'everybody' or ($displayFilter['creation_date']->access === 'admins-only' and is_admin('')) or ($displayFilter['creation_date']->access === 'registered-users' and is_classic_user(''))}
           <label>
             <input
               data-wid='date_created'
@@ -53,7 +53,7 @@
             >{='Creation date'|translate}</span>
           </label>
         {/if}
-        {if $displayFilter['album']['access'] == 'everybody' or ($displayFilter['album']['access'] == 'admins-only' and is_admin('')) or ($displayFilter['album']['access'] == 'registered-users' and is_classic_user(''))}
+        {if $displayFilter['album']->access === 'everybody' or ($displayFilter['album']->access === 'admins-only' and is_admin('')) or ($displayFilter['album']->access === 'registered-users' and is_classic_user(''))}
           <label>
             <input
               data-wid='album'
@@ -65,7 +65,7 @@
             >{='Album'|translate}</span>
           </label>
         {/if}
-        {if $displayFilter['author']['access'] == 'everybody' or ($displayFilter['author']['access'] == 'admins-only' and is_admin('')) or ($displayFilter['author']['access'] == 'registered-users' and is_classic_user(''))}
+        {if $displayFilter['author']->access === 'everybody' or ($displayFilter['author']->access === 'admins-only' and is_admin('')) or ($displayFilter['author']->access === 'registered-users' and is_classic_user(''))}
           <label>
             <input
               data-wid='authors'
@@ -77,7 +77,7 @@
             >{='Author'|translate}</span>
           </label>
         {/if}
-        {if $displayFilter['added_by']['access'] == 'everybody' or ($displayFilter['added_by']['access'] == 'admins-only' and is_admin('')) or ($displayFilter['added_by']['access'] == 'registered-users' and is_classic_user(''))}
+        {if $displayFilter['added_by']->access === 'everybody' or ($displayFilter['added_by']->access === 'admins-only' and is_admin('')) or ($displayFilter['added_by']->access === 'registered-users' and is_classic_user(''))}
           <label>
             <input
               data-wid='added_by'
@@ -89,7 +89,7 @@
             >{='Added by'|translate}</span>
           </label>
         {/if}
-        {if $displayFilter['file_type']['access'] == 'everybody' or ($displayFilter['file_type']['access'] == 'admins-only' and is_admin('')) or ($displayFilter['file_type']['access'] == 'registered-users' and is_classic_user(''))}
+        {if $displayFilter['file_type']->access === 'everybody' or ($displayFilter['file_type']->access === 'admins-only' and is_admin('')) or ($displayFilter['file_type']->access === 'registered-users' and is_classic_user(''))}
           <label>
             <input
               data-wid='filetypes'
@@ -101,7 +101,7 @@
             >{='File type'|translate}</span>
           </label>
         {/if}
-        {if $displayFilter['ratio']['access'] == 'everybody' or ($displayFilter['ratio']['access'] == 'admins-only' and is_admin('')) or ($displayFilter['ratio']['access'] == 'registered-users' and is_classic_user(''))}
+        {if $displayFilter['ratio']->access === 'everybody' or ($displayFilter['ratio']->access === 'admins-only' and is_admin('')) or ($displayFilter['ratio']->access === 'registered-users' and is_classic_user(''))}
           <label>
             <input
               data-wid='ratios'
@@ -112,7 +112,7 @@
           </label>
         {/if}
         {if $showFilterRatings and isset($showFilterRatings)}
-          {if $displayFilter['rating']['access'] == 'everybody' or ($displayFilter['rating']['access'] == 'admins-only' and is_admin('')) or ($displayFilter['rating']['access'] == 'registered-users' and is_classic_user(''))}
+          {if $displayFilter['rating']->access === 'everybody' or ($displayFilter['rating']->access === 'admins-only' and is_admin('')) or ($displayFilter['rating']->access === 'registered-users' and is_classic_user(''))}
             <label>
               <input
                 data-wid='ratings'
@@ -125,7 +125,7 @@
             </label>
           {/if}
         {/if}
-        {if $displayFilter['file_size']['access'] == 'everybody' or ($displayFilter['file_size']['access'] == 'admins-only' and is_admin('')) or ($displayFilter['file_size']['access'] == 'registered-users' and is_classic_user(''))}
+        {if $displayFilter['file_size']->access === 'everybody' or ($displayFilter['file_size']->access === 'admins-only' and is_admin('')) or ($displayFilter['file_size']->access === 'registered-users' and is_classic_user(''))}
           <label>
             <input
               data-wid='filesize'
@@ -137,7 +137,7 @@
             >{='Filesize'|translate}</span>
           </label>
         {/if}
-        {if $displayFilter['height']['access'] == 'everybody' or ($displayFilter['height']['access'] == 'admins-only' and is_admin('')) or ($displayFilter['height']['access'] == 'registered-users' and is_classic_user(''))}
+        {if $displayFilter['height']->access === 'everybody' or ($displayFilter['height']->access === 'admins-only' and is_admin('')) or ($displayFilter['height']->access === 'registered-users' and is_classic_user(''))}
           <label>
             <input
               data-wid='height'
@@ -149,7 +149,7 @@
             >{='Height'|translate}</span>
           </label>
         {/if}
-        {if $displayFilter['width']['access'] == 'everybody' or ($displayFilter['width']['access'] == 'admins-only' and is_admin('')) or ($displayFilter['width']['access'] == 'registered-users' and is_classic_user(''))}
+        {if $displayFilter['width']->access === 'everybody' or ($displayFilter['width']->access === 'admins-only' and is_admin('')) or ($displayFilter['width']->access === 'registered-users' and is_classic_user(''))}
           <label>
             <input
               data-wid='width'
@@ -162,7 +162,7 @@
           </label>
         {/if}
 
-        {if $displayFilter['expert']['access'] == 'everybody' or ($displayFilter['expert']['access'] == 'admins-only' and is_admin('')) or ($displayFilter['expert']['access'] == 'registered-users' and is_classic_user(''))}
+        {if $displayFilter['expert']->access === 'everybody' or ($displayFilter['expert']->access === 'admins-only' and is_admin('')) or ($displayFilter['expert']->access === 'registered-users' and is_classic_user(''))}
           <label>
             <input
               data-wid='expert'

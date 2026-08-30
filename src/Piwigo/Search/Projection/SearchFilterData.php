@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Search\Projection;
 
+use Piwigo\Config\FilterViewDefinition;
+
 /**
  * The full search-filter-sidebar payload {@see
  * \Piwigo\Search\SearchFilterRenderer::render()} computes whenever the
@@ -24,7 +26,7 @@ namespace Piwigo\Search\Projection;
 final readonly class SearchFilterData
 {
     /**
-     * @param array<string, array<string, mixed>> $displayFilter
+     * @param array<string, FilterViewDefinition> $displayFilter
      * @param list<array<array-key, mixed>>|null $tags
      * @param list<AuthorFilterCount>|null $authors
      * @param list<AddedByFilterCount>|null $addedBy

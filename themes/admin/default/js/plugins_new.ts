@@ -2,6 +2,21 @@ import "./common";
 
 import { pwg_getPageString } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
+import {
+  addClass,
+  data,
+  find,
+  hasClass,
+  hide,
+  html,
+  htmlOf,
+  on,
+  ready,
+  removeClass,
+  show,
+  trigger,
+  val,
+} from "../../../default/js/vendor/dom";
 export {};
 
 const str_confirm_msg = pwg_getPageString("Yes, I am sure");
@@ -30,28 +45,33 @@ let sortOrder = "date";
 // any, b: any) => number)` ambient signature (no real type source for
 // this vendored plugin) -- HTMLElement is the real runtime shape either
 // way, and a more specific param type here is still assignable to that
-// `any`-typed callback slot.
+// `any`-typed callback slot. `data()` reads real `data-*` attributes
+// (name/revision/downloads, all rendered by the template) -- no jQuery
+// needed for the comparator itself, only for the still-jQuery
+// `.sortElements()` call site that invokes it.
 const sortPlugins = function (a: HTMLElement, b: HTMLElement) {
   if (
     sortOrder == "downloads" ||
     sortOrder == "revision" ||
     sortOrder == "date"
   )
-    return parseInt(String($(a).data(sortOrder))) <
-      parseInt(String($(b).data(sortOrder)))
+    return parseInt(String(data(a, sortOrder))) <
+      parseInt(String(data(b, sortOrder)))
       ? 1
       : -1;
   else
-    return String($(a).data(sortOrder)).toLowerCase() >
-      String($(b).data(sortOrder)).toLowerCase()
+    return String(data(a, sortOrder)).toLowerCase() >
+      String(data(b, sortOrder)).toLowerCase()
       ? 1
       : -1;
 };
 
-$(function () {
+ready(function () {
   // <-- Set the advanced filters -->
 
-  const betaTestPlugins = $("#showBetaTestPlugin")[0]!.hasAttribute("checked");
+  const betaTestPlugins = document
+    .getElementById("showBetaTestPlugin")!
+    .hasAttribute("checked");
 
   interface PluginFilters {
     search: string;
@@ -73,11 +93,24 @@ $(function () {
   };
 
   // toggle advanced filter's panel
-  $(".advanced-filter-btn").click(advanced_filter_button_click);
-  $(".advanced-filter span.icon-cancel").click(advanced_filter_hide);
+  on(
+    document.querySelectorAll(".advanced-filter-btn"),
+    "click",
+    advanced_filter_button_click,
+  );
+  on(
+    document.querySelectorAll(".advanced-filter span.icon-cancel"),
+    "click",
+    advanced_filter_hide,
+  );
 
   function advanced_filter_button_click() {
-    if (!$(".advanced-filter").hasClass("advanced-filter-open")) {
+    if (
+      !hasClass(
+        document.querySelectorAll(".advanced-filter"),
+        "advanced-filter-open",
+      )
+    ) {
       advanced_filter_show();
     } else {
       advanced_filter_hide();
@@ -85,51 +118,71 @@ $(function () {
   }
 
   function advanced_filter_show() {
-    $(".advanced-filter-btn, .advanced-filter").addClass(
+    addClass(
+      document.querySelectorAll(".advanced-filter-btn, .advanced-filter"),
       "advanced-filter-open",
     );
   }
 
   function advanced_filter_hide() {
-    $(".advanced-filter-btn, .advanced-filter").removeClass(
+    removeClass(
+      document.querySelectorAll(".advanced-filter-btn, .advanced-filter"),
       "advanced-filter-open",
     );
   }
 
-  jQuery('select[name="selectOrder"]').change(function () {
-    sortOrder = (this as HTMLSelectElement).value;
-    $(".pluginBox").sortElements(sortPlugins);
-    void ajax({ url: "admin.php?plugins_new_order=" + sortOrder });
-  });
+  on(
+    document.querySelectorAll('select[name="selectOrder"]'),
+    "change",
+    function (event: Event): void {
+      sortOrder = (event.currentTarget as HTMLSelectElement).value;
+      // Still jQuery: jquery.sort is a library, ported in P49-B group 1.
+      $(".pluginBox").sortElements(sortPlugins);
+      void ajax({ url: "admin.php?plugins_new_order=" + sortOrder });
+    },
+  );
 
-  jQuery("#search").on("input", function () {
-    applyFilter("search", (this as HTMLInputElement).value.toUpperCase());
-    jQuery("#search").trigger("click");
-  });
+  on(
+    document.querySelectorAll("#search"),
+    "input",
+    function (event: Event): void {
+      applyFilter(
+        "search",
+        (event.currentTarget as HTMLInputElement).value.toUpperCase(),
+      );
+      trigger(document.querySelectorAll("#search"), "click");
+    },
+  );
 
-  $(".search-cancel").on("click", () => {
+  on(document.querySelectorAll(".search-cancel"), "click", () => {
     applyFilter("search", "");
   });
 
-  $(".buttonInstall").each(function () {
-    const plugin_name = $(this).closest(".pluginBox").data("name") as string;
-    $(this).pwg_jconfirm_follow_href({
+  document.querySelectorAll(".buttonInstall").forEach((el) => {
+    const box = el.closest(".pluginBox");
+    const plugin_name = box !== null ? (data(box, "name") as string) : "";
+    // Still jQuery: pwg_jconfirm_follow_href wraps jquery-confirm, ported
+    // in P49-B group 5.
+    jQuery(el).pwg_jconfirm_follow_href({
       alert_title: str_install_title.replace("%s", plugin_name),
       alert_confirm: str_confirm_msg,
       alert_cancel: str_cancel_msg,
     });
   });
 
+  // Still jQuery: tipTip is a library, ported in P49-B group 2.
   jQuery(".certification").tipTip({
     delay: 0,
     fadeIn: 200,
     fadeOut: 200,
   });
 
-  $(".pluginRating").each((i, node) => {
-    const ratingContainer = $(node);
-    const rating = ratingContainer.data("rating") as number;
-    displayStars(ratingContainer.find(".rating-star-container"), rating);
+  document.querySelectorAll(".pluginRating").forEach((node) => {
+    const rating = data(node, "rating") as number;
+    const starContainer = node.querySelector(".rating-star-container");
+    if (starContainer !== null) {
+      displayStars(starContainer, rating);
+    }
   });
 
   interface FilterOption {
@@ -142,15 +195,15 @@ $(function () {
   const tagsNames: FilterOption[] = [{ value: "", text: "-" }];
 
   // read all plugin boxes to get author and tags
-  $(".pluginBox").each((i, el) => {
-    const author = $(el).data("author") as string;
+  document.querySelectorAll(".pluginBox").forEach((el) => {
+    const author = data(el, "author") as string;
     author.split(", ").forEach((name: string) => {
       if (!authorNames.find((el) => el.value == name)) {
         authorNames.push({ value: name, text: name });
       }
     });
 
-    const tags = $(el).data("tags") as string;
+    const tags = data(el, "tags") as string;
     tags.split(", ").forEach((tag: string) => {
       if (!tagsNames.find((el) => el.value == tag)) {
         tagsNames.push({ value: tag, text: tag });
@@ -159,6 +212,7 @@ $(function () {
   });
 
   // initialize the Selectize control
+  // Still jQuery: selectize is a library, ported in P49-B group 6.
   let $select = $("#author-filter").selectize({
     // Neither #author-filter nor #tag-filter is a `<select multiple>`
     // (confirmed in plugins_new.latte), so onChange always gives a
@@ -185,6 +239,7 @@ $(function () {
   const selectizeTag = $select[0]!.selectize;
   selectizeTag.addOption(tagsNames);
 
+  // Still jQuery: jQuery-UI slider, ported in P49-B group 4.
   $(".notation-filter-slider").slider({
     range: "min",
     value: 0,
@@ -256,41 +311,60 @@ $(function () {
   updateCertificationFilterLabel(minCertification);
   updateRevisionFilterLabel(0);
 
-  function displayStars(element: JQuery, rating: number) {
-    element.find("span").addClass("icon-star-empty");
-    element.find("span i").attr("class", "");
+  function displayStars(container: Element, rating: number) {
+    addClass(find(container, "span"), "icon-star-empty");
+    find(container, "span i").forEach((el) => {
+      el.className = "";
+    });
 
     rating = Math.round(rating * 2);
 
+    // Attribute selector values are quoted here -- unlike Sizzle (jQuery's
+    // selector engine), which tolerates an unquoted value starting with a
+    // digit, native querySelectorAll() enforces real CSS grammar (an
+    // identifier can't start with an unescaped digit) and throws a real
+    // SyntaxError. Confirmed live: a real plugin with rating 4.5 in this
+    // environment (PEM reachable here, same as updates_ext.ts's page)
+    // reaches the `(rating - 1) / 2 === 4` branch and crashes unquoted.
     if (rating % 2 == 1) {
-      $(element)
-        .find("span[data-star=" + (rating - 1) / 2 + "] i")
-        .addClass("icon-star-half");
+      addClass(
+        find(container, 'span[data-star="' + (rating - 1) / 2 + '"] i'),
+        "icon-star-half",
+      );
       rating -= 1;
     }
 
     while (rating > 0) {
       rating -= 2;
-      $(element)
-        .find("span[data-star=" + rating / 2 + "] i")
-        .addClass("icon-star");
-      $(element)
-        .find("span[data-star=" + rating / 2 + "]")
-        .removeClass("icon-star-empty");
+      addClass(
+        find(container, 'span[data-star="' + rating / 2 + '"] i'),
+        "icon-star",
+      );
+      removeClass(
+        find(container, 'span[data-star="' + rating / 2 + '"]'),
+        "icon-star-empty",
+      );
     }
   }
 
   // Updates labels when input change
 
   function updateRatingFilterLabel(value: number) {
-    displayStars($(".advanced-filter-rating .rating-star-container"), value);
+    const container = document.querySelector(
+      ".advanced-filter-rating .rating-star-container",
+    );
+    if (container !== null) displayStars(container, value);
   }
 
   function updateCertificationFilterLabel(value: number) {
-    const certifNode = $(".advanced-filter-certification .certification");
-    certifNode.attr("data-certification", value);
-    certifNode.attr("title", strs_certification[String(value)]!);
-    certifNode.tipTip({
+    const certifNode = document.querySelector(
+      ".advanced-filter-certification .certification",
+    );
+    if (certifNode === null) return;
+    certifNode.setAttribute("data-certification", String(value));
+    certifNode.setAttribute("title", strs_certification[String(value)]!);
+    // Still jQuery: tipTip is a library, ported in P49-B group 2.
+    jQuery(certifNode).tipTip({
       delay: 0,
       fadeIn: 200,
       fadeOut: 200,
@@ -299,7 +373,7 @@ $(function () {
 
   function updateRevisionFilterLabel(val: number) {
     const [, label] = value_to_month(val);
-    $(".revision-date").html(label);
+    html(document.querySelectorAll(".revision-date"), label);
   }
 
   // <-- Apply advanced filters -->
@@ -307,9 +381,10 @@ $(function () {
   // object that remember filters states
   filters = {
     // Real #search input, always a string.
-    search: $("#search").val() as string,
+    search: val(document.querySelectorAll("#search")) as string,
     author: "",
     tag: "",
+    // Still jQuery: jQuery-UI slider, ported in P49-B group 4.
     rating: $(".notation-filter-slider").slider("value"),
     certification: $(".certification-filter-slider").slider("value"),
     // Real, pre-existing behavior, not a bug this phase fixes: reads
@@ -328,17 +403,19 @@ $(function () {
   function applyFilter(changed: keyof PluginFilters, value: string | number) {
     (filters as Record<keyof PluginFilters, string | number>)[changed] = value;
 
-    sort((pluginBox: JQuery) => {
+    sort((pluginBox: Element) => {
+      const ratingEl = pluginBox.querySelector(".pluginRating");
       const pluginRating =
-        (pluginBox.find(".pluginRating").data("rating") as number) || 0;
-      const pluginCertification = pluginBox
-        .find(".certification")
-        .data("certification") as number;
-      const pluginAuthors = (pluginBox.data("author") as string).split(", ");
-      const pluginName = (pluginBox.data("name") as string).toUpperCase();
-      const pluginTags = (pluginBox.data("tags") as string).split(", ");
+        (ratingEl !== null ? (data(ratingEl, "rating") as number) : 0) || 0;
+      const pluginCertification = data(
+        pluginBox.querySelector(".certification")!,
+        "certification",
+      ) as number;
+      const pluginAuthors = (data(pluginBox, "author") as string).split(", ");
+      const pluginName = (data(pluginBox, "name") as string).toUpperCase();
+      const pluginTags = (data(pluginBox, "tags") as string).split(", ");
       const pluginRevisionOld = monthDiff(
-        new Date((pluginBox.data("revision") as number) * 1000),
+        new Date((data(pluginBox, "revision") as number) * 1000),
         new Date(),
       ); // number of months between the last revision date and now
 
@@ -354,26 +431,29 @@ $(function () {
   }
 
   // Display or not plugin with a function handler
-  function sort(sortFunction: (pluginBox: JQuery) => boolean) {
-    $(".pluginBox").each((i, el) => {
-      if (sortFunction($(el))) {
-        $(el).show();
+  function sort(sortFunction: (pluginBox: Element) => boolean) {
+    document.querySelectorAll(".pluginBox").forEach((el) => {
+      if (sortFunction(el)) {
+        show(el);
       } else {
-        $(el).hide();
+        hide(el);
       }
     });
   }
 
   // Crop the names of plugins if there are too long
-  $(".pluginName span").each((i, el) => {
-    const name = $(el);
-    if (name.html().length > 30) {
-      name.html(name.html().slice(0, 30) + "...");
+  document.querySelectorAll(".pluginName span").forEach((el) => {
+    const name = htmlOf(el) ?? "";
+    if (name.length > 30) {
+      html(el, name.slice(0, 30) + "...");
     }
   });
 
-  $("#showBetaTestPlugin").on("change", (e) => {
-    $(".beta-test-plugin-switch .slider").addClass("loading");
+  on(document.querySelectorAll("#showBetaTestPlugin"), "change", (e) => {
+    addClass(
+      document.querySelectorAll(".beta-test-plugin-switch .slider"),
+      "loading",
+    );
 
     const queryParams = new URLSearchParams(window.location.search);
 

@@ -1564,6 +1564,23 @@ export function setChecked(
   }
 }
 
+/**
+ * `.prop("disabled", bool)` -- writes to every element in the set. Not
+ * restricted to a single element type: jQuery's own `.prop()` just does
+ * `elem[name] = value` with no type check, and call sites use it on
+ * `<button>` as readily as `<input>`.
+ */
+export function setDisabled(
+  target: Element | ArrayLike<Element>,
+  disabled: boolean
+): void {
+  for (const el of toElements(target)) {
+    if ("disabled" in el) {
+      (el as unknown as { disabled: boolean }).disabled = disabled;
+    }
+  }
+}
+
 /** `.addClass("a b")` -- space-separated, as jQuery splits it. */
 export function addClass(
   target: Element | ArrayLike<Element>,

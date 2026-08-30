@@ -31,46 +31,73 @@ import {
   uninstall_plugin_msg,
   x_plugins_found,
 } from "./plugins_installed_config";
-import { ajax } from "../../../default/js/vendor/ajax";
-function setDisplayClassic() {
-  $(".pluginContainer")
-    .removeClass("line-form")
-    .removeClass("compact-form")
-    .addClass("classic-form");
+import { ajax, type AjaxResponse } from "../../../default/js/vendor/ajax";
+import {
+  addClass,
+  css,
+  delay,
+  fadeOut,
+  find,
+  hasClass,
+  hide,
+  html,
+  is,
+  on,
+  prepend,
+  ready,
+  removeClass,
+  setChecked,
+  setDisabled,
+  show,
+  stop,
+  textOf,
+  toggle,
+  trigger,
+  val,
+} from "../../../default/js/vendor/dom";
 
-  $(".pluginDesc").show();
-  $(".pluginActions").show();
-  $(".pluginActionsSmallIcons").hide();
+function setDisplayClassic(): void {
+  removeClass(
+    document.querySelectorAll(".pluginContainer"),
+    "line-form compact-form",
+  );
+  addClass(document.querySelectorAll(".pluginContainer"), "classic-form");
 
-  $(".pluginName").removeClass("pluginNameCompact");
+  show(document.querySelectorAll(".pluginDesc"));
+  show(document.querySelectorAll(".pluginActions"));
+  hide(document.querySelectorAll(".pluginActionsSmallIcons"));
+
+  removeClass(document.querySelectorAll(".pluginName"), "pluginNameCompact");
 }
 
-function setDisplayCompact() {
-  $(".pluginContainer")
-    .removeClass("line-form")
-    .addClass("compact-form")
-    .removeClass("classic-form");
+function setDisplayCompact(): void {
+  removeClass(
+    document.querySelectorAll(".pluginContainer"),
+    "line-form classic-form",
+  );
+  addClass(document.querySelectorAll(".pluginContainer"), "compact-form");
 
-  $(".pluginDesc").hide();
-  $(".pluginActions").hide();
-  $(".pluginActionsSmallIcons").show();
+  hide(document.querySelectorAll(".pluginDesc"));
+  hide(document.querySelectorAll(".pluginActions"));
+  show(document.querySelectorAll(".pluginActionsSmallIcons"));
 
-  $(".pluginName").addClass("pluginNameCompact");
+  addClass(document.querySelectorAll(".pluginName"), "pluginNameCompact");
 }
 
-function setDisplayLine() {
-  $(".pluginContainer")
-    .addClass("line-form")
-    .removeClass("compact-form")
-    .removeClass("classic-form");
+function setDisplayLine(): void {
+  removeClass(
+    document.querySelectorAll(".pluginContainer"),
+    "compact-form classic-form",
+  );
+  addClass(document.querySelectorAll(".pluginContainer"), "line-form");
 
-  $(".pluginDesc").show();
-  $(".pluginActions").show();
-  $(".pluginActionsSmallIcons").hide();
+  show(document.querySelectorAll(".pluginDesc"));
+  show(document.querySelectorAll(".pluginActions"));
+  hide(document.querySelectorAll(".pluginActionsSmallIcons"));
 }
 
-function activatePlugin(id: string) {
-  $("#" + id + " .switch").prop("disabled", true);
+function activatePlugin(id: string): void {
+  setDisabled(document.querySelectorAll("#" + id + " .switch"), true);
 
   void ajax({
     type: "POST",
@@ -81,30 +108,48 @@ function activatePlugin(id: string) {
     data: JSON.stringify({ action: "activate" }),
     // 204 No Content -- pluginPerformAction's real response has no body.
     success: function (_data: unknown) {
-      $("#" + id + " .pluginNotif").stop(false, true);
-      $("#" + id + " .AddPluginSuccess label span:first").html(
+      stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
+      html(
+        find(
+          document.querySelectorAll("#" + id + " .AddPluginSuccess"),
+          "label span:first-child",
+        ),
         plugin_added_str,
       );
-      $("#" + id + " .AddPluginSuccess").css("display", "flex");
+      css(
+        document.querySelectorAll("#" + id + " .AddPluginSuccess"),
+        "display",
+        "flex",
+      );
 
       nb_plugin.active += 1;
       nb_plugin.inactive -= 1;
       actualizeFilter();
     },
-    error: function (e) {
+    error: function (e: AjaxResponse) {
       console.log(e.responseText);
-      $("#" + id + " .pluginNotif").stop(false, true);
-      $("#" + id + " .PluginActionError label span:first").html(
+      stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
+      html(
+        find(
+          document.querySelectorAll("#" + id + " .PluginActionError"),
+          "label span:first-child",
+        ),
         plugin_action_error,
       );
-      $("#" + id + " .PluginActionError").css("display", "flex");
-      $("#" + id + " .PluginActionError")
-        .delay(1500)
-        .fadeOut(2500);
+      css(
+        document.querySelectorAll("#" + id + " .PluginActionError"),
+        "display",
+        "flex",
+      );
+      const errorEl = document.querySelectorAll(
+        "#" + id + " .PluginActionError",
+      );
+      delay(errorEl, 1500);
+      fadeOut(errorEl, 2500);
     },
   }).done(function (_data: unknown) {
-    $("#" + id + " .switch").prop("disabled", false);
-    $("#" + id + " .AddPluginSuccess").fadeOut(3000);
+    setDisabled(document.querySelectorAll("#" + id + " .switch"), false);
+    fadeOut(document.querySelectorAll("#" + id + " .AddPluginSuccess"), 3000);
   });
 }
 
@@ -113,15 +158,15 @@ function activatePlugin(id: string) {
  * the confirm-first path below can reuse it verbatim rather than duplicate
  * the class bookkeeping.
  */
-function applyActivation(row: JQuery) {
-  activatePlugin(row.attr("id")!);
+function applyActivation(row: Element): void {
+  activatePlugin(row.id);
 
-  row.addClass("plugin-active").removeClass("plugin-inactive");
-  if (row.find(".pluginUnavailableAction").attr("href")) {
-    row
-      .find(".pluginUnavailableAction")
-      .removeClass("pluginUnavailableAction")
-      .addClass("pluginActionLevel1");
+  addClass(row, "plugin-active");
+  removeClass(row, "plugin-inactive");
+  if (find(row, ".pluginUnavailableAction")[0]?.getAttribute("href")) {
+    const unavailable = find(row, ".pluginUnavailableAction");
+    removeClass(unavailable, "pluginUnavailableAction");
+    addClass(unavailable, "pluginActionLevel1");
   }
 }
 
@@ -136,9 +181,10 @@ function applyActivation(row: JQuery) {
  * activated. `onClose` fires for every dismissal path, so the `confirmed`
  * flag is what distinguishes them.
  */
-function confirmIncompatibleActivation(toggle: JQuery, row: JQuery) {
+function confirmIncompatibleActivation(toggleEl: Element, row: Element): void {
   let confirmed = false;
 
+  // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
   $.confirm({
     title: incompatible_msg,
     content: activate_msg,
@@ -158,15 +204,15 @@ function confirmIncompatibleActivation(toggle: JQuery, row: JQuery) {
     },
     onClose: function () {
       if (!confirmed) {
-        toggle.prop("checked", false);
+        setChecked(toggleEl, false);
       }
     },
     ...jConfirm_confirm_with_content_options,
   });
 }
 
-function disactivatePlugin(id: string) {
-  $("#" + id + " .switch").prop("disabled", true);
+function disactivatePlugin(id: string): void {
+  setDisabled(document.querySelectorAll("#" + id + " .switch"), true);
 
   void ajax({
     type: "POST",
@@ -177,34 +223,56 @@ function disactivatePlugin(id: string) {
     data: JSON.stringify({ action: "deactivate" }),
     // 204 No Content -- pluginPerformAction's real response has no body.
     success: function (_data: unknown) {
-      $("#" + id + " .pluginNotif").stop(false, true);
-      $("#" + id + " .DeactivatePluginSuccess label span:first").html(
+      stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
+      html(
+        find(
+          document.querySelectorAll("#" + id + " .DeactivatePluginSuccess"),
+          "label span:first-child",
+        ),
         plugin_deactivated_str,
       );
-      $("#" + id + " .DeactivatePluginSuccess").css("display", "flex");
+      css(
+        document.querySelectorAll("#" + id + " .DeactivatePluginSuccess"),
+        "display",
+        "flex",
+      );
 
       nb_plugin.inactive += 1;
       nb_plugin.active -= 1;
       actualizeFilter();
     },
-    error: function (e) {
+    error: function (e: AjaxResponse) {
       console.log(e);
-      $("#" + id + " .pluginNotif").stop(false, true);
-      $("#" + id + " .PluginActionError label span:first").html(
+      stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
+      html(
+        find(
+          document.querySelectorAll("#" + id + " .PluginActionError"),
+          "label span:first-child",
+        ),
         plugin_action_error,
       );
-      $("#" + id + " .PluginActionError").css("display", "flex");
-      $("#" + id + " .PluginActionError")
-        .delay(1500)
-        .fadeOut(2500);
+      css(
+        document.querySelectorAll("#" + id + " .PluginActionError"),
+        "display",
+        "flex",
+      );
+      const errorEl = document.querySelectorAll(
+        "#" + id + " .PluginActionError",
+      );
+      delay(errorEl, 1500);
+      fadeOut(errorEl, 2500);
     },
   }).done(function (_data: unknown) {
-    $("#" + id + " .switch").prop("disabled", false);
-    $("#" + id + " .DeactivatePluginSuccess").fadeOut(3000);
+    setDisabled(document.querySelectorAll("#" + id + " .switch"), false);
+    fadeOut(
+      document.querySelectorAll("#" + id + " .DeactivatePluginSuccess"),
+      3000,
+    );
   });
 }
 
-function deletePlugin(id: string, name: string) {
+function deletePlugin(id: string, name: string): void {
+  // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
   $.alert({
     title: deleted_plugin_msg.replace("%s", name),
     content: function () {
@@ -217,21 +285,35 @@ function deletePlugin(id: string, name: string) {
         data: JSON.stringify({ action: "delete" }),
         // 204 No Content -- pluginPerformAction's real response has no body.
         success: function (_data: unknown) {
-          $("#" + id).remove();
+          document.getElementById(id)?.remove();
           nb_plugin.inactive -= 1;
           nb_plugin.all -= 1;
           actualizeFilter();
         },
-        error: function (e) {
+        error: function (e: AjaxResponse) {
           console.log(e);
-          $("#" + id + " .pluginNotif").stop(false, true);
-          $("#" + id + " .PluginActionError label span:first").html(
+          stop(
+            document.querySelectorAll("#" + id + " .pluginNotif"),
+            false,
+            true,
+          );
+          html(
+            find(
+              document.querySelectorAll("#" + id + " .PluginActionError"),
+              "label span:first-child",
+            ),
             plugin_action_error,
           );
-          $("#" + id + " .PluginActionError").css("display", "flex");
-          $("#" + id + " .PluginActionError")
-            .delay(1500)
-            .fadeOut(2500);
+          css(
+            document.querySelectorAll("#" + id + " .PluginActionError"),
+            "display",
+            "flex",
+          );
+          const errorEl = document.querySelectorAll(
+            "#" + id + " .PluginActionError",
+          );
+          delay(errorEl, 1500);
+          fadeOut(errorEl, 2500);
         },
       });
     },
@@ -239,7 +321,7 @@ function deletePlugin(id: string, name: string) {
   });
 }
 
-function restorePlugin(id: string) {
+function restorePlugin(id: string): void {
   void ajax({
     type: "POST",
     dataType: "json",
@@ -249,29 +331,50 @@ function restorePlugin(id: string) {
     data: JSON.stringify({ action: "restore" }),
     // 204 No Content -- pluginPerformAction's real response has no body.
     success: function (_data: unknown) {
-      $("#" + id + " .pluginNotif").stop(false, true);
-      $("#" + id + " .RestorePluginSuccess label span:first").html(
+      stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
+      html(
+        find(
+          document.querySelectorAll("#" + id + " .RestorePluginSuccess"),
+          "label span:first-child",
+        ),
         plugin_restored_str,
       );
-      $("#" + id + " .RestorePluginSuccess").css("display", "flex");
+      css(
+        document.querySelectorAll("#" + id + " .RestorePluginSuccess"),
+        "display",
+        "flex",
+      );
     },
-    error: function (e) {
+    error: function (e: AjaxResponse) {
       console.log(e);
-      $("#" + id + " .pluginNotif").stop(false, true);
-      $("#" + id + " .PluginActionError label span:first").html(
+      stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
+      html(
+        find(
+          document.querySelectorAll("#" + id + " .PluginActionError"),
+          "label span:first-child",
+        ),
         plugin_action_error,
       );
-      $("#" + id + " .PluginActionError").css("display", "flex");
-      $("#" + id + " .PluginActionError")
-        .delay(1500)
-        .fadeOut(2500);
+      css(
+        document.querySelectorAll("#" + id + " .PluginActionError"),
+        "display",
+        "flex",
+      );
+      const errorEl = document.querySelectorAll(
+        "#" + id + " .PluginActionError",
+      );
+      delay(errorEl, 1500);
+      fadeOut(errorEl, 2500);
     },
   }).done(function (_data: unknown) {
-    $("#" + id + " .RestorePluginSuccess").fadeOut(3000);
+    fadeOut(
+      document.querySelectorAll("#" + id + " .RestorePluginSuccess"),
+      3000,
+    );
   });
 }
 
-function uninstallPlugin(id: string) {
+function uninstallPlugin(id: string): void {
   void ajax({
     type: "POST",
     dataType: "json",
@@ -281,20 +384,30 @@ function uninstallPlugin(id: string) {
     data: JSON.stringify({ action: "uninstall" }),
     // 204 No Content -- pluginPerformAction's real response has no body.
     success: function (_data: unknown) {
-      $("#" + id).remove();
+      document.getElementById(id)?.remove();
       nb_plugin.other -= 1;
       nb_plugin.all -= 1;
       actualizeFilter();
     },
-    error: function (e) {
-      $("#" + id + " .pluginNotif").stop(false, true);
-      $("#" + id + " .PluginActionError label span:first").html(
+    error: function (e: AjaxResponse) {
+      stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
+      html(
+        find(
+          document.querySelectorAll("#" + id + " .PluginActionError"),
+          "label span:first-child",
+        ),
         plugin_action_error,
       );
-      $("#" + id + " .PluginActionError").css("display", "flex");
-      $("#" + id + " .PluginActionError")
-        .delay(1500)
-        .fadeOut(2500);
+      css(
+        document.querySelectorAll("#" + id + " .PluginActionError"),
+        "display",
+        "flex",
+      );
+      const errorEl = document.querySelectorAll(
+        "#" + id + " .PluginActionError",
+      );
+      delay(errorEl, 1500);
+      fadeOut(errorEl, 2500);
       // Was `e.message` -- jqXHR has no such property (confirmed via
       // @types/jquery's own jqXHR interface); the real server error body
       // is JSON on `.responseText`, matching activatePlugin's own
@@ -304,32 +417,32 @@ function uninstallPlugin(id: string) {
   });
 }
 
-$(document).ready(function () {
+ready(function () {
   actualizeFilter();
 
-  if ($("#displayClassic").is(":checked")) {
+  if (is(document.querySelectorAll("#displayClassic"), ":checked")) {
     setDisplayClassic();
   }
 
-  if ($("#displayCompact").is(":checked")) {
+  if (is(document.querySelectorAll("#displayCompact"), ":checked")) {
     setDisplayCompact();
   }
 
-  if ($("#displayLine").is(":checked")) {
+  if (is(document.querySelectorAll("#displayLine"), ":checked")) {
     setDisplayLine();
   }
 
-  $("#displayClassic").change(function () {
+  on(document.querySelectorAll("#displayClassic"), "change", function () {
     setDisplayClassic();
     set_view_selector("classic");
   });
 
-  $("#displayCompact").change(function () {
+  on(document.querySelectorAll("#displayCompact"), "change", function () {
     setDisplayCompact();
     set_view_selector("compact");
   });
 
-  $("#displayLine").change(function () {
+  on(document.querySelectorAll("#displayLine"), "change", function () {
     setDisplayLine();
     set_view_selector("line");
   });
@@ -338,52 +451,56 @@ $(document).ready(function () {
 
   // Set filter on Active on load
   if (nb_plugin.active > 0) {
-    $(".pluginMiniBox").each(function () {
-      if (!$(this).hasClass("plugin-active")) {
-        $(this).hide();
+    document.querySelectorAll(".pluginMiniBox").forEach((el) => {
+      if (!hasClass(el, "plugin-active")) {
+        hide(el);
       }
     });
-    $("#seeActive").trigger("click");
+    // `.trigger("click")` on a real radio input: jQuery's own trigger()
+    // special-cases click/focus/blur/select/submit/reset by calling the
+    // element's real native method instead of dispatching a synthetic
+    // event -- only that real `.click()` actually flips the radio's own
+    // checked state and fires the native "change" that follows. A
+    // dispatched CustomEvent (dom.ts's own `trigger()`) does neither, so
+    // this one call site needs the real DOM method, not the helper.
+    document.getElementById("seeActive")?.click();
   } else {
-    $(".pluginMiniBox").show();
+    show(document.querySelectorAll(".pluginMiniBox"));
   }
 
-  $("#seeAll").on("change", function () {
-    $(".pluginBox").show();
-    $(".search-input").trigger("input");
+  on(document.querySelectorAll("#seeAll"), "change", function () {
+    show(document.querySelectorAll(".pluginBox"));
+    trigger(document.querySelectorAll(".search-input"), "input");
   });
 
-  $("#seeActive").on("change", function () {
-    $(".pluginBox").show();
-    $(".pluginBox").each(function () {
-      if (!$(this).hasClass("plugin-active")) {
-        $(this).hide();
+  on(document.querySelectorAll("#seeActive"), "change", function () {
+    show(document.querySelectorAll(".pluginBox"));
+    document.querySelectorAll(".pluginBox").forEach((el) => {
+      if (!hasClass(el, "plugin-active")) {
+        hide(el);
       }
     });
-    $(".search-input").trigger("input");
+    trigger(document.querySelectorAll(".search-input"), "input");
   });
 
-  $("#seeInactive").on("change", function () {
-    $(".pluginBox").show();
-    $(".pluginBox").each(function () {
-      if (!$(this).hasClass("plugin-inactive")) {
-        $(this).hide();
+  on(document.querySelectorAll("#seeInactive"), "change", function () {
+    show(document.querySelectorAll(".pluginBox"));
+    document.querySelectorAll(".pluginBox").forEach((el) => {
+      if (!hasClass(el, "plugin-inactive")) {
+        hide(el);
       }
     });
-    $(".search-input").trigger("input");
+    trigger(document.querySelectorAll(".search-input"), "input");
   });
 
-  $("#seeOther").on("change", function () {
-    $(".pluginBox").show();
-    $(".pluginBox").each(function () {
-      if (
-        $(this).hasClass("plugin-active") ||
-        $(this).hasClass("plugin-inactive")
-      ) {
-        $(this).hide();
+  on(document.querySelectorAll("#seeOther"), "change", function () {
+    show(document.querySelectorAll(".pluginBox"));
+    document.querySelectorAll(".pluginBox").forEach((el) => {
+      if (hasClass(el, "plugin-active") || hasClass(el, "plugin-inactive")) {
+        hide(el);
       }
     });
-    $(".search-input").trigger("input");
+    trigger(document.querySelectorAll(".search-input"), "input");
   });
 
   /* Plugin Actions */
@@ -391,13 +508,14 @@ $(document).ready(function () {
    * Activate / Deactivate
    */
   if (isWebmaster != 0) {
-    $(".switch").change(function () {
-      $(".pluginMiniBox").addClass("usable");
+    on(document.querySelectorAll(".switch"), "change", function (event: Event) {
+      const switchEl = event.currentTarget as Element;
+      addClass(document.querySelectorAll(".pluginMiniBox"), "usable");
 
-      const toggle = $(this).find("#toggleSelectionMode");
-      const row = $(this).parent().parent();
+      const toggleEl = find(switchEl, "#toggleSelectionMode")[0]!;
+      const row = switchEl.parentElement!.parentElement!;
 
-      if (toggle.is(":checked")) {
+      if (is(toggleEl, ":checked")) {
         // Activating a plugin the PEM catalog reports as incompatible with
         // this Piwigo version asks first. This guard used to hang off
         // `#<id> .activate` inside the incompatible-plugins ajax handler
@@ -408,60 +526,90 @@ $(document).ready(function () {
         // never shown: the warning marker rendered, and activation went
         // through silently regardless. It lives here now, on the control
         // that actually performs the activation.
-        if (row.hasClass("incompatible")) {
-          confirmIncompatibleActivation(toggle, row);
+        if (hasClass(row, "incompatible")) {
+          confirmIncompatibleActivation(toggleEl, row);
 
           return;
         }
 
         applyActivation(row);
       } else {
-        disactivatePlugin(row.attr("id")!);
+        disactivatePlugin(row.id);
 
-        row.removeClass("plugin-active").addClass("plugin-inactive");
-        row
-          .find(".pluginActionLevel1")
-          .removeClass("pluginActionLevel1")
-          .addClass("pluginUnavailableAction");
+        removeClass(row, "plugin-active");
+        addClass(row, "plugin-inactive");
+        const levelAction = find(row, ".pluginActionLevel1");
+        removeClass(levelAction, "pluginActionLevel1");
+        addClass(levelAction, "pluginUnavailableAction");
       }
 
       actualizeFilter();
     });
   } else {
-    $(".pluginMiniBox").addClass("notUsable");
-    $(".plugin-active").find(".slider").addClass("desactivate_disabled");
-    $(".plugin-inactive").find(".slider").addClass("activate_disabled");
-    $(".switch input").on("click", function (event) {
-      $(this).addClass("disabled");
-      event.preventDefault();
-      event.stopPropagation();
+    addClass(document.querySelectorAll(".pluginMiniBox"), "notUsable");
+    addClass(
+      find(document.querySelectorAll(".plugin-active"), ".slider"),
+      "desactivate_disabled",
+    );
+    addClass(
+      find(document.querySelectorAll(".plugin-inactive"), ".slider"),
+      "activate_disabled",
+    );
+    on(
+      document.querySelectorAll(".switch input"),
+      "click",
+      function (event: Event) {
+        const el = event.currentTarget as Element;
+        addClass(el, "disabled");
+        event.preventDefault();
+        event.stopPropagation();
 
-      const id = $(this).parent().parent().parent().attr("id")!;
-      $("#" + id + " .pluginNotif").stop(false, true);
-      $("#" + id + " .PluginActionError label span:first").html(not_webmaster);
-      $("#" + id + " .PluginActionError").css("display", "flex");
-      $("#" + id + " .PluginActionError")
-        .delay(1500)
-        .fadeOut(2500);
+        const id = el.parentElement!.parentElement!.parentElement!.id;
+        stop(
+          document.querySelectorAll("#" + id + " .pluginNotif"),
+          false,
+          true,
+        );
+        html(
+          find(
+            document.querySelectorAll("#" + id + " .PluginActionError"),
+            "label span:first-child",
+          ),
+          not_webmaster,
+        );
+        css(
+          document.querySelectorAll("#" + id + " .PluginActionError"),
+          "display",
+          "flex",
+        );
+        const errorEl = document.querySelectorAll(
+          "#" + id + " .PluginActionError",
+        );
+        delay(errorEl, 1500);
+        fadeOut(errorEl, 2500);
 
-      setTimeout(function () {
-        $(".switch input").removeClass("disabled");
-      }, 400); //Same duration as the animation "desactivate_disabled" in css
-    });
+        setTimeout(function () {
+          removeClass(document.querySelectorAll(".switch input"), "disabled");
+        }, 400); //Same duration as the animation "desactivate_disabled" in css
+      },
+    );
   }
 
   /**
    * Delete
    */
-  $(".pluginContent")
-    .find(".dropdown-option.delete-plugin-button")
-    .on("click", function () {
-      const plugin_name = $(this)
-        .closest(".pluginContent")
-        .find(".pluginName")
-        .html()
-        .trim();
-      const plugin_id = $(this).closest(".pluginContent").parent().attr("id")!;
+  on(
+    find(
+      document.querySelectorAll(".pluginContent"),
+      ".dropdown-option.delete-plugin-button",
+    ),
+    "click",
+    function (event: Event) {
+      const el = event.currentTarget as Element;
+      const pluginContent = el.closest(".pluginContent")!;
+      const plugin_name = textOf(find(pluginContent, ".pluginName")).trim();
+      const plugin_id = pluginContent.parentElement!.id;
+      // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
       $.confirm({
         title: delete_plugin_msg.replace("%s", plugin_name),
         buttons: {
@@ -478,20 +626,24 @@ $(document).ready(function () {
         },
         ...jConfirm_confirm_options,
       });
-    });
+    },
+  );
 
   /**
    * Restore
    */
-  $(".pluginContent")
-    .find(".dropdown-option.plugin-restore")
-    .on("click", function () {
-      const plugin_name = $(this)
-        .closest(".pluginContent")
-        .find(".pluginName")
-        .html()
-        .trim();
-      const plugin_id = $(this).closest(".pluginContent").parent().attr("id")!;
+  on(
+    find(
+      document.querySelectorAll(".pluginContent"),
+      ".dropdown-option.plugin-restore",
+    ),
+    "click",
+    function (event: Event) {
+      const el = event.currentTarget as Element;
+      const pluginContent = el.closest(".pluginContent")!;
+      const plugin_name = textOf(find(pluginContent, ".pluginName")).trim();
+      const plugin_id = pluginContent.parentElement!.id;
+      // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
       $.confirm({
         title: restore_plugin_msg.replace("%s", plugin_name),
         content: str_restore_def,
@@ -509,20 +661,24 @@ $(document).ready(function () {
         },
         ...jConfirm_confirm_options,
       });
-    });
+    },
+  );
 
   /**
    * Uninstall
    */
-  $(".pluginContent")
-    .find(".uninstall-plugin-button")
-    .on("click", function () {
-      const plugin_name = $(this)
-        .closest(".pluginContent")
-        .find(".pluginName")
-        .html()
-        .trim();
-      const plugin_id = $(this).closest(".pluginContent").parent().attr("id")!;
+  on(
+    find(
+      document.querySelectorAll(".pluginContent"),
+      ".uninstall-plugin-button",
+    ),
+    "click",
+    function (event: Event) {
+      const el = event.currentTarget as Element;
+      const pluginContent = el.closest(".pluginContent")!;
+      const plugin_name = textOf(find(pluginContent, ".pluginName")).trim();
+      const plugin_id = pluginContent.parentElement!.id;
+      // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
       $.confirm({
         title: uninstall_plugin_msg.replace("%s", plugin_name),
         buttons: {
@@ -539,10 +695,11 @@ $(document).ready(function () {
         },
         ...jConfirm_confirm_options,
       });
-    });
+    },
+  );
 });
 
-function set_view_selector(view_type: string) {
+function set_view_selector(view_type: string): void {
   void ajax({
     url: "api/v1/session/preferences/plugin-manager-view",
     type: "PUT",
@@ -554,30 +711,45 @@ function set_view_selector(view_type: string) {
   });
 }
 
-function actualizeFilter() {
-  $("label[for='seeAll'] .filter-badge").html(String(nb_plugin.all));
-  $("label[for='seeActive'] .filter-badge").html(String(nb_plugin.active));
-  $("label[for='seeInactive'] .filter-badge").html(String(nb_plugin.inactive));
-  $("label[for='seeOther'] .filter-badge").html(String(nb_plugin.other));
-  $(".filterLabel").show();
+function actualizeFilter(): void {
+  html(
+    find(document.querySelectorAll("label[for='seeAll']"), ".filter-badge"),
+    String(nb_plugin.all),
+  );
+  html(
+    find(document.querySelectorAll("label[for='seeActive']"), ".filter-badge"),
+    String(nb_plugin.active),
+  );
+  html(
+    find(
+      document.querySelectorAll("label[for='seeInactive']"),
+      ".filter-badge",
+    ),
+    String(nb_plugin.inactive),
+  );
+  html(
+    find(document.querySelectorAll("label[for='seeOther']"), ".filter-badge"),
+    String(nb_plugin.other),
+  );
+  show(document.querySelectorAll(".filterLabel"));
 
-  $(".pluginMiniBox").each(function () {
+  document.querySelectorAll(".pluginMiniBox").forEach(() => {
     if (nb_plugin.active == 0) {
-      $("label[for='seeActive']").hide();
-      if ($("#seeActive").is(":checked")) {
-        $("#seeAll").trigger("click");
+      hide(document.querySelectorAll("label[for='seeActive']"));
+      if (is(document.querySelectorAll("#seeActive"), ":checked")) {
+        document.getElementById("seeAll")?.click();
       }
     }
     if (nb_plugin.inactive == 0) {
-      $("label[for='seeInactive']").hide();
-      if ($("#seeInactive").is(":checked")) {
-        $("#seeAll").trigger("click");
+      hide(document.querySelectorAll("label[for='seeInactive']"));
+      if (is(document.querySelectorAll("#seeInactive"), ":checked")) {
+        document.getElementById("seeAll")?.click();
       }
     }
     if (nb_plugin.other == 0) {
-      $("label[for='seeOther']").hide();
-      if ($("#seeOther").is(":checked")) {
-        $("#seeAll").trigger("click");
+      hide(document.querySelectorAll("label[for='seeOther']"));
+      if (is(document.querySelectorAll("#seeOther"), ":checked")) {
+        document.getElementById("seeAll")?.click();
       }
     }
   });
@@ -585,35 +757,46 @@ function actualizeFilter() {
 
 /* group action */
 
-jQuery(document).ready(function () {
-  $("label[for='seeActive'] .filter-badge").html(String(nb_plugin.active));
-  $("label[for='seeInactive'] .filter-badge").html(String(nb_plugin.inactive));
-  $("label[for='seeOther'] .filter-badge").html(String(nb_plugin.other));
-  $(".filterLabel").show();
+ready(function () {
+  html(
+    find(document.querySelectorAll("label[for='seeActive']"), ".filter-badge"),
+    String(nb_plugin.active),
+  );
+  html(
+    find(
+      document.querySelectorAll("label[for='seeInactive']"),
+      ".filter-badge",
+    ),
+    String(nb_plugin.inactive),
+  );
+  html(
+    find(document.querySelectorAll("label[for='seeOther']"), ".filter-badge"),
+    String(nb_plugin.other),
+  );
+  show(document.querySelectorAll(".filterLabel"));
 
-  $(".pluginBox").each(function () {
+  document.querySelectorAll(".pluginBox").forEach((box) => {
     if (nb_plugin.active == 0) {
-      $("label[for='seeActive']").hide();
-      if ($("#seeActive").is(":checked")) {
-        $("#seeAll").trigger("click");
+      hide(document.querySelectorAll("label[for='seeActive']"));
+      if (is(document.querySelectorAll("#seeActive"), ":checked")) {
+        document.getElementById("seeAll")?.click();
       }
     }
     if (nb_plugin.inactive == 0) {
-      $("label[for='seeInactive']").hide();
-      if ($("#seeInactive").is(":checked")) {
-        $("#seeAll").trigger("click");
+      hide(document.querySelectorAll("label[for='seeInactive']"));
+      if (is(document.querySelectorAll("#seeInactive"), ":checked")) {
+        document.getElementById("seeAll")?.click();
       }
     }
     if (nb_plugin.other == 0) {
-      $("label[for='seeOther']").hide();
-      if ($("#seeOther").is(":checked")) {
-        $("#seeAll").trigger("click");
+      hide(document.querySelectorAll("label[for='seeOther']"));
+      if (is(document.querySelectorAll("#seeOther"), ":checked")) {
+        document.getElementById("seeAll")?.click();
       }
     }
 
-    const myplugin = jQuery(this);
-    myplugin.find(".showOptions").click(function () {
-      myplugin.find(".PluginOptionsBlock").toggle();
+    on(find(box, ".showOptions"), "click", function () {
+      toggle(find(box, ".PluginOptionsBlock"));
     });
   });
 
@@ -636,18 +819,21 @@ jQuery(document).ready(function () {
     success: function (data: string[]) {
       for (let i = 0; i < data.length; i++) {
         if (show_details)
-          jQuery("#" + data[i] + " .pluginName").prepend(
+          prepend(
+            document.querySelectorAll("#" + data[i] + " .pluginName"),
             '<a class="warning" title="' + incompatible_msg + '"></a>',
           );
         else
-          jQuery("#" + data[i] + " .pluginName").prepend(
+          prepend(
+            document.querySelectorAll("#" + data[i] + " .pluginName"),
             '<span class="warning" title="' + incompatible_msg + '"></span>',
           );
         // The `incompatible` class is what the activation guard in the
         // switch handler above keys off -- this marker is the whole
         // mechanism, not just styling.
-        jQuery("#" + data[i]).addClass("incompatible");
+        addClass(document.querySelectorAll("#" + data[i]), "incompatible");
       }
+      // Still jQuery: tipTip is a library, ported in P49-B group 2.
       jQuery(".warning").tipTip({
         delay: 0,
         fadeIn: 200,
@@ -660,153 +846,164 @@ jQuery(document).ready(function () {
   /*Add the filter research*/
   document.onkeydown = function (e) {
     if (e.keyCode == 58) {
-      jQuery(".pluginFilter input.search-input").focus();
+      document
+        .querySelector<HTMLElement>(".pluginFilter input.search-input")
+        ?.focus();
       return false;
     }
   };
 
-  jQuery(".pluginFilter input").on("input", function () {
-    const text = String(jQuery(this).val()).toLowerCase();
-    let searchNumber = 0;
+  on(
+    document.querySelectorAll(".pluginFilter input"),
+    "input",
+    function (event: Event) {
+      const text = String(val(event.currentTarget as Element)).toLowerCase();
+      let searchNumber = 0;
 
-    let searchActive = 0;
-    let searchInactive = 0;
-    let searchOther = 0;
+      let searchActive = 0;
+      let searchInactive = 0;
+      let searchOther = 0;
 
-    $(".pluginBox").each(function () {
-      if (text == "") {
-        jQuery(".nbPluginsSearch").hide();
-        if ($("#seeAll").is(":checked")) {
-          jQuery(this).show();
-        }
-        if (
-          $("#seeActive").is(":checked") &&
-          jQuery(this).hasClass("plugin-active")
-        ) {
-          jQuery(this).show();
-        }
-        if (
-          $("#seeInactive").is(":checked") &&
-          jQuery(this).hasClass("plugin-inactive")
-        ) {
-          jQuery(this).show();
-        }
-        if (
-          $("#seeOther").is(":checked") &&
-          (jQuery(this).hasClass("plugin-merged") ||
-            jQuery(this).hasClass("plugin-missing"))
-        ) {
-          jQuery(this).show();
-        }
-
-        if ($(this).hasClass("plugin-active")) {
-          searchActive++;
-        }
-        if ($(this).hasClass("plugin-inactive")) {
-          searchInactive++;
-        }
-        if (
-          $(this).hasClass("plugin-merged") ||
-          $(this).hasClass("plugin-missing")
-        ) {
-          searchOther++;
-        }
-        searchNumber++;
-
-        nb_plugin.all = searchNumber;
-        nb_plugin.active = searchActive;
-        nb_plugin.inactive = searchInactive;
-        nb_plugin.other = searchOther;
-      } else {
-        const name = jQuery(this).find(".pluginName").text().toLowerCase();
-        jQuery(".nbPluginsSearch").show();
-        const description = jQuery(this)
-          .find(".pluginDesc")
-          .text()
-          .toLowerCase();
-        if (name.search(text) != -1 || description.search(text) != -1) {
-          searchNumber++;
-
-          if ($("#seeAll").is(":checked")) {
-            jQuery(this).show();
+      document.querySelectorAll(".pluginBox").forEach((box) => {
+        if (text == "") {
+          hide(document.querySelectorAll(".nbPluginsSearch"));
+          if (is(document.querySelectorAll("#seeAll"), ":checked")) {
+            show(box);
           }
           if (
-            $("#seeActive").is(":checked") &&
-            jQuery(this).hasClass("plugin-active")
+            is(document.querySelectorAll("#seeActive"), ":checked") &&
+            hasClass(box, "plugin-active")
           ) {
-            jQuery(this).show();
+            show(box);
           }
           if (
-            $("#seeInactive").is(":checked") &&
-            jQuery(this).hasClass("plugin-inactive")
+            is(document.querySelectorAll("#seeInactive"), ":checked") &&
+            hasClass(box, "plugin-inactive")
           ) {
-            jQuery(this).show();
+            show(box);
           }
           if (
-            $("#seeOther").is(":checked") &&
-            (jQuery(this).hasClass("plugin-merged") ||
-              jQuery(this).hasClass("plugin-missing"))
+            is(document.querySelectorAll("#seeOther"), ":checked") &&
+            (hasClass(box, "plugin-merged") || hasClass(box, "plugin-missing"))
           ) {
-            jQuery(this).show();
+            show(box);
           }
 
-          if ($(this).hasClass("plugin-active")) {
+          if (hasClass(box, "plugin-active")) {
             searchActive++;
           }
-          if ($(this).hasClass("plugin-inactive")) {
+          if (hasClass(box, "plugin-inactive")) {
             searchInactive++;
           }
           if (
-            $(this).hasClass("plugin-merged") ||
-            $(this).hasClass("plugin-missing")
+            hasClass(box, "plugin-merged") ||
+            hasClass(box, "plugin-missing")
           ) {
             searchOther++;
           }
+          searchNumber++;
 
           nb_plugin.all = searchNumber;
           nb_plugin.active = searchActive;
           nb_plugin.inactive = searchInactive;
           nb_plugin.other = searchOther;
         } else {
-          jQuery(this).hide();
+          const name = textOf(find(box, ".pluginName")).toLowerCase();
+          show(document.querySelectorAll(".nbPluginsSearch"));
+          const description = textOf(find(box, ".pluginDesc")).toLowerCase();
+          if (name.search(text) != -1 || description.search(text) != -1) {
+            searchNumber++;
 
-          nb_plugin.all = searchNumber;
-          nb_plugin.active = searchActive;
-          nb_plugin.inactive = searchInactive;
-          nb_plugin.other = searchOther;
+            if (is(document.querySelectorAll("#seeAll"), ":checked")) {
+              show(box);
+            }
+            if (
+              is(document.querySelectorAll("#seeActive"), ":checked") &&
+              hasClass(box, "plugin-active")
+            ) {
+              show(box);
+            }
+            if (
+              is(document.querySelectorAll("#seeInactive"), ":checked") &&
+              hasClass(box, "plugin-inactive")
+            ) {
+              show(box);
+            }
+            if (
+              is(document.querySelectorAll("#seeOther"), ":checked") &&
+              (hasClass(box, "plugin-merged") ||
+                hasClass(box, "plugin-missing"))
+            ) {
+              show(box);
+            }
+
+            if (hasClass(box, "plugin-active")) {
+              searchActive++;
+            }
+            if (hasClass(box, "plugin-inactive")) {
+              searchInactive++;
+            }
+            if (
+              hasClass(box, "plugin-merged") ||
+              hasClass(box, "plugin-missing")
+            ) {
+              searchOther++;
+            }
+
+            nb_plugin.all = searchNumber;
+            nb_plugin.active = searchActive;
+            nb_plugin.inactive = searchInactive;
+            nb_plugin.other = searchOther;
+          } else {
+            hide(box);
+
+            nb_plugin.all = searchNumber;
+            nb_plugin.active = searchActive;
+            nb_plugin.inactive = searchInactive;
+            nb_plugin.other = searchOther;
+          }
         }
+      });
+
+      actualizeFilter();
+
+      if (searchNumber == 0) {
+        html(document.querySelectorAll(".nbPluginsSearch"), nothing_found);
+      } else if (searchNumber == 1) {
+        html(
+          document.querySelectorAll(".nbPluginsSearch"),
+          plugin_found.replace("%s", String(searchNumber)),
+        );
+      } else {
+        html(
+          document.querySelectorAll(".nbPluginsSearch"),
+          x_plugins_found.replace("%s", String(searchNumber)),
+        );
       }
-    });
-
-    actualizeFilter();
-
-    if (searchNumber == 0) {
-      jQuery(".nbPluginsSearch").html(nothing_found);
-    } else if (searchNumber == 1) {
-      jQuery(".nbPluginsSearch").html(
-        plugin_found.replace("%s", String(searchNumber)),
-      );
-    } else {
-      jQuery(".nbPluginsSearch").html(
-        x_plugins_found.replace("%s", String(searchNumber)),
-      );
-    }
-  });
+    },
+  );
 
   if (plugin_filter == "deactivated") {
-    jQuery(".filterLabel[for='seeInactive']").trigger("click");
+    // `.trigger("click")` on a real <label> -- same real-native-method
+    // reasoning as the #seeActive call above, though a label's own
+    // `.click()` additionally activates the checkbox/radio it's `for`,
+    // which is the whole point here.
+    document
+      .querySelector<HTMLElement>(".filterLabel[for='seeInactive']")
+      ?.click();
   }
 });
 
-$(document).mouseup(function (e) {
+on(document, "mouseup", function (e: Event) {
   e.stopPropagation();
-  $(".pluginBox").each(function () {
+  document.querySelectorAll(".pluginBox").forEach((box) => {
+    const showOptions = find(box, ".showOptions")[0];
     if (
-      $(this)
-        .find(".showOptions")
-        .has(e.target as unknown as Element).length === 0
+      showOptions === undefined ||
+      (showOptions !== e.target &&
+        !showOptions.contains(e.target as Node | null))
     ) {
-      $(this).find(".PluginOptionsBlock").hide();
+      hide(find(box, ".PluginOptionsBlock"));
     }
   });
 });

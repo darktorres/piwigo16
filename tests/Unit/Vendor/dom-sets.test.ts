@@ -20,6 +20,7 @@ import {
   removeAttr,
   removeClass,
   setChecked,
+  setDisabled,
   setVal,
   text,
   textOf,
@@ -133,6 +134,31 @@ describe("setChecked", () => {
 
     expect(() => {
       setChecked(set, true);
+    }).not.toThrow();
+  });
+});
+
+describe("setDisabled", () => {
+  it("writes to every element of the set, regardless of tag", () => {
+    document.body.innerHTML =
+      '<button class="t"></button><input class="t">';
+    const set = document.body.querySelectorAll<
+      HTMLButtonElement | HTMLInputElement
+    >(".t");
+
+    setDisabled(set, true);
+    expect(Array.from(set).every((el) => el.disabled)).toBe(true);
+
+    setDisabled(set, false);
+    expect(Array.from(set).every((el) => el.disabled)).toBe(false);
+  });
+
+  it("ignores an element with no disabled property rather than throwing", () => {
+    document.body.innerHTML = '<div class="t"></div>';
+    const set = document.body.querySelectorAll<HTMLElement>(".t");
+
+    expect(() => {
+      setDisabled(set, true);
     }).not.toThrow();
   });
 });

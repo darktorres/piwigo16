@@ -3,6 +3,18 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
+import {
+  append,
+  attr,
+  hasClass,
+  hide,
+  html,
+  is,
+  on,
+  prepend,
+  ready,
+  val,
+} from "../../../default/js/vendor/dom";
 
 const piwigo_need_update_msg =
   '<a href="admin.php?page=updates">' +
@@ -29,7 +41,8 @@ Object.keys(storage_details).forEach(function (type) {
   translate_type[type] = pwg_getPageString(type);
 });
 
-jQuery().ready(function () {
+ready(function () {
+  // Still jQuery: cluetip is a library, ported in P49-B group 3.
   jQuery(".cluetip").cluetip({
     width: 300,
     splitTitle: "|",
@@ -47,22 +60,32 @@ jQuery().ready(function () {
       ) {
         const piwigo_update = data["piwigoNeedUpdate"];
         const ext_update = data["extNeedUpdate"];
-        if ((piwigo_update || ext_update) && !jQuery(".warnings").is("div"))
-          jQuery(".eiw").prepend(
+        if (
+          (piwigo_update || ext_update) &&
+          !is(document.querySelectorAll(".warnings"), "div")
+        )
+          prepend(
+            document.querySelectorAll(".eiw"),
             '<div class="warnings"><i class="eiw-icon icon-attention"></i><ul></ul></div>',
           );
         if (piwigo_update)
-          jQuery(".warnings ul").append(
+          append(
+            document.querySelectorAll(".warnings ul"),
             "<li>" + piwigo_need_update_msg + "</li>",
           );
         if (ext_update)
-          jQuery(".warnings ul").append("<li>" + ext_need_update_msg + "</li>");
+          append(
+            document.querySelectorAll(".warnings ul"),
+            "<li>" + ext_need_update_msg + "</li>",
+          );
       },
     });
   }
 
   if (pwg_getPageData<string | null>("subscribe_base_url")) {
-    jQuery(".eiw").prepend(`
+    prepend(
+      document.querySelectorAll(".eiw"),
+      `
     <div class="promote-newsletter">
       <div class="promote-content">
 
@@ -79,32 +102,47 @@ jQuery().ready(function () {
 
       </div>
       <a href="#" class="dont-show-again icon-cancel tiptip newsletter-hide" title="${pwg_getPageString("Understood, do not show again")}"></a>
-    </div>`);
+    </div>`,
+    );
   }
 
-  jQuery("#newsletterSubscribeInput").change(function () {
-    jQuery("#newsletterSubscribeLink").attr(
-      "href",
-      newsletter_base_url + String(jQuery("#newsletterSubscribeInput").val()),
-    );
-  });
+  on(
+    document.querySelectorAll("#newsletterSubscribeInput"),
+    "change",
+    function (): void {
+      attr(
+        document.querySelectorAll("#newsletterSubscribeLink"),
+        "href",
+        newsletter_base_url +
+          String(val(document.querySelectorAll("#newsletterSubscribeInput"))),
+      );
+    },
+  );
 
-  jQuery(".newsletter-hide").click(function () {
-    jQuery(".promote-newsletter").hide();
+  on(
+    document.querySelectorAll(".newsletter-hide"),
+    "click",
+    function (event: Event): void {
+      hide(document.querySelectorAll(".promote-newsletter"));
 
-    void ajax({
-      type: "GET",
-      url: "admin.php?action=hide_newsletter_subscription",
-    });
+      void ajax({
+        type: "GET",
+        url: "admin.php?action=hide_newsletter_subscription",
+      });
 
-    if (jQuery(this).hasClass("newsletter-hide")) {
-      return false;
-    }
-  });
+      if (hasClass(event.currentTarget as Element, "newsletter-hide")) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    },
+  );
   const size_info = storage_total > 1000000 ? str_gb_used : str_mb_used;
   const size_nb =
     storage_total > 1000000
       ? (storage_total / 1000000).toFixed(2)
       : (storage_total / 1000).toFixed(0);
-  $(".chart-title-infos").html(size_info.replace("%s", size_nb));
+  html(
+    document.querySelectorAll(".chart-title-infos"),
+    size_info.replace("%s", size_nb),
+  );
 });

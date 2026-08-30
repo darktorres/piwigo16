@@ -711,6 +711,92 @@ it('shows the newsletter subscription promo panel for an account old enough with
     }
 });
 
+/**
+ * P49-A conversion of themes/admin/default/js/intro.ts's own newsletter
+ * panel handlers -- the sibling test above already exercises the
+ * `prepend()` conversion that injects this panel at all (its own
+ * H::rawWebpage()->content() assertion reads the live, post-JS DOM, not
+ * the raw HTTP body, since the panel has no server-side template of its
+ * own). This one covers the two interactive behaviours neither that test
+ * nor the raw-POST "hides the newsletter subscription banner via the
+ * action param" test above reaches: the subscribe input's own change
+ * handler, and clicking the real close icon (not just POSTing the same
+ * `action` param the button's own ajax call happens to use).
+ */
+it('syncs the newsletter subscribe link and hides the panel on its close icon', function (): void {
+    $page = H::loginAsAdmin($this);
+    $db = introDbConnect();
+
+    $originalRegistration = H::fetchAssocOrFail($db, 'SELECT registration_date FROM user_infos WHERE user_id = 1')['registration_date'];
+    $originalPreferences = H::fetchAssocOrFail($db, 'SELECT preferences FROM user_infos WHERE user_id = 1')['preferences'];
+    $configSnapshot = H::snapshotConfig(['show_newsletter_subscription']);
+
+    H::dbQuery($db, "UPDATE user_infos SET registration_date = '2020-01-01 00:00:00' WHERE user_id = 1");
+    $preferencesExpr = $db instanceof mysqli
+        ? "JSON_SET(COALESCE(preferences, JSON_OBJECT()), '\$.show_newsletter_subscription', TRUE)"
+        : "jsonb_set(COALESCE(preferences, '{}'::jsonb), '{show_newsletter_subscription}', 'true'::jsonb)";
+    H::dbQuery($db, "UPDATE user_infos SET preferences = {$preferencesExpr} WHERE user_id = 1");
+    H::dbClose($db);
+
+    $promoSeed = introSeedPromoThresholds();
+
+    try {
+        H::setConfigValue('show_newsletter_subscription', 'true');
+
+        $page = H::navigateOk($page, '/admin.php');
+        $page->assertPresent('#newsletterSubscribeInput');
+
+        $initialHref = $page->script(
+            "document.getElementById('newsletterSubscribeLink').getAttribute('href')"
+        );
+        expect($initialHref)
+            ->toContain('fixture_admin@example.test');
+
+        $page->script(<<<'JS'
+            (() => {
+                const input = document.getElementById('newsletterSubscribeInput');
+                input.value = 'someone-else@example.test';
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+            })()
+            JS);
+
+        $updatedHref = $page->script(
+            "document.getElementById('newsletterSubscribeLink').getAttribute('href')"
+        );
+        expect($updatedHref)
+            ->toContain('someone-else@example.test');
+        expect($updatedHref)
+            ->not->toContain('fixture_admin@example.test');
+
+        $page->click('a.dont-show-again.newsletter-hide');
+
+        $page->script(<<<'JS'
+            new Promise((resolve, reject) => {
+                const deadline = Date.now() + 5000;
+                const check = () => {
+                    if (getComputedStyle(document.querySelector('.promote-newsletter')).display === 'none') {
+                        return resolve(true);
+                    }
+                    if (Date.now() > deadline) {
+                        return reject(new Error('promote-newsletter panel never hid'));
+                    }
+                    setTimeout(check, 100);
+                };
+                check();
+            })
+            JS);
+
+        $page->assertNoJavaScriptErrors();
+        H::assertNoServerErrors($page, 'intro newsletter panel interaction');
+    } finally {
+        $originalRegistrationStr = is_string($originalRegistration) ? $originalRegistration : '2026-08-01 00:00:00';
+        introSetUserColumn(1, 'registration_date', $originalRegistrationStr);
+        introSetUserColumn(1, 'preferences', is_string($originalPreferences) ? $originalPreferences : null);
+        H::restoreConfig($configSnapshot);
+        introRemovePromoSeed($promoSeed);
+    }
+});
+
 // NOT exercised, deliberately: IntroSubController::handle()'s activity-chart
 // "split days into circle sizes" while-loop (`$max_idx =
 // array_search(max($diff_x), $diff_x, true); if ($max_idx === false) {

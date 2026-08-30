@@ -1656,6 +1656,24 @@ export function append(
   }
 }
 
+/**
+ * `.prepend(html)` -- inserts as the first child(ren) of every element.
+ * `reference` is captured once per element, before the loop: inserting
+ * repeatedly before `el.firstChild` without it would insert each new node
+ * ahead of the previous one, reversing their order.
+ */
+export function prepend(
+  target: Element | ArrayLike<Element>,
+  markup: string
+): void {
+  for (const el of toElements(target)) {
+    const reference = el.firstChild;
+    for (const node of parseHtml(markup)) {
+      el.insertBefore(node, reference);
+    }
+  }
+}
+
 /** `.after(html)` -- inserts as the next sibling of every element. */
 export function after(
   target: Element | ArrayLike<Element>,

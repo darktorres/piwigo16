@@ -14,6 +14,7 @@ import {
   html,
   htmlOf,
   is,
+  prepend,
   remove,
   removeClass,
   setVal,
@@ -218,6 +219,39 @@ describe("append and after", () => {
     const ids = Array.from(set[0]?.children ?? []).map((el) => el.id);
 
     expect(ids).toEqual(["first", "last"]);
+  });
+});
+
+describe("prepend", () => {
+  it("gives every element its own parsed copy", () => {
+    const set = mount('<div class="t"></div><div class="t"></div>');
+
+    prepend(set, "<b>x</b>");
+
+    // Same "a node can only live in one parent" reasoning as append().
+    expect(document.body.querySelectorAll("b")).toHaveLength(2);
+  });
+
+  it("inserts before existing children, preserving source order", () => {
+    document.body.innerHTML = '<div class="t"><b id="last"></b></div>';
+    const set = document.body.querySelectorAll<HTMLElement>(".t");
+
+    prepend(set, '<b id="first"></b><b id="second"></b>');
+
+    const ids = Array.from(set[0]?.children ?? []).map((el) => el.id);
+
+    // Inserting each new node before the ORIGINAL first child (captured
+    // once, not re-read per node) is what keeps "first"/"second" in that
+    // order rather than reversed.
+    expect(ids).toEqual(["first", "second", "last"]);
+  });
+
+  it("is silent on an empty set", () => {
+    const set = document.body.querySelectorAll<HTMLElement>(".missing");
+
+    expect(() => {
+      prepend(set, "<b>x</b>");
+    }).not.toThrow();
   });
 });
 

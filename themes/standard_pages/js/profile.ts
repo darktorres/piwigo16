@@ -4,6 +4,33 @@ import { sprintf } from "../../admin/default/js/common";
 
 import { pwg_getPageData, pwg_getPageString } from "../../default/js/page-data";
 import { ajax, type AjaxResponse } from "../../default/js/vendor/ajax";
+import {
+  addClass,
+  attr,
+  attrOf,
+  data,
+  fadeIn,
+  fadeOut,
+  find,
+  hasClass,
+  hide,
+  html,
+  is,
+  isVisible,
+  off,
+  on,
+  ready,
+  remove,
+  removeClass,
+  setChecked,
+  setData,
+  setVal,
+  show,
+  text,
+  textOf,
+  trigger,
+  val,
+} from "../../default/js/vendor/dom";
 export {};
 
 interface DefaultUserValues {
@@ -41,13 +68,17 @@ type ApiKeyEntry =
 let user: UserPreferences = {
   username: pwg_getPageData<string>("username"),
   email: pwg_getPageData<string | null>("email"),
-  nb_image_page: $('input[name="nb_image_page"]').val() as string,
-  theme: $('select[name="theme"]').val() as string,
-  language: $('select[name="language"]').val() as string,
-  recent_period: $('input[name="recent_period"]').val() as string,
-  opt_album: $("#opt_album").is(":checked"),
-  opt_comment: $("#opt_comment").is(":checked"),
-  opt_hits: $("#opt_hits").is(":checked"),
+  nb_image_page: val(
+    document.querySelectorAll('input[name="nb_image_page"]'),
+  ) as string,
+  theme: val(document.querySelectorAll('select[name="theme"]')) as string,
+  language: val(document.querySelectorAll('select[name="language"]')) as string,
+  recent_period: val(
+    document.querySelectorAll('input[name="recent_period"]'),
+  ) as string,
+  opt_album: is(document.querySelectorAll("#opt_album"), ":checked"),
+  opt_comment: is(document.querySelectorAll("#opt_comment"), ":checked"),
+  opt_hits: is(document.querySelectorAll("#opt_hits"), ":checked"),
 };
 
 const canUpdatePreferences = pwg_getPageData<boolean>(
@@ -111,112 +142,157 @@ const str_api_edited = pwg_getPageString(
 const no_time_elapsed = pwg_getPageString("right now");
 
 let PWG_TOKEN: string;
-$(function () {
-  PWG_TOKEN = $("#pwg_token").val() as string;
-  $(".profile-section .display-section").on("click", function () {
-    const display = $(this).data("display");
-    const selector = $(`#${display}`);
-    const element = selector.get(0)!;
-    const arrow = $(this).find(".display-btn");
+ready(function () {
+  PWG_TOKEN = val(document.querySelectorAll("#pwg_token")) as string;
 
-    if (selector.hasClass("open")) {
-      // close
-      element.style.maxHeight = element.scrollHeight + "px";
-      void element.offsetHeight;
-      element.style.maxHeight = "1px";
-      selector.removeClass("open");
-      arrow.addClass("close");
-    } else {
-      // open
-      selector.addClass("open");
-      resetSection(display);
-      arrow.removeClass("close");
-    }
-  });
+  on(
+    document.querySelectorAll(".profile-section .display-section"),
+    "click",
+    function (event: Event) {
+      const el = event.currentTarget as Element;
+      const display = data(el, "display") as string;
+      const element = document.getElementById(display)!;
+      const arrow = find(el, ".display-btn");
+
+      if (hasClass(element, "open")) {
+        // close
+        element.style.maxHeight = element.scrollHeight + "px";
+        void element.offsetHeight;
+        element.style.maxHeight = "1px";
+        removeClass(element, "open");
+        addClass(arrow, "close");
+      } else {
+        // open
+        addClass(element, "open");
+        resetSection(display);
+        removeClass(arrow, "close");
+      }
+    },
+  );
 
   setTimeout(() => {
-    $("#account-section .display-section").trigger("click");
+    trigger(
+      document.querySelectorAll("#account-section .display-section"),
+      "click",
+    );
   }, 100);
 
-  $("#save_account").on("click", function () {
-    const mail = $("#email").val() as string;
+  on(document.querySelectorAll("#save_account"), "click", function () {
+    const mail = val(document.querySelectorAll("#email")) as string;
     if (!mail || mail == "") {
-      $("#email_error").show();
+      show(document.querySelectorAll("#email_error"));
       return;
     }
     setInfos({ email: mail });
   });
 
   if (canUpdatePreferences) {
-    $("#save_preferences").on("click", function () {
+    on(document.querySelectorAll("#save_preferences"), "click", function () {
       const values = {
-        nb_image_page: $("#nb_image_page").val() as string,
-        theme: $('select[name="theme"]').val() as string,
-        language: $('select[name="language"]').val() as string,
-        recent_period: $("#recent_period").val() as string,
-        expand: $("#opt_album").is(":checked"),
-        show_nb_comments: $("#opt_comment").is(":checked"),
-        show_nb_hits: $("#opt_hits").is(":checked"),
+        nb_image_page: val(
+          document.querySelectorAll("#nb_image_page"),
+        ) as string,
+        theme: val(document.querySelectorAll('select[name="theme"]')) as string,
+        language: val(
+          document.querySelectorAll('select[name="language"]'),
+        ) as string,
+        recent_period: val(
+          document.querySelectorAll("#recent_period"),
+        ) as string,
+        expand: is(document.querySelectorAll("#opt_album"), ":checked"),
+        show_nb_comments: is(
+          document.querySelectorAll("#opt_comment"),
+          ":checked",
+        ),
+        show_nb_hits: is(document.querySelectorAll("#opt_hits"), ":checked"),
       };
 
       if (values.nb_image_page == "") {
-        $("#error_nb_image").show();
+        show(document.querySelectorAll("#error_nb_image"));
         return;
       }
 
       if (values.recent_period == "") {
-        $("#error_period").show();
+        show(document.querySelectorAll("#error_period"));
         return;
       }
 
       setInfos({ ...values });
     });
 
-    $("#reset_preferences").on("click", function () {
-      $('input[name="nb_image_page"]').val(user.nb_image_page);
-      $('select[name="theme"]').val(user.theme);
-      $('select[name="language"]').val(user.language);
-      $('input[name="recent_period"]').val(user.recent_period);
-      $("#opt_album").prop("checked", user.opt_album);
-      $("#opt_comment").prop("checked", user.opt_comment);
-      $("#opt_hits").prop("checked", user.opt_hits);
+    on(document.querySelectorAll("#reset_preferences"), "click", function () {
+      setVal(
+        document.querySelectorAll('input[name="nb_image_page"]'),
+        user.nb_image_page,
+      );
+      setVal(document.querySelectorAll('select[name="theme"]'), user.theme);
+      setVal(
+        document.querySelectorAll('select[name="language"]'),
+        user.language,
+      );
+      setVal(
+        document.querySelectorAll('input[name="recent_period"]'),
+        user.recent_period,
+      );
+      setChecked(document.querySelectorAll("#opt_album"), user.opt_album);
+      setChecked(document.querySelectorAll("#opt_comment"), user.opt_comment);
+      setChecked(document.querySelectorAll("#opt_hits"), user.opt_hits);
     });
 
-    $("#default_preferences").on("click", function () {
-      $('input[name="nb_image_page"]').val(
-        preferencesDefaultValues.nb_image_page,
+    on(document.querySelectorAll("#default_preferences"), "click", function () {
+      setVal(
+        document.querySelectorAll('input[name="nb_image_page"]'),
+        String(preferencesDefaultValues.nb_image_page),
       );
-      $('input[name="recent_period"]').val(
-        preferencesDefaultValues.recent_period,
+      setVal(
+        document.querySelectorAll('input[name="recent_period"]'),
+        String(preferencesDefaultValues.recent_period),
       );
-      $("#opt_album").prop("checked", preferencesDefaultValues.opt_album);
-      $("#opt_comment").prop("checked", preferencesDefaultValues.opt_comment);
-      $("#opt_hits").prop("checked", preferencesDefaultValues.opt_hits);
+      // See preferencesDefaultValues' own docblock -- these 3 lines treat
+      // any non-empty string (including the literal text "false") as
+      // truthy, faithfully matching the original's identical
+      // `.prop("checked", stringValue)` behavior.
+      setChecked(
+        document.querySelectorAll("#opt_album"),
+        Boolean(preferencesDefaultValues.opt_album),
+      );
+      setChecked(
+        document.querySelectorAll("#opt_comment"),
+        Boolean(preferencesDefaultValues.opt_comment),
+      );
+      setChecked(
+        document.querySelectorAll("#opt_hits"),
+        Boolean(preferencesDefaultValues.opt_hits),
+      );
     });
   }
 
   if (canUpdatePassword) {
-    $("#save_password").on("click", function () {
+    on(document.querySelectorAll("#save_password"), "click", function () {
       const passwords = {
-        password: $("#password").val() as string,
-        new_password: $("#password_new").val() as string,
-        conf_new_password: $("#password_conf").val() as string,
+        password: val(document.querySelectorAll("#password")) as string,
+        new_password: val(document.querySelectorAll("#password_new")) as string,
+        conf_new_password: val(
+          document.querySelectorAll("#password_conf"),
+        ) as string,
       };
       if (
         passwords.password == "" ||
         passwords.new_password == "" ||
         passwords.conf_new_password == ""
       ) {
-        $("#password-section input").each((i, element) => {
-          const el = $(element);
-          if (el.val() == "") {
-            el.parent().siblings().show();
+        document.querySelectorAll("#password-section input").forEach((el) => {
+          if (val(el) == "") {
+            const parent = el.parentElement;
+            if (parent !== null) {
+              show(siblingsOf(parent));
+            }
           }
         });
         return;
       }
       setInfos({ ...passwords });
-      $("#password-section input").val("");
+      setVal(document.querySelectorAll("#password-section input"), "");
     });
 
     // Live mirror of ProfileFormHandler's own server-side password-match
@@ -225,118 +301,150 @@ $(function () {
     // same element/convention the empty-field check above already
     // shows/hides.
     (function () {
-      const newPassword = $("#password_new");
-      const confirmPassword = $("#password_conf");
-      const errorMessage = confirmPassword
-        .closest(".column-flex")
-        .find(".error-message");
+      const newPassword = document.getElementById("password_new")!;
+      const confirmPassword = document.getElementById("password_conf")!;
+      const errorMessage = find(
+        confirmPassword.closest(".column-flex")!,
+        ".error-message",
+      );
 
       function check() {
         if (
-          confirmPassword.val() !== "" &&
-          newPassword.val() !== confirmPassword.val()
+          val(confirmPassword) !== "" &&
+          val(newPassword) !== val(confirmPassword)
         ) {
-          errorMessage
-            .html(
-              '<i class="gallery-icon-attention-circled"></i> ' +
-                pwg_getPageString("The passwords do not match"),
-            )
-            .show();
+          html(
+            errorMessage,
+            '<i class="gallery-icon-attention-circled"></i> ' +
+              pwg_getPageString("The passwords do not match"),
+          );
+          show(errorMessage);
         } else {
-          errorMessage.hide();
+          hide(errorMessage);
         }
       }
 
-      newPassword.on("blur keyup", check);
-      confirmPassword.on("blur keyup", check);
+      on(newPassword, "blur keyup", check);
+      on(confirmPassword, "blur keyup", check);
     })();
   }
 
   standardSaveSelector.forEach((selector, i) => {
-    $(selector).on("click", function () {
+    on(document.querySelectorAll(selector), "click", function () {
       const values: ProfileParams = {};
-      $(`#${i}-section`)
-        .find("input, textarea, select")
-        .each((_i, element) => {
-          const el = $(element);
-          const inputName = el.attr("name");
-          const inputValue = el.val() as string;
-          values[inputName!] = inputValue;
-        });
+      find(
+        document.querySelectorAll(`#${i}-section`),
+        "input, textarea, select",
+      ).forEach((element) => {
+        const inputName = attrOf(element, "name");
+        const inputValue = val(element) as string;
+        values[inputName!] = inputValue;
+      });
       setInfos({ ...values });
     });
   });
 
   // API KEY BELOW
   if (!can_manage_api) {
-    $(".can-manage").hide();
-    $("#cant_manage_api").show();
+    hide(document.querySelectorAll(".can-manage"));
+    show(document.querySelectorAll("#cant_manage_api"));
     return;
   }
-  $("#new_apikey").on("click", function () {
+  on(document.querySelectorAll("#new_apikey"), "click", function () {
     openApiModal();
   });
 
-  $("#close_api_modal, #cancel_apikey").on("click", function () {
-    closeApiModal();
-  });
+  on(
+    document.querySelectorAll("#close_api_modal, #cancel_apikey"),
+    "click",
+    function () {
+      closeApiModal();
+    },
+  );
 
-  $("#close_api_modal_edit").on("click", function () {
+  on(document.querySelectorAll("#close_api_modal_edit"), "click", function () {
     closeApiEditModal();
   });
 
-  $("#close_api_modal_revoke, #cancel_api_revoke").on("click", function () {
-    closeApiRevokeModal();
-  });
+  on(
+    document.querySelectorAll("#close_api_modal_revoke, #cancel_api_revoke"),
+    "click",
+    function () {
+      closeApiRevokeModal();
+    },
+  );
 
-  $("#show_expired_list").on("click", function () {
-    const api_list_expired = $("#api_key_list_expired");
-    const isOpen = $(this).data("show");
-    if (!isOpen) {
-      api_list_expired.get(0)!.style.maxHeight = "max-content";
-      $(this).text(str_hide_expired);
-    } else {
-      api_list_expired.get(0)!.style.maxHeight = "0";
-      $(this).text(str_show_expired);
-    }
+  on(
+    document.querySelectorAll("#show_expired_list"),
+    "click",
+    function (event: Event) {
+      const el = event.currentTarget as Element;
+      const api_list_expired = document.getElementById("api_key_list_expired")!;
+      const isOpen = data(el, "show");
+      if (!isOpen) {
+        api_list_expired.style.maxHeight = "max-content";
+        text(el, str_hide_expired);
+      } else {
+        api_list_expired.style.maxHeight = "0";
+        text(el, str_show_expired);
+      }
 
-    $(this).data("show", !isOpen);
+      setData(el, "show", !isOpen);
 
-    resetSection("apikey-display", false, true);
-  });
+      resetSection("apikey-display", false, true);
+    },
+  );
 
-  $(window).on("keydown", function (e) {
-    const haveApiModal = $("#api_modal").is(":visible");
-    const haveApiEditModal = $("#api_modal_edit").is(":visible");
-    const haveApiRevokeModal = $("#api_modal_revoke").is(":visible");
-    if (haveApiModal && e.key === "Escape") {
+  on(window, "keydown", function (e: Event) {
+    const key = (e as KeyboardEvent).key;
+    const haveApiModal = isVisible(document.getElementById("api_modal")!);
+    const haveApiEditModal = isVisible(
+      document.getElementById("api_modal_edit")!,
+    );
+    const haveApiRevokeModal = isVisible(
+      document.getElementById("api_modal_revoke")!,
+    );
+    if (haveApiModal && key === "Escape") {
       closeApiModal();
     }
-    if (haveApiEditModal && e.key === "Escape") {
+    if (haveApiEditModal && key === "Escape") {
       closeApiEditModal();
     }
-    if (haveApiRevokeModal && e.key === "Escape") {
+    if (haveApiRevokeModal && key === "Escape") {
       closeApiRevokeModal();
     }
   });
 
-  $('select[name="api_expiration"]').on("change", function () {
-    const custom_date = $("#api_custom_date");
-    const value = $(this).val();
-    if ("custom" === value) {
-      custom_date.css("display", "flex");
-    } else {
-      custom_date.css("display", "none");
-    }
-    $("#error_api_key_date").hide();
-  });
+  on(
+    document.querySelectorAll('select[name="api_expiration"]'),
+    "change",
+    function (event: Event) {
+      const custom_date = document.getElementById("api_custom_date")!;
+      const value = val(event.currentTarget as Element);
+      if ("custom" === value) {
+        custom_date.style.display = "flex";
+      } else {
+        custom_date.style.display = "none";
+      }
+      hide(document.querySelectorAll("#error_api_key_date"));
+    },
+  );
 
-  $("#api_expiration_date").on("change", function () {
-    $("#error_api_key_date").hide();
+  on(document.querySelectorAll("#api_expiration_date"), "change", function () {
+    hide(document.querySelectorAll("#error_api_key_date"));
   });
 
   getAllApiKeys();
 });
+
+/** `.siblings()` -- every other child of the element's own parent. */
+function siblingsOf(el: Element): Element[] {
+  const parent = el.parentElement;
+  if (parent === null) {
+    return [];
+  }
+  return Array.from(parent.children).filter((child) => child !== el);
+}
 
 // Callers (email/preferences/password/the plugin-extension
 // standardSaveSelector loop, currently always empty -- see profile.latte's
@@ -463,66 +571,75 @@ function getAllApiKeys(reset: boolean = false) {
 }
 
 function AddApiLine(lines: ApiKeyEntry[], reset: boolean) {
-  const api_list = $("#api_key_list");
-  const api_list_expired = $("#api_key_list_expired");
+  const api_list = document.getElementById("api_key_list")!;
+  const api_list_expired = document.getElementById("api_key_list_expired")!;
 
-  $(
-    "#api_key_list .api-tab-line:not(.template-api), #api_key_list .api-tab-collapse:not(.template-api)",
-  ).remove();
-  $(
-    "#api_key_list_expired .api-tab-line:not(.template-api), #api_key_list_expired .api-tab-collapse:not(.template-api)",
-  ).remove();
+  remove(
+    document.querySelectorAll(
+      "#api_key_list .api-tab-line:not(.template-api), #api_key_list .api-tab-collapse:not(.template-api)",
+    ),
+  );
+  remove(
+    document.querySelectorAll(
+      "#api_key_list_expired .api-tab-line:not(.template-api), #api_key_list_expired .api-tab-collapse:not(.template-api)",
+    ),
+  );
 
   lines.forEach((line) => {
-    const api_line = $("#api_line").clone();
-    const api_collapse = $("#api_collapse").clone();
+    const api_line = document
+      .getElementById("api_line")!
+      .cloneNode(true) as Element;
+    const api_collapse = document
+      .getElementById("api_collapse")!
+      .cloneNode(true) as Element;
     const tmp_id = line.authKey.slice(24, 34);
 
-    api_line.removeClass("template-api").addClass("api-tab");
-    api_line.attr("id", `api_${tmp_id}`);
-    api_line.find(".icon-collapse").data("api", tmp_id);
-    api_line
-      .find(".api_name")
-      .text(line.apikeyName)
-      .attr("title", line.apikeyName);
-    api_line.find(".api_creation").text(line.createdOn);
-    api_line
-      .find(".api_last_use")
-      .text(line.lastUsedOn || no_time_elapsed)
-      .attr("title", line.lastUsedOn || no_time_elapsed);
-    api_line.find(".api_expiration").text(line.expiration);
-    api_line.find(".api-icon-action").attr("data-api", `api_${tmp_id}`);
-    api_line.find(".api-icon-action").attr("data-pkid", line.authKey);
+    removeClass(api_line, "template-api");
+    addClass(api_line, "api-tab");
+    attr(api_line, "id", `api_${tmp_id}`);
+    setData(find(api_line, ".icon-collapse")[0]!, "api", tmp_id);
+    text(find(api_line, ".api_name"), line.apikeyName);
+    attr(find(api_line, ".api_name"), "title", line.apikeyName);
+    text(find(api_line, ".api_creation"), line.createdOn);
+    text(find(api_line, ".api_last_use"), line.lastUsedOn || no_time_elapsed);
+    attr(
+      find(api_line, ".api_last_use"),
+      "title",
+      line.lastUsedOn || no_time_elapsed,
+    );
+    text(find(api_line, ".api_expiration"), line.expiration);
+    attr(find(api_line, ".api-icon-action"), "data-api", `api_${tmp_id}`);
+    attr(find(api_line, ".api-icon-action"), "data-pkid", line.authKey);
 
-    api_collapse.attr("id", `api_collapse_${tmp_id}`);
-    api_collapse.removeClass("template-api");
-    api_collapse.find(".api_key").text(line.authKey);
-    api_collapse.find(".icon-clone").attr({
-      "data-copy": line.authKey,
-      "data-success": `api_copy_success_${tmp_id}`,
-    });
-    api_collapse.find(".api-copy").attr("id", `api_copy_success_${tmp_id}`);
+    attr(api_collapse, "id", `api_collapse_${tmp_id}`);
+    removeClass(api_collapse, "template-api");
+    text(find(api_collapse, ".api_key"), line.authKey);
+    attr(find(api_collapse, ".icon-clone"), "data-copy", line.authKey);
+    attr(
+      find(api_collapse, ".icon-clone"),
+      "data-success",
+      `api_copy_success_${tmp_id}`,
+    );
+    attr(find(api_collapse, ".api-copy"), "id", `api_copy_success_${tmp_id}`);
 
     if (!line.revokedOn && !line.isExpired) {
-      api_list.append(api_line);
+      api_list.appendChild(api_line);
       api_line.after(api_collapse);
     } else {
-      $("#show_expired_list").show();
-      api_list_expired.append(api_line);
+      show(document.querySelectorAll("#show_expired_list"));
+      api_list_expired.appendChild(api_line);
       api_line.after(api_collapse);
-      api_line.find(".api-icon-action").remove();
+      remove(find(api_line, ".api-icon-action"));
       if (line.isExpired) {
-        api_line
-          .find(".api_expiration")
-          .html(
-            `<i class="gallery-icon-skull api-skull"></i> <span>${line.expiredOn}</span>`,
-          );
+        html(
+          find(api_line, ".api_expiration"),
+          `<i class="gallery-icon-skull api-skull"></i> <span>${line.expiredOn}</span>`,
+        );
       } else {
-        api_line
-          .find(".api_expiration")
-          .html(
-            `<i class="gallery-icon-skull api-skull"></i> <span>${line.revokedOn}</span>`,
-          );
+        html(
+          find(api_line, ".api_expiration"),
+          `<i class="gallery-icon-skull api-skull"></i> <span>${line.revokedOn}</span>`,
+        );
       }
     }
   });
@@ -534,49 +651,56 @@ function AddApiLine(lines: ApiKeyEntry[], reset: boolean) {
 }
 
 function apiLineEvent() {
-  $(".icon-collapse")
-    .off("click")
-    .on("click", function () {
-      const api_collapse = $(`#api_collapse_${$(this).data("api")}`);
-      const api_line = $(`#api_${$(this).data("api")}`);
+  const iconCollapse = document.querySelectorAll(".icon-collapse");
+  off(iconCollapse, "click");
+  on(iconCollapse, "click", function (event: Event) {
+    const el = event.currentTarget as Element;
+    const apiId = data(el, "api") as string;
+    const api_collapse = document.getElementById(`api_collapse_${apiId}`)!;
+    const api_line = document.getElementById(`api_${apiId}`)!;
 
-      if (api_collapse.is(":visible")) {
-        api_collapse.removeClass("open");
-        api_line.removeClass("open");
-        api_line.find(".icon-collapse").addClass("close");
-        api_collapse.css("display", "none");
-        api_collapse.find(".api-copy").addClass("api-hide");
-      } else {
-        api_collapse.addClass("open");
-        api_line.addClass("open");
-        api_line.find(".icon-collapse").removeClass("close");
-        api_collapse.css("display", "grid");
-      }
+    if (isVisible(api_collapse)) {
+      removeClass(api_collapse, "open");
+      removeClass(api_line, "open");
+      addClass(find(api_line, ".icon-collapse"), "close");
+      api_collapse.style.display = "none";
+      addClass(find(api_collapse, ".api-copy"), "api-hide");
+    } else {
+      addClass(api_collapse, "open");
+      addClass(api_line, "open");
+      removeClass(find(api_line, ".icon-collapse"), "close");
+      api_collapse.style.display = "grid";
+    }
 
-      resetSection("apikey-display", false, true);
-    });
+    resetSection("apikey-display", false, true);
+  });
 
-  $(".api-tab-collapse .icon-clone")
-    .off("click")
-    .on("click", function () {
-      const data_to_copy = $(this).data("copy");
-      const selector = $(this).data("success");
-      copyToClipboard(data_to_copy, str_copy_key_id, `#${selector}`);
-    });
+  const cloneButtons = document.querySelectorAll(
+    ".api-tab-collapse .icon-clone",
+  );
+  off(cloneButtons, "click");
+  on(cloneButtons, "click", function (event: Event) {
+    const el = event.currentTarget as Element;
+    const data_to_copy = data(el, "copy") as string;
+    const selector = data(el, "success") as string;
+    copyToClipboard(data_to_copy, str_copy_key_id, `#${selector}`);
+  });
 
-  $(".api-tab-line .edit-mode")
-    .off("click")
-    .on("click", function () {
-      const selector = $(this).parent().data("api");
-      openApiEditModal(`#${selector}`);
-    });
+  const editButtons = document.querySelectorAll(".api-tab-line .edit-mode");
+  off(editButtons, "click");
+  on(editButtons, "click", function (event: Event) {
+    const parent = (event.currentTarget as Element).parentElement;
+    const selector = parent !== null ? (data(parent, "api") as string) : "";
+    openApiEditModal(`#${selector}`);
+  });
 
-  $(".api-tab-line .delete-mode")
-    .off("click")
-    .on("click", function () {
-      const selector = $(this).parent().data("api");
-      openApiRevokeModal(`#${selector}`);
-    });
+  const deleteButtons = document.querySelectorAll(".api-tab-line .delete-mode");
+  off(deleteButtons, "click");
+  on(deleteButtons, "click", function (event: Event) {
+    const parent = (event.currentTarget as Element).parentElement;
+    const selector = parent !== null ? (data(parent, "api") as string) : "";
+    openApiRevokeModal(`#${selector}`);
+  });
 }
 
 function resetSection(
@@ -584,14 +708,13 @@ function resetSection(
   scroll: boolean = true,
   maxContent: boolean = false,
 ) {
-  const el = $(`#${selector}`);
-  const element = el.get(0)!;
+  const element = document.getElementById(selector)!;
   const scrollH = maxContent ? "max-content" : element.scrollHeight + "px";
   element.style.maxHeight = scrollH;
 
   if ("account-display" !== selector && scroll) {
     setTimeout(() => {
-      const el = $(`#${selector.split("-")[0]}-section`).get(0)!;
+      const el = document.getElementById(`${selector.split("-")[0]}-section`)!;
       el.scrollIntoView({
         behavior: "smooth",
         block: "start",
@@ -601,72 +724,88 @@ function resetSection(
 }
 
 function openApiModal() {
-  $("#api_modal").fadeIn();
-  $("#api_key_name").trigger("focus");
+  fadeIn(document.querySelectorAll("#api_modal"));
+  document.getElementById("api_key_name")?.focus();
   saveApiKeyEvent();
 }
 
 function closeApiModal() {
-  $("#api_modal").fadeOut(() => {
-    $("#api_key_name").val("");
-    $('select[name="api_expiration"]').val(selected_date).trigger("change");
-    $("#api_expiration_date").val("");
+  fadeOut(document.querySelectorAll("#api_modal"), () => {
+    setVal(document.querySelectorAll("#api_key_name"), "");
+    setVal(
+      document.querySelectorAll('select[name="api_expiration"]'),
+      selected_date,
+    );
+    trigger(
+      document.querySelectorAll('select[name="api_expiration"]'),
+      "change",
+    );
+    setVal(document.querySelectorAll("#api_expiration_date"), "");
 
-    $("#api_secret_key").val("");
-    $("#retrieves_keyapi").hide();
-    $("#generate_keyapi").show();
-    $("#done_apikey").prop("disabled", true);
-    $("#api_key_copy_success, #api_id_copy_success").addClass("api-hide");
+    setVal(document.querySelectorAll("#api_secret_key"), "");
+    hide(document.querySelectorAll("#retrieves_keyapi"));
+    show(document.querySelectorAll("#generate_keyapi"));
+    (document.getElementById(
+      "done_apikey",
+    ) as HTMLButtonElement | null)!.disabled = true;
+    addClass(
+      document.querySelectorAll("#api_key_copy_success, #api_id_copy_success"),
+      "api-hide",
+    );
   });
   unbindApiKeyEvents();
 }
 
 function successApiModal(secret: string, id: string) {
-  $("#api_secret_key").val(secret);
-  $("#api_id_key").val(id);
+  setVal(document.querySelectorAll("#api_secret_key"), secret);
+  setVal(document.querySelectorAll("#api_id_key"), id);
 
-  $("#generate_keyapi").hide();
-  $("#retrieves_keyapi").fadeIn();
+  hide(document.querySelectorAll("#generate_keyapi"));
+  fadeIn(document.querySelectorAll("#retrieves_keyapi"));
 
-  $("#api_secret_copy")
-    .off("click")
-    .on("click", function () {
-      copyToClipboard(secret, str_copy_key_secret, "#api_key_copy_success");
+  const apiSecretCopy = document.querySelectorAll("#api_secret_copy");
+  off(apiSecretCopy, "click");
+  on(apiSecretCopy, "click", function () {
+    copyToClipboard(secret, str_copy_key_secret, "#api_key_copy_success");
 
-      $("#done_apikey").removeAttr("disabled");
-      $("#done_apikey").on("click", closeApiModal);
-    });
+    const doneButton = document.getElementById(
+      "done_apikey",
+    ) as HTMLButtonElement;
+    doneButton.disabled = false;
+    on(doneButton, "click", closeApiModal);
+  });
 
-  $("#api_id_copy")
-    .off("click")
-    .on("click", function () {
-      copyToClipboard(id, str_copy_key_id, "#api_id_copy_success");
-    });
+  const apiIdCopy = document.querySelectorAll("#api_id_copy");
+  off(apiIdCopy, "click");
+  on(apiIdCopy, "click", function () {
+    copyToClipboard(id, str_copy_key_id, "#api_id_copy_success");
+  });
 }
 
 //api edit modal
 function openApiEditModal(selector: string) {
-  const value = $(selector).find(".api_name").text();
-  const pkid = $(selector).find(".api-icon-action").data("pkid");
-  $("#api_key_edit").val(value);
-  $("#api_modal_edit").fadeIn();
-  $("#api_key_edit").trigger("focus");
+  const target = document.querySelector(selector)!;
+  const value = textOf(find(target, ".api_name"));
+  const pkid = data(find(target, ".api-icon-action")[0]!, "pkid") as string;
+  setVal(document.querySelectorAll("#api_key_edit"), value);
+  fadeIn(document.querySelectorAll("#api_modal_edit"));
+  document.getElementById("api_key_edit")?.focus();
   saveApiEditEvents(pkid);
 }
 
 function closeApiEditModal() {
-  $("#api_modal_edit").fadeOut(() => {
-    $("#api_key_edit").val("");
+  fadeOut(document.querySelectorAll("#api_modal_edit"), () => {
+    setVal(document.querySelectorAll("#api_key_edit"), "");
     unbindApiEditEvents();
   });
 }
 
 function saveApiEditEvents(pkid: string) {
-  $("#save_api_edit").on("click", function () {
-    const value = $("#api_key_edit").val() as string;
+  on(document.querySelectorAll("#save_api_edit"), "click", function () {
+    const value = val(document.querySelectorAll("#api_key_edit")) as string;
 
     if ("" == value) {
-      $("#error_api_key_edit").show();
+      show(document.querySelectorAll("#error_api_key_edit"));
       return;
     }
     setInfos(
@@ -686,29 +825,30 @@ function saveApiEditEvents(pkid: string) {
 }
 
 function unbindApiEditEvents() {
-  $("#save_api_edit").off("click");
+  off(document.querySelectorAll("#save_api_edit"), "click");
 }
 
 // api revoke modal
 function openApiRevokeModal(selector: string) {
-  const apiName = $(selector).find(".api_name").text();
-  const pkid = $(selector).find(".api-icon-action").data("pkid");
-  const text = sprintf(str_revoke_key, apiName);
-  $("#api_modal_revoke_title").text(text);
+  const target = document.querySelector(selector)!;
+  const apiName = textOf(find(target, ".api_name"));
+  const pkid = data(find(target, ".api-icon-action")[0]!, "pkid") as string;
+  const text_ = sprintf(str_revoke_key, apiName);
+  text(document.querySelectorAll("#api_modal_revoke_title"), text_);
 
-  $("#api_modal_revoke").fadeIn();
+  fadeIn(document.querySelectorAll("#api_modal_revoke"));
   saveApiRevokeEvents(pkid);
 }
 
 function closeApiRevokeModal() {
-  $("#api_modal_revoke").fadeOut(() => {
-    $("#api_modal_revoke_title").text("");
+  fadeOut(document.querySelectorAll("#api_modal_revoke"), () => {
+    text(document.querySelectorAll("#api_modal_revoke_title"), "");
     unbindApiRevokeEvents();
   });
 }
 
 function saveApiRevokeEvents(pkid: string) {
-  $("#revoke_api_key").on("click", function () {
+  on(document.querySelectorAll("#revoke_api_key"), "click", function () {
     setInfos(
       {
         pkid,
@@ -725,7 +865,7 @@ function saveApiRevokeEvents(pkid: string) {
 }
 
 function unbindApiRevokeEvents() {
-  $("#revoke_api_key").off("click");
+  off(document.querySelectorAll("#revoke_api_key"), "click");
 }
 
 function copyToClipboard(
@@ -736,7 +876,7 @@ function copyToClipboard(
   if (window.isSecureContext && navigator.clipboard) {
     void navigator.clipboard.writeText(copy);
     if (selector) {
-      $(selector).removeClass("api-hide");
+      removeClass(document.querySelectorAll(selector), "api-hide");
       // auto hide
       // setTimeout(() => {
       //   $(selector).addClass('api-hide');
@@ -753,16 +893,21 @@ function copyToClipboard(
 
 function saveApiKeyEvent() {
   const handler = () => {
-    const api_name = $("#api_key_name").val() as string;
-    let api_duration = $('select[name="api_expiration"]').val();
+    const api_name = val(document.querySelectorAll("#api_key_name")) as string;
+    let api_duration: string | number | undefined = val(
+      document.querySelectorAll('select[name="api_expiration"]'),
+    );
 
     if (api_name == "") {
-      $("#error_api_key_name").show();
+      show(document.querySelectorAll("#error_api_key_name"));
       return;
     }
 
-    if ("custom" === api_duration && !$("#api_expiration_date").val()) {
-      $("#error_api_key_date").show();
+    if (
+      "custom" === api_duration &&
+      !val(document.querySelectorAll("#api_expiration_date"))
+    ) {
+      show(document.querySelectorAll("#error_api_key_date"));
       return;
     }
 
@@ -770,7 +915,9 @@ function saveApiKeyEvent() {
 
     if ("custom" === api_duration) {
       const today = new Date();
-      const custom_date = new Date(String($("#api_expiration_date").val()));
+      const custom_date = new Date(
+        String(val(document.querySelectorAll("#api_expiration_date"))),
+      );
       const one_day = 1000 * 60 * 60 * 24;
       const days = Math.ceil(
         (custom_date.getTime() - today.getTime()) / one_day,
@@ -804,9 +951,9 @@ function saveApiKeyEvent() {
     );
   };
 
-  $("#save_apikey").on("click.apikey", handler);
-  $(window).on("keydown.apikey", function (e) {
-    if (e.key === "Enter") {
+  on(document.querySelectorAll("#save_apikey"), "click.apikey", handler);
+  on(window, "keydown.apikey", function (e: Event) {
+    if ((e as KeyboardEvent).key === "Enter") {
       e.preventDefault();
       handler();
     }
@@ -814,6 +961,7 @@ function saveApiKeyEvent() {
 }
 
 function unbindApiKeyEvents() {
-  $("#api_modal").find("*").addBack().off(".apikey");
-  $(window).off(".apikey");
+  const modal = document.getElementById("api_modal")!;
+  off([modal, ...Array.from(modal.querySelectorAll("*"))], ".apikey");
+  off(window, ".apikey");
 }

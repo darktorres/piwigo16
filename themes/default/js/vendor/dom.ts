@@ -1552,6 +1552,18 @@ export function setVal(
   }
 }
 
+/** `.prop("checked", bool)` -- writes to every checkbox/radio in the set. */
+export function setChecked(
+  target: Element | ArrayLike<Element>,
+  checked: boolean
+): void {
+  for (const el of toElements(target)) {
+    if (el instanceof HTMLInputElement) {
+      el.checked = checked;
+    }
+  }
+}
+
 /** `.addClass("a b")` -- space-separated, as jQuery splits it. */
 export function addClass(
   target: Element | ArrayLike<Element>,

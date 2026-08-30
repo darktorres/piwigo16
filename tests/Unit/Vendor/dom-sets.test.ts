@@ -19,6 +19,7 @@ import {
   remove,
   removeAttr,
   removeClass,
+  setChecked,
   setVal,
   text,
   textOf,
@@ -110,6 +111,29 @@ describe("val", () => {
       "not rendered anywhere"
     );
     expect(val(set)).toBe("not rendered anywhere");
+  });
+});
+
+describe("setChecked", () => {
+  it("writes to every checkbox in the set", () => {
+    document.body.innerHTML =
+      '<input type="checkbox" class="t"><input type="checkbox" class="t">';
+    const set = document.body.querySelectorAll<HTMLInputElement>(".t");
+
+    setChecked(set, true);
+    expect(Array.from(set).every((el) => el.checked)).toBe(true);
+
+    setChecked(set, false);
+    expect(Array.from(set).every((el) => el.checked)).toBe(false);
+  });
+
+  it("ignores a non-input element rather than throwing", () => {
+    document.body.innerHTML = '<div class="t"></div>';
+    const set = document.body.querySelectorAll<HTMLElement>(".t");
+
+    expect(() => {
+      setChecked(set, true);
+    }).not.toThrow();
   });
 });
 

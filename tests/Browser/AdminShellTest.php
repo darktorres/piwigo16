@@ -248,3 +248,73 @@ it('purges stale whats_new_* preferences and shows the whats-new popin for a use
         H::dbClose($db);
     }
 });
+
+/**
+ * footer.ts's own whats-new show/hide, converted off jQuery in P49-A.
+ *
+ * Both halves run through the converted show()/hide(): the script calls
+ * show_user_whats_new() on load when the `show_whats_new` page-data flag
+ * is set, and the close control calls hide_user_whats_new() from an
+ * onclick attribute. Neither state is visible to a golden fixture -- the
+ * markup is identical either way, only the inline display differs.
+ *
+ * The assertion that discriminates is the one on LOAD. hide() and a bare
+ * `style.display = ""` coincide on close, because `#whats_new` is hidden
+ * by CSS to begin with and clearing the inline value falls back to that --
+ * checked, and the naive version passes. show() is where they differ, and
+ * swapping it out fails this test.
+ *
+ * The flag has to be set up rather than hoped for. AdminShell only raises
+ * it when the account predates `last_major_update`, and the fixture admin
+ * does not: both are stamped from the same frozen PIWIGO_TEST_NOW, so on
+ * an untouched fixture this popin never opens and a test that merely
+ * loads the page would assert nothing at all.
+ */
+it('shows the whats-new popin on load and hides it from the close control', function (): void {
+    $db = H::connect();
+    $before = H::fetchAssocOrFail($db, 'SELECT registration_date, preferences FROM user_infos WHERE user_id = 1');
+    $originalDate = $before['registration_date'] ?? null;
+    $originalPrefs = $before['preferences'] ?? null;
+
+    // Two preconditions, not one. The account has to predate
+    // last_major_update (2026-08-01 in the fixture config), AND the
+    // `show_whats_new_<branch>` preference has to be unset -- AdminShell
+    // writes it false the first time it decides against showing the popin,
+    // and the shared admin session has loaded /admin.php long before this
+    // test runs, so on an untouched fixture that gate is already closed.
+    H::dbQuery($db, sprintf(
+        "UPDATE user_infos SET registration_date = '2025-08-01 00:00:00', preferences = '%s' WHERE user_id = 1",
+        H::dbEscape($db, H::jsonEncode([]))
+    ));
+    H::dbClose($db);
+
+    try {
+        $page = H::asAdmin($this);
+        $page = H::navigateOk($page, '/admin.php');
+
+        // The precondition really did take: a vacuous run is the failure
+        // mode this setup exists to prevent, so it is asserted, not assumed.
+        expect($page->script(
+            'JSON.parse(document.getElementById("page-data").textContent).data.show_whats_new'
+        ))->toBeTrue();
+
+        $display = 'getComputedStyle(document.querySelector("#whats_new")).display';
+        expect($page->script($display))->not->toBe('none');
+
+        $page->click('.close_whats_new');
+
+        expect($page->script($display))->toBe('none');
+        $page->assertNoJavaScriptErrors();
+    } finally {
+        $restore = H::connect();
+        H::dbQuery($restore, sprintf(
+            "UPDATE user_infos SET registration_date = %s, preferences = %s WHERE user_id = 1",
+            $originalDate === null ? 'NULL' : "'" . H::dbEscape($restore, (string) $originalDate) . "'",
+            $originalPrefs === null ? 'NULL' : "'" . H::dbEscape($restore, (string) $originalPrefs) . "'"
+        ));
+        H::dbClose($restore);
+        // AdminShell flips show_whats_new_* off on first display, and the
+        // shared session caches the admin's preferences.
+        H::markSharedSessionDirty();
+    }
+});

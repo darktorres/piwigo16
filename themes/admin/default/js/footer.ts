@@ -7,6 +7,7 @@
 // anyone else's bundle.
 import { pwg_getPageData } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
+import { hide, on, show } from "../../../default/js/vendor/dom";
 
 export {};
 
@@ -36,16 +37,33 @@ export {};
 // pattern (docs/PLAN.md P46-C's own finding) needs the same `window.X
 // = X` exposure as a cross-file bare read, once this file's own
 // top-level declarations become IIFE-private at build time.
+// Still jQuery: tipTip is a library, ported in P49-B group 2.
 jQuery(".tiptip").tipTip({
   delay: 0,
   fadeIn: 200,
   fadeOut: 200,
 });
 
-jQuery("a.externalLink").click(function () {
-  window.open(jQuery(this).attr("href"));
-  return false;
-});
+on(
+  document.querySelectorAll("a.externalLink"),
+  "click",
+  function (event: Event): void {
+    // nodeType, not `instanceof Element`: instanceof is per-realm, and
+    // answering false for a node from another document is a failure mode
+    // this campaign has already hit once (docs/PLAN.md P49's own list).
+    // jQuery itself tests nodeType for the same reason.
+    const link = event.currentTarget as Node | null;
+    window.open(
+      (link?.nodeType === 1 ? (link as Element).getAttribute("href") : null) ??
+        undefined,
+    );
+    // jQuery treats a handler returning false as preventDefault() PLUS
+    // stopPropagation(), so both are needed here -- returning false from a
+    // native listener only does the former.
+    event.preventDefault();
+    event.stopPropagation();
+  },
+);
 
 function hide_user_whats_new() {
   void ajax({
@@ -60,11 +78,11 @@ function hide_user_whats_new() {
       isJson: true,
     }),
   });
-  $("#whats_new").hide();
+  hide(document.querySelectorAll("#whats_new"));
 }
 
 function show_user_whats_new() {
-  $("#whats_new").show();
+  show(document.querySelectorAll("#whats_new"));
 }
 
 if (pwg_getPageData<boolean>("show_whats_new")) {

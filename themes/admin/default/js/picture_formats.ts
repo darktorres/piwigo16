@@ -5,6 +5,15 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
+import {
+  attr,
+  data,
+  fadeOut,
+  htmlOf,
+  on,
+  remove,
+  show,
+} from "../../../default/js/vendor/dom";
 export {};
 
 const pwg_token = pwg_getPageData<string>("csrf_token");
@@ -13,7 +22,7 @@ const str_confirm_msg = pwg_getPageString("Yes, I am sure");
 const str_cancel_msg = pwg_getPageString("No, I have changed my mind");
 
 function fitExtensions() {
-  $(".format-card-ext span").each((i, node) => {
+  document.querySelectorAll(".format-card-ext span").forEach((node) => {
     const size = Math.min((180 * 1) / node.innerHTML.length, 45);
     node.setAttribute("style", `font-size:${size}px`);
   });
@@ -21,14 +30,14 @@ function fitExtensions() {
 
 fitExtensions();
 
-$(".format-card").each((i, node) => {
-  const card = $(node);
-  const button = card.find(".format-delete");
-  button.click(() => {
+document.querySelectorAll(".format-card").forEach((card) => {
+  const button = card.querySelectorAll(".format-delete");
+  on(button, "click", () => {
+    // Still jQuery: $.confirm is jquery-confirm, ported in P49-B group 5.
     $.confirm({
       title: str_confirm_delete_format.replace(
         "%s",
-        card.find(".format-card-ext span").html(),
+        htmlOf(card.querySelectorAll(".format-card-ext span")) ?? "",
       ),
       content: "",
       buttons: {
@@ -48,21 +57,30 @@ $(".format-card").each((i, node) => {
   });
 });
 
-function deleteFormat(card: JQuery) {
-  card.find(".format-delete i").attr("class", "icon-spin6 animate-spin");
+function deleteFormat(card: Element) {
+  attr(
+    card.querySelectorAll(".format-delete i"),
+    "class",
+    "icon-spin6 animate-spin",
+  );
   void ajax({
     url: "api/v1/images/formats/actions/delete",
     type: "POST",
     contentType: "application/json",
     headers: { "X-CSRF-Token": pwg_token },
     data: JSON.stringify({
-      formatIds: [Number(card.data("id"))],
+      // `data-id` is a real attribute in picture_formats.latte, never
+      // written from JS, so the helper's store and jQuery's agree here --
+      // both just coerce the same attribute.
+      formatIds: [Number(data(card, "id"))],
     }),
     // 204 No Content -- imageFormatDelete's real response has no body.
     success: function (_raw_data: unknown) {
-      card.fadeOut("slow", () => {
-        card.remove();
-        if ($(".format-card").length == 0) $(".no-formats").show();
+      fadeOut(card, "slow", () => {
+        remove(card);
+        if (document.querySelectorAll(".format-card").length === 0) {
+          show(document.querySelectorAll(".no-formats"));
+        }
       });
     },
     error: function (message) {

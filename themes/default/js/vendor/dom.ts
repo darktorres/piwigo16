@@ -1494,35 +1494,31 @@ export function textOf(target: Element | ArrayLike<Element>): string {
     .join("");
 }
 
-/** `.val()` -- reads the first element, `undefined` for an empty set. */
-export function val(
-  target: Element | ArrayLike<Element>
-): string | undefined {
+/**
+ * `.val()` -- reads the first element, `undefined` for an empty set.
+ * jQuery's own getter has no special hook for a plain element (only
+ * `select`/`radio`/`checkbox` do), so it falls through to that element's
+ * own `.value` -- an inert, non-form-control elements included, own
+ * property, never reflected in what renders. Faithfully mirrored here
+ * rather than restricted to input/select/textarea, since
+ * `updates_ext.ts`'s `#reset_ignore` (a `<div>`) is exactly such a caller.
+ */
+export function val(target: Element | ArrayLike<Element>): string | undefined {
   const first = toElements(target)[0];
-  if (
-    first instanceof HTMLInputElement ||
-    first instanceof HTMLSelectElement ||
-    first instanceof HTMLTextAreaElement
-  ) {
-    return first.value;
+  if (first === undefined) {
+    return undefined;
   }
 
-  return undefined;
+  return (first as HTMLInputElement).value;
 }
 
-/** `.val(value)` -- writes to every element. */
+/** `.val(value)` -- writes to every element; see `val()`'s own docblock. */
 export function setVal(
   target: Element | ArrayLike<Element>,
   value: string
 ): void {
   for (const el of toElements(target)) {
-    if (
-      el instanceof HTMLInputElement ||
-      el instanceof HTMLSelectElement ||
-      el instanceof HTMLTextAreaElement
-    ) {
-      el.value = value;
-    }
+    (el as HTMLInputElement).value = value;
   }
 }
 

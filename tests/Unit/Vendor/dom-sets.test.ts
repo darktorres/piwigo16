@@ -99,6 +99,17 @@ describe("val", () => {
 
     expect(val(area)).toBe("area");
   });
+
+  it("falls through to a plain .value property on a non-form element, as jQuery's own valHook-less path does", () => {
+    const set = mount('<div class="t"></div>');
+
+    setVal(set, "not rendered anywhere");
+
+    expect((Array.from(set)[0] as unknown as { value: string }).value).toBe(
+      "not rendered anywhere"
+    );
+    expect(val(set)).toBe("not rendered anywhere");
+  });
 });
 
 describe("classes", () => {

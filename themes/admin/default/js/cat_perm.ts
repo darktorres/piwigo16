@@ -2,6 +2,7 @@ import "./common";
 import { GroupsCache, UsersCache } from "./LocalStorageCache";
 
 import { pwg_getPageData } from "../../../default/js/page-data";
+import { hide, on, show, toggle, val } from "../../../default/js/vendor/dom";
 export {};
 (function () {
   // <!-- GROUPS -->
@@ -11,6 +12,9 @@ export {};
     rootUrl: pwg_getPageData<string>("root_url"),
   });
 
+  // Still jQuery: selectize() takes a JQuery object and stashes the cache on
+  // it with jQuery's own data store, which addAlbum.ts reads back the same
+  // way -- both sides convert together with selectize in P49-B.
   groupsCache.selectize(jQuery("[data-selectize=groups]"));
 
   // <!-- USERS -->
@@ -24,21 +28,33 @@ export {};
 
   // <!-- TOGGLES -->
   function checkStatusOptions() {
-    if (jQuery("input[name=status]:checked").val() === "private") {
-      jQuery("#privateOptions").show();
+    // `:checked` is a real CSS pseudo-class, unlike the jQuery-only ones
+    // (`:visible`/`:input`/`:first`) querySelectorAll throws on, so this
+    // selector carries over unchanged. With no radio checked the set is
+    // empty and val() returns undefined, matching jQuery.
+    if (
+      val(document.querySelectorAll("input[name=status]:checked")) === "private"
+    ) {
+      show(document.querySelectorAll("#privateOptions"));
     } else {
-      jQuery("#privateOptions").hide();
+      hide(document.querySelectorAll("#privateOptions"));
     }
   }
 
   checkStatusOptions();
-  jQuery("#selectStatus").change(function () {
+  on(document.querySelectorAll("#selectStatus"), "change", function (): void {
     checkStatusOptions();
   });
 
-  jQuery(".toggle-indirectPermissions").click(function (e) {
-    jQuery(".toggle-indirectPermissions").toggle();
-    jQuery("#indirectPermissionsDetails").toggle();
-    e.preventDefault();
-  });
+  on(
+    document.querySelectorAll(".toggle-indirectPermissions"),
+    "click",
+    function (e: Event): void {
+      // Both links carry the class, and each is toggled against its OWN
+      // current visibility -- the pair swaps rather than both hiding.
+      toggle(document.querySelectorAll(".toggle-indirectPermissions"));
+      toggle(document.querySelectorAll("#indirectPermissionsDetails"));
+      e.preventDefault();
+    },
+  );
 })();

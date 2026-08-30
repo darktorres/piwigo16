@@ -109,3 +109,35 @@ it('submits a status/group permission change and persists it', function (): void
     expect(is_array($groupAssoc) ? (int) $groupAssoc['group_id'] : -1)->toBe(3);
     H::dbClose($db);
 });
+
+/**
+ * cat_perm.ts's own status toggle, converted off jQuery in P49-A.
+ *
+ * `#privateOptions` carries no `u-hidden` class -- the server always
+ * renders it visible and the script hides it on load for a public album,
+ * so its resting state is JS-produced. That makes this the one behaviour
+ * on the page a golden fixture cannot describe at all, and the reason the
+ * conversion needs a test that runs the script rather than one that reads
+ * the markup.
+ */
+it('hides the private options for a public album and reveals them on selecting private', function (): void {
+    $page = H::asAdmin($this);
+    // Category 1 is public in the fixture, so checkStatusOptions() takes its
+    // hide branch on load.
+    $page = H::navigateOk($page, '/admin.php?page=album&cat_id=1&tab=permissions');
+
+    $display = static fn (string $selector): string => sprintf(
+        'getComputedStyle(document.querySelector(%s)).display',
+        json_encode($selector, JSON_THROW_ON_ERROR)
+    );
+
+    expect($page->script($display('#privateOptions')))->toBe('none');
+
+    // The radio itself is visually replaced by the theme's own
+    // `font-checkbox` control, so it is not clickable; a user clicks the
+    // label, which is what actually drives the change event.
+    $page->click('#selectStatus label:has(input[value="private"])');
+
+    expect($page->script($display('#privateOptions')))->not->toBe('none');
+    $page->assertNoJavaScriptErrors();
+});

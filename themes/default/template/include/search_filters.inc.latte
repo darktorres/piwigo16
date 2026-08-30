@@ -800,13 +800,13 @@
           <div class="filetypes-option-container">
             {foreach $filetypes as $k => $filetypeCount}
               <div
-                class="filetypes-option {if 0 == $filetypeCount}disabled{/if}"
+                class="filetypes-option {if 0 === $filetypeCount}disabled{/if}"
               >
                 <input
                   type="checkbox"
                   id="filetype-{$k}"
                   name="{$k}"
-                  {if 0 == $filetypeCount}
+                  {if 0 === $filetypeCount}
                   disabled
                   {/if}
                 >
@@ -815,7 +815,7 @@
                     class="mcs-icon gallery-icon-checkmark checked-icon"
                   ></span>
                   <span class="ext-name">{$k}</span>
-                  {if 0 != $filetypeCount}<span
+                  {if 0 !== $filetypeCount}<span
                       class="ext-badge"
                     >{$filetypeCount}</span>{/if}
                 </label>
@@ -854,12 +854,12 @@
         <div class="form-container">
           <div class="ratios-option-container">
             {foreach $ratios as $k => $ratio}
-              <div class="ratios-option {if 0 == $ratio}disabled{/if}">
+              <div class="ratios-option {if 0 === $ratio}disabled{/if}">
                 <input
                   type="checkbox"
                   id="ratio-{$k}"
                   name="{$k}"
-                  {if 0 == $ratio}
+                  {if 0 === $ratio}
                   disabled
                   {/if}
                 >
@@ -868,7 +868,9 @@
                     class="mcs-icon gallery-icon-checkmark checked-icon"
                   ></span>
                   <span class="ratio-name">{$k|translate}</span>
-                  {if 0 != $ratio}<span class="ratio-badge">{$ratio}</span>{/if}
+                  {if 0 !== $ratio}<span
+                      class="ratio-badge"
+                    >{$ratio}</span>{/if}
                 </label>
               </div>
             {/foreach}
@@ -907,12 +909,14 @@
           <div class="ratings-option-container">
             <form>
               {foreach $rating as $k => $ratingCount}
-                <div class="ratings-option {if 0 == $ratingCount}disabled{/if}">
+                <div
+                  class="ratings-option {if 0 === $ratingCount}disabled{/if}"
+                >
                   <input
                     type="checkbox"
                     id="rating-{$k}"
                     name="{if 0 == $k}0{else}{$k}{/if}"
-                    {if 0 == $ratingCount}
+                    {if 0 === $ratingCount}
                     disabled
                     {/if}
                   >
@@ -923,7 +927,7 @@
                     <span
                       class="ratings-name"
                     >{if 0 == $k}{='no rate'|translate}{else}{=translate('between %d and %d', intval($k) - 1, $k)}{/if}</span>
-                    {if 0 != $ratingCount}<span
+                    {if 0 !== $ratingCount}<span
                         class="ratings-badge"
                       >{$ratingCount}</span>{/if}
                   </label>

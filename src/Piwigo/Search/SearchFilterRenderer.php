@@ -522,15 +522,17 @@ final readonly class SearchFilterRenderer
                 $map = [];
                 foreach ($rows as $row) {
                     if (is_array($row) && is_string($row['ext'] ?? null)) {
-                        $map[$row['ext']] = $row['counter'] ?? 0;
+                        $map[$row['ext']] = is_numeric($row['counter'] ?? null) ? (int) $row['counter'] : 0;
                     }
                 }
 
                 return $map;
             };
 
-            $allExts = $this->cacheGet($cacheKey);
-            if (! is_array($allExts)) {
+            $cachedExts = $this->cacheGet($cacheKey);
+            if (is_array($cachedExts)) {
+                $allExts = self::toCounterMap($cachedExts);
+            } else {
                 $allExts = $extToCounterMap($this->repo->countImagesGroupedBy("SUBSTRING_INDEX(i.path, '.', -1)", 'ext', $allExtsCondition, true));
                 $this->cacheSet($cacheKey, $allExts);
             }
@@ -561,9 +563,10 @@ final readonly class SearchFilterRenderer
 
                 $cacheKey = 'ratings_' . $userId;
                 $cacheApplicable = $filterClause->cacheApplicable;
-                $ratings = $cacheApplicable ? $this->cacheGet($cacheKey) : null;
+                $cachedRatings = $cacheApplicable ? $this->cacheGet($cacheKey) : null;
+                $ratings = is_array($cachedRatings) ? self::toCounterMap($cachedRatings) : null;
 
-                if (! is_array($ratings)) {
+                if ($ratings === null) {
                     $filterRows = $this->repo->findDistinctImageRows(['i.ratingScore AS rating_score'], $filterCondition);
 
                     $ratings = array_fill(0, 6, 0);
@@ -658,9 +661,10 @@ final readonly class SearchFilterRenderer
 
             $cacheKey = 'ratios_' . $userId;
             $cacheApplicable = $filterClause->cacheApplicable;
-            $ratios = $cacheApplicable ? $this->cacheGet($cacheKey) : null;
+            $cachedRatios = $cacheApplicable ? $this->cacheGet($cacheKey) : null;
+            $ratios = is_array($cachedRatios) ? self::toCounterMap($cachedRatios) : null;
 
-            if (! is_array($ratios)) {
+            if ($ratios === null) {
                 $notNullCondition = SqlCondition::combine('AND', $filterCondition, SqlCondition::fromRawSql('i.width IS NOT NULL AND i.height IS NOT NULL'));
                 $filterRows = $this->repo->findDistinctImageRows(['i.width AS width', 'i.height AS height'], $notNullCondition);
 
@@ -1310,5 +1314,35 @@ final readonly class SearchFilterRenderer
         // array<int, mixed> $otherFiltersItems.
         /** @var list<int|string> $cachedItems */
         return $cachedItems;
+    }
+
+    /**
+     * Coerces a counter map -- filetype/rating/ratio bucket counts -- back
+     * to `array<array-key, int>`.
+     *
+     * Needed on two paths, both of which lose the value type: a cache read
+     * (the pool hands back `mixed`, and `is_array()` proves nothing about
+     * the values) and a raw DBAL row's `counter` column. Without it the
+     * counts reach `search_filters.inc.latte` as `mixed`, which is what
+     * left nine `0 == $count` comparisons undecidable (P58-B3).
+     *
+     * A non-numeric entry becomes 0 rather than being dropped, so the
+     * bucket keeps its slot: the template renders one control per bucket
+     * and a missing key would shift the set, not just its label.
+     *
+     * @return array<array-key, int>
+     */
+    private static function toCounterMap(mixed $raw): array
+    {
+        if (! is_array($raw)) {
+            return [];
+        }
+
+        $map = [];
+        foreach ($raw as $key => $value) {
+            $map[$key] = is_numeric($value) ? (int) $value : 0;
+        }
+
+        return $map;
     }
 }

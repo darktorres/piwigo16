@@ -21,6 +21,24 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
+import {
+  addClass,
+  attrOf,
+  fadeIn,
+  fadeOut,
+  hide,
+  html,
+  isVisible,
+  off,
+  on,
+  ready,
+  removeClass,
+  setVal,
+  show,
+  slideToggle,
+  slideUp,
+  val,
+} from "../../../default/js/vendor/dom";
 export {};
 
 // `sliders` here is a genuinely independent, unrelated top-level `var`
@@ -100,37 +118,50 @@ let errorFilters = "";
 /* ********** Filters*/
 function filter_enable(filter: string) {
   /* show the filter*/
-  $("#" + filter).show();
+  show(document.querySelectorAll("#" + filter));
 
   /* check the checkbox to declare we use this filter */
-  $("input[type=checkbox][name=" + filter + "_use]").prop("checked", true);
+  document
+    .querySelectorAll('input[type=checkbox][name="' + filter + '_use"]')
+    .forEach((el) => {
+      (el as HTMLInputElement).checked = true;
+    });
 
   /* forbid to select this filter in the addFilter list */
-  $("#addFilter")
-    .find("a[data-value=" + filter + "]")
-    .addClass("disabled");
+  addClass(
+    document.querySelectorAll('#addFilter a[data-value="' + filter + '"]'),
+    "disabled",
+  );
 
   /* hide the no filter message */
-  $(".noFilter").hide();
-  $(".addFilter-button").removeClass("highlight");
+  hide(document.querySelectorAll(".noFilter"));
+  removeClass(document.querySelectorAll(".addFilter-button"), "highlight");
 }
 
 function filter_disable(filter: string) {
   /* hide the filter line */
-  $("#" + filter).hide();
+  hide(document.querySelectorAll("#" + filter));
 
   /* uncheck the checkbox to declare we do not use this filter */
-  $("input[name=" + filter + "_use]").prop("checked", false);
+  document
+    .querySelectorAll('input[name="' + filter + '_use"]')
+    .forEach((el) => {
+      (el as HTMLInputElement).checked = false;
+    });
 
   /* give the possibility to show it again */
-  $("#addFilter")
-    .find("a[data-value=" + filter + "]")
-    .removeClass("disabled");
+  removeClass(
+    document.querySelectorAll('#addFilter a[data-value="' + filter + '"]'),
+    "disabled",
+  );
 
   /* show the no filter message if no filter selected */
-  if ($("#filterList li:visible").length == 0) {
-    $(".noFilter").show();
-    $(".addFilter-button").addClass("highlight");
+  const anyVisible = Array.from(
+    document.querySelectorAll("#filterList li"),
+  ).some((el) => isVisible(el));
+  if (!anyVisible) {
+    show(document.querySelectorAll(".noFilter"));
+    addClass(document.querySelectorAll(".addFilter-button"), "highlight");
   }
 }
 // Album Selector
@@ -139,35 +170,39 @@ function select_album_filter({
   newSelectedAlbum,
   getSelectedAlbum,
 }: AlbumSelectorCallbackArgs) {
-  $("#selectedAlbumNameFilter").html(album.name!);
+  html(document.querySelectorAll("#selectedAlbumNameFilter"), album.name!);
   newSelectedAlbum();
   hide_filters_error(str_select_album);
-  $("#filterCategoryValue").val(+getSelectedAlbum()[0]!);
-  $("#selectAlbumFilter").hide();
-  $("#selectedAlbumFilterArea").fadeIn();
+  setVal(
+    document.querySelectorAll("#filterCategoryValue"),
+    String(+getSelectedAlbum()[0]!),
+  );
+  hide(document.querySelectorAll("#selectAlbumFilter"));
+  fadeIn(document.querySelectorAll("#selectedAlbumFilterArea"));
 }
 
 // Tags and Albums validation
 function show_filters_error(message: string) {
   errorFilters = message;
-  $("#errorFilter").html(`<p>${message}</p>`).fadeIn();
+  html(document.querySelectorAll("#errorFilter"), `<p>${message}</p>`);
+  fadeIn(document.querySelectorAll("#errorFilter"));
 }
 
 function hide_filters_error(message: string) {
   if (message === errorFilters) {
-    $("#errorFilter").hide();
+    hide(document.querySelectorAll("#errorFilter"));
   }
 }
 
-$(document).ready(function () {
+ready(function () {
   // Moved out of batch_manager_filter.inc.latte's own
   // `onclick="$('.addFilter-dropdown').slideToggle()"` -- see albums.ts for
-  // why these came out of the templates, and why they stay on jQuery until
-  // their file converts. The document-level handler further down already
-  // slides this dropdown up when a click lands outside it, and skips clicks
-  // on .addFilter-button precisely so this toggle keeps working.
-  $(".addFilter-button").on("click", function () {
-    $(".addFilter-dropdown").slideToggle();
+  // why these came out of the templates. The document-level handler
+  // further down already slides this dropdown up when a click lands
+  // outside it, and skips clicks on .addFilter-button precisely so this
+  // toggle keeps working.
+  on(document.querySelectorAll(".addFilter-button"), "click", function () {
+    slideToggle(document.querySelectorAll(".addFilter-dropdown"));
   });
 
   const ab_filter = new AlbumSelector({
@@ -176,84 +211,124 @@ $(document).ready(function () {
     adminMode: true,
   });
 
-  $("#selectAlbumFilter, #selectedAlbumEditFilter").on("click", function () {
-    ab_filter.open();
-  });
+  on(
+    document.querySelectorAll("#selectAlbumFilter, #selectedAlbumEditFilter"),
+    "click",
+    function () {
+      ab_filter.open();
+    },
+  );
 
-  $(".removeFilter").addClass("icon-cancel-circled");
+  addClass(document.querySelectorAll(".removeFilter"), "icon-cancel-circled");
 
-  $(".removeFilter").click(function () {
-    const filter = $(this).parent("li").attr("id")!;
-    filter_disable(filter);
-
-    return false;
-  });
-
-  $("#addFilter a").on("click", function () {
-    const filter = $(this).attr("data-value")!;
-    filter_enable(filter);
-  });
-
-  $("#removeFilters").click(function () {
-    $("#filterList li").each(function () {
-      const filter = $(this).attr("id")!;
+  on(
+    document.querySelectorAll(".removeFilter"),
+    "click",
+    function (event: Event): boolean {
+      event.preventDefault();
+      // jQuery's `.parent("li")` -- the immediate parent, filtered by tag;
+      // every real .removeFilter is inside exactly one <li> with a real id.
+      const li = (event.currentTarget as Element).parentElement!;
+      const filter = li.id;
       filter_disable(filter);
-    });
-    return false;
-  });
 
+      return false;
+    },
+  );
+
+  on(
+    document.querySelectorAll("#addFilter a"),
+    "click",
+    function (event: Event): void {
+      const filter = attrOf(event.currentTarget as Element, "data-value")!;
+      filter_enable(filter);
+    },
+  );
+
+  on(
+    document.querySelectorAll("#removeFilters"),
+    "click",
+    function (event: Event): boolean {
+      event.preventDefault();
+      document.querySelectorAll("#filterList li").forEach((el) => {
+        filter_disable(el.id);
+      });
+      return false;
+    },
+  );
+
+  // Still jQuery: pwgDoubleSlider wraps jQuery-UI slider, ported in P49-B
+  // group 4.
   $("[data-slider=widths]").pwgDoubleSlider(sliders.widths);
   $("[data-slider=heights]").pwgDoubleSlider(sliders.heights);
   $("[data-slider=ratios]").pwgDoubleSlider(sliders.ratios);
   $("[data-slider=filesizes]").pwgDoubleSlider(sliders.filesizes);
 
-  $(document).mouseup(function (e) {
+  on(document, "mouseup", function (e: Event): void {
     e.stopPropagation();
-    if (!$(event!.target as unknown as Element).hasClass("addFilter-button")) {
-      $(".addFilter-dropdown").slideUp();
+    if (!(e.target as Element).classList.contains("addFilter-button")) {
+      slideUp(document.querySelectorAll(".addFilter-dropdown"));
     }
   });
 
-  // Filter JS Validation
-  $('.filterBlock select[data-selectize="tags"]').on("change", function () {
-    if ($(this).val()) {
-      hide_filters_error(str_select_tag);
-    }
-  });
+  // Filter JS Validation -- reads the real underlying <select>'s value,
+  // which selectize (still jQuery, P49-B group 6) keeps synced; only the
+  // widget itself stays jQuery, not this read.
+  on(
+    document.querySelectorAll('.filterBlock select[data-selectize="tags"]'),
+    "change",
+    function (event: Event): void {
+      if (val([event.currentTarget as Element])) {
+        hide_filters_error(str_select_tag);
+      }
+    },
+  );
 
-  $("#applyFilter").on("click", function (e) {
-    if ($("#filter_tags").is(":visible")) {
-      const tags = $('.filterBlock select[data-selectize="tags"]');
-      if (!tags.val()) {
-        e.preventDefault();
-        show_filters_error(str_select_tag);
-        $("#filter_tags .removeFilter")
-          .off("click.apply")
-          .on("click.apply", function () {
+  on(
+    document.querySelectorAll("#applyFilter"),
+    "click",
+    function (e: Event): void {
+      const filterTags = document.getElementById("filter_tags");
+      if (filterTags !== null && isVisible(filterTags)) {
+        const tags = document.querySelectorAll(
+          '.filterBlock select[data-selectize="tags"]',
+        );
+        if (!val(tags)) {
+          e.preventDefault();
+          show_filters_error(str_select_tag);
+          const removeFilterTags = document.querySelectorAll(
+            "#filter_tags .removeFilter",
+          );
+          off(removeFilterTags, "click.apply");
+          on(removeFilterTags, "click.apply", function () {
             hide_filters_error(str_select_tag);
           });
+        }
       }
-    }
 
-    if ($("#filter_category").is(":visible")) {
-      const albums = ab_filter.get_selected_albums();
-      if (albums.length === 0) {
-        e.preventDefault();
-        show_filters_error(str_select_album);
-        $("#filter_category .removeFilter")
-          .off("click.apply")
-          .on("click.apply", function () {
+      const filterCategory = document.getElementById("filter_category");
+      if (filterCategory !== null && isVisible(filterCategory)) {
+        const albums = ab_filter.get_selected_albums();
+        if (albums.length === 0) {
+          e.preventDefault();
+          show_filters_error(str_select_album);
+          const removeFilterCategory = document.querySelectorAll(
+            "#filter_category .removeFilter",
+          );
+          off(removeFilterCategory, "click.apply");
+          on(removeFilterCategory, "click.apply", function () {
             hide_filters_error(str_select_album);
           });
+        }
       }
-    }
+    },
+  );
+
+  on(document.querySelectorAll(".help-popin-search"), "click", function () {
+    fadeIn(document.querySelectorAll("#modalQuickSearch"));
   });
 
-  $(".help-popin-search").on("click", function () {
-    $("#modalQuickSearch").fadeIn();
-  });
-
-  $("#closeModalQuickSearch").on("click", function () {
-    $("#modalQuickSearch").fadeOut();
+  on(document.querySelectorAll("#closeModalQuickSearch"), "click", function () {
+    fadeOut(document.querySelectorAll("#modalQuickSearch"));
   });
 });

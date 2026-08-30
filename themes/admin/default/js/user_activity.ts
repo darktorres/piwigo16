@@ -13,6 +13,25 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
+import {
+  addClass,
+  append,
+  attr,
+  cssValue,
+  data,
+  find,
+  hasClass,
+  hide,
+  html,
+  on,
+  parseHtml,
+  ready,
+  remove,
+  removeClass,
+  show,
+  slideToggle,
+  val,
+} from "../../../default/js/vendor/dom";
 export {};
 
 type UserListResponse =
@@ -305,12 +324,23 @@ async function get_user_activity(
   // and the `.loading` spinner toggled just below -- on the very
   // first call. `.children()` is the real jQuery method that accepts
   // a selector, matching the code's own clear intent.
-  $(".tab").children(":not(#-1):not(.loading)").remove();
-  $(".loading").show();
-  $(".pagination-arrow.rigth").addClass("unavailable");
-  $(".pagination-arrow.left").addClass("unavailable");
-  $(".pagination-item-container").hide();
-  $(".user-update-spinner").addClass("icon-spin6");
+  //
+  // `#-1` (a literal id starting with a hyphen then a digit) is also
+  // not a valid native CSS identifier -- getElementById() side-steps
+  // that entirely, same reasoning as escapeId() elsewhere in P49-A.
+  const tab = document.querySelector(".tab");
+  if (tab !== null) {
+    Array.from(tab.children).forEach((child) => {
+      if (child.id !== "-1" && !child.classList.contains("loading")) {
+        child.remove();
+      }
+    });
+  }
+  show(document.querySelectorAll(".loading"));
+  addClass(document.querySelectorAll(".pagination-arrow.rigth"), "unavailable");
+  addClass(document.querySelectorAll(".pagination-arrow.left"), "unavailable");
+  hide(document.querySelectorAll(".pagination-item-container"));
+  addClass(document.querySelectorAll(".user-update-spinner"), "icon-spin6");
 
   try {
     const merged = await fetchAndMergeActivityLines(
@@ -328,7 +358,7 @@ async function get_user_activity(
     date_min_filter = date[0]!;
     date_max_filter = date[1]!;
 
-    $(".loading").hide();
+    hide(document.querySelectorAll(".loading"));
 
     if (merged.lines.length > 0) {
       merged.lines.forEach((line) => {
@@ -343,8 +373,11 @@ async function get_user_activity(
       page_offsets.push(merged.nextOffset);
     }
 
-    $(".user-update-spinner").removeClass("icon-spin6");
-    $(".pagination-item-container").show();
+    removeClass(
+      document.querySelectorAll(".user-update-spinner"),
+      "icon-spin6",
+    );
+    show(document.querySelectorAll(".pagination-item-container"));
     update_pagination_menu();
   } catch (e: unknown) {
     console.log("ajax call failed");
@@ -353,15 +386,15 @@ async function get_user_activity(
 }
 
 function lineConstructor(line: MergedActivityLine) {
-  const newLine = $("#-1").clone();
+  const newLine = document.getElementById("-1")!.cloneNode(true) as Element;
 
-  $(".tab-title").show();
-  $(".activity-noresult").hide();
-  newLine.removeClass("hide");
+  show(document.querySelectorAll(".tab-title"));
+  hide(document.querySelectorAll(".activity-noresult"));
+  removeClass(newLine, "hide");
 
-  /* console log to help debug 
+  /* console log to help debug
     {* console.log(line); *}*/
-  newLine.attr("id", line.id);
+  attr(newLine, "id", String(line.id));
 
   let final_albumInfos: string;
 
@@ -371,20 +404,21 @@ function lineConstructor(line: MergedActivityLine) {
     // pluriel
     switch (line.action) {
       case "edit":
-        newLine.find(".action-type").addClass("icon-blue");
-        newLine
-          .find(".user-pic")
-          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
-        newLine.find(".action-icon").addClass("icon-pencil");
+        addClass(find(newLine, ".action-type"), "icon-blue");
+        addClass(
+          find(newLine, ".user-pic"),
+          color_icons[(line.user_id ?? 0) % 5]!,
+        );
+        addClass(find(newLine, ".action-icon"), "icon-pencil");
 
-        newLine.find(".action-name").html(actionType_edit);
+        html(find(newLine, ".action-name"), actionType_edit);
         switch (line.object) {
           case "user":
             final_albumInfos = actionInfos_users_edited.replace(
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-user-1");
+            addClass(find(newLine, ".action-section"), "icon-user-1");
 
             break;
           case "album":
@@ -392,7 +426,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-folder-open");
+            addClass(find(newLine, ".action-section"), "icon-folder-open");
 
             break;
           case "group":
@@ -400,7 +434,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-users-1");
+            addClass(find(newLine, ".action-section"), "icon-users-1");
 
             break;
           case "photo":
@@ -408,7 +442,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-picture");
+            addClass(find(newLine, ".action-section"), "icon-picture");
 
             break;
           case "tag":
@@ -416,7 +450,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-tags");
+            addClass(find(newLine, ".action-section"), "icon-tags");
 
             break;
           default:
@@ -428,20 +462,21 @@ function lineConstructor(line: MergedActivityLine) {
         break;
 
       case "add":
-        newLine.find(".action-type").addClass("icon-green");
-        newLine
-          .find(".user-pic")
-          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
-        newLine.find(".action-icon").addClass("icon-plus");
+        addClass(find(newLine, ".action-type"), "icon-green");
+        addClass(
+          find(newLine, ".user-pic"),
+          color_icons[(line.user_id ?? 0) % 5]!,
+        );
+        addClass(find(newLine, ".action-icon"), "icon-plus");
 
-        newLine.find(".action-name").html(actionType_add);
+        html(find(newLine, ".action-name"), actionType_add);
         switch (line.object) {
           case "user":
             final_albumInfos = actionInfos_users_added.replace(
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-user-1");
+            addClass(find(newLine, ".action-section"), "icon-user-1");
 
             break;
           case "album":
@@ -449,7 +484,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-folder-open");
+            addClass(find(newLine, ".action-section"), "icon-folder-open");
 
             break;
           case "group":
@@ -457,7 +492,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-users-1");
+            addClass(find(newLine, ".action-section"), "icon-users-1");
 
             break;
           case "photo":
@@ -465,7 +500,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-picture");
+            addClass(find(newLine, ".action-section"), "icon-picture");
 
             break;
           case "tag":
@@ -473,7 +508,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-tags");
+            addClass(find(newLine, ".action-section"), "icon-tags");
 
             break;
           default:
@@ -485,20 +520,21 @@ function lineConstructor(line: MergedActivityLine) {
         break;
 
       case "delete":
-        newLine.find(".action-type").addClass("icon-red");
-        newLine
-          .find(".user-pic")
-          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
-        newLine.find(".action-icon").addClass("icon-trash-1");
+        addClass(find(newLine, ".action-type"), "icon-red");
+        addClass(
+          find(newLine, ".user-pic"),
+          color_icons[(line.user_id ?? 0) % 5]!,
+        );
+        addClass(find(newLine, ".action-icon"), "icon-trash-1");
 
-        newLine.find(".action-name").html(actionType_delete);
+        html(find(newLine, ".action-name"), actionType_delete);
         switch (line.object) {
           case "user":
             final_albumInfos = actionInfos_users_deleted.replace(
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-user-1");
+            addClass(find(newLine, ".action-section"), "icon-user-1");
 
             break;
           case "album":
@@ -506,7 +542,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-folder-open");
+            addClass(find(newLine, ".action-section"), "icon-folder-open");
 
             break;
           case "group":
@@ -514,7 +550,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-users-1");
+            addClass(find(newLine, ".action-section"), "icon-users-1");
 
             break;
           case "photo":
@@ -522,7 +558,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-picture");
+            addClass(find(newLine, ".action-section"), "icon-picture");
 
             break;
           case "tag":
@@ -530,7 +566,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-tags");
+            addClass(find(newLine, ".action-section"), "icon-tags");
 
             break;
           default:
@@ -542,20 +578,21 @@ function lineConstructor(line: MergedActivityLine) {
         break;
 
       case "move":
-        newLine.find(".action-type").addClass("icon-yellow");
-        newLine
-          .find(".user-pic")
-          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
-        newLine.find(".action-icon").addClass("icon-move");
+        addClass(find(newLine, ".action-type"), "icon-yellow");
+        addClass(
+          find(newLine, ".user-pic"),
+          color_icons[(line.user_id ?? 0) % 5]!,
+        );
+        addClass(find(newLine, ".action-icon"), "icon-move");
 
-        newLine.find(".action-name").html(actionType_move);
+        html(find(newLine, ".action-name"), actionType_move);
         switch (line.object) {
           case "album":
             final_albumInfos = actionInfos_albums_moved.replace(
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-folder-open");
+            addClass(find(newLine, ".action-section"), "icon-folder-open");
 
             break;
           case "group":
@@ -563,7 +600,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-users-1");
+            addClass(find(newLine, ".action-section"), "icon-users-1");
 
             break;
           case "photo":
@@ -571,7 +608,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-picture");
+            addClass(find(newLine, ".action-section"), "icon-picture");
 
             break;
           case "tag":
@@ -579,7 +616,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-tags");
+            addClass(find(newLine, ".action-section"), "icon-tags");
 
             break;
           default:
@@ -591,14 +628,15 @@ function lineConstructor(line: MergedActivityLine) {
         break;
 
       case "login":
-        newLine.find(".action-type").addClass("icon-purple");
-        newLine
-          .find(".user-pic")
-          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
-        newLine.find(".action-icon").addClass("icon-key");
-        newLine.find(".action-section").addClass("icon-user-1");
+        addClass(find(newLine, ".action-type"), "icon-purple");
+        addClass(
+          find(newLine, ".user-pic"),
+          color_icons[(line.user_id ?? 0) % 5]!,
+        );
+        addClass(find(newLine, ".action-icon"), "icon-key");
+        addClass(find(newLine, ".action-section"), "icon-user-1");
 
-        newLine.find(".action-name").html(actionType_login);
+        html(find(newLine, ".action-name"), actionType_login);
 
         final_albumInfos = actionInfos_users_logged_in.replace(
           "%d",
@@ -608,20 +646,22 @@ function lineConstructor(line: MergedActivityLine) {
         break;
 
       case "logout":
-        newLine.find(".action-type").addClass("icon-purple");
+        addClass(find(newLine, ".action-type"), "icon-purple");
         if (line.user_id != 2) {
-          newLine
-            .find(".user-pic")
-            .addClass(color_icons[(line.user_id ?? 0) % 5]!);
+          addClass(
+            find(newLine, ".user-pic"),
+            color_icons[(line.user_id ?? 0) % 5]!,
+          );
         } else {
-          newLine
-            .find(".user-pic")
-            .addClass(color_icons[(line.object_id[0] ?? 0) % 5]!);
+          addClass(
+            find(newLine, ".user-pic"),
+            color_icons[(line.object_id[0] ?? 0) % 5]!,
+          );
         }
-        newLine.find(".action-icon").addClass("icon-logout");
-        newLine.find(".action-section").addClass("icon-user-1");
+        addClass(find(newLine, ".action-icon"), "icon-logout");
+        addClass(find(newLine, ".action-section"), "icon-user-1");
 
-        newLine.find(".action-name").html(actionType_logout);
+        html(find(newLine, ".action-name"), actionType_logout);
 
         final_albumInfos = actionInfos_users_logged_out.replace(
           "%d",
@@ -631,12 +671,13 @@ function lineConstructor(line: MergedActivityLine) {
         break;
 
       default:
-        newLine.find(".action-type").addClass("icon-purple");
-        newLine
-          .find(".user-pic")
-          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
-        newLine.find(".action-section").addClass("icon-user-1");
-        newLine.find(".action-name").html(line.action);
+        addClass(find(newLine, ".action-type"), "icon-purple");
+        addClass(
+          find(newLine, ".user-pic"),
+          color_icons[(line.user_id ?? 0) % 5]!,
+        );
+        addClass(find(newLine, ".action-section"), "icon-user-1");
+        html(find(newLine, ".action-name"), line.action);
         final_albumInfos = "x" + line.counter;
         break;
     }
@@ -644,20 +685,21 @@ function lineConstructor(line: MergedActivityLine) {
     // singulier
     switch (line.action) {
       case "edit":
-        newLine.find(".action-type").addClass("icon-blue");
-        newLine
-          .find(".user-pic")
-          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
-        newLine.find(".action-icon").addClass("icon-pencil");
+        addClass(find(newLine, ".action-type"), "icon-blue");
+        addClass(
+          find(newLine, ".user-pic"),
+          color_icons[(line.user_id ?? 0) % 5]!,
+        );
+        addClass(find(newLine, ".action-icon"), "icon-pencil");
 
-        newLine.find(".action-name").html(actionType_edit);
+        html(find(newLine, ".action-name"), actionType_edit);
         switch (line.object) {
           case "user":
             final_albumInfos = actionInfos_user_edited.replace(
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-user-1");
+            addClass(find(newLine, ".action-section"), "icon-user-1");
 
             break;
           case "album":
@@ -665,7 +707,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-folder-open");
+            addClass(find(newLine, ".action-section"), "icon-folder-open");
 
             break;
           case "group":
@@ -673,7 +715,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-users-1");
+            addClass(find(newLine, ".action-section"), "icon-users-1");
 
             break;
           case "photo":
@@ -681,7 +723,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-picture");
+            addClass(find(newLine, ".action-section"), "icon-picture");
 
             break;
           case "tag":
@@ -689,7 +731,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-tags");
+            addClass(find(newLine, ".action-section"), "icon-tags");
 
             break;
           default:
@@ -700,20 +742,21 @@ function lineConstructor(line: MergedActivityLine) {
 
         break;
       case "add":
-        newLine.find(".action-type").addClass("icon-green");
-        newLine
-          .find(".user-pic")
-          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
-        newLine.find(".action-icon").addClass("icon-plus");
+        addClass(find(newLine, ".action-type"), "icon-green");
+        addClass(
+          find(newLine, ".user-pic"),
+          color_icons[(line.user_id ?? 0) % 5]!,
+        );
+        addClass(find(newLine, ".action-icon"), "icon-plus");
 
-        newLine.find(".action-name").html(actionType_add);
+        html(find(newLine, ".action-name"), actionType_add);
         switch (line.object) {
           case "user":
             final_albumInfos = actionInfos_user_added.replace(
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-user-1");
+            addClass(find(newLine, ".action-section"), "icon-user-1");
 
             break;
           case "album":
@@ -721,7 +764,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-folder-open");
+            addClass(find(newLine, ".action-section"), "icon-folder-open");
 
             break;
           case "group":
@@ -729,7 +772,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-users-1");
+            addClass(find(newLine, ".action-section"), "icon-users-1");
 
             break;
           case "photo":
@@ -737,7 +780,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-picture");
+            addClass(find(newLine, ".action-section"), "icon-picture");
 
             break;
           case "tag":
@@ -745,7 +788,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-tags");
+            addClass(find(newLine, ".action-section"), "icon-tags");
 
             break;
           default:
@@ -757,20 +800,21 @@ function lineConstructor(line: MergedActivityLine) {
 
         break;
       case "delete":
-        newLine.find(".action-type").addClass("icon-red");
-        newLine
-          .find(".user-pic")
-          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
-        newLine.find(".action-icon").addClass("icon-trash-1");
+        addClass(find(newLine, ".action-type"), "icon-red");
+        addClass(
+          find(newLine, ".user-pic"),
+          color_icons[(line.user_id ?? 0) % 5]!,
+        );
+        addClass(find(newLine, ".action-icon"), "icon-trash-1");
 
-        newLine.find(".action-name").html(actionType_delete);
+        html(find(newLine, ".action-name"), actionType_delete);
         switch (line.object) {
           case "user":
             final_albumInfos = actionInfos_user_deleted.replace(
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-user-1");
+            addClass(find(newLine, ".action-section"), "icon-user-1");
 
             break;
           case "album":
@@ -778,7 +822,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-folder-open");
+            addClass(find(newLine, ".action-section"), "icon-folder-open");
 
             break;
           case "group":
@@ -786,7 +830,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-users-1");
+            addClass(find(newLine, ".action-section"), "icon-users-1");
 
             break;
           case "photo":
@@ -794,7 +838,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-picture");
+            addClass(find(newLine, ".action-section"), "icon-picture");
 
             break;
           case "tag":
@@ -802,7 +846,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-tags");
+            addClass(find(newLine, ".action-section"), "icon-tags");
 
             break;
           default:
@@ -813,20 +857,21 @@ function lineConstructor(line: MergedActivityLine) {
 
         break;
       case "move":
-        newLine.find(".action-type").addClass("icon-yellow");
-        newLine
-          .find(".user-pic")
-          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
-        newLine.find(".action-icon").addClass("icon-move");
+        addClass(find(newLine, ".action-type"), "icon-yellow");
+        addClass(
+          find(newLine, ".user-pic"),
+          color_icons[(line.user_id ?? 0) % 5]!,
+        );
+        addClass(find(newLine, ".action-icon"), "icon-move");
 
-        newLine.find(".action-name").html(actionType_move);
+        html(find(newLine, ".action-name"), actionType_move);
         switch (line.object) {
           case "album":
             final_albumInfos = actionInfos_album_moved.replace(
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-folder-open");
+            addClass(find(newLine, ".action-section"), "icon-folder-open");
 
             break;
           case "group":
@@ -834,7 +879,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-users-1");
+            addClass(find(newLine, ".action-section"), "icon-users-1");
 
             break;
           case "photo":
@@ -842,7 +887,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-picture");
+            addClass(find(newLine, ".action-section"), "icon-picture");
 
             break;
           case "tag":
@@ -850,7 +895,7 @@ function lineConstructor(line: MergedActivityLine) {
               "%d",
               String(line.counter),
             );
-            newLine.find(".action-section").addClass("icon-tags");
+            addClass(find(newLine, ".action-section"), "icon-tags");
 
             break;
           default:
@@ -861,14 +906,15 @@ function lineConstructor(line: MergedActivityLine) {
 
         break;
       case "login":
-        newLine.find(".action-type").addClass("icon-purple");
-        newLine
-          .find(".user-pic")
-          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
-        newLine.find(".action-icon").addClass("icon-key");
-        newLine.find(".action-section").addClass("icon-user-1");
+        addClass(find(newLine, ".action-type"), "icon-purple");
+        addClass(
+          find(newLine, ".user-pic"),
+          color_icons[(line.user_id ?? 0) % 5]!,
+        );
+        addClass(find(newLine, ".action-icon"), "icon-key");
+        addClass(find(newLine, ".action-section"), "icon-user-1");
 
-        newLine.find(".action-name").html(actionType_login);
+        html(find(newLine, ".action-name"), actionType_login);
 
         final_albumInfos = actionInfos_user_logged_in.replace(
           "%d",
@@ -877,20 +923,22 @@ function lineConstructor(line: MergedActivityLine) {
 
         break;
       case "logout":
-        newLine.find(".action-type").addClass("icon-purple");
+        addClass(find(newLine, ".action-type"), "icon-purple");
         if (line.user_id != 2) {
-          newLine
-            .find(".user-pic")
-            .addClass(color_icons[(line.user_id ?? 0) % 5]!);
+          addClass(
+            find(newLine, ".user-pic"),
+            color_icons[(line.user_id ?? 0) % 5]!,
+          );
         } else {
-          newLine
-            .find(".user-pic")
-            .addClass(color_icons[(line.object_id[0] ?? 0) % 5]!);
+          addClass(
+            find(newLine, ".user-pic"),
+            color_icons[(line.object_id[0] ?? 0) % 5]!,
+          );
         }
-        newLine.find(".action-icon").addClass("icon-logout");
-        newLine.find(".action-section").addClass("icon-user-1");
+        addClass(find(newLine, ".action-icon"), "icon-logout");
+        addClass(find(newLine, ".action-section"), "icon-user-1");
 
-        newLine.find(".action-name").html(actionType_logout);
+        html(find(newLine, ".action-name"), actionType_logout);
 
         final_albumInfos = actionInfos_user_logged_out.replace(
           "%d",
@@ -900,40 +948,41 @@ function lineConstructor(line: MergedActivityLine) {
         break;
 
       default:
-        newLine.find(".action-type").addClass("icon-purple");
-        newLine
-          .find(".user-pic")
-          .addClass(color_icons[(line.user_id ?? 0) % 5]!);
-        newLine.find(".action-section").addClass("icon-user-1");
-        newLine.find(".action-name").html(line.action);
+        addClass(find(newLine, ".action-type"), "icon-purple");
+        addClass(
+          find(newLine, ".user-pic"),
+          color_icons[(line.user_id ?? 0) % 5]!,
+        );
+        addClass(find(newLine, ".action-section"), "icon-user-1");
+        html(find(newLine, ".action-name"), line.action);
         final_albumInfos = "x" + line.counter;
         break;
     }
   }
 
-  newLine.find(".action-infos-test").html(final_albumInfos);
+  html(find(newLine, ".action-infos-test"), final_albumInfos);
 
   /* Action_section */
-  newLine.find(".nb_items").html(String(line.counter));
+  html(find(newLine, ".nb_items"), String(line.counter));
 
   /* Date_section */
-  newLine.find(".date-day").html(line.date);
-  newLine.find(".date-hour").html(line.hour);
+  html(find(newLine, ".date-day"), line.date);
+  html(find(newLine, ".date-hour"), line.hour);
 
   /* User _Section */
-  newLine.find(".user-name").html(line.username);
-  newLine.find(".user-pic").html(get_initials(line.username));
+  html(find(newLine, ".user-name"), line.username);
+  html(find(newLine, ".user-pic"), get_initials(line.username));
 
   /* Detail_section */
-  newLine.find(".detail-item-1").html(line.ip_address ?? "");
-  newLine.find(".detail-item-1").attr("title", "IP: " + line.ip_address);
+  html(find(newLine, ".detail-item-1"), line.ip_address ?? "");
+  attr(find(newLine, ".detail-item-1"), "title", "IP: " + line.ip_address);
 
   if (line.detailsType == "script") {
-    newLine.find(".detail-item-2").html(line.details.script ?? "");
-    newLine.find(".detail-item-2").attr("title", "Script");
+    html(find(newLine, ".detail-item-2"), line.details.script ?? "");
+    attr(find(newLine, ".detail-item-2"), "title", "Script");
   } else if (line.detailsType == "method") {
-    newLine.find(".detail-item-2").html(line.details.method ?? "");
-    newLine.find(".detail-item-2").attr("title", "API Method");
+    html(find(newLine, ".detail-item-2"), line.details.method ?? "");
+    attr(find(newLine, ".detail-item-2"), "title", "API Method");
   }
 
   if (line.details.agent) {
@@ -941,36 +990,40 @@ function lineConstructor(line: MergedActivityLine) {
     const details = line.details.connected_with
       ? '<i class="icon-key"></i>' + line.details.agent
       : line.details.agent;
-    newLine.find(".detail-item-3").html(details);
-    newLine
-      .find(".detail-item-3")
-      .attr("title", api_key + "User-Agent: " + line.details.agent);
+    html(find(newLine, ".detail-item-3"), details);
+    attr(
+      find(newLine, ".detail-item-3"),
+      "title",
+      api_key + "User-Agent: " + line.details.agent,
+    );
   } else if (
     line.details.users &&
     line.action != "logout" &&
     line.action != "login"
   ) {
     const user_string = [...new Set(line.details.users)].toString();
-    newLine.find(".detail-item-3").html(user_string);
-    newLine
-      .find(".detail-item-3")
-      .attr("title", users_key + ": " + user_string);
+    html(find(newLine, ".detail-item-3"), user_string);
+    attr(
+      find(newLine, ".detail-item-3"),
+      "title",
+      users_key + ": " + user_string,
+    );
   } else {
-    newLine.find(".detail-item-3").remove();
+    remove(find(newLine, ".detail-item-3"));
   }
 
-  newLine.addClass("uid-" + line.user_id);
+  addClass(newLine, "uid-" + line.user_id);
 
   displayLine(newLine);
 }
 
-function displayLine(line: JQuery) {
-  $(".tab").append(line);
+function displayLine(line: Element) {
+  document.querySelector(".tab")?.appendChild(line);
 }
 
 function emptyLine() {
-  $(".tab-title").hide();
-  $(".activity-noresult").show();
+  hide(document.querySelectorAll(".tab-title"));
+  show(document.querySelectorAll(".activity-noresult"));
 }
 
 function get_initials(username: string) {
@@ -999,11 +1052,11 @@ function move_to_page(page: number) {
   );
 }
 
-$(".pagination-arrow.rigth").on("click", () => {
+on(document.querySelectorAll(".pagination-arrow.rigth"), "click", () => {
   move_to_page(actual_page + 1);
 });
 
-$(".pagination-arrow.left").on("click", () => {
+on(document.querySelectorAll(".pagination-arrow.left"), "click", () => {
   move_to_page(actual_page - 1);
 });
 
@@ -1011,28 +1064,40 @@ function update_pagination_menu(_page?: number) {
   updateArrows();
   update_pagination_items();
   if (end_page && actual_page == 1) {
-    $(".pagination-container").hide();
+    hide(document.querySelectorAll(".pagination-container"));
   } else {
-    $(".pagination-container").show();
+    show(document.querySelectorAll(".pagination-container"));
   }
 }
 
 function updateArrows() {
   if (actual_page == 1) {
-    $(".pagination-arrow.left").addClass("unavailable");
+    addClass(
+      document.querySelectorAll(".pagination-arrow.left"),
+      "unavailable",
+    );
   } else {
-    $(".pagination-arrow.left").removeClass("unavailable");
+    removeClass(
+      document.querySelectorAll(".pagination-arrow.left"),
+      "unavailable",
+    );
   }
   if (end_page) {
-    $(".pagination-arrow.rigth").addClass("unavailable");
+    addClass(
+      document.querySelectorAll(".pagination-arrow.rigth"),
+      "unavailable",
+    );
   } else {
-    $(".pagination-arrow.rigth").removeClass("unavailable");
+    removeClass(
+      document.querySelectorAll(".pagination-arrow.rigth"),
+      "unavailable",
+    );
   }
 }
 
 function update_pagination_items() {
-  $(".pagination-item-container a").remove();
-  $(".pagination-item-container span").remove();
+  remove(document.querySelectorAll(".pagination-item-container a"));
+  remove(document.querySelectorAll(".pagination-item-container span"));
 
   append_pagination_item(1);
 
@@ -1048,17 +1113,20 @@ function update_pagination_items() {
 }
 
 function append_pagination_item(page: number | null = null) {
+  const container = document.querySelector(".pagination-item-container");
+  if (container === null) return;
+
   if (page != null) {
-    const new_tag = $(page_item.replace(/%d/g, String(page)));
-    $(".pagination-item-container").append(new_tag);
+    const new_tag = parseHtml(page_item.replace(/%d/g, String(page)))[0]!;
+    container.appendChild(new_tag);
     if (actual_page == page) {
-      new_tag.addClass("actual");
+      addClass(new_tag, "actual");
     }
-    new_tag.on("click", () => {
-      move_to_page(new_tag.data("page") as number);
+    on(new_tag, "click", () => {
+      move_to_page(data(new_tag, "page") as number);
     });
   } else {
-    $(".pagination-item-container").append($(page_ellipsis));
+    container.appendChild(parseHtml(page_ellipsis)[0]!);
   }
 }
 
@@ -1069,125 +1137,162 @@ function page_reset() {
   end_page = false;
 }
 
-$(document).ready(function () {
-  $("h1").append(`<span class='badge-number'>` + (nb_users - 1) + `</span>`);
+ready(function () {
+  append(
+    document.querySelectorAll("h1"),
+    `<span class='badge-number'>` + (nb_users - 1) + `</span>`,
+  );
 
-  $("select.user-selecter").on("change", function (_user) {
-    if ($(".user-selecter .selectize-input").hasClass("full")) {
-      page_reset();
-      if ($(".user-selecter .selectize-input .item").data("value") == "none") {
-        //{* call ajax sur activity list sans uid *}
-        void get_user_activity(
-          1,
-          undefined,
-          action_filter,
-          object_filter,
-          [date_min_filter, date_max_filter],
-          additional_filt_value,
-        );
-      } else {
-        //{* call ajax sur activity list avec uid en param *}
-        void get_user_activity(
-          1,
-          $(".user-selecter .selectize-input .item").data("value") as
-            string | number | undefined,
-          action_filter,
-          object_filter,
-          [date_min_filter, date_max_filter],
-          additional_filt_value,
-        );
-      }
-    }
-  });
-
-  $("select.action-selecter").on("change", function (_user) {
-    if ($(".action-selecter .selectize-input").hasClass("full")) {
-      page_reset();
+  // The `.selectize-input`/`.item[data-value]` markup below is selectize's
+  // own real, rendered DOM (still jQuery, P49-B group 6) -- reading it
+  // natively is safe, same reasoning as jGrowl's own toast markup in
+  // updates_ext.ts; only the widget init itself stays jQuery.
+  on(
+    document.querySelectorAll("select.user-selecter"),
+    "change",
+    function (): void {
       if (
-        $(".action-selecter .selectize-input .item").data("value") == "none"
+        hasClass(
+          document.querySelectorAll(".user-selecter .selectize-input"),
+          "full",
+        )
       ) {
-        //{* call ajax sur activity list sans action et object *}
-        if (additional_filt_type) {
+        page_reset();
+        const item = document.querySelector(
+          ".user-selecter .selectize-input .item",
+        );
+        const value = item !== null ? data(item, "value") : undefined;
+        if (value == "none") {
+          //{* call ajax sur activity list sans uid *}
           void get_user_activity(
             1,
-            uid_filter,
             undefined,
+            action_filter,
             object_filter,
             [date_min_filter, date_max_filter],
             additional_filt_value,
           );
         } else {
+          //{* call ajax sur activity list avec uid en param *}
           void get_user_activity(
             1,
-            uid_filter,
-            undefined,
-            undefined,
+            value as string | number | undefined,
+            action_filter,
+            object_filter,
             [date_min_filter, date_max_filter],
             additional_filt_value,
           );
         }
-      } else {
-        //{* call ajax sur activity list avec action et object en param *}
-        const object = (
-          $(".action-selecter .selectize-input .item").data("value") as string
-        ).split("/")[0];
-        const action = (
-          $(".action-selecter .selectize-input .item").data("value") as string
-        ).split("/")[1];
-        void get_user_activity(
-          1,
-          uid_filter,
-          action,
-          object,
-          [date_min_filter, date_max_filter],
-          additional_filt_value,
-        );
       }
-    }
-  });
+    },
+  );
 
-  $("#date_min_activity").on("change", function (_user) {
-    page_reset();
-    if ($("#date_min_activity").val() == "") {
-      document
-        .getElementById("date_max_activity")!
-        .setAttribute("min", date_min);
-    } else {
-      document
-        .getElementById("date_max_activity")!
-        .setAttribute("min", String($("#date_min_activity").val()));
-    }
-    void get_user_activity(
-      activity_page,
-      uid_filter,
-      action_filter,
-      object_filter,
-      [$("#date_min_activity").val() as string, date_max_filter],
-      additional_filt_value,
-    );
-  });
+  on(
+    document.querySelectorAll("select.action-selecter"),
+    "change",
+    function (): void {
+      if (
+        hasClass(
+          document.querySelectorAll(".action-selecter .selectize-input"),
+          "full",
+        )
+      ) {
+        page_reset();
+        const item = document.querySelector(
+          ".action-selecter .selectize-input .item",
+        );
+        const value = item !== null ? data(item, "value") : undefined;
+        if (value == "none") {
+          //{* call ajax sur activity list sans action et object *}
+          if (additional_filt_type) {
+            void get_user_activity(
+              1,
+              uid_filter,
+              undefined,
+              object_filter,
+              [date_min_filter, date_max_filter],
+              additional_filt_value,
+            );
+          } else {
+            void get_user_activity(
+              1,
+              uid_filter,
+              undefined,
+              undefined,
+              [date_min_filter, date_max_filter],
+              additional_filt_value,
+            );
+          }
+        } else {
+          //{* call ajax sur activity list avec action et object en param *}
+          const object = (value as string).split("/")[0];
+          const action = (value as string).split("/")[1];
+          void get_user_activity(
+            1,
+            uid_filter,
+            action,
+            object,
+            [date_min_filter, date_max_filter],
+            additional_filt_value,
+          );
+        }
+      }
+    },
+  );
 
-  $("#date_max_activity").on("change", function (_user) {
-    page_reset();
-    if ($("#date_max_activity").val() == "") {
-      document
-        .getElementById("date_min_activity")!
-        .setAttribute("max", date_max);
-    } else {
-      document
-        .getElementById("date_min_activity")!
-        .setAttribute("max", String($("#date_max_activity").val()));
-    }
-    void get_user_activity(
-      activity_page,
-      uid_filter,
-      action_filter,
-      object_filter,
-      [date_min_filter, $("#date_max_activity").val() as string],
-      additional_filt_value,
-    );
-  });
+  on(
+    document.querySelectorAll("#date_min_activity"),
+    "change",
+    function (): void {
+      page_reset();
+      const minVal = val(document.querySelectorAll("#date_min_activity"));
+      if (minVal == "") {
+        document
+          .getElementById("date_max_activity")!
+          .setAttribute("min", date_min);
+      } else {
+        document
+          .getElementById("date_max_activity")!
+          .setAttribute("min", String(minVal));
+      }
+      void get_user_activity(
+        activity_page,
+        uid_filter,
+        action_filter,
+        object_filter,
+        [minVal, date_max_filter],
+        additional_filt_value,
+      );
+    },
+  );
 
+  on(
+    document.querySelectorAll("#date_max_activity"),
+    "change",
+    function (): void {
+      page_reset();
+      const maxVal = val(document.querySelectorAll("#date_max_activity"));
+      if (maxVal == "") {
+        document
+          .getElementById("date_min_activity")!
+          .setAttribute("max", date_max);
+      } else {
+        document
+          .getElementById("date_min_activity")!
+          .setAttribute("max", String(maxVal));
+      }
+      void get_user_activity(
+        activity_page,
+        uid_filter,
+        action_filter,
+        object_filter,
+        [date_min_filter, maxVal],
+        additional_filt_value,
+      );
+    },
+  );
+
+  // Still jQuery: selectize is a library, ported in P49-B group 6.
   jQuery(".user-selecter").selectize();
   jQuery(".user-selecter")[0]!.selectize.setValue(null);
 
@@ -1195,31 +1300,41 @@ $(document).ready(function () {
   jQuery(".action-selecter")[0]!.selectize.setValue(null);
 
   if (additional_filt_type) {
-    $("#activityMoreFilters").addClass("extend-padding");
+    addClass(
+      document.querySelectorAll("#activityMoreFilters"),
+      "extend-padding",
+    );
   } else {
-    $("#activityMoreFiltersContent").hide();
+    hide(document.querySelectorAll("#activityMoreFiltersContent"));
   }
   //var used to prevent the user to interfere with the collapsible when it's toggling, to avoid some problems
   let toggleTriggered = false;
-  $("#activityMoreFilters").on("click", function () {
-    if (
-      $("#activityMoreFiltersContent").css("display") == "none" &&
-      !toggleTriggered
-    ) {
-      toggleTriggered = true;
-      $("#activityMoreFilters").addClass("extend-padding");
-      $("#activityMoreFiltersContent").slideToggle(function () {
-        toggleTriggered = false;
-      });
-    } else if (
-      $("#activityMoreFiltersContent").css("display") == "flex" &&
-      !toggleTriggered
-    ) {
-      toggleTriggered = true;
-      $("#activityMoreFiltersContent").slideToggle(function () {
-        $("#activityMoreFilters").removeClass("extend-padding");
-        toggleTriggered = false;
-      });
-    }
-  });
+  on(
+    document.querySelectorAll("#activityMoreFilters"),
+    "click",
+    function (): void {
+      const content = document.querySelector("#activityMoreFiltersContent");
+      if (content === null) return;
+
+      if (cssValue(content, "display") == "none" && !toggleTriggered) {
+        toggleTriggered = true;
+        addClass(
+          document.querySelectorAll("#activityMoreFilters"),
+          "extend-padding",
+        );
+        slideToggle(content, function () {
+          toggleTriggered = false;
+        });
+      } else if (cssValue(content, "display") == "flex" && !toggleTriggered) {
+        toggleTriggered = true;
+        slideToggle(content, function () {
+          removeClass(
+            document.querySelectorAll("#activityMoreFilters"),
+            "extend-padding",
+          );
+          toggleTriggered = false;
+        });
+      }
+    },
+  );
 });

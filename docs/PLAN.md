@@ -148,7 +148,7 @@ Three structural changes produced that drift:
 | P55 | Real quality gates | Not started | 0 |
 | P56 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P57 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
-| P58 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | In progress — A0/A0b done (103 findings refiled as Latte codegen); a generic `CachingIterator` stub removed the erasure hiding 133 more; **P58-A 843 → 0, closed**; P58-B 376 → 231, with B1 (always-true/false) and B2 (every `empty()`) done and only the loose comparisons left. All 20 of A's identifier ignores retired from `phpstan.neon`, plus 4 of B's 6 and one from the permanent group. Twenty-two live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
+| P58 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | **DONE** — **A 843 → 0, B 376 → 0**, and the CAMPAIGN-PENDING block is gone from `phpstan.neon`. All 26 identifier-wide ignores retired, each forced out by `reportUnmatchedIgnoredErrors` rather than noticed; 2 more left the *permanent* groups (`empty.variable`, `foreach.valueOverwrite`). Twenty-three live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -4727,13 +4727,34 @@ variable undefined, and that is the only reason the templates reached for
 `empty()` there. A missing key was Smarty's way of spelling "no value" and
 nothing else.
 
-Then the comparisons. `===` is not a mechanical substitution:
-`int == int` is the only always-safe pair, `'10' == '1e1'` is true for
-numeric strings, and `'' == null` is true. **B3 opens at 231**, not the
-268 this plan first recorded -- Campaign A's typing resolved the rest --
-and its operand mix is now `string`/`string` 104, `mixed`/`string` 53,
-`int`/`int` 37, `string|null`/`string` 12, with ~25 in narrowed integer
-ranges.
+*B3 (done).* The comparisons -- 231 of them, not the 268 this plan first
+recorded, since Campaign A's typing resolved the rest. `===` was not a
+mechanical substitution anywhere:
+
+- `int`/`int` (48) is the one always-safe pair and went in as a sweep,
+  after confirming the narrowed ranges (`int<min, 2>|int<4, max>`) were
+  PHPStan tracking an `{elseif}` chain's excluded values rather than
+  always-false findings hiding in the pile.
+- `string`/`string` (97) needed every literal read first: all ~40 are
+  non-numeric identifiers, so `'10' == '1e1'` was never in play. The
+  thirteen with no literal on either side were read individually, and one
+  family mattered -- `$PAGE_TITLE != $GALLERY_TITLE` compares
+  user-supplied text, so a gallery named `1e3` and a page named `1000`
+  were EQUAL under `==` and the page title vanished from `<title>`.
+- `mixed`/`string` (53) could not be decided until the operand had a type,
+  exactly as this plan predicted, and 42 had one cause:
+  `SearchFilterRenderer` flattened `FilterViewDefinition` to an array so a
+  loop could overwrite its `access` string with a computed bool. One slot
+  holding two meanings; two names replaced it.
+- `string|null`/`string` (20) were safe once checked: the `'' == null`
+  trap needs an empty-string literal, and every one of these compares
+  against a non-empty action name.
+
+Four retypes came out of B3 rather than an operator change: the
+batch-manager filter panel takes `BulkManagerFilter` instead of the raw
+session bag, the three search-filter counter maps became
+`array<array-key, int>`, the rating buckets `array<int, int>`, and
+`Navbar::$currentPage` became an `int` (bug #23).
 
 *Gate.* Each identifier's ignore comes out of `phpstan.neon` in the
 commit that takes its count to zero; `reportUnmatchedIgnoredErrors`
@@ -4758,7 +4779,7 @@ padding cells to the wrong branch, and the only thing that caught it was a
 golden fixture built one commit earlier. Every `{if !empty($x)}` whose
 `$x` becomes an object has to be read by hand.
 
-Twenty-two live bugs have surfaced this way, none of them type work:
+Twenty-three live bugs have surfaced this way, none of them type work:
 
 1. Saving the Main, Comments or Display config tab turned off every
    checkbox on it. The tabs normalized to `'true'`/`'false'` strings and
@@ -4881,7 +4902,23 @@ Twenty-two live bugs have surfaced this way, none of them type work:
     average" showed as the same blank cell. The committed golden fixture
     had it baked in -- `power_user`'s cell goes from blank to `0.000`.
 
-A twenty-third is the compile step's own: `VariableMapBuilder` joined a
+23. **The paginated navigation bar highlighted no page at all for any
+    off-boundary offset.** `CURRENT_PAGE` was a float, so `?start=30` with
+    20 per page exported `2.5` and `{if $page == $navbar->currentPage}`
+    matched no key in the pages list. History says it was collateral: the
+    2009 original computed `ceil($start / $per) + 1`, a whole number, and
+    856b5a2519 (2012) replaced it while doing something else -- its subject
+    was pinning the generated URLs to page boundaries, it needed a
+    fractional position for its new `floor()`/`ceil()` window bounds, and
+    it reused one variable for both jobs. The page is now the one the first
+    displayed element falls on, clamped to the last real page, and the
+    links and window derive from it. Two more defects fell out: a "next"
+    link pointing at the page already shown (at `start=85` of 100), and an
+    out-of-range offset naming a page that does not exist. Verified by
+    diffing old against new over 15,306 inputs -- **zero differences on any
+    boundary-aligned offset**, which is every URL Piwigo itself emits.
+
+A twenty-fourth is the compile step's own: `VariableMapBuilder` joined a
 variable's declarations by imploding type strings, so a name one context
 declares `?string` and another declares `string` became `?string|string` --
 not valid PHPDoc, since the `?` shorthand cannot take part in a union.

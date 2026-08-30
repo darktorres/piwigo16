@@ -4,11 +4,12 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
+import { attr, attrOf, hide, on, show } from "../../../default/js/vendor/dom";
 export {};
 
 const confirm_msg = pwg_getPageString("Yes, I am sure");
 const cancel_msg = pwg_getPageString("No, I have changed my mind");
-$(".lock-gallery-button").each(function () {
+document.querySelectorAll(".lock-gallery-button").forEach(function (button) {
   const gallery_tip = pwg_getPageString(
     "A locked gallery is only visible to administrators",
   );
@@ -16,108 +17,141 @@ $(".lock-gallery-button").each(function () {
     ? pwg_getPageString("Are you sure you want to lock the gallery?")
     : pwg_getPageString("Are you sure you want to unlock the gallery?");
 
-  $(this).pwg_jconfirm_follow_href({
+  // Still jQuery: pwg_jconfirm_follow_href wraps jquery-confirm, ported
+  // in P49-B group 5.
+  jQuery(button).pwg_jconfirm_follow_href({
     alert_title: title,
     alert_confirm: confirm_msg,
     alert_cancel: cancel_msg,
     alert_content: gallery_tip,
   });
 });
-$(".purge-history-detail-button").each(function () {
-  const title = pwg_getPageString("Purge history detail");
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg,
+document
+  .querySelectorAll(".purge-history-detail-button")
+  .forEach(function (button) {
+    const title = pwg_getPageString("Purge history detail");
+    jQuery(button).pwg_jconfirm_follow_href({
+      alert_title: title,
+      alert_confirm: confirm_msg,
+      alert_cancel: cancel_msg,
+    });
   });
-});
-$(".purge-history-summary-button").each(function () {
-  const title = pwg_getPageString("Purge history summary");
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg,
+document
+  .querySelectorAll(".purge-history-summary-button")
+  .forEach(function (button) {
+    const title = pwg_getPageString("Purge history summary");
+    jQuery(button).pwg_jconfirm_follow_href({
+      alert_title: title,
+      alert_confirm: confirm_msg,
+      alert_cancel: cancel_msg,
+    });
   });
-});
-$(".purge-search-history-button").each(function () {
-  const title = pwg_getPageString("Purge search history");
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg,
+document
+  .querySelectorAll(".purge-search-history-button")
+  .forEach(function (button) {
+    const title = pwg_getPageString("Purge search history");
+    jQuery(button).pwg_jconfirm_follow_href({
+      alert_title: title,
+      alert_confirm: confirm_msg,
+      alert_cancel: cancel_msg,
+    });
   });
-});
-$(".delete-all-sizes-button").each(function () {
-  const title = pwg_getPageString("Are you sure you want to delete all sizes?");
-  $(this).pwg_jconfirm_follow_href({
-    alert_title: title,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg,
-  });
-});
-
-$(".delete-size-check").click(function () {
-  if ($(this).attr("data-selected") === "1") {
-    $(this).attr("data-selected", "0");
-    $(this).find("i").hide();
-  } else {
-    $(this).attr("data-selected", "1");
-    $(this).find("i").show();
-  }
-  $(this).trigger("change");
-});
-$(".delete-size-check:first").change(function () {
-  if ($(this).attr("data-selected") === "1") {
-    $(".delete-size-check").hide();
-    $(".delete-size-check").attr("data-selected", "1");
-    $(this).show();
-  } else {
-    $(".delete-size-check").show();
-    $(".delete-size-check").attr("data-selected", "0");
-  }
-});
-const delete_deriv_URL = "admin.php?page=maintenance&action=derivatives&";
-$(".delete-size-check").change(function () {
-  const delete_deriv_with_token =
-    delete_deriv_URL +
-    "pwg_token=" +
-    pwg_getPageData<string>("pwg_token") +
-    "&";
-  let types_str;
-  const selected: string[] = [];
-  $(".delete-size-check").each(function () {
-    if ($(this).attr("data-selected") === "1") {
-      selected.push($(this).attr("name")!);
-    }
-  });
-  if (selected.length === 0) {
-    $(".delete-sizes").attr("href", "");
-  } else {
-    if (selected[0] === "all") {
-      types_str = "all";
-    } else {
-      types_str = selected.join("_");
-    }
-    console.log(selected);
-    $(".delete-sizes").attr(
-      "href",
-      delete_deriv_with_token + "type=" + types_str,
+document
+  .querySelectorAll(".delete-all-sizes-button")
+  .forEach(function (button) {
+    const title = pwg_getPageString(
+      "Are you sure you want to delete all sizes?",
     );
-  }
-});
+    jQuery(button).pwg_jconfirm_follow_href({
+      alert_title: title,
+      alert_confirm: confirm_msg,
+      alert_cancel: cancel_msg,
+    });
+  });
 
-$(".delete-sizes").hide();
-$(".delete-size-check").click(function () {
+on(
+  document.querySelectorAll(".delete-size-check"),
+  "click",
+  function (event: Event): void {
+    const checkbox = event.currentTarget as Element;
+    if (attrOf(checkbox, "data-selected") === "1") {
+      attr(checkbox, "data-selected", "0");
+      hide(checkbox.querySelectorAll("i"));
+    } else {
+      attr(checkbox, "data-selected", "1");
+      show(checkbox.querySelectorAll("i"));
+    }
+    checkbox.dispatchEvent(new Event("change", { bubbles: true }));
+  },
+);
+const firstDeleteSizeCheck = document.querySelector(".delete-size-check");
+if (firstDeleteSizeCheck !== null) {
+  on(firstDeleteSizeCheck, "change", function (): void {
+    if (attrOf(firstDeleteSizeCheck, "data-selected") === "1") {
+      hide(document.querySelectorAll(".delete-size-check"));
+      attr(
+        document.querySelectorAll(".delete-size-check"),
+        "data-selected",
+        "1",
+      );
+      show(firstDeleteSizeCheck);
+    } else {
+      show(document.querySelectorAll(".delete-size-check"));
+      attr(
+        document.querySelectorAll(".delete-size-check"),
+        "data-selected",
+        "0",
+      );
+    }
+  });
+}
+const delete_deriv_URL = "admin.php?page=maintenance&action=derivatives&";
+on(
+  document.querySelectorAll(".delete-size-check"),
+  "change",
+  function (): void {
+    const delete_deriv_with_token =
+      delete_deriv_URL +
+      "pwg_token=" +
+      pwg_getPageData<string>("pwg_token") +
+      "&";
+    let types_str;
+    const selected: string[] = [];
+    document.querySelectorAll(".delete-size-check").forEach((el) => {
+      if (attrOf(el, "data-selected") === "1") {
+        selected.push(attrOf(el, "name")!);
+      }
+    });
+    if (selected.length === 0) {
+      attr(document.querySelectorAll(".delete-sizes"), "href", "");
+    } else {
+      if (selected[0] === "all") {
+        types_str = "all";
+      } else {
+        types_str = selected.join("_");
+      }
+      console.log(selected);
+      attr(
+        document.querySelectorAll(".delete-sizes"),
+        "href",
+        delete_deriv_with_token + "type=" + types_str,
+      );
+    }
+  },
+);
+
+hide(document.querySelectorAll(".delete-sizes"));
+on(document.querySelectorAll(".delete-size-check"), "click", function (): void {
   let displayDeleteSizes = false;
-  $(".delete-size-check").each(function () {
-    if ($(this).attr("data-selected") === "1") {
+  document.querySelectorAll(".delete-size-check").forEach((el) => {
+    if (attrOf(el, "data-selected") === "1") {
       displayDeleteSizes = true;
     }
   });
 
   if (displayDeleteSizes) {
-    $(".delete-sizes").show();
+    show(document.querySelectorAll(".delete-sizes"));
   } else {
-    $(".delete-sizes").hide();
+    hide(document.querySelectorAll(".delete-sizes"));
   }
 });

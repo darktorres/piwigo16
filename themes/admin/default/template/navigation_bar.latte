@@ -18,7 +18,7 @@
   <div class="pagination-item-container">
     {foreach $navbar->pages as $page => $url}
       <span n:if="$page > $prev_page + 1">...</span>
-      {if $page == $navbar->currentPage}
+      {if $page === $navbar->currentPage}
         <a class="actual">{$page}</a>
       {else}
         <a href="{$url|noescape}">{$page}</a>

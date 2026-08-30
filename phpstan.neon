@@ -483,9 +483,6 @@ parameters:
         -
             identifier: equal.notAllowed
             path: _analysis/phpstan-latte/*
-        -
-            identifier: notEqual.notAllowed
-            path: _analysis/phpstan-latte/*
 
 services:
     # A second, plain TableErrorFormatter instance for the override below

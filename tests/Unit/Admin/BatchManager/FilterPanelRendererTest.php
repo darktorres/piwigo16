@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Admin\BatchManager\Projection\BulkManagerFilter;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
@@ -145,8 +146,13 @@ test('render() shows every built-in prefilter and no active filter/selection whe
         // adding 'no_sync_md5sum'/'no_virtual_album' to the built-in 7.
         expect($ids)
             ->toBe(['all_photos', 'caddie', 'duplicates', 'last_import', 'no_album', 'no_sync_md5sum', 'no_tag', 'no_virtual_album', 'favorites'])
+            // The filter reaches the template as BulkManagerFilter now, not
+            // the raw session array (P58-B3): an empty session bag becomes a
+            // VO whose every field is at its "not enabled" default, which is
+            // the same statement the old `toBe([])` was making about the
+            // array.
             ->and($template->getTemplateVars('filter'))
-            ->toBe([])
+            ->toEqual(BulkManagerFilter::fromArray([]))
             ->and($template->getTemplateVars('selection'))
             ->toBe([])
             ->and($template->getTemplateVars('associated_categories'))

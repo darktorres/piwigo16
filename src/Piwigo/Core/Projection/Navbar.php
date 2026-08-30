@@ -23,7 +23,7 @@ final readonly class Navbar
      * @param array<int, string> $pages
      */
     public function __construct(
-        public ?float $currentPage = null,
+        public ?int $currentPage = null,
         public ?string $urlFirst = null,
         public ?string $urlPrev = null,
         public ?string $urlNext = null,
@@ -43,7 +43,7 @@ final readonly class Navbar
      * mutation-tested coverage with it) -- this is the one conversion
      * point at the very end, from that raw legacy shape to this VO.
      *
-     * @param array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int} $row
+     * @param array{CURRENT_PAGE?: int, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int} $row
      */
     public static function fromLegacyArray(array $row): self
     {

@@ -24,7 +24,7 @@ test('isEmpty is true for the no-navigation-needed instance', function (): void 
 test('isEmpty is false when any single field is set', function (): void {
     // One case per field, so no field can be dropped from the check
     // without a failure -- the whole point is that it is exhaustive.
-    expect(new Navbar(currentPage: 1.0)->isEmpty())
+    expect(new Navbar(currentPage: 1)->isEmpty())
         ->toBeFalse();
     expect(new Navbar(urlFirst: '/index.php')->isEmpty())
         ->toBeFalse();
@@ -43,7 +43,7 @@ test('isEmpty is false when any single field is set', function (): void {
 
 test('isEmpty is false for a real multi-page bar', function (): void {
     expect(Navbar::fromLegacyArray([
-        'CURRENT_PAGE' => 1.0,
+        'CURRENT_PAGE' => 1,
         'URL_NEXT' => '/index.php?start=2',
         'URL_LAST' => '/index.php?start=4',
         'pages' => [

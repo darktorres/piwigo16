@@ -17,7 +17,7 @@
   {var $prev_page = 0}
   {foreach $navbar->pages as $page => $url}
     {if $page > $prev_page + 1}...{/if}
-    {if $page == $navbar->currentPage}
+    {if $page === $navbar->currentPage}
       <span class="pageNumberSelected">{$page}</span>
     {else}
       <a href="{$url|noescape}">{$page}</a>

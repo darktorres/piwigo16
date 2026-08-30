@@ -60,33 +60,67 @@ final readonly class PaginationService
         if ($nbElement > $nbElementPage) {
             $url_start = $url . $start_str;
 
-            $cur_page = $navbar['CURRENT_PAGE'] = (float) $start / (float) $nbElementPage + 1.0;
             $maximum = (int) ceil($nbElement / $nbElementPage);
 
-            $start = (float) $nbElementPage * round((float) $start / (float) $nbElementPage);
-            $previous = $start - (float) $nbElementPage;
-            $next = $start + (float) $nbElementPage;
+            // The page being shown = the page the FIRST displayed element
+            // falls on. $start is an offset into the element list, so that is
+            // integer division, and the answer is a page number: an int.
+            //
+            // This is the one definition that survives an off-boundary
+            // $start, which is reachable because $start comes straight off
+            // the URL and is only clamped at < 0. Two others have existed
+            // here and neither does: the 2009 original computed
+            // `ceil($start / $per) + 1`, which over-counts (offset 4 of 20
+            // per page reports page 2, though every visible element but the
+            // last four is on page 1); and from 856b5a2519 (2012) until
+            // P58-B3 this exported `$start / $per + 1` UNROUNDED, so offset
+            // 30 reported page 2.5 and `{if $page == $navbar->currentPage}`
+            // matched nothing at all -- the bar rendered with no page
+            // highlighted. That fraction was collateral: the 2012 commit's
+            // actual subject was pinning the generated URLs to page
+            // boundaries, and it needed a fractional position for the window
+            // bounds below, so it reused one variable for both jobs.
+            // Clamped to $maximum: $start is not validated against the
+            // element count anywhere upstream, so ?start=500 on a 5-page
+            // gallery would otherwise report page 26 -- a page absent from
+            // the list below, which puts the template right back where the
+            // fraction left it. There is no 26th page to be on.
+            $currentPage = min(intdiv($start, $nbElementPage) + 1, $maximum);
+            $navbar['CURRENT_PAGE'] = $currentPage;
+
+            // The URLs stay on page boundaries -- that is 856b5a2519's own
+            // subject and it still holds -- but on the boundary of the page
+            // named above, so first/prev/next/last are that page's real
+            // neighbours rather than a separately-rounded page's.
+            $start = ($currentPage - 1) * $nbElementPage;
+            $previous = $start - $nbElementPage;
+            $next = $start + $nbElementPage;
             $last = ($maximum - 1) * $nbElementPage;
 
             // link to first page and previous page?
-            // $cur_page can be a non-integer float ($start / $nbElementPage + 1,
-            // computed before $start is normalized to a page boundary below) --
-            // compare numerically as floats, matching the original's loose "!="
-            // exactly, rather than a type-sensitive "!==".
-            if ($cur_page !== 1.0) {
+            if ($currentPage !== 1) {
                 $navbar['URL_FIRST'] = $url;
                 $navbar['URL_PREV'] = $previous > 0 ? $url_start . (string) $previous : $url;
             }
             // link on next page and last page?
-            if ($cur_page !== (float) $maximum) {
-                $navbar['URL_NEXT'] = $url_start . (string) ($next < $last ? $next : $last);
+            if ($currentPage !== $maximum) {
+                // No cap needed on $next: this branch only runs when
+                // $currentPage < $maximum (it is clamped to $maximum above),
+                // so $next is at most ($maximum - 1) * $nbElementPage, which
+                // is $last. The old `$next < $last ? $next : $last` guarded
+                // against an out-of-range $start reaching here, which the
+                // clamp now prevents at the source.
+                $navbar['URL_NEXT'] = $url_start . (string) $next;
                 $navbar['URL_LAST'] = $url_start . $last;
             }
 
-            // pages to display
+            // pages to display -- a window centred on the current page, which
+            // is what $pages_around means. The old floor()/ceil() pair around
+            // a fraction made it asymmetric by one on either side depending on
+            // where in the page the offset landed.
             $navbar['pages'] = [];
             $navbar['pages'][1] = $url;
-            for ($i = (int) max(floor($cur_page) - (float) $pages_around, 2), $stop = min(ceil($cur_page) + (float) $pages_around + 1.0, (float) $maximum);
+            for ($i = max($currentPage - $pages_around, 2), $stop = min($currentPage + $pages_around + 1, $maximum);
                 $i < $stop; $i++) {
                 $navbar['pages'][$i] = $url . $start_str . (($i - 1) * $nbElementPage);
             }

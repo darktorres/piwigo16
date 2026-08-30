@@ -822,3 +822,31 @@ it('resolves storage_category_id from a filesystem-synced photo, marks it unlink
         ]);
     }
 });
+
+/**
+ * autosize.ts's ready() callback, converted off jQuery in P49-A. The
+ * autogrow() call inside it is an in-tree micro plugin and stays until
+ * P49-B group 1; what this pins is the line beside it, which writes an
+ * inline `overflow-y: hidden` onto every textarea and is the callback's
+ * only directly observable effect.
+ *
+ * Whether a naive DOMContentLoaded port of ready() breaks is
+ * timing-dependent and this page does not reliably show it -- checked, and
+ * it still passed with the listener swapped in. LanguagesNewPageRendererTest
+ * is where that failure reproduces. What this pins is narrower and
+ * deterministic: the inline style the converted line writes.
+ */
+it('applies autosize\'s inline overflow-y to every textarea on load', function (): void {
+    $page = H::asAdmin($this);
+    $page = H::navigateOk($page, '/admin.php?page=photo-1&tab=properties');
+
+    $overflows = $page->script(
+        'Array.from(document.querySelectorAll("textarea")).map((t) => t.style.overflowY)'
+    );
+
+    expect($overflows)->not->toBe([]);
+    foreach ((array) $overflows as $value) {
+        expect($value)->toBe('hidden');
+    }
+    $page->assertNoJavaScriptErrors();
+});

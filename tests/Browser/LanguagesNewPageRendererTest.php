@@ -102,3 +102,22 @@ it('rejects an install request from a non-webmaster session', function (): void 
         H::restoreConfig($snapshot);
     }
 });
+
+/**
+ * languages_new.ts's whole body is one cluetip call inside a ready()
+ * wrapper. P49-A converts the wrapper; cluetip itself is a library and
+ * goes in P49-B, so what needs proving here is only that the callback
+ * still fires under the new ready().
+ *
+ * cluetip's own init inserts `#cluetip-waitimage` into the document if it
+ * is not already there, which is the earliest observable effect of the
+ * call and needs no hover to produce.
+ */
+it('runs its ready callback, initializing cluetip on load', function (): void {
+    $page = H::asAdmin($this);
+    $page = H::navigateOk($page, '/admin.php?page=languages&tab=new');
+
+    expect($page->script('document.querySelectorAll("#cluetip-waitimage").length'))
+        ->toBe(1);
+    $page->assertNoJavaScriptErrors();
+});

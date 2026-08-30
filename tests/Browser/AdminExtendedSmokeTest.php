@@ -112,3 +112,34 @@ foreach ($routes as $name => $path) {
         $page->assertNoJavaScriptErrors();
     });
 }
+
+/**
+ * photos_add_applications.ts is one colorbox call inside a ready()
+ * wrapper. colorbox is a library (P49-B group 3); P49-A converted the
+ * wrapper, so what needs proving is that the callback still fires.
+ *
+ * It does not distinguish ready() implementations: swapping in a bare
+ * DOMContentLoaded listener still passes here, because on this page the
+ * timing happens to work out. That failure reproduces in
+ * LanguagesNewPageRendererTest, and is checked there.
+ */
+it('binds colorbox to the application illustrations on load', function (): void {
+    $page = H::asAdmin($this);
+    $page = H::navigateOk($page, '/admin.php?page=photos_add&section=applications');
+
+    // `cboxElement` is the class colorbox stamps onto every element it
+    // binds, and it is the host-element mutation this port has to preserve
+    // -- the class P49's own post-mortem records as the category of
+    // regression that sank the first attempt (hasDatepicker, dataTable,
+    // ui-state-hover were all exactly this). Asserting it rather than the
+    // overlay also keeps the test to what the ready() callback does,
+    // rather than to colorbox's own click behaviour.
+    $bound = $page->script(
+        'document.querySelectorAll(".illustration a.cboxElement").length'
+    );
+    $all = $page->script('document.querySelectorAll(".illustration a").length');
+
+    expect($all)->toBeGreaterThan(0);
+    expect($bound)->toBe($all);
+    $page->assertNoJavaScriptErrors();
+});

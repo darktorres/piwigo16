@@ -1,7 +1,11 @@
+import { css, ready } from "../../../default/js/vendor/dom";
+
 export {};
 
-jQuery(document).ready(function () {
-  jQuery("textarea").css("overflow-y", "hidden");
-  // Auto size and auto grow for all text area
+ready(function () {
+  css(document.querySelectorAll("textarea"), "overflow-y", "hidden");
+  // Auto size and auto grow for all text area.
+  // Still jQuery: autogrow is one of the in-tree micro plugins, ported in
+  // P49-B group 1.
   jQuery("textarea").autogrow();
 });

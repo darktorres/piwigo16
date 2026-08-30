@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Admin\BatchManager\Projection\BatchManagerPrefilter;
 use Piwigo\Admin\BatchManager\Projection\BulkManagerFilter;
 use Piwigo\Admin\BatchManager\Projection\FilterPanelPageContext;
 
@@ -9,16 +10,19 @@ test('toArray flattens every property to its real Latte template variable name',
     // The filter reaches the template as the VO, not the raw session bag:
     // the array's key presence was only how it could say "the user enabled
     // this filter", and BulkManagerFilter names that directly (P58-B3).
+    // Prefilter rows reach the template as VOs, not raw arrays: the list is
+    // plugin-extensible and only is_array()-checked at the dispatch, so the
+    // ID/NAME strings the template needs are made true by construction
+    // rather than by convention (P58-B3).
+    $prefilter = new BatchManagerPrefilter(id: 'caddie', name: 'Caddie');
+
     $filter = BulkManagerFilter::fromArray([
         'level' => 2,
     ]);
 
     $context = new FilterPanelPageContext(
         confChecksumComputeBlocksize: 50,
-        prefilters: [[
-            'ID' => 'caddie',
-            'NAME' => 'Caddie',
-        ]],
+        prefilters: [$prefilter],
         filter: $filter,
         selection: [1, 2, 3],
         allElements: [1, 2, 3],
@@ -50,10 +54,7 @@ test('toArray flattens every property to its real Latte template variable name',
     expect($context->toArray())
         ->toBe([
             'conf_checksum_compute_blocksize' => 50,
-            'prefilters' => [[
-                'ID' => 'caddie',
-                'NAME' => 'Caddie',
-            ]],
+            'prefilters' => [$prefilter],
             'filter' => $filter,
             'selection' => [1, 2, 3],
             'all_elements' => [1, 2, 3],

@@ -425,64 +425,33 @@ parameters:
             path: _analysis/phpstan-latte/*
 
         # ------------------------------------------------------------------
-        # CAMPAIGN-PENDING (temporary): true positives whose real fix is
-        # source work, tracked as named follow-up campaigns; each batch of
-        # fixes shrinks these until reportUnmatched forces the entry out.
+        # P58 -- CLOSED. This is where the CAMPAIGN-PENDING block stood: 26
+        # identifier-wide `ignoreErrors` entries over _analysis/phpstan-latte,
+        # 20 for Campaign A and 6 for Campaign B, each suppressing a true
+        # positive whose real fix was source work. Every one came out as its
+        # own count reached zero, and every one was forced out by
+        # reportUnmatchedIgnoredErrors rather than noticed.
         #
-        # Campaign A (docs/PLAN.md P58-A) -- CLOSED. It opened at 843
-        # findings: values reaching a template as `mixed` because the View
-        # property they arrived through was typed `array<string, mixed>`,
-        # overwhelmingly a producer calling `->toArray()` on an
-        # already-typed VO one line before handing it to the View. Twenty
-        # identifier-wide entries stood here; every one came out as its
-        # count reached zero, each forced by reportUnmatchedIgnoredErrors
-        # rather than noticed.
+        # Campaign A (843 findings) typed the producer -> View -> template
+        # chain: values arrived as `mixed` because the View property carrying
+        # them was `array<string, mixed>`, overwhelmingly a producer calling
+        # ->toArray() on an already-typed VO one line before handing it over.
+        # Campaign B (376) modernized the template source itself -- loose
+        # ==/!=, empty(), always-true/false conditions.
         #
-        # Nothing of Campaign A is suppressed any more. Its two residual
-        # findings are Latte's own {foreach} chaining and epilogue, filed
-        # by message in group (1) above with the rest of the codegen; as
-        # this campaign typed the collections those loops run over, Latte
-        # began reporting concrete generics there where it used to report
-        # `mixed`, which is why those two patterns no longer name
-        # `<mixed, mixed>`.
-        #
-        # The largest single drop was not source work at all: 106 findings
-        # were Latte's own CachingIterator erasing the element type of every
-        # {foreach} in an $iterator-using template, fixed by the generic stub
-        # in stubFiles above -- which makes those findings not exist rather
-        # than suppressing them.
+        # Two entries also left the PERMANENT groups above, which is the part
+        # worth remembering: `empty.variable` (group 2), because B2 removed
+        # the last empty() from the template tree and every presence check
+        # left is spelled isset(); and `foreach.valueOverwrite`, which had
+        # been filed as Smarty-conversion style and turned out to be two live
+        # bugs. Twenty-two live bugs surfaced across the two campaigns, none
+        # of them type work -- they were what the blanket ignores were
+        # hiding. A blanket identifier ignore assumes every finding under it
+        # is the same kind of finding; for several of these it was not.
         #
         # tools/p58/census.php still measures both campaigns (it strips this
-        # block and re-runs PHPStan; with the block in place
-        # `composer analyse:phpstan` reports zero and says nothing about
-        # progress). It reads Campaign A: 0.
-
-        # Campaign B -- template-source modernization: Smarty-conversion
-        # legacy in the .latte files themselves (loose ==/!=, empty(),
-        # always-true/false conditions); ~450 findings, each needing
-        # per-site semantic care, not bulk replacement.
-        #
-        # `foreach.valueOverwrite` is no longer among them: it had exactly
-        # two sites, both in search_filters.inc.latte, and both were live
-        # bugs rather than style -- Latte compiles `{foreach $x as $k =>
-        # $x}` to `unset($k, $x); foreach ($x as ...)`, so each loop
-        # iterated a variable it had just destroyed and the file-type and
-        # rating option lists rendered empty on every search page. Fixed
-        # (P49-A typing pass), and the ignore dropped so a new one fails.
-        #
-        # The three always-true/false identifiers are gone the same way
-        # (B1): `if.alwaysTrue`, `booleanOr.rightAlwaysFalse` and
-        # `identical.alwaysFalse` had 5 findings between them, in 2 files,
-        # and one of them was a live bug -- cat_modify.latte guarded the
-        # representative-actions box with `allowSetRandom || allowSetRandom`,
-        # a duplicated operand inherited verbatim from the original Smarty,
-        # so the "Remove thumbnail" action never rendered for an album with
-        # no direct photos. What remains under this block is the loose
-        # comparison and `empty()` work (B2/B3), which is bulk but not
-        # mechanical.
-        -
-            identifier: equal.notAllowed
-            path: _analysis/phpstan-latte/*
+        # block -- now empty -- and re-runs PHPStan). It reads
+        # Campaign A: 0, Campaign B: 0.
 
 services:
     # A second, plain TableErrorFormatter instance for the override below

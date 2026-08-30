@@ -564,7 +564,20 @@ final readonly class SearchFilterRenderer
                 $cacheKey = 'ratings_' . $userId;
                 $cacheApplicable = $filterClause->cacheApplicable;
                 $cachedRatings = $cacheApplicable ? $this->cacheGet($cacheKey) : null;
-                $ratings = is_array($cachedRatings) ? self::toCounterMap($cachedRatings) : null;
+                // Rebuilt bucket by bucket rather than taken as-is: the
+                // rating filter is a fixed 0..5 set (array_fill(0, 6, 0)
+                // below), and saying so gives the template array<int, int>
+                // instead of array<array-key, int>, which is what its own
+                // `0 === $k` needs. It also means a cache entry that lost or
+                // gained a bucket cannot change how many controls render.
+                $ratings = null;
+                if (is_array($cachedRatings)) {
+                    $cachedCounts = self::toCounterMap($cachedRatings);
+                    $ratings = [];
+                    foreach (range(0, 5) as $bucket) {
+                        $ratings[$bucket] = $cachedCounts[$bucket] ?? 0;
+                    }
+                }
 
                 if ($ratings === null) {
                     $filterRows = $this->repo->findDistinctImageRows(['i.ratingScore AS rating_score'], $filterCondition);

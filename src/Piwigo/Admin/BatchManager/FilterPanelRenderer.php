@@ -6,6 +6,7 @@ namespace Piwigo\Admin\BatchManager;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\BatchManager\Event\GetBatchManagerPrefilters;
+use Piwigo\Admin\BatchManager\Projection\BatchManagerPrefilter;
 use Piwigo\Admin\BatchManager\Projection\BulkManagerFilter;
 use Piwigo\Admin\BatchManager\Projection\FilterPanelPageContext;
 use Piwigo\Config\CurrentConfig;
@@ -115,10 +116,16 @@ final class FilterPanelRenderer
         $prefiltersEvent = $eventDispatcher->dispatch(new GetBatchManagerPrefilters($prefilters));
 
         // A misbehaving third-party handler could still populate this with
-        // non-array elements PHP's own type system can't catch at runtime
-        // -- only accept a real array of arrays back, otherwise keep the
-        // built-in prefilter list above.
-        $prefilters = array_filter($prefiltersEvent->prefilters, is_array(...));
+        // non-array elements PHP's own type system can't catch at runtime,
+        // and even a real array row is not guaranteed to carry the
+        // ID/NAME strings the built-in entries use -- normalize to the VO
+        // and drop whatever cannot supply them, rather than letting a
+        // malformed row reach the template as an <option value=""> a user
+        // could actually select (P58-B3).
+        $prefilters = array_values(array_filter(array_map(
+            static fn (mixed $row): ?BatchManagerPrefilter => is_array($row) ? BatchManagerPrefilter::tryFromArray($row) : null,
+            $prefiltersEvent->prefilters
+        )));
 
         // Sort prefilters by localized name.
         usort($prefilters, self::compareByName(...));
@@ -206,22 +213,12 @@ final class FilterPanelRenderer
     }
 
     /**
-     * $prefilters is only reliably list<array{ID: string, NAME: string}>
-     * for this class's own 7-9 built-in entries -- the
-     * 'get_batch_manager_prefilters' filter above lets plugins splice in
-     * their own entries, only checked for is_array() (not this specific
-     * shape), so a real plugin-injected row could carry any array
-     * structure. Read defensively, same as any other plugin-extensible
-     * list.
-     *
-     * @param array<mixed> $a
-     * @param array<mixed> $b
+     * Sorts by localized name. The defensive `is_string()` narrowing this
+     * used to carry moved to {@see BatchManagerPrefilter::tryFromArray()},
+     * which is now the single place a plugin-supplied row is validated.
      */
-    private static function compareByName(array $a, array $b): int
+    private static function compareByName(BatchManagerPrefilter $a, BatchManagerPrefilter $b): int
     {
-        $a_name = is_string($a['NAME']) ? $a['NAME'] : '';
-        $b_name = is_string($b['NAME']) ? $b['NAME'] : '';
-
-        return strcmp(strtolower($a_name), strtolower($b_name));
+        return strcmp(strtolower($a->name), strtolower($b->name));
     }
 }

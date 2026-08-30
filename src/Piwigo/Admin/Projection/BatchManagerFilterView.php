@@ -43,11 +43,16 @@ use Piwigo\Template\Latte\Attribute\Template as TemplateAttr;
  * (`BatchManagerUnitView`/`BatchManagerGlobalView`) own methods instead
  * of a constructed instance of this class -- every one of the 4 real
  * values those calls need (`$dimensions`/`$filesize`/
- * `$filter_category_selected`, plus the ambient `$themeconf['colorscheme']`
- * already on each parent) is real and ambient-readable, but this
+ * `$filter_category_selected`/`$colorscheme`, already on each parent) is
+ * real and ambient-readable, but this
  * class's own constructor carries the other 9 real template properties
  * too, which would need real (not dummy) values just to build an
  * instance whose only use is calling 3 methods that never touch them.
+ *
+ * `$colorscheme` is a real property rather than the ambient
+ * `$themeconf['colorscheme']` bag read the template used to do (P58-B3),
+ * matching what {@see \Piwigo\Controller\Projection\SearchFiltersView}
+ * already carries for the very same quick-search partial.
  */
 #[TemplateAttr('include/batch_manager_filter.inc.latte')]
 final readonly class BatchManagerFilterView implements View
@@ -55,10 +60,11 @@ final readonly class BatchManagerFilterView implements View
     /**
      * @param array<int, string> $filter_level_options
      * @param array<int, array{name: mixed, id: string}> $filter_tags
-     * @param list<array<mixed>> $prefilters
+     * @param list<\Piwigo\Admin\BatchManager\Projection\BatchManagerPrefilter> $prefilters
      * @param ?list<string> $no_search_results
      */
     public function __construct(
+        public string $colorscheme,
         public BulkManagerFilter $filter,
         public ?int $filter_category_selected,
         public ?string $filter_search_query,

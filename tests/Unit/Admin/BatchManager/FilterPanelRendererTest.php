@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\BatchManager\Projection\BulkManagerFilter;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
+use Piwigo\Admin\BatchManager\Projection\BatchManagerPrefilter;
+use Piwigo\Admin\BatchManager\Projection\BulkManagerFilter;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\CurrentConfig;
@@ -138,7 +139,11 @@ test('render() shows every built-in prefilter and no active filter/selection whe
         if (! is_array($prefilters)) {
             throw new LogicException('expected an array of prefilters');
         }
-        $ids = array_map(static fn (mixed $row): mixed => is_array($row) ? ($row['ID'] ?? null) : null, $prefilters);
+        // Rows are BatchManagerPrefilter VOs now, not raw arrays (P58-B3).
+        $ids = array_map(
+            static fn (mixed $row): mixed => $row instanceof BatchManagerPrefilter ? $row->id : null,
+            $prefilters
+        );
 
         // Alphabetically sorted by each entry's own localized NAME (an
         // untranslated Lang here just echoes the English key back) -- a

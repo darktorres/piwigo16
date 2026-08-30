@@ -14,7 +14,7 @@ use Piwigo\Core\TemplatePageContext;
 final readonly class FilterPanelPageContext implements TemplatePageContext
 {
     /**
-     * @param list<array<mixed>> $prefilters
+     * @param list<\Piwigo\Admin\BatchManager\Projection\BatchManagerPrefilter> $prefilters
      * @param array<mixed> $selection
      * @param array<array-key, int|string|float|bool> $allElements
      * @param array<int, string> $filterLevelOptions

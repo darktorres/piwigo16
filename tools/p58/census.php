@@ -10,11 +10,19 @@ if (PHP_SAPI !== 'cli') {
 /**
  * [P58] Regenerates the Campaign A/B finding census.
  *
- * `phpstan.neon`'s CAMPAIGN-PENDING block suppresses every finding both
- * campaigns exist to fix, so a normal `composer analyse:phpstan` reports
- * zero and says nothing about progress. This strips that block into a
- * scratch config and analyses against it, which is the only way to see the
- * work remaining.
+ * `phpstan.neon`'s CAMPAIGN-PENDING block used to suppress every finding
+ * both campaigns exist to fix, so a normal `composer analyse:phpstan`
+ * reported zero and said nothing about progress. This stripped that block
+ * into a scratch config and analysed against it, which was the only way to
+ * see the work remaining.
+ *
+ * BOTH CAMPAIGNS ARE CLOSED and the block is gone, so this now reports
+ * zero by simply confirming there is nothing left to strip -- and
+ * `composer analyse:phpstan` is itself the gate, since a new finding of
+ * any of those 26 identifiers has nothing left to hide behind. Kept rather
+ * than deleted because it is the one thing that can tell a future reader
+ * whether an ignore has crept back: re-add one, and this starts measuring
+ * again.
  *
  * The scratch config is written *beside* `phpstan.neon` deliberately: its
  * `paths`/`excludePaths` are relative to the config file's own directory,
@@ -46,10 +54,21 @@ if ($neon === false) {
     exit(1);
 }
 
-$start = strpos($neon, '# CAMPAIGN-PENDING');
+$start = strpos($neon, '# CAMPAIGN-PENDING (temporary)');
 $end = strpos($neon, 'services:');
-if ($start === false || $end === false || $end < $start) {
-    fwrite(STDERR, "could not locate the CAMPAIGN-PENDING block; has phpstan.neon been restructured?\n");
+if ($start === false) {
+    // The closed state: no block to strip, so the campaigns' own gate --
+    // `composer analyse:phpstan` -- already reports every finding they
+    // covered. Exit 0, not 1: nothing is wrong.
+    echo "Campaign A: 0 findings\n\nCampaign B: 0 findings\n\n";
+    echo "The CAMPAIGN-PENDING block is gone (P58 closed). Nothing is\n";
+    echo "suppressed, so `composer analyse:phpstan` is the live measurement;\n";
+    echo "this script starts measuring again if an ignore is ever re-added.\n";
+    exit(0);
+}
+
+if ($end === false || $end < $start) {
+    fwrite(STDERR, "found a CAMPAIGN-PENDING block but no services: section; has phpstan.neon been restructured?\n");
     exit(1);
 }
 

@@ -915,7 +915,7 @@
                   <input
                     type="checkbox"
                     id="rating-{$k}"
-                    name="{if 0 == $k}0{else}{$k}{/if}"
+                    name="{if 0 === $k}0{else}{$k}{/if}"
                     {if 0 === $ratingCount}
                     disabled
                     {/if}
@@ -926,7 +926,7 @@
                     ></span>
                     <span
                       class="ratings-name"
-                    >{if 0 == $k}{='no rate'|translate}{else}{=translate('between %d and %d', intval($k) - 1, $k)}{/if}</span>
+                    >{if 0 === $k}{='no rate'|translate}{else}{=translate('between %d and %d', intval($k) - 1, $k)}{/if}</span>
                     {if 0 !== $ratingCount}<span
                         class="ratings-badge"
                       >{$ratingCount}</span>{/if}
@@ -1163,7 +1163,7 @@
 
     <div class="quick-search-content">
       <div class="quick-search-syntax">
-        {var $is_dark_mode = $themeconf['colorscheme'] == 'dark'}
+        {var $is_dark_mode = $colorscheme === 'dark'}
         {include $ROOT_PATH . 'themes/default/template/help/quick_search.latte', is_dark_mode: $is_dark_mode}
       </div>
     </div>

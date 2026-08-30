@@ -137,7 +137,6 @@ test('createNavigationBar rounds the total page count up, not down or to nearest
         ->toBe(6);
 });
 
-
 /**
  * The `(int)` normalization of $nbElement/$start is load-bearing, and
  * this test is what kills RemoveIntegerCast on it. It did NOT used to be:

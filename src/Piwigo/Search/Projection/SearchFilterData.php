@@ -31,7 +31,7 @@ final readonly class SearchFilterData
      * @param list<AuthorFilterCount>|null $authors
      * @param list<AddedByFilterCount>|null $addedBy
      * @param array<array-key, int>|null $filetypes
-     * @param array<array-key, int>|null $rating
+     * @param array<int, int>|null $rating
      * @param array<array-key, int>|null $ratios
      * @param list<string>|null $albumsFound
      * @param list<string>|null $tagsFound

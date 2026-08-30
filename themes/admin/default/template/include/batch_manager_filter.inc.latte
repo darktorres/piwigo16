@@ -33,16 +33,16 @@
         <select name="filter_prefilter">
           {foreach $prefilters as $prefilter}
             {var $optionClass = ''}
-            {if $prefilter['ID'] == 'no_album'}{var $optionClass = 'icon-heart-broken'}{/if}
-            {if $prefilter['ID'] == 'caddie'}{var $optionClass = 'icon-flag'}{/if}
+            {if $prefilter->id === 'no_album'}{var $optionClass = 'icon-heart-broken'}{/if}
+            {if $prefilter->id === 'caddie'}{var $optionClass = 'icon-flag'}{/if}
 
             <option
-              value="{$prefilter['ID']}"
+              value="{$prefilter->id}"
               class="{$optionClass}"
-              {if $filter->prefilter !== null && $filter->prefilter === $prefilter['ID']}
+              {if $filter->prefilter !== null && $filter->prefilter === $prefilter->id}
               selected="selected"
               {/if}
-            >{$prefilter['NAME']}</option>
+            >{$prefilter->name}</option>
           {/foreach}
         </select>
         <a
@@ -565,7 +565,7 @@
         </div>
       </div>
       <div class="quick-search-syntax">
-        {var $is_dark_mode = ($themeconf['colorscheme'] == 'dark')}
+        {var $is_dark_mode = $colorscheme === 'dark'}
         {include $ROOT_PATH . 'themes/default/template/help/quick_search.latte', is_dark_mode: $is_dark_mode}
       </div>
     </div>

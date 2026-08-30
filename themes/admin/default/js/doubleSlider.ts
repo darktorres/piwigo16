@@ -9,8 +9,9 @@ export {};
 // bare top-level var/function would: `jQuery`/`$` itself is a real,
 // unwrapped global regardless of this file's own IIFE wrapping, and
 // `.fn` is its one shared prototype object every entry mutates in
-// place -- same reasoning as common.ts's own `jQuery.fn.fontCheckbox`/
-// `pwg_jconfirm_follow_href` and admin.ts's own `lightAccordion`.
+// place -- same reasoning as common.ts's own `pwg_jconfirm_follow_href`
+// (fontCheckbox has since converted to a plain function, same as
+// admin.ts's own `lightAccordion`).
 (function ($: JQueryStatic) {
   /**
    * OPTIONS:

@@ -448,9 +448,8 @@ interface JQuery {
   // site so far.
   cluetip(options?: Record<string, unknown>): JQuery;
 
-  // common.ts's own 2 first-party `jQuery.fn` extensions (not vendored
-  // plugins).
-  fontCheckbox(): JQuery;
+  // common.ts's own first-party `jQuery.fn` extension (not a vendored
+  // plugin) -- `fontCheckbox` converted to a plain function.
   pwg_jconfirm_follow_href(options?: {
     alert_title?: string;
     alert_confirm?: string;

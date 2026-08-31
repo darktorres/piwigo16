@@ -85,7 +85,6 @@
     "@cyclonedx/cyclonedx-npm",
     "lefthook",
     "datatables.net",
-    "jgrowl",
     "jquery-cluetip",
     "jquery-confirm",
     "jquery-timepicker-addon",

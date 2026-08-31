@@ -33,10 +33,11 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * a synthetic id 404s -- only its `updateAll()`-driven click-filtering is
  * covered here.
  *
- * `jGrowl` (still jQuery, P49-B group 3) and `jquery-confirm` (group 5)
- * stay jQuery; only the DOM work around them converted.
- * `jquery.ajaxmanager` converted to `AjaxQueue`
- * (`themes/default/js/vendor/ajaxQueue.ts`) in P49-B group 2.
+ * `jquery-confirm` (P49-B group 5) stays jQuery; only the DOM work
+ * around it converted. `jquery.ajaxmanager` converted to `AjaxQueue`
+ * (`themes/default/js/vendor/ajaxQueue.ts`) in P49-B group 2, and
+ * `jgrowl` converted to `jGrowl` (`themes/default/js/vendor/jgrowl.ts`)
+ * in P49-B group 3.
  */
 function updatesExtPluginBoxHtml(string $type, string $id, bool $ignored): string
 {
@@ -308,4 +309,91 @@ it('resetIgnored() (via #reset_ignore) restores every hidden item and clears the
 
     $page->assertNoJavaScriptErrors();
     H::assertNoServerErrors($page, 'updates_ext resetIgnored');
+});
+
+it('shows a real, dismissible jGrowl error toast when updateExtension() 404s', function (): void {
+    // No existing test exercises jgrowl.ts's own rendering at all (its
+    // predecessor, jquery.jgrowl, was never asserted against either --
+    // grep confirms it) -- a real gap this closes, not just a
+    // regression check. `type: 'bogus-type'` doesn't match the route's
+    // own `{type}` pattern at all, so this 404s at the router, before
+    // ExtensionUpdateController ever runs -- deliberately not the
+    // focus of a test about jGrowl's own behavior, and confirmed live
+    // rather than assumed (the message asserted below is the router's
+    // own real text, not a guess).
+    $page = H::asAdmin($this);
+    $page = H::navigateOk($page, '/admin.php?page=updates&tab=ext');
+
+    $page->script("updateExtension('bogus-type', 'x', '1')");
+
+    $decoded = H::scriptJson($page, <<<'JS'
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + 3000;
+            const check = () => {
+                const toast = document.querySelector('#jGrowl .jGrowl-notification.error');
+                if (toast !== null) {
+                    return resolve(JSON.stringify({
+                        classList: Array.from(toast.classList),
+                        header: toast.querySelector('.jGrowl-header').textContent,
+                        message: toast.querySelector('.jGrowl-message').textContent,
+                        closerCount: document.querySelectorAll('#jGrowl .jGrowl-closer').length,
+                    }));
+                }
+                if (Date.now() > deadline) {
+                    return reject(new Error('no #jGrowl .jGrowl-notification.error ever appeared'));
+                }
+                setTimeout(check, 50);
+            };
+            check();
+        })
+        JS);
+    if (
+        ! is_array($decoded['classList'] ?? null)
+        || ! is_string($decoded['header'] ?? null)
+        || ! is_string($decoded['message'] ?? null)
+        || ! is_int($decoded['closerCount'] ?? null)
+    ) {
+        throw new RuntimeException('unexpected toast shape: ' . var_export($decoded, true));
+    }
+    $state = $decoded;
+
+    expect($state['classList'])->toContain('jGrowl-notification', 'ui-state-highlight', 'ui-corner-all', 'error');
+    expect($state['header'])->toBe('ERROR');
+    expect($state['message'])->toBe('No resource exists at /api/v1/extensions/bogus-type/x/actions/update.');
+    // Only one notification is ever showing here -- the "close all"
+    // button only renders once a second one joins it.
+    expect($state['closerCount'])->toBe(0);
+
+    // `sticky: true` on the error path: still there well past the
+    // default 3000ms `life` a non-sticky toast would have expired at
+    // (jgrowl.ts's own default, since the error path never sets `life`
+    // explicitly) -- 4500ms clears life (~3000ms from the fade-in
+    // completing, itself ~250-650ms after the call) plus the ~400ms
+    // close-fade a non-sticky toast would already be mid-way or done
+    // with by then, confirmed empirically (mutation-tested: forcing
+    // `sticky: false` in jgrowl.ts made this assertion fail, restored
+    // after).
+    $page->script('new Promise((resolve) => setTimeout(resolve, 4500))');
+    expect($page->script("document.querySelectorAll('#jGrowl .jGrowl-notification.error').length"))
+        ->toBe(1);
+
+    $page->click('#jGrowl .jGrowl-close');
+    $page->script(<<<'JS'
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + 3000;
+            const check = () => {
+                if (document.querySelectorAll('#jGrowl .jGrowl-notification.error').length === 0) {
+                    return resolve(true);
+                }
+                if (Date.now() > deadline) {
+                    return reject(new Error('toast never closed after clicking .jGrowl-close'));
+                }
+                setTimeout(check, 50);
+            };
+            check();
+        })
+        JS);
+
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'updates_ext jGrowl error toast');
 });

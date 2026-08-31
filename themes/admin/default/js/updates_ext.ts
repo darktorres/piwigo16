@@ -7,6 +7,7 @@ import {
 } from "../../../default/js/page-data";
 import { ajax, type AjaxResponse } from "../../../default/js/vendor/ajax";
 import { AjaxQueue } from "../../../default/js/vendor/ajaxQueue";
+import { jGrowl } from "../../../default/js/vendor/jgrowl";
 import {
   attr,
   attrOf,
@@ -123,8 +124,7 @@ function updateExtension(type: string, id: string, revision: string) {
     success: function (
       data: operations["extensionUpdate"]["responses"][200]["content"]["application/json"],
     ) {
-      // Still jQuery: jGrowl is a library, ported in P49-B group 3.
-      jQuery.jGrowl(data["message"], {
+      jGrowl(data["message"], {
         theme: "success",
         header: successHead,
         life: 4000,
@@ -139,7 +139,7 @@ function updateExtension(type: string, id: string, revision: string) {
       const message =
         (xhr.responseJSON as { detail?: string } | undefined)?.detail ??
         errorMsg;
-      jQuery.jGrowl(message, {
+      jGrowl(message, {
         theme: "error",
         header: errorHead,
         sticky: true,
@@ -152,10 +152,10 @@ const targetNode = document.getElementById("theAdminPage");
 
 const config = { attributes: false, childList: true, subtree: true };
 
-// jGrowl (still jQuery, P49-B group 3) builds its own toast popups under
-// #jGrowl -- but they're real DOM nodes regardless of which library
-// created them, so reading/writing them here is safe over a native
-// conversion; nothing here touches jGrowl's own internal state.
+// jGrowl (themes/default/js/vendor/jgrowl.ts, ported off jquery.jgrowl
+// in P49-B group 3) builds its own toast popups under #jGrowl; this
+// MutationObserver only reads/writes the resulting DOM nodes, nothing
+// of jgrowl.ts's own internal state.
 const callback = (mutationList: MutationRecord[]) => {
   for (const mutation of mutationList) {
     if (mutation.type === "childList") {

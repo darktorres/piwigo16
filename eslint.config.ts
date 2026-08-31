@@ -94,9 +94,11 @@ export default tseslint.config(
     // (`setInfos`'s callback, whose real shape differs per dispatched
     // endpoint). `build/jquery-plugins.d.ts` keeps the same relaxation
     // for its own remaining confirmed-unsourced vendor entries
-    // (jquery-confirm/cluetip/Jcrop/jgrowl/ajaxmanager/progressbar/
-    // sort/autogrow-textarea/DataTables -- no real npm/CDN type
-    // package covers any of them).
+    // (jquery-confirm/cluetip/Jcrop/DataTables -- no real npm/CDN type
+    // package covers any of them; jgrowl/ajaxmanager/sort/
+    // autogrow-textarea have all since been removed outright, P49-B
+    // groups 1-3, once those libraries were ported rather than just
+    // re-typed).
     files: [
       "themes/default/js/search_filters.ts",
       "themes/default/js/mcs.ts",

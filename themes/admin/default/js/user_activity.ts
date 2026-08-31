@@ -1145,8 +1145,10 @@ ready(function () {
 
   // The `.selectize-input`/`.item[data-value]` markup below is selectize's
   // own real, rendered DOM (still jQuery, P49-B group 6) -- reading it
-  // natively is safe, same reasoning as jGrowl's own toast markup in
-  // updates_ext.ts; only the widget init itself stays jQuery.
+  // natively is safe, same reasoning jGrowl's own toast markup in
+  // updates_ext.ts already established (P49-B group 3, now a real DOM
+  // node regardless of which code created it); only the widget init
+  // itself stays jQuery.
   on(
     document.querySelectorAll("select.user-selecter"),
     "change",

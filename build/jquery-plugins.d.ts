@@ -282,11 +282,6 @@ interface JQueryStatic {
   // site.
   isNumeric(value: any): boolean;
 
-  // jquery.jgrowl (vendored -- P46-0's own CDN table). `updates_ext.ts`'s
-  // own update/ignore-extension toast notifications are the one real
-  // first-party call site.
-  jGrowl(text: string, options?: Record<string, unknown>): void;
-
   // jquery-ui-timepicker-addon (vendored -- P46-0's own CDN table, no
   // real upstream types). `datepicker.ts`'s own `pwgDatepicker` plugin
   // is the one real first-party call site. `JQueryStatic.datepicker`

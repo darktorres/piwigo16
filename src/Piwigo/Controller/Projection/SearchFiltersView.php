@@ -83,7 +83,13 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('jquery.ui', '', loadMode: LoadMode::Async),
+            // jQuery UI's own script is gone -- doubleSlider.ts's
+            // `.pwgDoubleSlider()` (below) was this page's one real
+            // reason to load it, and that's a native port now (P49-B
+            // group 4). The CSS theme stays, unconditional and
+            // real: the native slider port renders the identical
+            // `ui-slider`/`ui-slider-handle`/... class structure it
+            // styles.
             AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui', order: -999),
             AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js', loadMode: LoadMode::Footer),
             // order 10 is required, see issue 1080
@@ -109,26 +115,17 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
             // into this bundle, a real new dependency on page-data.ts
             // having already run that didn't exist before this batch.
             //
-            // Real, necessary fix found via golden-html review, not
-            // assumed: doubleSlider.ts's own `.pwgDoubleSlider()` calls
-            // jQuery UI's real `.slider()` widget method internally, and
-            // that file's own code now folds into this bundle too
-            // (docs/PLAN.md P48, doubleSlider.ts's own batch). Before
-            // that fold, `doubleSlider`'s own separate registration
-            // (`loadMode: Footer, dependsOn: ['jquery.ui']`) structurally
-            // guaranteed jquery.ui loaded first via
-            // `PageAssets::promoteLoadModes()` ("a dependency can't load
-            // more loosely than its dependent"); folding its code into
-            // this bundle without carrying that same guarantee forward
-            // would have left a real Async-depends-on-Async race (the
-            // exact documented anti-pattern `promoteLoadModes()`'s own
-            // class docblock already warns about -- promotion only
-            // fires on a strict LoadMode difference, so leaving `mcs`
-            // itself Async here would silently no-op the dependency).
-            // `loadMode: Footer` (was Async) + `dependsOn: ['jquery.ui']`
-            // restores the identical real ordering guarantee doubleSlider
-            // used to carry on its own.
-            AssetContribution::script('mcs', 'themes/default/js/mcs.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'jquery.ui']),
+            // `loadMode: Footer` (was Async): doubleSlider.ts's own
+            // `.pwgDoubleSlider()` calls, and that file's own code now
+            // folds into this bundle too (docs/PLAN.md P48, doubleSlider.
+            // ts's own batch). `dependsOn: ['jquery.ui']` -- which used to
+            // sit here for exactly that reason, ordering this bundle
+            // after jQuery UI's real `.slider()` widget method -- is
+            // gone: `.pwgDoubleSlider()` is a native port now (P49-B
+            // group 4), so nothing on this page needs jQuery UI's script
+            // to have loaded at all any more (its CSS theme, above,
+            // still does).
+            AssetContribution::script('mcs', 'themes/default/js/mcs.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             ...new AlbumSelectorView()
                 ->pageAssets(),
             ...new QuickSearchView(is_dark_mode: $this->colorscheme === 'dark')

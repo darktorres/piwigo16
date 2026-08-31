@@ -1,94 +1,104 @@
 import { sprintf } from "./common";
+import {
+  data,
+  find,
+  html,
+  off,
+  on,
+  setVal,
+} from "../../../default/js/vendor/dom";
+import { slider, type SliderUIParams } from "../../../default/js/vendor/slider";
 
-export {};
+/**
+ * Real first-party wrapper around `themes/default/js/vendor/slider.ts`'s
+ * dual-handle (`range: true`) mode -- `container` is the
+ * `[data-slider=...]` element both real consumers
+ * (`batchManagerFilter.ts`, `mcs.ts`) already select; the actual slider
+ * track builds inside its `.slider-slider` child, and `.slider-choice`
+ * preset buttons (each carrying real `data-min`/`data-max` attributes)
+ * jump the slider to a specific index pair.
+ *
+ * `stop` is new: the original relied on jQuery UI's own custom
+ * `slidestop` DOM event (`widgetEventPrefix: "slide"` + `"stop"`),
+ * invisible to a native `addEventListener` -- `mcs.ts`'s own filesize
+ * filter was the one real listener (`jQuery(...).on("slidestop", ...)`,
+ * kept jQuery for exactly that reason during P49-B group 4's own
+ * investigation). Threading a real `stop` callback through here instead
+ * is the direct native equivalent, not a new capability.
+ */
+export interface PwgDoubleSliderOptions {
+  values: number[];
+  selected: { min: number; max: number };
+  text: string;
+  stop?: () => void;
+}
 
-// Real declarer of `pwgDoubleSlider` (docs/PLAN.md P46-C's own sweep --
-// batchManagerFilter.ts was converted first, as a consumer, using the
-// ambient type already declared in build/jquery-plugins.d.ts). A
-// `jQuery.fn` assignment needs no `window.X = X` exposure the way a
-// bare top-level var/function would: `jQuery`/`$` itself is a real,
-// unwrapped global regardless of this file's own IIFE wrapping, and
-// `.fn` is its one shared prototype object every entry mutates in
-// place -- same reasoning as common.ts's own `pwg_jconfirm_follow_href`
-// (fontCheckbox has since converted to a plain function, same as
-// admin.ts's own `lightAccordion`).
-(function ($: JQueryStatic) {
-  /**
-   * OPTIONS:
-   * values {mixed[]}
-   * selected {object} min and max
-   * text {string}
-   */
-  $.fn.pwgDoubleSlider = function (
-    this: JQuery,
-    options: PwgDoubleSliderOptions,
-  ) {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias -- the classic callback-closure idiom: `this` needs to stay reachable inside onChange(), which has its own `this`.
-    const that = this;
+export function pwgDoubleSlider(
+  container: Element,
+  options: PwgDoubleSliderOptions,
+): void {
+  function onChange(_event: Event, ui: SliderUIParams): void {
+    const minIdx = ui.values![0]!;
+    const maxIdx = ui.values![1]!;
+    setVal(
+      find(container, "[data-input=min]"),
+      String(options.values[minIdx]!),
+    );
+    setVal(
+      find(container, "[data-input=max]"),
+      String(options.values[maxIdx]!),
+    );
+    html(
+      find(container, ".slider-info"),
+      sprintf(options.text, options.values[minIdx]!, options.values[maxIdx]!),
+    );
+  }
 
-    function onChange(_e: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-      that.find("[data-input=min]").val(options.values[ui.values![0]!]!);
-      that.find("[data-input=max]").val(options.values[ui.values![1]!]!);
+  function findClosest(array: number[], value: number): number {
+    let closest: number | null = null;
+    let index = -1;
+    array.forEach((v, i) => {
+      if (closest === null || Math.abs(v - value) < Math.abs(closest - value)) {
+        closest = v;
+        index = i;
+      }
+    });
 
-      that
-        .find(".slider-info")
-        .html(
-          sprintf(
-            options.text,
-            options.values[ui.values![0]!]!,
-            options.values[ui.values![1]!]!,
-          ),
-        );
-    }
+    return index;
+  }
 
-    function findClosest(array: number[], value: number) {
-      let closest: number | null = null,
-        index = -1;
-      $.each(array, function (i, v) {
-        if (
-          closest == null ||
-          Math.abs(v - value) < Math.abs(closest - value)
-        ) {
-          closest = v;
-          index = i;
+  const values: [number, number] = [
+    options.values.indexOf(options.selected.min),
+    options.values.indexOf(options.selected.max),
+  ];
+  if (values[0] === -1) {
+    values[0] = findClosest(options.values, options.selected.min);
+  }
+  if (values[1] === -1) {
+    values[1] = findClosest(options.values, options.selected.max);
+  }
+
+  const sliderEl = find(container, ".slider-slider")[0]!;
+  slider(sliderEl, {
+    range: true,
+    min: 0,
+    max: options.values.length - 1,
+    values,
+    slide: onChange,
+    change: onChange,
+    stop: options.stop
+      ? () => {
+          options.stop!();
         }
-      });
-      return index;
-    }
+      : undefined,
+  });
 
-    const values = [
-      options.values.indexOf(options.selected.min),
-      options.values.indexOf(options.selected.max),
-    ];
-    if (values[0] == -1) {
-      values[0] = findClosest(options.values, options.selected.min);
-    }
-    if (values[1] == -1) {
-      values[1] = findClosest(options.values, options.selected.max);
-    }
-
-    const slider = this.find(".slider-slider").slider({
-      range: true,
-      min: 0,
-      max: options.values.length - 1,
-      values: values,
-      slide: onChange,
-      change: onChange,
-    });
-
-    this.find(".slider-choice").on("click", function () {
-      slider.slider(
-        "values",
-        0,
-        options.values.indexOf($(this).data("min") as number),
-      );
-      slider.slider(
-        "values",
-        1,
-        options.values.indexOf($(this).data("max") as number),
-      );
-    });
-
-    return this;
-  };
-})(jQuery);
+  const choices = find(container, ".slider-choice");
+  off(choices, "click");
+  on(choices, "click", function (this: Element): void {
+    const min = data(this, "min") as number;
+    const max = data(this, "max") as number;
+    slider(sliderEl, "values", 0, options.values.indexOf(min));
+    slider(sliderEl, "values", 1, options.values.indexOf(max));
+  });
+}

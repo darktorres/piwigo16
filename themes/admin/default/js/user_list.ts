@@ -6,6 +6,7 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { ajax, type AjaxThenable } from "../../../default/js/vendor/ajax";
+import { slider, type SliderUIParams } from "../../../default/js/vendor/slider";
 import {
   addClass,
   animate,
@@ -786,81 +787,87 @@ function getRecentPeriodInfoFromIdx(idx: number) {
   //return recent_period_values[idx].toString();
 }
 
-// Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
-// Every `.slider(...)` call/read below stays jQuery for the same
-// reason -- this whole section wraps a still-unported library.
-
 /* Photos bar slider */
-jQuery("#UserList .photos-select-bar .slider-bar-container").slider({
-  range: "min",
-  min: 0,
-  max: nb_image_page_values.length - 1,
-  value: nb_image_page_init,
-  change: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    html(
-      document.querySelectorAll(
-        "#UserList .photos-select-bar .nb-img-page-infos",
-      ),
-      getNbImagePageInfoFromIdx(ui.value!),
-    );
+slider(
+  document.querySelectorAll(
+    "#UserList .photos-select-bar .slider-bar-container",
+  ),
+  {
+    range: "min",
+    min: 0,
+    max: nb_image_page_values.length - 1,
+    value: nb_image_page_init,
+    change: function (event: Event, ui: SliderUIParams) {
+      html(
+        document.querySelectorAll(
+          "#UserList .photos-select-bar .nb-img-page-infos",
+        ),
+        getNbImagePageInfoFromIdx(ui.value!),
+      );
+    },
+    slide: function (event: Event, ui: SliderUIParams) {
+      html(
+        document.querySelectorAll(
+          "#UserList .photos-select-bar .nb-img-page-infos",
+        ),
+        getNbImagePageInfoFromIdx(ui.value!),
+      );
+    },
+    stop: function (event: Event, ui: SliderUIParams) {
+      setVal(
+        document.querySelectorAll(
+          "#UserList .photos-select-bar input[name=nb_image_page]",
+        ),
+        String(nb_image_page_values[ui.value!]!),
+      );
+      // Stays jQuery: `.trigger("change")` here reaches selectize/other
+      // still-jQuery listeners only through jQuery's own event system --
+      // same asymmetry already documented elsewhere in this campaign.
+      jQuery("#UserList .photos-select-bar input[name=nb_image_page]").trigger(
+        "change",
+      );
+    },
   },
-  slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    html(
-      document.querySelectorAll(
-        "#UserList .photos-select-bar .nb-img-page-infos",
-      ),
-      getNbImagePageInfoFromIdx(ui.value!),
-    );
-  },
-  stop: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    setVal(
-      document.querySelectorAll(
-        "#UserList .photos-select-bar input[name=nb_image_page]",
-      ),
-      String(nb_image_page_values[ui.value!]!),
-    );
-    // Stays jQuery: `.trigger("change")` here reaches selectize/other
-    // still-jQuery listeners only through jQuery's own event system --
-    // same asymmetry already documented elsewhere in this campaign.
-    jQuery("#UserList .photos-select-bar input[name=nb_image_page]").trigger(
-      "change",
-    );
-  },
-});
+);
 
-jQuery("#GuestUserList .photos-select-bar .slider-bar-container").slider({
-  range: "min",
-  min: 0,
-  max: nb_image_page_values.length - 1,
-  value: nb_image_page_init,
-  change: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    html(
-      document.querySelectorAll(
-        "#GuestUserList .photos-select-bar .nb-img-page-infos",
-      ),
-      getNbImagePageInfoFromIdx(ui.value!),
-    );
-  },
-  slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    html(
-      document.querySelectorAll(
-        "#GuestUserList .photos-select-bar .nb-img-page-infos",
-      ),
-      getNbImagePageInfoFromIdx(ui.value!),
-    );
-  },
-  stop: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    setVal(
-      document.querySelectorAll(
+slider(
+  document.querySelectorAll(
+    "#GuestUserList .photos-select-bar .slider-bar-container",
+  ),
+  {
+    range: "min",
+    min: 0,
+    max: nb_image_page_values.length - 1,
+    value: nb_image_page_init,
+    change: function (event: Event, ui: SliderUIParams) {
+      html(
+        document.querySelectorAll(
+          "#GuestUserList .photos-select-bar .nb-img-page-infos",
+        ),
+        getNbImagePageInfoFromIdx(ui.value!),
+      );
+    },
+    slide: function (event: Event, ui: SliderUIParams) {
+      html(
+        document.querySelectorAll(
+          "#GuestUserList .photos-select-bar .nb-img-page-infos",
+        ),
+        getNbImagePageInfoFromIdx(ui.value!),
+      );
+    },
+    stop: function (event: Event, ui: SliderUIParams) {
+      setVal(
+        document.querySelectorAll(
+          "#GuestUserList .photos-select-bar input[name=nb_image_page]",
+        ),
+        String(nb_image_page_values[ui.value!]!),
+      );
+      jQuery(
         "#GuestUserList .photos-select-bar input[name=nb_image_page]",
-      ),
-      String(nb_image_page_values[ui.value!]!),
-    );
-    jQuery(
-      "#GuestUserList .photos-select-bar input[name=nb_image_page]",
-    ).trigger("change");
+      ).trigger("change");
+    },
   },
-});
+);
 
 html(
   document.querySelectorAll(
@@ -868,13 +875,16 @@ html(
   ),
   getNbImagePageInfoFromIdx(0),
 );
-jQuery("#permitActionUserList .photos-select-bar .slider-bar-container").slider(
+slider(
+  document.querySelectorAll(
+    "#permitActionUserList .photos-select-bar .slider-bar-container",
+  ),
   {
     range: "min",
     min: 0,
     max: nb_image_page_values.length - 1,
     value: nb_image_page_init,
-    change: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
+    change: function (event: Event, ui: SliderUIParams) {
       html(
         document.querySelectorAll(
           "#permitActionUserList .photos-select-bar .nb-img-page-infos",
@@ -882,7 +892,7 @@ jQuery("#permitActionUserList .photos-select-bar .slider-bar-container").slider(
         getNbImagePageInfoFromIdx(ui.value!),
       );
     },
-    slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
+    slide: function (event: Event, ui: SliderUIParams) {
       html(
         document.querySelectorAll(
           "#permitActionUserList .photos-select-bar .nb-img-page-infos",
@@ -890,7 +900,7 @@ jQuery("#permitActionUserList .photos-select-bar .slider-bar-container").slider(
         getNbImagePageInfoFromIdx(ui.value!),
       );
     },
-    stop: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
+    stop: function (event: Event, ui: SliderUIParams) {
       setVal(
         document.querySelectorAll(
           "#permitActionUserList .photos-select-bar input[name=nb_image_page]",
@@ -905,81 +915,94 @@ jQuery("#permitActionUserList .photos-select-bar .slider-bar-container").slider(
 );
 
 /* recent_period slider */
-jQuery("#UserList .period-select-bar .slider-bar-container").slider({
-  range: "min",
-  min: 0,
-  max: recent_period_values.length - 1,
-  value: recent_period_init,
-  change: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    html(
-      document.querySelectorAll(
-        "#UserList .period-select-bar .recent_period_infos",
-      ),
-      getRecentPeriodInfoFromIdx(ui.value!),
-    );
-  },
-  slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    html(
-      document.querySelectorAll(
-        "#UserList .period-select-bar .recent_period_infos",
-      ),
-      getRecentPeriodInfoFromIdx(ui.value!),
-    );
-  },
-  stop: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    setVal(
-      document.querySelectorAll(
-        "#UserList .period-select-bar input[name=recent_period]",
-      ),
-      String(recent_period_values[ui.value!]!),
-    );
-    jQuery("#UserList .period-select-bar input[name=recent_period]").trigger(
-      "change",
-    );
-  },
-});
-
-jQuery("#GuestUserList .period-select-bar .slider-bar-container").slider({
-  range: "min",
-  min: 0,
-  max: recent_period_values.length - 1,
-  value: recent_period_init,
-  change: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    html(
-      document.querySelectorAll(
-        "#GuestUserList .period-select-bar .recent_period_infos",
-      ),
-      getRecentPeriodInfoFromIdx(ui.value!),
-    );
-  },
-  slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    html(
-      document.querySelectorAll(
-        "#GuestUserList .period-select-bar .recent_period_infos",
-      ),
-      getRecentPeriodInfoFromIdx(ui.value!),
-    );
-  },
-  stop: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    setVal(
-      document.querySelectorAll(
-        "#GuestUserList .period-select-bar input[name=recent_period]",
-      ),
-      String(recent_period_values[ui.value!]!),
-    );
-    jQuery(
-      "#GuestUserList .period-select-bar input[name=recent_period]",
-    ).trigger("change");
-  },
-});
-
-jQuery("#permitActionUserList .period-select-bar .slider-bar-container").slider(
+slider(
+  document.querySelectorAll(
+    "#UserList .period-select-bar .slider-bar-container",
+  ),
   {
     range: "min",
     min: 0,
     max: recent_period_values.length - 1,
     value: recent_period_init,
-    change: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
+    change: function (event: Event, ui: SliderUIParams) {
+      html(
+        document.querySelectorAll(
+          "#UserList .period-select-bar .recent_period_infos",
+        ),
+        getRecentPeriodInfoFromIdx(ui.value!),
+      );
+    },
+    slide: function (event: Event, ui: SliderUIParams) {
+      html(
+        document.querySelectorAll(
+          "#UserList .period-select-bar .recent_period_infos",
+        ),
+        getRecentPeriodInfoFromIdx(ui.value!),
+      );
+    },
+    stop: function (event: Event, ui: SliderUIParams) {
+      setVal(
+        document.querySelectorAll(
+          "#UserList .period-select-bar input[name=recent_period]",
+        ),
+        String(recent_period_values[ui.value!]!),
+      );
+      jQuery("#UserList .period-select-bar input[name=recent_period]").trigger(
+        "change",
+      );
+    },
+  },
+);
+
+slider(
+  document.querySelectorAll(
+    "#GuestUserList .period-select-bar .slider-bar-container",
+  ),
+  {
+    range: "min",
+    min: 0,
+    max: recent_period_values.length - 1,
+    value: recent_period_init,
+    change: function (event: Event, ui: SliderUIParams) {
+      html(
+        document.querySelectorAll(
+          "#GuestUserList .period-select-bar .recent_period_infos",
+        ),
+        getRecentPeriodInfoFromIdx(ui.value!),
+      );
+    },
+    slide: function (event: Event, ui: SliderUIParams) {
+      html(
+        document.querySelectorAll(
+          "#GuestUserList .period-select-bar .recent_period_infos",
+        ),
+        getRecentPeriodInfoFromIdx(ui.value!),
+      );
+    },
+    stop: function (event: Event, ui: SliderUIParams) {
+      setVal(
+        document.querySelectorAll(
+          "#GuestUserList .period-select-bar input[name=recent_period]",
+        ),
+        String(recent_period_values[ui.value!]!),
+      );
+      jQuery(
+        "#GuestUserList .period-select-bar input[name=recent_period]",
+      ).trigger("change");
+    },
+  },
+);
+
+slider(
+  document.querySelectorAll(
+    "#permitActionUserList .period-select-bar .slider-bar-container",
+  ),
+  {
+    range: "min",
+    min: 0,
+    max: recent_period_values.length - 1,
+    value: recent_period_init,
+    change: function (event: Event, ui: SliderUIParams) {
       html(
         document.querySelectorAll(
           "#permitActionUserList .period-select-bar .recent_period_infos",
@@ -987,7 +1010,7 @@ jQuery("#permitActionUserList .period-select-bar .slider-bar-container").slider(
         getRecentPeriodInfoFromIdx(ui.value!),
       );
     },
-    slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
+    slide: function (event: Event, ui: SliderUIParams) {
       html(
         document.querySelectorAll(
           "#permitActionUserList .period-select-bar .recent_period_infos",
@@ -995,7 +1018,7 @@ jQuery("#permitActionUserList .period-select-bar .slider-bar-container").slider(
         getRecentPeriodInfoFromIdx(ui.value!),
       );
     },
-    stop: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
+    stop: function (event: Event, ui: SliderUIParams) {
       setVal(
         document.querySelectorAll(
           "#permitActionUserList .period-select-bar input[name=recent_period]",
@@ -1008,7 +1031,10 @@ jQuery("#permitActionUserList .period-select-bar .slider-bar-container").slider(
     },
   },
 );
-jQuery("#permitActionUserList .photos-select-bar .slider-bar-container").slider(
+slider(
+  document.querySelectorAll(
+    "#permitActionUserList .photos-select-bar .slider-bar-container",
+  ),
   "option",
   "value",
   0,
@@ -1191,44 +1217,48 @@ function getDateStr(date: string) {
 }
 
 function setupRegisterDates(register_dates: string[]) {
-  // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
-  jQuery(".advanced-filter .dates-select-bar .slider-bar-container").slider({
-    range: true,
-    min: 0,
-    max: register_dates.length - 1,
-    values: [0, register_dates.length - 1],
-    change: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-      html(
-        document.querySelectorAll(".advanced-filter .dates-infos"),
-        sprintf(
-          dates_infos,
-          getDateStr(register_dates[ui.values![0]!]!),
-          getDateStr(register_dates[ui.values![1]!]!),
-        ),
-      );
+  slider(
+    document.querySelectorAll(
+      ".advanced-filter .dates-select-bar .slider-bar-container",
+    ),
+    {
+      range: true,
+      min: 0,
+      max: register_dates.length - 1,
+      values: [0, register_dates.length - 1],
+      change: function (event: Event, ui: SliderUIParams) {
+        html(
+          document.querySelectorAll(".advanced-filter .dates-infos"),
+          sprintf(
+            dates_infos,
+            getDateStr(register_dates[ui.values![0]!]!),
+            getDateStr(register_dates[ui.values![1]!]!),
+          ),
+        );
+      },
+      slide: function (event: Event, ui: SliderUIParams) {
+        html(
+          document.querySelectorAll(".advanced-filter .dates-infos"),
+          sprintf(
+            dates_infos,
+            getDateStr(register_dates[ui.values![0]!]!),
+            getDateStr(register_dates[ui.values![1]!]!),
+          ),
+        );
+      },
+      stop: function (event: Event, ui: SliderUIParams) {
+        html(
+          document.querySelectorAll(".advanced-filter .dates-infos"),
+          sprintf(
+            dates_infos,
+            getDateStr(register_dates[ui.values![0]!]!),
+            getDateStr(register_dates[ui.values![1]!]!),
+          ),
+        );
+        update_user_list();
+      },
     },
-    slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-      html(
-        document.querySelectorAll(".advanced-filter .dates-infos"),
-        sprintf(
-          dates_infos,
-          getDateStr(register_dates[ui.values![0]!]!),
-          getDateStr(register_dates[ui.values![1]!]!),
-        ),
-      );
-    },
-    stop: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-      html(
-        document.querySelectorAll(".advanced-filter .dates-infos"),
-        sprintf(
-          dates_infos,
-          getDateStr(register_dates[ui.values![0]!]!),
-          getDateStr(register_dates[ui.values![1]!]!),
-        ),
-      );
-      update_user_list();
-    },
-  });
+  );
 
   html(
     document.querySelectorAll(".advanced-filter .dates-infos"),
@@ -2164,8 +2194,8 @@ function fill_user_edit_preferences(user_to_edit: UserRow, pop_in: Element) {
     recent_period_values,
   );
 
-  // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
-  jQuery(find(pop_in, ".photos-select-bar .slider-bar-container")).slider(
+  slider(
+    find(pop_in, ".photos-select-bar .slider-bar-container"),
     "option",
     "value",
     slider_key_photos,
@@ -2180,8 +2210,8 @@ function fill_user_edit_preferences(user_to_edit: UserRow, pop_in: Element) {
       (option as HTMLOptionElement).selected = true;
     }
   });
-  // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
-  jQuery(find(pop_in, ".period-select-bar .slider-bar-container")).slider(
+  slider(
+    find(pop_in, ".period-select-bar .slider-bar-container"),
     "option",
     "value",
     slider_key_period,
@@ -2656,21 +2686,21 @@ function fill_ajax_data_from_preferences(
 ) {
   ajax_data["theme"] = val(find(pop_in, ".user-property-theme select"));
   ajax_data["language"] = val(find(pop_in, ".user-property-lang select"));
-  // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
   ajax_data["nbImagePage"] =
     nb_image_page_values[
-      jQuery(find(pop_in, ".photos-select-bar .slider-bar-container")).slider(
+      slider(
+        find(pop_in, ".photos-select-bar .slider-bar-container"),
         "option",
         "value",
-      ) as number
+      )!
     ];
-  // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
   ajax_data["recentPeriod"] =
     recent_period_values[
-      jQuery(find(pop_in, ".period-select-bar .slider-bar-container")).slider(
+      slider(
+        find(pop_in, ".period-select-bar .slider-bar-container"),
         "option",
         "value",
-      ) as number
+      )!
     ];
   ajax_data["expand"] =
     attrOf(
@@ -2757,24 +2787,23 @@ function select_whole_set() {
       maxLevel: filterLevel,
       minRegister:
         register_dates[
-          // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
-          (
-            jQuery(
-              document.querySelectorAll(
-                ".dates-select-bar .slider-bar-container",
-              ),
-            ).slider("option", "values") as number[]
-          )[0]!
+          slider(
+            document.querySelectorAll(
+              ".dates-select-bar .slider-bar-container",
+            ),
+            "option",
+            "values",
+          )![0]!
         ],
       maxRegister:
         register_dates[
-          (
-            jQuery(
-              document.querySelectorAll(
-                ".dates-select-bar .slider-bar-container",
-              ),
-            ).slider("option", "values") as number[]
-          )[1]!
+          slider(
+            document.querySelectorAll(
+              ".dates-select-bar .slider-bar-container",
+            ),
+            "option",
+            "values",
+          )![1]!
         ],
     },
     dataType: "json",
@@ -3125,24 +3154,19 @@ function update_user_list() {
     update_data["maxLevel"] = filterLevel;
     update_data["minRegister"] =
       register_dates[
-        // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
-        (
-          jQuery(
-            document.querySelectorAll(
-              ".dates-select-bar .slider-bar-container",
-            ),
-          ).slider("option", "values") as number[]
-        )[0]!
+        slider(
+          document.querySelectorAll(".dates-select-bar .slider-bar-container"),
+          "option",
+          "values",
+        )![0]!
       ];
     update_data["maxRegister"] =
       register_dates[
-        (
-          jQuery(
-            document.querySelectorAll(
-              ".dates-select-bar .slider-bar-container",
-            ),
-          ).slider("option", "values") as number[]
-        )[1]!
+        slider(
+          document.querySelectorAll(".dates-select-bar .slider-bar-container"),
+          "option",
+          "values",
+        )![1]!
       ];
   }
   void ajax({
@@ -3216,24 +3240,19 @@ function update_user_list() {
       )
         nb_filters += 1;
       if (
-        // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
-        (
-          jQuery(
-            document.querySelectorAll(
-              ".dates-select-bar .slider-bar-container",
-            ),
-          ).slider("option", "values") as number[]
-        )[0] != 0
+        slider(
+          document.querySelectorAll(".dates-select-bar .slider-bar-container"),
+          "option",
+          "values",
+        )![0] != 0
       )
         nb_filters += 1;
       if (
-        (
-          jQuery(
-            document.querySelectorAll(
-              ".dates-select-bar .slider-bar-container",
-            ),
-          ).slider("option", "values") as number[]
-        )[1] !=
+        slider(
+          document.querySelectorAll(".dates-select-bar .slider-bar-container"),
+          "option",
+          "values",
+        )![1] !=
         register_dates.length - 1
       )
         nb_filters += 1;
@@ -4054,12 +4073,13 @@ ready(function () {
       case "recent_period":
         data.recent_period =
           recent_period_values[
-            // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
-            jQuery(
+            slider(
               document.querySelectorAll(
                 "#permitActionUserList .period-select-bar .slider-bar-container",
               ),
-            ).slider("option", "value") as number
+              "option",
+              "value",
+            )!
           ];
         break;
       case "expand":

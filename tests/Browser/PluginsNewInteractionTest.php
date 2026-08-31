@@ -32,11 +32,15 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * technique `updates_ext.ts`'s own interaction test uses), rather than
  * depending on whatever `getServerExtensions()` returns right now.
  *
- * `.selectize()` (group 6), `.slider()` (jQuery-UI, group 4),
- * `.tipTip()` (group 2) and `pwg_jconfirm_follow_href` (jquery-confirm,
+ * `.selectize()` (group 6) and `pwg_jconfirm_follow_href` (jquery-confirm,
  * group 5) stay jQuery. `.sortElements()` (jquery.sort) converted to
- * `sortElements()` (`themes/default/js/vendor/sortElements.ts`) in
- * P49-B group 1.
+ * `sortElements()` (`themes/default/js/vendor/sortElements.ts`) in P49-B
+ * group 1, `.tipTip()` to `tipTip()` (`themes/default/js/vendor/
+ * tiptip.ts`) in group 2, and jQuery UI's `.slider()` to `slider()`
+ * (`themes/default/js/vendor/slider.ts`) in group 4 -- the drag test
+ * below is real new coverage for that conversion, not just a
+ * regression check: no prior test, jQuery-based or not, ever drove the
+ * slider itself, only its zero-state render.
  */
 it('toggles the advanced-filter panel open and closed', function (): void {
     $page = H::asAdmin($this);
@@ -101,6 +105,66 @@ it('renders the advanced filter\'s rating/certification/revision widgets at thei
 
     $page->assertNoJavaScriptErrors();
     H::assertNoServerErrors($page, 'plugins_new advanced-filter zero-state');
+});
+
+it('dragging the rating slider to its max end fills every star', function (): void {
+    // The panel has to be open first: a hidden (`display: none`)
+    // `.notation-filter-slider` has a zero-width `getBoundingClientRect()`,
+    // which the slider's own click-position math (`themes/default/js/
+    // vendor/slider.ts`) would divide by, and a real user can't drag a
+    // hidden slider either.
+    $page = H::asAdmin($this);
+    $page = H::navigateOk($page, '/admin.php?page=plugins&tab=new');
+    $page->click('.advanced-filter-btn');
+
+    // A real mousedown+mouseup pair dispatched at the track's own right
+    // edge -- indistinguishable, from the slider's own addEventListener
+    // handlers' point of view, from a real OS-driven click there (both
+    // are real DOM MouseEvents; only their origin differs). Chosen over
+    // Playwright's own `drag()` because that drags element-to-element,
+    // not to an arbitrary point along a track with no element to target
+    // there.
+    $page->script(<<<'JS'
+        (() => {
+            const track = document.querySelector('.notation-filter-slider');
+            const rect = track.getBoundingClientRect();
+            const x = rect.left + rect.width - 1;
+            const y = rect.top + rect.height / 2;
+            const opts = { clientX: x, clientY: y, bubbles: true };
+            track.dispatchEvent(new MouseEvent('mousedown', opts));
+            document.body.dispatchEvent(new MouseEvent('mouseup', opts));
+        })()
+        JS);
+
+    // displayStars(5) (plugins_new.ts) fills every `data-star="0..4"`
+    // span's own nested `<i>` with `icon-star` and drops that span's
+    // `icon-star-empty` -- the zero-state test above already covers the
+    // opposite (all-empty) end; this is the other one, reached for real
+    // through the slider this time, not called directly.
+    $starState = H::scriptJson(
+        $page,
+        <<<'JS'
+        JSON.stringify(
+            Array.from(document.querySelectorAll('.advanced-filter-rating .rating-star-container span')).map((span) => ({
+                spanEmpty: span.classList.contains('icon-star-empty'),
+                iconFilled: span.querySelector('i').classList.contains('icon-star'),
+            }))
+        )
+        JS
+    );
+    if (count($starState) !== 5) {
+        throw new RuntimeException('unexpected star state shape: ' . var_export($starState, true));
+    }
+    foreach ($starState as $star) {
+        if (! is_array($star) || ! is_bool($star['spanEmpty'] ?? null) || ! is_bool($star['iconFilled'] ?? null)) {
+            throw new RuntimeException('unexpected star entry shape: ' . var_export($star, true));
+        }
+        expect($star['spanEmpty'])->toBeFalse();
+        expect($star['iconFilled'])->toBeTrue();
+    }
+
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'plugins_new rating slider drag');
 });
 
 it('reloads with the beta-test query param set after toggling the switch', function (): void {

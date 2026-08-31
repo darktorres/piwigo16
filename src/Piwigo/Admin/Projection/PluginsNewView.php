@@ -57,8 +57,13 @@ final readonly class PluginsNewView implements View, HasPageAssets, ExposesPageD
             AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             // jquery.sort's own `.sortElements()` is a native port now
             // (P49-B group 1) -- no script tag or dependency left to
-            // register for it.
-            AssetContribution::script('pluginsNew', 'themes/admin/default/js/plugins_new.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui']),
+            // register for it. jQuery UI's own slider widget is too now
+            // (P49-B group 4) -- `dependsOn: ['jquery.ui']` dropped:
+            // that was the only real reason this page pulled in
+            // jquery.ui's *script* (the CSS registration above stays,
+            // still real -- the native slider port renders the
+            // identical class structure it themes).
+            AssetContribution::script('pluginsNew', 'themes/admin/default/js/plugins_new.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
         ];
     }

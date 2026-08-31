@@ -1,3 +1,4 @@
+import type { PwgDoubleSliderOptions } from "../../admin/default/js/doubleSlider";
 import { pwg_getPageData, pwg_getPageString } from "./page-data";
 
 interface SearchAllwordsRule {
@@ -159,17 +160,11 @@ const str_search_in_ab = pwg_getPageString("Search in albums");
 
 const prefix_icon = "gallery-icon-";
 
-interface PwgSliderConfig {
-  values: number[];
-  selected: { min: number; max: number };
-  text: string;
-}
-
 // <!-- sliders config -->
 const sliders: {
-  filesizes?: PwgSliderConfig;
-  heights?: PwgSliderConfig;
-  widths?: PwgSliderConfig;
+  filesizes?: PwgDoubleSliderOptions;
+  heights?: PwgDoubleSliderOptions;
+  widths?: PwgDoubleSliderOptions;
 } = {};
 
 // Real shape of the filesize/height/width page-data keys -- now

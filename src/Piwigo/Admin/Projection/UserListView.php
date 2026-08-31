@@ -86,7 +86,11 @@ final readonly class UserListView implements View, HasPageAssets, ExposesPageDat
         return [
             AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js'),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
-            AssetContribution::script('jquery.ui', ''),
+            // jQuery UI's own JS is gone (its slider widget, the only
+            // real reason this page ever loaded it, ported off jQuery
+            // in P49-B group 4) -- the CSS theme stays, since the
+            // native port renders the identical `ui-slider`/
+            // `ui-slider-handle`/... class structure it styles.
             AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui'),
             AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', dependsOn: ['jquery']),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),

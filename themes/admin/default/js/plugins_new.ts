@@ -17,6 +17,7 @@ import {
   trigger,
   val,
 } from "../../../default/js/vendor/dom";
+import { slider, type SliderUIParams } from "../../../default/js/vendor/slider";
 import { sortElements } from "../../../default/js/vendor/sortElements";
 import { tipTip } from "../../../default/js/vendor/tiptip";
 export {};
@@ -233,25 +234,24 @@ ready(function () {
   const selectizeTag = $select[0]!.selectize;
   selectizeTag.addOption(tagsNames);
 
-  // Still jQuery: jQuery-UI slider, ported in P49-B group 4.
-  $(".notation-filter-slider").slider({
+  slider(document.querySelectorAll(".notation-filter-slider"), {
     range: "min",
     value: 0,
     min: 0,
     max: 5,
     step: 0.5,
-    slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
+    slide: function (event: Event, ui: SliderUIParams) {
       updateRatingFilterLabel(ui.value!);
       applyFilter("rating", ui.value!);
     },
   });
 
-  $(".revision-date-filter-slider").slider({
+  slider(document.querySelectorAll(".revision-date-filter-slider"), {
     range: "min",
     value: 0,
     min: 0,
     max: 6,
-    slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
+    slide: function (event: Event, ui: SliderUIParams) {
       const [month] = value_to_month(ui.value!);
       updateRevisionFilterLabel(ui.value!);
       applyFilter("revision", month);
@@ -281,12 +281,12 @@ ready(function () {
   // The certification filter dosen't include incompatible if the beta-test option is not checked
   const minCertification = betaTestPlugins ? -1 : 0;
 
-  $(".certification-filter-slider").slider({
+  slider(document.querySelectorAll(".certification-filter-slider"), {
     range: "min",
     value: minCertification,
     min: minCertification,
     max: 3,
-    slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
+    slide: function (event: Event, ui: SliderUIParams) {
       updateCertificationFilterLabel(ui.value!);
       applyFilter("certification", ui.value!);
     },
@@ -377,16 +377,24 @@ ready(function () {
     search: val(document.querySelectorAll("#search")) as string,
     author: "",
     tag: "",
-    // Still jQuery: jQuery-UI slider, ported in P49-B group 4.
-    rating: $(".notation-filter-slider").slider("value"),
-    certification: $(".certification-filter-slider").slider("value"),
+    rating: slider(
+      document.querySelectorAll(".notation-filter-slider"),
+      "value",
+    )!,
+    certification: slider(
+      document.querySelectorAll(".certification-filter-slider"),
+      "value",
+    )!,
     // Real, pre-existing behavior, not a bug this phase fixes: reads
     // `.certification-filter-slider`'s own value here, not
     // `.revision-date-filter-slider`'s -- looks like a likely
     // copy-paste bug (both sliders start at 0 so it's not currently
     // observable), flagged rather than silently changed.
     revision: value_to_month(
-      $(".certification-filter-slider").slider("value"),
+      slider(
+        document.querySelectorAll(".certification-filter-slider"),
+        "value",
+      )!,
     )[0],
   };
 

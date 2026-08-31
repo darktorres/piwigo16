@@ -5,13 +5,11 @@ import type { operations } from "../../../openapi/client/schema";
 // list).
 import { AlbumSelector } from "../../admin/default/js/album_selector";
 import { sprintf } from "../../admin/default/js/common";
-// doubleSlider.ts's own side effect only (`$.fn.pwgDoubleSlider`, this
-// file's real `.pwgDoubleSlider(...)` call sites below). This file has
-// exactly one real registrant page (SearchFiltersView), but
-// doubleSlider.ts itself has 2 real file-level consumers (this file and
-// batchManagerFilter.ts, each its own separate Vite entry), so Rollup
-// emits it as a shared chunk.
-import "../../admin/default/js/doubleSlider";
+// This file has exactly one real registrant page (SearchFiltersView),
+// but doubleSlider.ts itself has 2 real file-level consumers (this
+// file and batchManagerFilter.ts, each its own separate Vite entry),
+// so Rollup emits it as a shared chunk.
+import { pwgDoubleSlider } from "../../admin/default/js/doubleSlider";
 // Real consumer of search_filters.ts's own exports (docs/PLAN.md P48,
 // search_filters.ts's own batch -- was bare-global reads before that).
 // This file is search_filters.ts's only real consumer
@@ -1107,6 +1105,28 @@ ready(function () {
     empty_filters_list.push(PS_params.ratings);
   }
 
+  // Real `pwgDoubleSlider({ stop })` callback (`themes/admin/default/js/
+  // doubleSlider.ts`) -- the direct native replacement for the
+  // `jQuery(...).on("slidestop", ...)` listener this used to be
+  // (jQuery UI slider's own custom event, invisible to a native
+  // addEventListener, P49-B group 4).
+  function onFilesizeSlideStop(): void {
+    const slider = document.querySelector("[data-slider=filesizes]")!;
+    const min = val(find(slider, "[data-input=min]"));
+    const max = val(find(slider, "[data-input=max]"));
+
+    const minInputs = document.querySelectorAll(
+      "input[name=filter_filesize_min_text]",
+    );
+    setVal(minInputs, min!);
+    trigger(minInputs, "change");
+    const maxInputs = document.querySelectorAll(
+      "input[name=filter_filesize_max_text]",
+    );
+    setVal(maxInputs, max!);
+    trigger(maxInputs, "change");
+  }
+
   // Setup filesize filter
   if (
     global_params.fields.filesize_min != null &&
@@ -1126,26 +1146,9 @@ ready(function () {
       ),
     );
 
-    // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
-    jQuery("[data-slider=filesizes]").pwgDoubleSlider(sliders.filesizes);
-
-    // Still jQuery: "slidestop" is jQuery-UI slider's own custom event,
-    // ported in P49-B group 4 -- invisible to native addEventListener.
-    jQuery("[data-slider=filesizes]").on("slidestop", function () {
-      const slider = document.querySelector("[data-slider=filesizes]")!;
-      const min = val(find(slider, "[data-input=min]"));
-      const max = val(find(slider, "[data-input=max]"));
-
-      const minInputs = document.querySelectorAll(
-        "input[name=filter_filesize_min_text]",
-      );
-      setVal(minInputs, min!);
-      trigger(minInputs, "change");
-      const maxInputs = document.querySelectorAll(
-        "input[name=filter_filesize_max_text]",
-      );
-      setVal(maxInputs, max!);
-      trigger(maxInputs, "change");
+    pwgDoubleSlider(document.querySelector("[data-slider=filesizes]")!, {
+      ...sliders.filesizes!,
+      stop: onFilesizeSlideStop,
     });
 
     if (
@@ -1178,8 +1181,16 @@ ready(function () {
       function () {
         updateFilters("filesize", "add");
         trigger(document.querySelectorAll(".filter-filesize"), "click");
-        // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
-        jQuery("[data-slider=filesizes]").pwgDoubleSlider(sliders.filesizes);
+        // `stop` re-passed here too: the original's own `slidestop`
+        // listener was bound once, directly to the container element,
+        // so it kept firing across every later `pwgDoubleSlider()`
+        // re-init below -- this "clear" handler's own re-init has to
+        // pass `stop` again to match, or it would silently go dark
+        // after the first clear.
+        pwgDoubleSlider(document.querySelector("[data-slider=filesizes]")!, {
+          ...sliders.filesizes!,
+          stop: onFilesizeSlideStop,
+        });
         if (
           hasClass(
             document.querySelectorAll(".filter-filesize"),
@@ -1230,8 +1241,10 @@ ready(function () {
       ),
     );
 
-    // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
-    jQuery("[data-slider=heights]").pwgDoubleSlider(sliders.heights);
+    pwgDoubleSlider(
+      document.querySelector("[data-slider=heights]")!,
+      sliders.heights!,
+    );
 
     if (
       Number(global_params.fields.height_min) > 0 &&
@@ -1259,8 +1272,10 @@ ready(function () {
       function () {
         updateFilters("height", "add");
         trigger(document.querySelectorAll(".filter-height"), "click");
-        // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
-        jQuery("[data-slider=heights]").pwgDoubleSlider(sliders.heights);
+        pwgDoubleSlider(
+          document.querySelector("[data-slider=heights]")!,
+          sliders.heights!,
+        );
         if (
           hasClass(document.querySelectorAll(".filter-height"), "filter-filled")
         ) {
@@ -1308,8 +1323,10 @@ ready(function () {
       ),
     );
 
-    // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
-    jQuery("[data-slider=widths]").pwgDoubleSlider(sliders.widths);
+    pwgDoubleSlider(
+      document.querySelector("[data-slider=widths]")!,
+      sliders.widths!,
+    );
 
     if (
       Number(global_params.fields.width_min) > 0 &&
@@ -1337,8 +1354,10 @@ ready(function () {
       function () {
         updateFilters("width", "add");
         trigger(document.querySelectorAll(".filter-width"), "click");
-        // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
-        jQuery("[data-slider=widths]").pwgDoubleSlider(sliders.widths);
+        pwgDoubleSlider(
+          document.querySelector("[data-slider=widths]")!,
+          sliders.widths!,
+        );
         if (
           hasClass(document.querySelectorAll(".filter-width"), "filter-filled")
         ) {

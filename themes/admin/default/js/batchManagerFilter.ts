@@ -13,9 +13,7 @@
 // single-active-popup coordination its module state was written for
 // actually works.
 import { AlbumSelector } from "./album_selector";
-// doubleSlider.ts's own side effect only (`$.fn.pwgDoubleSlider`, this
-// file's real `.pwgDoubleSlider(...)` call sites below).
-import "./doubleSlider";
+import { pwgDoubleSlider } from "./doubleSlider";
 
 import {
   pwg_getPageData,
@@ -41,10 +39,11 @@ import {
 } from "../../../default/js/vendor/dom";
 export {};
 
-// `sliders` here is a genuinely independent, unrelated top-level `var`
-// from search_filters.ts's own `window.sliders` (a different theme, a
-// different page, never co-loaded) -- this file's own `export {}`
-// module isolation keeps the two from ever colliding regardless.
+// `sliders` here is a genuinely independent, unrelated top-level
+// `const` from search_filters.ts's own real exported `sliders` (a
+// different theme, a different page, never co-loaded) -- this file's
+// own `export {}` module isolation keeps the two from ever colliding
+// regardless.
 interface DimensionsData {
   widths: string;
   heights: string;
@@ -257,12 +256,22 @@ ready(function () {
     },
   );
 
-  // Still jQuery: pwgDoubleSlider wraps jQuery-UI slider, ported in P49-B
-  // group 4.
-  $("[data-slider=widths]").pwgDoubleSlider(sliders.widths);
-  $("[data-slider=heights]").pwgDoubleSlider(sliders.heights);
-  $("[data-slider=ratios]").pwgDoubleSlider(sliders.ratios);
-  $("[data-slider=filesizes]").pwgDoubleSlider(sliders.filesizes);
+  pwgDoubleSlider(
+    document.querySelector("[data-slider=widths]")!,
+    sliders.widths,
+  );
+  pwgDoubleSlider(
+    document.querySelector("[data-slider=heights]")!,
+    sliders.heights,
+  );
+  pwgDoubleSlider(
+    document.querySelector("[data-slider=ratios]")!,
+    sliders.ratios,
+  );
+  pwgDoubleSlider(
+    document.querySelector("[data-slider=filesizes]")!,
+    sliders.filesizes,
+  );
 
   on(document, "mouseup", function (e: Event): void {
     e.stopPropagation();

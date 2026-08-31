@@ -146,11 +146,13 @@ interface Window {
   str_empty_search_bot_alt: string;
   str_search_in_ab: string;
   prefix_icon: string;
-  sliders: {
-    filesizes?: PwgSliderConfig;
-    heights?: PwgSliderConfig;
-    widths?: PwgSliderConfig;
-  };
+  // `sliders` used to live here too (`window.sliders`) -- gone now,
+  // confirmed dead: search_filters.ts's own P48 module conversion
+  // turned it into a real exported `const`, and nothing reads
+  // `window.sliders` anywhere any more (grepped for real, not
+  // assumed). Its own type, `PwgSliderConfig`, is gone with it --
+  // `PwgDoubleSliderOptions` (`themes/admin/default/js/
+  // doubleSlider.ts`, P49-B group 4) is the one real shape now.
   show_filter_ratings: boolean;
 
   // batchManagerGlobal.ts's own 4 functions, called from
@@ -429,11 +431,14 @@ interface JQuery {
     alert_content?: string;
   }): void;
 
-  // jQuery UI's own `slider` widget (vendored -- the one full-bundle
-  // `jquery.ui` id) is now real, verified types from `@types/jqueryui`
-  // (P47) -- deleted here (method-shorthand on both sides, harmless to
-  // leave, but redundant). `doubleSlider.ts`'s own `pwgDoubleSlider`
-  // extension (declared separately below) is built on it.
+  // jQuery UI's own `slider` widget itself was already deleted here as
+  // redundant back in P47 (real, verified types came from
+  // `@types/jqueryui` instead) -- moot now regardless: it was ported
+  // off jQuery outright in P49-B group 4, along with `doubleSlider.ts`'s
+  // own `pwgDoubleSlider` extension that wrapped it (its own former
+  // ambient declaration, once below, is gone too -- both are real,
+  // typed exports of `themes/default/js/vendor/slider.ts`/
+  // `themes/admin/default/js/doubleSlider.ts` now).
 
   // `.colorbox()` is now real, verified types from
   // `@types/jquery.colorbox` (P47) -- deleted here: it was declared as
@@ -501,16 +506,6 @@ interface JQuery {
   // declared and consumed within the same file, no other real call
   // site found.
   enableShiftClick(): JQuery;
-
-  // `doubleSlider.ts`'s own first-party `jQuery.fn.pwgDoubleSlider`
-  // extension -- `batchManagerFilter.ts` was the first *consumer*-only
-  // file that needed the ambient type without declaring it itself
-  // (same reasoning as `pwgDatepicker`/`pwgAddAlbum` above).
-  // `PwgDoubleSliderOptions` (below) replaces the former
-  // `Record<string, unknown>` (P47) -- declared here, not inside
-  // doubleSlider.ts's own IIFE, since this ambient signature needs the
-  // same shape.
-  pwgDoubleSlider(options?: PwgDoubleSliderOptions): JQuery;
 
   // plupload's own jQuery-UI queue widget (vendored -- P46-0's own CDN
   // table). `photos_add_direct.ts`'s own upload-queue setup is the one
@@ -613,14 +608,4 @@ interface StorageDetails {
     total: { filesize: number; nb_files: number };
     details?: Record<string, { filesize: number; nb_files: number }>;
   };
-}
-
-// `doubleSlider.ts`'s own real options shape (P47) -- matches its own
-// leading docblock comment (`values {mixed[]}`, `selected {object} min
-// and max`, `text {string}`) and every real caller's own literal shape
-// (`batchManagerFilter.ts`'s `sliders.widths`/etc.).
-interface PwgDoubleSliderOptions {
-  values: number[];
-  selected: { min: number; max: number };
-  text: string;
 }

@@ -33,9 +33,10 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * a synthetic id 404s -- only its `updateAll()`-driven click-filtering is
  * covered here.
  *
- * `jquery.ajaxmanager` (still jQuery, P49-B group 2), `jGrowl` (group 3)
- * and `jquery-confirm` (group 5) stay jQuery; only the DOM work around
- * them converted.
+ * `jGrowl` (still jQuery, P49-B group 3) and `jquery-confirm` (group 5)
+ * stay jQuery; only the DOM work around them converted.
+ * `jquery.ajaxmanager` converted to `AjaxQueue`
+ * (`themes/default/js/vendor/ajaxQueue.ts`) in P49-B group 2.
  */
 function updatesExtPluginBoxHtml(string $type, string $id, bool $ignored): string
 {

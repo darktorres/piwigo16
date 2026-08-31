@@ -29,6 +29,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
+import { AjaxQueue } from "../../../default/js/vendor/ajaxQueue";
 import {
   addClass,
   css,
@@ -408,12 +409,12 @@ ready(function () {
 
     hide(document.querySelectorAll(".bulkAction"));
 
-    // Still jQuery: ajaxmanager is a library, ported in P49-B group 2.
-    const _queuedManager = jQuery.manageAjax.create("queued", {
-      queue: true,
-      cacheResponse: false,
-      maxRequests: 1,
-    });
+    // getDerivativeUrls() (batchManagerGlobal.ts) queues every request
+    // this same instance -- including its own recursive self-calls, one
+    // batch of urls at a time until derivatives.elements is drained --
+    // so the queue is created once here and threaded through, not
+    // recreated per batch.
+    const queue = new AjaxQueue({ maxRequests: 1 });
 
     derivatives.elements = [];
     if (
@@ -440,7 +441,7 @@ ready(function () {
 
     progress_start();
     progress();
-    getDerivativeUrls();
+    getDerivativeUrls(queue);
     e.preventDefault();
     e.stopPropagation();
   });

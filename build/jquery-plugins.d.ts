@@ -268,23 +268,6 @@ declare module "piecon" {
 // rendering is the one real first-party call site.
 
 interface JQueryStatic {
-  // jquery.ajaxmanager (vendored, never published to npm -- P46-0's own
-  // CDN table) -- `thumbnails.loader.ts`'s own queued-thumbnail loader is
-  // the one real first-party call site.
-  manageAjax: {
-    create(
-      name: string,
-      options: Record<string, unknown>,
-    ): {
-      add(options: Record<string, unknown>): void;
-    };
-    // The other real half of this plugin's API: adds a request to an
-    // *already-created*, named queue (by the queue name string, not
-    // the object `.create()` returns) -- `batchManagerGlobal.ts`'s own
-    // `getDerivativeUrls()` is the one real first-party call site.
-    add(queueName: string, options: Record<string, unknown>): void;
-  };
-
   // jquery-confirm (vendored -- P46-0's own CDN table). `common.ts`'s own
   // `pwg_jconfirm_follow_href` is the one real first-party call site so
   // far; every admin page that pops a confirm/alert dialog calls this

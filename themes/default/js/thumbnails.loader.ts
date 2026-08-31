@@ -1,22 +1,25 @@
 import { pwg_getPageData } from "./page-data";
+import { AjaxQueue } from "./vendor/ajaxQueue";
 import { attr, data, hide, ready, show } from "./vendor/dom";
 export {};
 
 let max_requests = pwg_getPageData<number | undefined>("max_requests");
 if (typeof max_requests == "undefined") max_requests = 3;
 
-// Still jQuery: jquery.ajaxmanager is a library, ported in P49-B group 2.
-const thumbnails_queue = jQuery.manageAjax.create("queued", {
-  queue: true,
-  cacheResponse: false,
+const thumbnails_queue = new AjaxQueue({
   maxRequests: max_requests,
   preventDoubleRequests: false,
 });
 
 function add_thumbnail_to_queue(img: Element, loop: number) {
+  const src = data(img, "src");
+  if (typeof src !== "string") {
+    return;
+  }
+
   thumbnails_queue.add({
     type: "GET",
-    url: data(img, "src"),
+    url: src,
     data: { ajaxload: "true" },
     dataType: "json",
     beforeSend: function () {

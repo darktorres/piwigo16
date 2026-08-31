@@ -22,6 +22,7 @@ import {
 // import).
 import { AlbumSelector } from "./album_selector";
 import { ajax } from "../../../default/js/vendor/ajax";
+import { AjaxQueue } from "../../../default/js/vendor/ajaxQueue";
 import {
   append,
   css,
@@ -316,7 +317,7 @@ export function progress(success?: boolean) {
   }
 }
 
-export function getDerivativeUrls() {
+export function getDerivativeUrls(queue: AjaxQueue) {
   const ids = derivatives.elements!.splice(0, 500).map(Number);
   const params: { maxUrls: number; ids: number[]; types: string[] } = {
     maxUrls: 100000,
@@ -353,8 +354,7 @@ export function getDerivativeUrls() {
       );
       progress();
       for (let i = 0; i < responseData.urls.length; i++) {
-        // Still jQuery: ajaxmanager is a library, ported in P49-B group 2.
-        jQuery.manageAjax.add("queued", {
+        queue.add({
           type: "GET",
           url: responseData.urls[i] + "&ajaxload=true",
           dataType: "json",
@@ -378,7 +378,9 @@ export function getDerivativeUrls() {
       }
       if (derivatives.elements!.length)
         setTimeout(
-          getDerivativeUrls,
+          () => {
+            getDerivativeUrls(queue);
+          },
           25 * (derivatives.total - derivatives.done),
         );
     },
@@ -501,12 +503,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
         });
     }
 
-    // Still jQuery: ajaxmanager is a library, ported in P49-B group 2.
-    const queuedManager = jQuery.manageAjax.create("queued", {
-      queue: true,
-      cacheResponse: false,
-      maxRequests: 1,
-    });
+    const queuedManager = new AjaxQueue({ maxRequests: 1 });
 
     // Local alias for the definitely-assigned value, kept for
     // readability. The non-null assertion this used to need is gone:
@@ -540,7 +537,6 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
 
       (function (ids) {
         const thisBatchSize = ids.length;
-        // Still jQuery: ajaxmanager is a library, ported in P49-B group 2.
         queuedManager.add({
           url: "api/v1/images/actions/sync-metadata",
           type: "POST",
@@ -548,7 +544,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
           headers: {
             "X-CSRF-Token": val(
               document.querySelectorAll("input[name=pwg_token]"),
-            ),
+            )!,
           },
           data: JSON.stringify({
             imageIds: ids,
@@ -606,12 +602,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
   hide(document.querySelectorAll(".bulkAction"));
   const maxRequests = 1;
 
-  // Still jQuery: ajaxmanager is a library, ported in P49-B group 2.
-  const queuedManager = jQuery.manageAjax.create("queued", {
-    queue: true,
-    cacheResponse: false,
-    maxRequests: maxRequests,
-  });
+  const queuedManager = new AjaxQueue({ maxRequests: maxRequests });
 
   elements = [];
 
@@ -659,7 +650,6 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
 
     (function (ids) {
       const thisBatchSize = ids.length;
-      // Still jQuery: ajaxmanager is a library, ported in P49-B group 2.
       queuedManager.add({
         type: "POST",
         url: "api/v1/images/actions/delete",
@@ -667,7 +657,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
         headers: {
           "X-CSRF-Token": val(
             document.querySelectorAll("input[name=pwg_token]"),
-          ),
+          )!,
         },
         data: JSON.stringify({
           imageIds: ids.map(Number),

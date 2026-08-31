@@ -5,7 +5,8 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { ajax } from "../../../default/js/vendor/ajax";
+import { ajax, type AjaxResponse } from "../../../default/js/vendor/ajax";
+import { AjaxQueue } from "../../../default/js/vendor/ajaxQueue";
 import {
   attr,
   attrOf,
@@ -31,9 +32,7 @@ const errorMsg = pwg_getPageString("an error happened");
 const restoreMsg = pwg_getPageString("Reset ignored updates");
 
 let todo = 0;
-// Still jQuery: jquery.ajaxmanager is a library, ported in P49-B group 2.
-const queuedManager = $.manageAjax.create("queued", {
-  queue: true,
+const queuedManager = new AjaxQueue({
   maxRequests: 1,
   beforeSend: function () {
     autoupdate_bar_toggle(1);
@@ -114,7 +113,6 @@ function checkFieldsets() {
 }
 
 function updateExtension(type: string, id: string, revision: string) {
-  // Still jQuery: jquery.ajaxmanager is a library, ported in P49-B group 2.
   queuedManager.add({
     type: "POST",
     dataType: "json",
@@ -137,9 +135,9 @@ function updateExtension(type: string, id: string, revision: string) {
       });
       checkFieldsets();
     },
-    error: function (jqXHR: JQuery.jqXHR) {
+    error: function (xhr: AjaxResponse) {
       const message =
-        (jqXHR.responseJSON as { detail?: string } | undefined)?.detail ??
+        (xhr.responseJSON as { detail?: string } | undefined)?.detail ??
         errorMsg;
       jQuery.jGrowl(message, {
         theme: "error",
@@ -197,7 +195,6 @@ const observer = new MutationObserver(callback);
 observer.observe(targetNode!, config);
 
 function ignoreExtension(type: string, id: string) {
-  // Still jQuery: jquery.ajaxmanager is a library, ported in P49-B group 2.
   queuedManager.add({
     type: "POST",
     url: "api/v1/extensions/updates/ignore",

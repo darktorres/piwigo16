@@ -9,11 +9,10 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * (golden-html/VR) cannot see this behaviour at all: thumbnails.latte
  * renders the placeholder `img_small.png` + `data-src` markup identically
  * whether or not the JS afterward ever swaps it for the real derivative --
- * only a live page can tell the two apart. This is also the one real
- * first-party call site of `jQuery.manageAjax` (build/jquery-plugins.d.ts),
- * so it stays jQuery for the queue itself until that library ports in
- * P49-B group 2 -- only the `.data()`/`.attr()`/`.show()`/`.hide()`/
- * `.each()`/`ready()` calls around it convert here.
+ * only a live page can tell the two apart. `jQuery.manageAjax` (jquery.
+ * ajaxmanager) converted to `AjaxQueue`
+ * (`themes/default/js/vendor/ajaxQueue.ts`) in P49-B group 2, alongside
+ * this file's own conversion.
  *
  * DerivativeImage::isCached() only checks the derivative file's real mtime
  * under `derivative_url_style` 0 ("auto" -- CurrentConfig.php's own

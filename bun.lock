@@ -14,7 +14,6 @@
         "jquery-confirm": "3.3.4",
         "jquery-timepicker-addon": "github:trentrichardson/jQuery-Timepicker-Addon#v1.4.4",
         "jquery-ui": "1.10.4",
-        "jquery.ajaxmanager": "github:aFarkas/Ajaxmanager#3.12",
         "jquery.colorbox": "github:jackmoore/colorbox#1.5.14",
         "jquery.jcrop": "github:tapmodo/Jcrop#v0.9.12",
         "moment": "2.26.0",
@@ -964,8 +963,6 @@
     "jquery-timepicker-addon": ["jQuery-Timepicker-Addon@github:trentrichardson/jQuery-Timepicker-Addon#30c9bdb", {}, "trentrichardson-jQuery-Timepicker-Addon-30c9bdb", "sha512-q/sM1pkK+ZWv8J/eWb6nIdTWGWtYUixlXCmiknt1ABtPT7pqgmTTL3uPS/bEhw5xXVpT1NMilH4b5bNgUgAKUg=="],
 
     "jquery-ui": ["jquery-ui@1.10.4", "", {}, "sha512-VdBz+azK9w7aLfrynqRjhDClgKF57L5fOcj6xDRar/PC0F/WFVD2a5Rfp1W15NYa2kkAvKp1YzAd2/lnGlmOmw=="],
-
-    "jquery.ajaxmanager": ["Ajaxmanager@github:aFarkas/Ajaxmanager#7aba194", {}, "aFarkas-Ajaxmanager-7aba194", "sha512-ZtrBPllpDwSBWuG0rvdRSYZAjD7NlzFtcY9cQSScDOk6LG8ba0mWfF4SvqGkTJTHFAl3tT92mZM1qV49aA4Uvg=="],
 
     "jquery.colorbox": ["colorbox@github:jackmoore/colorbox#26f408d", {}, "jackmoore-colorbox-26f408d", "sha512-S1Kg5jZ1MtJxPl1t5zkg4tJdCslwP7N6qoL7rKaIOGnpme7K4FIbcSkGk6Ao7pHpqvUuYUGYTg/z+Df+Chb+3w=="],
 

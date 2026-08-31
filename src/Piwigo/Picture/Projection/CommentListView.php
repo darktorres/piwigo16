@@ -66,8 +66,7 @@ final readonly class CommentListView implements View, HasPageAssets, ExposesPage
     {
         $assets = [
             AssetContribution::css('themes/default/css/pages/comment_list.css', id: 'comment_list'),
-            AssetContribution::script('jquery.ajaxmanager', 'https://cdn.jsdelivr.net/gh/aFarkas/Ajaxmanager@3.12/jquery.ajaxmanager.js', loadMode: LoadMode::Footer),
-            AssetContribution::script('thumbnails.loader', 'themes/default/js/thumbnails.loader.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ajaxmanager']),
+            AssetContribution::script('thumbnails.loader', 'themes/default/js/thumbnails.loader.ts', loadMode: LoadMode::Footer),
         ];
 
         foreach ($this->comments as $comment) {

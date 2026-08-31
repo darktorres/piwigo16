@@ -51,7 +51,7 @@ test('an uncached selected derivative pulls in the thumbnail loader and its erro
     $view = makePictureContentView();
 
     expect($view->pageAssets())
-        ->toHaveCount(2);
+        ->toHaveCount(1);
     expect($view->exposedPageData())
         ->toBe([
             'error_icon' => 'http://example.com/icon/errors_small.png',

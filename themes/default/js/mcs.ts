@@ -367,11 +367,13 @@ ready(function () {
         document.querySelectorAll("#date_posted-" + date_posted_rule.preset),
         true,
       );
+      // `label#" + date_posted_rule.preset` is an ID selector fragment,
+      // and preset can be a bare digit-leading value too (e.g. "30d",
+      // not just the "custom" sub-case below) -- same escapeId() fix as
+      // that branch, same reason.
       let date_posted_str = textOf(
         document.querySelectorAll(
-          ".date_posted-option label#" +
-            date_posted_rule.preset +
-            " .date-period",
+          `.date_posted-option label#${escapeId(date_posted_rule.preset)} .date-period`,
         ),
       );
 
@@ -575,11 +577,11 @@ ready(function () {
         document.querySelectorAll("#date_created-" + date_created_rule.preset),
         true,
       );
+      // Same digit-leading-preset bug as the date_posted block above
+      // (e.g. preset "30d"), same escapeId() fix.
       let date_created_str = textOf(
         document.querySelectorAll(
-          ".date_created-option label#" +
-            date_created_rule.preset +
-            " .date-period",
+          `.date_created-option label#${escapeId(date_created_rule.preset)} .date-period`,
         ),
       );
 

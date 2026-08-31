@@ -704,23 +704,28 @@ it('bypasses the no-HD-access restriction for an admin download carrying a valid
     // time it's fixture_admin's own enabled_high (user_id 1) that's turned
     // off, isolating is_admin_download's withEnabledHigh(true) bypass from
     // AccessControl::isAdmin() itself (already true for this whole file's
-    // session, and not what's under test here).
+    // session, and not what's under test here). Inside try/finally from
+    // here, not just around the 2 HTTP requests below -- fixture_admin is
+    // the SAME shared account every other admin-authenticated test in the
+    // whole suite uses, so an exception during setup (image creation,
+    // upload) between the flip and a narrower try would leave enabled_high
+    // stuck false for the rest of the run with no restore ever running.
     actionSetEnabledHigh(1, false);
 
-    $img = imagecreatetruecolor(2000, 1500);
-    if ($img === false) {
-        throw new RuntimeException('imagecreatetruecolor failed');
-    }
-    $tmp = tempnam(sys_get_temp_dir(), 'pwg_action_admin_dl_');
-    if ($tmp === false) {
-        throw new RuntimeException('tempnam() failed');
-    }
-    $tmpPath = $tmp . '.jpg';
-    imagejpeg($img, $tmpPath, 80);
-    $imageId = H::uploadPhotoViaApi($tmpPath, $albumId, 'Action Controller Admin Download Photo');
-    @unlink($tmpPath);
-
     try {
+        $img = imagecreatetruecolor(2000, 1500);
+        if ($img === false) {
+            throw new RuntimeException('imagecreatetruecolor failed');
+        }
+        $tmp = tempnam(sys_get_temp_dir(), 'pwg_action_admin_dl_');
+        if ($tmp === false) {
+            throw new RuntimeException('tempnam() failed');
+        }
+        $tmpPath = $tmp . '.jpg';
+        imagejpeg($img, $tmpPath, 80);
+        $imageId = H::uploadPhotoViaApi($tmpPath, $albumId, 'Action Controller Admin Download Photo');
+        @unlink($tmpPath);
+
         // Without a matching pwg_token, is_admin_download stays false, so
         // the admin is subject to the same HD-access check as anyone else.
         $withoutToken = H::rawGet($page, '/action.php?id=' . $imageId . '&part=e');

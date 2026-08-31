@@ -539,7 +539,16 @@ it('serves the date-filter row/counter data from cache on a second load of a dat
         // deliberately NOT combined with any other search field (see the
         // comment below on why this test needs 'date_created' to stay
         // the *only* active filter).
-        extraFiltersSetImageAttrs($imageId, dateCreation: '2026-08-01 00:00:00');
+        //
+        // Relative to the real wall clock, not PIWIGO_TEST_NOW: SearchService::
+        // dateFilterClause()'s own '30d' preset compares against MySQL's
+        // real CURRENT_TIMESTAMP(), never the frozen fixture clock. A
+        // date hardcoded to PIWIGO_TEST_NOW's own value (2026-08-01)
+        // silently stopped matching once 30 real calendar days had
+        // actually elapsed past that fixture date -- confirmed live, this
+        // test failed on 2026-08-31 with no code change, for exactly that
+        // reason. "Yesterday" always qualifies, on any real day this runs.
+        extraFiltersSetImageAttrs($imageId, dateCreation: (new DateTimeImmutable())->modify('-1 day')->format('Y-m-d H:i:s'));
 
         // 'date_created_preset' alone (no categories/tags/authors/...) is
         // the ONLY active search field: getItemsForFilter('date_created',

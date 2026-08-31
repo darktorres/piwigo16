@@ -245,11 +245,13 @@ it('sorts .pluginBox rows by name via the sort-order select, in ascending order'
         "document.querySelector('select[name=\"selectOrder\"]').dispatchEvent(new Event('change', {bubbles: true}))",
     );
 
-    $order = H::scriptArray($page,
+    $order = H::scriptArray(
+        $page,
         "Array.from(document.querySelectorAll('#availablePlugins .pluginBox')).map((el) => el.getAttribute('data-name'))",
     );
 
-    expect($order)->toBe(['Apple Plugin', 'Mango Plugin', 'Zebra Plugin']);
+    expect($order)
+        ->toBe(['Apple Plugin', 'Mango Plugin', 'Zebra Plugin']);
 
     $page->assertNoJavaScriptErrors();
     H::assertNoServerErrors($page, 'plugins_new sortElements by name');

@@ -14,17 +14,31 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * route, never the client-side activity-list build/pagination/filter-
  * panel JS this file owns).
  *
- * Every real login (every `H::asAdmin()` call in this whole suite) writes
- * a real 'user'/'login' activity row, so `lineConstructor()`'s own client
- * merge-and-render is exercised for real on every test here -- no
- * synthetic fixture needed, and no assertion depends on an exact row
- * count (the fixture grows across the whole suite's run).
+ * A real login through this suite's own auth flow can NEVER produce the
+ * row this test needs: ActivityService::record()'s own `$performedBy`
+ * read happens before AuthService::login() updates CurrentUser/$_SESSION
+ * to the just-authenticated identity, so every real 'user'/'login' row's
+ * performedBy is whoever the request started as (guest) -- confirmed
+ * live, every real login logged during a full suite run shows
+ * performedByUsername "guest", never "fixture_admin". The fixture's own
+ * two 'user'/'login' rows for fixture_admin (activity_id 3/4 in
+ * tests/Fixtures/piwigo-17.0.sql) are written directly via SQL, bypassing
+ * that code path entirely -- this test's real precondition is that ONE
+ * of those two rows is still within the page's own
+ * ACTIVITY_DISPLAY_PAGE_SIZE (100) most-recent rows, which a long
+ * full-suite run's own accumulated activity eventually pushes past.
+ * Seeding a fresh row the same way the fixture does (not through a real
+ * login) is the only way to make this deterministic.
  *
  * `.selectize()` (user/action filter dropdowns, P49-B group 6) stays
  * jQuery; only the DOM work around it (reading its own rendered
  * `.selectize-input`/`.item[data-value]` markup) converted.
  */
 it('renders at least the real login activity line with the expected login classes and username', function (): void {
+    $db = H::connect();
+    H::dbQuery($db, "INSERT INTO activity (object, object_id, action, performed_by, session_idx, ip_address, occured_on, user_id) VALUES ('user', 1, 'login', 1, 'user_activity_interaction_test', '::1', NOW(), 1)");
+    H::dbClose($db);
+
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=user_activity');
 

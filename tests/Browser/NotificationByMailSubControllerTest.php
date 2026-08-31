@@ -156,7 +156,8 @@ it('auto-grows the complementary-mail-content textarea as multi-line text is typ
 
     $grownHeight = H::scriptInt($page, "document.getElementById('complementary_mail_content').offsetHeight");
 
-    expect($grownHeight)->toBeGreaterThan($initialHeight);
+    expect($grownHeight)
+        ->toBeGreaterThan($initialHeight);
 
     $page->assertNoJavaScriptErrors();
     H::assertNoServerErrors($page, 'notification_by_mail autogrow textarea');

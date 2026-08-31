@@ -27,14 +27,37 @@ it('accepts a plugins_new_order AJAX request and exits immediately with an empty
 });
 
 it('toggles the admin theme via change_theme and redirects back', function (): void {
-    $page = H::asAdmin($this);
+    // admin_theme is persisted to user_infos.preferences (PreferencesService::
+    // updateParam()'s own real DB write, same column AdminRomaThemeTest.php's
+    // own docblock documents), not scoped to this test's session -- leaving
+    // it toggled (to whatever roma/clear it lands on) would render every
+    // later admin test under a random theme. Confirmed live: this test's own
+    // missing restore left admin_theme=roma stuck for the rest of a full
+    // suite run, breaking CatListInteractionTest's own hard-coded hover
+    // color assertion (roma's stylesheet forces `.categoryBox`'s background
+    // with !important, defeating the JS's plain inline hover style) --
+    // snapshot/restore the same way AdminRomaThemeTest.php does.
+    $db = H::connect();
+    $before = H::dbFetchAssoc($db, 'SELECT preferences FROM user_infos WHERE user_id = 1');
+    $original = is_string($before['preferences'] ?? null) ? $before['preferences'] : '{}';
 
-    $result = H::rawGet($page, '/admin.php?page=intro&change_theme=1');
+    try {
+        $page = H::asAdmin($this);
 
-    // redirectService->redirect() is a real Location header -- opaque
-    // under fetch(manual), status always 0 (see this suite's own
-    // empty_caddie test for the same Fetch API caveat).
-    expect($result['status'])->toBe(0);
+        $result = H::rawGet($page, '/admin.php?page=intro&change_theme=1');
+
+        // redirectService->redirect() is a real Location header -- opaque
+        // under fetch(manual), status always 0 (see this suite's own
+        // empty_caddie test for the same Fetch API caveat).
+        expect($result['status'])->toBe(0);
+    } finally {
+        H::dbQuery(
+            $db,
+            "UPDATE user_infos SET preferences = '" . H::dbEscape($db, $original) . "' WHERE user_id = 1"
+        );
+        H::dbClose($db);
+        H::markSharedSessionDirty();
+    }
 });
 
 it('resolves the plugin-X page-slug alias to page=plugin&section=X/admin.php', function (): void {

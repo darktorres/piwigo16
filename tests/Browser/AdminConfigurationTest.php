@@ -700,16 +700,27 @@ it('renders the sizes tab', function (): void {
 });
 
 it('sizes tab: restore_settings resets derivative params to Piwigo defaults', function (): void {
-    $page = H::asAdmin($this);
-    H::navigateOk($page, ctConfigSection('sizes'));
-    $token = H::pwgToken($page);
+    // Unlike every other "sizes tab" test in this file, restore_settings
+    // really does overwrite every derivative_settings/derivative_size row
+    // to Piwigo's own hardcoded defaults, not the fixture's own baseline
+    // -- every sibling test in this file snapshots/restores around a
+    // config-mutating action, this one didn't.
+    $snapshot = H::snapshotDerivativeConfig();
 
-    $result = H::adminPost($page, '/admin.php?page=configuration&section=sizes&action=restore_settings', [
-        'pwg_token' => $token,
-    ]);
+    try {
+        $page = H::asAdmin($this);
+        H::navigateOk($page, ctConfigSection('sizes'));
+        $token = H::pwgToken($page);
 
-    expect($result['status'])->toBe(200);
-    expect($result['body'])->not->toContain('Fatal error');
+        $result = H::adminPost($page, '/admin.php?page=configuration&section=sizes&action=restore_settings', [
+            'pwg_token' => $token,
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Fatal error');
+    } finally {
+        H::restoreDerivativeConfig($snapshot);
+    }
 });
 
 it('sizes tab: saves every derivative type with valid ascending sizes', function (): void {

@@ -6,6 +6,35 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { ajax, type AjaxThenable } from "../../../default/js/vendor/ajax";
+import {
+  addClass,
+  animate,
+  append,
+  attr,
+  attrOf,
+  css,
+  data,
+  delay,
+  fadeIn,
+  fadeOut,
+  find,
+  hasClass,
+  hide,
+  html,
+  htmlOf,
+  is,
+  off,
+  on,
+  parseHtml,
+  ready,
+  removeAttr,
+  removeClass,
+  setChecked,
+  setVal,
+  show,
+  trigger,
+  val,
+} from "../../../default/js/vendor/dom";
 export {};
 
 // The real `GET /api/v1/users` per-row shape (P47) -- `current_users`/
@@ -36,6 +65,12 @@ interface GroupOption {
   value: number;
   label: string;
   isSelected: boolean;
+}
+
+function siblingsOf(el: Element): Element[] {
+  const parent = el.parentElement;
+  if (parent === null) return [];
+  return Array.from(parent.children).filter((child) => child !== el);
 }
 
 const color_icons = [
@@ -75,8 +110,8 @@ Escape of pop-in
 ----------------*/
 
 //get out of pop in via escape key
-$(document).on("keydown", function (e) {
-  if (e.keyCode === 27) {
+on(document, "keydown", function (e: Event) {
+  if ((e as KeyboardEvent).keyCode === 27) {
     // ESC button
     hide_modals();
     close_user_list();
@@ -95,6 +130,7 @@ $(document).on("keydown", function (e) {
 Group Selectize
 ----------------*/
 
+// Still jQuery: selectize is a library, ported in P49-B group 6.
 jQuery("[data-selectize=groups]").selectize({
   valueField: "value",
   labelField: "label",
@@ -102,11 +138,12 @@ jQuery("[data-selectize=groups]").selectize({
   plugins: ["remove_button"],
 });
 
+// Still jQuery: selectize is a library, ported in P49-B group 6.
 const groupSelectize = jQuery("[data-selectize=groups]")[0]!
   .selectize as Selectize.IApi<string | number, GroupOption>;
 const groupGuestSelectize = jQuery("[data-selectize=groups]")[1]!
   .selectize as Selectize.IApi<string | number, GroupOption>;
-const groupAddUserSelectize = $("[data-selectize=groups]")[2]!
+const groupAddUserSelectize = jQuery("[data-selectize=groups]")[2]!
   .selectize as Selectize.IApi<string | number, GroupOption>;
 
 /*-----------------
@@ -114,140 +151,195 @@ OnClick functions
 -----------------*/
 function open_user_list() {
   hide_temporary_messages();
-  $("#UserList").fadeIn();
+  fadeIn(document.querySelectorAll("#UserList"));
 }
 
 function close_user_list() {
   hide_temporary_messages();
-  $("#result_send_mail_copy_input").val("");
-  $("#UserList").fadeOut();
+  setVal(document.querySelectorAll("#result_send_mail_copy_input"), "");
+  fadeOut(document.querySelectorAll("#UserList"));
 }
 
 function open_guest_user_list() {
   hide_temporary_messages();
-  $("#GuestUserList").fadeIn();
+  fadeIn(document.querySelectorAll("#GuestUserList"));
 }
 
 function close_guest_user_list() {
   hide_temporary_messages();
-  $("#GuestUserList").fadeOut();
+  fadeOut(document.querySelectorAll("#GuestUserList"));
 }
 
 function isSelectionMode() {
-  return $("#toggleSelectionMode").is(":checked");
+  return is(document.querySelectorAll("#toggleSelectionMode"), ":checked");
 }
 
-$(document).ready(function () {
-  $(".user-property-register").tipTip({
+ready(function () {
+  // Still jQuery: tipTip is a library, ported in P49-B group 2.
+  jQuery(".user-property-register").tipTip({
     maxWidth: "300px",
     delay: 0,
     fadeIn: 200,
     fadeOut: 200,
   });
-  $(".user-property-last-visit").tipTip({
+  // Still jQuery: tipTip is a library, ported in P49-B group 2.
+  jQuery(".user-property-last-visit").tipTip({
     maxWidth: "300px",
     delay: 0,
     fadeIn: 200,
     fadeOut: 200,
   });
-  $(".advanced-filter-level select option").eq(1).remove();
+  document
+    .querySelectorAll(".advanced-filter-level select option")
+    .item(1)
+    ?.remove();
 
   /* Edit Password */
-  $(".button-edit-password-icon").click(function () {
-    reset_password_modals();
-    $(".user-property-password-change").fadeIn();
-  });
+  on(
+    document.querySelectorAll(".button-edit-password-icon"),
+    "click",
+    function () {
+      reset_password_modals();
+      fadeIn(document.querySelectorAll(".user-property-password-change"));
+    },
+  );
 
-  $(".edit-password-cancel").click(function () {
-    $(".user-property-password-change").fadeOut();
+  on(document.querySelectorAll(".edit-password-cancel"), "click", function () {
+    fadeOut(document.querySelectorAll(".user-property-password-change"));
     reset_input_password();
   });
 
-  $(".icon-show-password").on("click", function () {
-    const icon = $(this);
-    const closestInput = icon.siblings();
-    if (closestInput.attr("type") === "password") {
-      closestInput.attr("type", "text");
-      icon.removeClass("icon-eye").addClass("icon-eye-off");
-    } else {
-      closestInput.attr("type", "password");
-      icon.removeClass("icon-eye-off").addClass("icon-eye");
-    }
-  });
+  on(
+    document.querySelectorAll(".icon-show-password"),
+    "click",
+    function (this: Element) {
+      const closestInput = siblingsOf(this)[0];
+      if (closestInput === undefined) return;
+      if (attrOf(closestInput, "type") === "password") {
+        attr(closestInput, "type", "text");
+        removeClass(this, "icon-eye");
+        addClass(this, "icon-eye-off");
+      } else {
+        attr(closestInput, "type", "password");
+        removeClass(this, "icon-eye-off");
+        addClass(this, "icon-eye");
+      }
+    },
+  );
 
   // Password input onkeyup clear error
-  $("#edit_user_password, #edit_user_conf_password").on("keyup", function () {
-    hide_error_edit_user();
-  });
+  on(
+    document.querySelectorAll("#edit_user_password, #edit_user_conf_password"),
+    "keyup",
+    function () {
+      hide_error_edit_user();
+    },
+  );
 
   /* Edit Username */
-  $(".edit-username").click(function () {
-    $(".user-property-username-change").show();
+  on(document.querySelectorAll(".edit-username"), "click", function () {
+    show(document.querySelectorAll(".user-property-username-change"));
   });
 
-  $(".edit-username-cancel").click(function () {
+  on(document.querySelectorAll(".edit-username-cancel"), "click", function () {
     //possibly reset input value
-    $(".user-property-username-change").hide();
+    hide(document.querySelectorAll(".user-property-username-change"));
   });
 
-  $("#UserList .close-update-button").click(close_user_list);
-  $(".CloseUserList").click(close_user_list);
+  on(
+    document.querySelectorAll("#UserList .close-update-button"),
+    "click",
+    close_user_list,
+  );
+  on(document.querySelectorAll(".CloseUserList"), "click", close_user_list);
 
-  $("#toggleSelectionMode").prop("checked", false);
-  $("#toggleSelectionMode").click(function () {
-    const isSelection = $(this).is(":checked");
+  setChecked(document.querySelectorAll("#toggleSelectionMode"), false);
+  on(document.querySelectorAll("#toggleSelectionMode"), "click", function () {
+    const isSelection = is(
+      document.querySelectorAll("#toggleSelectionMode"),
+      ":checked",
+    );
     selectionMode(isSelection);
   });
-  $(".edit-guest-user-button").click(open_guest_user_list);
-  $(".CloseGuestUserList").click(close_guest_user_list);
-  $("#GuestUserList .close-update-button").click(close_guest_user_list);
+  on(
+    document.querySelectorAll(".edit-guest-user-button"),
+    "click",
+    open_guest_user_list,
+  );
+  on(
+    document.querySelectorAll(".CloseGuestUserList"),
+    "click",
+    close_guest_user_list,
+  );
+  on(
+    document.querySelectorAll("#GuestUserList .close-update-button"),
+    "click",
+    close_guest_user_list,
+  );
   /* Action */
-  jQuery("[id^=action_]").hide();
+  hide(document.querySelectorAll("[id^=action_]"));
 
-  jQuery("select[name=selectAction]").change(function () {
-    jQuery("#applyActionBlock .infos").hide();
-    jQuery("[id^=action_]").hide();
-    jQuery("#action_" + $(this).prop("value")).show();
-    if (jQuery(this).val() != -1) {
-      jQuery("#applyActionBlock").show();
-    } else {
-      jQuery("#applyActionBlock").hide();
+  on(
+    document.querySelectorAll("select[name=selectAction]"),
+    "change",
+    function (this: Element) {
+      hide(document.querySelectorAll("#applyActionBlock .infos"));
+      hide(document.querySelectorAll("[id^=action_]"));
+      show(
+        document.querySelectorAll(
+          "#action_" + (this as HTMLSelectElement).value,
+        ),
+      );
+      if (val(this) != "-1") {
+        show(document.querySelectorAll("#applyActionBlock"));
+      } else {
+        hide(document.querySelectorAll("#applyActionBlock"));
+      }
+    },
+  );
+  const yesNoCheckboxes = document.querySelectorAll(
+    ".yes_no_radio .user-list-checkbox",
+  );
+  off(yesNoCheckboxes, "click");
+  on(yesNoCheckboxes, "click", function (this: Element) {
+    if (attrOf(this, "data-selected") !== "1") {
+      attr(this, "data-selected", "1");
+      siblingsOf(this).forEach((sibling) => {
+        attr(sibling, "data-selected", "0");
+      });
     }
   });
-  $(".yes_no_radio .user-list-checkbox")
-    .unbind("click")
-    .click(function () {
-      if ($(this).attr("data-selected") !== "1") {
-        $(this).attr("data-selected", "1");
-        $(this).siblings().attr("data-selected", "0");
-      }
-    });
-  $(".EditUserGenPassword").on("click", function () {
+  on(document.querySelectorAll(".EditUserGenPassword"), "click", function () {
     const password = gen_password();
-    $("#edit_user_password").val(password);
-    $("#edit_user_conf_password").val(password);
+    setVal(document.querySelectorAll("#edit_user_password"), password);
+    setVal(document.querySelectorAll("#edit_user_conf_password"), password);
     hide_error_edit_user();
   });
-  $(".AddUserGenPassword span").on("click", function () {
-    const password = gen_password();
-    $("#add_user_pass").val(password);
-    $("#add_user_confpass").val(password);
-  });
-  $(".AddUserSubmit").click(add_user);
-  $(".AddUserCancel").click(add_user_close);
-  $(".CloseAddUser").click(add_user_close);
+  on(
+    document.querySelectorAll(".AddUserGenPassword span"),
+    "click",
+    function () {
+      const password = gen_password();
+      setVal(document.querySelectorAll("#add_user_pass"), password);
+      setVal(document.querySelectorAll("#add_user_confpass"), password);
+    },
+  );
+  on(document.querySelectorAll(".AddUserSubmit"), "click", add_user);
+  on(document.querySelectorAll(".AddUserCancel"), "click", add_user_close);
+  on(document.querySelectorAll(".CloseAddUser"), "click", add_user_close);
 
   //open add user pop in
-  $(".add-user-button").click(add_user_open);
+  on(document.querySelectorAll(".add-user-button"), "click", add_user_open);
 
   /* Select */
 
-  jQuery("#selectSet").click(function () {
+  on(document.querySelectorAll("#selectSet"), "click", function (e: Event) {
     select_whole_set();
+    e.preventDefault();
     return false;
   });
 
-  jQuery("#selectAllPage").click(function () {
+  on(document.querySelectorAll("#selectAllPage"), "click", function (e: Event) {
     const selection_ids = selection.map((x) => x.id);
     for (let i = 0; i < current_users.length; i++) {
       if (!selection_ids.includes(current_users[i]!.id)) {
@@ -258,16 +350,18 @@ $(document).ready(function () {
       }
     }
     update_selection_content();
+    e.preventDefault();
     return false;
   });
 
-  jQuery("#selectNone").click(function () {
+  on(document.querySelectorAll("#selectNone"), "click", function (e: Event) {
     selection = [];
     update_selection_content();
+    e.preventDefault();
     return false;
   });
 
-  jQuery("#selectInvert").click(function () {
+  on(document.querySelectorAll("#selectInvert"), "click", function (e: Event) {
     const selection_ids = selection.map((x) => x.id);
     for (let i = 0; i < current_users.length; i++) {
       if (selection_ids.includes(current_users[i]!.id)) {
@@ -283,53 +377,71 @@ $(document).ready(function () {
       }
     }
     update_selection_content();
+    e.preventDefault();
     return false;
   });
 
-  $("#permitActionUserList select[name=selectAction]").val("-1");
+  setVal(
+    document.querySelectorAll(
+      "#permitActionUserList select[name=selectAction]",
+    ),
+    "-1",
+  );
 
-  $(".advanced-filter-btn").click(advanced_filter_button_click);
-  $(".advanced-filter span.icon-cancel").click(advanced_filter_hide);
-  $(".advanced-filter-select").change(update_user_list);
-  $("#user_search").on("input", update_user_list);
+  on(
+    document.querySelectorAll(".advanced-filter-btn"),
+    "click",
+    advanced_filter_button_click,
+  );
+  on(
+    document.querySelectorAll(".advanced-filter span.icon-cancel"),
+    "click",
+    advanced_filter_hide,
+  );
+  on(
+    document.querySelectorAll(".advanced-filter-select"),
+    "change",
+    update_user_list,
+  );
+  on(document.querySelectorAll("#user_search"), "input", update_user_list);
 
   /*View manager*/
 
-  if ($("#displayCompact").is(":checked")) {
+  if (is(document.querySelectorAll("#displayCompact"), ":checked")) {
     setDisplayCompact();
   }
 
-  if ($("#displayLine").is(":checked")) {
+  if (is(document.querySelectorAll("#displayLine"), ":checked")) {
     setDisplayLine();
   }
 
-  if ($("#displayTile").is(":checked")) {
+  if (is(document.querySelectorAll("#displayTile"), ":checked")) {
     setDisplayTile();
   }
 
-  $("#displayCompact").change(function () {
+  on(document.querySelectorAll("#displayCompact"), "change", function () {
     setDisplayCompact();
 
-    if ($(".addAlbum").hasClass("input-mode")) {
-      $(".addAlbum p").hide();
+    if (hasClass(document.querySelectorAll(".addAlbum"), "input-mode")) {
+      hide(document.querySelectorAll(".addAlbum p"));
     }
     set_view_selector("compact");
   });
 
-  $("#displayLine").change(function () {
+  on(document.querySelectorAll("#displayLine"), "change", function () {
     setDisplayLine();
 
-    if ($(".addAlbum").hasClass("input-mode")) {
-      $(".addAlbum p").hide();
+    if (hasClass(document.querySelectorAll(".addAlbum"), "input-mode")) {
+      hide(document.querySelectorAll(".addAlbum p"));
     }
     set_view_selector("line");
   });
 
-  $("#displayTile").change(function () {
+  on(document.querySelectorAll("#displayTile"), "change", function () {
     setDisplayTile();
 
-    if ($(".addAlbum").hasClass("input-mode")) {
-      $(".addAlbum p").show();
+    if (hasClass(document.querySelectorAll(".addAlbum"), "input-mode")) {
+      show(document.querySelectorAll(".addAlbum p"));
     }
     set_view_selector("tile");
   });
@@ -338,30 +450,78 @@ $(document).ready(function () {
 
   switch (pagination) {
     case "5":
-      $("#pagination-per-page-5").addClass("selected-pagination");
-      $("#pagination-per-page-10").removeClass("selected-pagination");
-      $("#pagination-per-page-25").removeClass("selected-pagination");
-      $("#pagination-per-page-50").removeClass("selected-pagination");
+      addClass(
+        document.querySelectorAll("#pagination-per-page-5"),
+        "selected-pagination",
+      );
+      removeClass(
+        document.querySelectorAll("#pagination-per-page-10"),
+        "selected-pagination",
+      );
+      removeClass(
+        document.querySelectorAll("#pagination-per-page-25"),
+        "selected-pagination",
+      );
+      removeClass(
+        document.querySelectorAll("#pagination-per-page-50"),
+        "selected-pagination",
+      );
       break;
     case "10":
-      $("#pagination-per-page-5").removeClass("selected-pagination");
-      $("#pagination-per-page-10").addClass("selected-pagination");
-      $("#pagination-per-page-25").removeClass("selected-pagination");
-      $("#pagination-per-page-50").removeClass("selected-pagination");
+      removeClass(
+        document.querySelectorAll("#pagination-per-page-5"),
+        "selected-pagination",
+      );
+      addClass(
+        document.querySelectorAll("#pagination-per-page-10"),
+        "selected-pagination",
+      );
+      removeClass(
+        document.querySelectorAll("#pagination-per-page-25"),
+        "selected-pagination",
+      );
+      removeClass(
+        document.querySelectorAll("#pagination-per-page-50"),
+        "selected-pagination",
+      );
 
       break;
     case "25":
-      $("#pagination-per-page-5").removeClass("selected-pagination");
-      $("#pagination-per-page-10").removeClass("selected-pagination");
-      $("#pagination-per-page-25").addClass("selected-pagination");
-      $("#pagination-per-page-50").removeClass("selected-pagination");
+      removeClass(
+        document.querySelectorAll("#pagination-per-page-5"),
+        "selected-pagination",
+      );
+      removeClass(
+        document.querySelectorAll("#pagination-per-page-10"),
+        "selected-pagination",
+      );
+      addClass(
+        document.querySelectorAll("#pagination-per-page-25"),
+        "selected-pagination",
+      );
+      removeClass(
+        document.querySelectorAll("#pagination-per-page-50"),
+        "selected-pagination",
+      );
 
       break;
     case "50":
-      $("#pagination-per-page-5").removeClass("selected-pagination");
-      $("#pagination-per-page-10").removeClass("selected-pagination");
-      $("#pagination-per-page-25").removeClass("selected-pagination");
-      $("#pagination-per-page-50").addClass("selected-pagination");
+      removeClass(
+        document.querySelectorAll("#pagination-per-page-5"),
+        "selected-pagination",
+      );
+      removeClass(
+        document.querySelectorAll("#pagination-per-page-10"),
+        "selected-pagination",
+      );
+      removeClass(
+        document.querySelectorAll("#pagination-per-page-25"),
+        "selected-pagination",
+      );
+      addClass(
+        document.querySelectorAll("#pagination-per-page-50"),
+        "selected-pagination",
+      );
       break;
     default:
       break;
@@ -371,60 +531,62 @@ $(document).ready(function () {
 
   if (has_group) {
     advanced_filter_button_click();
-    $("select[name='filter_group']").val(has_group);
+    setVal(document.querySelectorAll("select[name='filter_group']"), has_group);
     update_user_list();
   }
 
-  $(".search-cancel").on("click", function () {
-    $(".search-input").val("");
-    $(".search-input").trigger("input");
+  on(document.querySelectorAll(".search-cancel"), "click", function () {
+    setVal(document.querySelectorAll(".search-input"), "");
+    trigger(document.querySelectorAll(".search-input"), "input");
   });
 
-  $(".search-input").on("input", function () {
-    if ($(".search-input").val() == "") {
-      $(".search-cancel").hide();
+  on(document.querySelectorAll(".search-input"), "input", function () {
+    if (val(document.querySelectorAll(".search-input")) == "") {
+      hide(document.querySelectorAll(".search-cancel"));
     } else {
-      $(".search-cancel").show();
+      show(document.querySelectorAll(".search-cancel"));
     }
   });
   // Filter by id (registered) and username
-  const icon_user = $("#icon-usr-list-user");
-  const icon_registered = $("#icon-usr-list-registered");
-  $("#usr-list-registered").on("click", function () {
-    icon_user.css("display", "none");
-    icon_registered.css("display", "block");
-    icon_user.attr("class", "icon-down");
+  const icon_user = document.querySelectorAll("#icon-usr-list-user");
+  const icon_registered = document.querySelectorAll(
+    "#icon-usr-list-registered",
+  );
+  on(document.querySelectorAll("#usr-list-registered"), "click", function () {
+    css(icon_user, "display", "none");
+    css(icon_registered, "display", "block");
+    attr(icon_user, "class", "icon-down");
     switch (filter_by) {
       case "id DESC":
-        icon_registered.attr("class", "icon-down");
+        attr(icon_registered, "class", "icon-down");
         filter_by = "id ASC";
         break;
       case "id ASC":
-        icon_registered.attr("class", "icon-up");
+        attr(icon_registered, "class", "icon-up");
         filter_by = "id DESC";
         break;
       default:
-        icon_registered.attr("class", "icon-up");
+        attr(icon_registered, "class", "icon-up");
         filter_by = "id DESC";
         break;
     }
     update_user_list();
   });
-  $("#usr-list-user").on("click", function () {
-    icon_registered.css("display", "none");
-    icon_user.css("display", "block");
-    icon_registered.attr("class", "icon-up");
+  on(document.querySelectorAll("#usr-list-user"), "click", function () {
+    css(icon_registered, "display", "none");
+    css(icon_user, "display", "block");
+    attr(icon_registered, "class", "icon-up");
     switch (filter_by) {
       case "username DESC":
-        icon_user.attr("class", "icon-down");
+        attr(icon_user, "class", "icon-down");
         filter_by = "username ASC";
         break;
       case "username ASC":
-        icon_user.attr("class", "icon-up");
+        attr(icon_user, "class", "icon-up");
         filter_by = "username DESC";
         break;
       default:
-        icon_user.attr("class", "icon-down");
+        attr(icon_user, "class", "icon-down");
         filter_by = "username ASC";
         break;
     }
@@ -434,52 +596,65 @@ $(document).ready(function () {
   /* tabsheet pop in user */
   editTabsBind();
 
-  $(".edit-user-slides").on("scroll", function () {
-    const slides = $(".edit-user-slides").children();
-    const rectView = this.getBoundingClientRect();
-    $(".edit-user-tabsheet").removeClass("selected");
-    // for debug
-    // console.log('RECT REFERENCES left / right', rectView.left.toFixed(0), ' / ', rectView.right.toFixed(0));
-
-    slides.each(function () {
-      const rect = this.getBoundingClientRect();
+  on(
+    document.querySelectorAll(".edit-user-slides"),
+    "scroll",
+    function (this: Element) {
+      const slides = Array.from(this.children);
+      const rectView = this.getBoundingClientRect();
+      removeClass(document.querySelectorAll(".edit-user-tabsheet"), "selected");
       // for debug
-      // console.log('rect',$(this).attr('id'), ' left / right : ', rect.left, ' / ', rect.right);
-      if (
-        +rect.left.toFixed(0) >= +rectView.left.toFixed(0) - 1 &&
-        +rect.right.toFixed(0) <= +rectView.right.toFixed(0) + 1
-      ) {
-        const tabId = $(this).attr("id");
-        $("#name_" + tabId).addClass("selected");
-      }
-    });
-  });
+      // console.log('RECT REFERENCES left / right', rectView.left.toFixed(0), ' / ', rectView.right.toFixed(0));
+
+      slides.forEach((slide) => {
+        const rect = slide.getBoundingClientRect();
+        // for debug
+        // console.log('rect',$(this).attr('id'), ' left / right : ', rect.left, ' / ', rect.right);
+        if (
+          +rect.left.toFixed(0) >= +rectView.left.toFixed(0) - 1 &&
+          +rect.right.toFixed(0) <= +rectView.right.toFixed(0) + 1
+        ) {
+          const tabId = attrOf(slide, "id");
+          addClass(document.querySelectorAll("#name_" + tabId), "selected");
+        }
+      });
+    },
+  );
 
   /* tabsheet pop in guest */
-  $(".guest-edit-user-tabsheet")
-    .off("click")
-    .on("click", function () {
-      const tabName = $(this).attr("id")!.split("_");
-      const tabId = tabName[1] + "_" + tabName[2] + "_" + tabName[3];
-      $("#" + tabId)[0]!.scrollIntoView({
-        behavior: "smooth",
-      });
-    });
-  $(".guest-edit-user-slides").on("scroll", function () {
-    const slides = $(".guest-edit-user-slides").children();
-    const rectView = this.getBoundingClientRect();
-    $(".guest-edit-user-tabsheet").removeClass("selected");
-    slides.each(function () {
-      const rect = this.getBoundingClientRect();
-      if (
-        +rect.left.toFixed(0) >= +rectView.left.toFixed(0) - 1 &&
-        +rect.right.toFixed(0) <= +rectView.right.toFixed(0) + 1
-      ) {
-        const tabId = $(this).attr("id");
-        $("#name_" + tabId).addClass("selected");
-      }
+  const guestEditTabsheet = document.querySelectorAll(
+    ".guest-edit-user-tabsheet",
+  );
+  off(guestEditTabsheet, "click");
+  on(guestEditTabsheet, "click", function (this: Element) {
+    const tabName = attrOf(this, "id")!.split("_");
+    const tabId = tabName[1] + "_" + tabName[2] + "_" + tabName[3];
+    document.querySelector("#" + tabId)?.scrollIntoView({
+      behavior: "smooth",
     });
   });
+  on(
+    document.querySelectorAll(".guest-edit-user-slides"),
+    "scroll",
+    function (this: Element) {
+      const slides = Array.from(this.children);
+      const rectView = this.getBoundingClientRect();
+      removeClass(
+        document.querySelectorAll(".guest-edit-user-tabsheet"),
+        "selected",
+      );
+      slides.forEach((slide) => {
+        const rect = slide.getBoundingClientRect();
+        if (
+          +rect.left.toFixed(0) >= +rectView.left.toFixed(0) - 1 &&
+          +rect.right.toFixed(0) <= +rectView.right.toFixed(0) + 1
+        ) {
+          const tabId = attrOf(slide, "id");
+          addClass(document.querySelectorAll("#name_" + tabId), "selected");
+        }
+      });
+    },
+  );
 });
 
 function set_view_selector(view_type: string) {
@@ -495,37 +670,49 @@ function set_view_selector(view_type: string) {
 }
 
 function setDisplayTile() {
-  $(".user-container-wrapper")
-    .removeClass("compactView")
-    .removeClass("lineView")
-    .addClass("tileView");
-  $(".user-header-col").addClass("hide");
+  const wrapper = document.querySelectorAll(".user-container-wrapper");
+  removeClass(wrapper, "compactView");
+  removeClass(wrapper, "lineView");
+  addClass(wrapper, "tileView");
+  addClass(document.querySelectorAll(".user-header-col"), "hide");
 }
 
 function setDisplayLine() {
-  $(".user-container-wrapper")
-    .removeClass("tileView")
-    .removeClass("compactView")
-    .addClass("lineView");
-  $(".user-header-col").removeClass("hide");
+  const wrapper = document.querySelectorAll(".user-container-wrapper");
+  removeClass(wrapper, "tileView");
+  removeClass(wrapper, "compactView");
+  addClass(wrapper, "lineView");
+  removeClass(document.querySelectorAll(".user-header-col"), "hide");
 }
 
 function setDisplayCompact() {
-  $(".user-container-wrapper")
-    .removeClass("tileView")
-    .removeClass("lineView")
-    .addClass("compactView");
-  $(".user-header-col").addClass("hide");
+  const wrapper = document.querySelectorAll(".user-container-wrapper");
+  removeClass(wrapper, "tileView");
+  removeClass(wrapper, "lineView");
+  addClass(wrapper, "compactView");
+  addClass(document.querySelectorAll(".user-header-col"), "hide");
 
   if (per_page < 10) {
     per_page = 10;
     update_pagination_menu();
     update_user_list();
 
-    $("#pagination-per-page-5").removeClass("selected-pagination");
-    $("#pagination-per-page-10").addClass("selected-pagination");
-    $("#pagination-per-page-25").removeClass("selected-pagination");
-    $("#pagination-per-page-50").removeClass("selected-pagination");
+    removeClass(
+      document.querySelectorAll("#pagination-per-page-5"),
+      "selected-pagination",
+    );
+    addClass(
+      document.querySelectorAll("#pagination-per-page-10"),
+      "selected-pagination",
+    );
+    removeClass(
+      document.querySelectorAll("#pagination-per-page-25"),
+      "selected-pagination",
+    );
+    removeClass(
+      document.querySelectorAll("#pagination-per-page-50"),
+      "selected-pagination",
+    );
   }
 }
 
@@ -533,29 +720,31 @@ function setDisplayCompact() {
 Checkboxes
 ----------------*/
 
-function checkbox_change(this: HTMLElement) {
-  if ($(this).attr("data-selected") == "1") {
-    $(this).find("i").hide();
+function checkbox_change(this: Element) {
+  if (attrOf(this, "data-selected") == "1") {
+    hide(find(this, "i"));
   } else {
-    $(this).find("i").show();
+    show(find(this, "i"));
   }
 }
 
-function checkbox_click(this: HTMLElement) {
-  if ($(this).attr("data-selected") == "1") {
-    $(this).attr("data-selected", "0");
-    $(this).find("i").hide();
+function checkbox_click(this: Element) {
+  if (attrOf(this, "data-selected") == "1") {
+    attr(this, "data-selected", "0");
+    hide(find(this, "i"));
   } else {
-    $(this).attr("data-selected", "1");
-    $(this).find("i").show();
+    attr(this, "data-selected", "1");
+    show(find(this, "i"));
   }
 }
 
-$(".user-list-checkbox").unbind("change").change(checkbox_change);
-$(".user-list-checkbox").unbind("click").click(checkbox_click);
+off(document.querySelectorAll(".user-list-checkbox"), "change");
+on(document.querySelectorAll(".user-list-checkbox"), "change", checkbox_change);
+off(document.querySelectorAll(".user-list-checkbox"), "click");
+on(document.querySelectorAll(".user-list-checkbox"), "click", checkbox_click);
 
 /* ---------------
-User edit sliders 
+User edit sliders
 ----------------*/
 const nb_image_page_values = [
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
@@ -598,6 +787,10 @@ function getRecentPeriodInfoFromIdx(idx: number) {
   //return recent_period_values[idx].toString();
 }
 
+// Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
+// Every `.slider(...)` call/read below stays jQuery for the same
+// reason -- this whole section wraps a still-unported library.
+
 /* Photos bar slider */
 jQuery("#UserList .photos-select-bar .slider-bar-container").slider({
   range: "min",
@@ -605,19 +798,34 @@ jQuery("#UserList .photos-select-bar .slider-bar-container").slider({
   max: nb_image_page_values.length - 1,
   value: nb_image_page_init,
   change: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    $("#UserList .photos-select-bar .nb-img-page-infos").html(
+    html(
+      document.querySelectorAll(
+        "#UserList .photos-select-bar .nb-img-page-infos",
+      ),
       getNbImagePageInfoFromIdx(ui.value!),
     );
   },
   slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    $("#UserList .photos-select-bar .nb-img-page-infos").html(
+    html(
+      document.querySelectorAll(
+        "#UserList .photos-select-bar .nb-img-page-infos",
+      ),
       getNbImagePageInfoFromIdx(ui.value!),
     );
   },
   stop: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    $("#UserList .photos-select-bar input[name=nb_image_page]")
-      .val(nb_image_page_values[ui.value!]!)
-      .trigger("change");
+    setVal(
+      document.querySelectorAll(
+        "#UserList .photos-select-bar input[name=nb_image_page]",
+      ),
+      String(nb_image_page_values[ui.value!]!),
+    );
+    // Stays jQuery: `.trigger("change")` here reaches selectize/other
+    // still-jQuery listeners only through jQuery's own event system --
+    // same asymmetry already documented elsewhere in this campaign.
+    jQuery("#UserList .photos-select-bar input[name=nb_image_page]").trigger(
+      "change",
+    );
   },
 });
 
@@ -627,23 +835,38 @@ jQuery("#GuestUserList .photos-select-bar .slider-bar-container").slider({
   max: nb_image_page_values.length - 1,
   value: nb_image_page_init,
   change: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    $("#GuestUserList .photos-select-bar .nb-img-page-infos").html(
+    html(
+      document.querySelectorAll(
+        "#GuestUserList .photos-select-bar .nb-img-page-infos",
+      ),
       getNbImagePageInfoFromIdx(ui.value!),
     );
   },
   slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    $("#GuestUserList .photos-select-bar .nb-img-page-infos").html(
+    html(
+      document.querySelectorAll(
+        "#GuestUserList .photos-select-bar .nb-img-page-infos",
+      ),
       getNbImagePageInfoFromIdx(ui.value!),
     );
   },
   stop: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    $("#GuestUserList .photos-select-bar input[name=nb_image_page]")
-      .val(nb_image_page_values[ui.value!]!)
-      .trigger("change");
+    setVal(
+      document.querySelectorAll(
+        "#GuestUserList .photos-select-bar input[name=nb_image_page]",
+      ),
+      String(nb_image_page_values[ui.value!]!),
+    );
+    jQuery(
+      "#GuestUserList .photos-select-bar input[name=nb_image_page]",
+    ).trigger("change");
   },
 });
 
-$("#permitActionUserList .photos-select-bar .nb-img-page-infos").html(
+html(
+  document.querySelectorAll(
+    "#permitActionUserList .photos-select-bar .nb-img-page-infos",
+  ),
   getNbImagePageInfoFromIdx(0),
 );
 jQuery("#permitActionUserList .photos-select-bar .slider-bar-container").slider(
@@ -653,96 +876,149 @@ jQuery("#permitActionUserList .photos-select-bar .slider-bar-container").slider(
     max: nb_image_page_values.length - 1,
     value: nb_image_page_init,
     change: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-      $("#permitActionUserList .photos-select-bar .nb-img-page-infos").html(
+      html(
+        document.querySelectorAll(
+          "#permitActionUserList .photos-select-bar .nb-img-page-infos",
+        ),
         getNbImagePageInfoFromIdx(ui.value!),
       );
     },
     slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-      $("#permitActionUserList .photos-select-bar .nb-img-page-infos").html(
+      html(
+        document.querySelectorAll(
+          "#permitActionUserList .photos-select-bar .nb-img-page-infos",
+        ),
         getNbImagePageInfoFromIdx(ui.value!),
       );
     },
     stop: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-      $("#permitActionUserList .photos-select-bar input[name=nb_image_page]")
-        .val(nb_image_page_values[ui.value!]!)
-        .trigger("change");
+      setVal(
+        document.querySelectorAll(
+          "#permitActionUserList .photos-select-bar input[name=nb_image_page]",
+        ),
+        String(nb_image_page_values[ui.value!]!),
+      );
+      jQuery(
+        "#permitActionUserList .photos-select-bar input[name=nb_image_page]",
+      ).trigger("change");
     },
   },
 );
 
 /* recent_period slider */
-$("#UserList .period-select-bar .slider-bar-container").slider({
+jQuery("#UserList .period-select-bar .slider-bar-container").slider({
   range: "min",
   min: 0,
   max: recent_period_values.length - 1,
   value: recent_period_init,
   change: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    $("#UserList .period-select-bar .recent_period_infos").html(
+    html(
+      document.querySelectorAll(
+        "#UserList .period-select-bar .recent_period_infos",
+      ),
       getRecentPeriodInfoFromIdx(ui.value!),
     );
   },
   slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    $("#UserList .period-select-bar .recent_period_infos").html(
+    html(
+      document.querySelectorAll(
+        "#UserList .period-select-bar .recent_period_infos",
+      ),
       getRecentPeriodInfoFromIdx(ui.value!),
     );
   },
   stop: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    $("#UserList .period-select-bar input[name=recent_period]")
-      .val(recent_period_values[ui.value!]!)
-      .trigger("change");
+    setVal(
+      document.querySelectorAll(
+        "#UserList .period-select-bar input[name=recent_period]",
+      ),
+      String(recent_period_values[ui.value!]!),
+    );
+    jQuery("#UserList .period-select-bar input[name=recent_period]").trigger(
+      "change",
+    );
   },
 });
 
-$("#GuestUserList .period-select-bar .slider-bar-container").slider({
+jQuery("#GuestUserList .period-select-bar .slider-bar-container").slider({
   range: "min",
   min: 0,
   max: recent_period_values.length - 1,
   value: recent_period_init,
   change: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    $("#GuestUserList .period-select-bar .recent_period_infos").html(
+    html(
+      document.querySelectorAll(
+        "#GuestUserList .period-select-bar .recent_period_infos",
+      ),
       getRecentPeriodInfoFromIdx(ui.value!),
     );
   },
   slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    $("#GuestUserList .period-select-bar .recent_period_infos").html(
+    html(
+      document.querySelectorAll(
+        "#GuestUserList .period-select-bar .recent_period_infos",
+      ),
       getRecentPeriodInfoFromIdx(ui.value!),
     );
   },
   stop: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    $("#GuestUserList .period-select-bar input[name=recent_period]")
-      .val(recent_period_values[ui.value!]!)
-      .trigger("change");
+    setVal(
+      document.querySelectorAll(
+        "#GuestUserList .period-select-bar input[name=recent_period]",
+      ),
+      String(recent_period_values[ui.value!]!),
+    );
+    jQuery(
+      "#GuestUserList .period-select-bar input[name=recent_period]",
+    ).trigger("change");
   },
 });
 
-$("#permitActionUserList .period-select-bar .slider-bar-container").slider({
-  range: "min",
-  min: 0,
-  max: recent_period_values.length - 1,
-  value: recent_period_init,
-  change: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    $("#permitActionUserList .period-select-bar .recent_period_infos").html(
-      getRecentPeriodInfoFromIdx(ui.value!),
-    );
+jQuery("#permitActionUserList .period-select-bar .slider-bar-container").slider(
+  {
+    range: "min",
+    min: 0,
+    max: recent_period_values.length - 1,
+    value: recent_period_init,
+    change: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
+      html(
+        document.querySelectorAll(
+          "#permitActionUserList .period-select-bar .recent_period_infos",
+        ),
+        getRecentPeriodInfoFromIdx(ui.value!),
+      );
+    },
+    slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
+      html(
+        document.querySelectorAll(
+          "#permitActionUserList .period-select-bar .recent_period_infos",
+        ),
+        getRecentPeriodInfoFromIdx(ui.value!),
+      );
+    },
+    stop: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
+      setVal(
+        document.querySelectorAll(
+          "#permitActionUserList .period-select-bar input[name=recent_period]",
+        ),
+        String(recent_period_values[ui.value!]!),
+      );
+      jQuery(
+        "#permitActionUserList .period-select-bar input[name=recent_period]",
+      ).trigger("change");
+    },
   },
-  slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    $("#permitActionUserList .period-select-bar .recent_period_infos").html(
-      getRecentPeriodInfoFromIdx(ui.value!),
-    );
-  },
-  stop: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-    $("#permitActionUserList .period-select-bar input[name=recent_period]")
-      .val(recent_period_values[ui.value!]!)
-      .trigger("change");
-  },
-});
-$("#permitActionUserList .photos-select-bar .slider-bar-container").slider(
+);
+jQuery("#permitActionUserList .photos-select-bar .slider-bar-container").slider(
   "option",
   "value",
   0,
 );
 const period_info = getRecentPeriodInfoFromIdx(0);
-$("#permitActionUserList .period-select-bar .recent_period_infos").html(
+html(
+  document.querySelectorAll(
+    "#permitActionUserList .period-select-bar .recent_period_infos",
+  ),
   period_info,
 );
 
@@ -764,53 +1040,66 @@ function move_to_page(page: number) {
   update_user_list();
 }
 
-$(".pagination-arrow.rigth").on("click", () => {
+on(document.querySelectorAll(".pagination-arrow.rigth"), "click", () => {
   move_to_page(actual_page + 1);
 });
 
-$(".pagination-arrow.left").on("click", () => {
+on(document.querySelectorAll(".pagination-arrow.left"), "click", () => {
   move_to_page(actual_page - 1);
 });
 
-$(".pagination-per-page a").on("click", function () {
-  void ajax({
-    url: "api/v1/session/preferences/user-manager-pagination",
-    type: "PUT",
-    contentType: "application/json",
-    data: JSON.stringify({
-      value: String(parseInt($(this).html())),
-      isJson: false,
-    }),
-  });
+on(
+  document.querySelectorAll(".pagination-per-page a"),
+  "click",
+  function (this: Element) {
+    void ajax({
+      url: "api/v1/session/preferences/user-manager-pagination",
+      type: "PUT",
+      contentType: "application/json",
+      data: JSON.stringify({
+        value: String(parseInt(htmlOf(this) ?? "0")),
+        isJson: false,
+      }),
+    });
 
-  per_page = parseInt($(this).html());
-  actual_page = 1;
-  update_pagination_menu();
-  update_user_list();
+    per_page = parseInt(htmlOf(this) ?? "0");
+    actual_page = 1;
+    update_pagination_menu();
+    update_user_list();
 
-  $(this).parent().children("a").removeClass("selected-pagination");
+    const parent = this.parentElement;
+    if (parent !== null) {
+      removeClass(find(parent, "a"), "selected-pagination");
+    }
 
-  $(this).addClass("selected-pagination");
-});
+    addClass(this, "selected-pagination");
+  },
+);
 
 function append_pagination_item(page: number | null = null) {
+  const container = document.querySelector(".pagination-item-container");
+  if (container === null) return;
   if (page != null) {
-    const new_tag = $(page_item.replace(/%d/g, String(page)));
-    $(".pagination-item-container").append(new_tag);
+    const new_tag = parseHtml(page_item.replace(/%d/g, String(page)))[0]!;
+    container.appendChild(new_tag);
     if (actual_page == page) {
-      new_tag.addClass("actual");
+      addClass(new_tag, "actual");
     }
-    new_tag.on("click", () => {
-      move_to_page(new_tag.data("page") as number);
+    on(new_tag, "click", () => {
+      move_to_page(data(new_tag, "page") as number);
     });
   } else {
-    $(".pagination-item-container").append($(page_ellipsis));
+    container.appendChild(parseHtml(page_ellipsis)[0]!);
   }
 }
 
 function update_pagination_items() {
-  $(".pagination-item-container a").remove();
-  $(".pagination-item-container span").remove();
+  document.querySelectorAll(".pagination-item-container a").forEach((el) => {
+    el.remove();
+  });
+  document.querySelectorAll(".pagination-item-container span").forEach((el) => {
+    el.remove();
+  });
 
   append_pagination_item(1);
 
@@ -831,22 +1120,34 @@ function update_pagination_menu() {
   updateArrows();
   update_pagination_items();
   if (max_page <= 1) {
-    $(".pagination-container").hide();
+    hide(document.querySelectorAll(".pagination-container"));
   } else {
-    $(".pagination-container").show();
+    show(document.querySelectorAll(".pagination-container"));
   }
 }
 
 function updateArrows() {
   if (actual_page == 1) {
-    $(".pagination-arrow.left").addClass("unavailable");
+    addClass(
+      document.querySelectorAll(".pagination-arrow.left"),
+      "unavailable",
+    );
   } else {
-    $(".pagination-arrow.left").removeClass("unavailable");
+    removeClass(
+      document.querySelectorAll(".pagination-arrow.left"),
+      "unavailable",
+    );
   }
   if (actual_page == max_page) {
-    $(".pagination-arrow.rigth").addClass("unavailable");
+    addClass(
+      document.querySelectorAll(".pagination-arrow.rigth"),
+      "unavailable",
+    );
   } else {
-    $(".pagination-arrow.rigth").removeClass("unavailable");
+    removeClass(
+      document.querySelectorAll(".pagination-arrow.rigth"),
+      "unavailable",
+    );
   }
 }
 
@@ -855,7 +1156,12 @@ Advanced filter
 ------------------*/
 
 function advanced_filter_button_click() {
-  if (!$(".advanced-filter").hasClass("advanced-filter-open")) {
+  if (
+    !hasClass(
+      document.querySelectorAll(".advanced-filter"),
+      "advanced-filter-open",
+    )
+  ) {
     advanced_filter_show();
   } else {
     advanced_filter_hide();
@@ -864,11 +1170,15 @@ function advanced_filter_button_click() {
 }
 
 function advanced_filter_show() {
-  $(".advanced-filter-btn, .advanced-filter").addClass("advanced-filter-open");
+  addClass(
+    document.querySelectorAll(".advanced-filter-btn, .advanced-filter"),
+    "advanced-filter-open",
+  );
 }
 
 function advanced_filter_hide() {
-  $(".advanced-filter-btn, .advanced-filter").removeClass(
+  removeClass(
+    document.querySelectorAll(".advanced-filter-btn, .advanced-filter"),
     "advanced-filter-open",
   );
 }
@@ -882,13 +1192,15 @@ function getDateStr(date: string) {
 }
 
 function setupRegisterDates(register_dates: string[]) {
-  $(".advanced-filter .dates-select-bar .slider-bar-container").slider({
+  // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
+  jQuery(".advanced-filter .dates-select-bar .slider-bar-container").slider({
     range: true,
     min: 0,
     max: register_dates.length - 1,
     values: [0, register_dates.length - 1],
     change: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-      $(".advanced-filter .dates-infos").html(
+      html(
+        document.querySelectorAll(".advanced-filter .dates-infos"),
         sprintf(
           dates_infos,
           getDateStr(register_dates[ui.values![0]!]!),
@@ -897,7 +1209,8 @@ function setupRegisterDates(register_dates: string[]) {
       );
     },
     slide: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-      $(".advanced-filter .dates-infos").html(
+      html(
+        document.querySelectorAll(".advanced-filter .dates-infos"),
         sprintf(
           dates_infos,
           getDateStr(register_dates[ui.values![0]!]!),
@@ -906,7 +1219,8 @@ function setupRegisterDates(register_dates: string[]) {
       );
     },
     stop: function (event: JQueryEventObject, ui: JQueryUI.SliderUIParams) {
-      $(".advanced-filter .dates-infos").html(
+      html(
+        document.querySelectorAll(".advanced-filter .dates-infos"),
         sprintf(
           dates_infos,
           getDateStr(register_dates[ui.values![0]!]!),
@@ -917,7 +1231,8 @@ function setupRegisterDates(register_dates: string[]) {
     },
   });
 
-  $(".advanced-filter .dates-infos").html(
+  html(
+    document.querySelectorAll(".advanced-filter .dates-infos"),
     sprintf(
       dates_infos,
       getDateStr(register_dates[0]!),
@@ -948,43 +1263,58 @@ function gen_password() {
 }
 
 function add_user_close() {
-  $("#AddUser").fadeOut(() => {
-    $("#AddUser .AddUserErrors").css("visibility", "hidden");
+  fadeOut(document.querySelectorAll("#AddUser"), () => {
+    css(
+      document.querySelectorAll("#AddUser .AddUserErrors"),
+      "visibility",
+      "hidden",
+    );
   });
 }
 
 function add_user_open() {
-  $("#AddUserSuccessContainer").hide();
-  $("#AddUserFieldContainer").show();
-  $("#AddUser :input").val("");
-  $("#add_user_password").hide();
+  hide(document.querySelectorAll("#AddUserSuccessContainer"));
+  show(document.querySelectorAll("#AddUserFieldContainer"));
+  // `:input` is jQuery/Sizzle's own pseudo-selector (matches input,
+  // select, textarea and button elements) -- not real CSS, and
+  // querySelectorAll throws on it.
+  setVal(
+    document.querySelectorAll(
+      "#AddUser input, #AddUser select, #AddUser textarea, #AddUser button",
+    ),
+    "",
+  );
+  hide(document.querySelectorAll("#add_user_password"));
   fill_new_user();
-  $("#AddUser").fadeIn();
-  $(".AddUserLabelUsername input").first().focus();
-  $("#AddUser .user-property-status .user-property-select")
-    .off("change")
-    .on("change", function () {
-      const status = $(this).val();
-      $("#add_user_pass ,#add_user_confpass").val("");
-      if ("generic" === status) {
-        $("#add_user_password").show();
-        return;
-      }
-      $("#add_user_password").hide();
-    });
+  fadeIn(document.querySelectorAll("#AddUser"));
+  document.querySelector<HTMLElement>(".AddUserLabelUsername input")?.focus();
+  const statusSelect = document.querySelectorAll(
+    "#AddUser .user-property-status .user-property-select",
+  );
+  off(statusSelect, "change");
+  on(statusSelect, "change", function (this: Element) {
+    const status = val(this);
+    setVal(document.querySelectorAll("#add_user_pass ,#add_user_confpass"), "");
+    if ("generic" === status) {
+      show(document.querySelectorAll("#add_user_password"));
+      return;
+    }
+    hide(document.querySelectorAll("#add_user_password"));
+  });
 }
 
 /*------------------
 Selection mode
 ------------------*/
 
-function create_user_selected_item(user: SelectionEntry) {
-  const new_elem = $("#template .user-selected-item").clone();
-  new_elem.attr("data-id", user.id.toString());
+function create_user_selected_item(user: SelectionEntry): Element {
+  const template = document.querySelector(".user-selected-item")!;
+  const new_elem = template.cloneNode(true) as Element;
+  attr(new_elem, "data-id", user.id.toString());
   // Non-null: only ever called after the caller's own `typeof ...
   // !== "undefined"` guard confirms `username` is really set.
-  new_elem.find("p").html(user.username!);
-  new_elem.find("a").click(() => {
+  html(find(new_elem, "p"), user.username!);
+  on(find(new_elem, "a"), "click", () => {
     selection.splice(
       selection.findIndex((i) => i.id == user.id),
       1,
@@ -997,20 +1327,26 @@ function create_user_selected_item(user: SelectionEntry) {
 function generate_user_selected_items() {
   let items_created = 0;
   const others = selection.length - 5;
-  $(".user-selected-list .user-selected-item").remove();
+  document
+    .querySelectorAll(".user-selected-list .user-selected-item")
+    .forEach((el) => {
+      el.remove();
+    });
+  const list = document.querySelector(".user-selected-list");
   for (let i = 0; i < selection.length && items_created < 5; i++) {
     if (typeof selection[i]!.username !== "undefined") {
-      $(".user-selected-list").append(create_user_selected_item(selection[i]!));
+      list?.appendChild(create_user_selected_item(selection[i]!));
       items_created += 1;
     }
   }
   if (others >= 1) {
-    $(".selection-other-users").html(
+    html(
+      document.querySelectorAll(".selection-other-users"),
       str_and_others_tags.replace("%s", String(others)),
     );
-    $(".selection-other-users").show();
+    show(document.querySelectorAll(".selection-other-users"));
   } else {
-    $(".selection-other-users").hide();
+    hide(document.querySelectorAll(".selection-other-users"));
   }
   return;
 }
@@ -1033,69 +1369,81 @@ function update_selection_content() {
   const number = selection.length;
   fill_user_selected_list();
   if (number == 0) {
-    $("#forbidAction").show();
-    $(".selection-mode-ul").hide();
-    $("#permitActionUserList").hide();
+    show(document.querySelectorAll("#forbidAction"));
+    hide(document.querySelectorAll(".selection-mode-ul"));
+    hide(document.querySelectorAll("#permitActionUserList"));
   } else {
-    $("#forbidAction").hide();
-    $("#permitActionUserList").show();
-    $(".selection-mode-ul").show();
+    hide(document.querySelectorAll("#forbidAction"));
+    show(document.querySelectorAll("#permitActionUserList"));
+    show(document.querySelectorAll(".selection-mode-ul"));
   }
   set_selected_to_selection();
-  $("#applyActionBlock .infos").hide();
+  hide(document.querySelectorAll("#applyActionBlock .infos"));
 }
 
 function set_selected_to_selection() {
-  if (!$("#toggleSelectionMode").is(":checked")) {
+  if (!is(document.querySelectorAll("#toggleSelectionMode"), ":checked")) {
     return;
   }
-  $(".user-container-wrapper .user-container").each(function (index) {
-    const selection_ids = selection.map((x) => x.id);
-    if (selection_ids.includes(current_users[index]!.id)) {
-      $(this).addClass("container-selected");
-      $(this).find(".user-list-checkbox").attr("data-selected", "1");
-      $(this).find(".user-list-checkbox i").show();
-    } else {
-      $(this).removeClass("container-selected");
-      $(this).find(".user-list-checkbox").attr("data-selected", "0");
-      $(this).find(".user-list-checkbox i").hide();
-    }
-  });
+  document
+    .querySelectorAll(".user-container-wrapper .user-container")
+    .forEach((container, index) => {
+      const selection_ids = selection.map((x) => x.id);
+      if (selection_ids.includes(current_users[index]!.id)) {
+        addClass(container, "container-selected");
+        attr(find(container, ".user-list-checkbox"), "data-selected", "1");
+        show(find(container, ".user-list-checkbox i"));
+      } else {
+        removeClass(container, "container-selected");
+        attr(find(container, ".user-list-checkbox"), "data-selected", "0");
+        hide(find(container, ".user-list-checkbox i"));
+      }
+    });
 }
 
 function selectionMode(isSelection: boolean) {
-  $("#permitActionUserList select[name=selectAction]").val("-1");
-  $("#permitActionUserList select[name=selectAction]").trigger("change");
+  setVal(
+    document.querySelectorAll(
+      "#permitActionUserList select[name=selectAction]",
+    ),
+    "-1",
+  );
+  // Stays jQuery: reaches selectize/other still-jQuery listeners only
+  // through jQuery's own trigger mechanism.
+  jQuery("#permitActionUserList select[name=selectAction]").trigger("change");
   if (isSelection) {
     //resets the selection
     //selection = [];
     set_selected_to_selection();
-    $(".in-selection-mode").show();
-    $(".not-in-selection-mode").hide();
+    show(document.querySelectorAll(".in-selection-mode"));
+    hide(document.querySelectorAll(".not-in-selection-mode"));
 
     if (view_selector === "tile") {
-      $(".user-container-email").show();
+      show(document.querySelectorAll(".user-container-email"));
     }
 
     if (view_selector === "compact") {
-      $(".user-container-email").css({
+      css(document.querySelectorAll(".user-container-email"), {
         display: "none",
       });
     }
 
-    $(".user-container").addClass("selectable");
+    addClass(document.querySelectorAll(".user-container"), "selectable");
   } else {
-    $(".container-selected").removeClass("container-selected");
-    $(".in-selection-mode").hide();
-    $(".not-in-selection-mode").show();
+    removeClass(
+      document.querySelectorAll(".container-selected"),
+      "container-selected",
+    );
+    hide(document.querySelectorAll(".in-selection-mode"));
+    show(document.querySelectorAll(".not-in-selection-mode"));
 
     if (view_selector === "tile" || view_selector === "line") {
-      $(".user-container-email").css({
+      css(document.querySelectorAll(".user-container-email"), {
         display: "flex",
       });
     }
 
-    $(".user-container").removeClass("selectable");
+    removeClass(document.querySelectorAll(".user-container"), "selectable");
   }
 }
 
@@ -1104,9 +1452,9 @@ General functions
 ------------------*/
 
 function hide_temporary_messages() {
-  $(".update-user-success").hide();
-  $("#AddUserSuccess").hide();
-  $(".error-msg").hide();
+  hide(document.querySelectorAll(".update-user-success"));
+  hide(document.querySelectorAll("#AddUserSuccess"));
+  hide(document.querySelectorAll(".error-msg"));
 }
 
 function get_group_name_from_id(id: number) {
@@ -1128,83 +1476,119 @@ function get_container_index_from_uid(uid: number) {
 }
 
 function hide_error_edit_user() {
-  $("#UserList .EditUserErrors").animate({ opacity: 0 }, 100);
+  animate(
+    document.querySelectorAll("#UserList .EditUserErrors"),
+    { opacity: 0 },
+    100,
+  );
 }
 
 function show_error_edit_user() {
-  $("#UserList .EditUserErrors").animate({ opacity: 1 }, 300);
+  animate(
+    document.querySelectorAll("#UserList .EditUserErrors"),
+    { opacity: 1 },
+    300,
+  );
 }
 
 function reset_input_password() {
-  $("#edit_user_password, #edit_user_conf_password").val("");
+  setVal(
+    document.querySelectorAll("#edit_user_password, #edit_user_conf_password"),
+    "",
+  );
 }
 
 function editTabsBind() {
-  $(".edit-user-tabsheet")
-    .off("click")
-    .on("click", function () {
-      const tabName = $(this).attr("id")!.split("_");
-      const tabId = tabName[1] + "_" + tabName[2];
+  const tabsheets = document.querySelectorAll(".edit-user-tabsheet");
+  off(tabsheets, "click");
+  on(tabsheets, "click", function (this: Element) {
+    const tabName = attrOf(this, "id")!.split("_");
+    const tabId = tabName[1] + "_" + tabName[2];
 
-      $("#" + tabId)[0]!.scrollIntoView({
-        behavior: "smooth",
-      });
+    document.querySelector("#" + tabId)?.scrollIntoView({
+      behavior: "smooth",
     });
+  });
 }
 
 function check_tabs(title_tab_name_id: string) {
   if (plugins_load.length > 2) {
-    $(".edit-user-tab-title").css({
+    css(document.querySelectorAll(".edit-user-tab-title"), {
       gap: "0px",
       justifyContent: "space-between",
     });
     const countMoresPlugins = plugins_load.length - 2;
     if (!document.getElementById("mores_plugins_expand")) {
-      $(".edit-user-tab-title").append(
+      append(
+        document.querySelectorAll(".edit-user-tab-title"),
         '<span class="close mores-plugins" id="mores_plugins_expand"></span>' +
           '<div class="dropdown-mores-plugins" id="dropdown_mores_plugins"></div>',
       );
     }
-    $("#mores_plugins_expand").html("+" + countMoresPlugins);
+    html(
+      document.querySelectorAll("#mores_plugins_expand"),
+      "+" + countMoresPlugins,
+    );
 
-    const dropdown = $("#dropdown_mores_plugins");
-    const tabsheetTitle = $("#" + title_tab_name_id);
-    $(".edit-user-tab-title").css("margin-top", "3px");
-    $(".edit-user-tab-title p:lt(4)").css("padding-top", "5px");
-    tabsheetTitle.css({ "max-width": "100%" });
-    tabsheetTitle.appendTo(dropdown);
+    const dropdown = document.querySelector("#dropdown_mores_plugins")!;
+    const tabsheetTitle = document.querySelector("#" + title_tab_name_id)!;
+    css(document.querySelectorAll(".edit-user-tab-title"), "margin-top", "3px");
+    css(
+      document.querySelectorAll(".edit-user-tab-title p:nth-child(-n+4)"),
+      "padding-top",
+      "5px",
+    );
+    css(tabsheetTitle, "max-width", "100%");
+    dropdown.appendChild(tabsheetTitle);
 
     if (1 === countMoresPlugins) {
-      tabsheetTitle.css("border-radius", "10px");
+      css(tabsheetTitle, "border-radius", "10px");
     } else {
-      dropdown.children().css("border-radius", "0");
-      dropdown.children().first().css("border-radius", "10px 10px 0 0");
-      dropdown.children().last().css("border-radius", "0 0 10px 10px");
+      const dropdownChildren = Array.from(dropdown.children);
+      css(dropdownChildren, "border-radius", "0");
+      if (dropdownChildren[0] !== undefined) {
+        css(dropdownChildren[0], "border-radius", "10px 10px 0 0");
+      }
+      if (dropdownChildren[dropdownChildren.length - 1] !== undefined) {
+        css(
+          dropdownChildren[dropdownChildren.length - 1]!,
+          "border-radius",
+          "0 0 10px 10px",
+        );
+      }
     }
 
-    $("#mores_plugins_expand")
-      .off("click")
-      .on("click", function () {
-        const icon = $(this);
-        if (icon.hasClass("open")) {
-          icon.removeClass("open").addClass("close");
-          dropdown.fadeOut();
-        } else {
-          icon.removeClass("close").addClass("open");
-          dropdown.fadeIn();
-          $(window)
-            .off("click.hideUsersModal")
-            .on("click.hideUsersModal", function (e) {
-              if (
-                !$(e.target).closest("#dropdown_mores_plugins").length &&
-                !$(e.target).is("#mores_plugins_expand")
-              ) {
-                $("#dropdown_mores_plugins").fadeOut();
-                icon.removeClass("open").addClass("close");
-              }
-            });
-        }
-      });
+    const moresExpand = document.querySelectorAll("#mores_plugins_expand");
+    off(moresExpand, "click");
+    on(moresExpand, "click", function (this: Element) {
+      // Captured, not read via `this` inside the nested window handler
+      // below: that handler's own `this` is `window`, not this icon --
+      // same reason the original captured `const icon = $(this)` in its
+      // own enclosing scope rather than reading `this` twice.
+      // eslint-disable-next-line @typescript-eslint/no-this-alias -- the classic callback-closure idiom: `this` needs to stay reachable inside the nested window "click.hideUsersModal" handler below, which has its own `this`.
+      const icon = this;
+      if (hasClass(icon, "open")) {
+        removeClass(icon, "open");
+        addClass(icon, "close");
+        fadeOut(dropdown);
+      } else {
+        removeClass(icon, "close");
+        addClass(icon, "open");
+        fadeIn(dropdown);
+        off(window, "click.hideUsersModal");
+        on(window, "click.hideUsersModal", function (e: Event) {
+          const target = e.target as Element;
+          if (
+            target.closest("#dropdown_mores_plugins") === null &&
+            !target.matches("#mores_plugins_expand")
+          ) {
+            fadeOut(document.querySelectorAll("#dropdown_mores_plugins"));
+            removeClass(icon, "open");
+            addClass(icon, "close");
+          }
+        });
+      }
+    });
   }
 }
 
@@ -1267,9 +1651,10 @@ function plugin_add_tab_in_user_modal(
   }
 
   // DOM modification
-  const content = $("#" + content_id);
+  const content = document.getElementById(content_id)!;
 
-  $(".edit-user-tab-title").append(
+  append(
+    document.querySelectorAll(".edit-user-tab-title"),
     '<p class="edit-user-tabsheet" id="name_tab_' +
       name +
       '" title="' +
@@ -1279,7 +1664,8 @@ function plugin_add_tab_in_user_modal(
       "</p>",
   );
 
-  $(".edit-user-slides").append(
+  append(
+    document.querySelectorAll(".edit-user-slides"),
     '<div class="edit-user-tabsheet-plugins ' +
       name +
       '-container" id="tab_' +
@@ -1287,18 +1673,19 @@ function plugin_add_tab_in_user_modal(
       '"></div>',
   );
 
-  content.appendTo("#tab_" + name);
-  content.show();
+  document.getElementById("tab_" + name)?.appendChild(content);
+  show(content);
 
   editTabsBind();
 
-  $(".edit-user-tabsheet").addClass("tab-with-plugin");
+  addClass(document.querySelectorAll(".edit-user-tabsheet"), "tab-with-plugin");
 
   plugins_load.push("name_tab_" + name);
   check_tabs("name_tab_" + name);
 
   if (plugins_load.length <= 2) {
-    $("#name_tab_" + name).tipTip({
+    // Still jQuery: tipTip is a library, ported in P49-B group 2.
+    jQuery("#name_tab_" + name).tipTip({
       delay: 0,
       fadeIn: 200,
       fadeOut: 200,
@@ -1308,34 +1695,35 @@ function plugin_add_tab_in_user_modal(
 }
 
 function reset_password_modals() {
-  $(".user-property-password-change").hide();
-  $(".user-property-password-change-inputs").hide();
-  $("#edit_password_success_change").hide();
-  $("#edit_password_result_mail").hide();
-  $("#edit_password_result_mail_copy").hide();
-  $(".user-property-password-choice").show();
+  hide(document.querySelectorAll(".user-property-password-change"));
+  hide(document.querySelectorAll(".user-property-password-change-inputs"));
+  hide(document.querySelectorAll("#edit_password_success_change"));
+  hide(document.querySelectorAll("#edit_password_result_mail"));
+  hide(document.querySelectorAll("#edit_password_result_mail_copy"));
+  show(document.querySelectorAll(".user-property-password-choice"));
 }
 
 function reset_username_modals() {
-  $(".edit-username-success").hide();
-  $(".user-property-username-change-input").show();
+  hide(document.querySelectorAll(".edit-username-success"));
+  show(document.querySelectorAll(".user-property-username-change-input"));
 }
 
 function reset_main_user_modals() {
-  $("#main_user_rewrite").val("");
-  $("#main_user_rewrite_icon").removeClass(
+  setVal(document.querySelectorAll("#main_user_rewrite"), "");
+  removeClass(
+    document.querySelectorAll("#main_user_rewrite_icon"),
     "icon-ok icon-green icon-cancel icon-red",
   );
-  $(".main-user-rewrite").hide();
-  $(".main-user-validate").hide();
-  $(".main-user-success").hide();
-  $(".main-user-proceed").show();
+  hide(document.querySelectorAll(".main-user-rewrite"));
+  hide(document.querySelectorAll(".main-user-validate"));
+  hide(document.querySelectorAll(".main-user-success"));
+  show(document.querySelectorAll(".main-user-proceed"));
 }
 
 function hide_modals() {
-  $(".user-property-username-change").hide();
-  $(".user-property-password-change").hide();
-  $(".user-property-main-user-change").hide();
+  hide(document.querySelectorAll(".user-property-username-change"));
+  hide(document.querySelectorAll(".user-property-password-change"));
+  hide(document.querySelectorAll(".user-property-main-user-change"));
   reset_password_modals();
   reset_username_modals();
   reset_main_user_modals();
@@ -1362,56 +1750,62 @@ function generate_random_string() {
 Who is the king functions (main user)
 ----------------*/
 function open_main_user_modal(user_to_edit: UserRow) {
-  const modal = $(".user-property-main-user-change");
+  const modal = document.querySelectorAll(".user-property-main-user-change");
   reset_main_user_modals();
-  $(".main-user-proceed-desc").html(
+  html(
+    document.querySelectorAll(".main-user-proceed-desc"),
     sprintf(
       mainUserContinue,
       `<b>${display_long_string(user_to_edit.username)}</b>`,
       `<b>${display_long_string(owner_username)}</b>`,
     ),
   );
-  modal.fadeIn();
+  fadeIn(modal);
 
   // set event
-  $(".main-user-btn-proceed")
-    .off("click")
-    .on("click", function () {
-      const gen_string = generate_random_string();
-      $(".main-user-rewrite-desc").html(
-        sprintf(mainUserRewrite, `<b>${gen_string}</b>`) + " :",
-      );
-      $(".main-user-proceed").hide();
-      $(".main-user-rewrite").fadeIn();
-      event_check_string_main_user(
-        user_to_edit.username,
-        user_to_edit.id,
-        gen_string,
-      );
-    });
+  const proceedBtn = document.querySelectorAll(".main-user-btn-proceed");
+  off(proceedBtn, "click");
+  on(proceedBtn, "click", function () {
+    const gen_string = generate_random_string();
+    html(
+      document.querySelectorAll(".main-user-rewrite-desc"),
+      sprintf(mainUserRewrite, `<b>${gen_string}</b>`) + " :",
+    );
+    hide(document.querySelectorAll(".main-user-proceed"));
+    fadeIn(document.querySelectorAll(".main-user-rewrite"));
+    event_check_string_main_user(
+      user_to_edit.username,
+      user_to_edit.id,
+      gen_string,
+    );
+  });
 
-  $(".user-property-main-user-cancel, #main_user_success_close")
-    .off("click")
-    .on("click", function () {
-      modal.fadeOut();
-    });
+  const cancelBtn = document.querySelectorAll(
+    ".user-property-main-user-cancel, #main_user_success_close",
+  );
+  off(cancelBtn, "click");
+  on(cancelBtn, "click", function () {
+    fadeOut(modal);
+  });
 }
 
 function set_main_user_success() {
   const indexKey = current_users.findIndex((u) => u.id === owner_id);
-  const new_main = $('.user-container[key="' + indexKey + '"]').find(
+  const new_main = find(
+    document.querySelectorAll('.user-container[key="' + indexKey + '"]'),
     ".user-container-username",
-  );
-  let king = $("#the_king");
-  if (!king.length) {
-    king = $(king_template);
-    king.attr("title", mainUserStr);
-    king.tipTip();
+  )[0];
+  let king = document.querySelector("#the_king");
+  if (king === null) {
+    king = parseHtml(king_template)[0]!;
+    attr(king, "title", mainUserStr);
+    // Still jQuery: tipTip is a library, ported in P49-B group 2.
+    jQuery(king).tipTip();
   }
-  king.appendTo(new_main);
-  $(".delete-user-button").hide();
-  $(".main-user-validate").hide();
-  $(".main-user-success").fadeIn();
+  new_main?.appendChild(king);
+  hide(document.querySelectorAll(".delete-user-button"));
+  hide(document.querySelectorAll(".main-user-validate"));
+  fadeIn(document.querySelectorAll(".main-user-success"));
 }
 
 function event_check_string_main_user(
@@ -1419,65 +1813,68 @@ function event_check_string_main_user(
   new_main_id: number,
   stringToCheck: string,
 ) {
-  const icon = $("#main_user_rewrite_icon");
-  $("#main_user_rewrite")
-    .off("keyup")
-    .on("keyup", function () {
-      icon.removeClass("icon-ok icon-green").addClass("icon-cancel icon-red");
-      if (stringToCheck === $(this).val()) {
-        icon.removeClass("icon-cancel icon-red").addClass("icon-ok icon-green");
-        $(".main-user-validate-desc").html(
-          sprintf(
-            mainUserValidate,
-            `<b>${display_long_string(owner_username)}</b>`,
-            `<b>${display_long_string(new_main_username)}</b>`,
-          ),
-        );
-        $(".main-user-success-desc").html(
-          sprintf(mainUserSuccess, display_long_string(new_main_username)),
-        );
-        $(".main-user-rewrite").hide();
-        $(".main-user-validate").fadeIn();
-        event_validate_main_user(new_main_username, new_main_id);
-      }
-    });
+  const icon = document.querySelectorAll("#main_user_rewrite_icon");
+  const rewriteInput = document.querySelectorAll("#main_user_rewrite");
+  off(rewriteInput, "keyup");
+  on(rewriteInput, "keyup", function (this: Element) {
+    removeClass(icon, "icon-ok icon-green");
+    addClass(icon, "icon-cancel icon-red");
+    if (stringToCheck === val(this)) {
+      removeClass(icon, "icon-cancel icon-red");
+      addClass(icon, "icon-ok icon-green");
+      html(
+        document.querySelectorAll(".main-user-validate-desc"),
+        sprintf(
+          mainUserValidate,
+          `<b>${display_long_string(owner_username)}</b>`,
+          `<b>${display_long_string(new_main_username)}</b>`,
+        ),
+      );
+      html(
+        document.querySelectorAll(".main-user-success-desc"),
+        sprintf(mainUserSuccess, display_long_string(new_main_username)),
+      );
+      hide(document.querySelectorAll(".main-user-rewrite"));
+      fadeIn(document.querySelectorAll(".main-user-validate"));
+      event_validate_main_user(new_main_username, new_main_id);
+    }
+  });
 }
 
 function event_validate_main_user(new_main_username: string, user_id: number) {
-  $(".main-user-btn-validate")
-    .off("click")
-    .on("click", function () {
-      set_main_user(user_id, new_main_username);
-    });
+  const validateBtn = document.querySelectorAll(".main-user-btn-validate");
+  off(validateBtn, "click");
+  on(validateBtn, "click", function () {
+    set_main_user(user_id, new_main_username);
+  });
 }
 
 /*-----------------------
 Generate User Containers
 -----------------------*/
-function user_container_click(this: HTMLElement) {
+function user_container_click(this: Element) {
   if (!isSelectionMode()) {
     return;
   }
-  const curr_container = $(this);
-  const in_container = curr_container.length != 0;
-  const container_checkbox = $(this).find(".user-list-checkbox");
+  const in_container = true;
+  const container_checkbox = find(this, ".user-list-checkbox")[0]!;
   // Non-null: same "always a real, in-bounds index when in_container"
   // invariant as checkbox_container_click()'s own copy of this comment.
   const curr_user: { id: number; username: string } = in_container
-    ? current_users[parseInt(curr_container.attr("key")!)]!
+    ? current_users[parseInt(attrOf(this, "key")!)]!
     : { id: -1, username: "" };
-  if (container_checkbox.attr("data-selected") == "1") {
-    container_checkbox.attr("data-selected", "0");
-    container_checkbox.find("i").hide();
+  if (attrOf(container_checkbox, "data-selected") == "1") {
+    attr(container_checkbox, "data-selected", "0");
+    hide(find(container_checkbox, "i"));
     if (in_container) {
-      curr_container.removeClass("container-selected");
+      removeClass(this, "container-selected");
       selection = selection.filter((elem) => elem.id != curr_user.id);
     }
   } else {
-    container_checkbox.attr("data-selected", "1");
-    container_checkbox.find("i").show();
+    attr(container_checkbox, "data-selected", "1");
+    show(find(container_checkbox, "i"));
     if (in_container) {
-      curr_container.addClass("container-selected");
+      addClass(this, "container-selected");
       selection.push({ id: curr_user.id, username: curr_user.username });
     }
   }
@@ -1486,32 +1883,36 @@ function user_container_click(this: HTMLElement) {
   }
 }
 
-function generate_groups(container: JQuery, groups: number[]) {
-  container.find(".user-container-groups").html("");
+function generate_groups(container: Element, groups: number[]) {
+  const groupsContainer = find(container, ".user-container-groups")[0]!;
+  html(groupsContainer, "");
   if (groups.length >= 1) {
-    const primary_grp = $("#template .group-primary").clone();
-    primary_grp.html(get_group_name_from_id(groups[0]!));
-    primary_grp.addClass(color_icons[groups[0]! % 5]!);
-    container.find(".user-container-groups").append(primary_grp);
+    const template = document.querySelector("#template .group-primary")!;
+    const primary_grp = template.cloneNode(true) as Element;
+    html(primary_grp, get_group_name_from_id(groups[0]!));
+    addClass(primary_grp, color_icons[groups[0]! % 5]!);
+    groupsContainer.appendChild(primary_grp);
   }
   if (groups.length >= 2) {
-    const primary_grp = $("#template .group-primary").clone();
-    primary_grp.html(get_group_name_from_id(groups[1]!));
-    primary_grp.addClass(color_icons[groups[1]! % 5]!);
-    container.find(".user-container-groups").append(primary_grp);
+    const template = document.querySelector("#template .group-primary")!;
+    const primary_grp = template.cloneNode(true) as Element;
+    html(primary_grp, get_group_name_from_id(groups[1]!));
+    addClass(primary_grp, color_icons[groups[1]! % 5]!);
+    groupsContainer.appendChild(primary_grp);
   }
   if (groups.length >= 3) {
-    const bonus_grp = $("#template .group-bonus").clone();
-    bonus_grp.html("...");
-    bonus_grp.addClass(color_icons[groups[2]! % 5]!);
-    bonus_grp.addClass("tiptip");
+    const template = document.querySelector("#template .group-bonus")!;
+    const bonus_grp = template.cloneNode(true) as Element;
+    html(bonus_grp, "...");
+    addClass(bonus_grp, color_icons[groups[2]! % 5]!);
+    addClass(bonus_grp, "tiptip");
     let groups_in_title = "";
     for (let i = 2; i < groups.length; i++) {
       groups_in_title += get_group_name_from_id(groups[i]!) + ", ";
     }
     groups_in_title = groups_in_title.substring(0, groups_in_title.length - 2);
-    bonus_grp.prop("title", groups_in_title);
-    container.find(".user-container-groups").append(bonus_grp);
+    attr(bonus_grp, "title", groups_in_title);
+    groupsContainer.appendChild(bonus_grp);
   }
 }
 
@@ -1525,56 +1926,76 @@ function get_initials(username: string): string {
   return res;
 }
 
-function fill_container_user_info(container: JQuery, user_index: number) {
+function fill_container_user_info(container: Element, user_index: number) {
   const user = current_users[user_index]!;
   const registration_dates = (user.registrationDate ?? "").split(" ");
-  container.attr("key", user_index);
-  container.find(".user-container-username span").html(user.username);
-  if (user.id === owner_id && !$("#the_king").length) {
-    const kingToDisplay = $(king_template);
-    kingToDisplay.attr("title", mainUserStr);
-    kingToDisplay.tipTip();
-    container.find(".user-container-username").append(kingToDisplay);
+  attr(container, "key", String(user_index));
+  html(find(container, ".user-container-username span"), user.username);
+  if (user.id === owner_id && document.getElementById("the_king") === null) {
+    const kingToDisplay = parseHtml(king_template)[0]!;
+    attr(kingToDisplay, "title", mainUserStr);
+    // Still jQuery: tipTip is a library, ported in P49-B group 2.
+    jQuery(kingToDisplay).tipTip();
+    find(container, ".user-container-username")[0]?.appendChild(kingToDisplay);
   }
   const initial_to_fill = get_initials(user.username);
-  const initialSpan = container.find(".user-container-initials span");
-  initialSpan.html(initial_to_fill).addClass(color_icons[user.id % 5]!);
+  const initialSpan = find(container, ".user-container-initials span")[0]!;
+  html(initialSpan, initial_to_fill);
+  addClass(initialSpan, color_icons[user.id % 5]!);
   if (initial_to_fill.length > 1) {
-    initialSpan.addClass("small");
+    addClass(initialSpan, "small");
   } else {
-    initialSpan.removeClass("small");
+    removeClass(initialSpan, "small");
   }
-  container
-    .find(".user-container-status span")
+  html(
+    find(container, ".user-container-status span"),
     // Non-null: every real, listed user has a real status; `null` is
     // only a schema allowance for an edge case this admin listing
     // doesn't actually surface.
-    .html(status_to_str[user.status!]!);
-  container.find(".user-container-email span").html(user.email ?? "");
+    status_to_str[user.status!]!,
+  );
+  html(find(container, ".user-container-email span"), user.email ?? "");
   generate_groups(container, user.groups);
-  container
-    .find(".user-container-registration-date")
-    .html(registration_dates[0] ?? "");
-  container
-    .find(".user-container-registration-time")
-    .html(registration_dates[1] ?? "");
-  container
-    .find(".user-container-registration-date-since")
-    .html(user.registrationDateSince);
+  html(
+    find(container, ".user-container-registration-date"),
+    registration_dates[0] ?? "",
+  );
+  html(
+    find(container, ".user-container-registration-time"),
+    registration_dates[1] ?? "",
+  );
+  html(
+    find(container, ".user-container-registration-date-since"),
+    user.registrationDateSince,
+  );
 }
 
 function generate_user_list() {
-  $("#user-table-content").find(".user-container").remove();
+  document
+    .querySelectorAll("#user-table-content .user-container")
+    .forEach((el) => {
+      el.remove();
+    });
+  const wrapper = document.querySelector(
+    "#user-table-content .user-container-wrapper",
+  )!;
+  const template = document.querySelector("#template .user-container")!;
   for (let i = 0; i < current_users.length; i++) {
-    const new_container = $("#template .user-container").clone();
+    const new_container = template.cloneNode(true) as Element;
     fill_container_user_info(new_container, i);
-    $("#user-table-content .user-container-wrapper").append(new_container);
+    wrapper.appendChild(new_container);
   }
-  $(".user-container .user-list-checkbox")
-    .unbind("change")
-    .change(checkbox_change);
-  $(".user-container .user-list-checkbox").unbind("click");
-  $(".user-container").click(user_container_click);
+  const checkboxes = document.querySelectorAll(
+    ".user-container .user-list-checkbox",
+  );
+  off(checkboxes, "change");
+  on(checkboxes, "change", checkbox_change);
+  off(checkboxes, "click");
+  on(
+    document.querySelectorAll(".user-container"),
+    "click",
+    user_container_click,
+  );
 }
 
 function copyToClipboard(toCopy: string) {
@@ -1614,93 +2035,111 @@ function set_selected_groups(groups: number[]) {
 
 function fill_user_edit_summary(
   user_to_edit: UserRow,
-  pop_in: JQuery,
+  pop_in: Element,
   isGuest: boolean,
 ) {
   // console.log(isGuest);
   if (isGuest) {
-    pop_in
-      .find(".user-property-initials span")
-      .removeClass(color_icons.join(" "))
-      .addClass(color_icons[user_to_edit.id % 5]!);
+    const initialSpan = find(pop_in, ".user-property-initials span");
+    removeClass(initialSpan, color_icons.join(" "));
+    addClass(initialSpan, color_icons[user_to_edit.id % 5]!);
   } else {
     const initial_to_fill = get_initials(user_to_edit.username);
-    const initialSpan = pop_in.find(".user-property-initials span");
-    initialSpan
-      .html(initial_to_fill)
-      .removeClass(color_icons.join(" "))
-      .addClass(color_icons[user_to_edit.id % 5]!);
+    const initialSpan = find(pop_in, ".user-property-initials span");
+    html(initialSpan, initial_to_fill);
+    removeClass(initialSpan, color_icons.join(" "));
+    addClass(initialSpan, color_icons[user_to_edit.id % 5]!);
     if (initial_to_fill.length > 1) {
-      initialSpan.addClass("small");
+      addClass(initialSpan, "small");
     } else {
-      initialSpan.removeClass("small");
+      removeClass(initialSpan, "small");
     }
   }
-  pop_in
-    .find(".user-property-username span:first")
-    .html(user_to_edit.username)
-    .tipTip({ content: user_to_edit.username });
+  const usernameSpan = find(pop_in, ".user-property-username span:first-child");
+  html(usernameSpan, user_to_edit.username);
+  // Still jQuery: tipTip is a library, ported in P49-B group 2.
+  jQuery(usernameSpan).tipTip({ content: user_to_edit.username });
 
   if (user_to_edit.id === connected_user || user_to_edit.id === 1) {
-    pop_in.find(".user-property-username .edit-username-specifier").show();
+    show(find(pop_in, ".user-property-username .edit-username-specifier"));
   } else {
-    pop_in.find(".user-property-username .edit-username-specifier").hide();
+    hide(find(pop_in, ".user-property-username .edit-username-specifier"));
   }
-  pop_in
-    .find(".user-property-username-change input")
-    .val(user_to_edit.username);
-  pop_in.find(".user-property-password-change input").val("");
-  pop_in
-    .find(".user-property-permissions a")
-    .attr("href", `admin.php?page=user_perm&user_id=${user_to_edit.id}`);
-  pop_in
-    .find(".user-property-register")
-    .html(user_to_edit.registrationDateString);
-  pop_in.find(".user-property-register").tipTip({
+  setVal(
+    find(pop_in, ".user-property-username-change input"),
+    user_to_edit.username,
+  );
+  setVal(find(pop_in, ".user-property-password-change input"), "");
+  attr(
+    find(pop_in, ".user-property-permissions a"),
+    "href",
+    `admin.php?page=user_perm&user_id=${user_to_edit.id}`,
+  );
+  html(
+    find(pop_in, ".user-property-register"),
+    user_to_edit.registrationDateString,
+  );
+  // Still jQuery: tipTip is a library, ported in P49-B group 2.
+  jQuery(find(pop_in, ".user-property-register")).tipTip({
     content: `${registered_str}<br />${user_to_edit.registrationDateSince}`,
   });
-  pop_in.find(".user-property-last-visit").html(user_to_edit.lastVisitString);
-  pop_in.find(".user-property-last-visit").tipTip({
+  html(find(pop_in, ".user-property-last-visit"), user_to_edit.lastVisitString);
+  // Still jQuery: tipTip is a library, ported in P49-B group 2.
+  jQuery(find(pop_in, ".user-property-last-visit")).tipTip({
     content: `${last_visit_str}<br />${user_to_edit.lastVisitSince}`,
   });
-  pop_in
-    .find(".user-property-history a")
-    .attr("href", history_base_url + user_to_edit.id);
+  attr(
+    find(pop_in, ".user-property-history a"),
+    "href",
+    history_base_url + user_to_edit.id,
+  );
 
   // Hide the copy password button and change modal copy password
   // if you are not using https
   if (!window.isSecureContext) {
-    $("#copy_password").hide();
-    $(".update-password-success").css("margin", "40px 0");
-    $("#result_send_mail_copy").hide();
-    $("#result_send_mail_copy_btn, #AddUserCopyPassword")
-      .css({
-        cursor: "not-allowed",
-        "background-color": "grey",
-        color: "#ffffff",
-      })
-      .attr("title", cantCopy)
-      .on("mouseenter", function () {
-        $(this).css("background-color", "grey");
-      })
-      .tipTip();
+    hide(document.querySelectorAll("#copy_password"));
+    css(
+      document.querySelectorAll(".update-password-success"),
+      "margin",
+      "40px 0",
+    );
+    hide(document.querySelectorAll("#result_send_mail_copy"));
+    const copyBtns = document.querySelectorAll(
+      "#result_send_mail_copy_btn, #AddUserCopyPassword",
+    );
+    css(copyBtns, {
+      cursor: "not-allowed",
+      "background-color": "grey",
+      color: "#ffffff",
+    });
+    attr(copyBtns, "title", cantCopy);
+    on(copyBtns, "mouseenter", function (this: Element) {
+      css(this, "background-color", "grey");
+    });
+    // Still jQuery: tipTip is a library, ported in P49-B group 2.
+    jQuery(copyBtns).tipTip();
   }
 }
 
-function fill_user_edit_properties(user_to_edit: UserRow, pop_in: JQuery) {
+function fill_user_edit_properties(user_to_edit: UserRow, pop_in: Element) {
   const status_index = get_status_index(user_to_edit.status);
   const level_index = get_level_index(user_to_edit.level);
   const current_group_selectize =
     user_to_edit.id === guest_id ? groupGuestSelectize : groupSelectize;
 
-  pop_in.find(".user-property-email input").val(user_to_edit.email ?? "");
-  pop_in
-    .find(`.user-property-status select option:eq(${status_index})`)
-    .prop("selected", true);
-  pop_in
-    .find(`.user-property-level select option:eq(${level_index})`)
-    .prop("selected", true);
-  pop_in.find(".photos-select-bar input").val(user_to_edit.recentPeriod ?? "");
+  setVal(find(pop_in, ".user-property-email input"), user_to_edit.email ?? "");
+  const statusOption = find(pop_in, ".user-property-status select option")[
+    status_index
+  ] as HTMLOptionElement | undefined;
+  if (statusOption !== undefined) statusOption.selected = true;
+  const levelOption = find(pop_in, ".user-property-level select option")[
+    level_index
+  ] as HTMLOptionElement | undefined;
+  if (levelOption !== undefined) levelOption.selected = true;
+  setVal(
+    find(pop_in, ".photos-select-bar input"),
+    String(user_to_edit.recentPeriod ?? ""),
+  );
   set_selected_groups(user_to_edit.groups);
   current_group_selectize.clear();
   current_group_selectize.load(function (
@@ -1708,20 +2147,19 @@ function fill_user_edit_properties(user_to_edit: UserRow, pop_in: JQuery) {
   ) {
     callback(groupOptions);
   });
-  jQuery.each(
-    jQuery.grep(groupOptions, function (group) {
-      return group.isSelected;
-    }),
-    function (i, group) {
+  groupOptions
+    .filter((group) => group.isSelected)
+    .forEach((group) => {
       current_group_selectize.addItem(group.value);
-    },
+    });
+  attr(
+    find(pop_in, '.user-list-checkbox[name="hd_enabled"]'),
+    "data-selected",
+    user_to_edit.enabledHigh ? "1" : "0",
   );
-  pop_in
-    .find('.user-list-checkbox[name="hd_enabled"]')
-    .attr("data-selected", user_to_edit.enabledHigh ? "1" : "0");
 }
 
-function fill_user_edit_preferences(user_to_edit: UserRow, pop_in: JQuery) {
+function fill_user_edit_preferences(user_to_edit: UserRow, pop_in: Element) {
   const slider_key_photos = getSliderKeyFromValue(
     parseInt(String(user_to_edit.nbImagePage)),
     nb_image_page_values,
@@ -1731,185 +2169,210 @@ function fill_user_edit_preferences(user_to_edit: UserRow, pop_in: JQuery) {
     recent_period_values,
   );
 
-  pop_in
-    .find(".photos-select-bar .slider-bar-container")
-    .slider("option", "value", slider_key_photos);
-  pop_in.find(".user-property-theme select option").each(function (
-    this: HTMLElement,
-  ) {
-    if ($(this).val() == user_to_edit.theme) {
-      $(this).prop("selected", true);
+  // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
+  jQuery(find(pop_in, ".photos-select-bar .slider-bar-container")).slider(
+    "option",
+    "value",
+    slider_key_photos,
+  );
+  find(pop_in, ".user-property-theme select option").forEach((option) => {
+    if (val(option) == user_to_edit.theme) {
+      (option as HTMLOptionElement).selected = true;
     }
   });
-  pop_in.find(".user-property-lang select option").each(function (
-    this: HTMLElement,
-  ) {
-    if ($(this).val() == user_to_edit.language) {
-      $(this).prop("selected", true);
+  find(pop_in, ".user-property-lang select option").forEach((option) => {
+    if (val(option) == user_to_edit.language) {
+      (option as HTMLOptionElement).selected = true;
     }
   });
-  pop_in
-    .find(".period-select-bar .slider-bar-container")
-    .slider("option", "value", slider_key_period);
-  pop_in
-    .find('.user-list-checkbox[name="expand_all_albums"]')
-    .attr("data-selected", user_to_edit.expand ? "1" : "0");
-  pop_in
-    .find('.user-list-checkbox[name="show_nb_comments"]')
-    .attr("data-selected", user_to_edit.showNbComments ? "1" : "0");
-  pop_in
-    .find('.user-list-checkbox[name="show_nb_hits"]')
-    .attr("data-selected", user_to_edit.showNbHits ? "1" : "0");
+  // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
+  jQuery(find(pop_in, ".period-select-bar .slider-bar-container")).slider(
+    "option",
+    "value",
+    slider_key_period,
+  );
+  attr(
+    find(pop_in, '.user-list-checkbox[name="expand_all_albums"]'),
+    "data-selected",
+    user_to_edit.expand ? "1" : "0",
+  );
+  attr(
+    find(pop_in, '.user-list-checkbox[name="show_nb_comments"]'),
+    "data-selected",
+    user_to_edit.showNbComments ? "1" : "0",
+  );
+  attr(
+    find(pop_in, '.user-list-checkbox[name="show_nb_hits"]'),
+    "data-selected",
+    user_to_edit.showNbHits ? "1" : "0",
+  );
 }
 
-function fill_user_edit_update(user_to_edit: UserRow, pop_in: JQuery) {
-  pop_in
-    .find(".update-user-button")
-    .unbind("click")
-    .click(user_to_edit.id === guest_id ? update_guest_info : update_user_info);
-  pop_in
-    .find(".edit-username-validate")
-    .unbind("click")
-    .click(update_user_username);
-  pop_in
-    .find("#edit_modal_password")
-    .off("click")
-    .on("click", function () {
-      $(".user-property-password-choice").hide();
-      $(".user-property-password-change-inputs").fadeIn();
-    });
+function fill_user_edit_update(user_to_edit: UserRow, pop_in: Element) {
+  const updateBtn = find(pop_in, ".update-user-button");
+  off(updateBtn, "click");
+  on(
+    updateBtn,
+    "click",
+    user_to_edit.id === guest_id ? update_guest_info : update_user_info,
+  );
+  const usernameValidate = find(pop_in, ".edit-username-validate");
+  off(usernameValidate, "click");
+  on(usernameValidate, "click", update_user_username);
+  const editModalPassword = find(pop_in, "#edit_modal_password");
+  off(editModalPassword, "click");
+  on(editModalPassword, "click", function () {
+    hide(document.querySelectorAll(".user-property-password-choice"));
+    fadeIn(document.querySelectorAll(".user-property-password-change-inputs"));
+  });
   if (user_to_edit.email) {
-    pop_in
-      .find("#send_password_link")
-      .removeClass("unavailable tiptip")
-      .attr("title", "")
-      .off("click")
-      .on("click", function () {
-        send_link_password(
-          user_to_edit.email,
-          user_to_edit.username,
-          user_to_edit.id,
-          true,
-        );
-      });
-    pop_in.find("#send_password_link").off("mouseenter mouseleave focus blur");
+    const sendPasswordLink = find(pop_in, "#send_password_link");
+    removeClass(sendPasswordLink, "unavailable tiptip");
+    attr(sendPasswordLink, "title", "");
+    off(sendPasswordLink, "click");
+    on(sendPasswordLink, "click", function () {
+      send_link_password(
+        user_to_edit.email,
+        user_to_edit.username,
+        user_to_edit.id,
+        true,
+      );
+    });
+    off(sendPasswordLink, "mouseenter mouseleave focus blur");
   } else {
-    pop_in
-      .find("#send_password_link")
-      .addClass("unavailable tiptip")
-      .off("click")
-      .attr("title", cannotSendMail)
-      .tipTip({
-        delay: 0,
-        fadeIn: 200,
-        fadeOut: 200,
-        edgeOffset: 3,
-      });
+    const sendPasswordLink = find(pop_in, "#send_password_link");
+    addClass(sendPasswordLink, "unavailable tiptip");
+    off(sendPasswordLink, "click");
+    attr(sendPasswordLink, "title", cannotSendMail);
+    // Still jQuery: tipTip is a library, ported in P49-B group 2.
+    jQuery(sendPasswordLink).tipTip({
+      delay: 0,
+      fadeIn: 200,
+      fadeOut: 200,
+      edgeOffset: 3,
+    });
   }
-  pop_in
-    .find("#copy_password_link")
-    .off("click")
-    .on("click", function () {
-      const inputValue = $("#result_send_mail_copy_input").val();
-      if (inputValue === "") {
-        send_link_password(
-          user_to_edit.email,
-          user_to_edit.username,
-          user_to_edit.id,
-          false,
+  const copyPasswordLink = find(pop_in, "#copy_password_link");
+  off(copyPasswordLink, "click");
+  on(copyPasswordLink, "click", function () {
+    const inputValue = val(
+      document.querySelectorAll("#result_send_mail_copy_input"),
+    );
+    if (inputValue === "") {
+      send_link_password(
+        user_to_edit.email,
+        user_to_edit.username,
+        user_to_edit.id,
+        false,
+      );
+    } else {
+      if (window.isSecureContext && navigator.clipboard) {
+        copyToClipboard(String(inputValue));
+      }
+    }
+    hide(document.querySelectorAll(".user-property-password-choice"));
+    fadeIn(document.querySelectorAll("#edit_password_result_mail_copy"));
+    const closeBtn = document.querySelectorAll(
+      "#close_password_mail_send_close",
+    );
+    off(closeBtn, "click");
+    on(closeBtn, "click", function () {
+      reset_password_modals();
+    });
+    const copyResultBtn = document.querySelectorAll(
+      "#result_send_mail_copy_btn",
+    );
+    off(copyResultBtn, "click");
+    on(copyResultBtn, "click", function () {
+      if (window.isSecureContext && navigator.clipboard) {
+        const success = document.querySelectorAll("#result_send_mail_copy");
+        fadeOut(success, 100);
+        copyToClipboard(
+          String(
+            val(document.querySelectorAll("#result_send_mail_copy_input")),
+          ),
         );
-      } else {
-        if (window.isSecureContext && navigator.clipboard) {
-          copyToClipboard(String(inputValue));
-        }
+        fadeIn(success, 100);
       }
-      $(".user-property-password-choice").hide();
-      $("#edit_password_result_mail_copy").fadeIn();
-      $("#close_password_mail_send_close")
-        .off("click")
-        .on("click", function () {
-          reset_password_modals();
-        });
-      $("#result_send_mail_copy_btn")
-        .off("click")
-        .on("click", function () {
-          if (window.isSecureContext && navigator.clipboard) {
-            const success = $("#result_send_mail_copy");
-            success.fadeOut(100);
-            copyToClipboard(String($("#result_send_mail_copy_input").val()));
-            success.fadeIn(100);
-          }
-        });
-      $("#result_send_mail_copy_input").trigger("focus");
     });
-  pop_in
-    .find(".edit-password-validate")
-    .unbind("click")
-    .click(function () {
-      const errDiv = $("#UserList .EditUserErrors");
-      const inputPassword = $("#edit_user_password").val();
-      const inputConfirmPassword = $("#edit_user_conf_password").val();
+    document
+      .querySelector<HTMLElement>("#result_send_mail_copy_input")
+      ?.focus();
+  });
+  const passwordValidate = find(pop_in, ".edit-password-validate");
+  off(passwordValidate, "click");
+  on(passwordValidate, "click", function () {
+    const errDiv = document.querySelectorAll("#UserList .EditUserErrors");
+    const inputPassword = val(document.querySelectorAll("#edit_user_password"));
+    const inputConfirmPassword = val(
+      document.querySelectorAll("#edit_user_conf_password"),
+    );
 
-      if (inputPassword === "" || inputConfirmPassword === "") {
-        errDiv.html(missingField);
-        show_error_edit_user();
-      } else if (inputPassword !== inputConfirmPassword) {
-        errDiv.html(noMatchPassword);
-        show_error_edit_user();
-      } else {
-        update_user_password();
-      }
-    });
-  pop_in
-    .find(".delete-user-button")
-    .unbind("click")
-    .click(function () {
-      $.confirm({
-        title: title_msg.replace("%s", user_to_edit.username),
-        content: "",
-        buttons: {
-          confirm: {
-            text: confirm_msg,
-            btnClass: "btn-red",
-            action: function () {
-              delete_user(user_to_edit.id);
-            },
-          },
-          cancel: {
-            text: cancel_msg,
+    if (inputPassword === "" || inputConfirmPassword === "") {
+      html(errDiv, missingField);
+      show_error_edit_user();
+    } else if (inputPassword !== inputConfirmPassword) {
+      html(errDiv, noMatchPassword);
+      show_error_edit_user();
+    } else {
+      update_user_password();
+    }
+  });
+  const deleteBtn = find(pop_in, ".delete-user-button");
+  off(deleteBtn, "click");
+  on(deleteBtn, "click", function () {
+    // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
+    jQuery.confirm({
+      title: title_msg.replace("%s", user_to_edit.username),
+      content: "",
+      buttons: {
+        confirm: {
+          text: confirm_msg,
+          btnClass: "btn-red",
+          action: function () {
+            delete_user(user_to_edit.id);
           },
         },
-        ...jConfirm_confirm_options,
-      });
+        cancel: {
+          text: cancel_msg,
+        },
+      },
+      ...jConfirm_confirm_options,
     });
+  });
 }
 
-function fill_user_edit_permissions(user_to_edit: UserRow, pop_in: JQuery) {
+function fill_user_edit_permissions(user_to_edit: UserRow, pop_in: Element) {
   if (user_to_edit.id != connected_user) {
     // I'm not the connected user
     if (!is_owner(connected_user)) {
       // I'm not the owner, you need to test my permissions
       if (is_owner(user_to_edit.id)) {
         // I want to edit the owner but I'm not the owner (No matter my status)
-        pop_in.find(".delete-user-button").hide();
-        pop_in.find(".user-property-password.edit-password").hide();
-        pop_in
-          .find(".user-property-email .user-property-input")
-          .attr("disabled", "disabled");
-        pop_in
-          .find(".user-property-status .user-property-select")
-          .addClass("notClickable");
-        pop_in.find(".user-property-username .edit-username").hide();
+        hide(find(pop_in, ".delete-user-button"));
+        hide(find(pop_in, ".user-property-password.edit-password"));
+        attr(
+          find(pop_in, ".user-property-email .user-property-input"),
+          "disabled",
+          "disabled",
+        );
+        addClass(
+          find(pop_in, ".user-property-status .user-property-select"),
+          "notClickable",
+        );
+        hide(find(pop_in, ".user-property-username .edit-username"));
       } else {
-        pop_in.find(".delete-user-button").show();
-        pop_in.find(".user-property-password.edit-password").show();
-        pop_in
-          .find(".user-property-email .user-property-input")
-          .removeAttr("disabled");
-        pop_in
-          .find(".user-property-status .user-property-select")
-          .removeClass("notClickable");
-        pop_in.find(".user-property-username .edit-username").show();
+        show(find(pop_in, ".delete-user-button"));
+        show(find(pop_in, ".user-property-password.edit-password"));
+        removeAttr(
+          find(pop_in, ".user-property-email .user-property-input"),
+          "disabled",
+        );
+        removeClass(
+          find(pop_in, ".user-property-status .user-property-select"),
+          "notClickable",
+        );
+        show(find(pop_in, ".user-property-username .edit-username"));
       }
 
       if (
@@ -1918,87 +2381,108 @@ function fill_user_edit_permissions(user_to_edit: UserRow, pop_in: JQuery) {
         !is_owner(user_to_edit.id)
       ) {
         // I have the same status than the user I want to edit and I'm a webmaster, I can do whatever I want
-        pop_in.find(".delete-user-button").show();
-        pop_in.find(".user-property-password.edit-password").show();
-        pop_in
-          .find(".user-property-email .user-property-input")
-          .removeAttr("disabled");
-        pop_in
-          .find(".user-property-status .user-property-select")
-          .removeClass("notClickable");
-        pop_in.find(".user-property-username .edit-username").show();
+        show(find(pop_in, ".delete-user-button"));
+        show(find(pop_in, ".user-property-password.edit-password"));
+        removeAttr(
+          find(pop_in, ".user-property-email .user-property-input"),
+          "disabled",
+        );
+        removeClass(
+          find(pop_in, ".user-property-status .user-property-select"),
+          "notClickable",
+        );
+        show(find(pop_in, ".user-property-username .edit-username"));
       } else if (
         user_to_edit.status == connected_user_status &&
         connected_user_status == "admin"
       ) {
         // I have the same status than the user I want to edit and I'm an admin, I can do whatever I want but edit the status
-        pop_in.find(".delete-user-button").hide();
-        pop_in.find(".user-property-password.edit-password").show();
-        pop_in
-          .find(".user-property-email .user-property-input")
-          .removeAttr("disabled");
-        pop_in
-          .find(".user-property-username .edit-username")
-          .removeClass("notClickable");
-        pop_in
-          .find(".user-property-status .user-property-select")
-          .addClass("notClickable");
+        hide(find(pop_in, ".delete-user-button"));
+        show(find(pop_in, ".user-property-password.edit-password"));
+        removeAttr(
+          find(pop_in, ".user-property-email .user-property-input"),
+          "disabled",
+        );
+        removeClass(
+          find(pop_in, ".user-property-username .edit-username"),
+          "notClickable",
+        );
+        addClass(
+          find(pop_in, ".user-property-status .user-property-select"),
+          "notClickable",
+        );
       } else if (
         user_to_edit.status == "webmaster" &&
         connected_user_status == "admin"
       ) {
         // I'm admin and I want to edit webmaster
-        pop_in.find(".delete-user-button").hide();
-        pop_in.find(".user-property-password.edit-password").hide();
-        pop_in
-          .find(".user-property-email .user-property-input")
-          .attr("disabled", "disabled");
-        pop_in
-          .find(".user-property-status .user-property-select")
-          .addClass("notClickable");
-        pop_in.find(".user-property-username .edit-username").hide();
+        hide(find(pop_in, ".delete-user-button"));
+        hide(find(pop_in, ".user-property-password.edit-password"));
+        attr(
+          find(pop_in, ".user-property-email .user-property-input"),
+          "disabled",
+          "disabled",
+        );
+        addClass(
+          find(pop_in, ".user-property-status .user-property-select"),
+          "notClickable",
+        );
+        hide(find(pop_in, ".user-property-username .edit-username"));
       } else if (
         user_to_edit.status == "admin" &&
         connected_user_status == "webmaster"
       ) {
         // I'm webmaster and I want to edit admin
-        pop_in.find(".delete-user-button").show();
-        pop_in.find(".user-property-password.edit-password").show();
-        pop_in
-          .find(".user-property-email .user-property-input")
-          .removeAttr("disabled");
-        pop_in
-          .find(".user-property-status .user-property-select")
-          .removeClass("notClickable");
-        pop_in.find(".user-property-username .edit-username").show();
+        show(find(pop_in, ".delete-user-button"));
+        show(find(pop_in, ".user-property-password.edit-password"));
+        removeAttr(
+          find(pop_in, ".user-property-email .user-property-input"),
+          "disabled",
+        );
+        removeClass(
+          find(pop_in, ".user-property-status .user-property-select"),
+          "notClickable",
+        );
+        show(find(pop_in, ".user-property-username .edit-username"));
       }
     } else {
       // I'm the owner, I can do whatever I want. No need to test, I am GOD here
-      pop_in.find(".delete-user-button").show();
-      pop_in.find(".user-property-password.edit-password").show();
-      pop_in
-        .find(".user-property-email .user-property-input")
-        .removeAttr("disabled");
-      pop_in
-        .find(".user-property-status .user-property-select")
-        .removeClass("notClickable");
-      pop_in.find(".user-property-username .edit-username").show();
+      show(find(pop_in, ".delete-user-button"));
+      show(find(pop_in, ".user-property-password.edit-password"));
+      removeAttr(
+        find(pop_in, ".user-property-email .user-property-input"),
+        "disabled",
+      );
+      removeClass(
+        find(pop_in, ".user-property-status .user-property-select"),
+        "notClickable",
+      );
+      show(find(pop_in, ".user-property-username .edit-username"));
     }
   } else {
     // I'm the connected user, I can do whatever I want on my profile but kill myself (Suicide is not allowed) and edit my status
-    pop_in.find(".delete-user-button").hide();
-    pop_in.find(".user-property-password.edit-password").show();
-    pop_in
-      .find(".user-property-email .user-property-input")
-      .removeAttr("disabled");
-    pop_in
-      .find(".user-property-status .user-property-select")
-      .addClass("notClickable");
-    pop_in.find(".user-property-username .edit-username").show();
+    hide(find(pop_in, ".delete-user-button"));
+    show(find(pop_in, ".user-property-password.edit-password"));
+    removeAttr(
+      find(pop_in, ".user-property-email .user-property-input"),
+      "disabled",
+    );
+    addClass(
+      find(pop_in, ".user-property-status .user-property-select"),
+      "notClickable",
+    );
+    show(find(pop_in, ".user-property-username .edit-username"));
   }
 
-  $(".notClickableBefore").removeClass("notClickableBefore");
-  $(".notClickable").parent().addClass("notClickableBefore");
+  removeClass(
+    document.querySelectorAll(".notClickableBefore"),
+    "notClickableBefore",
+  );
+  document.querySelectorAll(".notClickable").forEach((el) => {
+    if (el.parentElement !== null) {
+      addClass(el.parentElement, "notClickableBefore");
+    }
+  });
 }
 
 function is_owner(user_id: number) {
@@ -2006,7 +2490,7 @@ function is_owner(user_id: number) {
 }
 
 function fill_user_edit(user_to_edit: UserRow) {
-  const pop_in = $("#UserList");
+  const pop_in = document.querySelector("#UserList")!;
   fill_user_edit_summary(user_to_edit, pop_in, false);
   fill_user_edit_properties(user_to_edit, pop_in);
   fill_user_edit_preferences(user_to_edit, pop_in);
@@ -2025,9 +2509,12 @@ function fill_user_edit(user_to_edit: UserRow) {
   const keyUserToEdit = Object.keys(user_to_edit);
   const userToEditRecord = user_to_edit as unknown as Record<string, unknown>;
   plugins_users_infos_table.forEach((i) => {
-    $("#" + i.content_id).val("");
+    setVal(document.querySelectorAll("#" + i.content_id), "");
     if (keyUserToEdit.includes(i.users_table)) {
-      $("#" + i.content_id).val(String(userToEditRecord[i.users_table]));
+      setVal(
+        document.querySelectorAll("#" + i.content_id),
+        String(userToEditRecord[i.users_table]),
+      );
     } else {
       console.error(i.users_table, " doesn't exist in USER_INFOS_TABLE");
     }
@@ -2036,7 +2523,7 @@ function fill_user_edit(user_to_edit: UserRow) {
 
 function fill_guest_edit() {
   const user_to_edit = guest_user;
-  const pop_in = $(".GuestUserListPopInContainer");
+  const pop_in = document.querySelector(".GuestUserListPopInContainer")!;
   fill_user_edit_summary(user_to_edit, pop_in, true);
   fill_user_edit_properties(user_to_edit, pop_in);
   fill_user_edit_preferences(user_to_edit, pop_in);
@@ -2046,7 +2533,7 @@ function fill_guest_edit() {
 function fill_new_user() {
   // When you want to add an user: privacy level and groups
   // by default are the same as Guest, not status
-  const addUserPopIn = $("#AddUser");
+  const addUserPopIn = document.querySelector("#AddUser")!;
   const status_index = get_status_index("normal");
   const level_index = get_level_index(guest_user.level);
   set_selected_groups(guest_user.groups);
@@ -2056,73 +2543,84 @@ function fill_new_user() {
   ) {
     callback(groupOptions);
   });
-  jQuery.each(
-    jQuery.grep(groupOptions, function (group) {
-      return group.isSelected;
-    }),
-    function (i, group) {
+  groupOptions
+    .filter((group) => group.isSelected)
+    .forEach((group) => {
       groupAddUserSelectize.addItem(group.value);
-    },
+    });
+  const statusOption = find(
+    addUserPopIn,
+    ".user-property-status select option",
+  )[status_index] as HTMLOptionElement | undefined;
+  if (statusOption !== undefined) statusOption.selected = true;
+  const levelOption = find(addUserPopIn, ".user-property-level select option")[
+    level_index
+  ] as HTMLOptionElement | undefined;
+  if (levelOption !== undefined) levelOption.selected = true;
+  attr(
+    find(addUserPopIn, '.user-list-checkbox[name="hd_enabled"]'),
+    "data-selected",
+    guest_user.enabledHigh ? "1" : "0",
   );
-  addUserPopIn
-    .find(`.user-property-status select option:eq(${status_index})`)
-    .prop("selected", true);
-  addUserPopIn
-    .find(`.user-property-level select option:eq(${level_index})`)
-    .prop("selected", true);
-  addUserPopIn
-    .find('.user-list-checkbox[name="hd_enabled"]')
-    .attr("data-selected", guest_user.enabledHigh ? "1" : "0");
 }
 
-function fill_who_is_the_king(user_to_edit: UserRow, pop_in: JQuery) {
-  const who_is_the_king = pop_in.find("#who_is_the_king");
+function fill_who_is_the_king(user_to_edit: UserRow, pop_in: Element) {
+  const who_is_the_king = find(pop_in, "#who_is_the_king")[0]!;
   // By default I'm an admin and I only see who is the Main User
-  who_is_the_king
-    .removeClass("princes-of-this-piwigo king-of-this-piwigo can-change")
-    .addClass("royal-court-of-this-piwigo cannot-change")
-    .attr("title", mainAskWebmaster)
-    .tipTip();
-  who_is_the_king.off("click");
+  removeClass(
+    who_is_the_king,
+    "princes-of-this-piwigo king-of-this-piwigo can-change",
+  );
+  addClass(who_is_the_king, "royal-court-of-this-piwigo cannot-change");
+  attr(who_is_the_king, "title", mainAskWebmaster);
+  // Still jQuery: tipTip is a library, ported in P49-B group 2.
+  jQuery(who_is_the_king).tipTip();
+  off(who_is_the_king, "click");
   // I'm an webmaster
   if (connected_user_status === "webmaster") {
     // check user to edit status
     switch (user_to_edit.status) {
       // user to edit is an webmaster
       case "webmaster":
-        who_is_the_king
-          .removeClass(
-            "royal-court-of-this-piwigo king-of-this-piwigo cannot-change",
-          )
-          .addClass("princes-of-this-piwigo can-change")
-          .attr("title", mainUserSet)
-          .tipTip();
+        removeClass(
+          who_is_the_king,
+          "royal-court-of-this-piwigo king-of-this-piwigo cannot-change",
+        );
+        addClass(who_is_the_king, "princes-of-this-piwigo can-change");
+        attr(who_is_the_king, "title", mainUserSet);
+        // Still jQuery: tipTip is a library, ported in P49-B group 2.
+        jQuery(who_is_the_king).tipTip();
         if (!is_owner(user_to_edit.id)) {
-          who_is_the_king.off("click").on("click", function () {
+          off(who_is_the_king, "click");
+          on(who_is_the_king, "click", function () {
             open_main_user_modal(user_to_edit);
           });
         }
         break;
       // if user to edit is not an webmaster he cannot be set as a main user
       default:
-        who_is_the_king
-          .removeClass("princes-of-this-piwigo king-of-this-piwigo")
-          .addClass("royal-court-of-this-piwigo")
-          .attr("title", mainUserUpgradeWebmaster)
-          .tipTip();
+        removeClass(
+          who_is_the_king,
+          "princes-of-this-piwigo king-of-this-piwigo",
+        );
+        addClass(who_is_the_king, "royal-court-of-this-piwigo");
+        attr(who_is_the_king, "title", mainUserUpgradeWebmaster);
+        // Still jQuery: tipTip is a library, ported in P49-B group 2.
+        jQuery(who_is_the_king).tipTip();
         break;
     }
   }
 
   // Main User also the King
   if (is_owner(user_to_edit.id)) {
-    who_is_the_king
-      .removeClass(
-        "princes-of-this-piwigo royal-court-of-this-piwigo can-change",
-      )
-      .addClass("king-of-this-piwigo cannot-change")
-      .attr("title", mainUserStr)
-      .tipTip();
+    removeClass(
+      who_is_the_king,
+      "princes-of-this-piwigo royal-court-of-this-piwigo can-change",
+    );
+    addClass(who_is_the_king, "king-of-this-piwigo cannot-change");
+    attr(who_is_the_king, "title", mainUserStr);
+    // Still jQuery: tipTip is a library, ported in P49-B group 2.
+    jQuery(who_is_the_king).tipTip();
   }
 }
 
@@ -2132,32 +2630,31 @@ Fill data for setInfo
 
 function fill_ajax_data_from_properties(
   ajax_data: Record<string, unknown>,
-  pop_in: JQuery,
+  pop_in: Element,
 ) {
-  const groups_selected = pop_in
-    .find(".user-property-group .selectize-input .item")
-    .map(function (this: HTMLElement) {
-      return parseInt($(this).attr("data-value")!);
-    })
-    .get();
+  const groups_selected = find(
+    pop_in,
+    ".user-property-group .selectize-input .item",
+  ).map((el) => parseInt(attrOf(el, "data-value")!));
   // console.log(groups_selected);
-  ajax_data["email"] = pop_in.find(".user-property-email input").val();
+  ajax_data["email"] = val(find(pop_in, ".user-property-email input"));
   if (
     connected_user_status == "admin" &&
-    pop_in.find(".user-property-status select").val() != "webmaster" &&
-    pop_in.find(".user-property-status select").val() != "admin"
+    val(find(pop_in, ".user-property-status select")) != "webmaster" &&
+    val(find(pop_in, ".user-property-status select")) != "admin"
   ) {
-    ajax_data["status"] = pop_in.find(".user-property-status select").val();
+    ajax_data["status"] = val(find(pop_in, ".user-property-status select"));
   } else if (connected_user_status == "webmaster") {
-    ajax_data["status"] = pop_in.find(".user-property-status select").val();
+    ajax_data["status"] = val(find(pop_in, ".user-property-status select"));
   }
   // console.log(ajax_data['status']);
-  ajax_data["level"] = Number(pop_in.find(".user-property-level select").val());
+  ajax_data["level"] = Number(val(find(pop_in, ".user-property-level select")));
   ajax_data["groupIds"] = groups_selected.length == 0 ? [-1] : groups_selected;
   ajax_data["enabledHigh"] =
-    pop_in
-      .find('.user-list-checkbox[name="hd_enabled"]')
-      .attr("data-selected") == "1"
+    attrOf(
+      find(pop_in, '.user-list-checkbox[name="hd_enabled"]'),
+      "data-selected",
+    ) == "1"
       ? true
       : false;
   return ajax_data;
@@ -2165,38 +2662,45 @@ function fill_ajax_data_from_properties(
 
 function fill_ajax_data_from_preferences(
   ajax_data: Record<string, unknown>,
-  pop_in: JQuery,
+  pop_in: Element,
 ) {
-  ajax_data["theme"] = pop_in.find(".user-property-theme select").val();
-  ajax_data["language"] = pop_in.find(".user-property-lang select").val();
+  ajax_data["theme"] = val(find(pop_in, ".user-property-theme select"));
+  ajax_data["language"] = val(find(pop_in, ".user-property-lang select"));
+  // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
   ajax_data["nbImagePage"] =
     nb_image_page_values[
-      pop_in
-        .find(".photos-select-bar .slider-bar-container")
-        .slider("option", "value") as number
+      jQuery(find(pop_in, ".photos-select-bar .slider-bar-container")).slider(
+        "option",
+        "value",
+      ) as number
     ];
+  // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
   ajax_data["recentPeriod"] =
     recent_period_values[
-      pop_in
-        .find(".period-select-bar .slider-bar-container")
-        .slider("option", "value") as number
+      jQuery(find(pop_in, ".period-select-bar .slider-bar-container")).slider(
+        "option",
+        "value",
+      ) as number
     ];
   ajax_data["expand"] =
-    pop_in
-      .find('.user-list-checkbox[name="expand_all_albums"]')
-      .attr("data-selected") == "1"
+    attrOf(
+      find(pop_in, '.user-list-checkbox[name="expand_all_albums"]'),
+      "data-selected",
+    ) == "1"
       ? true
       : false;
   ajax_data["showNbComments"] =
-    pop_in
-      .find('.user-list-checkbox[name="show_nb_comments"]')
-      .attr("data-selected") == "1"
+    attrOf(
+      find(pop_in, '.user-list-checkbox[name="show_nb_comments"]'),
+      "data-selected",
+    ) == "1"
       ? true
       : false;
   ajax_data["showNbHits"] =
-    pop_in
-      .find('.user-list-checkbox[name="show_nb_hits"]')
-      .attr("data-selected") == "1"
+    attrOf(
+      find(pop_in, '.user-list-checkbox[name="show_nb_hits"]'),
+      "data-selected",
+    ) == "1"
       ? true
       : false;
   return ajax_data;
@@ -2204,7 +2708,7 @@ function fill_ajax_data_from_preferences(
 
 function fill_ajax_data_from_container(
   ajax_data: Record<string, unknown>,
-  pop_in: JQuery,
+  pop_in: Element,
 ) {
   ajax_data = fill_ajax_data_from_properties(ajax_data, pop_in);
   ajax_data = fill_ajax_data_from_preferences(ajax_data, pop_in);
@@ -2240,9 +2744,15 @@ function get_first_selection_usernames(callback: () => void) {
 }
 
 function select_whole_set() {
-  const filterLevel = $(".advanced-filter-select[name=filter_level]").val();
-  const filterGroup = $(".advanced-filter-select[name=filter_group]").val();
-  const filterStatus = $(".advanced-filter-select[name=filter_status]").val();
+  const filterLevel = val(
+    document.querySelectorAll(".advanced-filter-select[name=filter_level]"),
+  );
+  const filterGroup = val(
+    document.querySelectorAll(".advanced-filter-select[name=filter_group]"),
+  );
+  const filterStatus = val(
+    document.querySelectorAll(".advanced-filter-select[name=filter_status]"),
+  );
   void ajax({
     url: "api/v1/users",
     type: "GET",
@@ -2257,53 +2767,56 @@ function select_whole_set() {
       maxLevel: filterLevel,
       minRegister:
         register_dates[
+          // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
           (
-            $(".dates-select-bar .slider-bar-container").slider(
-              "option",
-              "values",
-            ) as number[]
+            jQuery(
+              document.querySelectorAll(
+                ".dates-select-bar .slider-bar-container",
+              ),
+            ).slider("option", "values") as number[]
           )[0]!
         ],
       maxRegister:
         register_dates[
           (
-            $(".dates-select-bar .slider-bar-container").slider(
-              "option",
-              "values",
-            ) as number[]
+            jQuery(
+              document.querySelectorAll(
+                ".dates-select-bar .slider-bar-container",
+              ),
+            ).slider("option", "values") as number[]
           )[1]!
         ],
     },
     dataType: "json",
     beforeSend: function () {
-      $("#checkActions .loading").show();
+      show(document.querySelectorAll("#checkActions .loading"));
     },
     success: function (data: UserListResponse) {
       selection = data.users.map((x) => {
         return { id: x.id };
       });
-      $("#checkActions .loading").hide();
+      hide(document.querySelectorAll("#checkActions .loading"));
       update_selection_content();
     },
     error: function () {
-      $("#checkActions .loading").hide();
+      hide(document.querySelectorAll("#checkActions .loading"));
     },
   });
 }
 
 function update_user_username() {
-  const pop_in_container = $("#UserList");
+  const pop_in_container = document.querySelector("#UserList")!;
   const ajax_data: Record<string, unknown> = {};
   const newUsername = String(
-    pop_in_container.find(".user-property-input-username").val(),
+    val(find(pop_in_container, ".user-property-input-username")),
   );
   ajax_data["username"] = newUsername;
   if (newUsername.replace(/\s/g, "").length == 0) {
-    $(".update-user-fail")
-      .html(fieldNotEmpty)
-      .fadeIn()
-      .delay(1500)
-      .fadeOut(2500);
+    const failEl = document.querySelectorAll(".update-user-fail");
+    html(failEl, fieldNotEmpty);
+    fadeIn(failEl);
+    delay(failEl, 1500);
+    fadeOut(failEl, 2500);
     return;
   }
   void ajax({
@@ -2323,33 +2836,45 @@ function update_user_username() {
         const updatedUsername =
           "username" in data ? data.username : newUsername;
         current_users[last_user_index]!.username = updatedUsername;
-        $("#UserList .user-property-username .edit-username-title").html(
+        html(
+          document.querySelectorAll(
+            "#UserList .user-property-username .edit-username-title",
+          ),
           updatedUsername,
         );
-        $("#UserList .user-property-initials span").html(
+        html(
+          document.querySelectorAll("#UserList .user-property-initials span"),
           get_initials(updatedUsername),
         );
         fill_container_user_info(
-          $("#user-table-content .user-container").eq(last_user_index),
+          document.querySelectorAll("#user-table-content .user-container")[
+            last_user_index
+          ]!,
           last_user_index,
         );
       }
-      $(".user-property-username-change-input").hide();
-      $(".edit-username-success").fadeIn();
-      $("#close_username_success").on("click", function () {
-        $(".edit-username-success").hide();
-        $(".user-property-username-change-input").show();
-        $(".user-property-username-change").hide();
-      });
+      hide(document.querySelectorAll(".user-property-username-change-input"));
+      fadeIn(document.querySelectorAll(".edit-username-success"));
+      on(
+        document.querySelectorAll("#close_username_success"),
+        "click",
+        function () {
+          hide(document.querySelectorAll(".edit-username-success"));
+          show(
+            document.querySelectorAll(".user-property-username-change-input"),
+          );
+          hide(document.querySelectorAll(".user-property-username-change"));
+        },
+      );
     },
   });
 }
 
 function update_user_password() {
-  const pop_in_container = $("#UserList");
+  const pop_in_container = document.querySelector("#UserList")!;
   const ajax_data: Record<string, unknown> = {};
   const newPassword = String(
-    pop_in_container.find(".user-property-input-password").val(),
+    val(find(pop_in_container, ".user-property-input-password")),
   );
   ajax_data["password"] = newPassword;
   void ajax({
@@ -2360,39 +2885,50 @@ function update_user_password() {
     data: JSON.stringify(ajax_data),
     dataType: "json",
     success: () => {
-      $(".user-property-password-change-inputs").hide();
-      $("#edit_password_success_change").fadeIn();
+      hide(document.querySelectorAll(".user-property-password-change-inputs"));
+      fadeIn(document.querySelectorAll("#edit_password_success_change"));
 
       if (window.isSecureContext && navigator.clipboard) {
-        $("#copy_password").on("click", function () {
+        on(document.querySelectorAll("#copy_password"), "click", function () {
           copyToClipboard(newPassword);
-          $("#password_msg_success").html(passwordCopied);
+          html(
+            document.querySelectorAll("#password_msg_success"),
+            passwordCopied,
+          );
         });
       }
 
-      $("#close_password_success").on("click", function () {
-        $(".user-property-password-change").hide();
-        $("#edit_password_success_change").hide();
-        $(".user-property-password-change-inputs").show();
-        reset_input_password();
-      });
+      on(
+        document.querySelectorAll("#close_password_success"),
+        "click",
+        function () {
+          hide(document.querySelectorAll(".user-property-password-change"));
+          hide(document.querySelectorAll("#edit_password_success_change"));
+          show(
+            document.querySelectorAll(".user-property-password-change-inputs"),
+          );
+          reset_input_password();
+        },
+      );
     },
   });
 }
 
 function update_user_info() {
   //Show spinner
-  $(".update-user-button i")
-    .removeClass("icon-floppy")
-    .addClass("icon-spin6 animate-spin");
-  $(".update-user-button").addClass("unclickable");
-  const pop_in_container = $(".UserListPopInContainer");
+  const btnIcon = document.querySelectorAll(".update-user-button i");
+  removeClass(btnIcon, "icon-floppy");
+  addClass(btnIcon, "icon-spin6 animate-spin");
+  addClass(document.querySelectorAll(".update-user-button"), "unclickable");
+  const pop_in_container = document.querySelector(".UserListPopInContainer")!;
   let ajax_data: Record<string, unknown> = {};
   if (plugins_users_infos_table.length > 0) {
     const keyCurrentUsers = Object.keys(current_users[last_user_index]!);
     plugins_users_infos_table.forEach((i) => {
       if (keyCurrentUsers.includes(i.users_table)) {
-        ajax_data[i.users_table] = $("#" + i.content_id).val();
+        ajax_data[i.users_table] = val(
+          document.querySelectorAll("#" + i.content_id),
+        );
       } else {
         console.error(i.users_table, " doesn't exist in USER_INFOS_TABLE");
       }
@@ -2408,8 +2944,8 @@ function update_user_info() {
     data: JSON.stringify(ajax_data),
     dataType: "json",
     beforeSend: function () {
-      $("#UserList .update-user-fail").fadeOut();
-      $("#UserList .update-user-success").fadeOut();
+      fadeOut(document.querySelectorAll("#UserList .update-user-fail"));
+      fadeOut(document.querySelectorAll("#UserList .update-user-success"));
     },
     success: function (
       result_user: operations["userUpdate"]["responses"][200]["content"]["application/json"],
@@ -2420,17 +2956,26 @@ function update_user_info() {
           ...result_user,
         };
         fill_container_user_info(
-          $("#user-table-content .user-container").eq(last_user_index),
+          document.querySelectorAll("#user-table-content .user-container")[
+            last_user_index
+          ]!,
           last_user_index,
         );
       }
-      $("#UserList .update-user-success").fadeIn().delay(1500).fadeOut(2500);
+      const successEl = document.querySelectorAll(
+        "#UserList .update-user-success",
+      );
+      fadeIn(successEl);
+      delay(successEl, 1500);
+      fadeOut(successEl, 2500);
 
       //Hide spinner
-      $(".update-user-button i")
-        .removeClass("icon-spin6 animate-spin")
-        .addClass("icon-floppy");
-      $(".update-user-button").removeClass("unclickable");
+      removeClass(btnIcon, "icon-spin6 animate-spin");
+      addClass(btnIcon, "icon-floppy");
+      removeClass(
+        document.querySelectorAll(".update-user-button"),
+        "unclickable",
+      );
 
       // update plugins
       if (Object.keys(plugins_get_functions).length > 0) {
@@ -2445,21 +2990,23 @@ function update_user_info() {
       // response did carry) is always a real, complete UserRow.
       fill_who_is_the_king(
         last_user_index != -1 ? current_users[last_user_index]! : guest_user,
-        $("#UserList"),
+        document.querySelector("#UserList")!,
       );
     },
     error: function (jqXHR) {
       const message =
         (jqXHR.responseJSON as { detail?: string } | undefined)?.detail ??
         errorStr;
-      $("#UserList .update-user-fail").html(message);
-      $("#UserList .update-user-fail").fadeIn();
-      $(".update-user-button i")
-        .addClass("icon-floppy")
-        .removeClass("icon-spin6 animate-spin");
-      $(".update-user-button").removeClass("unclickable");
+      html(document.querySelectorAll("#UserList .update-user-fail"), message);
+      fadeIn(document.querySelectorAll("#UserList .update-user-fail"));
+      addClass(btnIcon, "icon-floppy");
+      removeClass(btnIcon, "icon-spin6 animate-spin");
+      removeClass(
+        document.querySelectorAll(".update-user-button"),
+        "unclickable",
+      );
       setTimeout(() => {
-        $("#UserList .update-user-fail").fadeOut();
+        fadeOut(document.querySelectorAll("#UserList .update-user-fail"));
       }, 5000);
     },
   });
@@ -2502,12 +3049,14 @@ function get_user_info(uid: number, callback: (() => void) | null = null) {
 
 function update_guest_info() {
   //Show spinner
-  $(".update-user-button i")
-    .removeClass("icon-floppy")
-    .addClass("icon-spin6 animate-spin");
-  $(".update-user-button").addClass("unclickable");
+  const btnIcon = document.querySelectorAll(".update-user-button i");
+  removeClass(btnIcon, "icon-floppy");
+  addClass(btnIcon, "icon-spin6 animate-spin");
+  addClass(document.querySelectorAll(".update-user-button"), "unclickable");
 
-  const pop_in_container = $(".GuestUserListPopInContainer");
+  const pop_in_container = document.querySelector(
+    ".GuestUserListPopInContainer",
+  )!;
   let ajax_data: Record<string, unknown> = {};
   ajax_data = fill_ajax_data_from_container(ajax_data, pop_in_container);
   ajax_data.email = undefined;
@@ -2522,21 +3071,27 @@ function update_guest_info() {
     success: function (
       _data: operations["userUpdate"]["responses"][200]["content"]["application/json"],
     ) {
-      $("#GuestUserList .update-user-success")
-        .fadeIn()
-        .delay(1500)
-        .fadeOut(2500);
+      const successEl = document.querySelectorAll(
+        "#GuestUserList .update-user-success",
+      );
+      fadeIn(successEl);
+      delay(successEl, 1500);
+      fadeOut(successEl, 2500);
       //Hide spinner
-      $(".update-user-button i")
-        .removeClass("icon-spin6 animate-spin")
-        .addClass("icon-floppy");
-      $(".update-user-button").removeClass("unclickable");
+      removeClass(btnIcon, "icon-spin6 animate-spin");
+      addClass(btnIcon, "icon-floppy");
+      removeClass(
+        document.querySelectorAll(".update-user-button"),
+        "unclickable",
+      );
     },
     error: function () {
-      $(".update-user-button i")
-        .removeClass("icon-spin6 animate-spin")
-        .addClass("icon-floppy");
-      $(".update-user-button").removeClass("unclickable");
+      removeClass(btnIcon, "icon-spin6 animate-spin");
+      addClass(btnIcon, "icon-floppy");
+      removeClass(
+        document.querySelectorAll(".update-user-button"),
+        "unclickable",
+      );
     },
   });
 }
@@ -2548,9 +3103,9 @@ function update_user_list() {
     perPage: per_page,
     exclude: [guest_id],
   };
-  const userSearchVal = $("#user_search").val();
+  const userSearchVal = val(document.querySelectorAll("#user_search"));
   if (userSearchVal) {
-    const matches = String(userSearchVal).match(/^id:(\d+)$/);
+    const matches = userSearchVal.match(/^id:(\d+)$/);
     if (matches) {
       update_data["userIds"] = [matches[1]];
     }
@@ -2559,30 +3114,44 @@ function update_user_list() {
     // docblock already documents this as a deliberately deferred
     // filter, not a gap introduced by this conversion.
   }
-  if ($(".advanced-filter").hasClass("advanced-filter-open")) {
-    const filterStatus = $(".advanced-filter-select[name=filter_status]").val();
-    const filterGroup = $(".advanced-filter-select[name=filter_group]").val();
-    const filterLevel = $(".advanced-filter-select[name=filter_level]").val();
+  if (
+    hasClass(
+      document.querySelectorAll(".advanced-filter"),
+      "advanced-filter-open",
+    )
+  ) {
+    const filterStatus = val(
+      document.querySelectorAll(".advanced-filter-select[name=filter_status]"),
+    );
+    const filterGroup = val(
+      document.querySelectorAll(".advanced-filter-select[name=filter_group]"),
+    );
+    const filterLevel = val(
+      document.querySelectorAll(".advanced-filter-select[name=filter_level]"),
+    );
     update_data["status"] = filterStatus ? [filterStatus] : [];
     update_data["groupIds"] = filterGroup ? [filterGroup] : [];
     update_data["minLevel"] = filterLevel;
     update_data["maxLevel"] = filterLevel;
     update_data["minRegister"] =
       register_dates[
+        // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
         (
-          $(".dates-select-bar .slider-bar-container").slider(
-            "option",
-            "values",
-          ) as number[]
+          jQuery(
+            document.querySelectorAll(
+              ".dates-select-bar .slider-bar-container",
+            ),
+          ).slider("option", "values") as number[]
         )[0]!
       ];
     update_data["maxRegister"] =
       register_dates[
         (
-          $(".dates-select-bar .slider-bar-container").slider(
-            "option",
-            "values",
-          ) as number[]
+          jQuery(
+            document.querySelectorAll(
+              ".dates-select-bar .slider-bar-container",
+            ),
+          ).slider("option", "values") as number[]
         )[1]!
       ];
   }
@@ -2592,56 +3161,88 @@ function update_user_list() {
     data: update_data,
     dataType: "json",
     beforeSend: function () {
-      $(".user-update-spinner").show();
+      show(document.querySelectorAll(".user-update-spinner"));
     },
     success: function (data: UserListResponse) {
       total_users = data.totalCount;
       if (first_update) {
-        $("h1").append(`<span class='badge-number'>${total_users}</span>`);
+        document
+          .querySelector("h1")
+          ?.insertAdjacentHTML(
+            "beforeend",
+            `<span class='badge-number'>${total_users}</span>`,
+          );
         first_update = false;
       }
       nb_filtered_users = data.totalCount;
       update_pagination_menu();
       current_users = data.users;
       generate_user_list();
-      $(".user-col.user-first-col.user-container-edit").click(function () {
-        const uid_index = Number(
-          $(this).closest(".user-container").attr("key"),
-        );
-        last_user_id = current_users[uid_index]!.id;
-        last_user_index = uid_index;
-        fill_user_edit(current_users[uid_index]!);
-        $("#UserList").fadeIn();
-        $("#tab_properties")[0]!.scrollIntoView({
-          behavior: "instant",
-        });
-      });
+      on(
+        document.querySelectorAll(
+          ".user-col.user-first-col.user-container-edit",
+        ),
+        "click",
+        function (this: Element) {
+          const uid_index = Number(
+            attrOf(this.closest(".user-container")!, "key"),
+          );
+          last_user_id = current_users[uid_index]!.id;
+          last_user_index = uid_index;
+          fill_user_edit(current_users[uid_index]!);
+          fadeIn(document.querySelectorAll("#UserList"));
+          document.querySelector("#tab_properties")?.scrollIntoView({
+            behavior: "instant",
+          });
+        },
+      );
       set_selected_to_selection();
 
-      $(".user-update-spinner").hide();
+      hide(document.querySelectorAll(".user-update-spinner"));
 
       let nb_filters = 0;
-      if ($(".advanced-filter-select[name=filter_status]").val() != "")
-        nb_filters += 1;
-      if ($(".advanced-filter-select[name=filter_group]").val() != "")
-        nb_filters += 1;
-      if ($(".advanced-filter-select[name=filter_level]").val() != "")
+      if (
+        val(
+          document.querySelectorAll(
+            ".advanced-filter-select[name=filter_status]",
+          ),
+        ) != ""
+      )
         nb_filters += 1;
       if (
+        val(
+          document.querySelectorAll(
+            ".advanced-filter-select[name=filter_group]",
+          ),
+        ) != ""
+      )
+        nb_filters += 1;
+      if (
+        val(
+          document.querySelectorAll(
+            ".advanced-filter-select[name=filter_level]",
+          ),
+        ) != ""
+      )
+        nb_filters += 1;
+      if (
+        // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
         (
-          $(".dates-select-bar .slider-bar-container").slider(
-            "option",
-            "values",
-          ) as number[]
+          jQuery(
+            document.querySelectorAll(
+              ".dates-select-bar .slider-bar-container",
+            ),
+          ).slider("option", "values") as number[]
         )[0] != 0
       )
         nb_filters += 1;
       if (
         (
-          $(".dates-select-bar .slider-bar-container").slider(
-            "option",
-            "values",
-          ) as number[]
+          jQuery(
+            document.querySelectorAll(
+              ".dates-select-bar .slider-bar-container",
+            ),
+          ).slider("option", "values") as number[]
         )[1] !=
         register_dates.length - 1
       )
@@ -2650,30 +3251,41 @@ function update_user_list() {
       show_filter_infos(nb_filters);
     },
     error: () => {
-      $(".user-update-spinner").hide();
+      hide(document.querySelectorAll(".user-update-spinner"));
     },
   });
 }
 
 function add_user() {
   const ajax_data: Record<string, unknown> = {};
-  const groups_selected = $(
-    ".AddUserInputContainer .user-property-group .selectize-input .item",
-  )
-    .map(function (this: HTMLElement) {
-      return parseInt($(this).attr("data-value")!);
-    })
-    .get();
-  ajax_data.username = $(".AddUserLabelUsername .user-property-input").val();
-  ajax_data.email = $(".AddUserLabelEmail .user-property-input").val();
-  ajax_data.status = $(
-    ".AddUserInputContainer .user-property-status select",
-  ).val();
+  const groups_selected = Array.from(
+    document.querySelectorAll(
+      ".AddUserInputContainer .user-property-group .selectize-input .item",
+    ),
+  ).map((el) => parseInt(attrOf(el, "data-value")!));
+  ajax_data.username = val(
+    document.querySelectorAll(".AddUserLabelUsername .user-property-input"),
+  );
+  ajax_data.email = val(
+    document.querySelectorAll(".AddUserLabelEmail .user-property-input"),
+  );
+  ajax_data.status = val(
+    document.querySelectorAll(
+      ".AddUserInputContainer .user-property-status select",
+    ),
+  );
   ajax_data.level = Number(
-    $(".AddUserInputContainer .user-property-level select").val(),
+    val(
+      document.querySelectorAll(
+        ".AddUserInputContainer .user-property-level select",
+      ),
+    ),
   );
   ajax_data.enabledHigh =
-    $('.AddUserInputContainer .user-list-checkbox[name="hd_enabled"]').attr(
+    attrOf(
+      document.querySelectorAll(
+        '.AddUserInputContainer .user-list-checkbox[name="hd_enabled"]',
+      ),
       "data-selected",
     ) == "1"
       ? true
@@ -2689,8 +3301,8 @@ function add_user() {
   };
 
   if ("generic" === ajax_data.status) {
-    data.password = $("#add_user_pass").val();
-    data.passwordConfirm = $("#add_user_confpass").val();
+    data.password = val(document.querySelectorAll("#add_user_pass"));
+    data.passwordConfirm = val(document.querySelectorAll("#add_user_confpass"));
   } else {
     data.autoPassword = true;
   }
@@ -2703,28 +3315,66 @@ function add_user() {
     data: JSON.stringify(data),
     dataType: "json",
     beforeSend: function () {
-      $("#AddUser .AddUserErrors").css("visibility", "hidden");
-      if ($(".AddUserLabelUsername .user-property-input").val() == "") {
-        $("#AddUser .AddUserErrors").html(missingUsername);
-        $("#AddUser .AddUserErrors").css("visibility", "visible");
+      css(
+        document.querySelectorAll("#AddUser .AddUserErrors"),
+        "visibility",
+        "hidden",
+      );
+      if (
+        val(
+          document.querySelectorAll(
+            ".AddUserLabelUsername .user-property-input",
+          ),
+        ) == ""
+      ) {
+        html(
+          document.querySelectorAll("#AddUser .AddUserErrors"),
+          missingUsername,
+        );
+        css(
+          document.querySelectorAll("#AddUser .AddUserErrors"),
+          "visibility",
+          "visible",
+        );
         return false;
       }
       if ("generic" === ajax_data.status) {
-        const pass = $("#add_user_pass").val();
-        const confPass = $("#add_user_confpass").val();
+        const pass = val(document.querySelectorAll("#add_user_pass"));
+        const confPass = val(document.querySelectorAll("#add_user_confpass"));
         if ("" == pass) {
-          $("#AddUser .AddUserErrors").html(missingPassword);
-          $("#AddUser .AddUserErrors").css("visibility", "visible");
+          html(
+            document.querySelectorAll("#AddUser .AddUserErrors"),
+            missingPassword,
+          );
+          css(
+            document.querySelectorAll("#AddUser .AddUserErrors"),
+            "visibility",
+            "visible",
+          );
           return false;
         }
         if ("" == confPass) {
-          $("#AddUser .AddUserErrors").html(missingConfPassword);
-          $("#AddUser .AddUserErrors").css("visibility", "visible");
+          html(
+            document.querySelectorAll("#AddUser .AddUserErrors"),
+            missingConfPassword,
+          );
+          css(
+            document.querySelectorAll("#AddUser .AddUserErrors"),
+            "visibility",
+            "visible",
+          );
           return false;
         }
         if (pass !== confPass) {
-          $("#AddUser .AddUserErrors").html(noMatchPassword);
-          $("#AddUser .AddUserErrors").css("visibility", "visible");
+          html(
+            document.querySelectorAll("#AddUser .AddUserErrors"),
+            noMatchPassword,
+          );
+          css(
+            document.querySelectorAll("#AddUser .AddUserErrors"),
+            "visibility",
+            "visible",
+          );
           return false;
         }
       }
@@ -2743,8 +3393,12 @@ function add_user() {
       const message =
         (jqXHR.responseJSON as { detail?: string } | undefined)?.detail ??
         errorStr;
-      $("#AddUser .AddUserErrors").html(message);
-      $("#AddUser .AddUserErrors").css("visibility", "visible");
+      html(document.querySelectorAll("#AddUser .AddUserErrors"), message);
+      css(
+        document.querySelectorAll("#AddUser .AddUserErrors"),
+        "visibility",
+        "visible",
+      );
     },
   });
 }
@@ -2771,10 +3425,16 @@ function add_infos_to_new_user(
       const new_user_id = data.id;
       update_user_list();
       // add_user_close();
-      $("#AddUserUpdated")
-        .removeClass("icon-red icon-cancel")
-        .addClass("icon-green border-green icon-ok");
-      $("#AddUserUpdatedText").html(
+      removeClass(
+        document.querySelectorAll("#AddUserUpdated"),
+        "icon-red icon-cancel",
+      );
+      addClass(
+        document.querySelectorAll("#AddUserUpdated"),
+        "icon-green border-green icon-ok",
+      );
+      html(
+        document.querySelectorAll("#AddUserUpdatedText"),
         user_added_str.replace("%s", String(ajax_data.username)),
       );
       const status = ["webmaster", "admin", "normal"];
@@ -2783,31 +3443,41 @@ function add_infos_to_new_user(
       } else {
         add_user_close();
       }
-      $("#AddUser .user-property-input").val("");
-      $("#AddUserSuccess .edit-now")
-        .off("click")
-        .on("click", () => {
-          last_user_id = new_user_id;
-          last_user_index = get_container_index_from_uid(new_user_id);
-          if (last_user_index != -1) {
-            fill_user_edit(current_users[last_user_index]!);
-            open_user_list();
-          } else {
-            get_user_info(new_user_id, open_user_list);
-          }
-        });
-      $("#AddUserSuccess label span:first").html(
+      setVal(document.querySelectorAll("#AddUser .user-property-input"), "");
+      const editNow = document.querySelectorAll("#AddUserSuccess .edit-now");
+      off(editNow, "click");
+      on(editNow, "click", () => {
+        last_user_id = new_user_id;
+        last_user_index = get_container_index_from_uid(new_user_id);
+        if (last_user_index != -1) {
+          fill_user_edit(current_users[last_user_index]!);
+          open_user_list();
+        } else {
+          get_user_info(new_user_id, open_user_list);
+        }
+      });
+      html(
+        document.querySelectorAll("#AddUserSuccess label span:first-child"),
         user_added_str.replace("%s", String(ajax_data.username)),
       );
-      $("#AddUserSuccess").css("display", "flex");
-      $(".badge-number").html(String(+$(".badge-number").html() + 1));
+      css(document.querySelectorAll("#AddUserSuccess"), "display", "flex");
+      html(
+        document.querySelectorAll(".badge-number"),
+        String(
+          +(htmlOf(document.querySelectorAll(".badge-number")) ?? "0") + 1,
+        ),
+      );
     },
     error: function (jqXHR) {
       const message =
         (jqXHR.responseJSON as { detail?: string } | undefined)?.detail ??
         errorStr;
-      $("#AddUser .AddUserErrors").html(message);
-      $("#AddUser .AddUserErrors").css("visibility", "visible");
+      html(document.querySelectorAll("#AddUser .AddUserErrors"), message);
+      css(
+        document.querySelectorAll("#AddUser .AddUserErrors"),
+        "visibility",
+        "visible",
+      );
     },
   });
 }
@@ -2826,57 +3496,80 @@ function send_new_user_password(user_id: number, mail: string) {
     success: function (
       response: operations["userGeneratePasswordLink"]["responses"][200]["content"]["application/json"],
     ) {
-      const password_container = $("#AddUserPasswordInputContainer");
-      password_container.show();
-      $("#AddUserFieldContainer").hide();
-      $("#AddUserSuccessContainer").fadeIn();
-      $("#AddUserPasswordLink").val(response.generatedLink).trigger("focus");
-      $("#AddUserTextField").html(
+      const password_container = document.querySelectorAll(
+        "#AddUserPasswordInputContainer",
+      );
+      show(password_container);
+      hide(document.querySelectorAll("#AddUserFieldContainer"));
+      fadeIn(document.querySelectorAll("#AddUserSuccessContainer"));
+      setVal(
+        document.querySelectorAll("#AddUserPasswordLink"),
+        response.generatedLink,
+      );
+      trigger(document.querySelectorAll("#AddUserPasswordLink"), "focus");
+      html(
+        document.querySelectorAll("#AddUserTextField"),
         send_by_mail
           ? sprintf(validLinkMail, response.timeValidation, `<b>${mail}</b>`)
           : sprintf(validLinkWithoutMail, response.timeValidation),
       );
 
       if (send_by_mail && !response.sendByMail) {
-        $("#AddUserUpdated")
-          .removeClass("icon-green border-green icon-ok")
-          .addClass("icon-red-error icon-cancel");
-        $("#AddUserUpdatedText").html(errorMailSent);
-        $("#AddUserTextField").html(
+        removeClass(
+          document.querySelectorAll("#AddUserUpdated"),
+          "icon-green border-green icon-ok",
+        );
+        addClass(
+          document.querySelectorAll("#AddUserUpdated"),
+          "icon-red-error icon-cancel",
+        );
+        html(document.querySelectorAll("#AddUserUpdatedText"), errorMailSent);
+        html(
+          document.querySelectorAll("#AddUserTextField"),
           sprintf(errorMailSentMsg, response.timeValidation),
         );
       } else if (send_by_mail && response.sendByMail) {
-        password_container.hide();
+        hide(password_container);
       }
 
       if (window.isSecureContext && navigator.clipboard) {
-        $("#AddUserCopyPassword")
-          .off("click")
-          .on("click", function () {
-            const successMsg = $("#AddUserUpdatedText");
-            successMsg.fadeOut();
-            copyToClipboard(response.generatedLink);
-            $("#AddUserUpdated")
-              .removeClass("icon-red icon-cancel")
-              .addClass("icon-green border-green icon-ok");
-            successMsg.html(copyLinkStr);
-            successMsg.fadeIn();
-          });
-      }
-      $("#AddUserButton")
-        .off("click")
-        .on("click", function () {
-          add_user_close();
+        const copyBtn = document.querySelectorAll("#AddUserCopyPassword");
+        off(copyBtn, "click");
+        on(copyBtn, "click", function () {
+          const successMsg = document.querySelectorAll("#AddUserUpdatedText");
+          fadeOut(successMsg);
+          copyToClipboard(response.generatedLink);
+          removeClass(
+            document.querySelectorAll("#AddUserUpdated"),
+            "icon-red icon-cancel",
+          );
+          addClass(
+            document.querySelectorAll("#AddUserUpdated"),
+            "icon-green border-green icon-ok",
+          );
+          html(successMsg, copyLinkStr);
+          fadeIn(successMsg);
         });
+      }
+      const addUserButton = document.querySelectorAll("#AddUserButton");
+      off(addUserButton, "click");
+      on(addUserButton, "click", function () {
+        add_user_close();
+      });
     },
     error: function (jqXHR) {
       const message =
         (jqXHR.responseJSON as { detail?: string } | undefined)?.detail ??
         errorStr;
-      $("#AddUserUpdated")
-        .removeClass("icon-green border-green icon-ok")
-        .addClass("icon-red-error icon-cancel");
-      $("#AddUserUpdatedText").html(message);
+      removeClass(
+        document.querySelectorAll("#AddUserUpdated"),
+        "icon-green border-green icon-ok",
+      );
+      addClass(
+        document.querySelectorAll("#AddUserUpdated"),
+        "icon-red-error icon-cancel",
+      );
+      html(document.querySelectorAll("#AddUserUpdatedText"), message);
     },
   });
 }
@@ -2894,7 +3587,12 @@ function delete_user(uid: number) {
     ) {
       close_user_list();
       update_user_list();
-      $(".badge-number").html(String(+$(".badge-number").html() - 1));
+      html(
+        document.querySelectorAll(".badge-number"),
+        String(
+          +(htmlOf(document.querySelectorAll(".badge-number")) ?? "0") - 1,
+        ),
+      );
       // msg where user was deleted
       //jQuery('#showAddUser .infos').html('&#x2714; User '+username+' deleted').show();
     },
@@ -2906,30 +3604,39 @@ function delete_user(uid: number) {
 }
 
 function show_filter_infos(nb_filters: number) {
-  if (String($("#user_search").val() ?? "").length != 0 || nb_filters != 0) {
+  if (
+    (val(document.querySelectorAll("#user_search")) ?? "").length != 0 ||
+    nb_filters != 0
+  ) {
     if (String(total_users) != "1") {
-      $(".filtered-users").html(
+      html(
+        document.querySelectorAll(".filtered-users"),
         filtered_users.replace(/%d/g, String(total_users)),
       );
     } else {
-      $(".filtered-users").html(
+      html(
+        document.querySelectorAll(".filtered-users"),
         filtered_user.replace(/%d/g, String(total_users)),
       );
     }
   } else {
-    $(".filtered-users").html("");
+    html(document.querySelectorAll(".filtered-users"), "");
   }
 
   if (nb_filters != 0) {
-    $(".advanced-filter-btn").css({
+    css(document.querySelectorAll(".advanced-filter-btn"), {
       width: "80px",
     });
-    $(".filter-counter").html(String(nb_filters)).css("display", "flex");
+    const counter = document.querySelectorAll(".filter-counter");
+    html(counter, String(nb_filters));
+    css(counter, "display", "flex");
   } else {
-    $(".advanced-filter-btn").css({
+    css(document.querySelectorAll(".advanced-filter-btn"), {
       width: "70px",
     });
-    $(".filter-counter").css("display", "none").html("0");
+    const counter = document.querySelectorAll(".filter-counter");
+    css(counter, "display", "none");
+    html(counter, "0");
   }
 }
 
@@ -2951,47 +3658,99 @@ function send_link_password(
     success: function (
       response: operations["userGeneratePasswordLink"]["responses"][200]["content"]["application/json"],
     ) {
-      $("#result_send_mail_copy_input").val(response.generatedLink);
+      setVal(
+        document.querySelectorAll("#result_send_mail_copy_input"),
+        response.generatedLink,
+      );
       if (send_by_mail) {
         if (response.sendByMail) {
-          $("#result_send_mail")
-            .removeClass("update-password-fail icon-red")
-            .addClass("update-password-success icon-green");
-          $("#icon_password_msg_result_mail")
-            .removeClass("icon-cancel")
-            .addClass("icon-ok");
-          const curr_mail = String(
-            $(".user-property-email .user-property-input").val() ?? "",
+          removeClass(
+            document.querySelectorAll("#result_send_mail"),
+            "update-password-fail icon-red",
+          );
+          addClass(
+            document.querySelectorAll("#result_send_mail"),
+            "update-password-success icon-green",
+          );
+          removeClass(
+            document.querySelectorAll("#icon_password_msg_result_mail"),
+            "icon-cancel",
+          );
+          addClass(
+            document.querySelectorAll("#icon_password_msg_result_mail"),
+            "icon-ok",
+          );
+          const curr_mail = (
+            val(
+              document.querySelectorAll(
+                ".user-property-email .user-property-input",
+              ),
+            ) ?? ""
           ).length
-            ? String($(".user-property-email .user-property-input").val())
+            ? String(
+                val(
+                  document.querySelectorAll(
+                    ".user-property-email .user-property-input",
+                  ),
+                ),
+              )
             : (email ?? "");
-          $("#password_msg_result_mail").html(
+          html(
+            document.querySelectorAll("#password_msg_result_mail"),
             sprintf(mailSentAt, username, curr_mail),
           );
         } else {
-          $("#result_send_mail")
-            .removeClass("update-password-success icon-green")
-            .addClass("update-password-fail icon-red");
-          $("#icon_password_msg_result_mail")
-            .removeClass("icon-ok")
-            .addClass("icon-cancel");
-          $("#password_msg_result_mail").html(errorMailSent);
+          removeClass(
+            document.querySelectorAll("#result_send_mail"),
+            "update-password-success icon-green",
+          );
+          addClass(
+            document.querySelectorAll("#result_send_mail"),
+            "update-password-fail icon-red",
+          );
+          removeClass(
+            document.querySelectorAll("#icon_password_msg_result_mail"),
+            "icon-ok",
+          );
+          addClass(
+            document.querySelectorAll("#icon_password_msg_result_mail"),
+            "icon-cancel",
+          );
+          html(
+            document.querySelectorAll("#password_msg_result_mail"),
+            errorMailSent,
+          );
         }
-        $(".user-property-password-choice").hide();
-        $("#edit_password_result_mail").fadeIn();
-        $("#close_password_mail_close")
-          .off("click")
-          .on("click", function () {
-            reset_password_modals();
-          });
+        hide(document.querySelectorAll(".user-property-password-choice"));
+        fadeIn(document.querySelectorAll("#edit_password_result_mail"));
+        const closeBtn = document.querySelectorAll(
+          "#close_password_mail_close",
+        );
+        off(closeBtn, "click");
+        on(closeBtn, "click", function () {
+          reset_password_modals();
+        });
       } else {
-        $("#result_send_mail_copy")
-          .removeClass("update-password-fail icon-red")
-          .addClass("update-password-success icon-green");
-        $("#result_send_mail_copy_icon")
-          .removeClass("icon-cancel")
-          .addClass("icon-ok");
-        $("#result_send_mail_copy_msg").html(copyLinkStr);
+        removeClass(
+          document.querySelectorAll("#result_send_mail_copy"),
+          "update-password-fail icon-red",
+        );
+        addClass(
+          document.querySelectorAll("#result_send_mail_copy"),
+          "update-password-success icon-green",
+        );
+        removeClass(
+          document.querySelectorAll("#result_send_mail_copy_icon"),
+          "icon-cancel",
+        );
+        addClass(
+          document.querySelectorAll("#result_send_mail_copy_icon"),
+          "icon-ok",
+        );
+        html(
+          document.querySelectorAll("#result_send_mail_copy_msg"),
+          copyLinkStr,
+        );
         if (window.isSecureContext && navigator.clipboard) {
           copyToClipboard(response.generatedLink);
         }
@@ -3000,28 +3759,53 @@ function send_link_password(
     error: function (err) {
       console.log("Error send_link_password :", err);
       if (!send_by_mail) {
-        $("#result_send_mail_copy")
-          .removeClass("update-password-success icon-green")
-          .addClass("update-password-fail icon-red");
-        $("#result_send_mail_copy_icon")
-          .removeClass("icon-ok")
-          .addClass("icon-cancel");
-        $("#result_send_mail_copy_msg").html(errorStr);
+        removeClass(
+          document.querySelectorAll("#result_send_mail_copy"),
+          "update-password-success icon-green",
+        );
+        addClass(
+          document.querySelectorAll("#result_send_mail_copy"),
+          "update-password-fail icon-red",
+        );
+        removeClass(
+          document.querySelectorAll("#result_send_mail_copy_icon"),
+          "icon-ok",
+        );
+        addClass(
+          document.querySelectorAll("#result_send_mail_copy_icon"),
+          "icon-cancel",
+        );
+        html(document.querySelectorAll("#result_send_mail_copy_msg"), errorStr);
       } else {
-        $("#result_send_mail")
-          .removeClass("update-password-success icon-green")
-          .addClass("update-password-fail icon-red");
-        $("#icon_password_msg_result_mail")
-          .removeClass("icon-ok")
-          .addClass("icon-cancel");
-        $("#password_msg_result_mail").html(errorMailSent);
-        $(".user-property-password-choice").hide();
-        $("#edit_password_result_mail").fadeIn();
-        $("#close_password_mail_close")
-          .off("click")
-          .on("click", function () {
-            reset_password_modals();
-          });
+        removeClass(
+          document.querySelectorAll("#result_send_mail"),
+          "update-password-success icon-green",
+        );
+        addClass(
+          document.querySelectorAll("#result_send_mail"),
+          "update-password-fail icon-red",
+        );
+        removeClass(
+          document.querySelectorAll("#icon_password_msg_result_mail"),
+          "icon-ok",
+        );
+        addClass(
+          document.querySelectorAll("#icon_password_msg_result_mail"),
+          "icon-cancel",
+        );
+        html(
+          document.querySelectorAll("#password_msg_result_mail"),
+          errorMailSent,
+        );
+        hide(document.querySelectorAll(".user-property-password-choice"));
+        fadeIn(document.querySelectorAll("#edit_password_result_mail"));
+        const closeBtn = document.querySelectorAll(
+          "#close_password_mail_close",
+        );
+        off(closeBtn, "click");
+        on(closeBtn, "click", function () {
+          reset_password_modals();
+        });
       }
     },
   });
@@ -3035,14 +3819,16 @@ function set_main_user(user_id: number, new_username: string) {
     contentType: "application/json",
     headers: { "X-CSRF-Token": pwg_token },
     success: function () {
-      $("#who_is_the_king")
-        .off("click")
-        .removeClass(
-          "princes-of-this-piwigo royal-court-of-this-piwigo can-change",
-        )
-        .addClass("king-of-this-piwigo cannot-change")
-        .attr("title", mainUserStr)
-        .tipTip();
+      const king = document.querySelectorAll("#who_is_the_king");
+      off(king, "click");
+      removeClass(
+        king,
+        "princes-of-this-piwigo royal-court-of-this-piwigo can-change",
+      );
+      addClass(king, "king-of-this-piwigo cannot-change");
+      attr(king, "title", mainUserStr);
+      // Still jQuery: tipTip is a library, ported in P49-B group 2.
+      jQuery(king).tipTip();
 
       owner_id = user_id;
       owner_username = new_username;
@@ -3180,87 +3966,120 @@ get_guest_info();
 update_user_list();
 update_selection_content();
 
-$(".icon-help-circled").tipTip({
+// Still jQuery: tipTip is a library, ported in P49-B group 2.
+jQuery(".icon-help-circled").tipTip({
   maxWidth: "700px",
   fadeIn: "1000",
 });
 
-$(document).ready(function () {
+ready(function () {
   // Only webmaster can set admin or webmaster to others users
   if (connected_user_status !== "webmaster") {
-    $(
+    const disabledOptions = document.querySelectorAll(
       'select[name="status"] option[value="webmaster"], select[name="status"] option[value="admin"]',
-    ).prop("disabled", true);
+    );
+    disabledOptions.forEach((option) => {
+      (option as HTMLOptionElement).disabled = true;
+    });
   }
   // We set the applyAction btn click event here so plugins can add cases to the list
   // which is not possible if this JS part is in a JS file
   // see #1571 on Github
-  jQuery("#applyAction").click(function () {
-    const action = jQuery("select[name=selectAction]").prop("value") as string;
+  on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
+    const action = val(
+      document.querySelectorAll("select[name=selectAction]"),
+    ) as string;
     const data: Record<string, unknown> = {};
     switch (action) {
       case "delete":
         if (
           !(
-            $(
-              "#permitActionUserList .user-list-checkbox[name=confirm_deletion]",
-            ).attr("data-selected") === "1"
+            attrOf(
+              document.querySelectorAll(
+                "#permitActionUserList .user-list-checkbox[name=confirm_deletion]",
+              ),
+              "data-selected",
+            ) === "1"
           )
         ) {
           alert(missingConfirm);
+          e.preventDefault();
           return false;
         }
         break;
       case "group_associate":
-        data.group_id = jQuery(
-          "#permitActionUserList select[name=associate]",
-        ).prop("value");
+        data.group_id = val(
+          document.querySelectorAll(
+            "#permitActionUserList select[name=associate]",
+          ),
+        );
         break;
       case "group_dissociate":
-        data.group_id = jQuery(
-          "#permitActionUserList select[name=dissociate]",
-        ).prop("value");
+        data.group_id = val(
+          document.querySelectorAll(
+            "#permitActionUserList select[name=dissociate]",
+          ),
+        );
         break;
       case "status":
-        data.status = jQuery("#permitActionUserList select[name=status]").prop(
-          "value",
+        data.status = val(
+          document.querySelectorAll(
+            "#permitActionUserList select[name=status]",
+          ),
         );
         break;
       case "enabled_high":
         data.enabled_high =
-          $(
-            "#permitActionUserList .user-list-checkbox[name=enabled_high_yes]",
-          ).attr("data-selected") === "1"
+          attrOf(
+            document.querySelectorAll(
+              "#permitActionUserList .user-list-checkbox[name=enabled_high_yes]",
+            ),
+            "data-selected",
+          ) === "1"
             ? true
             : false;
         break;
       case "level":
-        data.level = jQuery("#permitActionUserList select[name=level]").val();
+        data.level = val(
+          document.querySelectorAll("#permitActionUserList select[name=level]"),
+        );
         break;
       case "nb_image_page":
-        data.nb_image_page = jQuery(
-          "#permitActionUserList input[name=nb_image_page]",
-        ).val();
+        data.nb_image_page = val(
+          document.querySelectorAll(
+            "#permitActionUserList input[name=nb_image_page]",
+          ),
+        );
         break;
       case "theme":
-        data.theme = jQuery("#permitActionUserList select[name=theme]").val();
+        data.theme = val(
+          document.querySelectorAll("#permitActionUserList select[name=theme]"),
+        );
         break;
       case "language":
-        data.language = jQuery(
-          "#permitActionUserList select[name=language]",
-        ).val();
+        data.language = val(
+          document.querySelectorAll(
+            "#permitActionUserList select[name=language]",
+          ),
+        );
         break;
       case "recent_period":
         data.recent_period =
           recent_period_values[
-            $(
-              "#permitActionUserList .period-select-bar .slider-bar-container",
+            // Still jQuery: jQuery-UI's slider widget, ported in P49-B group 4.
+            jQuery(
+              document.querySelectorAll(
+                "#permitActionUserList .period-select-bar .slider-bar-container",
+              ),
             ).slider("option", "value") as number
           ];
         break;
       case "expand":
         data.expand =
-          $("#permitActionUserList .user-list-checkbox[name=expand_yes]").attr(
+          attrOf(
+            document.querySelectorAll(
+              "#permitActionUserList .user-list-checkbox[name=expand_yes]",
+            ),
             "data-selected",
           ) === "1"
             ? true
@@ -3268,22 +4087,29 @@ $(document).ready(function () {
         break;
       case "show_nb_comments":
         data.show_nb_comments =
-          $(
-            "#permitActionUserList .user-list-checkbox[name=show_nb_comments_yes]",
-          ).attr("data-selected") === "1"
+          attrOf(
+            document.querySelectorAll(
+              "#permitActionUserList .user-list-checkbox[name=show_nb_comments_yes]",
+            ),
+            "data-selected",
+          ) === "1"
             ? true
             : false;
         break;
       case "show_nb_hits":
         data.show_nb_hits =
-          $(
-            "#permitActionUserList .user-list-checkbox[name=show_nb_hits_yes]",
-          ).attr("data-selected") === "1"
+          attrOf(
+            document.querySelectorAll(
+              "#permitActionUserList .user-list-checkbox[name=show_nb_hits_yes]",
+            ),
+            "data-selected",
+          ) === "1"
             ? true
             : false;
         break;
       default:
         alert("Unexpected action");
+        e.preventDefault();
         return false;
     }
 
@@ -3306,8 +4132,8 @@ $(document).ready(function () {
     const numericFields = ["level", "nbImagePage", "recentPeriod"];
 
     let request: Promise<unknown> | AjaxThenable;
-    jQuery("#applyActionLoading").show();
-    jQuery("#applyActionBlock .infos").fadeOut();
+    show(document.querySelectorAll("#applyActionLoading"));
+    fadeOut(document.querySelectorAll("#applyActionBlock .infos"));
 
     if (action === "delete") {
       request = Promise.all(
@@ -3351,9 +4177,13 @@ $(document).ready(function () {
 
     Promise.resolve(request)
       .then(function () {
-        jQuery("#applyActionLoading").hide();
-        jQuery("#applyActionBlock .infos").fadeIn();
-        jQuery("#applyActionBlock .infos").css("display", "inline-block");
+        hide(document.querySelectorAll("#applyActionLoading"));
+        fadeIn(document.querySelectorAll("#applyActionBlock .infos"));
+        css(
+          document.querySelectorAll("#applyActionBlock .infos"),
+          "display",
+          "inline-block",
+        );
         update_user_list();
         if (action == "delete") {
           selection = [];
@@ -3361,8 +4191,9 @@ $(document).ready(function () {
         }
       })
       .catch(function () {
-        jQuery("#applyActionLoading").hide();
+        hide(document.querySelectorAll("#applyActionLoading"));
       });
+    e.preventDefault();
     return false;
   });
 });

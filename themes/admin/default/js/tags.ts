@@ -10,6 +10,35 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
+import {
+  addClass,
+  animate,
+  attr,
+  attrOf,
+  css,
+  data,
+  escapeId,
+  fadeIn,
+  fadeOut,
+  find,
+  hasClass,
+  hide,
+  html,
+  htmlOf,
+  is,
+  on,
+  parseHtml,
+  prepend,
+  ready,
+  removeClass,
+  setChecked,
+  setData,
+  setVal,
+  show,
+  slideDown,
+  slideUp,
+  val,
+} from "../../../default/js/vendor/dom";
 export {};
 
 // Real per-row shape (P47), traced to TagsPageRenderer.php's own
@@ -41,19 +70,26 @@ type TagMergeResponse =
   operations["tagMerge"]["responses"][200]["content"]["application/json"];
 
 //Get the data
-let dataTags = $(".tag-container").data("tags") as TagRow[];
+let dataTags = data(
+  document.querySelector(".tag-container")!,
+  "tags",
+) as TagRow[];
 
 //Initiate Select
-$("#select-100").prop("checked", true);
+setChecked(document.querySelectorAll("#select-100"), true);
 
 //Orphan tags
-$(".info-warning p a").on("click", () => {
-  const url = $(".info-warning p a").data("url") as string;
+on(document.querySelectorAll(".info-warning p a"), "click", () => {
+  const url = data(
+    document.querySelector(".info-warning p a")!,
+    "url",
+  ) as string;
   const tags = orphan_tag_names;
   const str_orphans = str_orphan_tags
     .replace("%s1", String(tags.length))
     .replace("%s2", tags.join(", "));
-  $.confirm({
+  // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
+  jQuery.confirm({
     content: str_orphans,
     title: str_delete_orphan_tags,
     draggable: false,
@@ -76,7 +112,7 @@ $(".info-warning p a").on("click", () => {
       keep: {
         text: str_keep_them,
         action: function () {
-          $(".info-warning").hide();
+          hide(document.querySelectorAll(".info-warning"));
         },
       },
     },
@@ -90,167 +126,237 @@ function createTagBox(
   url_name: string,
   count: number | undefined,
   raw_name: string | null = null,
-) {
+): Element {
   if (raw_name === null) {
     raw_name = name;
   }
   const u_edit = "admin.php?page=batch_manager&filter=tag-" + id;
   const u_view = "index.php?/tags/" + id + "-" + url_name;
-  let html = $(".tag-template")
-    .html()
+  // Non-null: the template block always exists in the page markup.
+  let markup = htmlOf(document.querySelectorAll(".tag-template"))!
     .replace(/%name%/g, unescape(name))
     .replace("%U_VIEW%", u_view)
     .replace("%U_EDIT%", u_edit)
     .replace("%raw_name%", raw_name);
   if (name == raw_name) {
-    html = html.replace("icon-globe", "");
+    markup = markup.replace("icon-globe", "");
   }
-  const newTag = $(
+  const newTag = parseHtml(
     '<div class="tag-box test" data-id=' +
       id +
       ' data-selected="0">' +
-      html +
+      markup +
       "</div>",
-  );
-  if ($("#toggleSelectionMode").is(":checked")) {
-    newTag.addClass("selection");
-    newTag.find(".in-selection-mode").show();
+  )[0]!;
+  if (is(document.querySelectorAll("#toggleSelectionMode"), ":checked")) {
+    addClass(newTag, "selection");
+    show(find(newTag, ".in-selection-mode"));
   }
   if (count !== undefined && count > 0) {
-    newTag
-      .find(".dropdown-option.view, .dropdown-option.manage")
-      .css("display", "block");
-    newTag
-      .find(".tag-dropdown-header i")
-      .html(str_number_photos.replace("%d", String(count)));
+    css(
+      find(newTag, ".dropdown-option.view, .dropdown-option.manage"),
+      "display",
+      "block",
+    );
+    html(
+      find(newTag, ".tag-dropdown-header i"),
+      str_number_photos.replace("%d", String(count)),
+    );
   } else {
-    newTag.find(".tag-dropdown-header i").html(str_no_photos);
+    html(find(newTag, ".tag-dropdown-header i"), str_no_photos);
   }
   return newTag;
 }
 
 function recycleTagBox(
-  tagBox: JQuery,
+  tagBox: Element,
   id: number,
   name: string,
   url_name: string,
   count: number | undefined,
   raw_name: string | null = null,
-) {
+): void {
   if (raw_name === null) {
     raw_name = name;
   }
-  tagBox = tagBox.first();
-  tagBox.attr("data-id", id);
-  tagBox.find(".tag-name, .tag-dropdown-header b").html(name);
-  tagBox.find(".tag-name-editable").val(name);
-  tagBox.attr("data-selected", 0);
-  tagBox.find(".tag-name").data("rawname", raw_name);
+  attr(tagBox, "data-id", String(id));
+  html(find(tagBox, ".tag-name, .tag-dropdown-header b"), name);
+  setVal(find(tagBox, ".tag-name-editable"), name);
+  attr(tagBox, "data-selected", "0");
+  find(tagBox, ".tag-name").forEach((el) => {
+    setData(el, "rawname", raw_name);
+  });
 
   //Dropdown
   const u_edit = "admin.php?page=batch_manager&filter=tag-" + id;
   const u_view = "index.php?/tags/" + id + "-" + url_name;
-  tagBox.find(".dropdown-option.view").attr("href", u_view);
-  tagBox.find(".dropdown-option.manage").attr("href", u_edit);
+  attr(find(tagBox, ".dropdown-option.view"), "href", u_view);
+  attr(find(tagBox, ".dropdown-option.manage"), "href", u_edit);
 
   if (count !== undefined && count > 0) {
-    tagBox
-      .find(".dropdown-option.view, .dropdown-option.manage")
-      .css("display", "block");
-    tagBox
-      .find(".tag-dropdown-header i")
-      .html(str_number_photos.replace("%d", String(count)));
+    css(
+      find(tagBox, ".dropdown-option.view, .dropdown-option.manage"),
+      "display",
+      "block",
+    );
+    html(
+      find(tagBox, ".tag-dropdown-header i"),
+      str_number_photos.replace("%d", String(count)),
+    );
   } else {
-    tagBox.find(".tag-dropdown-header i").html(str_no_photos);
+    html(find(tagBox, ".tag-dropdown-header i"), str_no_photos);
   }
 }
 
 //Number On Badge
-function updateBadge() {
-  $(".badge-number").html(String(dataTags.length));
+function updateBadge(): void {
+  html(document.querySelectorAll(".badge-number"), String(dataTags.length));
   if (dataTags.length == 0) {
-    $(".tag-header #add-tag .add-tag-label").addClass("highlight");
+    addClass(
+      document.querySelectorAll(".tag-header #add-tag .add-tag-label"),
+      "highlight",
+    );
   } else {
-    $(".tag-header #add-tag .add-tag-label").removeClass("highlight");
+    removeClass(
+      document.querySelectorAll(".tag-header #add-tag .add-tag-label"),
+      "highlight",
+    );
   }
 }
 
-//Add a tag
-$(".add-tag-container").on("click", function () {
-  $("#add-tag").addClass("input-mode");
-  $("#add-tag-input").focus();
-  $(".tag-info").hide();
+// `.add-tag-container` is `display: none` until `.input-mode` is added
+// below -- looks unreachable, but isn't: `.add-tag-label` is a real
+// <label>, `#add-tag-input` is its implicit associated control (the
+// first labelable descendant), and clicking anywhere on the label makes
+// the browser dispatch its own activation click at that input, which
+// bubbles up through `.add-tag-container` same as a real click would.
+// Confirmed live -- a direct click at `.add-tag-container` itself
+// (0x0, no hit-testable point) times out, but clicking `.add-tag-label`
+// reaches this listener regardless, both before and after this
+// conversion.
+on(document.querySelectorAll(".add-tag-container"), "click", function () {
+  addClass(document.querySelectorAll("#add-tag"), "input-mode");
+  document.querySelector<HTMLElement>("#add-tag-input")?.focus();
+  hide(document.querySelectorAll(".tag-info"));
 });
 
-$("#add-tag .icon-cancel-circled").on("click", function () {
-  $("#add-tag").removeClass("input-mode");
-  $(".tag-info").hide();
-});
+on(
+  document.querySelectorAll("#add-tag .icon-cancel-circled"),
+  "click",
+  function () {
+    removeClass(document.querySelectorAll("#add-tag"), "input-mode");
+    hide(document.querySelectorAll(".tag-info"));
+  },
+);
 
 //Display/Hide tag option
-$(".tag-box").each(function () {
-  setupTagbox($(this));
+document.querySelectorAll(".tag-box").forEach((tagBox) => {
+  setupTagbox(tagBox);
 });
 
 //Call the API when rename a tag
-$(".TagSubmit").on("click", function () {
-  $(".TagSubmit").hide();
-  $(".TagLoading").show();
+on(document.querySelectorAll(".TagSubmit"), "click", function () {
+  hide(document.querySelectorAll(".TagSubmit"));
+  show(document.querySelectorAll(".TagLoading"));
   // Non-null: set_up_popin() always sets this id before the form is
   // submittable.
-  const $tagboxid = $(".RenameTagPopInContainer")
-    .find(".tag-property-input")
-    .attr("id")!;
+  const $tagboxid = attrOf(
+    find(
+      document.querySelectorAll(".RenameTagPopInContainer"),
+      ".tag-property-input",
+    ),
+    "id",
+  )!;
   renameTag(
     $tagboxid,
-    String($(".RenameTagPopInContainer").find(".tag-property-input").val()),
+    String(
+      val(
+        find(
+          document.querySelectorAll(".RenameTagPopInContainer"),
+          ".tag-property-input",
+        ),
+      ),
+    ),
   )
     .then(() => {
-      $(".TagSubmit").show();
-      $(".TagLoading").hide();
+      show(document.querySelectorAll(".TagSubmit"));
+      hide(document.querySelectorAll(".TagLoading"));
       rename_tag_close();
       cleanCheckmark();
-      $("[data-id=" + $tagboxid + "]").wrap('<div class="tag-changed"></div>');
-      $(".tag-changed").prepend('<i class="icon-ok tag-checkmark"></i>');
+      const changedBox = document.querySelector(
+        '[data-id="' + $tagboxid + '"]',
+      );
+      if (changedBox !== null) {
+        wrapWithDiv(changedBox, "tag-changed");
+      }
+      prepend(
+        document.querySelectorAll(".tag-changed"),
+        '<i class="icon-ok tag-checkmark"></i>',
+      );
     })
     .catch((message: unknown) => {
-      $(".TagSubmit").show();
-      $(".TagLoading").hide();
+      show(document.querySelectorAll(".TagSubmit"));
+      hide(document.querySelectorAll(".TagLoading"));
       console.error(message);
     });
 });
 
-function cleanCheckmark() {
-  $(".tag-changed > *").unwrap();
-  $(".tag-checkmark").remove();
+// `.wrap(html)` -- jQuery inserts a copy of `html` immediately before the
+// matched element, then moves the element inside it. There's exactly one
+// element here, so no cloning is needed.
+function wrapWithDiv(el: Element, className: string): void {
+  const wrapper = document.createElement("div");
+  wrapper.className = className;
+  el.parentElement?.insertBefore(wrapper, el);
+  wrapper.appendChild(el);
+}
+
+function cleanCheckmark(): void {
+  // `.unwrap()` -- removes the parent, keeping the child in its place.
+  document.querySelectorAll(".tag-changed > *").forEach((child) => {
+    child.parentElement?.replaceWith(child);
+  });
+  document.querySelectorAll(".tag-checkmark").forEach((el) => {
+    el.remove();
+  });
 }
 
 /*-------
  Add a tag
 -------*/
 
-$("#add-tag").submit(function (e) {
+on(document.querySelectorAll("#add-tag"), "submit", function (e: Event) {
   e.preventDefault();
-  if ($("#add-tag-input").val() != "") {
+  if (val(document.querySelectorAll("#add-tag-input")) != "") {
     const loadState = new TemporaryState();
-    loadState.removeClass($("#add-tag .icon-validate"), "icon-plus");
+    loadState.removeClass(
+      document.querySelectorAll("#add-tag .icon-validate"),
+      "icon-plus",
+    );
     loadState.changeHTML(
-      $("#add-tag .icon-validate"),
+      document.querySelectorAll("#add-tag .icon-validate"),
       "<i class='icon-spin6 animate-spin'> </i>",
     );
     loadState.changeAttribute(
-      $("#add-tag .icon-validate"),
+      document.querySelectorAll("#add-tag .icon-validate"),
       "style",
       "pointer-event:none",
     );
-    addTag(String($("#add-tag-input").val()))
+    addTag(String(val(document.querySelectorAll("#add-tag-input"))))
       .then(function () {
         showMessage(
-          str_tag_created.replace("%s", String($("#add-tag-input").val())),
+          str_tag_created.replace(
+            "%s",
+            String(val(document.querySelectorAll("#add-tag-input"))),
+          ),
         );
-        $("#add-tag-input").val("");
-        $("#add-tag").removeClass("input-mode");
-        $("#search-tag .search-input").trigger("input");
+        setVal(document.querySelectorAll("#add-tag-input"), "");
+        removeClass(document.querySelectorAll("#add-tag"), "input-mode");
+        // Still jQuery: `.trigger("input")` -- both the firing and
+        // listening sides are native/dom.ts-based, but the search input's
+        // own "input" handler is unconverted below in this same file, so
+        // this stays until that call site converts with it.
+        jQuery("#search-tag .search-input").trigger("input");
         loadState.reverse();
       })
       .catch((message: unknown) => {
@@ -260,13 +366,20 @@ $("#add-tag").submit(function (e) {
   }
 });
 
-$("#add-tag .icon-validate").on("click", function () {
-  if ($("#add-tag").hasClass("input-mode")) {
-    $("#add-tag").submit();
+on(document.querySelectorAll("#add-tag .icon-validate"), "click", function () {
+  const form = document.querySelector<HTMLFormElement>("#add-tag");
+  // Not `.trigger("submit")`/a bare `.submit()` call: `HTMLFormElement
+  // .submit()` deliberately does NOT fire a "submit" event (it bypasses
+  // validation and any listener by spec), so it would silently never
+  // reach the native "submit" listener registered above.
+  // `requestSubmit()` is the real native equivalent of "submit this
+  // form as if the user had" -- it does dispatch the event.
+  if (form !== null && hasClass(form, "input-mode")) {
+    form.requestSubmit();
   }
 });
 
-function addTag(name: string) {
+function addTag(name: string): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     void ajax({
       url: "api/v1/tags",
@@ -281,7 +394,7 @@ function addTag(name: string) {
       dataType: "json",
       success: function (data: TagCreateResponse) {
         const newTag = createTagBox(data.id, data.name, data.urlName, 0);
-        $(".tag-container").prepend(newTag);
+        document.querySelector(".tag-container")?.prepend(newTag);
         setupTagbox(newTag);
         updateSearchInfo();
 
@@ -309,68 +422,67 @@ function addTag(name: string) {
  Setup Tag Box
 -------*/
 
-function setupTagbox(tagBox: JQuery) {
+function setupTagbox(tagBox: Element): void {
   //Dropdown options
-  tagBox.find(".showOptions").on("click", function () {
-    tagBox.find(".tag-dropdown-block").css("display", "grid");
+  on(find(tagBox, ".showOptions"), "click", function () {
+    css(find(tagBox, ".tag-dropdown-block"), "display", "grid");
   });
 
-  $(document).mouseup(function (e) {
+  on(document, "mouseup", function (e: Event) {
     e.stopPropagation();
     let option_is_clicked = false;
-    tagBox.find(".dropdown-option").each(function (this: HTMLElement) {
-      if (!($(this).has(e.target as unknown as Element).length === 0)) {
+    find(tagBox, ".dropdown-option").forEach((option) => {
+      if (option.contains(e.target as Node | null)) {
         option_is_clicked = true;
       }
     });
     if (!option_is_clicked) {
-      tagBox.find(".tag-dropdown-block").hide();
+      hide(find(tagBox, ".tag-dropdown-block"));
     }
   });
 
   // Selection behaviour
-  tagBox.on("click", function () {
-    if ($(".tag-container").hasClass("selection")) {
-      if (tagBox.attr("data-selected") == "1") {
-        tagBox.attr("data-selected", "0");
-        removeSelectedItem(tagBox.attr("data-id")!);
+  on(tagBox, "click", function () {
+    if (hasClass(document.querySelectorAll(".tag-container"), "selection")) {
+      if (attrOf(tagBox, "data-selected") == "1") {
+        attr(tagBox, "data-selected", "0");
+        removeSelectedItem(attrOf(tagBox, "data-id")!);
       } else {
-        tagBox.attr("data-selected", "1");
-        addSelectedItem(tagBox.attr("data-id")!);
+        attr(tagBox, "data-selected", "1");
+        addSelectedItem(attrOf(tagBox, "data-id")!);
       }
       updateSelectionContent();
     }
   });
 
   //Edit Name
-  tagBox
-    .find(".dropdown-option.edit")
-    .on("click", function (this: HTMLElement) {
-      const id = $(this).closest(".tag-box").data("id") as TagId;
-      const tagIndex = dataTags.findIndex((tag) => tag.id == id);
-      // Non-null: `id` always comes from a real tag box, which was
-      // itself rendered from this same `dataTags` array.
-      const tagRawName =
-        dataTags[tagIndex]!.raw_name ??
-        tagBox.find(".tag-name").data("rawname");
-      const tagName =
-        dataTags[tagIndex]!.name ?? tagBox.find(".tag-name").html();
-      set_up_popin(tagBox.data("id") as TagId, tagRawName, tagName);
-      rename_tag_open();
-    });
+  on(find(tagBox, ".dropdown-option.edit"), "click", function () {
+    const id = data(tagBox, "id") as TagId;
+    const tagIndex = dataTags.findIndex((tag) => tag.id == id);
+    // Non-null: `id` always comes from a real tag box, which was
+    // itself rendered from this same `dataTags` array.
+    const tagRawName =
+      dataTags[tagIndex]!.raw_name ??
+      data(find(tagBox, ".tag-name")[0]!, "rawname");
+    const tagName =
+      dataTags[tagIndex]!.name ?? htmlOf(find(tagBox, ".tag-name"));
+    set_up_popin(data(tagBox, "id") as TagId, tagRawName, tagName);
+    rename_tag_open();
+  });
 
   //Delete Tag
-  tagBox.find(".dropdown-option.delete").on("click", function () {
-    $.confirm({
-      title: str_delete.replace("%s", tagBox.find(".tag-name").html()),
+  on(find(tagBox, ".dropdown-option.delete"), "click", function () {
+    // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
+    jQuery.confirm({
+      title: str_delete.replace("%s", htmlOf(find(tagBox, ".tag-name"))!),
       buttons: {
         confirm: {
           text: str_yes_delete_confirmation,
           btnClass: "btn-red",
           action: function () {
             removeTag(
-              tagBox.data("id") as TagId,
-              tagBox.find(".tag-name").html(),
+              data(tagBox, "id") as TagId,
+              htmlOf(find(tagBox, ".tag-name"))!,
             );
           },
         },
@@ -383,38 +495,59 @@ function setupTagbox(tagBox: JQuery) {
   });
 
   //Duplicate Tag
-  tagBox.find(".dropdown-option.duplicate").on("click", function () {
+  on(find(tagBox, ".dropdown-option.duplicate"), "click", function () {
     void duplicateTag(
-      tagBox.data("id") as TagId,
-      tagBox.find(".tag-name").data("rawname") as string,
+      data(tagBox, "id") as TagId,
+      data(find(tagBox, ".tag-name")[0]!, "rawname") as string,
     ).then((data) => {
       showMessage(str_tag_created.replace("%s", data.name));
     });
   });
 }
 
-function set_up_popin(id: TagId, tagRawName: string, tagName: string) {
-  $(".RenameTagPopInContainer").find(".tag-property-input").attr("id", id);
+function set_up_popin(id: TagId, tagRawName: string, tagName: string): void {
+  attr(
+    find(
+      document.querySelectorAll(".RenameTagPopInContainer"),
+      ".tag-property-input",
+    ),
+    "id",
+    String(id),
+  );
 
-  $(".AddIconTitle span").html(str_tag_rename.replace("%s", tagName));
-  $(".ClosePopIn, .TagCancel").on("click", function () {
-    rename_tag_close();
-  });
-  $(".TagSubmit").html(str_yes_rename_confirmation);
-  $(".RenameTagPopInContainer").find(".tag-property-input").val(tagRawName);
+  html(
+    document.querySelectorAll(".AddIconTitle span"),
+    str_tag_rename.replace("%s", tagName),
+  );
+  on(
+    document.querySelectorAll(".ClosePopIn, .TagCancel"),
+    "click",
+    function () {
+      rename_tag_close();
+    },
+  );
+  html(document.querySelectorAll(".TagSubmit"), str_yes_rename_confirmation);
+  setVal(
+    find(
+      document.querySelectorAll(".RenameTagPopInContainer"),
+      ".tag-property-input",
+    ),
+    tagRawName,
+  );
 }
 
-function rename_tag_close() {
-  $("#RenameTag").fadeOut();
+function rename_tag_close(): void {
+  fadeOut(document.querySelectorAll("#RenameTag"));
 }
 
-function rename_tag_open() {
-  $("#RenameTag").fadeIn();
-  $(".tag-property-input").first().focus();
+function rename_tag_open(): void {
+  fadeIn(document.querySelectorAll("#RenameTag"));
+  document.querySelector<HTMLElement>(".tag-property-input")?.focus();
 }
 
-function removeTag(id: TagId, name: string) {
-  $.alert({
+function removeTag(id: TagId, name: string): void {
+  // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
+  jQuery.alert({
     title: str_tag_deleted.replace("%s", name),
     content: function () {
       return ajax({
@@ -425,7 +558,7 @@ function removeTag(id: TagId, name: string) {
         },
         dataType: "json",
         success: function (_data: TagDeleteResponse) {
-          $(".tag-box[data-id=" + id + "]").remove();
+          document.querySelector('.tag-box[data-id="' + id + '"]')?.remove();
           //Update data
           dataTags = dataTags.filter((tag) => tag.id != id);
           showMessage(str_tag_deleted.replace("%s", name));
@@ -442,7 +575,7 @@ function removeTag(id: TagId, name: string) {
   });
 }
 
-function renameTag(id: TagId, new_name: string) {
+function renameTag(id: TagId, new_name: string): Promise<TagRenameResponse> {
   return new Promise<TagRenameResponse>((resolve, reject) => {
     void ajax({
       url: "api/v1/tags/" + id,
@@ -456,23 +589,34 @@ function renameTag(id: TagId, new_name: string) {
       }),
       dataType: "json",
       success: function (data: TagRenameResponse) {
-        $(
-          ".tag-box[data-id=" +
-            id +
-            "] p, .tag-box[data-id=" +
-            id +
-            "] .tag-dropdown-header b",
-        ).html(data.name);
-        $(".tag-box[data-id=" + id + "] .tag-name-editable").attr(
+        html(
+          document.querySelectorAll(
+            '.tag-box[data-id="' +
+              id +
+              '"] p, .tag-box[data-id="' +
+              id +
+              '"] .tag-dropdown-header b',
+          ),
+          data.name,
+        );
+        attr(
+          document.querySelectorAll(
+            '.tag-box[data-id="' + id + '"] .tag-name-editable',
+          ),
           "value",
           data.name,
         );
-        $(".tag-box[data-id=" + id + "] .tag-name").attr(
+        attr(
+          document.querySelectorAll('.tag-box[data-id="' + id + '"] .tag-name'),
           "data-rawname",
           data.nameRaw,
         );
         const u_view = "index.php?/tags/" + id + "-" + data.urlName;
-        $(".dropdown-option.view").attr("href", u_view);
+        attr(
+          document.querySelectorAll(".dropdown-option.view"),
+          "href",
+          u_view,
+        );
 
         //Update the data
         const index = dataTags.findIndex((tag) => tag.id == id);
@@ -495,14 +639,14 @@ function renameTag(id: TagId, new_name: string) {
   });
 }
 
-function duplicateTag(id: TagId, name: string) {
+function duplicateTag(id: TagId, name: string): Promise<TagDuplicateResponse> {
   return new Promise<TagDuplicateResponse>((resolve, reject) => {
     let copy_name = name + str_copy;
 
-    const name_exist = function (name: string) {
+    const name_exist = function (name: string): boolean {
       let exist = false;
-      $(".tag-box .tag-name").each(function () {
-        if ($(this).html() === name) exist = true;
+      document.querySelectorAll(".tag-box .tag-name").forEach((el) => {
+        if (htmlOf(el) === name) exist = true;
       });
       return exist;
     };
@@ -530,7 +674,7 @@ function duplicateTag(id: TagId, name: string) {
           data.urlName,
           data.count,
         );
-        newTag.insertAfter($(".tag-box[data-id=" + id + "]"));
+        document.querySelector('.tag-box[data-id="' + id + '"]')?.after(newTag);
         setupTagbox(newTag);
 
         //Update Data
@@ -566,50 +710,55 @@ function duplicateTag(id: TagId, name: string) {
 let selected: TagId[] = [];
 const maxItemDisplayed = 5;
 
-$("#toggleSelectionMode").prop("checked", false);
-$("#toggleSelectionMode").click(function () {
-  selectionMode($(this).is(":checked"));
-  $(".tag-info").hide();
+setChecked(document.querySelectorAll("#toggleSelectionMode"), false);
+on(document.querySelectorAll("#toggleSelectionMode"), "click", function () {
+  selectionMode(
+    is(document.querySelectorAll("#toggleSelectionMode"), ":checked"),
+  );
+  hide(document.querySelectorAll(".tag-info"));
 });
 
-function selectionMode(isSelection: boolean) {
+function selectionMode(isSelection: boolean): void {
   if (isSelection) {
-    $(".in-selection-mode").addClass("show");
-    $(".not-in-selection-mode").addClass("hide");
-    $(".tag-container").addClass("selection");
-    $(".tag-box").removeClass("edit-name");
+    addClass(document.querySelectorAll(".in-selection-mode"), "show");
+    addClass(document.querySelectorAll(".not-in-selection-mode"), "hide");
+    addClass(document.querySelectorAll(".tag-container"), "selection");
+    removeClass(document.querySelectorAll(".tag-box"), "edit-name");
   } else {
-    $(".in-selection-mode").removeClass("show");
-    $(".not-in-selection-mode").removeClass("hide");
-    $(".tag-container").removeClass("selection");
-    $(".tag-box").attr("data-selected", "0");
-    $(".tag-select-message").slideUp();
+    removeClass(document.querySelectorAll(".in-selection-mode"), "show");
+    removeClass(document.querySelectorAll(".not-in-selection-mode"), "hide");
+    removeClass(document.querySelectorAll(".tag-container"), "selection");
+    attr(document.querySelectorAll(".tag-box"), "data-selected", "0");
+    slideUp(document.querySelectorAll(".tag-select-message"));
     clearSelection();
   }
 }
 
-function clearSelection() {
+function clearSelection(): void {
   selected = [];
-  $(".selection-mode-tag .tag-list").html("");
-  $(".selection-other-tags").hide();
+  html(document.querySelectorAll(".selection-mode-tag .tag-list"), "");
+  hide(document.querySelectorAll(".selection-other-tags"));
   updateSelectionContent();
 }
 
-function addSelectedItem(id: TagId) {
+function addSelectedItem(id: TagId): void {
   if (!selected.includes(id)) {
     selected.push(id);
 
     if (selected.length > maxItemDisplayed) {
-      $(".selection-other-tags").show();
-      const numberDisplayed = $(".selection-mode-tag .tag-list div").length;
-      $(".selection-other-tags").html(
+      show(document.querySelectorAll(".selection-other-tags"));
+      const numberDisplayed = document.querySelectorAll(
+        ".selection-mode-tag .tag-list div",
+      ).length;
+      html(
+        document.querySelectorAll(".selection-other-tags"),
         str_and_others_tags.replace(
           "%s",
           String(selected.length - numberDisplayed),
         ),
       );
     } else {
-      $(".selection-other-tags").hide();
+      hide(document.querySelectorAll(".selection-other-tags"));
       if (dataTags.findIndex((tag) => tag.id == id) > -1) {
         createSelectionItem(id, dataTags.find((tag) => tag.id == id)!.name);
       }
@@ -617,16 +766,21 @@ function addSelectedItem(id: TagId) {
   }
 }
 
-function createSelectionItem(id: TagId, name: string) {
-  const newItemStructure = $(
+function createSelectionItem(id: TagId, name: string): void {
+  const newItemStructure = parseHtml(
     '<div data-id="' +
       id +
       '"><a class="icon-cancel"></a><p>' +
       name +
       "</p> </div>",
-  );
-  $(".selection-mode-tag .tag-list").prepend(newItemStructure);
-  $(".selection-mode-tag .tag-list div[data-id=" + id + "] a").on(
+  )[0]!;
+  document
+    .querySelector(".selection-mode-tag .tag-list")
+    ?.prepend(newItemStructure);
+  on(
+    document.querySelectorAll(
+      '.selection-mode-tag .tag-list div[data-id="' + id + '"] a',
+    ),
     "click",
     function () {
       removeSelectedItem(id);
@@ -634,25 +788,40 @@ function createSelectionItem(id: TagId, name: string) {
   );
 }
 
-function removeSelectedItem(id: TagId) {
+function removeSelectedItem(id: TagId): void {
   if (selected.findIndex((tag) => tag == id) > -1) {
     selected = selected.filter((tag) => {
       return parseInt(String(tag)) != parseInt(String(id));
     });
 
-    $(".tag-box[data-id=" + id + "]").attr("data-selected", "0");
+    attr(
+      document.querySelectorAll('.tag-box[data-id="' + id + '"]'),
+      "data-selected",
+      "0",
+    );
     if (
-      $(".selection-mode-tag .tag-list div[data-id=" + id + "]").length != 0
+      document.querySelectorAll(
+        '.selection-mode-tag .tag-list div[data-id="' + id + '"]',
+      ).length != 0
     ) {
-      $(".selection-mode-tag .tag-list div[data-id=" + id + "]").remove();
+      document
+        .querySelectorAll(
+          '.selection-mode-tag .tag-list div[data-id="' + id + '"]',
+        )
+        .forEach((el) => {
+          el.remove();
+        });
 
       if (selected.length >= maxItemDisplayed) {
         let i = 0;
         let isNotCreate = true;
         while (i < selected.length && isNotCreate) {
           if (
-            $(".selection-mode-tag .tag-list div[data-id=" + selected[i] + "]")
-              .length == 0
+            document.querySelectorAll(
+              '.selection-mode-tag .tag-list div[data-id="' +
+                selected[i] +
+                '"]',
+            ).length == 0
           ) {
             isNotCreate = false;
             const indexOfTag = dataTags.findIndex(
@@ -665,86 +834,97 @@ function removeSelectedItem(id: TagId) {
       }
     }
 
-    const numberDisplayed = $(".selection-mode-tag .tag-list div").length;
-    $(".selection-other-tags").html(
+    const numberDisplayed = document.querySelectorAll(
+      ".selection-mode-tag .tag-list div",
+    ).length;
+    html(
+      document.querySelectorAll(".selection-other-tags"),
       str_and_others_tags.replace(
         "%s",
         String(selected.length - numberDisplayed),
       ),
     );
     if (selected.length - numberDisplayed <= 0) {
-      $(".selection-other-tags").hide();
+      hide(document.querySelectorAll(".selection-other-tags"));
     }
 
     //Remove the selection message
-    $(".tag-select-message").slideUp();
+    slideUp(document.querySelectorAll(".tag-select-message"));
   }
 }
 
-function updateMergeItems() {
-  $("#MergeOptionsChoices").html("");
+function updateMergeItems(): void {
+  html(document.querySelectorAll("#MergeOptionsChoices"), "");
+  const select = document.querySelector("#MergeOptionsChoices");
   selected.forEach((id) => {
-    $("#MergeOptionsChoices").append(
-      $(
+    select?.appendChild(
+      parseHtml(
         '<option value="' +
           id +
           '">' +
           dataTags.find((tag) => tag.id == id)!.name +
           "</option>",
-      ),
+      )[0]!,
     );
   });
 }
 
 let mergeOption = false;
 
-function updateSelectionContent() {
+function updateSelectionContent(): void {
   const number = selected.length;
   if (number == 0) {
     mergeOption = false;
-    $("#nothing-selected").show();
-    $(".selection-mode-tag").hide();
-    $("#MergeOptionsBlock").hide();
+    show(document.querySelectorAll("#nothing-selected"));
+    hide(document.querySelectorAll(".selection-mode-tag"));
+    hide(document.querySelectorAll("#MergeOptionsBlock"));
   } else if (number == 1) {
     mergeOption = false;
-    $("#nothing-selected").hide();
-    $(".selection-mode-tag").show();
-    $("#MergeOptionsBlock").hide();
-    $("#MergeSelectionMode").addClass("unavailable");
+    hide(document.querySelectorAll("#nothing-selected"));
+    show(document.querySelectorAll(".selection-mode-tag"));
+    hide(document.querySelectorAll("#MergeOptionsBlock"));
+    addClass(document.querySelectorAll("#MergeSelectionMode"), "unavailable");
   } else if (number > 1) {
-    $("#nothing-selected").hide();
-    $("#MergeSelectionMode").removeClass("unavailable");
+    hide(document.querySelectorAll("#nothing-selected"));
+    removeClass(
+      document.querySelectorAll("#MergeSelectionMode"),
+      "unavailable",
+    );
     if (mergeOption) {
-      $("#MergeOptionsBlock").show();
-      $(".selection-mode-tag").hide();
+      show(document.querySelectorAll("#MergeOptionsBlock"));
+      hide(document.querySelectorAll(".selection-mode-tag"));
       updateMergeItems();
     } else {
-      $("#MergeOptionsBlock").hide();
-      $(".selection-mode-tag").show();
+      hide(document.querySelectorAll("#MergeOptionsBlock"));
+      show(document.querySelectorAll(".selection-mode-tag"));
     }
   }
 }
 
-$("#MergeSelectionMode").on("click", function () {
+on(document.querySelectorAll("#MergeSelectionMode"), "click", function () {
   mergeOption = true;
   updateSelectionContent();
 });
 
-$("#CancelMerge").on("click", function () {
+on(document.querySelectorAll("#CancelMerge"), "click", function () {
   mergeOption = false;
   updateSelectionContent();
 });
 
-$("#selectAll").on("click", function () {
+on(document.querySelectorAll("#selectAll"), "click", function () {
   void selectAll(tagToDisplay());
   updateSelectionContent();
   if (selected.length < dataTags.length) {
     showSelectMessage(
-      str_selection_done.replace("%d", String($(".tag-box").length)),
+      str_selection_done.replace(
+        "%d",
+        String(document.querySelectorAll(".tag-box").length),
+      ),
       str_select_all_tag.replace("%d", String(dataTags.length)),
       function () {
-        $(".tag-select-message a").html("");
-        $(".tag-select-message div").html(
+        html(document.querySelectorAll(".tag-select-message a"), "");
+        html(
+          document.querySelectorAll(".tag-select-message div"),
           "<i class='icon-spin6 animate-spin'> </i>",
         );
         setTimeout(() => {
@@ -755,7 +935,7 @@ $("#selectAll").on("click", function () {
               str_clear_selection,
               function () {
                 selectNone();
-                $(".tag-select-message").slideUp();
+                slideUp(document.querySelectorAll(".tag-select-message"));
               },
             );
           });
@@ -770,7 +950,11 @@ function selectAll(data: TagRow[]) {
   data.forEach((tag) => {
     promises.push(
       new Promise<void>((res, _rej) => {
-        $(".tag-box[data-id=" + tag.id + "]").attr("data-selected", 1);
+        attr(
+          document.querySelectorAll('.tag-box[data-id="' + tag.id + '"]'),
+          "data-selected",
+          "1",
+        );
         addSelectedItem(tag.id);
         res();
       }),
@@ -779,46 +963,53 @@ function selectAll(data: TagRow[]) {
   return Promise.all(promises);
 }
 
-function showSelectMessage(str1: string, str2: string, callback: () => void) {
-  if (!$(".tag-select-message").is(":visible")) {
-    $(".tag-select-message").slideDown({
-      start: function () {
-        $(this).css({
-          display: "flex",
-        });
-      },
-    });
+function showSelectMessage(
+  str1: string,
+  str2: string,
+  callback: () => void,
+): void {
+  if (!is(document.querySelectorAll(".tag-select-message"), ":visible")) {
+    const message = document.querySelectorAll(".tag-select-message");
+    slideDown(message);
+    css(message, "display", "flex");
   }
 
-  $(".tag-select-message div").html(str1);
-  $(".tag-select-message a").html(str2);
-  $(".tag-select-message a").off("click");
-  $(".tag-select-message a").on("click", callback);
+  html(document.querySelectorAll(".tag-select-message div"), str1);
+  html(document.querySelectorAll(".tag-select-message a"), str2);
+  // `.off("click")` before re-binding: this runs once per select-all
+  // round trip, and a plain `on()` would stack a new listener each time
+  // rather than replacing the previous one the way jQuery's `.off()` +
+  // `.on()` pair did. The click target is rebuilt (its HTML is replaced
+  // just above), so the listener is attached to a fresh element each
+  // time regardless.
+  on(document.querySelectorAll(".tag-select-message a"), "click", callback);
 }
 
-$("#selectNone").on("click", function () {
-  $(".tag-select-message").slideUp();
+on(document.querySelectorAll("#selectNone"), "click", function () {
+  slideUp(document.querySelectorAll(".tag-select-message"));
   selectNone();
 });
 
-function selectNone() {
-  $(".tag-box").attr("data-selected", "0");
+function selectNone(): void {
+  attr(document.querySelectorAll(".tag-box"), "data-selected", "0");
   clearSelection();
 }
 
-$("#selectInvert").on("click", function () {
-  $(".tag-select-message").slideUp();
+on(document.querySelectorAll("#selectInvert"), "click", function () {
+  slideUp(document.querySelectorAll(".tag-select-message"));
   selectInvert(tagToDisplay());
 });
 
-function selectInvert(data: TagRow[]) {
+function selectInvert(data: TagRow[]): void {
   data.forEach((tag) => {
-    const tagBox = $(".tag-box[data-id=" + tag.id + "]");
-    if (tagBox.attr("data-selected") == "1") {
-      tagBox.attr("data-selected", "0");
+    const tagBox = document.querySelectorAll(
+      '.tag-box[data-id="' + tag.id + '"]',
+    );
+    if (attrOf(tagBox, "data-selected") == "1") {
+      attr(tagBox, "data-selected", "0");
       removeSelectedItem(tag.id);
     } else {
-      tagBox.attr("data-selected", "1");
+      attr(tagBox, "data-selected", "1");
       addSelectedItem(tag.id);
     }
   });
@@ -830,13 +1021,14 @@ function selectInvert(data: TagRow[]) {
 -------*/
 
 //Remove tags
-$("#DeleteSelectionMode").on("click", function () {
+on(document.querySelectorAll("#DeleteSelectionMode"), "click", function () {
   const names: string[] = [];
   selected.forEach(function (id) {
     names.push(dataTags.find((tag) => tag.id == id)!.name);
   });
 
-  $.confirm({
+  // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
+  jQuery.confirm({
     title: str_delete_tags.replace("%s", tagListToString(names)),
     buttons: {
       confirm: {
@@ -854,13 +1046,14 @@ $("#DeleteSelectionMode").on("click", function () {
   });
 });
 
-function removeSelectedTags() {
+function removeSelectedTags(): void {
   const names: string[] = [];
   selected.forEach(function (id) {
     names.push(dataTags.find((tag) => tag.id == id)!.name);
   });
 
-  $.alert({
+  // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
+  jQuery.alert({
     title: str_tags_deleted.replace("%s", tagListToString(names)),
     content: function () {
       // No bulk-delete endpoint (a REST single-resource DELETE per tag,
@@ -878,7 +1071,7 @@ function removeSelectedTags() {
         }),
       ).then(function () {
         selected.forEach(function (id) {
-          $(".tag-box[data-id=" + id + "]").remove();
+          document.querySelector('.tag-box[data-id="' + id + '"]')?.remove();
         });
 
         // Update Data
@@ -895,27 +1088,36 @@ function removeSelectedTags() {
 }
 
 //Merge Tags
-$(".ConfirmMergeButton").on("click", () => {
+on(document.querySelectorAll(".ConfirmMergeButton"), "click", () => {
   // Single-value <select>, never multi.
-  const dest_id = $("#MergeOptionsChoices").val() as string;
+  const dest_id = val(
+    document.querySelectorAll("#MergeOptionsChoices"),
+  ) as string;
   mergeGroups(dest_id, selected);
 });
 
-function mergeGroups(destination_id: TagId, merge_ids: TagId[]) {
-  const destination_name = $(
-    ".tag-box[data-id=" + destination_id + "] .tag-name",
-  ).html();
+function mergeGroups(destination_id: TagId, merge_ids: TagId[]): void {
+  const destination_name = htmlOf(
+    document.querySelectorAll(
+      '.tag-box[data-id="' + destination_id + '"] .tag-name',
+    ),
+  )!;
   const merge_name: string[] = [];
 
   merge_ids.forEach((id) => {
-    merge_name.push($(".tag-box[data-id=" + id + "] .tag-name").html());
+    merge_name.push(
+      htmlOf(
+        document.querySelectorAll('.tag-box[data-id="' + id + '"] .tag-name'),
+      )!,
+    );
   });
 
   const str_message = str_merged_into
     .replace("%s1", tagListToString(merge_name))
     .replace("%s2", destination_name);
 
-  $.alert({
+  // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
+  jQuery.alert({
     title: str_message,
     content: function () {
       return ajax({
@@ -933,21 +1135,25 @@ function mergeGroups(destination_id: TagId, merge_ids: TagId[]) {
         success: function (data: TagMergeResponse) {
           data.deletedTagIds.forEach((id) => {
             if (data.destinationTagId != id) {
-              $(".tag-box[data-id=" + id + "]").remove();
+              document
+                .querySelector('.tag-box[data-id="' + id + '"]')
+                ?.remove();
               // Update data
               dataTags = dataTags.filter((tag) => id != tag.id);
             }
           });
           if (data.imagesInMergedTag.length > 0) {
-            const tagBox = $(".tag-box[data-id=" + data.destinationTagId + "]");
-            tagBox
-              .find(
-                ".dropdown-option.view," +
-                  ".dropdown-option.manage," +
-                  ".tag-dropdown-header i",
-              )
-              .show();
-            $(".tag-dropdown-header i").html(
+            const tagBox = document.querySelectorAll(
+              '.tag-box[data-id="' + data.destinationTagId + '"]',
+            );
+            show(
+              find(
+                tagBox,
+                ".dropdown-option.view,.dropdown-option.manage,.tag-dropdown-header i",
+              ),
+            );
+            html(
+              document.querySelectorAll(".tag-dropdown-header i"),
               str_number_photos.replace(
                 "%d",
                 String(data.imagesInMergedTag.length),
@@ -960,7 +1166,7 @@ function mergeGroups(destination_id: TagId, merge_ids: TagId[]) {
             );
             dataTags[index]!.counter = data.imagesInMergedTag.length;
           }
-          $(".tag-box").attr("data-selected", "0");
+          attr(document.querySelectorAll(".tag-box"), "data-selected", "0");
           clearSelection();
           updatePaginationMenu();
           updateBadge();
@@ -972,7 +1178,7 @@ function mergeGroups(destination_id: TagId, merge_ids: TagId[]) {
   });
 }
 
-function tagListToString(list: string[]) {
+function tagListToString(list: string[]): string {
   if (list.length > 5) {
     return (
       list.slice(0, 5).join(", ") +
@@ -995,26 +1201,32 @@ function tagListToString(list: string[]) {
 let searchTimeOut: ReturnType<typeof setTimeout> | undefined;
 const delaySearchInput = 300;
 
-$("#search-tag .search-input").on("input", function () {
-  actualPage = 1;
+on(
+  document.querySelectorAll("#search-tag .search-input"),
+  "input",
+  function () {
+    actualPage = 1;
 
-  clearTimeout(searchTimeOut);
-  searchTimeOut = setTimeout(() => {
-    updatePaginationMenu();
-    if (dataTags.filter(isDataSearched).length == 0) {
-      $(".emptyResearch").show();
-    } else {
-      $(".emptyResearch").hide();
-    }
-  }, delaySearchInput);
-});
+    clearTimeout(searchTimeOut);
+    searchTimeOut = setTimeout(() => {
+      updatePaginationMenu();
+      if (dataTags.filter(isDataSearched).length == 0) {
+        show(document.querySelectorAll(".emptyResearch"));
+      } else {
+        hide(document.querySelectorAll(".emptyResearch"));
+      }
+    }, delaySearchInput);
+  },
+);
 
 // Genuinely dead code -- zero real callers found (confirmed via grep)
 // -- typed rather than left broken, same policy as prior files this
 // campaign.
-function isDataSearched(tagObj: TagRow) {
+function isDataSearched(tagObj: TagRow): boolean {
   const name = tagObj.raw_name.toLowerCase();
-  const stringSearch = String($("#search-tag .search-input").val());
+  const stringSearch = String(
+    val(document.querySelectorAll("#search-tag .search-input")),
+  );
   if (name.includes(stringSearch.toLowerCase())) {
     return true;
   } else {
@@ -1025,24 +1237,27 @@ function isDataSearched(tagObj: TagRow) {
 /*-------
  Show Info
 -------*/
-function showError(message: string) {
-  $(".info-error p").html(message);
-  $(".info-error").attr("title", message);
-  $(".info-info").hide();
-  $(".info-error").css("display", "flex");
+function showError(message: string): void {
+  html(document.querySelectorAll(".info-error p"), message);
+  attr(document.querySelectorAll(".info-error"), "title", message);
+  hide(document.querySelectorAll(".info-info"));
+  css(document.querySelectorAll(".info-error"), "display", "flex");
 }
 
-function showMessage(message: string) {
-  $(".info-message p").html(message);
-  $(".info-message").attr("title", message);
-  $(".info-info").hide();
-  $(".info-message").css("display", "flex");
+function showMessage(message: string): void {
+  html(document.querySelectorAll(".info-message p"), message);
+  attr(document.querySelectorAll(".info-message"), "title", message);
+  hide(document.querySelectorAll(".info-info"));
+  css(document.querySelectorAll(".info-message"), "display", "flex");
 }
 
 /*-------
  Pagination
 -------*/
-let per_page = $(".tag-container").data("per_page") as number;
+let per_page = data(
+  document.querySelector(".tag-container")!,
+  "per_page",
+) as number;
 const pageItem = '<a data-page="%d">%d</a>';
 const pageEllipsis = "<span>...</span>";
 let promisePending = false;
@@ -1051,7 +1266,7 @@ let updateAsk = false;
 let actualPage = 1;
 
 //Avoid 2 update at the same time
-function askUpdatePage() {
+function askUpdatePage(): void {
   if (!promisePending) {
     promisePending = true;
     void updatePage().then(promiseFinish);
@@ -1060,7 +1275,7 @@ function askUpdatePage() {
   }
 }
 
-function promiseFinish() {
+function promiseFinish(): void {
   promisePending = false;
   if (updateAsk) {
     updateAsk = false;
@@ -1068,26 +1283,26 @@ function promiseFinish() {
   }
 }
 
-function updatePaginationMenu() {
-  $(".pagination-item-container").html("");
+function updatePaginationMenu(): void {
+  html(document.querySelectorAll(".pagination-item-container"), "");
 
   actualPage = Math.min(actualPage, getNumberPages());
 
   if (getNumberPages() > 1) {
-    $(".pagination-container").show();
+    show(document.querySelectorAll(".pagination-container"));
     createPaginationMenu();
   } else {
-    $(".pagination-container").hide();
+    hide(document.querySelectorAll(".pagination-container"));
   }
 
   updateArrows();
   askUpdatePage();
 
   //Remove the selection message
-  $(".tag-select-message").slideUp();
+  slideUp(document.querySelectorAll(".tag-select-message"));
 }
 
-function createPaginationMenu() {
+function createPaginationMenu(): void {
   const nbPage = getNumberPages();
 
   appendPaginationItem(1);
@@ -1107,43 +1322,59 @@ function createPaginationMenu() {
   appendPaginationItem(nbPage);
 }
 
-function appendPaginationItem(page: number | null = null) {
+function appendPaginationItem(page: number | null = null): void {
+  const container = document.querySelector(".pagination-item-container");
+  if (container === null) {
+    return;
+  }
   if (page != null) {
-    const newTag = $(pageItem.replace(/%d/g, String(page)));
-    $(".pagination-item-container").append(newTag);
+    const newTag = parseHtml(pageItem.replace(/%d/g, String(page)))[0]!;
+    container.appendChild(newTag);
     if (actualPage == page) {
-      newTag.addClass("actual");
+      addClass(newTag, "actual");
     }
-    newTag.on("click", () => {
-      actualPage = newTag.data("page") as number;
+    on(newTag, "click", () => {
+      actualPage = data(newTag, "page") as number;
       updatePaginationMenu();
     });
   } else {
-    $(".pagination-item-container").append($(pageEllipsis));
+    container.appendChild(parseHtml(pageEllipsis)[0]!);
   }
 }
 
-function updateArrows() {
+function updateArrows(): void {
   if (actualPage == 1) {
-    $(".pagination-arrow.left").addClass("unavailable");
+    addClass(
+      document.querySelectorAll(".pagination-arrow.left"),
+      "unavailable",
+    );
   } else {
-    $(".pagination-arrow.left").removeClass("unavailable");
+    removeClass(
+      document.querySelectorAll(".pagination-arrow.left"),
+      "unavailable",
+    );
   }
 
   if (actualPage == getNumberPages()) {
-    $(".pagination-arrow.rigth").addClass("unavailable");
+    addClass(
+      document.querySelectorAll(".pagination-arrow.rigth"),
+      "unavailable",
+    );
   } else {
-    $(".pagination-arrow.rigth").removeClass("unavailable");
+    removeClass(
+      document.querySelectorAll(".pagination-arrow.rigth"),
+      "unavailable",
+    );
   }
 }
 
-function getNumberPages() {
+function getNumberPages(): number {
   const dataVisible = dataTags.filter(isDataSearched).length;
   return Math.floor((dataVisible - 1) / per_page) + 1;
 }
 
-function movePage(toRigth: boolean = true) {
-  $(".tag-box").removeClass("edit-name");
+function movePage(toRigth: boolean = true): void {
+  removeClass(document.querySelectorAll(".tag-box"), "edit-name");
   if (toRigth) {
     if (actualPage < getNumberPages()) {
       actualPage++;
@@ -1157,112 +1388,158 @@ function movePage(toRigth: boolean = true) {
   }
 }
 
-function updatePage() {
+// `.animate({opacity}, duration).promise().then(next)` waits for every
+// matched element's own animation to finish before continuing -- dom.ts's
+// `animate()` runs its `complete` callback once per element, not once for
+// the whole set, so the aggregation has to happen here.
+function fadeOpacity(
+  elements: Element[],
+  to: number,
+  duration: number,
+): Promise<void> {
+  return new Promise((resolve) => {
+    if (elements.length === 0) {
+      resolve();
+      return;
+    }
+    let remaining = elements.length;
+    elements.forEach((el) => {
+      animate(el, { opacity: to }, duration, () => {
+        remaining -= 1;
+        if (remaining === 0) {
+          resolve();
+        }
+      });
+    });
+  });
+}
+
+function updatePage(): Promise<void> {
   return new Promise<void>((resolve, _reject) => {
     const dataToDisplay = tagToDisplay();
-    const tagBoxes = $(".tag-box");
+    const tagBoxes = Array.from(document.querySelectorAll(".tag-box"));
     cleanCheckmark();
-    $(".pageLoad").fadeIn();
-    $(".tag-box")
-      .animate({ opacity: 0 }, 500)
-      .promise()
-      .then(() => {
-        const displayTags: Promise<void> = new Promise((res, _rej) => {
-          const boxToRecycle = Math.min(dataToDisplay.length, tagBoxes.length);
+    fadeIn(document.querySelectorAll(".pageLoad"));
+    void fadeOpacity(tagBoxes, 0, 500).then(() => {
+      const displayTags: Promise<void> = new Promise((res, _rej) => {
+        const boxToRecycle = Math.min(dataToDisplay.length, tagBoxes.length);
 
-          for (let i = 0; i < boxToRecycle; i++) {
-            const tag = dataToDisplay[i]!;
-            recycleTagBox(
-              $(tagBoxes[i]!),
+        for (let i = 0; i < boxToRecycle; i++) {
+          const tag = dataToDisplay[i]!;
+          recycleTagBox(
+            tagBoxes[i]!,
+            tag.id,
+            tag.name,
+            tag.url_name,
+            tag.counter,
+            tag.raw_name,
+          );
+        }
+
+        if (dataToDisplay.length < tagBoxes.length) {
+          for (let j = boxToRecycle; j < tagBoxes.length; j++) {
+            tagBoxes[j]!.remove();
+          }
+        } else if (dataToDisplay.length > tagBoxes.length) {
+          for (let j = boxToRecycle; j < dataToDisplay.length; j++) {
+            const tag = dataToDisplay[j]!;
+            const newTag = createTagBox(
               tag.id,
               tag.name,
               tag.url_name,
               tag.counter,
               tag.raw_name,
             );
+            css(newTag, "opacity", 0);
+            document.querySelector(".tag-container")?.appendChild(newTag);
+            setupTagbox(newTag);
           }
+        }
 
-          if (dataToDisplay.length < tagBoxes.length) {
-            for (let j = boxToRecycle; j < tagBoxes.length; j++) {
-              $(tagBoxes[j]!).remove();
-            }
-          } else if (dataToDisplay.length > tagBoxes.length) {
-            for (let j = boxToRecycle; j < dataToDisplay.length; j++) {
-              const tag = dataToDisplay[j]!;
-              const newTag = createTagBox(
-                tag.id,
-                tag.name,
-                tag.url_name,
-                tag.counter,
-                tag.raw_name,
-              );
-              newTag.css("opacity", 0);
-              $(".tag-container").append(newTag);
-              setupTagbox(newTag);
-            }
-          }
-
-          //Select selected tags
-          selected.forEach((id) => {
-            $(".tag-box[data-id=" + id + "]").attr("data-selected", 1);
-          });
-
-          res();
+        //Select selected tags
+        selected.forEach((id) => {
+          attr(
+            document.querySelectorAll('.tag-box[data-id="' + id + '"]'),
+            "data-selected",
+            "1",
+          );
         });
 
-        void displayTags.then(() => {
-          $(".pageLoad").fadeOut();
-          $(".tag-box").animate({ opacity: 1 }, 500);
-          if (getNumberPages() > 1) {
-            $(".tag-pagination").animate({ opacity: 1 }, 500);
-          }
-          updateSearchInfo();
-          resolve();
-        });
+        res();
       });
+
+      void displayTags.then(() => {
+        fadeOut(document.querySelectorAll(".pageLoad"));
+        animate(document.querySelectorAll(".tag-box"), { opacity: 1 }, 500);
+        if (getNumberPages() > 1) {
+          animate(
+            document.querySelectorAll(".tag-pagination"),
+            { opacity: 1 },
+            500,
+          );
+        }
+        updateSearchInfo();
+        resolve();
+      });
+    });
   });
 }
 
-function tagToDisplay() {
+function tagToDisplay(): TagRow[] {
   return dataTags
     .filter(isDataSearched)
     .slice((actualPage - 1) * per_page, actualPage * per_page);
 }
 
-$(".pagination-arrow.rigth").on("click", () => {
+on(document.querySelectorAll(".pagination-arrow.rigth"), "click", () => {
   movePage();
 });
 
-$(".pagination-arrow.left").on("click", () => {
+on(document.querySelectorAll(".pagination-arrow.left"), "click", () => {
   movePage(false);
 });
 
 if (getNumberPages() > 1) {
-  $(".pagination-container").show();
+  show(document.querySelectorAll(".pagination-container"));
   createPaginationMenu();
   updateArrows();
 } else {
-  $(".pagination-container").hide();
+  hide(document.querySelectorAll(".pagination-container"));
 }
 
-$(".pagination-per-page a").on("click", function () {
-  per_page = parseInt($(this).html());
-  updatePaginationMenu();
-  $(".pagination-per-page .selected").removeClass("selected");
-  $(this).addClass("selected");
-  $.cookie("pwg_tags_per_page", per_page);
-});
+on(
+  document.querySelectorAll(".pagination-per-page a"),
+  "click",
+  function (event: Event) {
+    const target = event.currentTarget as Element;
+    per_page = parseInt(htmlOf(target) ?? "");
+    updatePaginationMenu();
+    removeClass(
+      document.querySelectorAll(".pagination-per-page .selected"),
+      "selected",
+    );
+    addClass(target, "selected");
+    // Still jQuery: jquery.cookie is a library, ported in P49-B group 2.
+    jQuery.cookie("pwg_tags_per_page", per_page);
+  },
+);
 
-function updateSearchInfo() {
-  if ($(".search-input").val() != "") {
+function updateSearchInfo(): void {
+  if (val(document.querySelectorAll(".search-input")) != "") {
     const number = dataTags.filter(isDataSearched).length;
     if (number > 1) {
-      $(".search-info").html(str_tags_found.replace("%d", String(number)));
+      html(
+        document.querySelectorAll(".search-info"),
+        str_tags_found.replace("%d", String(number)),
+      );
     } else {
-      $(".search-info").html(str_tag_found.replace("%d", String(number)));
+      html(
+        document.querySelectorAll(".search-info"),
+        str_tag_found.replace("%d", String(number)),
+      );
     }
   } else {
-    $(".search-info").html("");
+    html(document.querySelectorAll(".search-info"), "");
   }
 }
 
@@ -1303,23 +1580,35 @@ const str_tag_selected = pwg_getPageString("<b>%d</b> tag selected");
 const str_tags_found = pwg_getPageString("<b>%d</b> tags found");
 const str_tag_found = pwg_getPageString("<b>%d</b> tag found");
 
-$(document).ready(function () {
-  $("h1").append(
-    '<span class="badge-number">' +
-      pwg_getPageData<number>("total") +
-      "</span>",
-  );
+ready(function () {
+  document
+    .querySelector("h1")
+    ?.insertAdjacentHTML(
+      "beforeend",
+      '<span class="badge-number">' +
+        pwg_getPageData<number>("total") +
+        "</span>",
+    );
 });
 
-if (!$.cookie("pwg_tags_per_page")) {
-  $.cookie("pwg_tags_per_page", "100");
+// Still jQuery: jquery.cookie is a library, ported in P49-B group 2.
+if (!jQuery.cookie("pwg_tags_per_page")) {
+  jQuery.cookie("pwg_tags_per_page", "100");
 }
 
-$(function () {
-  function setPagination() {
-    const test = $.cookie("pwg_tags_per_page") as string | undefined;
-    $(".pagination-per-page .selected").removeClass("selected");
-    $("#" + test).trigger("click");
+ready(function () {
+  function setPagination(): void {
+    // Still jQuery: jquery.cookie is a library, ported in P49-B group 2.
+    const test = jQuery.cookie("pwg_tags_per_page") as string | undefined;
+    removeClass(
+      document.querySelectorAll(".pagination-per-page .selected"),
+      "selected",
+    );
+    if (test !== undefined) {
+      // The per-page links' own ids are bare digits ("100", "200", ...) --
+      // querySelectorAll throws on an unescaped leading-digit id.
+      document.querySelector<HTMLElement>("#" + escapeId(test))?.click();
+    }
   }
 
   setPagination();

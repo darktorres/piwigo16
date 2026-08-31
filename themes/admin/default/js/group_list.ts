@@ -125,16 +125,16 @@ jQuery(document).ready(function () {
     const name = String($("#addGroupForm input[type=text]").val());
     const loadState = new TemporaryState();
     loadState.changeHTML(
-      $(".actionButtons button"),
+      document.querySelectorAll(".actionButtons button"),
       "<i class='icon-spin6 animate-spin'> </i>",
     );
     loadState.changeAttribute(
-      $(".actionButtons button"),
+      document.querySelectorAll(".actionButtons button"),
       "style",
       "pointer-events: none",
     );
     loadState.changeAttribute(
-      $(".actionButtons a"),
+      document.querySelectorAll(".actionButtons a"),
       "style",
       "pointer-events: none",
     );
@@ -433,15 +433,15 @@ const deleteGroup = function (id: string | number) {
 const renameGroup = function (id: string | number, newName: string) {
   const loadState = new TemporaryState();
   loadState.changeHTML(
-    $("#group-" + id + " .group-rename .validate"),
+    document.querySelectorAll("#group-" + id + " .group-rename .validate"),
     "<i class='animate-spin icon-spin6'></i>",
   );
   loadState.removeClass(
-    $("#group-" + id + " .group-rename .validate"),
+    document.querySelectorAll("#group-" + id + " .group-rename .validate"),
     "icon-ok",
   );
   loadState.changeAttribute(
-    $("#group-" + id + " .group-rename span"),
+    document.querySelectorAll("#group-" + id + " .group-rename span"),
     "style",
     "pointer-events: none",
   );
@@ -642,12 +642,15 @@ const setupDefaultActions = function (
 const duplicateAction = function (id: string | number) {
   const loadState = new TemporaryState();
   loadState.changeHTML(
-    $("#group-" + id + " #GroupDuplicate"),
+    document.querySelectorAll("#group-" + id + " #GroupDuplicate"),
     "<i class='icon-spin6 animate-spin'> </i>",
   );
-  loadState.removeClass($("#group-" + id + " #GroupDuplicate"), "icon-docs");
+  loadState.removeClass(
+    document.querySelectorAll("#group-" + id + " #GroupDuplicate"),
+    "icon-docs",
+  );
   loadState.changeAttribute(
-    $("#group-" + id + " #GroupDuplicate"),
+    document.querySelectorAll("#group-" + id + " #GroupDuplicate"),
     "style",
     "pointer-events: none; text-align: center;",
   );
@@ -822,15 +825,18 @@ const buttonUnavailable = function (button: JQuery) {
 $(".ConfirmMergeButton").on("click", function () {
   const loadState = new TemporaryState();
   loadState.changeAttribute(
-    $(".ConfirmMergeButton"),
+    document.querySelectorAll(".ConfirmMergeButton"),
     "style",
     "pointer-events: none",
   );
   loadState.changeHTML(
-    $(".ConfirmMergeButton"),
+    document.querySelectorAll(".ConfirmMergeButton"),
     "<i class='icon-spin6 animate-spin'> </i>",
   );
-  loadState.removeClass($(".ConfirmMergeButton"), "icon-ok");
+  loadState.removeClass(
+    document.querySelectorAll(".ConfirmMergeButton"),
+    "icon-ok",
+  );
   const merge_group: number[] = [];
   const name_merge: string[] = [];
   // Always overwritten inside the loop below before use (`dest_grp`
@@ -931,15 +937,18 @@ $(".ConfirmDeleteButton").on("click", function () {
 
   const loadState = new TemporaryState();
   loadState.changeAttribute(
-    $(".ConfirmDeleteButton"),
+    document.querySelectorAll(".ConfirmDeleteButton"),
     "style",
     "pointer-events: none",
   );
   loadState.changeHTML(
-    $(".ConfirmDeleteButton"),
+    document.querySelectorAll(".ConfirmDeleteButton"),
     "<i class='icon-spin6 animate-spin'> </i>",
   );
-  loadState.removeClass($(".ConfirmDeleteButton"), "icon-ok");
+  loadState.removeClass(
+    document.querySelectorAll(".ConfirmDeleteButton"),
+    "icon-ok",
+  );
 
   // No bulk-delete endpoint (a REST single-resource DELETE per group,
   // per P27's own design) -- fire one DELETE per selected group.
@@ -1080,16 +1089,16 @@ $(function () {
 const openUserManager = function (grp_id: string | number) {
   const loadState = new TemporaryState();
   loadState.removeClass(
-    $("#group-" + grp_id + " #UserListTrigger"),
+    document.querySelectorAll("#group-" + grp_id + " #UserListTrigger"),
     "icon-user-1",
   );
   loadState.changeAttribute(
-    $("#group-" + grp_id + " #UserListTrigger"),
+    document.querySelectorAll("#group-" + grp_id + " #UserListTrigger"),
     "style",
     "pointer-events: none",
   );
   loadState.changeHTML(
-    $("#group-" + grp_id + " #UserListTrigger"),
+    document.querySelectorAll("#group-" + grp_id + " #UserListTrigger"),
     "<i class='icon-spin6 animate-spin'> </i>",
   );
   void ajax({
@@ -1248,11 +1257,18 @@ $(".AddUserBlock button").on("click", function () {
   if (id != "") {
     const loadState = new TemporaryState();
     loadState.changeHTML(
-      $("#UserSubmit"),
+      document.querySelectorAll("#UserSubmit"),
       "<i class='icon-spin6 animate-spin'> </i>",
     );
-    loadState.removeClass($("#UserSubmit"), "icon-user-add");
-    loadState.changeAttribute($("#UserSubmit"), "css", "pointer-events:none");
+    loadState.removeClass(
+      document.querySelectorAll("#UserSubmit"),
+      "icon-user-add",
+    );
+    loadState.changeAttribute(
+      document.querySelectorAll("#UserSubmit"),
+      "css",
+      "pointer-events:none",
+    );
     void ajax({
       url: "api/v1/groups/" + grp_id + "/actions/add-user",
       type: "POST",

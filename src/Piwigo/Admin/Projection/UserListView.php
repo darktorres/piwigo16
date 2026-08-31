@@ -94,7 +94,6 @@ final readonly class UserListView implements View, HasPageAssets, ExposesPageDat
             // order: 10 is required, see issue 1080.
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::script('user_list', 'themes/admin/default/js/user_list.ts', loadMode: LoadMode::Footer),
-            AssetContribution::script('jquery.cookie', 'https://cdn.jsdelivr.net/npm/jquery.cookie@1.4.1/jquery.cookie.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/user_list.css', id: 'user_list'),
         ];
     }

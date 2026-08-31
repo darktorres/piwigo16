@@ -24,7 +24,6 @@
       "jqueryui",
       "selectize",
       "jquery.colorbox",
-      "jquery.cookie",
       "chart.js",
       "plupload"
     ]

@@ -13,6 +13,7 @@ import {
   removeClass,
   show,
 } from "../../../default/js/vendor/dom";
+import { cookie, setCookie } from "../../../default/js/vendor/cookie";
 
 export {};
 
@@ -539,17 +540,15 @@ function AddHoverOnAlbumActions(): void {
 }
 
 ready(function () {
-  // Still jQuery: jquery.cookie is a library, ported in P49-B group 2.
-  if (!$.cookie("pwg_album_manager_view")) {
-    $.cookie("pwg_album_manager_view", "tile");
+  if (!cookie("pwg_album_manager_view")) {
+    setCookie("pwg_album_manager_view", "tile");
   }
 
   on(document.querySelectorAll(".addAlbum"), "click", function (e: Event) {
     if ((e.target as Element).className !== "cancelAddAlbum") {
       addClass(document.querySelectorAll(".addAlbum"), "input-mode");
 
-      // Still jQuery: jquery.cookie is a library, ported in P49-B group 2.
-      if ($.cookie("pwg_album_manager_view") !== "tile") {
+      if (cookie("pwg_album_manager_view") !== "tile") {
         hide(document.querySelectorAll(".addAlbum p"), 300);
       }
     }
@@ -585,8 +584,7 @@ ready(function () {
       hide(document.querySelectorAll(".addAlbum p"));
     }
 
-    // Still jQuery: jquery.cookie is a library, ported in P49-B group 2.
-    $.cookie("pwg_album_manager_view", "compact");
+    setCookie("pwg_album_manager_view", "compact");
   });
 
   on(document.querySelectorAll("#displayLine"), "change", function () {
@@ -596,8 +594,7 @@ ready(function () {
       hide(document.querySelectorAll(".addAlbum p"));
     }
 
-    // Still jQuery: jquery.cookie is a library, ported in P49-B group 2.
-    $.cookie("pwg_album_manager_view", "line");
+    setCookie("pwg_album_manager_view", "line");
   });
 
   on(document.querySelectorAll("#displayTile"), "change", function () {
@@ -607,7 +604,6 @@ ready(function () {
       show(document.querySelectorAll(".addAlbum p"));
     }
 
-    // Still jQuery: jquery.cookie is a library, ported in P49-B group 2.
-    $.cookie("pwg_album_manager_view", "tile");
+    setCookie("pwg_album_manager_view", "tile");
   });
 });

@@ -7,9 +7,9 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 /**
  * P49-A conversion of themes/admin/default/js/tags.ts.
  *
- * Stays jQuery, each marked at its call site: `$.confirm()`/`$.alert()`
- * (jquery-confirm, P49-B group 5) and `$.cookie()` (jquery.cookie, P49-B
- * group 2).
+ * `$.confirm()`/`$.alert()` stay jQuery (jquery-confirm, P49-B group 5).
+ * `$.cookie()` converted to `cookie()`/`setCookie()`
+ * (`themes/default/js/vendor/cookie.ts`) in P49-B group 2.
  *
  * `TemporaryState` (themes/admin/default/js/common.ts) converted off
  * jQuery together with this file -- it wraps no library of its own, and
@@ -130,4 +130,29 @@ it('creates a tag via the checkmark button, then deletes it via the dropdown', f
 
     $page->assertNoJavaScriptErrors();
     H::assertNoServerErrors($page, 'tags add/delete flow');
+});
+
+it('persists the tags-per-page cookie across a real page reload', function (): void {
+    // tags.ts's own setCookie() (themes/default/js/vendor/cookie.ts,
+    // ported off jquery.cookie in P49-B group 2) writes the cookie
+    // TagsPageRenderer reads back to pre-select a page-size link on load.
+    // TagsPageRendererTest.php's own coverage of that server-side read
+    // only ever writes the cookie by hand -- this is the other half: a
+    // real click -> setCookie() -> a real second page load, round-tripping
+    // through setCookie()'s own encoding. `a[id="200"]`, not `#200`: the
+    // per-page links' own ids are bare digits, which querySelectorAll()
+    // rejects as an id selector (Sizzle tolerated it) -- the same reason
+    // tags.ts's own setPagination() reads back through escapeId().
+    $page = H::asAdmin($this);
+    $page = H::navigateOk($page, '/admin.php?page=tags');
+
+    $page->script("document.querySelector('a[id=\"200\"]').click()");
+
+    $page = H::navigateOk($page, '/admin.php?page=tags');
+
+    expect($page->script("document.querySelector('a[id=\"200\"]').classList.contains('selected')"))
+        ->toBeTrue();
+
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'tags per-page cookie round trip');
 });

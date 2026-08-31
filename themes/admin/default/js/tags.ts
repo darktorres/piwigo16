@@ -10,6 +10,7 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
+import { cookie, setCookie } from "../../../default/js/vendor/cookie";
 import {
   addClass,
   animate,
@@ -1519,8 +1520,7 @@ on(
       "selected",
     );
     addClass(target, "selected");
-    // Still jQuery: jquery.cookie is a library, ported in P49-B group 2.
-    jQuery.cookie("pwg_tags_per_page", per_page);
+    setCookie("pwg_tags_per_page", per_page);
   },
 );
 
@@ -1591,15 +1591,13 @@ ready(function () {
     );
 });
 
-// Still jQuery: jquery.cookie is a library, ported in P49-B group 2.
-if (!jQuery.cookie("pwg_tags_per_page")) {
-  jQuery.cookie("pwg_tags_per_page", "100");
+if (!cookie("pwg_tags_per_page")) {
+  setCookie("pwg_tags_per_page", "100");
 }
 
 ready(function () {
   function setPagination(): void {
-    // Still jQuery: jquery.cookie is a library, ported in P49-B group 2.
-    const test = jQuery.cookie("pwg_tags_per_page") as string | undefined;
+    const test = cookie("pwg_tags_per_page");
     removeClass(
       document.querySelectorAll(".pagination-per-page .selected"),
       "selected",

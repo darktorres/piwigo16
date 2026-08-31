@@ -10,6 +10,35 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
+import {
+  addClass,
+  animate,
+  attr,
+  attrOf,
+  css,
+  cssValue,
+  data,
+  fadeIn,
+  fadeOut,
+  find,
+  hide,
+  html,
+  htmlOf,
+  is,
+  off,
+  on,
+  outerHeight,
+  parseHtml,
+  ready,
+  removeAttr,
+  removeClass,
+  setChecked,
+  setVal,
+  show,
+  toggle,
+  trigger,
+  val,
+} from "../../../default/js/vendor/dom";
 export {};
 
 // `UserEntity`/`EntityCacheInstance<T>` are LocalStorageCache.ts's own
@@ -40,46 +69,53 @@ const DELAY_FEEDBACK = 3000;
 Group Popin
 -------*/
 
-$(".group_details_popup_trigger").click(function () {
-  $(".Group_details-popup-container").show();
-});
+on(
+  document.querySelectorAll(".group_details_popup_trigger"),
+  "click",
+  function () {
+    show(document.querySelectorAll(".Group_details-popup-container"));
+  },
+);
 
-$(".CloseGroupPopup").click(function () {
-  $(".Group_details-popup-container").hide();
+on(document.querySelectorAll(".CloseGroupPopup"), "click", function () {
+  hide(document.querySelectorAll(".Group_details-popup-container"));
 });
 
 //Number On Badge
 function updateBadge() {
-  $(".badge-number").html(String($(".GroupContainer").length - 2)); //Less the add group div and the template
+  html(
+    document.querySelectorAll(".badge-number"),
+    String(document.querySelectorAll(".GroupContainer").length - 2),
+  ); //Less the add group div and the template
 }
 
 /*-------
  Add User toggle and reduces height of user list when add user form is visible
  -------*/
 
-$("#form-btn").click(function () {
-  $("#cancel").show();
-  $("#addUserLabel").show();
-  $(".UserSearch").show();
-  $("#UserSubmit").show();
-  $("#form-btn").hide();
-  $(".groups .list_user").css("max-height", "100px");
+on(document.querySelectorAll("#form-btn"), "click", function () {
+  show(document.querySelectorAll("#cancel"));
+  show(document.querySelectorAll("#addUserLabel"));
+  show(document.querySelectorAll(".UserSearch"));
+  show(document.querySelectorAll("#UserSubmit"));
+  hide(document.querySelectorAll("#form-btn"));
+  css(document.querySelectorAll(".groups .list_user"), "max-height", "100px");
 });
 
-$("#cancel").click(function () {
-  $("#cancel").hide();
-  $("#addUserLabel").hide();
-  $(".UserSearch").hide();
-  $("#UserSubmit").hide();
-  $("#form-btn").show();
-  $(".groups .list_user").css("max-height", "200px");
+on(document.querySelectorAll("#cancel"), "click", function () {
+  hide(document.querySelectorAll("#cancel"));
+  hide(document.querySelectorAll("#addUserLabel"));
+  hide(document.querySelectorAll(".UserSearch"));
+  hide(document.querySelectorAll("#UserSubmit"));
+  show(document.querySelectorAll("#form-btn"));
+  css(document.querySelectorAll(".groups .list_user"), "max-height", "200px");
 });
 
 /*-------
  Add Group toggle
  -------*/
 let isToggle = true;
-$(".addGroupBlock").on("click", function () {
+on(document.querySelectorAll(".addGroupBlock"), "click", function () {
   if (isToggle) {
     deployAddGroupForm();
   } else {
@@ -88,23 +124,25 @@ $(".addGroupBlock").on("click", function () {
 });
 
 const deployAddGroupForm = function () {
-  $(".addGroupBlock").animate(
+  animate(
+    document.querySelectorAll(".addGroupBlock"),
     {
       top: "20%",
       padding: "0px",
     },
     400,
     function () {
-      $("#addGroupForm form").fadeIn();
-      $("#addGroupNameInput").focus();
+      fadeIn(document.querySelectorAll("#addGroupForm form"));
+      document.querySelector<HTMLElement>("#addGroupNameInput")?.focus();
     },
   );
   isToggle = false;
 };
 
 const hideAddGroupForm = function () {
-  $("#addGroupForm form").fadeOut(function () {
-    $(".addGroupBlock").animate(
+  fadeOut(document.querySelectorAll("#addGroupForm form"), function () {
+    animate(
+      document.querySelectorAll(".addGroupBlock"),
       {
         top: "50%",
         padding: "100px 0",
@@ -119,91 +157,119 @@ const hideAddGroupForm = function () {
  Add Group Submit
  -------*/
 
-jQuery(document).ready(function () {
-  $("#addGroupForm form").on("submit", function (e) {
-    e.preventDefault();
-    const name = String($("#addGroupForm input[type=text]").val());
-    const loadState = new TemporaryState();
-    loadState.changeHTML(
-      document.querySelectorAll(".actionButtons button"),
-      "<i class='icon-spin6 animate-spin'> </i>",
-    );
-    loadState.changeAttribute(
-      document.querySelectorAll(".actionButtons button"),
-      "style",
-      "pointer-events: none",
-    );
-    loadState.changeAttribute(
-      document.querySelectorAll(".actionButtons a"),
-      "style",
-      "pointer-events: none",
-    );
+ready(function () {
+  on(
+    document.querySelectorAll("#addGroupForm form"),
+    "submit",
+    function (e: Event) {
+      e.preventDefault();
+      const name = String(
+        val(document.querySelectorAll("#addGroupForm input[type=text]")),
+      );
+      const loadState = new TemporaryState();
+      loadState.changeHTML(
+        document.querySelectorAll(".actionButtons button"),
+        "<i class='icon-spin6 animate-spin'> </i>",
+      );
+      loadState.changeAttribute(
+        document.querySelectorAll(".actionButtons button"),
+        "style",
+        "pointer-events: none",
+      );
+      loadState.changeAttribute(
+        document.querySelectorAll(".actionButtons a"),
+        "style",
+        "pointer-events: none",
+      );
 
-    if (name.replace(/\s/g, "").length != 0) {
-      void ajax({
-        url: "api/v1/groups",
-        type: "POST",
-        contentType: "application/json",
-        headers: {
-          "X-CSRF-Token": pwg_token,
-        },
-        data: JSON.stringify({
-          name: name,
-        }),
-        dataType: "json",
-        success: function (
-          data: operations["groupCreate"]["responses"][201]["content"]["application/json"],
-        ) {
-          loadState.reverse();
-          $(".addGroupFormLabelAndInput input").val("");
-          const group = data;
-          const groupBox = createGroup(group);
-          $("#addGroupForm").after(groupBox);
-          setupGroupBox(groupBox);
-          updateBadge();
-        },
-        error: function (_err) {
-          loadState.reverse();
-          $("#addGroupForm .groupError").html(str_name_not_empty);
-          $("#addGroupForm .groupError").fadeIn();
-          $("#addGroupForm .groupError").delay(DELAY_FEEDBACK).fadeOut();
-        },
-      });
-    } else {
-      loadState.reverse();
-      $("#addGroupForm .groupError").html(str_name_not_empty);
-      $("#addGroupForm .groupError").fadeIn();
-      $("#addGroupForm .groupError").delay(DELAY_FEEDBACK).fadeOut();
-    }
-  });
+      if (name.replace(/\s/g, "").length != 0) {
+        void ajax({
+          url: "api/v1/groups",
+          type: "POST",
+          contentType: "application/json",
+          headers: {
+            "X-CSRF-Token": pwg_token,
+          },
+          data: JSON.stringify({
+            name: name,
+          }),
+          dataType: "json",
+          success: function (
+            data: operations["groupCreate"]["responses"][201]["content"]["application/json"],
+          ) {
+            loadState.reverse();
+            setVal(
+              document.querySelectorAll(".addGroupFormLabelAndInput input"),
+              "",
+            );
+            const group = data;
+            const groupBox = createGroup(group);
+            document.querySelector("#addGroupForm")?.after(groupBox);
+            setupGroupBox(groupBox);
+            updateBadge();
+          },
+          error: function (_err) {
+            loadState.reverse();
+            html(
+              document.querySelectorAll("#addGroupForm .groupError"),
+              str_name_not_empty,
+            );
+            fadeIn(document.querySelectorAll("#addGroupForm .groupError"));
+            const errorEl = document.querySelectorAll(
+              "#addGroupForm .groupError",
+            );
+            setTimeout(() => {
+              fadeOut(errorEl);
+            }, DELAY_FEEDBACK);
+          },
+        });
+      } else {
+        loadState.reverse();
+        html(
+          document.querySelectorAll("#addGroupForm .groupError"),
+          str_name_not_empty,
+        );
+        fadeIn(document.querySelectorAll("#addGroupForm .groupError"));
+        const errorEl = document.querySelectorAll("#addGroupForm .groupError");
+        setTimeout(() => {
+          fadeOut(errorEl);
+        }, DELAY_FEEDBACK);
+      }
+    },
+  );
 });
 
-const createGroup = function (group: Group) {
+const createGroup = function (group: Group): Element {
   //Setup the group
-  const newgroup = $("#group-template")
-    .clone()
-    .attr("id", "group-" + group.id);
-  newgroup.attr("data-id", group.id);
-  newgroup.find("#group_name").html(group.name);
-  newgroup.find(".group_name-editable").val(group.name);
-  newgroup
-    .find(".Group-checkbox label")
-    .attr("for", "Group-Checkbox-selection-" + group.id);
-  newgroup
-    .find(".Group-checkbox input")
-    .attr("id", "Group-Checkbox-selection-" + group.id);
-  newgroup.find(".input-edit-group-name").attr("placeholder", group.name);
-  newgroup
-    .find(".group_number_users")
-    .html(
-      group.nbUsers +
-        " " +
-        (group.nbUsers > 1 ? str_members_default : str_member_default),
-    );
-  newgroup.find(".group_name-editable").html(group.name);
-  newgroup
-    .find(".manage-permissions")
-    .attr("href", "admin.php?page=group_perm&group_id=" + group.id);
+  const template = document.getElementById("group-template")!;
+  const newgroup = template.cloneNode(true) as HTMLElement;
+  newgroup.id = "group-" + group.id;
+  attr(newgroup, "data-id", String(group.id));
+  html(find(newgroup, "#group_name"), group.name);
+  setVal(find(newgroup, ".group_name-editable"), group.name);
+  attr(
+    find(newgroup, ".Group-checkbox label"),
+    "for",
+    "Group-Checkbox-selection-" + group.id,
+  );
+  attr(
+    find(newgroup, ".Group-checkbox input"),
+    "id",
+    "Group-Checkbox-selection-" + group.id,
+  );
+  attr(find(newgroup, ".input-edit-group-name"), "placeholder", group.name);
+  html(
+    find(newgroup, ".group_number_users"),
+    group.nbUsers +
+      " " +
+      (group.nbUsers > 1 ? str_members_default : str_member_default),
+  );
+  html(find(newgroup, ".group_name-editable"), group.name);
+  attr(
+    find(newgroup, ".manage-permissions"),
+    "href",
+    "admin.php?page=group_perm&group_id=" + group.id,
+  );
   hideAddGroupForm();
 
   //Setup the icon color
@@ -215,157 +281,180 @@ const createGroup = function (group: Group) {
     "icon-green",
   ];
   const colorId = group.id % 5;
-  newgroup.find(".icon-users-1").addClass(colors[colorId]!);
+  addClass(find(newgroup, ".icon-users-1"), colors[colorId]!);
 
   //Place group in first Place
-  newgroup.find(".groupMessage").html(str_group_created);
-  newgroup.find(".groupMessage").fadeIn();
-  newgroup.find(".groupMessage").delay(DELAY_FEEDBACK).fadeOut();
+  html(find(newgroup, ".groupMessage"), str_group_created);
+  fadeIn(find(newgroup, ".groupMessage"));
+  const groupMessage = find(newgroup, ".groupMessage");
+  setTimeout(() => {
+    fadeOut(groupMessage);
+  }, DELAY_FEEDBACK);
   return newgroup;
 };
 
 /*-------
  SETUP JS ON GROUP BOX
  -------*/
-jQuery(document).ready(function () {
-  $(".GroupContainer").each(function () {
-    if ($(this).attr("id") != "group-template") setupGroupBox($(this));
+ready(function () {
+  document.querySelectorAll(".GroupContainer").forEach((groupBox) => {
+    if (attrOf(groupBox, "id") != "group-template") setupGroupBox(groupBox);
   });
 });
-const setupGroupBox = function (groupBox: JQuery) {
-  const id = groupBox.data("id") as string | number;
+const setupGroupBox = function (groupBox: Element) {
+  const id = data(groupBox, "id") as string | number;
 
   /* Change background color of group block if checked in selection mode */
-  groupBox.find(".Group-checkbox input[type='checkbox']").change(function () {
-    toogleSelection(
-      id,
-      groupBox.find(".Group-checkbox input[type='checkbox']").is(":checked"),
-    );
-  });
+  on(
+    find(groupBox, ".Group-checkbox input[type='checkbox']"),
+    "change",
+    function () {
+      toogleSelection(
+        id,
+        is(
+          find(groupBox, ".Group-checkbox input[type='checkbox']"),
+          ":checked",
+        ),
+      );
+    },
+  );
   // Was `.attr("checked", false)` -- jQuery's `.attr()` setter never
   // accepted a boolean (masked by this file's pre-P47 `any` typing);
   // `.prop("checked", ...)` is the correct API for a checkbox's boolean
   // state, matching every other checked-state toggle in this same file
-  // (e.g. `toogleSelection`'s own `.prop("checked", true/false)` below).
-  groupBox
-    .find(".Group-checkbox input[type='checkbox']")
-    .prop("checked", false);
+  // (e.g. `toogleSelection`'s own `setChecked(..., true/false)` below).
+  setChecked(find(groupBox, ".Group-checkbox input[type='checkbox']"), false);
 
   /* Display the option on the click on "..." */
-  groupBox.find(".group-dropdown-options").click(function GroupOptions(
-    this: HTMLElement,
-  ) {
-    $(this).find("#GroupOptions").toggle();
-  });
+  on(
+    find(groupBox, ".group-dropdown-options"),
+    "click",
+    function (this: Element) {
+      toggle(find(this, "#GroupOptions"));
+    },
+  );
 
   /* Set the delete action */
-  groupBox.find("#GroupDelete").on("click", function () {
+  on(find(groupBox, "#GroupDelete"), "click", function () {
     deleteGroup(id);
   });
 
   /* Set the rename action */
-  groupBox
-    .find(".Group-name .icon-pencil, #GroupEdit")
-    .on("click", function () {
+  on(
+    find(groupBox, ".Group-name .icon-pencil, #GroupEdit"),
+    "click",
+    function () {
       displayRenameForm(true, id);
       setTimeout(() => {
-        groupBox.find("#GroupOptions").hide();
+        hide(find(groupBox, "#GroupOptions"));
       }, 10);
-    });
+    },
+  );
 
-  groupBox.find(".group-rename .validate").on("click", function () {
-    groupBox.find(".group-rename form").trigger("submit");
+  on(find(groupBox, ".group-rename .validate"), "click", function () {
+    // Not `.trigger("submit")`: `HTMLFormElement.submit()` deliberately
+    // does not fire a "submit" event (bypasses validation/listeners by
+    // spec), so it would never reach the native "submit" listener
+    // registered below. `requestSubmit()` is the real equivalent of
+    // "submit this form as if the user had".
+    (
+      find(groupBox, ".group-rename form")[0] as HTMLFormElement | undefined
+    )?.requestSubmit();
   });
 
-  groupBox.find(".group-rename form").on("submit", function (e) {
+  on(find(groupBox, ".group-rename form"), "submit", function (e: Event) {
     e.preventDefault();
-    renameGroup(id, String(groupBox.find(".group_name-editable").val()));
+    renameGroup(id, String(val(find(groupBox, ".group_name-editable"))));
   });
 
-  groupBox.find(".group-rename .icon-cancel").on("click", function () {
+  on(find(groupBox, ".group-rename .icon-cancel"), "click", function () {
     displayRenameForm(false, id);
-    groupBox
-      .find(".group_name-editable")
-      .val(groupBox.find(".Group-name-container p").html());
+    setVal(
+      find(groupBox, ".group_name-editable"),
+      htmlOf(find(groupBox, ".Group-name-container p")) ?? "",
+    );
   });
 
   /* Hide group options and rename field on click on the screen */
 
-  $(document).mouseup(function (e) {
+  on(document, "mouseup", function (e: Event) {
     e.stopPropagation();
     let option_is_clicked = false;
-    $("#GroupOptions div").each(function () {
-      if (!($(this).has(e.target as unknown as Element).length === 0)) {
+    document.querySelectorAll("#GroupOptions div").forEach((option) => {
+      if (option.contains(e.target as Node | null)) {
         option_is_clicked = true;
       }
     });
     if (!option_is_clicked) {
-      groupBox.find("#GroupOptions").hide();
+      hide(find(groupBox, "#GroupOptions"));
     }
   });
 
   /* Setup the default action */
-  if (groupBox.data("default") == 1) {
+  if (data(groupBox, "default") == 1) {
     setupDefaultActions(id, true);
-  } else if (groupBox.data("default") == 0) {
+  } else if (data(groupBox, "default") == 0) {
     setupDefaultActions(id, false);
   }
 
-  groupBox.find(".manage-users").on("click", function () {
+  on(find(groupBox, ".manage-users"), "click", function () {
     openUserManager(id);
   });
 
-  groupBox.find("#GroupDuplicate").on("click", function () {
+  on(find(groupBox, "#GroupDuplicate"), "click", function () {
     duplicateAction(id);
   });
 };
 
-const toogleSelection = function (group_id: string | number, toggle: boolean) {
-  const groupBox = $("#group-" + group_id);
-  if (toggle) {
-    groupBox.find(".Group-checkbox input").prop("checked", true);
-    groupBox.addClass("GroupBackgroudSelected");
-    groupBox.find(".icon-users-1").addClass("OrangeIcon");
-    groupBox.find(".group_number_users").addClass("OrangeFont");
+const toogleSelection = function (
+  group_id: string | number,
+  toggleOn: boolean,
+) {
+  const groupBox = document.querySelectorAll("#group-" + group_id);
+  if (toggleOn) {
+    setChecked(find(groupBox, ".Group-checkbox input"), true);
+    addClass(groupBox, "GroupBackgroudSelected");
+    addClass(find(groupBox, ".icon-users-1"), "OrangeIcon");
+    addClass(find(groupBox, ".group_number_users"), "OrangeFont");
 
     //Display item selection on selection panel
-    const item = $(
+    const item = parseHtml(
       "<div data-id=" +
         group_id +
         ">" +
         "<a class='icon-cancel'></a>" +
         "<p>" +
-        groupBox.find("#group_name").html() +
+        htmlOf(find(groupBox, "#group_name")) +
         "</p> </div>",
-    );
-    item.appendTo(".DeleteGroupList");
-    item.find("a").on("click", function () {
-      groupBox.find(".Group-checkbox input").prop("checked", false);
+    )[0]!;
+    document.querySelector(".DeleteGroupList")?.appendChild(item);
+    on(find(item, "a"), "click", function () {
+      setChecked(find(groupBox, ".Group-checkbox input"), false);
       toogleSelection(group_id, false);
     });
     updateSelectionPanel();
-    const option = $(
+    const option = parseHtml(
       '<option value="' +
         group_id +
         '">' +
-        groupBox.find("#group_name").html() +
+        htmlOf(find(groupBox, "#group_name")) +
         "</option>",
-    );
-    option.appendTo("#MergeOptionsChoices");
+    )[0]!;
+    document.querySelector("#MergeOptionsChoices")?.appendChild(option);
   } else {
-    groupBox.find(".Group-checkbox input").prop("checked", false);
-    groupBox.removeClass("GroupBackgroudSelected");
-    groupBox.find(".icon-users-1").removeClass("OrangeIcon");
-    groupBox.find(".group_number_users").removeClass("OrangeFont");
-    $(".DeleteGroupList div").each(function () {
-      if ($(this).data("id") == group_id) {
-        $(this).remove();
+    setChecked(find(groupBox, ".Group-checkbox input"), false);
+    removeClass(groupBox, "GroupBackgroudSelected");
+    removeClass(find(groupBox, ".icon-users-1"), "OrangeIcon");
+    removeClass(find(groupBox, ".group_number_users"), "OrangeFont");
+    document.querySelectorAll(".DeleteGroupList div").forEach((el) => {
+      if (attrOf(el, "data-id") == String(group_id)) {
+        el.remove();
       }
     });
     updateSelectionPanel();
-    $("#MergeOptionsChoices option").each(function () {
-      if ($(this).attr("value") == group_id) {
-        $(this).remove();
+    document.querySelectorAll("#MergeOptionsChoices option").forEach((el) => {
+      if (attrOf(el, "value") == String(group_id)) {
+        el.remove();
       }
     });
   }
@@ -373,8 +462,12 @@ const toogleSelection = function (group_id: string | number, toggle: boolean) {
 
 /* Group Ajax and Display Functions */
 const deleteGroup = function (id: string | number) {
-  $.confirm({
-    title: str_delete.replace("%s", $("#group-" + id + " #group_name").html()),
+  // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
+  jQuery.confirm({
+    title: str_delete.replace(
+      "%s",
+      htmlOf(document.querySelectorAll("#group-" + id + " #group_name"))!,
+    ),
     draggable: false,
     titleClass: "jconfirmDeleteConfirm",
     theme: "modern",
@@ -391,10 +484,13 @@ const deleteGroup = function (id: string | number) {
         text: str_yes_delete_confirmation,
         btnClass: "btn-red",
         action: function () {
-          const groupName = $(
-            "#group-" + id + " .Group-name-container p",
-          ).html();
-          $.alert({
+          const groupName = htmlOf(
+            document.querySelectorAll(
+              "#group-" + id + " .Group-name-container p",
+            ),
+          )!;
+          // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
+          jQuery.alert({
             ...{
               title: str_group_deleted.replace("%s", groupName),
               content: function () {
@@ -408,9 +504,17 @@ const deleteGroup = function (id: string | number) {
                   success: function (
                     _data: operations["groupDelete"]["responses"][200]["content"]["application/json"],
                   ) {
-                    $("#group-" + id).remove();
-                    $(".DeleteGroupList div[data-id=" + id + "]").remove();
-                    $("#MergeOptionsChoices option[value=" + id + "]").remove();
+                    document.querySelector("#group-" + id)?.remove();
+                    document
+                      .querySelector(
+                        '.DeleteGroupList div[data-id="' + id + '"]',
+                      )
+                      ?.remove();
+                    document
+                      .querySelector(
+                        '#MergeOptionsChoices option[value="' + id + '"]',
+                      )
+                      ?.remove();
                     updateBadge();
                   },
                   error: function (err) {
@@ -464,19 +568,22 @@ const renameGroup = function (id: string | number, newName: string) {
         loadState.reverse();
         newName = data.name;
         //Display message
-        $("#group-" + id)
-          .find(".groupMessage")
-          .html(str_renaming_done);
-        $("#group-" + id)
-          .find(".groupMessage")
-          .fadeIn();
-        $("#group-" + id)
-          .find(".groupMessage")
-          .delay(DELAY_FEEDBACK)
-          .fadeOut();
-        $("#group-" + id)
-          .find("#group_name")
-          .html(newName);
+        html(
+          find(document.querySelectorAll("#group-" + id), ".groupMessage"),
+          str_renaming_done,
+        );
+        const groupMessage = find(
+          document.querySelectorAll("#group-" + id),
+          ".groupMessage",
+        );
+        fadeIn(groupMessage);
+        setTimeout(() => {
+          fadeOut(groupMessage);
+        }, DELAY_FEEDBACK);
+        html(
+          find(document.querySelectorAll("#group-" + id), "#group_name"),
+          newName,
+        );
 
         //Hide editable field
         displayRenameForm(false, id);
@@ -484,30 +591,34 @@ const renameGroup = function (id: string | number, newName: string) {
       error: function (_err) {
         loadState.reverse();
         //Display error message
-        $("#group-" + id)
-          .find(".groupError")
-          .html(str_name_taken);
-        $("#group-" + id)
-          .find(".groupError")
-          .fadeIn();
-        $("#group-" + id)
-          .find(".groupError")
-          .delay(DELAY_FEEDBACK)
-          .fadeOut();
+        html(
+          find(document.querySelectorAll("#group-" + id), ".groupError"),
+          str_name_taken,
+        );
+        const groupError = find(
+          document.querySelectorAll("#group-" + id),
+          ".groupError",
+        );
+        fadeIn(groupError);
+        setTimeout(() => {
+          fadeOut(groupError);
+        }, DELAY_FEEDBACK);
       },
     });
   } else {
     loadState.reverse();
-    $("#group-" + id)
-      .find(".groupError")
-      .html(str_name_not_empty);
-    $("#group-" + id)
-      .find(".groupError")
-      .fadeIn();
-    $("#group-" + id)
-      .find(".groupError")
-      .delay(DELAY_FEEDBACK)
-      .fadeOut();
+    html(
+      find(document.querySelectorAll("#group-" + id), ".groupError"),
+      str_name_not_empty,
+    );
+    const groupError = find(
+      document.querySelectorAll("#group-" + id),
+      ".groupError",
+    );
+    fadeIn(groupError);
+    setTimeout(() => {
+      fadeOut(groupError);
+    }, DELAY_FEEDBACK);
   }
 };
 
@@ -517,46 +628,65 @@ const displayRenameForm = function (
   grp_id: string | number,
 ) {
   if (doDisplay) {
-    $("#group-" + grp_id)
-      .find(".group-rename")
-      .css("display", "flex");
-    $("#group-" + grp_id)
-      .find(".Group-name-container .icon-pencil")
-      .hide();
-    $("#group-" + grp_id)
-      .find(".Group-name-container p")
-      .css("opacity", 0);
+    css(
+      find(document.querySelectorAll("#group-" + grp_id), ".group-rename"),
+      "display",
+      "flex",
+    );
+    hide(
+      find(
+        document.querySelectorAll("#group-" + grp_id),
+        ".Group-name-container .icon-pencil",
+      ),
+    );
+    css(
+      find(
+        document.querySelectorAll("#group-" + grp_id),
+        ".Group-name-container p",
+      ),
+      "opacity",
+      0,
+    );
   } else {
-    $("#group-" + grp_id)
-      .find(".group-rename")
-      .hide();
-    $("#group-" + grp_id)
-      .find(".Group-name-container .icon-pencil")
-      .removeAttr("style");
-    $("#group-" + grp_id)
-      .find(".Group-name-container p")
-      .css("opacity", 1);
+    hide(find(document.querySelectorAll("#group-" + grp_id), ".group-rename"));
+    removeAttr(
+      find(
+        document.querySelectorAll("#group-" + grp_id),
+        ".Group-name-container .icon-pencil",
+      ),
+      "style",
+    );
+    css(
+      find(
+        document.querySelectorAll("#group-" + grp_id),
+        ".Group-name-container p",
+      ),
+      "opacity",
+      1,
+    );
   }
 };
 
 const setDefaultGroup = function (id: string | number, is_default: boolean) {
-  $("#group-" + id + " #GroupDefault").css(
-    "width",
-    $("#group-" + id + " #GroupDefault").width()!,
+  const groupDefault = document.querySelectorAll(
+    "#group-" + id + " #GroupDefault",
   );
-  $("#group-" + id + " #GroupDefault").html(
-    "<i class='icon-spin6 animate-spin'> </i>",
+  css(groupDefault, "width", outerHeight(groupDefault[0] as HTMLElement));
+  html(groupDefault, "<i class='icon-spin6 animate-spin'> </i>");
+  removeClass(groupDefault, "icon-star");
+  attr(groupDefault, "style", "pointer-events: none; text-align: center;");
+  addClass(
+    find(document.querySelectorAll("#group-" + id), ".is-default-token"),
+    "icon-spin6",
   );
-  $("#group-" + id + " #GroupDefault").removeClass("icon-star");
-  $("#group-" + id + " #GroupDefault").attr(
-    "style",
-    "pointer-events: none; text-align: center;",
+  addClass(
+    find(document.querySelectorAll("#group-" + id), ".is-default-token"),
+    "animate-spin",
   );
-  $("#group-" + id)
-    .find(".is-default-token")
-    .addClass("icon-spin6")
-    .addClass("animate-spin")
-    .removeClass("icon-star");
+  removeClass(
+    find(document.querySelectorAll("#group-" + id), ".is-default-token"),
+    "icon-star",
+  );
   void ajax({
     url: "api/v1/groups/" + id,
     type: "PATCH",
@@ -571,7 +701,7 @@ const setDefaultGroup = function (id: string | number, is_default: boolean) {
     success: function (
       _data: operations["groupUpdate"]["responses"][200]["content"]["application/json"],
     ) {
-      $("#group-" + id + " #GroupOptions").hide();
+      hide(document.querySelectorAll("#group-" + id + " #GroupOptions"));
       if (is_default) {
         setupDefaultActions(id, true);
       } else {
@@ -588,54 +718,80 @@ const setupDefaultActions = function (
   id: string | number,
   is_default: boolean,
 ) {
-  $("#group-" + id + " #GroupDefault").attr("style", "");
-  $("#group-" + id + " #GroupDefault").addClass("icon-star");
-  $("#group-" + id)
-    .find(".is-default-token")
-    .removeClass("icon-spin6")
-    .removeClass("animate-spin")
-    .addClass("icon-star");
+  attr(
+    document.querySelectorAll("#group-" + id + " #GroupDefault"),
+    "style",
+    "",
+  );
+  addClass(
+    document.querySelectorAll("#group-" + id + " #GroupDefault"),
+    "icon-star",
+  );
+  const token = find(
+    document.querySelectorAll("#group-" + id),
+    ".is-default-token",
+  );
+  removeClass(token, "icon-spin6");
+  removeClass(token, "animate-spin");
+  addClass(token, "icon-star");
   if (is_default) {
-    $("#group-" + id)
-      .find("#GroupDefault")
-      .html(str_unset_default);
-    $("#group-" + id)
-      .find(".is-default-token")
-      .attr("title", str_unset_default);
-    $("#group-" + id)
-      .find("#GroupDefault")
-      .unbind("click");
-    $("#group-" + id)
-      .find(".is-default-token")
-      .removeClass("deactivate");
-    $("#group-" + id)
-      .find("#GroupDefault")
-      .on("click", function () {
+    html(
+      find(document.querySelectorAll("#group-" + id), "#GroupDefault"),
+      str_unset_default,
+    );
+    attr(
+      find(document.querySelectorAll("#group-" + id), ".is-default-token"),
+      "title",
+      str_unset_default,
+    );
+    // `.unbind("click")` removes every click handler this element has,
+    // regardless of which closure added it -- dom.ts's own `off(target,
+    // "click")` (no handler argument) matches that, over its own
+    // registry of `on()`-added listeners.
+    off(document.querySelectorAll("#group-" + id + " #GroupDefault"), "click");
+    removeClass(
+      find(document.querySelectorAll("#group-" + id), ".is-default-token"),
+      "deactivate",
+    );
+    on(
+      document.querySelectorAll("#group-" + id + " #GroupDefault"),
+      "click",
+      function () {
         setDefaultGroup(id, false);
-      });
-    $("#group-" + id)
-      .find(".is-default-token")
-      .on("click", function () {
+      },
+    );
+    on(
+      find(document.querySelectorAll("#group-" + id), ".is-default-token"),
+      "click",
+      function () {
         setDefaultGroup(id, false);
-      });
+      },
+    );
   } else {
-    $("#group-" + id)
-      .find("#GroupDefault")
-      .html(str_set_default);
-    $("#group-" + id)
-      .find(".is-default-token")
-      .attr("title", str_set_default);
-    $("#group-" + id)
-      .find(".is-default-token")
-      .addClass("deactivate");
-    $("#group-" + id)
-      .find("#GroupDefault")
-      .on("click", function () {
+    html(
+      find(document.querySelectorAll("#group-" + id), "#GroupDefault"),
+      str_set_default,
+    );
+    attr(
+      find(document.querySelectorAll("#group-" + id), ".is-default-token"),
+      "title",
+      str_set_default,
+    );
+    addClass(
+      find(document.querySelectorAll("#group-" + id), ".is-default-token"),
+      "deactivate",
+    );
+    on(
+      document.querySelectorAll("#group-" + id + " #GroupDefault"),
+      "click",
+      function () {
         setDefaultGroup(id, true);
-      });
-    $("#group-" + id)
-      .find(".is-default-token")
-      .unbind("click");
+      },
+    );
+    off(
+      find(document.querySelectorAll("#group-" + id), ".is-default-token"),
+      "click",
+    );
   }
 };
 
@@ -654,12 +810,14 @@ const duplicateAction = function (id: string | number) {
     "style",
     "pointer-events: none; text-align: center;",
   );
-  let copy_name = $("#group-" + id + " #group_name").html() + str_copy;
+  let copy_name =
+    htmlOf(document.querySelectorAll("#group-" + id + " #group_name")) +
+    str_copy;
 
   const name_exist = function (name: string) {
     let exist = false;
-    $(".Group-name-container p").each(function () {
-      if ($(this).html() === name) exist = true;
+    document.querySelectorAll(".Group-name-container p").forEach((el) => {
+      if (htmlOf(el) === name) exist = true;
     });
     return exist;
   };
@@ -667,7 +825,7 @@ const duplicateAction = function (id: string | number) {
   let i = 1;
   while (name_exist(copy_name)) {
     copy_name =
-      $("#group-" + id + " #group_name").html() +
+      htmlOf(document.querySelectorAll("#group-" + id + " #group_name")) +
       str_other_copy.replace("%s", String(i++));
   }
 
@@ -686,10 +844,10 @@ const duplicateAction = function (id: string | number) {
       data: operations["groupDuplicate"]["responses"][201]["content"]["application/json"],
     ) {
       loadState.reverse();
-      $("#group-" + id + " #GroupOptions").hide();
+      hide(document.querySelectorAll("#group-" + id + " #GroupOptions"));
       const group = data;
       const groupbox = createGroup(group);
-      groupbox.insertAfter($("#group-" + id));
+      document.querySelector("#group-" + id)?.after(groupbox);
       setupGroupBox(groupbox);
       updateBadge();
 
@@ -705,23 +863,26 @@ const duplicateAction = function (id: string | number) {
 };
 
 /*-------
- Selection mode toggle actions,  
+ Selection mode toggle actions,
  changes "..." in group block to checkbox,
  disables group actions in selection mode
  -------*/
 
-$(function () {
-  $("#toggleSelectionMode").prop("checked", false);
-  $("#toggleSelectionMode").click(function () {
-    if ($(this).is(":checked")) {
-      $(".in-selection-mode").show();
-      $(".not-in-selection-mode").hide();
-      $(".GroupManagerButtons").removeClass("visible");
+ready(function () {
+  setChecked(document.querySelectorAll("#toggleSelectionMode"), false);
+  on(document.querySelectorAll("#toggleSelectionMode"), "click", function () {
+    if (is(document.querySelectorAll("#toggleSelectionMode"), ":checked")) {
+      show(document.querySelectorAll(".in-selection-mode"));
+      hide(document.querySelectorAll(".not-in-selection-mode"));
+      removeClass(document.querySelectorAll(".GroupManagerButtons"), "visible");
     } else {
-      $(".in-selection-mode").hide();
-      $(".not-in-selection-mode").removeAttr("style");
-      $(".Group-checkbox input").prop("checked", false);
-      $(".Group-checkbox input[type='checkbox']").trigger("change");
+      hide(document.querySelectorAll(".in-selection-mode"));
+      removeAttr(document.querySelectorAll(".not-in-selection-mode"), "style");
+      setChecked(document.querySelectorAll(".Group-checkbox input"), false);
+      trigger(
+        document.querySelectorAll(".Group-checkbox input[type='checkbox']"),
+        "change",
+      );
     }
   });
 });
@@ -732,7 +893,7 @@ $(function () {
 let state = "NoSelection";
 
 const updateSelectionPanel = function (changedState: string = "") {
-  const numSelect = $(".DeleteGroupList div").length;
+  const numSelect = document.querySelectorAll(".DeleteGroupList div").length;
 
   if (numSelect == 0) {
     updateStatePanel("NoSelection");
@@ -746,7 +907,7 @@ const updateSelectionPanel = function (changedState: string = "") {
     else updateStatePanel(changedState);
   }
 
-  $(".number-Selected").html(numSelect + "");
+  html(document.querySelectorAll(".number-Selected"), numSelect + "");
 };
 
 /*Update the state of the panel in 5 states :
@@ -756,73 +917,76 @@ const updateStatePanel = function (newState: string = "Selection") {
   state = newState;
   switch (newState) {
     case "OneSelected":
-      $("#DeleteSelectionMode").show();
-      $("#MergeSelectionMode").show();
-      buttonUnavailable($("#MergeSelectionMode"));
+      show(document.querySelectorAll("#DeleteSelectionMode"));
+      show(document.querySelectorAll("#MergeSelectionMode"));
+      buttonUnavailable(document.querySelectorAll("#MergeSelectionMode"));
       buttonAvailable(
-        $("#DeleteSelectionMode"),
+        document.querySelectorAll("#DeleteSelectionMode"),
         "updateSelectionPanel('ConfirmDeletion')",
       );
-      $("#MergeOptionsBlock").hide();
-      $("#ConfirmGroupAction").hide();
+      hide(document.querySelectorAll("#MergeOptionsBlock"));
+      hide(document.querySelectorAll("#ConfirmGroupAction"));
       break;
     case "ConfirmDeletion":
-      $("#DeleteSelectionMode").hide();
-      $("#MergeSelectionMode").hide();
-      $("#MergeOptionsBlock").hide();
-      $("#ConfirmGroupAction").show();
+      hide(document.querySelectorAll("#DeleteSelectionMode"));
+      hide(document.querySelectorAll("#MergeSelectionMode"));
+      hide(document.querySelectorAll("#MergeOptionsBlock"));
+      show(document.querySelectorAll("#ConfirmGroupAction"));
       break;
     case "Selection":
-      $("#DeleteSelectionMode").show();
-      $("#MergeSelectionMode").show();
+      show(document.querySelectorAll("#DeleteSelectionMode"));
+      show(document.querySelectorAll("#MergeSelectionMode"));
       buttonAvailable(
-        $("#MergeSelectionMode"),
+        document.querySelectorAll("#MergeSelectionMode"),
         "updateSelectionPanel('OptionMerge')",
       );
       buttonAvailable(
-        $("#DeleteSelectionMode"),
+        document.querySelectorAll("#DeleteSelectionMode"),
         "updateSelectionPanel('ConfirmDeletion')",
       );
-      $("#MergeOptionsBlock").hide();
-      $("#ConfirmGroupAction").hide();
+      hide(document.querySelectorAll("#MergeOptionsBlock"));
+      hide(document.querySelectorAll("#ConfirmGroupAction"));
       break;
     case "OptionMerge":
-      $("#DeleteSelectionMode").hide();
-      $("#MergeSelectionMode").hide();
-      $("#MergeOptionsBlock").show();
-      $("#ConfirmGroupAction").hide();
+      hide(document.querySelectorAll("#DeleteSelectionMode"));
+      hide(document.querySelectorAll("#MergeSelectionMode"));
+      show(document.querySelectorAll("#MergeOptionsBlock"));
+      hide(document.querySelectorAll("#ConfirmGroupAction"));
       break;
   }
   if (newState == "NoSelection") {
-    $("#DeleteSelectionMode").show();
-    $("#MergeSelectionMode").show();
-    buttonUnavailable($("#MergeSelectionMode"));
-    buttonUnavailable($("#DeleteSelectionMode"));
-    $(".SelectionModeGroup").hide();
-    $("#nothing-selected").show();
-    $("#MergeOptionsBlock").hide();
-    $("#ConfirmGroupAction").hide();
+    show(document.querySelectorAll("#DeleteSelectionMode"));
+    show(document.querySelectorAll("#MergeSelectionMode"));
+    buttonUnavailable(document.querySelectorAll("#MergeSelectionMode"));
+    buttonUnavailable(document.querySelectorAll("#DeleteSelectionMode"));
+    hide(document.querySelectorAll(".SelectionModeGroup"));
+    show(document.querySelectorAll("#nothing-selected"));
+    hide(document.querySelectorAll("#MergeOptionsBlock"));
+    hide(document.querySelectorAll("#ConfirmGroupAction"));
   } else {
-    $(".SelectionModeGroup").show();
-    $("#nothing-selected").hide();
+    show(document.querySelectorAll(".SelectionModeGroup"));
+    hide(document.querySelectorAll("#nothing-selected"));
   }
 };
 
-const buttonAvailable = function (button: JQuery, onClick: string) {
-  button.removeClass("unavailable");
-  button.attr("OnClick", onClick);
+const buttonAvailable = function (
+  button: Element | ArrayLike<Element>,
+  onClick: string,
+) {
+  removeClass(button, "unavailable");
+  attr(button, "onclick", onClick);
 };
 
-const buttonUnavailable = function (button: JQuery) {
-  button.addClass("unavailable");
-  button.removeAttr("OnClick");
+const buttonUnavailable = function (button: Element | ArrayLike<Element>) {
+  addClass(button, "unavailable");
+  removeAttr(button, "onclick");
 };
 
 /*-------
  Merge function on button's pannel
  -------*/
 
-$(".ConfirmMergeButton").on("click", function () {
+on(document.querySelectorAll(".ConfirmMergeButton"), "click", function () {
   const loadState = new TemporaryState();
   loadState.changeAttribute(
     document.querySelectorAll(".ConfirmMergeButton"),
@@ -844,17 +1008,17 @@ $(".ConfirmMergeButton").on("click", function () {
   // string, not the original `[]` placeholder, which never matched the
   // value actually assigned or read.
   let name_dest = "";
-  // Single-value <select>, never multi -- `.val()`'s generic
-  // `JQuery<HTMLElement>` overload would otherwise widen to
-  // `string | number | string[] | undefined`.
-  const dest_grp = $("#MergeOptionsChoices").val() as string;
+  // Single-value <select>, never multi.
+  const dest_grp = val(
+    document.querySelectorAll("#MergeOptionsChoices"),
+  ) as string;
 
-  $(".DeleteGroupList div").each(function () {
-    if (dest_grp != $(this).attr("data-id")) {
-      merge_group.push(Number($(this).attr("data-id")));
-      name_merge.push($(this).find("p").html());
+  document.querySelectorAll(".DeleteGroupList div").forEach((el) => {
+    if (dest_grp != attrOf(el, "data-id")) {
+      merge_group.push(Number(attrOf(el, "data-id")));
+      name_merge.push(htmlOf(find(el, "p"))!);
     } else {
-      name_dest = $(this).find("p").html();
+      name_dest = htmlOf(find(el, "p"))!;
     }
   });
 
@@ -876,15 +1040,19 @@ $(".ConfirmMergeButton").on("click", function () {
       loadState.reverse();
       updateSelectionPanel("Selection");
       merge_group.forEach(function (id: number) {
-        $("#group-" + id).fadeOut(function () {
-          $(this).remove();
+        const el = document.querySelectorAll("#group-" + id);
+        fadeOut(el, () => {
+          el.forEach((one) => {
+            one.remove();
+          });
         });
       });
       toogleSelection(dest_grp, false);
-      $(".DeleteGroupList").html("");
-      $("#MergeOptionsChoices").html("");
+      html(document.querySelectorAll(".DeleteGroupList"), "");
+      html(document.querySelectorAll("#MergeOptionsChoices"), "");
 
-      $.alert({
+      // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
+      jQuery.alert({
         ...{
           title: str_merged_into
             .replace("%s1", name_merge.toString())
@@ -894,7 +1062,10 @@ $(".ConfirmMergeButton").on("click", function () {
         ...jConfirm_alert_options,
       });
 
-      $("#group-" + dest_grp + " .group_number_users").html(
+      html(
+        document.querySelectorAll(
+          "#group-" + dest_grp + " .group_number_users",
+        ),
         "<i class='icon-spin6 animate-spin'> </i>",
       );
       void ajax({
@@ -906,7 +1077,10 @@ $(".ConfirmMergeButton").on("click", function () {
         dataType: "json",
         success: function (data: GroupUserListResponse) {
           const number = data.users.length;
-          $("#group-" + dest_grp + " .group_number_users").html(
+          html(
+            document.querySelectorAll(
+              "#group-" + dest_grp + " .group_number_users",
+            ),
             number +
               " " +
               (number > 1 ? str_members_default : str_member_default),
@@ -926,12 +1100,14 @@ $(".ConfirmMergeButton").on("click", function () {
  Delete function on button's pannel
  -------*/
 
-$(".ConfirmDeleteButton").on("click", function () {
+on(document.querySelectorAll(".ConfirmDeleteButton"), "click", function () {
   const names: string[] = [];
   const ids: (string | number)[] = [];
-  $(".DeleteGroupList div").each(function () {
-    const id = $(this).data("id") as string | number;
-    names.push($("#group-" + id + " #group_name").html());
+  document.querySelectorAll(".DeleteGroupList div").forEach((el) => {
+    const id = attrOf(el, "data-id") as string;
+    names.push(
+      htmlOf(document.querySelectorAll("#group-" + id + " #group_name"))!,
+    );
     ids.push(id);
   });
 
@@ -965,17 +1141,19 @@ $(".ConfirmDeleteButton").on("click", function () {
     }),
   )
     .then(function () {
-      $(".DeleteGroupList div").each(function () {
-        $(this).remove();
-        $("#group-" + $(this).attr("data-id")).remove();
-        $(
-          "#MergeOptionsChoices option[value=" + $(this).attr("data-id") + "]",
-        ).remove();
+      document.querySelectorAll(".DeleteGroupList div").forEach((el) => {
+        const dataId = attrOf(el, "data-id");
+        el.remove();
+        document.querySelector("#group-" + dataId)?.remove();
+        document
+          .querySelector('#MergeOptionsChoices option[value="' + dataId + '"]')
+          ?.remove();
       });
 
       loadState.reverse();
       updateSelectionPanel("NoSelection");
-      $.alert({
+      // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
+      jQuery.alert({
         ...{
           title: str_groups_deleted.replace("%s", names.toString()),
           content: "",
@@ -1007,27 +1185,28 @@ let usersInGroup: GroupMemberDisplay[] = [];
 // Max offset of the user container (322 = 6 lines)
 const maxOffsetUserCont = 322;
 
-const dissociateUserInfo = $(
+const dissociateUserInfo = parseHtml(
   "<div class='ValidationUserDissociated'>" +
     "<p class='icon-ok'></p>" +
     "</div>",
-)
-  .appendTo(".group-name-block")
-  .hide();
+)[0]!;
+document.querySelector(".group-name-block")?.appendChild(dissociateUserInfo);
+hide(dissociateUserInfo);
 
-const associateUserInfo = $(
+const associateUserInfo = parseHtml(
   "<div class='ValidationUserAssociated'>" +
     "<p class='icon-ok'></p>" +
     "</div>",
-);
+)[0]!;
 
 // Setup the user research bar
 // Declared here, at module scope (not inside the ready callback below), because getUserDisplay()/the .input-user-name handler further down -- both textually outside this IIFE -- call it too. The real function body still closes over idSearch/selectize/usersCache exactly as before: JS closures capture their enclosing lexical scope by reference regardless of where the containing variable itself is declared.
 let updateUserSearch: () => void;
 
-$(function () {
-  // initialize the Selectize control
-  const $select = $(".AddUserBlock select").selectize({});
+ready(function () {
+  // Still jQuery: selectize() takes a JQuery object, ported in P49-B
+  // group 6.
+  const $select = jQuery(".AddUserBlock select").selectize({});
 
   // fetch the instance -- ambient `HTMLElement.selectize` (from
   // @types/selectize) ships as `Selectize.IApi<any, any>`; narrowed to
@@ -1038,8 +1217,11 @@ $(function () {
   >;
 
   let idSearch = "";
-  $(".UserSearch input").on("focus", function () {
-    if (idSearch != $("#UserList").attr("data-group_id")) {
+  on(document.querySelectorAll(".UserSearch input"), "focus", function () {
+    if (
+      idSearch !=
+      attrOf(document.querySelectorAll("#UserList"), "data-group_id")
+    ) {
       updateUserSearch();
     }
   });
@@ -1069,7 +1251,8 @@ $(function () {
     cached.data.forEach(function (u) {
       selectize.addOption({ value: u.id, text: u.username });
     });
-    idSearch = $("#UserList").attr("data-group_id") ?? "";
+    idSearch =
+      attrOf(document.querySelectorAll("#UserList"), "data-group_id") ?? "";
     // Was `value.username` -- no such field exists on the actual
     // selectize option data (`addOption({value, text})` above only ever
     // sets `value`/`text`), so this comparison was always false and the
@@ -1079,8 +1262,8 @@ $(function () {
         selectize.removeOption(value.value);
       }
     }
-    $(".UsernameBlock").each(function () {
-      selectize.removeOption($(this).data("id") as string | number);
+    document.querySelectorAll(".UsernameBlock").forEach((el) => {
+      selectize.removeOption(data(el, "id") as string | number);
     });
   };
 });
@@ -1111,13 +1294,16 @@ const openUserManager = function (grp_id: string | number) {
     success: function (data: GroupUserListResponse) {
       loadState.reverse();
       //Set the popin name
-      $(".group-name-block p").html(
-        $("#group-" + grp_id + " #group_name").html() + " / " + str_user_list,
+      html(
+        document.querySelectorAll(".group-name-block p"),
+        htmlOf(document.querySelectorAll("#group-" + grp_id + " #group_name")) +
+          " / " +
+          str_user_list,
       );
-      $(".UsersInGroupList").html("");
+      html(document.querySelectorAll(".UsersInGroupList"), "");
 
       //Display the popin
-      $("#UserList").fadeIn();
+      fadeIn(document.querySelectorAll("#UserList"));
 
       //Fill with user blocks
       usersInGroup = data.users;
@@ -1128,25 +1314,38 @@ const openUserManager = function (grp_id: string | number) {
         } else return 1;
       });
       let i = 0;
+      const usersInGroupList = document.querySelector(".UsersInGroupList")!;
       while (
-        $(".UsersInGroupList").outerHeight()! <= maxOffsetUserCont &&
+        outerHeight(usersInGroupList as HTMLElement) <= maxOffsetUserCont &&
         usersInGroup[i] != undefined
       ) {
-        getUserDisplay(
-          usersInGroup[i]!.username,
-          usersInGroup[i]!.id,
-          grp_id,
-        ).appendTo(".UsersInGroupList");
+        usersInGroupList.appendChild(
+          getUserDisplay(
+            usersInGroup[i]!.username,
+            usersInGroup[i]!.id,
+            grp_id,
+          ),
+        );
         i++;
       }
-      while ($(".UsersInGroupList").height()! > maxOffsetUserCont) {
-        $(".UsernameBlock").last().remove();
+      while (
+        (usersInGroupList as HTMLElement).offsetHeight > maxOffsetUserCont
+      ) {
+        document
+          .querySelectorAll(".UsernameBlock")
+          .item(document.querySelectorAll(".UsernameBlock").length - 1)
+          ?.remove();
       }
       updateMembernumber(usersInGroup.length, grp_id);
       //Attribute the group id to the div
-      $("#UserList").attr("data-group_id", grp_id);
+      attr(
+        document.querySelectorAll("#UserList"),
+        "data-group_id",
+        String(grp_id),
+      );
 
-      $(".LinkUserManager a").attr(
+      attr(
+        document.querySelectorAll(".LinkUserManager a"),
         "href",
         "admin.php?page=user_list&group=" + grp_id,
       );
@@ -1163,8 +1362,8 @@ const getUserDisplay = function (
   username: string,
   user_id: string | number,
   grp_id: string | number,
-) {
-  const userBlock = $(
+): Element {
+  const userBlock = parseHtml(
     '<div class="UsernameBlock" data-id=' +
       user_id +
       ">" +
@@ -1179,18 +1378,20 @@ const getUserDisplay = function (
       "</p>" +
       "</div>" +
       "</div>",
-  );
+  )[0]!;
 
-  while ($(".UsersInGroupList")[0]!.offsetHeight > maxOffsetUserCont) {
-    $(".UsernameBlock").last().remove();
+  const usersInGroupList = document.querySelector(".UsersInGroupList")!;
+  while ((usersInGroupList as HTMLElement).offsetHeight > maxOffsetUserCont) {
+    const blocks = document.querySelectorAll(".UsernameBlock");
+    blocks.item(blocks.length - 1)?.remove();
   }
 
   //Setup the delete action
-  userBlock.find(".icon-cancel").on("click", function () {
-    userBlock.find(".icon-cancel").addClass("icon-spin6");
-    userBlock.find(".icon-cancel").addClass("animate-spin");
-    userBlock.find(".icon-cancel").css("pointer-events", "none");
-    userBlock.find(".icon-cancel").removeClass("icon-cancel");
+  on(find(userBlock, ".icon-cancel"), "click", function () {
+    addClass(find(userBlock, ".icon-cancel"), "icon-spin6");
+    addClass(find(userBlock, ".icon-cancel"), "animate-spin");
+    css(find(userBlock, ".icon-cancel"), "pointer-events", "none");
+    removeClass(find(userBlock, ".icon-cancel"), "icon-cancel");
     void ajax({
       url: "api/v1/groups/" + grp_id + "/actions/remove-user",
       type: "POST",
@@ -1206,23 +1407,33 @@ const getUserDisplay = function (
         _data: operations["groupRemoveUser"]["responses"][200]["content"]["application/json"],
       ) {
         const str = str_user_dissociated.replace("%s", username);
-        associateUserInfo.fadeOut();
-        dissociateUserInfo.find("p").html(str);
-        dissociateUserInfo.fadeIn();
+        fadeOut(associateUserInfo);
+        html(find(dissociateUserInfo, "p"), str);
+        fadeIn(dissociateUserInfo);
 
-        $(".UsernameBlock").css("margin-right", "10px").css("border", "none");
+        const usernameBlocks = document.querySelectorAll(".UsernameBlock");
+        css(usernameBlocks, "margin-right", "10px");
+        css(usernameBlocks, "border", "none");
         userBlock.remove();
 
         updateUserSearch();
 
-        while ($(".UsersInGroupList").height()! > maxOffsetUserCont) {
-          $(".UsernameBlock").last().remove();
+        while (
+          (usersInGroupList as HTMLElement).offsetHeight > maxOffsetUserCont
+        ) {
+          const blocks = document.querySelectorAll(".UsernameBlock");
+          blocks.item(blocks.length - 1)?.remove();
         }
 
         usersInGroup = usersInGroup.filter((u) => u.id != user_id);
 
         //Update member number
-        updateMembernumber(parseInt($(".UserNumberBadge").html()) - 1, grp_id);
+        updateMembernumber(
+          parseInt(
+            htmlOf(document.querySelectorAll(".UserNumberBadge")) ?? "0",
+          ) - 1,
+          grp_id,
+        );
       },
     });
   });
@@ -1231,24 +1442,32 @@ const getUserDisplay = function (
 
 //Update member number function
 function updateMembernumber(number: number, grp_id: string | number) {
-  $(".GroupContainer[data-id=" + grp_id + "] .group_number_users").html(
+  html(
+    document.querySelectorAll(
+      '.GroupContainer[data-id="' + grp_id + '"] .group_number_users',
+    ),
     number + " " + (number > 1 ? str_members_default : str_member_default),
   );
-  $(".UserNumberBadge").html(String(number));
-  $(".AmountOfUsersShown strong:nth-child(2)").html(String(number));
-  $(".AmountOfUsersShown strong:nth-child(1)").html(
-    String($(".UsernameBlock").length),
+  html(document.querySelectorAll(".UserNumberBadge"), String(number));
+  html(
+    document.querySelectorAll(".AmountOfUsersShown strong:nth-child(2)"),
+    String(number),
+  );
+  html(
+    document.querySelectorAll(".AmountOfUsersShown strong:nth-child(1)"),
+    String(document.querySelectorAll(".UsernameBlock").length),
   );
 }
 
 // Close pop-up on cross click
-$(".CloseUserList").on("click", function () {
-  $("#UserList").fadeOut();
+on(document.querySelectorAll(".CloseUserList"), "click", function () {
+  fadeOut(document.querySelectorAll("#UserList"));
 });
 
 // Adding Group Action
-$(".AddUserBlock button").on("click", function () {
-  const grp_id = $("#UserList").attr("data-group_id") ?? "";
+on(document.querySelectorAll(".AddUserBlock button"), "click", function () {
+  const grp_id =
+    attrOf(document.querySelectorAll("#UserList"), "data-group_id") ?? "";
   // Get selected ids -- `@types/selectize`'s own `getValue(): any` is a
   // real, incomplete vendor declaration (same gap as `.storage`
   // indexing above), narrowed to this file's real value shape.
@@ -1299,32 +1518,44 @@ $(".AddUserBlock button").on("click", function () {
             username = u.username;
           }
         });
-        const userBlock = getUserDisplay(username, id, grp_id).prependTo(
-          ".UsersInGroupList",
-        );
+        const userBlock = getUserDisplay(username, id, grp_id);
+        document.querySelector(".UsersInGroupList")?.prepend(userBlock);
 
-        dissociateUserInfo.fadeOut();
+        fadeOut(dissociateUserInfo);
 
-        $(".UsernameBlock:first").addClass("success_message");
-        $(".UsernameBlock")
-          .slice(1)
-          .css("margin-right", "10px")
-          .css("border", "none");
+        const firstUsernameBlock = document.querySelector(".UsernameBlock");
+        if (firstUsernameBlock !== null) {
+          addClass(firstUsernameBlock, "success_message");
+        }
+        const restUsernameBlocks = Array.from(
+          document.querySelectorAll(".UsernameBlock"),
+        ).slice(1);
+        css(restUsernameBlocks, "margin-right", "10px");
+        css(restUsernameBlocks, "border", "none");
         associateUserInfo.remove();
-        associateUserInfo.insertAfter(userBlock);
-        associateUserInfo.find("p").html(str_user_associated);
-        associateUserInfo.fadeIn();
+        userBlock.after(associateUserInfo);
+        html(find(associateUserInfo, "p"), str_user_associated);
+        fadeIn(associateUserInfo);
 
         updateUserSearch();
 
         usersInGroup.push({ username: username, id: id });
 
-        while ($(".UsersInGroupList").height()! > maxOffsetUserCont) {
-          $(".UsernameBlock").last().remove();
+        const usersInGroupList = document.querySelector(".UsersInGroupList")!;
+        while (
+          (usersInGroupList as HTMLElement).offsetHeight > maxOffsetUserCont
+        ) {
+          const blocks = document.querySelectorAll(".UsernameBlock");
+          blocks.item(blocks.length - 1)?.remove();
         }
 
         //Update member number
-        updateMembernumber(parseInt($(".UserNumberBadge").html()) + 1, grp_id);
+        updateMembernumber(
+          parseInt(
+            htmlOf(document.querySelectorAll(".UserNumberBadge")) ?? "0",
+          ) + 1,
+          grp_id,
+        );
       },
       error: function (err) {
         loadState.reverse();
@@ -1334,45 +1565,50 @@ $(".AddUserBlock button").on("click", function () {
   }
 });
 
-$(".input-user-name").on("input", function () {
-  const searchString = String($(this).val()).toLowerCase();
-  const grp_id = $(".UserListPopIn").data("group_id") as string | number;
+on(document.querySelectorAll(".input-user-name"), "input", function () {
+  const searchString = String(
+    val(document.querySelectorAll(".input-user-name")),
+  ).toLowerCase();
+  const grp_id = data(document.querySelector(".UserListPopIn")!, "group_id") as
+    string | number;
+  const container = document.querySelector(".UsersInGroupListContainer")!;
+  const usersInGroupList = document.querySelector(".UsersInGroupList")!;
   if (searchString != "") {
-    $(".UsersInGroupListContainer").css(
-      "min-height",
-      $(".UsersInGroupListContainer").height()!,
-    );
+    css(container, "min-height", cssValue(container, "height"));
     usersInGroup.forEach(function (u) {
       const isSearched = u.username.toLowerCase().includes(searchString);
-      if ($(".UsernameBlock[data-id=" + u.id + "]").length != 0) {
+      const existing = document.querySelector(
+        '.UsernameBlock[data-id="' + u.id + '"]',
+      );
+      if (existing !== null) {
         if (!isSearched) {
-          $(".UsernameBlock[data-id=" + u.id + "]").remove();
+          existing.remove();
         }
       } else if (isSearched) {
-        getUserDisplay(u.username, u.id, grp_id).prependTo(".UsersInGroupList");
+        usersInGroupList.prepend(getUserDisplay(u.username, u.id, grp_id));
       }
     });
   } else {
-    $(".UsersInGroupListContainer").css("min-height", "");
-    $(".UsersInGroupList").html("");
+    css(container, "min-height", "");
+    html(document.querySelectorAll(".UsersInGroupList"), "");
     let i = 0;
     while (
-      $(".UsersInGroupList").outerHeight()! <= maxOffsetUserCont &&
+      outerHeight(usersInGroupList as HTMLElement) <= maxOffsetUserCont &&
       usersInGroup[i] != undefined
     ) {
-      getUserDisplay(
-        usersInGroup[i]!.username,
-        usersInGroup[i]!.id,
-        grp_id,
-      ).appendTo(".UsersInGroupList");
+      usersInGroupList.appendChild(
+        getUserDisplay(usersInGroup[i]!.username, usersInGroup[i]!.id, grp_id),
+      );
       i++;
     }
   }
-  $(".AmountOfUsersShown strong:nth-child(1)").html(
-    String($(".UsernameBlock").length),
+  html(
+    document.querySelectorAll(".AmountOfUsersShown strong:nth-child(1)"),
+    String(document.querySelectorAll(".UsernameBlock").length),
   );
-  while ($(".UsersInGroupList").height()! > maxOffsetUserCont) {
-    $(".UsernameBlock").last().remove();
+  while ((usersInGroupList as HTMLElement).offsetHeight > maxOffsetUserCont) {
+    const blocks = document.querySelectorAll(".UsernameBlock");
+    blocks.item(blocks.length - 1)?.remove();
   }
 });
 
@@ -1412,18 +1648,17 @@ const serverKey = pwg_getPageData<string>("cache_key_users");
 const serverId = pwg_getPageData<string>("cache_key_hash");
 const rootUrl = pwg_getPageData<string>("root_url");
 
-$(document).on("keydown", function (e) {
-  if (e.keyCode === 27) {
+on(document, "keydown", function (e: Event) {
+  if ((e as KeyboardEvent).keyCode === 27) {
     // ESC button
-    $("#UserList").fadeOut();
+    fadeOut(document.querySelectorAll("#UserList"));
   }
 });
-$(document).on("click", function (e) {
+on(document, "click", function (e: Event) {
   if (
-    $(e.target as unknown as Element).closest(".UserListPopInContainer")
-      .length === 0
+    (e.target as Element | null)?.closest(".UserListPopInContainer") === null
   ) {
-    $("#UserList").fadeOut();
+    fadeOut(document.querySelectorAll("#UserList"));
   }
 });
 
@@ -1434,6 +1669,8 @@ usersCache = new UsersCache({
   rootUrl: rootUrl,
 });
 
+// Still jQuery: selectize() takes a JQuery object, ported in P49-B
+// group 6.
 usersCache.selectize(jQuery("select.UserSearch"));
 // temporary fix for #1283 (end)
 
@@ -1441,8 +1678,8 @@ usersCache.selectize(jQuery("select.UserSearch"));
 // (see plugins_installed_config.ts's own leading comment for the full
 // explanation). `hideAddGroupForm` is called from group_list.latte's
 // own `onclick="hideAddGroupForm()"` attribute; `updateSelectionPanel`
-// is called from a dynamically-set `onclick`/`OnClick` HTML attribute
-// (buttonAvailable()'s own `button.attr("OnClick", onClick)`, a string
+// is called from a dynamically-set `onclick` HTML attribute
+// (buttonAvailable()'s own `attr(button, "onclick", onClick)`, a string
 // like `"updateSelectionPanel('Selection')"`) -- the exact same
 // javascript:/onclick= exposure requirement, just set via JS instead
 // of a static Latte attribute.

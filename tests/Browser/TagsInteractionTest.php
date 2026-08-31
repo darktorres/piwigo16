@@ -78,7 +78,8 @@ it('creates a tag via the checkmark button, then deletes it via the dropdown', f
             (el) => el.querySelector('.tag-name')?.textContent?.trim() === {$encodedName}
         )?.getAttribute('data-id')
         JS);
-    expect($tagId)->not->toBeNull();
+    expect($tagId)
+        ->not->toBeNull();
 
     // The add-tag <form> is left out of input-mode, and the loading spinner
     // TemporaryState swapped in is reverted back to the plus icon -- both

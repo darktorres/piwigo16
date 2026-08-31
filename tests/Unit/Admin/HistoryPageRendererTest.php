@@ -15,6 +15,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Env;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\GeoIp\GeoIpLookupService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -117,8 +118,13 @@ test('render() defaults the date range to today and skips the user-id lookup whe
             throw new LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
         }
 
+        $geoIpLookupService = Kernel::container()->get(GeoIpLookupService::class);
+        if (! $geoIpLookupService instanceof GeoIpLookupService) {
+            throw new LogicException('Container returned an unexpected type for ' . GeoIpLookupService::class);
+        }
+
         $result = new HistoryPageRenderer()
-            ->render(LangTestFactory::get(), historyPageTestAccessControl(), 'history', UrlServiceTestFactory::build(), $coreTabs, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $eventDispatcher, new InputValidator(), $entityManager, new Renderer(CurrentTemplateTestFactory::get()));
+            ->render(LangTestFactory::get(), historyPageTestAccessControl(), 'history', UrlServiceTestFactory::build(), $coreTabs, CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), $eventDispatcher, new InputValidator(), $entityManager, new Renderer(CurrentTemplateTestFactory::get()), $geoIpLookupService);
 
         $today = Env::now()->format('Y-m-d');
 

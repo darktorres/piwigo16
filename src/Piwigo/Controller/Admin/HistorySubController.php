@@ -13,6 +13,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\GeoIp\GeoIpLookupService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
@@ -41,12 +42,13 @@ final readonly class HistorySubController implements AdminSubControllerInterface
         private InputValidator $inputValidator,
         private EntityManagerInterface $entityManager,
         private Renderer $renderer,
+        private GeoIpLookupService $geoIpLookupService,
     ) {}
 
     #[Override]
     public function handle(ServerRequestInterface $request): AdminPageResult
     {
         return new HistoryPageRenderer()
-            ->render($this->lang, $this->accessControl, 'history', $this->urlService, $this->coreTabs, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->inputValidator, $this->entityManager, $this->renderer);
+            ->render($this->lang, $this->accessControl, 'history', $this->urlService, $this->coreTabs, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->inputValidator, $this->entityManager, $this->renderer, $this->geoIpLookupService);
     }
 }

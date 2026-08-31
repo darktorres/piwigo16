@@ -16,6 +16,7 @@ use Piwigo\Controller\Admin\HistorySubController;
 use Piwigo\Core\Env;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\GeoIp\GeoIpLookupService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\Renderer;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -112,6 +113,11 @@ test('handle() delegates to HistoryPageRenderer::render() with page slug hardcod
             throw new LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
         }
 
+        $geoIpLookupService = Kernel::container()->get(GeoIpLookupService::class);
+        if (! $geoIpLookupService instanceof GeoIpLookupService) {
+            throw new LogicException('Container returned an unexpected type for ' . GeoIpLookupService::class);
+        }
+
         $subController = new HistorySubController(
             LangTestFactory::get(),
             historySubControllerTestAccessControl(),
@@ -123,6 +129,7 @@ test('handle() delegates to HistoryPageRenderer::render() with page slug hardcod
             new InputValidator(),
             $entityManager,
             new Renderer(CurrentTemplateTestFactory::get()),
+            $geoIpLookupService,
         );
 
         $result = $subController->handle(new ServerRequest('GET', '/admin.php'));

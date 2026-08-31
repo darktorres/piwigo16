@@ -480,6 +480,7 @@ function lineConstructor(line: HistoryLine, id: number) {
     line.ip + '<i class="add-filter icon-plus-circled"></i>',
   );
   setData(find(newLine, ".user-ip")[0]!, "ip", line.ip);
+  setupGeoIpHover(find(newLine, ".user-ip")[0]!);
   if (current_param.ip == "") {
     on(find(newLine, ".user-ip"), "click", function (event: Event) {
       const el = event.currentTarget as Element;
@@ -1024,42 +1025,52 @@ function checkFilters() {
   }
 }
 
-/* global GeoIp -- themes/admin/default/js/jquery.geoip.js, loaded via the same page's own combineScript() call */
+// GET /api/v1/geoip's own response shape -- the real replacement for
+// jquery.geoip.js's client-side call to the long-dead freegeoip.net
+// JSONP endpoint (docs/PLAN.md P49-B group 1's own finding). Same type
+// rating_user.ts's own copy of this call reads.
+type GeoIpLookupResponse =
+  operations["geoIpLookup"]["responses"][200]["content"]["application/json"];
 
-// Same real shape as rating_user.ts's own GeoIpResult -- GeoIp itself
-// stays untyped (no real type source for this vendored plugin).
-interface GeoIpResult {
-  fullName?: string;
-  latitude?: number;
-  longitude?: number;
-  region_name?: string;
-}
+/**
+ * Real pre-existing bug found while wiring GET /api/v1/geoip up to a
+ * real backend (docs/PLAN.md P49-B group 1): this used to be bound via
+ * `document.querySelectorAll(".IP").forEach(...)` inside `ready()`,
+ * querying a class that has never existed in this file's own rendered
+ * markup -- `lineConstructor()` (below) has always used `.user-ip`. Every
+ * row's `.IP` match count was 0 at `ready()` time regardless, since rows
+ * are appended asynchronously afterwards, so the hover handler never
+ * fired even once, independent of the freegeoip.net dead-endpoint issue
+ * this same conversion also fixes. Fixed by binding per-row, from
+ * lineConstructor() itself, on the one real `.user-ip` element that row
+ * actually has -- not a page-wide re-scan on every search result (that
+ * would re-register a listener on every already-bound older row too).
+ */
+function setupGeoIpHover(ipEl: Element): void {
+  on(
+    ipEl,
+    "mouseenter",
+    function (): void {
+      setData(ipEl, "isOver", true);
+      on(
+        ipEl,
+        "mouseleave",
+        function (): void {
+          removeData(ipEl, "isOver");
+        },
+        { once: true },
+      );
 
-ready(function () {
-  document.querySelectorAll(".IP").forEach((ipEl) => {
-    on(
-      ipEl,
-      "mouseenter",
-      function (): void {
-        setData(ipEl, "isOver", true);
-        on(
-          ipEl,
-          "mouseleave",
-          function (): void {
-            removeData(ipEl, "isOver");
-          },
-          { once: true },
-        );
-
-        // Renamed from the original callback's own `data` parameter name
-        // (rating_user.ts's own GeoIp.get callback hit the identical
-        // shadowing problem against this file's imported `data()` helper
-        // and was renamed the same way).
-        GeoIp.get(textOf(ipEl), function (geoData: GeoIpResult) {
-          if (!geoData.fullName) return;
+      void ajax({
+        url: "api/v1/geoip",
+        type: "GET",
+        dataType: "json",
+        data: { ip: textOf(ipEl) },
+        success: function (geoData: GeoIpLookupResponse) {
+          if (!geoData.available || geoData.fullName === undefined) return;
 
           let content = geoData.fullName;
-          if (geoData.latitude && geoData.region_name) {
+          if (geoData.latitude != null && geoData.longitude != null) {
             content +=
               '\x3Cbr>\x3Ca class="ipGeoOpen" data-lat="' +
               geoData.latitude +
@@ -1076,13 +1087,21 @@ ready(function () {
             defaultPosition: "right",
             maxWidth: 320,
           });
-          if (data(ipEl, "isOver")) trigger(ipEl, "mouseenter");
-        });
-      },
-      { once: true },
-    );
-  });
+          // jQuery's own "mouseenter" is synthetic: internally it binds a
+          // real "mouseover" listener and derives enter/leave via
+          // relatedTarget (src/event.js's mouseHooks). Dispatching a
+          // literal "mouseenter" here -- what tipTip's binding actually
+          // listens for at the DOM level -- would never reach it; "mouseover"
+          // is what jQuery itself is bound to.
+          if (data(ipEl, "isOver")) trigger(ipEl, "mouseover");
+        },
+      });
+    },
+    { once: true },
+  );
+}
 
+ready(function () {
   delegate(
     document,
     "click",

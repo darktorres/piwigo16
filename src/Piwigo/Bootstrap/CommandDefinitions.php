@@ -13,6 +13,7 @@ use Piwigo\Command\MaintenanceCacheSizeCommand;
 use Piwigo\Command\MaintenanceCalculateOrphansCommand;
 use Piwigo\Command\MaintenanceDeleteOrphansCommand;
 use Piwigo\Command\MaintenanceEmptyLoungeCommand;
+use Piwigo\Command\MaintenanceGeoIpUpdateCommand;
 use Piwigo\Command\MaintenanceOrphanTagsCommand;
 use Piwigo\Command\MaintenancePurgeFailedLoginsCommand;
 use Piwigo\Command\MaintenancePurgeHistoryCommand;
@@ -68,6 +69,7 @@ final class CommandDefinitions
             MaintenanceSyncMetadataCommand::class,
             MaintenanceCacheSizeCommand::class,
             MaintenanceEmptyLoungeCommand::class,
+            MaintenanceGeoIpUpdateCommand::class,
             MigrateCommand::class,
             SchemaDumpCommand::class,
             LintLatteCommand::class,

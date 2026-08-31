@@ -245,18 +245,12 @@ declare module "piecon" {
   export default Piecon;
 }
 
-// jquery.geoip.js -- genuinely first-party (docs/PLAN.md's own scope
-// note), but excluded from this phase's real 61-file count and not yet
-// converted itself. `rating_user.ts`/`history.ts` both call `.get()`
-// with their own tooltip-content callback (each independently declaring
-// an identical local `GeoIpResult` interface for the real lookup-result
-// shape) -- typed here only enough to stop the outer call itself from
-// resolving to `any` (P47); the callback's own `data` param stays
-// loosely `any` in this ambient signature since the real result shape
-// genuinely lives with jquery.geoip.js itself, not here.
-declare const GeoIp: {
-  get(query: string, callback: (data: any) => void): void;
-};
+// jquery.geoip.js is gone (docs/PLAN.md P49-B group 1): its one real
+// call was JSONP to a long-dead third-party endpoint. Replaced by
+// GET /api/v1/geoip, a real first-party admin-only endpoint backed by a
+// self-hosted DB-IP City Lite database -- rating_user.ts/history.ts now
+// call it via the already-ported ajax() helper, no ambient global left
+// to declare here.
 
 // Chart.js (vendored -- P46-0's own CDN table). Real, verified types
 // from `@types/chart.js` (P47) -- no `declare const` needed any more

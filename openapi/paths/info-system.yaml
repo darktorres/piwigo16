@@ -193,6 +193,49 @@
         $ref: '../openapi.yaml#/components/responses/Forbidden'
       '422':
         $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
+/geoip:
+  get:
+    operationId: geoIpLookup
+    tags:
+      - Info/System
+    summary: Look up an IP address's approximate location
+    description: >-
+      Real replacement for the old jquery.geoip.js's client-side call to
+      the long-dead freegeoip.net JSONP endpoint -- backed by a
+      self-hosted DB-IP City Lite database. `available: false` is an
+      expected "nothing to show" result (database not downloaded yet, or
+      the IP has no match), not an error.
+    parameters:
+      - name: ip
+        in: query
+        required: true
+        schema:
+          type: string
+        description: An IPv4 or IPv6 address.
+    responses:
+      '200':
+        description: The lookup result.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [available]
+              properties:
+                available:
+                  type: boolean
+                fullName:
+                  type: string
+                  description: '"City, Region, Country", skipping any part that''s empty. Only present when `available` is true.'
+                latitude:
+                  type: [number, 'null']
+                longitude:
+                  type: [number, 'null']
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        $ref: '../openapi.yaml#/components/responses/Forbidden'
+      '422':
+        $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
 components:
   schemas:
     ActivityRow:

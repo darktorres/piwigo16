@@ -16,6 +16,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\TypedRepository;
+use Piwigo\GeoIp\GeoIpLookupService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\Projection\SrcImageInfo;
@@ -39,7 +40,7 @@ use Piwigo\Template\Renderer;
  */
 final class RatingUserPageRenderer
 {
-    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, EntityManagerInterface $entityManager, CsrfService $csrfService, Renderer $renderer): AdminPageResult
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, CurrentTemplate $currentTemplate, CurrentConfig $currentConfig, EventDispatcher $eventDispatcher, EntityManagerInterface $entityManager, CsrfService $csrfService, Renderer $renderer, GeoIpLookupService $geoIpLookupService): AdminPageResult
     {
         $tabsheet = new Tabsheet();
         $tabsheet->setId('rating');
@@ -172,6 +173,7 @@ final class RatingUserPageRenderer
             csrfToken: $csrfService
                 ->getToken(),
             rootUrl: $urlService->getRootUrl(),
+            geoIpAvailable: $geoIpLookupService->isAvailable(),
         ));
 
         return new AdminPageResult(

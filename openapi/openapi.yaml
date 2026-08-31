@@ -109,6 +109,8 @@ paths:
     $ref: 'paths/info-system.yaml#/~1cache-size'
   /activity:
     $ref: 'paths/info-system.yaml#/~1activity'
+  /geoip:
+    $ref: 'paths/info-system.yaml#/~1geoip'
   /tags:
     $ref: 'paths/tags.yaml#/~1tags'
   /tags/available:

@@ -244,6 +244,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/geoip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Look up an IP address's approximate location
+         * @description Real replacement for the old jquery.geoip.js's client-side call to the long-dead freegeoip.net JSONP endpoint -- backed by a self-hosted DB-IP City Lite database. `available: false` is an expected "nothing to show" result (database not downloaded yet, or the IP has no match), not an error.
+         */
+        get: operations["geoIpLookup"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tags": {
         parameters: {
             query?: never;
@@ -2438,6 +2458,38 @@ export interface operations {
                         /** @description Always 100, the fixed page size. */
                         limit: number;
                         hasMore: boolean;
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["UnprocessableEntity"];
+        };
+    };
+    geoIpLookup: {
+        parameters: {
+            query: {
+                /** @description An IPv4 or IPv6 address. */
+                ip: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The lookup result. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        available: boolean;
+                        /** @description "City, Region, Country", skipping any part that's empty. Only present when `available` is true. */
+                        fullName?: string;
+                        latitude?: number | null;
+                        longitude?: number | null;
                     };
                 };
             };

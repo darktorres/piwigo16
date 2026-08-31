@@ -69,6 +69,45 @@ function historyInteractionInsertLine(int $userId, string $section): void
     H::dbClose($db);
 }
 
+function historyInteractionInsertLineWithIp(int $userId, string $section, string $ip): void
+{
+    $db = H::connect();
+    $today = (new DateTime((string) getenv('PIWIGO_TEST_NOW')))->format('Y-m-d');
+    H::dbQuery($db, sprintf(
+        "INSERT INTO history (date, time, user_id, section, IP) VALUES ('%s', '12:00:00', %d, '%s', '%s')",
+        $today,
+        $userId,
+        H::dbEscape($db, $section),
+        H::dbEscape($db, $ip),
+    ));
+    H::dbClose($db);
+}
+
+/**
+ * Installs GeoIpLookupServiceTest.php's own MaxMind test-data fixture at
+ * the real path GeoIpLookupService::databasePathFor() resolves for this
+ * worktree, so `.IP`'s hover tooltip has a real match to render --
+ * without this, `GeoIpLookupService::isAvailable()` is false and neither
+ * the tooltip nor history.latte's own attribution line renders at all.
+ * Removed again in the caller's `finally`, matching golden-html/VR's own
+ * existing baselines, which were captured with no database installed.
+ */
+function historyInteractionInstallGeoIpFixture(): string
+{
+    $destination = dirname(__DIR__, 2) . '/_data/geoip/dbip-city-lite.mmdb';
+    if (! is_dir(dirname($destination))) {
+        mkdir(dirname($destination), 0o777, true);
+    }
+    copy(dirname(__DIR__) . '/Fixtures/GeoIp/GeoIP2-City-Test.mmdb', $destination);
+
+    return $destination;
+}
+
+function historyInteractionRemoveGeoIpFixture(string $destination): void
+{
+    @unlink($destination);
+}
+
 function historyInteractionWaitForLoad(mixed $page): void
 {
     // Wait for `.pagination-item-container` to be populated, not merely for
@@ -100,6 +139,19 @@ function historyInteractionWaitForLoad(mixed $page): void
 function historyInteractionClick(mixed $page, string $selector): void
 {
     $page->script("document.querySelector('" . $selector . "').click()");
+}
+
+/**
+ * Same reasoning as historyInteractionClick()'s own docblock note above
+ * (lineConstructor()'s numeric-leading row `id` crashes Playwright's own
+ * post-action selector introspection) -- $page->hover() hits the
+ * identical crash, so this dispatches a real `mouseenter` via script
+ * instead, which setupGeoIpHover()'s native `on(ipEl, "mouseenter", ...)`
+ * listener sees exactly the same as a real one.
+ */
+function historyInteractionHover(mixed $page, string $selector): void
+{
+    $page->script("document.querySelector('" . $selector . "').dispatchEvent(new MouseEvent('mouseenter', {bubbles: true}))");
 }
 
 it('filters lines by the Action dropdown, reading option:checked', function (): void {
@@ -198,4 +250,58 @@ it('adds a line\'s user as a filter, then removes it', function (): void {
 
     $page->assertNoJavaScriptErrors();
     H::assertNoServerErrors($page, 'history add/remove user filter');
+});
+
+it('shows a geolocation tooltip when hovering a line\'s IP', function (): void {
+    $geoIpFixture = historyInteractionInstallGeoIpFixture();
+
+    try {
+        $page = H::asAdmin($this);
+        H::truncateHistory();
+        // A real, known match in GeoIP2-City-Test.mmdb (London, England,
+        // United Kingdom) -- GeoIpLookupServiceTest.php's own primary
+        // fixture IP.
+        historyInteractionInsertLineWithIp(1, 'list', '81.2.69.142');
+
+        $page = H::navigateOk($page, '/admin.php?page=history');
+        historyInteractionWaitForLoad($page);
+        $page->assertSee('fixture_admin');
+
+        // Page load races two independent searches (this file's own
+        // docblock) -- settle before hovering, same wait the Action-
+        // dropdown test above uses, or the second search's own fresh
+        // row can replace the one this test already dispatched a
+        // "mouseenter" on.
+        $page->script('new Promise((resolve) => setTimeout(resolve, 1000))');
+
+        // setupGeoIpHover() binds per-row from lineConstructor() itself
+        // (see history.ts's own docblock on that function for the real,
+        // pre-existing `.IP`-vs-`.user-ip` mismatch this conversion
+        // found and fixed) -- a lost binding here shows up as the
+        // tooltip never appearing.
+        historyInteractionHover($page, '.tab .search-line .user-ip');
+
+        $page->script(<<<'JS'
+            new Promise((resolve, reject) => {
+                const deadline = Date.now() + 8000;
+                const check = () => {
+                    const content = document.getElementById('tiptip_content');
+                    if (content !== null && content.textContent.includes('London')) {
+                        return resolve(true);
+                    }
+                    if (Date.now() > deadline) return reject(new Error('geoip tooltip never appeared'));
+                    setTimeout(check, 100);
+                };
+                check();
+            })
+            JS);
+
+        expect((string) $page->script("document.getElementById('tiptip_content').textContent"))
+            ->toContain('London, England, United Kingdom');
+
+        $page->assertNoJavaScriptErrors();
+        H::assertNoServerErrors($page, 'history IP geolocation tooltip');
+    } finally {
+        historyInteractionRemoveGeoIpFixture($geoIpFixture);
+    }
 });

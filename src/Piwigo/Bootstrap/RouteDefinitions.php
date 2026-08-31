@@ -29,6 +29,7 @@ use Piwigo\Controller\Api\Extensions\ExtensionUpdateController;
 use Piwigo\Controller\Api\Extensions\IgnoreUpdateController;
 use Piwigo\Controller\Api\Extensions\PluginListController;
 use Piwigo\Controller\Api\Extensions\PluginPerformActionController;
+use Piwigo\Controller\Api\GeoIpLookupController;
 use Piwigo\Controller\Api\Groups\GroupAddUserController;
 use Piwigo\Controller\Api\Groups\GroupCreateController;
 use Piwigo\Controller\Api\Groups\GroupDeleteController;
@@ -333,6 +334,13 @@ final class RouteDefinitions
         // Maintenance page's own "calculate cache size" button.
         $routes->add('api_v1_cache_size', new Route('/api/v1/cache-size', defaults: [
             '_controller' => CacheSizeController::class,
+        ], methods: ['GET']));
+
+        // Real replacement for jquery.geoip.js's own dead-endpoint JSONP
+        // call -- admin only, history.ts's/rating_user.ts's IP-hover
+        // tooltip.
+        $routes->add('api_v1_geoip', new Route('/api/v1/geoip', defaults: [
+            '_controller' => GeoIpLookupController::class,
         ], methods: ['GET']));
 
         // Tags resource family -- admin-consumed (pwg.tags.getAdminList's

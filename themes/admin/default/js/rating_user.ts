@@ -185,12 +185,12 @@ ready(function () {
   );
 });
 
-interface GeoIpResult {
-  fullName?: string;
-  latitude?: number;
-  longitude?: number;
-  region_name?: string;
-}
+// GET /api/v1/geoip's own response shape -- the real replacement for
+// jquery.geoip.js's client-side call to the long-dead freegeoip.net
+// JSONP endpoint (docs/PLAN.md P49-B group 1's own finding). Same type
+// history.ts's own copy of this call reads.
+type GeoIpLookupResponse =
+  operations["geoIpLookup"]["responses"][200]["content"]["application/json"];
 
 ready(function () {
   // Still jQuery: tooltip is a jQuery-UI widget (the same $.Widget factory
@@ -218,22 +218,35 @@ ready(function () {
         { once: true },
       );
 
-      GeoIp.get(udata.aid + ".1", function (geoData: GeoIpResult) {
-        if (!geoData.fullName) return;
-        let content = geoData.fullName;
-        if (geoData.latitude && geoData.region_name) {
-          content +=
-            "<" +
-            "br>" +
-            "<" +
-            'img width=300 height=220 src="http://maps.googleapis.com/maps/api/staticmap?sensor=false&size=300x220&zoom=6' +
-            "&markers=size:tiny%7C" +
-            geoData.latitude +
-            "," +
-            geoData.longitude +
-            '">';
-        }
-        if (data(el, "isOver")) callback(content);
+      void ajax({
+        url: "api/v1/geoip",
+        // `aid` is an anonymous rater's IP with its last octet
+        // deliberately stripped for privacy (RateService::$anonymousId/
+        // PictureRateRenderer::$anonymous_id), so this reconstructs a
+        // plausible full IP -- good enough for a city-level lookup,
+        // since city blocks are coarser than a single host anyway. Must
+        // stay exactly this shape; it's the one piece of real logic in
+        // this call site.
+        type: "GET",
+        dataType: "json",
+        data: { ip: udata.aid + ".1" },
+        success: function (geoData: GeoIpLookupResponse) {
+          if (!geoData.available || geoData.fullName === undefined) return;
+          let content = geoData.fullName;
+          if (geoData.latitude != null && geoData.longitude != null) {
+            content +=
+              "<" +
+              "br>" +
+              "<" +
+              'img width=300 height=220 src="http://maps.googleapis.com/maps/api/staticmap?sensor=false&size=300x220&zoom=6' +
+              "&markers=size:tiny%7C" +
+              geoData.latitude +
+              "," +
+              geoData.longitude +
+              '">';
+          }
+          if (data(el, "isOver")) callback(content);
+        },
       });
     },
   });

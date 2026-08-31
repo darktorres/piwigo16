@@ -13,6 +13,7 @@ use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\GeoIp\GeoIpLookupService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
@@ -39,12 +40,13 @@ final readonly class RatingUserSubController implements AdminSubControllerInterf
         private EntityManagerInterface $entityManager,
         private CsrfService $csrfService,
         private Renderer $renderer,
+        private GeoIpLookupService $geoIpLookupService,
     ) {}
 
     #[Override]
     public function handle(ServerRequestInterface $request): AdminPageResult
     {
         return new RatingUserPageRenderer()
-            ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->entityManager, $this->csrfService, $this->renderer);
+            ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->entityManager, $this->csrfService, $this->renderer, $this->geoIpLookupService);
     }
 }

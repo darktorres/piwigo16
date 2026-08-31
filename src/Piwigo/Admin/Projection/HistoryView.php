@@ -31,6 +31,7 @@ final readonly class HistoryView implements View, HasPageAssets, ExposesPageData
         public string $end,
         public int $guestId,
         public string $jqueryCode,
+        public bool $geoIpAvailable,
     ) {}
 
     /**
@@ -53,7 +54,6 @@ final readonly class HistoryView implements View, HasPageAssets, ExposesPageData
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
-            AssetContribution::script('jquery.geoip', 'themes/admin/default/js/jquery.geoip.js', loadMode: LoadMode::Async),
             AssetContribution::css('themes/admin/default/css/pages/history.css', id: 'history'),
         ];
     }

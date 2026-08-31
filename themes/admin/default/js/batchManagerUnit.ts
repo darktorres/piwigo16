@@ -12,7 +12,27 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { albumBreadcrumbHtml } from "../../../default/js/vendor/dom";
+import {
+  addClass,
+  albumBreadcrumbHtml,
+  append,
+  attrOf,
+  css,
+  cssValue,
+  data,
+  escapeId,
+  fadeOut,
+  hide,
+  html,
+  on,
+  ready,
+  remove,
+  removeClass,
+  setVal,
+  show,
+  text,
+  val,
+} from "../../../default/js/vendor/dom";
 import { ajax } from "../../../default/js/vendor/ajax";
 export {};
 
@@ -54,6 +74,8 @@ const tagsCache = new TagsCache({
   serverId: pwg_getPageData<string>("cache_key_hash"),
   rootUrl: pwg_getPageData<string>("root_url"),
 });
+// Still jQuery: selectize() takes a JQuery object, ported in P49-B
+// group 6.
 tagsCache.selectize(jQuery("[data-selectize=tags]"), {
   lang: {
     Add: pwg_getPageString("Create"),
@@ -70,6 +92,9 @@ const associated_categories = pwg_getPageData<Record<string, unknown>>(
   "associated_categories",
 );
 
+// Still jQuery: selectize() takes a JQuery object, ported in P49-B
+// group 6. `jQuery.grep()` inside the filter callback is a plain array
+// filter with no DOM/jQuery-set involvement, so it converts on its own.
 categoriesCache.selectize(jQuery("[data-selectize=categories]"), {
   filter: function (
     this: { name?: string },
@@ -77,9 +102,9 @@ categoriesCache.selectize(jQuery("[data-selectize=categories]"), {
     options: { default?: string | number },
   ) {
     if (this.name === "dissociate") {
-      const filtered = jQuery.grep(categories, function (cat) {
-        return Boolean(associated_categories[cat.id]);
-      });
+      const filtered = categories.filter((cat) =>
+        Boolean(associated_categories[cat.id]),
+      );
 
       if (filtered.length > 0) {
         options.default = filtered[0]!.id;
@@ -93,13 +118,16 @@ categoriesCache.selectize(jQuery("[data-selectize=categories]"), {
 });
 
 // onLoad needed to wait localization loads
-jQuery(function () {
+ready(function () {
+  // Still jQuery: pwgDatepicker wraps jQuery-UI datepicker +
+  // timepicker-addon, ported in P49-B group 5.
   jQuery("[data-datepicker]").pwgDatepicker({
     showTimepicker: true,
     cancelButton: pwg_getPageString("Cancel"),
   });
 });
 
+// Still jQuery: colorbox is a library, ported in P49-B group 3.
 jQuery("a.preview-box").colorbox({
   photo: true,
 });
@@ -118,175 +146,227 @@ let b_current_picture_id: string | number | undefined;
 // Check Skeleton extension for more details about extensibility
 const pluginValues: PluginValueEntry[] = [];
 
-$(document).ready(function () {
+ready(function () {
   // Detect unsaved changes on any inputs
   let user_interacted = false;
 
-  $("input, textarea, select").on("focus", function () {
+  on(document.querySelectorAll("input, textarea, select"), "focus", () => {
     user_interacted = true;
   });
 
-  $("input, textarea").on("input", function () {
-    const pictureId = $(this).parents("fieldset").data("image_id") as
+  on(
+    document.querySelectorAll("input, textarea"),
+    "input",
+    function (this: Element) {
+      // This selector is page-wide, unlike every other handler below --
+      // it also matches inputs with no enclosing fieldset at all (the
+      // album selector popup's own #search-input-ab), where jQuery's
+      // `.parents("fieldset").data(...)` quietly returned `undefined`
+      // from an empty set. `closest()` returns `null` there instead, and
+      // dom.ts's `data()` throws on a null element rather than silently
+      // matching jQuery's tolerance -- so this one call site needs its
+      // own guard that the others (all scoped to per-photo classes that
+      // only ever render inside a fieldset) don't.
+      const fieldset = this.closest("fieldset");
+      if (fieldset === null) {
+        return;
+      }
+      const pictureId = data(fieldset, "image_id") as string | number;
+      if (user_interacted) {
+        showUnsavedLocalBadge(pictureId);
+      }
+    },
+  );
+
+  // Specific handler for datepicker inputs. Stays jQuery: pwgDatepicker
+  // sets the date via jQuery's own `.trigger("change")`, which (unlike
+  // "click"/"focus"/other event types with a real native method) never
+  // calls dispatchEvent() -- only a jQuery-registered listener sees it.
+  jQuery("input[data-datepicker]").on("change", function () {
+    const pictureId = jQuery(this).parents("fieldset").data("image_id") as
       string | number;
     if (user_interacted) {
       showUnsavedLocalBadge(pictureId);
     }
   });
 
-  // Specific handler for datepicker inputs
-  $("input[data-datepicker]").on("change", function () {
-    const pictureId = $(this).parents("fieldset").data("image_id") as
+  // Stays jQuery for the same reason: selectize triggers "change" on its
+  // original (hidden) <select> via jQuery's own `.trigger()`, which a
+  // native listener would never see. This selector also matches every
+  // plain, non-selectized <select> on the page, whose real native
+  // "change" events a jQuery-registered listener receives just as well.
+  jQuery("select").on("change", function () {
+    const pictureId = jQuery(this).parents("fieldset").data("image_id") as
       string | number;
     if (user_interacted) {
       showUnsavedLocalBadge(pictureId);
     }
   });
 
-  $("select").on("change", function () {
-    const pictureId = $(this).parents("fieldset").data("image_id") as
-      string | number;
-    if (user_interacted) {
-      showUnsavedLocalBadge(pictureId);
-    }
-  });
-
-  $(".related-categories-container .remove-item, .datepickerDelete").on(
+  on(
+    document.querySelectorAll(
+      ".related-categories-container .remove-item, .datepickerDelete",
+    ),
     "click",
-    function () {
+    function (this: Element) {
       user_interacted = true;
-      const pictureId = $(this).parents("fieldset").data("image_id") as
-        string | number;
+      const fieldset = this.closest("fieldset")!;
+      const pictureId = data(fieldset, "image_id") as string | number;
       showUnsavedLocalBadge(pictureId);
     },
   );
 
   // METADATA SYNC
-  $(".action-sync-metadata").on("click", function (_event) {
-    const pictureId = $(this).parents("fieldset").data("image_id") as
-      string | number;
-    $.confirm({
-      title: str_meta_warning,
-      draggable: false,
-      titleClass: "metadataSyncConfirm",
-      theme: "modern",
-      content: "",
-      animation: "zoom",
-      boxWidth: "30%",
-      useBootstrap: false,
-      type: "red",
-      animateFromElement: false,
-      backgroundDismiss: true,
-      typeAnimated: false,
-      buttons: {
-        confirm: {
-          text: str_meta_yes,
-          btnClass: "btn-red",
-          action: function () {
-            disableLocalButton(pictureId);
-            void ajax({
-              type: "POST",
-              url: "api/v1/images/actions/sync-metadata",
-              contentType: "application/json",
-              headers: {
-                "X-CSRF-Token": String(jQuery("input[name=pwg_token]").val()),
-              },
-              data: JSON.stringify({
-                imageIds: [pictureId],
-              }),
-              dataType: "json",
-              success: function (
-                _data: operations["imageSyncMetadata"]["responses"][200]["content"]["application/json"],
-              ) {
-                updateBlock(pictureId);
-              },
-              error: function (_data) {
-                console.error("Error occurred");
-                showErrorLocalBadge(pictureId);
-                enableLocalButton(pictureId);
-              },
-            });
-          },
-        },
-        cancel: {
-          text: str_no,
-        },
-      },
-    });
-  });
-  // DELETE
-  $(".action-delete-picture").on("click", function (_event) {
-    const $fieldset = $(this).parents("fieldset");
-    const pictureId = $fieldset.data("image_id") as string | number;
-    $.confirm({
-      title: str_are_you_sure,
-      draggable: false,
-      titleClass: "groupDeleteConfirm",
-      theme: "modern",
-      content: "",
-      animation: "zoom",
-      boxWidth: "30%",
-      useBootstrap: false,
-      type: "red",
-      animateFromElement: false,
-      backgroundDismiss: true,
-      typeAnimated: false,
-      buttons: {
-        confirm: {
-          text: str_yes,
-          btnClass: "btn-red",
-          action: function () {
-            const image_ids = [pictureId];
-            (function (ids: (string | number)[]) {
+  on(
+    document.querySelectorAll(".action-sync-metadata"),
+    "click",
+    function (this: Element) {
+      const fieldset = this.closest("fieldset")!;
+      const pictureId = data(fieldset, "image_id") as string | number;
+      // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
+      jQuery.confirm({
+        title: str_meta_warning,
+        draggable: false,
+        titleClass: "metadataSyncConfirm",
+        theme: "modern",
+        content: "",
+        animation: "zoom",
+        boxWidth: "30%",
+        useBootstrap: false,
+        type: "red",
+        animateFromElement: false,
+        backgroundDismiss: true,
+        typeAnimated: false,
+        buttons: {
+          confirm: {
+            text: str_meta_yes,
+            btnClass: "btn-red",
+            action: function () {
+              disableLocalButton(pictureId);
               void ajax({
                 type: "POST",
-                url: "api/v1/images/actions/delete",
+                url: "api/v1/images/actions/sync-metadata",
                 contentType: "application/json",
                 headers: {
-                  "X-CSRF-Token": String(jQuery("input[name=pwg_token]").val()),
+                  "X-CSRF-Token": String(
+                    val(document.querySelectorAll("input[name=pwg_token]")),
+                  ),
                 },
                 data: JSON.stringify({
-                  imageIds: ids.map(Number),
+                  imageIds: [pictureId],
                 }),
                 dataType: "json",
                 success: function (
-                  _data: operations["imageDelete"]["responses"][200]["content"]["application/json"],
+                  _data: operations["imageSyncMetadata"]["responses"][200]["content"]["application/json"],
                 ) {
-                  $fieldset.remove();
-                  $(".pagination-container").css({
-                    "pointer-events": "none",
-                    opacity: "0.5",
-                  });
-                  $(".button-reload").css("display", "block");
-                  $('div[data-image_id="' + pictureId + '"]').css(
-                    "display",
-                    "flex",
-                  );
+                  updateBlock(pictureId);
                 },
                 error: function (_data) {
                   console.error("Error occurred");
                   showErrorLocalBadge(pictureId);
+                  enableLocalButton(pictureId);
                 },
               });
-            })(image_ids);
+            },
+          },
+          cancel: {
+            text: str_no,
           },
         },
-        cancel: {
-          text: str_no,
+      });
+    },
+  );
+  // DELETE
+  on(
+    document.querySelectorAll(".action-delete-picture"),
+    "click",
+    function (this: Element) {
+      const fieldset = this.closest("fieldset")!;
+      const pictureId = data(fieldset, "image_id") as string | number;
+      // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
+      jQuery.confirm({
+        title: str_are_you_sure,
+        draggable: false,
+        titleClass: "groupDeleteConfirm",
+        theme: "modern",
+        content: "",
+        animation: "zoom",
+        boxWidth: "30%",
+        useBootstrap: false,
+        type: "red",
+        animateFromElement: false,
+        backgroundDismiss: true,
+        typeAnimated: false,
+        buttons: {
+          confirm: {
+            text: str_yes,
+            btnClass: "btn-red",
+            action: function () {
+              const image_ids = [pictureId];
+              (function (ids: (string | number)[]) {
+                void ajax({
+                  type: "POST",
+                  url: "api/v1/images/actions/delete",
+                  contentType: "application/json",
+                  headers: {
+                    "X-CSRF-Token": String(
+                      val(document.querySelectorAll("input[name=pwg_token]")),
+                    ),
+                  },
+                  data: JSON.stringify({
+                    imageIds: ids.map(Number),
+                  }),
+                  dataType: "json",
+                  success: function (
+                    _data: operations["imageDelete"]["responses"][200]["content"]["application/json"],
+                  ) {
+                    remove(fieldset);
+                    css(document.querySelectorAll(".pagination-container"), {
+                      "pointer-events": "none",
+                      opacity: "0.5",
+                    });
+                    css(
+                      document.querySelectorAll(".button-reload"),
+                      "display",
+                      "block",
+                    );
+                    css(
+                      document.querySelectorAll(
+                        'div[data-image_id="' + pictureId + '"]',
+                      ),
+                      "display",
+                      "flex",
+                    );
+                  },
+                  error: function (_data) {
+                    console.error("Error occurred");
+                    showErrorLocalBadge(pictureId);
+                  },
+                });
+              })(image_ids);
+            },
+          },
+          cancel: {
+            text: str_no,
+          },
         },
-      },
-    });
-  });
+      });
+    },
+  );
   // VALIDATION
   //Unit Save
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises -- fire-and-forget async click handler, same as the original .js: jQuery's .on() doesn't await a handler's return value either way.
-  $(".action-save-picture").on("click", async function (_event) {
-    const $fieldset = $(this).parents("fieldset");
-    const pictureId = $fieldset.data("image_id") as string | number;
-    await saveChanges(pictureId);
-  });
+  on(
+    document.querySelectorAll(".action-save-picture"),
+    "click",
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises -- fire-and-forget async click handler, same as the original .js: dom.ts's on() doesn't await a handler's return value either way.
+    async function (this: Element) {
+      const fieldset = this.closest("fieldset")!;
+      const pictureId = data(fieldset, "image_id") as string | number;
+      await saveChanges(pictureId);
+    },
+  );
   //Global Save
-  $(".action-save-global").on("click", function (_event) {
+  on(document.querySelectorAll(".action-save-global"), "click", function () {
     void saveAllChanges();
   });
   //Categories
@@ -296,25 +376,34 @@ $(document).ready(function () {
     adminMode: true,
     modalTitle: str_title_ab,
   });
-  $(".linked-albums.add-item").on("click", function () {
-    b_current_picture_id = $(this).parents("fieldset").data("image_id") as
-      string | number;
-    ab.hardUpdate(all_related_categories_ids[b_current_picture_id] ?? []);
-    ab.open();
-  });
-  $(".related-categories-container").on("click", (e) => {
-    if (e.target.classList.contains("remove-item")) {
-      const cat_id = $(e.target).attr("id")!;
-      const picture_id = $(e.target).parents("fieldset").data("image_id") as
-        string | number;
+  on(
+    document.querySelectorAll(".linked-albums.add-item"),
+    "click",
+    function (this: Element) {
+      const fieldset = this.closest("fieldset")!;
+      b_current_picture_id = data(fieldset, "image_id") as string | number;
+      ab.hardUpdate(all_related_categories_ids[b_current_picture_id] ?? []);
+      ab.open();
+    },
+  );
+  on(
+    document.querySelectorAll(".related-categories-container"),
+    "click",
+    (e: Event) => {
+      const eventTarget = e.target as Element;
+      if (eventTarget.classList.contains("remove-item")) {
+        const cat_id = attrOf(eventTarget, "id")!;
+        const fieldset = eventTarget.closest("fieldset")!;
+        const picture_id = data(fieldset, "image_id") as string | number;
 
-      remove_selected_category(cat_id, picture_id);
-      check_related_categories(
-        picture_id,
-        all_related_categories_ids[picture_id] ?? [],
-      );
-    }
-  });
+        remove_selected_category(cat_id, picture_id);
+        check_related_categories(
+          picture_id,
+          all_related_categories_ids[picture_id] ?? [],
+        );
+      }
+    },
+  );
   pluginFunctionMapInit(activePlugins);
 });
 
@@ -337,9 +426,9 @@ function remove_selected_category(
     showUnsavedLocalBadge(picture_id);
   }
 
-  $("#" + picture_id + " #" + cat_id)
-    .parent()
-    .remove();
+  document
+    .querySelector("#" + escapeId(picture_id) + " #" + escapeId(cat_id))
+    ?.parentElement?.remove();
 }
 
 function add_related_category({
@@ -349,7 +438,12 @@ function add_related_category({
   addSelectedAlbum,
 }: AlbumSelectorCallbackArgs) {
   if (!getSelectedAlbum().includes(album.id)) {
-    $("#" + b_current_picture_id + " .related-categories-container").append(
+    append(
+      document.querySelectorAll(
+        "#" +
+          escapeId(b_current_picture_id!) +
+          " .related-categories-container",
+      ),
       `<div class="breadcrumb-item album-listed">
         <span class="link-path">${albumBreadcrumbHtml(album.breadcrumb, levelSeparator)}</span><span id="${album.id}" class="icon-cancel-circled remove-item"></span>
       </div>`,
@@ -376,68 +470,112 @@ function check_related_categories(
   pictureId: string | number,
   selectedAlbum: (string | number)[],
 ) {
-  $("#picture-" + pictureId + " .linked-albums-badge").html(
+  html(
+    document.querySelectorAll(
+      "#picture-" + pictureId + " .linked-albums-badge",
+    ),
     String(selectedAlbum.length),
   );
   if (selectedAlbum.length == 0) {
-    $("#" + pictureId + " .linked-albums-badge").addClass("badge-red");
-    $("#" + pictureId + " .add-item").addClass("highlight");
-    $("#" + pictureId + " .orphan-photo")
-      .html(str_orphan)
-      .show();
-  } else {
-    $("#" + pictureId + " .linked-albums-badge.badge-red").removeClass(
+    addClass(
+      document.querySelectorAll(
+        "#" + escapeId(pictureId) + " .linked-albums-badge",
+      ),
       "badge-red",
     );
-    $("#" + pictureId + " .add-item.highlight").removeClass("highlight");
-    $("#" + pictureId + " .orphan-photo").hide();
+    addClass(
+      document.querySelectorAll("#" + escapeId(pictureId) + " .add-item"),
+      "highlight",
+    );
+    const orphan = document.querySelectorAll(
+      "#" + escapeId(pictureId) + " .orphan-photo",
+    );
+    html(orphan, str_orphan);
+    show(orphan);
+  } else {
+    removeClass(
+      document.querySelectorAll(
+        "#" + escapeId(pictureId) + " .linked-albums-badge.badge-red",
+      ),
+      "badge-red",
+    );
+    removeClass(
+      document.querySelectorAll(
+        "#" + escapeId(pictureId) + " .add-item.highlight",
+      ),
+      "highlight",
+    );
+    hide(
+      document.querySelectorAll("#" + escapeId(pictureId) + " .orphan-photo"),
+    );
   }
 }
 
 function updateUnsavedGlobalBadge() {
-  const visibleLocalUnsavedCount = $(".local-unsaved-badge").filter(
-    function () {
-      return $(this).css("display") === "block";
-    },
-  ).length;
+  const visibleLocalUnsavedCount = Array.from(
+    document.querySelectorAll(".local-unsaved-badge"),
+  ).filter((el) => cssValue(el, "display") === "block").length;
   if (visibleLocalUnsavedCount > 0) {
-    $(".global-unsaved-badge").css("display", "block");
-    $("#unsaved-count").text(String(visibleLocalUnsavedCount));
+    css(document.querySelectorAll(".global-unsaved-badge"), "display", "block");
+    text(
+      document.querySelectorAll("#unsaved-count"),
+      String(visibleLocalUnsavedCount),
+    );
   } else {
-    $(".global-unsaved-badge").css("display", "none");
-    $("#unsaved-count").text("");
+    css(document.querySelectorAll(".global-unsaved-badge"), "display", "none");
+    text(document.querySelectorAll("#unsaved-count"), "");
   }
 }
 
 function showUnsavedLocalBadge(pictureId: string | number) {
   hideSuccesLocalBadge(pictureId);
   hideErrorLocalBadge(pictureId);
-  $("#picture-" + pictureId + " .local-unsaved-badge").css("display", "block");
+  css(
+    document.querySelectorAll(
+      "#picture-" + pictureId + " .local-unsaved-badge",
+    ),
+    "display",
+    "block",
+  );
   updateUnsavedGlobalBadge();
 }
 
 function hideUnsavedLocalBadge(pictureId: string | number) {
-  $("#picture-" + pictureId + " .local-unsaved-badge").css("display", "none");
+  css(
+    document.querySelectorAll(
+      "#picture-" + pictureId + " .local-unsaved-badge",
+    ),
+    "display",
+    "none",
+  );
   updateUnsavedGlobalBadge();
 }
-// $(window).on('beforeunload', function() {
+// on(window, 'beforeunload', function() {
 //   if (user_interacted) {
 //     return "You have unsaved changes, are you sure you want to leave this page?";
 //   }
 // });
 //Error badge
 function showErrorLocalBadge(pictureId: string | number) {
-  $("#picture-" + pictureId + " .local-error-badge").css("display", "block");
+  css(
+    document.querySelectorAll("#picture-" + pictureId + " .local-error-badge"),
+    "display",
+    "block",
+  );
 }
 
 function hideErrorLocalBadge(pictureId: string | number) {
-  $("#picture-" + pictureId + " .local-error-badge").css("display", "none");
+  css(
+    document.querySelectorAll("#picture-" + pictureId + " .local-error-badge"),
+    "display",
+    "none",
+  );
 }
 //Succes badge
 function updateSuccessGlobalBadge() {
-  const visibleLocalSuccesCount = $(".local-success-badge").filter(function () {
-    return $(this).css("display") === "block";
-  }).length;
+  const visibleLocalSuccesCount = Array.from(
+    document.querySelectorAll(".local-success-badge"),
+  ).filter((el) => cssValue(el, "display") === "block").length;
   if (visibleLocalSuccesCount > 0) {
     showSuccesGlobalBadge();
   } else {
@@ -446,108 +584,142 @@ function updateSuccessGlobalBadge() {
 }
 
 function showSuccessLocalBadge(pictureId: string | number) {
-  const badge = $("#picture-" + pictureId + " .local-success-badge");
-  badge.css({
+  const badge = document.querySelectorAll(
+    "#picture-" + pictureId + " .local-success-badge",
+  );
+  css(badge, {
     display: "block",
     opacity: 1,
   });
   setTimeout(() => {
-    badge.fadeOut(1000, function () {
-      badge.css("display", "none");
+    fadeOut(badge, 1000, function () {
+      css(badge, "display", "none");
     });
   }, 3000);
 }
 
 function hideSuccesLocalBadge(pictureId: string | number) {
-  $("#picture-" + pictureId + " .local-success-badge").css("display", "none");
+  css(
+    document.querySelectorAll(
+      "#picture-" + pictureId + " .local-success-badge",
+    ),
+    "display",
+    "none",
+  );
 }
 
 function showSuccesGlobalBadge() {
-  const badge = $(".global-succes-badge");
-  badge.css({
+  const badge = document.querySelectorAll(".global-succes-badge");
+  css(badge, {
     display: "block",
     opacity: 1,
   });
   setTimeout(() => {
-    badge.fadeOut(1000, function () {
-      badge.css("display", "none");
+    fadeOut(badge, 1000, function () {
+      css(badge, "display", "none");
     });
   }, 3000);
 }
 
 function hideSuccesGlobalBadge() {
-  $("global-succes-badge").css("display", "none");
+  // Pre-existing bug, left as-is: missing "." on a class selector that
+  // targets nothing, same as the original jQuery -- not this phase's job.
+  css(document.querySelectorAll("global-succes-badge"), "display", "none");
 }
 
 function showMetasyncSuccesBadge(pictureId: string | number) {
-  const badge = $("#picture-" + pictureId + " .metasync-success");
-  badge.css({
+  const badge = document.querySelectorAll(
+    "#picture-" + pictureId + " .metasync-success",
+  );
+  css(badge, {
     display: "block",
     opacity: 1,
   });
   setTimeout(() => {
-    badge.fadeOut(1000, function () {
-      badge.css("display", "none");
+    fadeOut(badge, 1000, function () {
+      css(badge, "display", "none");
     });
   }, 3000);
 }
 
 function disableLocalButton(pictureId: string | number) {
-  $("#picture-" + pictureId + " .action-save-picture").addClass("disabled");
-  $("#picture-" + pictureId + " .action-save-picture i")
-    .removeClass("icon-floppy")
-    .addClass("icon-spin6 animate-spin");
+  addClass(
+    document.querySelectorAll(
+      "#picture-" + pictureId + " .action-save-picture",
+    ),
+    "disabled",
+  );
+  const icon = document.querySelectorAll(
+    "#picture-" + pictureId + " .action-save-picture i",
+  );
+  removeClass(icon, "icon-floppy");
+  addClass(icon, "icon-spin6 animate-spin");
   disableGlobalButton();
 }
 
 function enableLocalButton(pictureId: string | number) {
-  $("#picture-" + pictureId + " .action-save-picture").removeClass("disabled");
-  $("#picture-" + pictureId + " .action-save-picture i")
-    .removeClass("icon-spin6 animate-spin")
-    .addClass("icon-floppy");
+  removeClass(
+    document.querySelectorAll(
+      "#picture-" + pictureId + " .action-save-picture",
+    ),
+    "disabled",
+  );
+  const icon = document.querySelectorAll(
+    "#picture-" + pictureId + " .action-save-picture i",
+  );
+  removeClass(icon, "icon-spin6 animate-spin");
+  addClass(icon, "icon-floppy");
 }
 
 function disableGlobalButton() {
-  $(".action-save-global").addClass("disabled");
-  $(".action-save-global i")
-    .removeClass("icon-floppy")
-    .addClass("icon-spin6 animate-spin");
+  addClass(document.querySelectorAll(".action-save-global"), "disabled");
+  const icon = document.querySelectorAll(".action-save-global i");
+  removeClass(icon, "icon-floppy");
+  addClass(icon, "icon-spin6 animate-spin");
 }
 
 function enableGlobalButton() {
-  $(".action-save-global").removeClass("disabled");
-  $(".action-save-global i")
-    .removeClass("icon-spin6 animate-spin")
-    .addClass("icon-floppy");
+  removeClass(document.querySelectorAll(".action-save-global"), "disabled");
+  const icon = document.querySelectorAll(".action-save-global i");
+  removeClass(icon, "icon-spin6 animate-spin");
+  addClass(icon, "icon-floppy");
 }
 
 async function saveChanges(pictureId: string | number) {
-  if (
-    $("#picture-" + pictureId + " .local-unsaved-badge").css("display") ===
-    "block"
-  ) {
+  const unsavedBadge = document.querySelector(
+    "#picture-" + pictureId + " .local-unsaved-badge",
+  );
+  if (unsavedBadge !== null && cssValue(unsavedBadge, "display") === "block") {
     disableLocalButton(pictureId);
     // Retrieve Infos
-    const name = $("#picture-" + pictureId + " #name").val() as string;
-    const author = $("#picture-" + pictureId + " #author").val() as string;
-    const date_creation = $(
-      "#picture-" + pictureId + " #date_creation",
-    ).val() as string;
-    const comment = $(
-      "#picture-" + pictureId + " #description",
-    ).val() as string;
-    const level = $(
-      "#picture-" + pictureId + " #level option:selected",
-    ).val() as string;
+    const name = val(
+      document.querySelectorAll("#picture-" + pictureId + " #name"),
+    ) as string;
+    const author = val(
+      document.querySelectorAll("#picture-" + pictureId + " #author"),
+    ) as string;
+    const date_creation = val(
+      document.querySelectorAll("#picture-" + pictureId + " #date_creation"),
+    ) as string;
+    const comment = val(
+      document.querySelectorAll("#picture-" + pictureId + " #description"),
+    ) as string;
+    // `option:selected` is jQuery/Sizzle's own pseudo-selector, not real
+    // CSS -- querySelectorAll throws on it. Reading the <select>'s own
+    // `.value` gets the selected option's value directly.
+    const level = document.querySelector<HTMLSelectElement>(
+      "#picture-" + pictureId + " #level",
+    )?.value;
     // Get Categories
     const categories = all_related_categories_ids[pictureId]!;
     const categoriesStr = categories.join(";");
     // Get Tags
     const tags: (string | number)[] = [];
-    $("#picture-" + pictureId + " #tags option").each(function () {
-      const tagId = $(this).val() as string;
-      tags.push(tagId);
-    });
+    document
+      .querySelectorAll("#picture-" + pictureId + " #tags option")
+      .forEach((option) => {
+        tags.push((option as HTMLOptionElement).value);
+      });
     const tagsStr = tags.join(",");
     const ajax_data: ImageUpdateBody = {
       name: name,
@@ -563,10 +735,11 @@ async function saveChanges(pictureId: string | number) {
 
     for (const key_index of pluginValues.keys()) {
       const pluginValues_selector = pluginValues[key_index]!.selector;
-      const full_selector = $(
-        "#picture-" + pictureId + " " + pluginValues_selector,
+      const pluginValues_value = val(
+        document.querySelectorAll(
+          "#picture-" + pictureId + " " + pluginValues_selector,
+        ),
       );
-      const pluginValues_value = full_selector.val();
       ajax_data[pluginValues[key_index]!.api_key] = pluginValues_value;
     }
 
@@ -575,7 +748,9 @@ async function saveChanges(pictureId: string | number) {
       method: "PATCH",
       contentType: "application/json",
       headers: {
-        "X-CSRF-Token": String(jQuery("input[name=pwg_token]").val()),
+        "X-CSRF-Token": String(
+          val(document.querySelectorAll("input[name=pwg_token]")),
+        ),
       },
       dataType: "json",
       data: JSON.stringify(ajax_data),
@@ -603,9 +778,9 @@ async function saveChanges(pictureId: string | number) {
 }
 
 async function saveAllChanges() {
-  const allField = $("fieldset").toArray();
+  const allField = Array.from(document.querySelectorAll("fieldset"));
   for (const field of allField) {
-    const pictureId = $(field).data("image_id") as string | number;
+    const pictureId = data(field, "image_id") as string | number;
     await saveChanges(pictureId);
   }
 }
@@ -646,16 +821,36 @@ function updateBlock(pictureId: string | number) {
     success: function (
       response: operations["imageGet"]["responses"][200]["content"]["application/json"],
     ) {
-      $("#picture-" + pictureId + " #name").val(response.name);
-      $("#picture-" + pictureId + " #author").val(response.author ?? "");
-      $("#picture-" + pictureId + " #date_creation").val(
+      setVal(
+        document.querySelectorAll("#picture-" + pictureId + " #name"),
+        response.name,
+      );
+      setVal(
+        document.querySelectorAll("#picture-" + pictureId + " #author"),
+        response.author ?? "",
+      );
+      setVal(
+        document.querySelectorAll("#picture-" + pictureId + " #date_creation"),
         response.dateCreation ?? "",
       ); //TODO
-      $("#picture-" + pictureId + " #description").val(response.comment);
-      $("#picture-" + pictureId + " #level").val(response.level);
-      $("#picture-" + pictureId + " #filename").text(response.file);
-      $("#picture-" + pictureId + " #filesize").text(response.filesize ?? 0);
-      $("#picture-" + pictureId + " #dimensions").text(
+      setVal(
+        document.querySelectorAll("#picture-" + pictureId + " #description"),
+        response.comment,
+      );
+      setVal(
+        document.querySelectorAll("#picture-" + pictureId + " #level"),
+        String(response.level),
+      );
+      text(
+        document.querySelectorAll("#picture-" + pictureId + " #filename"),
+        response.file,
+      );
+      text(
+        document.querySelectorAll("#picture-" + pictureId + " #filesize"),
+        String(response.filesize ?? 0),
+      );
+      text(
+        document.querySelectorAll("#picture-" + pictureId + " #dimensions"),
         (response.width ?? 0) + "x" + (response.height ?? 0),
       );
       // updateTags(response.tags, pictureId); //Yet to be implemented (TODO)

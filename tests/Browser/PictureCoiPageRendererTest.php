@@ -229,11 +229,12 @@ it('round-trips a stored center of interest back into the coordinate inputs', fu
     // inputs are populated long before they are correct. Waiting only for
     // the first non-empty value samples mid-flight and returns a different
     // number on every run. Poll until two consecutive reads agree.
+    /** @return array{l: string, t: string, r: string, b: string} */
     $readAll = static fn (): array => [
-        'l' => $page->script('document.querySelector("#l") ? document.querySelector("#l").value : ""'),
-        't' => $page->script('document.querySelector("#t") ? document.querySelector("#t").value : ""'),
-        'r' => $page->script('document.querySelector("#r") ? document.querySelector("#r").value : ""'),
-        'b' => $page->script('document.querySelector("#b") ? document.querySelector("#b").value : ""'),
+        'l' => H::scriptString($page, 'document.querySelector("#l") ? document.querySelector("#l").value : ""'),
+        't' => H::scriptString($page, 'document.querySelector("#t") ? document.querySelector("#t").value : ""'),
+        'r' => H::scriptString($page, 'document.querySelector("#r") ? document.querySelector("#r").value : ""'),
+        'b' => H::scriptString($page, 'document.querySelector("#b") ? document.querySelector("#b").value : ""'),
     ];
 
     // Three consecutive agreeing reads, not two: an animation can hold the
@@ -258,6 +259,9 @@ it('round-trips a stored center of interest back into the coordinate inputs', fu
     }
     expect($settled)
         ->not->toBeNull('the coordinate inputs never settled');
+    if ($settled === null) {
+        throw new RuntimeException('unreachable -- asserted above');
+    }
 
     $read = array_map(static fn (string $v): float => (float) $v, $settled);
 
@@ -266,17 +270,17 @@ it('round-trips a stored center of interest back into the coordinate inputs', fu
         // does not produce a slightly-off fraction here, it produces NaN,
         // because Jcrop has already replaced #jcrop with a wrapper and the
         // naive offsetWidth of the original is 0.
-        expect(is_numeric($actual) && is_finite((float) $actual))
+        expect(is_finite($actual))
             ->toBeTrue("#{$field} came back non-finite ({$actual}) -- the image was measured while it had no box");
-        expect((float) $actual)
+        expect($actual)
             ->toBeGreaterThanOrEqual(0.0);
-        expect((float) $actual)
+        expect($actual)
             ->toBeLessThanOrEqual(1.0);
     }
 
     // ...and the rectangle survives as a rectangle.
-    expect((float) $read['l'])->toBeLessThan((float) $read['r']);
-    expect((float) $read['t'])->toBeLessThan((float) $read['b']);
+    expect($read['l'])->toBeLessThan($read['r']);
+    expect($read['t'])->toBeLessThan($read['b']);
 
     // The exact settled round trip, off a 200x150 image in a 500x400 box.
     expect($read)

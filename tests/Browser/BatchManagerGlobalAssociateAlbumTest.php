@@ -127,7 +127,7 @@ it('associates an album via the chip flow, then removes it', function (): void {
         // established pattern for this same widget). A real Playwright
         // click, not a synthetic `.click()` call, matches how every
         // other AlbumSelector consumer's own interaction test drives it.
-        $rowId = (string) $page->script(<<<JS
+        $rowId = H::scriptString($page, <<<JS
         Array.from(document.querySelectorAll('#searchResult .search-result-item'))
             .find((r) => r.textContent.includes({$encoded}))
             .getAttribute('id')
@@ -153,7 +153,8 @@ it('associates an album via the chip flow, then removes it', function (): void {
         })
         JS);
 
-        $chipCountAfterAdd = (int) $page->script(
+        $chipCountAfterAdd = H::scriptInt(
+            $page,
             "document.querySelectorAll('.selected-associate-item').length",
         );
         expect($chipCountAfterAdd)

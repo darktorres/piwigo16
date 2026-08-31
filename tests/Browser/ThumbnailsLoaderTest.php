@@ -45,7 +45,7 @@ it('replaces the placeholder thumbnail with the real derivative via the ajax que
 
         $page = H::navigateOk($page, '/index.php?/category/' . $albumId);
 
-        $result = $page->script(<<<'JS'
+        $result = H::scriptArray($page, <<<'JS'
             new Promise((resolve, reject) => {
                 const deadline = Date.now() + 5000;
                 const check = () => {
@@ -69,6 +69,14 @@ it('replaces the placeholder thumbnail with the real derivative via the ajax que
                 check();
             })
             JS);
+
+        if (
+            ! is_string($result['src'] ?? null)
+            || ! is_string($result['dataSrc'] ?? null)
+            || (! is_string($result['loaderDisplay'] ?? null) && ($result['loaderDisplay'] ?? null) !== null)
+        ) {
+            throw new RuntimeException('unexpected result shape: ' . var_export($result, true));
+        }
 
         // `data-src` is the ajaxload URL (i.php?/...) thumbnails.loader.ts
         // requests -- untouched by the swap, jQuery never removed it either.

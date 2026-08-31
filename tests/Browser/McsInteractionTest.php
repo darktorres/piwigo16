@@ -94,7 +94,8 @@ it('opens the album filter dropdown and removes a selected album chip', function
         })
         JS);
 
-    $chipCountBefore = (int) $page->script(
+    $chipCountBefore = H::scriptInt(
+        $page,
         "document.querySelectorAll('.selected-categories-container .breadcrumb-item').length",
     );
     expect($chipCountBefore)

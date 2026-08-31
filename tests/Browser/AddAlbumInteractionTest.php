@@ -82,7 +82,7 @@ it('creates a new album through the add-album popup and selects it in the move d
     $page->fill('[name=category_name]', $newAlbumName);
     $page->click('.albumCreationButton');
 
-    $selected = $page->script(<<<'JS'
+    $selected = H::scriptArray($page, <<<'JS'
         new Promise((resolve, reject) => {
             const deadline = Date.now() + 5000;
             const check = () => {
@@ -106,6 +106,9 @@ it('creates a new album through the add-album popup and selects it in the move d
             check();
         })
         JS);
+    if (! is_string($selected['value'] ?? null) || ! is_string($selected['label'] ?? null)) {
+        throw new RuntimeException('unexpected selected shape: ' . var_export($selected, true));
+    }
 
     expect($selected['label'])->toBe($newAlbumName);
 
@@ -118,5 +121,5 @@ it('creates a new album through the add-album popup and selects it in the move d
         H::dbEscape($db, $newAlbumName)
     ));
     H::dbClose($db);
-    expect((string) $row['id'])->toBe((string) $selected['value']);
+    expect((string) $row['id'])->toBe($selected['value']);
 });

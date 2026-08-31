@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Pest\Browser\Api\AwaitableWebpage;
+use Pest\Browser\Api\PendingAwaitablePage;
+use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -44,7 +47,7 @@ it('renders at least the real login activity line with the expected login classe
         })
         JS);
 
-    $state = $page->script(<<<'JS'
+    $decoded = H::scriptJson($page, <<<'JS'
         JSON.stringify({
             tabTitleVisible: document.querySelector('.tab-title').offsetParent !== null,
             noResultVisible: document.querySelector('.activity-noresult').offsetParent !== null,
@@ -68,19 +71,28 @@ it('renders at least the real login activity line with the expected login classe
             })(),
         })
         JS);
-    $state = json_decode($state, true);
+    if (! is_bool($decoded['tabTitleVisible'] ?? null) || ! is_bool($decoded['noResultVisible'] ?? null)) {
+        throw new RuntimeException('unexpected state shape: ' . var_export($decoded, true));
+    }
+    $loginLine = $decoded['loginLine'] ?? null;
+    if (
+        ! is_array($loginLine)
+        || ! is_string($loginLine['actionType'] ?? null)
+        || ! is_string($loginLine['actionSection'] ?? null)
+        || ! is_string($loginLine['userName'] ?? null)
+    ) {
+        throw new RuntimeException('unexpected loginLine shape: ' . var_export($loginLine, true));
+    }
 
-    expect($state['tabTitleVisible'])
+    expect($decoded['tabTitleVisible'])
         ->toBeTrue();
-    expect($state['noResultVisible'])
+    expect($decoded['noResultVisible'])
         ->toBeFalse();
-    expect($state['loginLine'])
-        ->not->toBeNull();
-    expect($state['loginLine']['actionType'])
+    expect($loginLine['actionType'])
         ->toContain('icon-purple');
-    expect($state['loginLine']['actionSection'])
+    expect($loginLine['actionSection'])
         ->toContain('icon-user-1');
-    expect($state['loginLine']['userName'])
+    expect($loginLine['userName'])
         ->toBe('fixture_admin');
 
     $page->assertNoJavaScriptErrors();
@@ -91,7 +103,8 @@ it('shows the real user count in the page title badge', function (): void {
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=user_activity');
 
-    $badgeText = $page->script(
+    $badgeText = H::scriptString(
+        $page,
         "document.querySelector('h1 .badge-number').textContent"
     );
 
@@ -106,7 +119,7 @@ it('opens and closes the "more filters" panel on click', function (): void {
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=user_activity');
 
-    $waitForDisplay = static function (mixed $page, string $expected, string $failMessage): void {
+    $waitForDisplay = static function (Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $expected, string $failMessage): void {
         $page->script(
             <<<JS
             new Promise((resolve, reject) => {
@@ -127,17 +140,17 @@ it('opens and closes the "more filters" panel on click', function (): void {
         );
     };
 
-    $sleep = static function (mixed $page, int $ms): void {
+    $sleep = static function (Webpage|PendingAwaitablePage|AwaitableWebpage $page, int $ms): void {
         $page->script("new Promise((resolve) => setTimeout(resolve, {$ms}))");
     };
 
-    expect($page->script("getComputedStyle(document.getElementById('activityMoreFiltersContent')).display"))
+    expect(H::scriptString($page, "getComputedStyle(document.getElementById('activityMoreFiltersContent')).display"))
         ->toBe('none');
 
     $page->click('#activityMoreFilters');
     $waitForDisplay($page, 'flex', 'filters panel never opened');
 
-    expect($page->script("document.getElementById('activityMoreFilters').classList.contains('extend-padding')"))
+    expect(H::scriptBool($page, "document.getElementById('activityMoreFilters').classList.contains('extend-padding')"))
         ->toBeTrue();
 
     // slideToggle()'s own completion callback (which releases the
@@ -150,7 +163,7 @@ it('opens and closes the "more filters" panel on click', function (): void {
     $page->click('#activityMoreFilters');
     $waitForDisplay($page, 'none', 'filters panel never closed');
 
-    expect($page->script("document.getElementById('activityMoreFilters').classList.contains('extend-padding')"))
+    expect(H::scriptBool($page, "document.getElementById('activityMoreFilters').classList.contains('extend-padding')"))
         ->toBeFalse();
 
     $page->assertNoJavaScriptErrors();

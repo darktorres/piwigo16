@@ -1685,6 +1685,102 @@ final class BrowserTestHelpers
     }
 
     /**
+     * Runs $js (expected to end in `JSON.stringify(...)`, the established
+     * idiom this suite's own interaction tests already use ad hoc) and
+     * JSON-decodes the result as an associative array/list --
+     * AwaitableWebpage's script() is a magic __call proxy (see
+     * rawWebpage()'s own docblock) with no static return type, so PHPStan
+     * sees `mixed` regardless of how $page itself is typed. Centralizes
+     * the narrowing every call site was otherwise repeating individually.
+     *
+     * @return array<array-key, mixed>
+     */
+    public static function scriptJson(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $js): array
+    {
+        $result = $page->script($js);
+        if (! is_string($result)) {
+            throw new ExpectationFailedException(
+                'scriptJson(): script did not return a string result: ' . var_export($result, true)
+            );
+        }
+
+        $decoded = json_decode($result, true);
+        if (! is_array($decoded)) {
+            throw new ExpectationFailedException(
+                'scriptJson(): script did not return a JSON array/object: ' . var_export($result, true)
+            );
+        }
+
+        return $decoded;
+    }
+
+    /**
+     * Same narrowing as scriptJson(), for a script that returns a plain string.
+     */
+    public static function scriptString(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $js): string
+    {
+        $result = $page->script($js);
+        if (! is_string($result)) {
+            throw new ExpectationFailedException(
+                'scriptString(): script did not return a string result: ' . var_export($result, true)
+            );
+        }
+
+        return $result;
+    }
+
+    /**
+     * Same narrowing as scriptJson(), for a script that returns a plain boolean.
+     */
+    public static function scriptBool(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $js): bool
+    {
+        $result = $page->script($js);
+        if (! is_bool($result)) {
+            throw new ExpectationFailedException(
+                'scriptBool(): script did not return a boolean result: ' . var_export($result, true)
+            );
+        }
+
+        return $result;
+    }
+
+    /**
+     * Same narrowing as scriptJson(), for a script whose return value is
+     * already an array/object -- Playwright's CDP evaluate() auto-
+     * serializes a plain array/object return without needing an explicit
+     * `JSON.stringify()` in the script itself, unlike scriptJson()'s own
+     * JSON.stringify()-then-decode idiom.
+     *
+     * @return array<array-key, mixed>
+     */
+    public static function scriptArray(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $js): array
+    {
+        $result = $page->script($js);
+        if (! is_array($result)) {
+            throw new ExpectationFailedException(
+                'scriptArray(): script did not return an array result: ' . var_export($result, true)
+            );
+        }
+
+        return $result;
+    }
+
+    /**
+     * Same narrowing as scriptJson(), for a script that returns a plain integer.
+     */
+    public static function scriptInt(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $js): int
+    {
+        $result = $page->script($js);
+        if (! is_int($result)) {
+            throw new ExpectationFailedException(
+                'scriptInt(): script did not return an integer result: ' . var_export($result, true)
+            );
+        }
+
+        return $result;
+    }
+
+    /**
      * Polls in-browser (via script(), which awaits the returned promise —
      * see apiFetch()) until $selector is absent or hidden, instead of racing a
      * single check against an async request. Neither assertSee() nor

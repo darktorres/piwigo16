@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Pest\Browser\Api\AwaitableWebpage;
+use Pest\Browser\Api\PendingAwaitablePage;
+use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -32,7 +35,7 @@ it('reveals the comment-option dropdown on click and hides it again on an outsid
 
     $page = H::navigateOk($page, '/admin.php?page=album&cat_id=' . $albumId . '&tab=properties');
 
-    $isOpen = static fn (mixed $page): mixed => $page->script(
+    $isOpen = static fn (Webpage|PendingAwaitablePage|AwaitableWebpage $page): mixed => $page->script(
         "document.querySelector('.comment-option').offsetParent !== null"
     );
 
@@ -87,13 +90,15 @@ it('saves a renamed album name via #cat-properties-save and shows the success me
 
     // save_button_set_loading(false) also runs in the success handler --
     // the spinner icon should be gone and the save button re-enabled.
-    $state = $page->script(<<<'JS'
+    $state = H::scriptJson($page, <<<'JS'
         JSON.stringify({
             iconClass: document.querySelector('#cat-properties-save i').className,
             disabled: document.getElementById('cat-properties-save').disabled,
         })
         JS);
-    $state = json_decode($state, true);
+    if (! is_string($state['iconClass'] ?? null) || ! is_bool($state['disabled'] ?? null)) {
+        throw new RuntimeException('unexpected state shape: ' . var_export($state, true));
+    }
     expect($state['iconClass'])
         ->toContain('icon-floppy')
         ->not->toContain('icon-spin6');

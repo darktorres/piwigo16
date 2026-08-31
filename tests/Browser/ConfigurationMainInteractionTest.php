@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PHPUnit\Framework\Assert;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -23,10 +24,12 @@ it('toggles rate_anonymous based on the rate checkbox, in both directions', func
     // forces the same state regardless of the checkbox would still pass a
     // single-click assertion whenever that forced state happens to match
     // the one transition being tested.
-    $checked = static fn (): mixed => $page->script(
+    $checked = static fn (): bool => H::scriptBool(
+        $page,
         "document.querySelector('input[name=rate]').checked"
     );
-    $display = static fn (): mixed => $page->script(
+    $display = static fn (): string => H::scriptString(
+        $page,
         "getComputedStyle(document.getElementById('rate_anonymous')).display"
     );
 
@@ -61,7 +64,8 @@ it('adds and removes an order-by filter row', function (): void {
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=configuration');
 
-    $rowCount = static fn (): mixed => $page->script(
+    $rowCount = static fn (): int => H::scriptInt(
+        $page,
         "document.querySelectorAll('#order_filters select').length"
     );
     $before = $rowCount();
@@ -73,7 +77,8 @@ it('adds and removes an order-by filter row', function (): void {
 
     // The newly-added row's own select is reset to no selection (val("")),
     // not a copy of the row it was cloned from.
-    $lastSelectValue = $page->script(
+    $lastSelectValue = H::scriptString(
+        $page,
         "Array.from(document.querySelectorAll('#order_filters select')).pop().value"
     );
     expect($lastSelectValue)
@@ -93,14 +98,15 @@ it('disables an order-by option in other rows once it is chosen in one', functio
     $page = H::navigateOk($page, '/admin.php?page=configuration');
 
     // Guarantee at least 2 rows to compare across.
-    $rowCount = $page->script(
+    $rowCount = H::scriptInt(
+        $page,
         "document.querySelectorAll('#order_filters select').length"
     );
     if ($rowCount < 2) {
         $page->click('#order_filters .addFilter');
     }
 
-    $chosenValue = $page->script(<<<'JS'
+    $chosenValue = H::scriptString($page, <<<'JS'
         (() => {
             const select = document.querySelector('#order_filters select');
             const option = Array.from(select.options).find((o) => !o.disabled);
@@ -110,7 +116,7 @@ it('disables an order-by option in other rows once it is chosen in one', functio
         })()
         JS);
 
-    $disabledElsewhere = $page->script(<<<JS
+    $disabledElsewhere = H::scriptBool($page, <<<JS
         Array.from(document.querySelectorAll('#order_filters select'))
             .slice(1)
             .every((select) => {
@@ -129,21 +135,25 @@ it('highlights the selected mail theme', function (): void {
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=configuration');
 
-    $themeCount = $page->script(
+    $themeCount = H::scriptInt(
+        $page,
         "document.querySelectorAll('.themeSelect').length"
     );
     if ($themeCount < 2) {
-        $this->markTestSkipped('Needs at least 2 mail themes to prove the swap, not just the initial state.');
+        Assert::markTestSkipped('Needs at least 2 mail themes to prove the swap, not just the initial state.');
     }
 
     $page->click('.themeSelect:last-of-type label.font-checkbox');
 
-    $result = $page->script(<<<'JS'
+    $result = H::scriptArray($page, <<<'JS'
         ({
             defaultCount: document.querySelectorAll('.themeSelect.themeDefault').length,
             lastIsDefault: document.querySelector('.themeSelect:last-of-type').classList.contains('themeDefault'),
         })
         JS);
+    if (! is_int($result['defaultCount'] ?? null) || ! is_bool($result['lastIsDefault'] ?? null)) {
+        throw new RuntimeException('unexpected result shape: ' . var_export($result, true));
+    }
 
     expect($result['defaultCount'])->toBe(1);
     expect($result['lastIsDefault'])->toBeTrue();
@@ -159,20 +169,23 @@ it('shows the group-options block when "group" is selected for the new-user emai
     // The filter radios only render once "email admins on new user" is
     // checked (email_admin_on_new_user_filter's own u-hidden guard) --
     // make sure that path is open first.
-    $emailFilterVisible = $page->script(
+    $emailFilterVisible = H::scriptBool(
+        $page,
         "document.getElementById('email_admin_on_new_user').offsetParent !== null"
     );
     if (! $emailFilterVisible) {
         $page->click('label.font-checkbox:has(input[name=allow_user_registration])');
     }
-    $notifyChecked = $page->script(
+    $notifyChecked = H::scriptBool(
+        $page,
         "document.querySelector('input[name=email_admin_on_new_user]').checked"
     );
     if (! $notifyChecked) {
         $page->click('label.font-checkbox:has(input[name=email_admin_on_new_user])');
     }
 
-    $display = static fn (): mixed => $page->script(
+    $display = static fn (): string => H::scriptString(
+        $page,
         "getComputedStyle(document.getElementById('email_admin_on_new_user_filter_group_options')).display"
     );
 

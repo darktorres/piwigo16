@@ -26,7 +26,7 @@ it('adds a user through the popup, edits it, then deletes it', function (): void
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=user_list');
 
-    $badgeBefore = (int) $page->script("parseInt(document.querySelector('.badge-number').textContent)");
+    $badgeBefore = H::scriptInt($page, "parseInt(document.querySelector('.badge-number').textContent)");
 
     $username = 'ul_interaction_' . uniqid();
     $email = $username . '@example.test';
@@ -54,7 +54,7 @@ it('adds a user through the popup, edits it, then deletes it', function (): void
         })
         JS);
 
-    $badgeAfterAdd = (int) $page->script("parseInt(document.querySelector('.badge-number').textContent)");
+    $badgeAfterAdd = H::scriptInt($page, "parseInt(document.querySelector('.badge-number').textContent)");
     expect($badgeAfterAdd)
         ->toBe($badgeBefore + 1);
 

@@ -42,7 +42,7 @@ it('opens exactly one menubar section at a time, closing the previous one', func
 
     $page->click('#menubar dl:nth-of-type(2) dt');
 
-    $result = $page->script(<<<'JS'
+    $result = H::scriptArray($page, <<<'JS'
         new Promise((resolve, reject) => {
             const deadline = Date.now() + 5000;
             const check = () => {
@@ -70,6 +70,10 @@ it('opens exactly one menubar section at a time, closing the previous one', func
             check();
         })
         JS);
+
+    if (! is_string($result['photosDisplay'] ?? null) || ! is_string($result['albumsDisplay'] ?? null)) {
+        throw new RuntimeException('unexpected result shape: ' . var_export($result, true));
+    }
 
     expect($result['photosDisplay'])->toBe('none');
     expect($result['albumsDisplay'])->not->toBe('none');

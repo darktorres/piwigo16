@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Pest\Browser\Api\AwaitableWebpage;
+use Pest\Browser\Api\PendingAwaitablePage;
+use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -27,7 +30,7 @@ it('opens the add-filter dropdown on click and closes it on an outside click', f
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=batch_manager&mode=unit');
 
-    $waitFor = static function (mixed $page, string $condition, string $failMessage): void {
+    $waitFor = static function (Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $condition, string $failMessage): void {
         $page->script(
             <<<JS
             new Promise((resolve, reject) => {
@@ -47,7 +50,7 @@ it('opens the add-filter dropdown on click and closes it on an outside click', f
             ,
         );
     };
-    $isOpen = static fn (mixed $page): mixed => $page->script(
+    $isOpen = static fn (Webpage|PendingAwaitablePage|AwaitableWebpage $page): mixed => $page->script(
         "document.querySelector('.addFilter-dropdown').offsetParent !== null"
     );
 
@@ -70,13 +73,13 @@ it('enables the dimension filter from the dropdown, then removes it', function (
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=batch_manager&mode=unit');
 
-    $filterVisible = static fn (mixed $page): mixed => $page->script(
+    $filterVisible = static fn (Webpage|PendingAwaitablePage|AwaitableWebpage $page): mixed => $page->script(
         "document.getElementById('filter_dimension').offsetParent !== null"
     );
-    $linkDisabled = static fn (mixed $page): mixed => $page->script(
+    $linkDisabled = static fn (Webpage|PendingAwaitablePage|AwaitableWebpage $page): mixed => $page->script(
         "document.querySelector('#addFilter a[data-value=\"filter_dimension\"]').classList.contains('disabled')"
     );
-    $checkboxChecked = static fn (mixed $page): mixed => $page->script(
+    $checkboxChecked = static fn (Webpage|PendingAwaitablePage|AwaitableWebpage $page): mixed => $page->script(
         "document.querySelector('input[name=\"filter_dimension_use\"]').checked"
     );
 
@@ -120,7 +123,7 @@ it('fades the quick-search help modal in and out', function (): void {
     $page->click('.addFilter-button');
     $page->click('#addFilter a[data-value="filter_search"]');
 
-    $modalVisible = static fn (mixed $page): mixed => $page->script(
+    $modalVisible = static fn (Webpage|PendingAwaitablePage|AwaitableWebpage $page): mixed => $page->script(
         "getComputedStyle(document.getElementById('modalQuickSearch')).display !== 'none'"
     );
 

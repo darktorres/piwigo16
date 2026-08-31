@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Pest\Browser\Api\AwaitableWebpage;
+use Pest\Browser\Api\PendingAwaitablePage;
+use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -52,7 +55,7 @@ function updatesExtPluginBoxHtml(string $type, string $id, bool $ignored): strin
         HTML;
 }
 
-function updatesExtInjectFixture(mixed $page): void
+function updatesExtInjectFixture(Webpage|PendingAwaitablePage|AwaitableWebpage $page): void
 {
     $notIgnored = updatesExtPluginBoxHtml('plugins', 'not-ignored', false);
     $ignored = updatesExtPluginBoxHtml('plugins', 'ignored', true);
@@ -104,7 +107,8 @@ it('clicks every .updateExtension link on "Update All", including one inside an 
 
     $page->click('.jconfirm button.btn-red');
 
-    $clicked = $page->script(
+    $clicked = H::scriptArray(
+        $page,
         "window.__updatesExtClicks.filter((id) => id.startsWith('plugins_'))"
     );
     // updateAll()'s filter is `el.closest('div')` -- the immediate
@@ -136,7 +140,7 @@ it('does not click anything when the "Update All" confirm dialog is cancelled', 
 
     $page->click('.jconfirm button:not(.btn-red)');
 
-    $clicked = $page->script('window.__updatesExtClicks');
+    $clicked = H::scriptArray($page, 'window.__updatesExtClicks');
     expect($clicked)
         ->toBe([]);
 
@@ -152,7 +156,8 @@ it('clicks every .ignoreExtension link via ignoreAll(), same "always block" quir
 
     $page->click('#ignore_all');
 
-    $clicked = $page->script(
+    $clicked = H::scriptArray(
+        $page,
         "window.__updatesExtClicks.filter((id) => id.startsWith('plugins_'))"
     );
     expect($clicked)
@@ -172,7 +177,7 @@ it('ignoreExtension() hides the item, marks it ignored, reveals reset-ignore, an
 
     $page->click('#plugins_not-ignored .ignoreExtension');
 
-    $state = $page->script(<<<'JS'
+    $decoded = H::scriptJson($page, <<<'JS'
         new Promise((resolve, reject) => {
             const deadline = Date.now() + 5000;
             const check = () => {
@@ -194,7 +199,16 @@ it('ignoreExtension() hides the item, marks it ignored, reveals reset-ignore, an
             check();
         })
         JS);
-    $state = json_decode($state, true);
+    if (
+        ! is_bool($decoded['boxVisible'] ?? null)
+        || ! is_bool($decoded['resetIgnoreVisible'] ?? null)
+        || ! is_string($decoded['resetIgnoreValueProp'] ?? null)
+        || ! is_bool($decoded['fieldsetVisible'] ?? null)
+        || ! is_bool($decoded['upToDateVisible'] ?? null)
+    ) {
+        throw new RuntimeException('unexpected state shape: ' . var_export($decoded, true));
+    }
+    $state = $decoded;
 
     expect($state['boxVisible'])->toBeFalse();
     expect($state['resetIgnoreVisible'])->toBeTrue();
@@ -242,7 +256,7 @@ it('resetIgnored() (via #reset_ignore) restores every hidden item and clears the
 
     $page->click('#reset_ignore');
 
-    $state = $page->script(<<<'JS'
+    $decoded = H::scriptJson($page, <<<'JS'
         new Promise((resolve, reject) => {
             const deadline = Date.now() + 5000;
             const check = () => {
@@ -268,7 +282,19 @@ it('resetIgnored() (via #reset_ignore) restores every hidden item and clears the
             check();
         })
         JS);
-    $state = json_decode($state, true);
+    if (
+        ! is_bool($decoded['notIgnoredVisible'] ?? null)
+        || ! is_bool($decoded['ignoredBoxVisible'] ?? null)
+        || ! is_string($decoded['ignoredDataIgnored'] ?? null)
+        || ! is_bool($decoded['fieldsetVisible'] ?? null)
+        || ! is_bool($decoded['updateAllVisible'] ?? null)
+        || ! is_bool($decoded['ignoreAllVisible'] ?? null)
+        || ! is_bool($decoded['upToDateVisible'] ?? null)
+        || ! is_bool($decoded['resetIgnoreVisible'] ?? null)
+    ) {
+        throw new RuntimeException('unexpected state shape: ' . var_export($decoded, true));
+    }
+    $state = $decoded;
 
     expect($state['notIgnoredVisible'])->toBeTrue();
     expect($state['ignoredBoxVisible'])->toBeTrue();

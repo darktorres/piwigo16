@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Pest\Browser\Api\AwaitableWebpage;
+use Pest\Browser\Api\PendingAwaitablePage;
+use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -108,7 +111,7 @@ function historyInteractionRemoveGeoIpFixture(string $destination): void
     @unlink($destination);
 }
 
-function historyInteractionWaitForLoad(mixed $page): void
+function historyInteractionWaitForLoad(Webpage|PendingAwaitablePage|AwaitableWebpage $page): void
 {
     // Wait for `.pagination-item-container` to be populated, not merely for
     // the row to exist: the row is appended inside the ajax `success`
@@ -136,7 +139,7 @@ function historyInteractionWaitForLoad(mixed $page): void
         JS);
 }
 
-function historyInteractionClick(mixed $page, string $selector): void
+function historyInteractionClick(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $selector): void
 {
     $page->script("document.querySelector('" . $selector . "').click()");
 }
@@ -149,7 +152,7 @@ function historyInteractionClick(mixed $page, string $selector): void
  * instead, which setupGeoIpHover()'s native `on(ipEl, "mouseenter", ...)`
  * listener sees exactly the same as a real one.
  */
-function historyInteractionHover(mixed $page, string $selector): void
+function historyInteractionHover(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $selector): void
 {
     $page->script("document.querySelector('" . $selector . "').dispatchEvent(new MouseEvent('mouseenter', {bubbles: true}))");
 }
@@ -296,7 +299,7 @@ it('shows a geolocation tooltip when hovering a line\'s IP', function (): void {
             })
             JS);
 
-        expect((string) $page->script("document.getElementById('tiptip_content').textContent"))
+        expect(H::scriptString($page, "document.getElementById('tiptip_content').textContent"))
             ->toContain('London, England, United Kingdom');
 
         $page->assertNoJavaScriptErrors();

@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Pest\Browser\Api\AwaitableWebpage;
+use Pest\Browser\Api\PendingAwaitablePage;
+use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -65,7 +68,7 @@ it('opens and closes the preferences section via its own maxHeight toggle', func
     // section, so this test's own toggle isn't racing that one.
     $page->script('new Promise((resolve) => setTimeout(resolve, 300))');
 
-    $isOpen = static fn (mixed $page): mixed => $page->script(
+    $isOpen = static fn (Webpage|PendingAwaitablePage|AwaitableWebpage $page): mixed => $page->script(
         "document.getElementById('preferences-display').classList.contains('open')",
     );
 
@@ -93,7 +96,7 @@ it('shows a live mismatch error between the two new-password fields, and clears 
     $page = H::navigateOk($page, '/profile.php');
     $page->assertPresent('#password_conf');
 
-    $errorVisible = static fn (mixed $page): mixed => $page->script(
+    $errorVisible = static fn (Webpage|PendingAwaitablePage|AwaitableWebpage $page): mixed => $page->script(
         "document.getElementById('password_conf').closest('.column-flex').querySelector('.error-message').offsetParent !== null",
     );
 

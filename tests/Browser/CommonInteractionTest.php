@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Pest\Browser\Api\AwaitableWebpage;
+use Pest\Browser\Api\PendingAwaitablePage;
+use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -24,11 +27,39 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * (group_list.ts, tags.ts) converts first (see the class's own docblock).
  * `pwg_jconfirm_follow_href` stays jQuery (jquery-confirm, P49-B group 5).
  */
+
+/**
+ * Narrows a single font-checkbox row (`{value, checked, selected, icon}`)
+ * decoded from H::scriptJson() -- shared by every test below that reads
+ * this shape, since script()'s return is `mixed` however $page is typed.
+ *
+ * @return array{value: string, checked: bool, selected: bool, icon: string}
+ */
+function commonInteractionRow(mixed $row): array
+{
+    if (
+        ! is_array($row)
+        || ! is_string($row['value'] ?? null)
+        || ! is_bool($row['checked'] ?? null)
+        || ! is_bool($row['selected'] ?? null)
+        || ! is_string($row['icon'] ?? null)
+    ) {
+        throw new RuntimeException('commonInteractionRow(): unexpected shape: ' . var_export($row, true));
+    }
+
+    return [
+        'value' => $row['value'],
+        'checked' => $row['checked'],
+        'selected' => $row['selected'],
+        'icon' => $row['icon'],
+    ];
+}
+
 it('marks the checked radio\'s label "selected" and gives every other one the empty-circle icon on load', function (): void {
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=albums');
 
-    $state = $page->script(<<<'JS'
+    $rows = H::scriptJson($page, <<<'JS'
         JSON.stringify(
             Array.from(document.querySelectorAll('label.font-checkbox'))
                 .filter((label) => label.querySelector('input[name="order"]') !== null)
@@ -40,11 +71,11 @@ it('marks the checked radio\'s label "selected" and gives every other one the em
                 }))
         )
         JS);
-    $rows = json_decode($state, true);
 
     expect($rows)
         ->not->toBe([]);
-    foreach ($rows as $row) {
+    foreach ($rows as $rawRow) {
+        $row = commonInteractionRow($rawRow);
         if ($row['checked']) {
             expect($row['selected'])->toBeTrue("row {$row['value']} should be selected");
             expect($row['icon'])->toBe('icon-dot-circled', "row {$row['value']}'s icon");
@@ -67,18 +98,19 @@ it('moves "selected" and the icon to a newly-clicked radio in the same group, bo
     // untouched code, just the real way a user reaches this markup.
     $page->click('.order-root');
 
-    $rowFor = static fn (mixed $page, string $value): mixed => $page->script(
-        "(() => { const input = document.querySelector('input[name=\"order\"][value=\"{$value}\"]'); const label = input.closest('label'); return JSON.stringify({ checked: input.checked, selected: label.classList.contains('selected'), icon: label.querySelector('span').className }); })()"
-    );
+    $rowFor = static fn (Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $value): array => commonInteractionRow(H::scriptJson(
+        $page,
+        "(() => { const input = document.querySelector('input[name=\"order\"][value=\"{$value}\"]'); const label = input.closest('label'); return JSON.stringify({ checked: input.checked, selected: label.classList.contains('selected'), icon: label.querySelector('span').className, value: '{$value}' }); })()"
+    ));
 
-    $initialAsc = json_decode($rowFor($page, 'name ASC'), true);
+    $initialAsc = $rowFor($page, 'name ASC');
     expect($initialAsc['selected'])->toBeTrue();
     expect($initialAsc['icon'])->toBe('icon-dot-circled');
 
     $page->click('label:has(input[name="order"][value="name DESC"])');
 
-    $descAfterClick = json_decode($rowFor($page, 'name DESC'), true);
-    $ascAfterClick = json_decode($rowFor($page, 'name ASC'), true);
+    $descAfterClick = $rowFor($page, 'name DESC');
+    $ascAfterClick = $rowFor($page, 'name ASC');
     expect($descAfterClick['selected'])->toBeTrue();
     expect($descAfterClick['icon'])->toBe('icon-dot-circled');
     expect($ascAfterClick['selected'])->toBeFalse();
@@ -87,8 +119,8 @@ it('moves "selected" and the icon to a newly-clicked radio in the same group, bo
     // Back the other way, to prove this isn't a one-shot init artifact.
     $page->click('label:has(input[name="order"][value="name ASC"])');
 
-    $ascAfterSecondClick = json_decode($rowFor($page, 'name ASC'), true);
-    $descAfterSecondClick = json_decode($rowFor($page, 'name DESC'), true);
+    $ascAfterSecondClick = $rowFor($page, 'name ASC');
+    $descAfterSecondClick = $rowFor($page, 'name DESC');
     expect($ascAfterSecondClick['selected'])->toBeTrue();
     expect($ascAfterSecondClick['icon'])->toBe('icon-dot-circled');
     expect($descAfterSecondClick['selected'])->toBeFalse();
@@ -102,10 +134,12 @@ it('shows the search-cancel icon while the search box has text, and clears it ba
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=albums');
 
-    $cancelVisible = static fn (mixed $page): mixed => $page->script(
+    $cancelVisible = static fn (Webpage|PendingAwaitablePage|AwaitableWebpage $page): bool => H::scriptBool(
+        $page,
         "document.querySelector('.search-cancel').offsetParent !== null"
     );
-    $searchValue = static fn (mixed $page): mixed => $page->script(
+    $searchValue = static fn (Webpage|PendingAwaitablePage|AwaitableWebpage $page): string => H::scriptString(
+        $page,
         "document.querySelector('.search-input').value"
     );
 
@@ -140,12 +174,13 @@ it('fontCheckbox() does not double-process a radio nested under two overlapping 
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=configuration');
 
-    $rowFor = static fn (mixed $page, string $value): mixed => $page->script(
-        "(() => { const input = document.querySelector('input[name=\"mail_theme\"][value=\"{$value}\"]'); const label = input.closest('label.font-checkbox'); return JSON.stringify({ checked: input.checked, selected: label.classList.contains('selected'), icon: label.querySelector('span').className }); })()"
-    );
+    $rowFor = static fn (Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $value): array => commonInteractionRow(H::scriptJson(
+        $page,
+        "(() => { const input = document.querySelector('input[name=\"mail_theme\"][value=\"{$value}\"]'); const label = input.closest('label.font-checkbox'); return JSON.stringify({ checked: input.checked, selected: label.classList.contains('selected'), icon: label.querySelector('span').className, value: '{$value}' }); })()"
+    ));
 
-    $clear = json_decode($rowFor($page, 'clear'), true);
-    $dark = json_decode($rowFor($page, 'dark'), true);
+    $clear = $rowFor($page, 'clear');
+    $dark = $rowFor($page, 'dark');
 
     expect($clear['checked'])->toBeTrue();
     expect($clear['selected'])->toBeTrue();
@@ -156,8 +191,8 @@ it('fontCheckbox() does not double-process a radio nested under two overlapping 
 
     $page->click('label:has(input[name="mail_theme"][value="dark"])');
 
-    $clearAfter = json_decode($rowFor($page, 'clear'), true);
-    $darkAfter = json_decode($rowFor($page, 'dark'), true);
+    $clearAfter = $rowFor($page, 'clear');
+    $darkAfter = $rowFor($page, 'dark');
     expect($darkAfter['selected'])->toBeTrue();
     expect($darkAfter['icon'])->toBe('icon-dot-circled');
     expect($clearAfter['selected'])->toBeFalse();
@@ -183,15 +218,19 @@ it('does not touch a plain input[type=radio] outside any .font-checkbox ancestor
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=cat_list');
 
-    $classes = $page->script(
+    $classes = H::scriptJson(
+        $page,
         "JSON.stringify(Array.from(document.querySelectorAll('.AlbumViewSelector *')).map((el) => el.className))"
     );
-    $classes = json_decode($classes, true);
 
     expect($classes)
         ->not->toBe([]);
     foreach ($classes as $className) {
-        expect($className)->not->toContain('icon-dot-circled');
+        if (! is_string($className)) {
+            throw new RuntimeException('expected a className string, got: ' . var_export($className, true));
+        }
+        expect($className)
+            ->not->toContain('icon-dot-circled');
         expect($className)
             ->not->toContain('icon-circle-empty');
     }

@@ -38,13 +38,22 @@ it('toggles between the group and users recipient panels', function (): void {
 
     $page = H::navigateOk($page, '/admin.php?page=album-' . $albumId . '-notification');
 
+    /** @return array{group: string, users: string} */
     $displays = static function () use ($page): array {
-        return $page->script(<<<'JS'
+        $result = H::scriptArray($page, <<<'JS'
             ({
                 group: getComputedStyle(document.querySelector('.who_group')).display,
                 users: getComputedStyle(document.querySelector('.who_users')).display,
             })
             JS);
+        if (! is_string($result['group'] ?? null) || ! is_string($result['users'] ?? null)) {
+            throw new RuntimeException('unexpected displays shape: ' . var_export($result, true));
+        }
+
+        return [
+            'group' => $result['group'],
+            'users' => $result['users'],
+        ];
     };
 
     $initial = $displays();

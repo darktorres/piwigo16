@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use Pest\Browser\Api\AwaitableWebpage;
+use Pest\Browser\Api\PendingAwaitablePage;
+use Pest\Browser\Api\Webpage;
+use PHPUnit\Framework\Assert;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -32,7 +36,8 @@ it('toggles the advanced-filter panel open and closed', function (): void {
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=plugins&tab=new');
 
-    $isOpen = static fn (mixed $page): mixed => $page->script(
+    $isOpen = static fn (Webpage|PendingAwaitablePage|AwaitableWebpage $page): bool => H::scriptBool(
+        $page,
         "document.querySelector('.advanced-filter').classList.contains('advanced-filter-open')"
     );
 
@@ -57,18 +62,23 @@ it('renders the advanced filter\'s rating/certification/revision widgets at thei
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=plugins&tab=new');
 
-    $ratingIcons = $page->script(
+    $ratingIcons = H::scriptJson(
+        $page,
         "JSON.stringify(Array.from(document.querySelectorAll('.advanced-filter-rating .rating-star-container span')).map((el) => el.className))"
     );
-    $ratingIcons = json_decode($ratingIcons, true);
 
     expect($ratingIcons)
         ->toHaveCount(5);
     foreach ($ratingIcons as $className) {
-        expect($className)->toBe('icon-star-empty');
+        if (! is_string($className)) {
+            throw new RuntimeException('expected a className string, got: ' . var_export($className, true));
+        }
+        expect($className)
+            ->toBe('icon-star-empty');
     }
 
-    $certification = $page->script(
+    $certification = H::scriptString(
+        $page,
         "document.querySelector('.advanced-filter-certification .certification').getAttribute('data-certification')"
     );
     // betaTestPlugins is false for a real admin with no `beta-test` query
@@ -76,7 +86,8 @@ it('renders the advanced filter\'s rating/certification/revision widgets at thei
     expect($certification)
         ->toBe('0');
 
-    $revisionDate = $page->script(
+    $revisionDate = H::scriptString(
+        $page,
         "document.querySelector('.revision-date').textContent"
     );
     expect($revisionDate)
@@ -99,7 +110,7 @@ it('reloads with the beta-test query param set after toggling the switch', funct
     // The click's own handler calls window.location.reload() directly (a
     // real browser navigation, not one this harness's click() awaits), so
     // poll for the reload to land rather than asserting immediately.
-    $url = $page->script(<<<'JS'
+    $url = H::scriptString($page, <<<'JS'
         new Promise((resolve, reject) => {
             const deadline = Date.now() + 5000;
             const check = () => {
@@ -135,7 +146,7 @@ it('renders a real plugin\'s half-star rating without crashing on an unquoted at
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=plugins&tab=new');
 
-    $state = $page->script(<<<'JS'
+    $rawState = $page->script(<<<'JS'
         (() => {
             const box = document.querySelector('.pluginRating');
             if (box === null) return null;
@@ -148,24 +159,37 @@ it('renders a real plugin\'s half-star rating without crashing on an unquoted at
         })()
         JS);
 
-    if ($state === null) {
-        expect(true)->toBeTrue();
-
-        return;
+    if ($rawState === null) {
+        Assert::markTestSkipped('No real plugin with a rating was available from PEM in this environment.');
     }
 
-    $state = json_decode($state, true);
-    $fullStars = (int) floor($state['rating']);
-    $hasHalf = $state['rating'] - $fullStars >= 0.5;
+    if (! is_string($rawState)) {
+        throw new RuntimeException('expected null or a JSON string, got: ' . var_export($rawState, true));
+    }
+
+    $decoded = json_decode($rawState, true);
+    if (! is_array($decoded) || ! is_numeric($decoded['rating'] ?? null) || ! is_array($decoded['stars'] ?? null)) {
+        throw new RuntimeException('unexpected state shape: ' . var_export($decoded, true));
+    }
+
+    $rating = (float) $decoded['rating'];
+    $stars = $decoded['stars'];
+    $fullStars = (int) floor($rating);
+    $hasHalf = $rating - $fullStars >= 0.5;
 
     for ($i = 0; $i < 5; $i++) {
+        $star = $stars[$i] ?? null;
+        if (! is_array($star) || ! is_bool($star['emptyRemoved'] ?? null) || ! is_string($star['iconClass'] ?? null)) {
+            throw new RuntimeException("unexpected star shape at index {$i}: " . var_export($star, true));
+        }
+
         if ($i < $fullStars) {
-            expect($state['stars'][$i]['emptyRemoved'])->toBeTrue("star {$i} should be full");
-            expect($state['stars'][$i]['iconClass'])->toBe('icon-star');
+            expect($star['emptyRemoved'])->toBeTrue("star {$i} should be full");
+            expect($star['iconClass'])->toBe('icon-star');
         } elseif ($i === $fullStars && $hasHalf) {
-            expect($state['stars'][$i]['iconClass'])->toBe('icon-star-half');
+            expect($star['iconClass'])->toBe('icon-star-half');
         } else {
-            expect($state['stars'][$i]['iconClass'])->toBe('');
+            expect($star['iconClass'])->toBe('');
         }
     }
 

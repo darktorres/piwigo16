@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Pest\Browser\Api\AwaitableWebpage;
+use Pest\Browser\Api\PendingAwaitablePage;
+use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -34,7 +37,32 @@ function commentsInteractionInsert(int $imageId, string $author, string $content
     return $id;
 }
 
-function commentsInteractionWaitForLoad(mixed $page): void
+/**
+ * Narrows a flat, all-boolean JSON object decoded from H::scriptJson() to
+ * exactly the requested keys -- shared by both tests below that read this
+ * shape, since script()'s return is `mixed` however $page is typed.
+ *
+ * @param list<string> $keys
+ * @return array<string, bool>
+ */
+function commentsInteractionBoolState(mixed $decoded, array $keys): array
+{
+    if (! is_array($decoded)) {
+        throw new RuntimeException('commentsInteractionBoolState(): expected an array, got: ' . var_export($decoded, true));
+    }
+
+    $result = [];
+    foreach ($keys as $key) {
+        if (! is_bool($decoded[$key] ?? null)) {
+            throw new RuntimeException("commentsInteractionBoolState(): expected boolean key '{$key}', got: " . var_export($decoded[$key] ?? null, true));
+        }
+        $result[$key] = $decoded[$key];
+    }
+
+    return $result;
+}
+
+function commentsInteractionWaitForLoad(Webpage|PendingAwaitablePage|AwaitableWebpage $page): void
 {
     $page->script(<<<'JS'
         new Promise((resolve, reject) => {
@@ -58,29 +86,30 @@ it('toggles selection mode: shows checkboxes and the selection controller, hides
     $page = H::navigateOk($page, '/admin.php?page=comments');
     commentsInteractionWaitForLoad($page);
 
-    $state = static fn (mixed $page): mixed => $page->script(<<<'JS'
+    $stateKeys = ['checkboxVisible', 'buttonsVisible', 'controllerShown'];
+    $state = static fn (Webpage|PendingAwaitablePage|AwaitableWebpage $page): array => commentsInteractionBoolState(H::scriptJson($page, <<<'JS'
         JSON.stringify({
             checkboxVisible: document.querySelector('.comment-select-checkbox').offsetParent !== null,
             buttonsVisible: document.querySelector('.comment-buttons').offsetParent !== null,
             controllerShown: document.getElementById('commentsSelectController').classList.contains('show'),
         })
-        JS);
+        JS), $stateKeys);
 
-    $initial = json_decode($state($page), true);
+    $initial = $state($page);
     expect($initial['checkboxVisible'])->toBeFalse();
     expect($initial['buttonsVisible'])->toBeTrue();
     expect($initial['controllerShown'])->toBeFalse();
 
     $page->click('.comments-selection-switch label.switch');
 
-    $on = json_decode($state($page), true);
+    $on = $state($page);
     expect($on['checkboxVisible'])->toBeTrue();
     expect($on['buttonsVisible'])->toBeFalse();
     expect($on['controllerShown'])->toBeTrue();
 
     $page->click('.comments-selection-switch label.switch');
 
-    $off = json_decode($state($page), true);
+    $off = $state($page);
     expect($off['checkboxVisible'])->toBeFalse();
     expect($off['buttonsVisible'])->toBeTrue();
     expect($off['controllerShown'])->toBeFalse();
@@ -114,15 +143,14 @@ it('selects a comment via its checkbox and shows it in the selected-items area',
 
         $page->click('[id="' . $commentId . '"] .comment-select-checkbox');
 
-        $selected = $page->script(<<<JS
+        $selected = commentsInteractionBoolState(H::scriptJson($page, <<<JS
             JSON.stringify({
                 itemSelected: document.getElementById('{$commentId}').classList.contains('comment-selected'),
                 noSelectionVisible: document.getElementById('commentsNoSelection').offsetParent !== null,
                 selectionVisible: document.getElementById('commentsSelection').offsetParent !== null,
                 selectedItemPresent: document.querySelector('#commentsSelected p') !== null && document.querySelector('#commentsSelected p').textContent.trim() === '#{$commentId}',
             })
-            JS);
-        $selected = json_decode($selected, true);
+            JS), ['itemSelected', 'noSelectionVisible', 'selectionVisible', 'selectedItemPresent']);
 
         expect($selected['itemSelected'])->toBeTrue();
         expect($selected['noSelectionVisible'])->toBeFalse();

@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Pest\Browser\Api\AwaitableWebpage;
+use Pest\Browser\Api\PendingAwaitablePage;
+use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -71,7 +74,7 @@ it('toggles the upload-options panel open and closed', function (): void {
     $page = H::navigateOk($page, '/admin.php?page=photos_add&album=1');
     $page->assertPresent('#uploadOptionsContent');
 
-    $waitForDisplay = static function (mixed $page, string $expected, string $failMessage): void {
+    $waitForDisplay = static function (Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $expected, string $failMessage): void {
         $page->script(
             <<<JS
             new Promise((resolve, reject) => {
@@ -91,7 +94,7 @@ it('toggles the upload-options panel open and closed', function (): void {
             ,
         );
     };
-    $sleep = static function (mixed $page, int $ms): void {
+    $sleep = static function (Webpage|PendingAwaitablePage|AwaitableWebpage $page, int $ms): void {
         $page->script("new Promise((resolve) => setTimeout(resolve, {$ms}))");
     };
 

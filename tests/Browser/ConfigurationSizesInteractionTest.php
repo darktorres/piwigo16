@@ -16,11 +16,13 @@ it('toggles the original-size resize fields based on the checkbox', function ():
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=configuration&section=sizes');
 
-    $display = static fn (): mixed => $page->script(
+    $display = static fn (): string => H::scriptString(
+        $page,
         "getComputedStyle(document.getElementById('sizeEdit-original')).display"
     );
 
-    $initiallyChecked = $page->script(
+    $initiallyChecked = H::scriptBool(
+        $page,
         "document.querySelector('[name=original_resize]').checked"
     );
 
@@ -58,14 +60,17 @@ it('opens a size\'s edit row and hides its own open link', function (): void {
     // "rendered" from "not" here.
     $page->click('#showDetails');
 
-    $sizeName = $page->script(
+    $sizeName = H::scriptString(
+        $page,
         "document.querySelector('a.sizeEditOpen').id.replace('sizeEditOpen-', '')"
     );
 
-    $rowDisplay = static fn (): mixed => $page->script(
+    $rowDisplay = static fn (): string => H::scriptString(
+        $page,
         "getComputedStyle(document.getElementById('sizeEdit-{$sizeName}')).display"
     );
-    $linkVisible = static fn (): mixed => $page->script(
+    $linkVisible = static fn (): bool => H::scriptBool(
+        $page,
         "document.getElementById('sizeEditOpen-{$sizeName}').offsetParent !== null"
     );
 
@@ -95,29 +100,44 @@ it('swaps the width/height labels when the crop checkbox is toggled', function (
 
     // The crop checkbox only exists for a size that isn't forced square
     // (`n:if="!$d->mustSquare"`) -- scope to a row that actually has one.
-    $sizeName = $page->script(<<<'JS'
+    $rawSizeName = $page->script(<<<'JS'
         (() => {
             const cb = document.querySelector('.sizeEditForm .cropToggle');
             const row = cb ? cb.closest('tr[id^="sizeEdit-"]') : null;
             return row ? row.id.replace('sizeEdit-', '') : null;
         })()
         JS);
-    expect($sizeName)
+    expect($rawSizeName)
         ->not->toBeNull();
+    if (! is_string($rawSizeName)) {
+        throw new RuntimeException('expected a string sizeName, got: ' . var_export($rawSizeName, true));
+    }
+    $sizeName = $rawSizeName;
 
     $page->click('#sizeEditOpen-' . $sizeName);
 
-    $labels = static fn (): mixed => $page->script(<<<JS
-        (() => {
-            const row = document.getElementById('sizeEdit-{$sizeName}');
-            return {
-                width: row.querySelector('.sizeEditWidth').textContent,
-                height: row.querySelector('.sizeEditHeight').textContent,
-            };
-        })()
-        JS);
+    $labels = static function () use ($page, $sizeName): array {
+        $result = H::scriptArray($page, <<<JS
+            (() => {
+                const row = document.getElementById('sizeEdit-{$sizeName}');
+                return {
+                    width: row.querySelector('.sizeEditWidth').textContent,
+                    height: row.querySelector('.sizeEditHeight').textContent,
+                };
+            })()
+            JS);
+        if (! is_string($result['width'] ?? null) || ! is_string($result['height'] ?? null)) {
+            throw new RuntimeException('unexpected labels shape: ' . var_export($result, true));
+        }
 
-    $wasChecked = $page->script(
+        return [
+            'width' => $result['width'],
+            'height' => $result['height'],
+        ];
+    };
+
+    $wasChecked = H::scriptBool(
+        $page,
         "document.querySelector('#sizeEdit-{$sizeName} .cropToggle').checked"
     );
 
@@ -140,7 +160,8 @@ it('shows every size\'s details and hides the showDetails link', function (): vo
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=configuration&section=sizes');
 
-    $anySizeDetailsVisible = $page->script(
+    $anySizeDetailsVisible = H::scriptBool(
+        $page,
         "Array.from(document.querySelectorAll('.sizeDetails')).some((el) => getComputedStyle(el).display !== 'none')"
     );
     expect($anySizeDetailsVisible)
@@ -148,13 +169,15 @@ it('shows every size\'s details and hides the showDetails link', function (): vo
 
     $page->click('#showDetails');
 
-    $allSizeDetailsVisible = $page->script(
+    $allSizeDetailsVisible = H::scriptBool(
+        $page,
         "Array.from(document.querySelectorAll('.sizeDetails')).every((el) => getComputedStyle(el).display !== 'none')"
     );
     expect($allSizeDetailsVisible)
         ->toBeTrue();
 
-    $showDetailsVisibility = $page->script(
+    $showDetailsVisibility = H::scriptString(
+        $page,
         "getComputedStyle(document.getElementById('showDetails')).visibility"
     );
     expect($showDetailsVisibility)

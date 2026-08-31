@@ -64,15 +64,17 @@ it('writes sequential pos_ values from the sortable widget\'s current order on s
         "document.getElementById('menuOrdering').addEventListener('submit', (e) => e.preventDefault())"
     );
 
-    $blockIds = $page->script(
+    $blockIds = array_values(H::scriptArray(
+        $page,
         "Array.from(document.querySelectorAll('.menuUl > .menuLi')).map((li) => li.id.replace('menu_', ''))"
-    );
+    ));
     expect($blockIds)
         ->not->toBeEmpty();
 
     $page->click('button[name="submit"]');
 
-    $positions = $page->script(
+    $positions = H::scriptArray(
+        $page,
         "Array.from(document.querySelectorAll('.menuUl > .menuLi')).map((li) => "
         . "document.getElementsByName('pos_' + li.id.replace('menu_', ''))[0].value)"
     );

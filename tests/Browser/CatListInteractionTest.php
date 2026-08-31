@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Pest\Browser\Api\AwaitableWebpage;
+use Pest\Browser\Api\PendingAwaitablePage;
+use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -66,7 +69,7 @@ it('hovering a categoryBox in line view recolors it and marks its icon span', fu
     $page->click('label[for=displayLine]');
     $page->assertPresent('.categoryBox.line_cat');
 
-    $iconSpanHovered = static fn (mixed $page): mixed => $page->script(
+    $iconSpanHovered = static fn (Webpage|PendingAwaitablePage|AwaitableWebpage $page): mixed => $page->script(
         "document.querySelector('.categoryBox .albumTop .albumIcon span').classList.contains('albumIconLineHover')",
     );
 

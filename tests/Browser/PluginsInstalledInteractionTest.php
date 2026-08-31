@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Pest\Browser\Api\AwaitableWebpage;
+use Pest\Browser\Api\PendingAwaitablePage;
+use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -109,7 +112,7 @@ function pluginsInteractionFixtureRemove(string $dir): void
     rmdir($dir);
 }
 
-function pluginsInteractionWaitForRow(mixed $page, string $id): void
+function pluginsInteractionWaitForRow(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $id): void
 {
     $page->script(<<<JS
         new Promise((resolve, reject) => {

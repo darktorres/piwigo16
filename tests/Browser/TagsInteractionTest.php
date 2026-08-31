@@ -80,6 +80,9 @@ it('creates a tag via the checkmark button, then deletes it via the dropdown', f
         JS);
     expect($tagId)
         ->not->toBeNull();
+    if (! is_string($tagId)) {
+        throw new RuntimeException('expected a string tagId, got: ' . var_export($tagId, true));
+    }
 
     // The add-tag <form> is left out of input-mode, and the loading spinner
     // TemporaryState swapped in is reverted back to the plus icon -- both

@@ -6,6 +6,34 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
+import {
+  addClass,
+  after,
+  append,
+  attr,
+  attrOf,
+  data,
+  delegate,
+  fadeIn,
+  fadeOut,
+  find,
+  hide,
+  html,
+  off,
+  offset,
+  on,
+  outerHeight,
+  ready,
+  removeClass,
+  resolveDuration,
+  setData,
+  setVal,
+  show,
+  swing,
+  text,
+  val,
+  windowHeight,
+} from "../../../default/js/vendor/dom";
 export {};
 
 // jqtree's own custom `tree.open`/`tree.close`/`tree.move` jQuery events
@@ -14,7 +42,10 @@ export {};
 // command-string overloads) -- these payload shapes are real jqtree
 // public API (`event.move_info.{moved_node,target_node,position,
 // previous_parent,do_move()}`, `event.node`), not something the
-// vendored package exposes types for.
+// vendored package exposes types for. Stay jQuery-typed: jqtree itself
+// dispatches these via jQuery's own trigger mechanism, invisible to a
+// native addEventListener, so they stay jQuery registrations until the
+// library is ported (P49-B group 6).
 interface JqTreeNodeEvent extends JQuery.TriggeredEvent {
   node: AlbumJqTreeNode;
 }
@@ -29,7 +60,12 @@ interface JqTreeMoveEvent extends JQuery.TriggeredEvent {
   move_info: JqTreeMoveInfo;
 }
 
-export const data = pwg_getPageData<AlbumTreeNode[]>("album_data");
+// Named `albumData` internally, not `data` -- avoids shadowing dom.ts's
+// own imported `data()` helper throughout this file. Re-exported as
+// `data` below (its real, external name; cat_search.ts imports it as
+// such, docs/PLAN.md P48) to keep that contract unchanged.
+const albumData = pwg_getPageData<AlbumTreeNode[]>("album_data");
+export { albumData as data };
 const pwg_token = pwg_getPageData<string>("csrf_token");
 const str_are_you_sure = pwg_getPageString(
   "The status of the album '%s' and its sub-albums will change to private. Are you sure?",
@@ -99,21 +135,94 @@ const add_album_root_title = pwg_getPageString("Create a new album at root");
 const add_sub_album_of = pwg_getPageString('Create a sub-album of "%s"');
 const tiptip_locked_album = pwg_getPageString("Locked album");
 
-$(document).ready(() => {
-  // Moved out of albums.latte's own `onClick="$('.cat-move-order-popin')
-  // .fadeOut()"`. An inline handler is invisible to tsc, eslint and every
-  // grep over themes/**/*.ts, so it would have broken silently the moment
-  // jQuery went away (docs/PLAN.md P49-A). Deliberately still jQuery: this
-  // same element is faded in by jQuery further down, and running two
-  // animation queues against one element is its own bug -- both convert
-  // together when this file does.
-  $(".cat-move-order-popin .close-popin").on("click", function () {
-    $(".cat-move-order-popin").fadeOut();
+// jQuery's default easing (`effects/Tween.js`) and speed-name table, both
+// re-exported by dom.ts -- reused here rather than duplicated, since
+// `scrollTop` is a DOM property, not a CSS one, and dom.ts's own
+// animate() only ever writes to `el.style`.
+function animateScrollTop(targetTop: number, duration?: number | string): void {
+  const ms = resolveDuration(duration);
+  const startTop = window.scrollY;
+  const delta = targetTop - startTop;
+  if (ms <= 0) {
+    window.scrollTo(0, targetTop);
+    return;
+  }
+  const startTime = performance.now();
+  const step = (now: number): void => {
+    const fraction = Math.min(1, (now - startTime) / ms);
+    window.scrollTo(0, startTop + delta * swing(fraction));
+    if (fraction < 1) {
+      requestAnimationFrame(step);
+    }
+  };
+  requestAnimationFrame(step);
+}
+
+// Rebinds the .move-cat-add/.move-cat-delete/.move-cat-title-container
+// click handlers -- called after every tree mutation (add/delete/move/
+// load-on-demand), same as the original's own repeated off()-then-on()
+// blocks at each of those call sites. Broad on purpose: every call
+// rebinds every matching element in the whole tree, not just the one a
+// mutation just affected -- matching the original jQuery's own
+// equally-broad `$(".move-cat-add").off("click").on(...)` pattern
+// verbatim, not something to narrow while translating.
+function rebindMoveCatActions(): void {
+  off(document.querySelectorAll(".move-cat-add"), "click");
+  on(document.querySelectorAll(".move-cat-add"), "click", function (e: Event) {
+    e.preventDefault();
+    const target = e.currentTarget as Element;
+    const aid = data(target, "aid") as string | number;
+    openAddAlbumPopIn(aid);
+    setData(document.querySelector(".AddAlbumSubmit")!, "a-parent", aid);
+  });
+  off(document.querySelectorAll(".move-cat-delete"), "click");
+  on(
+    document.querySelectorAll(".move-cat-delete"),
+    "click",
+    function (e: Event) {
+      triggerDeleteAlbum(
+        data(e.currentTarget as Element, "id") as string | number,
+      );
+    },
+  );
+  off(document.querySelectorAll(".move-cat-title-container"), "click");
+  on(
+    document.querySelectorAll(".move-cat-title-container"),
+    "click",
+    function (e: Event) {
+      const target = e.currentTarget as Element;
+      openRenameAlbumPopIn(
+        attrOf(find(target, ".move-cat-title"), "title") ?? undefined,
+      );
+      setData(
+        document.querySelector(".RenameAlbumSubmit")!,
+        "cat_id",
+        attrOf(target, "data-id")!,
+      );
+    },
+  );
+  // Still jQuery: tipTip is a library, ported in P49-B group 2.
+  jQuery(".tiptip").tipTip({
+    delay: 0,
+    fadeIn: 200,
+    fadeOut: 200,
+    edgeOffset: 3,
+  });
+}
+
+ready(() => {
+  const closePopin = document.querySelectorAll(
+    ".cat-move-order-popin .close-popin",
+  );
+  on(closePopin, "click", function () {
+    fadeOut(document.querySelectorAll(".cat-move-order-popin"));
   });
 
   const openUppercats =
-    openCat == "-1" ? [] : findAlbumById(data, openCat)!.uppercats.split(",");
-  const new_data = data.map((a: AlbumTreeNode) => {
+    openCat == "-1"
+      ? []
+      : findAlbumById(albumData, openCat)!.uppercats.split(",");
+  const new_data = albumData.map((a: AlbumTreeNode) => {
     const al: AlbumTreeNode = {
       ...a,
       children: openUppercats.includes(a.id) ? a.children : [],
@@ -125,9 +234,15 @@ $(document).ready(() => {
     return al;
   });
 
-  $("h1").append(`<span class='badge-number'>` + nb_albums + `</span>`);
+  document
+    .querySelector("h1")
+    ?.insertAdjacentHTML(
+      "beforeend",
+      `<span class='badge-number'>` + nb_albums + `</span>`,
+    );
 
-  $(".tree").tree({
+  // Still jQuery: jqtree is a library, ported in P49-B group 6.
+  jQuery(".tree").tree({
     data: new_data,
     autoOpen: false,
     dragAndDrop: true,
@@ -138,9 +253,12 @@ $(document).ready(() => {
     },
   });
 
-  $(".tree").on("click", ".move-cat-toogler", function () {
-    const node_id = $(this).attr("data-id");
-    const node = $(".tree").tree(
+  const treeEl = document.querySelector(".tree")!;
+
+  delegate(treeEl, "click", ".move-cat-toogler", function (this: Element) {
+    const node_id = attrOf(this, "data-id");
+    // Still jQuery: jqtree is a library, ported in P49-B group 6.
+    const node = jQuery(".tree").tree(
       "getNodeById",
       node_id,
     ) as AlbumJqTreeNode | null;
@@ -150,57 +268,48 @@ $(document).ready(() => {
         loadOnDemand(node);
       }
 
-      const open_nodes = $(".tree").tree("getState").open_nodes;
+      // Still jQuery: jqtree is a library, ported in P49-B group 6.
+      const open_nodes = jQuery(".tree").tree("getState").open_nodes;
       if (!open_nodes.includes(node.id)) {
-        $(this).html(toggler_open);
-        $(".tree").tree("openNode", node);
+        html(this, toggler_open);
+        // Still jQuery: jqtree is a library, ported in P49-B group 6.
+        jQuery(".tree").tree("openNode", node);
         // reset event here:
-        $(".move-cat-add")
-          .off("click")
-          .on("click", function (e) {
-            e.preventDefault();
-            openAddAlbumPopIn($(this).data("aid") as string | number);
-            $(".AddAlbumSubmit").data(
-              "a-parent",
-              $(this).data("aid") as string | number,
-            );
-          });
-        $(".move-cat-delete")
-          .off("click")
-          .on("click", function () {
-            triggerDeleteAlbum($(this).data("id") as string | number);
-          });
-        $(".move-cat-title-container")
-          .off("click")
-          .on("click", function () {
-            openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-            $(".RenameAlbumSubmit").data("cat_id", $(this).attr("data-id")!);
-          });
+        rebindMoveCatActions();
       } else {
-        $(this).html(toggler_close);
-        $(".tree").tree("closeNode", node);
+        html(this, toggler_close);
+        // Still jQuery: jqtree is a library, ported in P49-B group 6.
+        jQuery(".tree").tree("closeNode", node);
       }
     }
   });
 
-  // jqtree's own custom events aren't in `@types/jquery`'s known-event
-  // map, so `.on()`'s generic overload resolves the handler param to
-  // the base `JQuery.TriggeredEvent` -- a real, strict-function-type
-  // contravariance rule (the same one `createAlbumNode`'s own
-  // `onCreateLi` assignment above works around) blocks declaring the
-  // handler's own param as the narrower `JqTreeNodeEvent`/
-  // `JqTreeMoveEvent` directly. Cast inside instead.
-  $(".tree").on("tree.open", function (e) {
+  // Still jQuery: jqtree's own custom event, dispatched via jQuery's own
+  // trigger mechanism from inside the (unported) library -- invisible to
+  // a native addEventListener. Ported in P49-B group 6.
+  jQuery(".tree").on("tree.open", function (e) {
     const ev = e as unknown as JqTreeNodeEvent;
-    $(".move-cat-toogler[data-id=" + ev.node.id + "]").html(toggler_open);
+    html(
+      document.querySelectorAll(
+        '.move-cat-toogler[data-id="' + ev.node.id + '"]',
+      ),
+      toggler_open,
+    );
   });
 
-  $(".tree").on("tree.close", function (e) {
+  // Still jQuery: same reason as "tree.open" above.
+  jQuery(".tree").on("tree.close", function (e) {
     const ev = e as unknown as JqTreeNodeEvent;
-    $(".move-cat-toogler[data-id=" + ev.node.id + "]").html(toggler_close);
+    html(
+      document.querySelectorAll(
+        '.move-cat-toogler[data-id="' + ev.node.id + '"]',
+      ),
+      toggler_close,
+    );
   });
 
-  $(".tree").on("tree.move", function (e) {
+  // Still jQuery: same reason as "tree.open" above.
+  jQuery(".tree").on("tree.move", function (e) {
     const event = e as unknown as JqTreeMoveEvent;
     event.preventDefault();
 
@@ -218,7 +327,8 @@ $(document).ready(() => {
       }
 
       if (parentIsPrivate) {
-        $.confirm({
+        // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
+        jQuery.confirm({
           title: str_are_you_sure.replace(
             /%s/g,
             event.move_info.moved_node.name,
@@ -246,32 +356,53 @@ $(document).ready(() => {
     }
   });
 
-  $(".tree").on("click", ".move-cat-order", function () {
-    const node_id = $(this).attr("data-id");
-    const node = $(".tree").tree(
+  delegate(treeEl, "click", ".move-cat-order", function (this: Element) {
+    const node_id = attrOf(this, "data-id");
+    // Still jQuery: jqtree is a library, ported in P49-B group 6.
+    const node = jQuery(".tree").tree(
       "getNodeById",
       node_id,
     ) as AlbumJqTreeNode | null;
     if (node) {
-      $(".cat-move-order-popin").fadeIn();
-      $(".cat-move-order-popin .album-name").html(getPathNode(node));
-      $(".cat-move-order-popin input[name=id]").val(node_id!);
-      $("input[name=simpleAutoOrder]").attr("value", str_sub_album_order);
+      fadeIn(document.querySelectorAll(".cat-move-order-popin"));
+      html(
+        document.querySelectorAll(".cat-move-order-popin .album-name"),
+        getPathNode(node),
+      );
+      setVal(
+        document.querySelectorAll(".cat-move-order-popin input[name=id]"),
+        node_id!,
+      );
+      attr(
+        document.querySelectorAll("input[name=simpleAutoOrder]"),
+        "value",
+        str_sub_album_order,
+      );
     }
   });
 
-  $(".order-root").on("click", function () {
-    $(".cat-move-order-popin").fadeIn();
-    $(".cat-move-order-popin .album-name").html(str_root);
-    $(".cat-move-order-popin input[name=id]").val(-1);
-    $("input[name=simpleAutoOrder]").attr("value", str_root_order);
+  on(document.querySelectorAll(".order-root"), "click", function () {
+    fadeIn(document.querySelectorAll(".cat-move-order-popin"));
+    html(
+      document.querySelectorAll(".cat-move-order-popin .album-name"),
+      str_root,
+    );
+    setVal(
+      document.querySelectorAll(".cat-move-order-popin input[name=id]"),
+      "-1",
+    );
+    attr(
+      document.querySelectorAll("input[name=simpleAutoOrder]"),
+      "value",
+      str_root_order,
+    );
   });
 
-  $(".tree").on("mousedown mouseup", function mouseState(e) {
+  on(treeEl, "mousedown mouseup", function mouseState(e: Event) {
     if (e.type == "mousedown") {
-      $(".tree").addClass("dragging");
+      addClass(treeEl, "dragging");
     } else if (e.type == "mouseup") {
-      $(".dragging").removeClass("dragging");
+      removeClass(document.querySelectorAll(".dragging"), "dragging");
     }
   });
 
@@ -279,254 +410,292 @@ $(document).ready(() => {
     // Non-null: `openCat`, when not the "-1" sentinel, is always a real
     // album id present in this tree (same unguarded assumption the
     // pre-P47 `any`-typed code already made).
-    const nodeToGo = $(".tree").tree("getNodeById", openCat) as AlbumJqTreeNode;
+    // Still jQuery: jqtree is a library, ported in P49-B group 6.
+    const nodeToGo = jQuery(".tree").tree(
+      "getNodeById",
+      openCat,
+    ) as AlbumJqTreeNode;
 
     goToNode(nodeToGo, nodeToGo);
     if (nodeToGo.children) {
-      $(".tree").tree("openNode", nodeToGo, false);
+      // Still jQuery: jqtree is a library, ported in P49-B group 6.
+      jQuery(".tree").tree("openNode", nodeToGo, false);
     }
 
-    $([document.documentElement, document.body]).animate(
-      {
-        scrollTop:
-          $("#cat-" + openCat).offset()!.top -
-          $(window).height()! / 2 +
-          $("#cat-" + openCat).outerHeight()! / 2,
-      },
+    const target = document.querySelector("#cat-" + openCat)!;
+    animateScrollTop(
+      offset(target).top -
+        windowHeight() / 2 +
+        outerHeight(target as HTMLElement) / 2,
       500,
     );
   }
 
   // RenameAlbumPopIn
-  $(".RenameAlbumErrors").hide();
-  $(".move-cat-title-container").on("click", function () {
-    openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-    $(".RenameAlbumSubmit").data("cat_id", $(this).attr("data-id")!);
-  });
-  $(".CloseRenameAlbum").on("click", function () {
+  hide(document.querySelectorAll(".RenameAlbumErrors"));
+  delegate(
+    document,
+    "click",
+    ".move-cat-title-container",
+    function (this: Element) {
+      openRenameAlbumPopIn(
+        attrOf(find(this, ".move-cat-title"), "title") ?? undefined,
+      );
+      setData(
+        document.querySelector(".RenameAlbumSubmit")!,
+        "cat_id",
+        attrOf(this, "data-id")!,
+      );
+    },
+  );
+  on(document.querySelectorAll(".CloseRenameAlbum"), "click", function () {
     closeRenameAlbumPopIn();
   });
-  $(".RenameAlbumCancel").on("click", function () {
+  on(document.querySelectorAll(".RenameAlbumCancel"), "click", function () {
     closeRenameAlbumPopIn();
   });
 
-  $(".RenameAlbumSubmit").on("click", function () {
-    const catToEdit = $(this).data("cat_id") as string | number;
-    void ajax({
-      url: "api/v1/categories/" + catToEdit,
-      type: "PATCH",
-      contentType: "application/json",
-      headers: { "X-CSRF-Token": pwg_token },
-      data: JSON.stringify({
-        name: $(".RenameAlbumLabelUsername input").val(),
-      }),
-      dataType: "json",
-      success: function (
-        _data: operations["categoryUpdate"]["responses"][200]["content"]["application/json"],
-      ) {
-        const node_id = $("#cat-" + catToEdit)
-          .find(".move-cat-toogler")
-          .attr("data-id");
-        const node = $(".tree").tree("getNodeById", node_id) as AlbumJqTreeNode;
-        node.name = String($(".RenameAlbumLabelUsername input").val());
-        $(".tree").tree(
-          "updateNode",
-          node,
-          $(".RenameAlbumLabelUsername input").val(),
-        );
+  on(
+    document.querySelectorAll(".RenameAlbumSubmit"),
+    "click",
+    function (this: Element) {
+      const catToEdit = data(this, "cat_id") as string | number;
+      void ajax({
+        url: "api/v1/categories/" + catToEdit,
+        type: "PATCH",
+        contentType: "application/json",
+        headers: { "X-CSRF-Token": pwg_token },
+        data: JSON.stringify({
+          name: val(
+            document.querySelectorAll(".RenameAlbumLabelUsername input"),
+          ),
+        }),
+        dataType: "json",
+        success: function (
+          _data: operations["categoryUpdate"]["responses"][200]["content"]["application/json"],
+        ) {
+          const node_id = attrOf(
+            find(
+              document.querySelectorAll("#cat-" + catToEdit),
+              ".move-cat-toogler",
+            ),
+            "data-id",
+          );
+          // Still jQuery: jqtree is a library, ported in P49-B group 6.
+          const node = jQuery(".tree").tree(
+            "getNodeById",
+            node_id,
+          ) as AlbumJqTreeNode;
+          node.name = String(
+            val(document.querySelectorAll(".RenameAlbumLabelUsername input")),
+          );
+          // Still jQuery: jqtree is a library, ported in P49-B group 6.
+          jQuery(".tree").tree(
+            "updateNode",
+            node,
+            val(document.querySelectorAll(".RenameAlbumLabelUsername input")),
+          );
 
-        $(".move-cat-title-container").on("click", function () {
-          openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-          $(".RenameAlbumSubmit").data("cat_id", $(this).attr("data-id")!);
-        });
+          rebindMoveCatActions();
 
-        $(".move-cat-add")
-          .off("click")
-          .on("click", function (e) {
-            e.preventDefault();
-            openAddAlbumPopIn($(this).data("aid") as string | number);
-            $(".AddAlbumSubmit").data(
-              "a-parent",
-              $(this).data("aid") as string | number,
-            );
-          });
-
-        closeRenameAlbumPopIn();
-      },
-      error: function (message) {
-        console.log(message);
-      },
-    });
-  });
+          closeRenameAlbumPopIn();
+        },
+        error: function (message) {
+          console.log(message);
+        },
+      });
+    },
+  );
 
   // AddAlbumPopIn
-  $(".AddAlbumErrors").hide();
-  $(".DeleteAlbumErrors").hide();
-  $(".add-album-button").on("click", function () {
+  hide(document.querySelectorAll(".AddAlbumErrors"));
+  hide(document.querySelectorAll(".DeleteAlbumErrors"));
+  on(document.querySelectorAll(".add-album-button"), "click", function () {
     openAddAlbumPopIn(0);
-    $(".AddAlbumSubmit").data("a-parent", 0);
+    setData(document.querySelector(".AddAlbumSubmit")!, "a-parent", 0);
   });
-  $(".move-cat-add").on("click", function (e) {
-    e.preventDefault();
-    openAddAlbumPopIn($(this).data("aid") as string | number);
-    $(".AddAlbumSubmit").data(
-      "a-parent",
-      $(this).data("aid") as string | number,
-    );
-  });
-  $(".CloseAddAlbum").on("click", function () {
+  delegate(
+    document,
+    "click",
+    ".move-cat-add",
+    function (this: Element, e: Event) {
+      e.preventDefault();
+      const aid = data(this, "aid") as string | number;
+      openAddAlbumPopIn(aid);
+      setData(document.querySelector(".AddAlbumSubmit")!, "a-parent", aid);
+    },
+  );
+  on(document.querySelectorAll(".CloseAddAlbum"), "click", function () {
     closeAddAlbumPopIn();
   });
-  $(".AddAlbumCancel").on("click", function () {
+  on(document.querySelectorAll(".AddAlbumCancel"), "click", function () {
     closeAddAlbumPopIn();
   });
-  $(".DeleteAlbumCancel").on("click", function () {
+  on(document.querySelectorAll(".DeleteAlbumCancel"), "click", function () {
     closeDeleteAlbumPopIn();
   });
 
-  $(".AddAlbumSubmit").on("click", function () {
-    $(this).addClass("notClickable");
+  on(
+    document.querySelectorAll(".AddAlbumSubmit"),
+    "click",
+    function (this: Element) {
+      addClass(this, "notClickable");
 
-    const newAlbumName = $(".AddAlbumLabelUsername input").val();
-    const newAlbumParent = $(".AddAlbumSubmit").data("a-parent") as
-      string | number;
-    const newAlbumPosition = $("input[name=position]:checked").val();
+      const newAlbumName = val(
+        document.querySelectorAll(".AddAlbumLabelUsername input"),
+      );
+      const newAlbumParent = data(
+        document.querySelector(".AddAlbumSubmit")!,
+        "a-parent",
+      ) as string | number;
+      const newAlbumPosition = val(
+        document.querySelectorAll("input[name=position]:checked"),
+      );
 
-    void ajax({
-      url: "api/v1/categories",
-      type: "POST",
-      contentType: "application/json",
-      headers: { "X-CSRF-Token": pwg_token },
-      data: JSON.stringify({
-        name: newAlbumName,
-        parentId: Number(newAlbumParent),
-        position: newAlbumPosition,
-      }),
-      dataType: "json",
-      success: function (
-        data: operations["categoryCreate"]["responses"][201]["content"]["application/json"],
-      ) {
-        const parent_node = $(".tree").tree(
-          "getNodeById",
-          newAlbumParent,
-        ) as AlbumJqTreeNode | null;
-        if (
-          parent_node &&
-          parent_node.load_on_demand &&
-          parent_node.haveChildren
+      void ajax({
+        url: "api/v1/categories",
+        type: "POST",
+        contentType: "application/json",
+        headers: { "X-CSRF-Token": pwg_token },
+        data: JSON.stringify({
+          name: newAlbumName,
+          parentId: Number(newAlbumParent),
+          position: newAlbumPosition,
+        }),
+        dataType: "json",
+        success: function (
+          data: operations["categoryCreate"]["responses"][201]["content"]["application/json"],
         ) {
-          loadOnDemand(parent_node);
-        }
-        if (parent_node) openNodeOnDemand(parent_node);
+          // Still jQuery: jqtree is a library, ported in P49-B group 6.
+          const parent_node = jQuery(".tree").tree(
+            "getNodeById",
+            newAlbumParent,
+          ) as AlbumJqTreeNode | null;
+          if (
+            parent_node &&
+            parent_node.load_on_demand &&
+            parent_node.haveChildren
+          ) {
+            loadOnDemand(parent_node);
+          }
+          if (parent_node) openNodeOnDemand(parent_node);
 
-        if (newAlbumPosition == "last") {
-          $(".tree").tree(
-            "appendNode",
-            {
-              id: data.id,
-              isEmptyFolder: true,
-              name: newAlbumName,
-            },
-            parent_node ?? undefined,
-          );
-        } else {
-          $(".tree").tree(
-            "prependNode",
-            {
-              id: data.id,
-              isEmptyFolder: true,
-              name: newAlbumName,
-            },
-            parent_node ?? undefined,
-          );
-        }
-
-        if (parent_node) {
-          setSubcatsBadge(parent_node);
-
-          $("#cat-" + parent_node.id).on(
-            "click",
-            ".move-cat-toogler",
-            function () {
-              const node_id = parent_node.id;
-              const node = $(".tree").tree(
-                "getNodeById",
-                node_id,
-              ) as AlbumJqTreeNode | null;
-              if (node) {
-                const open_nodes = $(".tree").tree("getState").open_nodes;
-                if (!open_nodes.includes(node_id)) {
-                  $(this).html(toggler_open);
-                  $(".tree").tree("openNode", node);
-                } else {
-                  $(this).html(toggler_close);
-                  $(".tree").tree("closeNode", node);
-                }
-              }
-            },
-          );
-        }
-
-        $(".move-cat-add")
-          .off("click")
-          .on("click", function (e) {
-            e.preventDefault();
-            openAddAlbumPopIn($(this).data("aid") as string | number);
-            $(".AddAlbumSubmit").data(
-              "a-parent",
-              $(this).data("aid") as string | number,
+          if (newAlbumPosition == "last") {
+            // Still jQuery: jqtree is a library, ported in P49-B group 6.
+            jQuery(".tree").tree(
+              "appendNode",
+              {
+                id: data.id,
+                isEmptyFolder: true,
+                name: newAlbumName,
+              },
+              parent_node ?? undefined,
             );
-          });
-        $(".move-cat-delete").on("click", function () {
-          triggerDeleteAlbum($(this).data("id") as string | number);
-        });
-        $(".move-cat-title-container")
-          .unbind("click")
-          .on("click", function () {
-            openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-            $(".RenameAlbumSubmit").data("cat_id", $(this).attr("data-id")!);
-          });
-        $(".tiptip").tipTip({
-          delay: 0,
-          fadeIn: 200,
-          fadeOut: 200,
-          edgeOffset: 3,
-        });
+          } else {
+            // Still jQuery: jqtree is a library, ported in P49-B group 6.
+            jQuery(".tree").tree(
+              "prependNode",
+              {
+                id: data.id,
+                isEmptyFolder: true,
+                name: newAlbumName,
+              },
+              parent_node ?? undefined,
+            );
+          }
 
-        updateTitleBadge(nb_albums + 1);
+          if (parent_node) {
+            setSubcatsBadge(parent_node);
 
-        goToNode(
-          $(".tree").tree("getNodeById", data.id) as AlbumJqTreeNode,
-          $(".tree").tree("getNodeById", data.id) as AlbumJqTreeNode,
-        );
-        $("html,body").animate(
-          {
-            scrollTop: $("#cat-" + data.id).offset()!.top - screen.height / 2,
-          },
-          "slow",
-        );
+            delegate(
+              document.querySelectorAll("#cat-" + parent_node.id),
+              "click",
+              ".move-cat-toogler",
+              function (this: Element) {
+                const node_id = parent_node.id;
+                // Still jQuery: jqtree is a library, ported in P49-B group 6.
+                const node = jQuery(".tree").tree(
+                  "getNodeById",
+                  node_id,
+                ) as AlbumJqTreeNode | null;
+                if (node) {
+                  // Still jQuery: jqtree is a library, ported in P49-B group 6.
+                  const open_nodes =
+                    jQuery(".tree").tree("getState").open_nodes;
+                  if (!open_nodes.includes(node_id)) {
+                    html(this, toggler_open);
+                    // Still jQuery: jqtree is a library, ported in P49-B group 6.
+                    jQuery(".tree").tree("openNode", node);
+                  } else {
+                    html(this, toggler_close);
+                    // Still jQuery: jqtree is a library, ported in P49-B group 6.
+                    jQuery(".tree").tree("closeNode", node);
+                  }
+                }
+              },
+            );
+          }
 
-        closeAddAlbumPopIn();
-        $(".AddAlbumSubmit").removeClass("notClickable");
-      },
-      error: function (message) {
-        console.log(message);
-        $(".AddAlbumErrors").text(str_album_name_empty).show();
-        $(".AddAlbumSubmit").removeClass("notClickable");
-      },
-    });
-  });
+          rebindMoveCatActions();
+
+          updateTitleBadge(nb_albums + 1);
+
+          goToNode(
+            // Still jQuery: jqtree is a library, ported in P49-B group 6.
+            jQuery(".tree").tree("getNodeById", data.id) as AlbumJqTreeNode,
+            jQuery(".tree").tree("getNodeById", data.id) as AlbumJqTreeNode,
+          );
+          animateScrollTop(
+            offset(document.querySelector("#cat-" + data.id)!).top -
+              screen.height / 2,
+            "slow",
+          );
+
+          closeAddAlbumPopIn();
+          removeClass(
+            document.querySelectorAll(".AddAlbumSubmit"),
+            "notClickable",
+          );
+        },
+        error: function (message) {
+          console.log(message);
+          text(
+            document.querySelectorAll(".AddAlbumErrors"),
+            str_album_name_empty,
+          );
+          show(document.querySelectorAll(".AddAlbumErrors"));
+          removeClass(
+            document.querySelectorAll(".AddAlbumSubmit"),
+            "notClickable",
+          );
+        },
+      });
+    },
+  );
 
   // Delete Album
-  $(".move-cat-delete").on("click", function () {
-    triggerDeleteAlbum($(this).data("id") as string | number);
-  });
+  on(
+    document.querySelectorAll(".move-cat-delete"),
+    "click",
+    function (e: Event) {
+      triggerDeleteAlbum(
+        data(e.currentTarget as Element, "id") as string | number,
+      );
+    },
+  );
 
-  $(".user-list-checkbox").unbind("change").change(checkbox_change);
-  $(".user-list-checkbox").unbind("click").click(checkbox_click);
+  off(document.querySelectorAll(".user-list-checkbox"), "change");
+  on(
+    document.querySelectorAll(".user-list-checkbox"),
+    "change",
+    checkbox_change,
+  );
+  off(document.querySelectorAll(".user-list-checkbox"), "click");
+  on(document.querySelectorAll(".user-list-checkbox"), "click", checkbox_click);
 
   if (!light_album_manager) {
-    $(".tiptip").tipTip({
+    // Still jQuery: tipTip is a library, ported in P49-B group 2.
+    jQuery(".tiptip").tipTip({
       delay: 0,
       fadeIn: 200,
       fadeOut: 200,
@@ -537,6 +706,7 @@ $(document).ready(() => {
 
 function createAlbumNode(rawNode: INode, li: JQuery) {
   const node = rawNode as AlbumJqTreeNode;
+  const liEl = li[0]!;
   const icon = "<span class='%icon%'></span>";
   let title =
     '<span data-id="' + node.id + '" class="move-cat-title-container ';
@@ -606,57 +776,57 @@ function createAlbumNode(rawNode: INode, li: JQuery) {
     "</div>";
   // action_order = '<a data-id="'+node.id+'" class="move-cat-order icon-sort-name-up tiptip" title="'+ str_sort_order +'"></a>';
 
-  const cont = li.find(".jqtree-element");
-  cont.addClass("move-cat-container");
-  cont.attr("id", "cat-" + node.id);
-  cont.html("");
+  const cont = find(liEl, ".jqtree-element")[0]!;
+  addClass(cont, "move-cat-container");
+  attr(cont, "id", "cat-" + node.id);
+  html(cont, "");
 
-  cont.append(actions);
+  append(cont, actions);
 
-  cont.find(".toggle-cat-option").on("click", function (this: HTMLElement) {
-    $(".cat-option").hide();
-    $(this).find(".cat-option").toggle();
+  on(find(cont, ".toggle-cat-option"), "click", function (this: Element) {
+    hide(document.querySelectorAll(".cat-option"));
+    find(this, ".cat-option").forEach((el) => {
+      el.classList.toggle("cat-option-visible");
+    });
   });
 
   let toggler: string;
   if (node.haveChildren || node.children.length != 0) {
-    const open_nodes = $(".tree").tree("getState").open_nodes;
+    // Still jQuery: jqtree is a library, ported in P49-B group 6.
+    const open_nodes = jQuery(".tree").tree("getState").open_nodes;
     if (open_nodes.includes(node.id)) {
       toggler = toggler_open;
     } else {
       toggler = toggler_close;
     }
-    cont.append(
-      $(
-        toggler_cont
-          .replace(/%content%/g, toggler)
-          .replace(/%id%/g, String(node.id)),
-      ),
+    append(
+      cont,
+      toggler_cont
+        .replace(/%content%/g, toggler)
+        .replace(/%id%/g, String(node.id)),
     );
   } else {
-    cont.find(".move-cat-order").addClass("notClickable");
+    addClass(find(cont, ".move-cat-order"), "notClickable");
 
-    cont
-      .append(
-        $(
-          toggler_cont
-            .replace(/%content%/g, toggler_close)
-            .replace(/%id%/g, String(node.id)),
-        ),
-      )
-      .addClass("disabledToggle");
+    append(
+      cont,
+      toggler_cont
+        .replace(/%content%/g, toggler_close)
+        .replace(/%id%/g, String(node.id)),
+    );
+    addClass(cont, "disabledToggle");
   }
 
-  cont.append($(icon.replace(/%icon%/g, "icon-grip-vertical-solid")));
-  cont.find(".icon-grip-vertical-solid").attr("title", str_albs_drag_drop);
+  append(cont, icon.replace(/%icon%/g, "icon-grip-vertical-solid"));
+  attr(find(cont, ".icon-grip-vertical-solid"), "title", str_albs_drag_drop);
 
   if (node.haveChildren || node.children.length != 0) {
-    cont.append($(icon.replace(/%icon%/g, "icon-sitemap")));
+    append(cont, icon.replace(/%icon%/g, "icon-sitemap"));
   } else {
-    cont.append($(icon.replace(/%icon%/g, "icon-folder-open")));
+    append(cont, icon.replace(/%icon%/g, "icon-folder-open"));
   }
 
-  cont.append($(title.replace(/%name%/g, node.name)));
+  append(cont, title.replace(/%name%/g, node.name));
 
   const colors = [
     "icon-red",
@@ -666,52 +836,51 @@ function createAlbumNode(rawNode: INode, li: JQuery) {
     "icon-green",
   ];
   const colorId = Number(node.id) % 5;
-  cont
-    .find("span.icon-folder-open, span.icon-sitemap")
-    .addClass(colors[colorId]!)
-    .addClass("node-icon");
+  addClass(
+    find(cont, "span.icon-folder-open, span.icon-sitemap"),
+    colors[colorId] + " node-icon",
+  );
 
-  cont
-    .find(".move-cat-title-container")
-    .after(
-      "<div class='badge-container'>" +
-        "<i class='icon-blue icon-sitemap nb-subcats'>" +
-        String(node.nb_subcats) +
-        "</i>" +
-        "<i class='icon-purple icon-picture nb-images'>" +
-        node.nb_images +
-        "</i>" +
-        "<i class='icon-green icon-imagefolder-01 nb-sub-photos'>" +
-        node.nb_sub_photos +
-        "</i>" +
-        "<div class='badge-dropdown'>" +
-        "<span class='icon-blue icon-sitemap nb-subcats'>" +
-        x_nb_subcats.replace("%d", String(node.nb_subcats)) +
-        "</span>" +
-        "<span class='icon-purple icon-picture nb-images'>" +
-        x_nb_images.replace("%d", String(node.nb_images)) +
-        "</span>" +
-        "<span class='icon-green icon-imagefolder-01 nb-sub-photos'>" +
-        x_nb_sub_photos.replace("%d", String(node.nb_sub_photos)) +
-        "</span>" +
-        "</div>" +
-        "</div>",
-    );
+  after(
+    find(cont, ".move-cat-title-container"),
+    "<div class='badge-container'>" +
+      "<i class='icon-blue icon-sitemap nb-subcats'>" +
+      String(node.nb_subcats) +
+      "</i>" +
+      "<i class='icon-purple icon-picture nb-images'>" +
+      node.nb_images +
+      "</i>" +
+      "<i class='icon-green icon-imagefolder-01 nb-sub-photos'>" +
+      node.nb_sub_photos +
+      "</i>" +
+      "<div class='badge-dropdown'>" +
+      "<span class='icon-blue icon-sitemap nb-subcats'>" +
+      x_nb_subcats.replace("%d", String(node.nb_subcats)) +
+      "</span>" +
+      "<span class='icon-purple icon-picture nb-images'>" +
+      x_nb_images.replace("%d", String(node.nb_images)) +
+      "</span>" +
+      "<span class='icon-green icon-imagefolder-01 nb-sub-photos'>" +
+      x_nb_sub_photos.replace("%d", String(node.nb_sub_photos)) +
+      "</span>" +
+      "</div>" +
+      "</div>",
+  );
 
   if (!node.nb_subcats) {
-    cont.find(".nb-subcats").hide();
+    hide(find(cont, ".nb-subcats"));
   }
 
   if (!(node.nb_images != 0 && node.nb_images)) {
-    cont.find(".nb-images").hide();
+    hide(find(cont, ".nb-images"));
   }
 
   if (!node.nb_sub_photos) {
-    cont.find(".nb-sub-photos").hide();
+    hide(find(cont, ".nb-sub-photos"));
   }
 
   if (node.has_not_access) {
-    cont.find(".move-cat-see").addClass("notClickable");
+    addClass(find(cont, ".move-cat-see"), "notClickable");
   }
 }
 
@@ -719,21 +888,21 @@ function createAlbumNode(rawNode: INode, li: JQuery) {
 Checkboxes
 ----------------*/
 
-function checkbox_change(this: HTMLElement) {
-  if ($(this).attr("data-selected") == "1") {
-    $(this).find("i").hide();
+function checkbox_change(this: Element) {
+  if (attrOf(this, "data-selected") == "1") {
+    hide(find(this, "i"));
   } else {
-    $(this).find("i").show();
+    show(find(this, "i"));
   }
 }
 
-function checkbox_click(this: HTMLElement) {
-  if ($(this).attr("data-selected") == "1") {
-    $(this).attr("data-selected", "0");
-    $(this).find("i").hide();
+function checkbox_click(this: Element) {
+  if (attrOf(this, "data-selected") == "1") {
+    attr(this, "data-selected", "0");
+    hide(find(this, "i"));
   } else {
-    $(this).attr("data-selected", "1");
-    $(this).find("i").show();
+    attr(this, "data-selected", "1");
+    show(find(this, "i"));
   }
 }
 
@@ -742,62 +911,80 @@ function checkbox_click(this: HTMLElement) {
 // functions found this campaign.
 function openAddAlbumPopIn(parentAlbumId: string | number) {
   if (parentAlbumId != 0) {
-    $("#AddAlbum .AddIconTitle span").html(
+    html(
+      document.querySelectorAll("#AddAlbum .AddIconTitle span"),
       add_sub_album_of.replace(
         "%s",
-        $(".tree").tree("getNodeById", parentAlbumId)!.name,
+        // Still jQuery: jqtree is a library, ported in P49-B group 6.
+        jQuery(".tree").tree("getNodeById", parentAlbumId)!.name,
       ),
     );
   } else {
-    $("#AddAlbum .AddIconTitle span").html(add_album_root_title);
+    html(
+      document.querySelectorAll("#AddAlbum .AddIconTitle span"),
+      add_album_root_title,
+    );
   }
-  $("#AddAlbum").fadeIn();
-  const modalInput = $(".AddAlbumLabelUsername .user-property-input");
-  modalInput.val("");
-  modalInput.trigger("focus");
-  modalInput.off("keyup").on("keyup", function () {
-    if ($(this).val() !== "") {
-      $(".AddAlbumErrors").hide();
+  fadeIn(document.querySelectorAll("#AddAlbum"));
+  const modalInput = document.querySelectorAll(
+    ".AddAlbumLabelUsername .user-property-input",
+  );
+  setVal(modalInput, "");
+  (modalInput[0] as HTMLElement | undefined)?.focus();
+  off(modalInput, "keyup");
+  on(modalInput, "keyup", function (this: Element) {
+    if (val(this) !== "") {
+      hide(document.querySelectorAll(".AddAlbumErrors"));
     }
   });
 
-  $("#AddAlbum").unbind("keyup");
-  $("#AddAlbum").on("keyup", function (e) {
+  const addAlbum = document.querySelectorAll("#AddAlbum");
+  off(addAlbum, "keyup");
+  on(addAlbum, "keyup", function (e: Event) {
     // 13 is 'Enter'
-    if (e.keyCode === 13) {
-      $(".AddAlbumSubmit").trigger("click");
+    if ((e as KeyboardEvent).keyCode === 13) {
+      document.querySelector<HTMLElement>(".AddAlbumSubmit")?.click();
     }
     // 27 is 'Escape'
-    if (e.keyCode === 27) {
+    if ((e as KeyboardEvent).keyCode === 27) {
       closeAddAlbumPopIn();
     }
   });
 }
 
 function closeAddAlbumPopIn() {
-  $("#AddAlbum").fadeOut(function () {
-    $(".AddAlbumErrors").hide();
+  fadeOut(document.querySelectorAll("#AddAlbum"), function () {
+    hide(document.querySelectorAll(".AddAlbumErrors"));
   });
 }
 
 function openRenameAlbumPopIn(replacedAlbumName: string | undefined) {
   const safeName = replacedAlbumName ?? "";
-  $("#RenameAlbum").fadeIn();
-  $(".RenameAlbumTitle span").html(rename_item.replace("%s", safeName));
-  $(".RenameAlbumLabelUsername .user-property-input").val(safeName);
-  $(".RenameAlbumLabelUsername .user-property-input").focus();
+  fadeIn(document.querySelectorAll("#RenameAlbum"));
+  html(
+    document.querySelectorAll(".RenameAlbumTitle span"),
+    rename_item.replace("%s", safeName),
+  );
+  setVal(
+    document.querySelectorAll(".RenameAlbumLabelUsername .user-property-input"),
+    safeName,
+  );
+  document
+    .querySelector<HTMLElement>(
+      ".RenameAlbumLabelUsername .user-property-input",
+    )
+    ?.focus();
 
-  $(document)
-    .unbind("keypress")
-    .on("keypress", function (e) {
-      if (e.which == 13) {
-        $(".RenameAlbumSubmit").trigger("click");
-      }
-    });
+  off(document, "keypress");
+  on(document, "keypress", function (e: Event) {
+    if ((e as KeyboardEvent).which == 13) {
+      document.querySelector<HTMLElement>(".RenameAlbumSubmit")?.click();
+    }
+  });
 }
 
 function closeRenameAlbumPopIn() {
-  $("#RenameAlbum").fadeOut();
+  fadeOut(document.querySelectorAll("#RenameAlbum"));
 }
 
 function triggerDeleteAlbum(cat_id: string | number) {
@@ -809,24 +996,34 @@ function triggerDeleteAlbum(cat_id: string | number) {
       data: operations["categoryOrphanImpact"]["responses"][200]["content"]["application/json"],
     ) {
       if (data.nbImagesRecursive == 0) {
-        $(".deleteAlbumOptions").hide();
+        hide(document.querySelectorAll(".deleteAlbumOptions"));
       } else {
-        $(".deleteAlbumOptions").show();
+        show(document.querySelectorAll(".deleteAlbumOptions"));
         if (data.nbImagesAssociatedOutside == 0) {
-          $("#IMAGES_ASSOCIATED_OUTSIDE").hide();
+          hide(document.querySelectorAll("#IMAGES_ASSOCIATED_OUTSIDE"));
         } else {
-          $("#IMAGES_ASSOCIATED_OUTSIDE .innerText").html("");
-          $("#IMAGES_ASSOCIATED_OUTSIDE .innerText").append(
+          html(
+            document.querySelectorAll("#IMAGES_ASSOCIATED_OUTSIDE .innerText"),
+            "",
+          );
+          append(
+            document.querySelectorAll(
+              "#IMAGES_ASSOCIATED_OUTSIDE .innerText",
+            )[0]!,
             has_images_associated_outside
               .replace("%d", String(data.nbImagesRecursive))
               .replace("%d", String(data.nbImagesAssociatedOutside)),
           );
         }
         if (data.nbImagesBecomingOrphan == 0) {
-          $("#IMAGES_BECOMING_ORPHAN").hide();
+          hide(document.querySelectorAll("#IMAGES_BECOMING_ORPHAN"));
         } else {
-          $("#IMAGES_BECOMING_ORPHAN .innerText").html("");
-          $("#IMAGES_BECOMING_ORPHAN .innerText").append(
+          html(
+            document.querySelectorAll("#IMAGES_BECOMING_ORPHAN .innerText"),
+            "",
+          );
+          append(
+            document.querySelectorAll("#IMAGES_BECOMING_ORPHAN .innerText")[0]!,
             has_images_becomming_orphans.replace(
               "%d",
               String(data.nbImagesBecomingOrphan),
@@ -844,15 +1041,21 @@ function triggerDeleteAlbum(cat_id: string | number) {
 }
 
 function openDeleteAlbumPopIn(cat_to_delete: string | number) {
-  $("#DeleteAlbum").fadeIn();
-  const node = $(".tree").tree("getNodeById", cat_to_delete) as AlbumJqTreeNode;
+  fadeIn(document.querySelectorAll("#DeleteAlbum"));
+  // Still jQuery: jqtree is a library, ported in P49-B group 6.
+  const node = jQuery(".tree").tree(
+    "getNodeById",
+    cat_to_delete,
+  ) as AlbumJqTreeNode;
   if (node.children.length == 0) {
-    $(".DeleteIconTitle span").html(
+    html(
+      document.querySelectorAll(".DeleteIconTitle span"),
       delete_album_with_name.replace("%s", node.name),
     );
   } else {
     const nb_sub_cats = 0;
-    $(".DeleteIconTitle span").html(
+    html(
+      document.querySelectorAll(".DeleteIconTitle span"),
       delete_album_with_subs
         .replace("%s", node.name)
         .replace("%d", String(getAllSubAlbumsFromNode(node, nb_sub_cats))),
@@ -860,65 +1063,44 @@ function openDeleteAlbumPopIn(cat_to_delete: string | number) {
   }
 
   // Actually delete
-  $(".DeleteAlbumSubmit")
-    .unbind("click")
-    .on("click", function () {
-      void ajax({
-        url: "api/v1/categories/" + cat_to_delete,
-        type: "DELETE",
-        contentType: "application/json",
-        headers: { "X-CSRF-Token": pwg_token },
-        data: JSON.stringify({
-          photoDeletionMode: $("input[name=photo_deletion_mode]:checked").val(),
-        }),
-        success: function (
-          _raw_data: operations["categoryDelete"]["responses"][200]["content"]["application/json"],
-        ) {
-          // Non-null: same "always a real parent, never bare null in
-          // practice" invariant as createAlbumNode()'s own copy of this
-          // comment above.
-          const parentOfDeletedNode = node.parent!;
-          $(".tree").tree("removeNode", node);
+  const deleteSubmit = document.querySelectorAll(".DeleteAlbumSubmit");
+  off(deleteSubmit, "click");
+  on(deleteSubmit, "click", function () {
+    void ajax({
+      url: "api/v1/categories/" + cat_to_delete,
+      type: "DELETE",
+      contentType: "application/json",
+      headers: { "X-CSRF-Token": pwg_token },
+      data: JSON.stringify({
+        photoDeletionMode: val(
+          document.querySelectorAll("input[name=photo_deletion_mode]:checked"),
+        ),
+      }),
+      success: function (
+        _raw_data: operations["categoryDelete"]["responses"][200]["content"]["application/json"],
+      ) {
+        // Non-null: same "always a real parent, never bare null in
+        // practice" invariant as createAlbumNode()'s own copy of this
+        // comment above.
+        const parentOfDeletedNode = node.parent!;
+        // Still jQuery: jqtree is a library, ported in P49-B group 6.
+        jQuery(".tree").tree("removeNode", node);
 
-          $(".move-cat-add").on("click", function (e) {
-            e.preventDefault();
-            openAddAlbumPopIn($(this).data("aid") as string | number);
-            $(".AddAlbumSubmit").data(
-              "a-parent",
-              $(this).data("aid") as string | number,
-            );
-          });
-          $(".move-cat-delete").on("click", function () {
-            triggerDeleteAlbum($(this).data("id") as string | number);
-          });
-          $(".move-cat-title-container")
-            .unbind("click")
-            .on("click", function () {
-              openRenameAlbumPopIn(
-                $(this).find(".move-cat-title").attr("title"),
-              );
-              $(".RenameAlbumSubmit").data("cat_id", $(this).attr("data-id")!);
-            });
-          $(".tiptip").tipTip({
-            delay: 0,
-            fadeIn: 200,
-            fadeOut: 200,
-            edgeOffset: 3,
-          });
+        rebindMoveCatActions();
 
-          updateTitleBadge(nb_albums - 1);
-          setSubcatsBadge(parentOfDeletedNode);
-          closeDeleteAlbumPopIn();
-        },
-        error: function (message) {
-          console.log(message);
-        },
-      });
+        updateTitleBadge(nb_albums - 1);
+        setSubcatsBadge(parentOfDeletedNode);
+        closeDeleteAlbumPopIn();
+      },
+      error: function (message) {
+        console.log(message);
+      },
     });
+  });
 }
 
 function closeDeleteAlbumPopIn() {
-  $("#DeleteAlbum").fadeOut();
+  fadeOut(document.querySelectorAll("#DeleteAlbum"));
 }
 
 function getAllSubAlbumsFromNode(
@@ -940,24 +1122,30 @@ function getAllSubAlbumsFromNode(
 
 function setSubcatsBadge(node: AlbumJqTreeNode) {
   if (node.children.length != 0) {
-    $("#cat-" + node.id)
-      .find(".nb-subcats")
-      .text(node.children.length)
-      .show(100);
-    $("#cat-" + node.id)
-      .find(".badge-dropdown")
-      .find(".nb-subcats")
-      .text(x_nb_subcats.replace("%d", String(node.children.length)));
+    const nbSubcats = find(
+      document.querySelectorAll("#cat-" + node.id),
+      ".nb-subcats",
+    );
+    text(nbSubcats, String(node.children.length));
+    show(nbSubcats, 100);
+    text(
+      find(
+        find(document.querySelectorAll("#cat-" + node.id), ".badge-dropdown"),
+        ".nb-subcats",
+      ),
+      x_nb_subcats.replace("%d", String(node.children.length)),
+    );
   } else {
-    $("#cat-" + node.id)
-      .find(".nb-subcats")
-      .hide(100);
+    hide(
+      find(document.querySelectorAll("#cat-" + node.id), ".nb-subcats"),
+      100,
+    );
   }
 }
 
 function updateTitleBadge(new_nb_albums: number) {
   nb_albums = new_nb_albums;
-  $(".badge-number").text(new_nb_albums);
+  text(document.querySelectorAll(".badge-number"), String(new_nb_albums));
 }
 
 function goToNode(node: AlbumJqTreeNode, firstNode: AlbumJqTreeNode) {
@@ -965,14 +1153,16 @@ function goToNode(node: AlbumJqTreeNode, firstNode: AlbumJqTreeNode) {
   if (node.parent) {
     goToNode(node.parent, firstNode);
     if (node != firstNode) {
-      $(".tree").tree("openNode", node);
+      // Still jQuery: jqtree is a library, ported in P49-B group 6.
+      jQuery(".tree").tree("openNode", node);
       // console.log("parent id : " + node.parent.id);
-      $("#cat-" + node.parent.id).show();
-      $("#cat-" + node.parent.id).addClass("imune");
+      show(document.querySelectorAll("#cat-" + node.parent.id));
+      addClass(document.querySelectorAll("#cat-" + node.parent.id), "imune");
     }
   } else {
-    $(".tree").tree("openNode", node);
-    $("#cat-" + firstNode.id).addClass("animateFocus");
+    // Still jQuery: jqtree is a library, ported in P49-B group 6.
+    jQuery(".tree").tree("openNode", node);
+    addClass(document.querySelectorAll("#cat-" + firstNode.id), "animateFocus");
 
     showNodeChildrens(firstNode);
   }
@@ -983,7 +1173,7 @@ function showNodeChildrens(node: AlbumJqTreeNode) {
     // console.log("childrens : " + node.children);
     node.children.forEach((child) => {
       // console.log("children : " + child.id, child.name);
-      $("#cat-" + child.id).addClass("imune");
+      addClass(document.querySelectorAll("#cat-" + child.id), "imune");
       showNodeChildrens(child);
     });
   }
@@ -1021,7 +1211,7 @@ function getRank(
 
 function applyMove(event: JqTreeMoveEvent) {
   const waitingTimeout = setTimeout(() => {
-    $(".waiting-message").addClass("visible");
+    addClass(document.querySelectorAll(".waiting-message"), "visible");
   }, 500);
   const id = event.move_info.moved_node.id;
   let moveParent: string | number | null = null;
@@ -1038,7 +1228,8 @@ function applyMove(event: JqTreeMoveEvent) {
   } else if (event.move_info.position == "inside") {
     if (getId(previous_parent) != getId(target)) {
       moveParent = getId(target);
-      const currentNode = $(".tree").tree(
+      // Still jQuery: jqtree is a library, ported in P49-B group 6.
+      const currentNode = jQuery(".tree").tree(
         "getNodeById",
         moveParent,
       ) as AlbumJqTreeNode | null;
@@ -1061,7 +1252,7 @@ function applyMove(event: JqTreeMoveEvent) {
     .then(() => {
       event.move_info.do_move();
       clearTimeout(waitingTimeout);
-      $(".waiting-message").removeClass("visible");
+      removeClass(document.querySelectorAll(".waiting-message"), "visible");
       setSubcatsBadge(previous_parent);
       // Was an unconditional `setSubcatsBadge($(".tree").tree
       // ("getNodeById", moveParent))` -- `moveParent` stays `null` for
@@ -1075,62 +1266,19 @@ function applyMove(event: JqTreeMoveEvent) {
       // already-refreshed badge above covers it.
       if (moveParent !== null) {
         setSubcatsBadge(
-          $(".tree").tree("getNodeById", moveParent) as AlbumJqTreeNode,
+          // Still jQuery: jqtree is a library, ported in P49-B group 6.
+          jQuery(".tree").tree("getNodeById", moveParent) as AlbumJqTreeNode,
         );
       }
 
-      $(".move-cat-add")
-        .off("click")
-        .on("click", function (e) {
-          e.preventDefault();
-          openAddAlbumPopIn($(this).data("aid") as string | number);
-          $(".AddAlbumSubmit").data(
-            "a-parent",
-            $(this).data("aid") as string | number,
-          );
-        });
-      $(".move-cat-delete").on("click", function () {
-        triggerDeleteAlbum($(this).data("id") as string | number);
-      });
-      $(".move-cat-title-container").on("click", function () {
-        openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-        $(".RenameAlbumSubmit").data("cat_id", $(this).attr("data-id")!);
-      });
-      $(".tiptip").tipTip({
-        delay: 0,
-        fadeIn: 200,
-        fadeOut: 200,
-        edgeOffset: 3,
-      });
+      rebindMoveCatActions();
     })
     .catch(function (message: unknown) {
       console.log(
         "An error has occured : " +
           (message instanceof Error ? message.message : String(message)),
       );
-      $(".move-cat-add")
-        .off("click")
-        .on("click", function (e) {
-          e.preventDefault();
-          openAddAlbumPopIn($(this).data("aid") as string | number);
-          $(".AddAlbumSubmit").data(
-            "a-parent",
-            $(this).data("aid") as string | number,
-          );
-        });
-      $(".move-cat-delete").on("click", function () {
-        triggerDeleteAlbum($(this).data("id") as string | number);
-      });
-      $(".move-cat-title-container").on("click", function () {
-        openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-        $(".RenameAlbumSubmit").data("cat_id", $(this).attr("data-id")!);
-      });
-      $(".tiptip").tipTip({
-        delay: 0,
-        fadeIn: 200,
-        fadeOut: 200,
-        edgeOffset: 3,
-      });
+      rebindMoveCatActions();
     });
 }
 
@@ -1183,12 +1331,14 @@ function changeParent(
         const updatedCategories = data.updatedCategories;
         if (updatedCategories) {
           updatedCategories.forEach((cat) => {
-            const catNode = $(".tree").tree(
+            // Still jQuery: jqtree is a library, ported in P49-B group 6.
+            const catNode = jQuery(".tree").tree(
               "getNodeById",
               cat.categoryId,
             ) as AlbumJqTreeNode;
             catNode.nb_sub_photos = cat.nbSubPhotos;
-            $(".tree").tree("updateNode", catNode, catNode.name);
+            // Still jQuery: jqtree is a library, ported in P49-B group 6.
+            jQuery(".tree").tree("updateNode", catNode, catNode.name);
           });
         }
         res();
@@ -1272,12 +1422,14 @@ function loadOnDemand(node: AlbumJqTreeNode) {
     return al;
   });
 
-  $(".tree").tree("loadData", formatedChild, node);
+  // Still jQuery: jqtree is a library, ported in P49-B group 6.
+  jQuery(".tree").tree("loadData", formatedChild, node);
   node.load_on_demand = false;
 }
 
 function openNodeOnDemand(node: AlbumJqTreeNode) {
-  const open_nodes = $(".tree").tree("getState").open_nodes;
+  // Still jQuery: jqtree is a library, ported in P49-B group 6.
+  const open_nodes = jQuery(".tree").tree("getState").open_nodes;
   // Was `open_nodes.includes(node)` -- comparing the whole node object
   // against a list of plain ids, which real strict typing rejects
   // outright (`(string | number)[]` vs an object). Always evaluated to
@@ -1285,28 +1437,9 @@ function openNodeOnDemand(node: AlbumJqTreeNode) {
   // anything; harmless in practice (jqtree's own `openNode()` no-ops on
   // an already-open node), but not the real intended check.
   if (!open_nodes.includes(node.id)) {
-    $(".tree").tree("openNode", node);
-    $(".move-cat-add")
-      .off("click")
-      .on("click", function (e) {
-        e.preventDefault();
-        openAddAlbumPopIn($(this).data("aid") as string | number);
-        $(".AddAlbumSubmit").data(
-          "a-parent",
-          $(this).data("aid") as string | number,
-        );
-      });
-    $(".move-cat-delete")
-      .off("click")
-      .on("click", function () {
-        triggerDeleteAlbum($(this).data("id") as string | number);
-      });
-    $(".move-cat-title-container")
-      .off("click")
-      .on("click", function () {
-        openRenameAlbumPopIn($(this).find(".move-cat-title").attr("title"));
-        $(".RenameAlbumSubmit").data("cat_id", $(this).attr("data-id")!);
-      });
+    // Still jQuery: jqtree is a library, ported in P49-B group 6.
+    jQuery(".tree").tree("openNode", node);
+    rebindMoveCatActions();
   }
 }
 

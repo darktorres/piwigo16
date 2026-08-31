@@ -12,17 +12,15 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * dropdown revealing its panel and toggling `#applyActionBlock`/
  * `#confirmDel`, and Select All/None updating `.thumbSelected`.
  *
- * `#applyAction`'s own click listener stays a jQuery *registration* on
- * purpose (see batch_manager_global.ts's own comment) --
- * batchManagerGlobal.ts (not yet converted, P49-A's documented
- * module-cycle exception) synthetically fires this same button's click
- * via jQuery's own `.trigger("click")`/`.click()` shorthand, which does
- * NOT dispatch a real DOM event (the identical mechanism history.ts's
- * own finding documents for `.trigger("change")`) -- a native listener
- * would never see it. Not exercised here: that handler's own body reaches
- * into `derivatives`/`progress_start` from the sibling file, which is
- * exactly what BatchManagerSubControllerTest.php's real form-submission
- * tests already cover end to end.
+ * `#applyAction` carries two independent click listeners -- one bound
+ * here, one in batchManagerGlobal.ts -- and both are now native
+ * `addEventListener` registrations (batchManagerGlobal.ts converted
+ * last, its own documented P49-A module-cycle exception, which is what
+ * had kept this file's own listener jQuery-bound: the old trigger side
+ * needed it). Not exercised here: both handlers' own bodies reach into
+ * `derivatives`/`progress_start`/`getDerivativeUrls`/`jQuery.manageAjax`,
+ * which is exactly what BatchManagerSubControllerTest.php's real
+ * form-submission tests already cover end to end.
  */
 function bmgInsertCaddie(int $userId, int $imageId): void
 {

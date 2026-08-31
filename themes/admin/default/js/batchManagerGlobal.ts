@@ -22,53 +22,82 @@ import {
 // import).
 import { AlbumSelector } from "./album_selector";
 import { ajax } from "../../../default/js/vendor/ajax";
+import {
+  append,
+  css,
+  data,
+  escapeId,
+  find,
+  hide,
+  html,
+  is,
+  isVisible,
+  on,
+  ready,
+  setChecked,
+  setVal,
+  show,
+  trigger,
+  val,
+} from "../../../default/js/vendor/dom";
 
 /* ********** Thumbs */
 
 /* Shift-click: select all photos between the click and the shift+click */
-jQuery(document).ready(function () {
-  let last_clicked = 0,
-    last_clickedstatus = true;
-  jQuery.fn.enableShiftClick = function (this: JQuery) {
-    const inputs: HTMLElement[] = [];
-    let count = 0;
-    this.find("input[type=checkbox]").each(function () {
-      const pos = count;
-      inputs[count++] = this;
-      $(this).bind(
-        "shclick",
-        function (dummy: unknown, event: JQuery.TriggeredEvent) {
-          if (event.shiftKey) {
-            let first = last_clicked;
-            let last = pos;
-            if (first > last) {
-              first = pos;
-              last = last_clicked;
-            }
+ready(function () {
+  let last_clicked = 0;
+  let last_clickedstatus = true;
 
-            for (let i = first; i <= last; i++) {
-              const input = $(inputs[i]!);
-              $(input).prop("checked", last_clickedstatus).trigger("change");
-              if (last_clickedstatus) {
-                $(input).closest("li").addClass("thumbSelected");
-              } else {
-                $(input).closest("li").removeClass("thumbSelected");
-              }
-            }
-          } else {
-            last_clicked = pos;
-            last_clickedstatus = (this as HTMLInputElement).checked;
+  function enableShiftClick(container: Element): void {
+    const inputs: HTMLInputElement[] = [];
+    let count = 0;
+    find(container, "input[type=checkbox]").forEach((el) => {
+      const checkbox = el as HTMLInputElement;
+      const pos = count;
+      inputs[count++] = checkbox;
+      // "shclick" is a first-party custom event, not a library's --
+      // both this bind and the trigger below convert together, and so
+      // does batch_manager_global.ts's own remote trigger of it (this
+      // file's whole reason for converting last). The real event
+      // (carrying `shiftKey`) travels as the CustomEvent's `detail`,
+      // since dom.ts's `trigger()` has no jQuery-style extra-parameter
+      // slot.
+      on(checkbox, "shclick", function (shclickEvent: Event) {
+        const event = (shclickEvent as CustomEvent<MouseEvent | KeyboardEvent>)
+          .detail;
+        if (event.shiftKey) {
+          let first = last_clicked;
+          let last = pos;
+          if (first > last) {
+            first = pos;
+            last = last_clicked;
           }
-          return true;
-        },
-      );
-      $(this).click(function (event) {
-        $(this).triggerHandler("shclick", event);
+
+          for (let i = first; i <= last; i++) {
+            const input = inputs[i]!;
+            input.checked = last_clickedstatus;
+            trigger([input], "change");
+            const li = input.closest("li");
+            if (last_clickedstatus) {
+              li?.classList.add("thumbSelected");
+            } else {
+              li?.classList.remove("thumbSelected");
+            }
+          }
+        } else {
+          last_clicked = pos;
+          last_clickedstatus = checkbox.checked;
+        }
+      });
+      on(checkbox, "click", function (event: Event) {
+        trigger([checkbox], "shclick", event);
       });
     });
-    return this;
-  };
-  jQuery("ul.thumbnails").enableShiftClick();
+  }
+  const thumbnailsContainer = document.querySelector("ul.thumbnails");
+  if (thumbnailsContainer !== null) {
+    enableShiftClick(thumbnailsContainer);
+  }
 
   const ab_action = new AlbumSelector({
     adminMode: true,
@@ -76,15 +105,20 @@ jQuery(document).ready(function () {
     removeSelectedAlbum: remove_album_action,
   });
 
-  $("#associate_as").on("click", function () {
+  on(document.querySelectorAll("#associate_as"), "click", function () {
     ab_action.open();
   });
 
-  $(".selected-associate-action").on("click", (e) => {
-    if (e.target.classList.contains("remove-associate")) {
-      ab_action.remove_selected_album($(e.target).attr("id")!);
-    }
-  });
+  on(
+    document.querySelectorAll(".selected-associate-action"),
+    "click",
+    (e: Event) => {
+      const target = e.target as Element;
+      if (target.classList.contains("remove-associate")) {
+        ab_action.remove_selected_album(target.id);
+      }
+    },
+  );
 });
 
 /* ********** Album Selector */
@@ -92,8 +126,9 @@ function select_album_action({
   album,
   addSelectedAlbum,
 }: AlbumSelectorCallbackArgs) {
-  $("#associate_as p").html(str_add_alb_associate);
-  $(".selected-associate-action").append(
+  html(document.querySelectorAll("#associate_as p"), str_add_alb_associate);
+  append(
+    document.querySelectorAll(".selected-associate-action"),
     `<div class="selected-associate-item">
       <span>${album.name}</span><span id="${album.id}" class="remove-associate icon-cancel-circled"></span>
       <input type="hidden" id="associate_input_${album.id}" name="associate[]" value="${album.id}">
@@ -106,15 +141,27 @@ function remove_album_action({
   id_album,
   getSelectedAlbum,
 }: AlbumSelectorRemoveCallbackArgs) {
-  $(".selected-associate-item").find(`#${id_album}`).parent().remove();
+  // `id_album` is the raw album id `select_album_action()` wrote above
+  // as this chip's own bare `id` attribute -- digit-leading, so it
+  // needs escapeId() under native querySelector (same bug class as
+  // mcs.ts's remove_related_category()).
+  find(
+    document.querySelectorAll(".selected-associate-item"),
+    "#" + escapeId(id_album),
+  )[0]?.parentElement?.remove();
   const selected = getSelectedAlbum();
   if (!selected.length) {
-    $("#associate_as p").html(str_select_alb_associate);
+    html(
+      document.querySelectorAll("#associate_as p"),
+      str_select_alb_associate,
+    );
   }
 }
 
+// Still jQuery: colorbox is a library, ported in P49-B group 3.
 jQuery("a.preview-box").colorbox({ photo: true });
 
+// Still jQuery: tipTip is a library, ported in P49-B group 2.
 jQuery(".thumbnails img").tipTip({
   delay: 0,
   fadeIn: 200,
@@ -133,7 +180,9 @@ jQuery(".thumbnails img").tipTip({
 // load, not a silent undefined. Deferring the read removes the
 // dependency on import order entirely; this mirrors the `.ready()`
 // wrapper directly below, added for the same class of ordering problem.
-jQuery(document).ready(function () {
+ready(function () {
+  // Still jQuery: jQuery-UI's datepicker + timepicker-addon, ported in
+  // P49-B group 5 (pwgDatepicker).
   jQuery("[data-datepicker]").pwgDatepicker({
     showTimepicker: true,
     cancelButton: lang.Cancel,
@@ -168,33 +217,47 @@ jQuery(document).ready(function () {
 // addAlbum.ts's own `pwgAddAlbum: target must use selectize` guard.
 // Confirmed live once already. Anything that lets the bundler decide
 // module evaluation order (shared chunks) has to re-verify this page.
-jQuery(document).ready(function () {
+ready(function () {
+  // Still jQuery: selectize is a library, ported in P49-B group 6
+  // (pwgAddAlbum).
   jQuery("[data-add-album]").pwgAddAlbum();
 });
 
-$("input[name=remove_author]").click(function () {
-  if ($(this).is(":checked")) {
-    $("input[name=author]").hide();
-  } else {
-    $("input[name=author]").show();
-  }
-});
+on(
+  document.querySelectorAll("input[name=remove_author]"),
+  "click",
+  function (this: Element) {
+    if (is(this, ":checked")) {
+      hide(document.querySelectorAll("input[name=author]"));
+    } else {
+      show(document.querySelectorAll("input[name=author]"));
+    }
+  },
+);
 
-$("input[name=remove_title]").click(function () {
-  if ($(this).is(":checked")) {
-    $("input[name=title]").hide();
-  } else {
-    $("input[name=title]").show();
-  }
-});
+on(
+  document.querySelectorAll("input[name=remove_title]"),
+  "click",
+  function (this: Element) {
+    if (is(this, ":checked")) {
+      hide(document.querySelectorAll("input[name=title]"));
+    } else {
+      show(document.querySelectorAll("input[name=title]"));
+    }
+  },
+);
 
-$("input[name=remove_date_creation]").click(function () {
-  if ($(this).is(":checked")) {
-    $("#set_date_creation").hide();
-  } else {
-    $("#set_date_creation").show();
-  }
-});
+on(
+  document.querySelectorAll("input[name=remove_date_creation]"),
+  "click",
+  function (this: Element) {
+    if (is(this, ":checked")) {
+      hide(document.querySelectorAll("#set_date_creation"));
+    } else {
+      show(document.querySelectorAll("#set_date_creation"));
+    }
+  },
+);
 
 interface Derivatives {
   elements: (string | number)[] | null;
@@ -218,29 +281,38 @@ export const derivatives: Derivatives = {
 };
 
 export function progress_start() {
-  jQuery("#uploadingActions").show();
-  jQuery("#uploadingActions .progress-bar").width("0%");
+  show(document.querySelectorAll("#uploadingActions"));
+  css(
+    document.querySelectorAll("#uploadingActions .progress-bar"),
+    "width",
+    "0%",
+  );
 }
 
 function progress_end() {
-  jQuery("#uploadingActions").hide();
+  hide(document.querySelectorAll("#uploadingActions"));
 }
 
 export function progress(success?: boolean) {
   const percent = parseInt(
     String((derivatives.done / derivatives.total) * 100),
   );
-  jQuery("#uploadingActions .progressbar").width(percent.toString() + "%");
+  css(
+    document.querySelectorAll("#uploadingActions .progressbar"),
+    "width",
+    percent.toString() + "%",
+  );
   if (success !== undefined) {
     const type = success ? "regenerateSuccess" : "regenerateError";
-    let s = Number(jQuery('[name="' + type + '"]').val());
+    const typeInputs = document.querySelectorAll('[name="' + type + '"]');
+    let s = Number(val(typeInputs));
     // eslint-disable-next-line no-useless-assignment -- `s` genuinely exists only to be pre-incremented once here; inlining it would just make this harder to read for no behavior change.
-    jQuery('[name="' + type + '"]').val(++s);
+    setVal(typeInputs, String(++s));
   }
 
   if (derivatives.finished()) {
     progress_end();
-    jQuery("#applyAction").click();
+    document.querySelector<HTMLElement>("#applyAction")?.click();
   }
 }
 
@@ -251,47 +323,53 @@ export function getDerivativeUrls() {
     ids: ids,
     types: [],
   };
-  jQuery("#action_generate_derivatives input").each(function (i, t) {
-    if ($(t).is(":checked")) params.types.push((t as HTMLInputElement).value);
-  });
-  jQuery("#applyActionBlock").hide();
-  jQuery(".permitActionListButton").hide();
-  jQuery("#confirmDel").hide();
-  jQuery("#regenerationMsg").show();
-  jQuery("#regenerationText").html(lang.generateMsg);
+  document
+    .querySelectorAll("#action_generate_derivatives input")
+    .forEach((t) => {
+      if (is(t, ":checked")) params.types.push((t as HTMLInputElement).value);
+    });
+  hide(document.querySelectorAll("#applyActionBlock"));
+  hide(document.querySelectorAll(".permitActionListButton"));
+  hide(document.querySelectorAll("#confirmDel"));
+  show(document.querySelectorAll("#regenerationMsg"));
+  html(document.querySelectorAll("#regenerationText"), lang.generateMsg);
   progress_start();
   void ajax({
     type: "POST",
     url: "api/v1/images/actions/missing-derivatives",
     contentType: "application/json",
     headers: {
-      "X-CSRF-Token": jQuery("input[name=pwg_token]").val() as string,
+      "X-CSRF-Token": val(document.querySelectorAll("input[name=pwg_token]"))!,
     },
     data: JSON.stringify(params),
     dataType: "json",
     success: function (
-      data: import("../../../../openapi/client/schema").operations["imageMissingDerivatives"]["responses"][200]["content"]["application/json"],
+      responseData: import("../../../../openapi/client/schema").operations["imageMissingDerivatives"]["responses"][200]["content"]["application/json"],
     ) {
-      derivatives.total += data.urls.length;
-      jQuery("#regenerationStatus .badge-number").html(
+      derivatives.total += responseData.urls.length;
+      html(
+        document.querySelectorAll("#regenerationStatus .badge-number"),
         derivatives.done.toString() + "/" + derivatives.total.toString(),
       );
       progress();
-      for (let i = 0; i < data.urls.length; i++) {
+      for (let i = 0; i < responseData.urls.length; i++) {
+        // Still jQuery: ajaxmanager is a library, ported in P49-B group 2.
         jQuery.manageAjax.add("queued", {
           type: "GET",
-          url: data.urls[i] + "&ajaxload=true",
+          url: responseData.urls[i] + "&ajaxload=true",
           dataType: "json",
           success: function (_data: unknown) {
             derivatives.done++;
-            jQuery("#regenerationStatus .badge-number").html(
+            html(
+              document.querySelectorAll("#regenerationStatus .badge-number"),
               derivatives.done.toString() + "/" + derivatives.total.toString(),
             );
             progress(true);
           },
           error: function (_data: unknown) {
             derivatives.done++;
-            jQuery("#regenerationStatus .badge-number").html(
+            html(
+              document.querySelectorAll("#regenerationStatus .badge-number"),
               derivatives.done.toString() + "/" + derivatives.total.toString(),
             );
             progress(false);
@@ -308,25 +386,33 @@ export function getDerivativeUrls() {
 }
 
 function selectGenerateDerivAll() {
-  $("#action_generate_derivatives input[type=checkbox]")
-    .prop("checked", true)
-    .trigger("change");
+  const els = document.querySelectorAll(
+    "#action_generate_derivatives input[type=checkbox]",
+  );
+  setChecked(els, true);
+  trigger(els, "change");
 }
 function selectGenerateDerivNone() {
-  $("#action_generate_derivatives input[type=checkbox]")
-    .prop("checked", false)
-    .trigger("change");
+  const els = document.querySelectorAll(
+    "#action_generate_derivatives input[type=checkbox]",
+  );
+  setChecked(els, false);
+  trigger(els, "change");
 }
 
 function selectDelDerivAll() {
-  $('#action_delete_derivatives input[name="del_derivatives_type[]"]')
-    .prop("checked", true)
-    .trigger("change");
+  const els = document.querySelectorAll(
+    '#action_delete_derivatives input[name="del_derivatives_type[]"]',
+  );
+  setChecked(els, true);
+  trigger(els, "change");
 }
 function selectDelDerivNone() {
-  $('#action_delete_derivatives input[name="del_derivatives_type[]"]')
-    .prop("checked", false)
-    .trigger("change");
+  const els = document.querySelectorAll(
+    '#action_delete_derivatives input[name="del_derivatives_type[]"]',
+  );
+  setChecked(els, false);
+  trigger(els, "change");
 }
 
 // Explicit `window.` exposure -- required for a different reason than
@@ -342,19 +428,26 @@ window.selectDelDerivAll = selectDelDerivAll;
 window.selectDelDerivNone = selectDelDerivNone;
 
 // Trigger action click on pressing enter and if the value of applyAction is not equal to -1
-$(window).on("keypress", function (e) {
-  const selected = $("select[name='selectAction']").val();
-  const haveTextarea = $(`#action_${String(selected)} textarea`).length;
-  const haveAlbumSelector = $("#addLinkedAlbum").is(":visible");
+on(window, "keypress", function (e: Event) {
+  const selected = val(
+    document.querySelectorAll("select[name='selectAction']"),
+  );
+  const haveTextarea =
+    document.querySelectorAll(`#action_${String(selected)} textarea`).length >
+    0;
+  const addLinkedAlbum = document.querySelector("#addLinkedAlbum");
+  const haveAlbumSelector =
+    addLinkedAlbum !== null && isVisible(addLinkedAlbum);
 
+  const keyEvent = e as KeyboardEvent;
   if (
-    e.key === "Enter" &&
-    selected != -1 &&
+    keyEvent.key === "Enter" &&
+    (selected as unknown) != -1 &&
     !haveTextarea &&
     !haveAlbumSelector
   ) {
-    e.preventDefault();
-    $("#applyAction").trigger("click");
+    keyEvent.preventDefault();
+    trigger(document.querySelectorAll("#applyAction"), "click");
   }
 });
 
@@ -372,32 +465,43 @@ $(window).on("keypress", function (e) {
 let elements: (string | number)[] | undefined;
 
 /* sync metadatas or delete photos by blocks, with progress bar */
-jQuery("#applyAction").click(function (e) {
+// `#applyAction` is a real `<button type="submit">`, and this handler
+// leans on jQuery's own return-value sugar (`return false` ==
+// preventDefault()+stopPropagation(), `return true`/falling off the end
+// == let the native submit through) to decide whether the click
+// actually submits the form. Translated explicitly below rather than
+// kept as jQuery -- "click" isn't a library-only event, so this isn't
+// one of the genuine widget exceptions.
+on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
   if (typeof elements != "undefined") {
-    return true;
+    return;
   }
 
   let progressBar_max: number;
 
-  if (jQuery('[name="selectAction"]').val() == "metadata") {
+  if (val(document.querySelectorAll('[name="selectAction"]')) == "metadata") {
     e.preventDefault();
     e.stopPropagation();
-    jQuery(".bulkAction").hide();
-    jQuery("#regenerationText").html(lang.syncProgressMessage);
+    hide(document.querySelectorAll(".bulkAction"));
+    html(
+      document.querySelectorAll("#regenerationText"),
+      lang.syncProgressMessage,
+    );
     elements = [];
 
-    if (jQuery("input[name=setSelected]").is(":checked")) {
+    if (is(document.querySelector("input[name=setSelected]")!, ":checked")) {
       elements = all_elements;
     } else {
-      jQuery('input[name="selection[]"]')
-        .filter(":checked")
-        .each(function () {
+      document
+        .querySelectorAll('input[name="selection[]"]:checked')
+        .forEach((el) => {
           // Checkbox `.val()` is always its plain `value` attribute string
           // (never string[]/undefined) -- never a multi-select.
-          elements!.push(jQuery(this).val() as string);
+          elements!.push((el as HTMLInputElement).value);
         });
     }
 
+    // Still jQuery: ajaxmanager is a library, ported in P49-B group 2.
     const queuedManager = jQuery.manageAjax.create("queued", {
       queue: true,
       cacheResponse: false,
@@ -420,10 +524,10 @@ jQuery("#applyAction").click(function (e) {
     );
     let image_ids = [];
 
-    jQuery("#applyActionBlock").hide();
-    jQuery(".permitActionListButton").hide();
-    jQuery("#confirmDel").hide();
-    jQuery("#regenerationMsg").show();
+    hide(document.querySelectorAll("#applyActionBlock"));
+    hide(document.querySelectorAll(".permitActionListButton"));
+    hide(document.querySelectorAll("#confirmDel"));
+    show(document.querySelectorAll("#regenerationMsg"));
     progress_bar_start();
     for (let i = 0; i < syncElements.length; i++) {
       image_ids.push(syncElements[i]);
@@ -436,25 +540,29 @@ jQuery("#applyAction").click(function (e) {
 
       (function (ids) {
         const thisBatchSize = ids.length;
+        // Still jQuery: ajaxmanager is a library, ported in P49-B group 2.
         queuedManager.add({
           url: "api/v1/images/actions/sync-metadata",
           type: "POST",
           contentType: "application/json",
           headers: {
-            "X-CSRF-Token": jQuery("input[name=pwg_token]").val(),
+            "X-CSRF-Token": val(
+              document.querySelectorAll("input[name=pwg_token]"),
+            ),
           },
           data: JSON.stringify({
             imageIds: ids,
           }),
           dataType: "json",
           success: function (
-            data: import("../../../../openapi/client/schema").operations["imageSyncMetadata"]["responses"][200]["content"]["application/json"],
+            responseData: import("../../../../openapi/client/schema").operations["imageSyncMetadata"]["responses"][200]["content"]["application/json"],
           ) {
             todo += thisBatchSize;
-            if (data.nbSynchronized != thisBatchSize) {
+            if (responseData.nbSynchronized != thisBatchSize) {
               /*TODO: user feedback only data.nbSynchronized images out of thisBatchSize were sync*/
             }
-            jQuery("#regenerationStatus .badge-number").html(
+            html(
+              document.querySelectorAll("#regenerationStatus .badge-number"),
               todo.toString() + "/" + progressBar_max.toString(),
             );
             progress_bar(todo, progressBar_max, false);
@@ -462,7 +570,8 @@ jQuery("#applyAction").click(function (e) {
           error: function (_data: unknown) {
             todo += thisBatchSize;
             /*TODO: user feedback*/
-            jQuery("#regenerationStatus .badge-number").html(
+            html(
+              document.querySelectorAll("#regenerationStatus .badge-number"),
               todo.toString() + "/" + progressBar_max.toString(),
             );
             progress_bar(todo, progressBar_max, false);
@@ -473,19 +582,31 @@ jQuery("#applyAction").click(function (e) {
     }
   }
 
-  if (jQuery('[name="selectAction"]').val() == "delete") {
-    if (!jQuery("#confirmDel input[name=confirm_deletion]").is(":checked")) {
-      jQuery("#confirmDel span.errors").css("visibility", "visible");
-      return false;
+  if (val(document.querySelectorAll('[name="selectAction"]')) == "delete") {
+    if (
+      !is(
+        document.querySelector("#confirmDel input[name=confirm_deletion]")!,
+        ":checked",
+      )
+    ) {
+      css(
+        document.querySelectorAll("#confirmDel span.errors"),
+        "visibility",
+        "visible",
+      );
+      e.preventDefault();
+      e.stopPropagation();
+      return;
     }
     e.stopPropagation();
   } else {
-    return true;
+    return;
   }
 
-  jQuery(".bulkAction").hide();
+  hide(document.querySelectorAll(".bulkAction"));
   const maxRequests = 1;
 
+  // Still jQuery: ajaxmanager is a library, ported in P49-B group 2.
   const queuedManager = jQuery.manageAjax.create("queued", {
     queue: true,
     cacheResponse: false,
@@ -494,15 +615,15 @@ jQuery("#applyAction").click(function (e) {
 
   elements = [];
 
-  if (jQuery("input[name=setSelected]").is(":checked")) {
+  if (is(document.querySelector("input[name=setSelected]")!, ":checked")) {
     elements = all_elements;
   } else {
-    jQuery('input[name="selection[]"]')
-      .filter(":checked")
-      .each(function () {
+    document
+      .querySelectorAll('input[name="selection[]"]:checked')
+      .forEach((el) => {
         // Checkbox `.val()` is always its plain `value` attribute string
         // (never string[]/undefined) -- never a multi-select.
-        elements!.push(jQuery(this).val() as string);
+        elements!.push((el as HTMLInputElement).value);
       });
   }
 
@@ -518,11 +639,14 @@ jQuery("#applyAction").click(function (e) {
   );
   let image_ids = [];
 
-  jQuery("#applyActionBlock").hide();
-  jQuery(".permitActionListButton").hide();
-  jQuery("#confirmDel").hide();
-  jQuery("#regenerationText").html(lang.deleteProgressMessage);
-  jQuery("#regenerationMsg").show();
+  hide(document.querySelectorAll("#applyActionBlock"));
+  hide(document.querySelectorAll(".permitActionListButton"));
+  hide(document.querySelectorAll("#confirmDel"));
+  html(
+    document.querySelectorAll("#regenerationText"),
+    lang.deleteProgressMessage,
+  );
+  show(document.querySelectorAll("#regenerationMsg"));
   progress_bar_start();
   for (let i = 0; i < deleteElements.length; i++) {
     image_ids.push(deleteElements[i]);
@@ -535,24 +659,30 @@ jQuery("#applyAction").click(function (e) {
 
     (function (ids) {
       const thisBatchSize = ids.length;
+      // Still jQuery: ajaxmanager is a library, ported in P49-B group 2.
       queuedManager.add({
         type: "POST",
         url: "api/v1/images/actions/delete",
         contentType: "application/json",
-        headers: { "X-CSRF-Token": jQuery("input[name=pwg_token]").val() },
+        headers: {
+          "X-CSRF-Token": val(
+            document.querySelectorAll("input[name=pwg_token]"),
+          ),
+        },
         data: JSON.stringify({
           imageIds: ids.map(Number),
         }),
         dataType: "json",
         success: function (
-          data: import("../../../../openapi/client/schema").operations["imageDelete"]["responses"][200]["content"]["application/json"],
+          responseData: import("../../../../openapi/client/schema").operations["imageDelete"]["responses"][200]["content"]["application/json"],
         ) {
           todo += thisBatchSize;
-          if (data.deletedCount != thisBatchSize) {
+          if (responseData.deletedCount != thisBatchSize) {
             /*TODO: user feedback only data.deletedCount images out of thisBatchSize were deleted*/
           }
           /*TODO: user feedback if isError*/
-          jQuery("#regenerationStatus .badge-number").html(
+          html(
+            document.querySelectorAll("#regenerationStatus .badge-number"),
             todo.toString() + "/" + progressBar_max.toString(),
           );
           progress_bar(todo, progressBar_max, false);
@@ -560,7 +690,8 @@ jQuery("#applyAction").click(function (e) {
         error: function (_data: unknown) {
           todo += thisBatchSize;
           /*TODO: user feedback*/
-          jQuery("#regenerationStatus .badge-number").html(
+          html(
+            document.querySelectorAll("#regenerationStatus .badge-number"),
             todo.toString() + "/" + progressBar_max.toString(),
           );
           progress_bar(todo, progressBar_max, false);
@@ -572,18 +703,24 @@ jQuery("#applyAction").click(function (e) {
   }
 
   /* tell PHP how many photos were deleted */
-  jQuery("form").append(
+  append(
+    document.querySelectorAll("form"),
     '<input type="hidden" name="nb_photos_deleted" value="' +
       deleteElements.length +
       '">',
   );
 
-  return false;
+  e.preventDefault();
+  e.stopPropagation();
 });
 
 function progress_bar_start() {
-  jQuery("#uploadingActions").show();
-  jQuery("#uploadingActions .progress-bar").width("0%");
+  show(document.querySelectorAll("#uploadingActions"));
+  css(
+    document.querySelectorAll("#uploadingActions .progress-bar"),
+    "width",
+    "0%",
+  );
 }
 
 // Genuinely dead code, confirmed via a repo-wide grep (zero references
@@ -592,31 +729,52 @@ function progress_bar_start() {
 // `progress_end()` (a few lines up) does the exact same thing and is
 // the one actually called.
 function _progress_bar_end() {
-  jQuery("#uploadingActions").hide();
+  hide(document.querySelectorAll("#uploadingActions"));
 }
 
 function progress_bar(val: number, max: number, _success: boolean) {
   const percent = parseInt(String((val / max) * 100));
-  jQuery("#uploadingActions .progressbar").width(percent.toString() + "%");
-  if (val == max) jQuery("#applyAction").click();
+  css(
+    document.querySelectorAll("#uploadingActions .progressbar"),
+    "width",
+    percent.toString() + "%",
+  );
+  if (val == max) document.querySelector<HTMLElement>("#applyAction")?.click();
 }
 
-jQuery("#confirmDel input[name=confirm_deletion]").change(function () {
-  jQuery("#confirmDel span.errors").css("visibility", "hidden");
-});
+on(
+  document.querySelectorAll("#confirmDel input[name=confirm_deletion]"),
+  "change",
+  function () {
+    css(
+      document.querySelectorAll("#confirmDel span.errors"),
+      "visibility",
+      "hidden",
+    );
+  },
+);
 
-jQuery("#sync_md5sum").click(function (_e) {
-  jQuery(this).hide();
-  jQuery("#add_md5sum").show();
+on(
+  document.querySelectorAll("#sync_md5sum"),
+  "click",
+  function (this: Element, e: Event) {
+    hide([this]);
+    show(document.querySelectorAll("#add_md5sum"));
 
-  const addBlockSize = Math.min(
-    Number((jQuery("#md5sum_to_add").data("origin") / 2).toFixed()),
-    1000,
-  );
-  add_md5sum_block(addBlockSize);
+    const addBlockSize = Math.min(
+      Number(
+        (
+          Number(data(document.querySelector("#md5sum_to_add")!, "origin")) / 2
+        ).toFixed(),
+      ),
+      1000,
+    );
+    add_md5sum_block(addBlockSize);
 
-  return false;
-});
+    e.preventDefault();
+    e.stopPropagation();
+  },
+);
 
 function add_md5sum_block(blockSize?: number) {
   void ajax({
@@ -624,61 +782,75 @@ function add_md5sum_block(blockSize?: number) {
     type: "POST",
     contentType: "application/json",
     headers: {
-      "X-CSRF-Token": jQuery("input[name=pwg_token]").val() as string,
+      "X-CSRF-Token": val(document.querySelectorAll("input[name=pwg_token]"))!,
     },
     dataType: "json",
     data: JSON.stringify({
       blockSize: blockSize,
     }),
     success: function (
-      data: import("../../../../openapi/client/schema").operations["imageSetMd5sum"]["responses"][200]["content"]["application/json"],
+      responseData: import("../../../../openapi/client/schema").operations["imageSetMd5sum"]["responses"][200]["content"]["application/json"],
     ) {
-      jQuery("#md5sum_to_add").html(String(data.remainingCount));
+      html(
+        document.querySelectorAll("#md5sum_to_add"),
+        String(responseData.remainingCount),
+      );
 
+      const origin = document.querySelector("#md5sum_to_add")!;
       const percent_remaining = Number(
         (
-          (data.remainingCount * 100) /
-          jQuery("#md5sum_to_add").data("origin")
+          (responseData.remainingCount * 100) /
+          Number(data(origin, "origin"))
         ).toFixed(),
       );
       const percent_done = 100 - percent_remaining;
-      jQuery("#md5sum_added").html(String(percent_done));
-      if (data.remainingCount > 0) {
+      html(document.querySelectorAll("#md5sum_added"), String(percent_done));
+      if (responseData.remainingCount > 0) {
         add_md5sum_block();
       } else {
         // time to refresh the whole page
         let redirect_to = "admin.php?page=batch_manager";
         redirect_to += "&action=sync_md5sum";
-        redirect_to +=
-          "&nb_md5sum_added=" + jQuery("#md5sum_to_add").data("origin");
+        redirect_to += "&nb_md5sum_added=" + String(data(origin, "origin"));
 
         window.location.href = redirect_to;
       }
     },
     error: function (XMLHttpRequest) {
-      jQuery("#add_md5sum").hide();
-      jQuery("#add_md5sum_error")
-        .show()
-        .html(
-          "error " + XMLHttpRequest.status + " : " + XMLHttpRequest.statusText,
-        );
+      hide(document.querySelectorAll("#add_md5sum"));
+      show(document.querySelectorAll("#add_md5sum_error"));
+      html(
+        document.querySelectorAll("#add_md5sum_error"),
+        "error " + XMLHttpRequest.status + " : " + XMLHttpRequest.statusText,
+      );
     },
   });
 }
 
-jQuery("#delete_orphans").click(function (_e) {
-  jQuery(this).hide();
-  jQuery("#orphans_deletion").show();
+on(
+  document.querySelectorAll("#delete_orphans"),
+  "click",
+  function (this: Element, e: Event) {
+    hide([this]);
+    show(document.querySelectorAll("#orphans_deletion"));
 
-  const deleteBlockSize = Math.min(
-    Number((jQuery("#orphans_to_delete").data("origin") / 2).toFixed()),
-    1000,
-  );
+    const deleteBlockSize = Math.min(
+      Number(
+        (
+          Number(
+            data(document.querySelector("#orphans_to_delete")!, "origin"),
+          ) / 2
+        ).toFixed(),
+      ),
+      1000,
+    );
 
-  delete_orphans_block(deleteBlockSize);
+    delete_orphans_block(deleteBlockSize);
 
-  return false;
-});
+    e.preventDefault();
+    e.stopPropagation();
+  },
+);
 
 function delete_orphans_block(blockSize?: number) {
   void ajax({
@@ -686,45 +858,48 @@ function delete_orphans_block(blockSize?: number) {
     type: "POST",
     contentType: "application/json",
     headers: {
-      "X-CSRF-Token": jQuery("input[name=pwg_token]").val() as string,
+      "X-CSRF-Token": val(document.querySelectorAll("input[name=pwg_token]"))!,
     },
     data: JSON.stringify({
       blockSize: blockSize,
     }),
     dataType: "json",
     success: function (
-      data: import("../../../../openapi/client/schema").operations["imageDeleteOrphans"]["responses"][200]["content"]["application/json"],
+      responseData: import("../../../../openapi/client/schema").operations["imageDeleteOrphans"]["responses"][200]["content"]["application/json"],
     ) {
-      jQuery("#orphans_to_delete").html(String(data.nbOrphans));
+      html(
+        document.querySelectorAll("#orphans_to_delete"),
+        String(responseData.nbOrphans),
+      );
 
+      const origin = document.querySelector("#orphans_to_delete")!;
       const percent_remaining = Number(
         (
-          (data.nbOrphans * 100) /
-          jQuery("#orphans_to_delete").data("origin")
+          (responseData.nbOrphans * 100) /
+          Number(data(origin, "origin"))
         ).toFixed(),
       );
       const percent_done = 100 - percent_remaining;
-      jQuery("#orphans_deleted").html(String(percent_done));
+      html(document.querySelectorAll("#orphans_deleted"), String(percent_done));
 
-      if (data.nbOrphans > 0) {
+      if (responseData.nbOrphans > 0) {
         delete_orphans_block();
       } else {
         // time to refresh the whole page
         let redirect_to = "admin.php?page=batch_manager";
         redirect_to += "&action=delete_orphans";
-        redirect_to +=
-          "&nb_orphans_deleted=" + jQuery("#orphans_to_delete").data("origin");
+        redirect_to += "&nb_orphans_deleted=" + String(data(origin, "origin"));
 
         window.location.href = redirect_to;
       }
     },
     error: function (XMLHttpRequest) {
-      jQuery("#orphans_deletion").hide();
-      jQuery("#orphans_deletion_error")
-        .show()
-        .html(
-          "error " + XMLHttpRequest.status + " : " + XMLHttpRequest.statusText,
-        );
+      hide(document.querySelectorAll("#orphans_deletion"));
+      show(document.querySelectorAll("#orphans_deletion_error"));
+      html(
+        document.querySelectorAll("#orphans_deletion_error"),
+        "error " + XMLHttpRequest.status + " : " + XMLHttpRequest.statusText,
+      );
     },
   });
 }

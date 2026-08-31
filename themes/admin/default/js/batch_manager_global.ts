@@ -220,12 +220,13 @@ ready(function () {
       ) as HTMLInputElement | undefined;
 
       if (checkbox !== undefined) {
-        // Still jQuery: triggerHandler("shclick", ...) reaches
-        // batchManagerGlobal.ts's own enableShiftClick() plugin, bound
-        // through jQuery's own event system -- that file converts last
-        // (P49-A's own documented module-cycle exception, see this
-        // file's leading comment).
-        jQuery(checkbox).triggerHandler("shclick", event);
+        // Reaches batchManagerGlobal.ts's own enableShiftClick(), whose
+        // "shclick" bind/trigger pair converted together with this call
+        // site once that file's own P49-A module-cycle deferral lifted
+        // (see this file's leading comment). The real event travels as
+        // the CustomEvent's `detail`, since dom.ts's `trigger()` has no
+        // jQuery-style extra-parameter slot.
+        trigger(checkbox, "shclick", event);
 
         if (checkbox.checked) {
           li?.classList.add("thumbSelected");
@@ -363,14 +364,13 @@ ready(function () {
     },
   );
 
-  // Still jQuery: registration only. batchManagerGlobal.ts (not yet
-  // converted -- P49-A's own documented last-file exception, a real
-  // module cycle) synthetically fires this button's click via jQuery's
-  // own `.trigger("click")`/`.click()` shorthand more than once, and
-  // jQuery's own trigger walks its own internal handler registry rather
-  // than dispatching a real DOM event (see history.ts's own finding for
-  // the exact mechanism) -- a native listener here would never see it.
-  jQuery("#applyAction").click(function () {
+  // batchManagerGlobal.ts's own `#applyAction` handler and click
+  // triggers converted together with this one (its own P49-A
+  // module-cycle deferral, now lifted) -- both now bind/dispatch through
+  // real native events, so this can bind natively too. Was jQuery-bound
+  // only because the old (pre-conversion) trigger side needed it; "click"
+  // itself is not a library-only event.
+  on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
     const action = val(document.querySelectorAll('[name="selectAction"]'));
     if (action === "delete_derivatives") {
       const _d_count = document.querySelectorAll(
@@ -394,18 +394,21 @@ ready(function () {
           "visibility",
           "visible",
         );
-        return false;
+        e.preventDefault();
+        e.stopPropagation();
+        return;
       } else {
-        return true;
+        return;
       }
     }
 
     if (action !== "generate_derivatives" || derivatives.finished()) {
-      return true;
+      return;
     }
 
     hide(document.querySelectorAll(".bulkAction"));
 
+    // Still jQuery: ajaxmanager is a library, ported in P49-B group 2.
     const _queuedManager = jQuery.manageAjax.create("queued", {
       queue: true,
       cacheResponse: false,
@@ -438,7 +441,8 @@ ready(function () {
     progress_start();
     progress();
     getDerivativeUrls();
-    return false;
+    e.preventDefault();
+    e.stopPropagation();
   });
 
   checkPermitAction();

@@ -440,15 +440,16 @@ interface JQuery {
   // leave, but redundant). `doubleSlider.ts`'s own `pwgDoubleSlider`
   // extension (declared separately below) is built on it.
 
-  // jquery.tipTip (vendored -- P46-0's own CDN table, no real upstream
-  // types). `batchManagerGlobal.ts`'s own tooltip setup is the one real
-  // first-party call site. `.colorbox()` is now real, verified types
-  // from `@types/jquery.colorbox` (P47) -- deleted here: it was
-  // declared as a *property* by the real package (`colorbox: Colorbox`)
-  // vs. method-shorthand here, a real "duplicate identifier" conflict
-  // if both were left in place (confirmed via a local `tsc` repro
-  // during planning), not just redundant like `.slider()` above.
-  tipTip(options?: Record<string, unknown>): JQuery;
+  // `.colorbox()` is now real, verified types from
+  // `@types/jquery.colorbox` (P47) -- deleted here: it was declared as
+  // a *property* by the real package (`colorbox: Colorbox`) vs.
+  // method-shorthand here, a real "duplicate identifier" conflict if
+  // both were left in place (confirmed via a local `tsc` repro during
+  // planning), not just redundant like `.slider()` above. (jquery.
+  // tipTip's own ambient `tipTip()` declaration, once here too, was
+  // deleted outright in P49-B group 2 -- the library itself was ported,
+  // not just re-typed, so nothing calls `.tipTip()` through jQuery any
+  // more.)
 
   // jquery.Jcrop (vendored -- P46-0's own CDN table). `picture_coi.ts`'s
   // own crop-of-interest setup is the one real first-party call site.

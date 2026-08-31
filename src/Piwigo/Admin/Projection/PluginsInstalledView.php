@@ -52,7 +52,6 @@ final readonly class PluginsInstalledView implements View, HasPageAssets, Expose
         return [
             AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
-            AssetContribution::script('tiptip', 'https://cdn.jsdelivr.net/gh/drewwilson/TipTip@277e33629e/jquery.tipTip.minified.js'),
             // Real per-page bundle entry (docs/PLAN.md's P48) -- folds
             // plugins_installed_config.ts/plugins_installated.ts's code
             // in via real imports instead of the 2 separate script

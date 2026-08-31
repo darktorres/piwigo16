@@ -8,6 +8,7 @@ import {
   show,
   val,
 } from "../../../default/js/vendor/dom";
+import { tipTip } from "../../../default/js/vendor/tiptip";
 export {};
 
 ready(function () {
@@ -56,8 +57,7 @@ ready(function () {
   checkOrderOptions();
 });
 ready(function () {
-  // Still jQuery: tipTip is a library, ported in P49-B group 2.
-  jQuery(".thumbnail").tipTip({
+  tipTip(document.querySelectorAll(".thumbnail"), {
     delay: 0,
     fadeIn: 200,
     fadeOut: 200,

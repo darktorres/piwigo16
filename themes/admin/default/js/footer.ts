@@ -8,6 +8,7 @@
 import { pwg_getPageData } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
 import { hide, on, show } from "../../../default/js/vendor/dom";
+import { tipTip } from "../../../default/js/vendor/tiptip";
 
 export {};
 
@@ -37,8 +38,7 @@ export {};
 // pattern (docs/PLAN.md P46-C's own finding) needs the same `window.X
 // = X` exposure as a cross-file bare read, once this file's own
 // top-level declarations become IIFE-private at build time.
-// Still jQuery: tipTip is a library, ported in P49-B group 2.
-jQuery(".tiptip").tipTip({
+tipTip(document.querySelectorAll(".tiptip"), {
   delay: 0,
   fadeIn: 200,
   fadeOut: 200,

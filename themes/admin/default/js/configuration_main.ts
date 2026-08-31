@@ -14,6 +14,7 @@ import {
   toggle,
   val,
 } from "../../../default/js/vendor/dom";
+import { tipTip } from "../../../default/js/vendor/tiptip";
 export {};
 
 (function () {
@@ -49,8 +50,7 @@ export {};
     })(target);
   }
 
-  // Still jQuery: tipTip is a library, ported in P49-B group 2.
-  jQuery(".tiptip-with-img").tipTip({
+  tipTip(document.querySelectorAll(".tiptip-with-img"), {
     maxWidth: "300px",
     delay: 0,
     fadeIn: 200,

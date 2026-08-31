@@ -18,6 +18,7 @@ import {
   val,
 } from "../../../default/js/vendor/dom";
 import { sortElements } from "../../../default/js/vendor/sortElements";
+import { tipTip } from "../../../default/js/vendor/tiptip";
 export {};
 
 const str_confirm_msg = pwg_getPageString("Yes, I am sure");
@@ -164,8 +165,7 @@ ready(function () {
     });
   });
 
-  // Still jQuery: tipTip is a library, ported in P49-B group 2.
-  jQuery(".certification").tipTip({
+  tipTip(document.querySelectorAll(".certification"), {
     delay: 0,
     fadeIn: 200,
     fadeOut: 200,
@@ -357,8 +357,7 @@ ready(function () {
     if (certifNode === null) return;
     certifNode.setAttribute("data-certification", String(value));
     certifNode.setAttribute("title", strs_certification[String(value)]!);
-    // Still jQuery: tipTip is a library, ported in P49-B group 2.
-    jQuery(certifNode).tipTip({
+    tipTip(certifNode, {
       delay: 0,
       fadeIn: 200,
       fadeOut: 200,

@@ -34,6 +34,7 @@ import {
   val,
   windowHeight,
 } from "../../../default/js/vendor/dom";
+import { tipTip } from "../../../default/js/vendor/tiptip";
 export {};
 
 // jqtree's own custom `tree.open`/`tree.close`/`tree.move` jQuery events
@@ -201,8 +202,7 @@ function rebindMoveCatActions(): void {
       );
     },
   );
-  // Still jQuery: tipTip is a library, ported in P49-B group 2.
-  jQuery(".tiptip").tipTip({
+  tipTip(document.querySelectorAll(".tiptip"), {
     delay: 0,
     fadeIn: 200,
     fadeOut: 200,
@@ -694,8 +694,7 @@ ready(() => {
   on(document.querySelectorAll(".user-list-checkbox"), "click", checkbox_click);
 
   if (!light_album_manager) {
-    // Still jQuery: tipTip is a library, ported in P49-B group 2.
-    jQuery(".tiptip").tipTip({
+    tipTip(document.querySelectorAll(".tiptip"), {
       delay: 0,
       fadeIn: 200,
       fadeOut: 200,

@@ -21,7 +21,6 @@
         "piecon": "github:lipka/piecon#0.5.0",
         "plupload": "github:moxiecode/plupload#v2.1.2",
         "selectize": "github:selectize/selectize.js#v0.11.2",
-        "tipTip": "github:drewwilson/TipTip#277e33629e",
         "tus-js-client": "4.3.0",
         "underscore": "1.5.2",
         "web-vitals": "6.1.1",
@@ -1551,8 +1550,6 @@
     "tinyglobby": ["tinyglobby@0.2.17", "", { "dependencies": { "fdir": "^6.5.0", "picomatch": "^4.0.4" } }, "sha512-wXR/dYpcqKmfWpEdZjiKJOwCNFndD0DMnrW/cYjVGttEkBfVgcLFHoNrlj47mjOVic9yyNu65alsgF4NQyTa2g=="],
 
     "tinyrainbow": ["tinyrainbow@3.1.1", "", {}, "sha512-yau8yJdTt989Mm0Bd/236QnzEiPf2xLLTqUZRUJOo/3CB078LSwzei343DgtJVmfJKJE3TMINY1u42SQsP6mXw=="],
-
-    "tipTip": ["TipTip@github:drewwilson/TipTip#277e336", {}, "drewwilson-TipTip-277e336", "sha512-oerUP2jF0V/3Ht4LzTGKeRll7WfRgS/jqG8PWlyG2D9I7Lnlm/qa2xk9XYAYKku42RunTTbcdm+pTizUF+TCfw=="],
 
     "tldts-core": ["tldts-core@6.1.86", "", {}, "sha512-Je6p7pkk+KMzMv2XXKmAE3McmolOQFdxkKw0R8EYNr7sELW46JqnNeTX8ybPiQgvg1ymCoF8LXs5fzFaZvJPTA=="],
 

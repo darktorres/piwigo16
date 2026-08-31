@@ -41,6 +41,7 @@ import {
   trigger,
   val,
 } from "../../../default/js/vendor/dom";
+import { tipTip } from "../../../default/js/vendor/tiptip";
 
 /* ********** Thumbs */
 
@@ -162,8 +163,7 @@ function remove_album_action({
 // Still jQuery: colorbox is a library, ported in P49-B group 3.
 jQuery("a.preview-box").colorbox({ photo: true });
 
-// Still jQuery: tipTip is a library, ported in P49-B group 2.
-jQuery(".thumbnails img").tipTip({
+tipTip(document.querySelectorAll(".thumbnails img"), {
   delay: 0,
   fadeIn: 200,
   fadeOut: 200,

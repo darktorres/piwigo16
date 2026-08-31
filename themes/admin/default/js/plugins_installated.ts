@@ -55,6 +55,7 @@ import {
   trigger,
   val,
 } from "../../../default/js/vendor/dom";
+import { tipTip } from "../../../default/js/vendor/tiptip";
 
 function setDisplayClassic(): void {
   removeClass(
@@ -833,8 +834,7 @@ ready(function () {
         // mechanism, not just styling.
         addClass(document.querySelectorAll("#" + data[i]), "incompatible");
       }
-      // Still jQuery: tipTip is a library, ported in P49-B group 2.
-      jQuery(".warning").tipTip({
+      tipTip(document.querySelectorAll(".warning"), {
         delay: 0,
         fadeIn: 200,
         fadeOut: 200,

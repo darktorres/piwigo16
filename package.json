@@ -74,7 +74,6 @@
     "piecon": "github:lipka/piecon#0.5.0",
     "plupload": "github:moxiecode/plupload#v2.1.2",
     "selectize": "github:selectize/selectize.js#v0.11.2",
-    "tipTip": "github:drewwilson/TipTip#277e33629e",
     "tus-js-client": "4.3.0",
     "underscore": "1.5.2",
     "web-vitals": "6.1.1"

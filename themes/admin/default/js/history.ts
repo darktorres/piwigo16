@@ -31,6 +31,7 @@ import {
   toggle,
   trigger,
 } from "../../../default/js/vendor/dom";
+import { tipTip } from "../../../default/js/vendor/tiptip";
 export {};
 
 type HistorySearchResponse =
@@ -410,8 +411,7 @@ function fillHistoryResult(ajaxParam: HistoryFilterParams) {
     activateLineOptions();
     addClass(document.querySelectorAll(".loading"), "hide");
     updatePagination(maxPage);
-    // Still jQuery: tipTip is a library, ported in P49-B group 2.
-    jQuery(".tiptip").tipTip({
+    tipTip(document.querySelectorAll(".tiptip"), {
       delay: 0,
       fadeIn: 200,
       fadeOut: 200,
@@ -1080,20 +1080,17 @@ function setupGeoIpHover(ipEl: Element): void {
             content += ' href="#">show on a Google Map</a>';
           }
 
-          // Still jQuery: tipTip is a library, ported in P49-B group 2.
-          jQuery(ipEl).tipTip({
+          tipTip(ipEl, {
             content: content,
             keepAlive: true,
             defaultPosition: "right",
             maxWidth: 320,
           });
-          // jQuery's own "mouseenter" is synthetic: internally it binds a
-          // real "mouseover" listener and derives enter/leave via
-          // relatedTarget (src/event.js's mouseHooks). Dispatching a
-          // literal "mouseenter" here -- what tipTip's binding actually
-          // listens for at the DOM level -- would never reach it; "mouseover"
-          // is what jQuery itself is bound to.
-          if (data(ipEl, "isOver")) trigger(ipEl, "mouseover");
+          // tipTip's own hover binding (dom.ts's hover()) listens for real,
+          // native "mouseenter" -- unlike jQuery's own synthetic version
+          // (internally a "mouseover" listener translated via
+          // relatedTarget), a real "mouseenter" reaches it directly.
+          if (data(ipEl, "isOver")) trigger(ipEl, "mouseenter");
         },
       });
     },

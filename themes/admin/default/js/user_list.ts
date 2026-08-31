@@ -35,6 +35,7 @@ import {
   trigger,
   val,
 } from "../../../default/js/vendor/dom";
+import { tipTip } from "../../../default/js/vendor/tiptip";
 export {};
 
 // The real `GET /api/v1/users` per-row shape (P47) -- `current_users`/
@@ -175,15 +176,13 @@ function isSelectionMode() {
 }
 
 ready(function () {
-  // Still jQuery: tipTip is a library, ported in P49-B group 2.
-  jQuery(".user-property-register").tipTip({
+  tipTip(document.querySelectorAll(".user-property-register"), {
     maxWidth: "300px",
     delay: 0,
     fadeIn: 200,
     fadeOut: 200,
   });
-  // Still jQuery: tipTip is a library, ported in P49-B group 2.
-  jQuery(".user-property-last-visit").tipTip({
+  tipTip(document.querySelectorAll(".user-property-last-visit"), {
     maxWidth: "300px",
     delay: 0,
     fadeIn: 200,
@@ -1684,13 +1683,15 @@ function plugin_add_tab_in_user_modal(
   check_tabs("name_tab_" + name);
 
   if (plugins_load.length <= 2) {
-    // Still jQuery: tipTip is a library, ported in P49-B group 2.
-    jQuery("#name_tab_" + name).tipTip({
-      delay: 0,
-      fadeIn: 200,
-      fadeOut: 200,
-      edgeOffset: 3,
-    });
+    const nameTab = document.getElementById("name_tab_" + name);
+    if (nameTab !== null) {
+      tipTip(nameTab, {
+        delay: 0,
+        fadeIn: 200,
+        fadeOut: 200,
+        edgeOffset: 3,
+      });
+    }
   }
 }
 
@@ -1799,8 +1800,7 @@ function set_main_user_success() {
   if (king === null) {
     king = parseHtml(king_template)[0]!;
     attr(king, "title", mainUserStr);
-    // Still jQuery: tipTip is a library, ported in P49-B group 2.
-    jQuery(king).tipTip();
+    tipTip(king);
   }
   new_main?.appendChild(king);
   hide(document.querySelectorAll(".delete-user-button"));
@@ -1934,8 +1934,7 @@ function fill_container_user_info(container: Element, user_index: number) {
   if (user.id === owner_id && document.getElementById("the_king") === null) {
     const kingToDisplay = parseHtml(king_template)[0]!;
     attr(kingToDisplay, "title", mainUserStr);
-    // Still jQuery: tipTip is a library, ported in P49-B group 2.
-    jQuery(kingToDisplay).tipTip();
+    tipTip(kingToDisplay);
     find(container, ".user-container-username")[0]?.appendChild(kingToDisplay);
   }
   const initial_to_fill = get_initials(user.username);
@@ -2057,8 +2056,7 @@ function fill_user_edit_summary(
   }
   const usernameSpan = find(pop_in, ".user-property-username span:first-child");
   html(usernameSpan, user_to_edit.username);
-  // Still jQuery: tipTip is a library, ported in P49-B group 2.
-  jQuery(usernameSpan).tipTip({ content: user_to_edit.username });
+  tipTip(usernameSpan, { content: user_to_edit.username });
 
   if (user_to_edit.id === connected_user || user_to_edit.id === 1) {
     show(find(pop_in, ".user-property-username .edit-username-specifier"));
@@ -2079,13 +2077,11 @@ function fill_user_edit_summary(
     find(pop_in, ".user-property-register"),
     user_to_edit.registrationDateString,
   );
-  // Still jQuery: tipTip is a library, ported in P49-B group 2.
-  jQuery(find(pop_in, ".user-property-register")).tipTip({
+  tipTip(find(pop_in, ".user-property-register"), {
     content: `${registered_str}<br />${user_to_edit.registrationDateSince}`,
   });
   html(find(pop_in, ".user-property-last-visit"), user_to_edit.lastVisitString);
-  // Still jQuery: tipTip is a library, ported in P49-B group 2.
-  jQuery(find(pop_in, ".user-property-last-visit")).tipTip({
+  tipTip(find(pop_in, ".user-property-last-visit"), {
     content: `${last_visit_str}<br />${user_to_edit.lastVisitSince}`,
   });
   attr(
@@ -2116,8 +2112,7 @@ function fill_user_edit_summary(
     on(copyBtns, "mouseenter", function (this: Element) {
       css(this, "background-color", "grey");
     });
-    // Still jQuery: tipTip is a library, ported in P49-B group 2.
-    jQuery(copyBtns).tipTip();
+    tipTip(copyBtns);
   }
 }
 
@@ -2244,8 +2239,7 @@ function fill_user_edit_update(user_to_edit: UserRow, pop_in: Element) {
     addClass(sendPasswordLink, "unavailable tiptip");
     off(sendPasswordLink, "click");
     attr(sendPasswordLink, "title", cannotSendMail);
-    // Still jQuery: tipTip is a library, ported in P49-B group 2.
-    jQuery(sendPasswordLink).tipTip({
+    tipTip(sendPasswordLink, {
       delay: 0,
       fadeIn: 200,
       fadeOut: 200,
@@ -2573,8 +2567,7 @@ function fill_who_is_the_king(user_to_edit: UserRow, pop_in: Element) {
   );
   addClass(who_is_the_king, "royal-court-of-this-piwigo cannot-change");
   attr(who_is_the_king, "title", mainAskWebmaster);
-  // Still jQuery: tipTip is a library, ported in P49-B group 2.
-  jQuery(who_is_the_king).tipTip();
+  tipTip(who_is_the_king);
   off(who_is_the_king, "click");
   // I'm an webmaster
   if (connected_user_status === "webmaster") {
@@ -2588,8 +2581,7 @@ function fill_who_is_the_king(user_to_edit: UserRow, pop_in: Element) {
         );
         addClass(who_is_the_king, "princes-of-this-piwigo can-change");
         attr(who_is_the_king, "title", mainUserSet);
-        // Still jQuery: tipTip is a library, ported in P49-B group 2.
-        jQuery(who_is_the_king).tipTip();
+        tipTip(who_is_the_king);
         if (!is_owner(user_to_edit.id)) {
           off(who_is_the_king, "click");
           on(who_is_the_king, "click", function () {
@@ -2605,8 +2597,7 @@ function fill_who_is_the_king(user_to_edit: UserRow, pop_in: Element) {
         );
         addClass(who_is_the_king, "royal-court-of-this-piwigo");
         attr(who_is_the_king, "title", mainUserUpgradeWebmaster);
-        // Still jQuery: tipTip is a library, ported in P49-B group 2.
-        jQuery(who_is_the_king).tipTip();
+        tipTip(who_is_the_king);
         break;
     }
   }
@@ -2619,8 +2610,7 @@ function fill_who_is_the_king(user_to_edit: UserRow, pop_in: Element) {
     );
     addClass(who_is_the_king, "king-of-this-piwigo cannot-change");
     attr(who_is_the_king, "title", mainUserStr);
-    // Still jQuery: tipTip is a library, ported in P49-B group 2.
-    jQuery(who_is_the_king).tipTip();
+    tipTip(who_is_the_king);
   }
 }
 
@@ -3827,8 +3817,7 @@ function set_main_user(user_id: number, new_username: string) {
       );
       addClass(king, "king-of-this-piwigo cannot-change");
       attr(king, "title", mainUserStr);
-      // Still jQuery: tipTip is a library, ported in P49-B group 2.
-      jQuery(king).tipTip();
+      tipTip(king);
 
       owner_id = user_id;
       owner_username = new_username;
@@ -3966,8 +3955,7 @@ get_guest_info();
 update_user_list();
 update_selection_content();
 
-// Still jQuery: tipTip is a library, ported in P49-B group 2.
-jQuery(".icon-help-circled").tipTip({
+tipTip(document.querySelectorAll(".icon-help-circled"), {
   maxWidth: "700px",
   fadeIn: "1000",
 });

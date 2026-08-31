@@ -41,13 +41,16 @@ use Piwigo\Asset\LoadMode;
  * breaking golden-html byte-identity. `Template::finalizeHtml()`
  * registers `page-data` itself, immediately before the one real
  * `resolveScripts()` call, which is the correct last-insertion
- * point -- see that method's own comment. `admin`'s own
- * `jquery.tipTip`/`footer` registrations sat at that identical tail
- * position too, so they're pulled into `lateAdminScripts()` below
- * instead of `forAdminLayout()` -- same reasoning, same fix, not
- * folded in eagerly. Its 2 `exposeData()` calls
+ * point -- see that method's own comment. `admin`'s own `footer`
+ * registration sat at that identical tail position too, so it's
+ * pulled into `lateAdminScripts()` below instead of
+ * `forAdminLayout()` -- same reasoning, same fix, not folded in
+ * eagerly. Its 2 `exposeData()` calls
  * (`whats_new_major_version`/`show_whats_new`) sat there as well
- * (right alongside `jquery.tipTip`) -- also moved to a late call,
+ * (right alongside the old `jquery.tipTip` registration, removed in
+ * P49-B group 2 once `footer.ts` started importing its tooltip
+ * conversion directly rather than depending on a runtime script
+ * load) -- also moved to a late call,
  * from `AdminShell::runDispatch()` itself (after
  * `Renderer::render()` returns, before `finalizeHtml()`), since
  * they're genuinely per-request data with no page-level View to
@@ -90,13 +93,13 @@ final readonly class ThemeBaseAssets
     }
 
     /**
-     * `jquery.tipTip`/`footer` -- admin-only, and, like `page-data`
-     * above, deliberately excluded from `forAdminLayout()`'s own eager
-     * theme-init registration for the identical reason: both sat at
-     * the very tail of `layout.latte` originally, after every
-     * page-specific script already registered. `Template::finalizeHtml()`
-     * calls this alongside its own `page-data` registration, for admin
-     * layouts only, at that same last-insertion point.
+     * `footer` -- admin-only, and, like `page-data` above, deliberately
+     * excluded from `forAdminLayout()`'s own eager theme-init
+     * registration for the identical reason: it sat at the very tail of
+     * `layout.latte` originally, after every page-specific script
+     * already registered. `Template::finalizeHtml()` calls this
+     * alongside its own `page-data` registration, for admin layouts
+     * only, at that same last-insertion point.
      *
      * `footer` (`themes/admin/default/js/footer.ts`) stays a real
      * standalone script tag here, not folded into any per-page bundle
@@ -105,15 +108,19 @@ final readonly class ThemeBaseAssets
      * whole point is a page-agnostic, centrally-ordered late injection,
      * which a per-page import would have to re-derive per View
      * instead, for a file with zero real exports to gain from module
-     * conversion.
+     * conversion. Its own `dependsOn: ['jquery.tipTip']` was dropped in
+     * P49-B group 2: `footer.ts` now imports the ported tooltip
+     * (`themes/default/js/vendor/tiptip.ts`) directly, a real ES-module
+     * dependency the bundler already orders correctly, rather than a
+     * runtime `<script>`-tag load order this registration had to spell
+     * out.
      *
      * @return list<AssetContribution>
      */
     public static function lateAdminScripts(): array
     {
         return [
-            AssetContribution::script('jquery.tipTip', 'https://cdn.jsdelivr.net/gh/drewwilson/TipTip@277e33629e/jquery.tipTip.minified.js', loadMode: LoadMode::Footer),
-            AssetContribution::script('footer', 'themes/admin/default/js/footer.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.tipTip']),
+            AssetContribution::script('footer', 'themes/admin/default/js/footer.ts', loadMode: LoadMode::Footer),
         ];
     }
 

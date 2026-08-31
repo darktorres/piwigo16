@@ -92,7 +92,6 @@
     "jquery-ui",
     "jquery.jcrop",
     "piecon",
-    "tipTip",
     "underscore"
   ]
 }

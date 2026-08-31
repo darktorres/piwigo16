@@ -32,6 +32,7 @@ import {
   val,
 } from "../../../default/js/vendor/dom";
 import { ajax } from "../../../default/js/vendor/ajax";
+import { tipTip } from "../../../default/js/vendor/tiptip";
 export {};
 
 // `add_related_category` is declared here too, independently of the
@@ -132,8 +133,7 @@ ready(function () {
     });
   });
 
-  // Still jQuery: tipTip is a library, ported in P49-B group 2.
-  jQuery(".tiptip").tipTip({
+  tipTip(document.querySelectorAll(".tiptip"), {
     delay: 0,
     fadeIn: 200,
     fadeOut: 200,

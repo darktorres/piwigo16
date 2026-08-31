@@ -59,7 +59,6 @@ final readonly class TagsView implements View, HasPageAssets, ExposesPageData
             // order: 10 is required, see issue 1080.
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::css('themes/admin/default/css/pages/tags.css', id: 'tags'),
-            AssetContribution::script('tiptip', 'https://cdn.jsdelivr.net/gh/drewwilson/TipTip@277e33629e/jquery.tipTip.minified.js'),
             AssetContribution::script('tags', 'themes/admin/default/js/tags.ts', loadMode: LoadMode::Footer),
         ];
     }

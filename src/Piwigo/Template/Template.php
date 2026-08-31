@@ -1075,12 +1075,11 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * and the raw source path when it did not. So this asks "did Vite
      * build this?", not "is it local?" -- and those differ. Remote CDN
      * scripts are classic, but so are the vendored jQuery plugins served
-     * straight from `themes/**` (jquery.geoip.js, jquery.sort.js,
-     * jquery.autogrow-textarea.js, jquery.progressbar.min.js), which are
+     * straight from `themes/**` (jquery.progressbar.min.js), which are
      * not Vite entries. Loading one of those as a module would break it:
-     * jquery.geoip.js opens with a bare `GeoIp = {...}` assignment, and
-     * module code is always strict, so that is a ReferenceError rather
-     * than an implicit global.
+     * a classic script that assigns a bare global (no `export`) throws a
+     * ReferenceError under module code, which is always strict, rather
+     * than creating an implicit global.
      */
     private function scriptTypeAttr(ResolvedAsset $asset): string
     {
@@ -1166,9 +1165,8 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             JS;
             foreach ($async as $asset) {
                 // Per asset, not a blanket 'module': the async set mixes Vite
-                // bundles with vendored classic plugins (jquery.autogrow,
-                // jquery.progressBar, jquery.geoip), and injecting one of
-                // those as a module would break it.
+                // bundles with vendored classic plugins (jquery.progressbar),
+                // and injecting one of those as a module would break it.
                 $scriptType = $this->scriptTypeAttr($asset);
                 $content[] = <<<JS
                 s=document.createElement('script'); s.type='{$scriptType}'; s.async=true; s.src='{$this->makeAssetSrc($asset)}';

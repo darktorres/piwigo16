@@ -136,7 +136,7 @@ test('resolveScripts() resolves jquery.ui from a zero-param registration, real r
 
 test('resolveScripts() resolves jquery.ui as an undeclared dependency, real updates_ext.latte/plugins_new.latte case', function (): void {
     $assets = new PageAssets(pageAssetsTestManifest());
-    $assets->add(AssetContribution::script('pluginsNew', 'themes/admin/default/js/plugins_new.ts', dependsOn: ['jquery.ui', 'jquery.sort']));
+    $assets->add(AssetContribution::script('pluginsNew', 'themes/admin/default/js/plugins_new.ts', dependsOn: ['jquery.ui']));
 
     $paths = array_map(fn ($r) => $r->path, $assets->resolveScripts());
 
@@ -234,7 +234,7 @@ test('resolveModulePreloads() walks shared chunks transitively, dedupes them, an
     $assets->add(AssetContribution::script('a', 'themes/a.ts', loadMode: LoadMode::Footer));
     $assets->add(AssetContribution::script('b', 'themes/b.ts', loadMode: LoadMode::Footer));
     // Not a Vite entry at all: contributes nothing to preload.
-    $assets->add(AssetContribution::script('vendor', 'themes/default/js/plugins/jquery.sort.js', loadMode: LoadMode::Footer));
+    $assets->add(AssetContribution::script('vendor', 'themes/default/js/plugins/jquery.progressbar.min.js', loadMode: LoadMode::Footer));
 
     $preloads = $assets->resolveModulePreloads();
 

@@ -61,7 +61,7 @@ final readonly class AlbumSelectorView implements View, HasPageAssets, ExposesPa
             // (docs/PLAN.md P48) -- it has 8 real consumer files, each
             // folding its code in via its own direct import instead of
             // one shared standalone script tag (the same reasoning as
-            // AutosizeView/DatepickerView's own P48 batches).
+            // DatepickerView's own P48 batch).
         ];
     }
 

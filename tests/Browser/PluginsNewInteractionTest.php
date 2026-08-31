@@ -26,11 +26,17 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * certification/revision-date widgets' initial render (each set once by
  * this file's own converted `updateRatingFilterLabel(0)`/
  * `updateCertificationFilterLabel(minCertification)`/
- * `updateRevisionFilterLabel(0)` calls at load).
+ * `updateRevisionFilterLabel(0)` calls at load). The `sortElements()`
+ * test below sidesteps PEM reachability entirely: it injects its own
+ * deterministic, real-template-shaped `.pluginBox` fixture rows (same
+ * technique `updates_ext.ts`'s own interaction test uses), rather than
+ * depending on whatever `getServerExtensions()` returns right now.
  *
- * `.sortElements()` (jquery.sort, P49-B group 1), `.selectize()` (group 6),
- * `.slider()` (jQuery-UI, group 4), `.tipTip()` (group 2) and
- * `pwg_jconfirm_follow_href` (jquery-confirm, group 5) stay jQuery.
+ * `.selectize()` (group 6), `.slider()` (jQuery-UI, group 4),
+ * `.tipTip()` (group 2) and `pwg_jconfirm_follow_href` (jquery-confirm,
+ * group 5) stay jQuery. `.sortElements()` (jquery.sort) converted to
+ * `sortElements()` (`themes/default/js/vendor/sortElements.ts`) in
+ * P49-B group 1.
  */
 it('toggles the advanced-filter panel open and closed', function (): void {
     $page = H::asAdmin($this);
@@ -195,4 +201,56 @@ it('renders a real plugin\'s half-star rating without crashing on an unquoted at
 
     $page->assertNoJavaScriptErrors();
     H::assertNoServerErrors($page, 'plugins_new real plugin rating stars');
+});
+
+it('sorts .pluginBox rows by name via the sort-order select, in ascending order', function (): void {
+    // getServerExtensions() may or may not reach PEM right now (see this
+    // file's own docblock) -- inject a deterministic, real-template-shaped
+    // fixture as the ONLY '.pluginBox' rows (same "clear then inject"
+    // technique updates_ext.ts's own interaction test uses), so the
+    // sortElements() assertion below doesn't depend on whatever PEM
+    // returns (or doesn't) right now.
+    $page = H::asAdmin($this);
+    $page = H::navigateOk($page, '/admin.php?page=plugins&tab=new');
+
+    H::rawWebpage($page)->script(<<<'JS'
+        (() => {
+            let root = document.getElementById('availablePlugins');
+            if (root === null) {
+                root = document.createElement('div');
+                root.id = 'availablePlugins';
+                document.getElementById('theAdminPage').appendChild(root);
+            }
+            root.innerHTML = '';
+            for (const row of [
+                { id: 'zebra', name: 'Zebra Plugin' },
+                { id: 'apple', name: 'Apple Plugin' },
+                { id: 'mango', name: 'Mango Plugin' },
+            ]) {
+                const box = document.createElement('div');
+                box.className = 'pluginBox pluginBigBox';
+                box.id = 'plugin_' + row.id;
+                box.setAttribute('data-id', row.id);
+                box.setAttribute('data-name', row.name);
+                box.setAttribute('data-date', '0');
+                box.setAttribute('data-revision', '0');
+                box.setAttribute('data-downloads', '0');
+                root.appendChild(box);
+            }
+        })();
+        JS);
+
+    $page->script(
+        "document.querySelector('select[name=\"selectOrder\"]').value = 'name'; " .
+        "document.querySelector('select[name=\"selectOrder\"]').dispatchEvent(new Event('change', {bubbles: true}))",
+    );
+
+    $order = H::scriptArray($page,
+        "Array.from(document.querySelectorAll('#availablePlugins .pluginBox')).map((el) => el.getAttribute('data-name'))",
+    );
+
+    expect($order)->toBe(['Apple Plugin', 'Mango Plugin', 'Zebra Plugin']);
+
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'plugins_new sortElements by name');
 });

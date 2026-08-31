@@ -1169,11 +1169,11 @@ test('a vendored classic script served from themes/ stays type="text/javascript"
     $t = TemplateTestFactory::build();
     $root = CurrentPathsTestFactory::get()->root;
     @mkdir($root . '/themes/default/js/plugins', 0777, true);
-    // Mirrors the real jquery.geoip.js/jquery.sort.js family: vendored,
+    // Mirrors the real jquery.progressbar.min.js family: vendored,
     // registered as a local asset, and deliberately NOT a Vite entry, so
     // the manifest cannot resolve it and resolvePath() passes the raw
     // source path through. Loading one of these as a module would break
-    // it -- jquery.geoip.js assigns a bare `GeoIp = {...}` global, which
+    // it -- a classic script that assigns a bare global (no `export`)
     // throws under a module's always-on strict mode.
     file_put_contents($root . '/themes/default/js/plugins/jquery.legacy.js', 'Legacy = {};');
 

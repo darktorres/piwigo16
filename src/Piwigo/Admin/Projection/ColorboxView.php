@@ -28,7 +28,7 @@ use Piwigo\Template\Latte\Attribute\Template as TemplateAttr;
  * own hook either, for the identical reason -- every real parent
  * constructs a `new ColorboxView(...)` purely to merge
  * `->pageAssets()` into its own return value (the same construct-and-
- * merge pattern `AutosizeView`/`DatepickerView` already established).
+ * merge pattern `DatepickerView` already established).
  */
 #[TemplateAttr('include/colorbox.inc.latte')]
 final readonly class ColorboxView implements View, HasPageAssets

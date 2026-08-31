@@ -136,6 +136,32 @@ it('renders the param tab', function (): void {
     $page->assertNoJavaScriptErrors();
 });
 
+it('auto-grows the complementary-mail-content textarea as multi-line text is typed', function (): void {
+    // autosize.ts's own autogrow() (jquery.autogrow-textarea.js, ported
+    // natively in P49-B group 1) -- #complementary_mail_content is a
+    // real rows="5" textarea, small enough that several real lines of
+    // typed text overflow it and force a real height grow.
+    $page = H::asAdmin($this);
+    $page = H::navigateOk($page, '/admin.php?page=notification_by_mail&mode=param');
+
+    $initialHeight = H::scriptInt($page, "document.getElementById('complementary_mail_content').offsetHeight");
+
+    $page->fill(
+        '#complementary_mail_content',
+        "line one\nline two\nline three\nline four\nline five\nline six\nline seven\nline eight",
+    );
+    $page->script(
+        "document.getElementById('complementary_mail_content').dispatchEvent(new Event('keyup', {bubbles: true}))",
+    );
+
+    $grownHeight = H::scriptInt($page, "document.getElementById('complementary_mail_content').offsetHeight");
+
+    expect($grownHeight)->toBeGreaterThan($initialHeight);
+
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'notification_by_mail autogrow textarea');
+});
+
 it('renders the subscribe tab', function (): void {
     $page = H::asAdmin($this);
     // Deliberately not navigateOk(): notification_by_mail.latte's subscribe

@@ -17,6 +17,7 @@ import {
   trigger,
   val,
 } from "../../../default/js/vendor/dom";
+import { sortElements } from "../../../default/js/vendor/sortElements";
 export {};
 
 const str_confirm_msg = pwg_getPageString("Yes, I am sure");
@@ -41,15 +42,9 @@ const str_from_begining = pwg_getPageString("since the beginning");
 
 // <-- Define sort orders -->
 let sortOrder = "date";
-// Params match jquery.sort.js's own untyped `sortElements(comparator: (a:
-// any, b: any) => number)` ambient signature (no real type source for
-// this vendored plugin) -- HTMLElement is the real runtime shape either
-// way, and a more specific param type here is still assignable to that
-// `any`-typed callback slot. `data()` reads real `data-*` attributes
-// (name/revision/downloads, all rendered by the template) -- no jQuery
-// needed for the comparator itself, only for the still-jQuery
-// `.sortElements()` call site that invokes it.
-const sortPlugins = function (a: HTMLElement, b: HTMLElement) {
+// `data()` reads real `data-*` attributes (name/revision/downloads, all
+// rendered by the template).
+const sortPlugins = function (a: Element, b: Element) {
   if (
     sortOrder == "downloads" ||
     sortOrder == "revision" ||
@@ -136,8 +131,7 @@ ready(function () {
     "change",
     function (event: Event): void {
       sortOrder = (event.currentTarget as HTMLSelectElement).value;
-      // Still jQuery: jquery.sort is a library, ported in P49-B group 1.
-      $(".pluginBox").sortElements(sortPlugins);
+      sortElements(document.querySelectorAll(".pluginBox"), sortPlugins);
       void ajax({ url: "admin.php?plugins_new_order=" + sortOrder });
     },
   );

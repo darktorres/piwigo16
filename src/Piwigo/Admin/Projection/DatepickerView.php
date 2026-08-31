@@ -106,9 +106,9 @@ final readonly class DatepickerView implements View, HasPageAssets
         // datepicker.ts's own registration is no longer here (docs/
         // PLAN.md P48) -- it has 4 real registrant pages, each now
         // folding its code in via its own page bundle's direct import
-        // instead of one shared standalone script tag (the same
-        // reasoning as AutosizeView's own P48 batch). Each registrant
-        // page's own bundle depends on `jquery.ui.timepicker-addon`
+        // instead of one shared standalone script tag (the same P48
+        // batch this class's own registrant pages went through). Each
+        // registrant page's own bundle depends on `jquery.ui.timepicker-addon`
         // directly -- datepicker.ts's own top-level code doesn't need
         // the optional per-locale files this method registers below,
         // only jQuery UI core's datepicker/timepicker-addon.

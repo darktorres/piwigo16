@@ -93,28 +93,26 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
     public function pageAssets(): array
     {
         return [
-            ...new AutosizeView()
-                ->pageAssets(),
             ...new DatepickerView(jqueryCode: $this->jqueryCode)
                 ->pageAssets(),
             // Real per-page bundle entry (docs/PLAN.md's P48) -- folds
             // autosize.ts's, datepicker.ts's, and scripts.ts's own code
             // in via direct imports instead of the separate script
-            // tags AutosizeView/DatepickerView/this method's own former
-            // `core.scripts` registration used to register directly
-            // (all 3 have several real registrant pages, so a plain
-            // import isn't safe here -- Design §4).
-            AssetContribution::script('batch_manager_unit_page', 'themes/admin/default/js/pages/batch_manager_unit.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.autogrow', 'jquery.ui.timepicker-addon']),
+            // tags DatepickerView/this method's own former `core.scripts`
+            // registration used to register directly (all 3 have several
+            // real registrant pages, so a plain import isn't safe here --
+            // Design §4). autosize.ts's own `jquery.autogrow` dependency
+            // is gone too -- autogrow is a native port now (P49-B group 1).
+            AssetContribution::script('batch_manager_unit_page', 'themes/admin/default/js/pages/batch_manager_unit.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui.timepicker-addon']),
             ...new ColorboxView()
                 ->pageAssets(),
-            AssetContribution::script('jquery.sort', 'themes/default/js/plugins/jquery.sort.js', loadMode: LoadMode::Footer),
             AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
-            AssetContribution::script('batchManagerUnit', 'themes/admin/default/js/batchManagerUnit.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui', 'jquery.sort', 'jquery.selectize', 'jquery.colorbox']),
+            AssetContribution::script('batchManagerUnit', 'themes/admin/default/js/batchManagerUnit.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui', 'jquery.selectize', 'jquery.colorbox']),
             AssetContribution::css('themes/admin/default/css/pages/batch_manager_unit.css', id: 'batch_manager_unit'),
             ...new AlbumSelectorView()
                 ->pageAssets(),

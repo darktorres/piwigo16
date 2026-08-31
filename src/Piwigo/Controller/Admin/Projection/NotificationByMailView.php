@@ -6,7 +6,6 @@ namespace Piwigo\Controller\Admin\Projection;
 
 use Latte\Runtime\Html;
 use Override;
-use Piwigo\Admin\Projection\AutosizeView;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
@@ -47,14 +46,13 @@ final readonly class NotificationByMailView implements View, HasPageAssets
     public function pageAssets(): array
     {
         return [
-            ...new AutosizeView()
-                ->pageAssets(),
             // Real per-page bundle entry (docs/PLAN.md's P48) -- folds
-            // autosize.ts's code in via a direct import instead of
-            // the separate script tag AutosizeView used to register
-            // directly (autosize.ts has 3 real registrant pages, so a
-            // plain import isn't safe here -- Design §4).
-            AssetContribution::script('notification_by_mail_page', 'themes/admin/default/js/pages/notification_by_mail.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.autogrow']),
+            // autosize.ts's code in via a direct import instead of a
+            // separate script tag (autosize.ts has 3 real registrant
+            // pages, so a plain import isn't safe here -- Design §4).
+            // autosize.ts's own `jquery.autogrow` dependency is gone too
+            // -- autogrow is a native port now (P49-B group 1).
+            AssetContribution::script('notification_by_mail_page', 'themes/admin/default/js/pages/notification_by_mail.ts', loadMode: LoadMode::Footer),
             AssetContribution::script('notification_by_mail', 'themes/admin/default/js/notification_by_mail.ts', loadMode: LoadMode::Footer),
         ];
     }

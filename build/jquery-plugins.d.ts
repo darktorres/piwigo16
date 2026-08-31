@@ -510,13 +510,6 @@ interface JQuery {
   // leave, but redundant). `rating_user.ts`'s own GeoIP-lookup tooltip
   // is the one real first-party call site.
 
-  // jquery.sort.js (the well-known `jQuery.fn.sortElements` snippet --
-  // one of the genuinely-unresolved libraries P46-0's own CDN
-  // migration kept vendored, no real package/repo found anywhere).
-  // `plugins_new.ts`'s own plugin-list sort is the one real
-  // first-party call site.
-  sortElements(comparator: (a: any, b: any) => number): JQuery;
-
   // jqtree's own `.tree()` is now real, verified types from its own
   // bundled `.d.ts` (`/// <reference types="jqtree" />` at the top of
   // this file) -- deleted here: jqtree declares `tree` as a *property*
@@ -544,13 +537,6 @@ interface JQuery {
   // table). `photos_add_direct.ts`'s own upload-queue setup is the one
   // real first-party call site.
   pluploadQueue(options?: Record<string, unknown>): JQuery;
-
-  // jquery.autogrow-textarea.js (vendored, one of the 3 genuinely-
-  // unresolved libraries P46-0's own CDN migration kept vendored --
-  // see docs/PLAN.md's own "2 libraries remain genuinely unresolvable"
-  // note). `autosize.ts`'s own textarea auto-grow setup is the one real
-  // first-party call site.
-  autogrow(): JQuery;
 
   // jQuery UI's `sortable` widget (vendored -- the one full-bundle
   // `jquery.ui` id) is now real, verified types from `@types/jqueryui`

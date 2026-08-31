@@ -160,7 +160,6 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             // ColorboxView/AddAlbumView), so album_selector's own
             // contribution has to resolve first, matching the accepted
             // golden-html baseline confirmed by a real diff, not assumed.
-            AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js'),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
             AssetContribution::script('jquery.ui', '', loadMode: LoadMode::Async),
             AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui'),

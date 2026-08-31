@@ -43,9 +43,9 @@ const str_orphan = pwg_getPageString("This photo is an orphan");
     rootUrl: pwg_getPageData<string>("root_url"),
   });
 
-  // Still jQuery: selectize() takes a JQuery object, ported in P49-B
-  // group 6.
-  categoriesCache.selectize(jQuery("[data-selectize=categories]"));
+  categoriesCache.selectize(
+    document.querySelectorAll("[data-selectize=categories]"),
+  );
 
   // <!-- TAGS -->
   const tagsCache = new TagsCache({
@@ -54,7 +54,7 @@ const str_orphan = pwg_getPageString("This photo is an orphan");
     rootUrl: pwg_getPageData<string>("root_url"),
   });
 
-  tagsCache.selectize(jQuery("[data-selectize=tags]"), {
+  tagsCache.selectize(document.querySelectorAll("[data-selectize=tags]"), {
     lang: {
       Add: pwg_getPageString("Create"),
     },

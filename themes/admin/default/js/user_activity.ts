@@ -13,6 +13,7 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
+import { selectize } from "../../../default/js/vendor/selectize";
 import {
   addClass,
   append,
@@ -1143,12 +1144,8 @@ ready(function () {
     `<span class='badge-number'>` + (nb_users - 1) + `</span>`,
   );
 
-  // The `.selectize-input`/`.item[data-value]` markup below is selectize's
-  // own real, rendered DOM (still jQuery, P49-B group 6) -- reading it
-  // natively is safe, same reasoning jGrowl's own toast markup in
-  // updates_ext.ts already established (P49-B group 3, now a real DOM
-  // node regardless of which code created it); only the widget init
-  // itself stays jQuery.
+  // The `.selectize-input`/`.item[data-value]` markup below is
+  // `vendor/selectize.ts`'s own real, rendered DOM (P49-B group 6).
   on(
     document.querySelectorAll("select.user-selecter"),
     "change",
@@ -1294,12 +1291,16 @@ ready(function () {
     },
   );
 
-  // Still jQuery: selectize is a library, ported in P49-B group 6.
-  jQuery(".user-selecter").selectize();
-  jQuery(".user-selecter")[0]!.selectize.setValue(null);
-
-  jQuery(".action-selecter").selectize();
-  jQuery(".action-selecter")[0]!.selectize.setValue(null);
+  document
+    .querySelectorAll<HTMLSelectElement>(".user-selecter")
+    .forEach((el) => {
+      selectize(el, {}).clear();
+    });
+  document
+    .querySelectorAll<HTMLSelectElement>(".action-selecter")
+    .forEach((el) => {
+      selectize(el, {}).clear();
+    });
 
   if (additional_filt_type) {
     addClass(

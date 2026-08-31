@@ -61,14 +61,13 @@ final readonly class RatingView implements View, HasPageAssets, ExposesPageData
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
             AssetContribution::css('themes/admin/default/css/pages/rating.css', id: 'rating'),
             // 'rating' imports scripts.ts directly now (docs/PLAN.md
             // P48) -- the separate
             // `core.scripts` registration this page used to carry is
             // dropped.
-            AssetContribution::script('rating', 'themes/admin/default/js/rating.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.selectize']),
+            AssetContribution::script('rating', 'themes/admin/default/js/rating.ts', loadMode: LoadMode::Footer),
         ];
     }
 

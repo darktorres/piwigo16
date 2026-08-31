@@ -61,6 +61,10 @@ import {
 } from "./search_filters";
 import { ajax } from "./vendor/ajax";
 import {
+  getSelectizeInstance,
+  selectize as createSelectize,
+} from "./vendor/selectize";
+import {
   addClass,
   append,
   attr,
@@ -275,14 +279,10 @@ ready(function () {
 
   // Setup tag filter
   const tags_rule = global_params.fields.tags;
-  document.querySelectorAll("#tag-search").forEach((el) => {
-    // Still jQuery: selectize is a library, ported in P49-B group 6.
-    jQuery(el).selectize({
+  document.querySelectorAll<HTMLSelectElement>("#tag-search").forEach((el) => {
+    createSelectize(el, {
       plugins: ["remove_button"],
       maxOptions: el.querySelectorAll("option").length,
-      // `undefined` where this used to pass `null`: selectize itself
-      // gates on `$.isArray(settings.items)` (selectize.js:221), so the
-      // two are indistinguishable to it.
       items: tags_rule?.words,
     });
   });
@@ -301,18 +301,12 @@ ready(function () {
     );
 
     let tag_search_str = "";
-    // Still jQuery: selectize is a library, ported in P49-B group 6.
-    // `@types/selectize`'s own `getValue(): any` is a real, incomplete
-    // vendor declaration (the ambient `HTMLElement.selectize` property
-    // ships unparameterized, `IApi<any, any>`), narrowed to this file's
-    // real value shape.
-    (
-      jQuery("#tag-search")[0]!.selectize.getValue() as (string | number)[]
-    ).forEach((id) => {
+    const tagSearchEl =
+      document.querySelector<HTMLSelectElement>("#tag-search")!;
+    const tagSearchSelectize = getSelectizeInstance(tagSearchEl)!;
+    (tagSearchSelectize.getValue() as (string | number)[]).forEach((id) => {
       tag_search_str +=
-        jQuery("#tag-search")[0]!
-          .selectize.getItem(id)
-          .text()
+        (tagSearchSelectize.getItem(id)?.textContent ?? "")
           .replace(/\(\d+ \w+\)×/, "")
           .trim() + ", ";
     });
@@ -333,8 +327,7 @@ ready(function () {
       document.querySelectorAll(".filter-tag .filter-actions .clear"),
       "click",
       function () {
-        // Still jQuery: selectize is a library, ported in P49-B group 6.
-        jQuery("#tag-search")[0]!.selectize.clear();
+        getSelectizeInstance(tagSearchEl)?.clear();
         setChecked(
           document.querySelectorAll(
             ".filter-tag .search-params input[value='AND']",
@@ -824,12 +817,10 @@ ready(function () {
 
   // Setup author filter
   const author_rule = global_params.fields.author;
-  document.querySelectorAll("#authors").forEach((el) => {
-    // Still jQuery: selectize is a library, ported in P49-B group 6.
-    jQuery(el).selectize({
+  document.querySelectorAll<HTMLSelectElement>("#authors").forEach((el) => {
+    createSelectize(el, {
       plugins: ["remove_button"],
       maxOptions: el.querySelectorAll("option").length,
-      // `undefined` where this used to pass `null`, same as tag-search.
       items: author_rule?.words,
     });
     if (author_rule) {
@@ -840,16 +831,10 @@ ready(function () {
       );
 
       let author_search_str = "";
-      // Still jQuery: selectize is a library, ported in P49-B group 6.
-      // Same real-but-incomplete `@types/selectize` vendor gap as
-      // tag-search's own copy of this comment above.
-      (
-        jQuery("#authors")[0]!.selectize.getValue() as (string | number)[]
-      ).forEach((id) => {
+      const authorsSelectize = getSelectizeInstance(el)!;
+      (authorsSelectize.getValue() as (string | number)[]).forEach((id) => {
         author_search_str +=
-          jQuery("#authors")[0]!
-            .selectize.getItem(id)
-            .text()
+          (authorsSelectize.getItem(id)?.textContent ?? "")
             .replace(/\(\d+ \w+\)×/, "")
             .trim() + ", ";
       });
@@ -871,8 +856,7 @@ ready(function () {
         document.querySelectorAll(".filter-authors .filter-actions .clear"),
         "click",
         function () {
-          // Still jQuery: selectize is a library, ported in P49-B group 6.
-          jQuery("#authors")[0]!.selectize.clear();
+          getSelectizeInstance(el)?.clear();
         },
       );
 
@@ -1707,11 +1691,12 @@ ready(function () {
             document.querySelectorAll(".filter-tag"),
             "show-filter-dropdown",
           );
-          // Still jQuery: selectize is a library, ported in P49-B group 6.
-          PS_params.tags =
-            jQuery("#tag-search")[0]!.selectize.getValue().length > 0
-              ? jQuery("#tag-search")[0]!.selectize.getValue()
-              : "";
+          {
+            const tagValue = getSelectizeInstance(
+              document.querySelector<HTMLSelectElement>("#tag-search")!,
+            )!.getValue() as (string | number)[];
+            PS_params.tags = tagValue.length > 0 ? tagValue : "";
+          }
           PS_params.tags_mode = val(
             document.querySelectorAll(
               ".filter-tag-form .search-params input:checked",
@@ -1998,11 +1983,12 @@ ready(function () {
               "show-filter-dropdown",
             );
 
-            // Still jQuery: selectize is a library, ported in P49-B group 6.
-            PS_params.authors =
-              jQuery("#authors")[0]!.selectize.getValue().length > 0
-                ? jQuery("#authors")[0]!.selectize.getValue()
-                : "";
+            {
+              const authorValue = getSelectizeInstance(
+                document.querySelector<HTMLSelectElement>("#authors")!,
+              )!.getValue() as (string | number)[];
+              PS_params.authors = authorValue.length > 0 ? authorValue : "";
+            }
           }
         },
       );

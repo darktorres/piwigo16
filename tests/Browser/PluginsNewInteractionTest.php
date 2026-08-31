@@ -33,7 +33,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * depending on whatever `getServerExtensions()` returns right now.
  *
  * `.selectize()` (group 6) and `pwg_jconfirm_follow_href` (jquery-confirm,
- * group 5) stay jQuery. `.sortElements()` (jquery.sort) converted to
+ * group 5) are both real native calls now. `.sortElements()` (jquery.sort) converted to
  * `sortElements()` (`themes/default/js/vendor/sortElements.ts`) in P49-B
  * group 1, `.tipTip()` to `tipTip()` (`themes/default/js/vendor/
  * tiptip.ts`) in group 2, and jQuery UI's `.slider()` to `slider()`

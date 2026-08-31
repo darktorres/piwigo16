@@ -12,22 +12,12 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * popup.
  *
  * Stays jQuery on purpose: `this.colorbox(...)` (colorbox is $.fn.colorbox,
- * P49-B group 3, and `this` must be a real JQuery object for it) and
- * `cache.selectize(jQuery(albumParent), ...)` (LocalStorageCache.ts's own
- * AbstractSelectizer, P49-B group 6, whose internals need a JQuery target).
- *
- * Found live during this conversion, fixed in the same commit: reading the
- * selectize cache via `data(target, "cache")` (the native helper) instead
- * of `jQuery(target).data("cache")` made `cache` always come back
- * undefined and threw `jQuery.error("pwgAddAlbum: missing categories
- * cache")` on every real page load -- an uncaught, opaque "Script error."
- * with no stack trace, since it fired inside batchManagerGlobal.ts's own
- * `ready()` callback, a file this conversion never touched. Caught by
- * re-running the EXISTING (not new) BatchManagerSubControllerTest.php
- * suite, not by writing a new test first -- LocalStorageCache.ts's own
- * `$target.data("cache", this)` write is a jQuery-internal cache entry,
- * a different store entirely from what our data()/setData() read and
- * write (see project_p49_jquery_trigger_native_listener_gap memory).
+ * P49-B group 3, and `this` must be a real JQuery object for it).
+ * `cache.selectize(albumParent, ...)` (LocalStorageCache.ts's own
+ * AbstractSelectizer) is a real native call now (P49-B group 6,
+ * `vendor/selectize.ts`) -- the cache lookup below reads real state off
+ * the rendered DOM (`select.value`, the widget's own `.item` markup)
+ * rather than a since-removed `.selectize` instance property.
  */
 it('creates a new album through the add-album popup and selects it in the move dropdown', function (): void {
     $page = H::asAdmin($this);
@@ -87,13 +77,14 @@ it('creates a new album through the add-album popup and selects it in the move d
             const deadline = Date.now() + 5000;
             const check = () => {
                 const select = document.querySelector('select[name="move"]');
-                const value = select && select.selectize ? select.selectize.getValue() : null;
+                const value = select ? select.value : null;
+                const item = select
+                    ? select.nextElementSibling.querySelector('.selectize-input [data-value]')
+                    : null;
                 if (value) {
                     return resolve({
                         value: value,
-                        label: select.selectize.options[value]
-                            ? select.selectize.options[value].fullname
-                            : null,
+                        label: item ? item.textContent : null,
                     });
                 }
                 if (Date.now() > deadline) {

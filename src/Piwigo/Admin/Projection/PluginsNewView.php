@@ -52,7 +52,6 @@ final readonly class PluginsNewView implements View, HasPageAssets, ExposesPageD
         return [
             AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui'),
             AssetContribution::css('themes/admin/default/css/pages/plugins_new.css', id: 'plugins_new'),
-            AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
             // jquery.sort's own `.sortElements()` is a native port now
             // (P49-B group 1) -- no script tag or dependency left to

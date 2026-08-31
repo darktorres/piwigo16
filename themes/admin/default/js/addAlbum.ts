@@ -10,10 +10,11 @@ import {
   show,
   val,
 } from "../../../default/js/vendor/dom";
+import { getSelectizeInstance } from "../../../default/js/vendor/selectize";
 
 export {};
 
-interface AlbumOptionData {
+interface AlbumOptionData extends Record<string, unknown> {
   id: string | number;
   fullname: string;
   global_rank: string | number;
@@ -42,24 +43,17 @@ jQuery.fn.pwgAddAlbum = function (this: JQuery, options?: PwgAddAlbumOptions) {
   const target = document.querySelector<HTMLSelectElement>(
     '[name="' + String(data(buttonEl, "addAlbum")) + '"]',
   );
-  // Still jQuery: LocalStorageCache.ts's own _selectize() stashes this via
-  // jQuery's OWN internal data cache ($target.data("cache", this)), which
-  // is a completely separate store from our native data()/setData() --
-  // confirmed live: reading it through data() came back undefined even
-  // though LocalStorageCache.ts had already set it, because a jQuery
-  // .data(key, value) write never touches the DOM attribute our helper
-  // reads and never reaches our own WeakMap-backed store either. Reading
-  // it back through jQuery is what LocalStorageCache.ts itself requires
-  // until it ports (P49-B group 6).
-  const cache = (
-    target === null ? undefined : jQuery(target).data("cache")
-  ) as {
-    selectize(target: JQuery, options?: Record<string, unknown>): void;
+  // LocalStorageCache.ts's own _selectize() stashes the owning Cache
+  // instance via `setData(el, "cache", this)` (P49-B group 6) -- the
+  // same native data() store this file already uses elsewhere.
+  const cache = (target === null ? undefined : data(target, "cache")) as {
+    selectize(
+      target: Element | ArrayLike<Element>,
+      options?: Record<string, unknown>,
+    ): void;
   };
 
-  console.log(cache);
-
-  if (target && !target.selectize) {
+  if (target && !getSelectizeInstance(target)) {
     jQuery.error("pwgAddAlbum: target must use selectize");
   }
   if (!cache) {
@@ -69,10 +63,7 @@ jQuery.fn.pwgAddAlbum = function (this: JQuery, options?: PwgAddAlbumOptions) {
   function init() {
     setData(popup, "init", true);
 
-    // Still jQuery: cache.selectize() (LocalStorageCache.ts's own
-    // AbstractSelectizer) takes a JQuery target internally -- ported
-    // alongside selectize itself in P49-B group 6.
-    cache.selectize(jQuery(albumParent), {
+    cache.selectize(albumParent, {
       default: 0,
       filter: function (this: unknown, categories: AlbumOptionData[]) {
         categories.push({
@@ -156,10 +147,10 @@ jQuery.fn.pwgAddAlbum = function (this: JQuery, options?: PwgAddAlbumOptions) {
             pos: 0,
           };
 
-          const parentSelectize = albumParent.selectize as Selectize.IApi<
+          const parentSelectize = getSelectizeInstance<
             string | number,
             AlbumOptionData
-          >;
+          >(albumParent)!;
 
           // Was `parent_id != 0` -- a loose comparison TS accepted when
           // .val() was jQuery's own loosely-typed return value. Our val()
@@ -174,7 +165,10 @@ jQuery.fn.pwgAddAlbum = function (this: JQuery, options?: PwgAddAlbumOptions) {
             newAlbum.pos = (parent.pos ?? 0) + 1;
           }
 
-          const targetSelectize = target!.selectize;
+          const targetSelectize = getSelectizeInstance<
+            string | number,
+            AlbumOptionData
+          >(target!)!;
           targetSelectize.addOption(newAlbum);
           targetSelectize.setValue(newAlbum.id);
 
@@ -218,7 +212,7 @@ jQuery.fn.pwgAddAlbum = function (this: JQuery, options?: PwgAddAlbumOptions) {
       )!;
       setVal(nameInput, "");
       nameInput.focus();
-      albumParent.selectize.setValue(val(target ?? []) || 0);
+      getSelectizeInstance(albumParent)?.setValue(val(target ?? []) || 0);
     },
   });
 

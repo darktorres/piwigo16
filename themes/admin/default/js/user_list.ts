@@ -7,6 +7,10 @@ import {
 } from "../../../default/js/page-data";
 import { ajax, type AjaxThenable } from "../../../default/js/vendor/ajax";
 import { confirm } from "../../../default/js/vendor/jconfirm";
+import {
+  getSelectizeInstance,
+  selectize as createSelectize,
+} from "../../../default/js/vendor/selectize";
 import { slider, type SliderUIParams } from "../../../default/js/vendor/slider";
 import {
   addClass,
@@ -64,7 +68,7 @@ interface SelectionEntry {
 
 // `groupOptions`'s own real per-item shape (below), fed to the 3 real
 // group-picker Selectize instances.
-interface GroupOption {
+interface GroupOption extends Record<string, unknown> {
   value: number;
   label: string;
   isSelected: boolean;
@@ -133,21 +137,28 @@ on(document, "keydown", function (e: Event) {
 Group Selectize
 ----------------*/
 
-// Still jQuery: selectize is a library, ported in P49-B group 6.
-jQuery("[data-selectize=groups]").selectize({
-  valueField: "value",
-  labelField: "label",
-  searchField: ["label"],
-  plugins: ["remove_button"],
+const groupSelectizeTargets = document.querySelectorAll<HTMLSelectElement>(
+  "[data-selectize=groups]",
+);
+groupSelectizeTargets.forEach((el) => {
+  createSelectize<string | number, GroupOption>(el, {
+    valueField: "value",
+    labelField: "label",
+    searchField: ["label"],
+    plugins: ["remove_button"],
+  });
 });
 
-// Still jQuery: selectize is a library, ported in P49-B group 6.
-const groupSelectize = jQuery("[data-selectize=groups]")[0]!
-  .selectize as Selectize.IApi<string | number, GroupOption>;
-const groupGuestSelectize = jQuery("[data-selectize=groups]")[1]!
-  .selectize as Selectize.IApi<string | number, GroupOption>;
-const groupAddUserSelectize = jQuery("[data-selectize=groups]")[2]!
-  .selectize as Selectize.IApi<string | number, GroupOption>;
+const groupSelectize = getSelectizeInstance<string | number, GroupOption>(
+  groupSelectizeTargets[0]!,
+)!;
+const groupGuestSelectize = getSelectizeInstance<string | number, GroupOption>(
+  groupSelectizeTargets[1]!,
+)!;
+const groupAddUserSelectize = getSelectizeInstance<
+  string | number,
+  GroupOption
+>(groupSelectizeTargets[2]!)!;
 
 /*-----------------
 OnClick functions

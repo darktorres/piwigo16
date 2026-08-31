@@ -18,7 +18,6 @@
         "openapi-fetch": "0.17.0",
         "piecon": "github:lipka/piecon#0.5.0",
         "plupload": "github:moxiecode/plupload#v2.1.2",
-        "selectize": "github:selectize/selectize.js#v0.11.2",
         "tus-js-client": "4.3.0",
         "underscore": "1.5.2",
         "web-vitals": "6.1.1",
@@ -38,7 +37,6 @@
         "@types/jqueryui": "1.12.24",
         "@types/node": "26.2.0",
         "@types/plupload": "2.0.14",
-        "@types/selectize": "0.12.40",
         "@vitest/coverage-v8": "4.1.11",
         "eslint": "10.8.1",
         "globals": "17.11.0",
@@ -400,8 +398,6 @@
     "@types/node": ["@types/node@26.2.0", "", { "dependencies": { "undici-types": "~8.3.0" } }, "sha512-5IviulTZeRNp2vAJ514cc/HUlY5nZ9fCbq9DMyC52BrhFZACo3nI0R7qBxhQmo/d27NFe96ur/b7Wwxklda+kg=="],
 
     "@types/plupload": ["@types/plupload@2.0.14", "", {}, "sha512-R7s7QeOTYghAdQ3V5/aRXj4cZuyHhVi/L/3OgYP3yCtiHsydbpahpWUuwZKP0WOyqVY5ItNsMZkIGJRuwFx73g=="],
-
-    "@types/selectize": ["@types/selectize@0.12.40", "", {}, "sha512-9AefwwbaBa/u7RoZIdkYde4RCQFpxBy/2YgrwmE5NvQ9xUcVoijC5ISuT3X5L2nsKUhcF6jVb5EyLVe1NW1a1g=="],
 
     "@types/unist": ["@types/unist@2.0.11", "", {}, "sha512-CmBKiL6NNo/OqgmMn95Fk9Whlp2mtvIv+KNpQKN2F4SjvrEesubTRWGYSg+BnWZOnlCaSTU1sMpsBOzgbYhnsA=="],
 
@@ -1422,8 +1418,6 @@
     "safer-buffer": ["safer-buffer@2.1.2", "", {}, "sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg=="],
 
     "schemes": ["schemes@1.4.0", "", { "dependencies": { "extend": "^3.0.0" } }, "sha512-ImFy9FbCsQlVgnE3TCWmLPCFnVzx0lHL/l+umHplDqAKd0dzFpnS6lFZIpagBlYhKwzVmlV36ec0Y1XTu8JBAQ=="],
-
-    "selectize": ["selectize@github:selectize/selectize.js#74e8953", {}, "selectize-selectize.js-74e8953", "sha512-T/TCgOUJTAJ8FoZvdV0YDrmKpn1r8JDm3XHFaICjogHxsuh6JurdFcxTQVkrSpkF/7G4MgJyJudTB+P7eKgcrA=="],
 
     "semver": ["semver@7.8.5", "", { "bin": "bin/semver.js" }, "sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA=="],
 

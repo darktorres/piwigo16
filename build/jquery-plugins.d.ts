@@ -270,12 +270,6 @@ declare module "piecon" {
 // rendering is the one real first-party call site.
 
 interface JQueryStatic {
-  // Real jQuery-core static helper, just missing from @types/jquery's
-  // own typings for this jQuery version. `LocalStorageCache.ts`'s own
-  // `AbstractSelectizer._selectize` is the one real first-party call
-  // site.
-  isNumeric(value: any): boolean;
-
   // jquery-ui-timepicker-addon (vendored -- P46-0's own CDN table, no
   // real upstream types). `datepicker.ts`'s own `pwgDatepicker` plugin
   // is the one real first-party call site. `JQueryStatic.datepicker`
@@ -401,13 +395,6 @@ interface JQuery {
   // it even in legacy.d.ts). `plugins_installated.ts`'s own
   // `jQuery("div.active").size()` is the one real first-party call site.
   size(): number;
-
-  // selectize.js's own `.selectize()` init method is now real, verified
-  // types from `@types/selectize` (P47) -- deleted here (was
-  // method-shorthand on both sides, harmless to leave, but redundant).
-  // `@types/selectize` also declares `interface HTMLElement { selectize:
-  // Selectize.IApi<any, any>; }` globally itself, so the live-instance
-  // property (`$el[0].selectize`) needs no ambient entry here either.
 
   // jquery.cluetip (vendored, github-sourced -- P46-0's own CDN table).
   // `intro.ts`'s own tooltip setup is the one real first-party call

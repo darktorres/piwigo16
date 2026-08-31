@@ -1,6 +1,7 @@
 import "./common";
 
 import { hide, on, ready, show, val } from "../../../default/js/vendor/dom";
+import { selectize } from "../../../default/js/vendor/selectize";
 export {};
 
 ready(function () {
@@ -18,10 +19,13 @@ ready(function () {
     show(document.querySelectorAll(".who_" + option));
   }
 
-  // Still jQuery: selectize is a library, ported in P49-B group 6.
-  jQuery(".who_option select").selectize({
-    plugins: ["remove_button"],
-  });
+  document
+    .querySelectorAll<HTMLSelectElement>(".who_option select")
+    .forEach((el) => {
+      selectize(el, {
+        plugins: ["remove_button"],
+      });
+    });
 
   on(
     document.querySelectorAll("form#categoryNotify"),

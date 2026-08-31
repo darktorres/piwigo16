@@ -9,8 +9,9 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * live-interaction coverage before this (PictureModifyPageRendererTest.php
  * only ever asserts the rendered page or drives raw POSTs).
  *
- * `.selectize()`, `.pwgDatepicker()`, `.colorbox()` and jquery-confirm
- * (`jQuery.confirm`/`.confirm()`) all stay jQuery (P49-B groups 3, 5, 6).
+ * `.selectize()` and jquery-confirm's own `confirm()` are real native
+ * calls now (P49-B groups 5 and 6, `vendor/jconfirm.ts`/`vendor/
+ * selectize.ts`). `.pwgDatepicker()`/`.colorbox()` still stay jQuery.
  */
 it('removes a linked album, updating the badge and showing the orphan message', function (): void {
     $page = H::asAdmin($this);
@@ -103,4 +104,85 @@ it('shows a delete-confirmation dialog', function (): void {
 
     $page->assertNoJavaScriptErrors();
     H::assertNoServerErrors($page, 'picture_modify delete-confirm dialog');
+});
+
+it('creates a brand-new tag via the selectize control, typing it and pressing Enter', function (): void {
+    // Real, mutation-verified coverage of `vendor/selectize.ts`'s own
+    // `create: true` + Enter-to-create flow (P49-B group 6) -- no prior
+    // test, jQuery-based or not, ever drove selectize's search input or
+    // its keyboard handling at all, only its zero-state render or direct
+    // API/DOM state.
+    $page = H::asAdmin($this);
+    $album = H::createCategory($page, [
+        'name' => 'Picture Modify New Tag Album ' . uniqid(),
+    ]);
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $album['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Picture Modify New Tag Photo');
+    @unlink($image);
+
+    $page = H::navigateOk($page, '/admin.php?page=photo-' . $imageId);
+
+    $newTagName = 'Fresh Tag ' . uniqid();
+    $inputSelector = 'select[name="tags[]"] + .selectize-control input';
+
+    $page->fill($inputSelector, $newTagName);
+
+    $page->script(<<<'JS'
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + 5000;
+            const check = () => {
+                if (document.querySelector('select[name="tags[]"] + .selectize-control .selectize-dropdown [data-create]') !== null) {
+                    return resolve(true);
+                }
+                if (Date.now() > deadline) {
+                    return reject(new Error('create row never appeared for the typed tag name'));
+                }
+                setTimeout(check, 100);
+            };
+            check();
+        })
+        JS);
+
+    $page->keys($inputSelector, 'Enter');
+
+    // Real `updateOriginalInput()` behavior, faithfully ported: a
+    // regenerated `<option>` carries the selected `value` only, no text
+    // content -- the tag's real display name lives in the widget's own
+    // rendered `.item` chip, not the underlying `<select>`.
+    $result = H::scriptArray($page, <<<'JS'
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + 5000;
+            const check = () => {
+                const select = document.querySelector('select[name="tags[]"]');
+                const item = select.nextElementSibling.querySelector('.selectize-input [data-value]');
+                const chip = item ? item.querySelector('.remove') : null;
+                if (select.options.length > 0 && select.options[0].selected && chip !== null) {
+                    return resolve({
+                        optionCount: select.options.length,
+                        itemText: item.textContent,
+                        hasRemoveButton: true,
+                    });
+                }
+                if (Date.now() > deadline) {
+                    return reject(new Error('new tag chip never landed in the real <select>'));
+                }
+                setTimeout(check, 100);
+            };
+            check();
+        })
+        JS);
+
+    expect($result['optionCount'])
+        ->toBe(1);
+    expect($result['itemText'])
+        ->toContain($newTagName);
+    expect($result['hasRemoveButton'])
+        ->toBeTrue();
+
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'picture_modify create tag via selectize Enter');
 });

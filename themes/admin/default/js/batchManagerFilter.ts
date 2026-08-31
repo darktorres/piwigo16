@@ -281,8 +281,8 @@ ready(function () {
   });
 
   // Filter JS Validation -- reads the real underlying <select>'s value,
-  // which selectize (still jQuery, P49-B group 6) keeps synced; only the
-  // widget itself stays jQuery, not this read.
+  // which selectize (`vendor/selectize.ts`, P49-B group 6) keeps synced
+  // and now dispatches a real native "change" event for.
   on(
     document.querySelectorAll('.filterBlock select[data-selectize="tags"]'),
     "change",

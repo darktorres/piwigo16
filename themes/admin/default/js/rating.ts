@@ -11,6 +11,7 @@ import { CategoriesCache } from "./LocalStorageCache";
 
 import { pwg_getPageData } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
+import { getSelectizeInstance } from "../../../default/js/vendor/selectize";
 import {
   delegate,
   fadeTo,
@@ -30,18 +31,20 @@ const categoriesCache = new CategoriesCache({
   rootUrl: pwg_getPageData<string>("root_url"),
 });
 
-// Still jQuery: selectize() takes a JQuery object. The widget's own later
-// reads (`.selectize` below) attach directly to the raw <select> element
-// (selectize.js's own `input.selectize = self`) and need no wrapper.
-categoriesCache.selectize(jQuery("[data-selectize=categories]"));
+categoriesCache.selectize(
+  document.querySelectorAll("[data-selectize=categories]"),
+);
 
 on(
   document.querySelectorAll("#removeAlbumFilter"),
   "click",
   function (event: Event): void {
-    document
-      .querySelector<HTMLSelectElement>("select[name=cat]")!
-      .selectize.setValue(null);
+    // Was `.selectize.setValue(null)` -- selectize.js's own `setValue()`
+    // always `clear()`s before applying the given value regardless, so a
+    // `null`/empty value is functionally just `clear()`.
+    getSelectizeInstance(
+      document.querySelector<HTMLSelectElement>("select[name=cat]")!,
+    )?.clear();
     event.preventDefault();
     event.stopPropagation();
   },
@@ -56,14 +59,13 @@ function checkCatFilter() {
 }
 
 checkCatFilter();
-// Still jQuery, deliberately: selectize.js's own onChange() propagates every
-// value change (typing/picking an option, or the setValue(null) above) by
-// calling `this.$input.trigger('change')` -- a jQuery-internal dispatch,
-// not a real DOM event. `<select>` has no native `.change()` method for
-// jQuery.trigger()'s own native-method fast path to call either, so a
-// native addEventListener("change", ...) here would never fire. Converts
-// with selectize itself in P49-B group 6.
-jQuery("select[name=cat]").change(function () {
+// `vendor/selectize.ts`'s own `triggerChange()` dispatches a real native
+// `change` event on the underlying `<select>` on every value change
+// (typing/picking an option, or the `clear()` above), so a plain native
+// listener now sees it -- unlike jQuery's own internal `.trigger('change')`
+// dispatch the original library used, which only ever reached other
+// jQuery-bound handlers.
+on(document.querySelectorAll("select[name=cat]"), "change", function () {
   checkCatFilter();
 });
 

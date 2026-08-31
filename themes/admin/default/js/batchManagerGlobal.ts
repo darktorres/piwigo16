@@ -219,8 +219,10 @@ ready(function () {
 // Confirmed live once already. Anything that lets the bundler decide
 // module evaluation order (shared chunks) has to re-verify this page.
 ready(function () {
-  // Still jQuery: selectize is a library, ported in P49-B group 6
-  // (pwgAddAlbum).
+  // Still jQuery: addAlbum.ts's own `jQuery.fn.pwgAddAlbum` needs a real
+  // JQuery `this` for colorbox (P49-B group 3, still jQuery itself) --
+  // unrelated to selectize, which it also uses internally and which is
+  // now a real native module (P49-B group 6).
   jQuery("[data-add-album]").pwgAddAlbum();
 });
 

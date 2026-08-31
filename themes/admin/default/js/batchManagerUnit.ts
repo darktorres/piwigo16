@@ -75,9 +75,7 @@ const tagsCache = new TagsCache({
   serverId: pwg_getPageData<string>("cache_key_hash"),
   rootUrl: pwg_getPageData<string>("root_url"),
 });
-// Still jQuery: selectize() takes a JQuery object, ported in P49-B
-// group 6.
-tagsCache.selectize(jQuery("[data-selectize=tags]"), {
+tagsCache.selectize(document.querySelectorAll("[data-selectize=tags]"), {
   lang: {
     Add: pwg_getPageString("Create"),
   },
@@ -93,30 +91,30 @@ const associated_categories = pwg_getPageData<Record<string, unknown>>(
   "associated_categories",
 );
 
-// Still jQuery: selectize() takes a JQuery object, ported in P49-B
-// group 6. `jQuery.grep()` inside the filter callback is a plain array
-// filter with no DOM/jQuery-set involvement, so it converts on its own.
-categoriesCache.selectize(jQuery("[data-selectize=categories]"), {
-  filter: function (
-    this: { name?: string },
-    categories: { id: string | number }[],
-    options: { default?: string | number },
-  ) {
-    if (this.name === "dissociate") {
-      const filtered = categories.filter((cat) =>
-        Boolean(associated_categories[cat.id]),
-      );
+categoriesCache.selectize(
+  document.querySelectorAll("[data-selectize=categories]"),
+  {
+    filter: function (
+      this: { name?: string },
+      categories: { id: string | number; [key: string]: unknown }[],
+      options: { default?: string | number },
+    ) {
+      if (this.name === "dissociate") {
+        const filtered = categories.filter((cat) =>
+          Boolean(associated_categories[cat.id]),
+        );
 
-      if (filtered.length > 0) {
-        options.default = filtered[0]!.id;
+        if (filtered.length > 0) {
+          options.default = filtered[0]!.id;
+        }
+
+        return filtered;
+      } else {
+        return categories;
       }
-
-      return filtered;
-    } else {
-      return categories;
-    }
+    },
   },
-});
+);
 
 // onLoad needed to wait localization loads
 ready(function () {
@@ -191,13 +189,12 @@ ready(function () {
     }
   });
 
-  // Stays jQuery for the same reason: selectize triggers "change" on its
-  // original (hidden) <select> via jQuery's own `.trigger()`, which a
-  // native listener would never see. This selector also matches every
-  // plain, non-selectized <select> on the page, whose real native
-  // "change" events a jQuery-registered listener receives just as well.
-  jQuery("select").on("change", function () {
-    const pictureId = jQuery(this).parents("fieldset").data("image_id") as
+  // `vendor/selectize.ts`'s own `triggerChange()` now dispatches a real
+  // native "change" event on the original (hidden) <select> (P49-B group
+  // 6), so a native listener sees it just like it always did for every
+  // plain, non-selectized <select> on the page.
+  on(document.querySelectorAll("select"), "change", function (this: Element) {
+    const pictureId = data(this.closest("fieldset")!, "image_id") as
       string | number;
     if (user_interacted) {
       showUnsavedLocalBadge(pictureId);

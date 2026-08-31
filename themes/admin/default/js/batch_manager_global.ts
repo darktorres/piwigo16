@@ -53,19 +53,15 @@ export const lang = {
   generateMsg: pwg_getPageString("Generate multiple size images"),
 };
 
-// Still jQuery: registration only, and genuinely so -- this whole block is
-// selectize interop (the still-jQuery library, P49-B group 6), not P49-A
-// DOM work: no native dom.ts call appears in it at all. Confirmed live,
-// not just reasoned: swapping this to dom.ts's own `ready()` produced a
-// real, reproducible page-load-time error (a cross-origin-masked "Script
-// error." from inside the selectize CDN script itself, confirmed via
-// `window.__pestBrowser.jsErrors` and absent on both the unconverted
-// original and a `jQuery(document).ready()`-wrapped version) -- jQuery's
-// own `.ready(fn)` runs `fn` synchronously, in the same tick, once the
-// document is already ready, whereas dom.ts's `ready()` always defers via
-// `setTimeout()`; delaying this block by a tick broke selectize's own
-// initialization.
-jQuery(document).ready(function () {
+// Was `jQuery(document).ready(...)`, not dom.ts's own `ready()`: this
+// whole block used to be selectize CDN-script interop, and swapping to
+// `ready()`'s always-deferred-via-`setTimeout()` timing broke that
+// script's own initialization (confirmed live via a reproducible
+// page-load "Script error." from inside the CDN bundle). Now that
+// selectize itself is a real native module (P49-B group 6, `vendor/
+// selectize.ts`) with no async script load to race, that constraint is
+// gone -- converted to the same `ready()` every other P49 file uses.
+ready(function () {
   // <!-- TAGS -->
   const tagsCache = new TagsCache({
     serverKey: pwg_getPageData<string>("cache_key_tags"),
@@ -73,8 +69,7 @@ jQuery(document).ready(function () {
     rootUrl: pwg_getPageData<string>("root_url"),
   });
 
-  // Still jQuery: selectize is a library, ported in P49-B group 6.
-  tagsCache.selectize(jQuery("[data-selectize=tags]"), {
+  tagsCache.selectize(document.querySelectorAll("[data-selectize=tags]"), {
     lang: {
       Add: pwg_getPageString("Create"),
     },
@@ -91,32 +86,34 @@ jQuery(document).ready(function () {
     Record<string | number, unknown>
   >("associated_categories");
 
-  interface SelectizeCategoryOption {
+  interface SelectizeCategoryOption extends Record<string, unknown> {
     id: string | number;
   }
 
-  // Still jQuery: selectize is a library, ported in P49-B group 6.
-  categoriesCache.selectize(jQuery("[data-selectize=categories]"), {
-    filter: function (
-      this: { name: string },
-      categories: SelectizeCategoryOption[],
-      options: { default?: string | number },
-    ) {
-      if (this.name === "dissociate") {
-        const filtered = categories.filter((cat) =>
-          Boolean(associated_categories[cat.id]),
-        );
+  categoriesCache.selectize(
+    document.querySelectorAll("[data-selectize=categories]"),
+    {
+      filter: function (
+        this: { name: string },
+        categories: SelectizeCategoryOption[],
+        options: { default?: string | number },
+      ) {
+        if (this.name === "dissociate") {
+          const filtered = categories.filter((cat) =>
+            Boolean(associated_categories[cat.id]),
+          );
 
-        if (filtered.length > 0) {
-          options.default = filtered[0]!.id;
+          if (filtered.length > 0) {
+            options.default = filtered[0]!.id;
+          }
+
+          return filtered;
+        } else {
+          return categories;
         }
-
-        return filtered;
-      } else {
-        return categories;
-      }
+      },
     },
-  });
+  );
 });
 
 const _nb_thumbs_page = pwg_getPageData<number>("nb_thumbs_page");

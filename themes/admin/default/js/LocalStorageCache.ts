@@ -15,6 +15,12 @@
 // module, its own types are module-private, so this file needs its own
 // local copy -- a pure type alias, safe to duplicate.
 import { ajax } from "../../../default/js/vendor/ajax";
+import { data, setData } from "../../../default/js/vendor/dom";
+import {
+  getSelectizeInstance,
+  selectize as createSelectize,
+  type SelectizeRenderers,
+} from "../../../default/js/vendor/selectize";
 
 type CategoryAdmin =
   import("../../../../openapi/client/schema").operations["categoryList"]["responses"][200]["content"]["application/json"]["categories"][number];
@@ -51,7 +57,7 @@ interface LocalStorageCacheOptions {
 // a real `.id`, plus whatever other fields the render/filter functions
 // (each *Cache's own `.selectize()`, `AbstractSelectizer.getRender()`)
 // dynamically look up by field name.
-interface SelectizeEntity {
+interface SelectizeEntity extends Record<string, unknown> {
   id: string | number;
 }
 
@@ -73,37 +79,34 @@ interface LocalStorageCacheCtor {
   prototype: LocalStorageCacheInstance;
 }
 
-interface SelectizeOptions {
+// The options a real call site passes to a Cache's own `.selectize()` --
+// distinct from `vendor/selectize.ts`'s own `SelectizeOptions` (the
+// low-level widget-init options), imported below under its real name.
+interface EntitySelectizeCallOptions {
   value?: (string | number)[] | { id: string | number }[];
   default?: string | number;
   create?: boolean;
   lang?: { Add?: string };
   filter?: (
     data: SelectizeEntity[],
-    options: SelectizeOptions,
+    options: EntitySelectizeCallOptions,
   ) => SelectizeEntity[];
 }
 
 interface AbstractSelectizerInstance extends LocalStorageCacheInstance {
   _selectize(
-    $target: JQuery<HTMLSelectElement>,
-    globalOptions: SelectizeOptions,
+    targets: Element | ArrayLike<Element>,
+    globalOptions: EntitySelectizeCallOptions,
   ): void;
-}
-
-interface SelectizeRenderers {
-  option(data: SelectizeEntity, _escape: unknown): string;
-  item(data: SelectizeEntity, _escape: unknown): string;
-  option_create(data: { input: string }, _escape: unknown): string;
 }
 
 interface AbstractSelectizerCtor {
   new (): AbstractSelectizerInstance;
   prototype: AbstractSelectizerInstance;
-  getRender(
+  getRender<U extends Record<string, unknown>>(
     field_label: string,
     lang: { Add?: string } | undefined,
-  ): SelectizeRenderers;
+  ): Required<SelectizeRenderers<U>>;
 }
 
 export interface EntityCacheInstance<
@@ -113,8 +116,8 @@ export interface EntityCacheInstance<
   get(callback: (data: T[]) => void): void;
   set(data: T[]): void;
   selectize(
-    $target: JQuery<HTMLSelectElement>,
-    options?: SelectizeOptions,
+    targets: Element | ArrayLike<Element>,
+    options?: EntitySelectizeCallOptions,
   ): void;
 }
 
@@ -123,16 +126,11 @@ interface EntityCacheCtor<T extends SelectizeEntity> {
   prototype: EntityCacheInstance<T>;
 }
 
-// Real module now (docs/PLAN.md P48 -- was a non-module IIFE pre-P48,
-// see git history for the pre-P48 shape). The IIFE's own `$`/`exports`
-// params/wrapper are gone entirely -- a real module's own top-level
-// declarations are already module-scoped, not global, with no wrapper
-// needed. `$` stays a local alias (jQuery/`$` itself is already a real
-// global regardless) purely to avoid re-touching every one of this
-// file's own many `$.`/`$(...)` call sites for a pure module-boundary
-// change. Body indentation is unchanged (still one level deep from the
-// old IIFE) -- a pure reformat, not a logic change; left for Prettier.
-const $: JQueryStatic = jQuery;
+function toElements(target: Element | ArrayLike<Element>): HTMLSelectElement[] {
+  return (
+    target instanceof Element ? [target] : Array.from(target)
+  ) as HTMLSelectElement[];
+}
 
 /**
  * Base LocalStorage cache
@@ -245,7 +243,9 @@ AbstractSelectizer.prototype = new LocalStorageCache(
 
 /*
  * Load Selectize with cache content
- * @param $target {jQuery} may have some data attributes (create, default, value)
+ * @param targets elements already initialized via `vendor/selectize.ts`'s
+ *   own `selectize()` by the calling subclass's own `.selectize()` method
+ *   (may have real `data-create`/`data-default`/`data-value` attributes)
  * @param options {object}
  *    - value (optional) list of preselected items (ids, or objects with "id" attribute")
  *    - default (optional) default value which will be forced if the select is emptyed
@@ -256,66 +256,67 @@ AbstractSelectizer.prototype = new LocalStorageCache(
  */
 AbstractSelectizer.prototype._selectize = function (
   this: AbstractSelectizerInstance,
-  $target: JQuery<HTMLSelectElement>,
-  globalOptions: SelectizeOptions,
+  targets: Element | ArrayLike<Element>,
+  globalOptions: EntitySelectizeCallOptions,
 ) {
-  $target.data("cache", this);
+  const elements = toElements(targets);
+  elements.forEach((el) => {
+    setData(el, "cache", this);
+  });
 
-  this.get(function (data) {
-    $target.each(function (this: HTMLSelectElement) {
+  this.get((cacheData) => {
+    elements.forEach((el) => {
       let filtered: SelectizeEntity[];
       let value: (string | number)[] | { id: string | number }[] | undefined;
       let defaultValue: string | number | undefined;
-      const options = $.extend({}, globalOptions);
+      const options = { ...globalOptions };
+      const instance = getSelectizeInstance<string | number, SelectizeEntity>(
+        el,
+      )!;
 
       // apply filter function
       if (options.filter != undefined) {
-        filtered = options.filter.call(this, data, options);
+        filtered = options.filter.call(el, cacheData, options);
       } else {
-        filtered = data;
+        filtered = cacheData;
       }
 
-      this.selectize.settings.maxOptions = filtered.length + 100;
+      instance.settings.maxOptions = filtered.length + 100;
 
       // active creation mode
-      if (this.hasAttribute("data-create")) {
+      if (el.hasAttribute("data-create")) {
         options.create = true;
       }
-      this.selectize.settings.create = !!options.create;
+      instance.settings.create = !!options.create;
 
       // load options
-      this.selectize.load(function (
-        this: { options: Record<string, unknown> },
-        callback: (data: SelectizeEntity[]) => void,
-      ) {
-        if ($.isEmptyObject(this.options)) {
+      instance.load(function (callback) {
+        if (Object.keys(this.options).length === 0) {
           callback(filtered);
         }
       });
 
       // load items
       if (
-        (value = $(this).data("value") as
+        (value = data(el, "value") as
           (string | number)[] | { id: string | number }[] | undefined)
       ) {
         options.value = value;
       }
       if (options.value != undefined) {
-        $.each(
-          value,
-          $.proxy(function (
-            this: HTMLSelectElement,
-            i: number,
-            cat: string | number | { id: string | number },
-          ) {
-            if ($.isNumeric(cat)) this.selectize.addItem(cat);
-            else this.selectize.addItem((cat as { id: string }).id);
-          }, this),
+        options.value.forEach(
+          (cat: string | number | { id: string | number }) => {
+            if (typeof cat === "string" || typeof cat === "number") {
+              instance.addItem(cat);
+            } else {
+              instance.addItem(cat.id);
+            }
+          },
         );
       }
 
       // set default
-      if ((defaultValue = $(this).data("default") as string | number)) {
+      if ((defaultValue = data(el, "default") as string | number)) {
         options.default = defaultValue;
       }
       if (options.default == "first") {
@@ -323,38 +324,38 @@ AbstractSelectizer.prototype._selectize = function (
       }
 
       if (options.default != undefined) {
+        const defaultValue = options.default;
         // add default item
-        if (this.selectize.getValue() == "") {
-          this.selectize.addItem(options.default);
+        if (instance.getValue() == "") {
+          instance.addItem(defaultValue);
         }
 
         // if multiple: prevent item deletion
-        if (this.multiple) {
-          this.selectize.getItem(options.default).find(".remove").hide();
+        if (el.multiple) {
+          (
+            instance
+              .getItem(defaultValue)
+              ?.querySelector(".remove") as HTMLElement | null
+          )?.style.setProperty("display", "none");
 
-          this.selectize.on(
-            "item_remove",
-            function (
-              this: Selectize.IApi<string | number, SelectizeEntity>,
-              id: string | number,
-            ) {
-              if (id == options.default) {
-                this.addItem(id);
-                this.getItem(id).find(".remove").hide();
-              }
-            },
-          );
+          instance.on("item_remove", (id) => {
+            if (id == defaultValue) {
+              instance.addItem(id);
+              (
+                instance
+                  .getItem(id)
+                  ?.querySelector(".remove") as HTMLElement | null
+              )?.style.setProperty("display", "none");
+            }
+          });
         }
         // if single: restore default on blur
         else {
-          this.selectize.on(
-            "dropdown_close",
-            function (this: Selectize.IApi<string | number, SelectizeEntity>) {
-              if (this.getValue() == "") {
-                this.addItem(options.default!);
-              }
-            },
-          );
+          instance.on("dropdown_close", () => {
+            if (instance.getValue() == "") {
+              instance.addItem(defaultValue);
+            }
+          });
         }
       }
     });
@@ -362,26 +363,18 @@ AbstractSelectizer.prototype._selectize = function (
 };
 
 // redefine Selectize templates without escape
-AbstractSelectizer.getRender = function (
+AbstractSelectizer.getRender = function <U extends Record<string, unknown>>(
   field_label: string,
   lang: { Add?: string } | undefined,
 ) {
   lang = lang || { Add: "Add" };
 
   return {
-    option: function (data: SelectizeEntity, _escape: unknown) {
-      return (
-        '<div class="option">' +
-        String((data as unknown as Record<string, unknown>)[field_label]) +
-        "</div>"
-      );
+    option: function (data: U, _escape: unknown) {
+      return '<div class="option">' + String(data[field_label]) + "</div>";
     },
-    item: function (data: SelectizeEntity, _escape: unknown) {
-      return (
-        '<div class="item">' +
-        String((data as unknown as Record<string, unknown>)[field_label]) +
-        "</div>"
-      );
+    item: function (data: U, _escape: unknown) {
+      return '<div class="item">' + String(data[field_label]) + "</div>";
     },
     option_create: function (data: { input: string }, _escape: unknown) {
       return (
@@ -438,21 +431,23 @@ CategoriesCache.prototype =
  */
 CategoriesCache.prototype.selectize = function (
   this: EntityCacheInstance<ProcessedCategory>,
-  $target: JQuery<HTMLSelectElement>,
-  options?: SelectizeOptions,
+  targets: Element | ArrayLike<Element>,
+  options?: EntitySelectizeCallOptions,
 ) {
   options = options || {};
 
-  $target.selectize({
-    valueField: "id",
-    labelField: "fullname",
-    sortField: "pos",
-    searchField: ["fullname"],
-    plugins: ["remove_button"],
-    render: AbstractSelectizer.getRender("fullname", options.lang),
+  toElements(targets).forEach((el) => {
+    createSelectize(el, {
+      valueField: "id",
+      labelField: "fullname",
+      sortField: "pos",
+      searchField: ["fullname"],
+      plugins: ["remove_button"],
+      render: AbstractSelectizer.getRender("fullname", options.lang),
+    });
   });
 
-  this._selectize($target, options);
+  this._selectize(targets, options);
 };
 
 /**
@@ -498,21 +493,23 @@ TagsCache.prototype =
  */
 TagsCache.prototype.selectize = function (
   this: EntityCacheInstance<ProcessedTag>,
-  $target: JQuery<HTMLSelectElement>,
-  options?: SelectizeOptions,
+  targets: Element | ArrayLike<Element>,
+  options?: EntitySelectizeCallOptions,
 ) {
   options = options || {};
 
-  $target.selectize({
-    valueField: "id",
-    labelField: "name",
-    sortField: "name",
-    searchField: ["name"],
-    plugins: ["remove_button"],
-    render: AbstractSelectizer.getRender("name", options.lang),
+  toElements(targets).forEach((el) => {
+    createSelectize(el, {
+      valueField: "id",
+      labelField: "name",
+      sortField: "name",
+      searchField: ["name"],
+      plugins: ["remove_button"],
+      render: AbstractSelectizer.getRender("name", options.lang),
+    });
   });
 
-  this._selectize($target, options);
+  this._selectize(targets, options);
 };
 
 /**
@@ -558,21 +555,23 @@ GroupsCache.prototype =
  */
 GroupsCache.prototype.selectize = function (
   this: EntityCacheInstance<ProcessedGroup>,
-  $target: JQuery<HTMLSelectElement>,
-  options?: SelectizeOptions,
+  targets: Element | ArrayLike<Element>,
+  options?: EntitySelectizeCallOptions,
 ) {
   options = options || {};
 
-  $target.selectize({
-    valueField: "id",
-    labelField: "name",
-    sortField: "name",
-    searchField: ["name"],
-    plugins: ["remove_button"],
-    render: AbstractSelectizer.getRender("name", options.lang),
+  toElements(targets).forEach((el) => {
+    createSelectize(el, {
+      valueField: "id",
+      labelField: "name",
+      sortField: "name",
+      searchField: ["name"],
+      plugins: ["remove_button"],
+      render: AbstractSelectizer.getRender("name", options.lang),
+    });
   });
 
-  this._selectize($target, options);
+  this._selectize(targets, options);
 };
 
 /**
@@ -624,21 +623,23 @@ UsersCache.prototype =
  */
 UsersCache.prototype.selectize = function (
   this: EntityCacheInstance<UserEntity>,
-  $target: JQuery<HTMLSelectElement>,
-  options?: SelectizeOptions,
+  targets: Element | ArrayLike<Element>,
+  options?: EntitySelectizeCallOptions,
 ) {
   options = options || {};
 
-  $target.selectize({
-    valueField: "id",
-    labelField: "username",
-    sortField: "username",
-    searchField: ["username"],
-    plugins: ["remove_button"],
-    render: AbstractSelectizer.getRender("username", options.lang),
+  toElements(targets).forEach((el) => {
+    createSelectize(el, {
+      valueField: "id",
+      labelField: "username",
+      sortField: "username",
+      searchField: ["username"],
+      plugins: ["remove_button"],
+      render: AbstractSelectizer.getRender("username", options.lang),
+    });
   });
 
-  this._selectize($target, options);
+  this._selectize(targets, options);
 };
 
 // LocalStorageCache itself (the 4 real exports' own shared base class)

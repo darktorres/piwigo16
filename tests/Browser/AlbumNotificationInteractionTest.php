@@ -114,20 +114,16 @@ it('blocks the send when no recipient is actually selected, allows it once one i
     expect($blockedWithNoSelection)
         ->toBeTrue();
 
-    // Through selectize's own API, not by setting `.selected` directly --
-    // selectize.js detaches every original <option> from the underlying
-    // <select> on init ($input.children().detach(), keeping them only to
-    // restore on destroy()), so there is no unselected <option> element
-    // left to select there any more. `.selectize.addItem()` is what
-    // re-adds a real, selected <option> via the widget's own
-    // updateOriginalInput() -- the same real DOM state
-    // `whoSelect.selectedOptions` (album_notification.ts's own submit
-    // guard) reads. User id 1 is fixture_admin, always a valid recipient
-    // for a public album (AlbumNotificationPageRendererTest.php's own
-    // sibling test already sends to this same id).
-    $page->script(<<<'JS'
-        document.querySelector('.who_users select').selectize.addItem('1')
-        JS);
+    // Real user interaction through `vendor/selectize.ts`'s own rendered
+    // DOM (P49-B group 6), not a direct API call: click the control to
+    // open the dropdown, then click the real `[data-value="1"]` option
+    // row -- the same real DOM state `whoSelect.selectedOptions`
+    // (album_notification.ts's own submit guard) reads afterward. User
+    // id 1 is fixture_admin, always a valid recipient for a public album
+    // (AlbumNotificationPageRendererTest.php's own sibling test already
+    // sends to this same id).
+    $page->click('.who_users .selectize-input');
+    $page->click('.who_users .selectize-dropdown [data-value="1"]');
 
     $page->click('button[name=submitEmail]');
     $blockedWithSelection = $page->script('window.__wasPrevented');

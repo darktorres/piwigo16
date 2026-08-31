@@ -11,17 +11,17 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * (a real ajax round trip, fade, and row removal) and the album-filter
  * show/hide toggle.
  *
- * That second one is the interesting one: selectize.js propagates every
- * value change (including the removeAlbumFilter click's own
- * `.selectize.setValue(null)`) by calling `this.$input.trigger('change')`,
- * a jQuery-internal dispatch that a native addEventListener("change", ...)
- * never receives -- confirmed by reading selectize.js's own onChange()
- * and jQuery's own trigger() (its native-method fast path only fires for
- * event types a DOM element has a real method for, e.g. click/submit,
- * never "change" on a <select>). rating.ts's own `select[name=cat]`
- * "change" binding stays jQuery for exactly this reason (converts with
- * selectize itself in P49-B group 6) -- this test is what would catch it
- * silently breaking if that binding were ever converted to native.
+ * That second one is the interesting one: `vendor/selectize.ts`'s own
+ * `triggerChange()` (P49-B group 6) dispatches a real native "change"
+ * event on the underlying `<select>` for every value change (including
+ * the removeAlbumFilter click's own `.clear()`), which rating.ts's own
+ * `select[name=cat]` "change" binding (now a plain `on()`, no longer
+ * jQuery-bound) picks up. This test caught a real bug during that
+ * conversion: `syncOriginalSelect()` originally tried to toggle
+ * `.selected` on pre-existing `<option>` children, but a Cache-backed
+ * `<select>` (this one included) starts with none -- real selectize.js
+ * instead *regenerates* the `<option>` list from the current items on
+ * every change, which is what fixed it.
  */
 it('deletes a rating via the trash icon, fading and removing its row', function (): void {
     $page = H::asAdmin($this);

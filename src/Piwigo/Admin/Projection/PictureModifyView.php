@@ -87,7 +87,6 @@ final readonly class PictureModifyView implements View, HasPageAssets, ExposesPa
             AssetContribution::script('picture_modify_page', 'themes/admin/default/js/pages/picture_modify.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui.timepicker-addon']),
             ...new ColorboxView()
                 ->pageAssets(),
-            AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
             AssetContribution::css('themes/admin/default/css/pages/picture_modify.css', id: 'picture_modify'),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),

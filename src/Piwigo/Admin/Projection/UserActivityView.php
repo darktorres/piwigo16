@@ -49,7 +49,6 @@ final readonly class UserActivityView implements View, HasPageAssets, ExposesPag
         return [
             ...new ColorboxView()
                 ->pageAssets(),
-            AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),

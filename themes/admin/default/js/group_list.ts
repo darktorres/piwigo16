@@ -12,6 +12,10 @@ import {
 import { ajax } from "../../../default/js/vendor/ajax";
 import { alert, confirm } from "../../../default/js/vendor/jconfirm";
 import {
+  selectize as createSelectize,
+  type SelectizeInstance,
+} from "../../../default/js/vendor/selectize";
+import {
   addClass,
   animate,
   attr,
@@ -60,7 +64,7 @@ interface GroupMemberDisplay {
   id: string | number;
   username: string;
 }
-interface UserSelectOption {
+interface UserSelectOption extends Record<string, unknown> {
   value: string | number;
   text: string;
 }
@@ -1163,7 +1167,7 @@ on(document.querySelectorAll(".ConfirmDeleteButton"), "click", function () {
  -------*/
 
 // Initialize the research user bar
-let selectize: Selectize.IApi<string | number, UserSelectOption>;
+let selectize: SelectizeInstance<string | number, UserSelectOption>;
 
 // Initialize the cache -- placeholder cast, real init happens via
 // `new UsersCache(...)` inside updateUserSearch()/at module load
@@ -1194,17 +1198,10 @@ const associateUserInfo = parseHtml(
 let updateUserSearch: () => void;
 
 ready(function () {
-  // Still jQuery: selectize() takes a JQuery object, ported in P49-B
-  // group 6.
-  const $select = jQuery(".AddUserBlock select").selectize({});
-
-  // fetch the instance -- ambient `HTMLElement.selectize` (from
-  // @types/selectize) ships as `Selectize.IApi<any, any>`; narrowed to
-  // this file's real value/option shape.
-  selectize = $select[0]!.selectize as Selectize.IApi<
-    string | number,
-    UserSelectOption
-  >;
+  selectize = createSelectize<string | number, UserSelectOption>(
+    document.querySelector<HTMLSelectElement>(".AddUserBlock select")!,
+    {},
+  );
 
   let idSearch = "";
   on(document.querySelectorAll(".UserSearch input"), "focus", function () {
@@ -1659,9 +1656,7 @@ usersCache = new UsersCache({
   rootUrl: rootUrl,
 });
 
-// Still jQuery: selectize() takes a JQuery object, ported in P49-B
-// group 6.
-usersCache.selectize(jQuery("select.UserSearch"));
+usersCache.selectize(document.querySelectorAll("select.UserSearch"));
 // temporary fix for #1283 (end)
 
 // Explicit `window.` exposure -- required at runtime, not decorative

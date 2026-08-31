@@ -12,10 +12,7 @@ export {};
     rootUrl: pwg_getPageData<string>("root_url"),
   });
 
-  // Still jQuery: selectize() takes a JQuery object and stashes the cache on
-  // it with jQuery's own data store, which addAlbum.ts reads back the same
-  // way -- both sides convert together with selectize in P49-B.
-  groupsCache.selectize(jQuery("[data-selectize=groups]"));
+  groupsCache.selectize(document.querySelectorAll("[data-selectize=groups]"));
 
   // <!-- USERS -->
   const usersCache = new UsersCache({
@@ -24,7 +21,7 @@ export {};
     rootUrl: pwg_getPageData<string>("root_url"),
   });
 
-  usersCache.selectize(jQuery("[data-selectize=users]"));
+  usersCache.selectize(document.querySelectorAll("[data-selectize=users]"));
 
   // <!-- TOGGLES -->
   function checkStatusOptions() {

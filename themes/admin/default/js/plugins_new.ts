@@ -17,6 +17,7 @@ import {
   trigger,
   val,
 } from "../../../default/js/vendor/dom";
+import { selectize as createSelectize } from "../../../default/js/vendor/selectize";
 import { slider, type SliderUIParams } from "../../../default/js/vendor/slider";
 import { sortElements } from "../../../default/js/vendor/sortElements";
 import { tipTip } from "../../../default/js/vendor/tiptip";
@@ -178,7 +179,7 @@ ready(function () {
     }
   });
 
-  interface FilterOption {
+  interface FilterOption extends Record<string, unknown> {
     value: string;
     text: string;
   }
@@ -205,31 +206,30 @@ ready(function () {
   });
 
   // initialize the Selectize control
-  // Still jQuery: selectize is a library, ported in P49-B group 6.
-  let $select = $("#author-filter").selectize({
-    // Neither #author-filter nor #tag-filter is a `<select multiple>`
-    // (confirmed in plugins_new.latte), so onChange always gives a
-    // single string, not string[].
-    onChange: function (value: string) {
-      applyFilter("author", value);
+  const selectizeAuthor = createSelectize<string, FilterOption>(
+    document.querySelector<HTMLSelectElement>("#author-filter")!,
+    {
+      // Neither #author-filter nor #tag-filter is a `<select multiple>`
+      // (confirmed in plugins_new.latte), so onChange always gives a
+      // single string, not string[].
+      onChange: function (value) {
+        applyFilter("author", value as string);
+      },
+      plugins: ["remove_button"],
     },
-    plugins: ["remove_button"],
-  });
-
-  // fetch the instance
-  const selectizeAuthor = $select[0]!.selectize;
+  );
   selectizeAuthor.addOption(authorNames);
 
   // initialize the Selectize control
-  $select = $("#tag-filter").selectize({
-    onChange: function (value: string) {
-      applyFilter("tag", value);
+  const selectizeTag = createSelectize<string, FilterOption>(
+    document.querySelector<HTMLSelectElement>("#tag-filter")!,
+    {
+      onChange: function (value) {
+        applyFilter("tag", value as string);
+      },
+      plugins: ["remove_button"],
     },
-    plugins: ["remove_button"],
-  });
-
-  // fetch the instance
-  const selectizeTag = $select[0]!.selectize;
+  );
   selectizeTag.addOption(tagsNames);
 
   slider(document.querySelectorAll(".notation-filter-slider"), {

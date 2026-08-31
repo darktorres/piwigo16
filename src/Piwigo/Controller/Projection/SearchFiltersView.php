@@ -91,7 +91,6 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
             // `ui-slider`/`ui-slider-handle`/... class structure it
             // styles.
             AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui', order: -999),
-            AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js', loadMode: LoadMode::Footer),
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::css('themes/default/css/search.css', order: -100),

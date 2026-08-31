@@ -30,9 +30,10 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * Seeding a fresh row the same way the fixture does (not through a real
  * login) is the only way to make this deterministic.
  *
- * `.selectize()` (user/action filter dropdowns, P49-B group 6) stays
- * jQuery; only the DOM work around it (reading its own rendered
- * `.selectize-input`/`.item[data-value]` markup) converted.
+ * `.selectize()` (user/action filter dropdowns) is a real native call now
+ * (P49-B group 6, `vendor/selectize.ts`) -- this test still only reads
+ * its own rendered `.selectize-input`/`.item[data-value]` markup, same as
+ * before.
  */
 it('renders at least the real login activity line with the expected login classes and username', function (): void {
     $db = H::connect();

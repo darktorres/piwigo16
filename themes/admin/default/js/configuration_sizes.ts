@@ -1,4 +1,4 @@
-import "./common";
+import { pwg_jconfirm_follow_href } from "./common";
 
 import { pwg_getPageString } from "../../../default/js/page-data";
 import {
@@ -21,9 +21,7 @@ const cancel_msg = pwg_getPageString("No, I have changed my mind");
 document
   .querySelectorAll(".restore-settings-button")
   .forEach(function (button) {
-    // Still jQuery: pwg_jconfirm_follow_href wraps jquery-confirm, ported
-    // in P49-B group 5.
-    jQuery(button).pwg_jconfirm_follow_href({
+    pwg_jconfirm_follow_href(button, {
       alert_title: title_msg,
       alert_confirm: confirm_msg,
       alert_cancel: cancel_msg,

@@ -54,7 +54,6 @@ final readonly class PluginsNewView implements View, HasPageAssets, ExposesPageD
             AssetContribution::css('themes/admin/default/css/pages/plugins_new.css', id: 'plugins_new'),
             AssetContribution::script('jquery.selectize', 'https://cdn.jsdelivr.net/gh/selectize/selectize.js@v0.11.2/dist/js/standalone/selectize.min.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
-            AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             // jquery.sort's own `.sortElements()` is a native port now
             // (P49-B group 1) -- no script tag or dependency left to
             // register for it. jQuery UI's own slider widget is too now

@@ -6,6 +6,7 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { ajax, type AjaxThenable } from "../../../default/js/vendor/ajax";
+import { confirm } from "../../../default/js/vendor/jconfirm";
 import { slider, type SliderUIParams } from "../../../default/js/vendor/slider";
 import {
   addClass,
@@ -2345,8 +2346,7 @@ function fill_user_edit_update(user_to_edit: UserRow, pop_in: Element) {
   const deleteBtn = find(pop_in, ".delete-user-button");
   off(deleteBtn, "click");
   on(deleteBtn, "click", function () {
-    // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-    jQuery.confirm({
+    confirm({
       title: title_msg.replace("%s", user_to_edit.username),
       content: "",
       buttons: {

@@ -62,7 +62,6 @@
     "datatables.net": "1.10.11",
     "jquery": "1.11.3",
     "jquery-cluetip": "github:kswedberg/jquery-cluetip#1.2.6",
-    "jquery-confirm": "3.3.4",
     "jquery-timepicker-addon": "github:trentrichardson/jQuery-Timepicker-Addon#v1.4.4",
     "jquery-ui": "1.10.4",
     "jquery.colorbox": "github:jackmoore/colorbox#1.5.14",

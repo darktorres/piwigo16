@@ -5,6 +5,7 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
+import { confirm } from "../../../default/js/vendor/jconfirm";
 import {
   attr,
   data,
@@ -33,8 +34,7 @@ fitExtensions();
 document.querySelectorAll(".format-card").forEach((card) => {
   const button = card.querySelectorAll(".format-delete");
   on(button, "click", () => {
-    // Still jQuery: $.confirm is jquery-confirm, ported in P49-B group 5.
-    $.confirm({
+    confirm({
       title: str_confirm_delete_format.replace(
         "%s",
         htmlOf(card.querySelectorAll(".format-card-ext span")) ?? "",

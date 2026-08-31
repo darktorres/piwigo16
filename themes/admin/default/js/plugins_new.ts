@@ -1,4 +1,4 @@
-import "./common";
+import { pwg_jconfirm_follow_href } from "./common";
 
 import { pwg_getPageString } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
@@ -157,9 +157,7 @@ ready(function () {
   document.querySelectorAll(".buttonInstall").forEach((el) => {
     const box = el.closest(".pluginBox");
     const plugin_name = box !== null ? (data(box, "name") as string) : "";
-    // Still jQuery: pwg_jconfirm_follow_href wraps jquery-confirm, ported
-    // in P49-B group 5.
-    jQuery(el).pwg_jconfirm_follow_href({
+    pwg_jconfirm_follow_href(el, {
       alert_title: str_install_title.replace("%s", plugin_name),
       alert_confirm: str_confirm_msg,
       alert_cancel: str_cancel_msg,

@@ -10,6 +10,7 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
+import { alert, confirm } from "../../../default/js/vendor/jconfirm";
 import {
   addClass,
   animate,
@@ -462,23 +463,15 @@ const toogleSelection = function (
 
 /* Group Ajax and Display Functions */
 const deleteGroup = function (id: string | number) {
-  // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-  jQuery.confirm({
+  confirm({
     title: str_delete.replace(
       "%s",
       htmlOf(document.querySelectorAll("#group-" + id + " #group_name"))!,
     ),
-    draggable: false,
     titleClass: "jconfirmDeleteConfirm",
-    theme: "modern",
     content: "",
-    animation: "zoom",
     boxWidth: "30%",
-    useBootstrap: false,
     type: "red",
-    animateFromElement: false,
-    backgroundDismiss: true,
-    typeAnimated: false,
     buttons: {
       confirm: {
         text: str_yes_delete_confirmation,
@@ -489,8 +482,7 @@ const deleteGroup = function (id: string | number) {
               "#group-" + id + " .Group-name-container p",
             ),
           )!;
-          // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-          jQuery.alert({
+          alert({
             ...{
               title: str_group_deleted.replace("%s", groupName),
               content: function () {
@@ -1051,8 +1043,7 @@ on(document.querySelectorAll(".ConfirmMergeButton"), "click", function () {
       html(document.querySelectorAll(".DeleteGroupList"), "");
       html(document.querySelectorAll("#MergeOptionsChoices"), "");
 
-      // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-      jQuery.alert({
+      alert({
         ...{
           title: str_merged_into
             .replace("%s1", name_merge.toString())
@@ -1152,8 +1143,7 @@ on(document.querySelectorAll(".ConfirmDeleteButton"), "click", function () {
 
       loadState.reverse();
       updateSelectionPanel("NoSelection");
-      // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-      jQuery.alert({
+      alert({
         ...{
           title: str_groups_deleted.replace("%s", names.toString()),
           content: "",

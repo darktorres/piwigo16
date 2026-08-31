@@ -32,6 +32,7 @@ import {
   x_plugins_found,
 } from "./plugins_installed_config";
 import { ajax, type AjaxResponse } from "../../../default/js/vendor/ajax";
+import { alert, confirm } from "../../../default/js/vendor/jconfirm";
 import {
   addClass,
   css,
@@ -185,8 +186,7 @@ function applyActivation(row: Element): void {
 function confirmIncompatibleActivation(toggleEl: Element, row: Element): void {
   let confirmed = false;
 
-  // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-  $.confirm({
+  confirm({
     title: incompatible_msg,
     content: activate_msg,
     buttons: {
@@ -273,8 +273,7 @@ function disactivatePlugin(id: string): void {
 }
 
 function deletePlugin(id: string, name: string): void {
-  // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-  $.alert({
+  alert({
     title: deleted_plugin_msg.replace("%s", name),
     content: function () {
       return ajax({
@@ -610,8 +609,7 @@ ready(function () {
       const pluginContent = el.closest(".pluginContent")!;
       const plugin_name = textOf(find(pluginContent, ".pluginName")).trim();
       const plugin_id = pluginContent.parentElement!.id;
-      // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-      $.confirm({
+      confirm({
         title: delete_plugin_msg.replace("%s", plugin_name),
         buttons: {
           confirm: {
@@ -644,8 +642,7 @@ ready(function () {
       const pluginContent = el.closest(".pluginContent")!;
       const plugin_name = textOf(find(pluginContent, ".pluginName")).trim();
       const plugin_id = pluginContent.parentElement!.id;
-      // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-      $.confirm({
+      confirm({
         title: restore_plugin_msg.replace("%s", plugin_name),
         content: str_restore_def,
         buttons: {
@@ -679,8 +676,7 @@ ready(function () {
       const pluginContent = el.closest(".pluginContent")!;
       const plugin_name = textOf(find(pluginContent, ".pluginName")).trim();
       const plugin_id = pluginContent.parentElement!.id;
-      // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-      $.confirm({
+      confirm({
         title: uninstall_plugin_msg.replace("%s", plugin_name),
         buttons: {
           confirm: {

@@ -46,9 +46,8 @@ final readonly class UpdatesExtView implements View, HasPageAssets, ExposesPageD
         return [
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jgrowl@1.3.0/jquery.jgrowl.min.css'),
             AssetContribution::css('themes/admin/default/css/pages/updates_ext.css', id: 'updates_ext'),
-            AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
-            AssetContribution::script('updates_ext', 'themes/admin/default/js/updates_ext.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui', 'jquery.confirm']),
+            AssetContribution::script('updates_ext', 'themes/admin/default/js/updates_ext.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui']),
         ];
     }
 

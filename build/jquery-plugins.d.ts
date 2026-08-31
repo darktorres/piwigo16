@@ -270,14 +270,6 @@ declare module "piecon" {
 // rendering is the one real first-party call site.
 
 interface JQueryStatic {
-  // jquery-confirm (vendored -- P46-0's own CDN table). `common.ts`'s own
-  // `pwg_jconfirm_follow_href` is the one real first-party call site so
-  // far; every admin page that pops a confirm/alert dialog calls this
-  // same `$.confirm(...)` API directly too, so this grows as those
-  // convert.
-  confirm(options: Record<string, unknown>): void;
-  alert(options: Record<string, unknown>): void;
-
   // Real jQuery-core static helper, just missing from @types/jquery's
   // own typings for this jQuery version. `LocalStorageCache.ts`'s own
   // `AbstractSelectizer._selectize` is the one real first-party call
@@ -421,15 +413,6 @@ interface JQuery {
   // `intro.ts`'s own tooltip setup is the one real first-party call
   // site so far.
   cluetip(options?: Record<string, unknown>): JQuery;
-
-  // common.ts's own first-party `jQuery.fn` extension (not a vendored
-  // plugin) -- `fontCheckbox` converted to a plain function.
-  pwg_jconfirm_follow_href(options?: {
-    alert_title?: string;
-    alert_confirm?: string;
-    alert_cancel?: string;
-    alert_content?: string;
-  }): void;
 
   // jQuery UI's own `slider` widget itself was already deleted here as
   // redundant back in P47 (real, verified types came from

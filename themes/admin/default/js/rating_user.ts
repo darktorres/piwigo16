@@ -13,6 +13,7 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
+import { confirm } from "../../../default/js/vendor/jconfirm";
 import {
   attrOf,
   data,
@@ -136,8 +137,7 @@ ready(function () {
       const trAncestor = this.closest("tr");
       const usr_name =
         trAncestor === null ? "" : (htmlOf(find(trAncestor, ".usr")) ?? "");
-      // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-      $.confirm({
+      confirm({
         title: title_msg.replace("%s", usr_name),
         buttons: {
           confirm: {
@@ -194,7 +194,18 @@ type GeoIpLookupResponse =
 
 ready(function () {
   // Still jQuery: tooltip is a jQuery-UI widget (the same $.Widget factory
-  // datepicker/sortable/slider use), ported alongside them in P49-B group 4.
+  // datepicker/sortable/slider use). Not actually part of P49-B group 4's
+  // own real scope despite an earlier planning note here claiming it was
+  // (corrected, not just left) -- `items: ".usr,[title]"` here relies on
+  // jQuery UI's own *delegated* binding (any matching descendant, at
+  // hover time, not bind time) to keep working after #rateTable's
+  // dataTable() (jQuery, group 7) redraws its rows on paging/sorting.
+  // Native "mouseenter" doesn't bubble, so a real delegated equivalent
+  // needs the same mouseover+relatedTarget translation jQuery's own
+  // event system does internally for it -- deferred to land alongside
+  // group 7's own dataTable() conversion, which needs a real redraw
+  // hook to rebind against regardless, rather than solved in isolation
+  // here first.
   jQuery("#rateTable").tooltip({
     items: ".usr,[title]",
     content: function (this: HTMLElement, callback: (content: string) => void) {

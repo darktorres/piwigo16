@@ -1,4 +1,4 @@
-import "./common";
+import { pwg_jconfirm_follow_href } from "./common";
 
 import { pwg_getPageString } from "../../../default/js/page-data";
 import { htmlOf } from "../../../default/js/vendor/dom";
@@ -19,9 +19,7 @@ document.querySelectorAll(".delete-lang-button").forEach(function (button) {
     htmlOf(
       button.closest(".languageBox")?.querySelectorAll(".languageName") ?? [],
     ) ?? "";
-  // Still jQuery: pwg_jconfirm_follow_href wraps jquery-confirm, ported in
-  // P49-B group 5.
-  $(button).pwg_jconfirm_follow_href({
+  pwg_jconfirm_follow_href(button, {
     alert_title: title_msg.replace("%s", lang_name),
     alert_confirm: confirm_msg,
     alert_cancel: cancel_msg,

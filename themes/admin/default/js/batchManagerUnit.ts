@@ -34,6 +34,7 @@ import {
   val,
 } from "../../../default/js/vendor/dom";
 import { ajax } from "../../../default/js/vendor/ajax";
+import { confirm } from "../../../default/js/vendor/jconfirm";
 export {};
 
 // Real shape confirmed via BatchManagerUnitPageRenderer.php's own
@@ -223,20 +224,12 @@ ready(function () {
     function (this: Element) {
       const fieldset = this.closest("fieldset")!;
       const pictureId = data(fieldset, "image_id") as string | number;
-      // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-      jQuery.confirm({
+      confirm({
         title: str_meta_warning,
-        draggable: false,
         titleClass: "metadataSyncConfirm",
-        theme: "modern",
         content: "",
-        animation: "zoom",
         boxWidth: "30%",
-        useBootstrap: false,
         type: "red",
-        animateFromElement: false,
-        backgroundDismiss: true,
-        typeAnimated: false,
         buttons: {
           confirm: {
             text: str_meta_yes,
@@ -283,20 +276,12 @@ ready(function () {
     function (this: Element) {
       const fieldset = this.closest("fieldset")!;
       const pictureId = data(fieldset, "image_id") as string | number;
-      // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-      jQuery.confirm({
+      confirm({
         title: str_are_you_sure,
-        draggable: false,
         titleClass: "groupDeleteConfirm",
-        theme: "modern",
         content: "",
-        animation: "zoom",
         boxWidth: "30%",
-        useBootstrap: false,
         type: "red",
-        animateFromElement: false,
-        backgroundDismiss: true,
-        typeAnimated: false,
         buttons: {
           confirm: {
             text: str_yes,

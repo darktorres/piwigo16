@@ -18,10 +18,9 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * confirmed by grep, not assumed -- so that specific effect has no
  * observable DOM to assert on here.
  *
- * `.tiptip` (P49-B group 2) and `.deleteAlbum`'s own `$.confirm()`
- * (jquery-confirm, P49-B group 5) stay jQuery; only the DOM work around
- * them converted. A fresh throwaway album is used for every test that
- * mutates state, never the shared fixture's category 1/2.
+ * `.tiptip` (P49-B group 2) stays jQuery; only the DOM work around it
+ * converted. A fresh throwaway album is used for every test that mutates
+ * state, never the shared fixture's category 1/2.
  */
 it('reveals the comment-option dropdown on click and hides it again on an outside click', function (): void {
     $page = H::asAdmin($this);
@@ -162,4 +161,82 @@ it('locks the album via the switch and persists it through #cat-properties-save'
 
     $page->assertNoJavaScriptErrors();
     H::assertNoServerErrors($page, 'cat_modify lock via switch');
+});
+
+it('deletes the album via .deleteAlbum, loading its confirm dialog content from a real ajax call', function (): void {
+    // Real, load-bearing behavior of themes/default/js/vendor/jconfirm.ts
+    // (P49-B group 5) that no other Browser test exercises: a `content`
+    // function returning this app's own `ajax()` thenable opens the
+    // dialog with a loading spinner first, then the *success callback*
+    // pushes the real content via `setContent()` -- not a value read off
+    // the settled promise itself. A fresh, empty throwaway album means
+    // `nbImagesRecursive` is falsy, so only the `#no_delete` radio (never
+    // `#force_delete`/`#delete_orphans`) should render once that content
+    // lands.
+    $page = H::asAdmin($this);
+    $album = H::createCategory($page, [
+        'name' => 'Cat Modify Delete ' . uniqid(),
+    ]);
+    if (! is_numeric($album['id'] ?? null)) {
+        throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $album['id'];
+
+    $page = H::navigateOk($page, '/admin.php?page=album&cat_id=' . $albumId . '&tab=properties');
+
+    $page->click('.deleteAlbum');
+    $page->assertPresent('.jconfirm');
+
+    $page->script(<<<'JS'
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + 5000;
+            const check = () => {
+                const radio = document.getElementById('no_delete');
+                if (radio !== null) return resolve(true);
+                if (Date.now() > deadline) {
+                    return reject(new Error('orphan-impact content never loaded'));
+                }
+                setTimeout(check, 100);
+            };
+            check();
+        })
+        JS);
+
+    expect($page->script("document.getElementById('no_delete').checked"))
+        ->toBeTrue();
+    expect($page->script("document.getElementById('force_delete')"))
+        ->toBeNull();
+
+    $page->click('.jconfirm button.btn-red');
+
+    $page->script(<<<JS
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + 5000;
+            const check = () => {
+                if (!window.location.href.includes('cat_id={$albumId}')) {
+                    return resolve(true);
+                }
+                if (Date.now() > deadline) {
+                    return reject(new Error('delete-album redirect never happened'));
+                }
+                setTimeout(check, 100);
+            };
+            check();
+        })
+        JS);
+
+    $response = H::listCategoriesAdmin($page);
+    $categories = $response['categories'] ?? null;
+    if (! is_array($categories)) {
+        throw new RuntimeException('listCategoriesAdmin response missing categories: ' . var_export($response, true));
+    }
+    $ids = array_map(
+        static fn (mixed $cat): mixed => is_array($cat) ? ($cat['id'] ?? null) : null,
+        $categories,
+    );
+    expect($ids)
+        ->not->toContain($albumId);
+
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'cat_modify delete album via confirm dialog');
 });

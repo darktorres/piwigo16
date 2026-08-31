@@ -10,6 +10,7 @@ import {
   trigger,
   val,
 } from "../../../default/js/vendor/dom";
+import { confirm } from "../../../default/js/vendor/jconfirm";
 
 // Real declarer of `fontCheckbox` -- wraps no library (docs/PLAN.md's own
 // P49 plugin table lists it "wraps: --"), so it converts fully now rather
@@ -362,62 +363,40 @@ export class TemporaryState {
   }
 }
 
+// `draggable`/`theme`/`animation`/`useBootstrap`/`animateFromElement`/
+// `typeAnimated`/`backgroundDismiss` all dropped from these 4 presets:
+// every real call site across the whole app set them to the exact same
+// values (confirmed via a full grep, not assumed), so `themes/default/js/
+// vendor/jconfirm.ts`'s own port of `$.confirm`/`$.alert` (P49-B group 5)
+// hardcodes them instead of taking them as options at all.
 export const jConfirm_alert_options = {
   icon: "icon-ok",
   titleClass: "jconfirmAlert",
-  theme: "modern",
   closeIcon: true,
-  draggable: false,
-  animation: "zoom",
   boxWidth: "20%",
-  useBootstrap: false,
-  backgroundDismiss: true,
-  animateFromElement: false,
-  typeAnimated: false,
 };
 
 export const jConfirm_confirm_options = {
-  draggable: false,
   titleClass: "jconfirmDeleteConfirm",
-  theme: "modern",
-  animation: "zoom",
   boxWidth: "40%",
-  useBootstrap: false,
   type: "red",
-  animateFromElement: false,
-  backgroundDismiss: true,
-  typeAnimated: false,
 };
 
 export const jConfirm_warning_options = {
   icon: "icon-attention",
-  draggable: false,
   titleClass: "jconfirmWarning jconfirmAlert",
-  theme: "modern",
   type: "orange",
   closeIcon: true,
-  animation: "zoom",
   boxWidth: "20%",
-  useBootstrap: false,
-  backgroundDismiss: true,
-  animateFromElement: false,
-  typeAnimated: false,
 };
 
 export const jConfirm_confirm_with_content_options = {
-  draggable: false,
-  theme: "modern",
-  animation: "zoom",
   boxWidth: "40%",
-  useBootstrap: false,
   type: "red",
-  animateFromElement: false,
-  backgroundDismiss: true,
-  typeAnimated: false,
 };
 
-jQuery.fn.pwg_jconfirm_follow_href = function (
-  this: JQuery,
+export function pwg_jconfirm_follow_href(
+  el: Element,
   {
     alert_title = "TITLE",
     alert_confirm = "CONFIRM",
@@ -430,13 +409,14 @@ jQuery.fn.pwg_jconfirm_follow_href = function (
     alert_content?: string;
   } = {},
 ): void {
-  const button_href = $(this).attr("href");
+  const button_href = attrOf(el, "href");
   const options =
     alert_content === ""
       ? jConfirm_confirm_options
       : jConfirm_confirm_with_content_options;
-  $(this).click(function () {
-    $.confirm({
+  on(el, "click", (e) => {
+    e.preventDefault();
+    confirm({
       content: alert_content,
       title: alert_title,
       buttons: {
@@ -453,9 +433,8 @@ jQuery.fn.pwg_jconfirm_follow_href = function (
       },
       ...options,
     });
-    return false;
   });
-};
+}
 
 // getRandomInt/sprintf/jConfirm_alert_options/jConfirm_confirm_options/
 // jConfirm_warning_options/TemporaryState are real exports now

@@ -106,7 +106,6 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
             AssetContribution::script('batch_manager_unit_page', 'themes/admin/default/js/pages/batch_manager_unit.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui.timepicker-addon']),
             ...new ColorboxView()
                 ->pageAssets(),
-            AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),

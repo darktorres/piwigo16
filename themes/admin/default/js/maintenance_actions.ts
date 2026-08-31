@@ -1,4 +1,4 @@
-import "./common";
+import { pwg_jconfirm_follow_href } from "./common";
 
 import {
   pwg_getPageData,
@@ -17,9 +17,7 @@ document.querySelectorAll(".lock-gallery-button").forEach(function (button) {
     ? pwg_getPageString("Are you sure you want to lock the gallery?")
     : pwg_getPageString("Are you sure you want to unlock the gallery?");
 
-  // Still jQuery: pwg_jconfirm_follow_href wraps jquery-confirm, ported
-  // in P49-B group 5.
-  jQuery(button).pwg_jconfirm_follow_href({
+  pwg_jconfirm_follow_href(button, {
     alert_title: title,
     alert_confirm: confirm_msg,
     alert_cancel: cancel_msg,
@@ -30,7 +28,7 @@ document
   .querySelectorAll(".purge-history-detail-button")
   .forEach(function (button) {
     const title = pwg_getPageString("Purge history detail");
-    jQuery(button).pwg_jconfirm_follow_href({
+    pwg_jconfirm_follow_href(button, {
       alert_title: title,
       alert_confirm: confirm_msg,
       alert_cancel: cancel_msg,
@@ -40,7 +38,7 @@ document
   .querySelectorAll(".purge-history-summary-button")
   .forEach(function (button) {
     const title = pwg_getPageString("Purge history summary");
-    jQuery(button).pwg_jconfirm_follow_href({
+    pwg_jconfirm_follow_href(button, {
       alert_title: title,
       alert_confirm: confirm_msg,
       alert_cancel: cancel_msg,
@@ -50,7 +48,7 @@ document
   .querySelectorAll(".purge-search-history-button")
   .forEach(function (button) {
     const title = pwg_getPageString("Purge search history");
-    jQuery(button).pwg_jconfirm_follow_href({
+    pwg_jconfirm_follow_href(button, {
       alert_title: title,
       alert_confirm: confirm_msg,
       alert_cancel: cancel_msg,
@@ -62,7 +60,7 @@ document
     const title = pwg_getPageString(
       "Are you sure you want to delete all sizes?",
     );
-    jQuery(button).pwg_jconfirm_follow_href({
+    pwg_jconfirm_follow_href(button, {
       alert_title: title,
       alert_confirm: confirm_msg,
       alert_cancel: cancel_msg,

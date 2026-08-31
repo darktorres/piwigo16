@@ -32,6 +32,10 @@ import {
   val,
 } from "../../../default/js/vendor/dom";
 import { ajax } from "../../../default/js/vendor/ajax";
+import {
+  confirm,
+  type JConfirmInstance,
+} from "../../../default/js/vendor/jconfirm";
 import { tipTip } from "../../../default/js/vendor/tiptip";
 export {};
 
@@ -253,20 +257,10 @@ ready(function () {
     if (button !== null) button.disabled = state;
   }
 
-  // jquery-confirm's own modal instance -- no real type source (this
-  // campaign's own established list of loosely-typed vendor libraries),
-  // narrowed to just the 3 real methods actually called on it here.
-  interface JConfirmModalInstance {
-    setContent(html: string): void;
-    showLoading(): void;
-    close(): void;
-  }
-
   on(document.querySelectorAll(".deleteAlbum"), "click", function () {
-    // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-    $.confirm({
+    confirm({
       title: str_delete_album,
-      content: function (this: JConfirmModalInstance) {
+      content: function (this: JConfirmInstance) {
         // eslint-disable-next-line @typescript-eslint/no-this-alias -- the classic callback-closure idiom: `this` (the jquery-confirm modal instance) needs to stay reachable inside the nested `success`/`error` callbacks below, which have their own `this`.
         const self = this;
         return ajax({
@@ -316,7 +310,7 @@ ready(function () {
         deleteAlbum: {
           text: str_delete_album,
           btnClass: "btn-red",
-          action: function (this: JConfirmModalInstance) {
+          action: function (this: JConfirmInstance) {
             this.showLoading();
             const checked = document.querySelector(
               'input[name="deletion-mode"]:checked',

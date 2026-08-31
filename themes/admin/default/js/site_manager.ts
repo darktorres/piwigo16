@@ -1,4 +1,4 @@
-import "./common";
+import { pwg_jconfirm_follow_href } from "./common";
 
 import { pwg_getPageString } from "../../../default/js/page-data";
 import { hide, on, ready, show } from "../../../default/js/vendor/dom";
@@ -25,10 +25,8 @@ const title_msg = pwg_getPageString(
 );
 const confirm_msg = pwg_getPageString("Yes, I am sure");
 const cancel_msg = pwg_getPageString("No, I have changed my mind");
-// Still jQuery: pwg_jconfirm_follow_href wraps jquery-confirm, so this line
-// converts with that library in P49-B, not here.
-$(".delete-site-button").each(function () {
-  $(this).pwg_jconfirm_follow_href({
+document.querySelectorAll(".delete-site-button").forEach((button) => {
+  pwg_jconfirm_follow_href(button, {
     alert_title: title_msg,
     alert_confirm: confirm_msg,
     alert_cancel: cancel_msg,

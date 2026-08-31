@@ -6,6 +6,7 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
+import { confirm } from "../../../default/js/vendor/jconfirm";
 import {
   addClass,
   after,
@@ -327,8 +328,7 @@ ready(() => {
       }
 
       if (parentIsPrivate) {
-        // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-        jQuery.confirm({
+        confirm({
           title: str_are_you_sure.replace(
             /%s/g,
             event.move_info.moved_node.name,

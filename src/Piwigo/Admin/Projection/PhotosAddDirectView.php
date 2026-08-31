@@ -101,7 +101,6 @@ final readonly class PhotosAddDirectView implements View, HasPageAssets, Exposes
         $assets = [
             AssetContribution::script('jquery.plupload', 'https://cdn.jsdelivr.net/gh/moxiecode/plupload@v2.1.2/js/plupload.full.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             AssetContribution::script('jquery.plupload.queue', 'https://cdn.jsdelivr.net/gh/moxiecode/plupload@v2.1.2/js/jquery.plupload.queue/jquery.plupload.queue.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
-            AssetContribution::script('jquery.confirm', 'https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
             AssetContribution::css('https://cdn.jsdelivr.net/gh/moxiecode/plupload@v2.1.2/js/jquery.plupload.queue/css/jquery.plupload.queue.css'),
         ];

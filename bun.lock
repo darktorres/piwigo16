@@ -10,7 +10,6 @@
         "jqtree": "1.4.12",
         "jquery": "1.11.3",
         "jquery-cluetip": "github:kswedberg/jquery-cluetip#1.2.6",
-        "jquery-confirm": "3.3.4",
         "jquery-timepicker-addon": "github:trentrichardson/jQuery-Timepicker-Addon#v1.4.4",
         "jquery-ui": "1.10.4",
         "jquery.colorbox": "github:jackmoore/colorbox#1.5.14",
@@ -953,8 +952,6 @@
     "jquery": ["jquery@1.11.3", "", {}, "sha512-pHM/XLofp0FJc0/0AsRm8q/5ob+a1kno+vfclXGozaMBPv3qD7Xq19loECVcBB4MOLdygnyneQMPTsH5QiVNBQ=="],
 
     "jquery-cluetip": ["jquery-cluetip@github:kswedberg/jquery-cluetip#4c7ba7c", {}, "kswedberg-jquery-cluetip-4c7ba7c", "sha512-XbRy4bNgudfilcflOtYxiEX59V7ecAfmhOLv649cE1APBE/fGZoIa4aHFBxtiWtRh6rcx7nom66BBJoP5x3gDg=="],
-
-    "jquery-confirm": ["jquery-confirm@3.3.4", "", { "dependencies": { "jquery": ">=1.6" } }, "sha512-SF3mX2kWAK9FP/Hut1uLHI30LPZ9DAki3Jq6JId9vg6AlMVugjlh40APtuxPQ/0C44XTkQFSVyRrg57NMbaicA=="],
 
     "jquery-timepicker-addon": ["jQuery-Timepicker-Addon@github:trentrichardson/jQuery-Timepicker-Addon#30c9bdb", {}, "trentrichardson-jQuery-Timepicker-Addon-30c9bdb", "sha512-q/sM1pkK+ZWv8J/eWb6nIdTWGWtYUixlXCmiknt1ABtPT7pqgmTTL3uPS/bEhw5xXVpT1NMilH4b5bNgUgAKUg=="],
 

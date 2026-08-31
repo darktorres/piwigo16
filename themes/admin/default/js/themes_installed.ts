@@ -1,4 +1,4 @@
-import "./common";
+import { pwg_jconfirm_follow_href } from "./common";
 
 import { pwg_getPageString } from "../../../default/js/page-data";
 import {
@@ -24,9 +24,7 @@ document.querySelectorAll(".delete-theme-button").forEach(function (button) {
   const title = pwg_getPageString(
     'Are you sure you want to delete the theme "%s"?',
   );
-  // Still jQuery: pwg_jconfirm_follow_href wraps jquery-confirm, ported in
-  // P49-B group 5.
-  jQuery(button).pwg_jconfirm_follow_href({
+  pwg_jconfirm_follow_href(button, {
     alert_title: title.replace("%s", theme_name!),
     alert_confirm: confirm_msg,
     alert_cancel: cancel_msg,

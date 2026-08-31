@@ -5,6 +5,7 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
+import { alert, confirm } from "../../../default/js/vendor/jconfirm";
 import {
   addClass,
   append,
@@ -279,8 +280,7 @@ function getComments(params: CommentsFilterParams) {
     },
     error: (e) => {
       console.log(e);
-      // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-      $.alert({
+      alert({
         title: str_an_error_has,
         content: "",
         ...jConfirm_warning_options,
@@ -690,8 +690,7 @@ function validateComment(id: (string | number)[]) {
     success: function (
       _data: import("../../../../openapi/client/schema").operations["commentValidate"]["responses"][200]["content"]["application/json"],
     ) {
-      // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-      $.alert({
+      alert({
         title: idLenght > 1 ? str_comments_validated : str_comment_validated,
         content: "",
         ...jConfirm_alert_options,
@@ -700,7 +699,7 @@ function validateComment(id: (string | number)[]) {
     },
     error: function (e) {
       console.log(e);
-      $.alert({
+      alert({
         title: str_an_error_has,
         content: "",
         ...jConfirm_warning_options,
@@ -712,23 +711,15 @@ function validateComment(id: (string | number)[]) {
 function deleteComment(id: (string | number)[]) {
   const idLenght = id.length ?? 1;
 
-  // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-  $.confirm({
+  confirm({
     title:
       idLenght > 1
         ? str_deletes.replace("%d", String(idLenght))
         : str_delete.replace("%s", String(id)),
-    draggable: false,
     titleClass: "jconfirmDeleteConfirm",
-    theme: "modern",
     content: "",
-    animation: "zoom",
     boxWidth: "30%",
-    useBootstrap: false,
     type: "red",
-    animateFromElement: false,
-    backgroundDismiss: true,
-    typeAnimated: false,
     buttons: {
       confirm: {
         text: str_yes_delete_confirmation,

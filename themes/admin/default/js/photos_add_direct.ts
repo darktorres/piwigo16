@@ -17,6 +17,7 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
+import { alert } from "../../../default/js/vendor/jconfirm";
 import {
   addClass,
   append,
@@ -506,9 +507,7 @@ ready(function () {
                 return tab;
               });
 
-              // Still jQuery: jquery-confirm is a library, ported in
-              // P49-B group 5.
-              $.alert({
+              alert({
                 title: str_format_warning,
                 content:
                   (notFound.length

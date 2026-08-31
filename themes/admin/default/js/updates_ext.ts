@@ -8,6 +8,7 @@ import {
 import { ajax, type AjaxResponse } from "../../../default/js/vendor/ajax";
 import { AjaxQueue } from "../../../default/js/vendor/ajaxQueue";
 import { jGrowl } from "../../../default/js/vendor/jgrowl";
+import { confirm } from "../../../default/js/vendor/jconfirm";
 import {
   attr,
   attrOf,
@@ -230,8 +231,7 @@ on(document.querySelectorAll("#update_all"), "click", function (): void {
   const title_msg = pwg_getPageString(
     "Are you sure you want to update all extensions?",
   );
-  // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-  $.confirm({
+  confirm({
     title: title_msg,
     buttons: {
       confirm: {

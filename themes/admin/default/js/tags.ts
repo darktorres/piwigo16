@@ -11,6 +11,7 @@ import {
 } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
 import { cookie, setCookie } from "../../../default/js/vendor/cookie";
+import { alert, confirm } from "../../../default/js/vendor/jconfirm";
 import {
   addClass,
   animate,
@@ -89,19 +90,11 @@ on(document.querySelectorAll(".info-warning p a"), "click", () => {
   const str_orphans = str_orphan_tags
     .replace("%s1", String(tags.length))
     .replace("%s2", tags.join(", "));
-  // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-  jQuery.confirm({
+  confirm({
     content: str_orphans,
     title: str_delete_orphan_tags,
-    draggable: false,
-    theme: "modern",
-    animation: "zoom",
     boxWidth: "30%",
-    useBootstrap: false,
     type: "red",
-    animateFromElement: false,
-    backgroundDismiss: true,
-    typeAnimated: false,
     buttons: {
       delete: {
         text: str_delete_them,
@@ -473,8 +466,7 @@ function setupTagbox(tagBox: Element): void {
 
   //Delete Tag
   on(find(tagBox, ".dropdown-option.delete"), "click", function () {
-    // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-    jQuery.confirm({
+    confirm({
       title: str_delete.replace("%s", htmlOf(find(tagBox, ".tag-name"))!),
       buttons: {
         confirm: {
@@ -547,8 +539,7 @@ function rename_tag_open(): void {
 }
 
 function removeTag(id: TagId, name: string): void {
-  // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-  jQuery.alert({
+  alert({
     title: str_tag_deleted.replace("%s", name),
     content: function () {
       return ajax({
@@ -1028,8 +1019,7 @@ on(document.querySelectorAll("#DeleteSelectionMode"), "click", function () {
     names.push(dataTags.find((tag) => tag.id == id)!.name);
   });
 
-  // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-  jQuery.confirm({
+  confirm({
     title: str_delete_tags.replace("%s", tagListToString(names)),
     buttons: {
       confirm: {
@@ -1053,8 +1043,7 @@ function removeSelectedTags(): void {
     names.push(dataTags.find((tag) => tag.id == id)!.name);
   });
 
-  // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-  jQuery.alert({
+  alert({
     title: str_tags_deleted.replace("%s", tagListToString(names)),
     content: function () {
       // No bulk-delete endpoint (a REST single-resource DELETE per tag,
@@ -1117,8 +1106,7 @@ function mergeGroups(destination_id: TagId, merge_ids: TagId[]): void {
     .replace("%s1", tagListToString(merge_name))
     .replace("%s2", destination_name);
 
-  // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-  jQuery.alert({
+  alert({
     title: str_message,
     content: function () {
       return ajax({

@@ -8,6 +8,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
+import { confirm } from "../../../default/js/vendor/jconfirm";
 import {
   addClass,
   albumBreadcrumbHtml,
@@ -85,20 +86,12 @@ const str_orphan = pwg_getPageString("This photo is an orphan");
     document.querySelectorAll("#action-delete-picture"),
     "click",
     function (): void {
-      // Still jQuery: jquery-confirm is a library, ported in P49-B group 5.
-      jQuery.confirm({
+      confirm({
         title: str_are_you_sure,
-        draggable: false,
         titleClass: "groupDeleteConfirm",
-        theme: "modern",
         content: "",
-        animation: "zoom",
         boxWidth: "30%",
-        useBootstrap: false,
         type: "red",
-        animateFromElement: false,
-        backgroundDismiss: true,
-        typeAnimated: false,
         buttons: {
           confirm: {
             text: str_yes,

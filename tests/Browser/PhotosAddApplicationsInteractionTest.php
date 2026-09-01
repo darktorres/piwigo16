@@ -5,6 +5,33 @@ declare(strict_types=1);
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
+ * Narrows the `{title, current, visible, total}` shape decoded from
+ * H::scriptJson() below -- script()'s return is `mixed` however $page
+ * is typed, and `total` is read back into a string concatenation.
+ *
+ * @return array{title: string, current: string, visible: bool, total: int}
+ */
+function photosAddApplicationsInteractionOpened(mixed $opened): array
+{
+    if (
+        ! is_array($opened)
+        || ! is_string($opened['title'] ?? null)
+        || ! is_string($opened['current'] ?? null)
+        || ! is_bool($opened['visible'] ?? null)
+        || ! is_int($opened['total'] ?? null)
+    ) {
+        throw new RuntimeException('photosAddApplicationsInteractionOpened(): unexpected shape: ' . var_export($opened, true));
+    }
+
+    return [
+        'title' => $opened['title'],
+        'current' => $opened['current'],
+        'visible' => $opened['visible'],
+        'total' => $opened['total'],
+    ];
+}
+
+/**
  * P49-B native port of colorbox (`themes/default/js/vendor/colorbox.ts`).
  * No prior test, jQuery-based or not, ever drove colorbox's own click-
  * to-open/group-navigation/counter/close behavior -- only its
@@ -30,7 +57,7 @@ it('opens a photo group, navigates with next/prev and Escape, and closes', funct
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=photos_add&section=applications');
 
-    $opened = H::scriptJson($page, <<<'JS'
+    $opened = photosAddApplicationsInteractionOpened(H::scriptJson($page, <<<'JS'
         new Promise((resolve, reject) => {
             const links = document.querySelectorAll('.illustration a');
             links[0].click();
@@ -63,7 +90,7 @@ it('opens a photo group, navigates with next/prev and Escape, and closes', funct
             };
             check();
         })
-        JS);
+        JS));
 
     expect($opened['title'])->toBe('Piwigo Remote Sync');
     expect($opened['current'])->toBe('image 1 of ' . $opened['total']);

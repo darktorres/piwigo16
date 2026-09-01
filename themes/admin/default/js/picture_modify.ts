@@ -10,6 +10,7 @@ import {
 } from "../../../default/js/page-data";
 import { colorbox } from "../../../default/js/vendor/colorbox";
 import { confirm } from "../../../default/js/vendor/jconfirm";
+import { pwgDatepicker } from "../../../default/js/vendor/datepicker";
 import {
   addClass,
   albumBreadcrumbHtml,
@@ -64,11 +65,10 @@ const str_orphan = pwg_getPageString("This photo is an orphan");
   // <!-- DATEPICKER -->
   ready(function () {
     // onLoad needed to wait localization loads
-    // Still jQuery: pwgDatepicker wraps jQuery-UI datepicker +
-    // timepicker-addon, ported in P49-B group 5.
-    jQuery("[data-datepicker]").pwgDatepicker({
+    pwgDatepicker(document.querySelectorAll("[data-datepicker]"), {
       showTimepicker: true,
       cancelButton: pwg_getPageString("Cancel"),
+      jqueryCode: pwg_getPageData<string | undefined>("jquery_code"),
     });
   });
 

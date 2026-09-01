@@ -108,8 +108,6 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
     public function pageAssets(): array
     {
         return [
-            ...new DatepickerView(load_mode: 'async', jqueryCode: $this->jqueryCode)
-                ->pageAssets(),
             ...new ColorboxView()
                 ->pageAssets(),
             ...new AddAlbumView(colorscheme: $this->colorscheme)
@@ -131,18 +129,13 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             // registration), so it can never be safely duplicated the
             // way addAlbum.ts's direct import is. Footer (not
             // batchManagerGlobal.ts's former Async) is the merged mode,
-            // matching batch_manager_global.ts's own former mode --
-            // `jquery.ui.timepicker-addon` below cascade-promotes to
-            // Footer too via PageAssets::promoteLoadModes() ("a
-            // dependency can't load more loosely than its dependent"),
-            // a real, intentional
-            // structural side effect (docs/PLAN.md's own Design §6) that
-            // also fixes a genuine pre-existing race:
-            // batchManagerGlobal.ts's own top-level `lang.Cancel` read
-            // wasn't previously guaranteed to run after
-            // batch_manager_global.ts set it (Async vs Footer, no
-            // `dependsOn` between them).
-            AssetContribution::script('batch_manager_global_page', 'themes/admin/default/js/pages/batch_manager_global.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'jquery.ui.timepicker-addon']),
+            // matching batch_manager_global.ts's own former mode. No more
+            // `jquery.ui.timepicker-addon` dependency -- datepicker.ts is
+            // fully native now too (P49-B); `jquery-ui.css` below (kept
+            // for its own sake, not via that former dependency's
+            // cascade-promotion) still themes the native port's reused
+            // class names.
+            AssetContribution::script('batch_manager_global_page', 'themes/admin/default/js/pages/batch_manager_global.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             AssetContribution::script('jquery.progressBar', 'themes/default/js/plugins/jquery.progressbar.min.js', loadMode: LoadMode::Async),
             AssetContribution::css('themes/admin/default/css/pages/batch_manager_global.css', id: 'batch_manager_global'),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
@@ -161,8 +154,8 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             // contribution has to resolve first, matching the accepted
             // golden-html baseline confirmed by a real diff, not assumed.
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
-            AssetContribution::script('jquery.ui', '', loadMode: LoadMode::Async),
             AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui'),
+            AssetContribution::css('https://cdn.jsdelivr.net/gh/trentrichardson/jQuery-Timepicker-Addon@v1.4.4/dist/jquery-ui-timepicker-addon.min.css'),
             AssetContribution::script('batchManagerFilter', 'themes/admin/default/js/batchManagerFilter.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/components/batch_manager_filter.css', id: 'batch_manager_filter'),
             // quick_search.latte's own contribution, reached via
@@ -185,6 +178,7 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             'cache_key_categories' => $this->cacheKeys['categories'],
             'cache_key_hash' => $this->cacheKeys['_hash'],
             'root_url' => $this->rootUrl,
+            'jquery_code' => $this->jqueryCode,
             'associated_categories' => $this->associatedCategories,
             'nb_thumbs_page' => $this->nbThumbsPage,
             'nb_thumbs_set' => $this->nbThumbsSet,

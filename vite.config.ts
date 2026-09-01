@@ -302,11 +302,6 @@ export default defineConfig({
         notificationByMailPage: r(
           "themes/admin/default/js/pages/notification_by_mail.ts",
         ),
-        // datepicker.ts's own batch (docs/PLAN.md P48) -- extends
-        // batchManagerUnitPage/pictureModifyPage/batchManagerGlobalPage
-        // above with a direct import each; historyPage is its 4th real
-        // registrant page, with no prior page bundle to extend.
-        historyPage: r("themes/admin/default/js/pages/history.ts"),
         // scripts.ts's own batch (docs/PLAN.md P48) -- extends
         // batchManagerUnitPage/batchManagerGlobalPage above with a
         // direct import each; coreScriptsPage is the shared bundle for

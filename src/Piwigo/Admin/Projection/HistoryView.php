@@ -41,15 +41,18 @@ final readonly class HistoryView implements View, HasPageAssets, ExposesPageData
     public function pageAssets(): array
     {
         return [
-            ...new DatepickerView(jqueryCode: $this->jqueryCode)
-                ->pageAssets(),
-            // Real per-page bundle entry (docs/PLAN.md's P48) -- folds
-            // datepicker.ts's own code in via a direct import
-            // instead of the separate script tag DatepickerView used to
-            // register directly (datepicker.ts has 4 real registrant
-            // pages, so a plain import isn't safe here -- Design §4).
-            AssetContribution::script('history_page', 'themes/admin/default/js/pages/history.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui.timepicker-addon']),
+            // No more separate `history_page` bundle entry (docs/PLAN.md
+            // P48/P49-B): it existed only to trigger Rollup's shared
+            // chunking of `datepicker.ts`, itself a side-effect-only
+            // import with no other real code of its own. Now that
+            // `vendor/datepicker.ts` (P49-B, native port) is imported
+            // directly by `history.ts` below, that indirection has no
+            // remaining purpose. `jquery-ui.css`/
+            // `jquery-ui-timepicker-addon.min.css` still theme the
+            // native port's own reused class names.
             AssetContribution::script('history', 'themes/admin/default/js/history.ts', loadMode: LoadMode::Footer),
+            AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui'),
+            AssetContribution::css('https://cdn.jsdelivr.net/gh/trentrichardson/jQuery-Timepicker-Addon@v1.4.4/dist/jquery-ui-timepicker-addon.min.css'),
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
@@ -69,6 +72,7 @@ final readonly class HistoryView implements View, HasPageAssets, ExposesPageData
             'image_id' => $this->imageId,
             'ip' => $this->ip,
             'guest_id' => $this->guestId,
+            'jquery_code' => $this->jqueryCode,
         ];
     }
 

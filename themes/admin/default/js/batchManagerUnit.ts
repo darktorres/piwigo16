@@ -36,6 +36,7 @@ import {
 import { ajax } from "../../../default/js/vendor/ajax";
 import { colorbox } from "../../../default/js/vendor/colorbox";
 import { confirm } from "../../../default/js/vendor/jconfirm";
+import { pwgDatepicker } from "../../../default/js/vendor/datepicker";
 export {};
 
 // Real shape confirmed via BatchManagerUnitPageRenderer.php's own
@@ -119,11 +120,10 @@ categoriesCache.selectize(
 
 // onLoad needed to wait localization loads
 ready(function () {
-  // Still jQuery: pwgDatepicker wraps jQuery-UI datepicker +
-  // timepicker-addon, ported in P49-B group 5.
-  jQuery("[data-datepicker]").pwgDatepicker({
+  pwgDatepicker(document.querySelectorAll("[data-datepicker]"), {
     showTimepicker: true,
     cancelButton: pwg_getPageString("Cancel"),
+    jqueryCode: pwg_getPageData<string | undefined>("jquery_code"),
   });
 });
 
@@ -175,17 +175,21 @@ ready(function () {
     },
   );
 
-  // Specific handler for datepicker inputs. Stays jQuery: pwgDatepicker
-  // sets the date via jQuery's own `.trigger("change")`, which (unlike
-  // "click"/"focus"/other event types with a real native method) never
-  // calls dispatchEvent() -- only a jQuery-registered listener sees it.
-  jQuery("input[data-datepicker]").on("change", function () {
-    const pictureId = jQuery(this).parents("fieldset").data("image_id") as
-      string | number;
-    if (user_interacted) {
-      showUnsavedLocalBadge(pictureId);
-    }
-  });
+  // Specific handler for datepicker inputs: `vendor/datepicker.ts`'s
+  // own native port dispatches a real native "change" event on the
+  // visible field (matching the original's own real
+  // `this.$input.trigger("change")`), so a native listener sees it.
+  on(
+    document.querySelectorAll("input[data-datepicker]"),
+    "change",
+    function (this: Element) {
+      const pictureId = data(this.closest("fieldset")!, "image_id") as
+        string | number;
+      if (user_interacted) {
+        showUnsavedLocalBadge(pictureId);
+      }
+    },
+  );
 
   // `vendor/selectize.ts`'s own `triggerChange()` now dispatches a real
   // native "change" event on the original (hidden) <select> (P49-B group

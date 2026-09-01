@@ -15,15 +15,14 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * dropdown's `option:checked` read, and adding/removing a line's user as
  * a filter.
  *
- * `.date-start`/`.date-end`'s "change" listeners stay jQuery registrations
- * on purpose (see history.ts's own comment) -- pwgDatepicker (still
- * jQuery, P49-B group 5) fires its own linked-field update via a real
- * jQuery `.trigger("change")`, which does NOT dispatch a native DOM event
- * (it walks the ancestor chain and calls only handlers in jQuery's own
- * registry or a bare `.onchange` property) -- a native `addEventListener`
- * listener there would never see it, and the page's very first,
- * unfiltered search would never run. Both tests below (which pass through
- * that exact path on page load) are what caught this live.
+ * `.date-start`/`.date-end`'s "change" listeners are native now (P49-B,
+ * `vendor/datepicker.ts`) -- the native port's own `writeValue()`
+ * dispatches a real, bubbling native "change" event on the visible
+ * field (matching the original's own real
+ * `this.$input.trigger("change")`), so a plain `addEventListener`
+ * listener on the ancestor sees it, including on page load, and the
+ * page's very first, unfiltered search still runs. Both tests below
+ * (which pass through that exact path on page load) exercise it.
  *
  * A third interactive behavior, the per-row "..." options toggle, is
  * deliberately NOT covered by a live test here: page load fires two

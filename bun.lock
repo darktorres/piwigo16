@@ -8,8 +8,6 @@
         "chart.js": "2.9.3",
         "datatables.net": "1.10.11",
         "jquery": "1.11.3",
-        "jquery-timepicker-addon": "github:trentrichardson/jQuery-Timepicker-Addon#v1.4.4",
-        "jquery-ui": "1.10.4",
         "moment": "2.26.0",
         "openapi-fetch": "0.17.0",
         "piecon": "github:lipka/piecon#0.5.0",
@@ -937,10 +935,6 @@
     "jpeg-js": ["jpeg-js@0.4.4", "", {}, "sha512-WZzeDOEtTOBK4Mdsar0IqEU5sMr3vSV2RqkAIzUEV2BHnUfKGyswWFPFwK5EeDo93K3FohSHbLAjj0s1Wzd+dg=="],
 
     "jquery": ["jquery@1.11.3", "", {}, "sha512-pHM/XLofp0FJc0/0AsRm8q/5ob+a1kno+vfclXGozaMBPv3qD7Xq19loECVcBB4MOLdygnyneQMPTsH5QiVNBQ=="],
-
-    "jquery-timepicker-addon": ["jQuery-Timepicker-Addon@github:trentrichardson/jQuery-Timepicker-Addon#30c9bdb", {}, "trentrichardson-jQuery-Timepicker-Addon-30c9bdb", "sha512-q/sM1pkK+ZWv8J/eWb6nIdTWGWtYUixlXCmiknt1ABtPT7pqgmTTL3uPS/bEhw5xXVpT1NMilH4b5bNgUgAKUg=="],
-
-    "jquery-ui": ["jquery-ui@1.10.4", "", {}, "sha512-VdBz+azK9w7aLfrynqRjhDClgKF57L5fOcj6xDRar/PC0F/WFVD2a5Rfp1W15NYa2kkAvKp1YzAd2/lnGlmOmw=="],
 
     "js-base64": ["js-base64@3.9.3", "", {}, "sha512-uwYQp+VJ38FVvtim6qNbit6e9uT6dwWQ4Y1+H9TxhW5hcHjpHwoxlR0nMpqUmIFOmu4VqMxwdJA88gIVuZJQ/g=="],
 

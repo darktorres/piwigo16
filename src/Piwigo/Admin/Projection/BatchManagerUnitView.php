@@ -93,24 +93,26 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
     public function pageAssets(): array
     {
         return [
-            ...new DatepickerView(jqueryCode: $this->jqueryCode)
-                ->pageAssets(),
             // Real per-page bundle entry (docs/PLAN.md's P48) -- folds
             // autosize.ts's, datepicker.ts's, and scripts.ts's own code
             // in via direct imports instead of the separate script
-            // tags DatepickerView/this method's own former `core.scripts`
-            // registration used to register directly (all 3 have several
-            // real registrant pages, so a plain import isn't safe here --
+            // tags this method's own former `core.scripts` registration
+            // used to register directly (all 3 have several real
+            // registrant pages, so a plain import isn't safe here --
             // Design §4). autosize.ts's own `jquery.autogrow` dependency
-            // is gone too -- autogrow is a native port now (P49-B group 1).
-            AssetContribution::script('batch_manager_unit_page', 'themes/admin/default/js/pages/batch_manager_unit.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui.timepicker-addon']),
+            // is gone too -- autogrow is a native port now (P49-B group
+            // 1). datepicker.ts is fully native now too (P49-B), so no
+            // more `jquery.ui.timepicker-addon` script dependency --
+            // `jquery-ui.css`/`jquery-ui-timepicker-addon.min.css` below
+            // stay for the native port's own reused class names.
+            AssetContribution::script('batch_manager_unit_page', 'themes/admin/default/js/pages/batch_manager_unit.ts', loadMode: LoadMode::Footer),
             ...new ColorboxView()
                 ->pageAssets(),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
-            AssetContribution::script('batchManagerUnit', 'themes/admin/default/js/batchManagerUnit.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui']),
+            AssetContribution::script('batchManagerUnit', 'themes/admin/default/js/batchManagerUnit.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/batch_manager_unit.css', id: 'batch_manager_unit'),
             ...new AlbumSelectorView()
                 ->pageAssets(),
@@ -126,8 +128,8 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
             // BatchManagerGlobalView's own identical comment, confirmed
             // there via a real golden-html diff.
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
-            AssetContribution::script('jquery.ui', '', loadMode: LoadMode::Async),
             AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui'),
+            AssetContribution::css('https://cdn.jsdelivr.net/gh/trentrichardson/jQuery-Timepicker-Addon@v1.4.4/dist/jquery-ui-timepicker-addon.min.css'),
             AssetContribution::script('batchManagerFilter', 'themes/admin/default/js/batchManagerFilter.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/components/batch_manager_filter.css', id: 'batch_manager_filter'),
             // quick_search.latte's own contribution, reached via
@@ -162,6 +164,7 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
             'cache_key_categories' => $this->cacheKeys['categories'],
             'cache_key_hash' => $this->cacheKeys['_hash'],
             'root_url' => $this->rootUrl,
+            'jquery_code' => $this->jqueryCode,
             'associated_categories' => $this->associatedCategories,
             'dimensions' => $this->filterDimensions->toPageData(),
             'filesize' => $this->filterFilesize->toPageData(),

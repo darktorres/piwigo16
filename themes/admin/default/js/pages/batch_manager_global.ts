@@ -6,11 +6,6 @@
 // entries the way most pages' shared-library files do.
 //
 // Import order is load-bearing:
-// - datepicker.ts must be entered before batchManagerGlobal.ts: the
-//   latter's own top-level, synchronous `jQuery("[data-datepicker]")
-//   .pwgDatepicker(...)` call needs that plugin already registered,
-//   replicating the real script-tag `dependsOn` ordering this page
-//   used before this batch.
 // - batchManagerGlobal.ts must be entered before batch_manager_global.ts
 //   for its own top-level, synchronous `lang.Cancel` read to see
 //   `lang` already set -- its own circular import of
@@ -25,8 +20,11 @@
 // that runs before this file's own subsequent code -- the old bare
 // side-effect import (needed only for `jQuery.fn.pwgAddAlbum`'s global
 // registration) would just be a redundant second resolution of the
-// same module.
-import "../datepicker";
+// same module. Same reasoning now applies to `vendor/datepicker.ts`'s
+// own `{ pwgDatepicker }` (P49-B, datepicker): `batchManagerGlobal.ts`
+// imports it directly and only calls it inside a `.ready()` callback,
+// so no separate side-effect import or load-order constraint remains
+// here either.
 // scripts.ts also has several real registrant pages (
 // Design §4); this import replaces the separate `core.scripts` script
 // tag BatchManagerGlobalView used to register directly. This page

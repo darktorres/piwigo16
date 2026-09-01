@@ -6,6 +6,7 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
+import { pwgDatepicker } from "../../../default/js/vendor/datepicker";
 import {
   addClass,
   append,
@@ -158,17 +159,12 @@ ready(() => {
     fillHistoryResult(current_param);
   });
 
-  // Still jQuery: registration only. pwgDatepicker (jQuery-UI datepicker +
-  // timepicker-addon, P49-B group 5) fires its own linked-field update via
-  // `this.$input.trigger("change")` on init -- and jQuery's own `.trigger()`
-  // does NOT dispatch a real DOM event. It manually walks the ancestor
-  // chain and calls only handlers it finds in its own internal registry (or
-  // a bare `el.onchange` property), so a native `addEventListener` listener
-  // on `.date-start`/`.date-end` is invisible to it and this handler would
-  // never fire on page load, leaving the initial search never run. The
-  // handler body is free to use native helpers; only the binding itself
-  // has to stay jQuery so the datepicker's own trigger can reach it.
-  jQuery(".date-start").on("change", function () {
+  // `vendor/datepicker.ts`'s own native port dispatches a real native
+  // "change" event (bubbling) on the visible field on init/selection --
+  // matching the original's own real `this.$input.trigger("change")`
+  // -- so a native listener on the `.date-start`/`.date-end` ancestor
+  // sees it, including the one fired on page load.
+  on(document.querySelectorAll(".date-start"), "change", function () {
     const value = attrOf(
       document.querySelectorAll('.date-start input[name="start"]'),
       "value",
@@ -180,8 +176,7 @@ ready(() => {
     }
   });
 
-  // Still jQuery: registration only -- same reason as `.date-start` above.
-  jQuery(".date-end").on("change", function () {
+  on(document.querySelectorAll(".date-end"), "change", function () {
     const newValue = attrOf(
       document.querySelectorAll('.date-end input[name="end"]'),
       "value",
@@ -243,9 +238,9 @@ ready(() => {
 
 // onLoad needed to wait localization loads
 ready(function () {
-  // Still jQuery: pwgDatepicker wraps jQuery-UI datepicker +
-  // timepicker-addon, ported in P49-B group 5.
-  jQuery("[data-datepicker]").pwgDatepicker();
+  pwgDatepicker(document.querySelectorAll("[data-datepicker]"), {
+    jqueryCode: pwg_getPageData<string | undefined>("jquery_code"),
+  });
 });
 
 function activateLineOptions() {

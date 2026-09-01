@@ -74,17 +74,20 @@ final readonly class PictureModifyView implements View, HasPageAssets, ExposesPa
     public function pageAssets(): array
     {
         return [
-            ...new DatepickerView(jqueryCode: $this->jqueryCode)
-                ->pageAssets(),
             // Real per-page bundle entry (docs/PLAN.md's P48) -- folds
             // autosize.ts's and datepicker.ts's own code in via real
-            // direct imports instead of the separate script tags
-            // DatepickerView used to register directly (both have
-            // several real registrant pages, so a plain import isn't
-            // safe here -- Design §4). autosize.ts's own `jquery.autogrow`
+            // direct imports instead of the separate script tags this
+            // page used to register directly (both have several real
+            // registrant pages, so a plain import isn't safe here --
+            // Design §4). autosize.ts's own `jquery.autogrow`
             // dependency is gone too -- autogrow is a native port now
-            // (P49-B group 1).
-            AssetContribution::script('picture_modify_page', 'themes/admin/default/js/pages/picture_modify.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui.timepicker-addon']),
+            // (P49-B group 1). datepicker.ts is fully native now too
+            // (P49-B), so no more `jquery.ui.timepicker-addon` script
+            // dependency -- `jquery-ui.css`/`jquery-ui-timepicker-addon.
+            // min.css` stay for the native port's own reused class names.
+            AssetContribution::script('picture_modify_page', 'themes/admin/default/js/pages/picture_modify.ts', loadMode: LoadMode::Footer),
+            AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui'),
+            AssetContribution::css('https://cdn.jsdelivr.net/gh/trentrichardson/jQuery-Timepicker-Addon@v1.4.4/dist/jquery-ui-timepicker-addon.min.css'),
             ...new ColorboxView()
                 ->pageAssets(),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
@@ -111,6 +114,7 @@ final readonly class PictureModifyView implements View, HasPageAssets, ExposesPa
             'root_url' => $this->rootUrl,
             'u_delete' => $this->uDelete,
             'related_categories_ids' => $this->relatedCategoriesIds,
+            'jquery_code' => $this->jqueryCode,
             // Real pre-existing gap, found via album_selector.ts's own
             // P48 module conversion (docs/PLAN.md): this page embeds
             // AlbumSelectorView, whose real `#create_album()` reads the

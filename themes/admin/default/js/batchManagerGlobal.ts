@@ -22,9 +22,11 @@ import {
 // import).
 import { AlbumSelector } from "./album_selector";
 import { pwgAddAlbum } from "./addAlbum";
+import { pwg_getPageData } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
 import { AjaxQueue } from "../../../default/js/vendor/ajaxQueue";
 import { colorbox } from "../../../default/js/vendor/colorbox";
+import { pwgDatepicker } from "../../../default/js/vendor/datepicker";
 import {
   append,
   css,
@@ -183,11 +185,10 @@ tipTip(document.querySelectorAll(".thumbnails img"), {
 // dependency on import order entirely; this mirrors the `.ready()`
 // wrapper directly below, added for the same class of ordering problem.
 ready(function () {
-  // Still jQuery: jQuery-UI's datepicker + timepicker-addon, ported in
-  // P49-B group 5 (pwgDatepicker).
-  jQuery("[data-datepicker]").pwgDatepicker({
+  pwgDatepicker(document.querySelectorAll("[data-datepicker]"), {
     showTimepicker: true,
     cancelButton: lang.Cancel,
+    jqueryCode: pwg_getPageData<string | undefined>("jquery_code"),
   });
 });
 

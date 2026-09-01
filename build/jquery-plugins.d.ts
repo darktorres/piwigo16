@@ -257,51 +257,6 @@ declare module "piecon" {
 // global the same way `tus` does above. `stats.ts`'s own graph
 // rendering is the one real first-party call site.
 
-interface JQueryStatic {
-  // jquery-ui-timepicker-addon (vendored -- P46-0's own CDN table, no
-  // real upstream types). `datepicker.ts`'s own `pwgDatepicker` plugin
-  // is the one real first-party call site. `JQueryStatic.datepicker`
-  // itself is no longer declared here -- see the `JQueryUI.Datepicker`
-  // merge below, required because `@types/jqueryui` (P47) now declares
-  // `JQueryStatic.datepicker: JQueryUI.Datepicker` itself, and
-  // re-declaring the same property with a different from-scratch type
-  // here would be a real "subsequent property declarations must have
-  // the same type" compile error.
-  timepicker: { log: any };
-}
-
-// `@types/jqueryui` (P47) declares `JQueryStatic.datepicker:
-// JQueryUI.Datepicker`, but its public API has no home for the
-// internal engine methods `datepicker.ts`'s own `pwgDatepicker` plugin
-// patches (`_generateMonthYearHeader`/`_selectMonthYear`/`parseDateTime`/
-// `parseDate`) -- merged directly onto the real `JQueryUI.Datepicker`
-// interface instead of re-declaring `JQueryStatic.datepicker` from
-// scratch (which would conflict, per the note above). Confirmed a real,
-// mergeable `interface`, not a `type` alias, via a local `tsc` repro
-// during planning.
-declare namespace JQueryUI {
-  interface Datepicker {
-    _generateMonthYearHeader(...args: any[]): any;
-    _selectMonthYear(...args: any[]): any;
-    parseDateTime(
-      dateFormat: string,
-      timeFormat: string,
-      value: string,
-      ...args: any[]
-    ): any;
-    parseDate(format: string, value: string, ...args: any[]): any;
-  }
-}
-
-// The real shape `datepicker.ts`'s own `pwgDatepicker` plugin accepts
-// (P47) -- confirmed against every real call site
-// (batchManagerGlobal.ts/batchManagerUnit.ts/picture_modify.ts/
-// history.ts's own zero-arg call).
-interface PwgDatepickerSettings {
-  showTimepicker?: boolean;
-  cancelButton?: string | false;
-}
-
 interface JQuery {
   // Real jQuery-core instance method (deprecated since 1.8, but still
   // present in the vendored 1.11.3 runtime -- @types/jquery never typed
@@ -328,24 +283,12 @@ interface JQuery {
   // real `JQuery` `this` for it) converted to a plain function
   // alongside it.
 
-  // `datepicker.ts`'s own first-party `jQuery.fn.pwgDatepicker`
-  // extension (docs/PLAN.md P46-C) -- still real, `pwgDatepicker`/
-  // jQuery UI's own datepicker + `jquery-timepicker-addon` are the
-  // last unstarted P49-B surfaces. `batchManagerGlobal.ts` is the
-  // first *consumer*-only file that needed the ambient type without
-  // declaring it itself (same reasoning as `pwg_token`, P46-C's own
-  // `album_selector.ts`).
-  pwgDatepicker(options?: PwgDatepickerSettings): JQuery;
-
-  // jQuery UI core datepicker + jquery-ui-timepicker-addon's own
-  // combined `.fn` widget method (vendored -- same pair as
-  // `JQueryStatic.datepicker`/`.timepicker` above). `datepicker.ts`'s
-  // own `pwgDatepicker` plugin is the one real first-party call site;
-  // every one of its many distinct command-string overloads collapses
-  // to one loose signature, matching `.sortable()`/`.slider()`'s own
-  // treatment above.
-  datetimepicker(...args: any[]): any;
-  datepicker(...args: any[]): any;
+  // jQuery UI's own datepicker widget + `jquery-timepicker-addon`'s own
+  // `.fn.pwgDatepicker`/`.datetimepicker()`/`.datepicker()` ambient
+  // declarations (once here) are gone outright now: the pair was ported
+  // to `themes/default/js/vendor/datepicker.ts` in P49-B, the last
+  // unstarted P49-B surface -- nothing calls either through jQuery any
+  // more.
 
   // datatables.net (vendored -- P46-0's own CDN table). `rating_user.ts`'s
   // own user-rating list is the one real first-party call site so far.

@@ -9,10 +9,10 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * live-interaction coverage before this (PictureModifyPageRendererTest.php
  * only ever asserts the rendered page or drives raw POSTs).
  *
- * `.selectize()`, jquery-confirm's own `confirm()`, and `colorbox()` are
- * real native calls now (P49-B, `vendor/jconfirm.ts`/`vendor/
- * selectize.ts`/`vendor/colorbox.ts`). `.pwgDatepicker()` still stays
- * jQuery.
+ * `.selectize()`, jquery-confirm's own `confirm()`, `colorbox()`, and
+ * `pwgDatepicker()` are all real native calls now (P49-B, `vendor/
+ * jconfirm.ts`/`vendor/selectize.ts`/`vendor/colorbox.ts`/`vendor/
+ * datepicker.ts`).
  */
 it('removes a linked album, updating the badge and showing the orphan message', function (): void {
     $page = H::asAdmin($this);

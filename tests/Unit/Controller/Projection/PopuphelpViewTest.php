@@ -11,7 +11,7 @@ test('pageAssets registers popuphelp.js for the front-end context', function ():
 
     expect($view->pageAssets())
         ->toEqual([
-            AssetContribution::script('popuphelp', 'themes/default/js/popuphelp.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::script('popuphelp', 'themes/default/js/popuphelp.ts', loadMode: LoadMode::Footer),
         ]);
 });
 

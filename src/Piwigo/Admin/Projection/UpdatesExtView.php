@@ -47,7 +47,10 @@ final readonly class UpdatesExtView implements View, HasPageAssets, ExposesPageD
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jgrowl@1.3.0/jquery.jgrowl.min.css'),
             AssetContribution::css('themes/admin/default/css/pages/updates_ext.css', id: 'updates_ext'),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
-            AssetContribution::script('updates_ext', 'themes/admin/default/js/updates_ext.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui']),
+            // No `dependsOn: ['jquery.ui']` (P49-C) -- jgrowl/jquery-confirm
+            // are both real native ports now (P49-B), and confirmed zero
+            // real jQuery UI calls left anywhere in `updates_ext.ts` itself.
+            AssetContribution::script('updates_ext', 'themes/admin/default/js/updates_ext.ts', loadMode: LoadMode::Footer),
         ];
     }
 

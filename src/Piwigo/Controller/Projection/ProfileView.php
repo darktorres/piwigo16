@@ -117,8 +117,8 @@ final readonly class ProfileView implements View, HasPageAssets, ExposesPageData
             AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
             AssetContribution::css('themes/admin/default/fontello/css/fontello.css', order: -11),
             AssetContribution::css('themes/standard_pages/css/pages/profile.css', id: 'profile'),
-            AssetContribution::script('standard_pages_js', 'themes/standard_pages/js/standard_pages.ts', loadMode: LoadMode::Async, dependsOn: ['jquery']),
-            AssetContribution::script('standard_profile_js', 'themes/standard_pages/js/profile.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::script('standard_pages_js', 'themes/standard_pages/js/standard_pages.ts', loadMode: LoadMode::Async),
+            AssetContribution::script('standard_profile_js', 'themes/standard_pages/js/profile.ts', loadMode: LoadMode::Footer),
             ...new ToasterView()
                 ->pageAssets(),
         ];

@@ -46,7 +46,7 @@ final readonly class PopuphelpView implements View, HasPageAssets
         }
 
         return [
-            AssetContribution::script('popuphelp', 'themes/default/js/popuphelp.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            AssetContribution::script('popuphelp', 'themes/default/js/popuphelp.ts', loadMode: LoadMode::Footer),
         ];
     }
 }

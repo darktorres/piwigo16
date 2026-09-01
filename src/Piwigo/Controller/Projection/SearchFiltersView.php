@@ -123,8 +123,10 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
             // gone: `.pwgDoubleSlider()` is a native port now (P49-B
             // group 4), so nothing on this page needs jQuery UI's script
             // to have loaded at all any more (its CSS theme, above,
-            // still does).
-            AssetContribution::script('mcs', 'themes/default/js/mcs.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
+            // still does). No plain `dependsOn: ['jquery']` either
+            // (P49-C) -- confirmed zero real jQuery calls left anywhere
+            // in `mcs.ts` itself.
+            AssetContribution::script('mcs', 'themes/default/js/mcs.ts', loadMode: LoadMode::Footer),
             ...new AlbumSelectorView()
                 ->pageAssets(),
             ...new QuickSearchView(is_dark_mode: $this->colorscheme === 'dark')

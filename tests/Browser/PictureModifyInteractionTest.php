@@ -130,6 +130,36 @@ it('creates a brand-new tag via the selectize control, typing it and pressing En
     $newTagName = 'Fresh Tag ' . uniqid();
     $inputSelector = 'select[name="tags[]"] + .selectize-control input';
 
+    // `LocalStorageCache`'s own `AbstractSelectizer._selectize()` loads
+    // asynchronously (`this.get(callback)`, same real race
+    // `RatingPageInteractionTest.php`'s own leading comment documents):
+    // its callback's `instance.load(...)` -> `renderOptions(false)`
+    // rebuilds `dropdownContent.innerHTML` from whatever the input's
+    // current value is at the moment the cache resolves. Typing before
+    // that lands risks the async rebuild clobbering the freshly-typed
+    // "create" row out from under a concurrent Enter keypress -- a real
+    // race, not just a slow first `fill()` (confirmed live: this test
+    // failed at 2 different, inconsistent later steps depending on
+    // exactly how much incidental delay preceded the first interaction).
+    // Poll for the real, cache-driven dropdown population (every site
+    // has at least one real existing tag) before typing at all.
+    $page->script(<<<'JS'
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + 5000;
+            const check = () => {
+                const content = document.querySelector('select[name="tags[]"] + .selectize-control .selectize-dropdown-content');
+                if (content !== null && content.children.length > 0) {
+                    return resolve(true);
+                }
+                if (Date.now() > deadline) {
+                    return reject(new Error('tags selectize cache never populated the dropdown'));
+                }
+                setTimeout(check, 100);
+            };
+            check();
+        })
+        JS);
+
     $page->fill($inputSelector, $newTagName);
 
     $page->script(<<<'JS'

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\Env;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -41,7 +42,12 @@ it('renders the stats page as a webmaster', function (): void {
 });
 
 it('renders more than one year of history summary data and a real day-level month bucket, covering the multi-year compare branch and the daily-stats accumulation loop', function (): void {
-    $today = new DateTime();
+    // The renderer computes "now" via Env::now() (frozen by
+    // PIWIGO_TEST_NOW in test mode), not the real wall clock -- a raw
+    // `new DateTime()` here agrees with it only by coincidence, and
+    // disagrees by a whole month (not just a boundary race) for as long
+    // as the real date sits in a different month than the frozen one.
+    $today = Env::now();
     $lastMonth = (clone $today)->sub(new DateInterval('P1M'));
     $lastMonthYear = (int) $lastMonth->format('Y');
     $lastMonthMonth = (int) $lastMonth->format('n');

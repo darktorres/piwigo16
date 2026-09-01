@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\StatsPageRenderer;
+use Piwigo\Core\Env;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
@@ -87,8 +88,15 @@ test('getMonthOfLastYears(\'all\') takes the <= 1 row fallback branch, zero-fill
     // `else` branch: setMissingValues('month', $allRows, now - 1 year, now).
     $result = statsGetMonthOfLastYearsInvoke();
 
-    $today = new DateTime();
-    $oneYearAgo = new DateTime()
+    // The SUT computes "now" via Env::now() (frozen by PIWIGO_TEST_NOW in
+    // test mode), not the real wall clock -- a raw `new DateTime()` here
+    // agrees with it only by coincidence, and disagrees by a whole month
+    // (not just a boundary race) for as long as the real date sits in a
+    // different month than the frozen one. Confirmed live: this test
+    // failed exactly that way once the real clock rolled into September
+    // while PIWIGO_TEST_NOW stayed pinned at 2026-08-01.
+    $today = Env::now();
+    $oneYearAgo = Env::now()
         ->sub(new DateInterval('P1Y'));
 
     expect(array_key_first($result))

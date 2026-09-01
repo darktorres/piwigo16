@@ -10,10 +10,12 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * instances, 3 selectize instances, a dozen `pop_in: Element` helper
  * functions threaded through the whole add/edit user flow).
  *
- * Stays jQuery, each marked at its call site: jQuery-UI's slider widget
- * (P49-B group 4, every `.slider(...)` call/read), selectize (P49-B
- * group 6, the 3 group-picker instances), tipTip (P49-B group 2), and
- * jquery-confirm (P49-B group 5, the delete-user confirm).
+ * jQuery-UI's slider widget, selectize, tipTip, and jquery-confirm (all
+ * mentioned here as "still jQuery" when this test was first written)
+ * are all real native ports now (P49-B); the file's own last remaining
+ * real jQuery usage (7 bare `.trigger("change")` calls, no widget
+ * behind any of them) was converted to `dom.ts`'s own native `trigger()`
+ * in P49-C, see that test below for the real bug it fixed.
  *
  * This one live end-to-end test (add a user through the popup, edit it,
  * delete it) exercises the three highest-risk conversions at once: the
@@ -146,4 +148,61 @@ it('adds a user through the popup, edits it, then deletes it', function (): void
 
     $page->assertNoJavaScriptErrors();
     H::assertNoServerErrors($page, 'user_list add/edit/delete flow');
+});
+
+/**
+ * Real, previously-hidden bug found live during P49-C's own
+ * `jQuery(...).trigger("change")` -> native `trigger()` conversion:
+ * `select[name=selectAction]`'s own real "change" listener (hiding
+ * `#applyActionBlock`, registered via `dom.ts`'s own `on()`) always
+ * uses a real `addEventListener` -- jQuery's own `.trigger()` can't
+ * invoke a native method for "change" (unlike "click"/"focus"/
+ * "submit"), so it falls back to replaying only handlers in jQuery's
+ * own internal registry, never reaching a listener registered outside
+ * it. `selectionMode()`'s own former `jQuery(...).trigger("change")`
+ * call reset the `<select>`'s own value to "-1" but never actually hid
+ * the panel -- confirmed live against the unmodified branch before
+ * fixing it here. No prior test exercised this reset path at all.
+ */
+it('resets the bulk-action panel when selection mode is toggled off', function (): void {
+    $page = H::asAdmin($this);
+    $page = H::navigateOk($page, '/admin.php?page=user_list');
+
+    // `#permitActionUserList` needs both selection mode on (the
+    // checkbox is visually hidden by the switch's own CSS, so its own
+    // wrapping `<label class="switch">` is the real click target) AND
+    // at least one real user selected (`update_selection_content()`'s
+    // own real gate) before it becomes visible at all.
+    $page->click('.selection-mode-group-manager label.switch');
+    $page->click('#selectAllPage');
+
+    $page->select('#permitActionUserList select[name="selectAction"]', 'status');
+
+    $blockVisibleAfterSelect = H::scriptBool(
+        $page,
+        "getComputedStyle(document.getElementById('applyActionBlock')).display !== 'none'",
+    );
+    expect($blockVisibleAfterSelect)
+        ->toBeTrue();
+
+    // Toggling the same switch back off is what used to leave the
+    // panel visibly stuck open.
+    $page->click('.selection-mode-group-manager label.switch');
+
+    $blockVisibleAfterToggle = H::scriptBool(
+        $page,
+        "getComputedStyle(document.getElementById('applyActionBlock')).display !== 'none'",
+    );
+    $selectValueAfterToggle = H::scriptString(
+        $page,
+        "document.querySelector('#permitActionUserList select[name=selectAction]').value",
+    );
+
+    expect($blockVisibleAfterToggle)
+        ->toBeFalse();
+    expect($selectValueAfterToggle)
+        ->toBe('-1');
+
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'user_list selectionMode reset');
 });

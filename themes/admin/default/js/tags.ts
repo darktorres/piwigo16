@@ -39,6 +39,7 @@ import {
   show,
   slideDown,
   slideUp,
+  trigger,
   val,
 } from "../../../default/js/vendor/dom";
 export {};
@@ -346,11 +347,14 @@ on(document.querySelectorAll("#add-tag"), "submit", function (e: Event) {
         );
         setVal(document.querySelectorAll("#add-tag-input"), "");
         removeClass(document.querySelectorAll("#add-tag"), "input-mode");
-        // Still jQuery: `.trigger("input")` -- both the firing and
-        // listening sides are native/dom.ts-based, but the search input's
-        // own "input" handler is unconverted below in this same file, so
-        // this stays until that call site converts with it.
-        jQuery("#search-tag .search-input").trigger("input");
+        // The search input's own "input" handler (below in this same
+        // file) is a real native `on()` registration (P49-C) -- a plain
+        // native dispatch reaches it the same as any other real "input"
+        // event.
+        trigger(
+          document.querySelectorAll("#search-tag .search-input"),
+          "input",
+        );
         loadState.reverse();
       })
       .catch((message: unknown) => {

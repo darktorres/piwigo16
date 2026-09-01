@@ -832,10 +832,10 @@ slider(
         ),
         String(nb_image_page_values[ui.value!]!),
       );
-      // Stays jQuery: `.trigger("change")` here reaches selectize/other
-      // still-jQuery listeners only through jQuery's own event system --
-      // same asymmetry already documented elsewhere in this campaign.
-      jQuery("#UserList .photos-select-bar input[name=nb_image_page]").trigger(
+      trigger(
+        document.querySelectorAll(
+          "#UserList .photos-select-bar input[name=nb_image_page]",
+        ),
         "change",
       );
     },
@@ -874,9 +874,12 @@ slider(
         ),
         String(nb_image_page_values[ui.value!]!),
       );
-      jQuery(
-        "#GuestUserList .photos-select-bar input[name=nb_image_page]",
-      ).trigger("change");
+      trigger(
+        document.querySelectorAll(
+          "#GuestUserList .photos-select-bar input[name=nb_image_page]",
+        ),
+        "change",
+      );
     },
   },
 );
@@ -919,9 +922,12 @@ slider(
         ),
         String(nb_image_page_values[ui.value!]!),
       );
-      jQuery(
-        "#permitActionUserList .photos-select-bar input[name=nb_image_page]",
-      ).trigger("change");
+      trigger(
+        document.querySelectorAll(
+          "#permitActionUserList .photos-select-bar input[name=nb_image_page]",
+        ),
+        "change",
+      );
     },
   },
 );
@@ -959,7 +965,10 @@ slider(
         ),
         String(recent_period_values[ui.value!]!),
       );
-      jQuery("#UserList .period-select-bar input[name=recent_period]").trigger(
+      trigger(
+        document.querySelectorAll(
+          "#UserList .period-select-bar input[name=recent_period]",
+        ),
         "change",
       );
     },
@@ -998,9 +1007,12 @@ slider(
         ),
         String(recent_period_values[ui.value!]!),
       );
-      jQuery(
-        "#GuestUserList .period-select-bar input[name=recent_period]",
-      ).trigger("change");
+      trigger(
+        document.querySelectorAll(
+          "#GuestUserList .period-select-bar input[name=recent_period]",
+        ),
+        "change",
+      );
     },
   },
 );
@@ -1037,9 +1049,12 @@ slider(
         ),
         String(recent_period_values[ui.value!]!),
       );
-      jQuery(
-        "#permitActionUserList .period-select-bar input[name=recent_period]",
-      ).trigger("change");
+      trigger(
+        document.querySelectorAll(
+          "#permitActionUserList .period-select-bar input[name=recent_period]",
+        ),
+        "change",
+      );
     },
   },
 );
@@ -1449,9 +1464,29 @@ function selectionMode(isSelection: boolean) {
     ),
     "-1",
   );
-  // Stays jQuery: reaches selectize/other still-jQuery listeners only
-  // through jQuery's own trigger mechanism.
-  jQuery("#permitActionUserList select[name=selectAction]").trigger("change");
+  // Real, confirmed pre-existing bug fixed here (P49-C): `dom.ts`'s own
+  // `on()` (the real listener at this file's own `select[name=
+  // selectAction]` "change" registration, hiding `#applyActionBlock`)
+  // always uses a real `addEventListener` -- jQuery's own `.trigger()`
+  // can't invoke a native method for "change" (unlike "click"/"focus"/
+  // "submit"), so it falls back to replaying only handlers in jQuery's
+  // own internal registry, never reaching a listener registered outside
+  // Real, confirmed pre-existing bug fixed here (P49-C): `dom.ts`'s own
+  // `on()` (the real listener at this file's own `select[name=
+  // selectAction]` "change" registration, hiding `#applyActionBlock`)
+  // always uses a real `addEventListener` -- jQuery's own `.trigger()`
+  // can't invoke a native method for "change" (unlike "click"/"focus"/
+  // "submit"), so it falls back to replaying only handlers in jQuery's
+  // own internal registry, never reaching a listener registered outside
+  // it. Confirmed live: toggling selection mode reset the `<select>`'s
+  // own value to "-1" but left `#applyActionBlock` visibly stuck open --
+  // this dispatch reaches the real listener now.
+  trigger(
+    document.querySelectorAll(
+      "#permitActionUserList select[name=selectAction]",
+    ),
+    "change",
+  );
   if (isSelection) {
     //resets the selection
     //selection = [];
@@ -3599,9 +3634,6 @@ function delete_user(uid: number) {
     url: "api/v1/users/" + uid,
     type: "DELETE",
     headers: { "X-CSRF-Token": pwg_token },
-    beforeSend: function () {
-      //jQuery('#user'+uid+' .userDelete .loading').show();
-    },
     success: function (
       _data: operations["userDelete"]["responses"][200]["content"]["application/json"],
     ) {
@@ -3613,12 +3645,6 @@ function delete_user(uid: number) {
           +(htmlOf(document.querySelectorAll(".badge-number")) ?? "0") - 1,
         ),
       );
-      // msg where user was deleted
-      //jQuery('#showAddUser .infos').html('&#x2714; User '+username+' deleted').show();
-    },
-    error: function () {
-      //error just hide loading
-      //jQuery('#user'+uid+' .userDelete .loading').hide();
     },
   });
 }

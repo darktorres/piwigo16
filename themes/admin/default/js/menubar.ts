@@ -9,6 +9,7 @@ import {
   removeClass,
   show,
 } from "../../../default/js/vendor/dom";
+import { sortable, sortableToArray } from "../../../default/js/vendor/sortable";
 
 export {};
 
@@ -16,8 +17,7 @@ ready(function () {
   hide(document.querySelectorAll(".menuPos"));
   show(document.querySelectorAll(".drag_button"));
   css(document.querySelectorAll(".menuLi"), "cursor", "move");
-  // Still jQuery: sortable is a jQuery-UI widget, ported in P49-B group 4.
-  jQuery(".menuUl").sortable({
+  sortable(document.querySelectorAll(".menuUl"), {
     axis: "y",
     opacity: 0.8,
   });
@@ -41,8 +41,7 @@ ready(function () {
     },
   );
   on(document.querySelectorAll("#menuOrdering"), "submit", function (): void {
-    // Still jQuery: reads the sortable widget's own current DOM order.
-    const ar = jQuery(".menuUl").sortable("toArray");
+    const ar = sortableToArray(document.querySelector(".menuUl")!);
     for (let i = 0; i < ar.length; i++) {
       const men = ar[i]!.split("menu_");
       (

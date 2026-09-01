@@ -8,6 +8,7 @@ import {
   show,
   val,
 } from "../../../default/js/vendor/dom";
+import { sortable } from "../../../default/js/vendor/sortable";
 import { tipTip } from "../../../default/js/vendor/tiptip";
 export {};
 
@@ -23,15 +24,11 @@ ready(function () {
     }
   }
 
-  // Still jQuery: sortable is a jQuery-UI widget, ported in P49-B group 4.
-  // `update`'s own body below is ordinary DOM work, converted -- jQuery-UI
-  // calls it with `this` already bound to the widget's real DOM element.
-  jQuery("ul.thumbnails").sortable({
-    revert: true,
+  sortable(document.querySelectorAll("ul.thumbnails"), {
     opacity: 0.7,
-    handle: jQuery(".rank-of-image").add(".rank-of-image img"),
-    update: function (this: HTMLElement) {
-      this.querySelectorAll("li").forEach((li, i) => {
+    handle: ".rank-of-image, .rank-of-image img",
+    update: function (container: HTMLElement) {
+      container.querySelectorAll("li").forEach((li, i) => {
         li.querySelectorAll("input[name^=rank_of_image]").forEach((input) => {
           attr(input, "value", String((i + 1) * 10));
         });

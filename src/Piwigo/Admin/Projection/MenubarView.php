@@ -40,7 +40,7 @@ final readonly class MenubarView implements View, HasPageAssets
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('menubar', 'themes/admin/default/js/menubar.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui']),
+            AssetContribution::script('menubar', 'themes/admin/default/js/menubar.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/menubar.css', id: 'menubar'),
         ];
     }

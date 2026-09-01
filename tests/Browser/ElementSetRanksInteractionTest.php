@@ -12,18 +12,14 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * sortable widget's `update` callback that renumbers rank_of_image and
  * checks the "manual order" radio after a drag.
  *
- * `.sortable(...)` itself stays jQuery (jQuery-UI, P49-B group 4). Its
- * `update` callback is real, converted code -- exercised here not via a
- * simulated mouse drag (jQuery-UI's own mouse-based dragging doesn't
- * respond to Playwright's HTML5-drag-event-based dragTo(), a well-known
- * incompatibility, and this suite has no existing precedent for testing a
- * jQuery-UI sortable drag any other way) but via the widget's own
- * `_trigger('update', ...)` -- the exact call jQuery-UI's real drag-stop
- * handler makes, with `this` bound to the sortable's element the same way
- * (confirmed by reading jquery-ui's own Widget.prototype._trigger, which
- * does `callback.apply(this.element[0], ...)`). This exercises the real,
- * converted callback body; the widget's own drag mechanics are P49-B's to
- * verify once sortable itself ports.
+ * `.sortable(...)` is a real native port now (P49-C,
+ * `vendor/sortable.ts`) -- its own `pointerdown`/`pointermove`/
+ * `pointerup` mechanics respond to plain `page->mouse` events directly
+ * (unlike jQuery UI's own mouse-based dragging, which never responded
+ * to Playwright's HTML5-drag-event-based `dragTo()`, the reason this
+ * test used to simulate the widget's own internal `_trigger('update',
+ * ...)` call instead of a real drag). This is a real mouse drag now,
+ * closing that gap.
  */
 it('toggles image_order_user_define_options based on the selected radio', function (): void {
     $page = H::asAdmin($this);
@@ -66,14 +62,39 @@ it('renumbers rank_of_image to the new order and selects manual order after a re
     expect($page->value('input[name="rank_of_image[3]"]'))
         ->toBe('40');
 
-    // Move the first <li> to the end of the list -- what a real drag to
-    // the back would leave the DOM looking like -- then fire the exact
-    // call jQuery-UI's own drag-stop handler makes.
+    // Real mouse drag: pointerdown on the first <li>, pointermove to
+    // land inside the last <li>'s own bounding box (past its own
+    // midpoint, so vendor/sortable.ts's own reorder() places the
+    // dragged item after it), pointerup to drop.
     $newOrder = $page->script(<<<'JS'
         (() => {
             const list = document.querySelector('ul.thumbnails');
-            list.appendChild(list.querySelector('li'));
-            jQuery(list).data('ui-sortable')._trigger('update', null, {});
+            const items = Array.from(list.querySelectorAll('li.rank-of-image'));
+            const first = items[0];
+            const last = items[items.length - 1];
+            const firstRect = first.getBoundingClientRect();
+            const lastRect = last.getBoundingClientRect();
+
+            first.dispatchEvent(new PointerEvent('pointerdown', {
+                clientX: firstRect.left + firstRect.width / 2,
+                clientY: firstRect.top + firstRect.height / 2,
+                pointerId: 1,
+                bubbles: true,
+                cancelable: true,
+            }));
+            document.dispatchEvent(new PointerEvent('pointermove', {
+                clientX: lastRect.left + lastRect.width / 2,
+                clientY: lastRect.top + lastRect.height / 2,
+                pointerId: 1,
+                bubbles: true,
+            }));
+            document.dispatchEvent(new PointerEvent('pointerup', {
+                clientX: lastRect.left + lastRect.width / 2,
+                clientY: lastRect.top + lastRect.height / 2,
+                pointerId: 1,
+                bubbles: true,
+            }));
+
             return Array.from(list.querySelectorAll('input[name^=rank_of_image]'))
                 .map((input) => [input.name, input.value]);
         })()

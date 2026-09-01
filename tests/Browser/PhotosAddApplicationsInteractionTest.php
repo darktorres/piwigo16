@@ -146,7 +146,8 @@ it('opens a photo group, navigates with next/prev and Escape, and closes', funct
         })
         JS);
 
-    expect($closed)->toBeTrue();
+    expect($closed)
+        ->toBeTrue();
 
     $page->assertNoJavaScriptErrors();
     H::assertNoServerErrors($page, 'colorbox group navigation + close');

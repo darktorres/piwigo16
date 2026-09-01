@@ -132,7 +132,7 @@ it('toggles the upload-options panel open and closed', function (): void {
  * the real Piecon calls through the real integration point, not a
  * piecon-internals-only stub.
  */
-it("draws a progress favicon during upload and resets it on complete", function (): void {
+it('draws a progress favicon during upload and resets it on complete', function (): void {
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=photos_add&album=1');
 

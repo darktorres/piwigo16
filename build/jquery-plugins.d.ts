@@ -318,25 +318,24 @@ interface JQuery {
   // typed exports of `themes/default/js/vendor/slider.ts`/
   // `themes/admin/default/js/doubleSlider.ts` now).
 
-  // `.colorbox()` is now real, verified types from
-  // `@types/jquery.colorbox` (P47) -- deleted here: it was declared as
-  // a *property* by the real package (`colorbox: Colorbox`) vs.
-  // method-shorthand here, a real "duplicate identifier" conflict if
-  // both were left in place (confirmed via a local `tsc` repro during
-  // planning), not just redundant like `.slider()` above. (jquery.
-  // tipTip's own ambient `tipTip()` declaration, once here too, was
-  // deleted outright in P49-B group 2 -- the library itself was ported,
-  // not just re-typed, so nothing calls `.tipTip()` through jQuery any
-  // more.)
+  // `.colorbox()`'s own ambient `@types/jquery.colorbox` ("real,
+  // verified types from P47" note, once here too) is gone outright now:
+  // the library itself was ported to `themes/default/js/vendor/
+  // colorbox.ts` in P49-B, same as `jquery.tipTip`'s own ambient
+  // `tipTip()` declaration before it -- nothing calls `.colorbox()`
+  // through jQuery any more, `addAlbum.ts`'s own former
+  // `jQuery.fn.pwgAddAlbum` (the one first-party wrapper needing a
+  // real `JQuery` `this` for it) converted to a plain function
+  // alongside it.
 
   // `datepicker.ts`'s own first-party `jQuery.fn.pwgDatepicker`
-  // extension and `addAlbum.ts`'s own `jQuery.fn.pwgAddAlbum` -- both
-  // files converted (docs/PLAN.md P46-C), `batchManagerGlobal.ts` was
-  // the first *consumer*-only file that needed the ambient type
-  // without declaring it itself (same reasoning as `pwg_token`, P46-C's
-  // own `album_selector.ts`).
+  // extension (docs/PLAN.md P46-C) -- still real, `pwgDatepicker`/
+  // jQuery UI's own datepicker + `jquery-timepicker-addon` are the
+  // last unstarted P49-B surfaces. `batchManagerGlobal.ts` is the
+  // first *consumer*-only file that needed the ambient type without
+  // declaring it itself (same reasoning as `pwg_token`, P46-C's own
+  // `album_selector.ts`).
   pwgDatepicker(options?: PwgDatepickerSettings): JQuery;
-  pwgAddAlbum(options?: Record<string, unknown>): JQuery;
 
   // jQuery UI core datepicker + jquery-ui-timepicker-addon's own
   // combined `.fn` widget method (vendored -- same pair as

@@ -11,8 +11,9 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * both drive the surrounding batch-manager page but never open this
  * popup.
  *
- * Stays jQuery on purpose: `this.colorbox(...)` (colorbox is $.fn.colorbox,
- * P49-B group 3, and `this` must be a real JQuery object for it).
+ * `colorbox(trigger, ...)` is a real native call now too (P49-B,
+ * `vendor/colorbox.ts`) -- `pwgAddAlbum` itself converted from a
+ * `jQuery.fn` extension to a plain function in the same pass.
  * `cache.selectize(albumParent, ...)` (LocalStorageCache.ts's own
  * AbstractSelectizer) is a real native call now (P49-B group 6,
  * `vendor/selectize.ts`) -- the cache lookup below reads real state off

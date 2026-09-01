@@ -10,8 +10,8 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * live-interaction coverage before this (no existing Browser test file for
  * this page at all).
  *
- * `.tiptip-with-img` and `.themeBoxes a` stay jQuery (tipTip and colorbox,
- * P49-B groups 2 and 3).
+ * `.tiptip-with-img` and `.themeBoxes a` are both real native calls now
+ * (tipTip and colorbox, P49-B).
  */
 it('toggles rate_anonymous based on the rate checkbox, in both directions', function (): void {
     $page = H::asAdmin($this);
@@ -199,4 +199,63 @@ it('shows the group-options block when "group" is selected for the new-user emai
 
     $page->assertNoJavaScriptErrors();
     H::assertNoServerErrors($page, 'configuration_main email-filter group-options toggle');
+});
+
+/**
+ * `.help-popin` (`admin.latte`'s own page-wide help icon, registered by
+ * `AdminShellView`) is colorbox's one real ajax/HTML-fallback call site
+ * (P49-B) -- every other real call site is `photo` mode or `inline`
+ * mode, both covered elsewhere (`PhotosAddApplicationsInteractionTest.
+ * php`, `AddAlbumInteractionTest.php`). No prior test, jQuery-based or
+ * not, ever drove this fetch-and-inject path.
+ */
+it('loads the help content into the popup via ajax', function (): void {
+    $page = H::asAdmin($this);
+    $page = H::navigateOk($page, '/admin.php?page=configuration');
+
+    $page->click('a.help-popin');
+
+    $loaded = H::scriptJson($page, <<<'JS'
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + 5000;
+            const check = () => {
+                // `#cboxLoadingOverlay`'s own `style.display` is set to
+                // "none" in exactly one place: the tail of `prep()`'s own
+                // reveal callback, the same callback that sets the title
+                // -- `#cboxLoadedContent` is appended (with its real
+                // content already inside) well before that reveal step,
+                // so polling for its content instead races the callback
+                // and reads the title before it's set.
+                const settled = document.getElementById('cboxLoadingOverlay').style.display === 'none';
+                if (settled) {
+                    const loaded = document.getElementById('cboxLoadedContent');
+                    return resolve(JSON.stringify({
+                        title: document.getElementById('cboxTitle').textContent,
+                        hasContent: loaded.textContent.trim().length > 0,
+                        visible: getComputedStyle(document.getElementById('colorbox')).display !== 'none',
+                    }));
+                }
+                if (Date.now() > deadline) {
+                    return reject(new Error('colorbox never loaded the help content'));
+                }
+                setTimeout(check, 50);
+            };
+            check();
+        })
+        JS);
+
+    expect($loaded['title'])->toBe('Help');
+    expect($loaded['hasContent'])->toBeTrue();
+    expect($loaded['visible'])->toBeTrue();
+
+    // No assertNoServerErrors() here on purpose: it scans the *live* DOM
+    // (Playwright's own page.content()), which now includes the ajax-
+    // fetched help article's real prose, injected verbatim via
+    // colorbox's own `innerHTML` -- `language/en_UK/help/configuration.
+    // html`'s own real documentation text includes the literal sentence
+    // "Notice: false by default." (describing a config default's own
+    // value), a false positive against the helper's generic `/\bNotice:
+    // \s/` server-error pattern, confirmed by fetching the endpoint
+    // directly. Real app chrome, not an uncaught PHP notice.
+    $page->assertNoJavaScriptErrors();
 });

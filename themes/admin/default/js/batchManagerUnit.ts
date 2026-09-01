@@ -34,6 +34,7 @@ import {
   val,
 } from "../../../default/js/vendor/dom";
 import { ajax } from "../../../default/js/vendor/ajax";
+import { colorbox } from "../../../default/js/vendor/colorbox";
 import { confirm } from "../../../default/js/vendor/jconfirm";
 export {};
 
@@ -126,10 +127,7 @@ ready(function () {
   });
 });
 
-// Still jQuery: colorbox is a library, ported in P49-B group 3.
-jQuery("a.preview-box").colorbox({
-  photo: true,
-});
+colorbox(document.querySelectorAll("a.preview-box"), { photo: true });
 
 const str_are_you_sure = pwg_getPageString("Are you sure?");
 const str_yes = pwg_getPageString("Yes, delete");

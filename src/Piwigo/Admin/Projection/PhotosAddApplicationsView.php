@@ -40,7 +40,7 @@ final readonly class PhotosAddApplicationsView implements View, HasPageAssets
         return [
             ...new ColorboxView()
                 ->pageAssets(),
-            AssetContribution::script('photos_add_applications', 'themes/admin/default/js/photos_add_applications.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.colorbox']),
+            AssetContribution::script('photos_add_applications', 'themes/admin/default/js/photos_add_applications.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/photos_add_applications.css', id: 'photos_add_applications'),
         ];
     }

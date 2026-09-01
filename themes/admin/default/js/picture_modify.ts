@@ -8,6 +8,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
+import { colorbox } from "../../../default/js/vendor/colorbox";
 import { confirm } from "../../../default/js/vendor/jconfirm";
 import {
   addClass,
@@ -72,10 +73,7 @@ const str_orphan = pwg_getPageString("This photo is an orphan");
   });
 
   // <!-- THUMBNAILS -->
-  // Still jQuery: colorbox is a library, ported in P49-B group 3.
-  jQuery("a.preview-box").colorbox({
-    photo: true,
-  });
+  colorbox(document.querySelectorAll("a.preview-box"), { photo: true });
 
   const str_are_you_sure = pwg_getPageString("Are you sure?");
   const str_yes = pwg_getPageString("Yes, delete");

@@ -23,11 +23,14 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * element where jQuery's own empty-set `.data()` quietly returned
  * `undefined`).
  *
- * Stays jQuery, each marked at its call site: jquery-confirm (group 5),
- * pwgDatepicker (group 5), colorbox (group 3), selectize (group 6), and
- * two "change" listeners that must stay jQuery registrations because
- * pwgDatepicker/selectize signal via jQuery's own `.trigger("change")`,
- * which never reaches a native listener.
+ * jquery-confirm, colorbox, and selectize are all real native calls now
+ * (P49-B) -- selectize's own `triggerChange()` dispatches a real native
+ * "change" event, so the `<select>` change listener is native too.
+ * `pwgDatepicker` still stays jQuery, marked at its own call site,
+ * along with the one "change" listener on `input[data-datepicker]`
+ * that must stay a jQuery registration: pwgDatepicker signals via
+ * jQuery's own `.trigger("change")`, which never reaches a native
+ * listener.
  */
 it('scopes the unsaved/save flow to the edited photo, not any other photo on the page', function (): void {
     $page = H::asAdmin($this);

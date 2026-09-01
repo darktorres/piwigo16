@@ -1,3 +1,5 @@
+import { colorbox } from "../../../default/js/vendor/colorbox";
+
 export {};
 
-jQuery(".help-popin").colorbox({ width: "500px" });
+colorbox(document.querySelectorAll(".help-popin"), { width: "500px" });

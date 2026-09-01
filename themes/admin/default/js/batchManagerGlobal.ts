@@ -21,8 +21,10 @@ import {
 // this page" consequence of batchManagerFilter.ts's own separate direct
 // import).
 import { AlbumSelector } from "./album_selector";
+import { pwgAddAlbum } from "./addAlbum";
 import { ajax } from "../../../default/js/vendor/ajax";
 import { AjaxQueue } from "../../../default/js/vendor/ajaxQueue";
+import { colorbox } from "../../../default/js/vendor/colorbox";
 import {
   append,
   css,
@@ -160,8 +162,7 @@ function remove_album_action({
   }
 }
 
-// Still jQuery: colorbox is a library, ported in P49-B group 3.
-jQuery("a.preview-box").colorbox({ photo: true });
+colorbox(document.querySelectorAll("a.preview-box"), { photo: true });
 
 tipTip(document.querySelectorAll(".thumbnails img"), {
   delay: 0,
@@ -193,7 +194,7 @@ ready(function () {
 // Real regression found live (docs/PLAN.md P48, this pair's own merge
 // into one bundle): `pwgAddAlbum()` needs `[data-add-album]`'s own
 // target `<select>` to already have its selectize widget initialized
-// (`addAlbum.ts`'s own `jQuery.error('pwgAddAlbum: target must use
+// (`addAlbum.ts`'s own `throw new Error('pwgAddAlbum: target must use
 // selectize')` guard), which happens inside batch_manager_global.ts's
 // own `jQuery(document).ready(...)` callback. jQuery 3.x's `.ready()`
 // resolves via a real Deferred, not truly synchronously even when the
@@ -219,11 +220,10 @@ ready(function () {
 // Confirmed live once already. Anything that lets the bundler decide
 // module evaluation order (shared chunks) has to re-verify this page.
 ready(function () {
-  // Still jQuery: addAlbum.ts's own `jQuery.fn.pwgAddAlbum` needs a real
-  // JQuery `this` for colorbox (P49-B group 3, still jQuery itself) --
-  // unrelated to selectize, which it also uses internally and which is
-  // now a real native module (P49-B group 6).
-  jQuery("[data-add-album]").pwgAddAlbum();
+  const trigger = document.querySelector("[data-add-album]");
+  if (trigger !== null) {
+    pwgAddAlbum(trigger);
+  }
 });
 
 on(

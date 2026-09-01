@@ -22,7 +22,6 @@
       "node",
       "jquery",
       "jqueryui",
-      "jquery.colorbox",
       "chart.js",
       "plupload"
     ]

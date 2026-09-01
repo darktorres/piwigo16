@@ -110,7 +110,7 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
         return [
             ...new DatepickerView(load_mode: 'async', jqueryCode: $this->jqueryCode)
                 ->pageAssets(),
-            ...new ColorboxView(load_mode: 'footer')
+            ...new ColorboxView()
                 ->pageAssets(),
             ...new AddAlbumView(colorscheme: $this->colorscheme)
                 ->pageAssets(),
@@ -132,17 +132,17 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             // way addAlbum.ts's direct import is. Footer (not
             // batchManagerGlobal.ts's former Async) is the merged mode,
             // matching batch_manager_global.ts's own former mode --
-            // `jquery.ui.timepicker-addon`/`jquery.colorbox`
-            // below cascade-promote to Footer too via
-            // PageAssets::promoteLoadModes() ("a dependency can't load
-            // more loosely than its dependent"), a real, intentional
+            // `jquery.ui.timepicker-addon` below cascade-promotes to
+            // Footer too via PageAssets::promoteLoadModes() ("a
+            // dependency can't load more loosely than its dependent"),
+            // a real, intentional
             // structural side effect (docs/PLAN.md's own Design §6) that
             // also fixes a genuine pre-existing race:
             // batchManagerGlobal.ts's own top-level `lang.Cancel` read
             // wasn't previously guaranteed to run after
             // batch_manager_global.ts set it (Async vs Footer, no
             // `dependsOn` between them).
-            AssetContribution::script('batch_manager_global_page', 'themes/admin/default/js/pages/batch_manager_global.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'jquery.ui.timepicker-addon', 'jquery.colorbox']),
+            AssetContribution::script('batch_manager_global_page', 'themes/admin/default/js/pages/batch_manager_global.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery', 'jquery.ui.timepicker-addon']),
             AssetContribution::script('jquery.progressBar', 'themes/default/js/plugins/jquery.progressbar.min.js', loadMode: LoadMode::Async),
             AssetContribution::css('themes/admin/default/css/pages/batch_manager_global.css', id: 'batch_manager_global'),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),

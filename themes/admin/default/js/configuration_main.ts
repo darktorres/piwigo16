@@ -1,6 +1,7 @@
 import "./common";
 
 import { pwg_getPageData } from "../../../default/js/page-data";
+import { colorbox } from "../../../default/js/vendor/colorbox";
 import {
   addClass,
   attr,
@@ -150,8 +151,7 @@ export {};
   updateFilters();
 })();
 
-// Still jQuery: colorbox is a library, ported in P49-B group 3.
-jQuery(".themeBoxes a").colorbox();
+colorbox(document.querySelectorAll(".themeBoxes a"));
 
 on(
   document.querySelectorAll("input[name='mail_theme']"),

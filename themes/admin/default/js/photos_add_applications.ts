@@ -1,8 +1,8 @@
+import { colorbox } from "../../../default/js/vendor/colorbox";
 import { ready } from "../../../default/js/vendor/dom";
 
 export {};
 
 ready(function () {
-  // Still jQuery: colorbox is a library (docs/PLAN.md P49-B group 3).
-  jQuery(".illustration a").colorbox({ rel: "group1" });
+  colorbox(document.querySelectorAll(".illustration a"), { rel: "group1" });
 });

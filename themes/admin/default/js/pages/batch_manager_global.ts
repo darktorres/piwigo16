@@ -5,7 +5,7 @@
 // comments for why they can't stay 2 separate (page × LoadMode)
 // entries the way most pages' shared-library files do.
 //
-// Import order is load-bearing, twice over:
+// Import order is load-bearing:
 // - datepicker.ts must be entered before batchManagerGlobal.ts: the
 //   latter's own top-level, synchronous `jQuery("[data-datepicker]")
 //   .pwgDatepicker(...)` call needs that plugin already registered,
@@ -18,7 +18,14 @@
 //   enters via batchManagerGlobal.ts first (see that file's own
 //   leading comment for the full analysis).
 // Do not reorder without re-verifying both.
-import "../addAlbum";
+//
+// No separate `addAlbum.ts` import here anymore (P49-B, colorbox):
+// `batchManagerGlobal.ts` now imports its own `{ pwgAddAlbum }` binding
+// directly, and standard ESM dependency evaluation already guarantees
+// that runs before this file's own subsequent code -- the old bare
+// side-effect import (needed only for `jQuery.fn.pwgAddAlbum`'s global
+// registration) would just be a redundant second resolution of the
+// same module.
 import "../datepicker";
 // scripts.ts also has several real registrant pages (
 // Design §4); this import replaces the separate `core.scripts` script

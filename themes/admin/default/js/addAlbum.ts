@@ -1,5 +1,6 @@
 import type { operations } from "../../../../openapi/client/schema";
 import { ajax } from "../../../default/js/vendor/ajax";
+import { closeColorbox, colorbox } from "../../../default/js/vendor/colorbox";
 import {
   css,
   data,
@@ -32,16 +33,15 @@ interface PwgAddAlbumOptions {
   afterSelect?: () => void;
 }
 
-jQuery.fn.pwgAddAlbum = function (this: JQuery, options?: PwgAddAlbumOptions) {
+export function pwgAddAlbum(trigger: Element, options?: PwgAddAlbumOptions) {
   options = options || {};
 
   const popup = document.querySelector("#addAlbumForm")!;
   const albumParent = popup.querySelector<HTMLSelectElement>(
     '[name="category_parent"]',
   )!;
-  const buttonEl = this[0]!;
   const target = document.querySelector<HTMLSelectElement>(
-    '[name="' + String(data(buttonEl, "addAlbum")) + '"]',
+    '[name="' + String(data(trigger, "addAlbum")) + '"]',
   );
   // LocalStorageCache.ts's own _selectize() stashes the owning Cache
   // instance via `setData(el, "cache", this)` (P49-B group 6) -- the
@@ -54,10 +54,10 @@ jQuery.fn.pwgAddAlbum = function (this: JQuery, options?: PwgAddAlbumOptions) {
   };
 
   if (target && !getSelectizeInstance(target)) {
-    jQuery.error("pwgAddAlbum: target must use selectize");
+    throw new Error("pwgAddAlbum: target must use selectize");
   }
   if (!cache) {
-    jQuery.error("pwgAddAlbum: missing categories cache");
+    throw new Error("pwgAddAlbum: missing categories cache");
   }
 
   function init() {
@@ -131,11 +131,7 @@ jQuery.fn.pwgAddAlbum = function (this: JQuery, options?: PwgAddAlbumOptions) {
         ) {
           hide(document.querySelectorAll("#albumCreationLoading"));
           show(document.querySelectorAll(".albumCreationButton"));
-          // Real Colorbox bug found via retyping: `.close()` only exists
-          // as a *static* method on `jQuery.colorbox` itself, never as a
-          // per-element property -- confirmed via @types/jquery.colorbox's
-          // own ColorboxStatic interface. Fixed to the documented form.
-          jQuery.colorbox.close();
+          closeColorbox();
 
           const newAlbum: AlbumOptionData = {
             id: data.id,
@@ -190,9 +186,7 @@ jQuery.fn.pwgAddAlbum = function (this: JQuery, options?: PwgAddAlbumOptions) {
     });
   }
 
-  // Still jQuery: colorbox is a library, ported in P49-B group 3. `this`
-  // must stay a real JQuery object for it -- colorbox is $.fn.colorbox.
-  this.colorbox({
+  colorbox(trigger, {
     inline: true,
     href: "#addAlbumForm",
     width: 650,
@@ -215,6 +209,4 @@ jQuery.fn.pwgAddAlbum = function (this: JQuery, options?: PwgAddAlbumOptions) {
       getSelectizeInstance(albumParent)?.setValue(val(target ?? []) || 0);
     },
   });
-
-  return this;
-};
+}

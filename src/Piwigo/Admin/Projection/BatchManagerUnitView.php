@@ -110,7 +110,7 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
-            AssetContribution::script('batchManagerUnit', 'themes/admin/default/js/batchManagerUnit.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui', 'jquery.colorbox']),
+            AssetContribution::script('batchManagerUnit', 'themes/admin/default/js/batchManagerUnit.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.ui']),
             AssetContribution::css('themes/admin/default/css/pages/batch_manager_unit.css', id: 'batch_manager_unit'),
             ...new AlbumSelectorView()
                 ->pageAssets(),

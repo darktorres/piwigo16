@@ -1,6 +1,7 @@
 import { pwg_jconfirm_follow_href } from "./common";
 
 import { pwg_getPageString } from "../../../default/js/page-data";
+import { colorbox } from "../../../default/js/vendor/colorbox";
 import {
   attrOf,
   css,
@@ -32,8 +33,7 @@ document.querySelectorAll(".delete-theme-button").forEach(function (button) {
 });
 
 ready(function () {
-  // Still jQuery: colorbox is a library, ported in P49-B group 3.
-  jQuery("a.preview-box").colorbox();
+  colorbox(document.querySelectorAll("a.preview-box"));
 
   on(document, "mouseup", function (e: Event): void {
     e.stopPropagation();

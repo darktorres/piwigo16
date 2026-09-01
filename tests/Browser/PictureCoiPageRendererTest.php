@@ -160,7 +160,8 @@ it('renders a real 404 "Page not found" response for a nonexistent image_id', fu
 });
 
 /**
- * picture_coi.ts's own coordinate maths, converted off jQuery in P49-A.
+ * picture_coi.ts's own coordinate maths, converted off jQuery in P49-A;
+ * Jcrop itself is native too now (P49-B group 6, `vendor/jcrop.ts`).
  *
  * The round trip is the assertion. With a COI already stored, Jcrop's init
  * callback calls animateTo() with pixel coordinates from_coi() derives
@@ -183,17 +184,20 @@ it('renders a real 404 "Page not found" response for a nonexistent image_id', fu
  * either the image size or the box and these move; that is a real signal,
  * not noise, and the diff will say which.
  *
- * What the invariants DO catch is the failure this conversion could
- * actually cause, and it is not a small numeric error. jQuery's
- * .width()/.height() are the content box; the obvious native swap,
- * offsetWidth/offsetHeight, reports 0 here, because by the time these
- * callbacks run Jcrop has replaced #jcrop with its own wrapper and the
- * original element is no longer laid out. from_coi() then divides by
- * zero and every coordinate comes back NaN -- checked, and the non-finite
- * assertion below is what names it. That is the failure mode
- * docs/PLAN.md already records for this campaign ("a hidden element has
- * no box"); jQuery's width() forces such an element into layout to
- * measure it, and the helper reproduces that.
+ * What the invariants DO catch is a failure `vendor/jcrop.ts`'s own port
+ * genuinely reintroduced once already this session, confirmed live
+ * against a real uploaded photo before this test suite even ran: cloning
+ * `#jcrop` (real source's own approach, faithfully ported) re-triggers
+ * the clone's own async image decode regardless of the original's own
+ * load state, and reading the clone's rendered size synchronously right
+ * after `cloneNode()` raced that decode -- `presize()` measured 0 and
+ * every coordinate silently came back wrong (not NaN in that particular
+ * failure shape, since the width fed in was a real box, just the
+ * *wrong* one; the NaN case these invariants were originally written
+ * for is `width(img)` reading an actually-unlaid-out element, e.g. a
+ * naive `offsetWidth` swap-in for jQuery's own layout-forcing
+ * `.width()`). Both are "measured the wrong box, or no box" bugs this
+ * same round-trip assertion catches either way.
  */
 it('round-trips a stored center of interest back into the coordinate inputs', function (): void {
     $page = H::asAdmin($this);

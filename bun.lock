@@ -12,7 +12,6 @@
         "jquery-timepicker-addon": "github:trentrichardson/jQuery-Timepicker-Addon#v1.4.4",
         "jquery-ui": "1.10.4",
         "jquery.colorbox": "github:jackmoore/colorbox#1.5.14",
-        "jquery.jcrop": "github:tapmodo/Jcrop#v0.9.12",
         "moment": "2.26.0",
         "openapi-fetch": "0.17.0",
         "piecon": "github:lipka/piecon#0.5.0",
@@ -951,8 +950,6 @@
     "jquery-ui": ["jquery-ui@1.10.4", "", {}, "sha512-VdBz+azK9w7aLfrynqRjhDClgKF57L5fOcj6xDRar/PC0F/WFVD2a5Rfp1W15NYa2kkAvKp1YzAd2/lnGlmOmw=="],
 
     "jquery.colorbox": ["colorbox@github:jackmoore/colorbox#26f408d", {}, "jackmoore-colorbox-26f408d", "sha512-S1Kg5jZ1MtJxPl1t5zkg4tJdCslwP7N6qoL7rKaIOGnpme7K4FIbcSkGk6Ao7pHpqvUuYUGYTg/z+Df+Chb+3w=="],
-
-    "jquery.jcrop": ["Jcrop@github:tapmodo/Jcrop#1902fbc", {}, "tapmodo-Jcrop-1902fbc", "sha512-62cxglTNeVw+nm3Dd8ziQmiF1o0uscmyv0u2et3VubR3LrVNv6ihxnX520olTMXi1YQq7graf7fv9Zr9PIKpcQ=="],
 
     "js-base64": ["js-base64@3.9.3", "", {}, "sha512-uwYQp+VJ38FVvtim6qNbit6e9uT6dwWQ4Y1+H9TxhW5hcHjpHwoxlR0nMpqUmIFOmu4VqMxwdJA88gIVuZJQ/g=="],
 

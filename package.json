@@ -64,7 +64,6 @@
     "jquery-timepicker-addon": "github:trentrichardson/jQuery-Timepicker-Addon#v1.4.4",
     "jquery-ui": "1.10.4",
     "jquery.colorbox": "github:jackmoore/colorbox#1.5.14",
-    "jquery.jcrop": "github:tapmodo/Jcrop#v0.9.12",
     "moment": "2.26.0",
     "openapi-fetch": "0.17.0",
     "piecon": "github:lipka/piecon#0.5.0",

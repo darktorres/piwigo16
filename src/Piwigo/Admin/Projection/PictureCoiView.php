@@ -40,17 +40,18 @@ final readonly class PictureCoiView implements View, HasPageAssets, ExposesPageD
      * (a plain static CSS stylesheet link -- a `combineCss()` call that
      * happened to go through the wrong function, per docs/PLAN.md's own
      * "htmlHead() -- fully migrated, not an exception" design note) plus
-     * `{do combineScript(...)}`x2/`{do combineCss(...)}`x1
-     * (docs/PLAN.md's P42-B).
+     * `{do combineScript(...)}`x1/`{do combineCss(...)}`x1
+     * (docs/PLAN.md's P42-B). Jcrop's own CDN script registration is
+     * gone (P49-B group 6, `vendor/jcrop.ts`) -- its CSS stays, kept for
+     * its real `.jcrop-*` class names this module's own DOM still uses.
      */
     #[Override]
     public function pageAssets(): array
     {
         return [
             AssetContribution::css('https://cdn.jsdelivr.net/gh/tapmodo/Jcrop@v0.9.12/css/jquery.Jcrop.css'),
-            AssetContribution::script('jquery.jcrop', 'https://cdn.jsdelivr.net/gh/tapmodo/Jcrop@v0.9.12/js/jquery.Jcrop.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             AssetContribution::css('themes/admin/default/css/pages/picture_coi.css', id: 'picture_coi'),
-            AssetContribution::script('picture_coi', 'themes/admin/default/js/picture_coi.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.jcrop']),
+            AssetContribution::script('picture_coi', 'themes/admin/default/js/picture_coi.ts', loadMode: LoadMode::Footer),
         ];
     }
 

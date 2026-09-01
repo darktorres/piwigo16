@@ -1,5 +1,6 @@
 import { pwg_getPageData } from "../../../default/js/page-data";
 import { height, setVal, width } from "../../../default/js/vendor/dom";
+import { jcrop, type JcropApi } from "../../../default/js/vendor/jcrop";
 export {};
 
 function from_coi(f: number, total: number) {
@@ -47,8 +48,8 @@ const coi = pwg_getPageData<
   { l: number; t: number; r: number; b: number } | undefined
 >("coi");
 
-// Still jQuery: Jcrop is a library, ported in P49-B group 6.
-jQuery("#jcrop").Jcrop(
+jcrop(
+  document.querySelector<HTMLImageElement>("#jcrop")!,
   {
     boxWidth: 500,
     boxHeight: 400,
@@ -56,7 +57,7 @@ jQuery("#jcrop").Jcrop(
     onRelease: jOnRelease,
   },
   coi
-    ? function (this: { animateTo(coords: number[]): void }) {
+    ? function (this: JcropApi) {
         const img = cropImage();
         if (img === null) {
           return;

@@ -334,16 +334,6 @@ interface JQuery {
   // not just re-typed, so nothing calls `.tipTip()` through jQuery any
   // more.)
 
-  // jquery.Jcrop (vendored -- P46-0's own CDN table). `picture_coi.ts`'s
-  // own crop-of-interest setup is the one real first-party call site.
-  // The optional callback runs with `this` bound to the real Jcrop API
-  // object -- `.animateTo(...)` is the one real method called (P47),
-  // not the jQuery collection.
-  Jcrop(
-    options: Record<string, any>,
-    callback?: (this: { animateTo(coords: number[]): void }) => void,
-  ): JQuery;
-
   // `datepicker.ts`'s own first-party `jQuery.fn.pwgDatepicker`
   // extension and `addAlbum.ts`'s own `jQuery.fn.pwgAddAlbum` -- both
   // files converted (docs/PLAN.md P46-C), `batchManagerGlobal.ts` was

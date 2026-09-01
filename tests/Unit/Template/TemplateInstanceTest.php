@@ -390,7 +390,7 @@ test('constructor sets templateDir to the raw root argument (root=".")', functio
         ->toBe('.');
 });
 
-test('constructor derives jquery_code and plupload_code from the lang code when not already set', function (): void {
+test('constructor derives jquery_code from the lang code when not already set', function (): void {
     LangTestFactory::get()->setLangInfo([
         'code' => 'en-UK',
     ]);
@@ -400,7 +400,6 @@ test('constructor derives jquery_code and plupload_code from the lang code when 
     $expected = [
         'code' => 'en-UK',
         'jquery_code' => 'en-UK',
-        'plupload_code' => 'en_UK',
     ];
     expect(LangTestFactory::get()->langInfo())->toBe($expected)
         ->and($t->getTemplateVars('lang_info'))
@@ -420,24 +419,6 @@ test('constructor never overwrites an already-present jquery_code, even when cod
     TemplateTestFactory::build();
 
     expect(LangTestFactory::get()->langInfo()['jquery_code'])->toBe('already-set');
-});
-
-test('constructor skips deriving plupload_code when jquery_code is set but not a string, without throwing', function (): void {
-    // Real gap: a LogicalAndToLogicalOr mutation on this guard's own first
-    // `and` (isset(jquery_code) and is_string(jquery_code)) groups the
-    // first two clauses into an `or` instead -- isset(jquery_code) alone
-    // being true is enough to reach str_replace('-', '_', $jquery_code)
-    // even when jquery_code isn't a string, which throws a TypeError
-    // under strict_types. A non-string jquery_code proves the real `and`
-    // (not `or`) is what prevents that call.
-    LangTestFactory::get()->setLangInfo([
-        'code' => 'en-UK',
-        'jquery_code' => true,
-    ]);
-
-    TemplateTestFactory::build();
-
-    expect(LangTestFactory::get()->langInfo())->not->toHaveKey('plupload_code');
 });
 
 // --- setTheme -----------------------------------------------------------

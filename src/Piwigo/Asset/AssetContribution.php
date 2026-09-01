@@ -82,11 +82,14 @@ final readonly class AssetContribution
      *   `ScriptLoader::addInline()`'s own real behavior (execution
      *   order across separate `<script async>` tags isn't guaranteed,
      *   inline code isn't). Unlike `ScriptLoader::addInline()`, an id
-     *   that isn't registered and isn't a known-by-naming-convention
-     *   script (`PageAssets::isKnownId()`) is silently ignored rather
-     *   than fatal-erroring -- confirmed via grep that none of the 6
-     *   real `{do footerScript(...)}` call sites ever pass `require` at
-     *   all, so there was no real behavior to preserve there.
+     *   that isn't registered at all is silently ignored rather than
+     *   fatal-erroring (`PageAssets::promoteLoadModes()`'s own
+     *   `$this->scripts[$id] ?? null` null-check) -- confirmed via grep
+     *   that none of the 6 real `{do footerScript(...)}` call sites ever
+     *   pass `require` at all, so there was no real behavior to preserve
+     *   there. Used to also cover a known-by-naming-convention id
+     *   (`jquery`/`jquery.ui`) auto-registering itself here -- gone with
+     *   that whole mechanism (P49-C).
      */
     public static function inlineScript(string $code, array $dependsOn = []): self
     {

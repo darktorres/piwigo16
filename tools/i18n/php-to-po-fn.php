@@ -54,16 +54,18 @@ function convert_lang_php_to_po(string $phpFile, string $locale, array $pairs): 
     $code = is_string($lang_info['code'] ?? null) ? $lang_info['code'] : '';
     $zeroPlural = ! in_array($lang_info['zero_plural'] ?? null, [null, false, 0, '0', '', []], true) ? 'true' : 'false';
     // parent: real fallback-chain data (5 locales, e.g. en_GB -> en_UK),
-    // read by get_parent_language()/load_language(). jquery_code/
-    // plupload_code: real, actively read by admin Latte templates
-    // (datepicker.inc.latte, photos_add_direct.latte) to pick the right
-    // jQuery UI/plupload locale JS file -- losing these would silently
-    // break admin-panel JS localization for every non-English-code
-    // locale that has one. 'charset' is NOT preserved: no real consumers
-    // exist anywhere outside the .lang.php files themselves.
+    // read by get_parent_language()/load_language(). jquery_code: real,
+    // actively read by vendor/datepickerLocales.ts (P49-C's native
+    // datepicker port) to pick the right locale entry -- losing it would
+    // silently break admin-panel calendar localization for every
+    // non-English-code locale that has one. No `plupload_code` any more
+    // (P49-C): its own former reader, PhotosAddDirectView's per-locale
+    // `plupload_i18n-*` script registration, is gone -- the native
+    // uploadQueue.ts port needs no per-locale JS file at all. 'charset'
+    // is NOT preserved: no real consumers exist anywhere outside the
+    // .lang.php files themselves.
     $parent = is_string($lang_info['parent'] ?? null) ? $lang_info['parent'] : '';
     $jqueryCode = is_string($lang_info['jquery_code'] ?? null) ? $lang_info['jquery_code'] : '';
-    $pluploadCode = is_string($lang_info['plupload_code'] ?? null) ? $lang_info['plupload_code'] : '';
 
     $po = '';
     $po .= "# Piwigo translation — {$locale}\n";
@@ -85,9 +87,6 @@ function convert_lang_php_to_po(string $phpFile, string $locale, array $pairs): 
     }
     if ($jqueryCode !== '') {
         $po .= "\"X-Piwigo-Jquery-Code: {$jqueryCode}\\n\"\n";
-    }
-    if ($pluploadCode !== '') {
-        $po .= "\"X-Piwigo-Plupload-Code: {$pluploadCode}\\n\"\n";
     }
     if ($direction !== '') {
         $po .= "\"X-Piwigo-Direction: {$direction}\\n\"\n";

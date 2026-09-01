@@ -576,10 +576,14 @@ final class Lang
      * Rebuilds the legacy $lang_info array shape from a .po file's headers --
      * load()'s PO path uses this so callers that still read
      * $lang_info['language_name']/['country']/['direction']/['code']/
-     * ['zero_plural']/['parent']/['jquery_code']/['plupload_code'] (admin
-     * Latte templates, getParentLanguage()) keep working unchanged after
-     * the .lang.php source files are gone -- see php-to-po-fn.php's own
-     * X-Piwigo-* header list for what's preserved and why.
+     * ['zero_plural']/['parent']/['jquery_code'] (admin Latte templates,
+     * getParentLanguage(), vendor/datepickerLocales.ts's own locale
+     * lookup) keep working unchanged after the .lang.php source files are
+     * gone -- see php-to-po-fn.php's own X-Piwigo-* header list for what's
+     * preserved and why. No `plupload_code` any more (P49-C): its only
+     * real reader, PhotosAddDirectView's own per-locale
+     * `plupload_i18n-*` script registration, is gone -- the native
+     * uploadQueue.ts port needs no per-locale JS file at all.
      *
      * @return array<string, string|bool>
      */
@@ -593,7 +597,6 @@ final class Lang
             'X-Piwigo-Code' => 'code',
             'X-Piwigo-Parent' => 'parent',
             'X-Piwigo-Jquery-Code' => 'jquery_code',
-            'X-Piwigo-Plupload-Code' => 'plupload_code',
         ];
         foreach ($map as $header => $key) {
             $value = $headers->get($header);

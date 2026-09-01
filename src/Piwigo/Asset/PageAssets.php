@@ -16,12 +16,14 @@ use LogicException;
  * yet (66 of the real 78 theme JS files as of docs/PLAN.md's P46-B;
  * `vitals` plus P46-B's own 12 entries already resolve here).
  *
- * No real caller wires all three sources together yet -- see
- * `docs/PLAN.md`'s P36 section on why real template migration is
- * explicitly out of scope for this phase. Every behavior below is
- * preserved from `ScriptLoader`/`CssLoader`'s real, currently-live
- * logic, confirmed against the real 76-template corpus rather than
- * reinvented:
+ * All three sources are real and wired together now (docs/PLAN.md's
+ * P42: a 945-call-site migration put every real page's own
+ * `pageAssets()`/plugin `GetPageAssets` contribution through this exact
+ * class -- the note this docblock used to carry about no real caller
+ * existing describes P36's own original, not-yet-wired scaffolding,
+ * long since superseded). Every behavior below is preserved from
+ * `ScriptLoader`/`CssLoader`'s real, then-live logic, confirmed against
+ * the real 76-template corpus rather than reinvented:
  *
  * - CSS: plain stable sort by `$order` (real range found in templates:
  *   -999 to 100). `CssLoader::cmpByOrder()`'s own `order * 1000 +
@@ -31,28 +33,33 @@ use LogicException;
  *   preserved for equal `$order` values without that trick.
  * - Scripts: head/footer/async partition, each group
  *   dependency-respecting topologically sorted
- *   (`ScriptLoader::computeScriptTopologicalOrder()`'s real logic --
- *   confirmed real multi-level chains exist, e.g.
- *   `jquery.ui.timepicker-addon` -> `jquery.ui` -> `jquery`). A
+ *   (`ScriptLoader::computeScriptTopologicalOrder()`'s real logic). A
  *   dependency can't load more loosely than its dependent
  *   (`ScriptLoader::checkLoadDep()`'s real "if B requires A, A->loadMode
- *   <= B->loadMode" promotion).
- * - The jQuery-UI known-script resolver (`ScriptLoader::fillWellKnown()`/
- *   `loadKnownRequiredScript()`) used to also resolve individual
- *   `jquery.ui.{widget}`/`jquery.ui.effect-*` ids purely by naming
- *   convention -- deleted along with the whole per-widget lazy-loading
- *   system it supported (docs/PLAN.md P46's vendor-CDN migration: one
- *   full `jquery.ui` bundle replaces every individual widget file, so
- *   every former per-widget id just depends on `'jquery.ui'` directly
- *   now). `'jquery'`/`'jquery.ui'` themselves still resolve purely by
- *   naming convention, with zero explicit path/require needed at the
- *   real call site.
+ *   <= B->loadMode" promotion). The real multi-level chain this once
+ *   had to handle (`jquery.ui.timepicker-addon` -> `jquery.ui` ->
+ *   `jquery`) is gone with jQuery itself (P49-C) -- the only real
+ *   `dependsOn` left anywhere is single-level (`cat_search` ->
+ *   `albums`, `AlbumsView`), but the topological sort stays generic
+ *   rather than narrowed to that, since a future multi-level need is a
+ *   real possibility this mechanism already handles for free.
  * - Both kinds dedupe by id: a later `add()` with an id already
  *   present merges into the existing contribution rather than
  *   replacing or duplicating it (`ScriptLoader::add()`'s real merge --
  *   union `dependsOn`, promote to the more eager `loadMode`, keep the
  *   higher `version` -- and `CssLoader::add()`'s real "keep whichever
  *   has the higher order, or higher version on a tie").
+ *
+ * The jQuery-UI known-script-by-naming-convention resolver
+ * (`ScriptLoader::fillWellKnown()`/`loadKnownRequiredScript()`,
+ * `$knownPaths`/`isKnownId()`/`knownPath()`/`knownRequires()`/
+ * `resolveMissingDependencies()`/`fillKnownScript()` here) is gone
+ * outright (P49-C): its only 2 real entries ever, `'jquery'` and
+ * `'jquery.ui'`, are unreachable from any real `dependsOn` or bare
+ * registration anywhere in the app now (confirmed via a repo-wide
+ * grep) -- this was never a generic "any well-known library" system,
+ * only ever jQuery's own naming convention, so nothing generic survives
+ * to keep.
  */
 final class PageAssets
 {
@@ -75,35 +82,6 @@ final class PageAssets
      * @var list<AssetContribution>
      */
     private array $inlineScripts = [];
-
-    /**
-     * Path resolved by id (once), matching `ScriptLoader::$known_paths`
-     * -- `jquery`/`jquery.ui` can each be registered as someone else's
-     * `dependsOn` without ever passing an explicit `path:`.
-     *
-     * @var array<string, string>
-     */
-    private static array $knownPaths = [
-        // 'core.scripts' entry removed (docs/PLAN.md P48, scripts.ts's
-        // own module conversion) -- no `dependsOn` references it any
-        // more (every real registrant page now imports directly the file
-        // directly instead of registering it as its own script tag).
-        'jquery' => 'https://cdn.jsdelivr.net/npm/jquery@1.11.3/dist/jquery.min.js',
-        // One full bundle, not the old per-widget minified files
-        // (docs/PLAN.md P46's vendor-CDN migration). cdnjs specifically,
-        // not jsDelivr's npm mirror like every other pin here -- a real
-        // VR run caught that npm's own published `jquery-ui` tarball
-        // (individual widget files AND its own "main" full-bundle file
-        // alike) starts with an unconditional `require('jquery')`,
-        // which throws in a plain `<script>` tag and silently no-ops
-        // the whole file (confirmed live: `.datepicker`/`.slider`
-        // simply didn't exist on real pages). cdnjs serves the
-        // project's own official, genuinely browser-ready distributable
-        // instead (confirmed zero `require(` calls anywhere in it) --
-        // the same file 14.x's own real migration used for this exact
-        // reason.
-        'jquery.ui' => 'https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.js',
-    ];
 
     public function __construct(
         private readonly ViteManifest $viteManifest,
@@ -132,56 +110,20 @@ final class PageAssets
     }
 
     /**
-     * `ScriptLoader::addInline()`'s own replacement: no dedup (plain
-     * append), but a `dependsOn` id still needs the same
-     * known-by-naming-convention auto-registration `resolveMissingDependencies()`
-     * already gives a real script's own `dependsOn` below.
+     * `ScriptLoader::addInline()`'s own replacement: no dedup, every call
+     * unconditionally appends.
      */
     private function addInlineScript(AssetContribution $contribution): void
     {
         $this->inlineScripts[] = $contribution;
-        $this->resolveMissingDependencies($contribution);
     }
 
     private function addScript(AssetContribution $contribution): void
     {
         $existing = $this->scripts[$contribution->id] ?? null;
-        $merged = $existing === null ? self::fillKnownScript($contribution) : self::mergeScripts($existing, $contribution);
+        $merged = $existing === null ? $contribution : self::mergeScripts($existing, $contribution);
 
         $this->scripts[$merged->id] = $merged;
-        $this->resolveMissingDependencies($merged);
-    }
-
-    /**
-     * Fills in a script's path/dependencies from the naming-convention
-     * resolver (`knownPath()`/`knownRequires()` below) the first time
-     * it's registered -- `ScriptLoader::add()`'s real behavior: every
-     * newly-added script goes through `fillWellKnown()` regardless of
-     * whether it was registered directly or reached only as someone
-     * else's `dependsOn` (e.g. `'jquery.ui'` itself, auto-registered
-     * with zero explicit path/require the moment any real page depends
-     * on it).
-     */
-    private static function fillKnownScript(AssetContribution $contribution): AssetContribution
-    {
-        if (! self::isKnownId($contribution->id)) {
-            return $contribution;
-        }
-
-        $path = $contribution->path !== '' ? $contribution->path : self::knownPath($contribution->id);
-        $dependsOn = array_values(array_unique([...$contribution->dependsOn, ...self::knownRequires($contribution->id)]));
-
-        if ($path === $contribution->path && $dependsOn === $contribution->dependsOn) {
-            return $contribution;
-        }
-
-        return AssetContribution::script(
-            id: $contribution->id,
-            path: $path,
-            loadMode: $contribution->loadMode ?? LoadMode::Header,
-            dependsOn: $dependsOn,
-            version: $contribution->version,
-        );
     }
 
     private static function mergeScripts(AssetContribution $existing, AssetContribution $incoming): AssetContribution
@@ -227,51 +169,6 @@ final class PageAssets
         }
 
         return version_compare($a, $b) >= 0 ? $a : $b;
-    }
-
-    /**
-     * Auto-registers an undeclared known-by-naming-convention dependency
-     * -- `ScriptLoader::loadKnownRequiredScript()`'s real, live
-     * behavior. Only 2 real ids left since the jQuery-UI per-widget
-     * resolver's own deletion (docs/PLAN.md P46's vendor-CDN migration
-     * -- one full `jquery.ui` bundle replaces the whole per-widget
-     * `$uiCoreDependencies`/`jquery.ui.effect-*` naming-convention
-     * machinery that used to live here): `jquery`/`jquery.ui` can each
-     * still be reached purely as someone else's dependency, with no
-     * explicit path of their own.
-     */
-    private function resolveMissingDependencies(AssetContribution $contribution): void
-    {
-        foreach ($contribution->dependsOn as $id) {
-            if (isset($this->scripts[$id]) || ! self::isKnownId($id)) {
-                continue;
-            }
-
-            $this->addScript(AssetContribution::script(id: $id, path: ''));
-        }
-    }
-
-    private static function isKnownId(string $id): bool
-    {
-        return isset(self::$knownPaths[$id]);
-    }
-
-    private static function knownPath(string $id): string
-    {
-        return self::$knownPaths[$id];
-    }
-
-    /**
-     * `jquery.ui`'s own real, remaining implicit dependency -- every
-     * other naming-convention case this used to resolve
-     * (`jquery.ui.{widget}`, `jquery.ui.effect-*`) was the per-widget
-     * lazy-loading system this phase's vendor-CDN migration deleted.
-     *
-     * @return list<string>
-     */
-    private static function knownRequires(string $id): array
-    {
-        return $id === 'jquery.ui' ? ['jquery'] : [];
     }
 
     /**

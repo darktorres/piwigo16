@@ -24,14 +24,6 @@ export default defineConfig({
       // the browser entry explicitly makes the resolution deterministic
       // instead of dependent on mainFields ordering.
       "tus-js-client": r("node_modules/tus-js-client/lib.esm/browser/index.js"),
-      // moment's `main` is the core build, which ships English only.
-      // stats.ts calls `moment.locale(<runtime lang code>)`, and chart.js
-      // 2.x formats its own date axes through the same moment instance,
-      // so both need the with-locales build or a non-English gallery
-      // silently renders English dates. Aliasing (rather than importing
-      // the deep path in stats.ts) also guarantees chart.js's internal
-      // `require("moment")` resolves to that same single instance.
-      moment: r("node_modules/moment/min/moment-with-locales.js"),
     },
   },
   // Resolve dynamic chunk URLs via import.meta.url so they work under any

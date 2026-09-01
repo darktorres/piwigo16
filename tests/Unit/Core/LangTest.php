@@ -1349,7 +1349,7 @@ test('getParentLanguage(with an explicit lang_id) returns null when the common.p
 
 test('poHeadersToLangInfo maps every X-Piwigo-* header to its own langInfo key', function (): void {
     // A single exact-array assertion kills every RemoveArrayItem mutant
-    // on the $map literal (7, one per key) plus ForeachEmptyIterable --
+    // on the $map literal (6, one per key) plus ForeachEmptyIterable --
     // any one of them would drop that key from the result entirely.
     $result = langTestCallPoHeadersToLangInfo(langTestMake(), [
         'X-Piwigo-Language-Name' => 'English (UK)',
@@ -1358,7 +1358,6 @@ test('poHeadersToLangInfo maps every X-Piwigo-* header to its own langInfo key',
         'X-Piwigo-Code' => 'en_UK',
         'X-Piwigo-Parent' => 'en_US',
         'X-Piwigo-Jquery-Code' => 'en',
-        'X-Piwigo-Plupload-Code' => 'en',
         'X-Piwigo-Zero-Plural' => 'true',
     ]);
 
@@ -1370,17 +1369,16 @@ test('poHeadersToLangInfo maps every X-Piwigo-* header to its own langInfo key',
             'code' => 'en_UK',
             'parent' => 'en_US',
             'jquery_code' => 'en',
-            'plupload_code' => 'en',
             'zero_plural' => true,
         ]);
 });
 
 test('poHeadersToLangInfo omits keys whose header is absent or explicitly empty', function (): void {
-    // Kills line 576's IfNegated/NotIdenticalToIdentical (x2)/
+    // Kills line 603's IfNegated/NotIdenticalToIdentical (x2)/
     // BooleanAndToBooleanOr/EmptyStringToNotEmpty: an explicitly-empty
     // header (language_name) and a genuinely-absent one (country) must
     // both be excluded, while a real value (code) stays -- and line
-    // 580's IdenticalToNotIdentical: an absent zero_plural header must
+    // 607's IdenticalToNotIdentical: an absent zero_plural header must
     // resolve to false, not true.
     $result = langTestCallPoHeadersToLangInfo(langTestMake(), [
         'X-Piwigo-Language-Name' => '',

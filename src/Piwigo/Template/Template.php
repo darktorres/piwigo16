@@ -405,10 +405,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             $lang_info['jquery_code'] = $lang_info['code'];
         }
 
-        if (isset($lang_info['jquery_code']) and is_string($lang_info['jquery_code']) and ! isset($lang_info['plupload_code'])) {
-            $lang_info['plupload_code'] = str_replace('-', '_', $lang_info['jquery_code']);
-        }
-
         $this->lang->setLangInfo($lang_info);
         $this->assign('lang_info', $lang_info);
     }
@@ -869,11 +865,14 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             // structurally by each consumer's own direct `import`, so
             // they named an id that no registration produced any more.
             // They were inert either way -- `resolveMissingDependencies()`
-            // only materializes an unknown id when it is in `$knownPaths`,
-            // and both `promoteLoadModes()` and `computeOrder()` skip an
-            // id with no registration -- but a dependency on an asset
-            // that does not exist reads as fact. Same disposition as this
-            // file's own former `['core.scripts']`/`['core.switchbox']`.
+            // (gone entirely now, P49-C, along with `$knownPaths` and the
+            // rest of the jQuery-only known-script resolver it fed) only
+            // ever materialized an unknown id when it was in
+            // `$knownPaths`, and both `promoteLoadModes()` and
+            // `computeOrder()` skip an id with no registration -- but a
+            // dependency on an asset that does not exist reads as fact.
+            // Same disposition as this file's own former
+            // `['core.scripts']`/`['core.switchbox']`.
             if ($this->themeBaseApplied && $this->isAdminLayout) {
                 foreach (ThemeBaseAssets::lateAdminScripts() as $lateAsset) {
                     $this->pageAssets->add($lateAsset);

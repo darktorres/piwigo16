@@ -20,19 +20,6 @@ function pageAssetsTestManifest(): ViteManifest
     return new ViteManifest(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-page-assets-test-empty-' . bin2hex(random_bytes(8))));
 }
 
-/**
- * @param list<string> $haystack
- */
-function pageAssetsTestIndexOf(array $haystack, string $needle): int
-{
-    $index = array_search($needle, $haystack, true);
-    if ($index === false) {
-        throw new RuntimeException("'{$needle}' not found in resolved asset list");
-    }
-
-    return $index;
-}
-
 test('resolveCss() sorts by order, real range found in templates (-999 to 100)', function (): void {
     $assets = new PageAssets(pageAssetsTestManifest());
     $assets->add(AssetContribution::css('themes/default/css/search.css', order: -100));
@@ -97,59 +84,30 @@ test('resolveScripts() partitions header before footer before async', function (
         ->toBe(['header.js', 'footer.js', 'async.js']);
 });
 
-test('resolveScripts() orders a dependency before its dependent, real chain', function (): void {
-    // Real chain found live in datepicker.inc.latte: timepicker-addon
-    // depends on jquery.ui, which itself depends on jquery -- both
-    // resolved purely by naming convention, neither ever registered
-    // explicitly. docs/PLAN.md P46's vendor-CDN migration collapsed
-    // the old per-widget jquery.ui.datepicker/jquery.ui.slider chain
-    // into this single shared jquery.ui id (one full CDN bundle now
-    // covers every widget).
+test('resolveScripts() orders a dependency before its dependent across a multi-level chain', function (): void {
+    // The real multi-level chain this once had to handle live
+    // (timepicker-addon -> jquery.ui -> jquery, both jQuery-only ids
+    // resolved purely by naming convention) is gone with jQuery itself
+    // (P49-C) -- every real script is explicitly registered with its
+    // own real path now, so this asserts the topological sort still
+    // handles 3 real, explicitly-registered levels correctly.
     $assets = new PageAssets(pageAssetsTestManifest());
-    $assets->add(AssetContribution::script(
-        'jquery.ui.timepicker-addon',
-        'https://cdn.jsdelivr.net/gh/trentrichardson/jQuery-Timepicker-Addon@v1.4.4/dist/jquery-ui-timepicker-addon.js',
-        dependsOn: ['jquery.ui'],
-    ));
+    $assets->add(AssetContribution::script('grandchild', 'grandchild.js', dependsOn: ['child']));
+    $assets->add(AssetContribution::script('child', 'child.js', dependsOn: ['parent']));
+    $assets->add(AssetContribution::script('parent', 'parent.js'));
 
     $paths = array_map(fn ($r) => $r->path, $assets->resolveScripts());
 
     expect($paths)
-        ->toBe([
-            'https://cdn.jsdelivr.net/npm/jquery@1.11.3/dist/jquery.min.js',
-            'https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.js',
-            'https://cdn.jsdelivr.net/gh/trentrichardson/jQuery-Timepicker-Addon@v1.4.4/dist/jquery-ui-timepicker-addon.js',
-        ]);
-});
-
-test('resolveScripts() resolves jquery.ui from a zero-param registration, real rating_user.latte case', function (): void {
-    $assets = new PageAssets(pageAssetsTestManifest());
-    $assets->add(AssetContribution::script('jquery.ui', ''));
-
-    $paths = array_map(fn ($r) => $r->path, $assets->resolveScripts());
-
-    expect($paths)
-        ->toContain('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.js')
-        ->and($paths)
-        ->toContain('https://cdn.jsdelivr.net/npm/jquery@1.11.3/dist/jquery.min.js');
-});
-
-test('resolveScripts() resolves jquery.ui as an undeclared dependency, real updates_ext.latte/plugins_new.latte case', function (): void {
-    $assets = new PageAssets(pageAssetsTestManifest());
-    $assets->add(AssetContribution::script('pluginsNew', 'themes/admin/default/js/plugins_new.ts', dependsOn: ['jquery.ui']));
-
-    $paths = array_map(fn ($r) => $r->path, $assets->resolveScripts());
-
-    expect($paths)
-        ->toContain('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.js')
-        ->and(pageAssetsTestIndexOf($paths, 'https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.js'))
-        ->toBeLessThan(pageAssetsTestIndexOf($paths, 'themes/admin/default/js/plugins_new.ts'));
+        ->toBe(['parent.js', 'child.js', 'grandchild.js']);
 });
 
 test('scripts dedupe by id, unioning dependsOn and promoting to the more eager load mode', function (): void {
     $assets = new PageAssets(pageAssetsTestManifest());
-    $assets->add(AssetContribution::script('shared', 'shared.js', loadMode: LoadMode::Async, dependsOn: ['jquery.ui']));
-    $assets->add(AssetContribution::script('shared', 'shared.js', loadMode: LoadMode::Header, dependsOn: ['jquery']));
+    $assets->add(AssetContribution::script('dep-a', 'dep-a.js'));
+    $assets->add(AssetContribution::script('dep-b', 'dep-b.js'));
+    $assets->add(AssetContribution::script('shared', 'shared.js', loadMode: LoadMode::Async, dependsOn: ['dep-a']));
+    $assets->add(AssetContribution::script('shared', 'shared.js', loadMode: LoadMode::Header, dependsOn: ['dep-b']));
 
     $resolved = $assets->resolveScripts();
 

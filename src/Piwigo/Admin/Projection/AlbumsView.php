@@ -44,7 +44,6 @@ final readonly class AlbumsView implements View, HasPageAssets, ExposesPageData
         return [
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jqtree@1.4.12/jqtree.css'),
-            AssetContribution::script('jtree', 'https://cdn.jsdelivr.net/npm/jqtree@1.4.12/tree.jquery.js', loadMode: LoadMode::Footer),
             // order: 10 is required, see issue 1080.
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::script('albums', 'themes/admin/default/js/albums.ts', loadMode: LoadMode::Footer),

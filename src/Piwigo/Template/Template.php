@@ -1086,18 +1086,28 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         return str_starts_with($asset->path, 'dist/') ? 'module' : 'text/javascript';
     }
 
+    /**
+     * Never appends a `?v=` query: every real caller (header/footer
+     * scripts, modulepreload chunks, async scripts) now always resolves
+     * with `$asset->version === false` (`PageAssets::resolveScripts()`/
+     * `resolveModulePreloads()`), since a JS module's own URL must match
+     * exactly everywhere it's reached from -- an inter-chunk `import`
+     * Vite itself emits (e.g. `cat_search.ts` importing `albums.ts`'s
+     * `data`, docs/PLAN.md P48's `dependsOn` convention) never carries a
+     * query string, so a versioned `<script src>` for the same file
+     * would be a *different* URL to the browser's module registry,
+     * silently double-executing the entry's top-level code -- confirmed
+     * via a live browser session against `admin.php?page=albums`, where
+     * a single click on `.AddAlbumSubmit` fired 2 real `POST /api/v1/
+     * categories` requests, each from an independent module instance.
+     * Vite's own content-hashed filenames make cache-busting redundant
+     * anyway.
+     */
     private function makeAssetSrc(ResolvedAsset $asset): string
     {
         $isRemote = $this->urlService->urlIsRemote($asset->path) || str_starts_with($asset->path, '//');
 
-        if ($isRemote) {
-            $ret = $asset->path;
-        } else {
-            $ret = $this->urlService->getRootUrl() . $asset->path;
-            if ($asset->version !== false) {
-                $ret .= '?v' . ((bool) $asset->version ? $asset->version : AppInfo::VERSION);
-            }
-        }
+        $ret = $isRemote ? $asset->path : $this->urlService->getRootUrl() . $asset->path;
         // trigger the event for eventual use of a cdn
         $combinedScriptEvent = $this->eventDispatcher->dispatch(new CombinedScript($ret, $asset));
 

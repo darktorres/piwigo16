@@ -300,16 +300,16 @@ final class PageAssets
 
         $resolved = [];
         foreach ($this->topologicalSort($byMode['header']) as $contribution) {
-            $resolved[] = ResolvedAsset::file($this->resolvePath($contribution->path), $contribution->loadMode, $contribution->version);
+            $resolved[] = ResolvedAsset::file($this->resolvePath($contribution->path), $contribution->loadMode, false);
         }
         foreach ($this->topologicalSort($byMode['footer']) as $contribution) {
-            $resolved[] = ResolvedAsset::file($this->resolvePath($contribution->path), $contribution->loadMode, $contribution->version);
+            $resolved[] = ResolvedAsset::file($this->resolvePath($contribution->path), $contribution->loadMode, false);
         }
         foreach ($this->inlineScripts as $inline) {
             $resolved[] = ResolvedAsset::inline((string) $inline->code);
         }
         foreach ($this->topologicalSort($byMode['async']) as $contribution) {
-            $resolved[] = ResolvedAsset::file($this->resolvePath($contribution->path), $contribution->loadMode, $contribution->version);
+            $resolved[] = ResolvedAsset::file($this->resolvePath($contribution->path), $contribution->loadMode, false);
         }
 
         return $resolved;

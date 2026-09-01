@@ -1,15 +1,3 @@
-/// <reference types="jqtree" />
-// jqtree ships its own real, bundled `.d.ts` (`node_modules/jqtree/src/
-// tree.jquery.d.ts`, referenced via its own `package.json`'s `types`
-// field) but isn't a `@types/*` package, so it isn't picked up by
-// `tsconfig.json`'s `types` array -- this reference directive is what
-// actually pulls in its `interface JQuery { tree: IJQTreePlugin; }`
-// declaration (P47). That declaration is a *property*, not
-// method-shorthand, so the hand-rolled `tree(...)` overloads this file
-// used to carry were deleted below -- keeping both would be the same
-// "subsequent property declarations must have the same type" conflict
-// documented at the `JQueryUI.Datepicker` merge further down.
-
 // Shared ambient types for vendored jQuery-plugin methods that
 // @types/jquery doesn't cover (docs/PLAN.md P46). `JQueryStatic`/`JQuery`
 // are already global interfaces (see node_modules/@types/jquery), so
@@ -314,81 +302,6 @@ interface PwgDatepickerSettings {
   cancelButton?: string | false;
 }
 
-// jqtree's own bundled `IJQTreePlugin` (referenced above) never typed
-// its real `"getState"` command -- an upstream typings gap, not
-// something we can edit in `node_modules` directly. `albums.ts`'s own
-// album tree reads `.tree("getState").open_nodes` -- confirmed against
-// jqtree's real runtime source (`save_state_handler.js`'s own
-// `getState()`) that this returns `{ open_nodes, selected_node }`,
-// both arrays of the tree's own `INode.id` type (`number | string`).
-// `IJQTreePlugin` is a real, mergeable top-level interface, so this
-// adds the one missing overload without touching the vendored file.
-interface IJQTreePlugin {
-  (behavior: "getState"): {
-    open_nodes: (number | string)[];
-    selected_node: (number | string)[];
-  };
-}
-
-// jqtree's own bundled `INode` (referenced above) never typed 2 more
-// real, well-known Node-prototype methods (`getLevel()`/
-// `getPreviousSibling()`) -- `albums.ts`'s own `getId()`/`getRank()`/
-// `getPathNode()` all call these (P47). Same "real mergeable interface,
-// one missing overload" fix as `IJQTreePlugin`'s own `getState()` above.
-interface INode {
-  getLevel(): number;
-  getPreviousSibling(): INode | null;
-}
-
-// `albums.ts`'s own real per-row shape (P47), traced to
-// AlbumsPageRenderer.php's own `assocToOrderedTree()` -- the raw JSON
-// tree fed into `.tree({data: ...})` and returned by `pwg_getPageData
-// ("album_data")`, *before* jqtree wraps each row into a live `INode`.
-// `load_on_demand`/`haveChildren` are client-side-only fields albums.ts
-// itself adds when reshaping a row for lazy loading -- never present in
-// the raw PHP payload.
-interface AlbumTreeNode {
-  id: string;
-  rank: string | number | null;
-  name: string;
-  status: string;
-  visible: string;
-  uppercats: string;
-  nb_images: number;
-  last_updates: string;
-  has_not_access: boolean;
-  nb_sub_photos: number;
-  nb_subcats?: number;
-  children?: AlbumTreeNode[];
-  load_on_demand?: boolean;
-  haveChildren?: AlbumTreeNode[];
-}
-
-// The *live* jqtree node shape once `.tree()` has wrapped a raw
-// `AlbumTreeNode` -- jqtree copies every own-property of the raw data
-// object onto the resulting node alongside its own real `INode` fields
-// (`.parent`/`.getLevel()`/`.iterate()`/etc.), so both sets are real,
-// simultaneously-present properties on every node `getNodeById()`/
-// `onCreateLi` ever hands back. `INode`'s own `[key: string]: any`
-// index signature (jqtree's own bundled `.d.ts`, not editable here)
-// otherwise makes every one of these fields resolve to `any`.
-interface AlbumJqTreeNode extends INode {
-  rank: string | number | null;
-  status: string;
-  visible: string;
-  uppercats: string;
-  nb_images: number;
-  last_updates: string;
-  has_not_access: boolean;
-  nb_sub_photos: number;
-  nb_subcats?: number;
-  load_on_demand: boolean | null;
-  haveChildren?: AlbumTreeNode[];
-  parent: AlbumJqTreeNode | null;
-  children: AlbumJqTreeNode[];
-  getPreviousSibling(): AlbumJqTreeNode | null;
-}
-
 interface JQuery {
   // Real jQuery-core instance method (deprecated since 1.8, but still
   // present in the vendored 1.11.3 runtime -- @types/jquery never typed
@@ -463,14 +376,6 @@ interface JQuery {
   // (P47) -- deleted here (method-shorthand on both sides, harmless to
   // leave, but redundant). `rating_user.ts`'s own GeoIP-lookup tooltip
   // is the one real first-party call site.
-
-  // jqtree's own `.tree()` is now real, verified types from its own
-  // bundled `.d.ts` (`/// <reference types="jqtree" />` at the top of
-  // this file) -- deleted here: jqtree declares `tree` as a *property*
-  // (`tree: IJQTreePlugin`), so leaving this file's own method-shorthand
-  // `tree(...)` overloads in place would be a real "duplicate
-  // identifier" conflict, not just redundant. `albums.ts`'s own album
-  // tree is the one real first-party call site.
 
   // `batchManagerGlobal.ts`'s own first-party `jQuery.fn` extension --
   // declared and consumed within the same file, no other real call

@@ -18,7 +18,6 @@ use Piwigo\Contribution\PanelLink;
 use Piwigo\Contribution\PictureInfoRow;
 use Piwigo\Contribution\ProfileField;
 use Piwigo\Contribution\ThumbnailOverlay;
-use Piwigo\Core\AppInfo;
 use Piwigo\Core\HeadLink;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -1133,7 +1132,7 @@ test('registerPageAssets defaults a script to header load, rendered at the heade
 
     $tags = templateInstanceTestScriptTags($t);
     expect($tags['header'])
-        ->toContain('src="x.js?v' . AppInfo::VERSION . '"')
+        ->toContain('src="x.js"')
         ->and($tags['footer'])
         ->toBe('');
 });
@@ -1146,7 +1145,7 @@ test('registerPageAssets maps LoadMode::Footer to the footer placeholder as a pl
 
     $tags = templateInstanceTestScriptTags($t);
     expect($tags['footer'])
-        ->toBe('<script type="text/javascript" src="x.js?v' . AppInfo::VERSION . '"></script>')
+        ->toBe('<script type="text/javascript" src="x.js"></script>')
         ->and($tags['header'])
         ->toBe('');
 });
@@ -1162,7 +1161,7 @@ test('a Vite-built asset renders as type="module"', function (): void {
     // The `dist/` prefix is exactly what PageAssets::resolvePath() puts on
     // a path the Vite manifest resolved, and nothing else carries it.
     expect(templateInstanceTestScriptTags($t)['footer'])
-        ->toBe('<script type="module" src="dist/assets/built-abc12345.js?v' . AppInfo::VERSION . '"></script>');
+        ->toBe('<script type="module" src="dist/assets/built-abc12345.js"></script>');
 });
 
 test('a vendored classic script served from themes/ stays type="text/javascript"', function (): void {
@@ -1180,7 +1179,7 @@ test('a vendored classic script served from themes/ stays type="text/javascript"
     $t->registerPageAssets([AssetContribution::script('jquery.legacy', 'themes/default/js/plugins/jquery.legacy.js', LoadMode::Footer)]);
 
     expect(templateInstanceTestScriptTags($t)['footer'])
-        ->toBe('<script type="text/javascript" src="themes/default/js/plugins/jquery.legacy.js?v' . AppInfo::VERSION . '"></script>');
+        ->toBe('<script type="text/javascript" src="themes/default/js/plugins/jquery.legacy.js"></script>');
 });
 
 test('the async bootstrap keeps a classic wrapper and types each injected script individually', function (): void {
@@ -1205,9 +1204,9 @@ test('the async bootstrap keeps a classic wrapper and types each injected script
         ->toStartWith('<script type="text/javascript">');
     // ...while each injected script is typed on its own merits.
     expect($footer)
-        ->toContain("s.type='module'; s.async=true; s.src='dist/assets/asyncmod-abc12345.js?v" . AppInfo::VERSION . "'")
+        ->toContain("s.type='module'; s.async=true; s.src='dist/assets/asyncmod-abc12345.js'")
         ->and($footer)
-        ->toContain("s.type='text/javascript'; s.async=true; s.src='themes/default/js/plugins/jquery.legacy.js?v" . AppInfo::VERSION . "'");
+        ->toContain("s.type='text/javascript'; s.async=true; s.src='themes/default/js/plugins/jquery.legacy.js'");
 });
 
 test('registerPageAssets maps LoadMode::Async to the footer placeholder via the dynamic-script bootstrap', function (): void {
@@ -1217,7 +1216,7 @@ test('registerPageAssets maps LoadMode::Async to the footer placeholder via the 
 
     $tags = templateInstanceTestScriptTags($t);
 
-    $src = 'async.js?v' . AppInfo::VERSION;
+    $src = 'async.js';
     $expected = '<script type="text/javascript">' . "\n"
         . "(function() {\nvar s,after = document.getElementsByTagName('script')[document.getElementsByTagName('script').length-1];\n"
         . "s=document.createElement('script'); s.type='text/javascript'; s.async=true; s.src='{$src}';\n" . 'after = after.parentNode.insertBefore(s, after);' . "\n"
@@ -1252,7 +1251,7 @@ test('registerPageAssets orders a script\'s dependencies first', function (): vo
         ->toBeLessThan(templateInstanceTestStrpos($tags['header'], 'x.js'));
 });
 
-test('registerPageAssets defaults a script\'s version to "0" (falsy), so makeAssetSrc falls back to AppInfo::VERSION', function (): void {
+test('registerPageAssets never appends a version query to a script, even with the default falsy version', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/x.js', 'console.log(1);');
 
@@ -1260,10 +1259,21 @@ test('registerPageAssets defaults a script\'s version to "0" (falsy), so makeAss
 
     $tags = templateInstanceTestScriptTags($t);
     expect($tags['header'])
-        ->toContain('?v' . AppInfo::VERSION);
+        ->toBe('<script type="text/javascript" src="x.js"></script>');
 });
 
-test('registerPageAssets keeps a real string version', function (): void {
+// A script's own real URL must match exactly everywhere it's reached
+// from -- an inter-chunk `import` Vite itself emits between 2 built
+// entries never carries a query string, so a versioned `<script src>`
+// for the same file would be a *different* URL to the browser's module
+// registry, silently double-executing the entry's top-level code
+// (confirmed via a live browser session against `admin.php?page=
+// albums`: a single click on `.AddAlbumSubmit` fired 2 real `POST /api/
+// v1/categories` requests, each from an independent module instance).
+// `AssetContribution::$version` still means something for CSS -- see
+// the `resolveCss()`-backed tests elsewhere in this file -- but for a
+// script it's now unconditionally ignored, whatever value is passed.
+test('registerPageAssets ignores an explicit string version on a script', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/x.js', 'console.log(1);');
 
@@ -1271,10 +1281,10 @@ test('registerPageAssets keeps a real string version', function (): void {
 
     $tags = templateInstanceTestScriptTags($t);
     expect($tags['header'])
-        ->toContain('?v3.2');
+        ->toBe('<script type="text/javascript" src="x.js"></script>');
 });
 
-test('registerPageAssets keeps version=false as-is, omitting the version query string entirely', function (): void {
+test('registerPageAssets keeps version=false on a script as-is too, omitting the version query string entirely', function (): void {
     $t = TemplateTestFactory::build();
     file_put_contents(CurrentPathsTestFactory::get()->root . '/x.js', 'console.log(1);');
 
@@ -1307,7 +1317,7 @@ test('getCombinedScripts prefixes the root URL onto the script src, in the corre
     }
 
     expect($tags['footer'])
-        ->toBe('<script type="text/javascript" src="http://example.test/root/sync.js?v' . AppInfo::VERSION . '"></script>');
+        ->toBe('<script type="text/javascript" src="http://example.test/root/sync.js"></script>');
 });
 
 test('makeAssetSrc (via getCombinedScripts) uses a remote script\'s own path verbatim, with no root URL prefix or version suffix', function (): void {
@@ -1533,7 +1543,7 @@ test('registerPageAssets forwards every contribution in the list to PageAssets',
     expect($css)
         ->toContain('href="style.css">')
         ->and($header)
-        ->toContain('src="x.js?v' . AppInfo::VERSION . '"');
+        ->toContain('src="x.js">');
 });
 
 test('registerPageAssets is a no-op for an empty list', function (): void {

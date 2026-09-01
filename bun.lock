@@ -7,7 +7,6 @@
       "dependencies": {
         "chart.js": "2.9.3",
         "datatables.net": "1.10.11",
-        "jqtree": "1.4.12",
         "jquery": "1.11.3",
         "jquery-cluetip": "github:kswedberg/jquery-cluetip#1.2.6",
         "jquery-timepicker-addon": "github:trentrichardson/jQuery-Timepicker-Addon#v1.4.4",
@@ -942,8 +941,6 @@
     "jiti": ["jiti@2.6.1", "", { "bin": "lib/jiti-cli.mjs" }, "sha512-ekilCSN1jwRvIbgeg/57YFh8qQDNbwDb9xT/qu2DAHbFFZUicIl4ygVaAvzveMhMVr3LnpSKTNnwt8PoOfmKhQ=="],
 
     "jpeg-js": ["jpeg-js@0.4.4", "", {}, "sha512-WZzeDOEtTOBK4Mdsar0IqEU5sMr3vSV2RqkAIzUEV2BHnUfKGyswWFPFwK5EeDo93K3FohSHbLAjj0s1Wzd+dg=="],
-
-    "jqtree": ["jqtree@1.4.12", "", { "dependencies": { "jquery": ">=1.9" } }, "sha512-zNdnVFFNWAmPbtVFZaAhIjhFVoYpRF/NWeVGU1THRdefjKhXFwLeVILW1R4Frr/qiGg4TTbXWAxk7V7E+Wu3ZQ=="],
 
     "jquery": ["jquery@1.11.3", "", {}, "sha512-pHM/XLofp0FJc0/0AsRm8q/5ob+a1kno+vfclXGozaMBPv3qD7Xq19loECVcBB4MOLdygnyneQMPTsH5QiVNBQ=="],
 

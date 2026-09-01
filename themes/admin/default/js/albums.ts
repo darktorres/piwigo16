@@ -8,6 +8,13 @@ import {
 import { ajax } from "../../../default/js/vendor/ajax";
 import { confirm } from "../../../default/js/vendor/jconfirm";
 import {
+  getTreeInstance,
+  tree,
+  type JqTreeInstance,
+  type JqTreeMoveInfo,
+  type JqTreeNode,
+} from "../../../default/js/vendor/jqtree";
+import {
   addClass,
   after,
   append,
@@ -38,29 +45,48 @@ import {
 import { tipTip } from "../../../default/js/vendor/tiptip";
 export {};
 
-// jqtree's own custom `tree.open`/`tree.close`/`tree.move` jQuery events
-// aren't covered by `@types/jquery`'s own named-event overloads, and its
-// bundled `.d.ts` doesn't type them either (only `IJQTreePlugin`'s
-// command-string overloads) -- these payload shapes are real jqtree
-// public API (`event.move_info.{moved_node,target_node,position,
-// previous_parent,do_move()}`, `event.node`), not something the
-// vendored package exposes types for. Stay jQuery-typed: jqtree itself
-// dispatches these via jQuery's own trigger mechanism, invisible to a
-// native addEventListener, so they stay jQuery registrations until the
-// library is ported (P49-B group 6).
-interface JqTreeNodeEvent extends JQuery.TriggeredEvent {
-  node: AlbumJqTreeNode;
+// `vendor/jqtree.ts`'s own real per-row shape (P49-B group 6B), traced to
+// AlbumsPageRenderer.php's own `assocToOrderedTree()` -- the raw JSON
+// tree fed into `tree(el, {data: ...})` and returned by `pwg_getPageData
+// ("album_data")`, *before* jqtree wraps each row into a live node.
+// `load_on_demand`/`haveChildren` are client-side-only fields albums.ts
+// itself adds when reshaping a row for lazy loading -- never present in
+// the raw PHP payload.
+interface AlbumTreeNode extends Record<string, unknown> {
+  id: string;
+  rank: string | number | null;
+  name: string;
+  status: string;
+  visible: string;
+  uppercats: string;
+  nb_images: number;
+  last_updates: string;
+  has_not_access: boolean;
+  nb_sub_photos: number;
+  nb_subcats?: number;
+  children?: AlbumTreeNode[];
+  load_on_demand?: boolean;
+  haveChildren?: AlbumTreeNode[];
 }
-interface JqTreeMoveInfo {
-  moved_node: AlbumJqTreeNode;
-  target_node: AlbumJqTreeNode;
-  position: "before" | "after" | "inside" | "none";
-  previous_parent: AlbumJqTreeNode;
-  do_move(): void;
+
+// The extra, real per-node data `vendor/jqtree.ts`'s generic node type
+// carries alongside its own base fields (`.id`/`.parent`/`.children`/
+// `.getLevel()`/...) -- every own-property of the raw `AlbumTreeNode`
+// data becomes a real property on the resulting live node, simultaneously
+// with the base shape.
+interface AlbumNodeData extends Record<string, unknown> {
+  rank: string | number | null;
+  status: string;
+  visible: string;
+  uppercats: string;
+  nb_images: number;
+  last_updates: string;
+  has_not_access: boolean;
+  nb_sub_photos: number;
+  nb_subcats?: number;
+  haveChildren?: AlbumTreeNode[];
 }
-interface JqTreeMoveEvent extends JQuery.TriggeredEvent {
-  move_info: JqTreeMoveInfo;
-}
+type AlbumJqTreeNode = JqTreeNode<AlbumNodeData>;
 
 // Named `albumData` internally, not `data` -- avoids shadowing dom.ts's
 // own imported `data()` helper throughout this file. Re-exported as
@@ -98,6 +124,16 @@ const x_nb_sub_photos = pwg_getPageString("%d pictures in sub-albums");
 const str_albs_drag_drop = pwg_getPageString("Drag and drop to reorder albums");
 
 const delay_autoOpen = pwg_getPageData<number>("delay_auto_open");
+
+// Assigned once, at the top of `ready()` below, before the tree is
+// initialized -- every other module-level function reads the live
+// instance back through `getAlbumTree()` (same WeakMap-instance-lookup
+// pattern `vendor/jqtree.ts` documents), matching the original's own
+// repeated `jQuery(".tree").tree(...)` re-selection at each call site.
+let treeEl: HTMLElement;
+function getAlbumTree(): JqTreeInstance<AlbumNodeData> {
+  return getTreeInstance<AlbumNodeData>(treeEl)!;
+}
 
 // Genuine pre-existing scope bug found only by real strict typechecking
 // (invisible to non-strict JS): the tree click/`tree.open`/`tree.close`
@@ -242,104 +278,86 @@ ready(() => {
       `<span class='badge-number'>` + nb_albums + `</span>`,
     );
 
-  // Still jQuery: jqtree is a library, ported in P49-B group 6.
-  jQuery(".tree").tree({
+  treeEl = document.querySelector(".tree")!;
+
+  // Real init options only (P49-B group 6B): `autoOpen`/`onCanSelectNode`
+  // are dropped from `vendor/jqtree.ts`'s own options surface entirely,
+  // since this is the library's one real consumer and it always passes
+  // `autoOpen: false` (no restore-from-storage, no auto-expand) and
+  // permanently disables node selection -- see that module's own header
+  // comment for the full narrowing rationale.
+  tree<AlbumNodeData>(treeEl, {
     data: new_data,
-    autoOpen: false,
     dragAndDrop: true,
     openFolderDelay: delay_autoOpen,
     onCreateLi: createAlbumNode,
-    onCanSelectNode: function () {
-      return false;
-    },
   });
-
-  const treeEl = document.querySelector(".tree")!;
 
   delegate(treeEl, "click", ".move-cat-toogler", function (this: Element) {
     const node_id = attrOf(this, "data-id");
-    // Still jQuery: jqtree is a library, ported in P49-B group 6.
-    const node = jQuery(".tree").tree(
-      "getNodeById",
-      node_id,
-    ) as AlbumJqTreeNode | null;
+    const node = getAlbumTree().getNodeById(node_id);
 
     if (node) {
       if (node.load_on_demand && node.haveChildren) {
         loadOnDemand(node);
       }
 
-      // Still jQuery: jqtree is a library, ported in P49-B group 6.
-      const open_nodes = jQuery(".tree").tree("getState").open_nodes;
-      if (!open_nodes.includes(node.id)) {
+      const open_nodes = getAlbumTree().getState().open_nodes;
+      if (!open_nodes.includes(node.id!)) {
         html(this, toggler_open);
-        // Still jQuery: jqtree is a library, ported in P49-B group 6.
-        jQuery(".tree").tree("openNode", node);
+        getAlbumTree().openNode(node);
         // reset event here:
         rebindMoveCatActions();
       } else {
         html(this, toggler_close);
-        // Still jQuery: jqtree is a library, ported in P49-B group 6.
-        jQuery(".tree").tree("closeNode", node);
+        getAlbumTree().closeNode(node);
       }
     }
   });
 
-  // Still jQuery: jqtree's own custom event, dispatched via jQuery's own
-  // trigger mechanism from inside the (unported) library -- invisible to
-  // a native addEventListener. Ported in P49-B group 6.
-  jQuery(".tree").on("tree.open", function (e) {
-    const ev = e as unknown as JqTreeNodeEvent;
+  on(treeEl, "tree.open", function (e: Event) {
+    const { node } = (e as CustomEvent<{ node: AlbumJqTreeNode }>).detail;
     html(
-      document.querySelectorAll(
-        '.move-cat-toogler[data-id="' + ev.node.id + '"]',
-      ),
+      document.querySelectorAll('.move-cat-toogler[data-id="' + node.id + '"]'),
       toggler_open,
     );
   });
 
-  // Still jQuery: same reason as "tree.open" above.
-  jQuery(".tree").on("tree.close", function (e) {
-    const ev = e as unknown as JqTreeNodeEvent;
+  on(treeEl, "tree.close", function (e: Event) {
+    const { node } = (e as CustomEvent<{ node: AlbumJqTreeNode }>).detail;
     html(
-      document.querySelectorAll(
-        '.move-cat-toogler[data-id="' + ev.node.id + '"]',
-      ),
+      document.querySelectorAll('.move-cat-toogler[data-id="' + node.id + '"]'),
       toggler_close,
     );
   });
 
-  // Still jQuery: same reason as "tree.open" above.
-  jQuery(".tree").on("tree.move", function (e) {
-    const event = e as unknown as JqTreeMoveEvent;
+  on(treeEl, "tree.move", function (e: Event) {
+    const event = e as CustomEvent<JqTreeMoveInfo<AlbumNodeData>>;
     event.preventDefault();
+    const moveInfo = event.detail;
 
-    if (event.move_info.moved_node.status != "private") {
+    if (moveInfo.movedNode.status != "private") {
       let parentIsPrivate = false;
-      if (event.move_info.position == "after") {
+      if (moveInfo.position == "after") {
         // Non-null: a same-level "after" move always has a real parent
         // in this tree (there is no top-level move target with a null
         // parent in practice) -- same unguarded assumption the
         // pre-P47 `any`-typed code already made.
-        parentIsPrivate =
-          event.move_info.target_node.parent!.status == "private";
-      } else if (event.move_info.position == "inside") {
-        parentIsPrivate = event.move_info.target_node.status == "private";
+        parentIsPrivate = moveInfo.targetNode.parent!.status == "private";
+      } else if (moveInfo.position == "inside") {
+        parentIsPrivate = moveInfo.targetNode.status == "private";
       }
 
       if (parentIsPrivate) {
         confirm({
-          title: str_are_you_sure.replace(
-            /%s/g,
-            event.move_info.moved_node.name,
-          ),
+          title: str_are_you_sure.replace(/%s/g, moveInfo.movedNode.name),
           buttons: {
             confirm: {
               text: str_yes_change_parent,
               btnClass: "btn-red",
               action: function () {
-                makePrivateHierarchy(event.move_info.moved_node);
-                applyMove(event);
+                makePrivateHierarchy(moveInfo.movedNode);
+                applyMove(moveInfo);
               },
             },
             cancel: {
@@ -349,20 +367,16 @@ ready(() => {
           ...jConfirm_confirm_options,
         });
       } else {
-        applyMove(event);
+        applyMove(moveInfo);
       }
     } else {
-      applyMove(event);
+      applyMove(moveInfo);
     }
   });
 
   delegate(treeEl, "click", ".move-cat-order", function (this: Element) {
     const node_id = attrOf(this, "data-id");
-    // Still jQuery: jqtree is a library, ported in P49-B group 6.
-    const node = jQuery(".tree").tree(
-      "getNodeById",
-      node_id,
-    ) as AlbumJqTreeNode | null;
+    const node = getAlbumTree().getNodeById(node_id);
     if (node) {
       fadeIn(document.querySelectorAll(".cat-move-order-popin"));
       html(
@@ -410,16 +424,11 @@ ready(() => {
     // Non-null: `openCat`, when not the "-1" sentinel, is always a real
     // album id present in this tree (same unguarded assumption the
     // pre-P47 `any`-typed code already made).
-    // Still jQuery: jqtree is a library, ported in P49-B group 6.
-    const nodeToGo = jQuery(".tree").tree(
-      "getNodeById",
-      openCat,
-    ) as AlbumJqTreeNode;
+    const nodeToGo = getAlbumTree().getNodeById(openCat)!;
 
     goToNode(nodeToGo, nodeToGo);
     if (nodeToGo.children) {
-      // Still jQuery: jqtree is a library, ported in P49-B group 6.
-      jQuery(".tree").tree("openNode", nodeToGo, false);
+      getAlbumTree().openNode(nodeToGo, false);
     }
 
     const target = document.querySelector("#cat-" + openCat)!;
@@ -481,17 +490,11 @@ ready(() => {
             ),
             "data-id",
           );
-          // Still jQuery: jqtree is a library, ported in P49-B group 6.
-          const node = jQuery(".tree").tree(
-            "getNodeById",
-            node_id,
-          ) as AlbumJqTreeNode;
+          const node = getAlbumTree().getNodeById(node_id)!;
           node.name = String(
             val(document.querySelectorAll(".RenameAlbumLabelUsername input")),
           );
-          // Still jQuery: jqtree is a library, ported in P49-B group 6.
-          jQuery(".tree").tree(
-            "updateNode",
+          getAlbumTree().updateNode(
             node,
             val(document.querySelectorAll(".RenameAlbumLabelUsername input")),
           );
@@ -566,11 +569,7 @@ ready(() => {
         success: function (
           data: operations["categoryCreate"]["responses"][201]["content"]["application/json"],
         ) {
-          // Still jQuery: jqtree is a library, ported in P49-B group 6.
-          const parent_node = jQuery(".tree").tree(
-            "getNodeById",
-            newAlbumParent,
-          ) as AlbumJqTreeNode | null;
+          const parent_node = getAlbumTree().getNodeById(newAlbumParent);
           if (
             parent_node &&
             parent_node.load_on_demand &&
@@ -581,24 +580,24 @@ ready(() => {
           if (parent_node) openNodeOnDemand(parent_node);
 
           if (newAlbumPosition == "last") {
-            // Still jQuery: jqtree is a library, ported in P49-B group 6.
-            jQuery(".tree").tree(
-              "appendNode",
+            getAlbumTree().appendNode(
               {
                 id: data.id,
                 isEmptyFolder: true,
-                name: newAlbumName,
+                // Non-null: a required admin form field, always populated
+                // by the time this AJAX success handler runs.
+                name: newAlbumName!,
               },
               parent_node ?? undefined,
             );
           } else {
-            // Still jQuery: jqtree is a library, ported in P49-B group 6.
-            jQuery(".tree").tree(
-              "prependNode",
+            getAlbumTree().prependNode(
               {
                 id: data.id,
                 isEmptyFolder: true,
-                name: newAlbumName,
+                // Non-null: a required admin form field, always populated
+                // by the time this AJAX success handler runs.
+                name: newAlbumName!,
               },
               parent_node ?? undefined,
             );
@@ -613,23 +612,15 @@ ready(() => {
               ".move-cat-toogler",
               function (this: Element) {
                 const node_id = parent_node.id;
-                // Still jQuery: jqtree is a library, ported in P49-B group 6.
-                const node = jQuery(".tree").tree(
-                  "getNodeById",
-                  node_id,
-                ) as AlbumJqTreeNode | null;
+                const node = getAlbumTree().getNodeById(node_id);
                 if (node) {
-                  // Still jQuery: jqtree is a library, ported in P49-B group 6.
-                  const open_nodes =
-                    jQuery(".tree").tree("getState").open_nodes;
-                  if (!open_nodes.includes(node_id)) {
+                  const open_nodes = getAlbumTree().getState().open_nodes;
+                  if (!open_nodes.includes(node_id!)) {
                     html(this, toggler_open);
-                    // Still jQuery: jqtree is a library, ported in P49-B group 6.
-                    jQuery(".tree").tree("openNode", node);
+                    getAlbumTree().openNode(node);
                   } else {
                     html(this, toggler_close);
-                    // Still jQuery: jqtree is a library, ported in P49-B group 6.
-                    jQuery(".tree").tree("closeNode", node);
+                    getAlbumTree().closeNode(node);
                   }
                 }
               },
@@ -641,9 +632,8 @@ ready(() => {
           updateTitleBadge(nb_albums + 1);
 
           goToNode(
-            // Still jQuery: jqtree is a library, ported in P49-B group 6.
-            jQuery(".tree").tree("getNodeById", data.id) as AlbumJqTreeNode,
-            jQuery(".tree").tree("getNodeById", data.id) as AlbumJqTreeNode,
+            getAlbumTree().getNodeById(data.id)!,
+            getAlbumTree().getNodeById(data.id)!,
           );
           animateScrollTop(
             offset(document.querySelector("#cat-" + data.id)!).top -
@@ -703,9 +693,7 @@ ready(() => {
   }
 });
 
-function createAlbumNode(rawNode: INode, li: JQuery) {
-  const node = rawNode as AlbumJqTreeNode;
-  const liEl = li[0]!;
+function createAlbumNode(node: AlbumJqTreeNode, liEl: HTMLLIElement) {
   const icon = "<span class='%icon%'></span>";
   let title =
     '<span data-id="' + node.id + '" class="move-cat-title-container ';
@@ -791,9 +779,8 @@ function createAlbumNode(rawNode: INode, li: JQuery) {
 
   let toggler: string;
   if (node.haveChildren || node.children.length != 0) {
-    // Still jQuery: jqtree is a library, ported in P49-B group 6.
-    const open_nodes = jQuery(".tree").tree("getState").open_nodes;
-    if (open_nodes.includes(node.id)) {
+    const open_nodes = getAlbumTree().getState().open_nodes;
+    if (open_nodes.includes(node.id!)) {
       toggler = toggler_open;
     } else {
       toggler = toggler_close;
@@ -914,8 +901,7 @@ function openAddAlbumPopIn(parentAlbumId: string | number) {
       document.querySelectorAll("#AddAlbum .AddIconTitle span"),
       add_sub_album_of.replace(
         "%s",
-        // Still jQuery: jqtree is a library, ported in P49-B group 6.
-        jQuery(".tree").tree("getNodeById", parentAlbumId)!.name,
+        getAlbumTree().getNodeById(parentAlbumId)!.name,
       ),
     );
   } else {
@@ -1041,11 +1027,7 @@ function triggerDeleteAlbum(cat_id: string | number) {
 
 function openDeleteAlbumPopIn(cat_to_delete: string | number) {
   fadeIn(document.querySelectorAll("#DeleteAlbum"));
-  // Still jQuery: jqtree is a library, ported in P49-B group 6.
-  const node = jQuery(".tree").tree(
-    "getNodeById",
-    cat_to_delete,
-  ) as AlbumJqTreeNode;
+  const node = getAlbumTree().getNodeById(cat_to_delete)!;
   if (node.children.length == 0) {
     html(
       document.querySelectorAll(".DeleteIconTitle span"),
@@ -1082,8 +1064,7 @@ function openDeleteAlbumPopIn(cat_to_delete: string | number) {
         // practice" invariant as createAlbumNode()'s own copy of this
         // comment above.
         const parentOfDeletedNode = node.parent!;
-        // Still jQuery: jqtree is a library, ported in P49-B group 6.
-        jQuery(".tree").tree("removeNode", node);
+        getAlbumTree().removeNode(node);
 
         rebindMoveCatActions();
 
@@ -1152,15 +1133,13 @@ function goToNode(node: AlbumJqTreeNode, firstNode: AlbumJqTreeNode) {
   if (node.parent) {
     goToNode(node.parent, firstNode);
     if (node != firstNode) {
-      // Still jQuery: jqtree is a library, ported in P49-B group 6.
-      jQuery(".tree").tree("openNode", node);
+      getAlbumTree().openNode(node);
       // console.log("parent id : " + node.parent.id);
       show(document.querySelectorAll("#cat-" + node.parent.id));
       addClass(document.querySelectorAll("#cat-" + node.parent.id), "imune");
     }
   } else {
-    // Still jQuery: jqtree is a library, ported in P49-B group 6.
-    jQuery(".tree").tree("openNode", node);
+    getAlbumTree().openNode(node);
     addClass(document.querySelectorAll("#cat-" + firstNode.id), "animateFocus");
 
     showNodeChildrens(firstNode);
@@ -1184,7 +1163,10 @@ function getId(parent: AlbumJqTreeNode): string | number {
   if (parent.getLevel() == 0) {
     return 0;
   } else {
-    return parent.id;
+    // Non-null: every real album node carries a real id (only jqtree's
+    // own invisible tree root, excluded by the `getLevel() == 0` branch
+    // above, ever lacks one).
+    return parent.id!;
   }
 }
 
@@ -1208,30 +1190,26 @@ function getRank(
   }
 }
 
-function applyMove(event: JqTreeMoveEvent) {
+function applyMove(moveInfo: JqTreeMoveInfo<AlbumNodeData>) {
   const waitingTimeout = setTimeout(() => {
     addClass(document.querySelectorAll(".waiting-message"), "visible");
   }, 500);
-  const id = event.move_info.moved_node.id;
+  const id = moveInfo.movedNode.id!;
   let moveParent: string | number | null = null;
   let moveRank: number | null = null;
-  const previous_parent = event.move_info.previous_parent;
-  const target = event.move_info.target_node;
-  if (event.move_info.position == "after") {
+  const previous_parent = moveInfo.previousParent!;
+  const target = moveInfo.targetNode;
+  if (moveInfo.position == "after") {
     // Non-null: same "always a real parent" invariant as elsewhere in
     // this file (a move target is never the tree's own invisible root).
     if (getId(previous_parent) != getId(target.parent!)) {
       moveParent = getId(target.parent!);
     }
     moveRank = getRank(target, id) + 1;
-  } else if (event.move_info.position == "inside") {
+  } else if (moveInfo.position == "inside") {
     if (getId(previous_parent) != getId(target)) {
       moveParent = getId(target);
-      // Still jQuery: jqtree is a library, ported in P49-B group 6.
-      const currentNode = jQuery(".tree").tree(
-        "getNodeById",
-        moveParent,
-      ) as AlbumJqTreeNode | null;
+      const currentNode = getAlbumTree().getNodeById(moveParent);
       if (
         currentNode &&
         currentNode.load_on_demand &&
@@ -1241,7 +1219,7 @@ function applyMove(event: JqTreeMoveEvent) {
       }
     }
     moveRank = 1;
-  } else if (event.move_info.position == "before") {
+  } else if (moveInfo.position == "before") {
     if (getId(previous_parent) != getId(target.parent!)) {
       moveParent = getId(target.parent!);
     }
@@ -1249,7 +1227,7 @@ function applyMove(event: JqTreeMoveEvent) {
   }
   moveNode(id, moveRank, moveParent)
     .then(() => {
-      event.move_info.do_move();
+      moveInfo.doMove();
       clearTimeout(waitingTimeout);
       removeClass(document.querySelectorAll(".waiting-message"), "visible");
       setSubcatsBadge(previous_parent);
@@ -1264,10 +1242,7 @@ function applyMove(event: JqTreeMoveEvent) {
       // when the parent didn't change, `previous_parent`'s own
       // already-refreshed badge above covers it.
       if (moveParent !== null) {
-        setSubcatsBadge(
-          // Still jQuery: jqtree is a library, ported in P49-B group 6.
-          jQuery(".tree").tree("getNodeById", moveParent) as AlbumJqTreeNode,
-        );
+        setSubcatsBadge(getAlbumTree().getNodeById(moveParent)!);
       }
 
       rebindMoveCatActions();
@@ -1330,14 +1305,9 @@ function changeParent(
         const updatedCategories = data.updatedCategories;
         if (updatedCategories) {
           updatedCategories.forEach((cat) => {
-            // Still jQuery: jqtree is a library, ported in P49-B group 6.
-            const catNode = jQuery(".tree").tree(
-              "getNodeById",
-              cat.categoryId,
-            ) as AlbumJqTreeNode;
+            const catNode = getAlbumTree().getNodeById(cat.categoryId)!;
             catNode.nb_sub_photos = cat.nbSubPhotos;
-            // Still jQuery: jqtree is a library, ported in P49-B group 6.
-            jQuery(".tree").tree("updateNode", catNode, catNode.name);
+            getAlbumTree().updateNode(catNode, catNode.name);
           });
         }
         res();
@@ -1421,23 +1391,20 @@ function loadOnDemand(node: AlbumJqTreeNode) {
     return al;
   });
 
-  // Still jQuery: jqtree is a library, ported in P49-B group 6.
-  jQuery(".tree").tree("loadData", formatedChild, node);
+  getAlbumTree().loadData(formatedChild, node);
   node.load_on_demand = false;
 }
 
 function openNodeOnDemand(node: AlbumJqTreeNode) {
-  // Still jQuery: jqtree is a library, ported in P49-B group 6.
-  const open_nodes = jQuery(".tree").tree("getState").open_nodes;
+  const open_nodes = getAlbumTree().getState().open_nodes;
   // Was `open_nodes.includes(node)` -- comparing the whole node object
   // against a list of plain ids, which real strict typing rejects
   // outright (`(string | number)[]` vs an object). Always evaluated to
   // `false`, so the "already open" guard below never actually skipped
   // anything; harmless in practice (jqtree's own `openNode()` no-ops on
   // an already-open node), but not the real intended check.
-  if (!open_nodes.includes(node.id)) {
-    // Still jQuery: jqtree is a library, ported in P49-B group 6.
-    jQuery(".tree").tree("openNode", node);
+  if (!open_nodes.includes(node.id!)) {
+    getAlbumTree().openNode(node);
     rebindMoveCatActions();
   }
 }

@@ -523,14 +523,6 @@
             href="https://upstream.example.invalid"
             title="Visit Piwigo project website"
           ><img src="themes/admin/default/images/piwigo-grey.svg"></a>
-          <span
-            id="whats_new_notification"
-            class="icon-blue tiptip"
-            onclick="show_user_whats_new()"
-            title="What&apos;s new in version 17?"
-          >
-            <i class="icon-bell"></i>
-          </span>
         </div>
         <div id="pageInfos">
 
@@ -538,52 +530,7 @@
           <a
             href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site"
           >Webmaster</a>
-        </div>      </div>    </div>    <div
-      id="whats_new"
-    >
-      <div id="whats_new_popin">
-        <a
-          class="icon-cancel close_whats_new"
-          onClick="hide_user_whats_new()"
-        ></a>
-        <h3>What's new in version 17?</h3>
-        <div>
-          <div class="whats_new_block_container">
-            <div class="whats_new_block icon-blue whats_new_block_w_60">
-              <h4><a
-                  href="https://upstream.example.invalid/releases/17.0.0"
-                  target="_blank"
-                >Brand new login &amp; preferences with Standard pages !</a></h4>
-            </div>
-            <div class="whats_new_block icon-purple whats_new_block_w_40">
-              <h4><a
-                  href="https://upstream.example.invalid/releases/17.0.0"
-                  target="_blank"
-                >Two factor authentication is here</a></h4>
-            </div>
-          </div>
-          <div class="whats_new_block_container">
-            <div class="whats_new_block icon-green whats_new_block_w_100">
-              <h4><a
-                  href="https://upstream.example.invalid/releases/17.0.0"
-                  target="_blank"
-                >UI redesigns that make a difference</a></h4>
-            </div>
-          </div>
-        </div>
-        <div class="whats_new_buttons">
-          <button onClick="hide_user_whats_new()"><i
-              class="icon-thumbs-up"
-            ></i> Ok, got it!</button>
-          <a
-            class="buttonLike"
-            href="https://upstream.example.invalid/releases/17.0.0"
-            target="_blank"
-          ><i class="icon-book"></i> Read the release note</a>
-        </div>
-      </div>
-    </div>
-
+        </div>      </div>    </div>
     <script type="application/json" id="page-data">{"data":{"csrf_token":"{{TOKEN}}","orphan_tag_names_array":"[]","total":3,"active_menu":0,"whats_new_major_version":"17","show_whats_new":false},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?","Delete tag \"%s\"?":"Delete tag \"%s\"?","Delete tags {%s}?":"Delete tags {%s}?","Yes, delete":"Yes, delete","Yes, rename":"Yes, rename","Tag \"%s\" succesfully deleted":"Tag \\\"%s\\\" succesfully deleted","Tags {%s} succesfully deleted":"Tags {%s} succesfully deleted","Tag \"%s\" already exists":"Tag \"%s\" already exists","Tag \"%s\" created":"Tag \"%s\" created","Tag \"%s1\" renamed in \"%s2\"":"Tag \\\"%s1\\\" renamed in \\\"%s2\\\"","Rename \"%s\"":"Rename \"%s\"","Delete orphan tags ?":"Delete orphan tags?","You have %s1 orphan : %s2":"You have %s1 orphan: %s2","Delete them":"Delete them","Keep them":"Keep them"," (copy)":" (copy)"," (copy %s)":" (copy %s)","Tag(s) {%s1} succesfully merged into \"%s2\"":"Tag(s) {%s1} succesfully merged into \"%s2\"","and %s others":"and %s others","%s other tags available...":"%s other tags available...","%d photos":"%d photos","no photo":"no photo","Select all %d tags":"Select all %d tags","Clear Selection":"Clear Selection","The %d tags on this page are selected":"The %d tags on this page are selected","\u003Cb\u003E%d\u003C\/b\u003E tag selected":"\u003Cb\u003E%d\u003C\/b\u003E tag selected","\u003Cb\u003E%d\u003C\/b\u003E tags found":"\u003Cb\u003E%d\u003C\/b\u003E tags found","\u003Cb\u003E%d\u003C\/b\u003E tag found":"\u003Cb\u003E%d\u003C\/b\u003E tag found"}}</script>
 
     <script type="module" src="dist/assets/tags-{{ASSET_HASH}}.js"></script>

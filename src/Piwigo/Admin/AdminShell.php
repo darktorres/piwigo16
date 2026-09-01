@@ -32,6 +32,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LayoutState;
 use Piwigo\Core\PageState;
@@ -445,7 +446,7 @@ final readonly class AdminShell
                 ->username?->value,
             enableSynchronization: $this->currentConfig->enableSynchronization,
             uSiteManager: $link_start . 'site_manager',
-            uHistoryStat: $link_start . 'stats&amp;year=' . date('Y') . '&amp;month=' . date('n'),
+            uHistoryStat: $link_start . 'stats&amp;year=' . Env::now()->format('Y') . '&amp;month=' . Env::now()->format('n'),
             uFaq: $link_start . 'help',
             uMaintenance: $link_start . 'maintenance',
             uNotificationByMail: $link_start . 'notification_by_mail',
@@ -505,7 +506,7 @@ final readonly class AdminShell
             activeMenu: AdminUiHelper::getActiveMenu($page_slug),
             hasHelp: $template->getTemplateVars('U_HELP') !== null,
             enableSynchronization: $this->currentConfig->enableSynchronization,
-            uHistoryStat: $link_start . 'stats&amp;year=' . date('Y') . '&amp;month=' . date('n'),
+            uHistoryStat: $link_start . 'stats&amp;year=' . Env::now()->format('Y') . '&amp;month=' . Env::now()->format('n'),
             uMaintenance: $link_start . 'maintenance',
             uNotificationByMail: $link_start . 'notification_by_mail',
             uConfigGeneral: $link_start . 'configuration',

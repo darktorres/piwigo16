@@ -99,6 +99,93 @@ it('persists the selected logo option and skin across a later plain visit', func
     }
 });
 
+/**
+ * themes_standard_pages.ts's own "scroll mini to show the selected one" --
+ * 0% live-interaction coverage before this. Two real, independent bugs
+ * found live and fixed here: `.std_pgs_mini_previews` (the scroll
+ * container) has no `position` rule of its own, so it was never the real
+ * `offsetParent` of its `<img>` children -- the old `.position()`-based
+ * calculation measured the *container's* own distance from an unrelated
+ * positioned ancestor further up the page, not the selected thumbnail's
+ * distance from the top of the container's own scrollable content, landing
+ * on an arbitrary offset (490px in this fixture, always the same wrong
+ * distance regardless of which skin was actually selected). Separately,
+ * computing that position at `ready()` time raced the 11 real `<img>`
+ * mini-previews' own loads. Both are fixed by switching to
+ * `selected.scrollIntoView({block: "nearest"})` (no offsetParent
+ * assumption) after waiting for every mini-preview to settle.
+ *
+ * `"default"` (the first thumbnail, index 0) needs no real scroll -- every
+ * other test in this file uses it or "cobalt" (index 2, still within the
+ * container's own initial visible height), neither of which the old bug's
+ * own wrong-by-490px offset would coincidentally look correct for, but
+ * neither exercises real scrolling either. `"teal"` (index 10, the last of
+ * 11) is the one real selection that must scroll to become visible at all.
+ */
+it('scrolls the selected skin into view, including one far enough down the list to need it', function (): void {
+    $snapshot = H::snapshotConfig(['standard_pages_selected_skin']);
+    $page = H::asAdmin($this);
+
+    try {
+        $page = H::navigateOk($page, '/admin.php?page=themes_standard_pages');
+
+        // The real default ("default", index 0) needs zero scroll -- the
+        // old bug's own wrong offset (a fixed ~490px, this fixture's own
+        // real distance from an unrelated ancestor) would have failed this
+        // exact assertion regardless of which skin were selected.
+        $defaultScrollTop = H::scriptJson($page, <<<'JS'
+            new Promise((resolve) => {
+                new Promise((r) => setTimeout(r, 200)).then(() => {
+                    resolve(JSON.stringify({
+                        scrollTop: document.querySelector('.std_pgs_mini_previews').scrollTop,
+                    }));
+                });
+            })
+            JS);
+        expect($defaultScrollTop['scrollTop'])->toBe(0);
+
+        $result = H::adminPost($page, '/admin.php?page=themes_standard_pages', [
+            'submit' => '1',
+            'use_standard_pages' => '1',
+            'std_pgs_selected_skin' => 'teal',
+            'pwg_token' => H::pwgToken($page),
+        ]);
+        expect($result['status'])->toBe(200);
+
+        $page = H::navigateOk($page, '/admin.php?page=themes_standard_pages');
+
+        $state = H::scriptJson($page, <<<'JS'
+            new Promise((resolve) => {
+                new Promise((r) => setTimeout(r, 200)).then(() => {
+                    const container = document.querySelector('.std_pgs_mini_previews');
+                    const selected = container.querySelector('.selected');
+                    const containerRect = container.getBoundingClientRect();
+                    const selectedRect = selected.getBoundingClientRect();
+                    resolve(JSON.stringify({
+                        selectedId: selected.id,
+                        scrollTop: container.scrollTop,
+                        // The real assertion that matters: the selected
+                        // thumbnail's own box is actually within the
+                        // container's visible (scrolled) viewport, not
+                        // merely that *some* scrolling happened.
+                        visible:
+                            selectedRect.top >= containerRect.top - 1 &&
+                            selectedRect.bottom <= containerRect.bottom + 1,
+                    }));
+                });
+            })
+            JS);
+
+        expect($state['selectedId'])->toBe('teal');
+        expect($state['scrollTop'])->toBeGreaterThan(0);
+        expect($state['visible'])->toBeTrue();
+
+        $page->assertNoJavaScriptErrors();
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
 it('unchecks use_standard_pages when the checkbox is simply omitted from the submission', function (): void {
     $snapshot = H::snapshotConfig(['use_standard_pages']);
     H::setConfigValue('use_standard_pages', 'true');

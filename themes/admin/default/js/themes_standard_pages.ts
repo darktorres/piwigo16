@@ -1,6 +1,6 @@
 import "./common";
 
-import { hide, position, ready, show } from "../../../default/js/vendor/dom";
+import { hide, ready, show } from "../../../default/js/vendor/dom";
 
 export {};
 
@@ -60,19 +60,60 @@ document
     });
   });
 
-// Scroll mini to show the selected one
+// Scroll mini to show the selected one. Two real, independent bugs found
+// live, both root-caused by comparing screenshots pixel-by-pixel across
+// repeated runs of the same page:
+// - `.std_pgs_mini_previews` (the scroll container) has no `position` rule
+//   of its own (`position: static`), so it is never the real `offsetParent`
+//   of its `<img>` children -- `.position()` (jQuery-style, always relative
+//   to the *real* offsetParent) returned that container's own distance from
+//   an unrelated positioned ancestor further up the page, not the selected
+//   thumbnail's distance from the top of the container's own scrollable
+//   content. For the real default ("default", the first thumbnail, needing
+//   zero scroll), this scrolled the container by however far down the page
+//   it happened to sit -- landing on an arbitrary later thumbnail instead.
+//   `scrollIntoView()` has no such assumption: it walks the real scrollable
+//   ancestor chain itself, so it lands correctly regardless of what does or
+//   doesn't establish a positioning context.
+// - Even with that fixed, computing any position at `ready()` time races
+//   the 11 real `<img>` mini-previews' own loads: one still-loading image
+//   above `selected` leaves the layout mid-shift, changing the measured
+//   result depending on real network/decode timing. Waiting for every
+//   mini-preview to settle (load or error) first removes that dependency.
 ready(function () {
   const container = document.querySelector<HTMLElement>(
     ".std_pgs_mini_previews",
   );
   const selected = container?.querySelector<HTMLElement>(".selected") ?? null;
 
-  if (container !== null && selected !== null) {
-    // `.position()` is relative to the offset parent with the element's own
-    // margins removed, which is what makes this land on the thumbnail rather
-    // than a margin's width away from it.
-    container.scrollTop = position(selected).top + container.scrollTop;
+  if (container === null || selected === null) {
+    return;
   }
+
+  const scrollToSelected = () => {
+    selected.scrollIntoView({ block: "nearest" });
+  };
+
+  const pending = Array.from(
+    container.querySelectorAll<HTMLImageElement>("img"),
+  ).filter((image) => !image.complete);
+
+  if (pending.length === 0) {
+    scrollToSelected();
+    return;
+  }
+
+  let remaining = pending.length;
+  const onSettled = () => {
+    remaining -= 1;
+    if (remaining === 0) {
+      scrollToSelected();
+    }
+  };
+  pending.forEach((image) => {
+    image.addEventListener("load", onSettled, { once: true });
+    image.addEventListener("error", onSettled, { once: true });
+  });
 });
 
 //Switch between change logo and use existing logo

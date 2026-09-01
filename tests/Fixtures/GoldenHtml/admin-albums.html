@@ -505,14 +505,6 @@
             href="https://upstream.example.invalid"
             title="Visit Piwigo project website"
           ><img src="themes/admin/default/images/piwigo-grey.svg"></a>
-          <span
-            id="whats_new_notification"
-            class="icon-blue tiptip"
-            onclick="show_user_whats_new()"
-            title="What&apos;s new in version 17?"
-          >
-            <i class="icon-bell"></i>
-          </span>
         </div>
         <div id="pageInfos">
 
@@ -520,52 +512,7 @@
           <a
             href="mailto:fixture_admin@example.test?subject=A%20comment%20on%20your%20site"
           >Webmaster</a>
-        </div>      </div>    </div>    <div
-      id="whats_new"
-    >
-      <div id="whats_new_popin">
-        <a
-          class="icon-cancel close_whats_new"
-          onClick="hide_user_whats_new()"
-        ></a>
-        <h3>What's new in version 17?</h3>
-        <div>
-          <div class="whats_new_block_container">
-            <div class="whats_new_block icon-blue whats_new_block_w_60">
-              <h4><a
-                  href="https://upstream.example.invalid/releases/17.0.0"
-                  target="_blank"
-                >Brand new login &amp; preferences with Standard pages !</a></h4>
-            </div>
-            <div class="whats_new_block icon-purple whats_new_block_w_40">
-              <h4><a
-                  href="https://upstream.example.invalid/releases/17.0.0"
-                  target="_blank"
-                >Two factor authentication is here</a></h4>
-            </div>
-          </div>
-          <div class="whats_new_block_container">
-            <div class="whats_new_block icon-green whats_new_block_w_100">
-              <h4><a
-                  href="https://upstream.example.invalid/releases/17.0.0"
-                  target="_blank"
-                >UI redesigns that make a difference</a></h4>
-            </div>
-          </div>
-        </div>
-        <div class="whats_new_buttons">
-          <button onClick="hide_user_whats_new()"><i
-              class="icon-thumbs-up"
-            ></i> Ok, got it!</button>
-          <a
-            class="buttonLike"
-            href="https://upstream.example.invalid/releases/17.0.0"
-            target="_blank"
-          ><i class="icon-book"></i> Read the release note</a>
-        </div>
-      </div>
-    </div>
-
+        </div>      </div>    </div>
     <script type="application/json" id="page-data">{"data":{"album_data":[{"rank":1,"name":"Sample Album","status":"public","id":"1","visible":"true","uppercats":"1","nb_images":3,"last_updates":"1 day in the future","has_not_access":false,"nb_sub_photos":2,"nb_subcats":1,"children":[{"rank":1,"name":"Nested Sub Album","status":"public","id":"2","visible":"true","uppercats":"1,2","nb_images":2,"last_updates":"1 day in the future","has_not_access":false,"nb_sub_photos":0}]}],"csrf_token":"{{TOKEN}}","open_cat":"-1","nb_albums":2,"light_album_manager":0,"delay_auto_open":3000,"active_menu":1,"whats_new_major_version":"17","show_whats_new":false},"strings":{"Yes, I am sure":"Yes, I am sure","No, I have changed my mind":"No, I have changed my mind","Are you sure?":"Are you sure?","The status of the album '%s' and its sub-albums will change to private. Are you sure?":"The status of the album '%s' and its sub-albums will change to private. Are you sure?","Yes change parent anyway":"Yes change parent anyway","No, don't move this album here":"No, don't move this album here","Root":"Root","%d sub-albums":"%d sub-albums","%d photos":"%d photos","%d pictures in sub-albums":"%d pictures in sub-albums","\u003Cb\u003E%d\u003C\/b\u003E albums found":"\u003Cb\u003E%d\u003C\/b\u003E albums found","\u003Cb\u003E1\u003C\/b\u003E album found":"\u003Cb\u003E1\u003C\/b\u003E album found","\u003Cb\u003E%d+\u003C\/b\u003E albums found, try to refine the search":"\u003Cb\u003E%d+\u003C\/b\u003E albums found, try to refine the search","Drag and drop to reorder albums":"Drag and drop to reorder albums","Delete album \"%s\".":"Delete album \"%s\".","Delete album \"%s\" and its %d sub-albums.":"Delete album \"%s\" and its %d sub-albums.","delete album and all %d photos, even the %d associated to other albums":"delete album and all %d photos, even the %d associated to other albums","delete album and the %d orphan photos":"delete album and the %d orphan photos","Rename \"%s\"":"Rename \"%s\"","Add Album":"Add Album","Edit album":"Edit album","Add Photos":"Add Photos","Visit Gallery":"Visit the gallery","Automatic sort order":"Automatic sort order","Delete album":"Delete album","Apply to root albums":"Apply to root albums","Apply to direct sub-albums":"Apply to direct sub-albums","Album name must not be empty":"Album name must not be empty","Create a new album at root":"Create a new album at root","Create a sub-album of \"%s\"":"Create a sub-album of \"%s\"","Locked album":"Locked album"}}</script>
 
     <script type="module" src="dist/assets/albums-{{ASSET_HASH}}.js"></script>

@@ -43,8 +43,6 @@ migrated handler mutates its event in place.
 | `blockmanager_prepare_display` | notify | `Piwigo\Menu\Event\BlockManagerPrepareDisplay` |
 | `blockmanager_register_blocks` | notify | `Piwigo\Menu\Event\BlockManagerRegisterBlocks` |
 | `clean_iptc_value` | filter | `Piwigo\Metadata\Event\CleanIptcValue` |
-| `combinable_preparse` | notify | `Piwigo\Template\Event\CombinablePreparse` |
-| `combined_css_postfilter` | filter | `Piwigo\Template\Event\CombinedCssPostfilter` |
 | `combined_script` | filter | `Piwigo\Template\Event\CombinedScript` |
 | `create_virtual_category` | notify | `Piwigo\Category\Event\CreateVirtualCategory` |
 | `delete_categories` | notify | `Piwigo\Category\Event\DeleteCategories` |
@@ -272,3 +270,23 @@ event: `PluginConfig\ApiRouteProviderInterface` (P29.6), a manifest-declared
 `/api/v1/plugin-routes/{id}/...` routes -- see that interface's own
 docblock for the full mechanism. The other 4 hooks above genuinely have
 no replacement of any kind.
+
+2 more were removed later still, when asset file-combining itself was
+dropped on purpose (P41-G, a Vite/TS builder replaces it) — found stale
+in this table via a completeness audit (both classes had a "Current
+classes" row here with no real class file behind it anymore, confirmed
+via a repo-wide grep), not caught at removal time the way the two
+batches above were:
+
+`combinable_preparse` · `combined_css_postfilter`
+
+Both were typed events for the legacy `Combinable`/`FileCombiner`
+mechanism's own pre-parse and post-concatenation hook points — real
+once, when "combined CSS/JS" meant literally concatenating multiple
+source files into one bundle server-side. `combined_script`'s own
+current class (`Piwigo\Template\Event\CombinedScript`, still real,
+still dispatched from `Template::getCombinedScripts()`) is not the same
+mechanism despite the name overlap: today "combined" just means
+"resolve this placeholder's own list of already-Vite-built script
+tags", not concatenate file contents, so there is no post-concatenation
+moment left for a postfilter to hook.

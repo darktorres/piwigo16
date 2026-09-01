@@ -134,9 +134,16 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             // fully native now too (P49-B); `jquery-ui.css` below (kept
             // for its own sake, not via that former dependency's
             // cascade-promotion) still themes the native port's reused
-            // class names.
-            AssetContribution::script('batch_manager_global_page', 'themes/admin/default/js/pages/batch_manager_global.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
-            AssetContribution::script('jquery.progressBar', 'themes/default/js/plugins/jquery.progressbar.min.js', loadMode: LoadMode::Async),
+            // class names. No plain `dependsOn: ['jquery']` either
+            // (P49-C) -- confirmed zero real jQuery calls left anywhere
+            // in `batchManagerGlobal.ts`/`batch_manager_global.ts`
+            // (`pwgAddAlbum` is a real named ES import now, not a
+            // `jQuery.fn.pwgAddAlbum` plugin registration). The
+            // `jquery.progressBar` script is dropped outright too --
+            // `progress_bar()`'s own real implementation is plain
+            // `css()` (`vendor/dom.ts`), never that plugin's own real
+            // `.progressBar()` API, confirmed via a repo-wide grep.
+            AssetContribution::script('batch_manager_global_page', 'themes/admin/default/js/pages/batch_manager_global.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/batch_manager_global.css', id: 'batch_manager_global'),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
             // order 10 is required, see issue 1080

@@ -33,10 +33,7 @@
     "@size-limit/file": "13.0.3",
     "@size-limit/preset-app": "13.0.3",
     "@types/chart.js": "2.9.41",
-    "@types/jquery": "4.0.1",
-    "@types/jqueryui": "1.12.24",
     "@types/node": "26.2.0",
-    "@types/plupload": "2.0.14",
     "@vitest/coverage-v8": "4.1.11",
     "eslint": "10.8.1",
     "globals": "17.11.0",
@@ -57,11 +54,8 @@
   },
   "dependencies": {
     "chart.js": "2.9.3",
-    "datatables.net": "1.10.11",
-    "jquery": "1.11.3",
     "moment": "2.26.0",
     "openapi-fetch": "0.17.0",
-    "plupload": "github:moxiecode/plupload#v2.1.2",
     "tus-js-client": "4.3.0",
     "web-vitals": "6.1.1"
   },

@@ -19,14 +19,23 @@ use Piwigo\Asset\LoadMode;
  * 2 extra unconditional stylesheets (`fontello.css`/`components/general.css`,
  * both with a literally hardcoded `admin/default/` path regardless of
  * which admin sub-theme is active -- preserved exactly, not "fixed"),
- * registers `jquery` with an explicit `path:` and no `load:` (defaults to
- * header), and never calls `localCssRules()` (a separate, real
- * asymmetry -- see that method's own docblock). `default`/`standard_pages`
- * share the theme-chain CSS loop's shape exactly, but differ in their
- * own `utilities.css` path and `jquery`'s `load:` timing (`footer` vs
- * `header`). One class with 3 named methods, not a false single shared
- * shape forced across all 3 -- matches this campaign's own "don't bundle
- * genuinely independent concerns" reasoning elsewhere.
+ * and never calls `localCssRules()` (a separate, real asymmetry -- see
+ * that method's own docblock). `default`/`standard_pages` share the
+ * theme-chain CSS loop's shape exactly, but differ in their own
+ * `utilities.css` path. One class with 3 named methods, not a false
+ * single shared shape forced across all 3 -- matches this campaign's
+ * own "don't bundle genuinely independent concerns" reasoning
+ * elsewhere.
+ *
+ * None of the 3 register `jquery` any more (P49-C): with plupload's
+ * native port (`vendor/uploadQueue.ts`) landing, every real first-party
+ * and vendored jQuery/jQuery-UI/datatables.net consumer in the whole
+ * app is gone -- confirmed via a repo-wide grep for `jQuery(`/bare
+ * `$(`/`.dataTable(`/`.pluploadQueue(`/`.size(`/`.enableShiftClick(`,
+ * every one either absent or comment-only. jQuery itself was loaded
+ * completely unconditionally here on every single page regardless of
+ * whether that page's own scripts needed it, so removing it doesn't
+ * need any per-page opt-out -- it just stops.
  *
  * The `page-data` script registration (P42-B) is identical, static,
  * and unconditional across all 3 real `layout.latte` files, but is
@@ -87,8 +96,6 @@ final readonly class ThemeBaseAssets
             $assets[] = AssetContribution::css('themes/admin/' . $theme->id . '/css/components/general.css', order: -9);
         }
 
-        $assets[] = AssetContribution::script('jquery', 'https://cdn.jsdelivr.net/npm/jquery@1.11.3/dist/jquery.min.js');
-
         return $assets;
     }
 
@@ -132,7 +139,6 @@ final readonly class ThemeBaseAssets
     {
         $assets = self::themeChainCss($themes);
         $assets[] = AssetContribution::css('themes/default/css/utilities.css', order: -5);
-        $assets[] = AssetContribution::script('jquery', path: '', loadMode: LoadMode::Footer);
 
         return $assets;
     }
@@ -145,7 +151,6 @@ final readonly class ThemeBaseAssets
     {
         $assets = self::themeChainCss($themes);
         $assets[] = AssetContribution::css('themes/standard_pages/css/utilities.css', order: -5);
-        $assets[] = AssetContribution::script('jquery', path: '', loadMode: LoadMode::Header);
 
         return $assets;
     }

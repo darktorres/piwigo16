@@ -1,16 +1,15 @@
-// Shared ambient types for vendored jQuery-plugin methods that
-// @types/jquery doesn't cover (docs/PLAN.md P46). `JQueryStatic`/`JQuery`
-// are already global interfaces (see node_modules/@types/jquery), so
-// merging into them here needs no `declare global` wrapper -- this file
-// has no top-level import/export of its own.
+// Was the home for shared ambient types for vendored jQuery-plugin
+// methods `@types/jquery` didn't cover (docs/PLAN.md P46) -- that whole
+// `interface JQuery { ... }` augmentation is gone now (P49-C, see the
+// comment further down where it used to live): every real call site it
+// typed is ported to a native module or was already plain. `@types/
+// jquery`/`@types/jqueryui` are gone from `package.json` too, so this
+// file no longer merges into either package's own global `JQuery`/
+// `JQueryStatic` interfaces at all.
 //
-// Also the home for genuinely first-party (non-jQuery-plugin) shared
-// ambient globals, when a real one turns up during conversion (P46-B
-// found window.SwitchBox needs exactly this).
-//
-// Starts empty -- grows one method/global at a time as each conversion
-// batch's real call sites need it, rather than guessing the full list
-// up front.
+// Still the home for genuinely first-party (non-jQuery-plugin) shared
+// ambient globals -- `Window.SwitchBox`/`Window._pwgRatingAutoQueue`
+// below, and everything after them, is unrelated to jQuery.
 
 // See `Window.SwitchBox`/`Window._pwgRatingAutoQueue` below for the real
 // "queue array, then live handler" shape-shifting story these 2 cover.
@@ -257,69 +256,20 @@ declare module "piecon" {
 // global the same way `tus` does above. `stats.ts`'s own graph
 // rendering is the one real first-party call site.
 
-interface JQuery {
-  // Real jQuery-core instance method (deprecated since 1.8, but still
-  // present in the vendored 1.11.3 runtime -- @types/jquery never typed
-  // it even in legacy.d.ts). `plugins_installated.ts`'s own
-  // `jQuery("div.active").size()` is the one real first-party call site.
-  size(): number;
-
-  // jQuery UI's own `slider` widget itself was already deleted here as
-  // redundant back in P47 (real, verified types came from
-  // `@types/jqueryui` instead) -- moot now regardless: it was ported
-  // off jQuery outright in P49-B group 4, along with `doubleSlider.ts`'s
-  // own `pwgDoubleSlider` extension that wrapped it (its own former
-  // ambient declaration, once below, is gone too -- both are real,
-  // typed exports of `themes/default/js/vendor/slider.ts`/
-  // `themes/admin/default/js/doubleSlider.ts` now).
-
-  // `.colorbox()`'s own ambient `@types/jquery.colorbox` ("real,
-  // verified types from P47" note, once here too) is gone outright now:
-  // the library itself was ported to `themes/default/js/vendor/
-  // colorbox.ts` in P49-B, same as `jquery.tipTip`'s own ambient
-  // `tipTip()` declaration before it -- nothing calls `.colorbox()`
-  // through jQuery any more, `addAlbum.ts`'s own former
-  // `jQuery.fn.pwgAddAlbum` (the one first-party wrapper needing a
-  // real `JQuery` `this` for it) converted to a plain function
-  // alongside it.
-
-  // jQuery UI's own datepicker widget + `jquery-timepicker-addon`'s own
-  // `.fn.pwgDatepicker`/`.datetimepicker()`/`.datepicker()` ambient
-  // declarations (once here) are gone outright now: the pair was ported
-  // to `themes/default/js/vendor/datepicker.ts` in P49-B, the last
-  // unstarted P49-B surface -- nothing calls either through jQuery any
-  // more.
-
-  // datatables.net (vendored -- P46-0's own CDN table). `rating_user.ts`'s
-  // own user-rating list is the one real first-party call site so far.
-  // `.dataTable()` is the setup call; `.DataTable()` returns the real
-  // API object (`.row(...).remove().draw()`), loosely typed like every
-  // other vendored jQuery UI/plugin API surface in this file.
-  dataTable(options?: Record<string, unknown>): JQuery;
-  DataTable(options?: Record<string, unknown>): any;
-
-  // jQuery UI's own `tooltip` widget (vendored -- the one full-bundle
-  // `jquery.ui` id) is now real, verified types from `@types/jqueryui`
-  // (P47) -- deleted here (method-shorthand on both sides, harmless to
-  // leave, but redundant). `rating_user.ts`'s own GeoIP-lookup tooltip
-  // is the one real first-party call site.
-
-  // `batchManagerGlobal.ts`'s own first-party `jQuery.fn` extension --
-  // declared and consumed within the same file, no other real call
-  // site found.
-  enableShiftClick(): JQuery;
-
-  // plupload's own jQuery-UI queue widget (vendored -- P46-0's own CDN
-  // table). `photos_add_direct.ts`'s own upload-queue setup is the one
-  // real first-party call site.
-  pluploadQueue(options?: Record<string, unknown>): JQuery;
-
-  // jQuery UI's `sortable` widget (vendored -- the one full-bundle
-  // `jquery.ui` id) is now real, verified types from `@types/jqueryui`
-  // (P47) -- deleted here (method-shorthand on both sides, harmless to
-  // leave, but redundant). `menubar.ts`'s own drag-to-reorder menu
-  // setup is the one real first-party call site.
-}
+// The `interface JQuery { ... }` ambient-method augmentation block that
+// used to live here (`size()`, `dataTable()`/`DataTable()`,
+// `enableShiftClick()`, `pluploadQueue()` -- `.slider()`/`.colorbox()`/
+// `.datepicker()`/`.tooltip()`/`.sortable()` were already gone before
+// this) is deleted outright now (P49-C): every real call site it typed
+// is gone -- `rating_user.ts`'s `.dataTable()`/`.DataTable()` and
+// `photos_add_direct.ts`'s `.pluploadQueue()` both ported to native
+// `vendor/dataTable.ts`/`vendor/uploadQueue.ts`; `enableShiftClick`
+// (`batchManagerGlobal.ts`) and `.size()` (`plugins_installated.ts`)
+// were each already real plain functions with zero remaining jQuery
+// call site, just never had this file's own now-stale augmentation
+// cleaned up after. `@types/jquery`/`@types/jqueryui` are gone from
+// `package.json` too -- nothing in the app reads the ambient
+// `JQuery`/`JQueryStatic` globals those packages declared any more.
 
 // `album_selector.ts`'s own real `class AlbumSelector` public surface
 // (P47) -- mirrors `TemporaryStateCtor`'s own precedent above. Kept to

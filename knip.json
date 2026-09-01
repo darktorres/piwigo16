@@ -80,9 +80,5 @@
     "*.config.ts",
     "openapi/client/*.ts"
   ],
-  "ignoreDependencies": [
-    "@cyclonedx/cyclonedx-npm",
-    "lefthook",
-    "datatables.net"
-  ]
+  "ignoreDependencies": ["@cyclonedx/cyclonedx-npm", "lefthook"]
 }

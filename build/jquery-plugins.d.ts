@@ -309,11 +309,6 @@ interface JQuery {
   // `jQuery("div.active").size()` is the one real first-party call site.
   size(): number;
 
-  // jquery.cluetip (vendored, github-sourced -- P46-0's own CDN table).
-  // `intro.ts`'s own tooltip setup is the one real first-party call
-  // site so far.
-  cluetip(options?: Record<string, unknown>): JQuery;
-
   // jQuery UI's own `slider` widget itself was already deleted here as
   // redundant back in P47 (real, verified types came from
   // `@types/jqueryui` instead) -- moot now regardless: it was ported

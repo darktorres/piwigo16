@@ -1,5 +1,6 @@
 import { pwg_getPageString } from "../../../default/js/page-data";
 import { ajax, type AjaxThenable } from "../../../default/js/vendor/ajax";
+import { cluetip } from "../../../default/js/vendor/cluetip";
 import {
   addClass,
   on,
@@ -265,15 +266,9 @@ ready(function () {
   });
 });
 
-// The only jQuery left in this file, and the only part of it that is not
-// P49-A work: cluetip is a library, and this call goes when that library is
-// ported (docs/PLAN.md P49-B group 3). InstallView.php's own registration of
-// jQuery and jquery.cluetip (its lines 98/100) goes with it. The `ready()`
-// wrapper around it was P49-A and is converted.
 ready(function () {
-  jQuery(".cluetip").cluetip({
+  cluetip(document.querySelectorAll(".cluetip"), {
     width: 300,
-    splitTitle: "|",
     positionBy: "bottomTop",
   });
 });

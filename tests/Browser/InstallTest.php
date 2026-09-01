@@ -75,6 +75,40 @@ it('completes a fresh install end-to-end', function (): void {
         $page->assertPresent('input[name="dbpasswd"]');
         $page->assertPresent('input[name="dbname"]');
 
+        // Real, mutation-verified coverage for cluetip.ts (P49-B) --
+        // this newsletter-subscribe span is this page's one real
+        // `positionBy: "bottomTop"` call site (languages_new.ts's own is
+        // the "auto"/real-default one, covered by its own
+        // LanguagesNewInteractionTest.php). Asserted here, rather than
+        // in a test of its own, for the same reason the mail-mirroring
+        // block below is: reaching this page at all already pays the
+        // wipe-database cost above.
+        $original = $page->script("document.querySelector('.cluetip').getAttribute('title')");
+        $page->assertMissing('#cluetip');
+        $page->hover('.cluetip');
+        $page->assertVisible('#cluetip');
+        expect($page->script("document.querySelector('.cluetip').getAttribute('title')"))
+            ->toBe('');
+        // The loaded en_UK catalog rephrases the literal source msgid
+        // ("...Announcements Newsletter", plural) as singular -- verified
+        // live via this test's own screenshot, not assumed.
+        $page->assertSeeIn('.cluetip-title', 'Piwigo Announcement Newsletter');
+        $page->assertSeeIn('.cluetip-inner', 'Keep in touch with Piwigo project');
+
+        // Moving off the trigger schedules the real 50ms delayed close --
+        // long enough to have fired by the time the next real assertion
+        // below runs. A synthetic dispatch (not Pest Browser's own
+        // `->hover()`, which timed out here trying to find an
+        // unobstructed point to move the real mouse to) -- same fix as
+        // LanguagesNewInteractionTest.php's own equivalent step.
+        $page->script(
+            "document.querySelector('.cluetip').dispatchEvent(new MouseEvent('mouseleave', {bubbles: true}))"
+        );
+        usleep(150_000);
+        $page->assertMissing('#cluetip');
+        expect($page->script("document.querySelector('.cluetip').getAttribute('title')"))
+            ->toBe($original);
+
         // install.ts's client-side half, asserted here rather than in a test
         // of its own: reaching the install form at all means wiping the
         // database and moving the installed-flag aside, so a second

@@ -105,19 +105,21 @@ it('rejects an install request from a non-webmaster session', function (): void 
 
 /**
  * languages_new.ts's whole body is one cluetip call inside a ready()
- * wrapper. P49-A converts the wrapper; cluetip itself is a library and
- * goes in P49-B, so what needs proving here is only that the callback
- * still fires under the new ready().
- *
- * cluetip's own init inserts `#cluetip-waitimage` into the document if it
- * is not already there, which is the earliest observable effect of the
- * call and needs no hover to produce.
+ * wrapper. `cluetip()` itself is now a native port
+ * (`vendor/cluetip.ts`, P49-B) rather than a jQuery library call, so
+ * what needs proving here is that the ready() callback still fires and
+ * that cluetip's own shared `#cluetip` element gets created -- its
+ * real, eager, hover-independent init side effect, matching the
+ * original library's own behavior of creating that shared div on the
+ * very first `.cluetip()` call a page makes (not deferred to a hover).
+ * Real interactive hover/positioning behavior is covered by
+ * `LanguagesNewInteractionTest.php`.
  */
 it('runs its ready callback, initializing cluetip on load', function (): void {
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=languages&tab=new');
 
-    expect($page->script('document.querySelectorAll("#cluetip-waitimage").length'))
+    expect($page->script('document.querySelectorAll("#cluetip").length'))
         ->toBe(1);
     $page->assertNoJavaScriptErrors();
 });

@@ -91,9 +91,7 @@ final readonly class InstallView implements View, HasPageAssets, ExposesPageData
             }
         }
 
-        $assets[] = AssetContribution::script('jquery', 'https://cdn.jsdelivr.net/npm/jquery@1.11.3/dist/jquery.min.js');
         $assets[] = AssetContribution::css('themes/admin/default/css/pages/install.css', id: 'install');
-        $assets[] = AssetContribution::script('jquery.cluetip', 'https://cdn.jsdelivr.net/gh/kswedberg/jquery-cluetip@1.2.6/jquery.cluetip.js', loadMode: LoadMode::Async, dependsOn: ['jquery']);
         // This page opts out of the theme-base wiring that would normally
         // auto-register page-data (Template::finalizeHtml(), gated on
         // $themeBaseApplied), so install.ts's own pwg_getPageString() calls
@@ -107,7 +105,7 @@ final readonly class InstallView implements View, HasPageAssets, ExposesPageData
         // source path for anything it cannot resolve -- meaning this page
         // emitted `<script src="themes/default/js/page-data.ts">` and
         // served the browser raw TypeScript.
-        $assets[] = AssetContribution::script('install', 'themes/admin/default/js/install.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.cluetip']);
+        $assets[] = AssetContribution::script('install', 'themes/admin/default/js/install.ts', loadMode: LoadMode::Footer);
 
         return $assets;
     }

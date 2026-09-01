@@ -85,7 +85,6 @@
     "@cyclonedx/cyclonedx-npm",
     "lefthook",
     "datatables.net",
-    "jquery-cluetip",
     "jquery-timepicker-addon",
     "jquery-ui",
     "piecon",

@@ -69,20 +69,23 @@ test('pageAssets skips a theme whose loadCss is false', function (): void {
         ->toBe([]);
 });
 
-test('pageAssets always registers the 5 static assets regardless of themes', function (): void {
+test('pageAssets always registers the 3 static assets regardless of themes', function (): void {
     $view = makeInstallView([]);
 
     expect($view->pageAssets())
         ->toEqual([
-            AssetContribution::script('jquery', 'https://cdn.jsdelivr.net/npm/jquery@1.11.3/dist/jquery.min.js'),
             AssetContribution::css('themes/admin/default/css/pages/install.css', id: 'install'),
-            AssetContribution::script('jquery.cluetip', 'https://cdn.jsdelivr.net/gh/kswedberg/jquery-cluetip@1.2.6/jquery.cluetip.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
-            AssetContribution::script('install', 'themes/admin/default/js/install.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.cluetip']),
+            AssetContribution::script('install', 'themes/admin/default/js/install.ts', loadMode: LoadMode::Footer),
             // No standalone page-data registration: install.ts imports it,
             // so its code ships inside the install bundle. Registering it
             // separately emitted a `<script src=".../page-data.ts">` tag,
             // since P48 removed page-data.ts as a Vite entry and there is
             // no manifest entry to resolve.
+            //
+            // No bare `jquery`/`jquery.cluetip` registrations either
+            // (P49-B): `cluetip.ts`'s native port removed this page's
+            // only real jQuery-cluetip call site, and jQuery itself had
+            // no other real consumer on this page once that went.
         ]);
 });
 

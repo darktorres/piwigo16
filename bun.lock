@@ -8,7 +8,6 @@
         "chart.js": "2.9.3",
         "datatables.net": "1.10.11",
         "jquery": "1.11.3",
-        "jquery-cluetip": "github:kswedberg/jquery-cluetip#1.2.6",
         "jquery-timepicker-addon": "github:trentrichardson/jQuery-Timepicker-Addon#v1.4.4",
         "jquery-ui": "1.10.4",
         "jquery.colorbox": "github:jackmoore/colorbox#1.5.14",
@@ -942,8 +941,6 @@
     "jpeg-js": ["jpeg-js@0.4.4", "", {}, "sha512-WZzeDOEtTOBK4Mdsar0IqEU5sMr3vSV2RqkAIzUEV2BHnUfKGyswWFPFwK5EeDo93K3FohSHbLAjj0s1Wzd+dg=="],
 
     "jquery": ["jquery@1.11.3", "", {}, "sha512-pHM/XLofp0FJc0/0AsRm8q/5ob+a1kno+vfclXGozaMBPv3qD7Xq19loECVcBB4MOLdygnyneQMPTsH5QiVNBQ=="],
-
-    "jquery-cluetip": ["jquery-cluetip@github:kswedberg/jquery-cluetip#4c7ba7c", {}, "kswedberg-jquery-cluetip-4c7ba7c", "sha512-XbRy4bNgudfilcflOtYxiEX59V7ecAfmhOLv649cE1APBE/fGZoIa4aHFBxtiWtRh6rcx7nom66BBJoP5x3gDg=="],
 
     "jquery-timepicker-addon": ["jQuery-Timepicker-Addon@github:trentrichardson/jQuery-Timepicker-Addon#30c9bdb", {}, "trentrichardson-jQuery-Timepicker-Addon-30c9bdb", "sha512-q/sM1pkK+ZWv8J/eWb6nIdTWGWtYUixlXCmiknt1ABtPT7pqgmTTL3uPS/bEhw5xXVpT1NMilH4b5bNgUgAKUg=="],
 

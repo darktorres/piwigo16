@@ -80,12 +80,14 @@ final readonly class IntroView implements View, HasPageAssets, ExposesPageData
         return [
             ...new ColorboxView()
                 ->pageAssets(),
-            AssetContribution::script('jquery.cluetip', 'https://cdn.jsdelivr.net/gh/kswedberg/jquery-cluetip@1.2.6/jquery.cluetip.js', loadMode: LoadMode::Async, dependsOn: ['jquery']),
             // Real per-page bundle entry (docs/PLAN.md's P48) -- folds
             // intro.ts/intro_tooltips.ts's code in via real imports
             // instead of the 2 separate script tags this used to
-            // register.
-            AssetContribution::script('intro_page', 'themes/admin/default/js/pages/intro.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.cluetip']),
+            // register. No longer depends on `jquery.cluetip`: this
+            // page never rendered any `.cluetip`-classed markup, so
+            // that registration (and intro.ts's own matching call) was
+            // genuinely dead and removed outright rather than ported.
+            AssetContribution::script('intro_page', 'themes/admin/default/js/pages/intro.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/intro.css', id: 'intro'),
         ];
     }

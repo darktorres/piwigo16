@@ -42,12 +42,11 @@ Object.keys(storage_details).forEach(function (type) {
 });
 
 ready(function () {
-  // Still jQuery: cluetip is a library, ported in P49-B group 3.
-  jQuery(".cluetip").cluetip({
-    width: 300,
-    splitTitle: "|",
-    positionBy: "bottomTop",
-  });
+  // No `.cluetip`-classed markup is ever rendered on this page (verified:
+  // neither statically in intro.latte nor dynamically by this file's own
+  // newsletter-promo injection below, which uses `.tiptip` instead,
+  // already ported in P49-B group 2) -- the old jQuery `.cluetip()` call
+  // that used to sit here was a genuine no-op and is not ported.
 
   if (pwg_getPageData<boolean>("check_for_updates")) {
     void ajax({

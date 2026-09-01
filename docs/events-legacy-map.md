@@ -211,6 +211,28 @@ from:
 | `get_high_url` | A binary "high definition available" toggle with no analogue in this rewrite's derivative/multi-size image system. |
 | `add_elements` | A legacy batch-insert notify (`$inserts`, an array of raw file rows from an old directory-scan flow) with no current counterpart. |
 
+7 more turned up the same way, found by cross-referencing `tools/
+triggers_list.php`'s own hook inventory (deleted outright as part of
+P49-C's jQuery/DataTables removal, its data never having been part of
+the P32 catalogue pass in the first place) against the same two
+reference corpora above, rather than assumed complete:
+
+| Legacy hook | Why not ported |
+| --- | --- |
+| `get_download_url` | Real listener in the wild plugin corpus (`piwigo-cdnplus`), but zero dispatch site anywhere in `../piwigo16` itself — already dead in this fork's own legacy reference before this rewrite began. |
+| `loc_end_search` | Real listener in the wild theme corpus (`bootstrap_darkroom_16.d`), but zero dispatch site anywhere in `../piwigo16` itself — same disposition as `get_download_url`. |
+| `loc_visible_user_list` | Real listener in the wild plugin corpus (`LCAS`), but zero dispatch site anywhere in `../piwigo16` itself — same disposition as `get_download_url`. |
+| `get_high_location` | No dispatch site and no listener anywhere in `../piwigo16` or either wild corpus — a `tools/triggers_list.php`-only entry, never real in the lineage this fork is built from at all. |
+| `get_image_location` | Same as `get_high_location` — no dispatch site, no listener, `tools/triggers_list.php`-only. |
+| `functions_history_included` | Unlike the rows above, this one *does* have a real dispatch site (`admin/include/functions_history.inc.php`) and a real listener (`lightbox_14.a`) in `../piwigo16` — but the concept itself (a bare "this monolithic include file has now loaded" marker) has no analogue once PSR-4 autoloading replaces manual file includes; there is no "this class is now available" moment to notify. |
+| `functions_mail_included` | Same mechanism and same disposition as `functions_history_included` (real dispatch site in `include/functions_mail.inc.php`), but no listener found in either wild corpus. |
+
+`tools/triggers_list.php`'s own inventory also carried a `'trigger'`
+entry — not a real hook at all, just that file's own self-descriptive
+row for the generic `trigger_change()`/`trigger_notify()` dispatch
+mechanism itself. Excluded here for the same reason it was never a
+candidate for a typed class.
+
 ## Removed
 
 28 classes were deleted during P32 Stage A5's catalogue pass — either

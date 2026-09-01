@@ -413,12 +413,12 @@ final readonly class ConfigService
      * skipped here, exactly like the SCHEMA-driven design this replaces
      * skipped keys with no matching accessor.
      *
-     * Fires the same 'load_conf' plugin hook the reference's
-     * ConfigDb::loadConfFromDb() does, payload $param in place of that
-     * method's raw SQL $condition string -- a documented trigger
-     * (tools/triggers_list.php), so a plugin listening for it must keep
-     * being notified regardless of which persistence layer a given
-     * caller routes through.
+     * Does NOT fire the reference's own 'load_conf' plugin hook
+     * (ConfigDb::loadConfFromDb()'s real behavior) -- confirmed dead
+     * weight and removed outright during P32 Stage A5's catalogue pass
+     * (zero real dispatch site and zero real listener anywhere in this
+     * fork's own legacy reference), not a gap introduced here. See
+     * `docs/events-legacy-map.md`'s "Removed" section.
      */
     public function loadConfFromDb(?string $param = null, bool $dieIfNotFound = true): void
     {

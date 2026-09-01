@@ -538,7 +538,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
         // then Cache, exactly as the accumulation above filled them.
         //
         // The snake_case keys are intro.ts's own wire contract
-        // (StorageDetails in build/jquery-plugins.d.ts, read through
+        // (StorageDetails in build/ambient-globals.d.ts, read through
         // pwg_getPageData('storage_chart_data')), so this stays an
         // array shape rather than becoming a value object.
         $data_storage = [];

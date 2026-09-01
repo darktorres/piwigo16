@@ -18,7 +18,7 @@ interface LightAccordionOptions {
 }
 
 // Real declarer of the accordion this page's own #menubar sidebar uses --
-// this file is its one real call site (build/jquery-plugins.d.ts's own
+// this file is its one real call site (build/ambient-globals.d.ts's own
 // former jQuery.fn.lightAccordion, before this conversion), so it converts
 // to a plain function scoped to that one container rather than keeping the
 // jQuery-plugin "runs per matched element" shape a set of callers would need.

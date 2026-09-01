@@ -1530,7 +1530,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * before that, which this method's own `dependsOn` used to
      * reference; no replacement needed, since switchbox.ts's own "queue
      * array, then live handler" shape-shifting design
-     * (build/jquery-plugins.d.ts's own `SwitchBoxQueue` comment) is
+     * (build/ambient-globals.d.ts's own `SwitchBoxQueue` comment) is
      * already safe regardless of load order, and this inline script
      * renders in Footer position after every footer-sync `<script src>`
      * tag regardless -- `ScriptLoader::addInline()`'s own real

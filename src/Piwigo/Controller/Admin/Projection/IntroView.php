@@ -41,7 +41,7 @@ final readonly class IntroView implements View, HasPageAssets, ExposesPageData
      *   'Cache' entry is the odd one: it carries a filesize and
      *   nothing else, so both 'nb_files' and 'details' are
      *   genuinely optional here. Key names are the wire contract
-     *   with intro.ts's own StorageDetails (build/jquery-plugins.d.ts),
+     *   with intro.ts's own StorageDetails (build/ambient-globals.d.ts),
      *   which reads them through pwg_getPageData('storage_chart_data')
      *   -- they are snake_case for that reason and must stay so.
      */

@@ -1,12 +1,10 @@
-import Chart from "chart.js";
-// Functionally required, not cosmetic: this stylesheet carries the
-// `chartjs-size-monitor` machinery Chart.js 2.x uses to detect
-// container resizes, so responsive charts stop resizing without it. It
-// used to arrive as a separate CDN <link>; imported here, Vite emits it
-// as this entry's own CSS chunk and PageAssets::resolveCss() renders
-// the <link> from the manifest automatically.
-import "chart.js/dist/Chart.min.css";
-import moment from "moment";
+import {
+  LineChart,
+  type LineChartConfig,
+  type LineChartPoint,
+  type LineChartSeries,
+  type LineChartUnit,
+} from "../../../default/js/vendor/lineChart";
 import {
   pwg_getPageData,
   pwg_getPageString,
@@ -15,20 +13,60 @@ import { data as readData, ready } from "../../../default/js/vendor/dom";
 export {};
 
 const str_number_page_visited = pwg_getPageString("Page Visited");
-const str_tooltip_format: Record<string, string> = {
-  years: "YYYY",
-  months: "MMMM YYYY",
-  days: "DD MMM",
-  hours: "LT",
-};
-const str_unit_format = {
-  day: "dddd",
-  month: "MMM YYYY",
-};
 const str_avg = pwg_getPageString("Average last 12 months");
 const str_months_tosplit = pwg_getPageData<string>("month_labels");
 const str_months = str_months_tosplit.split("~");
-moment.locale(pwg_getPageData<string>("lang_code"));
+
+// See vendor/lineChart.ts's own header comment: `moment.locale()` never
+// actually took effect in production (no `moment/locale/*` file was ever
+// imported), so this is a real, deliberate improvement over the old
+// behaviour, not a preserved quirk -- `Intl.DateTimeFormat` needs no
+// separate locale data file to honor it. `LangCode`'s own `ll_RR` form
+// (underscore) becomes the `ll-RR` BCP-47 form `Intl` expects.
+const locale = pwg_getPageData<string>("lang_code").replace("_", "-");
+
+const weekdayLongFormat = new Intl.DateTimeFormat(locale, { weekday: "long" });
+const monthShortFormat = new Intl.DateTimeFormat(locale, { month: "short" });
+const monthLongYearFormat = new Intl.DateTimeFormat(locale, {
+  month: "long",
+  year: "numeric",
+});
+const monthShortYearFormat = new Intl.DateTimeFormat(locale, {
+  month: "short",
+  year: "numeric",
+});
+const yearFormat = new Intl.DateTimeFormat(locale, { year: "numeric" });
+const dayFormat = new Intl.DateTimeFormat(locale, { day: "2-digit" });
+const timeFormat = new Intl.DateTimeFormat(locale, {
+  hour: "numeric",
+  minute: "2-digit",
+});
+
+/**
+ * moment's `"DD MMM"` is a fixed-order format -- day always before month,
+ * regardless of locale, only the month's own name text is localized. Built
+ * from 2 separate formatters rather than one combined
+ * `Intl.DateTimeFormat({day, month})`, which would follow the locale's own
+ * field order instead (month-then-day for `en-US`).
+ */
+function dayMonth(date: Date): string {
+  return `${dayFormat.format(date)} ${monthShortFormat.format(date)}`;
+}
+
+type DataType = "hours" | "days" | "months" | "years";
+
+const str_tooltip_format: Record<DataType, (date: Date) => string> = {
+  hours: (date) => timeFormat.format(date),
+  days: dayMonth,
+  months: (date) => monthLongYearFormat.format(date),
+  years: (date) => yearFormat.format(date),
+};
+
+const str_unit_format: Record<LineChartUnit, (date: Date) => string> = {
+  day: (date) => weekdayLongFormat.format(date),
+  month: (date) => monthShortYearFormat.format(date),
+  year: (date) => yearFormat.format(date),
+};
 
 /*-------
 Data Get
@@ -51,7 +89,8 @@ interface StatData {
 // objects, and the coercion that turns a brace-wrapped attribute into a
 // parsed object is jQuery's, not the DOM's. `dataset` would hand back the
 // raw strings and every `Object.keys()` below would walk the characters of
-// one.
+// one. `readData()` (vendor/dom.ts) reproduces that same coercion natively
+// (P49-C).
 const dataElement = document.getElementById("data")!;
 const data = {} as StatData;
 data["hours"] = readData(dataElement, "hours") as StatDataPoint;
@@ -64,7 +103,7 @@ data["month-stats"] = readData(dataElement, "month-stats") as {
   avg: number;
 };
 
-const data_unit: Record<string, Chart.TimeUnit> = {
+const data_unit: Record<DataType, LineChartUnit> = {
   hours: "day",
   days: "month",
   months: "year",
@@ -76,170 +115,64 @@ let compareMode = false;
 /*-------
 Creating graph
 -------*/
-const ctx = (
-  document.getElementById("stat-graph") as HTMLCanvasElement
-).getContext("2d")!;
-//Create the gradient under the curve
-function gradient(r: number, g: number, b: number) {
-  const gradient = ctx.createLinearGradient(0, 400, 0, 0);
-  gradient.addColorStop(0, "rgba(" + r + "," + g + "," + b + ",0)");
-  gradient.addColorStop(1, "rgba(" + r + "," + g + "," + b + ",1)");
-  return gradient;
-}
+const canvas = document.getElementById("stat-graph") as HTMLCanvasElement;
+const chart = new LineChart(canvas, locale);
 
-//Setup the graph
-Chart.defaults.global.elements!.point!.radius = 0.1;
-Chart.defaults.global.elements!.point!.hitRadius = 10;
-Chart.defaults.global.defaultFontSize = 14;
-Chart.defaults.global.defaultFontColor = "#888";
-Chart.defaults.global.tooltips.intersect = false;
-Chart.defaults.global.legend!.onClick = undefined;
+const LINE_COLOR = "#FFA646";
+const FILL_RGB: [number, number, number] = [255, 119, 0];
+const COMPARE_COLORS = ["#ffa744", "#ff5252", "#896af3", "#2883c3", "#6ece5e"];
 
-const statGraph = new Chart(ctx, {
-  type: "line",
-  options: {
-    maintainAspectRatio: false,
-  },
-});
-
-//Line options
-const displayOptions = {
-  backgroundColor: gradient(255, 119, 0),
-  borderColor: "#FFA646 ",
-  lineTension: 0.2,
-};
-
-function changeData(
-  dataType: "hours" | "days" | "months" | "years",
-  options: typeof displayOptions = displayOptions,
-) {
+function changeData(dataType: DataType): void {
   if (!compareMode) {
-    statGraph.data = {
-      datasets: [
+    const config: LineChartConfig = {
+      xAxis: {
+        kind: "time",
+        unit: data_unit[dataType],
+        tickFormat: str_unit_format[data_unit[dataType]],
+        tooltipFormat: str_tooltip_format[dataType],
+      },
+      series: [
         {
           label: str_number_page_visited,
-          data: getValues(data[dataType]),
-          ...options,
+          color: LINE_COLOR,
+          fillColor: FILL_RGB,
+          points: getValues(data[dataType]),
         },
       ],
+      legend: false,
     };
-    statGraph.options = {
-      scales: {
-        xAxes: [
-          {
-            type: "time",
-            time: {
-              tooltipFormat: "ll",
-            },
-            gridLines: {
-              display: false,
-            },
-          },
-        ],
-        yAxes: [
-          {
-            ticks: {
-              min: 0,
-            },
-          },
-        ],
-      },
-      legend: {
-        display: false,
-      },
-      tooltips: {
-        mode: "index",
-      },
-      hover: {
-        intersect: false,
-      },
-    };
-    statGraph.options.scales!.xAxes!.forEach((axe) => {
-      axe.time!.tooltipFormat = str_tooltip_format[dataType]!;
-      axe.time!.unit = data_unit[dataType]!;
-      axe.time!.displayFormats = str_unit_format;
+    chart.setData(config);
+  } else if (dataType === "years") {
+    chart.setData({
+      xAxis: { kind: "category", labels: str_months },
+      series: getComparedYearDataset(),
+      legend: true,
+      yAxisLabel: str_number_page_visited,
     });
-    statGraph.update();
-  } else {
-    statGraph.options.legend!.display = true;
-    statGraph.options.hover = {
-      intersect: true,
-    };
-    statGraph.options.tooltips = {
-      mode: "nearest",
-    };
-    if (dataType == "years") {
-      statGraph.data = {
-        datasets: getComparedYearDataset(),
-      };
-      statGraph.options.scales = {
-        xAxes: [
-          {
-            type: "category",
-            labels: str_months,
-            gridLines: {
-              display: false,
-            },
-          },
-        ],
-        yAxes: [
-          {
-            scaleLabel: {
-              display: true,
-              labelString: str_number_page_visited,
-            },
-            ticks: {
-              min: 0,
-            },
-          },
-        ],
-      };
-    } else if (dataType == "months") {
-      const days: string[] = [];
-      for (let i = 1; i <= 31; i++) {
-        days.push(String(i));
-      }
-      statGraph.data = {
-        datasets: getMonthStatsDataset(),
-      };
-      statGraph.options.scales = {
-        xAxes: [
-          {
-            type: "category",
-            labels: days,
-            gridLines: {
-              display: false,
-            },
-          },
-        ],
-        yAxes: [
-          {
-            scaleLabel: {
-              display: true,
-              labelString: str_number_page_visited,
-            },
-          },
-        ],
-      };
-    }
-    statGraph.update();
+  } else if (dataType === "months") {
+    const days = Array.from({ length: 31 }, (_, i) => String(i + 1));
+    chart.setData({
+      xAxis: { kind: "category", labels: days },
+      series: getMonthStatsDataset(),
+      legend: true,
+      yAxisLabel: str_number_page_visited,
+    });
   }
+  // "hours"/"days" are unreachable here: the compare-mode toggle handler
+  // below forces the selection to "years" whenever one of them was active,
+  // and their own labels are marked `.unavailable` (`pointer-events: none`)
+  // for as long as compare mode stays on.
 }
 
-//Make Data readable by Chart.js
-function getValues(statDataPoint: StatDataPoint) {
-  const values: { x: Date; y: number }[] = [];
-  Object.keys(statDataPoint).forEach(function (key) {
-    const newPoint = {
-      x: new Date(key),
-      y: statDataPoint[key]!,
-    };
-    values.push(newPoint);
-  });
-  return values;
+//Make Data readable by the chart
+function getValues(statDataPoint: StatDataPoint): LineChartPoint[] {
+  return Object.keys(statDataPoint).map((key) => ({
+    x: new Date(key).getTime(),
+    y: statDataPoint[key]!,
+  }));
 }
 
-function getComparedYearDataset() {
+function getComparedYearDataset(): LineChartSeries[] {
   // Genuine pre-existing implicit-global bug (no `var`/`let`/`const`
   // anywhere) -- confirmed via the P46-C full sweep's own standalone
   // finding for this exact file. `colors` here and in
@@ -248,82 +181,61 @@ function getComparedYearDataset() {
   // global -- safe to properly scope, matching the same "harmless
   // implicit global, no cross-file reliance" fix already applied
   // throughout this campaign (e.g. phpWGOpenWindow's img/newWin).
-  const colors = ["#ffa744", "#ff5252", "#896af3", "#2883c3", "#6ece5e"];
-  const values: Record<string, number[]> = {};
-  const dataset: {
-    label: string;
-    data: number[];
-    lineTension: number;
-    borderColor: string;
-    backgroundColor: string;
-  }[] = [];
+  const values: Record<string, (number | undefined)[]> = {};
 
   Object.keys(data["compare-years"]).forEach(function (key) {
     const date = new Date(key);
-    if (values[date.getFullYear()] == undefined) {
-      values[date.getFullYear()] = [];
-    }
-    values[date.getFullYear()]![parseInt(String(date.getMonth()))] =
-      data["compare-years"][key]!;
+    const year = String(date.getFullYear());
+    values[year] ??= [];
+    values[year][date.getMonth()] = data["compare-years"][key]!;
   });
 
-  Object.keys(values).forEach(function (key) {
-    dataset.push({
-      label: key,
-      data: values[key]!,
-      lineTension: 0.2,
-      borderColor: colors[parseInt(key) % colors.length]!,
-      backgroundColor: "rgba(0,0,0,0)",
-    });
-  });
-
-  return dataset;
+  return Object.keys(values).map((year) => ({
+    label: year,
+    color: COMPARE_COLORS[parseInt(year) % COMPARE_COLORS.length]!,
+    points: values[year]!.map((y, month): LineChartPoint | null =>
+      y === undefined ? null : { x: month, y },
+    ).filter((p): p is LineChartPoint => p !== null),
+  }));
 }
 
-function getMonthStatsDataset() {
-  const colors = ["#ffa744", "#ff5252", "#896af3", "#2883c3", "#6ece5e"];
-  const dataset: {
-    label: string;
-    data: number[];
-    lineTension: number;
-    borderColor: string;
-    backgroundColor: string;
-  }[] = [];
+function getMonthStatsDataset(): LineChartSeries[] {
+  const datasets: LineChartSeries[] = [];
   let colorIndice = 0;
-  let date!: Date;
+  let lastDate: Date | undefined;
 
   data["month-stats"]["month"].forEach((values: StatDataPoint) => {
-    const days_data: number[] = [];
+    const days_data: (number | undefined)[] = [];
     Object.keys(values).forEach(function (key) {
-      date = new Date(key);
-      days_data[parseInt(String(date.getUTCDate())) - 1] = values[key]!;
+      lastDate = new Date(key);
+      days_data[lastDate.getUTCDate() - 1] = values[key]!;
     });
-    dataset.push({
-      label: str_months[date.getMonth()] + " " + date.getFullYear(),
-      data: days_data,
-      lineTension: 0.2,
-      borderColor: colors[colorIndice % colors.length]!,
-      backgroundColor: "rgba(0,0,0,0)",
+    datasets.push({
+      label:
+        lastDate === undefined
+          ? ""
+          : `${str_months[lastDate.getMonth()]} ${String(lastDate.getFullYear())}`,
+      color: COMPARE_COLORS[colorIndice % COMPARE_COLORS.length]!,
+      points: days_data
+        .map((y, day): LineChartPoint | null =>
+          y === undefined ? null : { x: day, y },
+        )
+        .filter((p): p is LineChartPoint => p !== null),
     });
     colorIndice++;
   });
 
-  const averageTab: number[] = [];
-  for (let i = 0; i < 31; i++) {
-    averageTab[i] = data["month-stats"]["avg"];
-  }
-  dataset.push({
+  datasets.push({
     label: str_avg,
-    data: averageTab,
-    lineTension: 0.2,
-    borderColor: colors[4]!,
-    backgroundColor: "rgba(0,0,0,0)",
+    color: COMPARE_COLORS[4]!,
+    points: Array.from({ length: 31 }, (_, day) => ({
+      x: day,
+      y: data["month-stats"]["avg"],
+    })),
   });
 
-  return dataset;
+  return datasets;
 }
-
-type DataType = "hours" | "days" | "months" | "years";
 
 // The label carries `data-value`; reading it through the helper keeps
 // jQuery's coercion, which leaves a plain word a string.

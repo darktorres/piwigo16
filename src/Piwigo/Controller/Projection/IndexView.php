@@ -100,7 +100,7 @@ final readonly class IndexView implements View, HasPageAssets
             // timing change: switchbox.ts used to load at this page's
             // own Async, now runs at index.ts's own Footer instead --
             // safe since switchbox.ts's own "queue array, then live
-            // handler" shape-shifting design (build/jquery-plugins.d.ts's
+            // handler" shape-shifting design (build/ambient-globals.d.ts's
             // own `SwitchBoxQueue` comment) is already safe regardless
             // of load order relative to its 2 real pushers.
             AssetContribution::script('index', 'themes/default/js/index.ts', loadMode: LoadMode::Footer),

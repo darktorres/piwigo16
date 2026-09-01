@@ -14,7 +14,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * and everything stayed open"). Was a jQuery plugin (`$.fn.lightAccordion`,
  * one real call site); is now a plain function, since nothing else ever
  * called it -- the ambient `LightAccordionOptions` type moved out of
- * build/jquery-plugins.d.ts along with it.
+ * build/ambient-globals.d.ts along with it.
  */
 it('opens exactly one menubar section at a time, closing the previous one', function (): void {
     $page = H::asAdmin($this);

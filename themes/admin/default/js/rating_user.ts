@@ -31,11 +31,6 @@ import {
 } from "../../../default/js/vendor/dom";
 export {};
 
-// GeoIp -- themes/admin/default/js/jquery.geoip.js, loaded via the
-// same page's own combineScript() call (excluded from P46's own
-// 61-file count, not converted yet -- ambient `declare const GeoIp`
-// in build/jquery-plugins.d.ts stands in for it in the meantime).
-
 ready(function () {
   // jQuery's `$("h1").append(...)` appended to every matching heading, not
   // just the first.

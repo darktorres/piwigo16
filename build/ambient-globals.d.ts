@@ -1,15 +1,16 @@
-// Was the home for shared ambient types for vendored jQuery-plugin
-// methods `@types/jquery` didn't cover (docs/PLAN.md P46) -- that whole
-// `interface JQuery { ... }` augmentation is gone now (P49-C, see the
-// comment further down where it used to live): every real call site it
-// typed is ported to a native module or was already plain. `@types/
-// jquery`/`@types/jqueryui` are gone from `package.json` too, so this
-// file no longer merges into either package's own global `JQuery`/
-// `JQueryStatic` interfaces at all.
+// Renamed from `jquery-plugins.d.ts` (P49-C): that name stopped
+// describing the file's real content once the last jQuery-plugin-shaped
+// entries left it (the `interface JQuery { ... }` ambient-method
+// augmentation and the Chart.js/moment declarations, see the comments
+// further down where each used to live) -- every real call site either
+// one typed is ported to a native module now. `@types/jquery`/
+// `@types/jqueryui`/`@types/chart.js` are gone from `package.json` too,
+// so this file no longer merges into any third-party package's own
+// global types at all.
 //
-// Still the home for genuinely first-party (non-jQuery-plugin) shared
-// ambient globals -- `Window.SwitchBox`/`Window._pwgRatingAutoQueue`
-// below, and everything after them, is unrelated to jQuery.
+// What is actually here is genuinely first-party shared ambient globals
+// -- `Window.SwitchBox`/`Window._pwgRatingAutoQueue` below, and
+// everything after them.
 
 // See `Window.SwitchBox`/`Window._pwgRatingAutoQueue` below for the real
 // "queue array, then live handler" shape-shifting story these 2 cover.
@@ -241,20 +242,10 @@ declare module "piecon" {
 // call it via the already-ported ajax() helper, no ambient global left
 // to declare here.
 
-// Chart.js (vendored -- P46-0's own CDN table). Real, verified types
-// from `@types/chart.js` (P47) -- no `declare const` needed any more
-// (removed; leaving one would silently shadow the real package's own
-// global with `any`, confirmed via a local `tsc` repro during
-// planning). `stats.ts`'s own graph rendering is the one real
-// first-party call site.
-//
-// moment.js (vendored -- P46-0's own CDN table) ships its own bundled
-// `.d.ts` (`node_modules/moment/moment.d.ts`, already an installed npm
-// dependency) but declares itself via `export = moment`, not
-// `export as namespace` -- it has no global binding of its own, so
-// `typeof import(...)` bridges the real npm types to the CDN-loaded
-// global the same way `tus` does above. `stats.ts`'s own graph
-// rendering is the one real first-party call site.
+// Chart.js and moment.js are both gone (P49-C): `stats.ts`'s own graph
+// rendering is native now (`vendor/lineChart.ts`), and was the only real
+// first-party call site either library had. `chart.js`/`moment`/
+// `@types/chart.js` are gone from `package.json` too.
 
 // The `interface JQuery { ... }` ambient-method augmentation block that
 // used to live here (`size()`, `dataTable()`/`DataTable()`,

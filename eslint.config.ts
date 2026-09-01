@@ -92,13 +92,16 @@ export default tseslint.config(
     // (jQuery UI's own datepicker internals this file's `pwgDatepicker`
     // plugin patches, no real upstream type source), and `profile.ts`
     // (`setInfos`'s callback, whose real shape differs per dispatched
-    // endpoint). `build/jquery-plugins.d.ts` keeps the same relaxation
-    // for its own remaining confirmed-unsourced vendor entries
-    // (jquery-confirm/cluetip/Jcrop/DataTables -- no real npm/CDN type
-    // package covers any of them; jgrowl/ajaxmanager/sort/
-    // autogrow-textarea have all since been removed outright, P49-B
-    // groups 1-3, once those libraries were ported rather than just
-    // re-typed).
+    // endpoint). `build/ambient-globals.d.ts` keeps the same relaxation
+    // too, though for different entries now: every vendor-library type
+    // it used to need this for (jquery-confirm/cluetip/Jcrop/DataTables/
+    // jgrowl/ajaxmanager/sort/autogrow-textarea/plupload/Chart.js/
+    // moment) is gone, each ported to a native module in turn (P49-B/
+    // P49-C). What remains is `global_params`/`fullname_of_cat` (the
+    // same search-filter query object as `search_filters.ts`'s own
+    // entry above, declared ambiently here for `Window`) and
+    // `AlbumSelectorCallbackArgs.addSelectedAlbum`'s own real variadic
+    // passthrough.
     files: [
       "themes/default/js/search_filters.ts",
       "themes/default/js/mcs.ts",
@@ -106,7 +109,7 @@ export default tseslint.config(
       "themes/admin/default/js/common.ts",
       "themes/admin/default/js/datepicker.ts",
       "themes/standard_pages/js/profile.ts",
-      "build/jquery-plugins.d.ts",
+      "build/ambient-globals.d.ts",
     ],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",

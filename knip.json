@@ -35,7 +35,6 @@
     "themes/admin/default/js/notification_by_mail.ts",
     "themes/admin/default/js/pages/batch_manager_global.ts",
     "themes/admin/default/js/pages/batch_manager_unit.ts",
-    "themes/admin/default/js/pages/history.ts",
     "themes/admin/default/js/pages/intro.ts",
     "themes/admin/default/js/pages/notification_by_mail.ts",
     "themes/admin/default/js/pages/photos_add_direct.ts",
@@ -85,9 +84,6 @@
     "@cyclonedx/cyclonedx-npm",
     "lefthook",
     "datatables.net",
-    "jquery-timepicker-addon",
-    "jquery-ui",
-    "piecon",
     "underscore"
   ]
 }

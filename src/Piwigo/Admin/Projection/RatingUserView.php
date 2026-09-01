@@ -52,27 +52,24 @@ final readonly class RatingUserView implements View, HasPageAssets, ExposesPageD
 
     /**
      * `rating_user.latte`'s own unconditional `{do combineScript(...)}`x7/
-     * `{do combineCss(...)}`x2 (docs/PLAN.md's P42-B). `jquery.ui` carries
-     * no `path:` in the original call either -- it's one of `PageAssets`'s
-     * own well-known ids, resolved by naming convention, so an empty path
-     * here matches the original behavior exactly. No jQuery-UI theme CSS
-     * was ever registered on this page (tooltip styling didn't need it),
-     * so the CDN vendor-migration retarget doesn't add one here either
-     * (docs/PLAN.md P46).
+     * `{do combineCss(...)}`x2 (docs/PLAN.md's P42-B). No jQuery-UI theme
+     * CSS was ever registered on this page (tooltip styling didn't need
+     * it) -- unaffected by the native `dataTable()`/`tooltip()` port
+     * (docs/PLAN.md P49-C), which drops the `jquery.dataTables`/
+     * `jquery.ui` script registrations outright: `rating_user.ts` itself
+     * has zero real jQuery/jQuery-UI/datatables.net calls left.
      */
     #[Override]
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('jquery.dataTables', 'https://cdn.jsdelivr.net/npm/datatables.net@1.10.11/js/jquery.dataTables.js', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/rating_user.css', id: 'rating_user'),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
-            AssetContribution::script('jquery.ui', '', loadMode: LoadMode::Footer),
             // 'rating_user' folds scripts.ts's own code in via a real
             // direct import now (docs/PLAN.md P48) -- the separate
             // `core.scripts` registration this page used to carry is
             // dropped.
-            AssetContribution::script('rating_user', 'themes/admin/default/js/rating_user.ts', loadMode: LoadMode::Footer, dependsOn: ['jquery.dataTables', 'jquery.ui']),
+            AssetContribution::script('rating_user', 'themes/admin/default/js/rating_user.ts', loadMode: LoadMode::Footer),
         ];
     }
 

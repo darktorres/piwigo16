@@ -14,6 +14,8 @@ import {
 } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
 import { confirm } from "../../../default/js/vendor/jconfirm";
+import { dataTable } from "../../../default/js/vendor/dataTable";
+import { tooltip } from "../../../default/js/vendor/tooltip";
 import {
   attrOf,
   data,
@@ -55,61 +57,33 @@ interface RatingUserCellData {
   aid: string;
 }
 
-// Still jQuery: dataTables is a library, ported in P49-B group 7 (its live
-// subset).
-jQuery("#rateTable").dataTable({
-  dom: '<"dtBar"filp>rt<"dtBar"ilp>',
+// Native port now (P49-C, `vendor/dataTable.ts`) -- the legacy
+// aTargets/asSorting/bSearchable/bSortable/sType hungarian-notation
+// option shape below is this file's own real, unmodified original
+// options object, just re-typed against the vendor module's own
+// (deliberately narrower) `DataTableColumnDef` shape.
+const rateTableEl = document.querySelector<HTMLTableElement>("#rateTable")!;
+const oTable = dataTable(rateTableEl, {
   pageLength: 100,
-  lengthMenu: [
-    [25, 50, 100, 500, -1],
-    [25, 50, 100, 500, "All"],
-  ],
-  sorting: [], //[[1,'desc']],
-  autoWidth: false,
-  sortClasses: false,
+  lengthMenu: [25, 50, 100, 500, -1],
   columnDefs: [
+    { targetClass: "dtc_user" },
+    { targetClass: "dtc_date", sortDirections: ["desc", "asc"] },
     {
-      aTargets: ["dtc_user"],
-      sType: "string",
-      sClass: null,
+      targetClass: "dtc_stat",
+      sortDirections: ["desc", "asc"],
+      searchable: false,
+      type: "numeric",
     },
     {
-      aTargets: ["dtc_date"],
-      asSorting: ["desc", "asc"],
-      sType: "string",
-      sClass: null,
+      targetClass: "dtc_rate",
+      sortDirections: ["desc", "asc"],
+      searchable: false,
+      type: "numeric",
     },
-    {
-      aTargets: ["dtc_stat"],
-      asSorting: ["desc", "asc"],
-      bSearchable: false,
-      sType: "numeric",
-      sClass: null,
-    },
-    {
-      aTargets: ["dtc_rate"],
-      asSorting: ["desc", "asc"],
-      bSearchable: false,
-      sType: "html",
-      sClass: null,
-    },
-    {
-      aTargets: ["dtc_del"],
-      bSortable: false,
-      bSearchable: false,
-      sType: "string",
-      sClass: null,
-    },
+    { targetClass: "dtc_del", sortable: false, searchable: false },
   ],
 });
-
-// DataTables has no real type source (docs/PLAN.md's own confirmed-
-// unresolvable vendor list) -- narrowed to the one real method this
-// file actually calls, rather than left as the vendor's own bare `any`.
-interface DataTableApi {
-  row(selector: unknown): { remove(): { draw(): void } };
-}
-const oTable = jQuery("#rateTable").DataTable() as DataTableApi;
 
 function uidFromCell(cell: HTMLElement): RatingUserCellData {
   let tr: HTMLElement = cell;
@@ -193,26 +167,18 @@ type GeoIpLookupResponse =
   operations["geoIpLookup"]["responses"][200]["content"]["application/json"];
 
 ready(function () {
-  // Still jQuery: tooltip is a jQuery-UI widget (the same $.Widget factory
-  // datepicker/sortable/slider use). Not actually part of P49-B group 4's
-  // own real scope despite an earlier planning note here claiming it was
-  // (corrected, not just left) -- `items: ".usr,[title]"` here relies on
-  // jQuery UI's own *delegated* binding (any matching descendant, at
-  // hover time, not bind time) to keep working after #rateTable's
-  // dataTable() (jQuery, group 7) redraws its rows on paging/sorting.
-  // Native "mouseenter" doesn't bubble, so a real delegated equivalent
-  // needs the same mouseover+relatedTarget translation jQuery's own
-  // event system does internally for it -- deferred to land alongside
-  // group 7's own dataTable() conversion, which needs a real redraw
-  // hook to rebind against regardless, rather than solved in isolation
-  // here first.
-  jQuery("#rateTable").tooltip({
+  // Native port now (P49-C, `vendor/tooltip.ts`) -- `items: ".usr,[title]"`
+  // still relies on the vendor module's own real delegated binding (a
+  // matching descendant at hover time, not at bind time) to keep working
+  // after #rateTable's own dataTable() redraws its rows on
+  // paging/sorting/filtering.
+  tooltip(rateTableEl, {
     items: ".usr,[title]",
     content: function (this: HTMLElement, callback: (content: string) => void) {
-      // jQuery-UI's own _updateContent() calls this with `this` already
-      // bound to the raw target element (`contentOption.call(target[0],
-      // ...)`), so no jQuery wrapping is needed here even though the
-      // widget itself stays jQuery.
+      // jQuery-UI's own real `_updateContent()` (the source `vendor/
+      // tooltip.ts` was ported from) calls this with `this` already bound
+      // to the raw target element, which the native port's own `show()`
+      // call site (`options.content.call(target, show)`) preserves as-is.
       // eslint-disable-next-line @typescript-eslint/no-this-alias -- needs to stay reachable inside the nested mouseleave/GeoIp callbacks below, which each have their own `this`.
       const el = this;
       const t = attrOf(el, "title");

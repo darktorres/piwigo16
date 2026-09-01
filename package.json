@@ -64,7 +64,6 @@
     "piecon": "github:lipka/piecon#0.5.0",
     "plupload": "github:moxiecode/plupload#v2.1.2",
     "tus-js-client": "4.3.0",
-    "underscore": "1.5.2",
     "web-vitals": "6.1.1"
   },
   "overrides": {

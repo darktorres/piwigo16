@@ -83,7 +83,6 @@
   "ignoreDependencies": [
     "@cyclonedx/cyclonedx-npm",
     "lefthook",
-    "datatables.net",
-    "underscore"
+    "datatables.net"
   ]
 }

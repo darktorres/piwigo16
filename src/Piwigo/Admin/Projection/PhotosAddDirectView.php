@@ -64,34 +64,21 @@ final readonly class PhotosAddDirectView implements View, HasPageAssets, Exposes
         public array $setupWarnings,
         public ?string $hideWarningsLink,
         public string $colorscheme,
-        public string $pluploadCode,
     ) {}
-
-    /**
-     * The real, upstream `moxiecode/plupload` v2.1.2 tag's own
-     * `js/i18n/` directory listing (confirmed identical between the
-     * vendored copy and the real npm-published package before the CDN
-     * migration deleted the vendored copy) -- `plupload_i18n-{code}`'s
-     * own membership check below replaces a real `file_exists()` gate
-     * that can no longer work once the locale file is served from a
-     * CDN, not a local path (docs/PLAN.md P46's vendor-CDN migration).
-     * Covered by its own unit test, same shape `DatepickerView`'s own
-     * gate already established.
-     *
-     * @var list<string>
-     */
-    private const array PLUPLOAD_LOCALES = [
-        'ar', 'az', 'bs', 'cs', 'cy', 'da', 'de', 'el', 'en', 'es', 'et',
-        'fa', 'fi', 'fr', 'he', 'hr', 'hu', 'hy', 'id', 'it', 'ja', 'ka',
-        'kk', 'km', 'ko', 'lt', 'lv', 'mn', 'ms', 'nl', 'pl', 'pt_BR',
-        'ro', 'ru', 'sk', 'sq', 'sr', 'sr_RS', 'sv', 'th_TH', 'tr',
-        'uk_UA', 'zh_CN', 'zh_TW',
-    ];
 
     /**
      * `include/add_album.inc.latte`'s own contribution stays
      * conditional on `!$displayFormats`, matching the template's own
      * original `{if}` guard exactly.
+     *
+     * The `jquery.plupload`/`jquery.plupload.queue` scripts and the
+     * per-locale `plupload_i18n-{code}` one are all dropped (P49-C):
+     * `photos_add_direct.ts` no longer uses plupload as a jQuery-family
+     * library at all (native `vendor/uploadQueue.ts` replaces it
+     * entirely). The plugin's own CSS stays -- real, still-needed
+     * visual styling for the same classnames the native port's own
+     * markup produces, with zero jQuery/plupload-runtime dependency of
+     * its own.
      *
      * @return list<AssetContribution>
      */
@@ -99,18 +86,8 @@ final readonly class PhotosAddDirectView implements View, HasPageAssets, Exposes
     public function pageAssets(): array
     {
         $assets = [
-            AssetContribution::script('jquery.plupload', 'https://cdn.jsdelivr.net/gh/moxiecode/plupload@v2.1.2/js/plupload.full.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
-            AssetContribution::script('jquery.plupload.queue', 'https://cdn.jsdelivr.net/gh/moxiecode/plupload@v2.1.2/js/jquery.plupload.queue/jquery.plupload.queue.min.js', loadMode: LoadMode::Footer, dependsOn: ['jquery']),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
             AssetContribution::css('https://cdn.jsdelivr.net/gh/moxiecode/plupload@v2.1.2/js/jquery.plupload.queue/css/jquery.plupload.queue.css'),
-        ];
-
-        if (in_array($this->pluploadCode, self::PLUPLOAD_LOCALES, true)) {
-            $assets[] = AssetContribution::script('plupload_i18n-' . $this->pluploadCode, 'https://cdn.jsdelivr.net/gh/moxiecode/plupload@v2.1.2/js/i18n/' . $this->pluploadCode . '.js', loadMode: LoadMode::Footer, dependsOn: ['jquery.plupload.queue']);
-        }
-
-        $assets = [
-            ...$assets,
             ...new ColorboxView()
                 ->pageAssets(),
         ];

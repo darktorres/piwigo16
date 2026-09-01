@@ -24,8 +24,9 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * friends, gated on `nb_albums === 0`). None are fixed here -- P49 is
  * translation-only, and a handler binding zero elements is harmless.
  *
- * `.pluploadQueue()` (P49-B group 7, live subset) stays jQuery; only the
- * DOM work inside its own preinit/init callbacks converted. `$.alert()`
+ * `.pluploadQueue()` is a real native port now (P49-C,
+ * `vendor/uploadQueue.ts`) -- see the tests further down for its own
+ * real file-selection/validation/queue/drag-drop coverage. `$.alert()`
  * (jquery-confirm, group 5) is untouched and unexercised here (it needs a
  * real ambiguous-filename detection during a real upload).
  */
@@ -122,15 +123,15 @@ it('toggles the upload-options panel open and closed', function (): void {
 
 /**
  * Piecon (P49-C native port, `vendor/piecon.ts`) -- no prior test, npm
- * package or not, ever drove its own favicon-drawing behavior. Driving
- * a real file through plupload's own queue to reach `UploadProgress`/
- * `UploadComplete` is fragile and unnecessary here: `.pluploadQueue()`
- * still stays jQuery (P49-B group 7), and plupload's own real `Uploader`
- * instance (`jQuery('#uploader').pluploadQueue()`) exposes its own
- * genuine pub-sub `.trigger(eventName, args)` -- firing the exact same
- * two callback names `photos_add_direct.ts` itself registers reaches
- * the real Piecon calls through the real integration point, not a
- * piecon-internals-only stub.
+ * package or not, ever drove its own favicon-drawing behavior. plupload
+ * is a real native port now too (P49-C, `vendor/uploadQueue.ts`), which
+ * exposes no global the way `jQuery('#uploader').pluploadQueue()` used
+ * to (matching this whole campaign's own module-scoping convention) --
+ * so this drives a real file through the real upload queue's own hidden
+ * `<input type="file">` (`vendor/uploadQueue.ts`'s own real
+ * browse-button proxy target) and a real click on `#startUpload`,
+ * reaching Piecon through the real `UploadProgress`/`UploadComplete`
+ * pipeline via an actual tus upload rather than any internals stub.
  */
 it('draws a progress favicon during upload and resets it on complete', function (): void {
     $page = H::asAdmin($this);
@@ -141,34 +142,292 @@ it('draws a progress favicon during upload and resets it on complete', function 
         "document.querySelector('link[rel=\"icon\"]').getAttribute('href')",
     );
 
-    $page->script(<<<'JS'
-        (() => {
-            const uploader = jQuery('#uploader').pluploadQueue();
-            uploader.total.percent = 50;
-            uploader.trigger('UploadProgress', [uploader, {}]);
-        })()
-        JS);
+    $image = H::makeTestImage(uniqid());
+    $page->attach('#uploader input[type="file"]', $image);
+    @unlink($image);
 
-    $hrefDuringProgress = H::scriptString(
-        $page,
-        "document.querySelector('link[rel=\"icon\"]').getAttribute('href')",
-    );
-    expect($hrefDuringProgress)
-        ->not->toBe($originalHref);
-    expect($hrefDuringProgress)
-        ->toStartWith('data:image/png;base64,');
+    $page->click('#startUpload');
 
-    $page->script(
-        "jQuery('#uploader').pluploadQueue().trigger('UploadComplete', [jQuery('#uploader').pluploadQueue(), []])",
+    $sawProgressFavicon = $page->script(
+        'new Promise((resolve, reject) => {'
+        . 'const deadline = Date.now() + 10000;'
+        . 'let sawProgress = false;'
+        . 'const originalHref = ' . json_encode($originalHref) . ';'
+        . 'const check = () => {'
+        . "const href = document.querySelector('link[rel=\"icon\"]').getAttribute('href');"
+        . "if (href && href.startsWith('data:image/png;base64,')) sawProgress = true;"
+        . 'if (sawProgress && href === originalHref) return resolve(true);'
+        . "if (Date.now() > deadline) return reject(new Error('upload never completed with an observed progress favicon (sawProgress=' + sawProgress + ', href=' + href + ')'));"
+        . 'setTimeout(check, 30);'
+        . '};'
+        . 'check();'
+        . '})',
     );
-
-    $hrefAfterComplete = H::scriptString(
-        $page,
-        "document.querySelector('link[rel=\"icon\"]').getAttribute('href')",
-    );
-    expect($hrefAfterComplete)
-        ->toBe($originalHref);
+    expect($sawProgressFavicon)
+        ->toBeTrue();
 
     $page->assertNoJavaScriptErrors();
     H::assertNoServerErrors($page, 'photos_add_direct piecon progress favicon');
+});
+
+/**
+ * `vendor/uploadQueue.ts`'s own real per-file extension-filter rejection
+ * -- real algorithm read from `plupload.dev.js`'s own `mime_types` file
+ * filter, real alert() text read from `jquery.plupload.queue.js`'s own
+ * `Error` binding. A disallowed extension is never even added to the
+ * visible queue (`#uploader_filelist` stays at 0 real rows).
+ */
+it('rejects a disallowed file extension with an alert and an appended error', function (): void {
+    $page = H::asAdmin($this);
+    $page = H::navigateOk($page, '/admin.php?page=photos_add&album=1');
+
+    $page->script(
+        'window.__uploadQueueAlerts = [];'
+        . 'window.alert = (msg) => { window.__uploadQueueAlerts.push(msg); };',
+    );
+
+    $page->script(
+        "const input = document.querySelector('#uploader input[type=\"file\"]');"
+        . 'const dt = new DataTransfer();'
+        . "dt.items.add(new File(['not an image'], 'bad-extension-test.txt', {type: 'text/plain'}));"
+        . 'input.files = dt.files;'
+        . "input.dispatchEvent(new Event('change', {bubbles: true}));",
+    );
+
+    $page->script(<<<'JS'
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + 5000;
+            const check = () => {
+                if (window.__uploadQueueAlerts.length > 0 && document.querySelector('.errors ul')?.textContent) {
+                    return resolve(true);
+                }
+                if (Date.now() > deadline) return reject(new Error('extension error never appeared'));
+                setTimeout(check, 50);
+            };
+            check();
+        })
+        JS);
+
+    $alerts = H::scriptArray($page, 'window.__uploadQueueAlerts');
+    expect($alerts)
+        ->toContain('Error: Invalid file extension: bad-extension-test.txt');
+
+    $errorsText = H::scriptString($page, "document.querySelector('.errors ul').textContent");
+    expect($errorsText)
+        ->toBe('File extension error.');
+
+    $queuedCount = H::scriptInt(
+        $page,
+        "document.querySelectorAll('#uploader_filelist li:not(.plupload_droptext)').length",
+    );
+    expect($queuedCount)
+        ->toBe(0);
+
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'photos_add_direct upload queue extension rejection');
+});
+
+/**
+ * `vendor/uploadQueue.ts`'s own real drag-and-drop -- the real drop
+ * zone is the file list `<ul>` itself (`vendor/uploadQueue.ts`'s own
+ * leading comment: matches `jquery.plupload.queue.js`'s own real
+ * `settings.drop_element = id + '_filelist'`), not the wider
+ * `#uploadForm`/`#uploader` container.
+ */
+it('queues a file dropped onto the file list', function (): void {
+    $page = H::asAdmin($this);
+    $page = H::navigateOk($page, '/admin.php?page=photos_add&album=1');
+
+    $page->script(
+        'const dt = new DataTransfer();'
+        . "dt.items.add(new File(['x'], 'dropped.jpg', {type: 'image/jpeg'}));"
+        . "document.querySelector('#uploader_filelist').dispatchEvent("
+        . "new DragEvent('drop', {bubbles: true, cancelable: true, dataTransfer: dt})"
+        . ');',
+    );
+
+    $page->script(<<<'JS'
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + 5000;
+            const check = () => {
+                if (document.querySelectorAll('#uploader_filelist li:not(.plupload_droptext)').length === 1) return resolve(true);
+                if (Date.now() > deadline) return reject(new Error('dropped file never queued'));
+                setTimeout(check, 50);
+            };
+            check();
+        })
+        JS);
+
+    $queuedName = H::scriptString(
+        $page,
+        "document.querySelector('#uploader_filelist .plupload_file_name span').textContent",
+    );
+    expect($queuedName)
+        ->toBe('dropped.jpg');
+
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'photos_add_direct upload queue drag-drop');
+});
+
+/**
+ * `vendor/uploadQueue.ts`'s own real per-file remove-from-queue click
+ * (only reachable for a still-QUEUED row, matching
+ * `jquery.plupload.queue.js`'s own real `$('#'+id+'.plupload_delete a')`
+ * selector scoping).
+ */
+it('removes a queued file when its action icon is clicked', function (): void {
+    $page = H::asAdmin($this);
+    $page = H::navigateOk($page, '/admin.php?page=photos_add&album=1');
+
+    $page->script(
+        "const input = document.querySelector('#uploader input[type=\"file\"]');"
+        . 'const dt = new DataTransfer();'
+        . "dt.items.add(new File(['x'], 'removable.jpg', {type: 'image/jpeg'}));"
+        . 'input.files = dt.files;'
+        . "input.dispatchEvent(new Event('change', {bubbles: true}));",
+    );
+
+    $page->script(<<<'JS'
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + 5000;
+            const check = () => {
+                if (document.querySelectorAll('#uploader_filelist li:not(.plupload_droptext)').length === 1) return resolve(true);
+                if (Date.now() > deadline) return reject(new Error('file never queued'));
+                setTimeout(check, 50);
+            };
+            check();
+        })
+        JS);
+
+    $rowClass = H::scriptString(
+        $page,
+        "document.querySelector('#uploader_filelist li:not(.plupload_droptext)').className",
+    );
+    expect($rowClass)
+        ->toBe('plupload_delete');
+
+    $page->click('#uploader_filelist li:not(.plupload_droptext) .plupload_file_action a');
+
+    $page->script(<<<'JS'
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + 5000;
+            const check = () => {
+                if (document.querySelectorAll('#uploader_filelist li:not(.plupload_droptext)').length === 0) return resolve(true);
+                if (Date.now() > deadline) return reject(new Error('file was never removed'));
+                setTimeout(check, 50);
+            };
+            check();
+        })
+        JS);
+
+    $droptextVisible = H::scriptBool(
+        $page,
+        "document.querySelector('#uploader_filelist li.plupload_droptext') !== null",
+    );
+    expect($droptextVisible)
+        ->toBeTrue();
+
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'photos_add_direct upload queue remove');
+});
+
+/**
+ * `vendor/uploadQueue.ts`'s own real click-to-rename (`rename: formatMode`
+ * -- only enabled once formats mode is real, matching
+ * `PhotosAddDirectRequest::fromGlobals()`'s own `$isFormatsEnabled &&
+ * isset($get['formats'])` gate). Targets a real existing photo via
+ * `formats=<id>` (the `haveFormatsOriginal` branch, same real pattern
+ * `PhotosAddDirectPageRendererTest.php`'s own "lists a real photo's
+ * existing formats..." test uses) rather than the filename-search
+ * branch: a name with no matching photo gets the row removed by
+ * `photos_add_direct.ts`'s own real `FilesAdded` handler before there's
+ * anything left to click.
+ */
+it('renames a queued file by clicking its name in formats mode', function (): void {
+    $snapshot = H::snapshotConfig(['enable_formats']);
+    H::setConfigValue('enable_formats', 'true');
+
+    try {
+        $page = H::asAdmin($this);
+        $album = H::createCategory($page, [
+            'name' => 'Photos Add Direct Rename Album ' . uniqid(),
+        ]);
+        if (! is_numeric($album['id'] ?? null)) {
+            throw new RuntimeException('createCategory did not return a numeric id: ' . var_export($album, true));
+        }
+        $albumId = (int) $album['id'];
+        $image = H::makeTestImage(uniqid());
+        $imageId = H::uploadPhotoViaApi($image, $albumId, 'Photos Add Direct Rename Photo');
+        @unlink($image);
+
+        $page = H::navigateOk($page, '/admin.php?page=photos_add&formats=' . $imageId);
+        expect(H::scriptBool($page, "JSON.parse(document.getElementById('page-data').textContent).data.display_formats"))
+            ->toBeTrue();
+
+        $page->script(
+            "const input = document.querySelector('#uploader input[type=\"file\"]');"
+            . 'const dt = new DataTransfer();'
+            . "dt.items.add(new File(['x'], 'original-name.dng', {type: 'image/x-adobe-dng'}));"
+            . 'input.files = dt.files;'
+            . "input.dispatchEvent(new Event('change', {bubbles: true}));",
+        );
+
+        $page->script(<<<'JS'
+            new Promise((resolve, reject) => {
+                const deadline = Date.now() + 5000;
+                const check = () => {
+                    if (document.querySelectorAll('#uploader_filelist li:not(.plupload_droptext)').length === 1) return resolve(true);
+                    if (Date.now() > deadline) return reject(new Error('file never queued'));
+                    setTimeout(check, 50);
+                };
+                check();
+            })
+            JS);
+
+        $page->click('#uploader_filelist .plupload_file_name span');
+
+        $page->script(<<<'JS'
+            new Promise((resolve, reject) => {
+                const deadline = Date.now() + 5000;
+                const check = () => {
+                    if (document.querySelector('#uploader_filelist li input[type="text"]')) return resolve(true);
+                    if (Date.now() > deadline) return reject(new Error('rename input never appeared'));
+                    setTimeout(check, 50);
+                };
+                check();
+            })
+            JS);
+
+        expect(H::scriptString($page, "document.querySelector('#uploader_filelist li input[type=\"text\"]').value"))
+            ->toBe('original-name');
+
+        $page->fill('#uploader_filelist li input[type="text"]', 'renamed-file');
+        // $page->press() is Dusk-style (clicks a button by its text/name,
+        // not a real key send) -- a real "Enter" keydown needs a
+        // synthetic KeyboardEvent instead.
+        $page->script(
+            "document.querySelector('#uploader_filelist li input[type=\"text\"]')"
+            . ".dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true}))",
+        );
+
+        $page->script(<<<'JS'
+            new Promise((resolve, reject) => {
+                const deadline = Date.now() + 5000;
+                const check = () => {
+                    if (!document.querySelector('#uploader_filelist li input[type="text"]')) return resolve(true);
+                    if (Date.now() > deadline) return reject(new Error('rename input never closed'));
+                    setTimeout(check, 50);
+                };
+                check();
+            })
+            JS);
+
+        expect(H::scriptString($page, "document.querySelector('#uploader_filelist .plupload_file_name span').textContent"))
+            ->toBe('renamed-file.dng');
+
+        $page->assertNoJavaScriptErrors();
+        H::assertNoServerErrors($page, 'photos_add_direct upload queue rename');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
 });

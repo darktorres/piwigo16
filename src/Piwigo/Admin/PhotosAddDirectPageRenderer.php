@@ -187,9 +187,6 @@ final readonly class PhotosAddDirectPageRenderer
 
         $conf_format_ext = $this->currentConfig->formatExtensions;
 
-        $plupload_code_raw = $this->lang->langInfo()['plupload_code'] ?? null;
-        $plupload_code = is_string($plupload_code_raw) ? $plupload_code_raw : '';
-
         $adminContent = $this->renderer->render(new PhotosAddDirectView(
             ...$uploadFormData,
             promoteMobileApps: $promote_mobile_apps,
@@ -202,7 +199,6 @@ final readonly class PhotosAddDirectPageRenderer
             formatExt: implode(',', array_filter($conf_format_ext, is_string(...))),
             strFormatExt: implode(', ', array_filter($conf_format_ext, is_string(...))),
             colorscheme: $template->themeConf('colorscheme'),
-            pluploadCode: $plupload_code,
         ));
 
         return new AdminPageResult(

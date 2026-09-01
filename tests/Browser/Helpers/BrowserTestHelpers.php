@@ -2639,9 +2639,12 @@ final class BrowserTestHelpers
      * PATCH both transfers every byte and completes the upload). Stays on
      * raw curl rather than the browser session: pest-plugin-browser has no
      * cookie-jar access to reuse the browser session for a binary-body
-     * PATCH, and Piwigo's admin upload UI is a JS (plupload)
-     * widget with no plain <input type="file"> fallback to automate
-     * reliably.
+     * PATCH -- most tests that just need *a* real uploaded photo (not to
+     * exercise the upload UI itself) don't need a real page load either,
+     * which this skips entirely. `PhotosAddDirectInteractionTest.php`'s own
+     * tests drive the real admin upload UI directly (a real
+     * `<input type="file">`, `vendor/uploadQueue.ts`'s own real native
+     * port) when that UI is what's actually under test.
      */
     public static function uploadPhotoViaApi(string $imagePath, int $albumId, string $name): int
     {

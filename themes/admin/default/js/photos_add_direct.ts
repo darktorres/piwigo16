@@ -19,6 +19,14 @@ import { ajax } from "../../../default/js/vendor/ajax";
 import { alert } from "../../../default/js/vendor/jconfirm";
 import * as Piecon from "../../../default/js/vendor/piecon";
 import {
+  DONE,
+  FAILED,
+  UPLOADING,
+  uploadQueue,
+  type UploadQueue,
+  type UploadQueueFile,
+} from "../../../default/js/vendor/uploadQueue";
+import {
   addClass,
   append,
   attr,
@@ -42,22 +50,6 @@ import {
 } from "../../../default/js/vendor/dom";
 export {};
 
-// `@types/plupload`'s own File shape is an untyped `TODO` (its own
-// comment: "Make plupload.File typing" -- `Uploader.files: any[]`)
-// -- these are the real properties/methods this file actually uses,
-// including `format_of`, an app-specific field this file itself
-// attaches (never part of plupload's own File shape).
-interface PluploadFile {
-  id: string;
-  name: string;
-  status: number;
-  loaded?: number;
-  size?: number;
-  percent?: number;
-  format_of?: string;
-  getNative(): File;
-}
-
 type ImageFormatSearchResponse =
   operations["imageFormatSearch"]["responses"][200]["content"]["application/json"];
 
@@ -74,7 +66,7 @@ interface TusUploadInfo {
 
 interface TusErrorInfo {
   message: string;
-  file: PluploadFile;
+  file: UploadQueueFile;
 }
 
 interface TusOnSuccessPayload {
@@ -95,10 +87,9 @@ interface MultipartParams {
 // these pages never co-load.
 //
 // tus-js-client is imported from its own npm package and bundled, not
-// a CDN-supplied global. Piecon is a real native port now
-// (`vendor/piecon.ts`, P49-C) -- no npm package at all any more.
-// plupload still is a CDN-supplied global (typed by `@types/plupload`),
-// and remains a jQuery-family CDN script pending its own removal batch.
+// a CDN-supplied global. Piecon and plupload are both real native ports
+// now (`vendor/piecon.ts`/`vendor/uploadQueue.ts`, P49-C) -- no npm
+// package, no CDN script, and no jQuery dependency for either any more.
 
 /*--------------
 Variables
@@ -250,27 +241,15 @@ ready(function () {
     css(document.querySelectorAll(".moxie-shim-html5"), "display", "none");
   });
 
-  // Still jQuery: pluploadQueue is a library, ported as its own live
-  // subset in P49-B group 7 -- only the DOM work inside its own
-  // preinit/init callbacks (our own template elements, not plupload's
-  // internal state) converted.
-  $("#uploader").pluploadQueue({
-    // General settings
+  // Native port now (P49-C, `vendor/uploadQueue.ts`) -- `browse_button`/
+  // `filters`/`rename`/`dragdrop`/`preinit`/`init` are this file's own
+  // real, unmodified original options; `container`/`runtimes`/`url`/
+  // `chunk_size` are dropped (see that module's own leading comment for
+  // why each is real but dead here -- `chunk_size` in particular still
+  // drives the real tus chunk size directly, in uploadNextTusFile()
+  // below, just no longer duplicated into this config too).
+  uploadQueue(uploaderPhotos!, {
     browse_button: "addFiles",
-    container: "uploadForm",
-
-    // runtimes : 'html5,flash,silverlight,html4',
-    runtimes: "html5",
-
-    // Plupload owns file selection/drag-drop/queue UI only -- this `url`
-    // is never actually requested. The real transport is a tus.Upload
-    // per file (see startTusUploads()/uploadNextTusFile() below), driven
-    // through this same up.trigger() event pipeline so every handler in
-    // `init` below keeps working exactly as if plupload's own uploader
-    // had run.
-    url: "api/v1/uploads",
-
-    chunk_size,
 
     filters: {
       // Maximum file size
@@ -291,7 +270,7 @@ ready(function () {
     dragdrop: true,
 
     preinit: {
-      Init: function (up: plupload.Uploader, _info: unknown) {
+      Init: function (up: UploadQueue, _info: unknown) {
         const uploaderContainer = document.getElementById("uploader_container");
         if (uploaderContainer !== null) {
           removeAttr(uploaderContainer, "title"); //remove the "using runtime" text
@@ -320,7 +299,7 @@ ready(function () {
 
     init: {
       // update custom button state on queue change
-      QueueChanged: function (up: plupload.Uploader) {
+      QueueChanged: function (up: UploadQueue) {
         if (btnAddFiles !== null) {
           addClass(btnAddFiles, "addFilesButtonChanged");
         }
@@ -359,10 +338,7 @@ ready(function () {
         }
       },
 
-      FilesAdded: async function (
-        up: plupload.Uploader,
-        files: PluploadFile[],
-      ) {
+      FilesAdded: async function (up: UploadQueue, files: UploadQueueFile[]) {
         // Création de la liste avec plupload_id : image_name
         const fileNames: Record<string, string> = {};
         const exts: Record<string, string> = {};
@@ -575,7 +551,7 @@ ready(function () {
         }
       },
 
-      FilesRemoved: function (up: plupload.Uploader, _file: PluploadFile) {
+      FilesRemoved: function (up: UploadQueue, _file: UploadQueueFile) {
         formats.forEach((forms) => {
           append(
             document.querySelectorAll(
@@ -619,7 +595,7 @@ ready(function () {
         });
       },
 
-      UploadProgress: function (up: plupload.Uploader, _file: PluploadFile) {
+      UploadProgress: function (up: UploadQueue, _file: UploadQueueFile) {
         css(
           document.querySelectorAll("#uploadingActions .progressbar"),
           "width",
@@ -628,7 +604,7 @@ ready(function () {
         Piecon.setProgress(up.total.percent);
       },
 
-      BeforeUpload: function (up: plupload.Uploader, file: PluploadFile) {
+      BeforeUpload: function (up: UploadQueue, file: UploadQueueFile) {
         // hide buttons
         hide(
           document.querySelectorAll("#startUpload, .selectFilesButtonBlock"),
@@ -681,8 +657,8 @@ ready(function () {
       },
 
       FileUploaded: function (
-        up: plupload.Uploader,
-        file: PluploadFile,
+        up: UploadQueue,
+        file: UploadQueueFile,
         info: TusUploadInfo,
       ) {
         // Called when file has finished uploading. Unlike a plain plupload
@@ -734,7 +710,7 @@ ready(function () {
         }
       },
 
-      Error: function (up: plupload.Uploader, error: TusErrorInfo) {
+      Error: function (up: UploadQueue, error: TusErrorInfo) {
         // Called when file has finished uploading. `error` is a plain
         // {message, file} object built in uploadNextTusFile() below, from
         // a real HTTP status returned by the tus endpoint.
@@ -745,10 +721,7 @@ ready(function () {
         show(document.querySelectorAll(".errors"));
       },
 
-      UploadComplete: function (
-        _up: plupload.Uploader,
-        _files: PluploadFile[],
-      ) {
+      UploadComplete: function (_up: UploadQueue, _files: UploadQueueFile[]) {
         // Called when all files are either uploaded or failed
         //console.log('[UploadComplete]');
 
@@ -871,12 +844,12 @@ Error/UploadComplete still update the same DOM.
 
 let activeTusUpload: TusUpload | null = null;
 
-function computeAggregatePercent(files: PluploadFile[]) {
+function computeAggregatePercent(files: UploadQueueFile[]) {
   let totalLoaded = 0;
   let totalSize = 0;
   files.forEach(function (f) {
     totalSize += f.size || 0;
-    totalLoaded += f.status === plupload.DONE ? f.size || 0 : f.loaded || 0;
+    totalLoaded += f.status === DONE ? f.size || 0 : f.loaded || 0;
   });
   return totalSize ? Math.round((totalLoaded / totalSize) * 100) : 0;
 }
@@ -898,9 +871,9 @@ function extractTusErrorDetail(err: Error | TusDetailedError) {
   return err && err.message ? err.message : "Upload failed";
 }
 
-function startTusUploads(up: plupload.Uploader) {
-  const pendingFiles = (up.files as PluploadFile[]).filter(function (f) {
-    return f.status !== plupload.DONE;
+function startTusUploads(up: UploadQueue) {
+  const pendingFiles = up.files.filter(function (f) {
+    return f.status !== DONE;
   });
 
   if (pendingFiles.length === 0) {
@@ -922,8 +895,8 @@ function cancelTusUploads() {
 }
 
 function uploadNextTusFile(
-  up: plupload.Uploader,
-  files: PluploadFile[],
+  up: UploadQueue,
+  files: UploadQueueFile[],
   index: number,
 ) {
   if (index >= files.length) {
@@ -933,7 +906,7 @@ function uploadNextTusFile(
   }
 
   const file = files[index]!;
-  file.status = plupload.UPLOADING;
+  file.status = UPLOADING;
 
   // Reuses BeforeUpload's own multipart_params-building logic verbatim
   // (album selector read, format_of/update_mode) -- only the destination
@@ -968,11 +941,11 @@ function uploadNextTusFile(
       file.percent = bytesTotal
         ? Math.round((bytesUploaded / bytesTotal) * 100)
         : 0;
-      up.total.percent = computeAggregatePercent(up.files as PluploadFile[]);
+      up.total.percent = computeAggregatePercent(up.files);
       up.trigger("UploadProgress", file);
     },
     onError: function (error: Error | TusDetailedError) {
-      file.status = plupload.FAILED;
+      file.status = FAILED;
       up.trigger("Error", {
         message: extractTusErrorDetail(error),
         file: file,
@@ -981,7 +954,7 @@ function uploadNextTusFile(
     },
     // eslint-disable-next-line @typescript-eslint/no-misused-promises -- fire-and-forget async completion handler, same as the click handlers elsewhere in this campaign: tus-js-client's own real onSuccess type expects void, but nothing here awaits or needs to await the returned promise.
     onSuccess: async function (payload: TusOnSuccessPayload) {
-      file.status = plupload.DONE;
+      file.status = DONE;
       file.percent = 100;
 
       let result: Partial<
@@ -1018,24 +991,15 @@ function uploadNextTusFile(
         // fallback thumbnail/name.
       }
 
-      // @types/plupload's own Uploader.trigger(name, Multiple) is
-      // 2-arity only -- a real gap in that package, not this code: the
-      // FileUploaded event genuinely fires with 2 extra args (file,
-      // info), matching plupload_event_FileUploaded's own 3-param
-      // handler shape a few lines up in the same package.
-      (up.trigger as (name: string, ...args: unknown[]) => unknown)(
-        "FileUploaded",
-        file,
-        {
-          imageId: result.imageId,
-          addStatus: result.addStatus,
-          squareSrc:
-            imageInfo.derivatives && imageInfo.derivatives.square
-              ? imageInfo.derivatives.square.url
-              : "",
-          name: imageInfo.name || file.name,
-        },
-      );
+      up.trigger("FileUploaded", file, {
+        imageId: result.imageId,
+        addStatus: result.addStatus,
+        squareSrc:
+          imageInfo.derivatives && imageInfo.derivatives.square
+            ? imageInfo.derivatives.square.url
+            : "",
+        name: imageInfo.name || file.name,
+      });
       uploadNextTusFile(up, files, index + 1);
     },
   });

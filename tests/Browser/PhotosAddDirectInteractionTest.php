@@ -119,3 +119,56 @@ it('toggles the upload-options panel open and closed', function (): void {
     $page->assertNoJavaScriptErrors();
     H::assertNoServerErrors($page, 'photos_add_direct upload-options toggle');
 });
+
+/**
+ * Piecon (P49-C native port, `vendor/piecon.ts`) -- no prior test, npm
+ * package or not, ever drove its own favicon-drawing behavior. Driving
+ * a real file through plupload's own queue to reach `UploadProgress`/
+ * `UploadComplete` is fragile and unnecessary here: `.pluploadQueue()`
+ * still stays jQuery (P49-B group 7), and plupload's own real `Uploader`
+ * instance (`jQuery('#uploader').pluploadQueue()`) exposes its own
+ * genuine pub-sub `.trigger(eventName, args)` -- firing the exact same
+ * two callback names `photos_add_direct.ts` itself registers reaches
+ * the real Piecon calls through the real integration point, not a
+ * piecon-internals-only stub.
+ */
+it("draws a progress favicon during upload and resets it on complete", function (): void {
+    $page = H::asAdmin($this);
+    $page = H::navigateOk($page, '/admin.php?page=photos_add&album=1');
+
+    $originalHref = H::scriptString(
+        $page,
+        "document.querySelector('link[rel=\"icon\"]').getAttribute('href')",
+    );
+
+    $page->script(<<<'JS'
+        (() => {
+            const uploader = jQuery('#uploader').pluploadQueue();
+            uploader.total.percent = 50;
+            uploader.trigger('UploadProgress', [uploader, {}]);
+        })()
+        JS);
+
+    $hrefDuringProgress = H::scriptString(
+        $page,
+        "document.querySelector('link[rel=\"icon\"]').getAttribute('href')",
+    );
+    expect($hrefDuringProgress)
+        ->not->toBe($originalHref);
+    expect($hrefDuringProgress)
+        ->toStartWith('data:image/png;base64,');
+
+    $page->script(
+        "jQuery('#uploader').pluploadQueue().trigger('UploadComplete', [jQuery('#uploader').pluploadQueue(), []])",
+    );
+
+    $hrefAfterComplete = H::scriptString(
+        $page,
+        "document.querySelector('link[rel=\"icon\"]').getAttribute('href')",
+    );
+    expect($hrefAfterComplete)
+        ->toBe($originalHref);
+
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'photos_add_direct piecon progress favicon');
+});

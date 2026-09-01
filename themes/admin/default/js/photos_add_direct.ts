@@ -1,4 +1,3 @@
-import Piecon from "piecon";
 import {
   Upload,
   type Upload as TusUpload,
@@ -18,6 +17,7 @@ import {
 } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
 import { alert } from "../../../default/js/vendor/jconfirm";
+import * as Piecon from "../../../default/js/vendor/piecon";
 import {
   addClass,
   append,
@@ -94,10 +94,11 @@ interface MultipartParams {
 // picture_modify.ts (docs/PLAN.md P46-B's own finding) -- safe since
 // these pages never co-load.
 //
-// Piecon and tus-js-client are imported from their npm packages and
-// bundled; neither is a CDN-supplied global any more. plupload still is
-// (typed by @types/plupload), and remains a jQuery-family CDN script
-// pending its own removal batch.
+// tus-js-client is imported from its own npm package and bundled, not
+// a CDN-supplied global. Piecon is a real native port now
+// (`vendor/piecon.ts`, P49-C) -- no npm package at all any more.
+// plupload still is a CDN-supplied global (typed by `@types/plupload`),
+// and remains a jQuery-family CDN script pending its own removal batch.
 
 /*--------------
 Variables

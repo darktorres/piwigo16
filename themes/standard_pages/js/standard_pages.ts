@@ -99,9 +99,7 @@ ready(function () {
 
 function toggle_mode(mode: string) {
   setCookie("mode", mode, 30);
-  const logo = document.getElementById(
-    "piwigo-logo",
-  ) as HTMLImageElement | null;
+  const logo = document.querySelector<HTMLImageElement>("#piwigo-logo");
   const lightToggle = document.getElementById("toggle_mode_light");
   const darkToggle = document.getElementById("toggle_mode_dark");
   const root = document.getElementById("mode");
@@ -171,8 +169,9 @@ document.querySelectorAll(".togglePassword").forEach((element) => {
     // `.siblings("input")` -- the parent's other children, never the
     // element itself.
     const input = Array.from(toggle.parentElement?.children ?? []).find(
-      (sibling) => sibling !== toggle && sibling.matches("input"),
-    ) as HTMLInputElement | undefined;
+      (sibling): sibling is HTMLInputElement =>
+        sibling !== toggle && sibling.matches("input"),
+    );
     if (input === undefined) {
       return;
     }
@@ -223,6 +222,7 @@ if (otherLanguages !== null) {
     "click",
     "[data-lang-code]",
     function (this: Element) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       setCookie("lang", readData(this, "langCode") as string, 30);
     },
   );

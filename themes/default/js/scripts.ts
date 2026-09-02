@@ -28,15 +28,13 @@ export function phpWGOpenWindow(
   const img = new Image();
   img.src = theURL;
   let width: number, height: number;
-  if (img.complete) {
+  const imgWasComplete = img.complete;
+  if (imgWasComplete) {
     width = img.width + 40;
     height = img.height + 40;
   } else {
     width = 640;
     height = 480;
-    img.onload = function () {
-      newWin.resizeTo(img.width + 50, img.height + 100);
-    };
   }
   const newWin = window.open(
     theURL,
@@ -47,6 +45,11 @@ export function phpWGOpenWindow(
       ",height=" +
       String(height),
   )!;
+  if (!imgWasComplete) {
+    img.onload = function () {
+      newWin.resizeTo(img.width + 50, img.height + 100);
+    };
+  }
 }
 
 function popuphelp(url: string): void {

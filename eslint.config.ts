@@ -208,6 +208,14 @@ export default defineConfig(
       ],
       "@typescript-eslint/consistent-type-exports": "error",
       "@typescript-eslint/no-import-type-side-effects": "error",
+
+      // Zero real violations today -- every ajax() call site already
+      // disciplines its promise with `void`/`return`/`Promise.all()`/
+      // `await`. Adding this locks that discipline in going forward,
+      // rather than relying on it staying true by convention, and guards
+      // the ~103 call sites P51-C is about to convert to async/await.
+      "@typescript-eslint/no-floating-promises": "error",
+      "@typescript-eslint/no-misused-promises": "error",
     },
   },
 );

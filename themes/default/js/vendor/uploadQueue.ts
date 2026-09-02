@@ -291,6 +291,7 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
       // `trigger()` calls every listener as `fn(this, ...args)` (matching
       // real plupload's own `fn(up, ...)` convention) -- `args[0]` here is
       // the uploader itself, not the payload.
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- bind()/trigger()'s own real plupload-emulation signature is generic (`...args: unknown[]`); "Error" always carries this real payload shape at args[1].
       const err = args[1] as UploadQueueError;
       if (err.code === FILE_SIZE_ERROR) {
         alert("Error: File too large: " + err.file.name);
@@ -301,15 +302,18 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
     });
 
     if (this.settings.preinit?.Init) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- bind()'s own real plupload-emulation signature is generic (`...args: unknown[]`); a real preinit.Init callback is always called with this real, narrower arg shape.
       this.bind("Init", this.settings.preinit.Init as (...args: unknown[]) => void);
     }
 
     this.renderShell();
 
     const init = this.settings.init ?? {};
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Object.keys() always returns string[] even for a typed object (a real, well-known TS limitation); every real key of `init` is genuinely one of its own declared property names.
     for (const name of Object.keys(init) as (keyof typeof init)[]) {
       const fn = init[name];
       if (fn) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- bind()'s own real plupload-emulation signature is generic (`...args: unknown[]`); each real settings.init[name] callback is always called with this real, narrower arg shape.
         this.bind(name, fn as (...args: unknown[]) => void);
       }
     }
@@ -321,9 +325,11 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
       this.renderFileList();
     });
     this.bind("FileUploaded", (...args) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- bind()/trigger()'s own real plupload-emulation signature is generic (`...args: unknown[]`); "FileUploaded" always carries this real payload shape at args[1].
       UploadQueue.markFileStatus(args[1] as UploadQueueFile);
     });
     this.bind("UploadProgress", (...args) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- bind()/trigger()'s own real plupload-emulation signature is generic (`...args: unknown[]`); "UploadProgress" always carries this real payload shape at args[1].
       const file = args[1] as UploadQueueFile;
       UploadQueue.updatePerFileProgress(file);
       UploadQueue.markFileStatus(file);

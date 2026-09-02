@@ -36,6 +36,7 @@ ready(function () {
 
   on(document, "mouseup", function (e: Event): void {
     e.stopPropagation();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real mouseup event's own target inside the document is always an Element (or null), never a bare EventTarget with no Element interface.
     if (!hasClass(e.target as Element, "showInfo")) {
       fadeOut(document.querySelectorAll(".showInfo-dropdown"));
     }

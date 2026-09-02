@@ -26,7 +26,7 @@ import {
 function box(style: string): HTMLElement {
   document.body.innerHTML = `<div id="probe" style="${style}"></div>`;
 
-  return document.getElementById("probe") as HTMLElement;
+  return document.getElementById("probe")!;
 }
 
 describe("box-model dimensions", () => {
@@ -194,9 +194,9 @@ describe("offset and offsetParent", () => {
       '<div id="static" style="position:static">' +
       '<span id="leaf"></span>' +
       "</div></div>";
-    const leaf = document.getElementById("leaf") as HTMLElement;
-    const positioned = document.getElementById("positioned") as HTMLElement;
-    const staticParent = document.getElementById("static") as HTMLElement;
+    const leaf = document.getElementById("leaf")!;
+    const positioned = document.getElementById("positioned")!;
+    const staticParent = document.getElementById("static")!;
 
     // happy-dom leaves offsetParent undefined, so drive the walk explicitly:
     // it must skip the static ancestor and stop at the relative one.
@@ -233,7 +233,7 @@ describe("position", () => {
       '<div style="position:relative;border:5px solid">' +
       '<div id="probe" style="position:fixed;margin:4px"></div>' +
       "</div>";
-    const el = document.getElementById("probe") as HTMLElement;
+    const el = document.getElementById("probe")!;
 
     // No parent border correction is applied on this branch, so only the
     // element's own margin comes off.
@@ -326,7 +326,7 @@ describe("css", () => {
 describe("css NaN guard", () => {
   it("writes nothing rather than 'NaNpx'", () => {
     document.body.innerHTML = '<div id="probe" style="left:4px"></div>';
-    const el = document.getElementById("probe") as HTMLElement;
+    const el = document.getElementById("probe")!;
 
     css(el, "left", Number.NaN);
 
@@ -338,14 +338,14 @@ describe("cssValue", () => {
   it("reads the computed value, not the inline one", () => {
     document.body.innerHTML =
       '<div id="probe" style="background-color:rgb(1, 2, 3)"></div>';
-    const el = document.getElementById("probe") as HTMLElement;
+    const el = document.getElementById("probe")!;
 
     expect(cssValue(el, "background-color")).toBe("rgb(1, 2, 3)");
   });
 
   it("accepts a camelCase property name", () => {
     document.body.innerHTML = '<div id="probe" style="margin-top:9px"></div>';
-    const el = document.getElementById("probe") as HTMLElement;
+    const el = document.getElementById("probe")!;
 
     expect(cssValue(el, "marginTop")).toBe("9px");
   });
@@ -353,7 +353,7 @@ describe("cssValue", () => {
   it("returns width as a px string, unlike width() which returns a number", () => {
     document.body.innerHTML =
       '<div id="probe" style="width:70px;padding:3px"></div>';
-    const el = document.getElementById("probe") as HTMLElement;
+    const el = document.getElementById("probe")!;
 
     // The asymmetry is jQuery's: .css("width") is a string, .width() a
     // number, and both mean the content box for a content-box element.
@@ -364,14 +364,14 @@ describe("cssValue", () => {
   it("measures width through the box hooks for a hidden element", () => {
     document.body.innerHTML =
       '<div id="probe" style="display:none;width:45px"></div>';
-    const el = document.getElementById("probe") as HTMLElement;
+    const el = document.getElementById("probe")!;
 
     expect(cssValue(el, "width")).toBe("45px");
   });
 
   it("returns an empty string for an undeclared property", () => {
     document.body.innerHTML = '<div id="probe"></div>';
-    const el = document.getElementById("probe") as HTMLElement;
+    const el = document.getElementById("probe")!;
 
     expect(cssValue(el, "z-index")).toBe("");
   });

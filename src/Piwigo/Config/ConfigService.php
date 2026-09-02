@@ -414,10 +414,8 @@ final readonly class ConfigService
      * skipped keys with no matching accessor.
      *
      * Does NOT fire the reference's own 'load_conf' plugin hook
-     * (ConfigDb::loadConfFromDb()'s real behavior) -- confirmed dead
-     * weight and removed outright during P32 Stage A5's catalogue pass
-     * (zero real dispatch site and zero real listener anywhere in this
-     * fork's own legacy reference), not a gap introduced here. See
+     * (ConfigDb::loadConfFromDb()'s real behavior) -- zero real dispatch
+     * site or listener anywhere in this fork's own legacy reference. See
      * `docs/events-legacy-map.md`'s "Removed" section.
      */
     public function loadConfFromDb(?string $param = null, bool $dieIfNotFound = true): void

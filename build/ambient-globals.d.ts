@@ -1,37 +1,20 @@
-// Renamed from `jquery-plugins.d.ts` (P49-C): that name stopped
-// describing the file's real content once the last jQuery-plugin-shaped
-// entries left it (the `interface JQuery { ... }` ambient-method
-// augmentation and the Chart.js/moment declarations, see the comments
-// further down where each used to live) -- every real call site either
-// one typed is ported to a native module now. `@types/jquery`/
-// `@types/jqueryui`/`@types/chart.js` are gone from `package.json` too,
-// so this file no longer merges into any third-party package's own
-// global types at all.
-//
-// What is actually here is genuinely first-party shared ambient globals
-// -- `Window.SwitchBox`/`Window._pwgRatingAutoQueue` below, and
-// everything after them.
+// Ambient declarations for genuinely first-party shared global state:
+// `Window.SwitchBox`/`Window._pwgRatingAutoQueue` and the rest of
+// `interface Window` below, plus a few standalone-library/shared-shape
+// types. Nothing here augments a third-party package's own ambient types.
 
-// See `Window.SwitchBox`/`Window._pwgRatingAutoQueue` below for the real
-// "queue array, then live handler" shape-shifting story these 2 cover.
 interface SwitchBoxQueue {
   push(link: string, box: string): void;
-  // Only present during the real "queue array" phase -- the live
-  // `{push: fn}` handler switchbox.ts's own IIFE replaces it with has
-  // neither.
+  // Only present during the "queue array" phase -- the live `{push: fn}`
+  // handler switchbox.ts's own IIFE replaces it with has neither.
   length?: number;
   [index: number]: string | undefined;
 }
-// Duplicates rating.ts's own identically-named, identically-shaped
-// local interfaces -- until that file's own P48 module conversion
-// (docs/PLAN.md), both were real ambient globals (that file was a
-// genuinely non-module IIFE), referenced bare here, not redeclared.
-// Now that it's a real module, its own copies are module-private, so
-// `RatingAutoQueue` below (which can't `import` from a module file
-// without becoming one itself, breaking its own other ambient
-// declarations) needs its own local copy -- a pure type duplication,
-// safe since both stay structurally identical by construction (rating.ts
-// is the only real writer of either shape).
+// Duplicates rating.ts's own local types: rating.ts is a non-module
+// script, so these can't be `import`ed without turning it into one
+// (which would break its other ambient declarations) -- kept
+// structurally identical by construction, since rating.ts is the only
+// real writer of either shape.
 interface PwgRatingResult {
   score: number;
   count: number;
@@ -48,7 +31,7 @@ interface PwgRatingOptions {
 }
 interface RatingAutoQueue {
   push(opts: PwgRatingOptions): void;
-  // Only present during the real "queue array" phase -- see
+  // Only present during the "queue array" phase -- see
   // `SwitchBoxQueue`'s own copy of this comment above.
   length?: number;
   [index: number]: PwgRatingOptions | undefined;
@@ -57,61 +40,48 @@ interface RatingAutoQueue {
 interface Window {
   // `index.ts`/`picture.ts` push onto this before `switchbox.ts` (loaded
   // later, footer-positioned) replaces it with a live `{push: fn}`
-  // handler -- same shape-shifting "queue array, then live handler"
-  // pattern as `_pwgRatingAutoQueue` below. Both real shapes agree on
-  // "has a `push(link, box)` method" (an array's own real `.push`
-  // signature is looser, but every real call site already only ever
-  // passes 2 strings either way), and switchbox.ts's own queue-drain
-  // read needs the array-like `.length`/`[i]` members too -- one
-  // `SwitchBoxQueue` type covers both real phases (P47), not a modeled
-  // union: a precise union of the 2 distinct shapes buys no real safety
-  // here (every real caller/callee already agrees on the args).
+  // handler. Both real shapes agree on "has a `push(link, box)` method"
+  // (an array's own real `.push` signature is looser, but every real
+  // call site already only ever passes 2 strings either way), and
+  // switchbox.ts's own queue-drain read needs the array-like
+  // `.length`/`[i]` members too -- one `SwitchBoxQueue` type covers both
+  // real phases, not a modeled union: a precise union of the 2 distinct
+  // shapes buys no real safety here, since every real caller/callee
+  // already agrees on the args.
   SwitchBox?: SwitchBoxQueue;
 
   // `picture.ts` pushes a rating-options object onto this (queue array)
   // if `rating.ts` hasn't loaded yet; `rating.ts`'s own IIFE drains the
   // queue then replaces it with a live `{push: fn}` handler for any
   // later pusher. Same shape-shifting pattern as `SwitchBox` above.
-  // Started as a bare (non-`window.`) global, matching the original
-  // pre-P46 .js -- 2 real bugs found in sequence via VR against a real
-  // browser before landing here: a bare undeclared read threw
-  // ReferenceError whenever picture.ts ran first, and `var`-declaring
-  // it "fixed" that but broke it a second way once every P46 entry got
+  // `window.` prefix is load-bearing, not decorative: a bare (or
+  // `var`-declared) reference to this same identifier only resolves as
+  // a real global outside any wrapping scope -- once an entry is
   // wrapped in its own IIFE (see vite.config.ts's banner/footer
-  // comment) -- a `var` inside that wrapper is scoped to the wrapper,
-  // no longer a real global at all. `window.` property access (here,
-  // like `SwitchBox` above) is the one form that's safe both ways.
+  // comment), a bare `var` there is scoped to the wrapper, not a real
+  // global at all. `window.` property access is the one form that's
+  // safe regardless of wrapping.
   _pwgRatingAutoQueue?: RatingAutoQueue;
 
-  // Explicit `window.` exposure of these names is required for the
-  // same reason documented at each assignment site (page-data.ts,
-  // scripts.ts): Vite/Rollup bundles each P46 entry as its own isolated
-  // module graph, and a top-level declaration with no call site *inside
-  // its own file* looks like dead/private state to the tree-shaker and
-  // minifier alike, even though sibling entries call it as a bare
-  // global. Declared here (not inferred from the assignment) so every
-  // consumer file's own bare reference -- e.g. `pwg_getPageData(...)`
-  // in picture.ts, which never imports anything -- type-checks too.
-  // `phpWGOpenWindow`/`pwgAddEventListener` no longer need an entry here
-  // (docs/PLAN.md P48, scripts.ts's own module conversion) -- real
-  // exports now, imported directly by their own real consumers.
-  // `popuphelp`/`pwg_tryFocus` stay -- both real, permanent `window.X`
-  // exposures even after that conversion (see scripts.ts's own leading
-  // comment for why neither converts).
+  // Explicit `window.` exposure of these names is required: Vite/Rollup
+  // bundles each entry as its own isolated module graph, and a
+  // top-level declaration with no call site *inside its own file* looks
+  // like dead/private state to the tree-shaker and minifier alike, even
+  // though a sibling entry calls it as a bare global. Declared here (not
+  // inferred from the assignment) so every consumer file's own bare
+  // reference -- e.g. `pwg_getPageData(...)` in picture.ts, which never
+  // imports anything -- type-checks too.
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- mirrors page-data.ts's own signature; see the note there.
   pwg_getPageData: <T = unknown>(key: string) => T;
   pwg_getPageString: (key: string) => string;
   popuphelp: (url: string) => void;
   pwg_tryFocus: (id: string) => void;
 
-  // search_filters.ts's own page-data-derived globals, all real bare
-  // reads confirmed in mcs.ts (P47). `global_params`/`fullname_of_cat`
-  // stay `any` -- the parsed JSON's own shape is a complex nested
-  // search-filter query object, not first-party logic this phase
-  // re-derives real types for (that's P48's job). Every other one here
-  // is either a real page-data-typed primitive or a translated string
-  // (`pwg_getPageString()`'s own real `string` return), both squarely
-  // this phase's own job.
+  // search_filters.ts's own page-data-derived globals, real bare reads
+  // in mcs.ts. `global_params`/`fullname_of_cat` stay `any` -- the
+  // parsed JSON's own shape is a complex nested search-filter query
+  // object neither file re-derives real types for. Every other entry
+  // here is a real page-data-typed primitive or a translated string.
   global_params: any;
   fullname_of_cat: any;
   search_id: string | undefined;
@@ -134,23 +104,11 @@ interface Window {
   str_empty_search_bot_alt: string;
   str_search_in_ab: string;
   prefix_icon: string;
-  // `sliders` used to live here too (`window.sliders`) -- gone now,
-  // confirmed dead: search_filters.ts's own P48 module conversion
-  // turned it into a real exported `const`, and nothing reads
-  // `window.sliders` anywhere any more (grepped for real, not
-  // assumed). Its own type, `PwgSliderConfig`, is gone with it --
-  // `PwgDoubleSliderOptions` (`themes/admin/default/js/
-  // doubleSlider.ts`, P49-B group 4) is the one real shape now.
   show_filter_ratings: boolean;
 
   // batchManagerGlobal.ts's own 4 functions, called from
   // batch_manager_global.latte's own `href="javascript:
-  // selectGenerateDerivAll()"`-style pseudo-protocol links (docs/
-  // PLAN.md P46-C's own finding, the one that first surfaced this
-  // exposure pattern -- no ambient entry was needed for it until this
-  // file itself became a real module (P48), since a global-script
-  // file's own top-level function declarations merge into
-  // `typeof globalThis` automatically).
+  // selectGenerateDerivAll()"`-style pseudo-protocol links.
   selectGenerateDerivAll: () => void;
   selectGenerateDerivNone: () => void;
   selectDelDerivAll: () => void;
@@ -181,14 +139,11 @@ interface Window {
   // `button.attr("OnClick", onClick)`) -- the same exposure
   // requirement either way.
   hideAddGroupForm: () => void;
-  // Real param type (P47) -- was `any` here from before group_list.ts's
-  // own typing pass ever landed; that pass retyped the real function's
-  // own signature but never circled back to update this copy.
   updateSelectionPanel: (changedState?: string) => void;
 
-  // user_list.ts's own real public plugin extension point (P47) --
-  // JSDoc-documented for third-party plugins to call from their own
-  // separately-loaded `<script>` tags.
+  // user_list.ts's own public plugin extension point -- JSDoc-documented
+  // for third-party plugins to call from their own separately-loaded
+  // `<script>` tags.
   plugin_add_tab_in_user_modal: (
     tab_name: string,
     content_id: string,
@@ -201,28 +156,23 @@ interface Window {
 // `pwg_token` (the CSRF token) is independently declared per-page by
 // whichever file happens to be that page's own top-level script
 // (`albums.js`'s own `var pwg_token = pwg_getPageData('csrf_token');`
-// is one of several -- same "declared per-page, safe because never
-// co-loaded with a conflicting value" pattern as P46-0's own
-// `add_related_category` finding). No ambient `declare const` needed
-// here at all, unlike every other "consumer converts before its
-// declarer" case in this file: `var` (unlike `let`/`const`) allows
-// unlimited redeclaration in the same scope, so once ANY one real
-// `var pwg_token = ...` exists anywhere in the shared type-checking
-// program (`plugins_installed_config.ts` supplied the first, followed
-// by every other per-page declarer as it converts), every consumer's
-// bare read resolves through it -- confirmed via a real TS2451 error
-// the one time an ambient `declare const pwg_token` briefly coexisted
-// with `plugins_installed_config.ts`'s own real `var` declaration.
+// is one of several -- declared per-page, safe because no two
+// declarers ever co-load on the same page). No ambient `declare const`
+// needed here at all, unlike every other "consumer needs its declarer
+// typed ambiently" case in this file: `var` (unlike `let`/`const`)
+// allows unlimited redeclaration in the same scope, so once any one
+// real `var pwg_token = ...` exists anywhere in the shared
+// type-checking program, every consumer's bare read resolves through
+// it. An ambient `declare const pwg_token` here would conflict with
+// that real `var` declaration (TS2451), so none is declared.
 
 // Vendored standalone-library globals (not jQuery plugins).
-// `plupload`'s own namespace/constants/`Uploader` class are now real,
-// verified types from `@types/plupload` (P47) -- no `declare const`
-// needed here any more; keeping one would silently shadow the real
-// package's own global with `any` (confirmed via a local `tsc` repro
-// during planning). `Piecon` has no real upstream types (one of P46-0's
-// own genuinely-unresolved vendored libraries) and stays hand-typed --
-// as a module declaration now that it is imported rather than read off
-// a CDN-supplied global. The package is UMD with a `module.exports =
+// `plupload`'s own namespace/constants/`Uploader` class are real,
+// verified types from `@types/plupload` -- no `declare const` needed
+// here; one would silently shadow the real package's own global with
+// `any`. `Piecon` has no real upstream types and stays hand-typed, as a
+// module declaration since it's imported rather than read off a
+// CDN-supplied global. The package is UMD with a `module.exports =
 // Piecon` branch, so Vite's CommonJS interop hands back the namespace
 // object as the default export. `setOptions` is part of the real API
 // too, though this codebase only calls the other two.
@@ -235,56 +185,27 @@ declare module "piecon" {
   export default Piecon;
 }
 
-// jquery.geoip.js is gone (docs/PLAN.md P49-B group 1): its one real
-// call was JSONP to a long-dead third-party endpoint. Replaced by
-// GET /api/v1/geoip, a real first-party admin-only endpoint backed by a
-// self-hosted DB-IP City Lite database -- rating_user.ts/history.ts now
-// call it via the already-ported ajax() helper, no ambient global left
-// to declare here.
-
-// Chart.js and moment.js are both gone (P49-C): `stats.ts`'s own graph
-// rendering is native now (`vendor/lineChart.ts`), and was the only real
-// first-party call site either library had. `chart.js`/`moment`/
-// `@types/chart.js` are gone from `package.json` too.
-
-// The `interface JQuery { ... }` ambient-method augmentation block that
-// used to live here (`size()`, `dataTable()`/`DataTable()`,
-// `enableShiftClick()`, `pluploadQueue()` -- `.slider()`/`.colorbox()`/
-// `.datepicker()`/`.tooltip()`/`.sortable()` were already gone before
-// this) is deleted outright now (P49-C): every real call site it typed
-// is gone -- `rating_user.ts`'s `.dataTable()`/`.DataTable()` and
-// `photos_add_direct.ts`'s `.pluploadQueue()` both ported to native
-// `vendor/dataTable.ts`/`vendor/uploadQueue.ts`; `enableShiftClick`
-// (`batchManagerGlobal.ts`) and `.size()` (`plugins_installated.ts`)
-// were each already real plain functions with zero remaining jQuery
-// call site, just never had this file's own now-stale augmentation
-// cleaned up after. `@types/jquery`/`@types/jqueryui` are gone from
-// `package.json` too -- nothing in the app reads the ambient
-// `JQuery`/`JQueryStatic` globals those packages declared any more.
-
-// `album_selector.ts`'s own real `class AlbumSelector` public surface
-// (P47) -- mirrors `TemporaryStateCtor`'s own precedent above. Kept to
-// the methods real consumers actually call; the real class's own
-// internal implementation stays loosely typed until its own P47-B turn.
+// `album_selector.ts`'s own `class AlbumSelector` public surface --
+// kept to the methods real consumers actually call; the class's own
+// internal implementation stays loosely typed.
 interface AlbumSelectorInstance {
   open(): void;
   close(): void;
   remove_selected_album(id: string | number): void;
-  // Genuinely mixed at runtime (P47): most real callers only ever push
-  // stringified ids (`select_album()`'s own `id.toString()`), but the
-  // internal ajax-driven pick/create flows push a raw numeric
-  // `cat.id` -- matching `remove_selected_album`/`select_album`'s own
-  // already-established `string | number` id type above.
+  // Mixed at runtime: most real callers only ever push stringified ids
+  // (`select_album()`'s own `id.toString()`), but the internal
+  // ajax-driven pick/create flows push a raw numeric `cat.id` --
+  // matching `remove_selected_album`/`select_album`'s own already-
+  // established `string | number` id type above.
   get_selected_albums(): (string | number)[];
   select_album(id: string | number): void;
   resetAll(): void;
   hardUpdate(cats: (string | number)[]): void;
 }
 
-// The real constructor options `class AlbumSelector`'s own destructured
-// param accepts (P47) -- every field optional, matching that
-// constructor's own default values; confirmed against every real
-// `new AlbumSelector({...})` call site.
+// The constructor options `class AlbumSelector`'s own destructured
+// param accepts -- every field optional, matching that constructor's
+// own default values.
 interface AlbumSelectorOptions {
   selectedCategoriesIds?: (string | number)[];
   selectAlbum?: (args: AlbumSelectorCallbackArgs) => void;
@@ -297,12 +218,11 @@ interface AlbumSelectorOptions {
   modalSearchPlaceholder?: string;
 }
 
-// The real shape `album_selector.ts`'s own constructor passes to a
-// consumer's `selectAlbum` callback (P47) -- confirmed by reading the
-// constructor's own wrapping (`this.#selectAlbum = (args) =>
+// The shape `album_selector.ts`'s own constructor passes to a
+// consumer's `selectAlbum` callback (`this.#selectAlbum = (args) =>
 // selectAlbum.call(null, { ...args, newSelectedAlbum, addSelectedAlbum,
-// getSelectedAlbum })`), not guessed. Shared across every real
-// `selectAlbum:` consumer (`batchManagerFilter.ts`, `cat_modify.ts`,
+// getSelectedAlbum })`). Shared across every real `selectAlbum:`
+// consumer (`batchManagerFilter.ts`, `cat_modify.ts`,
 // `batchManagerGlobal.ts`, `mcs.ts`, `batchManagerUnit.ts`,
 // `picture_modify.ts`, `photos_add_direct.ts`) -- grows if a future
 // consumer needs more of `album`'s own real shape than `id`/`name`.
@@ -312,13 +232,8 @@ interface AlbumSelectorCallbackArgs {
     name?: string;
     root?: string;
     // The breadcrumb display name, HTML-stripped, as
-    // CategoryListController builds it. Was
-    // `full_name_with_admin_links` until it turned out that field does
-    // not exist: the controller's own docblock records dropping the
-    // XML-era `additional_output=full_name_with_admin_links` opt-in, so
-    // every consumer reading it got `undefined` at runtime while this
-    // declaration kept it compiling. All four consumers are
-    // `adminMode: true`, which is the mode that carries `fullname`.
+    // CategoryListController builds it -- only populated when
+    // `adminMode: true`.
     fullname?: string;
     // The same breadcrumb, per segment, for the three consumers that render
     // it as links the way their own server-rendered rows do.
@@ -332,20 +247,18 @@ interface AlbumSelectorCallbackArgs {
   getSelectedAlbum: () => (string | number)[];
 }
 
-// The real shape `album_selector.ts`'s constructor passes to a
-// consumer's `removeSelectedAlbum` callback (P47) -- confirmed via the
-// same constructor wrapping as `AlbumSelectorCallbackArgs` above
-// (`this.#removeSelectedAlbum = (args) => removeSelectedAlbum.call(null,
-// { ...args, getSelectedAlbum })`), called with `{ id_album: id }` from
-// `remove_selected_album(id)`.
+// The shape `album_selector.ts`'s constructor passes to a consumer's
+// `removeSelectedAlbum` callback (`this.#removeSelectedAlbum = (args)
+// => removeSelectedAlbum.call(null, { ...args, getSelectedAlbum })`),
+// called with `{ id_album: id }` from `remove_selected_album(id)`.
 interface AlbumSelectorRemoveCallbackArgs {
   id_album: string | number;
   getSelectedAlbum: () => (string | number)[];
 }
 
-// `intro.ts`'s own `storage_details` shared global (P47) -- real shape
-// traced to `IntroView.php`'s `storage_chart_data` property and the
-// actual fields `intro.ts`/`intro_tooltips.ts` both read.
+// `intro.ts`'s own `storage_details` shared global -- shape traced to
+// `IntroView.php`'s `storage_chart_data` property and the actual fields
+// `intro.ts`/`intro_tooltips.ts` both read.
 interface StorageDetails {
   [type: string]: {
     total: { filesize: number; nb_files: number };

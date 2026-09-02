@@ -54,10 +54,9 @@ final readonly class RatingUserView implements View, HasPageAssets, ExposesPageD
      * `rating_user.latte`'s own unconditional `{do combineScript(...)}`x7/
      * `{do combineCss(...)}`x2 (docs/PLAN.md's P42-B). No jQuery-UI theme
      * CSS was ever registered on this page (tooltip styling didn't need
-     * it) -- unaffected by the native `dataTable()`/`tooltip()` port
-     * (docs/PLAN.md P49-C), which drops the `jquery.dataTables`/
-     * `jquery.ui` script registrations outright: `rating_user.ts` itself
-     * has zero real jQuery/jQuery-UI/datatables.net calls left.
+     * it), and no `jquery.dataTables`/`jquery.ui` script is registered
+     * here either: `rating_user.ts` has zero real jQuery/jQuery-UI/
+     * datatables.net calls.
      */
     #[Override]
     public function pageAssets(): array

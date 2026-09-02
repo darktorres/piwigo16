@@ -1466,23 +1466,12 @@ function selectionMode(isSelection: boolean) {
     ),
     "-1",
   );
-  // Real, confirmed pre-existing bug fixed here (P49-C): `dom.ts`'s own
-  // `on()` (the real listener at this file's own `select[name=
-  // selectAction]` "change" registration, hiding `#applyActionBlock`)
-  // always uses a real `addEventListener` -- jQuery's own `.trigger()`
+  // This dispatch must reach `dom.ts`'s own `on()`-registered "change"
+  // listener at `select[name=selectAction]` (hides `#applyActionBlock`),
+  // which uses a real `addEventListener` -- jQuery's own `.trigger()`
   // can't invoke a native method for "change" (unlike "click"/"focus"/
-  // "submit"), so it falls back to replaying only handlers in jQuery's
-  // own internal registry, never reaching a listener registered outside
-  // Real, confirmed pre-existing bug fixed here (P49-C): `dom.ts`'s own
-  // `on()` (the real listener at this file's own `select[name=
-  // selectAction]` "change" registration, hiding `#applyActionBlock`)
-  // always uses a real `addEventListener` -- jQuery's own `.trigger()`
-  // can't invoke a native method for "change" (unlike "click"/"focus"/
-  // "submit"), so it falls back to replaying only handlers in jQuery's
-  // own internal registry, never reaching a listener registered outside
-  // it. Confirmed live: toggling selection mode reset the `<select>`'s
-  // own value to "-1" but left `#applyActionBlock` visibly stuck open --
-  // this dispatch reaches the real listener now.
+  // "submit"), so it only replays handlers in jQuery's own internal
+  // registry, never one registered outside it.
   trigger(
     document.querySelectorAll(
       "#permitActionUserList select[name=selectAction]",

@@ -106,9 +106,11 @@ describe("ajax() request shaping", () => {
 
     const init = calls[0]?.init;
     expect(init?.body).toBe('{"action":"activate"}');
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own fetch() call always builds headers as a plain object, one of RequestInit's own several real HeadersInit shapes.
     expect((init?.headers as Record<string, string>)["Content-Type"]).toBe(
       "application/json"
     );
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own fetch() call always builds headers as a plain object, one of RequestInit's own several real HeadersInit shapes.
     expect((init?.headers as Record<string, string>)["X-CSRF-Token"]).toBe(
       "tok"
     );
@@ -118,6 +120,7 @@ describe("ajax() request shaping", () => {
     stubFetch(200, "");
     await ajax({ url: "x", type: "POST", data: { a: 1 } });
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own fetch() call always builds headers as a plain object, one of RequestInit's own several real HeadersInit shapes.
     expect((calls[0]?.init.headers as Record<string, string>)["Content-Type"]).toBe(
       "application/x-www-form-urlencoded; charset=UTF-8"
     );

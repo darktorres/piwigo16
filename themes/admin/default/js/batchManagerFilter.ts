@@ -121,9 +121,11 @@ function filter_enable(filter: string) {
 
   /* check the checkbox to declare we use this filter */
   document
-    .querySelectorAll('input[type=checkbox][name="' + filter + '_use"]')
+    .querySelectorAll<HTMLInputElement>(
+      'input[type=checkbox][name="' + filter + '_use"]',
+    )
     .forEach((el) => {
-      (el as HTMLInputElement).checked = true;
+      el.checked = true;
     });
 
   /* forbid to select this filter in the addFilter list */
@@ -143,9 +145,9 @@ function filter_disable(filter: string) {
 
   /* uncheck the checkbox to declare we do not use this filter */
   document
-    .querySelectorAll('input[name="' + filter + '_use"]')
+    .querySelectorAll<HTMLInputElement>('input[name="' + filter + '_use"]')
     .forEach((el) => {
-      (el as HTMLInputElement).checked = false;
+      el.checked = false;
     });
 
   /* give the possibility to show it again */
@@ -223,11 +225,11 @@ ready(function () {
   on(
     document.querySelectorAll(".removeFilter"),
     "click",
-    function (event: Event): boolean {
+    function (this: Element, event: Event): boolean {
       event.preventDefault();
       // jQuery's `.parent("li")` -- the immediate parent, filtered by tag;
       // every real .removeFilter is inside exactly one <li> with a real id.
-      const li = (event.currentTarget as Element).parentElement!;
+      const li = this.parentElement!;
       const filter = li.id;
       filter_disable(filter);
 
@@ -238,8 +240,8 @@ ready(function () {
   on(
     document.querySelectorAll("#addFilter a"),
     "click",
-    function (event: Event): void {
-      const filter = attrOf(event.currentTarget as Element, "data-value")!;
+    function (this: Element): void {
+      const filter = attrOf(this, "data-value")!;
       filter_enable(filter);
     },
   );
@@ -275,6 +277,7 @@ ready(function () {
 
   on(document, "mouseup", function (e: Event): void {
     e.stopPropagation();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real mouseup event's own target inside the document is always an Element (or null), never a bare EventTarget with no Element interface.
     if (!(e.target as Element).classList.contains("addFilter-button")) {
       slideUp(document.querySelectorAll(".addFilter-dropdown"));
     }
@@ -286,8 +289,8 @@ ready(function () {
   on(
     document.querySelectorAll('.filterBlock select[data-selectize="tags"]'),
     "change",
-    function (event: Event): void {
-      const tagValue = val([event.currentTarget as Element]);
+    function (this: Element): void {
+      const tagValue = val([this]);
       if (tagValue !== undefined && tagValue !== "") {
         hide_filters_error(str_select_tag);
       }

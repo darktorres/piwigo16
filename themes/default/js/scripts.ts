@@ -68,15 +68,16 @@ export function pwgAddEventListener(
   // this project's own P35 browserslist floor targets -- lib.dom.d.ts
   // itself has no ambient type for `attachEvent` (removed with IE),
   // hence the local interface rather than a real DOM type.
-  else
-    (
-      elem as unknown as {
-        attachEvent(
-          event: string,
-          handler: EventListenerOrEventListenerObject,
-        ): boolean;
-      }
-    ).attachEvent("on" + evt, fn);
+  else {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- IE-only fallback; lib.dom.d.ts has no ambient type for attachEvent at all (removed with IE), so there is no real interface to narrow to.
+    const legacyElem = elem as unknown as {
+      attachEvent(
+        event: string,
+        handler: EventListenerOrEventListenerObject,
+      ): boolean;
+    };
+    legacyElem.attachEvent("on" + evt, fn);
+  }
 }
 
 function pwg_tryFocus(id: string): void {
@@ -87,6 +88,7 @@ function pwg_tryFocus(id: string): void {
 }
 
 document.addEventListener("click", function (e) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real click inside the document always targets an HTMLElement (or null), never a bare EventTarget with no Element interface.
   const link = (e.target as HTMLElement).closest("[data-confirm]");
   if (link && !confirm(pwg_getPageString("Are you sure?"))) {
     e.preventDefault();
@@ -105,8 +107,8 @@ function pwg_checkPasswordMatch(
   pass2Id: string,
   errorId: string,
 ): void {
-  const pass1 = document.getElementById(pass1Id) as HTMLInputElement | null;
-  const pass2 = document.getElementById(pass2Id) as HTMLInputElement | null;
+  const pass1 = document.querySelector<HTMLInputElement>("#" + pass1Id);
+  const pass2 = document.querySelector<HTMLInputElement>("#" + pass2Id);
   const error = document.getElementById(errorId);
   if (!pass1 || !pass2 || !error) {
     return;
@@ -127,7 +129,7 @@ function pwg_checkPasswordMatch(
 }
 
 function pwg_checkEmailFormat(fieldId: string, errorId: string): void {
-  const field = document.getElementById(fieldId) as HTMLInputElement | null;
+  const field = document.querySelector<HTMLInputElement>("#" + fieldId);
   const error = document.getElementById(errorId);
   if (!field || !error) {
     return;

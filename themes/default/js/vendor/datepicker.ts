@@ -489,6 +489,7 @@ function buildPopup(): void {
     if (active === undefined) {
       return;
     }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real mousedown event's own target inside the document is always a Node (or null), never a bare EventTarget with no Node interface.
     const target = e.target as Node;
     if (
       !popupEl.contains(target) &&

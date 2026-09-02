@@ -91,9 +91,9 @@ delegate(
   function (this: HTMLElement, event: Event): void {
     del(
       this,
-      Number(this.dataset.imageId),
-      Number(this.dataset.userId),
-      this.dataset.anonymousId || null,
+      Number(this.dataset["imageId"]),
+      Number(this.dataset["userId"]),
+      this.dataset["anonymousId"] || null,
     );
     event.preventDefault();
     event.stopPropagation();

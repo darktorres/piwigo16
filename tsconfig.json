@@ -15,6 +15,7 @@
     "noUnusedLocals": true,
     "exactOptionalPropertyTypes": true,
     "noUnusedParameters": true,
+    "noPropertyAccessFromIndexSignature": true,
     "forceConsistentCasingInFileNames": true,
     "verbatimModuleSyntax": true,
     "allowJs": true,

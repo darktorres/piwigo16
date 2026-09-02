@@ -117,7 +117,7 @@ function toggle_mode(mode: string) {
     root?.classList.add("dark");
     root?.classList.remove("light");
     if (logo) {
-      logo.src = logo.dataset.logoDark!;
+      logo.src = logo.dataset["logoDark"]!;
     }
   } else {
     //Light mode
@@ -130,7 +130,7 @@ function toggle_mode(mode: string) {
     root?.classList.add("light");
     root?.classList.remove("dark");
     if (logo) {
-      logo.src = logo.dataset.logoLight!;
+      logo.src = logo.dataset["logoLight"]!;
     }
   }
 }

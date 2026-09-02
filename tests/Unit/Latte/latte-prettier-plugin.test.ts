@@ -42,7 +42,7 @@ function normalizeAst(node: unknown): unknown {
   if (Array.isArray(node)) {
     return node.map(normalizeAst).filter((n) => {
       const rec = n as Record<string, unknown> | null;
-      return !(rec && rec.type === "HtmlText" && rec.value === "");
+      return !(rec && rec["type"] === "HtmlText" && rec["value"] === "");
     });
   }
   if (node === null || typeof node !== "object") return node;
@@ -58,8 +58,8 @@ function normalizeAst(node: unknown): unknown {
       k === "unclosedAtEof"
     )
       continue;
-    if (k === "value" && rec.type === "HtmlText") {
-      out.value = (rec.value as string).replace(/\s+/g, " ").trim();
+    if (k === "value" && rec["type"] === "HtmlText") {
+      out["value"] = (rec["value"] as string).replace(/\s+/g, " ").trim();
       continue;
     }
     out[k] = normalizeAst(rec[k]);

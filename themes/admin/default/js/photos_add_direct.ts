@@ -917,14 +917,14 @@ function uploadNextTusFile(
 
   const metadata: Record<string, string> = { filename: file.name };
   if (formatMode) {
-    metadata.formatOf = String(options.format_of);
+    metadata["formatOf"] = String(options.format_of);
   } else {
-    metadata.category = String(options.category);
-    metadata.name = options.name ?? "";
+    metadata["category"] = String(options.category);
+    metadata["name"] = options.name ?? "";
     uploadCategory ??= { id: options.category };
   }
   if (options.update_mode) {
-    metadata.updateMode = "1";
+    metadata["updateMode"] = "1";
   }
 
   activeTusUpload = new Upload(file.getNative(), {
@@ -993,8 +993,8 @@ function uploadNextTusFile(
         imageId: result.imageId,
         addStatus: result.addStatus,
         squareSrc:
-          imageInfo.derivatives && imageInfo.derivatives.square
-            ? imageInfo.derivatives.square.url
+          imageInfo.derivatives && imageInfo.derivatives["square"]
+            ? imageInfo.derivatives["square"].url
             : "",
         name: imageInfo.name || file.name,
       });

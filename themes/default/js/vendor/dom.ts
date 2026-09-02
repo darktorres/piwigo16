@@ -633,7 +633,7 @@ export function resolveDuration(duration?: number | string): number {
     return FX_SPEEDS[duration] as number;
   }
 
-  return FX_SPEEDS._default as number;
+  return FX_SPEEDS["_default"] as number;
 }
 
 /**

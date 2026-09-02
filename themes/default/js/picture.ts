@@ -55,9 +55,9 @@ if (derivativeSwitchBox) {
     }
     e.preventDefault();
     changeImgSrc(
-      link.dataset.derivativeUrl!,
-      link.dataset.derivativeTypeSave!,
-      link.dataset.derivativeTypeMap!,
+      link.dataset["derivativeUrl"]!,
+      link.dataset["derivativeTypeSave"]!,
+      link.dataset["derivativeTypeMap"]!,
     );
   });
 }
@@ -71,7 +71,7 @@ if (originalLink) {
   originalLink.addEventListener("click", function (e) {
     e.preventDefault();
     phpWGOpenWindow(
-      originalLink.dataset.originalUrl!,
+      originalLink.dataset["originalUrl"]!,
       "xxx",
       "scrollbars=yes,toolbar=no,status=no,resizable=yes",
     );

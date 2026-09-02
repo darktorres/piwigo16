@@ -637,28 +637,28 @@ function lineConstructor(line: HistoryLine, id: number) {
       const active_more: any[] = [];
       const active_items = Object.keys(active_search_details);
       if (active_items.length > 0) {
-        if (active_search_details.allwords) {
+        if (active_search_details["allwords"]) {
           const item = find(newLine, ".detail-item-" + String(count_item));
-          html(item, active_search_details.allwords.join(" "));
-          addClass(item, String(search_icons.allwords) + " tiptip");
+          html(item, active_search_details["allwords"].join(" "));
+          addClass(item, String(search_icons["allwords"]) + " tiptip");
           attr(
             item,
             "title",
             "<b>" +
               str_search_details["allwords"]! +
               " :</b> " +
-              String(active_search_details.allwords.join(" ")),
+              String(active_search_details["allwords"].join(" ")),
           );
           count_item++;
           active_more.push("allwords");
         }
-        if (active_search_details.cat) {
-          const array_cat = Object.values(active_search_details.cat);
+        if (active_search_details["cat"]) {
+          const array_cat = Object.values(active_search_details["cat"]);
           const cat = array_cat.join(" + ");
           const text = stripHtml(cat);
           const item = find(newLine, ".detail-item-" + String(count_item));
           html(item, cat);
-          addClass(item, String(search_icons.cat) + " tiptip");
+          addClass(item, String(search_icons["cat"]) + " tiptip");
           attr(
             item,
             "title",
@@ -668,11 +668,11 @@ function lineConstructor(line: HistoryLine, id: number) {
           count_item++;
           active_more.push("cat");
         }
-        if (count_item <= 2 && active_search_details.tags) {
-          const array_tags = Object.values(active_search_details.tags);
+        if (count_item <= 2 && active_search_details["tags"]) {
+          const array_tags = Object.values(active_search_details["tags"]);
           const item = find(newLine, ".detail-item-" + String(count_item));
           html(item, array_tags.join(" + "));
-          addClass(item, String(search_icons.tags) + " tiptip");
+          addClass(item, String(search_icons["tags"]) + " tiptip");
           attr(
             item,
             "title",

@@ -3121,8 +3121,8 @@ function update_guest_info() {
   )!;
   let ajax_data: Record<string, unknown> = {};
   ajax_data = fill_ajax_data_from_container(ajax_data, pop_in_container);
-  ajax_data.email = undefined;
-  ajax_data.status = undefined;
+  ajax_data["email"] = undefined;
+  ajax_data["status"] = undefined;
   void ajax({
     url: "api/v1/users/" + String(guest_id),
     type: "PATCH",
@@ -3315,25 +3315,25 @@ function add_user() {
       ".AddUserInputContainer .user-property-group .selectize-input .item",
     ),
   ).map((el) => parseInt(attrOf(el, "data-value")!));
-  ajax_data.username = val(
+  ajax_data["username"] = val(
     document.querySelectorAll(".AddUserLabelUsername .user-property-input"),
   );
-  ajax_data.email = val(
+  ajax_data["email"] = val(
     document.querySelectorAll(".AddUserLabelEmail .user-property-input"),
   );
-  ajax_data.status = val(
+  ajax_data["status"] = val(
     document.querySelectorAll(
       ".AddUserInputContainer .user-property-status select",
     ),
   );
-  ajax_data.level = Number(
+  ajax_data["level"] = Number(
     val(
       document.querySelectorAll(
         ".AddUserInputContainer .user-property-level select",
       ),
     ),
   );
-  ajax_data.enabledHigh =
+  ajax_data["enabledHigh"] =
     attrOf(
       document.querySelectorAll(
         '.AddUserInputContainer .user-list-checkbox[name="hd_enabled"]',
@@ -3342,21 +3342,23 @@ function add_user() {
     ) === "1"
       ? true
       : false;
-  ajax_data.groupIds = groups_selected;
+  ajax_data["groupIds"] = groups_selected;
 
   // for debug
   // console.log(ajax_data);
 
   const data: Record<string, unknown> = {
-    username: ajax_data.username,
-    email: ajax_data.email,
+    username: ajax_data["username"],
+    email: ajax_data["email"],
   };
 
-  if ("generic" === ajax_data.status) {
-    data.password = val(document.querySelectorAll("#add_user_pass"));
-    data.passwordConfirm = val(document.querySelectorAll("#add_user_confpass"));
+  if ("generic" === ajax_data["status"]) {
+    data["password"] = val(document.querySelectorAll("#add_user_pass"));
+    data["passwordConfirm"] = val(
+      document.querySelectorAll("#add_user_confpass"),
+    );
   } else {
-    data.autoPassword = true;
+    data["autoPassword"] = true;
   }
 
   void ajax({
@@ -3390,7 +3392,7 @@ function add_user() {
         );
         return false;
       }
-      if ("generic" === ajax_data.status) {
+      if ("generic" === ajax_data["status"]) {
         const pass = val(document.querySelectorAll("#add_user_pass"));
         const confPass = val(document.querySelectorAll("#add_user_confpass"));
         if ("" === pass) {
@@ -3437,7 +3439,7 @@ function add_user() {
     ) => {
       const new_user_id = data.id;
       const default_group = "groups" in data ? data.groups : [];
-      ajax_data.groupIds = (ajax_data.groupIds as number[]).concat(
+      ajax_data["groupIds"] = (ajax_data["groupIds"] as number[]).concat(
         default_group,
       );
       add_infos_to_new_user(new_user_id, ajax_data);
@@ -3466,10 +3468,10 @@ function add_infos_to_new_user(
     contentType: "application/json",
     headers: { "X-CSRF-Token": pwg_token },
     data: JSON.stringify({
-      status: ajax_data.status,
-      level: ajax_data.level,
-      groupIds: ajax_data.groupIds,
-      enabledHigh: ajax_data.enabledHigh,
+      status: ajax_data["status"],
+      level: ajax_data["level"],
+      groupIds: ajax_data["groupIds"],
+      enabledHigh: ajax_data["enabledHigh"],
     }),
     dataType: "json",
     success: function (
@@ -3488,11 +3490,11 @@ function add_infos_to_new_user(
       );
       html(
         document.querySelectorAll("#AddUserUpdatedText"),
-        user_added_str.replace("%s", String(ajax_data.username)),
+        user_added_str.replace("%s", String(ajax_data["username"])),
       );
       const status = ["webmaster", "admin", "normal"];
-      if (status.includes(String(ajax_data.status))) {
-        send_new_user_password(new_user_id, String(ajax_data.email));
+      if (status.includes(String(ajax_data["status"]))) {
+        send_new_user_password(new_user_id, String(ajax_data["email"]));
       } else {
         add_user_close();
       }
@@ -3511,7 +3513,7 @@ function add_infos_to_new_user(
       });
       html(
         document.querySelectorAll("#AddUserSuccess label span:first-child"),
-        user_added_str.replace("%s", String(ajax_data.username)),
+        user_added_str.replace("%s", String(ajax_data["username"])),
       );
       css(document.querySelectorAll("#AddUserSuccess"), "display", "flex");
       html(
@@ -4052,28 +4054,28 @@ ready(function () {
         }
         break;
       case "group_associate":
-        data.group_id = val(
+        data["group_id"] = val(
           document.querySelectorAll(
             "#permitActionUserList select[name=associate]",
           ),
         );
         break;
       case "group_dissociate":
-        data.group_id = val(
+        data["group_id"] = val(
           document.querySelectorAll(
             "#permitActionUserList select[name=dissociate]",
           ),
         );
         break;
       case "status":
-        data.status = val(
+        data["status"] = val(
           document.querySelectorAll(
             "#permitActionUserList select[name=status]",
           ),
         );
         break;
       case "enabled_high":
-        data.enabled_high =
+        data["enabled_high"] =
           attrOf(
             document.querySelectorAll(
               "#permitActionUserList .user-list-checkbox[name=enabled_high_yes]",
@@ -4084,31 +4086,31 @@ ready(function () {
             : false;
         break;
       case "level":
-        data.level = val(
+        data["level"] = val(
           document.querySelectorAll("#permitActionUserList select[name=level]"),
         );
         break;
       case "nb_image_page":
-        data.nb_image_page = val(
+        data["nb_image_page"] = val(
           document.querySelectorAll(
             "#permitActionUserList input[name=nb_image_page]",
           ),
         );
         break;
       case "theme":
-        data.theme = val(
+        data["theme"] = val(
           document.querySelectorAll("#permitActionUserList select[name=theme]"),
         );
         break;
       case "language":
-        data.language = val(
+        data["language"] = val(
           document.querySelectorAll(
             "#permitActionUserList select[name=language]",
           ),
         );
         break;
       case "recent_period":
-        data.recent_period =
+        data["recent_period"] =
           recent_period_values[
             slider(
               document.querySelectorAll(
@@ -4120,7 +4122,7 @@ ready(function () {
           ];
         break;
       case "expand":
-        data.expand =
+        data["expand"] =
           attrOf(
             document.querySelectorAll(
               "#permitActionUserList .user-list-checkbox[name=expand_yes]",
@@ -4131,7 +4133,7 @@ ready(function () {
             : false;
         break;
       case "show_nb_comments":
-        data.show_nb_comments =
+        data["show_nb_comments"] =
           attrOf(
             document.querySelectorAll(
               "#permitActionUserList .user-list-checkbox[name=show_nb_comments_yes]",
@@ -4142,7 +4144,7 @@ ready(function () {
             : false;
         break;
       case "show_nb_hits":
-        data.show_nb_hits =
+        data["show_nb_hits"] =
           attrOf(
             document.querySelectorAll(
               "#permitActionUserList .user-list-checkbox[name=show_nb_hits_yes]",
@@ -4194,7 +4196,7 @@ ready(function () {
       request = ajax({
         url:
           "api/v1/groups/" +
-          String(data.group_id) +
+          String(data["group_id"]) +
           "/actions/" +
           (action === "group_associate" ? "add-user" : "remove-user"),
         method: "POST",

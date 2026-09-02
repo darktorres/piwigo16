@@ -488,15 +488,15 @@ const API_KEY_ENDPOINTS: Record<
   "pwg.users.api_key.create": (params) => ({
     url: "api/v1/session/api-keys",
     httpMethod: "POST",
-    body: { keyName: params.key_name, duration: params.duration },
+    body: { keyName: params["key_name"], duration: params["duration"] },
   }),
   "pwg.users.api_key.edit": (params) => ({
-    url: `api/v1/session/api-keys/${String(params.pkid)}`,
+    url: `api/v1/session/api-keys/${String(params["pkid"])}`,
     httpMethod: "PATCH",
-    body: { keyName: params.key_name },
+    body: { keyName: params["key_name"] },
   }),
   "pwg.users.api_key.revoke": (params) => ({
-    url: `api/v1/session/api-keys/${String(params.pkid)}`,
+    url: `api/v1/session/api-keys/${String(params["pkid"])}`,
     httpMethod: "DELETE",
     body: null,
   }),

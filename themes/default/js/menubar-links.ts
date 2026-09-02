@@ -8,8 +8,8 @@ function pwg_initMenubarLinks() {
     link.addEventListener("click", function (e) {
       window.open(
         link.href,
-        link.dataset.windowName,
-        link.dataset.windowFeatures,
+        link.dataset["windowName"],
+        link.dataset["windowFeatures"],
       );
       e.preventDefault();
     });

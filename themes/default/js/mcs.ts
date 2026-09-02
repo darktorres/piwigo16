@@ -202,7 +202,7 @@ ready(function () {
   // Declare params sent to pwg.images.filteredSearch.update
   // PS for performSearch()
   PS_params = {};
-  PS_params.search_id = search_id;
+  PS_params["search_id"] = search_id;
 
   // Setup word filter
   const allwords_rule = global_params.fields.allwords;
@@ -267,11 +267,11 @@ ready(function () {
       },
     );
 
-    PS_params.allwords = word_search_str.slice(0, -1);
-    PS_params.allwords_fields = word_search_fields;
-    PS_params.allwords_mode = word_search_mode;
+    PS_params["allwords"] = word_search_str.slice(0, -1);
+    PS_params["allwords_fields"] = word_search_fields;
+    PS_params["allwords_mode"] = word_search_mode;
 
-    empty_filters_list.push(PS_params.allwords);
+    empty_filters_list.push(PS_params["allwords"]);
   }
 
   //Hide filter spinner
@@ -337,10 +337,10 @@ ready(function () {
       },
     );
 
-    PS_params.tags = tags_rule.words.length > 0 ? tags_rule.words : "";
-    PS_params.tags_mode = tags_rule.mode;
+    PS_params["tags"] = tags_rule.words.length > 0 ? tags_rule.words : "";
+    PS_params["tags_mode"] = tags_rule.mode;
 
-    empty_filters_list.push(PS_params.tags);
+    empty_filters_list.push(PS_params["tags"]);
   }
 
   // Setup Date post filter
@@ -539,17 +539,17 @@ ready(function () {
       );
     }
 
-    PS_params.date_posted_preset = date_posted_rule.preset;
+    PS_params["date_posted_preset"] = date_posted_rule.preset;
     // Was `custom != ""`, which compared the array against a string:
     // `[].toString()` is `""`, so it read as an emptiness test by way of
     // loose equality. `length > 0` states that directly. The one input
     // the two disagree on is `[""]`, which no producer can build (every
     // entry carries a one-character type prefix).
-    PS_params.date_posted_custom =
+    PS_params["date_posted_custom"] =
       date_posted_rule.custom.length > 0 ? date_posted_rule.custom : "";
 
-    empty_filters_list.push(PS_params.date_posted_preset);
-    empty_filters_list.push(PS_params.date_posted_custom);
+    empty_filters_list.push(PS_params["date_posted_preset"]);
+    empty_filters_list.push(PS_params["date_posted_custom"]);
   }
 
   // Setup Date creation filter
@@ -735,13 +735,13 @@ ready(function () {
       );
     }
 
-    PS_params.date_created_preset = date_created_rule.preset;
+    PS_params["date_created_preset"] = date_created_rule.preset;
     // Same `custom != ""` rewrite as the date_posted block above.
-    PS_params.date_created_custom =
+    PS_params["date_created_custom"] =
       date_created_rule.custom.length > 0 ? date_created_rule.custom : "";
 
-    empty_filters_list.push(PS_params.date_created_preset);
-    empty_filters_list.push(PS_params.date_created_custom);
+    empty_filters_list.push(PS_params["date_created_preset"]);
+    empty_filters_list.push(PS_params["date_created_custom"]);
   }
 
   // Setup album filter
@@ -809,10 +809,10 @@ ready(function () {
       },
     );
 
-    PS_params.categories = cat_rule.words.length > 0 ? cat_rule.words : "";
-    PS_params.categories_withsubs = cat_rule.sub_inc;
+    PS_params["categories"] = cat_rule.words.length > 0 ? cat_rule.words : "";
+    PS_params["categories_withsubs"] = cat_rule.sub_inc;
 
-    empty_filters_list.push(PS_params.categories);
+    empty_filters_list.push(PS_params["categories"]);
   }
 
   // Setup author filter
@@ -860,9 +860,10 @@ ready(function () {
         },
       );
 
-      PS_params.authors = author_rule.words.length > 0 ? author_rule.words : "";
+      PS_params["authors"] =
+        author_rule.words.length > 0 ? author_rule.words : "";
 
-      empty_filters_list.push(PS_params.authors);
+      empty_filters_list.push(PS_params["authors"]);
     }
   });
 
@@ -912,9 +913,9 @@ ready(function () {
       },
     );
 
-    PS_params.added_by = added_by_ids.length > 0 ? added_by_ids : "";
+    PS_params["added_by"] = added_by_ids.length > 0 ? added_by_ids : "";
 
-    empty_filters_list.push(PS_params.added_by);
+    empty_filters_list.push(PS_params["added_by"]);
   }
 
   // Setup filetypes filter
@@ -965,9 +966,10 @@ ready(function () {
       },
     );
 
-    PS_params.filetypes = filetypes_filter.length > 0 ? filetypes_filter : "";
+    PS_params["filetypes"] =
+      filetypes_filter.length > 0 ? filetypes_filter : "";
 
-    empty_filters_list.push(PS_params.filetypes);
+    empty_filters_list.push(PS_params["filetypes"]);
   }
 
   // Setup Ratio filter
@@ -1014,9 +1016,9 @@ ready(function () {
       },
     );
 
-    PS_params.ratios = ratios_filter.length > 0 ? ratios_filter : "";
+    PS_params["ratios"] = ratios_filter.length > 0 ? ratios_filter : "";
 
-    empty_filters_list.push(PS_params.ratios);
+    empty_filters_list.push(PS_params["ratios"]);
   }
 
   // Setup rating filter
@@ -1084,9 +1086,9 @@ ready(function () {
       },
     );
 
-    PS_params.ratings = ratings_filter.length > 0 ? ratings_filter : "";
+    PS_params["ratings"] = ratings_filter.length > 0 ? ratings_filter : "";
 
-    empty_filters_list.push(PS_params.ratings);
+    empty_filters_list.push(PS_params["ratings"]);
   }
 
   // Real `pwgDoubleSlider({ stop })` callback (`themes/admin/default/js/
@@ -1192,11 +1194,11 @@ ready(function () {
       },
     );
 
-    PS_params.filesize_min = global_params.fields.filesize_min ?? "";
-    PS_params.filesize_max = global_params.fields.filesize_max ?? "";
+    PS_params["filesize_min"] = global_params.fields.filesize_min ?? "";
+    PS_params["filesize_max"] = global_params.fields.filesize_max ?? "";
 
-    empty_filters_list.push(PS_params.filesize_min);
-    empty_filters_list.push(PS_params.filesize_max);
+    empty_filters_list.push(PS_params["filesize_min"]);
+    empty_filters_list.push(PS_params["filesize_max"]);
   }
 
   // Setup Height filter
@@ -1268,11 +1270,11 @@ ready(function () {
       },
     );
 
-    PS_params.height_min = global_params.fields.height_min ?? "";
-    PS_params.height_max = global_params.fields.height_max ?? "";
+    PS_params["height_min"] = global_params.fields.height_min ?? "";
+    PS_params["height_max"] = global_params.fields.height_max ?? "";
 
-    empty_filters_list.push(PS_params.height_min);
-    empty_filters_list.push(PS_params.height_max);
+    empty_filters_list.push(PS_params["height_min"]);
+    empty_filters_list.push(PS_params["height_max"]);
   }
 
   // Setup Width filter
@@ -1344,11 +1346,11 @@ ready(function () {
       },
     );
 
-    PS_params.width_min = global_params.fields.width_min ?? "";
-    PS_params.width_max = global_params.fields.width_max ?? "";
+    PS_params["width_min"] = global_params.fields.width_min ?? "";
+    PS_params["width_max"] = global_params.fields.width_max ?? "";
 
-    empty_filters_list.push(PS_params.width_min);
-    empty_filters_list.push(PS_params.width_max);
+    empty_filters_list.push(PS_params["width_min"]);
+    empty_filters_list.push(PS_params["width_max"]);
   }
 
   // Setup Expert filter
@@ -1384,9 +1386,9 @@ ready(function () {
       },
     );
 
-    PS_params.expert = expert_search_str.length > 0 ? expert_search_str : "";
+    PS_params["expert"] = expert_search_str.length > 0 ? expert_search_str : "";
 
-    empty_filters_list.push(PS_params.expert);
+    empty_filters_list.push(PS_params["expert"]);
   }
 
   if (filters_to_remove.length > 0) {
@@ -1605,8 +1607,10 @@ ready(function () {
             "show-filter-dropdown",
           );
 
-          PS_params.allwords = val(document.querySelectorAll("#word-search"));
-          PS_params.allwords_mode = attrOf(
+          PS_params["allwords"] = val(
+            document.querySelectorAll("#word-search"),
+          );
+          PS_params["allwords_mode"] = attrOf(
             document.querySelectorAll(".word-search-options input:checked"),
             "value",
           );
@@ -1617,7 +1621,8 @@ ready(function () {
             .forEach((el) => {
               new_fields.push(attrOf(el, "name") ?? undefined);
             });
-          PS_params.allwords_fields = new_fields.length > 0 ? new_fields : "";
+          PS_params["allwords_fields"] =
+            new_fields.length > 0 ? new_fields : "";
         }
       },
     );
@@ -1673,9 +1678,9 @@ ready(function () {
             const tagValue = getSelectizeInstance(
               document.querySelector<HTMLSelectElement>("#tag-search")!,
             )!.getValue() as (string | number)[];
-            PS_params.tags = tagValue.length > 0 ? tagValue : "";
+            PS_params["tags"] = tagValue.length > 0 ? tagValue : "";
           }
-          PS_params.tags_mode = val(
+          PS_params["tags_mode"] = val(
             document.querySelectorAll(
               ".filter-tag-form .search-params input:checked",
             ),
@@ -1741,7 +1746,7 @@ ready(function () {
               ),
             );
 
-            PS_params.date_posted_preset = presetValue ?? "";
+            PS_params["date_posted_preset"] = presetValue ?? "";
 
             if ("custom" === presetValue) {
               const customDates: (string | number | string[] | undefined)[] =
@@ -1755,7 +1760,7 @@ ready(function () {
                   customDates.push(val([el]));
                 });
 
-              PS_params.date_posted_custom =
+              PS_params["date_posted_custom"] =
                 customDates.length > 0 ? customDates : "";
             }
           }
@@ -1825,7 +1830,7 @@ ready(function () {
               ),
             );
 
-            PS_params.date_created_preset = presetValue ?? "";
+            PS_params["date_created_preset"] = presetValue ?? "";
 
             if ("custom" === presetValue) {
               const customDates: (string | number | string[] | undefined)[] =
@@ -1839,7 +1844,7 @@ ready(function () {
                   customDates.push(val([el]));
                 });
 
-              PS_params.date_created_custom =
+              PS_params["date_created_custom"] =
                 customDates.length > 0 ? customDates : "";
             }
           }
@@ -1899,9 +1904,9 @@ ready(function () {
             document.querySelectorAll(".filter-album"),
             "show-filter-dropdown",
           );
-          PS_params.categories =
+          PS_params["categories"] =
             ab.get_selected_albums().length > 0 ? ab.get_selected_albums() : "";
-          PS_params.categories_withsubs =
+          PS_params["categories_withsubs"] =
             document.querySelectorAll("input[name='search-sub-cats']:checked")
               .length !== 0;
         }
@@ -1963,7 +1968,7 @@ ready(function () {
               const authorValue = getSelectizeInstance(
                 document.querySelector<HTMLSelectElement>("#authors")!,
               )!.getValue() as (string | number)[];
-              PS_params.authors = authorValue.length > 0 ? authorValue : "";
+              PS_params["authors"] = authorValue.length > 0 ? authorValue : "";
             }
           }
         },
@@ -2028,7 +2033,7 @@ ready(function () {
                 added_by_array.push(attrOf(el, "name") ?? undefined);
               });
 
-            PS_params.added_by =
+            PS_params["added_by"] =
               added_by_array.length > 0 ? added_by_array : "";
           }
         },
@@ -2096,7 +2101,7 @@ ready(function () {
                 filetypes_array.push(attrOf(el, "name") ?? undefined);
               });
 
-            PS_params.filetypes =
+            PS_params["filetypes"] =
               filetypes_array.length > 0 ? filetypes_array : "";
           }
         },
@@ -2162,7 +2167,7 @@ ready(function () {
               ratios_array.push(attrOf(el, "name") ?? undefined);
             });
 
-          PS_params.ratios = ratios_array.length > 0 ? ratios_array : "";
+          PS_params["ratios"] = ratios_array.length > 0 ? ratios_array : "";
         }
       },
     );
@@ -2226,7 +2231,8 @@ ready(function () {
                 ratings_array.push(attrOf(el, "name") ?? undefined);
               });
 
-            PS_params.ratings = ratings_array.length > 0 ? ratings_array : "";
+            PS_params["ratings"] =
+              ratings_array.length > 0 ? ratings_array : "";
           }
         },
       );
@@ -2303,8 +2309,8 @@ ready(function () {
         ) * 1024,
       );
 
-      PS_params.filesize_min = filesize_min;
-      PS_params.filesize_max = filesize_max;
+      PS_params["filesize_min"] = filesize_min;
+      PS_params["filesize_max"] = filesize_max;
 
       trigger(document.querySelectorAll(".filter-filesize"), "click");
       performSearch(PS_params, true);
@@ -2368,8 +2374,8 @@ ready(function () {
         document.querySelectorAll("input[name=filter_height_max]"),
       );
 
-      PS_params.height_min = height_min;
-      PS_params.height_max = height_max;
+      PS_params["height_min"] = height_min;
+      PS_params["height_max"] = height_max;
 
       trigger(document.querySelectorAll(".filter-height"), "click");
       performSearch(PS_params, true);
@@ -2430,8 +2436,8 @@ ready(function () {
         document.querySelectorAll("input[name=filter_width_max]"),
       );
 
-      PS_params.width_min = width_min;
-      PS_params.width_max = width_max;
+      PS_params["width_min"] = width_min;
+      PS_params["width_max"] = width_max;
 
       trigger(document.querySelectorAll(".filter-width"), "click");
       performSearch(PS_params, true);
@@ -2478,7 +2484,9 @@ ready(function () {
             "show-filter-dropdown",
           );
 
-          PS_params.expert = val(document.querySelectorAll("#expert-search"));
+          PS_params["expert"] = val(
+            document.querySelectorAll("#expert-search"),
+          );
         }
       },
     );
@@ -2518,25 +2526,25 @@ function performSearch(params: Record<string, any>, reload: boolean = false) {
   // place that actually sends it. `expert` has no equivalent on this
   // endpoint, so it's not sent.
   const body: Record<string, any> = {
-    allwords: params.allwords,
-    allwordsFields: params.allwords_fields,
-    allwordsMode: params.allwords_mode,
-    tags: params.tags,
-    tagsMode: params.tags_mode,
-    datePostedPreset: params.date_posted_preset,
-    datePostedCustom: params.date_posted_custom,
-    dateCreatedPreset: params.date_created_preset,
-    dateCreatedCustom: params.date_created_custom,
-    categories: params.categories,
-    categoriesWithsubs: params.categories_withsubs,
-    authors: params.authors,
-    addedBy: params.added_by,
-    filetypes: params.filetypes,
-    ratios: params.ratios,
-    ratings: params.ratings,
+    allwords: params["allwords"],
+    allwordsFields: params["allwords_fields"],
+    allwordsMode: params["allwords_mode"],
+    tags: params["tags"],
+    tagsMode: params["tags_mode"],
+    datePostedPreset: params["date_posted_preset"],
+    datePostedCustom: params["date_posted_custom"],
+    dateCreatedPreset: params["date_created_preset"],
+    dateCreatedCustom: params["date_created_custom"],
+    categories: params["categories"],
+    categoriesWithsubs: params["categories_withsubs"],
+    authors: params["authors"],
+    addedBy: params["added_by"],
+    filetypes: params["filetypes"],
+    ratios: params["ratios"],
+    ratings: params["ratings"],
   };
-  if (params.search_id) {
-    body.searchId = params.search_id;
+  if (params["search_id"]) {
+    body["searchId"] = params["search_id"];
   }
   (
     [
@@ -2623,83 +2631,83 @@ function updateFilters(filterName: string, mode: "add" | "del") {
   switch (filterName) {
     case "word":
       if (mode === "add") {
-        PS_params.allwords = "";
-        PS_params.allwords_mode = "AND";
-        PS_params.allwords_fields = [];
+        PS_params["allwords"] = "";
+        PS_params["allwords_mode"] = "AND";
+        PS_params["allwords_fields"] = [];
       } else {
-        delete PS_params.allwords;
-        delete PS_params.allwords_mode;
-        delete PS_params.allwords_fields;
+        delete PS_params["allwords"];
+        delete PS_params["allwords_mode"];
+        delete PS_params["allwords_fields"];
       }
       break;
 
     case "tag":
       if (mode === "add") {
-        PS_params.tags = "";
-        PS_params.tags_mode = "AND";
+        PS_params["tags"] = "";
+        PS_params["tags_mode"] = "AND";
       } else {
-        delete PS_params.tags;
-        delete PS_params.tags_mode;
+        delete PS_params["tags"];
+        delete PS_params["tags_mode"];
       }
       break;
 
     case "album":
       if (mode === "add") {
-        PS_params.categories = "";
-        PS_params.categories_withsubs = false;
+        PS_params["categories"] = "";
+        PS_params["categories_withsubs"] = false;
       } else {
-        delete PS_params.categories;
-        delete PS_params.categories_withsubs;
+        delete PS_params["categories"];
+        delete PS_params["categories_withsubs"];
       }
       break;
 
     case "date_posted":
       if (mode === "add") {
-        PS_params.date_posted_preset = "";
-        PS_params.date_posted_custom = [];
+        PS_params["date_posted_preset"] = "";
+        PS_params["date_posted_custom"] = [];
       } else {
-        delete PS_params.date_posted_preset;
-        delete PS_params.date_posted_custom;
+        delete PS_params["date_posted_preset"];
+        delete PS_params["date_posted_custom"];
       }
       break;
 
     case "date_created":
       if (mode === "add") {
-        PS_params.date_created_preset = "";
-        PS_params.date_created_custom = [];
+        PS_params["date_created_preset"] = "";
+        PS_params["date_created_custom"] = [];
       } else {
-        delete PS_params.date_created_preset;
-        delete PS_params.date_created_custom;
+        delete PS_params["date_created_preset"];
+        delete PS_params["date_created_custom"];
       }
       break;
 
     case "filesize":
       if (mode === "add") {
-        PS_params.filesize_min = "";
-        PS_params.filesize_max = "";
+        PS_params["filesize_min"] = "";
+        PS_params["filesize_max"] = "";
       } else {
-        delete PS_params.filesize_min;
-        delete PS_params.filesize_max;
+        delete PS_params["filesize_min"];
+        delete PS_params["filesize_max"];
       }
       break;
 
     case "height":
       if (mode === "add") {
-        PS_params.height_min = "";
-        PS_params.height_max = "";
+        PS_params["height_min"] = "";
+        PS_params["height_max"] = "";
       } else {
-        delete PS_params.height_min;
-        delete PS_params.height_max;
+        delete PS_params["height_min"];
+        delete PS_params["height_max"];
       }
       break;
 
     case "width":
       if (mode === "add") {
-        PS_params.width_min = "";
-        PS_params.width_max = "";
+        PS_params["width_min"] = "";
+        PS_params["width_max"] = "";
       } else {
-        delete PS_params.width_min;
-        delete PS_params.width_max;
+        delete PS_params["width_min"];
+        delete PS_params["width_max"];
       }
       break;
 

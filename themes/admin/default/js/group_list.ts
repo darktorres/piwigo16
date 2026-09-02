@@ -248,24 +248,24 @@ const createGroup = function (group: Group): Element {
   //Setup the group
   const template = document.getElementById("group-template")!;
   const newgroup = template.cloneNode(true) as HTMLElement;
-  newgroup.id = "group-" + group.id;
+  newgroup.id = "group-" + String(group.id);
   attr(newgroup, "data-id", String(group.id));
   html(find(newgroup, "#group_name"), group.name);
   setVal(find(newgroup, ".group_name-editable"), group.name);
   attr(
     find(newgroup, ".Group-checkbox label"),
     "for",
-    "Group-Checkbox-selection-" + group.id,
+    "Group-Checkbox-selection-" + String(group.id),
   );
   attr(
     find(newgroup, ".Group-checkbox input"),
     "id",
-    "Group-Checkbox-selection-" + group.id,
+    "Group-Checkbox-selection-" + String(group.id),
   );
   attr(find(newgroup, ".input-edit-group-name"), "placeholder", group.name);
   html(
     find(newgroup, ".group_number_users"),
-    group.nbUsers +
+    String(group.nbUsers) +
       " " +
       (group.nbUsers > 1 ? str_members_default : str_member_default),
   );
@@ -273,7 +273,7 @@ const createGroup = function (group: Group): Element {
   attr(
     find(newgroup, ".manage-permissions"),
     "href",
-    "admin.php?page=group_perm&group_id=" + group.id,
+    "admin.php?page=group_perm&group_id=" + String(group.id),
   );
   hideAddGroupForm();
 
@@ -415,7 +415,7 @@ const toogleSelection = function (
   group_id: string | number,
   toggleOn: boolean,
 ) {
-  const groupBox = document.querySelectorAll("#group-" + group_id);
+  const groupBox = document.querySelectorAll("#group-" + String(group_id));
   if (toggleOn) {
     setChecked(find(groupBox, ".Group-checkbox input"), true);
     addClass(groupBox, "GroupBackgroudSelected");
@@ -425,11 +425,11 @@ const toogleSelection = function (
     //Display item selection on selection panel
     const item = parseHtml(
       "<div data-id=" +
-        group_id +
+        String(group_id) +
         ">" +
         "<a class='icon-cancel'></a>" +
         "<p>" +
-        htmlOf(find(groupBox, "#group_name")) +
+        (htmlOf(find(groupBox, "#group_name")) ?? "") +
         "</p> </div>",
     )[0]!;
     document.querySelector(".DeleteGroupList")?.appendChild(item);
@@ -440,9 +440,9 @@ const toogleSelection = function (
     updateSelectionPanel();
     const option = parseHtml(
       '<option value="' +
-        group_id +
+        String(group_id) +
         '">' +
-        htmlOf(find(groupBox, "#group_name")) +
+        (htmlOf(find(groupBox, "#group_name")) ?? "") +
         "</option>",
     )[0]!;
     document.querySelector("#MergeOptionsChoices")?.appendChild(option);
@@ -470,7 +470,9 @@ const deleteGroup = function (id: string | number) {
   confirm({
     title: str_delete.replace(
       "%s",
-      htmlOf(document.querySelectorAll("#group-" + id + " #group_name"))!,
+      htmlOf(
+        document.querySelectorAll("#group-" + String(id) + " #group_name"),
+      )!,
     ),
     titleClass: "jconfirmDeleteConfirm",
     content: "",
@@ -483,7 +485,7 @@ const deleteGroup = function (id: string | number) {
         action: function () {
           const groupName = htmlOf(
             document.querySelectorAll(
-              "#group-" + id + " .Group-name-container p",
+              "#group-" + String(id) + " .Group-name-container p",
             ),
           )!;
           alert({
@@ -491,7 +493,7 @@ const deleteGroup = function (id: string | number) {
               title: str_group_deleted.replace("%s", groupName),
               content: function () {
                 return ajax({
-                  url: "api/v1/groups/" + id,
+                  url: "api/v1/groups/" + String(id),
                   type: "DELETE",
                   headers: {
                     "X-CSRF-Token": pwg_token,
@@ -500,15 +502,17 @@ const deleteGroup = function (id: string | number) {
                   success: function (
                     _data: operations["groupDelete"]["responses"][200]["content"]["application/json"],
                   ) {
-                    document.querySelector("#group-" + id)?.remove();
+                    document.querySelector("#group-" + String(id))?.remove();
                     document
                       .querySelector(
-                        '.DeleteGroupList div[data-id="' + id + '"]',
+                        '.DeleteGroupList div[data-id="' + String(id) + '"]',
                       )
                       ?.remove();
                     document
                       .querySelector(
-                        '#MergeOptionsChoices option[value="' + id + '"]',
+                        '#MergeOptionsChoices option[value="' +
+                          String(id) +
+                          '"]',
                       )
                       ?.remove();
                     updateBadge();
@@ -533,22 +537,26 @@ const deleteGroup = function (id: string | number) {
 const renameGroup = function (id: string | number, newName: string) {
   const loadState = new TemporaryState();
   loadState.changeHTML(
-    document.querySelectorAll("#group-" + id + " .group-rename .validate"),
+    document.querySelectorAll(
+      "#group-" + String(id) + " .group-rename .validate",
+    ),
     "<i class='animate-spin icon-spin6'></i>",
   );
   loadState.removeClass(
-    document.querySelectorAll("#group-" + id + " .group-rename .validate"),
+    document.querySelectorAll(
+      "#group-" + String(id) + " .group-rename .validate",
+    ),
     "icon-ok",
   );
   loadState.changeAttribute(
-    document.querySelectorAll("#group-" + id + " .group-rename span"),
+    document.querySelectorAll("#group-" + String(id) + " .group-rename span"),
     "style",
     "pointer-events: none",
   );
 
   if (newName.replace(/\s/g, "").length != 0) {
     void ajax({
-      url: "api/v1/groups/" + id,
+      url: "api/v1/groups/" + String(id),
       type: "PATCH",
       contentType: "application/json",
       headers: {
@@ -565,11 +573,14 @@ const renameGroup = function (id: string | number, newName: string) {
         const confirmedName = data.name;
         //Display message
         html(
-          find(document.querySelectorAll("#group-" + id), ".groupMessage"),
+          find(
+            document.querySelectorAll("#group-" + String(id)),
+            ".groupMessage",
+          ),
           str_renaming_done,
         );
         const groupMessage = find(
-          document.querySelectorAll("#group-" + id),
+          document.querySelectorAll("#group-" + String(id)),
           ".groupMessage",
         );
         fadeIn(groupMessage);
@@ -577,7 +588,10 @@ const renameGroup = function (id: string | number, newName: string) {
           fadeOut(groupMessage);
         }, DELAY_FEEDBACK);
         html(
-          find(document.querySelectorAll("#group-" + id), "#group_name"),
+          find(
+            document.querySelectorAll("#group-" + String(id)),
+            "#group_name",
+          ),
           confirmedName,
         );
 
@@ -588,11 +602,14 @@ const renameGroup = function (id: string | number, newName: string) {
         loadState.reverse();
         //Display error message
         html(
-          find(document.querySelectorAll("#group-" + id), ".groupError"),
+          find(
+            document.querySelectorAll("#group-" + String(id)),
+            ".groupError",
+          ),
           str_name_taken,
         );
         const groupError = find(
-          document.querySelectorAll("#group-" + id),
+          document.querySelectorAll("#group-" + String(id)),
           ".groupError",
         );
         fadeIn(groupError);
@@ -604,11 +621,11 @@ const renameGroup = function (id: string | number, newName: string) {
   } else {
     loadState.reverse();
     html(
-      find(document.querySelectorAll("#group-" + id), ".groupError"),
+      find(document.querySelectorAll("#group-" + String(id)), ".groupError"),
       str_name_not_empty,
     );
     const groupError = find(
-      document.querySelectorAll("#group-" + id),
+      document.querySelectorAll("#group-" + String(id)),
       ".groupError",
     );
     fadeIn(groupError);
@@ -625,36 +642,44 @@ const displayRenameForm = function (
 ) {
   if (doDisplay) {
     css(
-      find(document.querySelectorAll("#group-" + grp_id), ".group-rename"),
+      find(
+        document.querySelectorAll("#group-" + String(grp_id)),
+        ".group-rename",
+      ),
       "display",
       "flex",
     );
     hide(
       find(
-        document.querySelectorAll("#group-" + grp_id),
+        document.querySelectorAll("#group-" + String(grp_id)),
         ".Group-name-container .icon-pencil",
       ),
     );
     css(
       find(
-        document.querySelectorAll("#group-" + grp_id),
+        document.querySelectorAll("#group-" + String(grp_id)),
         ".Group-name-container p",
       ),
       "opacity",
       0,
     );
   } else {
-    hide(find(document.querySelectorAll("#group-" + grp_id), ".group-rename"));
+    hide(
+      find(
+        document.querySelectorAll("#group-" + String(grp_id)),
+        ".group-rename",
+      ),
+    );
     removeAttr(
       find(
-        document.querySelectorAll("#group-" + grp_id),
+        document.querySelectorAll("#group-" + String(grp_id)),
         ".Group-name-container .icon-pencil",
       ),
       "style",
     );
     css(
       find(
-        document.querySelectorAll("#group-" + grp_id),
+        document.querySelectorAll("#group-" + String(grp_id)),
         ".Group-name-container p",
       ),
       "opacity",
@@ -665,26 +690,35 @@ const displayRenameForm = function (
 
 const setDefaultGroup = function (id: string | number, is_default: boolean) {
   const groupDefault = document.querySelectorAll(
-    "#group-" + id + " #GroupDefault",
+    "#group-" + String(id) + " #GroupDefault",
   );
   css(groupDefault, "width", outerHeight(groupDefault[0] as HTMLElement));
   html(groupDefault, "<i class='icon-spin6 animate-spin'> </i>");
   removeClass(groupDefault, "icon-star");
   attr(groupDefault, "style", "pointer-events: none; text-align: center;");
   addClass(
-    find(document.querySelectorAll("#group-" + id), ".is-default-token"),
+    find(
+      document.querySelectorAll("#group-" + String(id)),
+      ".is-default-token",
+    ),
     "icon-spin6",
   );
   addClass(
-    find(document.querySelectorAll("#group-" + id), ".is-default-token"),
+    find(
+      document.querySelectorAll("#group-" + String(id)),
+      ".is-default-token",
+    ),
     "animate-spin",
   );
   removeClass(
-    find(document.querySelectorAll("#group-" + id), ".is-default-token"),
+    find(
+      document.querySelectorAll("#group-" + String(id)),
+      ".is-default-token",
+    ),
     "icon-star",
   );
   void ajax({
-    url: "api/v1/groups/" + id,
+    url: "api/v1/groups/" + String(id),
     type: "PATCH",
     contentType: "application/json",
     headers: {
@@ -697,7 +731,9 @@ const setDefaultGroup = function (id: string | number, is_default: boolean) {
     success: function (
       _data: operations["groupUpdate"]["responses"][200]["content"]["application/json"],
     ) {
-      hide(document.querySelectorAll("#group-" + id + " #GroupOptions"));
+      hide(
+        document.querySelectorAll("#group-" + String(id) + " #GroupOptions"),
+      );
       if (is_default) {
         setupDefaultActions(id, true);
       } else {
@@ -715,16 +751,16 @@ const setupDefaultActions = function (
   is_default: boolean,
 ) {
   attr(
-    document.querySelectorAll("#group-" + id + " #GroupDefault"),
+    document.querySelectorAll("#group-" + String(id) + " #GroupDefault"),
     "style",
     "",
   );
   addClass(
-    document.querySelectorAll("#group-" + id + " #GroupDefault"),
+    document.querySelectorAll("#group-" + String(id) + " #GroupDefault"),
     "icon-star",
   );
   const token = find(
-    document.querySelectorAll("#group-" + id),
+    document.querySelectorAll("#group-" + String(id)),
     ".is-default-token",
   );
   removeClass(token, "icon-spin6");
@@ -732,11 +768,14 @@ const setupDefaultActions = function (
   addClass(token, "icon-star");
   if (is_default) {
     html(
-      find(document.querySelectorAll("#group-" + id), "#GroupDefault"),
+      find(document.querySelectorAll("#group-" + String(id)), "#GroupDefault"),
       str_unset_default,
     );
     attr(
-      find(document.querySelectorAll("#group-" + id), ".is-default-token"),
+      find(
+        document.querySelectorAll("#group-" + String(id)),
+        ".is-default-token",
+      ),
       "title",
       str_unset_default,
     );
@@ -744,20 +783,29 @@ const setupDefaultActions = function (
     // regardless of which closure added it -- dom.ts's own `off(target,
     // "click")` (no handler argument) matches that, over its own
     // registry of `on()`-added listeners.
-    off(document.querySelectorAll("#group-" + id + " #GroupDefault"), "click");
+    off(
+      document.querySelectorAll("#group-" + String(id) + " #GroupDefault"),
+      "click",
+    );
     removeClass(
-      find(document.querySelectorAll("#group-" + id), ".is-default-token"),
+      find(
+        document.querySelectorAll("#group-" + String(id)),
+        ".is-default-token",
+      ),
       "deactivate",
     );
     on(
-      document.querySelectorAll("#group-" + id + " #GroupDefault"),
+      document.querySelectorAll("#group-" + String(id) + " #GroupDefault"),
       "click",
       function () {
         setDefaultGroup(id, false);
       },
     );
     on(
-      find(document.querySelectorAll("#group-" + id), ".is-default-token"),
+      find(
+        document.querySelectorAll("#group-" + String(id)),
+        ".is-default-token",
+      ),
       "click",
       function () {
         setDefaultGroup(id, false);
@@ -765,27 +813,36 @@ const setupDefaultActions = function (
     );
   } else {
     html(
-      find(document.querySelectorAll("#group-" + id), "#GroupDefault"),
+      find(document.querySelectorAll("#group-" + String(id)), "#GroupDefault"),
       str_set_default,
     );
     attr(
-      find(document.querySelectorAll("#group-" + id), ".is-default-token"),
+      find(
+        document.querySelectorAll("#group-" + String(id)),
+        ".is-default-token",
+      ),
       "title",
       str_set_default,
     );
     addClass(
-      find(document.querySelectorAll("#group-" + id), ".is-default-token"),
+      find(
+        document.querySelectorAll("#group-" + String(id)),
+        ".is-default-token",
+      ),
       "deactivate",
     );
     on(
-      document.querySelectorAll("#group-" + id + " #GroupDefault"),
+      document.querySelectorAll("#group-" + String(id) + " #GroupDefault"),
       "click",
       function () {
         setDefaultGroup(id, true);
       },
     );
     off(
-      find(document.querySelectorAll("#group-" + id), ".is-default-token"),
+      find(
+        document.querySelectorAll("#group-" + String(id)),
+        ".is-default-token",
+      ),
       "click",
     );
   }
@@ -794,21 +851,22 @@ const setupDefaultActions = function (
 const duplicateAction = function (id: string | number) {
   const loadState = new TemporaryState();
   loadState.changeHTML(
-    document.querySelectorAll("#group-" + id + " #GroupDuplicate"),
+    document.querySelectorAll("#group-" + String(id) + " #GroupDuplicate"),
     "<i class='icon-spin6 animate-spin'> </i>",
   );
   loadState.removeClass(
-    document.querySelectorAll("#group-" + id + " #GroupDuplicate"),
+    document.querySelectorAll("#group-" + String(id) + " #GroupDuplicate"),
     "icon-docs",
   );
   loadState.changeAttribute(
-    document.querySelectorAll("#group-" + id + " #GroupDuplicate"),
+    document.querySelectorAll("#group-" + String(id) + " #GroupDuplicate"),
     "style",
     "pointer-events: none; text-align: center;",
   );
   let copy_name =
-    htmlOf(document.querySelectorAll("#group-" + id + " #group_name")) +
-    str_copy;
+    (htmlOf(
+      document.querySelectorAll("#group-" + String(id) + " #group_name"),
+    ) ?? "") + str_copy;
 
   const name_exist = function (name: string) {
     let exist = false;
@@ -821,12 +879,13 @@ const duplicateAction = function (id: string | number) {
   let i = 1;
   while (name_exist(copy_name)) {
     copy_name =
-      htmlOf(document.querySelectorAll("#group-" + id + " #group_name")) +
-      str_other_copy.replace("%s", String(i++));
+      (htmlOf(
+        document.querySelectorAll("#group-" + String(id) + " #group_name"),
+      ) ?? "") + str_other_copy.replace("%s", String(i++));
   }
 
   void ajax({
-    url: "api/v1/groups/" + id + "/actions/duplicate",
+    url: "api/v1/groups/" + String(id) + "/actions/duplicate",
     type: "POST",
     contentType: "application/json",
     headers: {
@@ -840,10 +899,12 @@ const duplicateAction = function (id: string | number) {
       data: operations["groupDuplicate"]["responses"][201]["content"]["application/json"],
     ) {
       loadState.reverse();
-      hide(document.querySelectorAll("#group-" + id + " #GroupOptions"));
+      hide(
+        document.querySelectorAll("#group-" + String(id) + " #GroupOptions"),
+      );
       const group = data;
       const groupbox = createGroup(group);
-      document.querySelector("#group-" + id)?.after(groupbox);
+      document.querySelector("#group-" + String(id))?.after(groupbox);
       setupGroupBox(groupbox);
       updateBadge();
 
@@ -1036,7 +1097,7 @@ on(document.querySelectorAll(".ConfirmMergeButton"), "click", function () {
       loadState.reverse();
       updateSelectionPanel("Selection");
       merge_group.forEach(function (id: number) {
-        const el = document.querySelectorAll("#group-" + id);
+        const el = document.querySelectorAll("#group-" + String(id));
         fadeOut(el, () => {
           el.forEach((one) => {
             one.remove();
@@ -1076,7 +1137,7 @@ on(document.querySelectorAll(".ConfirmMergeButton"), "click", function () {
             document.querySelectorAll(
               "#group-" + dest_grp + " .group_number_users",
             ),
-            number +
+            String(number) +
               " " +
               (number > 1 ? str_members_default : str_member_default),
           );
@@ -1126,7 +1187,7 @@ on(document.querySelectorAll(".ConfirmDeleteButton"), "click", function () {
   Promise.all(
     ids.map(function (id: string | number) {
       return ajax({
-        url: "api/v1/groups/" + id,
+        url: "api/v1/groups/" + String(id),
         type: "DELETE",
         headers: {
           "X-CSRF-Token": pwg_token,
@@ -1139,9 +1200,11 @@ on(document.querySelectorAll(".ConfirmDeleteButton"), "click", function () {
       document.querySelectorAll(".DeleteGroupList div").forEach((el) => {
         const dataId = attrOf(el, "data-id");
         el.remove();
-        document.querySelector("#group-" + dataId)?.remove();
+        document.querySelector("#group-" + String(dataId))?.remove();
         document
-          .querySelector('#MergeOptionsChoices option[value="' + dataId + '"]')
+          .querySelector(
+            '#MergeOptionsChoices option[value="' + String(dataId) + '"]',
+          )
           ?.remove();
       });
 
@@ -1259,16 +1322,16 @@ ready(function () {
 const openUserManager = function (grp_id: string | number) {
   const loadState = new TemporaryState();
   loadState.removeClass(
-    document.querySelectorAll("#group-" + grp_id + " #UserListTrigger"),
+    document.querySelectorAll("#group-" + String(grp_id) + " #UserListTrigger"),
     "icon-user-1",
   );
   loadState.changeAttribute(
-    document.querySelectorAll("#group-" + grp_id + " #UserListTrigger"),
+    document.querySelectorAll("#group-" + String(grp_id) + " #UserListTrigger"),
     "style",
     "pointer-events: none",
   );
   loadState.changeHTML(
-    document.querySelectorAll("#group-" + grp_id + " #UserListTrigger"),
+    document.querySelectorAll("#group-" + String(grp_id) + " #UserListTrigger"),
     "<i class='icon-spin6 animate-spin'> </i>",
   );
   void ajax({
@@ -1283,7 +1346,11 @@ const openUserManager = function (grp_id: string | number) {
       //Set the popin name
       html(
         document.querySelectorAll(".group-name-block p"),
-        htmlOf(document.querySelectorAll("#group-" + grp_id + " #group_name")) +
+        (htmlOf(
+          document.querySelectorAll(
+            "#group-" + String(grp_id) + " #group_name",
+          ),
+        ) ?? "") +
           " / " +
           str_user_list,
       );
@@ -1334,7 +1401,7 @@ const openUserManager = function (grp_id: string | number) {
       attr(
         document.querySelectorAll(".LinkUserManager a"),
         "href",
-        "admin.php?page=user_list&group=" + grp_id,
+        "admin.php?page=user_list&group=" + String(grp_id),
       );
     },
     error: function (err) {
@@ -1352,7 +1419,7 @@ const getUserDisplay = function (
 ): Element {
   const userBlock = parseHtml(
     '<div class="UsernameBlock" data-id=' +
-      user_id +
+      String(user_id) +
       ">" +
       '<span class="icon-user-1"></span>' +
       "<p>" +
@@ -1380,7 +1447,7 @@ const getUserDisplay = function (
     css(find(userBlock, ".icon-cancel"), "pointer-events", "none");
     removeClass(find(userBlock, ".icon-cancel"), "icon-cancel");
     void ajax({
-      url: "api/v1/groups/" + grp_id + "/actions/remove-user",
+      url: "api/v1/groups/" + String(grp_id) + "/actions/remove-user",
       type: "POST",
       contentType: "application/json",
       headers: {
@@ -1431,9 +1498,11 @@ const getUserDisplay = function (
 function updateMembernumber(number: number, grp_id: string | number) {
   html(
     document.querySelectorAll(
-      '.GroupContainer[data-id="' + grp_id + '"] .group_number_users',
+      '.GroupContainer[data-id="' + String(grp_id) + '"] .group_number_users',
     ),
-    number + " " + (number > 1 ? str_members_default : str_member_default),
+    String(number) +
+      " " +
+      (number > 1 ? str_members_default : str_member_default),
   );
   html(document.querySelectorAll(".UserNumberBadge"), String(number));
   html(
@@ -1565,7 +1634,7 @@ on(document.querySelectorAll(".input-user-name"), "input", function () {
     usersInGroup.forEach(function (u) {
       const isSearched = u.username.toLowerCase().includes(searchString);
       const existing = document.querySelector(
-        '.UsernameBlock[data-id="' + u.id + '"]',
+        '.UsernameBlock[data-id="' + String(u.id) + '"]',
       );
       if (existing !== null) {
         if (!isSearched) {

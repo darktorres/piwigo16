@@ -59,10 +59,10 @@ const year = dateObj.getUTCFullYear();
 
 const filter_user_name = pwg_getPageData<string>("user_name");
 
-if (month < 10) month = "0" + month;
-if (day < 10) day = "0" + day;
+if (month < 10) month = "0" + String(month);
+if (day < 10) day = "0" + String(day);
 
-const today = year + "-" + month + "-" + day;
+const today = String(year) + "-" + String(month) + "-" + String(day);
 const current_param: HistoryFilterParams = {
   start: "",
   end: today,
@@ -453,7 +453,7 @@ function lineConstructor(line: HistoryLine, id: number) {
 
   html(
     find(newLine, ".user-name"),
-    line.username + '<i class="add-filter icon-plus-circled"></i>',
+    (line.username ?? "") + '<i class="add-filter icon-plus-circled"></i>',
   );
 
   attr(find(newLine, ".user-name"), "id", String(line.userId));
@@ -521,35 +521,39 @@ function lineConstructor(line: HistoryLine, id: number) {
       if (line.tagNames.length > 1 && line.tagNames.length <= 2) {
         html(
           find(newLine, ".type-name"),
-          line.tagNames[0] + ", " + line.tagNames[1] + ", ...",
+          line.tagNames[0]! + ", " + line.tagNames[1]! + ", ...",
         );
         html(
           find(newLine, ".type-id"),
-          "#" + line.tagIds[0] + ", " + line.tagIds[1] + ", ...",
+          "#" +
+            String(line.tagIds[0]) +
+            ", " +
+            String(line.tagIds[1]) +
+            ", ...",
         );
       } else if (line.tagNames.length > 2) {
         html(
           find(newLine, ".type-name"),
-          line.tagNames[0] +
+          line.tagNames[0]! +
             ", " +
-            line.tagNames[1] +
+            line.tagNames[1]! +
             ", " +
-            line.tagNames[2] +
+            line.tagNames[2]! +
             ", ...",
         );
         html(
           find(newLine, ".type-id"),
           "#" +
-            line.tagIds[0] +
+            String(line.tagIds[0]) +
             ", " +
-            line.tagIds[1] +
+            String(line.tagIds[1]) +
             ", " +
-            line.tagIds[2] +
+            String(line.tagIds[2]) +
             ", ...",
         );
       } else {
         html(find(newLine, ".type-name"), line.tagNames[0] ?? "");
-        html(find(newLine, ".type-id"), "#" + line.tagIds[0]);
+        html(find(newLine, ".type-id"), "#" + String(line.tagIds[0]));
       }
 
       let detail_str = "";
@@ -612,7 +616,7 @@ function lineConstructor(line: HistoryLine, id: number) {
         filetypes: "gallery-icon-file-image",
       };
       html(find(newLine, ".type-name"), line.section ?? "");
-      html(find(newLine, ".type-id"), "#" + line.searchId);
+      html(find(newLine, ".type-id"), "#" + String(line.searchId));
       if (!line.searchId) {
         hide(find(newLine, ".type-id"));
       }
@@ -633,16 +637,16 @@ function lineConstructor(line: HistoryLine, id: number) {
       const active_items = Object.keys(active_search_details);
       if (active_items.length > 0) {
         if (active_search_details.allwords) {
-          const item = find(newLine, ".detail-item-" + count_item);
+          const item = find(newLine, ".detail-item-" + String(count_item));
           html(item, active_search_details.allwords.join(" "));
-          addClass(item, search_icons.allwords + " tiptip");
+          addClass(item, String(search_icons.allwords) + " tiptip");
           attr(
             item,
             "title",
             "<b>" +
-              str_search_details["allwords"] +
+              str_search_details["allwords"]! +
               " :</b> " +
-              active_search_details.allwords.join(" "),
+              String(active_search_details.allwords.join(" ")),
           );
           count_item++;
           active_more.push("allwords");
@@ -651,13 +655,13 @@ function lineConstructor(line: HistoryLine, id: number) {
           const array_cat = Object.values(active_search_details.cat);
           const cat = array_cat.join(" + ");
           const text = stripHtml(cat);
-          const item = find(newLine, ".detail-item-" + count_item);
+          const item = find(newLine, ".detail-item-" + String(count_item));
           html(item, cat);
-          addClass(item, search_icons.cat + " tiptip");
+          addClass(item, String(search_icons.cat) + " tiptip");
           attr(
             item,
             "title",
-            "<b>" + str_search_details["cat"] + " :</b> " + text,
+            "<b>" + str_search_details["cat"]! + " :</b> " + text,
           );
           removeClass(item, "hide");
           count_item++;
@@ -665,14 +669,14 @@ function lineConstructor(line: HistoryLine, id: number) {
         }
         if (count_item <= 2 && active_search_details.tags) {
           const array_tags = Object.values(active_search_details.tags);
-          const item = find(newLine, ".detail-item-" + count_item);
+          const item = find(newLine, ".detail-item-" + String(count_item));
           html(item, array_tags.join(" + "));
-          addClass(item, search_icons.tags + " tiptip");
+          addClass(item, String(search_icons.tags) + " tiptip");
           attr(
             item,
             "title",
             "<b>" +
-              str_search_details["tags"] +
+              str_search_details["tags"]! +
               " :</b> " +
               array_tags.join(" + "),
           );
@@ -696,16 +700,16 @@ function lineConstructor(line: HistoryLine, id: number) {
               } else {
                 array_key = [active_search_details[key]];
               }
-              const item = find(newLine, ".detail-item-" + count_item);
+              const item = find(newLine, ".detail-item-" + String(count_item));
               html(item, array_key.join(" + "));
-              addClass(item, search_icons[key] + " tiptip");
+              addClass(item, String(search_icons[key]) + " tiptip");
               attr(
                 item,
                 "title",
                 "<b>" +
-                  str_search_details[key] +
+                  str_search_details[key]! +
                   " :</b> " +
-                  array_key.join(" + "),
+                  String(array_key.join(" + ")),
               );
               removeClass(item, "hide");
               count_item++;
@@ -831,7 +835,7 @@ function lineConstructor(line: HistoryLine, id: number) {
     const typeIcon = find(newLine, ".type-icon");
     empty(typeIcon);
     typeIcon[0]?.appendChild(img);
-    html(find(newLine, ".type-id"), "#" + line.imageId);
+    html(find(newLine, ".type-id"), "#" + String(line.imageId));
     if (line.imageEditUrl === null) {
       removeAttr(typeIcon, "href");
     } else {
@@ -852,7 +856,7 @@ function lineConstructor(line: HistoryLine, id: number) {
       const lineIconClass = icons[sections.indexOf(line.section ?? "")]!;
       addClass(find(newLine, ".type-icon i"), lineIconClass);
     } else {
-      console.warn("Unhandled section : " + line.section);
+      console.warn("Unhandled section : " + String(line.section));
     }
   }
 
@@ -949,7 +953,7 @@ function addImageFilter(img_id: string | number | null) {
     .cloneNode(true) as Element;
   removeClass(newFilter, "hide");
 
-  html(find(newFilter, ".filter-title"), "Image #" + img_id);
+  html(find(newFilter, ".filter-title"), "Image #" + String(img_id));
   addClass(find(newFilter, ".filter-icon"), "icon-picture");
 
   on(find(newFilter, ".remove-filter"), "click", function (event: Event) {
@@ -998,9 +1002,9 @@ function updatePagination(maxPage: number) {
   append(
     document.querySelectorAll(".pagination-item-container"),
     "<a class='actual'>" +
-      (current_param.pageNumber + 1) +
+      String(current_param.pageNumber + 1) +
       "/" +
-      maxPage +
+      String(maxPage) +
       "</a>",
   );
 }
@@ -1065,9 +1069,9 @@ function setupGeoIpHover(ipEl: Element): void {
           if (geoData.latitude != null && geoData.longitude != null) {
             content +=
               '\x3Cbr>\x3Ca class="ipGeoOpen" data-lat="' +
-              geoData.latitude +
+              String(geoData.latitude) +
               '" data-lon="' +
-              geoData.longitude +
+              String(geoData.longitude) +
               '"';
             content += ' href="#">show on a Google Map</a>';
           }
@@ -1105,9 +1109,9 @@ ready(function () {
         '\x3Cbr>\x3Cimg width=300 height=220 src="http://maps.googleapis.com/maps/api/staticmap';
       appendHtml +=
         "?sensor=false&size=300x220&zoom=6&markers=size:tiny%7C" +
-        lat +
+        String(lat) +
         "," +
-        lon +
+        String(lon) +
         '">';
 
       if (parent !== null) {

@@ -88,6 +88,7 @@ function bindItem(
     }
     if (
       options.handle !== undefined &&
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real "pointerdown" event's own target inside the document is always an Element, never a bare EventTarget with no Element interface.
       (downEvent.target as Element).closest(options.handle) === null
     ) {
       return;

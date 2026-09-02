@@ -320,7 +320,7 @@ ready(function () {
     // reaches the `(rating - 1) / 2 === 4` branch and crashes unquoted.
     if (rating % 2 == 1) {
       addClass(
-        find(container, 'span[data-star="' + (rating - 1) / 2 + '"] i'),
+        find(container, 'span[data-star="' + String((rating - 1) / 2) + '"] i'),
         "icon-star-half",
       );
       rating -= 1;
@@ -329,11 +329,11 @@ ready(function () {
     while (rating > 0) {
       rating -= 2;
       addClass(
-        find(container, 'span[data-star="' + rating / 2 + '"] i'),
+        find(container, 'span[data-star="' + String(rating / 2) + '"] i'),
         "icon-star",
       );
       removeClass(
-        find(container, 'span[data-star="' + rating / 2 + '"]'),
+        find(container, 'span[data-star="' + String(rating / 2) + '"]'),
         "icon-star-empty",
       );
     }

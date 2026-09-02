@@ -41,7 +41,11 @@ export function phpWGOpenWindow(
   const newWin = window.open(
     theURL,
     winName,
-    features + ",left=2,top=1,width=" + width + ",height=" + height,
+    features +
+      ",left=2,top=1,width=" +
+      String(width) +
+      ",height=" +
+      String(height),
   )!;
 }
 

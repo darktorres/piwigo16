@@ -723,7 +723,7 @@ function setStyleValue(
   value: number,
   unit: string
 ): void {
-  el.style.setProperty(cssPropertyName(prop), value + unit);
+  el.style.setProperty(cssPropertyName(prop), String(value) + unit);
 }
 
 /**

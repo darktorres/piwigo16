@@ -59,7 +59,7 @@ document
     "click",
     function (event: Event): void {
       const link = event.currentTarget as HTMLElement;
-      const sizeName = link.id.split("-")[1];
+      const sizeName = link.id.split("-")[1]!;
       toggle(document.querySelectorAll("#sizeEdit-" + sizeName));
       hide(link);
       event.preventDefault();

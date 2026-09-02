@@ -116,7 +116,7 @@ function del(node: HTMLElement, id: number, uid: number, aid: string | null) {
     url:
       pwg_getPageData<string>("root_url") +
       "api/v1/users/" +
-      uid +
+      String(uid) +
       "/actions/delete-ratings",
     method: "POST",
     contentType: "application/json",
@@ -125,7 +125,7 @@ function del(node: HTMLElement, id: number, uid: number, aid: string | null) {
     error: function (jqXHR) {
       stop(trSet);
       fadeTo(trSet, 0, 1);
-      alert(jqXHR.status + " " + jqXHR.statusText);
+      alert(String(jqXHR.status) + " " + jqXHR.statusText);
     },
     success: function (
       result: operations["userDeleteRatings"]["responses"][200]["content"]["application/json"],

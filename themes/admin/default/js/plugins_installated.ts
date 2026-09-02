@@ -817,18 +817,18 @@ ready(function () {
       for (let i = 0; i < data.length; i++) {
         if (show_details)
           prepend(
-            document.querySelectorAll("#" + data[i] + " .pluginName"),
+            document.querySelectorAll("#" + data[i]! + " .pluginName"),
             '<a class="warning" title="' + incompatible_msg + '"></a>',
           );
         else
           prepend(
-            document.querySelectorAll("#" + data[i] + " .pluginName"),
+            document.querySelectorAll("#" + data[i]! + " .pluginName"),
             '<span class="warning" title="' + incompatible_msg + '"></span>',
           );
         // The `incompatible` class is what the activation guard in the
         // switch handler above keys off -- this marker is the whole
         // mechanism, not just styling.
-        addClass(document.querySelectorAll("#" + data[i]), "incompatible");
+        addClass(document.querySelectorAll("#" + data[i]!), "incompatible");
       }
       tipTip(document.querySelectorAll(".warning"), {
         delay: 0,

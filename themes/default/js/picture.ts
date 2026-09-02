@@ -101,7 +101,7 @@ function addToCadie(
     data: JSON.stringify({ imageIds: [id] }),
     headers: { "X-CSRF-Token": pwg_getPageData<string>("csrf_token") },
     error: function (jqXHR) {
-      alert(jqXHR.status + " " + jqXHR.statusText);
+      alert(String(jqXHR.status) + " " + jqXHR.statusText);
       document.location.href = aElement.href;
     },
     success: function (_result) {

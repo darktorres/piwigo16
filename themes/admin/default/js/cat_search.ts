@@ -139,7 +139,7 @@ function searchAlbumByName(
     }
 
     const currentName =
-      name + `<a href="${editLink + c.id}">${c.name}</a>` + " / ";
+      name + `<a href="${editLink + String(c.id)}">${c.name}</a>` + " / ";
 
     if (c.name.toLowerCase().includes(search.toLowerCase())) {
       const haveChild = c.children && c.children.length ? true : false;
@@ -181,7 +181,7 @@ function addAlbumResult(
       label.innerHTML = name.slice(0, -2);
     });
 
-    const href = "admin.php?page=album-" + id;
+    const href = "admin.php?page=album-" + String(id);
     newCatNode.querySelectorAll(".search-album-edit").forEach((edit) => {
       edit.setAttribute("href", href);
     });

@@ -40,14 +40,14 @@ const savedTitles = new WeakMap<HTMLElement, string>();
 
 function positionTooltip(tooltipEl: HTMLElement, target: HTMLElement): void {
   const rect = target.getBoundingClientRect();
-  tooltipEl.style.left = rect.left + window.scrollX + "px";
+  tooltipEl.style.left = String(rect.left + window.scrollX) + "px";
 
   const tooltipHeight = tooltipEl.getBoundingClientRect().height;
   const below = rect.bottom + window.scrollY + 15;
   const overflowsViewport = rect.bottom + 15 + tooltipHeight > window.innerHeight;
   tooltipEl.style.top = overflowsViewport
-    ? rect.top + window.scrollY - tooltipHeight - 15 + "px"
-    : below + "px";
+    ? String(rect.top + window.scrollY - tooltipHeight - 15) + "px"
+    : String(below) + "px";
 }
 
 function openTooltip(target: HTMLElement, content: string): void {

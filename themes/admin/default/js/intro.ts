@@ -113,7 +113,7 @@ ready(function () {
       attr(
         document.querySelectorAll("#newsletterSubscribeLink"),
         "href",
-        newsletter_base_url +
+        (newsletter_base_url ?? "") +
           String(val(document.querySelectorAll("#newsletterSubscribeInput"))),
       );
     },

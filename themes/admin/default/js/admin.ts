@@ -68,11 +68,11 @@ ready(function () {
   for (let i = 0; i < eiw.length; i++) {
     const boxType = eiw[i];
 
-    const items = document.querySelectorAll("." + boxType + " ul li");
+    const items = document.querySelectorAll("." + (boxType ?? "") + " ul li");
     if (items.length > 1) {
       css(items, "list-style-type", "square");
       css(
-        document.querySelectorAll("." + boxType + " .eiw-icon"),
+        document.querySelectorAll("." + (boxType ?? "") + " .eiw-icon"),
         "margin-right",
         "20px",
       );

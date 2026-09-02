@@ -45,7 +45,7 @@ ready(function () {
     for (let i = 0; i < ar.length; i++) {
       const men = ar[i]!.split("menu_");
       (
-        document.getElementsByName("pos_" + men[1])[0] as HTMLInputElement
+        document.getElementsByName("pos_" + men[1]!)[0] as HTMLInputElement
       ).value = String(i + 1);
     }
   });

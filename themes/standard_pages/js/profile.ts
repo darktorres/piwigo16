@@ -156,7 +156,7 @@ ready(function () {
 
       if (hasClass(element, "open")) {
         // close
-        element.style.maxHeight = element.scrollHeight + "px";
+        element.style.maxHeight = String(element.scrollHeight) + "px";
         void element.offsetHeight;
         element.style.maxHeight = "1px";
         removeClass(element, "open");
@@ -712,7 +712,9 @@ function resetSection(
   maxContent: boolean = false,
 ) {
   const element = document.getElementById(selector)!;
-  const scrollH = maxContent ? "max-content" : element.scrollHeight + "px";
+  const scrollH = maxContent
+    ? "max-content"
+    : String(element.scrollHeight) + "px";
   element.style.maxHeight = scrollH;
 
   if ("account-display" !== selector && scroll) {

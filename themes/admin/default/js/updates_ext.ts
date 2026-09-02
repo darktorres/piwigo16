@@ -92,13 +92,13 @@ function checkFieldsets() {
   for (let i = 0; i < 3; i++) {
     nbExtensions = 0;
     document
-      .querySelectorAll("fieldset[data-type=" + types[i] + "] .pluginBox")
+      .querySelectorAll("fieldset[data-type=" + types[i]! + "] .pluginBox")
       .forEach((el) => {
         if (attrOf(el, "data-ignored") === "true") ignored++;
         else nbExtensions++;
       });
     total = total + nbExtensions;
-    if (nbExtensions === 0) hide(document.querySelectorAll("#" + types[i]));
+    if (nbExtensions === 0) hide(document.querySelectorAll("#" + types[i]!));
   }
 
   if (total === 0) {
@@ -109,7 +109,7 @@ function checkFieldsets() {
   if (ignored > 0) {
     setVal(
       document.querySelectorAll("#reset_ignore"),
-      restoreMsg + " (" + ignored + ")",
+      restoreMsg + " (" + String(ignored) + ")",
     );
   }
 }

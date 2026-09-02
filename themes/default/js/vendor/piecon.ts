@@ -115,7 +115,7 @@ function drawFavicon(percentage: number): void {
 
 function updateTitle(percentage: number): void {
   if (percentage > 0) {
-    document.title = "(" + percentage + "%) " + (originalTitle ?? "");
+    document.title = "(" + String(percentage) + "%) " + (originalTitle ?? "");
   } else {
     document.title = originalTitle ?? "";
   }

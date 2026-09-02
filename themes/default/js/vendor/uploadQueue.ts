@@ -172,15 +172,15 @@ function formatSize(size: number): string {
 
   let boundary = 1024 ** 4;
   if (size > boundary) {
-    return round(size / boundary, 1) + " tb";
+    return String(round(size / boundary, 1)) + " tb";
   }
   boundary /= 1024;
   if (size > boundary) {
-    return round(size / boundary, 1) + " gb";
+    return String(round(size / boundary, 1)) + " gb";
   }
   boundary /= 1024;
   if (size > boundary) {
-    return round(size / boundary, 1) + " mb";
+    return String(round(size / boundary, 1)) + " mb";
   }
   if (size > 1024) {
     return String(Math.round(size / 1024)) + " kb";

@@ -444,7 +444,7 @@ function commentsDiplayPagination(paging: CommentListResponse["paging"]) {
     });
     addClass(
       document.querySelectorAll(
-        "#" + escapeId("comments_page_" + (paging.page + 1)),
+        "#" + escapeId("comments_page_" + String(paging.page + 1)),
       ),
       "actual",
     );
@@ -608,7 +608,9 @@ function commentsDisplayAuthors(
 function updateNbComments(nb: string | number) {
   removeClass(commentsNb, "selected-pagination");
   addClass(
-    document.querySelectorAll("#" + escapeId("pagination-per-page-" + nb)),
+    document.querySelectorAll(
+      "#" + escapeId("pagination-per-page-" + String(nb)),
+    ),
     "selected-pagination",
   );
 

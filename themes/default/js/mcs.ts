@@ -1046,7 +1046,7 @@ ready(function () {
           str_between[0]! +
           String(Number(rating) - 1) +
           str_between[1]! +
-          String(rating) +
+          rating +
           str_between[2]!;
         if (ratings_filter.length - 1 != i) {
           ratings_search_str += ", ";

@@ -169,7 +169,9 @@ function remove_related_category({
 }: AlbumSelectorRemoveCallbackArgs) {
   remove(
     document.querySelectorAll(
-      '.invisible-related-categories-select option[value="' + id_album + '"]',
+      '.invisible-related-categories-select option[value="' +
+        String(id_album) +
+        '"]',
     ),
   );
   document
@@ -204,7 +206,7 @@ function add_related_category({
     );
     append(
       document.querySelectorAll(".invisible-related-categories-select"),
-      "<option selected value=" + album.id + "></option>",
+      "<option selected value=" + String(album.id) + "></option>",
     );
     document
       .querySelectorAll(".invisible-related-categories-select")

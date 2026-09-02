@@ -157,7 +157,7 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
           if (Number(parent_id) !== 0) {
             const parent = parentSelectize.options[String(parent_id)]!;
             newAlbum.fullname = parent.fullname + " / " + newAlbum.fullname;
-            newAlbum.global_rank = parent.global_rank + ".1";
+            newAlbum.global_rank = String(parent.global_rank) + ".1";
             newAlbum.pos = (parent.pos ?? 0) + 1;
           }
 

@@ -117,13 +117,13 @@ function updateRating(e: Event) {
     url:
       gRatingOptions.rootUrl +
       "api/v1/images/" +
-      gRatingOptions.image_id +
+      String(gRatingOptions.image_id) +
       "/rating",
     method: "PUT",
     contentType: "application/json",
     data: JSON.stringify({ rate: rateButton.initialRateValue }),
     error: function (xhr) {
-      alert(xhr.status + " " + xhr.statusText);
+      alert(String(xhr.status) + " " + xhr.statusText);
       document.location.href =
         rateButton.form!.action + "&rate=" + rateButton.initialRateValue;
     },

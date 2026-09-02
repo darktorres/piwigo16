@@ -20,12 +20,14 @@ ready(() => {
       });
     });
 
-  document.querySelectorAll('[name="understand"]').forEach((understand) => {
-    understand.addEventListener("click", () => {
-      const checked = (understand as HTMLInputElement).checked;
-      document
-        .querySelectorAll<HTMLInputElement>('[name="submit"]')
-        .forEach((submit) => (submit.disabled = !checked));
+  document
+    .querySelectorAll<HTMLInputElement>('[name="understand"]')
+    .forEach((understand) => {
+      understand.addEventListener("click", () => {
+        const checked = understand.checked;
+        document
+          .querySelectorAll<HTMLInputElement>('[name="submit"]')
+          .forEach((submit) => (submit.disabled = !checked));
+      });
     });
-  });
 });

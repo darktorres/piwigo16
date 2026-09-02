@@ -307,7 +307,7 @@ ready(function () {
           "startUpload",
         ) as HTMLButtonElement | null;
         if (startUpload !== null) {
-          startUpload.disabled = up.files.length == 0;
+          startUpload.disabled = up.files.length === 0;
         }
         if (btnAddFiles !== null) {
           removeClass(btnAddFiles, "buttonLike");
@@ -323,7 +323,7 @@ ready(function () {
           );
         }
 
-        if (up.files.length == 0) {
+        if (up.files.length === 0) {
           if (btnAddFiles !== null) {
             removeClass(btnAddFiles, "addFilesButtonChanged");
             removeClass(btnAddFiles, "buttonLike");
@@ -413,7 +413,7 @@ ready(function () {
 
             files.forEach((f) => {
               const search = images_search[f.id]!;
-              if (search.status == "found") {
+              if (search.status === "found") {
                 f.format_of = String(search.imageId);
                 formats.push([f.id, f.format_of]);
                 append(
@@ -457,7 +457,7 @@ ready(function () {
                   );
                 }
               } else {
-                if (search.status == "multiple") multiple.push(f.name);
+                if (search.status === "multiple") multiple.push(f.name);
                 else notFound.push(f.name);
                 up.removeFile(f.id);
               }
@@ -518,7 +518,7 @@ ready(function () {
                 </span>
               </a>`,
               );
-              if ($forms_exts.indexOf(exts[f.id]!) != -1) {
+              if ($forms_exts.indexOf(exts[f.id]!) !== -1) {
                 document
                   .querySelectorAll(
                     "#" + escapeId(f.id) + " > .plupload_file_name",
@@ -702,7 +702,7 @@ ready(function () {
         // do not remove file, or it will reset the progress bar :-/
         // up.removeFile(file);
         uploadedPhotos.push(info.imageId);
-        if (info.addStatus == "add") {
+        if (info.addStatus === "add") {
           addedPhotos.push(info.imageId);
         } else {
           updatedPhotos.push(info.imageId);

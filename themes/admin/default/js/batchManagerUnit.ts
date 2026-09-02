@@ -460,7 +460,7 @@ function check_related_categories(
     ),
     String(selectedAlbum.length),
   );
-  if (selectedAlbum.length == 0) {
+  if (selectedAlbum.length === 0) {
     addClass(
       document.querySelectorAll(
         "#" + escapeId(pictureId) + " .linked-albums-badge",

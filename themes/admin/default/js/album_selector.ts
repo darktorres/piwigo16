@@ -719,7 +719,7 @@ export class AlbumSelector {
       ...Object.fromEntries(cats.map((c) => [c.id, c])),
     };
     let display_div = q("#subcat-" + escapeId(rank));
-    if ("root" == rank) {
+    if ("root" === rank) {
       empty(AlbumSelector.selectors.searchResult);
       display_div = AlbumSelector.selectors.searchResult;
     } else {
@@ -930,7 +930,7 @@ export class AlbumSelector {
   }
 
   #perform_albums_search(searchText: string) {
-    if (searchText == "") {
+    if (searchText === "") {
       this.#reset_search_input(true);
       return;
     }
@@ -960,7 +960,7 @@ export class AlbumSelector {
             str_result_limit.replace("%d", String(categories.length)),
           );
         } else {
-          if (categories.length == 1) {
+          if (categories.length === 1) {
             html(AlbumSelector.selectors.limitReached, str_album_found);
           } else {
             html(

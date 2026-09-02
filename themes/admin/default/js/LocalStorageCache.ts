@@ -175,14 +175,17 @@ LocalStorageCache.prototype.get = function (
     that = this;
 
   const stored = (this.storage as unknown as Record<string, string>)[this.key];
-  if (this.ready && stored != undefined) {
+  if (this.ready && stored !== undefined) {
     const cache = JSON.parse(stored) as {
       timestamp: number;
       key?: string;
       data: SelectizeEntity[];
     };
 
-    if (now - cache.timestamp <= this.lifetime && cache.key == this.serverKey) {
+    if (
+      now - cache.timestamp <= this.lifetime &&
+      cache.key === this.serverKey
+    ) {
       callback(cache.data);
       return;
     }
@@ -273,7 +276,7 @@ AbstractSelectizer.prototype._selectize = function (
       )!;
 
       // apply filter function
-      if (options.filter != undefined) {
+      if (options.filter !== undefined) {
         filtered = options.filter.call(el, cacheData, options);
       } else {
         filtered = cacheData;
@@ -301,7 +304,7 @@ AbstractSelectizer.prototype._selectize = function (
       ) {
         options.value = value;
       }
-      if (options.value != undefined) {
+      if (options.value !== undefined) {
         options.value.forEach(
           (cat: string | number | { id: string | number }) => {
             if (typeof cat === "string" || typeof cat === "number") {
@@ -317,14 +320,14 @@ AbstractSelectizer.prototype._selectize = function (
       if ((defaultValue = data(el, "default") as string | number)) {
         options.default = defaultValue;
       }
-      if (options.default == "first") {
+      if (options.default === "first") {
         options.default = filtered[0] ? filtered[0].id : undefined;
       }
 
-      if (options.default != undefined) {
+      if (options.default !== undefined) {
         const defaultValue = options.default;
         // add default item
-        if (instance.getValue() == "") {
+        if (instance.getValue() === "") {
           instance.addItem(defaultValue);
         }
 
@@ -350,7 +353,7 @@ AbstractSelectizer.prototype._selectize = function (
         // if single: restore default on blur
         else {
           instance.on("dropdown_close", () => {
-            if (instance.getValue() == "") {
+            if (instance.getValue() === "") {
               instance.addItem(defaultValue);
             }
           });
@@ -600,7 +603,7 @@ const UsersCache = function (
         ) {
           users = users.concat(data.users);
 
-          if (data.users.length == data.perPage) {
+          if (data.users.length === data.perPage) {
             load(page + 1);
           } else {
             callback(users);

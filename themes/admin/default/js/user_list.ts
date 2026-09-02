@@ -301,7 +301,7 @@ ready(function () {
           "#action_" + (this as HTMLSelectElement).value,
         ),
       );
-      if (val(this) != "-1") {
+      if (val(this) !== "-1") {
         show(document.querySelectorAll("#applyActionBlock"));
       } else {
         hide(document.querySelectorAll("#applyActionBlock"));
@@ -552,7 +552,7 @@ ready(function () {
   });
 
   on(document.querySelectorAll(".search-input"), "input", function () {
-    if (val(document.querySelectorAll(".search-input")) == "") {
+    if (val(document.querySelectorAll(".search-input")) === "") {
       hide(document.querySelectorAll(".search-cancel"));
     } else {
       show(document.querySelectorAll(".search-cancel"));
@@ -734,7 +734,7 @@ Checkboxes
 ----------------*/
 
 function checkbox_change(this: Element) {
-  if (attrOf(this, "data-selected") == "1") {
+  if (attrOf(this, "data-selected") === "1") {
     hide(find(this, "i"));
   } else {
     show(find(this, "i"));
@@ -742,7 +742,7 @@ function checkbox_change(this: Element) {
 }
 
 function checkbox_click(this: Element) {
-  if (attrOf(this, "data-selected") == "1") {
+  if (attrOf(this, "data-selected") === "1") {
     attr(this, "data-selected", "0");
     hide(find(this, "i"));
   } else {
@@ -1135,7 +1135,7 @@ function append_pagination_item(page: number | null = null) {
   if (page != null) {
     const new_tag = parseHtml(page_item.replace(/%d/g, String(page)))[0]!;
     container.appendChild(new_tag);
-    if (actual_page == page) {
+    if (actual_page === page) {
       addClass(new_tag, "actual");
     }
     on(new_tag, "click", () => {
@@ -1159,7 +1159,7 @@ function update_pagination_items() {
   if (actual_page > 2) {
     append_pagination_item();
   }
-  if (actual_page != 1 && actual_page != max_page) {
+  if (actual_page !== 1 && actual_page !== max_page) {
     append_pagination_item(actual_page);
   }
   if (actual_page < max_page - 1) {
@@ -1180,7 +1180,7 @@ function update_pagination_menu() {
 }
 
 function updateArrows() {
-  if (actual_page == 1) {
+  if (actual_page === 1) {
     addClass(
       document.querySelectorAll(".pagination-arrow.left"),
       "unavailable",
@@ -1191,7 +1191,7 @@ function updateArrows() {
       "unavailable",
     );
   }
-  if (actual_page == max_page) {
+  if (actual_page === max_page) {
     addClass(
       document.querySelectorAll(".pagination-arrow.rigth"),
       "unavailable",
@@ -1415,7 +1415,7 @@ function fill_user_selected_list() {
       elems_with_username += 1;
     }
   }
-  if (elems_with_username < 5 && elems_with_username != selection.length) {
+  if (elems_with_username < 5 && elems_with_username !== selection.length) {
     get_first_selection_usernames(generate_user_selected_items);
   } else {
     generate_user_selected_items();
@@ -1425,7 +1425,7 @@ function fill_user_selected_list() {
 function update_selection_content() {
   const number = selection.length;
   fill_user_selected_list();
-  if (number == 0) {
+  if (number === 0) {
     show(document.querySelectorAll("#forbidAction"));
     hide(document.querySelectorAll(".selection-mode-ul"));
     hide(document.querySelectorAll("#permitActionUserList"));
@@ -1536,7 +1536,7 @@ function hide_temporary_messages() {
 
 function get_group_name_from_id(id: number) {
   for (let i = 0; i < groups_arr.length; i++) {
-    if (groups_arr[i]![0] == id) {
+    if (groups_arr[i]![0] === id) {
       return groups_arr[i]![1];
     }
   }
@@ -1943,7 +1943,7 @@ function user_container_click(this: Element) {
   const curr_user: { id: number; username: string } = in_container
     ? current_users[parseInt(attrOf(this, "key")!)]!
     : { id: -1, username: "" };
-  if (attrOf(container_checkbox, "data-selected") == "1") {
+  if (attrOf(container_checkbox, "data-selected") === "1") {
     attr(container_checkbox, "data-selected", "0");
     hide(find(container_checkbox, "i"));
     if (in_container) {
@@ -2099,7 +2099,7 @@ function get_level_index(level: number | null) {
   // the strict one status_arr's own still-string `status` comparison
   // above can keep using.
   for (let i = 0; i < level_arr.length; i++) {
-    if (level_arr[i]! == String(level)) {
+    if (level_arr[i]! === String(level)) {
       return i;
     }
   }
@@ -2251,12 +2251,12 @@ function fill_user_edit_preferences(user_to_edit: UserRow, pop_in: Element) {
     slider_key_photos,
   );
   find(pop_in, ".user-property-theme select option").forEach((option) => {
-    if (val(option) == user_to_edit.theme) {
+    if (val(option) === user_to_edit.theme) {
       (option as HTMLOptionElement).selected = true;
     }
   });
   find(pop_in, ".user-property-lang select option").forEach((option) => {
-    if (val(option) == user_to_edit.language) {
+    if (val(option) === user_to_edit.language) {
       (option as HTMLOptionElement).selected = true;
     }
   });
@@ -2449,8 +2449,8 @@ function fill_user_edit_permissions(user_to_edit: UserRow, pop_in: Element) {
       }
 
       if (
-        user_to_edit.status == connected_user_status &&
-        connected_user_status == "webmaster" &&
+        user_to_edit.status === connected_user_status &&
+        connected_user_status === "webmaster" &&
         !is_owner(user_to_edit.id)
       ) {
         // I have the same status than the user I want to edit and I'm a webmaster, I can do whatever I want
@@ -2466,8 +2466,8 @@ function fill_user_edit_permissions(user_to_edit: UserRow, pop_in: Element) {
         );
         show(find(pop_in, ".user-property-username .edit-username"));
       } else if (
-        user_to_edit.status == connected_user_status &&
-        connected_user_status == "admin"
+        user_to_edit.status === connected_user_status &&
+        connected_user_status === "admin"
       ) {
         // I have the same status than the user I want to edit and I'm an admin, I can do whatever I want but edit the status
         hide(find(pop_in, ".delete-user-button"));
@@ -2485,8 +2485,8 @@ function fill_user_edit_permissions(user_to_edit: UserRow, pop_in: Element) {
           "notClickable",
         );
       } else if (
-        user_to_edit.status == "webmaster" &&
-        connected_user_status == "admin"
+        user_to_edit.status === "webmaster" &&
+        connected_user_status === "admin"
       ) {
         // I'm admin and I want to edit webmaster
         hide(find(pop_in, ".delete-user-button"));
@@ -2502,8 +2502,8 @@ function fill_user_edit_permissions(user_to_edit: UserRow, pop_in: Element) {
         );
         hide(find(pop_in, ".user-property-username .edit-username"));
       } else if (
-        user_to_edit.status == "admin" &&
-        connected_user_status == "webmaster"
+        user_to_edit.status === "admin" &&
+        connected_user_status === "webmaster"
       ) {
         // I'm webmaster and I want to edit admin
         show(find(pop_in, ".delete-user-button"));
@@ -2708,22 +2708,22 @@ function fill_ajax_data_from_properties(
   // console.log(groups_selected);
   ajax_data["email"] = val(find(pop_in, ".user-property-email input"));
   if (
-    connected_user_status == "admin" &&
-    val(find(pop_in, ".user-property-status select")) != "webmaster" &&
-    val(find(pop_in, ".user-property-status select")) != "admin"
+    connected_user_status === "admin" &&
+    val(find(pop_in, ".user-property-status select")) !== "webmaster" &&
+    val(find(pop_in, ".user-property-status select")) !== "admin"
   ) {
     ajax_data["status"] = val(find(pop_in, ".user-property-status select"));
-  } else if (connected_user_status == "webmaster") {
+  } else if (connected_user_status === "webmaster") {
     ajax_data["status"] = val(find(pop_in, ".user-property-status select"));
   }
   // console.log(ajax_data['status']);
   ajax_data["level"] = Number(val(find(pop_in, ".user-property-level select")));
-  ajax_data["groupIds"] = groups_selected.length == 0 ? [-1] : groups_selected;
+  ajax_data["groupIds"] = groups_selected.length === 0 ? [-1] : groups_selected;
   ajax_data["enabledHigh"] =
     attrOf(
       find(pop_in, '.user-list-checkbox[name="hd_enabled"]'),
       "data-selected",
-    ) == "1"
+    ) === "1"
       ? true
       : false;
   return ajax_data;
@@ -2755,21 +2755,21 @@ function fill_ajax_data_from_preferences(
     attrOf(
       find(pop_in, '.user-list-checkbox[name="expand_all_albums"]'),
       "data-selected",
-    ) == "1"
+    ) === "1"
       ? true
       : false;
   ajax_data["showNbComments"] =
     attrOf(
       find(pop_in, '.user-list-checkbox[name="show_nb_comments"]'),
       "data-selected",
-    ) == "1"
+    ) === "1"
       ? true
       : false;
   ajax_data["showNbHits"] =
     attrOf(
       find(pop_in, '.user-list-checkbox[name="show_nb_hits"]'),
       "data-selected",
-    ) == "1"
+    ) === "1"
       ? true
       : false;
   return ajax_data;
@@ -2802,7 +2802,7 @@ function get_first_selection_usernames(callback: () => void) {
       const result = data.users;
       for (let i = 0; i < result.length; i++) {
         const index = selection.findIndex((x) => x.id === result[i]!.id);
-        if (index != -1) {
+        if (index !== -1) {
           selection[index]!.username = result[i]!.username;
         }
       }
@@ -2878,7 +2878,7 @@ function update_user_username() {
     val(find(pop_in_container, ".user-property-input-username")),
   );
   ajax_data["username"] = newUsername;
-  if (newUsername.replace(/\s/g, "").length == 0) {
+  if (newUsername.replace(/\s/g, "").length === 0) {
     const failEl = document.querySelectorAll(".update-user-fail");
     html(failEl, fieldNotEmpty);
     fadeIn(failEl);
@@ -2896,7 +2896,7 @@ function update_user_username() {
     success: (
       data: operations["userUpdate"]["responses"][200]["content"]["application/json"],
     ) => {
-      if (last_user_index != -1) {
+      if (last_user_index !== -1) {
         // "username" may be missing from a defensive-fallback response
         // (the row couldn't be re-fetched right after the update) --
         // the value we just successfully submitted is still correct.
@@ -3017,7 +3017,7 @@ function update_user_info() {
     success: function (
       result_user: operations["userUpdate"]["responses"][200]["content"]["application/json"],
     ) {
-      if (last_user_index != -1) {
+      if (last_user_index !== -1) {
         current_users[last_user_index] = {
           ...current_users[last_user_index]!,
           ...result_user,
@@ -3056,7 +3056,7 @@ function update_user_info() {
       // `current_users` entry (old data overlaid with whatever the
       // response did carry) is always a real, complete UserRow.
       fill_who_is_the_king(
-        last_user_index != -1 ? current_users[last_user_index]! : guest_user,
+        last_user_index !== -1 ? current_users[last_user_index]! : guest_user,
         document.querySelector("#UserList")!,
       );
     },
@@ -3268,7 +3268,7 @@ function update_user_list() {
           document.querySelectorAll(
             ".advanced-filter-select[name=filter_status]",
           ),
-        ) != ""
+        ) !== ""
       )
         nb_filters += 1;
       if (
@@ -3276,7 +3276,7 @@ function update_user_list() {
           document.querySelectorAll(
             ".advanced-filter-select[name=filter_group]",
           ),
-        ) != ""
+        ) !== ""
       )
         nb_filters += 1;
       if (
@@ -3284,7 +3284,7 @@ function update_user_list() {
           document.querySelectorAll(
             ".advanced-filter-select[name=filter_level]",
           ),
-        ) != ""
+        ) !== ""
       )
         nb_filters += 1;
       if (
@@ -3292,7 +3292,7 @@ function update_user_list() {
           document.querySelectorAll(".dates-select-bar .slider-bar-container"),
           "option",
           "values",
-        )![0] != 0
+        )![0] !== 0
       )
         nb_filters += 1;
       if (
@@ -3300,7 +3300,7 @@ function update_user_list() {
           document.querySelectorAll(".dates-select-bar .slider-bar-container"),
           "option",
           "values",
-        )![1] !=
+        )![1] !==
         register_dates.length - 1
       )
         nb_filters += 1;
@@ -3344,7 +3344,7 @@ function add_user() {
         '.AddUserInputContainer .user-list-checkbox[name="hd_enabled"]',
       ),
       "data-selected",
-    ) == "1"
+    ) === "1"
       ? true
       : false;
   ajax_data.groupIds = groups_selected;
@@ -3382,7 +3382,7 @@ function add_user() {
           document.querySelectorAll(
             ".AddUserLabelUsername .user-property-input",
           ),
-        ) == ""
+        ) === ""
       ) {
         html(
           document.querySelectorAll("#AddUser .AddUserErrors"),
@@ -3398,7 +3398,7 @@ function add_user() {
       if ("generic" === ajax_data.status) {
         const pass = val(document.querySelectorAll("#add_user_pass"));
         const confPass = val(document.querySelectorAll("#add_user_confpass"));
-        if ("" == pass) {
+        if ("" === pass) {
           html(
             document.querySelectorAll("#AddUser .AddUserErrors"),
             missingPassword,
@@ -3410,7 +3410,7 @@ function add_user() {
           );
           return false;
         }
-        if ("" == confPass) {
+        if ("" === confPass) {
           html(
             document.querySelectorAll("#AddUser .AddUserErrors"),
             missingConfPassword,
@@ -3506,7 +3506,7 @@ function add_infos_to_new_user(
       on(editNow, "click", () => {
         last_user_id = new_user_id;
         last_user_index = get_container_index_from_uid(new_user_id);
-        if (last_user_index != -1) {
+        if (last_user_index !== -1) {
           fill_user_edit(current_users[last_user_index]!);
           open_user_list();
         } else {
@@ -3653,10 +3653,10 @@ function delete_user(uid: number) {
 
 function show_filter_infos(nb_filters: number) {
   if (
-    (val(document.querySelectorAll("#user_search")) ?? "").length != 0 ||
-    nb_filters != 0
+    (val(document.querySelectorAll("#user_search")) ?? "").length !== 0 ||
+    nb_filters !== 0
   ) {
-    if (String(total_users) != "1") {
+    if (String(total_users) !== "1") {
       html(
         document.querySelectorAll(".filtered-users"),
         filtered_users.replace(/%d/g, String(total_users)),
@@ -3671,7 +3671,7 @@ function show_filter_infos(nb_filters: number) {
     html(document.querySelectorAll(".filtered-users"), "");
   }
 
-  if (nb_filters != 0) {
+  if (nb_filters !== 0) {
     css(document.querySelectorAll(".advanced-filter-btn"), {
       width: "80px",
     });
@@ -4232,7 +4232,7 @@ ready(function () {
           "inline-block",
         );
         update_user_list();
-        if (action == "delete") {
+        if (action === "delete") {
           selection = [];
           update_selection_content();
         }

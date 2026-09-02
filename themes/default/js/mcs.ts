@@ -352,7 +352,7 @@ ready(function () {
       true,
     );
 
-    if (date_posted_rule.preset != "") {
+    if (date_posted_rule.preset !== "") {
       // If filter is used and not empty check preset date option
       setChecked(
         document.querySelectorAll("#date_posted-" + date_posted_rule.preset),
@@ -369,7 +369,7 @@ ready(function () {
       );
 
       // if option is custom check custom dates
-      if ("custom" == date_posted_rule.preset) {
+      if ("custom" === date_posted_rule.preset) {
         date_posted_str = "";
         const customArray = date_posted_rule.custom;
 
@@ -414,7 +414,7 @@ ready(function () {
             ),
           );
 
-          if (customArray.length > 1 && index != customArray.length - 1) {
+          if (customArray.length > 1 && index !== customArray.length - 1) {
             date_posted_str += ", ";
           }
         });
@@ -475,11 +475,11 @@ ready(function () {
       function (this: Element) {
         const clickedOption = this.parentElement!;
         clickedOption.classList.toggle("show-child");
-        if ("year" == data(this, "type")) {
+        if ("year" === data(this, "type")) {
           toggle(
             find(clickedOption.parentElement!, ".date_posted-option.month"),
           );
-        } else if ("month" == data(this, "type")) {
+        } else if ("month" === data(this, "type")) {
           toggle(find(clickedOption.parentElement!, ".date_posted-option.day"));
         }
       },
@@ -562,7 +562,7 @@ ready(function () {
       true,
     );
 
-    if (date_created_rule.preset != "") {
+    if (date_created_rule.preset !== "") {
       // If filter is used and not empty check preset date option
       setChecked(
         document.querySelectorAll("#date_created-" + date_created_rule.preset),
@@ -577,7 +577,7 @@ ready(function () {
       );
 
       // if option is custom check custom dates
-      if ("custom" == date_created_rule.preset) {
+      if ("custom" === date_created_rule.preset) {
         date_created_str = "";
         const customArray = date_created_rule.custom;
 
@@ -609,7 +609,7 @@ ready(function () {
             ),
           );
 
-          if (customArray.length > 1 && index != customArray.length - 1) {
+          if (customArray.length > 1 && index !== customArray.length - 1) {
             date_created_str += ", ";
           }
         });
@@ -673,11 +673,11 @@ ready(function () {
       function (this: Element) {
         const clickedOption = this.parentElement!;
         clickedOption.classList.toggle("show-child");
-        if ("year" == data(this, "type")) {
+        if ("year" === data(this, "type")) {
           toggle(
             find(clickedOption.parentElement!, ".date_created-option.month"),
           );
-        } else if ("month" == data(this, "type")) {
+        } else if ("month" === data(this, "type")) {
           toggle(
             find(clickedOption.parentElement!, ".date_created-option.day"),
           );
@@ -1048,7 +1048,7 @@ ready(function () {
           str_between[1]! +
           rating +
           str_between[2]!;
-        if (ratings_filter.length - 1 != i) {
+        if (ratings_filter.length - 1 !== i) {
           ratings_search_str += ", ";
         }
       }
@@ -1422,7 +1422,7 @@ ready(function () {
       ];
       for (const key in PS_params) {
         if (!exclude_params.includes(key)) {
-          if ("date_posted_custom" == key || "date_created_custom" == key) {
+          if ("date_posted_custom" === key || "date_created_custom" === key) {
             PS_params[key] = [];
           } else {
             PS_params[key] = "";
@@ -1744,7 +1744,7 @@ ready(function () {
 
             PS_params.date_posted_preset = presetValue ?? "";
 
-            if ("custom" == presetValue) {
+            if ("custom" === presetValue) {
               const customDates: (string | number | string[] | undefined)[] =
                 [];
 
@@ -1828,7 +1828,7 @@ ready(function () {
 
             PS_params.date_created_preset = presetValue ?? "";
 
-            if ("custom" == presetValue) {
+            if ("custom" === presetValue) {
               const customDates: (string | number | string[] | undefined)[] =
                 [];
 
@@ -1904,7 +1904,7 @@ ready(function () {
             ab.get_selected_albums().length > 0 ? ab.get_selected_albums() : "";
           PS_params.categories_withsubs =
             document.querySelectorAll("input[name='search-sub-cats']:checked")
-              .length != 0;
+              .length !== 0;
         }
       },
     );
@@ -2623,11 +2623,11 @@ function display_related_category(
 function updateFilters(filterName: string, mode: "add" | "del") {
   switch (filterName) {
     case "word":
-      if (mode == "add") {
+      if (mode === "add") {
         PS_params.allwords = "";
         PS_params.allwords_mode = "AND";
         PS_params.allwords_fields = [];
-      } else if (mode == "del") {
+      } else if (mode === "del") {
         delete PS_params.allwords;
         delete PS_params.allwords_mode;
         delete PS_params.allwords_fields;
@@ -2635,79 +2635,79 @@ function updateFilters(filterName: string, mode: "add" | "del") {
       break;
 
     case "tag":
-      if (mode == "add") {
+      if (mode === "add") {
         PS_params.tags = "";
         PS_params.tags_mode = "AND";
-      } else if (mode == "del") {
+      } else if (mode === "del") {
         delete PS_params.tags;
         delete PS_params.tags_mode;
       }
       break;
 
     case "album":
-      if (mode == "add") {
+      if (mode === "add") {
         PS_params.categories = "";
         PS_params.categories_withsubs = false;
-      } else if (mode == "del") {
+      } else if (mode === "del") {
         delete PS_params.categories;
         delete PS_params.categories_withsubs;
       }
       break;
 
     case "date_posted":
-      if (mode == "add") {
+      if (mode === "add") {
         PS_params.date_posted_preset = "";
         PS_params.date_posted_custom = [];
-      } else if (mode == "del") {
+      } else if (mode === "del") {
         delete PS_params.date_posted_preset;
         delete PS_params.date_posted_custom;
       }
       break;
 
     case "date_created":
-      if (mode == "add") {
+      if (mode === "add") {
         PS_params.date_created_preset = "";
         PS_params.date_created_custom = [];
-      } else if (mode == "del") {
+      } else if (mode === "del") {
         delete PS_params.date_created_preset;
         delete PS_params.date_created_custom;
       }
       break;
 
     case "filesize":
-      if (mode == "add") {
+      if (mode === "add") {
         PS_params.filesize_min = "";
         PS_params.filesize_max = "";
-      } else if (mode == "del") {
+      } else if (mode === "del") {
         delete PS_params.filesize_min;
         delete PS_params.filesize_max;
       }
       break;
 
     case "height":
-      if (mode == "add") {
+      if (mode === "add") {
         PS_params.height_min = "";
         PS_params.height_max = "";
-      } else if (mode == "del") {
+      } else if (mode === "del") {
         delete PS_params.height_min;
         delete PS_params.height_max;
       }
       break;
 
     case "width":
-      if (mode == "add") {
+      if (mode === "add") {
         PS_params.width_min = "";
         PS_params.width_max = "";
-      } else if (mode == "del") {
+      } else if (mode === "del") {
         delete PS_params.width_min;
         delete PS_params.width_max;
       }
       break;
 
     default:
-      if (mode == "add") {
+      if (mode === "add") {
         PS_params[filterName] = "";
-      } else if (mode == "del") {
+      } else if (mode === "del") {
         // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- a search-parameter bag keyed by the filter name chosen at runtime, serialised straight to the API; a Map would have to be converted back on every request.
         delete PS_params[filterName];
       }

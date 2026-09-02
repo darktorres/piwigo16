@@ -184,7 +184,7 @@ export function sprintf(...args: (string | number)[]): string {
           f,
         ))
     ) {
-      if ((a = args[m[1] ? Number(m[1]) : i++]) == null || a == undefined) {
+      if ((a = args[m[1] ? Number(m[1]) : i++]) == null || a === undefined) {
         throw new Error("Too few arguments.");
       }
       if (/[^s]/.test(m[7]!) && typeof a !== "number") {
@@ -225,7 +225,7 @@ export function sprintf(...args: (string | number)[]): string {
       }
 
       a = /[def]/.test(m[7]!) && m[2] && a >= 0 ? "+" + String(a) : a;
-      c = m[3] ? (m[3] == "0" ? "0" : m[3].charAt(1)) : " ";
+      c = m[3] ? (m[3] === "0" ? "0" : m[3].charAt(1)) : " ";
       x = Number(m[5]) - String(a).length - s.length;
       p = m[5] ? str_repeat(c, x) : "";
       o.push(s + (m[4] ? String(a) + p : p + String(a)));

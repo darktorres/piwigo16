@@ -648,7 +648,7 @@ function lineConstructor(line: MergedActivityLine) {
 
       case "logout":
         addClass(find(newLine, ".action-type"), "icon-purple");
-        if (line.user_id != 2) {
+        if (line.user_id !== 2) {
           addClass(
             find(newLine, ".user-pic"),
             color_icons[(line.user_id ?? 0) % 5]!,
@@ -925,7 +925,7 @@ function lineConstructor(line: MergedActivityLine) {
         break;
       case "logout":
         addClass(find(newLine, ".action-type"), "icon-purple");
-        if (line.user_id != 2) {
+        if (line.user_id !== 2) {
           addClass(
             find(newLine, ".user-pic"),
             color_icons[(line.user_id ?? 0) % 5]!,
@@ -982,10 +982,10 @@ function lineConstructor(line: MergedActivityLine) {
     "IP: " + (line.ip_address ?? ""),
   );
 
-  if (line.detailsType == "script") {
+  if (line.detailsType === "script") {
     html(find(newLine, ".detail-item-2"), line.details.script ?? "");
     attr(find(newLine, ".detail-item-2"), "title", "Script");
-  } else if (line.detailsType == "method") {
+  } else if (line.detailsType === "method") {
     html(find(newLine, ".detail-item-2"), line.details.method ?? "");
     attr(find(newLine, ".detail-item-2"), "title", "API Method");
   }
@@ -1003,8 +1003,8 @@ function lineConstructor(line: MergedActivityLine) {
     );
   } else if (
     line.details.users &&
-    line.action != "logout" &&
-    line.action != "login"
+    line.action !== "logout" &&
+    line.action !== "login"
   ) {
     const user_string = [...new Set(line.details.users)].toString();
     html(find(newLine, ".detail-item-3"), user_string);
@@ -1068,7 +1068,7 @@ on(document.querySelectorAll(".pagination-arrow.left"), "click", () => {
 function update_pagination_menu(_page?: number) {
   updateArrows();
   update_pagination_items();
-  if (end_page && actual_page == 1) {
+  if (end_page && actual_page === 1) {
     hide(document.querySelectorAll(".pagination-container"));
   } else {
     show(document.querySelectorAll(".pagination-container"));
@@ -1076,7 +1076,7 @@ function update_pagination_menu(_page?: number) {
 }
 
 function updateArrows() {
-  if (actual_page == 1) {
+  if (actual_page === 1) {
     addClass(
       document.querySelectorAll(".pagination-arrow.left"),
       "unavailable",
@@ -1109,7 +1109,7 @@ function update_pagination_items() {
   if (actual_page > 2) {
     append_pagination_item();
   }
-  if (actual_page != 1) {
+  if (actual_page !== 1) {
     append_pagination_item(actual_page);
   }
   if (!end_page) {
@@ -1124,7 +1124,7 @@ function append_pagination_item(page: number | null = null) {
   if (page != null) {
     const new_tag = parseHtml(page_item.replace(/%d/g, String(page)))[0]!;
     container.appendChild(new_tag);
-    if (actual_page == page) {
+    if (actual_page === page) {
       addClass(new_tag, "actual");
     }
     on(new_tag, "click", () => {
@@ -1165,7 +1165,7 @@ ready(function () {
           ".user-selecter .selectize-input .item",
         );
         const value = item !== null ? data(item, "value") : undefined;
-        if (value == "none") {
+        if (value === "none") {
           //{* call ajax sur activity list sans uid *}
           void get_user_activity(
             1,
@@ -1205,7 +1205,7 @@ ready(function () {
           ".action-selecter .selectize-input .item",
         );
         const value = item !== null ? data(item, "value") : undefined;
-        if (value == "none") {
+        if (value === "none") {
           //{* call ajax sur activity list sans action et object *}
           if (additional_filt_type) {
             void get_user_activity(
@@ -1249,7 +1249,7 @@ ready(function () {
     function (): void {
       page_reset();
       const minVal = val(document.querySelectorAll("#date_min_activity"));
-      if (minVal == "") {
+      if (minVal === "") {
         document
           .getElementById("date_max_activity")!
           .setAttribute("min", date_min);
@@ -1275,7 +1275,7 @@ ready(function () {
     function (): void {
       page_reset();
       const maxVal = val(document.querySelectorAll("#date_max_activity"));
-      if (maxVal == "") {
+      if (maxVal === "") {
         document
           .getElementById("date_min_activity")!
           .setAttribute("max", date_max);
@@ -1323,7 +1323,7 @@ ready(function () {
       const content = document.querySelector("#activityMoreFiltersContent");
       if (content === null) return;
 
-      if (cssValue(content, "display") == "none" && !toggleTriggered) {
+      if (cssValue(content, "display") === "none" && !toggleTriggered) {
         toggleTriggered = true;
         addClass(
           document.querySelectorAll("#activityMoreFilters"),
@@ -1332,7 +1332,7 @@ ready(function () {
         slideToggle(content, function () {
           toggleTriggered = false;
         });
-      } else if (cssValue(content, "display") == "flex" && !toggleTriggered) {
+      } else if (cssValue(content, "display") === "flex" && !toggleTriggered) {
         toggleTriggered = true;
         slideToggle(content, function () {
           removeClass(

@@ -49,9 +49,9 @@ let sortOrder = "date";
 // rendered by the template).
 const sortPlugins = function (a: Element, b: Element) {
   if (
-    sortOrder == "downloads" ||
-    sortOrder == "revision" ||
-    sortOrder == "date"
+    sortOrder === "downloads" ||
+    sortOrder === "revision" ||
+    sortOrder === "date"
   )
     return parseInt(String(data(a, sortOrder))) <
       parseInt(String(data(b, sortOrder)))
@@ -192,14 +192,14 @@ ready(function () {
   document.querySelectorAll(".pluginBox").forEach((el) => {
     const author = data(el, "author") as string;
     author.split(", ").forEach((name: string) => {
-      if (!authorNames.find((el) => el.value == name)) {
+      if (!authorNames.find((el) => el.value === name)) {
         authorNames.push({ value: name, text: name });
       }
     });
 
     const tags = data(el, "tags") as string;
     tags.split(", ").forEach((tag: string) => {
-      if (!tagsNames.find((el) => el.value == tag)) {
+      if (!tagsNames.find((el) => el.value === tag)) {
         tagsNames.push({ value: tag, text: tag });
       }
     });
@@ -318,7 +318,7 @@ ready(function () {
     // SyntaxError. Confirmed live: a real plugin with rating 4.5 in this
     // environment (PEM reachable here, same as updates_ext.ts's page)
     // reaches the `(rating - 1) / 2 === 4` branch and crashes unquoted.
-    if (rating % 2 == 1) {
+    if (rating % 2 === 1) {
       addClass(
         find(container, 'span[data-star="' + String((rating - 1) / 2) + '"] i'),
         "icon-star-half",
@@ -421,7 +421,7 @@ ready(function () {
       return (
         pluginRating >= filters.rating &&
         pluginCertification >= filters.certification &&
-        (filters.search === "" || pluginName.indexOf(filters.search) != -1) &&
+        (filters.search === "" || pluginName.indexOf(filters.search) !== -1) &&
         (filters.author === "" || pluginAuthors.includes(filters.author)) &&
         (filters.tag === "" || pluginTags.includes(filters.tag)) &&
         pluginRevisionOld <= filters["revision"]

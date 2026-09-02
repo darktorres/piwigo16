@@ -137,7 +137,7 @@ function createTagBox(
     .replace("%U_VIEW%", u_view)
     .replace("%U_EDIT%", u_edit)
     .replace("%raw_name%", raw_name);
-  if (name == raw_name) {
+  if (name === raw_name) {
     markup = markup.replace("icon-globe", "");
   }
   const newTag = parseHtml(
@@ -208,7 +208,7 @@ function recycleTagBox(
 //Number On Badge
 function updateBadge(): void {
   html(document.querySelectorAll(".badge-number"), String(dataTags.length));
-  if (dataTags.length == 0) {
+  if (dataTags.length === 0) {
     addClass(
       document.querySelectorAll(".tag-header #add-tag .add-tag-label"),
       "highlight",
@@ -324,7 +324,7 @@ function cleanCheckmark(): void {
 
 on(document.querySelectorAll("#add-tag"), "submit", function (e: Event) {
   e.preventDefault();
-  if (val(document.querySelectorAll("#add-tag-input")) != "") {
+  if (val(document.querySelectorAll("#add-tag-input")) !== "") {
     const loadState = new TemporaryState();
     loadState.removeClass(
       document.querySelectorAll("#add-tag .icon-validate"),
@@ -444,7 +444,7 @@ function setupTagbox(tagBox: Element): void {
   // Selection behaviour
   on(tagBox, "click", function () {
     if (hasClass(document.querySelectorAll(".tag-container"), "selection")) {
-      if (attrOf(tagBox, "data-selected") == "1") {
+      if (attrOf(tagBox, "data-selected") === "1") {
         attr(tagBox, "data-selected", "0");
         removeSelectedItem(attrOf(tagBox, "data-id")!);
       } else {
@@ -796,9 +796,9 @@ function createSelectionItem(id: TagId, name: string): void {
 }
 
 function removeSelectedItem(id: TagId): void {
-  if (selected.findIndex((tag) => tag == id) > -1) {
+  if (selected.findIndex((tag) => Number(tag) === Number(id)) > -1) {
     selected = selected.filter((tag) => {
-      return parseInt(String(tag)) != parseInt(String(id));
+      return parseInt(String(tag)) !== parseInt(String(id));
     });
 
     attr(
@@ -809,7 +809,7 @@ function removeSelectedItem(id: TagId): void {
     if (
       document.querySelectorAll(
         '.selection-mode-tag .tag-list div[data-id="' + String(id) + '"]',
-      ).length != 0
+      ).length !== 0
     ) {
       document
         .querySelectorAll(
@@ -828,7 +828,7 @@ function removeSelectedItem(id: TagId): void {
               '.selection-mode-tag .tag-list div[data-id="' +
                 String(selected[i]) +
                 '"]',
-            ).length == 0
+            ).length === 0
           ) {
             isNotCreate = false;
             const indexOfTag = dataTags.findIndex(
@@ -880,12 +880,12 @@ let mergeOption = false;
 
 function updateSelectionContent(): void {
   const number = selected.length;
-  if (number == 0) {
+  if (number === 0) {
     mergeOption = false;
     show(document.querySelectorAll("#nothing-selected"));
     hide(document.querySelectorAll(".selection-mode-tag"));
     hide(document.querySelectorAll("#MergeOptionsBlock"));
-  } else if (number == 1) {
+  } else if (number === 1) {
     mergeOption = false;
     hide(document.querySelectorAll("#nothing-selected"));
     show(document.querySelectorAll(".selection-mode-tag"));
@@ -1014,7 +1014,7 @@ function selectInvert(data: TagRow[]): void {
     const tagBox = document.querySelectorAll(
       '.tag-box[data-id="' + String(tag.id) + '"]',
     );
-    if (attrOf(tagBox, "data-selected") == "1") {
+    if (attrOf(tagBox, "data-selected") === "1") {
       attr(tagBox, "data-selected", "0");
       removeSelectedItem(tag.id);
     } else {
@@ -1144,12 +1144,12 @@ function mergeGroups(destination_id: TagId, merge_ids: TagId[]): void {
         dataType: "json",
         success: function (data: TagMergeResponse) {
           data.deletedTagIds.forEach((id) => {
-            if (data.destinationTagId != id) {
+            if (data.destinationTagId !== id) {
               document
                 .querySelector('.tag-box[data-id="' + String(id) + '"]')
                 ?.remove();
               // Update data
-              dataTags = dataTags.filter((tag) => Number(id) !== tag.id);
+              dataTags = dataTags.filter((tag) => id !== tag.id);
             }
           });
           if (data.imagesInMergedTag.length > 0) {
@@ -1220,7 +1220,7 @@ on(
     clearTimeout(searchTimeOut);
     searchTimeOut = setTimeout(() => {
       updatePaginationMenu();
-      if (dataTags.filter(isDataSearched).length == 0) {
+      if (dataTags.filter(isDataSearched).length === 0) {
         show(document.querySelectorAll(".emptyResearch"));
       } else {
         hide(document.querySelectorAll(".emptyResearch"));
@@ -1321,7 +1321,7 @@ function createPaginationMenu(): void {
     appendPaginationItem();
   }
 
-  if (actualPage != 1 && actualPage != nbPage) {
+  if (actualPage !== 1 && actualPage !== nbPage) {
     appendPaginationItem(actualPage);
   }
 
@@ -1340,7 +1340,7 @@ function appendPaginationItem(page: number | null = null): void {
   if (page != null) {
     const newTag = parseHtml(pageItem.replace(/%d/g, String(page)))[0]!;
     container.appendChild(newTag);
-    if (actualPage == page) {
+    if (actualPage === page) {
       addClass(newTag, "actual");
     }
     on(newTag, "click", () => {
@@ -1353,7 +1353,7 @@ function appendPaginationItem(page: number | null = null): void {
 }
 
 function updateArrows(): void {
-  if (actualPage == 1) {
+  if (actualPage === 1) {
     addClass(
       document.querySelectorAll(".pagination-arrow.left"),
       "unavailable",
@@ -1365,7 +1365,7 @@ function updateArrows(): void {
     );
   }
 
-  if (actualPage == getNumberPages()) {
+  if (actualPage === getNumberPages()) {
     addClass(
       document.querySelectorAll(".pagination-arrow.rigth"),
       "unavailable",
@@ -1534,7 +1534,7 @@ on(
 );
 
 function updateSearchInfo(): void {
-  if (val(document.querySelectorAll(".search-input")) != "") {
+  if (val(document.querySelectorAll(".search-input")) !== "") {
     const number = dataTags.filter(isDataSearched).length;
     if (number > 1) {
       html(

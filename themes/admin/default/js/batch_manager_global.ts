@@ -189,7 +189,7 @@ ready(function () {
 
       show(document.querySelectorAll("#action_" + action));
 
-      if (el.value != "-1") {
+      if (el.value !== "-1") {
         show(document.querySelectorAll("#applyActionBlock"));
       } else {
         hide(document.querySelectorAll("#applyActionBlock"));

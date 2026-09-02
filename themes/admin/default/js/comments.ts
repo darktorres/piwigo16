@@ -414,7 +414,7 @@ function displayComments(comments: CommentListResponse["comments"]) {
             "comment-selected",
           );
 
-          commentsSelected = commentsSelected.filter((idx) => idx != id);
+          commentsSelected = commentsSelected.filter((idx) => idx !== id);
         }
 
         commentsUpdateSelection();
@@ -431,7 +431,7 @@ function commentsDiplayPagination(paging: CommentListResponse["paging"]) {
   if (container === null) return;
   empty(container);
 
-  if (paging.totalPages == 0) {
+  if (paging.totalPages === 0) {
     const pageNumbers = paging.totalPages + 1;
     const page = commentsPaginItems.replace(/%d/g, String(pageNumbers));
     const pageEl = parseHtml(page)[0]!;
@@ -492,7 +492,7 @@ function commentsDiplayPagination(paging: CommentListResponse["paging"]) {
         newPage = newPage + 1;
       }
 
-      if (newPage == -1 || newPage > commentsState.paging.totalPages) {
+      if (newPage === -1 || newPage > commentsState.paging.totalPages) {
         return;
       }
       commentsParams.page = newPage;

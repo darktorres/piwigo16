@@ -179,7 +179,7 @@ ready(function () {
 
   on(document.querySelectorAll("#save_account"), "click", function () {
     const mail = val(document.querySelectorAll("#email")) as string;
-    if (!mail || mail == "") {
+    if (!mail || mail === "") {
       show(document.querySelectorAll("#email_error"));
       return;
     }
@@ -207,12 +207,12 @@ ready(function () {
         show_nb_hits: is(document.querySelectorAll("#opt_hits"), ":checked"),
       };
 
-      if (values.nb_image_page == "") {
+      if (values.nb_image_page === "") {
         show(document.querySelectorAll("#error_nb_image"));
         return;
       }
 
-      if (values.recent_period == "") {
+      if (values.recent_period === "") {
         show(document.querySelectorAll("#error_period"));
         return;
       }
@@ -277,12 +277,12 @@ ready(function () {
         ) as string,
       };
       if (
-        passwords.password == "" ||
-        passwords.new_password == "" ||
-        passwords.conf_new_password == ""
+        passwords.password === "" ||
+        passwords.new_password === "" ||
+        passwords.conf_new_password === ""
       ) {
         document.querySelectorAll("#password-section input").forEach((el) => {
-          if (val(el) == "") {
+          if (val(el) === "") {
             const parent = el.parentElement;
             if (parent !== null) {
               show(siblingsOf(parent));
@@ -809,7 +809,7 @@ function saveApiEditEvents(pkid: string) {
   on(document.querySelectorAll("#save_api_edit"), "click", function () {
     const value = val(document.querySelectorAll("#api_key_edit")) as string;
 
-    if ("" == value) {
+    if ("" === value) {
       show(document.querySelectorAll("#error_api_key_edit"));
       return;
     }
@@ -903,7 +903,7 @@ function saveApiKeyEvent() {
       document.querySelectorAll('select[name="api_expiration"]'),
     );
 
-    if (api_name == "") {
+    if (api_name === "") {
       show(document.querySelectorAll("#error_api_key_name"));
       return;
     }

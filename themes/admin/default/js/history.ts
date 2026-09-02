@@ -120,13 +120,13 @@ ready(() => {
   activateLineOptions();
   checkFilters();
 
-  if (current_param.ip != "") {
+  if (current_param.ip !== "") {
     addIpFilter(current_param.ip);
   }
-  if (current_param.image_id != "") {
+  if (current_param.image_id !== "") {
     addImageFilter(current_param.image_id);
   }
-  if (current_param.user_id != "-1") {
+  if (current_param.user_id !== "-1") {
     addUserFilter(filter_user_name);
   }
 
@@ -136,12 +136,12 @@ ready(() => {
       "value",
     );
 
-    if (selectedType == "visited") {
+    if (selectedType === "visited") {
       current_param.types = {
         0: "none",
         1: "picture",
       };
-    } else if (selectedType == "downloaded") {
+    } else if (selectedType === "downloaded") {
       current_param.types = {
         0: "high",
         1: "other",
@@ -168,7 +168,7 @@ ready(() => {
       document.querySelectorAll('.date-start input[name="start"]'),
       "value",
     );
-    if (current_param.start != value) {
+    if (current_param.start !== value) {
       current_param.start = value ?? "";
       current_param.pageNumber = 0;
       fillHistoryResult(current_param);
@@ -180,7 +180,7 @@ ready(() => {
       document.querySelectorAll('.date-end input[name="end"]'),
       "value",
     );
-    if (current_param.end != newValue) {
+    if (current_param.end !== newValue) {
       current_param.end = newValue ?? "";
       current_param.pageNumber = 0;
       // The datepicker first fills the end-date with '1899-12-31',
@@ -199,7 +199,7 @@ ready(() => {
     // start date" button silently did nothing. Real intent (matching
     // `.date-start`'s own change handler above): only act when a
     // start filter is actually set.
-    if (current_param.start != "") {
+    if (current_param.start !== "") {
       current_param.pageNumber = 0;
       current_param.start = "";
       fillHistoryResult(current_param);
@@ -212,7 +212,7 @@ ready(() => {
     // of `current_param.end`, the field this handler actually resets
     // -- `today` is `.end`'s own "unset" sentinel, matching how
     // `#start_unset` above uses `""` for `.start`.
-    if (current_param.end != today) {
+    if (current_param.end !== today) {
       current_param.end = today;
       current_param.pageNumber = 0;
       fillHistoryResult(current_param);
@@ -301,7 +301,7 @@ function fillSummaryResult(summary: HistorySummary) {
     );
     addClass(summaryGuestsData, "icon-plus-circled");
     on(summaryGuestsData, "click", function () {
-      if (current_param.user_id == "-1") {
+      if (current_param.user_id === "-1") {
         current_param.user_id = guest_id;
         addGuestFilter(str_guest);
         fillHistoryResult(current_param);
@@ -339,7 +339,7 @@ function fillSummaryResult(summary: HistorySummary) {
 
       on(new_user_item, "click", function (event: Event) {
         const el = event.currentTarget as Element;
-        if (current_param.user_id != member.userId) {
+        if (Number(current_param.user_id) !== member.userId) {
           current_param.user_id = data(el, "user-id") as string | number;
           addUserFilter(member.username);
           fillHistoryResult(current_param);
@@ -457,7 +457,7 @@ function lineConstructor(line: HistoryLine, id: number) {
   );
 
   attr(find(newLine, ".user-name"), "id", String(line.userId));
-  if (current_param.user_id == "-1") {
+  if (current_param.user_id === "-1") {
     on(find(newLine, ".user-name"), "click", function (event: Event) {
       const el = event.currentTarget as Element;
       current_param.user_id = String(attrOf(el, "id"));
@@ -473,7 +473,7 @@ function lineConstructor(line: HistoryLine, id: number) {
   );
   setData(find(newLine, ".user-ip")[0]!, "ip", line.ip);
   setupGeoIpHover(find(newLine, ".user-ip")[0]!);
-  if (current_param.ip == "") {
+  if (current_param.ip === "") {
     on(find(newLine, ".user-ip"), "click", function (event: Event) {
       const el = event.currentTarget as Element;
       current_param.ip = (data(el, "ip") as string | undefined) ?? "";
@@ -484,7 +484,7 @@ function lineConstructor(line: HistoryLine, id: number) {
   }
 
   setData(find(newLine, ".add-img-as-filter")[0]!, "img-id", line.imageId);
-  if (current_param.image_id == "") {
+  if (current_param.image_id === "") {
     on(find(newLine, ".add-img-as-filter"), "click", function (event: Event) {
       const el = event.currentTarget as Element;
       const imgId = data(el, "img-id") as string | number | null;
@@ -686,7 +686,7 @@ function lineConstructor(line: HistoryLine, id: number) {
         }
         if (count_item <= 2) {
           const badge_to_add =
-            active_items.length == 1 ? 1 : count_item == 1 ? 2 : 1;
+            active_items.length === 1 ? 1 : count_item === 1 ? 2 : 1;
           let badge_added = 0;
           active_items.some((key) => {
             if (key !== "allwords" && key !== "cat" && key !== "tags") {
@@ -741,7 +741,7 @@ function lineConstructor(line: HistoryLine, id: number) {
               value_str = value;
             }
 
-            if (key == "cat") {
+            if (key === "cat") {
               value_str = stripHtml(value_str);
             }
             count_more++;
@@ -852,7 +852,7 @@ function lineConstructor(line: HistoryLine, id: number) {
     );
     hide(find(newLine, ".toggle-img-option"));
 
-    if (sections.indexOf(line.section ?? "") != -1) {
+    if (sections.indexOf(line.section ?? "") !== -1) {
       const lineIconClass = icons[sections.indexOf(line.section ?? "")]!;
       addClass(find(newLine, ".type-icon i"), lineIconClass);
     } else {
@@ -861,7 +861,7 @@ function lineConstructor(line: HistoryLine, id: number) {
   }
 
   removeClass(find(newLine, ".detail-item-1"), "hide");
-  if (line.imageType == "high") {
+  if (line.imageType === "high") {
     const detailItem1 = find(newLine, ".detail-item-1");
     html(detailItem1, str_dwld);
     addClass(detailItem1, "icon-blue");
@@ -970,7 +970,7 @@ function addImageFilter(img_id: string | number | null) {
 }
 
 function updateArrows(actualPage: number, maxPage: number) {
-  if (actualPage == 0) {
+  if (actualPage === 0) {
     addClass(
       document.querySelectorAll(".pagination-arrow.left"),
       "unavailable",
@@ -982,7 +982,7 @@ function updateArrows(actualPage: number, maxPage: number) {
     );
   }
 
-  if (actualPage == maxPage - 1) {
+  if (actualPage === maxPage - 1) {
     addClass(
       document.querySelectorAll(".pagination-arrow.rigth"),
       "unavailable",

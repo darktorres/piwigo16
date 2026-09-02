@@ -81,7 +81,7 @@ function updateSearch() {
   setHtml(".search-album-result", "");
   hide(document.querySelectorAll(".search-album-noresult"));
   hide(document.querySelectorAll(".limit-album-reached"));
-  if (string == "") {
+  if (string === "") {
     // help button unnecessary so do not show
     // $('.search-album-help').show();
     show(document.querySelectorAll(".search-album-ghost"));
@@ -97,7 +97,7 @@ function updateSearch() {
 
     nbResult = searchAlbumByName(data, string, nbResult);
 
-    if (nbResult != 1) {
+    if (nbResult !== 1) {
       if (nbResult >= RESULT_LIMIT) {
         setHtml(
           ".search-album-num-result",
@@ -113,7 +113,7 @@ function updateSearch() {
       setHtml(".search-album-num-result", str_album_found);
     }
 
-    if (nbResult != 0) {
+    if (nbResult !== 0) {
       resultAppear(
         document.querySelector<HTMLElement>(
           ".search-album-result .search-album-elem",

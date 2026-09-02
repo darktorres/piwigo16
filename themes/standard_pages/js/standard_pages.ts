@@ -18,7 +18,7 @@ function setHtmlAll(targets: ArrayLike<Element>, value: string): void {
 }
 
 const modeCookie = getCookie("mode");
-if ("" != modeCookie) {
+if ("" !== modeCookie) {
   toggle_mode(modeCookie);
 } else {
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -48,7 +48,7 @@ ready(function () {
         // coercion, and this comparison is against the boolean.
         const inputs = column.querySelectorAll<HTMLInputElement>("input");
         const input = inputs[0];
-        if (input !== undefined && readData(input, "required") == true) {
+        if (input !== undefined && readData(input, "required") === true) {
           const errorMessages = column.querySelectorAll(".error-message");
           if (!input.value.trim()) {
             e.preventDefault();
@@ -139,7 +139,7 @@ function setCookie(cname: string, cvalue: string, exdays: number) {
   d.setTime(d.getTime() + exdays * 24 * 60 * 60 * 1000);
   const expires = "expires=" + d.toUTCString();
   document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
-  if (cname == "lang") {
+  if (cname === "lang") {
     location.reload();
   }
 }
@@ -150,10 +150,10 @@ function getCookie(cname: string) {
   const ca = decodedCookie.split(";");
   for (let i = 0; i < ca.length; i++) {
     let c = ca[i]!;
-    while (c.charAt(0) == " ") {
+    while (c.charAt(0) === " ") {
       c = c.substring(1);
     }
-    if (c.indexOf(name) == 0) {
+    if (c.indexOf(name) === 0) {
       return c.substring(name.length, c.length);
     }
   }

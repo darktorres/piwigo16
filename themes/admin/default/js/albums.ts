@@ -256,7 +256,7 @@ ready(() => {
   });
 
   const openUppercats =
-    openCat == "-1"
+    openCat === "-1"
       ? []
       : findAlbumById(albumData, openCat)!.uppercats.split(",");
   const new_data = albumData.map((a: AlbumTreeNode) => {
@@ -340,16 +340,16 @@ ready(() => {
     event.preventDefault();
     const moveInfo = event.detail;
 
-    if (moveInfo.movedNode.status != "private") {
+    if (moveInfo.movedNode.status !== "private") {
       let parentIsPrivate = false;
-      if (moveInfo.position == "after") {
+      if (moveInfo.position === "after") {
         // Non-null: a same-level "after" move always has a real parent
         // in this tree (there is no top-level move target with a null
         // parent in practice) -- same unguarded assumption the
         // pre-P47 `any`-typed code already made.
-        parentIsPrivate = moveInfo.targetNode.parent!.status == "private";
-      } else if (moveInfo.position == "inside") {
-        parentIsPrivate = moveInfo.targetNode.status == "private";
+        parentIsPrivate = moveInfo.targetNode.parent!.status === "private";
+      } else if (moveInfo.position === "inside") {
+        parentIsPrivate = moveInfo.targetNode.status === "private";
       }
 
       if (parentIsPrivate) {
@@ -417,14 +417,14 @@ ready(() => {
   });
 
   on(treeEl, "mousedown mouseup", function mouseState(e: Event) {
-    if (e.type == "mousedown") {
+    if (e.type === "mousedown") {
       addClass(treeEl, "dragging");
-    } else if (e.type == "mouseup") {
+    } else if (e.type === "mouseup") {
       removeClass(document.querySelectorAll(".dragging"), "dragging");
     }
   });
 
-  if (openCat != "-1") {
+  if (openCat !== "-1") {
     // Non-null: `openCat`, when not the "-1" sentinel, is always a real
     // album id present in this tree (same unguarded assumption the
     // pre-P47 `any`-typed code already made).
@@ -583,7 +583,7 @@ ready(() => {
           }
           if (parent_node) openNodeOnDemand(parent_node);
 
-          if (newAlbumPosition == "last") {
+          if (newAlbumPosition === "last") {
             getAlbumTree().appendNode(
               {
                 id: data.id,
@@ -706,7 +706,7 @@ function createAlbumNode(node: AlbumJqTreeNode, liEl: HTMLLIElement) {
   // `null` for a node actually handed to `onCreateLi`) -- same
   // assumption `getId()` further down already makes explicitly via
   // `parent.getLevel()`.
-  if (node.status == "private" || node.parent!.status == "private") {
+  if (node.status === "private" || node.parent!.status === "private") {
     node.status = "private";
     title += "icon-lock";
   }
@@ -717,7 +717,7 @@ function createAlbumNode(node: AlbumJqTreeNode, liEl: HTMLLIElement) {
   // lock-icon inheritance from a private/hidden parent never actually
   // worked, and the reassignment never actually persisted the
   // propagated flag onto the node.
-  if (node.visible == "false" || node.parent!.visible == "false") {
+  if (node.visible === "false" || node.parent!.visible === "false") {
     node.visible = "false";
     title +=
       '<span class="tiptip icon-cone" title="' +
@@ -782,7 +782,7 @@ function createAlbumNode(node: AlbumJqTreeNode, liEl: HTMLLIElement) {
   });
 
   let toggler: string;
-  if (node.haveChildren || node.children.length != 0) {
+  if (node.haveChildren || node.children.length !== 0) {
     const open_nodes = getAlbumTree().getState().open_nodes;
     if (open_nodes.includes(node.id!)) {
       toggler = toggler_open;
@@ -810,7 +810,7 @@ function createAlbumNode(node: AlbumJqTreeNode, liEl: HTMLLIElement) {
   append(cont, icon.replace(/%icon%/g, "icon-grip-vertical-solid"));
   attr(find(cont, ".icon-grip-vertical-solid"), "title", str_albs_drag_drop);
 
-  if (node.haveChildren || node.children.length != 0) {
+  if (node.haveChildren || node.children.length !== 0) {
     append(cont, icon.replace(/%icon%/g, "icon-sitemap"));
   } else {
     append(cont, icon.replace(/%icon%/g, "icon-folder-open"));
@@ -861,7 +861,7 @@ function createAlbumNode(node: AlbumJqTreeNode, liEl: HTMLLIElement) {
     hide(find(cont, ".nb-subcats"));
   }
 
-  if (!(node.nb_images != 0 && node.nb_images)) {
+  if (!(node.nb_images !== 0 && node.nb_images)) {
     hide(find(cont, ".nb-images"));
   }
 
@@ -879,7 +879,7 @@ Checkboxes
 ----------------*/
 
 function checkbox_change(this: Element) {
-  if (attrOf(this, "data-selected") == "1") {
+  if (attrOf(this, "data-selected") === "1") {
     hide(find(this, "i"));
   } else {
     show(find(this, "i"));
@@ -887,7 +887,7 @@ function checkbox_change(this: Element) {
 }
 
 function checkbox_click(this: Element) {
-  if (attrOf(this, "data-selected") == "1") {
+  if (attrOf(this, "data-selected") === "1") {
     attr(this, "data-selected", "0");
     hide(find(this, "i"));
   } else {
@@ -900,7 +900,7 @@ function checkbox_click(this: Element) {
 // -- typed rather than left broken, same policy as other confirmed-dead
 // functions found this campaign.
 function openAddAlbumPopIn(parentAlbumId: string | number) {
-  if (parentAlbumId != 0) {
+  if (parentAlbumId !== 0) {
     html(
       document.querySelectorAll("#AddAlbum .AddIconTitle span"),
       add_sub_album_of.replace(
@@ -982,11 +982,11 @@ function triggerDeleteAlbum(cat_id: string | number) {
     success: function (
       data: operations["categoryOrphanImpact"]["responses"][200]["content"]["application/json"],
     ) {
-      if (data.nbImagesRecursive == 0) {
+      if (data.nbImagesRecursive === 0) {
         hide(document.querySelectorAll(".deleteAlbumOptions"));
       } else {
         show(document.querySelectorAll(".deleteAlbumOptions"));
-        if (data.nbImagesAssociatedOutside == 0) {
+        if (data.nbImagesAssociatedOutside === 0) {
           hide(document.querySelectorAll("#IMAGES_ASSOCIATED_OUTSIDE"));
         } else {
           html(
@@ -1002,7 +1002,7 @@ function triggerDeleteAlbum(cat_id: string | number) {
               .replace("%d", String(data.nbImagesAssociatedOutside)),
           );
         }
-        if (data.nbImagesBecomingOrphan == 0) {
+        if (data.nbImagesBecomingOrphan === 0) {
           hide(document.querySelectorAll("#IMAGES_BECOMING_ORPHAN"));
         } else {
           html(
@@ -1030,7 +1030,7 @@ function triggerDeleteAlbum(cat_id: string | number) {
 function openDeleteAlbumPopIn(cat_to_delete: string | number) {
   fadeIn(document.querySelectorAll("#DeleteAlbum"));
   const node = getAlbumTree().getNodeById(cat_to_delete)!;
-  if (node.children.length == 0) {
+  if (node.children.length === 0) {
     html(
       document.querySelectorAll(".DeleteIconTitle span"),
       delete_album_with_name.replace("%s", node.name),
@@ -1086,7 +1086,7 @@ function closeDeleteAlbumPopIn() {
 
 function getAllSubAlbumsFromNode(node: AlbumJqTreeNode): number {
   let nb_sub_cats = 0;
-  if (node.children.length != 0) {
+  if (node.children.length !== 0) {
     node.children.forEach((child) => {
       nb_sub_cats++;
       nb_sub_cats += getAllSubAlbumsFromNode(child);
@@ -1098,7 +1098,7 @@ function getAllSubAlbumsFromNode(node: AlbumJqTreeNode): number {
 }
 
 function setSubcatsBadge(node: AlbumJqTreeNode) {
-  if (node.children.length != 0) {
+  if (node.children.length !== 0) {
     const nbSubcats = find(
       document.querySelectorAll("#cat-" + String(node.id)),
       ".nb-subcats",
@@ -1132,7 +1132,7 @@ function goToNode(node: AlbumJqTreeNode, firstNode: AlbumJqTreeNode) {
   // console.log(firstNode.id, node.id);
   if (node.parent) {
     goToNode(node.parent, firstNode);
-    if (node != firstNode) {
+    if (node !== firstNode) {
       getAlbumTree().openNode(node);
       // console.log("parent id : " + node.parent.id);
       show(document.querySelectorAll("#cat-" + String(node.parent.id)));
@@ -1166,7 +1166,7 @@ function showNodeChildrens(node: AlbumJqTreeNode) {
 // Genuinely dead code -- zero real callers found (confirmed via grep)
 // -- typed rather than left broken, same policy as isNumeric() above.
 function getId(parent: AlbumJqTreeNode): string | number {
-  if (parent.getLevel() == 0) {
+  if (parent.getLevel() === 0) {
     return 0;
   } else {
     // Non-null: every real album node carries a real id (only jqtree's
@@ -1205,14 +1205,14 @@ function applyMove(moveInfo: JqTreeMoveInfo<AlbumNodeData>) {
   let moveRank: number | null = null;
   const previous_parent = moveInfo.previousParent!;
   const target = moveInfo.targetNode;
-  if (moveInfo.position == "after") {
+  if (moveInfo.position === "after") {
     // Non-null: same "always a real parent" invariant as elsewhere in
     // this file (a move target is never the tree's own invisible root).
     if (String(getId(previous_parent)) !== String(getId(target.parent!))) {
       moveParent = getId(target.parent!);
     }
     moveRank = getRank(target, id) + 1;
-  } else if (moveInfo.position == "inside") {
+  } else if (moveInfo.position === "inside") {
     if (String(getId(previous_parent)) !== String(getId(target))) {
       moveParent = getId(target);
       const currentNode = getAlbumTree().getNodeById(moveParent);
@@ -1225,7 +1225,7 @@ function applyMove(moveInfo: JqTreeMoveInfo<AlbumNodeData>) {
       }
     }
     moveRank = 1;
-  } else if (moveInfo.position == "before") {
+  } else if (moveInfo.position === "before") {
     if (String(getId(previous_parent)) !== String(getId(target.parent!))) {
       moveParent = getId(target.parent!);
     }
@@ -1357,7 +1357,7 @@ function makePrivateHierarchy(node: AlbumJqTreeNode) {
 function getPathNode(node: AlbumJqTreeNode): string {
   // Non-null: same "always a real parent" invariant as elsewhere in
   // this file.
-  if (node.parent!.getLevel() != 0) {
+  if (node.parent!.getLevel() !== 0) {
     return getPathNode(node.parent!) + " / " + node.name;
   } else {
     return node.name;

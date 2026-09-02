@@ -187,7 +187,7 @@ ready(function () {
         "pointer-events: none",
       );
 
-      if (name.replace(/\s/g, "").length != 0) {
+      if (name.replace(/\s/g, "").length !== 0) {
         void ajax({
           url: "api/v1/groups",
           type: "POST",
@@ -303,7 +303,7 @@ const createGroup = function (group: Group): Element {
  -------*/
 ready(function () {
   document.querySelectorAll(".GroupContainer").forEach((groupBox) => {
-    if (attrOf(groupBox, "id") != "group-template") setupGroupBox(groupBox);
+    if (attrOf(groupBox, "id") !== "group-template") setupGroupBox(groupBox);
   });
 });
 const setupGroupBox = function (groupBox: Element) {
@@ -396,9 +396,9 @@ const setupGroupBox = function (groupBox: Element) {
   });
 
   /* Setup the default action */
-  if (data(groupBox, "default") == 1) {
+  if (data(groupBox, "default") === 1) {
     setupDefaultActions(id, true);
-  } else if (data(groupBox, "default") == 0) {
+  } else if (data(groupBox, "default") === 0) {
     setupDefaultActions(id, false);
   }
 
@@ -452,13 +452,13 @@ const toogleSelection = function (
     removeClass(find(groupBox, ".icon-users-1"), "OrangeIcon");
     removeClass(find(groupBox, ".group_number_users"), "OrangeFont");
     document.querySelectorAll(".DeleteGroupList div").forEach((el) => {
-      if (attrOf(el, "data-id") == String(group_id)) {
+      if (attrOf(el, "data-id") === String(group_id)) {
         el.remove();
       }
     });
     updateSelectionPanel();
     document.querySelectorAll("#MergeOptionsChoices option").forEach((el) => {
-      if (attrOf(el, "value") == String(group_id)) {
+      if (attrOf(el, "value") === String(group_id)) {
         el.remove();
       }
     });
@@ -554,7 +554,7 @@ const renameGroup = function (id: string | number, newName: string) {
     "pointer-events: none",
   );
 
-  if (newName.replace(/\s/g, "").length != 0) {
+  if (newName.replace(/\s/g, "").length !== 0) {
     void ajax({
       url: "api/v1/groups/" + String(id),
       type: "PATCH",
@@ -952,14 +952,14 @@ let state = "NoSelection";
 const updateSelectionPanel = function (changedState: string = "") {
   const numSelect = document.querySelectorAll(".DeleteGroupList div").length;
 
-  if (numSelect == 0) {
+  if (numSelect === 0) {
     updateStatePanel("NoSelection");
-  } else if (changedState == "") {
-    if (numSelect == 1 && state != "ConfirmDeletion")
+  } else if (changedState === "") {
+    if (numSelect === 1 && state !== "ConfirmDeletion")
       updateStatePanel("OneSelected");
-    if (numSelect > 1 && state == "OneSelected") updateStatePanel("Selection");
+    if (numSelect > 1 && state === "OneSelected") updateStatePanel("Selection");
   } else {
-    if (changedState == "Selection" && numSelect == 1)
+    if (changedState === "Selection" && numSelect === 1)
       updateStatePanel("OneSelected");
     else updateStatePanel(changedState);
   }
@@ -1011,7 +1011,7 @@ const updateStatePanel = function (newState: string = "Selection") {
       hide(document.querySelectorAll("#ConfirmGroupAction"));
       break;
   }
-  if (newState == "NoSelection") {
+  if (newState === "NoSelection") {
     show(document.querySelectorAll("#DeleteSelectionMode"));
     show(document.querySelectorAll("#MergeSelectionMode"));
     buttonUnavailable(document.querySelectorAll("#MergeSelectionMode"));
@@ -1071,7 +1071,7 @@ on(document.querySelectorAll(".ConfirmMergeButton"), "click", function () {
   ) as string;
 
   document.querySelectorAll(".DeleteGroupList div").forEach((el) => {
-    if (dest_grp != attrOf(el, "data-id")) {
+    if (dest_grp !== attrOf(el, "data-id")) {
       merge_group.push(Number(attrOf(el, "data-id")));
       name_merge.push(htmlOf(find(el, "p"))!);
     } else {
@@ -1269,7 +1269,7 @@ ready(function () {
   let idSearch = "";
   on(document.querySelectorAll(".UserSearch input"), "focus", function () {
     if (
-      idSearch !=
+      idSearch !==
       attrOf(document.querySelectorAll("#UserList"), "data-group_id")
     ) {
       updateUserSearch();
@@ -1371,7 +1371,7 @@ const openUserManager = function (grp_id: string | number) {
       const usersInGroupList = document.querySelector(".UsersInGroupList")!;
       while (
         outerHeight(usersInGroupList as HTMLElement) <= maxOffsetUserCont &&
-        usersInGroup[i] != undefined
+        usersInGroup[i] !== undefined
       ) {
         usersInGroupList.appendChild(
           getUserDisplay(
@@ -1629,7 +1629,7 @@ on(document.querySelectorAll(".input-user-name"), "input", function () {
     string | number;
   const container = document.querySelector(".UsersInGroupListContainer")!;
   const usersInGroupList = document.querySelector(".UsersInGroupList")!;
-  if (searchString != "") {
+  if (searchString !== "") {
     css(container, "min-height", cssValue(container, "height"));
     usersInGroup.forEach(function (u) {
       const isSearched = u.username.toLowerCase().includes(searchString);
@@ -1650,7 +1650,7 @@ on(document.querySelectorAll(".input-user-name"), "input", function () {
     let i = 0;
     while (
       outerHeight(usersInGroupList as HTMLElement) <= maxOffsetUserCont &&
-      usersInGroup[i] != undefined
+      usersInGroup[i] !== undefined
     ) {
       usersInGroupList.appendChild(
         getUserDisplay(usersInGroup[i]!.username, usersInGroup[i]!.id, grp_id),

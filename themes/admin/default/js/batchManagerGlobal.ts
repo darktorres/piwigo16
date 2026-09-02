@@ -278,9 +278,9 @@ export const derivatives: Derivatives = {
 
   finished: function () {
     return (
-      derivatives.done == derivatives.total &&
+      derivatives.done === derivatives.total &&
       derivatives.elements !== null &&
-      derivatives.elements.length == 0
+      derivatives.elements.length === 0
     );
   },
 };
@@ -448,7 +448,7 @@ on(window, "keypress", function (e: Event) {
   const keyEvent = e as KeyboardEvent;
   if (
     keyEvent.key === "Enter" &&
-    (selected as unknown) != -1 &&
+    Number(selected) !== -1 &&
     !haveTextarea &&
     !haveAlbumSelector
   ) {
@@ -485,7 +485,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
 
   let progressBar_max: number;
 
-  if (val(document.querySelectorAll('[name="selectAction"]')) == "metadata") {
+  if (val(document.querySelectorAll('[name="selectAction"]')) === "metadata") {
     e.preventDefault();
     e.stopPropagation();
     hide(document.querySelectorAll(".bulkAction"));
@@ -533,8 +533,8 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
     for (let i = 0; i < syncElements.length; i++) {
       image_ids.push(syncElements[i]);
       if (
-        i % syncBlockSize != syncBlockSize - 1 &&
-        i != syncElements.length - 1
+        i % syncBlockSize !== syncBlockSize - 1 &&
+        i !== syncElements.length - 1
       ) {
         continue;
       }
@@ -558,7 +558,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
             responseData: operations["imageSyncMetadata"]["responses"][200]["content"]["application/json"],
           ) {
             todo += thisBatchSize;
-            if (responseData.nbSynchronized != thisBatchSize) {
+            if (responseData.nbSynchronized !== thisBatchSize) {
               /*TODO: user feedback only data.nbSynchronized images out of thisBatchSize were sync*/
             }
             html(
@@ -582,7 +582,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
     }
   }
 
-  if (val(document.querySelectorAll('[name="selectAction"]')) == "delete") {
+  if (val(document.querySelectorAll('[name="selectAction"]')) === "delete") {
     if (
       !is(
         document.querySelector("#confirmDel input[name=confirm_deletion]")!,
@@ -646,8 +646,8 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
   for (let i = 0; i < deleteElements.length; i++) {
     image_ids.push(deleteElements[i]);
     if (
-      i % deleteBlockSize != deleteBlockSize - 1 &&
-      i != deleteElements.length - 1
+      i % deleteBlockSize !== deleteBlockSize - 1 &&
+      i !== deleteElements.length - 1
     ) {
       continue;
     }
@@ -671,7 +671,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
           responseData: operations["imageDelete"]["responses"][200]["content"]["application/json"],
         ) {
           todo += thisBatchSize;
-          if (responseData.deletedCount != thisBatchSize) {
+          if (responseData.deletedCount !== thisBatchSize) {
             /*TODO: user feedback only data.deletedCount images out of thisBatchSize were deleted*/
           }
           /*TODO: user feedback if isError*/
@@ -733,7 +733,7 @@ function progress_bar(val: number, max: number, _success: boolean) {
     "width",
     percent.toString() + "%",
   );
-  if (val == max) document.querySelector<HTMLElement>("#applyAction")?.click();
+  if (val === max) document.querySelector<HTMLElement>("#applyAction")?.click();
 }
 
 on(

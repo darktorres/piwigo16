@@ -206,7 +206,7 @@ ready(function () {
       },
     });
 
-    if (parent_album != default_parent_album) {
+    if (parent_album !== default_parent_album) {
       void ajax({
         url: "api/v1/categories/actions/move",
         type: "POST",
@@ -478,7 +478,7 @@ ready(function () {
     "click",
     function (e) {
       // Don't open the popin if you click on the album link
-      if ((e.target as Element).localName != "a") {
+      if ((e.target as Element).localName !== "a") {
         ab.open();
       }
     },
@@ -601,7 +601,7 @@ ready(function () {
     setVal(textareas, value);
   });
   on(window, "click", function (e: Event) {
-    if (e.target == descModal) {
+    if (e.target === descModal) {
       if (descModal !== null) fadeToggle([descModal]);
     }
   });
@@ -617,7 +617,7 @@ ready(function () {
 });
 
 function checkAlbumLock() {
-  if (is_visible == "true") {
+  if (is_visible === "true") {
     hide(document.querySelectorAll(".warnings"));
   } else {
     document.querySelectorAll(".warnings").forEach((el) => {
@@ -634,7 +634,7 @@ function add_related_category({
   newSelectedAlbum,
   getSelectedAlbum,
 }: AlbumSelectorCallbackArgs) {
-  if (parent_album != album.id) {
+  if (parent_album !== album.id) {
     // Linked, matching what the server renders into this same element on
     // page load (`getCatDisplayNameCache($uppercats, 'admin.php?page=album-')`
     // via `categoriesParentNav`). `album.root` is the "Root" label the

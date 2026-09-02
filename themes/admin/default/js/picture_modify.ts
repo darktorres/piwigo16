@@ -225,7 +225,7 @@ function check_related_categories(selected_cat: (string | number)[]) {
     String(selected_cat.length),
   );
 
-  if (selected_cat.length == 0) {
+  if (selected_cat.length === 0) {
     addClass(document.querySelectorAll(".linked-albums-badge"), "badge-red");
     addClass(document.querySelectorAll(".add-item"), "highlight");
     html(document.querySelectorAll(".orphan-photo"), str_orphan);

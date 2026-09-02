@@ -507,7 +507,7 @@ ready(function () {
   /**
    * Activate / Deactivate
    */
-  if (isWebmaster != 0) {
+  if (isWebmaster !== 0) {
     on(document.querySelectorAll(".switch"), "change", function (event: Event) {
       const switchEl = event.currentTarget as Element;
       addClass(document.querySelectorAll(".pluginMiniBox"), "usable");
@@ -731,19 +731,19 @@ function actualizeFilter(): void {
   show(document.querySelectorAll(".filterLabel"));
 
   document.querySelectorAll(".pluginMiniBox").forEach(() => {
-    if (nb_plugin.active == 0) {
+    if (nb_plugin.active === 0) {
       hide(document.querySelectorAll("label[for='seeActive']"));
       if (is(document.querySelectorAll("#seeActive"), ":checked")) {
         document.getElementById("seeAll")?.click();
       }
     }
-    if (nb_plugin.inactive == 0) {
+    if (nb_plugin.inactive === 0) {
       hide(document.querySelectorAll("label[for='seeInactive']"));
       if (is(document.querySelectorAll("#seeInactive"), ":checked")) {
         document.getElementById("seeAll")?.click();
       }
     }
-    if (nb_plugin.other == 0) {
+    if (nb_plugin.other === 0) {
       hide(document.querySelectorAll("label[for='seeOther']"));
       if (is(document.querySelectorAll("#seeOther"), ":checked")) {
         document.getElementById("seeAll")?.click();
@@ -773,19 +773,19 @@ ready(function () {
   show(document.querySelectorAll(".filterLabel"));
 
   document.querySelectorAll(".pluginBox").forEach((box) => {
-    if (nb_plugin.active == 0) {
+    if (nb_plugin.active === 0) {
       hide(document.querySelectorAll("label[for='seeActive']"));
       if (is(document.querySelectorAll("#seeActive"), ":checked")) {
         document.getElementById("seeAll")?.click();
       }
     }
-    if (nb_plugin.inactive == 0) {
+    if (nb_plugin.inactive === 0) {
       hide(document.querySelectorAll("label[for='seeInactive']"));
       if (is(document.querySelectorAll("#seeInactive"), ":checked")) {
         document.getElementById("seeAll")?.click();
       }
     }
-    if (nb_plugin.other == 0) {
+    if (nb_plugin.other === 0) {
       hide(document.querySelectorAll("label[for='seeOther']"));
       if (is(document.querySelectorAll("#seeOther"), ":checked")) {
         document.getElementById("seeAll")?.click();
@@ -861,7 +861,7 @@ ready(function () {
       let searchOther = 0;
 
       document.querySelectorAll(".pluginBox").forEach((box) => {
-        if (text == "") {
+        if (text === "") {
           hide(document.querySelectorAll(".nbPluginsSearch"));
           if (is(document.querySelectorAll("#seeAll"), ":checked")) {
             show(box);
@@ -907,7 +907,7 @@ ready(function () {
           const name = textOf(find(box, ".pluginName")).toLowerCase();
           show(document.querySelectorAll(".nbPluginsSearch"));
           const description = textOf(find(box, ".pluginDesc")).toLowerCase();
-          if (name.search(text) != -1 || description.search(text) != -1) {
+          if (name.search(text) !== -1 || description.search(text) !== -1) {
             searchNumber++;
 
             if (is(document.querySelectorAll("#seeAll"), ":checked")) {
@@ -963,9 +963,9 @@ ready(function () {
 
       actualizeFilter();
 
-      if (searchNumber == 0) {
+      if (searchNumber === 0) {
         html(document.querySelectorAll(".nbPluginsSearch"), nothing_found);
-      } else if (searchNumber == 1) {
+      } else if (searchNumber === 1) {
         html(
           document.querySelectorAll(".nbPluginsSearch"),
           plugin_found.replace("%s", String(searchNumber)),
@@ -979,7 +979,7 @@ ready(function () {
     },
   );
 
-  if (plugin_filter == "deactivated") {
+  if (plugin_filter === "deactivated") {
     // `.trigger("click")` on a real <label> -- same real-native-method
     // reasoning as the #seeActive call above, though a label's own
     // `.click()` additionally activates the checkbox/radio it's `for`,

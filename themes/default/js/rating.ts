@@ -54,7 +54,7 @@ function makeNiceRatingForm(options: PwgRatingOptions) {
   ) as HTMLCollectionOf<RatingButton>;
   gUserRating = "";
   for (let i = 0; i < gRatingButtons.length; i++) {
-    if (gRatingButtons[i]!.type == "button") {
+    if (gRatingButtons[i]!.type === "button") {
       gUserRating = gRatingButtons[i]!.value;
       break;
     }
@@ -73,11 +73,11 @@ function makeNiceRatingForm(options: PwgRatingOptions) {
     rateButton.style.marginLeft = rateButton.style.marginRight = "0";
 
     if (
-      i != gRatingButtons.length - 1 &&
-      rateButton.nextSibling!.nodeType == 3 /*TEXT_NODE*/
+      i !== gRatingButtons.length - 1 &&
+      rateButton.nextSibling!.nodeType === 3 /*TEXT_NODE*/
     )
       rateButton.parentNode!.removeChild(rateButton.nextSibling!);
-    if (i > 0 && rateButton.previousSibling!.nodeType == 3 /*TEXT_NODE*/)
+    if (i > 0 && rateButton.previousSibling!.nodeType === 3 /*TEXT_NODE*/)
       rateButton.parentNode!.removeChild(rateButton.previousSibling!);
 
     pwgAddEventListener(rateButton, "click", updateRating);
@@ -109,7 +109,7 @@ function updateRatingStarDisplay(userRating: string) {
 
 function updateRating(e: Event) {
   const rateButton = e.target as RatingButton;
-  if (rateButton.initialRateValue == gUserRating) return false; //nothing to do
+  if (rateButton.initialRateValue === gUserRating) return false; //nothing to do
 
   for (let i = 0; i < gRatingButtons.length; i++)
     gRatingButtons[i]!.disabled = true;

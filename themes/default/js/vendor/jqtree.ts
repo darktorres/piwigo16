@@ -939,6 +939,12 @@ class JqTreeController<T extends Record<string, unknown>> {
 
   private mouseStop(positionInfo: PositionInfo): boolean {
     this.moveItem();
+    // Real pre-existing bug found only by strict typechecking: this read
+    // used to happen after the `this.hoveredArea = null` reset below,
+    // making the `onDragStop`-vs-successful-move branch below always
+    // take the "no hovered area" path -- captured before the reset now,
+    // matching the same-purpose `currentItem` capture a few lines down.
+    const hadHoveredArea = this.hoveredArea !== null;
     this.dragElement?.remove();
     this.dragElement = null;
     this.hoveredArea = null;
@@ -949,7 +955,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     this.currentItem = null;
     this.isDragging = false;
     this.positionInfo = null;
-    if (!this.hoveredArea && currentItem && this.options.onDragStop) {
+    if (!hadHoveredArea && currentItem && this.options.onDragStop) {
       this.options.onDragStop(
         currentItem as unknown as JqTreeNode<T>,
         positionInfo.originalEvent instanceof MouseEvent

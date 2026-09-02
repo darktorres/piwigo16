@@ -854,11 +854,12 @@ function computeAggregatePercent(files: UploadQueueFile[]) {
 }
 
 function extractTusErrorDetail(err: Error | TusDetailedError) {
-  if (err && "originalResponse" in err && err.originalResponse) {
+  if ("originalResponse" in err && err.originalResponse) {
     try {
       const body = JSON.parse(
         err.originalResponse.getBody(),
       ) as components["schemas"]["Problem"];
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real runtime guard: `body` is an `as`-cast of untrusted parsed JSON, not a real guarantee it matches Problem's shape.
       if (body?.detail) {
         return body.detail;
       }
@@ -867,7 +868,7 @@ function extractTusErrorDetail(err: Error | TusDetailedError) {
       // through to the generic message below.
     }
   }
-  return err && err.message ? err.message : "Upload failed";
+  return err.message ? err.message : "Upload failed";
 }
 
 function startTusUploads(up: UploadQueue) {

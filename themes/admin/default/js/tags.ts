@@ -436,6 +436,7 @@ function setupTagbox(tagBox: Element): void {
         option_is_clicked = true;
       }
     });
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real false positive from closure mutation: option_is_clicked is set inside the forEach callback above, which the rule doesn't track (same class as dom.ts's stopped).
     if (!option_is_clicked) {
       hide(find(tagBox, ".tag-dropdown-block"));
     }
@@ -461,11 +462,8 @@ function setupTagbox(tagBox: Element): void {
     const tagIndex = dataTags.findIndex((tag) => tag.id === Number(id));
     // Non-null: `id` always comes from a real tag box, which was
     // itself rendered from this same `dataTags` array.
-    const tagRawName =
-      dataTags[tagIndex]!.raw_name ??
-      data(find(tagBox, ".tag-name")[0]!, "rawname");
-    const tagName =
-      dataTags[tagIndex]!.name ?? htmlOf(find(tagBox, ".tag-name"));
+    const tagRawName = dataTags[tagIndex]!.raw_name;
+    const tagName = dataTags[tagIndex]!.name;
     set_up_popin(data(tagBox, "id") as TagId, tagRawName, tagName);
     rename_tag_open();
   });

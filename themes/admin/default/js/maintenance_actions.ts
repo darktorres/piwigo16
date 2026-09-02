@@ -146,6 +146,7 @@ on(document.querySelectorAll(".delete-size-check"), "click", function (): void {
     }
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real false positive from closure mutation: displayDeleteSizes is set inside the forEach callback above, which the rule doesn't track (same class as dom.ts's stopped).
   if (displayDeleteSizes) {
     show(document.querySelectorAll(".delete-sizes"));
   } else {

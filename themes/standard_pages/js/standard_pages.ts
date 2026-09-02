@@ -64,6 +64,7 @@ ready(function () {
 
       // jQuery turns a handler's `false` return into preventDefault plus
       // stopPropagation; a `true` return does nothing at all.
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real false positive from closure mutation: isValid is set inside the forEach callback above, which the rule doesn't track (same class as dom.ts's stopped).
       if (!isValid) {
         e.preventDefault();
         e.stopPropagation();

@@ -162,7 +162,7 @@ export function selectize<
     if (opt.value === "") return;
     const data = {
       [valueField]: opt.value,
-      [labelField]: opt.textContent ?? "",
+      [labelField]: opt.textContent,
       $order: i,
     } as unknown as U;
     options[opt.value] = data;
@@ -313,7 +313,7 @@ export function selectize<
       textNodes.push(node as Text);
     }
     textNodes.forEach((textNode) => {
-      const text = textNode.textContent ?? "";
+      const text = textNode.textContent;
       if (!regex.test(text)) return;
       regex.lastIndex = 0;
       const span = document.createElement("span");
@@ -643,7 +643,7 @@ export function selectize<
     },
     load(fn) {
       fn.call(instance, (data) => {
-        if (data && data.length > 0) {
+        if (data.length > 0) {
           instance.addOption(data);
           renderOptions(false);
         }

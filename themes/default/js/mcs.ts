@@ -1136,7 +1136,6 @@ ready(function () {
     });
 
     if (
-      global_params.fields.filesize_min != null &&
       // These bounds are `int|string` server-side (`SearchRules::
       // $filesizeMin` & co). `Number()` is what `> 0` was already doing
       // to a string operand -- a relational comparison against a number
@@ -2627,7 +2626,7 @@ function updateFilters(filterName: string, mode: "add" | "del") {
         PS_params.allwords = "";
         PS_params.allwords_mode = "AND";
         PS_params.allwords_fields = [];
-      } else if (mode === "del") {
+      } else {
         delete PS_params.allwords;
         delete PS_params.allwords_mode;
         delete PS_params.allwords_fields;
@@ -2638,7 +2637,7 @@ function updateFilters(filterName: string, mode: "add" | "del") {
       if (mode === "add") {
         PS_params.tags = "";
         PS_params.tags_mode = "AND";
-      } else if (mode === "del") {
+      } else {
         delete PS_params.tags;
         delete PS_params.tags_mode;
       }
@@ -2648,7 +2647,7 @@ function updateFilters(filterName: string, mode: "add" | "del") {
       if (mode === "add") {
         PS_params.categories = "";
         PS_params.categories_withsubs = false;
-      } else if (mode === "del") {
+      } else {
         delete PS_params.categories;
         delete PS_params.categories_withsubs;
       }
@@ -2658,7 +2657,7 @@ function updateFilters(filterName: string, mode: "add" | "del") {
       if (mode === "add") {
         PS_params.date_posted_preset = "";
         PS_params.date_posted_custom = [];
-      } else if (mode === "del") {
+      } else {
         delete PS_params.date_posted_preset;
         delete PS_params.date_posted_custom;
       }
@@ -2668,7 +2667,7 @@ function updateFilters(filterName: string, mode: "add" | "del") {
       if (mode === "add") {
         PS_params.date_created_preset = "";
         PS_params.date_created_custom = [];
-      } else if (mode === "del") {
+      } else {
         delete PS_params.date_created_preset;
         delete PS_params.date_created_custom;
       }
@@ -2678,7 +2677,7 @@ function updateFilters(filterName: string, mode: "add" | "del") {
       if (mode === "add") {
         PS_params.filesize_min = "";
         PS_params.filesize_max = "";
-      } else if (mode === "del") {
+      } else {
         delete PS_params.filesize_min;
         delete PS_params.filesize_max;
       }
@@ -2688,7 +2687,7 @@ function updateFilters(filterName: string, mode: "add" | "del") {
       if (mode === "add") {
         PS_params.height_min = "";
         PS_params.height_max = "";
-      } else if (mode === "del") {
+      } else {
         delete PS_params.height_min;
         delete PS_params.height_max;
       }
@@ -2698,7 +2697,7 @@ function updateFilters(filterName: string, mode: "add" | "del") {
       if (mode === "add") {
         PS_params.width_min = "";
         PS_params.width_max = "";
-      } else if (mode === "del") {
+      } else {
         delete PS_params.width_min;
         delete PS_params.width_max;
       }
@@ -2707,7 +2706,7 @@ function updateFilters(filterName: string, mode: "add" | "del") {
     default:
       if (mode === "add") {
         PS_params[filterName] = "";
-      } else if (mode === "del") {
+      } else {
         // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- a search-parameter bag keyed by the filter name chosen at runtime, serialised straight to the API; a Map would have to be converted back on every request.
         delete PS_params[filterName];
       }

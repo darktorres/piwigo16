@@ -206,7 +206,7 @@ ready(function () {
   );
 
   on(commentsNb, "click", function (event: Event) {
-    const nb = (event.currentTarget as Element).textContent ?? "";
+    const nb = (event.currentTarget as Element).textContent;
     updateNbComments(nb);
     commentsParams.page = 0;
     getComments(commentsParams);
@@ -678,7 +678,7 @@ function closeModalViewComment() {
 }
 
 function validateComment(id: (string | number)[]) {
-  const idLenght = id.length ?? 1;
+  const idLenght = id.length;
 
   void ajax({
     url: "api/v1/comments/actions/validate",
@@ -713,7 +713,7 @@ function validateComment(id: (string | number)[]) {
 }
 
 function deleteComment(id: (string | number)[]) {
-  const idLenght = id.length ?? 1;
+  const idLenght = id.length;
 
   confirm({
     title:

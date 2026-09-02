@@ -113,7 +113,7 @@ const guest_id = pwg_getPageData<number>("guest_id");
 function stripHtml(markup: string): string {
   const tempDiv = document.createElement("div");
   tempDiv.innerHTML = markup;
-  return (tempDiv.textContent ?? "").trim();
+  return tempDiv.textContent.trim();
 }
 
 ready(() => {
@@ -268,6 +268,7 @@ function activateLineOptions() {
         option_is_clicked = true;
       }
     });
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real false positive from closure mutation: option_is_clicked is set inside the forEach callback above, which the rule doesn't track (same class as dom.ts's stopped).
     if (!option_is_clicked) {
       hide(find(document.querySelectorAll(".search-line"), ".img-option"));
     }
@@ -615,7 +616,7 @@ function lineConstructor(line: HistoryLine, id: number) {
         addedBy: "gallery-icon-user",
         filetypes: "gallery-icon-file-image",
       };
-      html(find(newLine, ".type-name"), line.section ?? "");
+      html(find(newLine, ".type-name"), line.section);
       html(find(newLine, ".type-id"), "#" + String(line.searchId));
       if (!line.searchId) {
         hide(find(newLine, ".type-id"));

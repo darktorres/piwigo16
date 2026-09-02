@@ -431,7 +431,7 @@ ready(() => {
     const nodeToGo = getAlbumTree().getNodeById(openCat)!;
 
     goToNode(nodeToGo, nodeToGo);
-    if (nodeToGo.children) {
+    if (nodeToGo.children.length > 0) {
       getAlbumTree().openNode(nodeToGo, false);
     }
 
@@ -1153,7 +1153,7 @@ function goToNode(node: AlbumJqTreeNode, firstNode: AlbumJqTreeNode) {
 }
 
 function showNodeChildrens(node: AlbumJqTreeNode) {
-  if (node.children) {
+  if (node.children.length > 0) {
     // console.log("childrens : " + node.children);
     node.children.forEach((child) => {
       // console.log("children : " + child.id, child.name);
@@ -1308,14 +1308,11 @@ function changeParent(
         data: operations["categoryMove"]["responses"][200]["content"]["application/json"],
       ) {
         void changeRank(node, rank);
-        const updatedCategories = data.updatedCategories;
-        if (updatedCategories) {
-          updatedCategories.forEach((cat) => {
-            const catNode = getAlbumTree().getNodeById(cat.categoryId)!;
-            catNode.nb_sub_photos = cat.nbSubPhotos;
-            getAlbumTree().updateNode(catNode, catNode.name);
-          });
-        }
+        data.updatedCategories.forEach((cat) => {
+          const catNode = getAlbumTree().getNodeById(cat.categoryId)!;
+          catNode.nb_sub_photos = cat.nbSubPhotos;
+          getAlbumTree().updateNode(catNode, catNode.name);
+        });
         res();
       },
       error: function (message) {

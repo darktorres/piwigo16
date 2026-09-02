@@ -128,14 +128,12 @@ function str_repeat(i: string, m: number): string {
   return o.join("");
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- the guard is realistically dead in any evergreen browser this project's own P35 browserslist floor targets (indexOf has been standard since ES5); removal is P51-H's job (docs/PLAN.md), not this one.
 if (!Array.prototype.indexOf) {
   // Genuinely irreducible `any`: this assigns to the shared
   // `Array.prototype` object itself, not one array instance -- lib.es5's
   // own ambient `indexOf` signature for that shared prototype has no
-  // real element type to narrow to. The guard itself is realistically
-  // dead in any evergreen browser this project's own P35 browserslist
-  // floor targets (indexOf has been standard since ES5), but left
-  // as-is -- removing a guarded fallback isn't this phase's job.
+  // real element type to narrow to.
   Array.prototype.indexOf = function (elt: any, fromArg?: number): number {
     const len = this.length;
 

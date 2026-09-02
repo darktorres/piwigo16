@@ -553,7 +553,7 @@ function getAllApiKeys(reset: boolean = false) {
     success: function (
       res: operations["sessionApiKeyList"]["responses"][200]["content"]["application/json"],
     ) {
-      if (!res.apiKeys || res.apiKeys.length === 0) {
+      if (res.apiKeys.length === 0) {
         // No keys
       } else {
         AddApiLine(res.apiKeys, reset);
@@ -878,6 +878,7 @@ function copyToClipboard(
   message: string,
   selector: string | null = null,
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
   if (window.isSecureContext && navigator.clipboard) {
     void navigator.clipboard.writeText(copy);
     if (selector) {

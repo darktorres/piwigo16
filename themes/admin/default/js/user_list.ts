@@ -203,6 +203,7 @@ ready(function () {
   document
     .querySelectorAll(".advanced-filter-level select option")
     .item(1)
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real runtime guard: NodeListOf.item() is typed non-nullable but really returns null for an out-of-range index (fewer than 2 options).
     ?.remove();
 
   /* Edit Password */
@@ -1936,31 +1937,22 @@ function user_container_click(this: Element) {
   if (!isSelectionMode()) {
     return;
   }
-  const in_container = true;
   const container_checkbox = find(this, ".user-list-checkbox")[0]!;
-  // Non-null: same "always a real, in-bounds index when in_container"
-  // invariant as checkbox_container_click()'s own copy of this comment.
-  const curr_user: { id: number; username: string } = in_container
-    ? current_users[parseInt(attrOf(this, "key")!)]!
-    : { id: -1, username: "" };
+  // Non-null: `key` is always a real, in-bounds index into current_users
+  // for a real .UsernameBlock container.
+  const curr_user = current_users[parseInt(attrOf(this, "key")!)]!;
   if (attrOf(container_checkbox, "data-selected") === "1") {
     attr(container_checkbox, "data-selected", "0");
     hide(find(container_checkbox, "i"));
-    if (in_container) {
-      removeClass(this, "container-selected");
-      selection = selection.filter((elem) => elem.id !== curr_user.id);
-    }
+    removeClass(this, "container-selected");
+    selection = selection.filter((elem) => elem.id !== curr_user.id);
   } else {
     attr(container_checkbox, "data-selected", "1");
     show(find(container_checkbox, "i"));
-    if (in_container) {
-      addClass(this, "container-selected");
-      selection.push({ id: curr_user.id, username: curr_user.username });
-    }
+    addClass(this, "container-selected");
+    selection.push({ id: curr_user.id, username: curr_user.username });
   }
-  if (in_container) {
-    update_selection_content();
-  }
+  update_selection_content();
 }
 
 function generate_groups(container: Element, groups: number[]) {
@@ -2340,6 +2332,7 @@ function fill_user_edit_update(user_to_edit: UserRow, pop_in: Element) {
         false,
       );
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
       if (window.isSecureContext && navigator.clipboard) {
         copyToClipboard(String(inputValue));
       }
@@ -2358,6 +2351,7 @@ function fill_user_edit_update(user_to_edit: UserRow, pop_in: Element) {
     );
     off(copyResultBtn, "click");
     on(copyResultBtn, "click", function () {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
       if (window.isSecureContext && navigator.clipboard) {
         const success = document.querySelectorAll("#result_send_mail_copy");
         fadeOut(success, 100);
@@ -2955,6 +2949,7 @@ function update_user_password() {
       hide(document.querySelectorAll(".user-property-password-change-inputs"));
       fadeIn(document.querySelectorAll("#edit_password_success_change"));
 
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
       if (window.isSecureContext && navigator.clipboard) {
         on(document.querySelectorAll("#copy_password"), "click", function () {
           copyToClipboard(newPassword);
@@ -3589,6 +3584,7 @@ function send_new_user_password(user_id: number, mail: string) {
         hide(password_container);
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
       if (window.isSecureContext && navigator.clipboard) {
         const copyBtn = document.querySelectorAll("#AddUserCopyPassword");
         off(copyBtn, "click");
@@ -3799,6 +3795,7 @@ function send_link_password(
           document.querySelectorAll("#result_send_mail_copy_msg"),
           copyLinkStr,
         );
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
         if (window.isSecureContext && navigator.clipboard) {
           copyToClipboard(response.generatedLink);
         }

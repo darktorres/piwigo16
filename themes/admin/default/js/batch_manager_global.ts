@@ -120,6 +120,7 @@ const _nb_thumbs_page = pwg_getPageData<number>("nb_thumbs_page");
 const nb_thumbs_set = pwg_getPageData<number>("nb_thumbs_set");
 const applyOnDetails_pattern = pwg_getPageString("on the %d selected photos");
 export const all_elements =
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real runtime guard: pwg_getPageData<T>() always returns T per its own signature even when the key is genuinely absent from the page-data payload (an unsafe cast, not a real guarantee).
   pwg_getPageData<(string | number)[]>("all_elements") || [];
 
 const selectedMessage_pattern = pwg_getPageString("%d of %d photos selected");

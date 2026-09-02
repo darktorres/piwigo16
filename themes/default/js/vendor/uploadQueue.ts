@@ -292,13 +292,11 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
       // real plupload's own `fn(up, ...)` convention) -- `args[0]` here is
       // the uploader itself, not the payload.
       const err = args[1] as UploadQueueError;
-      if (err.file) {
-        if (err.code === FILE_SIZE_ERROR) {
-          alert("Error: File too large: " + err.file.name);
-        }
-        if (err.code === FILE_EXTENSION_ERROR) {
-          alert("Error: Invalid file extension: " + err.file.name);
-        }
+      if (err.code === FILE_SIZE_ERROR) {
+        alert("Error: File too large: " + err.file.name);
+      }
+      if (err.code === FILE_EXTENSION_ERROR) {
+        alert("Error: Invalid file extension: " + err.file.name);
       }
     });
 

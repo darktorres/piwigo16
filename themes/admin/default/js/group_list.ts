@@ -390,6 +390,7 @@ const setupGroupBox = function (groupBox: Element) {
         option_is_clicked = true;
       }
     });
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real false positive from closure mutation: option_is_clicked is set inside the forEach callback above, which the rule doesn't track (same class as dom.ts's stopped).
     if (!option_is_clicked) {
       hide(find(groupBox, "#GroupOptions"));
     }
@@ -1388,6 +1389,7 @@ const openUserManager = function (grp_id: string | number) {
         document
           .querySelectorAll(".UsernameBlock")
           .item(document.querySelectorAll(".UsernameBlock").length - 1)
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real runtime guard: NodeListOf.item() is typed non-nullable but really returns null for an out-of-range index (the list can be empty here).
           ?.remove();
       }
       updateMembernumber(usersInGroup.length, grp_id);
@@ -1437,6 +1439,7 @@ const getUserDisplay = function (
   const usersInGroupList = document.querySelector(".UsersInGroupList")!;
   while ((usersInGroupList as HTMLElement).offsetHeight > maxOffsetUserCont) {
     const blocks = document.querySelectorAll(".UsernameBlock");
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real runtime guard: NodeListOf.item() is typed non-nullable but really returns null for an out-of-range index (the list can be empty here).
     blocks.item(blocks.length - 1)?.remove();
   }
 
@@ -1476,6 +1479,7 @@ const getUserDisplay = function (
           (usersInGroupList as HTMLElement).offsetHeight > maxOffsetUserCont
         ) {
           const blocks = document.querySelectorAll(".UsernameBlock");
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real runtime guard: NodeListOf.item() is typed non-nullable but really returns null for an out-of-range index (the list can be empty here).
           blocks.item(blocks.length - 1)?.remove();
         }
 
@@ -1602,6 +1606,7 @@ on(document.querySelectorAll(".AddUserBlock button"), "click", function () {
           (usersInGroupList as HTMLElement).offsetHeight > maxOffsetUserCont
         ) {
           const blocks = document.querySelectorAll(".UsernameBlock");
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real runtime guard: NodeListOf.item() is typed non-nullable but really returns null for an out-of-range index (the list can be empty here).
           blocks.item(blocks.length - 1)?.remove();
         }
 
@@ -1664,6 +1669,7 @@ on(document.querySelectorAll(".input-user-name"), "input", function () {
   );
   while ((usersInGroupList as HTMLElement).offsetHeight > maxOffsetUserCont) {
     const blocks = document.querySelectorAll(".UsernameBlock");
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real runtime guard: NodeListOf.item() is typed non-nullable but really returns null for an out-of-range index (the list can be empty here).
     blocks.item(blocks.length - 1)?.remove();
   }
 });

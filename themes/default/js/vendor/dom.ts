@@ -500,6 +500,7 @@ function delegateOne(
       while (current !== null && (current as EventTarget) !== target) {
         if (current.matches(selector)) {
           handler.call(current, event);
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real false positive from closure mutation: `stopped` is set by the stopPropagation wrapper installed above, which the rule doesn't track.
           if (stopped) {
             return;
           }
@@ -1520,7 +1521,7 @@ export function text(target: Element | ArrayLike<Element>, value: string): void 
  */
 export function textOf(target: Element | ArrayLike<Element>): string {
   return toElements(target)
-    .map((el) => el.textContent ?? "")
+    .map((el) => el.textContent)
     .join("");
 }
 

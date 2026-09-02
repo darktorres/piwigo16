@@ -145,7 +145,7 @@ export function tipTip(
       const hCompare = Math.round((orgHeight - tipH) / 2);
       let margLeft = Math.round(left + wCompare);
       let margTop = Math.round(top + orgHeight + opts.edgeOffset);
-      let tClass = "";
+      let tClass: string;
       let arrowTop = 0;
       let arrowLeft = Math.round(tipW - 12) / 2;
 
@@ -155,7 +155,7 @@ export function tipTip(
         tClass = "_top";
       } else if (opts.defaultPosition === "left") {
         tClass = "_left";
-      } else if (opts.defaultPosition === "right") {
+      } else {
         tClass = "_right";
       }
 
@@ -185,15 +185,11 @@ export function tipTip(
         Math.trunc(windowHeight() + window.scrollY);
       const bottomCompare = top + orgHeight - (opts.edgeOffset + tipH + 8) < 0;
 
-      if (topCompare || (tClass === "_bottom" && topCompare) || (tClass === "_top" && !bottomCompare)) {
+      if (topCompare || (tClass === "_top" && !bottomCompare)) {
         tClass = tClass === "_top" || tClass === "_bottom" ? "_top" : `${tClass}_top`;
         arrowTop = tipH;
         margTop = Math.round(top - (tipH + 5 + opts.edgeOffset));
-      } else if (
-        bottomCompare ||
-        (tClass === "_top" && bottomCompare) ||
-        (tClass === "_bottom" && !topCompare)
-      ) {
+      } else if (bottomCompare || tClass === "_bottom") {
         tClass = tClass === "_top" || tClass === "_bottom" ? "_bottom" : `${tClass}_bottom`;
         arrowTop = -12;
         margTop = Math.round(top + orgHeight + opts.edgeOffset);

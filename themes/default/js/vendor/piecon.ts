@@ -133,7 +133,7 @@ export function setProgress(percentage: number): void {
     return;
   }
 
-  if (getCanvas().getContext === undefined || isIE || isSafari) {
+  if (isIE || isSafari) {
     updateTitle(percentage);
     return;
   }

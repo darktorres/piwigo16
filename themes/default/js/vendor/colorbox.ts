@@ -304,7 +304,7 @@ function buildBox(): void {
 
 function ensureBox(): void {
   buildBox();
-  if (document.body && boxEl.parentElement === null) {
+  if (boxEl.parentElement === null) {
     document.body.append(overlayEl, boxEl);
   }
 }

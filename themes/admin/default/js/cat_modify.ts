@@ -687,6 +687,7 @@ function activateCommentDropdown() {
         option_is_clicked = true;
       }
     });
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real false positive from closure mutation: option_is_clicked is set inside the forEach callback above, which the rule doesn't track (same class as dom.ts's stopped).
     if (!option_is_clicked) {
       hide(
         find(

@@ -7,6 +7,7 @@ export interface PwgToasterInfo {
 }
 
 export function pwgToaster(info: PwgToasterInfo) {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real runtime guard against a caller that doesn't respect PwgToasterInfo (an untyped call site, or a value that only satisfies the type after an `as` cast).
   if (!info.text || !info.icon) {
     console.error("set info.text or info.icon");
     return;
@@ -17,6 +18,7 @@ export function pwgToaster(info: PwgToasterInfo) {
     return;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- same real runtime guard as above.
   if (info.icon !== "success" && info.icon !== "error") {
     console.error("info.icon must be success or error");
     return;

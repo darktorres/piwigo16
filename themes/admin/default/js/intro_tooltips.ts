@@ -188,91 +188,90 @@ ready(function () {
 General function
 ----------------*/
 function resizeStorageTooltips(resize: boolean = false) {
-  document.querySelectorAll(".storage-chart span").forEach((segment) => {
-    const type = String(readData(segment, "type"));
-    const tooltips = document.querySelectorAll<HTMLElement>(
-      ".storage-tooltips #" + type,
-    );
-    const arrows = document.querySelectorAll<HTMLElement>(
-      ".storage-tooltips #" + type + " .tooltip-arrow",
-    );
+  document
+    .querySelectorAll<HTMLElement>(".storage-chart span")
+    .forEach((segment) => {
+      const type = String(readData(segment, "type"));
+      const tooltips = document.querySelectorAll<HTMLElement>(
+        ".storage-tooltips #" + type,
+      );
+      const arrows = document.querySelectorAll<HTMLElement>(
+        ".storage-tooltips #" + type + " .tooltip-arrow",
+      );
 
-    // jQuery's dimension getters read the *first* element of a set and give
-    // `undefined` for an empty one, which this arithmetic then turns into
-    // NaN. The NaN survives into a "NaNpx" string the browser ignores, so
-    // an absent tooltip is a silent no-op rather than an error -- kept
-    // rather than guarded, because guarding would change which branches run
-    // below.
-    const firstTooltip = tooltips[0];
-    const tooltipWidth =
-      firstTooltip === undefined ? Number.NaN : innerWidth(firstTooltip);
-    const chartTitle = document.querySelector<HTMLElement>(
-      "#chart-title-storage",
-    );
+      // jQuery's dimension getters read the *first* element of a set and give
+      // `undefined` for an empty one, which this arithmetic then turns into
+      // NaN. The NaN survives into a "NaNpx" string the browser ignores, so
+      // an absent tooltip is a silent no-op rather than an error -- kept
+      // rather than guarded, because guarding would change which branches run
+      // below.
+      const firstTooltip = tooltips[0];
+      const tooltipWidth =
+        firstTooltip === undefined ? Number.NaN : innerWidth(firstTooltip);
+      const chartTitle = document.querySelector<HTMLElement>(
+        "#chart-title-storage",
+      );
 
-    let left =
-      position(segment as HTMLElement).left +
-      width(segment as HTMLElement) / 2 -
-      tooltipWidth / 2;
-    // Move tooltip if he create horizontal scrollbar
-    const storage_width =
-      chartTitle === null ? Number.NaN : innerWidth(chartTitle);
-    if (left + tooltipWidth > storage_width) {
-      const diff = left + tooltipWidth - storage_width;
-      left = left - diff;
-      css(arrows, "left", "calc(50% + " + String(diff) + "px)");
-    }
-    css(tooltips, "left", String(left) + "px");
-    // Move tooltip if he create vertical scrollbar
-    const chart = document.querySelector<HTMLElement>(".storage-chart")!;
-    const str_chart_pos = offset(chart).top;
-    const str_chart_height = innerHeight(chart);
-    const tooltip_height =
-      (firstTooltip === undefined ? Number.NaN : innerHeight(firstTooltip)) +
-      str_chart_height;
-    const windows_height = windowHeight();
+      let left = position(segment).left + width(segment) / 2 - tooltipWidth / 2;
+      // Move tooltip if he create horizontal scrollbar
+      const storage_width =
+        chartTitle === null ? Number.NaN : innerWidth(chartTitle);
+      if (left + tooltipWidth > storage_width) {
+        const diff = left + tooltipWidth - storage_width;
+        left = left - diff;
+        css(arrows, "left", "calc(50% + " + String(diff) + "px)");
+      }
+      css(tooltips, "left", String(left) + "px");
+      // Move tooltip if he create vertical scrollbar
+      const chart = document.querySelector<HTMLElement>(".storage-chart")!;
+      const str_chart_pos = offset(chart).top;
+      const str_chart_height = innerHeight(chart);
+      const tooltip_height =
+        (firstTooltip === undefined ? Number.NaN : innerHeight(firstTooltip)) +
+        str_chart_height;
+      const windows_height = windowHeight();
 
-    if (resize) {
-      if (str_chart_pos + tooltip_height > windows_height) {
-        css(
-          tooltips,
-          "bottom",
-          "calc(100% + " + String(str_chart_height) + "px)",
-        );
-        arrows.forEach((arrow) => {
-          arrow.classList.add("bottom");
-        });
+      if (resize) {
+        if (str_chart_pos + tooltip_height > windows_height) {
+          css(
+            tooltips,
+            "bottom",
+            "calc(100% + " + String(str_chart_height) + "px)",
+          );
+          arrows.forEach((arrow) => {
+            arrow.classList.add("bottom");
+          });
+        } else {
+          css(tooltips, "bottom", "");
+          arrows.forEach((arrow) => {
+            arrow.classList.remove("bottom");
+          });
+        }
       } else {
-        css(tooltips, "bottom", "");
-        arrows.forEach((arrow) => {
-          arrow.classList.remove("bottom");
+        if (str_chart_pos + tooltip_height > windows_height) {
+          css(
+            tooltips,
+            "bottom",
+            "calc(100% + " + String(str_chart_height) + "px)",
+          );
+          arrows.forEach((arrow) => {
+            arrow.classList.add("bottom");
+          });
+        }
+        // off-then-on, so a second call replaces the previous registration
+        // instead of stacking another one. Both sides go through the helper
+        // because `removeEventListener` has no way to say "every handler of
+        // this type".
+        off(segment, "mouseenter");
+        on(segment, "mouseenter", function () {
+          show(tooltips);
+        });
+        off(segment, "mouseleave");
+        on(segment, "mouseleave", function () {
+          hide(tooltips);
         });
       }
-    } else {
-      if (str_chart_pos + tooltip_height > windows_height) {
-        css(
-          tooltips,
-          "bottom",
-          "calc(100% + " + String(str_chart_height) + "px)",
-        );
-        arrows.forEach((arrow) => {
-          arrow.classList.add("bottom");
-        });
-      }
-      // off-then-on, so a second call replaces the previous registration
-      // instead of stacking another one. Both sides go through the helper
-      // because `removeEventListener` has no way to say "every handler of
-      // this type".
-      off(segment, "mouseenter");
-      on(segment, "mouseenter", function () {
-        show(tooltips);
-      });
-      off(segment, "mouseleave");
-      on(segment, "mouseleave", function () {
-        hide(tooltips);
-      });
-    }
-  });
+    });
 }
 
 function resizeActivityTooltips() {

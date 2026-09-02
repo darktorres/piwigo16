@@ -516,43 +516,47 @@ ready(function () {
    * Activate / Deactivate
    */
   if (isWebmaster !== 0) {
-    on(document.querySelectorAll(".switch"), "change", function (event: Event) {
-      const switchEl = event.currentTarget as Element;
-      addClass(document.querySelectorAll(".pluginMiniBox"), "usable");
+    on(
+      document.querySelectorAll(".switch"),
+      "change",
+      function (this: Element) {
+        const switchEl = this;
+        addClass(document.querySelectorAll(".pluginMiniBox"), "usable");
 
-      const toggleEl = find(switchEl, "#toggleSelectionMode")[0]!;
-      const row = switchEl.parentElement!.parentElement!;
+        const toggleEl = find(switchEl, "#toggleSelectionMode")[0]!;
+        const row = switchEl.parentElement!.parentElement!;
 
-      if (is(toggleEl, ":checked")) {
-        // Activating a plugin the PEM catalog reports as incompatible with
-        // this Piwigo version asks first. This guard used to hang off
-        // `#<id> .activate` inside the incompatible-plugins ajax handler
-        // below -- upstream Piwigo's markup, an <a class="activate"> link,
-        // which this fork replaced with the toggle switch this handler
-        // binds. No `class="activate"` element exists in any template any
-        // more, so that .each() matched nothing and the confirmation was
-        // never shown: the warning marker rendered, and activation went
-        // through silently regardless. It lives here now, on the control
-        // that actually performs the activation.
-        if (hasClass(row, "incompatible")) {
-          confirmIncompatibleActivation(toggleEl, row);
+        if (is(toggleEl, ":checked")) {
+          // Activating a plugin the PEM catalog reports as incompatible with
+          // this Piwigo version asks first. This guard used to hang off
+          // `#<id> .activate` inside the incompatible-plugins ajax handler
+          // below -- upstream Piwigo's markup, an <a class="activate"> link,
+          // which this fork replaced with the toggle switch this handler
+          // binds. No `class="activate"` element exists in any template any
+          // more, so that .each() matched nothing and the confirmation was
+          // never shown: the warning marker rendered, and activation went
+          // through silently regardless. It lives here now, on the control
+          // that actually performs the activation.
+          if (hasClass(row, "incompatible")) {
+            confirmIncompatibleActivation(toggleEl, row);
 
-          return;
+            return;
+          }
+
+          applyActivation(row);
+        } else {
+          disactivatePlugin(row.id);
+
+          removeClass(row, "plugin-active");
+          addClass(row, "plugin-inactive");
+          const levelAction = find(row, ".pluginActionLevel1");
+          removeClass(levelAction, "pluginActionLevel1");
+          addClass(levelAction, "pluginUnavailableAction");
         }
 
-        applyActivation(row);
-      } else {
-        disactivatePlugin(row.id);
-
-        removeClass(row, "plugin-active");
-        addClass(row, "plugin-inactive");
-        const levelAction = find(row, ".pluginActionLevel1");
-        removeClass(levelAction, "pluginActionLevel1");
-        addClass(levelAction, "pluginUnavailableAction");
-      }
-
-      actualizeFilter();
-    });
+        actualizeFilter();
+      },
+    );
   } else {
     addClass(document.querySelectorAll(".pluginMiniBox"), "notUsable");
     addClass(
@@ -566,8 +570,8 @@ ready(function () {
     on(
       document.querySelectorAll(".switch input"),
       "click",
-      function (event: Event) {
-        const el = event.currentTarget as Element;
+      function (this: Element, event: Event) {
+        const el = this;
         addClass(el, "disabled");
         event.preventDefault();
         event.stopPropagation();
@@ -612,8 +616,8 @@ ready(function () {
       ".dropdown-option.delete-plugin-button",
     ),
     "click",
-    function (event: Event) {
-      const el = event.currentTarget as Element;
+    function (this: Element) {
+      const el = this;
       const pluginContent = el.closest(".pluginContent")!;
       const plugin_name = textOf(find(pluginContent, ".pluginName")).trim();
       const plugin_id = pluginContent.parentElement!.id;
@@ -645,8 +649,8 @@ ready(function () {
       ".dropdown-option.plugin-restore",
     ),
     "click",
-    function (event: Event) {
-      const el = event.currentTarget as Element;
+    function (this: Element) {
+      const el = this;
       const pluginContent = el.closest(".pluginContent")!;
       const plugin_name = textOf(find(pluginContent, ".pluginName")).trim();
       const plugin_id = pluginContent.parentElement!.id;
@@ -679,8 +683,8 @@ ready(function () {
       ".uninstall-plugin-button",
     ),
     "click",
-    function (event: Event) {
-      const el = event.currentTarget as Element;
+    function (this: Element) {
+      const el = this;
       const pluginContent = el.closest(".pluginContent")!;
       const plugin_name = textOf(find(pluginContent, ".pluginName")).trim();
       const plugin_id = pluginContent.parentElement!.id;
@@ -861,8 +865,8 @@ ready(function () {
   on(
     document.querySelectorAll(".pluginFilter input"),
     "input",
-    function (event: Event) {
-      const text = String(val(event.currentTarget as Element)).toLowerCase();
+    function (this: Element) {
+      const text = String(val(this)).toLowerCase();
       let searchNumber = 0;
 
       let searchActive = 0;
@@ -1006,6 +1010,7 @@ on(document, "mouseup", function (e: Event) {
     if (
       showOptions === undefined ||
       (showOptions !== e.target &&
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real mouseup event's own target inside the document is always a Node (or null), never a bare EventTarget with no Node interface.
         !showOptions.contains(e.target as Node | null))
     ) {
       hide(find(box, ".PluginOptionsBlock"));

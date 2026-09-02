@@ -141,7 +141,7 @@ function buildModal(options: JConfirmOptions): void {
       close();
     }
   };
-  const close = (): void => {
+  function close(): void {
     if (closed) {
       return;
     }
@@ -157,7 +157,7 @@ function buildModal(options: JConfirmOptions): void {
         document.body.classList.remove("jconfirm-no-scroll-modal");
       }
     }, 160);
-  };
+  }
   const instance: JConfirmInstance = {
     setContent(html: string): void {
       contentEl.innerHTML = html;

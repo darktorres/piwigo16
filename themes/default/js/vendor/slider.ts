@@ -352,7 +352,7 @@ function init(el: HTMLElement, options: SliderOptions): void {
   }
 
   let rangeEl = existing?.rangeEl ?? null;
-  if (options.range) {
+  if (options.range !== undefined && options.range !== false) {
     if (rangeEl === null) {
       rangeEl = document.createElement("div");
       el.appendChild(rangeEl);

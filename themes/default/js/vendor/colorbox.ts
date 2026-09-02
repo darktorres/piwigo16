@@ -610,7 +610,7 @@ function load(): void {
     loadingOverlayEl.style.display = "block";
   }, 100);
 
-  if (opts.inline) {
+  if (opts.inline === true) {
     const target = href ? document.querySelector(href) : null;
     if (target !== null) {
       const placeholder = document.createElement("div");

@@ -172,7 +172,7 @@ const actionInfos_tags_moved = pwg_getPageString("%d tags moved");
 // since top-level script execution reaches it before this line.
 const ACTIVITY_DISPLAY_PAGE_SIZE = 100;
 
-if (additional_filt_type) {
+if (additional_filt_type !== false) {
   object_filter = additional_filt_type;
 }
 
@@ -271,7 +271,7 @@ async function fetchAndMergeActivityLines(
           hour: row.occuredOn.split(" ")[1]!,
           user_id: row.performedBy,
           username:
-            row.performedByUsername || "user#" + String(row.performedBy),
+            row.performedByUsername ?? "user#" + String(row.performedBy),
           detailsType: detailsType,
           details: details,
           counter: 1,
@@ -300,7 +300,7 @@ async function fetchAndMergeActivityLines(
 
     userLines.forEach((l) => {
       const usernames = l.object_id.map(
-        (uid2) => usernameOfId[uid2] || "user#" + String(uid2),
+        (uid2) => usernameOfId[uid2] ?? "user#" + String(uid2),
       );
       l.details.users = usernames;
       l.details.users_string = [...new Set(usernames)].join(", ");
@@ -990,9 +990,14 @@ function lineConstructor(line: MergedActivityLine) {
     attr(find(newLine, ".detail-item-2"), "title", "API Method");
   }
 
-  if (line.details.agent) {
-    const api_key = line.details.connected_with ? "API Key, " : "";
-    const details = line.details.connected_with
+  if (
+    line.details.agent !== undefined &&
+    line.details.agent !== null &&
+    line.details.agent !== ""
+  ) {
+    const isConnectedWith = Boolean(line.details.connected_with);
+    const api_key = isConnectedWith ? "API Key, " : "";
+    const details = isConnectedWith
       ? '<i class="icon-key"></i>' + line.details.agent
       : line.details.agent;
     html(find(newLine, ".detail-item-3"), details);
@@ -1207,7 +1212,7 @@ ready(function () {
         const value = item !== null ? data(item, "value") : undefined;
         if (value === "none") {
           //{* call ajax sur activity list sans action et object *}
-          if (additional_filt_type) {
+          if (additional_filt_type !== false) {
             void get_user_activity(
               1,
               uid_filter,
@@ -1306,7 +1311,7 @@ ready(function () {
       selectize(el, {}).clear();
     });
 
-  if (additional_filt_type) {
+  if (additional_filt_type !== false) {
     addClass(
       document.querySelectorAll("#activityMoreFilters"),
       "extend-padding",

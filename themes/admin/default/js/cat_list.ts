@@ -540,7 +540,7 @@ function AddHoverOnAlbumActions(): void {
 }
 
 ready(function () {
-  if (!cookie("pwg_album_manager_view")) {
+  if (cookie("pwg_album_manager_view") === undefined) {
     setCookie("pwg_album_manager_view", "tile");
   }
 

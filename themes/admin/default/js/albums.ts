@@ -857,7 +857,7 @@ function createAlbumNode(node: AlbumJqTreeNode, liEl: HTMLLIElement) {
       "</div>",
   );
 
-  if (!node.nb_subcats) {
+  if (node.nb_subcats === undefined || node.nb_subcats === 0) {
     hide(find(cont, ".nb-subcats"));
   }
 

@@ -155,7 +155,8 @@ LocalStorageCache.prototype._init = function (
 ) {
   this.key = options.key! + "_" + options.serverId!;
   this.serverKey = options.serverKey;
-  this.lifetime = options.lifetime ? options.lifetime * 1000 : 3600 * 1000;
+  this.lifetime =
+    options.lifetime !== undefined ? options.lifetime * 1000 : 3600 * 1000;
   this.loader = options.loader!;
 
   this.storage = window.localStorage;
@@ -269,7 +270,6 @@ AbstractSelectizer.prototype._selectize = function (
     elements.forEach((el) => {
       let filtered: SelectizeEntity[];
       let value: (string | number)[] | { id: string | number }[] | undefined;
-      let defaultValue: string | number | undefined;
       const options = { ...globalOptions };
       const instance = getSelectizeInstance<string | number, SelectizeEntity>(
         el,
@@ -317,8 +317,9 @@ AbstractSelectizer.prototype._selectize = function (
       }
 
       // set default
-      if ((defaultValue = data(el, "default") as string | number)) {
-        options.default = defaultValue;
+      const rawDefault = data(el, "default") as string | number | undefined;
+      if (rawDefault !== undefined && rawDefault !== "") {
+        options.default = rawDefault;
       }
       if (options.default === "first") {
         options.default = filtered[0] ? filtered[0].id : undefined;

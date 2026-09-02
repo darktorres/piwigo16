@@ -124,12 +124,12 @@ function buildModal(options: JConfirmOptions): void {
   // transition back out before the element is actually removed.
   box.classList.add("jconfirm-animation-zoom", `jconfirm-type-${options.type ?? "default"}`);
   box.style.width = options.boxWidth ?? "50%";
-  if (options.titleClass) {
+  if (options.titleClass !== undefined && options.titleClass !== "") {
     titleContainer.classList.add(...options.titleClass.split(/\s+/));
   }
 
   titleEl.textContent = options.title ?? "";
-  if (options.icon) {
+  if (options.icon !== undefined && options.icon !== "") {
     iconEl.innerHTML = `<i class="${options.icon}"></i>`;
   }
 
@@ -241,7 +241,9 @@ function buildModal(options: JConfirmOptions): void {
       instance.setContent(typeof result === "string" && result ? result : "&nbsp;");
     }
   } else {
-    instance.setContent(content ? content : "&nbsp;");
+    instance.setContent(
+      content !== undefined && content !== "" ? content : "&nbsp;",
+    );
   }
 }
 

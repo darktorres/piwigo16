@@ -153,12 +153,10 @@ function updateRating(e: Event) {
   // `window.` prefix throughout -- see picture.ts's own copy of this
   // comment for why a bare (or `var`-declared) reference to this same
   // global breaks once every P46 entry is wrapped in its own IIFE.
-  if (
-    typeof window._pwgRatingAutoQueue !== "undefined" &&
-    window._pwgRatingAutoQueue.length
-  ) {
-    for (let i = 0; i < window._pwgRatingAutoQueue.length; i++)
-      makeNiceRatingForm(window._pwgRatingAutoQueue[i]!);
+  const queueLength = window._pwgRatingAutoQueue?.length;
+  if (queueLength !== undefined && queueLength > 0) {
+    for (let i = 0; i < queueLength; i++)
+      makeNiceRatingForm(window._pwgRatingAutoQueue![i]!);
   }
   window._pwgRatingAutoQueue = {
     push: function (opts: PwgRatingOptions) {

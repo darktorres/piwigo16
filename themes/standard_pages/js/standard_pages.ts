@@ -198,7 +198,7 @@ document.querySelectorAll("#other-languages a").forEach((link) => {
     const clickedUrl = new URL(target.getAttribute("href")!);
     const selectedLang = clickedUrl.searchParams.get("lang");
 
-    if (selectedLang) {
+    if (selectedLang !== null && selectedLang !== "") {
       setCookie("lang", selectedLang, 1);
     }
   });

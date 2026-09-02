@@ -13,9 +13,11 @@ document.querySelectorAll(".lock-gallery-button").forEach(function (button) {
   const gallery_tip = pwg_getPageString(
     "A locked gallery is only visible to administrators",
   );
-  const title = pwg_getPageData<string | null>("u_maint_lock_gallery")
-    ? pwg_getPageString("Are you sure you want to lock the gallery?")
-    : pwg_getPageString("Are you sure you want to unlock the gallery?");
+  const lockUrl = pwg_getPageData<string | null>("u_maint_lock_gallery");
+  const title =
+    lockUrl !== null && lockUrl !== ""
+      ? pwg_getPageString("Are you sure you want to lock the gallery?")
+      : pwg_getPageString("Are you sure you want to unlock the gallery?");
 
   pwg_jconfirm_follow_href(button, {
     alert_title: title,

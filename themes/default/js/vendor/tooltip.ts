@@ -65,7 +65,7 @@ function openTooltip(target: HTMLElement, content: string): void {
   // suppresses the browser's native tooltip without losing the value
   // `close()` restores below.
   const title = target.getAttribute("title");
-  if (title) {
+  if (title !== null && title !== "") {
     savedTitles.set(target, title);
     target.setAttribute("title", "");
   }
@@ -106,7 +106,11 @@ export function tooltip(container: Element, options: TooltipOptions): void {
     pendingOrOpen.add(target);
 
     const show = (content: string | undefined): void => {
-      if (!content || !pendingOrOpen.has(target)) {
+      if (
+        content === undefined ||
+        content === "" ||
+        !pendingOrOpen.has(target)
+      ) {
         return;
       }
       openTooltip(target, content);

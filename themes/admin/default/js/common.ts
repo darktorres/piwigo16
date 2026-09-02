@@ -128,7 +128,7 @@ function str_repeat(i: string, m: number): string {
   return o.join("");
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- the guard is realistically dead in any evergreen browser this project's own P35 browserslist floor targets (indexOf has been standard since ES5); removal is P51-H's job (docs/PLAN.md), not this one.
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions -- the guard is realistically dead in any evergreen browser this project's own P35 browserslist floor targets (indexOf has been standard since ES5); removal is P51-H's job (docs/PLAN.md), not this one.
 if (!Array.prototype.indexOf) {
   // Genuinely irreducible `any`: this assigns to the shared
   // `Array.prototype` object itself, not one array instance -- lib.es5's
@@ -182,7 +182,10 @@ export function sprintf(...args: (string | number)[]): string {
           f,
         ))
     ) {
-      if ((a = args[m[1] ? Number(m[1]) : i++]) == null || a === undefined) {
+      if (
+        (a = args[m[1] !== undefined ? Number(m[1]) : i++]) == null ||
+        a === undefined
+      ) {
         throw new Error("Too few arguments.");
       }
       if (/[^s]/.test(m[7]!) && typeof a !== "number") {
@@ -200,16 +203,25 @@ export function sprintf(...args: (string | number)[]): string {
           a = parseInt(a);
           break;
         case "e":
-          a = m[6] ? a.toExponential(Number(m[6])) : a.toExponential();
+          a =
+            m[6] !== undefined
+              ? a.toExponential(Number(m[6]))
+              : a.toExponential();
           break;
         case "f":
-          a = m[6] ? parseFloat(a).toFixed(Number(m[6])) : parseFloat(a);
+          a =
+            m[6] !== undefined
+              ? parseFloat(a).toFixed(Number(m[6]))
+              : parseFloat(a);
           break;
         case "o":
           a = a.toString(8);
           break;
         case "s":
-          a = (a = String(a)) && m[6] ? a.substring(0, Number(m[6])) : a;
+          a =
+            (a = String(a)) && m[6] !== undefined
+              ? a.substring(0, Number(m[6]))
+              : a;
           break;
         case "u":
           a = Math.abs(a);
@@ -222,11 +234,14 @@ export function sprintf(...args: (string | number)[]): string {
           break;
       }
 
-      a = /[def]/.test(m[7]!) && m[2] && a >= 0 ? "+" + String(a) : a;
-      c = m[3] ? (m[3] === "0" ? "0" : m[3].charAt(1)) : " ";
+      a =
+        /[def]/.test(m[7]!) && m[2] !== undefined && a >= 0
+          ? "+" + String(a)
+          : a;
+      c = m[3] !== undefined ? (m[3] === "0" ? "0" : m[3].charAt(1)) : " ";
       x = Number(m[5]) - String(a).length - s.length;
-      p = m[5] ? str_repeat(c, x) : "";
-      o.push(s + (m[4] ? String(a) + p : p + String(a)));
+      p = m[5] !== undefined ? str_repeat(c, x) : "";
+      o.push(s + (m[4] !== undefined ? String(a) + p : p + String(a)));
     } else {
       throw new Error("Huh ?!");
     }

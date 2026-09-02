@@ -1603,7 +1603,7 @@ ready(function () {
     );
 });
 
-if (!cookie("pwg_tags_per_page")) {
+if (cookie("pwg_tags_per_page") === undefined) {
   setCookie("pwg_tags_per_page", "100");
 }
 

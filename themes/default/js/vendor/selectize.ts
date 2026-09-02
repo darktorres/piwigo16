@@ -290,7 +290,7 @@ export function selectize<
       return matchesQuery(data, tokens);
     });
 
-    if (sortField) {
+    if (sortField !== undefined && sortField !== "") {
       matches.sort((a, b) => {
         const av = options[a]![sortField];
         const bv = options[b]![sortField];
@@ -568,7 +568,7 @@ export function selectize<
       instance.clear(true);
       const values = Array.isArray(value) ? value : [value];
       values.forEach((v) => { instance.addItem(v, true); });
-      if (!silent) triggerChange();
+      if (silent !== true) triggerChange();
     },
     addItem(value, silent) {
       const key = String(value);
@@ -593,7 +593,7 @@ export function selectize<
         renderOptions(isFocused);
       }
       syncOriginalSelect();
-      if (!silent) {
+      if (silent !== true) {
         triggerChange();
       }
     },
@@ -639,7 +639,7 @@ export function selectize<
       items.length = 0;
       renderItems();
       syncOriginalSelect();
-      if (!silent) triggerChange();
+      if (silent !== true) triggerChange();
     },
     load(fn) {
       fn.call(instance, (data) => {
@@ -656,7 +656,7 @@ export function selectize<
       items.splice(idx, 1);
       renderItems();
       syncOriginalSelect();
-      if (!silent) triggerChange();
+      if (silent !== true) triggerChange();
       listeners.item_remove.forEach((fn) => { fn(value); });
     },
   };

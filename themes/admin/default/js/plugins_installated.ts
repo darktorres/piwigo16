@@ -165,7 +165,15 @@ function applyActivation(row: Element): void {
 
   addClass(row, "plugin-active");
   removeClass(row, "plugin-inactive");
-  if (find(row, ".pluginUnavailableAction")[0]?.getAttribute("href")) {
+  const unavailableHref = find(
+    row,
+    ".pluginUnavailableAction",
+  )[0]?.getAttribute("href");
+  if (
+    unavailableHref !== undefined &&
+    unavailableHref !== null &&
+    unavailableHref !== ""
+  ) {
     const unavailable = find(row, ".pluginUnavailableAction");
     removeClass(unavailable, "pluginUnavailableAction");
     addClass(unavailable, "pluginActionLevel1");

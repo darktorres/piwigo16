@@ -859,7 +859,7 @@ function extractTusErrorDetail(err: Error | TusDetailedError) {
       const body = JSON.parse(
         err.originalResponse.getBody(),
       ) as components["schemas"]["Problem"];
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real runtime guard: `body` is an `as`-cast of untrusted parsed JSON, not a real guarantee it matches Problem's shape.
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions -- real runtime guard: `body` is an `as`-cast of untrusted parsed JSON, not a real guarantee it matches Problem's shape.
       if (body?.detail) {
         return body.detail;
       }
@@ -913,7 +913,7 @@ function uploadNextTusFile(
   // (tus metadata instead of plupload's native multipart form fields)
   // differs from here on.
   up.trigger("BeforeUpload", file);
-  const options = (up.getOption("multipart_params") || {}) as MultipartParams;
+  const options = (up.getOption("multipart_params") ?? {}) as MultipartParams;
 
   const metadata: Record<string, string> = { filename: file.name };
   if (formatMode) {
@@ -923,7 +923,7 @@ function uploadNextTusFile(
     metadata["name"] = options.name ?? "";
     uploadCategory ??= { id: options.category };
   }
-  if (options.update_mode) {
+  if (options.update_mode === true) {
     metadata["updateMode"] = "1";
   }
 
@@ -965,7 +965,7 @@ function uploadNextTusFile(
         // below reports it.
       }
 
-      if (!result.imageId) {
+      if (result.imageId === undefined) {
         up.trigger("Error", {
           message: "Upload finished but the server response was unreadable.",
           file: file,
@@ -996,7 +996,7 @@ function uploadNextTusFile(
           imageInfo.derivatives && imageInfo.derivatives["square"]
             ? imageInfo.derivatives["square"].url
             : "",
-        name: imageInfo.name || file.name,
+        name: imageInfo.name ?? file.name,
       });
       uploadNextTusFile(up, files, index + 1);
     },
@@ -1096,8 +1096,13 @@ const haveFormatsOriginal = pwg_getPageData<boolean>("have_formats_original");
 const originalImageId: string | number = haveFormatsOriginal
   ? pwg_getPageData<string>("original_image_id_str")
   : -1;
+const rawImageFormatsExtensions = pwg_getPageData<string | false | null>(
+  "formats_ext_info",
+);
 const imageFormatsExtensions =
-  pwg_getPageData<string | false | null>("formats_ext_info") || "";
+  rawImageFormatsExtensions !== false && rawImageFormatsExtensions !== null
+    ? rawImageFormatsExtensions
+    : "";
 const nb_albums = pwg_getPageData<string>("nb_albums");
 const chunk_size = String(pwg_getPageData<number>("chunk_size")) + "kb";
 const max_file_size = String(pwg_getPageData<number>("max_file_size")) + "mb";

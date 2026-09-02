@@ -93,7 +93,7 @@ delegate(
       this,
       Number(this.dataset["imageId"]),
       Number(this.dataset["userId"]),
-      this.dataset["anonymousId"] || null,
+      this.dataset["anonymousId"] ?? null,
     );
     event.preventDefault();
     event.stopPropagation();
@@ -109,7 +109,7 @@ function del(node: HTMLElement, id: number, uid: number, aid: string | null) {
   fadeTo(trSet, 1000, 0.4);
   const data = {
     imageId: id,
-    anonymousId: aid || null,
+    anonymousId: aid !== null && aid !== "" ? aid : null,
   };
 
   void ajax({

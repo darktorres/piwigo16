@@ -61,19 +61,19 @@ ready(function () {
         const piwigo_update = data["piwigoNeedUpdate"];
         const ext_update = data["extNeedUpdate"];
         if (
-          (piwigo_update || ext_update) &&
+          (piwigo_update === true || ext_update === true) &&
           !is(document.querySelectorAll(".warnings"), "div")
         )
           prepend(
             document.querySelectorAll(".eiw"),
             '<div class="warnings"><i class="eiw-icon icon-attention"></i><ul></ul></div>',
           );
-        if (piwigo_update)
+        if (piwigo_update === true)
           append(
             document.querySelectorAll(".warnings ul"),
             "<li>" + piwigo_need_update_msg + "</li>",
           );
-        if (ext_update)
+        if (ext_update === true)
           append(
             document.querySelectorAll(".warnings ul"),
             "<li>" + ext_need_update_msg + "</li>",
@@ -82,7 +82,10 @@ ready(function () {
     });
   }
 
-  if (pwg_getPageData<string | null>("subscribe_base_url")) {
+  if (newsletter_base_url !== null && newsletter_base_url !== "") {
+    const newsletter_email = pwg_getPageData<string | null>("email") ?? "";
+    const old_newsletters_url =
+      pwg_getPageData<string | null>("old_newsletters_url") ?? "";
     prepend(
       document.querySelectorAll(".eiw"),
       `
@@ -94,10 +97,10 @@ ready(function () {
         <div class="promote-newsletter-content">
           <span class="promote-newsletter-title">${pwg_getPageString("Subscribe to our newsletter and stay updated!")}</span>
           <div class="promote-content subscribe-newsletter">
-            <input type="text" id="newsletterSubscribeInput" value="${pwg_getPageData<string | null>("email") || ""}" class="left-side">
-            <a href="${pwg_getPageData<string | null>("subscribe_base_url") ?? ""}${pwg_getPageData<string | null>("email") || ""}" id="newsletterSubscribeLink" class="right-side go-to-porg icon-thumbs-up newsletter-hide">${pwg_getPageString("Sign up to the newsletter")}</a>
+            <input type="text" id="newsletterSubscribeInput" value="${newsletter_email}" class="left-side">
+            <a href="${newsletter_base_url}${newsletter_email}" id="newsletterSubscribeLink" class="right-side go-to-porg icon-thumbs-up newsletter-hide">${pwg_getPageString("Sign up to the newsletter")}</a>
           </div>
-          <a href="${pwg_getPageData<string | null>("old_newsletters_url") || ""}" class="promote-link">${pwg_getPageString("See previous newsletters")}</a>
+          <a href="${old_newsletters_url}" class="promote-link">${pwg_getPageString("See previous newsletters")}</a>
         </div>
 
       </div>

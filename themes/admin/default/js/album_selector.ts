@@ -710,9 +710,13 @@ export class AlbumSelector {
     const iconAlbum = this.#isAlbumCreationChecked
       ? "icon-add-album"
       : "gallery-icon-plus-circled";
-    const tempSelectedCat = this.#current_cat
-      ? [...this.#selected_categories, this.#current_cat.toString()]
-      : [...this.#selected_categories];
+    // `0` is the "no current album" sentinel (the constructor's own
+    // default for `currentAlbumId`) -- every real call site relies on
+    // that, none ever passes a real id of 0.
+    const tempSelectedCat =
+      this.#current_cat !== 0 && this.#current_cat !== ""
+        ? [...this.#selected_categories, this.#current_cat.toString()]
+        : [...this.#selected_categories];
 
     this.#cats = {
       ...this.#cats,
@@ -804,9 +808,13 @@ export class AlbumSelector {
     const iconAlbum = this.#isAlbumCreationChecked
       ? "icon-add-album"
       : "gallery-icon-plus-circled";
-    const tempSelectedCat = this.#current_cat
-      ? [...this.#selected_categories, this.#current_cat.toString()]
-      : [...this.#selected_categories];
+    // `0` is the "no current album" sentinel (the constructor's own
+    // default for `currentAlbumId`) -- every real call site relies on
+    // that, none ever passes a real id of 0.
+    const tempSelectedCat =
+      this.#current_cat !== 0 && this.#current_cat !== ""
+        ? [...this.#selected_categories, this.#current_cat.toString()]
+        : [...this.#selected_categories];
 
     this.#searchCat = Object.fromEntries(cats.map((c) => [c.id, c]));
     empty(AlbumSelector.selectors.searchResult);
@@ -988,7 +996,7 @@ export class AlbumSelector {
       position: cat_position,
     };
 
-    if (!cat_name || "" === cat_name) {
+    if (cat_name === undefined || cat_name === "") {
       this.#show_new_album_error(str_complete_name_field);
       return;
     }

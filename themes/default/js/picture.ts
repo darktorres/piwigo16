@@ -92,7 +92,7 @@ function addToCadie(
   aElement: HTMLAnchorElement & { disabled?: boolean },
   id: unknown,
 ): void {
-  if (aElement.disabled) return;
+  if (aElement.disabled === true) return;
   aElement.disabled = true;
   void ajax({
     url: pwg_getPageData<string>("root_url") + "api/v1/session/caddie",

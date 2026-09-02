@@ -95,7 +95,7 @@ ready(function () {
     const row = q("#overwrite-confirm-row");
     if (hasExistingInstall === true) {
       removeClass(row, "install-hidden-row");
-      if (overwriteToken) {
+      if (overwriteToken !== null && overwriteToken !== "") {
         setVal(q("#overwrite_token"), overwriteToken);
       }
     } else {

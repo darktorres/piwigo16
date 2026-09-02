@@ -177,7 +177,7 @@ ready(function () {
       // eslint-disable-next-line @typescript-eslint/no-this-alias -- needs to stay reachable inside the nested mouseleave/GeoIp callbacks below, which each have their own `this`.
       const el = this;
       const t = attrOf(el, "title");
-      if (t) return t;
+      if (t !== undefined && t !== null && t !== "") return t;
       const udata = uidFromCell(el);
       if (!udata.aid) return;
       setData(el, "isOver", true);
@@ -217,7 +217,7 @@ ready(function () {
               String(geoData.longitude) +
               '">';
           }
-          if (data(el, "isOver")) callback(content);
+          if (data(el, "isOver") === true) callback(content);
         },
       });
       return undefined;

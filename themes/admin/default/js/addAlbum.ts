@@ -56,7 +56,7 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
   if (target && !getSelectizeInstance(target)) {
     throw new Error("pwgAddAlbum: target must use selectize");
   }
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real runtime guard: the `as {...}` cast above forces this to look non-nullable to TS, but the ternary it casts really can produce undefined (target === null, or no cache ever stashed via setData).
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions -- real runtime guard: the `as {...}` cast above forces this to look non-nullable to TS, but the ternary it casts really can produce undefined (target === null, or no cache ever stashed via setData).
   if (!cache) {
     throw new Error("pwgAddAlbum: missing categories cache");
   }
@@ -90,7 +90,7 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
       )!;
       const name = val(nameInput);
 
-      if (!name) {
+      if (name === undefined || name === "") {
         css(
           document.querySelectorAll("#categoryNameError"),
           "visibility",
@@ -193,7 +193,7 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
     width: 650,
     height: "auto",
     onComplete: function () {
-      if (!data(popup, "init")) {
+      if (data(popup, "init") !== true) {
         init();
       }
 
@@ -207,7 +207,10 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
       )!;
       setVal(nameInput, "");
       nameInput.focus();
-      getSelectizeInstance(albumParent)?.setValue(val(target ?? []) || 0);
+      const targetValue = val(target ?? []);
+      getSelectizeInstance(albumParent)?.setValue(
+        targetValue === undefined || targetValue === "" ? 0 : targetValue,
+      );
     },
   });
 }

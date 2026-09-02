@@ -538,7 +538,7 @@ function commentsDisplayFilters(filters: CommentListResponse["filters"]) {
     on(filterDateStart, "change", function () {
       const min = val([filterDateStart]);
 
-      if (!min) {
+      if (min === undefined || min === "") {
         delete commentsParams.f_min_date;
       } else {
         // Real filter_date_start's own value: a plain date input, always
@@ -557,7 +557,7 @@ function commentsDisplayFilters(filters: CommentListResponse["filters"]) {
     on(filterDateEnd, "change", function () {
       const max = val([filterDateEnd]);
 
-      if (!max) {
+      if (max === undefined || max === "") {
         delete commentsParams.f_max_date;
       } else {
         // Real filter_date_end's own value: a plain date input, always a
@@ -834,7 +834,7 @@ function commentsUpdateSelection() {
     "click",
     function (event: Event) {
       const id = (event.currentTarget as Element).id.split("_")[1];
-      if (!id) return;
+      if (id === undefined || id === "") return;
       const target = document.querySelector(
         "#" + escapeId(id) + " .comment-content",
       );

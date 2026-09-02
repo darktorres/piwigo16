@@ -117,12 +117,15 @@ export function tipTip(
     // different element. Treating "no attribute" the same as "empty" --
     // skip binding entirely -- avoids replicating that rather than
     // faithfully reproducing it.
-    const orgTitle = opts.content ? opts.content : (attrOf(el, "title") ?? "");
+    const orgTitle =
+      opts.content !== undefined && opts.content !== ""
+        ? opts.content
+        : (attrOf(el, "title") ?? "");
     if (orgTitle === "") {
       continue;
     }
 
-    if (!opts.content) {
+    if (opts.content === undefined || opts.content === "") {
       removeAttr(el, "title");
     }
 

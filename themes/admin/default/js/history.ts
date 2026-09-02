@@ -496,7 +496,7 @@ function lineConstructor(line: HistoryLine, id: number) {
     });
   }
 
-  if (line.imageEditUrl) {
+  if (line.imageEditUrl !== null && line.imageEditUrl !== "") {
     attr(find(newLine, ".edit-img"), "href", line.imageEditUrl);
   } else {
     const editImg = find(newLine, ".edit-img");
@@ -618,11 +618,11 @@ function lineConstructor(line: HistoryLine, id: number) {
       };
       html(find(newLine, ".type-name"), line.section);
       html(find(newLine, ".type-id"), "#" + String(line.searchId));
-      if (!line.searchId) {
+      if (line.searchId === null) {
         hide(find(newLine, ".type-id"));
       }
 
-      if (!search_details) {
+      if (search_details === null) {
         hide(find(newLine, ".detail-item-1"));
         break;
       }
@@ -637,7 +637,8 @@ function lineConstructor(line: HistoryLine, id: number) {
       const active_more: any[] = [];
       const active_items = Object.keys(active_search_details);
       if (active_items.length > 0) {
-        if (active_search_details["allwords"]) {
+        const hasAllwords = Boolean(active_search_details["allwords"]);
+        if (hasAllwords) {
           const item = find(newLine, ".detail-item-" + String(count_item));
           html(item, active_search_details["allwords"].join(" "));
           addClass(item, String(search_icons["allwords"]) + " tiptip");
@@ -652,7 +653,8 @@ function lineConstructor(line: HistoryLine, id: number) {
           count_item++;
           active_more.push("allwords");
         }
-        if (active_search_details["cat"]) {
+        const hasCat = Boolean(active_search_details["cat"]);
+        if (hasCat) {
           const array_cat = Object.values(active_search_details["cat"]);
           const cat = array_cat.join(" + ");
           const text = stripHtml(cat);
@@ -668,7 +670,7 @@ function lineConstructor(line: HistoryLine, id: number) {
           count_item++;
           active_more.push("cat");
         }
-        if (count_item <= 2 && active_search_details["tags"]) {
+        if (count_item <= 2 && Boolean(active_search_details["tags"])) {
           const array_tags = Object.values(active_search_details["tags"]);
           const item = find(newLine, ".detail-item-" + String(count_item));
           html(item, array_tags.join(" + "));
@@ -794,7 +796,7 @@ function lineConstructor(line: HistoryLine, id: number) {
       } else {
         attr(detailItem1, "title", line.categoryPath);
       }
-      if (!line.imageThumbnailUrl) {
+      if (line.imageThumbnailUrl === null) {
         hide(find(newLine, ".type-id"));
       }
       break;
@@ -826,11 +828,11 @@ function lineConstructor(line: HistoryLine, id: number) {
       break;
   }
 
-  if (line.imageThumbnailUrl) {
+  if (line.imageThumbnailUrl !== null) {
     const img = document.createElement("img");
     attr(img, "src", line.imageThumbnailUrl);
-    attr(img, "alt", line.imageLabel || "");
-    attr(img, "title", line.imageLabel || "");
+    attr(img, "alt", line.imageLabel ?? "");
+    attr(img, "title", line.imageLabel ?? "");
 
     html(find(newLine, ".type-name"), line.imageLabel ?? "");
     const typeIcon = find(newLine, ".type-icon");
@@ -1087,7 +1089,7 @@ function setupGeoIpHover(ipEl: Element): void {
           // native "mouseenter" -- unlike jQuery's own synthetic version
           // (internally a "mouseover" listener translated via
           // relatedTarget), a real "mouseenter" reaches it directly.
-          if (data(ipEl, "isOver")) trigger(ipEl, "mouseenter");
+          if (data(ipEl, "isOver") === true) trigger(ipEl, "mouseenter");
         },
       });
     },

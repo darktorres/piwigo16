@@ -240,6 +240,28 @@ export default defineConfig(
       // than any real caller needed, a stale "bug preserved" comment this
       // pass found was never actually a bug -- see configuration_main.ts).
       "@typescript-eslint/no-shadow": "error",
+
+      // 117 real sites, each read individually against its own real
+      // declared type (openapi schema field, DOM helper return type, a
+      // third-party widget's own option type) -- never a blanket `!!`.
+      // Two recurring, deliberate choices: a `string | null` field
+      // compared with `!== null && !== ""` (preserves the exact old
+      // "empty means absent" truthy behavior); an `x || fallback` on a
+      // nullable string switched to `x ?? fallback` where nullish-only
+      // was the real intent and it was cheaper than spelling out both
+      // comparisons. `Boolean(x)` marks the handful of genuinely `any`/
+      // heterogeneous values (mcs.ts's own PS_params, a few `data()`
+      // DOM-helper reads) per the rule's own suggested fix. A few sites
+      // already had a targeted `no-unnecessary-condition` disable
+      // comment for the exact same real runtime guard (navigator.
+      // clipboard, an untrusted `as`-cast API response) -- extended
+      // in place rather than duplicated. One real bug found this way:
+      // `window._pwgRatingAutoQueue.length` is optional (only present
+      // during the "queue array" phase, gone once the real `{push}`
+      // handler replaces it) -- the old `&&`-chained truthy check masked
+      // that `tsc` alone doesn't (confirmed: fixing the boolean
+      // expression surfaced a real TS18048 the loose check had hidden).
+      "@typescript-eslint/strict-boolean-expressions": "error",
     },
   },
 );

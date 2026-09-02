@@ -2543,7 +2543,8 @@ function performSearch(params: Record<string, any>, reload: boolean = false) {
     ratios: params["ratios"],
     ratings: params["ratings"],
   };
-  if (params["search_id"]) {
+  const hasSearchId = Boolean(params["search_id"]);
+  if (hasSearchId) {
     body["searchId"] = params["search_id"];
   }
   (

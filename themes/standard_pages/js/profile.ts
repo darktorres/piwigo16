@@ -380,7 +380,7 @@ ready(function () {
     function (event: Event) {
       const el = event.currentTarget as Element;
       const api_list_expired = document.getElementById("api_key_list_expired")!;
-      const isOpen = data(el, "show");
+      const isOpen = data(el, "show") === true;
       if (!isOpen) {
         api_list_expired.style.maxHeight = "max-content";
         text(el, str_hide_expired);
@@ -464,7 +464,7 @@ function myInfoBody(params: ProfileParams) {
   const numeric = ["nbImagePage", "recentPeriod"];
   const body: ProfileParams = {};
   Object.keys(params).forEach((key) => {
-    const newKey = rename[key] || key;
+    const newKey = rename[key] ?? key;
     body[newKey] = numeric.includes(newKey) ? Number(params[key]) : params[key];
   });
   return body;
@@ -601,11 +601,11 @@ function AddApiLine(lines: ApiKeyEntry[], reset: boolean) {
     text(find(api_line, ".api_name"), line.apikeyName);
     attr(find(api_line, ".api_name"), "title", line.apikeyName);
     text(find(api_line, ".api_creation"), line.createdOn);
-    text(find(api_line, ".api_last_use"), line.lastUsedOn || no_time_elapsed);
+    text(find(api_line, ".api_last_use"), line.lastUsedOn ?? no_time_elapsed);
     attr(
       find(api_line, ".api_last_use"),
       "title",
-      line.lastUsedOn || no_time_elapsed,
+      line.lastUsedOn ?? no_time_elapsed,
     );
     text(find(api_line, ".api_expiration"), line.expiration);
     attr(find(api_line, ".api-icon-action"), "data-api", `api_${tmp_id}`);
@@ -622,7 +622,7 @@ function AddApiLine(lines: ApiKeyEntry[], reset: boolean) {
     );
     attr(find(api_collapse, ".api-copy"), "id", `api_copy_success_${tmp_id}`);
 
-    if (!line.revokedOn && !line.isExpired) {
+    if (line.revokedOn === null && !line.isExpired) {
       api_list.appendChild(api_line);
       api_line.after(api_collapse);
     } else {
@@ -878,10 +878,10 @@ function copyToClipboard(
   message: string,
   selector: string | null = null,
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
   if (window.isSecureContext && navigator.clipboard) {
     void navigator.clipboard.writeText(copy);
-    if (selector) {
+    if (selector !== null && selector !== "") {
       removeClass(document.querySelectorAll(selector), "api-hide");
       // auto hide
       // setTimeout(() => {
@@ -909,9 +909,12 @@ function saveApiKeyEvent() {
       return;
     }
 
+    const expirationDate = val(
+      document.querySelectorAll("#api_expiration_date"),
+    );
     if (
       "custom" === api_duration &&
-      !val(document.querySelectorAll("#api_expiration_date"))
+      (expirationDate === undefined || expirationDate === "")
     ) {
       show(document.querySelectorAll("#error_api_key_date"));
       return;

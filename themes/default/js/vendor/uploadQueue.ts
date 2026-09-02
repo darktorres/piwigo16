@@ -579,7 +579,7 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
     const action = li.querySelector<HTMLAnchorElement>(".plupload_file_action a");
     if (action !== null) {
       action.style.display = "block";
-      if (file.hint) {
+      if (file.hint !== undefined && file.hint !== "") {
         action.title = file.hint;
       }
     }

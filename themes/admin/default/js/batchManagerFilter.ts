@@ -106,9 +106,10 @@ const sliders = {
 const filterCategorySelected = pwg_getPageData<number | null>(
   "filter_category_selected",
 );
-const selected_filter_cat_ids = filterCategorySelected
-  ? [String(filterCategorySelected)]
-  : [];
+const selected_filter_cat_ids =
+  filterCategorySelected !== null && filterCategorySelected !== 0
+    ? [String(filterCategorySelected)]
+    : [];
 
 const str_select_album = pwg_getPageString("Select at least one album");
 const str_select_tag = pwg_getPageString("Select at least one tag");
@@ -287,7 +288,8 @@ ready(function () {
     document.querySelectorAll('.filterBlock select[data-selectize="tags"]'),
     "change",
     function (event: Event): void {
-      if (val([event.currentTarget as Element])) {
+      const tagValue = val([event.currentTarget as Element]);
+      if (tagValue !== undefined && tagValue !== "") {
         hide_filters_error(str_select_tag);
       }
     },
@@ -302,7 +304,8 @@ ready(function () {
         const tags = document.querySelectorAll(
           '.filterBlock select[data-selectize="tags"]',
         );
-        if (!val(tags)) {
+        const tagsValue = val(tags);
+        if (tagsValue === undefined || tagsValue === "") {
           e.preventDefault();
           show_filters_error(str_select_tag);
           const removeFilterTags = document.querySelectorAll(

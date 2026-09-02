@@ -117,6 +117,7 @@ Escape of pop-in
 
 //get out of pop in via escape key
 on(document, "keydown", function (e: Event) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
   if ((e as KeyboardEvent).key === "Escape") {
     hide_modals();
     close_user_list();
@@ -293,14 +294,10 @@ ready(function () {
   on(
     document.querySelectorAll("select[name=selectAction]"),
     "change",
-    function (this: Element) {
+    function (this: HTMLSelectElement) {
       hide(document.querySelectorAll("#applyActionBlock .infos"));
       hide(document.querySelectorAll("[id^=action_]"));
-      show(
-        document.querySelectorAll(
-          "#action_" + (this as HTMLSelectElement).value,
-        ),
-      );
+      show(document.querySelectorAll("#action_" + this.value));
       if (val(this) !== "-1") {
         show(document.querySelectorAll("#applyActionBlock"));
       } else {
@@ -1139,6 +1136,7 @@ function append_pagination_item(page: number | null = null) {
       addClass(new_tag, "actual");
     }
     on(new_tag, "click", () => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       move_to_page(data(new_tag, "page") as number);
     });
   } else {
@@ -1366,6 +1364,7 @@ Selection mode
 
 function create_user_selected_item(user: SelectionEntry): Element {
   const template = document.querySelector(".user-selected-item")!;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
   const new_elem = template.cloneNode(true) as Element;
   attr(new_elem, "data-id", user.id.toString());
   // Non-null: only ever called after the caller's own `typeof ...
@@ -1643,6 +1642,7 @@ function check_tabs(title_tab_name_id: string) {
         fadeIn(dropdown);
         off(window, "click.hideUsersModal");
         on(window, "click.hideUsersModal", function (e: Event) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real click inside the document always targets an Element.
           const target = e.target as Element;
           if (
             target.closest("#dropdown_mores_plugins") === null &&
@@ -1956,6 +1956,7 @@ function generate_groups(container: Element, groups: number[]) {
   html(groupsContainer, "");
   if (groups.length >= 1) {
     const template = document.querySelector("#template .group-primary")!;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
     const primary_grp = template.cloneNode(true) as Element;
     html(primary_grp, get_group_name_from_id(groups[0]!));
     addClass(primary_grp, color_icons[groups[0]! % 5]!);
@@ -1963,6 +1964,7 @@ function generate_groups(container: Element, groups: number[]) {
   }
   if (groups.length >= 2) {
     const template = document.querySelector("#template .group-primary")!;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
     const primary_grp = template.cloneNode(true) as Element;
     html(primary_grp, get_group_name_from_id(groups[1]!));
     addClass(primary_grp, color_icons[groups[1]! % 5]!);
@@ -1970,6 +1972,7 @@ function generate_groups(container: Element, groups: number[]) {
   }
   if (groups.length >= 3) {
     const template = document.querySelector("#template .group-bonus")!;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
     const bonus_grp = template.cloneNode(true) as Element;
     html(bonus_grp, "...");
     addClass(bonus_grp, color_icons[groups[2]! % 5]!);
@@ -2049,6 +2052,7 @@ function generate_user_list() {
   )!;
   const template = document.querySelector("#template .user-container")!;
   for (let i = 0; i < current_users.length; i++) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
     const new_container = template.cloneNode(true) as Element;
     fill_container_user_info(new_container, i);
     wrapper.appendChild(new_container);
@@ -2193,10 +2197,12 @@ function fill_user_edit_properties(user_to_edit: UserRow, pop_in: Element) {
     user_to_edit.id === guest_id ? groupGuestSelectize : groupSelectize;
 
   setVal(find(pop_in, ".user-property-email input"), user_to_edit.email ?? "");
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified by the selector: only <option> elements can match "select option".
   const statusOption = find(pop_in, ".user-property-status select option")[
     status_index
   ] as HTMLOptionElement | undefined;
   if (statusOption !== undefined) statusOption.selected = true;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified by the selector: only <option> elements can match "select option".
   const levelOption = find(pop_in, ".user-property-level select option")[
     level_index
   ] as HTMLOptionElement | undefined;
@@ -2242,11 +2248,13 @@ function fill_user_edit_preferences(user_to_edit: UserRow, pop_in: Element) {
   );
   find(pop_in, ".user-property-theme select option").forEach((option) => {
     if (val(option) === user_to_edit.theme) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified by the selector: only <option> elements can match "select option".
       (option as HTMLOptionElement).selected = true;
     }
   });
   find(pop_in, ".user-property-lang select option").forEach((option) => {
     if (val(option) === user_to_edit.language) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified by the selector: only <option> elements can match "select option".
       (option as HTMLOptionElement).selected = true;
     }
   });
@@ -2572,6 +2580,7 @@ function fill_user_edit(user_to_edit: UserRow) {
     });
   }
   const keyUserToEdit = Object.keys(user_to_edit);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- plugin_add_tab_in_user_modal's own extension point needs dynamic-by-name field access into a real UserRow; the string keys it's called with come from each plugin's own registration, not user input.
   const userToEditRecord = user_to_edit as unknown as Record<string, unknown>;
   plugins_users_infos_table.forEach((i) => {
     setVal(document.querySelectorAll("#" + i.content_id), "");
@@ -2613,11 +2622,13 @@ function fill_new_user() {
     .forEach((group) => {
       groupAddUserSelectize.addItem(group.value);
     });
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified by the selector: only <option> elements can match "select option".
   const statusOption = find(
     addUserPopIn,
     ".user-property-status select option",
   )[status_index] as HTMLOptionElement | undefined;
   if (statusOption !== undefined) statusOption.selected = true;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified by the selector: only <option> elements can match "select option".
   const levelOption = find(addUserPopIn, ".user-property-level select option")[
     level_index
   ] as HTMLOptionElement | undefined;
@@ -3057,6 +3068,7 @@ function update_user_info() {
     },
     error: function (jqXHR) {
       const message =
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- safe regardless of the real shape: a malformed/non-object responseJSON just makes `.detail` read undefined, falling back below.
         (jqXHR.responseJSON as { detail?: string } | undefined)?.detail ??
         errorStr;
       html(document.querySelectorAll("#UserList .update-user-fail"), message);
@@ -3441,6 +3453,7 @@ function add_user() {
     ) => {
       const new_user_id = response.id;
       const default_group = "groups" in response ? response.groups : [];
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax_data["groupIds"] was set to groups_selected (a real number[]) earlier in this same function, the only writer before this read.
       ajax_data["groupIds"] = (ajax_data["groupIds"] as number[]).concat(
         default_group,
       );
@@ -3448,6 +3461,7 @@ function add_user() {
     },
     error: (jqXHR) => {
       const message =
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- safe regardless of the real shape: a malformed/non-object responseJSON just makes `.detail` read undefined, falling back below.
         (jqXHR.responseJSON as { detail?: string } | undefined)?.detail ??
         errorStr;
       html(document.querySelectorAll("#AddUser .AddUserErrors"), message);
@@ -3527,6 +3541,7 @@ function add_infos_to_new_user(
     },
     error: function (jqXHR) {
       const message =
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- safe regardless of the real shape: a malformed/non-object responseJSON just makes `.detail` read undefined, falling back below.
         (jqXHR.responseJSON as { detail?: string } | undefined)?.detail ??
         errorStr;
       html(document.querySelectorAll("#AddUser .AddUserErrors"), message);
@@ -3624,6 +3639,7 @@ function send_new_user_password(user_id: number, mail: string) {
     },
     error: function (jqXHR) {
       const message =
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- safe regardless of the real shape: a malformed/non-object responseJSON just makes `.detail` read undefined, falling back below.
         (jqXHR.responseJSON as { detail?: string } | undefined)?.detail ??
         errorStr;
       removeClass(
@@ -4037,6 +4053,7 @@ ready(function () {
       'select[name="status"] option[value="webmaster"], select[name="status"] option[value="admin"]',
     );
     disabledOptions.forEach((option) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified by the selector: only <option> elements can match "select[...] option[...]".
       (option as HTMLOptionElement).disabled = true;
     });
   }
@@ -4044,9 +4061,7 @@ ready(function () {
   // which is not possible if this JS part is in a JS file
   // see #1571 on Github
   on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
-    const action = val(
-      document.querySelectorAll("select[name=selectAction]"),
-    ) as string;
+    const action = val(document.querySelectorAll("select[name=selectAction]"));
     const actionData: Record<string, unknown> = {};
     switch (action) {
       case "delete":

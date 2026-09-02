@@ -16,6 +16,7 @@ beforeEach(() => {
 
 function mount(html: string): HTMLElement {
   document.body.innerHTML = html;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- every real call site mounts a plain HTML tag (div/span), never SVG; firstElementChild is always non-null for a non-empty fixture string.
   return document.body.firstElementChild as HTMLElement;
 }
 
@@ -103,18 +104,18 @@ describe("show()/hide() over a set", () => {
     document.body.innerHTML = `<span id="a" style="display:inline">a</span><div id="b" style="display:flex">b</div>`;
     const nodes = document.querySelectorAll("#a, #b");
     hide(nodes);
-    expect((document.getElementById("a") as HTMLElement).style.display).toBe(
+    expect((document.getElementById("a")!).style.display).toBe(
       "none"
     );
-    expect((document.getElementById("b") as HTMLElement).style.display).toBe(
+    expect((document.getElementById("b")!).style.display).toBe(
       "none"
     );
 
     show(nodes);
-    expect((document.getElementById("a") as HTMLElement).style.display).toBe(
+    expect((document.getElementById("a")!).style.display).toBe(
       "inline"
     );
-    expect((document.getElementById("b") as HTMLElement).style.display).toBe(
+    expect((document.getElementById("b")!).style.display).toBe(
       "flex"
     );
   });

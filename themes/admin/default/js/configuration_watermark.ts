@@ -4,7 +4,7 @@ import { pwg_getPageData } from "../../../default/js/page-data";
 import { hide, show, toggle } from "../../../default/js/vendor/dom";
 
 (function () {
-  const select = document.getElementById("wSelect") as HTMLSelectElement | null;
+  const select = document.querySelector<HTMLSelectElement>("#wSelect");
   const image = document.getElementById("wImg");
 
   function onWatermarkChange() {

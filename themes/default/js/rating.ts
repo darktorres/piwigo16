@@ -47,6 +47,7 @@ function makeNiceRatingForm(options: PwgRatingOptions) {
   const form = document.getElementById("rateForm");
   if (!form) return; //? template changed
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- RatingButton's own extra `initialRateValue` property is added to each of these real <input> elements a few lines below, a self-authored runtime extension.
   gRatingButtons = form.getElementsByTagName(
     "input",
   ) as HTMLCollectionOf<RatingButton>;
@@ -104,16 +105,18 @@ function handleRatingMouseout(): void {
 // function`: this callback's own `e` silently typed as `Event` before,
 // `any` (a real `noImplicitAny` error) after.
 function handleRatingMouseover(e: Event): void {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- pwgAddEventListener() only ever binds this handler to a real gRatingButtons entry, always a real RatingButton at runtime.
   const target = e.target as RatingButton;
   updateRatingStarDisplay(target.initialRateValue);
 }
 
 function updateRating(e: Event) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- pwgAddEventListener() only ever binds this handler to a real gRatingButtons entry, always a real RatingButton at runtime.
   const rateButton = e.target as RatingButton;
   if (rateButton.initialRateValue === gUserRating) return false; //nothing to do
 
   for (const button of gRatingButtons) button.disabled = true;
-  void ajax({
+  void ajax<PwgRatingResult>({
     url:
       gRatingOptions.rootUrl +
       "api/v1/images/" +
@@ -127,8 +130,7 @@ function updateRating(e: Event) {
       document.location.href =
         rateButton.form!.action + "&rate=" + rateButton.initialRateValue;
     },
-    success: function (data) {
-      const result = data as PwgRatingResult;
+    success: function (result) {
       gUserRating = rateButton.initialRateValue;
       for (const button of gRatingButtons) button.disabled = false;
       if (gRatingOptions.onSuccess) gRatingOptions.onSuccess(result);

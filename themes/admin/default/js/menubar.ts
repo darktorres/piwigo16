@@ -22,8 +22,8 @@ ready(function () {
   on(
     document.querySelectorAll("input[name^='hide_']"),
     "click",
-    function (event: Event): void {
-      const input = event.currentTarget as HTMLInputElement;
+    function (this: HTMLInputElement): void {
+      const input = this;
       const men = input.name.split("hide_");
       if (input.checked) {
         addClass(
@@ -42,9 +42,9 @@ ready(function () {
     const ar = sortableToArray(document.querySelector(".menuUl")!);
     for (let i = 0; i < ar.length; i++) {
       const men = ar[i]!.split("menu_");
-      (
-        document.getElementsByName("pos_" + men[1]!)[0] as HTMLInputElement
-      ).value = String(i + 1);
+      document.querySelector<HTMLInputElement>(
+        '[name="pos_' + men[1]! + '"]',
+      )!.value = String(i + 1);
     }
   });
 });

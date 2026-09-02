@@ -38,7 +38,6 @@ type HistorySearchResponse =
   operations["historySearch"]["responses"][200]["content"]["application/json"];
 type HistoryLine = HistorySearchResponse["lines"][number];
 type HistorySummary = HistorySearchResponse["summary"];
-type HistorySearchDetails = NonNullable<HistoryLine["searchDetails"]>;
 
 interface HistoryFilterParams {
   start: string;
@@ -247,8 +246,8 @@ function activateLineOptions() {
   on(
     find(document.querySelectorAll(".search-line"), ".toggle-img-option"),
     "click",
-    function (event: Event) {
-      const el = event.currentTarget as Element;
+    function (this: Element) {
+      const el = this;
       // jQuery's own `.toggle()` display-memory semantics apply here too --
       // use dom.ts's `toggle()` rather than a hand-rolled inline-style
       // check (see comments.ts's own finding for why the naive version is
@@ -263,7 +262,11 @@ function activateLineOptions() {
     e.stopPropagation();
     let option_is_clicked = false;
     document.querySelectorAll(".img-option span").forEach((span) => {
-      if (span !== e.target && span.contains(e.target as Node | null)) {
+      if (
+        span !== e.target &&
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real mouseup event's own target inside the document is always a Node (or null), never a bare EventTarget with no Node interface.
+        span.contains(e.target as Node | null)
+      ) {
         option_is_clicked = true;
       }
     });
@@ -309,8 +312,8 @@ function fillSummaryResult(summary: HistorySummary) {
     });
     // `.hover(fn)` with a single argument binds the same handler to both
     // mouseenter and mouseleave.
-    on(summaryGuestsData, "mouseenter mouseleave", function (event: Event) {
-      css(event.currentTarget as Element, "cursor", "pointer");
+    on(summaryGuestsData, "mouseenter mouseleave", function (this: Element) {
+      css(this, "cursor", "pointer");
     });
 
     show(document.querySelectorAll(".summary-guests"));
@@ -329,6 +332,7 @@ function fillSummaryResult(summary: HistorySummary) {
   // summary.members is already ordered most-active-first
   summary.members.forEach((member) => {
     if (tmp < 5) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
       const new_user_item = document
         .getElementById("-2")!
         .cloneNode(true) as Element;
@@ -337,10 +341,10 @@ function fillSummaryResult(summary: HistorySummary) {
       html(find(new_user_item, ".user-item-name"), member.username ?? "");
       setData(new_user_item, "user-id", member.userId);
 
-      on(new_user_item, "click", function (event: Event) {
-        const el = event.currentTarget as Element;
+      on(new_user_item, "click", function (this: Element) {
         if (Number(current_param.user_id) !== member.userId) {
-          current_param.user_id = data(el, "user-id") as string | number;
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
+          current_param.user_id = data(this, "user-id") as string | number;
           addUserFilter(member.username);
           fillHistoryResult(current_param);
         }
@@ -413,6 +417,7 @@ function fillHistoryResult(ajaxParam: HistoryFilterParams) {
 }
 
 function lineConstructor(line: HistoryLine, id: number) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
   const newLine = document.getElementById("-1")!.cloneNode(true) as Element;
 
   const sections = [
@@ -458,11 +463,10 @@ function lineConstructor(line: HistoryLine, id: number) {
 
   attr(find(newLine, ".user-name"), "id", String(line.userId));
   if (current_param.user_id === "-1") {
-    on(find(newLine, ".user-name"), "click", function (event: Event) {
-      const el = event.currentTarget as Element;
-      current_param.user_id = String(attrOf(el, "id"));
+    on(find(newLine, ".user-name"), "click", function (this: Element) {
+      current_param.user_id = String(attrOf(this, "id"));
       current_param.pageNumber = 0;
-      addUserFilter(htmlOf(el) ?? "");
+      addUserFilter(htmlOf(this) ?? "");
       fillHistoryResult(current_param);
     });
   }
@@ -474,20 +478,20 @@ function lineConstructor(line: HistoryLine, id: number) {
   setData(find(newLine, ".user-ip")[0]!, "ip", line.ip);
   setupGeoIpHover(find(newLine, ".user-ip")[0]!);
   if (current_param.ip === "") {
-    on(find(newLine, ".user-ip"), "click", function (event: Event) {
-      const el = event.currentTarget as Element;
-      current_param.ip = (data(el, "ip") as string | undefined) ?? "";
+    on(find(newLine, ".user-ip"), "click", function (this: Element) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
+      current_param.ip = (data(this, "ip") as string | undefined) ?? "";
       current_param.pageNumber = 0;
-      addIpFilter(htmlOf(el) ?? "");
+      addIpFilter(htmlOf(this) ?? "");
       fillHistoryResult(current_param);
     });
   }
 
   setData(find(newLine, ".add-img-as-filter")[0]!, "img-id", line.imageId);
   if (current_param.image_id === "") {
-    on(find(newLine, ".add-img-as-filter"), "click", function (event: Event) {
-      const el = event.currentTarget as Element;
-      const imgId = data(el, "img-id") as string | number | null;
+    on(find(newLine, ".add-img-as-filter"), "click", function (this: Element) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
+      const imgId = data(this, "img-id") as string | number | null;
       current_param.image_id = imgId;
       current_param.pageNumber = 0;
       addImageFilter(imgId);
@@ -626,8 +630,7 @@ function lineConstructor(line: HistoryLine, id: number) {
         break;
       }
       const active_search_details: Record<string, any> = {};
-      Object.keys(search_details).forEach((key) => {
-        const value = search_details[key as keyof HistorySearchDetails];
+      Object.entries(search_details).forEach(([key, value]) => {
         if (value !== null) {
           active_search_details[key] = value;
         }
@@ -881,6 +884,7 @@ function displayLine(line: Element) {
 }
 
 function addUserFilter(username: string | null) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
   const newFilter = document
     .getElementById("default-filter")!
     .cloneNode(true) as Element;
@@ -889,8 +893,8 @@ function addUserFilter(username: string | null) {
   html(find(newFilter, ".filter-title"), username ?? "");
   addClass(find(newFilter, ".filter-icon"), "icon-user");
 
-  on(find(newFilter, ".remove-filter"), "click", function (event: Event) {
-    (event.currentTarget as Element).parentElement?.remove();
+  on(find(newFilter, ".remove-filter"), "click", function (this: Element) {
+    this.parentElement?.remove();
 
     current_param.user_id = "-1";
     current_param.pageNumber = 0;
@@ -905,6 +909,7 @@ function addUserFilter(username: string | null) {
 }
 
 function addGuestFilter(username: string) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
   const newFilter = document
     .getElementById("default-filter")!
     .cloneNode(true) as Element;
@@ -913,8 +918,8 @@ function addGuestFilter(username: string) {
   html(find(newFilter, ".filter-title"), username);
   addClass(find(newFilter, ".filter-icon"), "icon-user-secret");
 
-  on(find(newFilter, ".remove-filter"), "click", function (event: Event) {
-    (event.currentTarget as Element).parentElement?.remove();
+  on(find(newFilter, ".remove-filter"), "click", function (this: Element) {
+    this.parentElement?.remove();
 
     current_param.user_id = "-1";
     current_param.pageNumber = 0;
@@ -927,6 +932,7 @@ function addGuestFilter(username: string) {
 }
 
 function addIpFilter(ip: string) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
   const newFilter = document
     .getElementById("default-filter")!
     .cloneNode(true) as Element;
@@ -936,8 +942,8 @@ function addIpFilter(ip: string) {
   html(find(newFilter, ".filter-icon"), "IP ");
   addClass(find(newFilter, ".filter-icon"), "bold");
 
-  on(find(newFilter, ".remove-filter"), "click", function (event: Event) {
-    (event.currentTarget as Element).parentElement?.remove();
+  on(find(newFilter, ".remove-filter"), "click", function (this: Element) {
+    this.parentElement?.remove();
 
     current_param.ip = "";
     current_param.pageNumber = 0;
@@ -950,6 +956,7 @@ function addIpFilter(ip: string) {
 }
 
 function addImageFilter(img_id: string | number | null) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
   const newFilter = document
     .getElementById("default-filter")!
     .cloneNode(true) as Element;
@@ -958,8 +965,8 @@ function addImageFilter(img_id: string | number | null) {
   html(find(newFilter, ".filter-title"), "Image #" + String(img_id));
   addClass(find(newFilter, ".filter-icon"), "icon-picture");
 
-  on(find(newFilter, ".remove-filter"), "click", function (event: Event) {
-    (event.currentTarget as Element).parentElement?.remove();
+  on(find(newFilter, ".remove-filter"), "click", function (this: Element) {
+    this.parentElement?.remove();
 
     current_param.image_id = "";
     current_param.pageNumber = 0;

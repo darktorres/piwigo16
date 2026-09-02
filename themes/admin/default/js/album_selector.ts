@@ -176,21 +176,23 @@ const pwg_token = pwg_getPageData<string>("csrf_token");
  */
 export class AlbumSelector {
   instanceId: string;
-  #in_admin_mode: boolean;
-  #methodPwg: string;
-  #limitParam: number;
+  readonly #in_admin_mode: boolean;
+  readonly #methodPwg: string;
+  readonly #limitParam: number;
   #isAlbumCreationChecked: boolean;
-  #selectAlbum: (args: { album: AlbumSelectorCallbackArgs["album"] }) => void;
-  #removeSelectedAlbum: (args: { id_album: string | number }) => void;
+  readonly #selectAlbum: (args: {
+    album: AlbumSelectorCallbackArgs["album"];
+  }) => void;
+  readonly #removeSelectedAlbum: (args: { id_album: string | number }) => void;
   #currentSelectedId: string | number;
   #searchCat: Record<string, AlbumCategory>;
   #cats: Record<string, AlbumCategory>;
   #selected_categories: (string | number)[];
-  #show_root_btn: boolean;
+  readonly #show_root_btn: boolean;
   #put_to_root: boolean;
-  #current_cat: string | number;
-  #title: string;
-  #searchPlaceholder: string;
+  readonly #current_cat: string | number;
+  readonly #title: string;
+  readonly #searchPlaceholder: string;
   #loading_add: boolean;
   #levelSeparator: string;
 

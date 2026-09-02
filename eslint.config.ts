@@ -262,6 +262,19 @@ export default defineConfig(
       // that `tsc` alone doesn't (confirmed: fixing the boolean
       // expression surfaced a real TS18048 the loose check had hidden).
       "@typescript-eslint/strict-boolean-expressions": "error",
+
+      // Zero real violations -- every `as`/`!` in the tree is load-bearing.
+      "@typescript-eslint/no-unnecessary-type-assertion": "error",
+      // Zero real violations -- every `.sort()` call already passes a
+      // comparator.
+      "@typescript-eslint/require-array-sort-compare": "error",
+      // 15 real sites (album_selector.ts 9, jqtree.ts 6), each verified by
+      // grepping for a reassignment outside the constructor before
+      // marking it `readonly` -- album_selector.ts's own constructor-only
+      // fields, jqtree.ts's own stable bound-once event-handler class
+      // fields (read by addEventListener/removeEventListener, which needs
+      // the same reference both times, never reassigned).
+      "@typescript-eslint/prefer-readonly": "error",
     },
   },
 );

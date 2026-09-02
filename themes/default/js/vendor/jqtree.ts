@@ -730,7 +730,7 @@ class JqTreeController<T extends Record<string, unknown>> {
 
   // ── Mouse/touch capture (real source: lib/mouse.widget.js) ───────────
 
-  private onMouseDown = (e: Event): void => {
+  private readonly onMouseDown = (e: Event): void => {
     const event = e as MouseEvent;
     if (event.button !== 0) {
       return;
@@ -740,7 +740,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     }
   };
 
-  private onTouchStart = (e: Event): void => {
+  private readonly onTouchStart = (e: Event): void => {
     const event = e as TouchEvent;
     if (event.touches.length > 1) {
       return;
@@ -749,12 +749,12 @@ class JqTreeController<T extends Record<string, unknown>> {
     this.handleMouseDown(this.positionInfoFromTouch(touch, event));
   };
 
-  private onMouseMove = (e: Event): void => {
+  private readonly onMouseMove = (e: Event): void => {
     const event = e as MouseEvent;
     this.handleMouseMove(event, this.positionInfoFromMouse(event));
   };
 
-  private onTouchMove = (e: Event): void => {
+  private readonly onTouchMove = (e: Event): void => {
     const event = e as TouchEvent;
     if (event.touches.length > 1) {
       return;
@@ -763,11 +763,11 @@ class JqTreeController<T extends Record<string, unknown>> {
     this.handleMouseMove(event, this.positionInfoFromTouch(touch, event));
   };
 
-  private onMouseUp = (e: Event): void => {
+  private readonly onMouseUp = (e: Event): void => {
     this.handleMouseUp(this.positionInfoFromMouse(e as MouseEvent));
   };
 
-  private onTouchEnd = (e: Event): void => {
+  private readonly onTouchEnd = (e: Event): void => {
     const event = e as TouchEvent;
     if (event.touches.length > 1) {
       return;

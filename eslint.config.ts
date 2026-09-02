@@ -237,6 +237,27 @@ export default defineConfig(
         "error",
         { functions: false },
       ],
+
+      // Zero real violations at the time each was measured -- pure
+      // forward-guards / free consistency wins, no fix population.
+      "@typescript-eslint/no-unused-private-class-members": "error",
+      "@typescript-eslint/consistent-type-assertions": "error",
+      "@typescript-eslint/array-type": "error",
+      "@typescript-eslint/class-literal-property-style": "error",
+      // jQuery is fully gone (P49); guard against it ever coming back as
+      // a dependency now that nothing in this config would otherwise
+      // notice a reintroduced import.
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "jquery",
+              message: "jQuery was removed in P49 -- use vendor/dom.ts.",
+            },
+          ],
+        },
+      ],
     },
   },
 );

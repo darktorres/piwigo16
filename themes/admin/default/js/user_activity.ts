@@ -381,8 +381,7 @@ async function get_user_activity(
     show(document.querySelectorAll(".pagination-item-container"));
     update_pagination_menu();
   } catch (e: unknown) {
-    console.log("ajax call failed");
-    console.log(e);
+    console.error("ajax call failed", e);
   }
 }
 

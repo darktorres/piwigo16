@@ -146,19 +146,11 @@ ready(function () {
   on(document.querySelectorAll(inputSelector), "focus", function (): void {
     user_interacted = true;
   });
-  on(
-    document.querySelectorAll(inputSelector),
-    "change",
-    function (event: Event): void {
-      if (user_interacted) {
-        form_unsaved = true;
-        console.log(
-          (event.currentTarget as HTMLInputElement).name,
-          event.currentTarget,
-        );
-      }
-    },
-  );
+  on(document.querySelectorAll(inputSelector), "change", function (): void {
+    if (user_interacted) {
+      form_unsaved = true;
+    }
+  });
   on(window, "beforeunload", function (): string | undefined {
     if (form_unsaved) {
       return "Somes changes are not registered";

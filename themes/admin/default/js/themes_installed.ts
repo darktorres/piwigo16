@@ -37,11 +37,7 @@ ready(function () {
 
   on(document, "mouseup", function (e: Event): void {
     e.stopPropagation();
-    // `event`, not `e`: a genuine pre-existing quirk (the global Event
-    // object, not this handler's own normalized parameter), preserved
-    // rather than tidied to `e.target` -- both name the same currently-
-    // dispatching event in every browser this runs in.
-    if (!hasClass(event!.target as Element, "showInfo")) {
+    if (!hasClass(e.target as Element, "showInfo")) {
       fadeOut(document.querySelectorAll(".showInfo-dropdown"));
     }
   });

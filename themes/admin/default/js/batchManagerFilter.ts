@@ -174,7 +174,7 @@ function select_album_filter({
   hide_filters_error(str_select_album);
   setVal(
     document.querySelectorAll("#filterCategoryValue"),
-    String(+getSelectedAlbum()[0]!),
+    String(Number(getSelectedAlbum()[0]!)),
   );
   hide(document.querySelectorAll("#selectAlbumFilter"));
   fadeIn(document.querySelectorAll("#selectedAlbumFilterArea"));

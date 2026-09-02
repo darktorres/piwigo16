@@ -504,7 +504,7 @@ ready(() => {
           closeRenameAlbumPopIn();
         },
         error: function (message) {
-          console.log(message);
+          console.error(message);
         },
       });
     },
@@ -648,7 +648,7 @@ ready(() => {
           );
         },
         error: function (message) {
-          console.log(message);
+          console.error(message);
           text(
             document.querySelectorAll(".AddAlbumErrors"),
             str_album_name_empty,
@@ -926,12 +926,10 @@ function openAddAlbumPopIn(parentAlbumId: string | number) {
   const addAlbum = document.querySelectorAll("#AddAlbum");
   off(addAlbum, "keyup");
   on(addAlbum, "keyup", function (e: Event) {
-    // 13 is 'Enter'
-    if ((e as KeyboardEvent).keyCode === 13) {
+    if ((e as KeyboardEvent).key === "Enter") {
       document.querySelector<HTMLElement>(".AddAlbumSubmit")?.click();
     }
-    // 27 is 'Escape'
-    if ((e as KeyboardEvent).keyCode === 27) {
+    if ((e as KeyboardEvent).key === "Escape") {
       closeAddAlbumPopIn();
     }
   });
@@ -962,7 +960,7 @@ function openRenameAlbumPopIn(replacedAlbumName: string | undefined) {
 
   off(document, "keypress");
   on(document, "keypress", function (e: Event) {
-    if ((e as KeyboardEvent).which == 13) {
+    if ((e as KeyboardEvent).key === "Enter") {
       document.querySelector<HTMLElement>(".RenameAlbumSubmit")?.click();
     }
   });
@@ -1018,7 +1016,7 @@ function triggerDeleteAlbum(cat_id: string | number) {
       }
     },
     error: function (message) {
-      console.log(message);
+      console.error(message);
     },
   }).done(function () {
     openDeleteAlbumPopIn(cat_id);
@@ -1034,12 +1032,11 @@ function openDeleteAlbumPopIn(cat_to_delete: string | number) {
       delete_album_with_name.replace("%s", node.name),
     );
   } else {
-    const nb_sub_cats = 0;
     html(
       document.querySelectorAll(".DeleteIconTitle span"),
       delete_album_with_subs
         .replace("%s", node.name)
-        .replace("%d", String(getAllSubAlbumsFromNode(node, nb_sub_cats))),
+        .replace("%d", String(getAllSubAlbumsFromNode(node))),
     );
   }
 
@@ -1073,7 +1070,7 @@ function openDeleteAlbumPopIn(cat_to_delete: string | number) {
         closeDeleteAlbumPopIn();
       },
       error: function (message) {
-        console.log(message);
+        console.error(message);
       },
     });
   });
@@ -1083,16 +1080,12 @@ function closeDeleteAlbumPopIn() {
   fadeOut(document.querySelectorAll("#DeleteAlbum"));
 }
 
-function getAllSubAlbumsFromNode(
-  node: AlbumJqTreeNode,
-  nb_sub_cats: number,
-): number {
-  nb_sub_cats = 0;
+function getAllSubAlbumsFromNode(node: AlbumJqTreeNode): number {
+  let nb_sub_cats = 0;
   if (node.children.length != 0) {
     node.children.forEach((child) => {
       nb_sub_cats++;
-      const tmp = getAllSubAlbumsFromNode(child, nb_sub_cats);
-      nb_sub_cats += tmp;
+      nb_sub_cats += getAllSubAlbumsFromNode(child);
     });
   } else {
     return 0;
@@ -1248,7 +1241,7 @@ function applyMove(moveInfo: JqTreeMoveInfo<AlbumNodeData>) {
       rebindMoveCatActions();
     })
     .catch(function (message: unknown) {
-      console.log(
+      console.error(
         "An error has occured : " +
           (message instanceof Error ? message.message : String(message)),
       );

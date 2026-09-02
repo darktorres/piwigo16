@@ -33,8 +33,8 @@ interface PwgAddAlbumOptions {
   afterSelect?: () => void;
 }
 
-export function pwgAddAlbum(trigger: Element, options?: PwgAddAlbumOptions) {
-  options = options || {};
+export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
+  const options = rawOptions ?? {};
 
   const popup = document.querySelector("#addAlbumForm")!;
   const albumParent = popup.querySelector<HTMLSelectElement>(
@@ -72,8 +72,8 @@ export function pwgAddAlbum(trigger: Element, options?: PwgAddAlbumOptions) {
           global_rank: 0,
         });
 
-        if (options!.filter) {
-          categories = options!.filter.call(this, categories);
+        if (options.filter) {
+          return options.filter.call(this, categories);
         }
 
         return categories;
@@ -170,8 +170,8 @@ export function pwgAddAlbum(trigger: Element, options?: PwgAddAlbumOptions) {
 
           parentSelectize.addOption(newAlbum);
 
-          if (options!.afterSelect) {
-            options!.afterSelect();
+          if (options.afterSelect) {
+            options.afterSelect();
           }
         },
         error: function (

@@ -166,7 +166,7 @@ ready(function () {
             data.overwriteToken ?? null,
           );
         } else {
-          showDbCheckStatus("db-check-error", (data.errors || []).join(" "));
+          showDbCheckStatus("db-check-error", (data.errors ?? []).join(" "));
           toggleOverwriteWarning(false, null);
         }
       },

@@ -128,7 +128,6 @@ on(
       } else {
         types_str = selected.join("_");
       }
-      console.log(selected);
       attr(
         document.querySelectorAll(".delete-sizes"),
         "href",

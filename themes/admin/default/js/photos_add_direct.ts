@@ -344,7 +344,7 @@ ready(function () {
         const exts: Record<string, string> = {};
         files.forEach((file) => {
           fileNames[file.id] = file.name;
-          exts[file.id] = file.name.substr(file.name.lastIndexOf(".") + 1);
+          exts[file.id] = file.name.slice(file.name.lastIndexOf(".") + 1);
         });
 
         if (formatMode) {
@@ -467,22 +467,24 @@ ready(function () {
 
             // If a file is not found or found more than one time
             if (notFound.length || multiple.length) {
-              const [multStr, notFoundStr] = [multiple, notFound].map((tab) => {
-                //Get names
-                tab = tab.map((f) => f.slice(0, f.indexOf(".")));
-                // Remove duplicates
-                tab = tab.filter((f, i) => i === tab.indexOf(f));
+              const [multStr, notFoundStr] = [multiple, notFound].map(
+                (names) => {
+                  //Get names
+                  let tab = names.map((f) => f.slice(0, f.indexOf(".")));
+                  // Remove duplicates
+                  tab = tab.filter((f, i) => i === tab.indexOf(f));
 
-                // Add "and X more" if necessary
-                if (tab.length > 5) {
-                  tab[5] = str_and_X_others.replace(
-                    "%d",
-                    String(tab.length - 5),
-                  );
-                  tab = tab.splice(0, 6);
-                }
-                return tab;
-              });
+                  // Add "and X more" if necessary
+                  if (tab.length > 5) {
+                    tab[5] = str_and_X_others.replace(
+                      "%d",
+                      String(tab.length - 5),
+                    );
+                    tab = tab.splice(0, 6);
+                  }
+                  return tab;
+                },
+              );
 
               alert({
                 title: str_format_warning,
@@ -620,10 +622,7 @@ ready(function () {
 
         // warn user if she wants to leave page while upload is running
         on(window, "beforeunload", function (e: Event) {
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- a real narrowing tsc itself enforces (plain Event's own `returnValue` is typed `boolean`, BeforeUnloadEvent's own is `any`; without this cast the very next assignment fails to typecheck), the rule's own limitation with an `any`-typed target property.
-          const beforeUnload = e as BeforeUnloadEvent;
-          beforeUnload.preventDefault();
-          beforeUnload.returnValue = str_upload_in_progress;
+          e.preventDefault();
           return str_upload_in_progress;
         });
 
@@ -921,9 +920,7 @@ function uploadNextTusFile(
   } else {
     metadata.category = String(options.category);
     metadata.name = options.name ?? "";
-    if (!uploadCategory) {
-      uploadCategory = { id: options.category };
-    }
+    uploadCategory ??= { id: options.category };
   }
   if (options.update_mode) {
     metadata.updateMode = "1";

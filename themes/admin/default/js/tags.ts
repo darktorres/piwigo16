@@ -120,16 +120,20 @@ function createTagBox(
   name: string,
   url_name: string,
   count: number | undefined,
-  raw_name: string | null = null,
+  rawNameArg: string | null = null,
 ): Element {
-  if (raw_name === null) {
-    raw_name = name;
-  }
+  const raw_name = rawNameArg ?? name;
   const u_edit = "admin.php?page=batch_manager&filter=tag-" + id;
   const u_view = "index.php?/tags/" + id + "-" + url_name;
   // Non-null: the template block always exists in the page markup.
+  // `name` is a plain string straight off the JSON API response, never
+  // percent-encoded -- the legacy `unescape(name)` this replaced was a
+  // no-op for almost every real tag name and a real corruption risk for
+  // one shaped like a percent-hex escape (e.g. a tag named "tag %41");
+  // `decodeURIComponent` isn't a safe substitute either, since it throws
+  // on the common case of a bare "%" (e.g. "50% off").
   let markup = htmlOf(document.querySelectorAll(".tag-template"))!
-    .replace(/%name%/g, unescape(name))
+    .replace(/%name%/g, name)
     .replace("%U_VIEW%", u_view)
     .replace("%U_EDIT%", u_edit)
     .replace("%raw_name%", raw_name);
@@ -169,11 +173,9 @@ function recycleTagBox(
   name: string,
   url_name: string,
   count: number | undefined,
-  raw_name: string | null = null,
+  rawNameArg: string | null = null,
 ): void {
-  if (raw_name === null) {
-    raw_name = name;
-  }
+  const raw_name = rawNameArg ?? name;
   attr(tagBox, "data-id", String(id));
   html(find(tagBox, ".tag-name, .tag-dropdown-header b"), name);
   setVal(find(tagBox, ".tag-name-editable"), name);

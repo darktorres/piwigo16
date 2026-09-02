@@ -1193,14 +1193,8 @@ ready(function () {
       },
     );
 
-    PS_params.filesize_min =
-      global_params.fields.filesize_min != null
-        ? global_params.fields.filesize_min
-        : "";
-    PS_params.filesize_max =
-      global_params.fields.filesize_max != null
-        ? global_params.fields.filesize_max
-        : "";
+    PS_params.filesize_min = global_params.fields.filesize_min ?? "";
+    PS_params.filesize_max = global_params.fields.filesize_max ?? "";
 
     empty_filters_list.push(PS_params.filesize_min);
     empty_filters_list.push(PS_params.filesize_max);
@@ -1275,14 +1269,8 @@ ready(function () {
       },
     );
 
-    PS_params.height_min =
-      global_params.fields.height_min != null
-        ? global_params.fields.height_min
-        : "";
-    PS_params.height_max =
-      global_params.fields.height_max != null
-        ? global_params.fields.height_max
-        : "";
+    PS_params.height_min = global_params.fields.height_min ?? "";
+    PS_params.height_max = global_params.fields.height_max ?? "";
 
     empty_filters_list.push(PS_params.height_min);
     empty_filters_list.push(PS_params.height_max);
@@ -1357,14 +1345,8 @@ ready(function () {
       },
     );
 
-    PS_params.width_min =
-      global_params.fields.width_min != null
-        ? global_params.fields.width_min
-        : "";
-    PS_params.width_max =
-      global_params.fields.width_max != null
-        ? global_params.fields.width_max
-        : "";
+    PS_params.width_min = global_params.fields.width_min ?? "";
+    PS_params.width_max = global_params.fields.width_max ?? "";
 
     empty_filters_list.push(PS_params.width_min);
     empty_filters_list.push(PS_params.width_max);
@@ -1426,7 +1408,7 @@ ready(function () {
 
   if (
     !empty_filters_list.every(
-      (param) => param === "" || param === null || typeof param == "undefined",
+      (param) => param === "" || param === null || typeof param === "undefined",
     )
   ) {
     addClass(document.querySelectorAll(".clear-all"), "clickable");
@@ -1459,8 +1441,7 @@ ready(function () {
   });
 
   on(document, "keyup", function (e: Event) {
-    // 27 is 'Escape'
-    if ((e as KeyboardEvent).keyCode === 27) {
+    if ((e as KeyboardEvent).key === "Escape") {
       trigger(
         document.querySelectorAll(
           ".filter-manager-popin .filter-manager-close",
@@ -1469,8 +1450,7 @@ ready(function () {
       );
       trigger(document.querySelectorAll("#closeModalQuickSearch"), "click");
     }
-    // 13 is 'Enter'
-    if ((e as KeyboardEvent).keyCode === 13) {
+    if ((e as KeyboardEvent).key === "Enter") {
       document
         .querySelectorAll(".filter-form .filter-validate")
         .forEach((el) => {
@@ -1559,8 +1539,7 @@ ready(function () {
   });
 
   on(document, "keyup", function (e: Event) {
-    // 27 is 'Escape'
-    if ((e as KeyboardEvent).keyCode === 27) {
+    if ((e as KeyboardEvent).key === "Escape") {
       trigger(
         document.querySelectorAll(".tags-found-popin .tags-found-close"),
         "click",
@@ -1763,8 +1742,7 @@ ready(function () {
               ),
             );
 
-            PS_params.date_posted_preset =
-              presetValue != null ? presetValue : "";
+            PS_params.date_posted_preset = presetValue ?? "";
 
             if ("custom" == presetValue) {
               const customDates: (string | number | string[] | undefined)[] =
@@ -1848,8 +1826,7 @@ ready(function () {
               ),
             );
 
-            PS_params.date_created_preset =
-              presetValue != null ? presetValue : "";
+            PS_params.date_created_preset = presetValue ?? "";
 
             if ("custom" == presetValue) {
               const customDates: (string | number | string[] | undefined)[] =
@@ -2591,7 +2568,7 @@ function performSearch(params: Record<string, any>, reload: boolean = false) {
       }
     },
     error: function (e) {
-      console.log(e);
+      console.error(e);
       append(
         document.querySelectorAll(".filter-form "),
         '<p class="error">Error</p>',
@@ -2758,23 +2735,17 @@ function updateDateFilters(selector: string) {
   // uncheck with children checked => outline check mark
   // uncheck without children checked => hide
   if (is(inputYear, ":checked")) {
-    console.log("state : Year is check");
     yearIsCheck = true;
     setDisabled(find(ctx, inputSelector(":not(:checked)")), true);
     removeClass(iconYear, "gallery-icon-check-outline grey-icon");
     addClass(iconYear, "gallery-icon-checkmark");
     show(iconYear);
   } else if (find(ctx, inputSelector(":checked")).length > 0) {
-    console.log(
-      "state :  Year is uncheck but have children",
-      find(ctx, inputSelector(":checked")),
-    );
     setDisabled(find(ctx, inputSelector()), false);
     removeClass(iconYear, "gallery-icon-checkmark");
     addClass(iconYear, "gallery-icon-check-outline grey-icon");
     show(iconYear);
   } else {
-    console.log("state: Year is uncheck and doesnt have children");
     setDisabled(find(ctx, inputSelector()), false);
     removeClass(iconYear, "grey-icon");
     hide(iconYear);

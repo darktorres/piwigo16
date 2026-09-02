@@ -51,7 +51,6 @@ ready(function () {
         event.preventDefault();
       } else {
         hide(document.querySelectorAll(".actionButtons .errors"));
-        console.log("form can be submited");
       }
     },
   );

@@ -61,7 +61,7 @@ if (derivativeSwitchBox) {
     );
   });
 }
-(window.SwitchBox = window.SwitchBox || ([] as string[])).push(
+(window.SwitchBox = window.SwitchBox ?? ([] as string[])).push(
   "#derivativeSwitchLink",
   "#derivativeSwitchBox",
 );
@@ -81,7 +81,7 @@ if (originalLink) {
 ready(function () {
   if (document.getElementById("downloadSwitchBox")) {
     document.getElementById("downloadSwitchLink")?.removeAttribute("href");
-    (window.SwitchBox = window.SwitchBox || ([] as string[])).push(
+    (window.SwitchBox = window.SwitchBox ?? ([] as string[])).push(
       "#downloadSwitchLink",
       "#downloadSwitchBox",
     );
@@ -131,7 +131,7 @@ if (caddieLink) {
 // once -- reading a missing property never throws (unlike a bare
 // undeclared identifier), and `window` itself is the one true global
 // every wrapped entry can still reach directly.
-window._pwgRatingAutoQueue = window._pwgRatingAutoQueue || [];
+window._pwgRatingAutoQueue = window._pwgRatingAutoQueue ?? [];
 window._pwgRatingAutoQueue.push({
   rootUrl: pwg_getPageData<string>("root_url"),
   image_id: pwg_getPageData<string | number>("image_id"),

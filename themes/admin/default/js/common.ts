@@ -122,7 +122,7 @@ fontCheckbox();
 // than exported to nothing (Legacy porting: no permanent facades).
 function str_repeat(i: string, m: number): string {
   const o: string[] = [];
-  for (; m > 0; o[--m] = i);
+  for (let count = m; count > 0; o[--count] = i);
   return o.join("");
 }
 
@@ -149,9 +149,9 @@ if (!Array.prototype.indexOf) {
 }
 
 export function getRandomInt(min: number, max: number): number {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min)) + min;
+  const lo = Math.ceil(min);
+  const hi = Math.floor(max);
+  return Math.floor(Math.random() * (hi - lo)) + lo;
 }
 
 export function sprintf(...args: (string | number)[]): string {
@@ -185,7 +185,7 @@ export function sprintf(...args: (string | number)[]): string {
       if ((a = args[m[1] ? Number(m[1]) : i++]) == null || a == undefined) {
         throw new Error("Too few arguments.");
       }
-      if (/[^s]/.test(m[7]!) && typeof a != "number") {
+      if (/[^s]/.test(m[7]!) && typeof a !== "number") {
         throw new Error("Expecting number but found " + typeof a);
       }
 

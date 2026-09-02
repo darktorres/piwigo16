@@ -100,7 +100,7 @@ ready(function () {
           });
         },
         error: function (message) {
-          console.log(message);
+          console.error(message);
         },
       });
     });

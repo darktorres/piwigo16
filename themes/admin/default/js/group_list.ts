@@ -514,7 +514,7 @@ const deleteGroup = function (id: string | number) {
                     updateBadge();
                   },
                   error: function (err) {
-                    console.log(err);
+                    console.error(err);
                   },
                 });
               },
@@ -562,7 +562,7 @@ const renameGroup = function (id: string | number, newName: string) {
         data: operations["groupUpdate"]["responses"][200]["content"]["application/json"],
       ) {
         loadState.reverse();
-        newName = data.name;
+        const confirmedName = data.name;
         //Display message
         html(
           find(document.querySelectorAll("#group-" + id), ".groupMessage"),
@@ -578,7 +578,7 @@ const renameGroup = function (id: string | number, newName: string) {
         }, DELAY_FEEDBACK);
         html(
           find(document.querySelectorAll("#group-" + id), "#group_name"),
-          newName,
+          confirmedName,
         );
 
         //Hide editable field
@@ -705,7 +705,7 @@ const setDefaultGroup = function (id: string | number, is_default: boolean) {
       }
     },
     error: function (err) {
-      console.log(err);
+      console.error(err);
     },
   });
 };
@@ -853,7 +853,7 @@ const duplicateAction = function (id: string | number) {
     },
     error: function (err) {
       loadState.reverse();
-      console.log(err);
+      console.error(err);
     },
   });
 };
@@ -903,7 +903,7 @@ const updateSelectionPanel = function (changedState: string = "") {
     else updateStatePanel(changedState);
   }
 
-  html(document.querySelectorAll(".number-Selected"), numSelect + "");
+  html(document.querySelectorAll(".number-Selected"), String(numSelect));
 };
 
 /*Update the state of the panel in 5 states :
@@ -1086,7 +1086,7 @@ on(document.querySelectorAll(".ConfirmMergeButton"), "click", function () {
     },
     error: function (err) {
       loadState.reverse();
-      console.log(err);
+      console.error(err);
     },
   });
 });
@@ -1158,7 +1158,7 @@ on(document.querySelectorAll(".ConfirmDeleteButton"), "click", function () {
     })
     .catch(function (err: unknown) {
       loadState.reverse();
-      console.log(err);
+      console.error(err);
     });
 });
 
@@ -1339,7 +1339,7 @@ const openUserManager = function (grp_id: string | number) {
     },
     error: function (err) {
       loadState.reverse();
-      console.log(err);
+      console.error(err);
     },
   });
 };
@@ -1546,7 +1546,7 @@ on(document.querySelectorAll(".AddUserBlock button"), "click", function () {
       },
       error: function (err) {
         loadState.reverse();
-        console.log(err);
+        console.error(err);
       },
     });
   }
@@ -1636,8 +1636,7 @@ const serverId = pwg_getPageData<string>("cache_key_hash");
 const rootUrl = pwg_getPageData<string>("root_url");
 
 on(document, "keydown", function (e: Event) {
-  if ((e as KeyboardEvent).keyCode === 27) {
-    // ESC button
+  if ((e as KeyboardEvent).key === "Escape") {
     fadeOut(document.querySelectorAll("#UserList"));
   }
 });

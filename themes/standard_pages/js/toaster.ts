@@ -8,17 +8,17 @@ export interface PwgToasterInfo {
 
 export function pwgToaster(info: PwgToasterInfo) {
   if (!info.text || !info.icon) {
-    console.log("set info.text or info.icon");
+    console.error("set info.text or info.icon");
     return;
   }
 
   if (typeof info.text !== "string") {
-    console.log("info.text is not a string");
+    console.error("info.text is not a string");
     return;
   }
 
   if (info.icon !== "success" && info.icon !== "error") {
-    console.log("info.icon must be success or error");
+    console.error("info.icon must be success or error");
     return;
   }
 

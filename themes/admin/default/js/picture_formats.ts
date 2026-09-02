@@ -84,7 +84,7 @@ function deleteFormat(card: Element) {
       });
     },
     error: function (message) {
-      console.log(message);
+      console.error(message);
     },
   });
 }

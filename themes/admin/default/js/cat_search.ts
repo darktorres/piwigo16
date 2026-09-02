@@ -128,10 +128,11 @@ function updateSearch() {
 function searchAlbumByName(
   categories: AlbumTreeNode[],
   search: string,
-  nbResult: number,
+  initialNbResult: number,
   children?: boolean,
   name: string = "",
 ): number {
+  let nbResult = initialNbResult;
   for (const c of categories) {
     if (nbResult >= RESULT_LIMIT) {
       return nbResult;
@@ -166,7 +167,7 @@ function addAlbumResult(
   haveChildren: boolean,
   name: string,
 ) {
-  const id = +cat.id;
+  const id = Number(cat.id);
   const template = document.querySelector(".search-album-elem-template");
   const newCatNodes = parseHtml(template === null ? "" : template.innerHTML);
 

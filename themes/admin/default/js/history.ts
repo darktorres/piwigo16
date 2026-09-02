@@ -135,7 +135,6 @@ ready(() => {
       document.querySelectorAll(".elem-type-select option:checked"),
       "value",
     );
-    console.log(selectedType);
 
     if (selectedType == "visited") {
       current_param.types = {
@@ -194,7 +193,6 @@ ready(() => {
   });
 
   on(document.querySelectorAll("#start_unset"), "click", function () {
-    console.log("here" + current_param.start);
     // Genuine pre-existing bug found only by strict typechecking:
     // `!current_param.start == ""` compares a boolean to a string,
     // always false -- this guard never actually ran, so the "unset
@@ -356,7 +354,6 @@ function fillSummaryResult(summary: HistorySummary) {
 }
 
 function showResults(doShow: boolean) {
-  console.log("EMPTY");
   if (doShow) {
     show(document.querySelectorAll(".search-summary"));
     show(document.querySelectorAll(".container"));
@@ -400,7 +397,7 @@ function fillHistoryResult(ajaxParam: HistoryFilterParams) {
       }
     },
     error: function (e) {
-      console.log(e);
+      console.error(e);
     },
   }).done(() => {
     activateLineOptions();
@@ -855,7 +852,7 @@ function lineConstructor(line: HistoryLine, id: number) {
       const lineIconClass = icons[sections.indexOf(line.section ?? "")]!;
       addClass(find(newLine, ".type-icon i"), lineIconClass);
     } else {
-      console.log("Unhandled section : " + line.section);
+      console.warn("Unhandled section : " + line.section);
     }
   }
 

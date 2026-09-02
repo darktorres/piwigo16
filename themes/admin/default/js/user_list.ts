@@ -118,8 +118,7 @@ Escape of pop-in
 
 //get out of pop in via escape key
 on(document, "keydown", function (e: Event) {
-  if ((e as KeyboardEvent).keyCode === 27) {
-    // ESC button
+  if ((e as KeyboardEvent).key === "Escape") {
     hide_modals();
     close_user_list();
   }
@@ -623,8 +622,9 @@ ready(function () {
         // for debug
         // console.log('rect',$(this).attr('id'), ' left / right : ', rect.left, ' / ', rect.right);
         if (
-          +rect.left.toFixed(0) >= +rectView.left.toFixed(0) - 1 &&
-          +rect.right.toFixed(0) <= +rectView.right.toFixed(0) + 1
+          Number(rect.left.toFixed(0)) >=
+            Number(rectView.left.toFixed(0)) - 1 &&
+          Number(rect.right.toFixed(0)) <= Number(rectView.right.toFixed(0)) + 1
         ) {
           const tabId = attrOf(slide, "id");
           addClass(document.querySelectorAll("#name_" + tabId), "selected");
@@ -658,8 +658,9 @@ ready(function () {
       slides.forEach((slide) => {
         const rect = slide.getBoundingClientRect();
         if (
-          +rect.left.toFixed(0) >= +rectView.left.toFixed(0) - 1 &&
-          +rect.right.toFixed(0) <= +rectView.right.toFixed(0) + 1
+          Number(rect.left.toFixed(0)) >=
+            Number(rectView.left.toFixed(0)) - 1 &&
+          Number(rect.right.toFixed(0)) <= Number(rectView.right.toFixed(0)) + 1
         ) {
           const tabId = attrOf(slide, "id");
           addClass(document.querySelectorAll("#name_" + tabId), "selected");
@@ -2776,9 +2777,8 @@ function fill_ajax_data_from_container(
   ajax_data: Record<string, unknown>,
   pop_in: Element,
 ) {
-  ajax_data = fill_ajax_data_from_properties(ajax_data, pop_in);
-  ajax_data = fill_ajax_data_from_preferences(ajax_data, pop_in);
-  return ajax_data;
+  const withProperties = fill_ajax_data_from_properties(ajax_data, pop_in);
+  return fill_ajax_data_from_preferences(withProperties, pop_in);
 }
 
 /*----------------
@@ -3519,7 +3519,7 @@ function add_infos_to_new_user(
       html(
         document.querySelectorAll(".badge-number"),
         String(
-          +(htmlOf(document.querySelectorAll(".badge-number")) ?? "0") + 1,
+          Number(htmlOf(document.querySelectorAll(".badge-number")) ?? "0") + 1,
         ),
       );
     },
@@ -3642,7 +3642,7 @@ function delete_user(uid: number) {
       html(
         document.querySelectorAll(".badge-number"),
         String(
-          +(htmlOf(document.querySelectorAll(".badge-number")) ?? "0") - 1,
+          Number(htmlOf(document.querySelectorAll(".badge-number")) ?? "0") - 1,
         ),
       );
     },
@@ -3803,7 +3803,7 @@ function send_link_password(
       }
     },
     error: function (err) {
-      console.log("Error send_link_password :", err);
+      console.error("Error send_link_password :", err);
       if (!send_by_mail) {
         removeClass(
           document.querySelectorAll("#result_send_mail_copy"),
@@ -3880,7 +3880,7 @@ function set_main_user(user_id: number, new_username: string) {
       set_main_user_success();
     },
     error: function (err) {
-      console.log(err);
+      console.error(err);
     },
   });
 }

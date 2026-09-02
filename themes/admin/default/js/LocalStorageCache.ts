@@ -1,10 +1,5 @@
 // Real entity shapes for the 4 real per-list caches below, via the
-// existing OpenAPI schema. Declared as top-level `type X =
-// import(...)` aliases rather than real `import` statements, which is
-// now only a style holdover: the file was a non-module IIFE
-// (`(function ($, exports) {...})(jQuery, window)`) when that was
-// written, and P48 made it a real module -- it has had `export`
-// statements ever since.
+// existing OpenAPI schema.
 //
 // `CategoryAdmin` duplicates album_selector.ts's own identically-named,
 // identically-defined type alias -- until that file's own P48 module
@@ -21,15 +16,16 @@ import {
   selectize as createSelectize,
   type SelectizeRenderers,
 } from "../../../default/js/vendor/selectize";
+import type { operations } from "../../../../openapi/client/schema";
 
 type CategoryAdmin =
-  import("../../../../openapi/client/schema").operations["categoryList"]["responses"][200]["content"]["application/json"]["categories"][number];
+  operations["categoryList"]["responses"][200]["content"]["application/json"]["categories"][number];
 type TagAdmin =
-  import("../../../../openapi/client/schema").operations["tagList"]["responses"][200]["content"]["application/json"]["tags"][number];
+  operations["tagList"]["responses"][200]["content"]["application/json"]["tags"][number];
 type GroupEntity =
-  import("../../../../openapi/client/schema").operations["groupList"]["responses"][200]["content"]["application/json"]["groups"][number];
+  operations["groupList"]["responses"][200]["content"]["application/json"]["groups"][number];
 export type UserEntity =
-  import("../../../../openapi/client/schema").operations["userList"]["responses"][200]["content"]["application/json"]["users"][number];
+  operations["userList"]["responses"][200]["content"]["application/json"]["users"][number];
 
 // This file's own `categoriesAdminList`/`tagsAdminList`/`groupsAdminList`/
 // `usersAdminList` loaders each reshape the raw API row before caching
@@ -163,7 +159,7 @@ LocalStorageCache.prototype._init = function (
   this.loader = options.loader!;
 
   this.storage = window.localStorage;
-  this.ready = !!this.storage;
+  this.ready = Boolean(this.storage);
 };
 
 /*
@@ -216,9 +212,11 @@ LocalStorageCache.prototype.set = function (
         });
     }
   } catch (e) {
-    console.log("Local storage error:");
-    console.log(e);
-    console.log("Use of direct result from Piwigo API.");
+    console.error(
+      "Local storage error:",
+      e,
+      "Use of direct result from Piwigo API.",
+    );
   }
 };
 
@@ -287,7 +285,7 @@ AbstractSelectizer.prototype._selectize = function (
       if (el.hasAttribute("data-create")) {
         options.create = true;
       }
-      instance.settings.create = !!options.create;
+      instance.settings.create = Boolean(options.create);
 
       // load options
       instance.load(function (callback) {
@@ -365,9 +363,9 @@ AbstractSelectizer.prototype._selectize = function (
 // redefine Selectize templates without escape
 AbstractSelectizer.getRender = function <U extends Record<string, unknown>>(
   field_label: string,
-  lang: { Add?: string } | undefined,
+  rawLang: { Add?: string } | undefined,
 ) {
-  lang = lang || { Add: "Add" };
+  const lang = rawLang ?? { Add: "Add" };
 
   return {
     option: function (data: U, _escape: unknown) {
@@ -407,7 +405,7 @@ const CategoriesCache = function (
       url: options.rootUrl + "api/v1/categories",
       dataType: "json",
       success: function (
-        data: import("../../../../openapi/client/schema").operations["categoryList"]["responses"][200]["content"]["application/json"],
+        data: operations["categoryList"]["responses"][200]["content"]["application/json"],
       ) {
         const cats: ProcessedCategory[] = data.categories.map(function (c, i) {
           const { comment: _comment, uppercats: _uppercats, ...rest } = c;
@@ -432,9 +430,9 @@ CategoriesCache.prototype =
 CategoriesCache.prototype.selectize = function (
   this: EntityCacheInstance<ProcessedCategory>,
   targets: Element | ArrayLike<Element>,
-  options?: EntitySelectizeCallOptions,
+  rawOptions?: EntitySelectizeCallOptions,
 ) {
-  options = options || {};
+  const options = rawOptions ?? {};
 
   toElements(targets).forEach((el) => {
     createSelectize(el, {
@@ -469,7 +467,7 @@ const TagsCache = function (
       url: options.rootUrl + "api/v1/tags",
       dataType: "json",
       success: function (
-        data: import("../../../../openapi/client/schema").operations["tagList"]["responses"][200]["content"]["application/json"],
+        data: operations["tagList"]["responses"][200]["content"]["application/json"],
       ) {
         const tags: ProcessedTag[] = data.tags.map(function (t) {
           const { urlName: _urlName, lastmodified: _lastmodified, ...rest } = t;
@@ -494,9 +492,9 @@ TagsCache.prototype =
 TagsCache.prototype.selectize = function (
   this: EntityCacheInstance<ProcessedTag>,
   targets: Element | ArrayLike<Element>,
-  options?: EntitySelectizeCallOptions,
+  rawOptions?: EntitySelectizeCallOptions,
 ) {
-  options = options || {};
+  const options = rawOptions ?? {};
 
   toElements(targets).forEach((el) => {
     createSelectize(el, {
@@ -531,7 +529,7 @@ const GroupsCache = function (
       url: options.rootUrl + "api/v1/groups",
       dataType: "json",
       success: function (
-        data: import("../../../../openapi/client/schema").operations["groupList"]["responses"][200]["content"]["application/json"],
+        data: operations["groupList"]["responses"][200]["content"]["application/json"],
       ) {
         const groups: ProcessedGroup[] = data.groups.map(function (g) {
           const { lastmodified: _lastmodified, ...rest } = g;
@@ -556,9 +554,9 @@ GroupsCache.prototype =
 GroupsCache.prototype.selectize = function (
   this: EntityCacheInstance<ProcessedGroup>,
   targets: Element | ArrayLike<Element>,
-  options?: EntitySelectizeCallOptions,
+  rawOptions?: EntitySelectizeCallOptions,
 ) {
-  options = options || {};
+  const options = rawOptions ?? {};
 
   toElements(targets).forEach((el) => {
     createSelectize(el, {
@@ -597,12 +595,12 @@ const UsersCache = function (
         url: options.rootUrl + "api/v1/users?perPage=9999&page=" + page,
         dataType: "json",
         success: function (
-          data: import("../../../../openapi/client/schema").operations["userList"]["responses"][200]["content"]["application/json"],
+          data: operations["userList"]["responses"][200]["content"]["application/json"],
         ) {
           users = users.concat(data.users);
 
           if (data.users.length == data.perPage) {
-            load(++page);
+            load(page + 1);
           } else {
             callback(users);
           }
@@ -624,9 +622,9 @@ UsersCache.prototype =
 UsersCache.prototype.selectize = function (
   this: EntityCacheInstance<UserEntity>,
   targets: Element | ArrayLike<Element>,
-  options?: EntitySelectizeCallOptions,
+  rawOptions?: EntitySelectizeCallOptions,
 ) {
-  options = options || {};
+  const options = rawOptions ?? {};
 
   toElements(targets).forEach((el) => {
     createSelectize(el, {

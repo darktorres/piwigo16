@@ -228,9 +228,7 @@ export function ajax<T = unknown>(options: AjaxOptions<T>): AjaxThenable {
   // jQuery's default contentType. `contentType: false` suppresses the header
   // entirely, which is what a FormData upload needs.
   const contentType =
-    options.contentType === undefined
-      ? "application/x-www-form-urlencoded; charset=UTF-8"
-      : options.contentType;
+    options.contentType ?? "application/x-www-form-urlencoded; charset=UTF-8";
 
   if (options.data !== undefined && options.data !== null) {
     const serialized = isPlainObject(options.data)

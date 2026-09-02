@@ -46,6 +46,7 @@ import {
   val,
 } from "../../../default/js/vendor/dom";
 import { tipTip } from "../../../default/js/vendor/tiptip";
+import type { operations } from "../../../../openapi/client/schema";
 
 /* ********** Thumbs */
 
@@ -278,7 +279,7 @@ export const derivatives: Derivatives = {
   finished: function () {
     return (
       derivatives.done == derivatives.total &&
-      !!derivatives.elements &&
+      derivatives.elements !== null &&
       derivatives.elements.length == 0
     );
   },
@@ -348,7 +349,7 @@ export function getDerivativeUrls(queue: AjaxQueue) {
     data: JSON.stringify(params),
     dataType: "json",
     success: function (
-      responseData: import("../../../../openapi/client/schema").operations["imageMissingDerivatives"]["responses"][200]["content"]["application/json"],
+      responseData: operations["imageMissingDerivatives"]["responses"][200]["content"]["application/json"],
     ) {
       derivatives.total += responseData.urls.length;
       html(
@@ -478,7 +479,7 @@ let elements: (string | number)[] | undefined;
 // kept as jQuery -- "click" isn't a library-only event, so this isn't
 // one of the genuine widget exceptions.
 on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
-  if (typeof elements != "undefined") {
+  if (typeof elements !== "undefined") {
     return;
   }
 
@@ -554,7 +555,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
           }),
           dataType: "json",
           success: function (
-            responseData: import("../../../../openapi/client/schema").operations["imageSyncMetadata"]["responses"][200]["content"]["application/json"],
+            responseData: operations["imageSyncMetadata"]["responses"][200]["content"]["application/json"],
           ) {
             todo += thisBatchSize;
             if (responseData.nbSynchronized != thisBatchSize) {
@@ -667,7 +668,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
         }),
         dataType: "json",
         success: function (
-          responseData: import("../../../../openapi/client/schema").operations["imageDelete"]["responses"][200]["content"]["application/json"],
+          responseData: operations["imageDelete"]["responses"][200]["content"]["application/json"],
         ) {
           todo += thisBatchSize;
           if (responseData.deletedCount != thisBatchSize) {
@@ -782,7 +783,7 @@ function add_md5sum_block(blockSize?: number) {
       blockSize: blockSize,
     }),
     success: function (
-      responseData: import("../../../../openapi/client/schema").operations["imageSetMd5sum"]["responses"][200]["content"]["application/json"],
+      responseData: operations["imageSetMd5sum"]["responses"][200]["content"]["application/json"],
     ) {
       html(
         document.querySelectorAll("#md5sum_to_add"),
@@ -858,7 +859,7 @@ function delete_orphans_block(blockSize?: number) {
     }),
     dataType: "json",
     success: function (
-      responseData: import("../../../../openapi/client/schema").operations["imageDeleteOrphans"]["responses"][200]["content"]["application/json"],
+      responseData: operations["imageDeleteOrphans"]["responses"][200]["content"]["application/json"],
     ) {
       html(
         document.querySelectorAll("#orphans_to_delete"),

@@ -15,6 +15,7 @@ import {
   ready,
   val,
 } from "../../../default/js/vendor/dom";
+import type { operations } from "../../../../openapi/client/schema";
 
 const piwigo_need_update_msg =
   '<a href="admin.php?page=updates">' +
@@ -55,7 +56,7 @@ ready(function () {
       dataType: "json",
       timeout: 5000,
       success: function (
-        data: import("../../../../openapi/client/schema").operations["extensionsCheckUpdates"]["responses"][200]["content"]["application/json"],
+        data: operations["extensionsCheckUpdates"]["responses"][200]["content"]["application/json"],
       ) {
         const piwigo_update = data["piwigoNeedUpdate"];
         const ext_update = data["extNeedUpdate"];

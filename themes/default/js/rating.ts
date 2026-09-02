@@ -92,7 +92,7 @@ function makeNiceRatingForm(options: PwgRatingOptions) {
     // own `e` silently typed as `Event` before, `any` (a real
     // `noImplicitAny` error) after.
     pwgAddEventListener(rateButton, "mouseover", function (e: Event) {
-      const target = (e.target ?? e.srcElement) as RatingButton;
+      const target = e.target as RatingButton;
       updateRatingStarDisplay(target.initialRateValue);
     });
   }
@@ -108,7 +108,7 @@ function updateRatingStarDisplay(userRating: string) {
 }
 
 function updateRating(e: Event) {
-  const rateButton = (e.target || e.srcElement) as RatingButton;
+  const rateButton = e.target as RatingButton;
   if (rateButton.initialRateValue == gUserRating) return false; //nothing to do
 
   for (let i = 0; i < gRatingButtons.length; i++)
@@ -154,7 +154,7 @@ function updateRating(e: Event) {
   // comment for why a bare (or `var`-declared) reference to this same
   // global breaks once every P46 entry is wrapped in its own IIFE.
   if (
-    typeof window._pwgRatingAutoQueue != "undefined" &&
+    typeof window._pwgRatingAutoQueue !== "undefined" &&
     window._pwgRatingAutoQueue.length
   ) {
     for (let i = 0; i < window._pwgRatingAutoQueue.length; i++)

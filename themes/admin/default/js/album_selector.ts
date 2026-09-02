@@ -36,6 +36,7 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
+import type { operations } from "../../../../openapi/client/schema";
 import {
   addClass,
   after,
@@ -66,15 +67,13 @@ import {
 
 // Real shapes for the 2 real GET endpoints this file's own #methodPwg
 // switches between (admin mode: /categories; non-admin: /categories/available),
-// via the existing OpenAPI schema. Kept as top-level `type X = import(...)`
-// aliases -- real `import(...)` type-only references, distinct from this
-// file's own real `export`s below.
+// via the existing OpenAPI schema.
 type CategoryAdmin =
-  import("../../../../openapi/client/schema").operations["categoryList"]["responses"][200]["content"]["application/json"]["categories"][number];
+  operations["categoryList"]["responses"][200]["content"]["application/json"]["categories"][number];
 type CategoryAvailable =
-  import("../../../../openapi/client/schema").operations["categoryAvailableList"]["responses"][200]["content"]["application/json"]["categories"][number];
+  operations["categoryAvailableList"]["responses"][200]["content"]["application/json"]["categories"][number];
 type LimitInfo =
-  import("../../../../openapi/client/schema").operations["categoryList"]["responses"][200]["content"]["application/json"]["limit"];
+  operations["categoryList"]["responses"][200]["content"]["application/json"]["limit"];
 // CategoryAdmin's own OpenAPI schema omits `nbCategories` entirely
 // (a real documentation gap, not fixed here -- out of this phase's own
 // scope) even though CategoryListController.php's own non-recursive
@@ -91,8 +90,8 @@ type AlbumCategory = (CategoryAdmin | CategoryAvailable) & {
 // though CategoryAvailable's own schema marks it optional (conditional
 // on that same param).
 type CategoryListOrAvailableResponse =
-  | import("../../../../openapi/client/schema").operations["categoryList"]["responses"][200]["content"]["application/json"]
-  | import("../../../../openapi/client/schema").operations["categoryAvailableList"]["responses"][200]["content"]["application/json"];
+  | operations["categoryList"]["responses"][200]["content"]["application/json"]
+  | operations["categoryAvailableList"]["responses"][200]["content"]["application/json"];
 
 const str_plus_albums_found = pwg_getPageString(
   "Only the first %d albums are displayed, out of %d.",
@@ -899,7 +898,7 @@ export class AlbumSelector {
       },
       error: function (e) {
         hide(q(".linkedAlbumPopInContainer .searching"));
-        console.log("error : ", e.responseText);
+        console.error("error : ", e.responseText);
       },
     });
   }
@@ -925,7 +924,7 @@ export class AlbumSelector {
         this.#prefill_results(cat_id, cats, limit);
       },
       error: (e) => {
-        console.log("prefill search error :", e);
+        console.error("prefill search error :", e);
       },
     });
   }
@@ -973,7 +972,7 @@ export class AlbumSelector {
       },
       error: (e) => {
         hide(AlbumSelector.selectors.iconSearchingSpin);
-        console.log(e.responseText);
+        console.error(e.responseText);
       },
     });
   }
@@ -985,7 +984,7 @@ export class AlbumSelector {
     const cat_position = val(q("input[name=position]:checked"));
     const api_params = {
       name: cat_name,
-      parentId: cat_id === "root" ? 0 : +cat_id,
+      parentId: cat_id === "root" ? 0 : Number(cat_id),
       position: cat_position,
     };
 
@@ -1005,7 +1004,7 @@ export class AlbumSelector {
       dataType: "json",
       success: (payload) => {
         const data =
-          payload as import("../../../../openapi/client/schema").operations["categoryCreate"]["responses"][201]["content"]["application/json"];
+          payload as operations["categoryCreate"]["responses"][201]["content"]["application/json"];
         this.#get_album_by_id(data.id);
       },
       error: () => {
@@ -1024,7 +1023,7 @@ export class AlbumSelector {
       },
       success: (payload) => {
         const data =
-          payload as import("../../../../openapi/client/schema").operations["categoryList"]["responses"][200]["content"]["application/json"];
+          payload as operations["categoryList"]["responses"][200]["content"]["application/json"];
         this.#select_new_album_and_close(data.categories[0]!);
       },
       error: () => {

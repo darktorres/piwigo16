@@ -1,3 +1,4 @@
+import { defineConfig } from "eslint/config";
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import globals from "globals";
@@ -5,7 +6,10 @@ import globals from "globals";
 // Prettier is deliberately NOT wired in here (no eslint-plugin-prettier) — same
 // separation of concerns P0 kept between ECS (style) and PHPStan (correctness).
 // `bun run format` runs Prettier standalone; this config is lint rules only.
-export default tseslint.config(
+// `defineConfig()` (ESLint core), not `tseslint.config()` -- the latter is
+// deprecated in favor of the former now that ESLint core provides the same
+// config-flattening/`extends` support natively.
+export default defineConfig(
   {
     ignores: [
       "dist/**",
@@ -108,11 +112,9 @@ export default tseslint.config(
     // `AlbumSelectorCallbackArgs.addSelectedAlbum`'s own real variadic
     // passthrough.
     files: [
-      "themes/default/js/search_filters.ts",
       "themes/default/js/mcs.ts",
       "themes/admin/default/js/history.ts",
       "themes/admin/default/js/common.ts",
-      "themes/admin/default/js/datepicker.ts",
       "themes/standard_pages/js/profile.ts",
       "build/ambient-globals.d.ts",
     ],
@@ -126,18 +128,14 @@ export default tseslint.config(
     },
   },
   {
-    // KNOWN GAP, measured rather than assumed: the base rules in the
-    // plain-JS block above (`eqeqeq`, `no-console`, `no-implicit-coercion`,
-    // `no-param-reassign`) are scoped to `**/*.{js,mjs,cjs}`, which is 8
-    // tooling files. The 93 `.ts` files that are the actual application get
-    // none of them. Turning them on for `.ts` costs, measured: eqeqeq 389,
-    // no-console 56, no-param-reassign 31, no-implicit-coercion 22.
-    //
-    // `eqeqeq` is the one worth real work, and it is not a mechanical
-    // `==` -> `===` sweep: several comparisons here are deliberately loose
-    // because an id arrives as a number from one endpoint and a string from
-    // another (album_selector's `c.id != cat_id`), so each site needs
-    // reading. Its own commit, not a rider on a config change.
+    // P51-A: the 14.x branch's own hardened ruleset (`git show
+    // origin/14.x:eslint.config.js`), adopted here now that P49 (jQuery
+    // removal) has landed -- the rules `strictTypeChecked` left opted out
+    // above were each blocked on exactly that. Also closes the gap the
+    // plain-JS block's `eqeqeq`/`no-console`/`no-implicit-coercion`/
+    // `no-param-reassign` never reached: those rules were scoped to
+    // `**/*.{js,mjs,cjs}` (8 tooling files), never extended to the 108
+    // real `.ts` files that are the actual application.
     // Match the plain-JS block's own `^_`-prefixed-means-intentionally-
     // unused convention (see the `no-unused-vars` rule above) --
     // `recommendedTypeChecked` enables `@typescript-eslint/no-unused-vars`
@@ -145,46 +143,35 @@ export default tseslint.config(
     // with the rest of this config once .ts files exist to lint (P46-B).
     files: ["**/*.ts"],
     rules: {
-      // `strictTypeChecked` above turns on ~20 rules beyond
-      // `recommendedTypeChecked`, and the tree is clean under all of them
-      // except the five opted out here. Each carries the violation count
-      // measured when it was disabled, so the cost of adopting it later is
-      // a fact rather than a guess -- and so a future reader can tell a
-      // deliberate exclusion from an unexamined one.
+      // Tracked rather than silenced (14.x: "warn", not "off"). The `!`
+      // assertion is this codebase's normal way of stating an invariant
+      // the type system cannot see (a template always renders the
+      // element, an id is always in range), usually with a comment.
+      // Banning it outright would replace real assertions with `as`
+      // casts, which are strictly worse: they also silence genuine type
+      // errors.
+      "@typescript-eslint/no-non-null-assertion": "warn",
 
-      // 464 violations. The `!` assertion is this codebase's normal way of
-      // stating an invariant the type system cannot see (a template always
-      // renders the element, an id is always in range), usually with a
-      // comment. Banning it would replace them with `as` casts, which are
-      // strictly worse: they also silence genuine type errors.
-      "@typescript-eslint/no-non-null-assertion": "off",
+      "@typescript-eslint/restrict-plus-operands": "error",
 
-      // 396. Almost entirely `"text " + number` when building markup or a
-      // URL, which is idiomatic and safe.
-      "@typescript-eslint/restrict-plus-operands": "off",
+      "@typescript-eslint/restrict-template-expressions": [
+        "error",
+        { allowNumber: true, allowBoolean: false, allowNullish: false },
+      ],
 
-      // 251, and essentially all of them are jQuery APIs that P49 is in the
-      // middle of removing. Worth revisiting once that phase lands, when
-      // the count should be near zero on its own.
-      "@typescript-eslint/no-deprecated": "off",
+      // Real modern-DOM-API replacements now that jQuery (and the ambient
+      // vendor typings it needed) is gone (P49): `keyCode`/`which` ->
+      // `event.key`/`event.code`, `srcElement` -> `event.target`,
+      // `window.event` -> an explicit event parameter, `substr` ->
+      // `.slice()`/`.substring()`, `unescape` -> `decodeURIComponent`.
+      "@typescript-eslint/no-deprecated": "error",
 
-      // 58. `${number}` in a template literal; noise here.
-      "@typescript-eslint/restrict-template-expressions": "off",
-
-      // 44, and it is the one rule on this list that is *unsafe* to act on
-      // here rather than merely noisy. It trusts the declared types, and
-      // this codebase's types are partly assertions -- `!` in 464 places,
-      // `as` casts, and ambient declarations for jQuery plugins with no
-      // real type source. "Always truthy according to the type" is
-      // therefore not "always truthy at runtime", and the fixes it asks for
-      // delete real runtime guards: `toaster.ts`'s check that its caller
-      // passed a text and an icon, `addAlbum.ts`'s check that the plugin
-      // was given a cache. It also produces outright false positives
-      // against closure mutation -- it reports `dom.ts`'s `if (stopped)` as
-      // always false, though `stopped` is set by the `stopPropagation`
-      // wrapper installed a few lines above. Revisit when the ambient
-      // jQuery declarations are gone.
-      "@typescript-eslint/no-unnecessary-condition": "off",
+      // Read per-site, not blanket-suppressed: some are real bugs the
+      // same way P47/P49 found them this way; a genuine false positive
+      // from closure mutation (documented at its one confirmed site,
+      // `dom.ts`'s `stopped` check) gets a targeted, commented
+      // `eslint-disable-next-line`, never a default off.
+      "@typescript-eslint/no-unnecessary-condition": "error",
 
       "@typescript-eslint/no-unused-vars": [
         "warn",
@@ -195,6 +182,32 @@ export default tseslint.config(
           caughtErrorsIgnorePattern: "^_",
         },
       ],
+
+      eqeqeq: ["error", "always", { null: "ignore" }],
+      "no-console": ["error", { allow: ["warn", "error"] }],
+      "no-implicit-coercion": "error",
+      "no-param-reassign": ["error", { props: false }],
+      "prefer-const": "error",
+      "@typescript-eslint/prefer-nullish-coalescing": [
+        "error",
+        { ignorePrimitives: { string: true } },
+      ],
+      "@typescript-eslint/no-confusing-void-expression": "error",
+      "@typescript-eslint/no-invalid-void-type": [
+        "error",
+        { allowAsThisParameter: true },
+      ],
+
+      // Beyond 14.x's own ruleset -- `tsconfig.json` already sets
+      // `isolatedModules: true`, which `consistent-type-imports` directly
+      // supports (a type-only import re-exported as a value would break
+      // isolated per-file transpilation).
+      "@typescript-eslint/consistent-type-imports": [
+        "error",
+        { fixStyle: "inline-type-imports" },
+      ],
+      "@typescript-eslint/consistent-type-exports": "error",
+      "@typescript-eslint/no-import-type-side-effects": "error",
     },
   },
 );

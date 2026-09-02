@@ -33,7 +33,7 @@ export function coerceDataAttribute(raw: string): unknown {
   if (raw === "true") return true;
   if (raw === "false") return false;
   if (raw === "null") return null;
-  if (+raw + "" === raw) return +raw;
+  if (String(Number(raw)) === raw) return Number(raw);
 
   if (/^(?:\{[\w\W]*\}|\[[\w\W]*\])$/.test(raw)) {
     try {
@@ -193,7 +193,7 @@ export function defaultDisplay(nodeName: string): string {
 
     const frameDoc = iframe.contentWindow?.document;
     if (frameDoc !== undefined) {
-      frameDoc.write("");
+      frameDoc.open();
       frameDoc.close();
       display = actualDisplay(nodeName, frameDoc);
     }

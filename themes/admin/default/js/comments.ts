@@ -32,6 +32,7 @@ import {
   trigger,
   val,
 } from "../../../default/js/vendor/dom";
+import type { operations } from "../../../../openapi/client/schema";
 export {};
 
 const str_yes_delete_confirmation = pwg_getPageString("Yes, delete");
@@ -95,7 +96,7 @@ const commentsSelectedList =
 // The real shape of the GET api/v1/comments response (CommentListController.php),
 // via the existing OpenAPI schema.
 type CommentListResponse =
-  import("../../../../openapi/client/schema").operations["commentList"]["responses"][200]["content"]["application/json"];
+  operations["commentList"]["responses"][200]["content"]["application/json"];
 type CommentEntry = CommentListResponse["comments"][number];
 
 interface CommentsFilterParams {
@@ -279,7 +280,7 @@ function getComments(params: CommentsFilterParams) {
       delete commentsParams.search;
     },
     error: (e) => {
-      console.log(e);
+      console.error(e);
       alert({
         title: str_an_error_has,
         content: "",
@@ -688,7 +689,7 @@ function validateComment(id: (string | number)[]) {
     }),
     dataType: "json",
     success: function (
-      _data: import("../../../../openapi/client/schema").operations["commentValidate"]["responses"][200]["content"]["application/json"],
+      _data: operations["commentValidate"]["responses"][200]["content"]["application/json"],
     ) {
       alert({
         title: idLenght > 1 ? str_comments_validated : str_comment_validated,
@@ -698,7 +699,7 @@ function validateComment(id: (string | number)[]) {
       getComments(commentsParams);
     },
     error: function (e) {
-      console.log(e);
+      console.error(e);
       alert({
         title: str_an_error_has,
         content: "",
@@ -737,12 +738,12 @@ function deleteComment(id: (string | number)[]) {
             }),
             dataType: "json",
             success: function (
-              _data: import("../../../../openapi/client/schema").operations["commentDelete"]["responses"][200]["content"]["application/json"],
+              _data: operations["commentDelete"]["responses"][200]["content"]["application/json"],
             ) {
               getComments(commentsParams);
             },
             error: function (e) {
-              console.log(e);
+              console.error(e);
             },
           });
         },

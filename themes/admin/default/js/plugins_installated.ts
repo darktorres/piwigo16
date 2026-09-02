@@ -129,7 +129,7 @@ function activatePlugin(id: string): void {
       actualizeFilter();
     },
     error: function (e: AjaxResponse) {
-      console.log(e.responseText);
+      console.error(e.responseText);
       stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
       html(
         find(
@@ -243,7 +243,7 @@ function disactivatePlugin(id: string): void {
       actualizeFilter();
     },
     error: function (e: AjaxResponse) {
-      console.log(e);
+      console.error(e);
       stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
       html(
         find(
@@ -291,7 +291,7 @@ function deletePlugin(id: string, name: string): void {
           actualizeFilter();
         },
         error: function (e: AjaxResponse) {
-          console.log(e);
+          console.error(e);
           stop(
             document.querySelectorAll("#" + id + " .pluginNotif"),
             false,
@@ -346,7 +346,7 @@ function restorePlugin(id: string): void {
       );
     },
     error: function (e: AjaxResponse) {
-      console.log(e);
+      console.error(e);
       stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
       html(
         find(
@@ -412,7 +412,7 @@ function uninstallPlugin(id: string): void {
       // @types/jquery's own jqXHR interface); the real server error body
       // is JSON on `.responseText`, matching activatePlugin's own
       // sibling error handler above.
-      console.log(e.responseText);
+      console.error(e.responseText);
     },
   });
 }
@@ -841,7 +841,7 @@ ready(function () {
 
   /*Add the filter research*/
   document.onkeydown = function (e) {
-    if (e.keyCode == 58) {
+    if (e.key === ":") {
       document
         .querySelector<HTMLElement>(".pluginFilter input.search-input")
         ?.focus();

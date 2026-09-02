@@ -132,7 +132,7 @@ ready(function () {
         setTimeout(function () {
           hide(document.querySelectorAll(".info-error"));
         }, 5000);
-        console.log(errorThrows);
+        console.error(errorThrows);
       },
     });
   });
@@ -202,7 +202,7 @@ ready(function () {
         setTimeout(function () {
           hide(document.querySelectorAll(".info-error"));
         }, 5000);
-        console.log(errorThrows);
+        console.error(errorThrows);
       },
     });
 
@@ -231,7 +231,7 @@ ready(function () {
           setTimeout(function () {
             hide(document.querySelectorAll(".info-error"));
           }, 5000);
-          console.log(e.responseText);
+          console.error(e.responseText);
         },
       });
     }
@@ -301,7 +301,7 @@ ready(function () {
             self.setContent(message);
           },
           error: function (message) {
-            console.log(message);
+            console.error(message);
             self.setContent("An error has occured while calculating orphans");
           },
         });
@@ -320,7 +320,7 @@ ready(function () {
               .then(() => (window.location.href = u_delete))
               .catch((err: unknown) => {
                 this.close();
-                console.log(err);
+                console.error(err);
               });
             return false;
           },
@@ -517,7 +517,7 @@ ready(function () {
         }, 5000);
       },
       error: function (e) {
-        console.log(e);
+        console.error(e);
         save_button_set_loading(false);
         show(document.querySelectorAll(".info-error"));
         setTimeout(function () {
@@ -564,7 +564,7 @@ ready(function () {
         }, 5000);
       },
       error: function (e) {
-        console.log(e);
+        console.error(e);
         save_button_set_loading(false);
         show(document.querySelectorAll(".info-error"));
         setTimeout(function () {
@@ -601,9 +601,8 @@ ready(function () {
     }
   });
   on(document, "keyup", function (e: Event) {
-    // 27 is 'Escape'
     if (
-      (e as KeyboardEvent).keyCode === 27 &&
+      (e as KeyboardEvent).key === "Escape" &&
       descModal !== null &&
       isVisible(descModal)
     ) {

@@ -303,13 +303,13 @@ ready(function () {
   updateCertificationFilterLabel(minCertification);
   updateRevisionFilterLabel(0);
 
-  function displayStars(container: Element, rating: number) {
+  function displayStars(container: Element, initialRating: number) {
     addClass(find(container, "span"), "icon-star-empty");
     find(container, "span i").forEach((el) => {
       el.className = "";
     });
 
-    rating = Math.round(rating * 2);
+    let rating = Math.round(initialRating * 2);
 
     // Attribute selector values are quoted here -- unlike Sizzle (jQuery's
     // selector engine), which tolerates an unquoted value starting with a

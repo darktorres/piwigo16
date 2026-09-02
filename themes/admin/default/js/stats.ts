@@ -91,12 +91,19 @@ interface StatData {
 // one. `readData()` (vendor/dom.ts) reproduces that same coercion natively
 // (P49-C).
 const dataElement = document.getElementById("data")!;
+// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- deliberate placeholder, immediately filled in below by real readData() calls before any other code can observe it.
 const data = {} as StatData;
+// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- readData() reads this server-rendered #data element's own JSON-object attribute, never adversarial input.
 data["hours"] = readData(dataElement, "hours") as StatDataPoint;
+// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- readData() reads this server-rendered #data element's own JSON-object attribute, never adversarial input.
 data["days"] = readData(dataElement, "days") as StatDataPoint;
+// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- readData() reads this server-rendered #data element's own JSON-object attribute, never adversarial input.
 data["months"] = readData(dataElement, "months") as StatDataPoint;
+// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- readData() reads this server-rendered #data element's own JSON-object attribute, never adversarial input.
 data["years"] = readData(dataElement, "years") as StatDataPoint;
+// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- readData() reads this server-rendered #data element's own JSON-object attribute, never adversarial input.
 data["compare-years"] = readData(dataElement, "compare-years") as StatDataPoint;
+// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- readData() reads this server-rendered #data element's own JSON-object attribute, never adversarial input.
 data["month-stats"] = readData(dataElement, "month-stats") as {
   month: StatDataPoint[];
   avg: number;
@@ -114,7 +121,7 @@ let compareMode = false;
 /*-------
 Creating graph
 -------*/
-const canvas = document.getElementById("stat-graph") as HTMLCanvasElement;
+const canvas = document.querySelector<HTMLCanvasElement>("#stat-graph")!;
 const chart = new LineChart(canvas, locale);
 
 const LINE_COLOR = "#FFA646";
@@ -243,58 +250,64 @@ function selectedDataType(): DataType {
     ".stat-data-selector input:checked + label",
   )!;
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- readData() reads this label's own data-value attribute, this same app's own template writes it, never adversarial input.
   return readData(label, "value") as DataType;
 }
 
 function checkbox(id: string): HTMLInputElement | null {
-  return document.getElementById(id) as HTMLInputElement | null;
+  return document.querySelector<HTMLInputElement>("#" + id);
 }
 
 //Event listener
 document.querySelectorAll(".stat-data-selector label").forEach((label) => {
   label.addEventListener("click", function () {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- readData() reads this label's own data-value attribute, this same app's own template writes it, never adversarial input.
     const dataType = readData(label, "value") as DataType;
     changeData(dataType);
   });
 });
 
-document.querySelectorAll(".stat-compare-mode input").forEach((input) => {
-  input.addEventListener("change", function () {
-    compareMode = (input as HTMLInputElement).checked;
+document
+  .querySelectorAll<HTMLInputElement>(".stat-compare-mode input")
+  .forEach((input) => {
+    input.addEventListener("change", function () {
+      compareMode = input.checked;
 
-    const unavailable = document.querySelectorAll(
-      "#hours-selector + label, #days-selector + label",
-    );
+      const unavailable = document.querySelectorAll(
+        "#hours-selector + label, #days-selector + label",
+      );
 
-    if (compareMode) {
-      unavailable.forEach((label) => {
-        label.classList.add("unavailable");
-      });
-      if (
-        checkbox("hours-selector")?.checked === true ||
-        checkbox("days-selector")?.checked === true
-      ) {
-        const years = checkbox("years-selector");
-        if (years !== null) {
-          years.checked = true;
+      if (compareMode) {
+        unavailable.forEach((label) => {
+          label.classList.add("unavailable");
+        });
+        if (
+          checkbox("hours-selector")?.checked === true ||
+          checkbox("days-selector")?.checked === true
+        ) {
+          const years = checkbox("years-selector");
+          if (years !== null) {
+            years.checked = true;
+          }
+          document
+            .querySelectorAll<HTMLInputElement>(
+              "#hours-selector, #days-selector",
+            )
+            .forEach((selector) => {
+              selector.checked = false;
+            });
+          changeData("years");
+        } else {
+          changeData(selectedDataType());
         }
-        document
-          .querySelectorAll<HTMLInputElement>("#hours-selector, #days-selector")
-          .forEach((selector) => {
-            selector.checked = false;
-          });
-        changeData("years");
       } else {
+        unavailable.forEach((label) => {
+          label.classList.remove("unavailable");
+        });
         changeData(selectedDataType());
       }
-    } else {
-      unavailable.forEach((label) => {
-        label.classList.remove("unavailable");
-      });
-      changeData(selectedDataType());
-    }
+    });
   });
-});
 
 /*-------
 Initialize the page

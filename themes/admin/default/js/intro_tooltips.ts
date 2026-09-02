@@ -187,7 +187,7 @@ ready(function () {
 /*----------------
 General function
 ----------------*/
-function resizeStorageTooltips(resize: boolean = false) {
+function resizeStorageTooltips(resize = false) {
   document
     .querySelectorAll<HTMLElement>(".storage-chart span")
     .forEach((segment) => {

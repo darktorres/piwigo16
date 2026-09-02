@@ -128,7 +128,7 @@ function searchAlbumByName(
   search: string,
   initialNbResult: number,
   _children?: boolean,
-  name: string = "",
+  name = "",
 ): number {
   let nbResult = initialNbResult;
   for (const c of categories) {

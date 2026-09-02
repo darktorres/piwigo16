@@ -1432,7 +1432,7 @@ function getNumberPages(): number {
   return Math.floor((dataVisible - 1) / per_page) + 1;
 }
 
-function movePage(toRigth: boolean = true): void {
+function movePage(toRigth = true): void {
   removeClass(document.querySelectorAll(".tag-box"), "edit-name");
   if (toRigth) {
     if (actualPage < getNumberPages()) {

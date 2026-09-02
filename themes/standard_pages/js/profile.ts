@@ -537,7 +537,7 @@ function setInfos(
   });
 }
 
-function getAllApiKeys(reset: boolean = false) {
+function getAllApiKeys(reset = false) {
   void ajax({
     url: "api/v1/session/api-keys",
     type: "GET",
@@ -704,11 +704,7 @@ function apiLineEvent() {
   });
 }
 
-function resetSection(
-  selector: string,
-  scroll: boolean = true,
-  maxContent: boolean = false,
-) {
+function resetSection(selector: string, scroll = true, maxContent = false) {
   const element = document.getElementById(selector)!;
   const scrollH = maxContent
     ? "max-content"

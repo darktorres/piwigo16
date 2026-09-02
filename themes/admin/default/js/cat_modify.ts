@@ -243,7 +243,7 @@ ready(function () {
     }
   });
 
-  function save_button_set_loading(state: boolean = true) {
+  function save_button_set_loading(state = true) {
     const icon = document.querySelector("#cat-properties-save i");
     if (icon !== null) {
       if (state) {

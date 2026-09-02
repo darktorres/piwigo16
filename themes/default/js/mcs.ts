@@ -2528,7 +2528,7 @@ ready(function () {
   );
 });
 
-function performSearch(params: Record<string, any>, reload: boolean = false) {
+function performSearch(params: Record<string, any>, reload = false) {
   // PS_params uses snake_case field names (also used elsewhere in this
   // file to drive the active-filter-chip UI) -- translated to
   // POST /api/v1/images/searches's camelCase body shape here, the one

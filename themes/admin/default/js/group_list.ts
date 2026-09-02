@@ -986,7 +986,7 @@ ready(function () {
  -------*/
 let state = "NoSelection";
 
-function updateSelectionPanel(changedState: string = "") {
+function updateSelectionPanel(changedState = "") {
   const numSelect = document.querySelectorAll(".DeleteGroupList div").length;
 
   if (numSelect === 0) {
@@ -1007,7 +1007,7 @@ function updateSelectionPanel(changedState: string = "") {
 /*Update the state of the panel in 5 states :
  NoSelection, OneSelected, ConfirmDeletion, Selection, OptionMerge
  */
-function updateStatePanel(newState: string = "Selection") {
+function updateStatePanel(newState = "Selection") {
   state = newState;
   switch (newState) {
     case "OneSelected":

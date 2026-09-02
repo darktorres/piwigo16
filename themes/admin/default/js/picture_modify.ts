@@ -128,8 +128,10 @@ ready(function () {
     document.querySelectorAll(".related-categories-container"),
     "click",
     (e: Event) => {
-      if ((e.target as Element).classList.contains("remove-item")) {
-        ab.remove_selected_album(attrOf(e.target as Element, "id")!);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real click inside the document always targets an Element (or null), never a bare EventTarget with no Element interface.
+      const target = e.target as Element;
+      if (target.classList.contains("remove-item")) {
+        ab.remove_selected_album(attrOf(target, "id")!);
       }
     },
   );

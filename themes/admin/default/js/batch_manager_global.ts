@@ -178,10 +178,10 @@ ready(function () {
   on(
     document.querySelectorAll("select[name=selectAction]"),
     "change",
-    function (event: Event) {
+    function (this: HTMLSelectElement) {
       hide(document.querySelectorAll("[id^=action_]"));
 
-      const el = event.currentTarget as HTMLSelectElement;
+      const el = this;
       const action = el.value;
       // if (action == 'move') {
       //   action = 'associate';
@@ -205,17 +205,20 @@ ready(function () {
   on(
     document.querySelectorAll(".wrap1 label"),
     "click",
-    function (event: Event) {
-      document.querySelectorAll("input[name=setSelected]").forEach((el) => {
-        (el as HTMLInputElement).checked = false;
-      });
+    function (this: Element) {
+      document
+        .querySelectorAll<HTMLInputElement>("input[name=setSelected]")
+        .forEach((el) => {
+          el.checked = false;
+        });
       trigger(document.querySelectorAll("input[name=setSelected]"), "change");
 
-      const label = event.currentTarget as Element;
+      const label = this;
       const li = label.closest("li");
-      const checkbox = Array.from(label.children).find((child) =>
-        child.matches("input[type=checkbox]"),
-      ) as HTMLInputElement | undefined;
+      const checkbox = Array.from(label.children).find(
+        (child): child is HTMLInputElement =>
+          child.matches("input[type=checkbox]"),
+      );
 
       if (checkbox !== undefined) {
         // Reaches batchManagerGlobal.ts's own enableShiftClick(), whose
@@ -238,9 +241,11 @@ ready(function () {
   );
 
   on(document.querySelectorAll("#selectAll"), "click", function (event: Event) {
-    document.querySelectorAll("input[name=setSelected]").forEach((el) => {
-      (el as HTMLInputElement).checked = false;
-    });
+    document
+      .querySelectorAll<HTMLInputElement>("input[name=setSelected]")
+      .forEach((el) => {
+        el.checked = false;
+      });
     trigger(document.querySelectorAll("input[name=setSelected]"), "change");
     selectPageThumbnails();
     checkPermitAction();
@@ -250,9 +255,10 @@ ready(function () {
 
   function selectPageThumbnails(): void {
     document.querySelectorAll(".thumbnails label").forEach((label) => {
-      const checkbox = Array.from(label.children).find((child) =>
-        child.matches("input[type=checkbox]"),
-      ) as HTMLInputElement | undefined;
+      const checkbox = Array.from(label.children).find(
+        (child): child is HTMLInputElement =>
+          child.matches("input[type=checkbox]"),
+      );
 
       if (checkbox !== undefined) {
         checkbox.checked = true;
@@ -266,15 +272,18 @@ ready(function () {
     document.querySelectorAll("#selectNone"),
     "click",
     function (event: Event) {
-      document.querySelectorAll("input[name=setSelected]").forEach((el) => {
-        (el as HTMLInputElement).checked = false;
-      });
+      document
+        .querySelectorAll<HTMLInputElement>("input[name=setSelected]")
+        .forEach((el) => {
+          el.checked = false;
+        });
       trigger(document.querySelectorAll("input[name=setSelected]"), "change");
 
       document.querySelectorAll(".thumbnails label").forEach((label) => {
-        const checkbox = Array.from(label.children).find((child) =>
-          child.matches("input[type=checkbox]"),
-        ) as HTMLInputElement | undefined;
+        const checkbox = Array.from(label.children).find(
+          (child): child is HTMLInputElement =>
+            child.matches("input[type=checkbox]"),
+        );
 
         if (checkbox !== undefined) {
           if (checkbox.checked) {
@@ -294,15 +303,18 @@ ready(function () {
     document.querySelectorAll("#selectInvert"),
     "click",
     function (event: Event) {
-      document.querySelectorAll("input[name=setSelected]").forEach((el) => {
-        (el as HTMLInputElement).checked = false;
-      });
+      document
+        .querySelectorAll<HTMLInputElement>("input[name=setSelected]")
+        .forEach((el) => {
+          el.checked = false;
+        });
       trigger(document.querySelectorAll("input[name=setSelected]"), "change");
 
       document.querySelectorAll(".thumbnails label").forEach((label) => {
-        const checkbox = Array.from(label.children).find((child) =>
-          child.matches("input[type=checkbox]"),
-        ) as HTMLInputElement | undefined;
+        const checkbox = Array.from(label.children).find(
+          (child): child is HTMLInputElement =>
+            child.matches("input[type=checkbox]"),
+        );
 
         if (checkbox !== undefined) {
           checkbox.checked = !checkbox.checked;
@@ -323,9 +335,11 @@ ready(function () {
 
   on(document.querySelectorAll("#selectSet"), "click", function (event: Event) {
     selectPageThumbnails();
-    document.querySelectorAll("input[name=setSelected]").forEach((el) => {
-      (el as HTMLInputElement).checked = true;
-    });
+    document
+      .querySelectorAll<HTMLInputElement>("input[name=setSelected]")
+      .forEach((el) => {
+        el.checked = true;
+      });
     trigger(document.querySelectorAll("input[name=setSelected]"), "change");
     checkPermitAction();
     event.preventDefault();
@@ -335,11 +349,10 @@ ready(function () {
   on(
     document.querySelectorAll("input[name=setSelected]"),
     "change",
-    function (event: Event) {
-      const el = event.currentTarget as HTMLInputElement;
+    function (this: HTMLInputElement) {
       setVal(
         document.querySelectorAll("input[name=whole_set]"),
-        el.checked ? all_elements.join(",") : "",
+        this.checked ? all_elements.join(",") : "",
       );
     },
   );
@@ -410,11 +423,11 @@ ready(function () {
       derivatives.elements = all_elements;
     } else {
       document
-        .querySelectorAll(".thumbnails input[type=checkbox]:checked")
+        .querySelectorAll<HTMLInputElement>(
+          ".thumbnails input[type=checkbox]:checked",
+        )
         .forEach((el) => {
-          // Checkbox `.value` is always its plain `value` attribute string
-          // (never string[]/undefined) -- never a multi-select.
-          derivatives.elements!.push((el as HTMLInputElement).value);
+          derivatives.elements!.push(el.value);
         });
     }
 
@@ -438,8 +451,8 @@ ready(function () {
   on(
     document.querySelectorAll("select[name=filter_prefilter]"),
     "change",
-    function (event: Event) {
-      const el = event.currentTarget as HTMLSelectElement;
+    function (this: HTMLSelectElement) {
+      const el = this;
 
       toggle(document.querySelectorAll("#empty_caddie"), el.value === "caddie");
       toggle(

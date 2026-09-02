@@ -244,6 +244,8 @@ export default defineConfig(
       "@typescript-eslint/consistent-type-assertions": "error",
       "@typescript-eslint/array-type": "error",
       "@typescript-eslint/class-literal-property-style": "error",
+      "@typescript-eslint/consistent-generic-constructors": "error",
+      "@typescript-eslint/consistent-indexed-object-style": "error",
       // jQuery is fully gone (P49); guard against it ever coming back as
       // a dependency now that nothing in this config would otherwise
       // notice a reintroduced import.

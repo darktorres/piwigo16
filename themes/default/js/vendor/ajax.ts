@@ -335,6 +335,7 @@ export function ajax<T = unknown>(options: AjaxOptions<T>): AjaxThenable {
     const statusText = noContent ? "nocontent" : "success";
     // The cast is the whole of what `T` means: the caller asserted this
     // shape, and neither jQuery nor this checks it.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see comment above.
     options.success?.(data as T, statusText, xhr);
     options.complete?.(xhr, statusText);
 

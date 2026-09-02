@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ajax, AjaxError, param } from "../../../themes/default/js/vendor/ajax";
+import {
+  ajax,
+  AjaxError,
+  param,
+  type AjaxResponse,
+} from "../../../themes/default/js/vendor/ajax";
 
 interface FetchCall {
   url: string;
@@ -166,11 +171,12 @@ describe("ajax() response conversion", () => {
 
   it("gives error handlers responseText, which call sites log", async () => {
     stubFetch(500, "boom", "Server Error");
-    const error = vi.fn();
+    const error =
+      vi.fn<(xhr: AjaxResponse, statusText: string, errorThrown: string) => void>();
 
     await expect(ajax({ url: "x", error })).rejects.toBeDefined();
 
-    const captured = error.mock.calls[0]?.[0] as AjaxError | undefined;
+    const captured = error.mock.calls[0]?.[0];
     expect(captured?.responseText).toBe("boom");
     expect(captured?.status).toBe(500);
   });

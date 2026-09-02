@@ -3992,9 +3992,12 @@ connected_user = pwg_getPageData<number>("connected_user");
 const connected_user_status = pwg_getPageData<string>("connected_user_status");
 let owner_id = pwg_getPageData<number>("owner");
 owner_username = pwg_getPageData<string>("owner_username");
-const groups_arr_name = JSON.parse(
+const parsedGroupsArrName: unknown = JSON.parse(
   pwg_getPageData<string>("groups_arr_name"),
-) as string[];
+);
+const groups_arr_name = Array.isArray(parsedGroupsArrName)
+  ? parsedGroupsArrName.filter((n): n is string => typeof n === "string")
+  : [];
 const groups_arr_id: number[] = pwg_getPageData<string>("groups_arr_id")
   ? pwg_getPageData<string>("groups_arr_id").split(",").map(Number)
   : [];

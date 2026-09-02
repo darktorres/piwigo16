@@ -1556,9 +1556,12 @@ function updateSearchInfo(): void {
 }
 
 const pwg_token = pwg_getPageData<string>("csrf_token");
-const orphan_tag_names = JSON.parse(
+const parsedOrphanTagNames: unknown = JSON.parse(
   pwg_getPageData<string>("orphan_tag_names_array"),
-) as string[];
+);
+const orphan_tag_names = Array.isArray(parsedOrphanTagNames)
+  ? parsedOrphanTagNames.filter((n): n is string => typeof n === "string")
+  : [];
 const str_delete = pwg_getPageString('Delete tag "%s"?');
 const str_delete_tags = pwg_getPageString("Delete tags {%s}?");
 const str_yes_delete_confirmation = pwg_getPageString("Yes, delete");

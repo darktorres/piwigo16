@@ -97,6 +97,7 @@ if (typeof global_params_json !== "undefined") {
   // itself calls ToString on a non-string argument) -- same behavior,
   // just satisfies the stricter real parameter type now that this
   // value's real `string | false` shape is known.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- GlobalSearchParams is the same genuinely heterogeneous, deliberately-not-deep-validated search-filter query object this file's own eslint.config.ts any-relaxation entry already documents.
   global_params = JSON.parse(String(global_params_json)) as GlobalSearchParams;
 }
 
@@ -110,6 +111,7 @@ const fullname_of_cat_json = pwg_getPageData<string | false | null>(
 let fullname_of_cat: Record<string, string>;
 if (typeof fullname_of_cat_json !== "undefined") {
   // Same String(...) coercion note as global_params_json above.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- same genuinely heterogeneous search-filter query object as global_params_json above.
   fullname_of_cat = JSON.parse(String(fullname_of_cat_json)) as Record<
     string,
     string

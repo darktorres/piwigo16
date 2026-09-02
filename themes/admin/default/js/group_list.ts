@@ -1293,11 +1293,10 @@ ready(function () {
     // seeds this storage slot before any handler that reads it can run
     // (the P46-preserved "temporary fix for #1283" behavior, see the
     // module-load call at the bottom of this file).
-    const cached = JSON.parse(
-      (usersCache.storage as unknown as Record<string, string>)[
-        usersCache.key
-      ]!,
-    ) as { data: UserEntity[] };
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- self-write/self-read cache: usersCache's own constructor just seeded this slot synchronously (see comment above).
+    const cached = JSON.parse(usersCache.storage.getItem(usersCache.key)!) as {
+      data: UserEntity[];
+    };
     cached.data.forEach(function (u) {
       selectize.addOption({ value: u.id, text: u.username });
     });
@@ -1567,11 +1566,12 @@ on(document.querySelectorAll(".AddUserBlock button"), "click", function () {
         let username = "undefined";
         // Non-null: same "always-seeded by now" invariant as
         // updateUserSearch()'s own identical read, above.
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- self-write/self-read cache, same reasoning as updateUserSearch()'s own identical read above.
         const cached = JSON.parse(
-          (usersCache.storage as unknown as Record<string, string>)[
-            usersCache.key
-          ]!,
-        ) as { data: UserEntity[] };
+          usersCache.storage.getItem(usersCache.key)!,
+        ) as {
+          data: UserEntity[];
+        };
         cached.data.forEach(function (u) {
           if (u.id === Number(id)) {
             username = u.username;

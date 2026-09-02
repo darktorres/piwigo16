@@ -500,7 +500,10 @@ ready(function () {
           } else {
             let $forms_exts: string[];
             if (imageFormatsExtensions) {
-              $forms_exts = JSON.parse(imageFormatsExtensions) as string[];
+              const parsedExts: unknown = JSON.parse(imageFormatsExtensions);
+              $forms_exts = Array.isArray(parsedExts)
+                ? parsedExts.filter((n): n is string => typeof n === "string")
+                : [];
             } else {
               $forms_exts = [];
             }
@@ -851,6 +854,7 @@ function computeAggregatePercent(files: UploadQueueFile[]) {
 function extractTusErrorDetail(err: Error | TusDetailedError) {
   if ("originalResponse" in err && err.originalResponse) {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- untrusted parsed JSON, verified downstream instead (see the guard right below).
       const body = JSON.parse(
         err.originalResponse.getBody(),
       ) as components["schemas"]["Problem"];
@@ -954,6 +958,7 @@ function uploadNextTusFile(
         operations["uploadPatch"]["responses"][200]["content"]["application/json"]
       > = {};
       try {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified downstream instead (the `result.imageId === undefined` check right below).
         result = JSON.parse(payload.lastResponse.getBody()) as typeof result;
       } catch (_e) {
         // Falls through with result = {}; the !result.imageId check

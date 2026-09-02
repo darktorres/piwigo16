@@ -847,6 +847,7 @@ ready(function () {
         ?.focus();
       return false;
     }
+    return undefined;
   };
 
   on(

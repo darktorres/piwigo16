@@ -220,6 +220,7 @@ ready(function () {
           if (data(el, "isOver")) callback(content);
         },
       });
+      return undefined;
     },
   });
 });

@@ -3430,6 +3430,7 @@ function add_user() {
           return false;
         }
       }
+      return undefined;
     },
     success: (
       data: operations["userCreate"]["responses"][201]["content"]["application/json"],

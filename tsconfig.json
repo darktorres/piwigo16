@@ -11,6 +11,7 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
     "forceConsistentCasingInFileNames": true,
     "verbatimModuleSyntax": true,
     "allowJs": true,

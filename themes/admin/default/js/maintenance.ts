@@ -46,13 +46,11 @@ ready(function () {
       // conversion -- jQuery's `.on()` ignores any return value that is not
       // `false`, so nothing ever observed it. Dropped with the two
       // eslint-disable comments it needed.
-      void ajax({
+      void ajax<CacheSizeResponse>({
         url: "api/v1/cache-size",
         type: "GET",
         dataType: "json",
-        success: function (payload) {
-          const data = payload as CacheSizeResponse;
-
+        success: function (data) {
           const domElemToRefresh = [
             document.querySelectorAll<HTMLElement>(".cache-size-value"),
             document.querySelectorAll<HTMLElement>(".multiple-pictures-sizes"),

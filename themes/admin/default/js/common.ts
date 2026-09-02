@@ -59,8 +59,8 @@ function fontCheckbox(): void {
   on(
     document.querySelectorAll(".font-checkbox input[type=checkbox]"),
     "change",
-    function (event: Event): void {
-      const checkbox = event.currentTarget as Element;
+    function (this: Element): void {
+      const checkbox = this;
       const icon = checkbox.previousElementSibling;
       if (icon !== null) {
         // jQuery's `.removeClass()` with no argument clears every class.
@@ -91,8 +91,8 @@ function fontCheckbox(): void {
   on(
     document.querySelectorAll(".font-checkbox input[type=radio]"),
     "change",
-    function (event: Event): void {
-      const radio = event.currentTarget as Element;
+    function (this: Element): void {
+      const radio = this;
       // Non-null: every real .font-checkbox radio in the template has a
       // `name` attribute.
       const name = attrOf(radio, "name")!;
@@ -164,6 +164,7 @@ export function sprintf(...args: (string | number)[]): string {
     // The first argument is always the format-pattern string, never one
     // of the `%s`/`%d`-substituted values `args`'s own looser type
     // covers -- every real call site passes a literal string here.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified above.
     f = args[i++] as string,
     m: RegExpExecArray | null,
     p: string,

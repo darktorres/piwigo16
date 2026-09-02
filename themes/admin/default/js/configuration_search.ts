@@ -15,17 +15,17 @@ function present(...elements: (HTMLElement | null)[]): HTMLElement[] {
 }
 
 for (const filter_name of filters_names) {
-  const toggle = document.getElementById(
-    filter_name + "Filters",
-  ) as HTMLInputElement | null;
-  const select = document.getElementById(
-    "f" + filter_name + "Select",
-  ) as HTMLSelectElement | null;
+  const toggle = document.querySelector<HTMLInputElement>(
+    "#" + filter_name + "Filters",
+  );
+  const select = document.querySelector<HTMLSelectElement>(
+    "#f" + filter_name + "Select",
+  );
   const arrow = document.getElementById(filter_name + "Arrow");
   const adminIcon = document.getElementById(filter_name + "AdminIcon");
-  const defaultInput = document.getElementById(
-    "default_" + filter_name,
-  ) as HTMLInputElement | null;
+  const defaultInput = document.querySelector<HTMLInputElement>(
+    "#default_" + filter_name,
+  );
   const defaultContainer = defaultInput?.parentElement ?? null;
 
   if (toggle?.checked !== true) {

@@ -69,6 +69,43 @@ interface UserSelectOption extends Record<string, unknown> {
 }
 
 const DELAY_FEEDBACK = 3000;
+
+const pwg_token = pwg_getPageData<string>("csrf_token");
+const str_member_default = pwg_getPageString("member");
+const str_members_default = pwg_getPageString("members");
+const str_group_created = pwg_getPageString("Group added");
+const str_renaming_done = pwg_getPageString("Group renamed");
+const str_name_taken = pwg_getPageString("Name is already taken");
+const str_name_not_empty = pwg_getPageString("Name field must not be empty");
+const str_group_deleted = pwg_getPageString('Group "%s" succesfully deleted');
+const str_groups_deleted = pwg_getPageString("Groups {%s} succesfully deleted");
+const str_set_default = pwg_getPageString("Set as group for new users");
+const str_unset_default = pwg_getPageString("Unset as group for new users");
+const str_delete = pwg_getPageString(
+  'Are you sure you want to delete group "%s"?',
+);
+const str_yes_delete_confirmation = pwg_getPageString("Yes, delete");
+const str_no_delete_confirmation = pwg_getPageString(
+  "No, I have changed my mind",
+);
+const str_user_associated = pwg_getPageString("User associated");
+const str_user_dissociate = pwg_getPageString(
+  "Dissociate user from this group",
+);
+const str_user_dissociated = pwg_getPageString(
+  'User "%s" dissociated from this group',
+);
+const str_user_list = pwg_getPageString("Manage the members");
+const str_merged_into = pwg_getPageString(
+  'Group(s) {%s1} succesfully merged into "%s2"',
+);
+const str_copy = pwg_getPageString(" (copy)");
+const str_other_copy = pwg_getPageString(" (copy %s)");
+
+const serverKey = pwg_getPageData<string>("cache_key_users");
+const serverId = pwg_getPageData<string>("cache_key_hash");
+const rootUrl = pwg_getPageData<string>("root_url");
+
 /*-------
 Group Popin
 -------*/
@@ -127,7 +164,7 @@ on(document.querySelectorAll(".addGroupBlock"), "click", function () {
   }
 });
 
-const deployAddGroupForm = function () {
+function deployAddGroupForm() {
   animate(
     document.querySelectorAll(".addGroupBlock"),
     {
@@ -141,9 +178,9 @@ const deployAddGroupForm = function () {
     },
   );
   isToggle = false;
-};
+}
 
-const hideAddGroupForm = function () {
+function hideAddGroupForm() {
   fadeOut(document.querySelectorAll("#addGroupForm form"), function () {
     animate(
       document.querySelectorAll(".addGroupBlock"),
@@ -155,7 +192,7 @@ const hideAddGroupForm = function () {
     );
   });
   isToggle = true;
-};
+}
 
 /*-------
  Add Group Submit
@@ -243,7 +280,7 @@ ready(function () {
   );
 });
 
-const createGroup = function (group: Group): Element {
+function createGroup(group: Group): Element {
   //Setup the group
   const template = document.getElementById("group-template")!;
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning #group-template, itself a real HTMLElement, always produces an HTMLElement (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
@@ -296,7 +333,7 @@ const createGroup = function (group: Group): Element {
     fadeOut(groupMessage);
   }, DELAY_FEEDBACK);
   return newgroup;
-};
+}
 
 /*-------
  SETUP JS ON GROUP BOX
@@ -306,7 +343,7 @@ ready(function () {
     if (attrOf(groupBox, "id") !== "group-template") setupGroupBox(groupBox);
   });
 });
-const setupGroupBox = function (groupBox: Element) {
+function setupGroupBox(groupBox: Element) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
   const id = data(groupBox, "id") as string | number;
 
@@ -413,12 +450,9 @@ const setupGroupBox = function (groupBox: Element) {
   on(find(groupBox, "#GroupDuplicate"), "click", function () {
     duplicateAction(id);
   });
-};
+}
 
-const toogleSelection = function (
-  group_id: string | number,
-  toggleOn: boolean,
-) {
+function toogleSelection(group_id: string | number, toggleOn: boolean) {
   const groupBox = document.querySelectorAll("#group-" + String(group_id));
   if (toggleOn) {
     setChecked(find(groupBox, ".Group-checkbox input"), true);
@@ -467,10 +501,10 @@ const toogleSelection = function (
       }
     });
   }
-};
+}
 
 /* Group Ajax and Display Functions */
-const deleteGroup = function (id: string | number) {
+function deleteGroup(id: string | number) {
   confirm({
     title: str_delete.replace(
       "%s",
@@ -536,9 +570,9 @@ const deleteGroup = function (id: string | number) {
       },
     },
   });
-};
+}
 
-const renameGroup = function (id: string | number, newName: string) {
+function renameGroup(id: string | number, newName: string) {
   const loadState = new TemporaryState();
   loadState.changeHTML(
     document.querySelectorAll(
@@ -637,13 +671,10 @@ const renameGroup = function (id: string | number, newName: string) {
       fadeOut(groupError);
     }, DELAY_FEEDBACK);
   }
-};
+}
 
 // Hide or display rename form
-const displayRenameForm = function (
-  doDisplay: boolean,
-  grp_id: string | number,
-) {
+function displayRenameForm(doDisplay: boolean, grp_id: string | number) {
   if (doDisplay) {
     css(
       find(
@@ -690,7 +721,7 @@ const displayRenameForm = function (
       1,
     );
   }
-};
+}
 
 const setDefaultGroup = function (id: string | number, is_default: boolean) {
   const groupDefault = document.querySelectorAll(
@@ -755,10 +786,7 @@ const setDefaultGroup = function (id: string | number, is_default: boolean) {
   });
 };
 
-const setupDefaultActions = function (
-  id: string | number,
-  is_default: boolean,
-) {
+function setupDefaultActions(id: string | number, is_default: boolean) {
   attr(
     document.querySelectorAll("#group-" + String(id) + " #GroupDefault"),
     "style",
@@ -855,9 +883,9 @@ const setupDefaultActions = function (
       "click",
     );
   }
-};
+}
 
-const duplicateAction = function (id: string | number) {
+function duplicateAction(id: string | number) {
   const loadState = new TemporaryState();
   loadState.changeHTML(
     document.querySelectorAll("#group-" + String(id) + " #GroupDuplicate"),
@@ -926,7 +954,7 @@ const duplicateAction = function (id: string | number) {
       console.error(err);
     },
   });
-};
+}
 
 /*-------
  Selection mode toggle actions,
@@ -958,7 +986,7 @@ ready(function () {
  -------*/
 let state = "NoSelection";
 
-const updateSelectionPanel = function (changedState: string = "") {
+function updateSelectionPanel(changedState: string = "") {
   const numSelect = document.querySelectorAll(".DeleteGroupList div").length;
 
   if (numSelect === 0) {
@@ -974,12 +1002,12 @@ const updateSelectionPanel = function (changedState: string = "") {
   }
 
   html(document.querySelectorAll(".number-Selected"), String(numSelect));
-};
+}
 
 /*Update the state of the panel in 5 states :
  NoSelection, OneSelected, ConfirmDeletion, Selection, OptionMerge
  */
-const updateStatePanel = function (newState: string = "Selection") {
+function updateStatePanel(newState: string = "Selection") {
   state = newState;
   switch (newState) {
     case "OneSelected":
@@ -1033,20 +1061,20 @@ const updateStatePanel = function (newState: string = "Selection") {
     show(document.querySelectorAll(".SelectionModeGroup"));
     hide(document.querySelectorAll("#nothing-selected"));
   }
-};
+}
 
-const buttonAvailable = function (
+function buttonAvailable(
   button: Element | ArrayLike<Element>,
   onClick: string,
 ) {
   removeClass(button, "unavailable");
   attr(button, "onclick", onClick);
-};
+}
 
-const buttonUnavailable = function (button: Element | ArrayLike<Element>) {
+function buttonUnavailable(button: Element | ArrayLike<Element>) {
   addClass(button, "unavailable");
   removeAttr(button, "onclick");
-};
+}
 
 /*-------
  Merge function on button's pannel
@@ -1327,7 +1355,7 @@ ready(function () {
 });
 
 // Display the user manager for a specific group
-const openUserManager = function (grp_id: string | number) {
+function openUserManager(grp_id: string | number) {
   const loadState = new TemporaryState();
   loadState.removeClass(
     document.querySelectorAll("#group-" + String(grp_id) + " #UserListTrigger"),
@@ -1417,10 +1445,10 @@ const openUserManager = function (grp_id: string | number) {
       console.error(err);
     },
   });
-};
+}
 
 //Add a user block
-const getUserDisplay = function (
+function getUserDisplay(
   username: string,
   user_id: string | number,
   grp_id: string | number,
@@ -1501,7 +1529,7 @@ const getUserDisplay = function (
     });
   });
   return userBlock;
-};
+}
 
 //Update member number function
 function updateMembernumber(number: number, grp_id: string | number) {
@@ -1682,42 +1710,6 @@ on(document.querySelectorAll(".input-user-name"), "input", function () {
     blocks.item(blocks.length - 1)?.remove();
   }
 });
-
-const pwg_token = pwg_getPageData<string>("csrf_token");
-const str_member_default = pwg_getPageString("member");
-const str_members_default = pwg_getPageString("members");
-const str_group_created = pwg_getPageString("Group added");
-const str_renaming_done = pwg_getPageString("Group renamed");
-const str_name_taken = pwg_getPageString("Name is already taken");
-const str_name_not_empty = pwg_getPageString("Name field must not be empty");
-const str_group_deleted = pwg_getPageString('Group "%s" succesfully deleted');
-const str_groups_deleted = pwg_getPageString("Groups {%s} succesfully deleted");
-const str_set_default = pwg_getPageString("Set as group for new users");
-const str_unset_default = pwg_getPageString("Unset as group for new users");
-const str_delete = pwg_getPageString(
-  'Are you sure you want to delete group "%s"?',
-);
-const str_yes_delete_confirmation = pwg_getPageString("Yes, delete");
-const str_no_delete_confirmation = pwg_getPageString(
-  "No, I have changed my mind",
-);
-const str_user_associated = pwg_getPageString("User associated");
-const str_user_dissociate = pwg_getPageString(
-  "Dissociate user from this group",
-);
-const str_user_dissociated = pwg_getPageString(
-  'User "%s" dissociated from this group',
-);
-const str_user_list = pwg_getPageString("Manage the members");
-const str_merged_into = pwg_getPageString(
-  'Group(s) {%s1} succesfully merged into "%s2"',
-);
-const str_copy = pwg_getPageString(" (copy)");
-const str_other_copy = pwg_getPageString(" (copy %s)");
-
-const serverKey = pwg_getPageData<string>("cache_key_users");
-const serverId = pwg_getPageData<string>("cache_key_hash");
-const rootUrl = pwg_getPageData<string>("root_url");
 
 on(document, "keydown", function (e: Event) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.

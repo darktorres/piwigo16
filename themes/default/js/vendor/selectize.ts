@@ -154,6 +154,7 @@ export function selectize<
   // methods are built) so the click/event handlers registered before
   // that point -- which only ever run later, on real user interaction
   // -- can reference the same instance without a forward-reference.
+  // eslint-disable-next-line prefer-const -- deliberately `let`: a real object literal this large has no safe placeholder value to initialize with here, and the whole point of this declaration is the single, deferred assignment below.
   let instance: SelectizeInstance<T, U>;
 
   const options: Record<string, U> = {};

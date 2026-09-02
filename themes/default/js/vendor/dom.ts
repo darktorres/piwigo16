@@ -259,6 +259,26 @@ function showHide(
   });
 }
 
+/**
+ * `genFx("show", true)` -- what `.show(duration)`, `.hide(duration)` and
+ * `.toggle(duration)` animate. Not just opacity and not just height: the
+ * element's whole box collapses, margins and padding included, which is why
+ * it reads as a fold rather than a fade.
+ */
+const SHOW_PROPS = [
+  "height",
+  "width",
+  "opacity",
+  "marginTop",
+  "marginRight",
+  "marginBottom",
+  "marginLeft",
+  "paddingTop",
+  "paddingRight",
+  "paddingBottom",
+  "paddingLeft",
+];
+
 /** `$(el).show()`. */
 export function show(
   target: Element | ArrayLike<Element>,
@@ -932,26 +952,6 @@ export function stop(
 // left `display:none` with its opacity intact rather than stranded at 0.
 
 /** Vertical box properties a slide animates, per `genFx()`. */
-/**
- * `genFx("show", true)` -- what `.show(duration)`, `.hide(duration)` and
- * `.toggle(duration)` animate. Not just opacity and not just height: the
- * element's whole box collapses, margins and padding included, which is why
- * it reads as a fold rather than a fade.
- */
-const SHOW_PROPS = [
-  "height",
-  "width",
-  "opacity",
-  "marginTop",
-  "marginRight",
-  "marginBottom",
-  "marginLeft",
-  "paddingTop",
-  "paddingRight",
-  "paddingBottom",
-  "paddingLeft",
-];
-
 const SLIDE_PROPS = [
   "height",
   "marginTop",

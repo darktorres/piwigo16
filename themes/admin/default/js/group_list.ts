@@ -44,7 +44,6 @@ import {
   trigger,
   val,
 } from "../../../default/js/vendor/dom";
-export {};
 
 // `UserEntity`/`EntityCacheInstance<T>` are LocalStorageCache.ts's own
 // real exported types now (docs/PLAN.md P48, that file's own module

@@ -321,12 +321,12 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
       this.renderFileList();
     });
     this.bind("FileUploaded", (...args) => {
-      this.markFileStatus(args[1] as UploadQueueFile);
+      UploadQueue.markFileStatus(args[1] as UploadQueueFile);
     });
     this.bind("UploadProgress", (...args) => {
       const file = args[1] as UploadQueueFile;
-      this.updatePerFileProgress(file);
-      this.markFileStatus(file);
+      UploadQueue.updatePerFileProgress(file);
+      UploadQueue.markFileStatus(file);
       this.updateTotalProgressText();
     });
 
@@ -539,7 +539,7 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
       li.append(nameDiv, actionDiv, statusDiv, sizeDiv, clearer);
       this.listEl.append(li);
 
-      this.markFileStatus(file);
+      UploadQueue.markFileStatus(file);
 
       // Real source only ever binds this for a currently-QUEUED row
       // (`$('#'+file.id+'.plupload_delete a')`, a selector that only
@@ -562,7 +562,7 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
     }
   }
 
-  private markFileStatus(file: UploadQueueFile): void {
+  private static markFileStatus(file: UploadQueueFile): void {
     const li = document.getElementById(file.id);
     if (li === null) {
       return;
@@ -585,7 +585,7 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
     }
   }
 
-  private updatePerFileProgress(file: UploadQueueFile): void {
+  private static updatePerFileProgress(file: UploadQueueFile): void {
     const li = document.getElementById(file.id);
     const statusDiv = li?.querySelector(".plupload_file_status");
     if (statusDiv) {

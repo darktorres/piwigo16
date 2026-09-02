@@ -13,7 +13,6 @@ import {
   on,
   ready,
 } from "../../../default/js/vendor/dom";
-export {};
 
 const confirm_msg = pwg_getPageString("Yes, I am sure");
 const cancel_msg = pwg_getPageString("No, I have changed my mind");

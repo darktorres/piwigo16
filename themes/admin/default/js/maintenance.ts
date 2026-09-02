@@ -3,7 +3,6 @@ import type { operations } from "../../../../openapi/client/schema";
 import { pwg_getPageString } from "../../../default/js/page-data";
 import { ajax } from "../../../default/js/vendor/ajax";
 import { ready } from "../../../default/js/vendor/dom";
-export {};
 
 const no_time_elapsed = pwg_getPageString("right now");
 const unit_MB = pwg_getPageString("%s MB");
@@ -25,9 +24,9 @@ function displayResponse(
     });
   }
 
-  for (let index = 0; index < mDivs.length; index++) {
-    const mDivName = mDivs[index]!.getAttribute("name")!;
-    mDivs[index]!.title = unit_MB.replace("%s", mValues[mDivName]!);
+  for (const mDiv of mDivs) {
+    const mDivName = mDiv.getAttribute("name")!;
+    mDiv.title = unit_MB.replace("%s", mValues[mDivName]!);
   }
 
   document.querySelectorAll(".cache-lastCalculated-value").forEach((node) => {

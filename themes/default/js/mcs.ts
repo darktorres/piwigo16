@@ -101,8 +101,6 @@ import {
   windowWidth,
 } from "./vendor/dom";
 
-export {};
-
 let PS_params: Record<string, any> = {};
 
 function siblingsOf(el: Element): Element[] {

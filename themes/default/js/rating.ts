@@ -18,8 +18,6 @@ import { ajax } from "./vendor/ajax";
 // request-count optimization, so it's excluded here.
 import { pwgAddEventListener } from "./scripts";
 
-export {};
-
 interface RatingButton extends HTMLInputElement {
   initialRateValue: string;
 }
@@ -53,9 +51,9 @@ function makeNiceRatingForm(options: PwgRatingOptions) {
     "input",
   ) as HTMLCollectionOf<RatingButton>;
   gUserRating = "";
-  for (let i = 0; i < gRatingButtons.length; i++) {
-    if (gRatingButtons[i]!.type === "button") {
-      gUserRating = gRatingButtons[i]!.value;
+  for (const button of gRatingButtons) {
+    if (button.type === "button") {
+      gUserRating = button.value;
       break;
     }
   }
@@ -81,38 +79,40 @@ function makeNiceRatingForm(options: PwgRatingOptions) {
       rateButton.parentNode!.removeChild(rateButton.previousSibling!);
 
     pwgAddEventListener(rateButton, "click", updateRating);
-    pwgAddEventListener(rateButton, "mouseout", function () {
-      updateRatingStarDisplay(gUserRating);
-    });
-    // Explicit `e: Event` needed now (docs/PLAN.md P48) -- TS's own
-    // contextual parameter typing doesn't flow through a union-typed
-    // parameter (`EventListenerOrEventListenerObject`) the same way
-    // through a real `import`ed function as it did through the old
-    // ambient `declare function`, confirmed directly: this callback's
-    // own `e` silently typed as `Event` before, `any` (a real
-    // `noImplicitAny` error) after.
-    pwgAddEventListener(rateButton, "mouseover", function (e: Event) {
-      const target = e.target as RatingButton;
-      updateRatingStarDisplay(target.initialRateValue);
-    });
+    pwgAddEventListener(rateButton, "mouseout", handleRatingMouseout);
+    pwgAddEventListener(rateButton, "mouseover", handleRatingMouseover);
   }
   updateRatingStarDisplay(gUserRating);
 }
 
 function updateRatingStarDisplay(userRating: string) {
-  for (let i = 0; i < gRatingButtons.length; i++)
-    gRatingButtons[i]!.className =
-      userRating !== "" && userRating >= gRatingButtons[i]!.initialRateValue
+  for (const button of gRatingButtons)
+    button.className =
+      userRating !== "" && userRating >= button.initialRateValue
         ? "rateButtonStarFull"
         : "rateButtonStarEmpty";
+}
+
+function handleRatingMouseout(): void {
+  updateRatingStarDisplay(gUserRating);
+}
+
+// Explicit `e: Event` needed (docs/PLAN.md P48) -- TS's own contextual
+// parameter typing doesn't flow through a union-typed parameter
+// (`EventListenerOrEventListenerObject`) the same way through a real
+// `import`ed function as it did through the old ambient `declare
+// function`: this callback's own `e` silently typed as `Event` before,
+// `any` (a real `noImplicitAny` error) after.
+function handleRatingMouseover(e: Event): void {
+  const target = e.target as RatingButton;
+  updateRatingStarDisplay(target.initialRateValue);
 }
 
 function updateRating(e: Event) {
   const rateButton = e.target as RatingButton;
   if (rateButton.initialRateValue === gUserRating) return false; //nothing to do
 
-  for (let i = 0; i < gRatingButtons.length; i++)
-    gRatingButtons[i]!.disabled = true;
+  for (const button of gRatingButtons) button.disabled = true;
   void ajax({
     url:
       gRatingOptions.rootUrl +
@@ -130,8 +130,7 @@ function updateRating(e: Event) {
     success: function (data) {
       const result = data as PwgRatingResult;
       gUserRating = rateButton.initialRateValue;
-      for (let i = 0; i < gRatingButtons.length; i++)
-        gRatingButtons[i]!.disabled = false;
+      for (const button of gRatingButtons) button.disabled = false;
       if (gRatingOptions.onSuccess) gRatingOptions.onSuccess(result);
       if (gRatingOptions.updateRateElement)
         gRatingOptions.updateRateElement.innerHTML =

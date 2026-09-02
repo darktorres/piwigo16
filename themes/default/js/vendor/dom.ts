@@ -57,7 +57,7 @@ export function coerceDataAttribute(raw: string): unknown {
  */
 export function data(el: Element, key: string): unknown {
   const store = dataStore.get(el);
-  if (store !== undefined && store.has(key)) {
+  if (store?.has(key) === true) {
     return store.get(key);
   }
 
@@ -488,7 +488,7 @@ function delegateOne(
     // `nodeType`, not `instanceof Element`, for the same cross-realm reason
     // as `toTargets` above -- and because it is what jQuery itself checks.
     const origin = event.target as Node | null;
-    if (origin === null || origin.nodeType !== 1) {
+    if (origin?.nodeType !== 1) {
       return;
     }
 

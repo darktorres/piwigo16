@@ -357,10 +357,10 @@ export function getDerivativeUrls(queue: AjaxQueue) {
         derivatives.done.toString() + "/" + derivatives.total.toString(),
       );
       progress();
-      for (let i = 0; i < responseData.urls.length; i++) {
+      for (const url of responseData.urls) {
         queue.add({
           type: "GET",
-          url: responseData.urls[i]! + "&ajaxload=true",
+          url: url + "&ajaxload=true",
           dataType: "json",
           success: function (_data: unknown) {
             derivatives.done++;
@@ -539,6 +539,12 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
         continue;
       }
 
+      // `todo`/`progressBar_max` are a running counter and a fixed total
+      // shared across every batch's own async callback, not a
+      // per-iteration snapshot -- each callback must see the live value
+      // as later batches complete, which is exactly what a real closure
+      // over the outer scope gives here. Only `ids` needed the IIFE's
+      // own per-iteration capture, already applied above.
       (function (ids) {
         const thisBatchSize = ids.length;
         queuedManager.add({
@@ -554,6 +560,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
             imageIds: ids,
           }),
           dataType: "json",
+          // eslint-disable-next-line @typescript-eslint/no-loop-func -- see comment above the IIFE.
           success: function (
             responseData: operations["imageSyncMetadata"]["responses"][200]["content"]["application/json"],
           ) {
@@ -567,6 +574,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
             );
             progress_bar(todo, progressBar_max, false);
           },
+          // eslint-disable-next-line @typescript-eslint/no-loop-func -- see comment above the IIFE.
           error: function (_data: unknown) {
             todo += thisBatchSize;
             /*TODO: user feedback*/
@@ -652,6 +660,12 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
       continue;
     }
 
+    // `todo`/`progressBar_max` are a running counter and a fixed total
+    // shared across every batch's own async callback, not a
+    // per-iteration snapshot -- each callback must see the live value
+    // as later batches complete, which is exactly what a real closure
+    // over the outer scope gives here. Only `ids` needed the IIFE's
+    // own per-iteration capture, already applied above.
     (function (ids) {
       const thisBatchSize = ids.length;
       queuedManager.add({
@@ -667,6 +681,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
           imageIds: ids.map(Number),
         }),
         dataType: "json",
+        // eslint-disable-next-line @typescript-eslint/no-loop-func -- see comment above the IIFE.
         success: function (
           responseData: operations["imageDelete"]["responses"][200]["content"]["application/json"],
         ) {
@@ -681,6 +696,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
           );
           progress_bar(todo, progressBar_max, false);
         },
+        // eslint-disable-next-line @typescript-eslint/no-loop-func -- see comment above the IIFE.
         error: function (_data: unknown) {
           todo += thisBatchSize;
           /*TODO: user feedback*/

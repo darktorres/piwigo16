@@ -2,7 +2,6 @@ import "./common";
 
 import { pwg_getPageData } from "../../../default/js/page-data";
 import { hide, show, toggle } from "../../../default/js/vendor/dom";
-export {};
 
 (function () {
   const select = document.getElementById("wSelect") as HTMLSelectElement | null;

@@ -822,21 +822,21 @@ ready(function () {
     // plugin id strings, no OpenAPI coverage (legacy admin.php endpoint,
     // not api/v1).
     success: function (data: string[]) {
-      for (let i = 0; i < data.length; i++) {
+      for (const pluginId of data) {
         if (show_details)
           prepend(
-            document.querySelectorAll("#" + data[i]! + " .pluginName"),
+            document.querySelectorAll("#" + pluginId + " .pluginName"),
             '<a class="warning" title="' + incompatible_msg + '"></a>',
           );
         else
           prepend(
-            document.querySelectorAll("#" + data[i]! + " .pluginName"),
+            document.querySelectorAll("#" + pluginId + " .pluginName"),
             '<span class="warning" title="' + incompatible_msg + '"></span>',
           );
         // The `incompatible` class is what the activation guard in the
         // switch handler above keys off -- this marker is the whole
         // mechanism, not just styling.
-        addClass(document.querySelectorAll("#" + data[i]!), "incompatible");
+        addClass(document.querySelectorAll("#" + pluginId), "incompatible");
       }
       tipTip(document.querySelectorAll(".warning"), {
         delay: 0,

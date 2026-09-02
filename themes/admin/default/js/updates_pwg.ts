@@ -1,8 +1,6 @@
 import { pwg_getPageString } from "../../../default/js/page-data";
 import { hide, ready, show } from "../../../default/js/vendor/dom";
 
-export {};
-
 ready(() => {
   document
     .querySelectorAll<HTMLInputElement>('input[name="submit"]')

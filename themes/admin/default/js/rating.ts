@@ -23,7 +23,6 @@ import {
   stop,
   val,
 } from "../../../default/js/vendor/dom";
-export {};
 
 const categoriesCache = new CategoriesCache({
   serverKey: pwg_getPageData<string>("cache_key_categories"),

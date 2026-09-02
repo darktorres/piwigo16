@@ -29,7 +29,6 @@ import {
   setData,
   stop,
 } from "../../../default/js/vendor/dom";
-export {};
 
 ready(function () {
   // jQuery's `$("h1").append(...)` appended to every matching heading, not
@@ -179,7 +178,7 @@ ready(function () {
       const t = attrOf(el, "title");
       if (t !== undefined && t !== null && t !== "") return t;
       const udata = uidFromCell(el);
-      if (!udata.aid) return;
+      if (!udata.aid) return undefined;
       setData(el, "isOver", true);
       on(
         el,

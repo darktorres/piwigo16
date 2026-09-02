@@ -43,7 +43,6 @@ import {
   windowHeight,
 } from "../../../default/js/vendor/dom";
 import { tipTip } from "../../../default/js/vendor/tiptip";
-export {};
 
 // `vendor/jqtree.ts`'s own real per-row shape (P49-B group 6B), traced to
 // AlbumsPageRenderer.php's own `assocToOrderedTree()` -- the raw JSON

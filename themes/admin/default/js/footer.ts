@@ -10,8 +10,6 @@ import { ajax } from "../../../default/js/vendor/ajax";
 import { hide, on, show } from "../../../default/js/vendor/dom";
 import { tipTip } from "../../../default/js/vendor/tiptip";
 
-export {};
-
 // This file's own registration stays its own standalone Vite entry,
 // unfolded (docs/PLAN.md P48, this file's own catalog line's
 // investigation, confirmed not just assumed): every OTHER shared-

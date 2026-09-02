@@ -10,7 +10,6 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { data as readData, ready } from "../../../default/js/vendor/dom";
-export {};
 
 const str_number_page_visited = pwg_getPageString("Page Visited");
 const str_avg = pwg_getPageString("Average last 12 months");

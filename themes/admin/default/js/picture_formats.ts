@@ -15,7 +15,6 @@ import {
   remove,
   show,
 } from "../../../default/js/vendor/dom";
-export {};
 
 const pwg_token = pwg_getPageData<string>("csrf_token");
 const str_confirm_delete_format = pwg_getPageString("Delete %s format ?");

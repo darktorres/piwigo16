@@ -31,8 +31,6 @@ import {
   show,
 } from "../../../default/js/vendor/dom";
 
-export {};
-
 // Narrower local shape than albums.ts's own real `AlbumTreeNode` --
 // only the fields `searchAlbumByName()` below actually reads. TS's
 // structural typing accepts the real (wider) `data` value here without
@@ -142,12 +140,12 @@ function searchAlbumByName(
       name + `<a href="${editLink + String(c.id)}">${c.name}</a>` + " / ";
 
     if (c.name.toLowerCase().includes(search.toLowerCase())) {
-      const haveChild = c.children && c.children.length ? true : false;
+      const haveChild = (c.children?.length ?? 0) > 0;
       nbResult++;
       addAlbumResult(c, nbResult, haveChild, currentName);
     }
 
-    if (c.children && c.children.length) {
+    if (c.children !== undefined && c.children.length > 0) {
       nbResult = searchAlbumByName(
         c.children,
         search,

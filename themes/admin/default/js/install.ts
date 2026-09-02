@@ -9,7 +9,6 @@ import {
   setVal,
   text as setText,
 } from "../../../default/js/vendor/dom";
-export {};
 
 /** Every selector here is an id or an id list; static, as jQuery's were. */
 function q(selector: string): HTMLElement[] {

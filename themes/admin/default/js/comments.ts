@@ -33,7 +33,6 @@ import {
   val,
 } from "../../../default/js/vendor/dom";
 import type { operations } from "../../../../openapi/client/schema";
-export {};
 
 const str_yes_delete_confirmation = pwg_getPageString("Yes, delete");
 const str_no_delete_confirmation = pwg_getPageString(
@@ -156,10 +155,7 @@ ready(function () {
         commentContainer.classList.toggle("active");
       }
 
-      if (
-        commentContainer === null ||
-        !commentContainer.classList.contains("active")
-      ) {
+      if (commentContainer?.classList.contains("active") !== true) {
         selectionMode = false;
         hide(document.querySelectorAll(".comment-select-checkbox"));
 
@@ -620,7 +616,7 @@ function updateNbComments(nb: string | number) {
 
 function showModalViewComment(id: string | number) {
   const comment =
-    commentsState.comments.filter((c) => c.id === Number(id))[0] ?? null;
+    commentsState.comments.find((c) => c.id === Number(id)) ?? null;
   if (!comment || modalViewComment === null) return;
 
   const item = document.querySelector("#" + escapeId(id));

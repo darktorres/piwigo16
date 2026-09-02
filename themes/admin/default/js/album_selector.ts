@@ -229,7 +229,9 @@ export class AlbumSelector {
 
   constructor({
     selectedCategoriesIds = [],
+    // eslint-disable-next-line @typescript-eslint/no-empty-function -- intentional no-op default for an optional callback.
     selectAlbum = (_args: AlbumSelectorCallbackArgs) => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function -- intentional no-op default for an optional callback.
     removeSelectedAlbum = (_args: AlbumSelectorRemoveCallbackArgs) => {},
     showRootButton = false,
     adminMode = false,
@@ -588,7 +590,7 @@ export class AlbumSelector {
 
   #hard_reset_album_selector() {
     hide(AlbumSelector.selectors.albumCreate);
-    this.#hide_new_album_error();
+    AlbumSelector.#hide_new_album_error();
 
     this.#reset_album_selector();
     setVal(AlbumSelector.selectors.linkedAlbumInput, "");
@@ -665,15 +667,15 @@ export class AlbumSelector {
 
     off(AlbumSelector.selectors.linkedAlbumInput, `input${instanceAb}`);
     on(AlbumSelector.selectors.linkedAlbumInput, `input${instanceAb}`, () => {
-      this.#hide_new_album_error();
+      AlbumSelector.#hide_new_album_error();
     });
   }
 
-  #hide_new_album_error() {
+  static #hide_new_album_error() {
     css(AlbumSelector.selectors.addAlbumErrors, "visibility", "hidden");
   }
 
-  #show_new_album_error(text: string) {
+  static #show_new_album_error(text: string) {
     html(AlbumSelector.selectors.linkedAddAlbumErrors, text);
     css(AlbumSelector.selectors.addAlbumErrors, "visibility", "visible");
   }
@@ -827,7 +829,7 @@ export class AlbumSelector {
       append(
         AlbumSelector.selectors.searchResult,
         `<div class='search-result-item' id="${cat.id}">
-        <span class="search-result-path not-rtl">${this.#getEllipsisName(cat_name)}</span><span id="${cat.id}" class="${iconAlbum} item-add"></span>
+        <span class="search-result-path not-rtl">${AlbumSelector.#getEllipsisName(cat_name)}</span><span id="${cat.id}" class="${iconAlbum} item-add"></span>
       </div>`,
       );
 
@@ -867,7 +869,7 @@ export class AlbumSelector {
     }
   }
 
-  #getEllipsisName(str: string, lenght = 50) {
+  static #getEllipsisName(str: string, lenght = 50) {
     if (str.length <= lenght) return str;
     return "..." + str.slice(-lenght).trim();
   }
@@ -999,7 +1001,7 @@ export class AlbumSelector {
     };
 
     if (cat_name === undefined || cat_name === "") {
-      this.#show_new_album_error(str_complete_name_field);
+      AlbumSelector.#show_new_album_error(str_complete_name_field);
       return;
     }
 
@@ -1018,7 +1020,7 @@ export class AlbumSelector {
         this.#get_album_by_id(data.id);
       },
       error: () => {
-        this.#show_new_album_error(str_an_error_has_occured);
+        AlbumSelector.#show_new_album_error(str_an_error_has_occured);
       },
     });
   }
@@ -1037,7 +1039,7 @@ export class AlbumSelector {
         this.#select_new_album_and_close(data.categories[0]!);
       },
       error: () => {
-        this.#show_new_album_error(str_an_error_has_occured);
+        AlbumSelector.#show_new_album_error(str_an_error_has_occured);
       },
     });
   }

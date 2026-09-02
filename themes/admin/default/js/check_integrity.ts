@@ -1,6 +1,5 @@
 import { pwg_getPageData } from "../../../default/js/page-data";
 import { ready } from "../../../default/js/vendor/dom";
-export {};
 
 ready(() => {
   document
@@ -45,10 +44,9 @@ function setAllC13yCheckboxes(checked: boolean): void {
 }
 
 function DeselectAll(formulaire: HTMLFormElement) {
-  const elts = formulaire.elements;
-  for (let i = 0; i < elts.length; i++) {
-    if ((elts[i] as HTMLInputElement).type === "checkbox") {
-      (elts[i] as HTMLInputElement).checked = false;
+  for (const elt of formulaire.elements) {
+    if ((elt as HTMLInputElement).type === "checkbox") {
+      (elt as HTMLInputElement).checked = false;
     }
   }
 }

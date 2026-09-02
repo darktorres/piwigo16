@@ -16,7 +16,6 @@ import {
   val,
 } from "../../../default/js/vendor/dom";
 import { tipTip } from "../../../default/js/vendor/tiptip";
-export {};
 
 (function () {
   const targets: Record<string, string> = {
@@ -112,7 +111,7 @@ export {};
     ".removeFilter",
     function (this: Element): void {
       const parent = this.parentElement;
-      if (parent !== null && parent.matches("span.filter")) {
+      if (parent?.matches("span.filter") === true) {
         parent.remove();
       }
       updateFilters();
@@ -132,7 +131,7 @@ export {};
     function (event: Event): void {
       const addFilter = event.currentTarget as Element;
       const previous = addFilter.previousElementSibling;
-      if (previous === null || !previous.matches("span.filter")) {
+      if (previous?.matches("span.filter") !== true) {
         return;
       }
       const clone = previous.cloneNode(true) as Element;

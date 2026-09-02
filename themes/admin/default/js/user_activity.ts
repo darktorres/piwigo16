@@ -33,7 +33,6 @@ import {
   slideToggle,
   val,
 } from "../../../default/js/vendor/dom";
-export {};
 
 type UserListResponse =
   operations["userList"]["responses"][200]["content"]["application/json"];
@@ -1040,8 +1039,9 @@ function get_initials(username: string) {
   const words = username.toUpperCase().split(" ");
   let res = words[0]![0]!;
 
-  if (words.length > 1 && words[1]![0] !== undefined) {
-    res += words[1]![0];
+  const secondWord = words[1];
+  if (secondWord !== undefined && secondWord.length > 0) {
+    res += secondWord[0]!;
   }
   return res;
 }

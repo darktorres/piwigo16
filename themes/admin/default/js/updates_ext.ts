@@ -20,7 +20,6 @@ import {
   show,
   toggle,
 } from "../../../default/js/vendor/dom";
-export {};
 
 // ignoreAll/resetIgnored/updateExtension/ignoreExtension are called
 // from updates_ext.latte's own onClick= attributes -- window.X = X
@@ -89,16 +88,17 @@ function checkFieldsets() {
   let total = 0;
   let ignored = 0;
   let nbExtensions: number;
-  for (let i = 0; i < 3; i++) {
+  for (const type of types) {
     nbExtensions = 0;
     document
-      .querySelectorAll("fieldset[data-type=" + types[i]! + "] .pluginBox")
+      .querySelectorAll("fieldset[data-type=" + type + "] .pluginBox")
+      // eslint-disable-next-line @typescript-eslint/no-loop-func -- real false positive: forEach() runs synchronously, fully draining before the next `for` iteration starts, so `ignored`/`nbExtensions` are never read by a stale closure from an earlier iteration.
       .forEach((el) => {
         if (attrOf(el, "data-ignored") === "true") ignored++;
         else nbExtensions++;
       });
     total = total + nbExtensions;
-    if (nbExtensions === 0) hide(document.querySelectorAll("#" + types[i]!));
+    if (nbExtensions === 0) hide(document.querySelectorAll("#" + type));
   }
 
   if (total === 0) {

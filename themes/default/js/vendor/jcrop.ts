@@ -103,6 +103,7 @@ function oppositeLockCorner(ord: Ord): Corner {
     case "sw":
       return "ne";
   }
+  throw new Error("unreachable: exhaustive switch over Ord");
 }
 
 /**
@@ -136,7 +137,9 @@ export function jcrop(
 function initJcrop(origImg: HTMLImageElement, options: JcropOptions): JcropApi {
   const boxWidth = options.boxWidth ?? 0;
   const boxHeight = options.boxHeight ?? 0;
+  // eslint-disable-next-line @typescript-eslint/no-empty-function -- intentional no-op default for an optional callback.
   const onChange = options.onChange ?? ((): void => {});
+  // eslint-disable-next-line @typescript-eslint/no-empty-function -- intentional no-op default for an optional callback.
   const onRelease = options.onRelease ?? ((): void => {});
 
   // ── DOM construction ────────────────────────────────────────────────
@@ -382,6 +385,7 @@ function initJcrop(origImg: HTMLImageElement, options: JcropOptions): JcropApi {
       case "sw":
         return [c.x, c.y2];
     }
+    throw new Error("unreachable: exhaustive switch over Corner");
   }
 
   // Real source's own `x1 > boundx` branch computes `delta` from

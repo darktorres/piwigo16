@@ -2,7 +2,6 @@ import "./common";
 
 import { hide, on, ready, show, val } from "../../../default/js/vendor/dom";
 import { selectize } from "../../../default/js/vendor/selectize";
-export {};
 
 ready(function () {
   on(document.querySelectorAll("input[name=who]"), "change", function (): void {

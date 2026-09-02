@@ -5,7 +5,6 @@ import {
   pwg_getPageString,
 } from "../../../default/js/page-data";
 import { attr, attrOf, hide, on, show } from "../../../default/js/vendor/dom";
-export {};
 
 const confirm_msg = pwg_getPageString("Yes, I am sure");
 const cancel_msg = pwg_getPageString("No, I have changed my mind");

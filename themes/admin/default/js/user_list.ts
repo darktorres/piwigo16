@@ -42,7 +42,6 @@ import {
   val,
 } from "../../../default/js/vendor/dom";
 import { tipTip } from "../../../default/js/vendor/tiptip";
-export {};
 
 // The real `GET /api/v1/users` per-row shape (P47) -- `current_users`/
 // `guest_user` are both populated straight from that endpoint's own
@@ -353,11 +352,11 @@ ready(function () {
 
   on(document.querySelectorAll("#selectAllPage"), "click", function (e: Event) {
     const selection_ids = selection.map((x) => x.id);
-    for (let i = 0; i < current_users.length; i++) {
-      if (!selection_ids.includes(current_users[i]!.id)) {
+    for (const user of current_users) {
+      if (!selection_ids.includes(user.id)) {
         selection.push({
-          id: current_users[i]!.id,
-          username: current_users[i]!.username,
+          id: user.id,
+          username: user.username,
         });
       }
     }
@@ -375,16 +374,16 @@ ready(function () {
 
   on(document.querySelectorAll("#selectInvert"), "click", function (e: Event) {
     const selection_ids = selection.map((x) => x.id);
-    for (let i = 0; i < current_users.length; i++) {
-      if (selection_ids.includes(current_users[i]!.id)) {
+    for (const user of current_users) {
+      if (selection_ids.includes(user.id)) {
         selection.splice(
-          selection.findIndex((x) => x.id === current_users[i]!.id),
+          selection.findIndex((x) => x.id === user.id),
           1,
         );
       } else {
         selection.push({
-          id: current_users[i]!.id,
-          username: current_users[i]!.username,
+          id: user.id,
+          username: user.username,
         });
       }
     }
@@ -1525,9 +1524,9 @@ function hide_temporary_messages() {
 }
 
 function get_group_name_from_id(id: number) {
-  for (let i = 0; i < groups_arr.length; i++) {
-    if (groups_arr[i]![0] === id) {
-      return groups_arr[i]![1];
+  for (const [groupId, groupName] of groups_arr) {
+    if (groupId === id) {
+      return groupName;
     }
   }
   return "group_id error";
@@ -1989,8 +1988,9 @@ function get_initials(username: string): string {
   const words = username.toUpperCase().split(" ");
   let res = words[0]![0]!;
 
-  if (words.length > 1 && words[1]![0] !== undefined) {
-    res += words[1]![0];
+  const secondWord = words[1];
+  if (secondWord !== undefined && secondWord.length > 0) {
+    res += secondWord[0]!;
   }
   return res;
 }
@@ -2088,7 +2088,8 @@ function get_level_index(level: number | null) {
   // the strict one status_arr's own still-string `status` comparison
   // above can keep using.
   for (let i = 0; i < level_arr.length; i++) {
-    if (level_arr[i]! === String(level)) {
+    const levelStr = level_arr[i]!;
+    if (levelStr === String(level)) {
       return i;
     }
   }
@@ -2096,8 +2097,8 @@ function get_level_index(level: number | null) {
 }
 
 function set_selected_groups(groups: number[]) {
-  for (let i = 0; i < groupOptions.length; i++) {
-    groupOptions[i]!.isSelected = groups.includes(groupOptions[i]!.value);
+  for (const groupOption of groupOptions) {
+    groupOption.isSelected = groups.includes(groupOption.value);
   }
 }
 
@@ -2791,10 +2792,10 @@ function get_first_selection_usernames(callback: () => void) {
     dataType: "json",
     success: function (response: UserListResponse) {
       const result = response.users;
-      for (let i = 0; i < result.length; i++) {
-        const index = selection.findIndex((x) => x.id === result[i]!.id);
+      for (const resultUser of result) {
+        const index = selection.findIndex((x) => x.id === resultUser.id);
         if (index !== -1) {
-          selection[index]!.username = result[i]!.username;
+          selection[index]!.username = resultUser.username;
         }
       }
       callback();
@@ -3166,7 +3167,7 @@ function update_user_list() {
   };
   const userSearchVal = val(document.querySelectorAll("#user_search"));
   if (userSearchVal !== undefined && userSearchVal !== "") {
-    const matches = userSearchVal.match(/^id:(\d+)$/);
+    const matches = /^id:(\d+)$/.exec(userSearchVal);
     if (matches) {
       update_data["userIds"] = [matches[1]];
     }

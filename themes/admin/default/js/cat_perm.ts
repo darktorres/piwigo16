@@ -3,7 +3,7 @@ import { GroupsCache, UsersCache } from "./LocalStorageCache";
 
 import { pwg_getPageData } from "../../../default/js/page-data";
 import { hide, on, show, toggle, val } from "../../../default/js/vendor/dom";
-export {};
+
 (function () {
   // <!-- GROUPS -->
   const groupsCache = new GroupsCache({

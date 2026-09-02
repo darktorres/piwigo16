@@ -497,8 +497,7 @@ function positionBox(speed: number, onDone?: () => void): void {
 
   const target = computeTargetBox(current!.w, current!.h);
   const unchanged =
-    boxRect !== undefined &&
-    boxRect.width === target.width &&
+    boxRect?.width === target.width &&
     boxRect.height === target.height &&
     boxRect.top === target.top &&
     boxRect.left === target.left;

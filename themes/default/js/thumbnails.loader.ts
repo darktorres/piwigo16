@@ -1,7 +1,6 @@
 import { pwg_getPageData } from "./page-data";
 import { AjaxQueue } from "./vendor/ajaxQueue";
 import { attr, data, hide, ready, show } from "./vendor/dom";
-export {};
 
 let max_requests = pwg_getPageData<number | undefined>("max_requests");
 if (typeof max_requests === "undefined") max_requests = 3;

@@ -9,8 +9,6 @@ import {
   windowWidth,
 } from "./vendor/dom";
 
-export {};
-
 (function () {
   const sbFunc = function (link: string, box: string) {
     document.querySelectorAll<HTMLElement>(link).forEach((linkEl) => {

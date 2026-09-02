@@ -292,7 +292,7 @@ export function ajax<T = unknown>(options: AjaxOptions<T>): AjaxThenable {
     // which is how the history page's spinner ended up never hiding.
     const sniffed =
       dataType ??
-      (/json/.test(response.headers.get("Content-Type") ?? "")
+      ((response.headers.get("Content-Type") ?? "").includes("json")
         ? "json"
         : undefined);
 

@@ -498,7 +498,7 @@ class JqTreeController<T extends Record<string, unknown>> {
   // ── Rendering ───────────────────────────────────────────────────────
 
   render(fromNode: TreeNode | null): void {
-    if (fromNode && fromNode.parent) {
+    if (fromNode?.parent) {
       this.renderFromNode(fromNode);
     } else {
       this.renderFromRoot();
@@ -688,7 +688,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     }
   }
 
-  private mustShowBorderDropHint(node: TreeNode, position: JqTreePosition): boolean {
+  private static mustShowBorderDropHint(node: TreeNode, position: JqTreePosition): boolean {
     if (node.isFolder()) {
       return !node.is_open && position === "inside";
     }
@@ -697,7 +697,7 @@ class JqTreeController<T extends Record<string, unknown>> {
 
   private addDropHint(node: TreeNode, position: JqTreePosition): { remove(): void } {
     const li = node.element!;
-    if (this.mustShowBorderDropHint(node, position)) {
+    if (JqTreeController.mustShowBorderDropHint(node, position)) {
       const div = li.querySelector<HTMLElement>(":scope > .jqtree-element")!;
       const elWidth = width(li) || 0;
       const w = Math.max(elWidth + this.getScrollLeft() - 4, 0);
@@ -735,7 +735,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     if (event.button !== 0) {
       return;
     }
-    if (this.handleMouseDown(this.positionInfoFromMouse(event))) {
+    if (this.handleMouseDown(JqTreeController.positionInfoFromMouse(event))) {
       event.preventDefault();
     }
   };
@@ -746,12 +746,12 @@ class JqTreeController<T extends Record<string, unknown>> {
       return;
     }
     const touch = event.changedTouches[0]!;
-    this.handleMouseDown(this.positionInfoFromTouch(touch, event));
+    this.handleMouseDown(JqTreeController.positionInfoFromTouch(touch, event));
   };
 
   private readonly onMouseMove = (e: Event): void => {
     const event = e as MouseEvent;
-    this.handleMouseMove(event, this.positionInfoFromMouse(event));
+    this.handleMouseMove(event, JqTreeController.positionInfoFromMouse(event));
   };
 
   private readonly onTouchMove = (e: Event): void => {
@@ -760,11 +760,11 @@ class JqTreeController<T extends Record<string, unknown>> {
       return;
     }
     const touch = event.changedTouches[0]!;
-    this.handleMouseMove(event, this.positionInfoFromTouch(touch, event));
+    this.handleMouseMove(event, JqTreeController.positionInfoFromTouch(touch, event));
   };
 
   private readonly onMouseUp = (e: Event): void => {
-    this.handleMouseUp(this.positionInfoFromMouse(e as MouseEvent));
+    this.handleMouseUp(JqTreeController.positionInfoFromMouse(e as MouseEvent));
   };
 
   private readonly onTouchEnd = (e: Event): void => {
@@ -773,14 +773,14 @@ class JqTreeController<T extends Record<string, unknown>> {
       return;
     }
     const touch = event.changedTouches[0]!;
-    this.handleMouseUp(this.positionInfoFromTouch(touch, event));
+    this.handleMouseUp(JqTreeController.positionInfoFromTouch(touch, event));
   };
 
-  private positionInfoFromMouse(e: MouseEvent): PositionInfo {
+  private static positionInfoFromMouse(e: MouseEvent): PositionInfo {
     return { pageX: e.pageX, pageY: e.pageY, target: e.target, originalEvent: e };
   }
 
-  private positionInfoFromTouch(touch: Touch, e: TouchEvent): PositionInfo {
+  private static positionInfoFromTouch(touch: Touch, e: TouchEvent): PositionInfo {
     return { pageX: touch.pageX, pageY: touch.pageY, target: touch.target, originalEvent: e };
   }
 
@@ -913,7 +913,7 @@ class JqTreeController<T extends Record<string, unknown>> {
       }
       if (this.hoveredArea !== area) {
         this.hoveredArea = area;
-        if (this.mustOpenFolderTimer(area)) {
+        if (JqTreeController.mustOpenFolderTimer(area)) {
           this.startOpenFolderTimer(area.node);
         } else {
           this.stopOpenFolderTimer();
@@ -1016,7 +1016,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     return null;
   }
 
-  private mustOpenFolderTimer(area: HitArea): boolean {
+  private static mustOpenFolderTimer(area: HitArea): boolean {
     return area.node.isFolder() && !area.node.is_open && area.position === "inside";
   }
 
@@ -1166,7 +1166,7 @@ class JqTreeController<T extends Record<string, unknown>> {
 
   private checkHorizontalScrolling(): void {
     const positionInfo = this.positionInfo;
-    if (!positionInfo || positionInfo.pageX === undefined || positionInfo.pageY === undefined) {
+    if (positionInfo?.pageX === undefined || positionInfo.pageY === undefined) {
       return;
     }
     if (this.scrollParent) {

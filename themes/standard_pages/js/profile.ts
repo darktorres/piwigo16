@@ -31,7 +31,6 @@ import {
   trigger,
   val,
 } from "../../default/js/vendor/dom";
-export {};
 
 interface DefaultUserValues {
   nb_image_page: number;

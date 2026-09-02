@@ -21,7 +21,6 @@ import { selectize as createSelectize } from "../../../default/js/vendor/selecti
 import { slider, type SliderUIParams } from "../../../default/js/vendor/slider";
 import { sortElements } from "../../../default/js/vendor/sortElements";
 import { tipTip } from "../../../default/js/vendor/tiptip";
-export {};
 
 const str_confirm_msg = pwg_getPageString("Yes, I am sure");
 const str_cancel_msg = pwg_getPageString("No, I have changed my mind");
@@ -421,7 +420,7 @@ ready(function () {
       return (
         pluginRating >= filters.rating &&
         pluginCertification >= filters.certification &&
-        (filters.search === "" || pluginName.indexOf(filters.search) !== -1) &&
+        (filters.search === "" || pluginName.includes(filters.search)) &&
         (filters.author === "" || pluginAuthors.includes(filters.author)) &&
         (filters.tag === "" || pluginTags.includes(filters.tag)) &&
         pluginRevisionOld <= filters["revision"]

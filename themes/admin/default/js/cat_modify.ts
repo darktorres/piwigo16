@@ -37,7 +37,6 @@ import {
   type JConfirmInstance,
 } from "../../../default/js/vendor/jconfirm";
 import { tipTip } from "../../../default/js/vendor/tiptip";
-export {};
 
 // `add_related_category` is declared here too, independently of the
 // same-named functions in mcs.js/batchManagerUnit.js/
@@ -112,7 +111,7 @@ ready(function () {
         const catLocked = document.getElementById(
           "cat-locked",
         ) as HTMLInputElement | null;
-        if (catLocked !== null && catLocked.checked) {
+        if (catLocked?.checked === true) {
           trigger([catLocked], "click");
         }
         checkAlbumLock();
@@ -552,7 +551,7 @@ ready(function () {
         const commentable = document.getElementById(
           "cat-commentable",
         ) as HTMLInputElement | null;
-        if (commentable !== null && commentable.checked) {
+        if (commentable?.checked === true) {
           trigger([commentable], "click");
         }
 

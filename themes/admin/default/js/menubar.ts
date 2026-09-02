@@ -11,8 +11,6 @@ import {
 } from "../../../default/js/vendor/dom";
 import { sortable, sortableToArray } from "../../../default/js/vendor/sortable";
 
-export {};
-
 ready(function () {
   hide(document.querySelectorAll(".menuPos"));
   show(document.querySelectorAll(".drag_button"));

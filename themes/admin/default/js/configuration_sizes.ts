@@ -10,7 +10,6 @@ import {
   show,
   toggle,
 } from "../../../default/js/vendor/dom";
-export {};
 
 const title_msg = pwg_getPageString(
   "Are you sure you want to restore to default settings?",

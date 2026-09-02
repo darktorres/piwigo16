@@ -1,7 +1,5 @@
 import { hide, show } from "../../../default/js/vendor/dom";
 
-export {};
-
 document.querySelectorAll("#syncFiles label").forEach((label) => {
   label.addEventListener("click", () => {
     const filesInput = document.querySelector<HTMLInputElement>(

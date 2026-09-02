@@ -2,7 +2,6 @@ import { pwg_jconfirm_follow_href } from "./common";
 
 import { pwg_getPageString } from "../../../default/js/page-data";
 import { htmlOf } from "../../../default/js/vendor/dom";
-export {};
 
 document.querySelectorAll(".delete-lang-button").forEach(function (button) {
   const title_msg = pwg_getPageString(

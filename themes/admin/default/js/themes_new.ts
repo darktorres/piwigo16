@@ -1,6 +1,5 @@
 import { pwg_getPageData } from "../../../default/js/page-data";
 import { css, innerHeight, innerWidth } from "../../../default/js/vendor/dom";
-export {};
 
 document
   .querySelectorAll<HTMLImageElement>(".themeShotImg")

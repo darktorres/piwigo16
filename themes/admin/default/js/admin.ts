@@ -9,7 +9,6 @@ import {
   slideDown,
   slideUp,
 } from "../../../default/js/vendor/dom";
-export {};
 
 interface LightAccordionOptions {
   header?: string;
@@ -41,7 +40,7 @@ function lightAccordion(
   // (not just on the header element itself) still opens its content.
   delegate(container, "click", settings.header, function (this: Element): void {
     const next = this.nextElementSibling;
-    if (next === null || !next.matches(settings.content)) {
+    if (next?.matches(settings.content) !== true) {
       return;
     }
 
@@ -65,14 +64,12 @@ if (menubar !== null) {
 ready(function () {
   const eiw = ["infos", "erros", "warnings", "messages"];
 
-  for (let i = 0; i < eiw.length; i++) {
-    const boxType = eiw[i];
-
-    const items = document.querySelectorAll("." + (boxType ?? "") + " ul li");
+  for (const boxType of eiw) {
+    const items = document.querySelectorAll("." + boxType + " ul li");
     if (items.length > 1) {
       css(items, "list-style-type", "square");
       css(
-        document.querySelectorAll("." + (boxType ?? "") + " .eiw-icon"),
+        document.querySelectorAll("." + boxType + " .eiw-icon"),
         "margin-right",
         "20px",
       );

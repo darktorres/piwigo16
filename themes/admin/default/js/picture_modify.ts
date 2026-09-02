@@ -25,7 +25,7 @@ import {
   removeClass,
   show,
 } from "../../../default/js/vendor/dom";
-export {};
+
 //
 // `add_related_category`/`remove_related_category` are declared here
 // too, independently of the same-named functions in mcs.js/

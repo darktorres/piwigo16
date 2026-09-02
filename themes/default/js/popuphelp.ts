@@ -1,7 +1,5 @@
 import { hide, show } from "./vendor/dom";
 
-export {};
-
 if (Boolean(window.opener) || window.name !== "") {
   const closeLink = document.getElementById("closeLink");
   const homeLink = document.getElementById("homeLink");

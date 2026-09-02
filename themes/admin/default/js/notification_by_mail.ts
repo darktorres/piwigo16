@@ -1,7 +1,5 @@
 import { ready } from "../../../default/js/vendor/dom";
 
-export {};
-
 /**
  * `return false` from a jQuery handler is both preventDefault() and
  * stopPropagation(), not just the former -- these links must not navigate

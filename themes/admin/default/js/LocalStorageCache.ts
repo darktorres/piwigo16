@@ -236,8 +236,11 @@ LocalStorageCache.prototype.clear = function (this: LocalStorageCacheInstance) {
 /**
  * Abstract class containing common initialization code for selectize
  */
+// Prototype-based base "class" with no constructor logic of its own --
+// real init happens in _selectize()/_init().
 const AbstractSelectizer = function (
   this: AbstractSelectizerInstance,
+  // eslint-disable-next-line @typescript-eslint/no-empty-function -- see comment above.
 ) {} as unknown as AbstractSelectizerCtor;
 AbstractSelectizer.prototype = new LocalStorageCache(
   {},

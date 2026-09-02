@@ -48,7 +48,6 @@ import {
   trigger,
   val,
 } from "../../../default/js/vendor/dom";
-export {};
 
 type ImageFormatSearchResponse =
   operations["imageFormatSearch"]["responses"][200]["content"]["application/json"];
@@ -224,7 +223,7 @@ ready(function () {
     "click",
     function (event: Event) {
       const parent = (event.currentTarget as Element).parentElement;
-      if (parent !== null && parent.matches(".showFieldset")) {
+      if (parent?.matches(".showFieldset") === true) {
         hide(parent);
       }
       show(document.querySelectorAll("#permissions"));
@@ -518,7 +517,7 @@ ready(function () {
                 </span>
               </a>`,
               );
-              if ($forms_exts.indexOf(exts[f.id]!) !== -1) {
+              if ($forms_exts.includes(exts[f.id]!)) {
                 document
                   .querySelectorAll(
                     "#" + escapeId(f.id) + " > .plupload_file_name",
@@ -670,11 +669,7 @@ ready(function () {
 
         const uploadedPhotosEl = document.getElementById("uploadedPhotos");
         const uploadedPhotosParent = uploadedPhotosEl?.parentElement;
-        if (
-          uploadedPhotosParent !== undefined &&
-          uploadedPhotosParent !== null &&
-          uploadedPhotosParent.matches("fieldset")
-        ) {
+        if (uploadedPhotosParent?.matches("fieldset") === true) {
           show(uploadedPhotosParent);
         }
 
@@ -992,10 +987,9 @@ function uploadNextTusFile(
       up.trigger("FileUploaded", file, {
         imageId: result.imageId,
         addStatus: result.addStatus,
-        squareSrc:
-          imageInfo.derivatives && imageInfo.derivatives["square"]
-            ? imageInfo.derivatives["square"].url
-            : "",
+        squareSrc: imageInfo.derivatives?.["square"]
+          ? imageInfo.derivatives["square"].url
+          : "",
         name: imageInfo.name ?? file.name,
       });
       uploadNextTusFile(up, files, index + 1);

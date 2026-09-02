@@ -1,5 +1,4 @@
 import { pwg_getPageString } from "./page-data";
-export {};
 
 function pwg_initQuickSearch() {
   const input = document.getElementById(

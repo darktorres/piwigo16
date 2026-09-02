@@ -1,7 +1,6 @@
 import { pwg_getPageData } from "../../../default/js/page-data";
 import { height, setVal, width } from "../../../default/js/vendor/dom";
 import { jcrop, type JcropApi } from "../../../default/js/vendor/jcrop";
-export {};
 
 function from_coi(f: number, total: number) {
   return f * total;

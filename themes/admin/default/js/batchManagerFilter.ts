@@ -37,7 +37,6 @@ import {
   slideUp,
   val,
 } from "../../../default/js/vendor/dom";
-export {};
 
 // `sliders` here is a genuinely independent, unrelated top-level
 // `const` from search_filters.ts's own real exported `sliders` (a

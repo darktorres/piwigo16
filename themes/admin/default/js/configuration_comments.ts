@@ -2,8 +2,6 @@ import "./common";
 
 import { toggle } from "../../../default/js/vendor/dom";
 
-export {};
-
 (function () {
   const targets: Record<string, string> = {
     'input[name="comments_validation"]': "#email_admin_on_comment_validation",

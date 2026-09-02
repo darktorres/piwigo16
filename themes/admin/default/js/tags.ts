@@ -42,7 +42,6 @@ import {
   trigger,
   val,
 } from "../../../default/js/vendor/dom";
-export {};
 
 // Real per-row shape (P47), traced to TagsPageRenderer.php's own
 // `$all_tags` construction (`name`/`id`/`url_name`/`raw_name` always
@@ -826,18 +825,19 @@ function removeSelectedItem(id: TagId): void {
         let i = 0;
         let isNotCreate = true;
         while (i < selected.length && isNotCreate) {
+          const currentId = selected[i]!;
           if (
             document.querySelectorAll(
               '.selection-mode-tag .tag-list div[data-id="' +
-                String(selected[i]) +
+                String(currentId) +
                 '"]',
             ).length === 0
           ) {
             isNotCreate = false;
             const indexOfTag = dataTags.findIndex(
-              (tag) => tag.id === Number(selected[i]),
+              (tag) => tag.id === Number(currentId),
             );
-            createSelectionItem(selected[i]!, dataTags[indexOfTag]!.name);
+            createSelectionItem(currentId, dataTags[indexOfTag]!.name);
           }
           i++;
         }

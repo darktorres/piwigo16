@@ -10,7 +10,6 @@ import {
 } from "../../../default/js/vendor/dom";
 import { sortable } from "../../../default/js/vendor/sortable";
 import { tipTip } from "../../../default/js/vendor/tiptip";
-export {};
 
 ready(function () {
   function checkOrderOptions() {

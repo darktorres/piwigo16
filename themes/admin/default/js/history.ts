@@ -33,7 +33,6 @@ import {
   trigger,
 } from "../../../default/js/vendor/dom";
 import { tipTip } from "../../../default/js/vendor/tiptip";
-export {};
 
 type HistorySearchResponse =
   operations["historySearch"]["responses"][200]["content"]["application/json"];
@@ -855,7 +854,7 @@ function lineConstructor(line: HistoryLine, id: number) {
     );
     hide(find(newLine, ".toggle-img-option"));
 
-    if (sections.indexOf(line.section ?? "") !== -1) {
+    if (sections.includes(line.section ?? "")) {
       const lineIconClass = icons[sections.indexOf(line.section ?? "")]!;
       addClass(find(newLine, ".type-icon i"), lineIconClass);
     } else {

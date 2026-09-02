@@ -37,7 +37,6 @@ import { ajax } from "../../../default/js/vendor/ajax";
 import { colorbox } from "../../../default/js/vendor/colorbox";
 import { confirm } from "../../../default/js/vendor/jconfirm";
 import { pwgDatepicker } from "../../../default/js/vendor/datepicker";
-export {};
 
 // Real shape confirmed via BatchManagerUnitPageRenderer.php's own
 // `$related_category_ids[] = $item_category_id; ... json_encode(...)`

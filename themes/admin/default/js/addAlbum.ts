@@ -13,8 +13,6 @@ import {
 } from "../../../default/js/vendor/dom";
 import { getSelectizeInstance } from "../../../default/js/vendor/selectize";
 
-export {};
-
 interface AlbumOptionData extends Record<string, unknown> {
   id: string | number;
   fullname: string;

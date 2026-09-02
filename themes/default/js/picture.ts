@@ -15,7 +15,6 @@ import "./switchbox";
 import { pwg_getPageData, pwg_getPageString } from "./page-data";
 import { ajax } from "./vendor/ajax";
 import { css, ready } from "./vendor/dom";
-export {};
 
 function changeImgSrc(url: string, typeSave: string, typeMap: string): void {
   const theImg = document.getElementById(

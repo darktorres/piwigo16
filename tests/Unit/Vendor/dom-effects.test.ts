@@ -18,7 +18,7 @@ let el: HTMLElement;
 beforeEach(() => {
   vi.useFakeTimers();
   document.body.innerHTML = `<div id="t" style="opacity:1;height:40px">x</div>`;
-  el = document.getElementById("t") as HTMLElement;
+  el = document.getElementById("t")!;
 });
 
 afterEach(() => {
@@ -203,7 +203,7 @@ describe("show/hide/toggle durations", () => {
   });
 
   it("shows instantly with no argument", () => {
-    const box = document.getElementById("box") as HTMLElement;
+    const box = document.getElementById("box")!;
     hide(box);
 
     show(box);
@@ -214,7 +214,7 @@ describe("show/hide/toggle durations", () => {
   });
 
   it("treats a boolean as a forced state, not a duration", () => {
-    const box = document.getElementById("box") as HTMLElement;
+    const box = document.getElementById("box")!;
 
     toggle(box, false);
 
@@ -224,7 +224,7 @@ describe("show/hide/toggle durations", () => {
   });
 
   it("animates the whole box, not just opacity, when given a duration", () => {
-    const box = document.getElementById("box") as HTMLElement;
+    const box = document.getElementById("box")!;
     hide(box);
 
     show(box, 400);
@@ -240,7 +240,7 @@ describe("show/hide/toggle durations", () => {
   });
 
   it("restores the element's own styles when the animation ends", () => {
-    const box = document.getElementById("box") as HTMLElement;
+    const box = document.getElementById("box")!;
     hide(box);
 
     show(box, 400);
@@ -256,7 +256,7 @@ describe("show/hide/toggle durations", () => {
   });
 
   it("runs the callback of an animated hide once it is hidden", () => {
-    const box = document.getElementById("box") as HTMLElement;
+    const box = document.getElementById("box")!;
     const done = vi.fn();
 
     hide(box, 400, done);

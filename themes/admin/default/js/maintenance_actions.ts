@@ -71,8 +71,8 @@ document
 on(
   document.querySelectorAll(".delete-size-check"),
   "click",
-  function (event: Event): void {
-    const checkbox = event.currentTarget as Element;
+  function (this: Element): void {
+    const checkbox = this;
     if (attrOf(checkbox, "data-selected") === "1") {
       attr(checkbox, "data-selected", "0");
       hide(checkbox.querySelectorAll("i"));

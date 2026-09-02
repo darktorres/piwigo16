@@ -98,6 +98,7 @@ function openTooltip(target: HTMLElement, content: string): void {
 
 export function tooltip(container: Element, options: TooltipOptions): void {
   container.addEventListener("mouseover", (event) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real mouseover event's own target inside the document is always an Element (or null), never a bare EventTarget with no Element interface.
     const origin = event.target as Element | null;
     const target = origin?.closest(options.items);
     if (!(target instanceof HTMLElement) || pendingOrOpen.has(target)) {

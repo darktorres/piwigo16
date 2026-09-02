@@ -153,6 +153,7 @@ function initJcrop(origImg: HTMLImageElement, options: JcropOptions): JcropApi {
   origImg.style.width = px(rawWidth);
   origImg.style.height = px(rawHeight);
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an HTMLImageElement always produces an HTMLImageElement (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
   const img = origImg.cloneNode(true) as HTMLImageElement;
   img.removeAttribute("id");
   Object.assign(img.style, {

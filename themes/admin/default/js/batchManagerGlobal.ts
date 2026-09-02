@@ -360,7 +360,7 @@ export function getDerivativeUrls(queue: AjaxQueue) {
       for (let i = 0; i < responseData.urls.length; i++) {
         queue.add({
           type: "GET",
-          url: responseData.urls[i] + "&ajaxload=true",
+          url: responseData.urls[i]! + "&ajaxload=true",
           dataType: "json",
           success: function (_data: unknown) {
             derivatives.done++;
@@ -700,7 +700,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
   append(
     document.querySelectorAll("form"),
     '<input type="hidden" name="nb_photos_deleted" value="' +
-      deleteElements.length +
+      String(deleteElements.length) +
       '">',
   );
 
@@ -815,7 +815,10 @@ function add_md5sum_block(blockSize?: number) {
       show(document.querySelectorAll("#add_md5sum_error"));
       html(
         document.querySelectorAll("#add_md5sum_error"),
-        "error " + XMLHttpRequest.status + " : " + XMLHttpRequest.statusText,
+        "error " +
+          String(XMLHttpRequest.status) +
+          " : " +
+          XMLHttpRequest.statusText,
       );
     },
   });
@@ -892,7 +895,10 @@ function delete_orphans_block(blockSize?: number) {
       show(document.querySelectorAll("#orphans_deletion_error"));
       html(
         document.querySelectorAll("#orphans_deletion_error"),
-        "error " + XMLHttpRequest.status + " : " + XMLHttpRequest.statusText,
+        "error " +
+          String(XMLHttpRequest.status) +
+          " : " +
+          XMLHttpRequest.statusText,
       );
     },
   });

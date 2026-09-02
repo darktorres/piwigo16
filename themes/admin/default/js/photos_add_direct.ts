@@ -601,7 +601,7 @@ ready(function () {
         css(
           document.querySelectorAll("#uploadingActions .progressbar"),
           "width",
-          up.total.percent + "%",
+          String(up.total.percent) + "%",
         );
         Piecon.setProgress(up.total.percent);
       },
@@ -680,7 +680,7 @@ ready(function () {
 
         let lineHtml =
           '<a href="admin.php?page=photo-' +
-          info.imageId +
+          String(info.imageId) +
           '" style="position : relative" target="_blank">';
         lineHtml +=
           '<img src="' +
@@ -746,7 +746,7 @@ ready(function () {
               const summaryHtml = sprintf(
                 albumSummary_label,
                 '<a href="admin.php?page=album-' +
-                  data.category.id +
+                  String(data.category.id) +
                   '">' +
                   data.category.label +
                   "</a>",
@@ -978,7 +978,7 @@ function uploadNextTusFile(
       > = {};
       try {
         imageInfo = (await ajax({
-          url: "api/v1/images/" + result.imageId,
+          url: "api/v1/images/" + String(result.imageId),
           type: "GET",
           dataType: "json",
         })) as typeof imageInfo;
@@ -1098,8 +1098,8 @@ const originalImageId: string | number = haveFormatsOriginal
 const imageFormatsExtensions =
   pwg_getPageData<string | false | null>("formats_ext_info") || "";
 const nb_albums = pwg_getPageData<string>("nb_albums");
-const chunk_size = pwg_getPageData<number>("chunk_size") + "kb";
-const max_file_size = pwg_getPageData<number>("max_file_size") + "mb";
+const chunk_size = String(pwg_getPageData<number>("chunk_size")) + "kb";
+const max_file_size = String(pwg_getPageData<number>("max_file_size")) + "mb";
 const format_update_warning = pwg_getPageString(
   "This format already exists, it will be overwritten !",
 );

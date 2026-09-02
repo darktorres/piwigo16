@@ -71,14 +71,14 @@ window.addEventListener("load", function () {
     const size = innerWidth(previewBox);
 
     if (imageW > imageH) {
-      css(screenImage, "height", size + "px");
-      css(screenImage, "width", (imageW * size) / imageH + "px");
+      css(screenImage, "height", String(size) + "px");
+      css(screenImage, "width", String((imageW * size) / imageH) + "px");
     } else {
-      css(screenImage, "width", size + "px");
+      css(screenImage, "width", String(size) + "px");
       // "heigth" (sic) -- same genuine pre-existing typo already
       // preserved in themes_new.ts's own copy of this scaling logic;
       // jQuery.css() silently no-ops on an unrecognized property.
-      css(screenImage, "heigth", (imageH * size) / imageW + "px");
+      css(screenImage, "heigth", String((imageH * size) / imageW) + "px");
     }
   });
 });

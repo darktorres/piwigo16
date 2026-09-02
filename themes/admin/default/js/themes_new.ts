@@ -32,16 +32,16 @@ window.addEventListener("load", function () {
     const size = innerWidth(previewBox);
 
     if (imageW > imageH) {
-      css(screenImages, "height", size + "px");
-      css(screenImages, "width", (imageW * size) / imageH + "px");
+      css(screenImages, "height", String(size) + "px");
+      css(screenImages, "width", String((imageW * size) / imageH) + "px");
     } else {
-      css(screenImages, "width", size + "px");
+      css(screenImages, "width", String(size) + "px");
       // "heigth" (sic) -- a genuine pre-existing typo in the original .js,
       // preserved rather than fixed: jQuery.css() silently no-ops on an
       // unrecognized property, so this has always been a dead statement.
       // Correcting it would resize the screenshots, which is a behaviour
       // change and not this phase's business.
-      css(screenImages, "heigth", (imageH * size) / imageW + "px");
+      css(screenImages, "heigth", String((imageH * size) / imageW) + "px");
     }
   });
 });

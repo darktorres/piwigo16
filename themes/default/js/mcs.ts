@@ -756,7 +756,7 @@ ready(function () {
     let album_widget_value = "";
     cat_rule.words.forEach((cat_id) => {
       display_related_category(cat_id, fullname_of_cat[cat_id]);
-      album_widget_value += fullname_of_cat[cat_id] + ", ";
+      album_widget_value += (fullname_of_cat[cat_id] ?? "") + ", ";
     });
 
     // Load Album Selector
@@ -981,7 +981,7 @@ ready(function () {
 
     let ratios_search_str = "";
     ratios_filter.forEach((ft) => {
-      ratios_search_str += str_ratios_label[ft] + ", ";
+      ratios_search_str += (str_ratios_label[ft] ?? "") + ", ";
     });
 
     if (ratios_filter.length > 0) {
@@ -1044,9 +1044,9 @@ ready(function () {
         const str_between = str_between_rating.split("%d");
         ratings_search_str +=
           str_between[0]! +
-          (Number(rating) - 1) +
+          String(Number(rating) - 1) +
           str_between[1]! +
-          rating +
+          String(rating) +
           str_between[2]!;
         if (ratings_filter.length - 1 != i) {
           ratings_search_str += ", ";
@@ -2827,14 +2827,14 @@ function resize_filter_form() {
       const mobile_marg = is_desktop ? 0 : 2;
       const replace_form_width =
         -filter_form_width + innerWidth(filterEl) + check_left - mobile_marg;
-      css(filterForm, "left", replace_form_width + "px");
+      css(filterForm, "left", String(replace_form_width) + "px");
     }
     if (!is_desktop) {
       const left_arrow = offset(filterEl).left + innerWidth(filterEl) / 2;
       prepend(
         filterForm,
         '<svg width="10" height="10" viewBox="0 0 14 14" class="form_mobile_arrow" style="left:' +
-          left_arrow +
+          String(left_arrow) +
           'px"><polygon class="arrow-border" points="7,0 14,14 0,14"/><polygon class="arrow-fill" points="7,1 13.5,14 0.5,14"/></svg>',
       );
     }

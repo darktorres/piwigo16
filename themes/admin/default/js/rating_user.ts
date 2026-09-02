@@ -124,7 +124,7 @@ ready(function () {
                 url:
                   pwg_getPageData<string>("root_url") +
                   "api/v1/users/" +
-                  data.uid +
+                  String(data.uid) +
                   "/actions/delete-ratings",
                 method: "POST",
                 contentType: "application/json",
@@ -133,7 +133,7 @@ ready(function () {
                 error: function (jqXHR) {
                   stop(tr);
                   fadeTo(tr, 0, 1);
-                  alert(jqXHR.status + " " + jqXHR.statusText);
+                  alert(String(jqXHR.status) + " " + jqXHR.statusText);
                 },
                 success: function (
                   result: operations["userDeleteRatings"]["responses"][200]["content"]["application/json"],
@@ -212,9 +212,9 @@ ready(function () {
               "<" +
               'img width=300 height=220 src="http://maps.googleapis.com/maps/api/staticmap?sensor=false&size=300x220&zoom=6' +
               "&markers=size:tiny%7C" +
-              geoData.latitude +
+              String(geoData.latitude) +
               "," +
-              geoData.longitude +
+              String(geoData.longitude) +
               '">';
           }
           if (data(el, "isOver")) callback(content);

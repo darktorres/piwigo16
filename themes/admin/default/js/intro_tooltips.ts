@@ -47,7 +47,10 @@ ready(function () {
     const str_size = str_size_type_string.replace("%s", size_nb);
 
     // Display head of Tooltip
-    setHtml("#storage-title-" + type, "<b>" + translate_type[type] + "</b>");
+    setHtml(
+      "#storage-title-" + type,
+      "<b>" + (translate_type[type] ?? "") + "</b>",
+    );
     setHtml("#storage-size-" + type, "<b>" + str_size + "</b>");
     setHtml(
       "#storage-files-" + type,
@@ -217,9 +220,9 @@ function resizeStorageTooltips(resize: boolean = false) {
     if (left + tooltipWidth > storage_width) {
       const diff = left + tooltipWidth - storage_width;
       left = left - diff;
-      css(arrows, "left", "calc(50% + " + diff + "px)");
+      css(arrows, "left", "calc(50% + " + String(diff) + "px)");
     }
-    css(tooltips, "left", left + "px");
+    css(tooltips, "left", String(left) + "px");
     // Move tooltip if he create vertical scrollbar
     const chart = document.querySelector<HTMLElement>(".storage-chart")!;
     const str_chart_pos = offset(chart).top;
@@ -231,7 +234,11 @@ function resizeStorageTooltips(resize: boolean = false) {
 
     if (resize) {
       if (str_chart_pos + tooltip_height > windows_height) {
-        css(tooltips, "bottom", "calc(100% + " + str_chart_height + "px)");
+        css(
+          tooltips,
+          "bottom",
+          "calc(100% + " + String(str_chart_height) + "px)",
+        );
         arrows.forEach((arrow) => {
           arrow.classList.add("bottom");
         });
@@ -243,7 +250,11 @@ function resizeStorageTooltips(resize: boolean = false) {
       }
     } else {
       if (str_chart_pos + tooltip_height > windows_height) {
-        css(tooltips, "bottom", "calc(100% + " + str_chart_height + "px)");
+        css(
+          tooltips,
+          "bottom",
+          "calc(100% + " + String(str_chart_height) + "px)",
+        );
         arrows.forEach((arrow) => {
           arrow.classList.add("bottom");
         });
@@ -286,8 +297,8 @@ function resizeActivityTooltips() {
           container.querySelectorAll<HTMLElement>(".tooltip-arrow");
         const diff = max_width - left;
 
-        css(tooltip, "left", "calc(50% + " + diff + "px)");
-        css(arrows, "left", "calc(50% - " + diff + "px)");
+        css(tooltip, "left", "calc(50% + " + String(diff) + "px)");
+        css(arrows, "left", "calc(50% - " + String(diff) + "px)");
       }
     });
 }

@@ -122,17 +122,17 @@ function bindItem(
       // into the dragged item's old spot instead.
       placeholder = document.createElement(item.tagName);
       placeholder.className = item.className;
-      placeholder.style.width = rect.width + "px";
-      placeholder.style.height = rect.height + "px";
+      placeholder.style.width = String(rect.width) + "px";
+      placeholder.style.height = String(rect.height) + "px";
       placeholder.style.visibility = "hidden";
       item.before(placeholder);
 
       item.setPointerCapture(downEvent.pointerId);
       item.style.position = "fixed";
       item.style.zIndex = "10000";
-      item.style.width = rect.width + "px";
-      item.style.left = rect.left + "px";
-      item.style.top = rect.top + "px";
+      item.style.width = String(rect.width) + "px";
+      item.style.left = String(rect.left) + "px";
+      item.style.top = String(rect.top) + "px";
       item.style.pointerEvents = "none";
       if (options.opacity !== undefined) {
         item.style.opacity = String(options.opacity);
@@ -155,10 +155,10 @@ function bindItem(
       const x = moveEvent.clientX - offsetX;
       const y = moveEvent.clientY - offsetY;
       if (options.axis !== "y") {
-        item.style.left = x + "px";
+        item.style.left = String(x) + "px";
       }
       if (options.axis !== "x") {
-        item.style.top = y + "px";
+        item.style.top = String(y) + "px";
       }
 
       reorder(

@@ -209,71 +209,21 @@ export default defineConfig(
       "@typescript-eslint/consistent-type-exports": "error",
       "@typescript-eslint/no-import-type-side-effects": "error",
 
-      // Zero real violations today -- every ajax() call site already
-      // disciplines its promise with `void`/`return`/`Promise.all()`/
-      // `await`. Adding this locks that discipline in going forward,
-      // rather than relying on it staying true by convention, and guards
-      // the ~103 call sites P51-C is about to convert to async/await.
       "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/no-misused-promises": "error",
 
-      // `considerDefaultExhaustiveForUnions: true` -- every remaining real
-      // site's `default` is a genuine, verified-correct catch-all for the
-      // rest of the union (comments.ts's author-status icon, history.ts's
-      // unrecognized-section fallback, user_list.ts's non-webmaster
-      // branch, ajax.ts's generic-object stringify, jcrop.ts's
-      // no-axis-pin corner drag) -- not a placeholder masking a missed
-      // case. The two sites where the switch's own parameter type was
-      // genuinely too wide (jcrop.ts's `oppositeLockCorner`/`getCorner`,
-      // each accepting a value neither real call site can ever pass) were
-      // narrowed for real instead of relying on this option.
+      // A `default` case counts as covering the rest of the union even
+      // for a type this rule would otherwise want every member listed
+      // for -- most of this codebase's switches rely on that.
       "@typescript-eslint/switch-exhaustiveness-check": [
         "error",
         { considerDefaultExhaustiveForUnions: true },
       ],
 
-      // 57 real sites, each read individually. Overwhelmingly one
-      // recurring pattern: an ajax success-callback param named `data`
-      // shadowing the imported `data()` DOM helper -- renamed to
-      // `response` throughout. The rest were genuine per-site judgment
-      // calls (a closure-narrowing capture, a param whose type was wider
-      // than any real caller needed, a stale "bug preserved" comment this
-      // pass found was never actually a bug -- see configuration_main.ts).
       "@typescript-eslint/no-shadow": "error",
-
-      // 117 real sites, each read individually against its own real
-      // declared type (openapi schema field, DOM helper return type, a
-      // third-party widget's own option type) -- never a blanket `!!`.
-      // Two recurring, deliberate choices: a `string | null` field
-      // compared with `!== null && !== ""` (preserves the exact old
-      // "empty means absent" truthy behavior); an `x || fallback` on a
-      // nullable string switched to `x ?? fallback` where nullish-only
-      // was the real intent and it was cheaper than spelling out both
-      // comparisons. `Boolean(x)` marks the handful of genuinely `any`/
-      // heterogeneous values (mcs.ts's own PS_params, a few `data()`
-      // DOM-helper reads) per the rule's own suggested fix. A few sites
-      // already had a targeted `no-unnecessary-condition` disable
-      // comment for the exact same real runtime guard (navigator.
-      // clipboard, an untrusted `as`-cast API response) -- extended
-      // in place rather than duplicated. One real bug found this way:
-      // `window._pwgRatingAutoQueue.length` is optional (only present
-      // during the "queue array" phase, gone once the real `{push}`
-      // handler replaces it) -- the old `&&`-chained truthy check masked
-      // that `tsc` alone doesn't (confirmed: fixing the boolean
-      // expression surfaced a real TS18048 the loose check had hidden).
       "@typescript-eslint/strict-boolean-expressions": "error",
-
-      // Zero real violations -- every `as`/`!` in the tree is load-bearing.
       "@typescript-eslint/no-unnecessary-type-assertion": "error",
-      // Zero real violations -- every `.sort()` call already passes a
-      // comparator.
       "@typescript-eslint/require-array-sort-compare": "error",
-      // 15 real sites (album_selector.ts 9, jqtree.ts 6), each verified by
-      // grepping for a reassignment outside the constructor before
-      // marking it `readonly` -- album_selector.ts's own constructor-only
-      // fields, jqtree.ts's own stable bound-once event-handler class
-      // fields (read by addEventListener/removeEventListener, which needs
-      // the same reference both times, never reassigned).
       "@typescript-eslint/prefer-readonly": "error",
     },
   },

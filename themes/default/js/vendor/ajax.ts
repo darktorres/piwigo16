@@ -81,8 +81,7 @@ export interface AjaxOptions<T = unknown> {
  * rejects with a 422.
  */
 function paramValue(value: unknown): string {
-  const resolved =
-    typeof value === "function" ? (value as () => unknown)() : value;
+  const resolved = typeof value === "function" ? value() : value;
 
   if (resolved === null || resolved === undefined) {
     return "";
@@ -185,6 +184,7 @@ function decorate(promise: Promise<unknown>, abort: () => void): AjaxThenable {
   // the original: `await ajax(...)` still rejects, and .fail() still fires.
   void promise.catch(() => undefined);
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- AjaxThenable's own extra done()/fail()/always()/abort() methods are assigned onto this same promise object immediately below, a real boundary between "plain Promise" and "decorated with those methods".
   const thenable = promise as AjaxThenable;
 
   thenable.done = (handler) => {
@@ -194,6 +194,7 @@ function decorate(promise: Promise<unknown>, abort: () => void): AjaxThenable {
   };
   thenable.fail = (handler) => {
     void promise.catch((reason: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- this same promise only ever rejects with a real AjaxError, constructed at this file's own 2 real rejection sites.
       handler(reason as AjaxError);
     });
 

@@ -96,9 +96,8 @@ Variables
 const btnFirstAlbum = document.getElementById("btnFirstAlbum");
 const modalFirstAlbum = document.getElementById("addFirstAlbum");
 const closeModalFirstAlbum = document.getElementById("closeFirstAlbum");
-const inputFirstAlbum = document.getElementById(
-  "inputFirstAlbum",
-) as HTMLInputElement | null;
+const inputFirstAlbum =
+  document.querySelector<HTMLInputElement>("#inputFirstAlbum");
 const btnAddFirstAlbum = document.getElementById("btnAddFirstAlbum");
 const firstAlbum = document.querySelectorAll(".addAlbumEmptyCenter");
 const uploadForm = document.getElementById("uploadForm");
@@ -124,10 +123,8 @@ ready(function () {
   on(
     document.querySelectorAll(".format-mode-group-manager .switch"),
     "click",
-    function (event: Event) {
-      const url = (event.currentTarget as HTMLElement).dataset[
-        "switchFormatModeUrl"
-      ];
+    function (this: HTMLElement) {
+      const url = this.dataset["switchFormatModeUrl"];
       if (url === undefined || url === "") {
         return;
       }
@@ -164,6 +161,7 @@ ready(function () {
 
     if (inputFirstAlbum !== null) {
       on(inputFirstAlbum, "keyup", function (e: Event) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keyup" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
         if ((e as KeyboardEvent).key === "Enter" && btnAddFirstAlbum !== null) {
           trigger([btnAddFirstAlbum], "click");
         }
@@ -221,8 +219,8 @@ ready(function () {
   on(
     document.querySelectorAll("#showPermissions"),
     "click",
-    function (event: Event) {
-      const parent = (event.currentTarget as Element).parentElement;
+    function (this: Element) {
+      const parent = this.parentElement;
       if (parent?.matches(".showFieldset") === true) {
         hide(parent);
       }
@@ -302,9 +300,8 @@ ready(function () {
         if (btnAddFiles !== null) {
           addClass(btnAddFiles, "addFilesButtonChanged");
         }
-        const startUpload = document.getElementById(
-          "startUpload",
-        ) as HTMLButtonElement | null;
+        const startUpload =
+          document.querySelector<HTMLButtonElement>("#startUpload");
         if (startUpload !== null) {
           startUpload.disabled = up.files.length === 0;
         }
@@ -649,9 +646,8 @@ ready(function () {
           options.name = file.name;
         }
 
-        const toggleUpdateMode = document.getElementById(
-          "toggleUpdateMode",
-        ) as HTMLInputElement | null;
+        const toggleUpdateMode =
+          document.querySelector<HTMLInputElement>("#toggleUpdateMode");
         options.update_mode = toggleUpdateMode?.checked ?? false;
 
         up.setOption("multipart_params", options);
@@ -912,6 +908,7 @@ function uploadNextTusFile(
   // (tus metadata instead of plupload's native multipart form fields)
   // differs from here on.
   up.trigger("BeforeUpload", file);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- getOption()'s own real vendor signature returns unknown (a generic options bag); BeforeUpload above this same call always seeds it with this exact real shape.
   const options = (up.getOption("multipart_params") ?? {}) as MultipartParams;
 
   const metadata: Record<string, string> = { filename: file.name };
@@ -978,6 +975,7 @@ function uploadNextTusFile(
         operations["imageGet"]["responses"][200]["content"]["application/json"]
       > = {};
       try {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
         imageInfo = (await ajax({
           url: "api/v1/images/" + String(result.imageId),
           type: "GET",

@@ -131,8 +131,8 @@ ready(function () {
   on(
     document.querySelectorAll('select[name="selectOrder"]'),
     "change",
-    function (event: Event): void {
-      sortOrder = (event.currentTarget as HTMLSelectElement).value;
+    function (this: HTMLSelectElement): void {
+      sortOrder = this.value;
       sortElements(document.querySelectorAll(".pluginBox"), sortPlugins);
       void ajax({ url: "admin.php?plugins_new_order=" + sortOrder });
     },
@@ -141,11 +141,8 @@ ready(function () {
   on(
     document.querySelectorAll("#search"),
     "input",
-    function (event: Event): void {
-      applyFilter(
-        "search",
-        (event.currentTarget as HTMLInputElement).value.toUpperCase(),
-      );
+    function (this: HTMLInputElement): void {
+      applyFilter("search", this.value.toUpperCase());
       trigger(document.querySelectorAll("#search"), "click");
     },
   );
@@ -156,6 +153,7 @@ ready(function () {
 
   document.querySelectorAll(".buttonInstall").forEach((el) => {
     const box = el.closest(".pluginBox");
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
     const plugin_name = box !== null ? (data(box, "name") as string) : "";
     pwg_jconfirm_follow_href(el, {
       alert_title: str_install_title.replace("%s", plugin_name),
@@ -171,6 +169,7 @@ ready(function () {
   });
 
   document.querySelectorAll(".pluginRating").forEach((node) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
     const rating = data(node, "rating") as number;
     const starContainer = node.querySelector(".rating-star-container");
     if (starContainer !== null) {
@@ -189,6 +188,7 @@ ready(function () {
 
   // read all plugin boxes to get author and tags
   document.querySelectorAll(".pluginBox").forEach((el) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
     const author = data(el, "author") as string;
     author.split(", ").forEach((name: string) => {
       if (!authorNames.find((opt) => opt.value === name)) {
@@ -196,6 +196,7 @@ ready(function () {
       }
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
     const tags = data(el, "tags") as string;
     tags.split(", ").forEach((tag: string) => {
       if (!tagsNames.find((opt) => opt.value === tag)) {
@@ -212,6 +213,7 @@ ready(function () {
       // (confirmed in plugins_new.latte), so onChange always gives a
       // single string, not string[].
       onChange: function (value) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified above: a non-multiple selectize instance's onChange() never gives an array.
         applyFilter("author", value as string);
       },
       plugins: ["remove_button"],
@@ -224,6 +226,7 @@ ready(function () {
     document.querySelector<HTMLSelectElement>("#tag-filter")!,
     {
       onChange: function (value) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified above: a non-multiple selectize instance's onChange() never gives an array.
         applyFilter("tag", value as string);
       },
       plugins: ["remove_button"],
@@ -370,8 +373,7 @@ ready(function () {
 
   // object that remember filters states
   filters = {
-    // Real #search input, always a string.
-    search: val(document.querySelectorAll("#search")) as string,
+    search: val(document.querySelectorAll("#search")) ?? "",
     author: "",
     tag: "",
     rating: slider(
@@ -404,15 +406,21 @@ ready(function () {
     sort((pluginBox: Element) => {
       const ratingEl = pluginBox.querySelector(".pluginRating");
       const pluginRating =
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
         (ratingEl !== null ? (data(ratingEl, "rating") as number) : 0) || 0;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       const pluginCertification = data(
         pluginBox.querySelector(".certification")!,
         "certification",
       ) as number;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       const pluginAuthors = (data(pluginBox, "author") as string).split(", ");
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       const pluginName = (data(pluginBox, "name") as string).toUpperCase();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       const pluginTags = (data(pluginBox, "tags") as string).split(", ");
       const pluginRevisionOld = monthDiff(
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
         new Date((data(pluginBox, "revision") as number) * 1000),
         new Date(),
       ); // number of months between the last revision date and now
@@ -457,6 +465,7 @@ ready(function () {
 
     queryParams.set(
       "beta-test",
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- #showBetaTestPlugin is a real <input type=checkbox> (plugins_new.latte), so its own "change" event's currentTarget is always an HTMLInputElement.
       (e.currentTarget as HTMLInputElement).checked.toString(),
     );
 

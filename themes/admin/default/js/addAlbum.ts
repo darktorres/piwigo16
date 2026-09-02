@@ -44,6 +44,7 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
   // LocalStorageCache.ts's own _selectize() stashes the owning Cache
   // instance via `setData(el, "cache", this)` (P49-B group 6) -- the
   // same native data() store this file already uses elsewhere.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified above.
   const cache = (target === null ? undefined : data(target, "cache")) as {
     selectize(
       target: Element | ArrayLike<Element>,

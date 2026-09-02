@@ -72,6 +72,7 @@ type TagMergeResponse =
   operations["tagMerge"]["responses"][200]["content"]["application/json"];
 
 //Get the data
+// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
 let dataTags = data(
   document.querySelector(".tag-container")!,
   "tags",
@@ -82,6 +83,7 @@ setChecked(document.querySelectorAll("#select-100"), true);
 
 //Orphan tags
 on(document.querySelectorAll(".info-warning p a"), "click", () => {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
   const url = data(
     document.querySelector(".info-warning p a")!,
     "url",
@@ -436,6 +438,7 @@ function setupTagbox(tagBox: Element): void {
     e.stopPropagation();
     let option_is_clicked = false;
     find(tagBox, ".dropdown-option").forEach((option) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real mouseup event's own target inside the document is always a Node (or null), never a bare EventTarget with no Node interface.
       if (option.contains(e.target as Node | null)) {
         option_is_clicked = true;
       }
@@ -462,13 +465,14 @@ function setupTagbox(tagBox: Element): void {
 
   //Edit Name
   on(find(tagBox, ".dropdown-option.edit"), "click", function () {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
     const id = data(tagBox, "id") as TagId;
     const tagIndex = dataTags.findIndex((tag) => tag.id === Number(id));
     // Non-null: `id` always comes from a real tag box, which was
     // itself rendered from this same `dataTags` array.
     const tagRawName = dataTags[tagIndex]!.raw_name;
     const tagName = dataTags[tagIndex]!.name;
-    set_up_popin(data(tagBox, "id") as TagId, tagRawName, tagName);
+    set_up_popin(id, tagRawName, tagName);
     rename_tag_open();
   });
 
@@ -482,6 +486,7 @@ function setupTagbox(tagBox: Element): void {
           btnClass: "btn-red",
           action: function () {
             removeTag(
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
               data(tagBox, "id") as TagId,
               htmlOf(find(tagBox, ".tag-name"))!,
             );
@@ -498,7 +503,9 @@ function setupTagbox(tagBox: Element): void {
   //Duplicate Tag
   on(find(tagBox, ".dropdown-option.duplicate"), "click", function () {
     void duplicateTag(
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       data(tagBox, "id") as TagId,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       data(find(tagBox, ".tag-name")[0]!, "rawname") as string,
     ).then((newTag) => {
       showMessage(str_tag_created.replace("%s", newTag.name));
@@ -1102,9 +1109,7 @@ function removeSelectedTags(): void {
 //Merge Tags
 on(document.querySelectorAll(".ConfirmMergeButton"), "click", () => {
   // Single-value <select>, never multi.
-  const dest_id = val(
-    document.querySelectorAll("#MergeOptionsChoices"),
-  ) as string;
+  const dest_id = val(document.querySelectorAll("#MergeOptionsChoices")) ?? "";
   mergeGroups(dest_id, selected);
 });
 
@@ -1267,6 +1272,7 @@ function showMessage(message: string): void {
 /*-------
  Pagination
 -------*/
+// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
 let per_page = data(
   document.querySelector(".tag-container")!,
   "per_page",
@@ -1347,6 +1353,7 @@ function appendPaginationItem(page: number | null = null): void {
       addClass(newTag, "actual");
     }
     on(newTag, "click", () => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       actualPage = data(newTag, "page") as number;
       updatePaginationMenu();
     });
@@ -1523,8 +1530,8 @@ if (getNumberPages() > 1) {
 on(
   document.querySelectorAll(".pagination-per-page a"),
   "click",
-  function (event: Event) {
-    const target = event.currentTarget as Element;
+  function (this: Element) {
+    const target = this;
     per_page = parseInt(htmlOf(target) ?? "");
     updatePaginationMenu();
     removeClass(

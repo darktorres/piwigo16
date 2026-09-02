@@ -262,7 +262,7 @@ ready(() => {
   const new_data = albumData.map((a: AlbumTreeNode) => {
     const al: AlbumTreeNode = {
       ...a,
-      children: openUppercats.includes(a.id) ? a.children : [],
+      children: openUppercats.includes(a.id) ? (a.children ?? []) : [],
     };
     if (a.children) {
       al.load_on_demand = openUppercats.includes(a.id) ? false : true;

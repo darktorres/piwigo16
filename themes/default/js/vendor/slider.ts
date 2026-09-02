@@ -58,9 +58,9 @@ interface SliderState {
   lastChangedValue: number;
   handles: HTMLAnchorElement[];
   rangeEl: HTMLDivElement | null;
-  slide?: (event: Event, ui: SliderUIParams) => unknown;
-  change?: (event: Event, ui: SliderUIParams) => void;
-  stop?: (event: Event, ui: SliderUIParams) => void;
+  slide?: ((event: Event, ui: SliderUIParams) => unknown) | undefined;
+  change?: ((event: Event, ui: SliderUIParams) => void) | undefined;
+  stop?: ((event: Event, ui: SliderUIParams) => void) | undefined;
 }
 
 const instances = new WeakMap<Element, SliderState>();
@@ -123,10 +123,10 @@ function refreshValue(el: HTMLElement, state: SliderState): void {
 
 function currentUi(state: SliderState, index: number): SliderUIParams {
   if (state.isRange) {
-    return { value: state.values[index], values: state.values.slice() };
+    return { value: state.values[index]!, values: state.values.slice() };
   }
 
-  return { value: state.values[0] };
+  return { value: state.values[0]! };
 }
 
 function fireChange(

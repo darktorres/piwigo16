@@ -99,7 +99,7 @@ categoriesCache.selectize(
     filter: function (
       this: { name?: string },
       categories: { id: string | number; [key: string]: unknown }[],
-      options: { default?: string | number },
+      options: { default?: string | number | undefined },
     ) {
       if (this.name === "dissociate") {
         const filtered = categories.filter((cat) =>

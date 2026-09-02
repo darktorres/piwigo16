@@ -96,7 +96,7 @@ ready(function () {
       filter: function (
         this: { name: string },
         categories: SelectizeCategoryOption[],
-        options: { default?: string | number },
+        options: { default?: string | number | undefined },
       ) {
         if (this.name === "dissociate") {
           const filtered = categories.filter((cat) =>

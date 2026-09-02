@@ -212,8 +212,8 @@ async function fetchAndMergeActivityLines(
   while (lines.length < ACTIVITY_DISPLAY_PAGE_SIZE && hasMore) {
     const params: {
       offset: number;
-      dateMin?: string;
-      dateMax?: string;
+      dateMin?: string | undefined;
+      dateMax?: string | undefined;
       userId?: string | number;
       action?: string;
       object?: string;

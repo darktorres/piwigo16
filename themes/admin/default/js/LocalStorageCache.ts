@@ -59,7 +59,7 @@ interface SelectizeEntity extends Record<string, unknown> {
 
 interface LocalStorageCacheInstance {
   key: string;
-  serverKey?: string;
+  serverKey?: string | undefined;
   lifetime: number;
   loader: (callback: (data: SelectizeEntity[]) => void) => void;
   storage: Storage;
@@ -80,7 +80,7 @@ interface LocalStorageCacheCtor {
 // low-level widget-init options), imported below under its real name.
 interface EntitySelectizeCallOptions {
   value?: (string | number)[] | { id: string | number }[];
-  default?: string | number;
+  default?: string | number | undefined;
   create?: boolean;
   lang?: { Add?: string };
   filter?: (

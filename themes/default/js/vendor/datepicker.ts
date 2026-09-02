@@ -104,7 +104,7 @@ import {
 export interface PwgDatepickerOptions {
   showTimepicker?: boolean;
   cancelButton?: string | false;
-  jqueryCode?: string;
+  jqueryCode?: string | undefined;
 }
 
 const ENGLISH_DATEPICKER_LOCALE: DatepickerLocale = {

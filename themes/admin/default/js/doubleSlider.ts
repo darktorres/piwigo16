@@ -7,7 +7,11 @@ import {
   on,
   setVal,
 } from "../../../default/js/vendor/dom";
-import { slider, type SliderUIParams } from "../../../default/js/vendor/slider";
+import {
+  slider,
+  type SliderOptions,
+  type SliderUIParams,
+} from "../../../default/js/vendor/slider";
 
 /**
  * Real first-party wrapper around `themes/default/js/vendor/slider.ts`'s
@@ -79,19 +83,20 @@ export function pwgDoubleSlider(
   }
 
   const sliderEl = find(container, ".slider-slider")[0]!;
-  slider(sliderEl, {
+  const sliderOptions: SliderOptions = {
     range: true,
     min: 0,
     max: options.values.length - 1,
     values,
     slide: onChange,
     change: onChange,
-    stop: options.stop
-      ? () => {
-          options.stop!();
-        }
-      : undefined,
-  });
+  };
+  if (options.stop) {
+    sliderOptions.stop = () => {
+      options.stop!();
+    };
+  }
+  slider(sliderEl, sliderOptions);
 
   const choices = find(container, ".slider-choice");
   off(choices, "click");

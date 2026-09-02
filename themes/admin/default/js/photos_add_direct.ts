@@ -75,8 +75,8 @@ interface TusOnSuccessPayload {
 
 interface MultipartParams {
   pwg_token: string;
-  format_of?: string;
-  category?: string | number;
+  format_of?: string | undefined;
+  category?: string | number | undefined;
   name?: string;
   update_mode?: boolean;
 }

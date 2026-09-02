@@ -262,7 +262,7 @@ export function ajax<T = unknown>(options: AjaxOptions<T>): AjaxThenable {
   const run = async (): Promise<unknown> => {
     const response = await fetch(url, {
       method,
-      body,
+      ...(body !== undefined ? { body } : {}),
       headers,
       signal: controller.signal,
       credentials: "same-origin",

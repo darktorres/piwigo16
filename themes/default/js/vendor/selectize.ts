@@ -44,7 +44,7 @@ export interface SelectizeOptions<T extends string | number, U> {
   plugins?: string[];
   create?: boolean;
   maxOptions?: number;
-  items?: T[];
+  items?: T[] | undefined;
   onChange?: (value: T | T[]) => void;
   render?: SelectizeRenderers<U>;
 }

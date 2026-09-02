@@ -71,6 +71,46 @@ type TagDuplicateResponse =
 type TagMergeResponse =
   operations["tagMerge"]["responses"][200]["content"]["application/json"];
 
+const pwg_token = pwg_getPageData<string>("csrf_token");
+const parsedOrphanTagNames: unknown = JSON.parse(
+  pwg_getPageData<string>("orphan_tag_names_array"),
+);
+const orphan_tag_names = Array.isArray(parsedOrphanTagNames)
+  ? parsedOrphanTagNames.filter((n): n is string => typeof n === "string")
+  : [];
+const str_delete = pwg_getPageString('Delete tag "%s"?');
+const str_delete_tags = pwg_getPageString("Delete tags {%s}?");
+const str_yes_delete_confirmation = pwg_getPageString("Yes, delete");
+const str_no_delete_confirmation = pwg_getPageString(
+  "No, I have changed my mind",
+);
+const str_yes_rename_confirmation = pwg_getPageString("Yes, rename");
+const str_tag_deleted = pwg_getPageString('Tag "%s" succesfully deleted');
+const str_tags_deleted = pwg_getPageString("Tags {%s} succesfully deleted");
+const str_already_exist = pwg_getPageString('Tag "%s" already exists');
+const str_tag_created = pwg_getPageString('Tag "%s" created');
+const str_tag_rename = pwg_getPageString('Rename "%s"');
+const str_delete_orphan_tags = pwg_getPageString("Delete orphan tags ?");
+const str_orphan_tags = pwg_getPageString("You have %s1 orphan : %s2");
+const str_delete_them = pwg_getPageString("Delete them");
+const str_keep_them = pwg_getPageString("Keep them");
+const str_copy = pwg_getPageString(" (copy)");
+const str_other_copy = pwg_getPageString(" (copy %s)");
+const str_merged_into = pwg_getPageString(
+  'Tag(s) {%s1} succesfully merged into "%s2"',
+);
+const str_and_others_tags = pwg_getPageString("and %s others");
+const str_number_photos = pwg_getPageString("%d photos");
+const str_no_photos = pwg_getPageString("no photo");
+const str_select_all_tag = pwg_getPageString("Select all %d tags");
+const str_clear_selection = pwg_getPageString("Clear Selection");
+const str_selection_done = pwg_getPageString(
+  "The %d tags on this page are selected",
+);
+const str_tag_selected = pwg_getPageString("<b>%d</b> tag selected");
+const str_tags_found = pwg_getPageString("<b>%d</b> tags found");
+const str_tag_found = pwg_getPageString("<b>%d</b> tag found");
+
 //Get the data
 // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
 let dataTags = data(
@@ -1218,6 +1258,7 @@ function tagListToString(list: string[]): string {
 // `NodeJS.Timeout`-returning signatures, not the DOM lib's.
 let searchTimeOut: ReturnType<typeof setTimeout> | undefined;
 const delaySearchInput = 300;
+let actualPage = 1;
 
 on(
   document.querySelectorAll("#search-tag .search-input"),
@@ -1281,8 +1322,6 @@ const pageItem = '<a data-page="%d">%d</a>';
 const pageEllipsis = "<span>...</span>";
 let promisePending = false;
 let updateAsk = false;
-
-let actualPage = 1;
 
 //Avoid 2 update at the same time
 function askUpdatePage(): void {
@@ -1560,46 +1599,6 @@ function updateSearchInfo(): void {
     html(document.querySelectorAll(".search-info"), "");
   }
 }
-
-const pwg_token = pwg_getPageData<string>("csrf_token");
-const parsedOrphanTagNames: unknown = JSON.parse(
-  pwg_getPageData<string>("orphan_tag_names_array"),
-);
-const orphan_tag_names = Array.isArray(parsedOrphanTagNames)
-  ? parsedOrphanTagNames.filter((n): n is string => typeof n === "string")
-  : [];
-const str_delete = pwg_getPageString('Delete tag "%s"?');
-const str_delete_tags = pwg_getPageString("Delete tags {%s}?");
-const str_yes_delete_confirmation = pwg_getPageString("Yes, delete");
-const str_no_delete_confirmation = pwg_getPageString(
-  "No, I have changed my mind",
-);
-const str_yes_rename_confirmation = pwg_getPageString("Yes, rename");
-const str_tag_deleted = pwg_getPageString('Tag "%s" succesfully deleted');
-const str_tags_deleted = pwg_getPageString("Tags {%s} succesfully deleted");
-const str_already_exist = pwg_getPageString('Tag "%s" already exists');
-const str_tag_created = pwg_getPageString('Tag "%s" created');
-const str_tag_rename = pwg_getPageString('Rename "%s"');
-const str_delete_orphan_tags = pwg_getPageString("Delete orphan tags ?");
-const str_orphan_tags = pwg_getPageString("You have %s1 orphan : %s2");
-const str_delete_them = pwg_getPageString("Delete them");
-const str_keep_them = pwg_getPageString("Keep them");
-const str_copy = pwg_getPageString(" (copy)");
-const str_other_copy = pwg_getPageString(" (copy %s)");
-const str_merged_into = pwg_getPageString(
-  'Tag(s) {%s1} succesfully merged into "%s2"',
-);
-const str_and_others_tags = pwg_getPageString("and %s others");
-const str_number_photos = pwg_getPageString("%d photos");
-const str_no_photos = pwg_getPageString("no photo");
-const str_select_all_tag = pwg_getPageString("Select all %d tags");
-const str_clear_selection = pwg_getPageString("Clear Selection");
-const str_selection_done = pwg_getPageString(
-  "The %d tags on this page are selected",
-);
-const str_tag_selected = pwg_getPageString("<b>%d</b> tag selected");
-const str_tags_found = pwg_getPageString("<b>%d</b> tags found");
-const str_tag_found = pwg_getPageString("<b>%d</b> tag found");
 
 ready(function () {
   document

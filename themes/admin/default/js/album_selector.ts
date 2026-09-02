@@ -381,6 +381,7 @@ export class AlbumSelector {
     // event escape album selector
     off(document, `keyup${instanceAb}`);
     on(document, `keyup${instanceAb}`, (event) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keyup" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
       const e = event as KeyboardEvent;
       if (
         e.key === "Escape" &&
@@ -427,6 +428,7 @@ export class AlbumSelector {
       off(AlbumSelector.selectors.albumCheckBox, `change${instanceAb}`);
       on(AlbumSelector.selectors.albumCheckBox, `change${instanceAb}`, (e) => {
         this.#isAlbumCreationChecked = is(
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real "change" event's own currentTarget is always the registered Element, never a bare EventTarget with no Element interface.
           e.currentTarget as Element,
           ":checked",
         );
@@ -439,6 +441,7 @@ export class AlbumSelector {
       off(AlbumSelector.selectors.putToRootBtn, `click${instanceAb}`);
       on(AlbumSelector.selectors.putToRootBtn, `click${instanceAb}`, (e) => {
         if (!this.#selected_categories.includes("0")) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real "click" event's own currentTarget is always the registered Element, never a bare EventTarget with no Element interface.
           const curr = e.currentTarget as Element;
           addClass(curr, "notClickable");
           this.#put_to_root = true;
@@ -455,6 +458,7 @@ export class AlbumSelector {
       const items = q(".prefill-results-item");
       off(items, `click${instanceAb}`);
       on(items, `click${instanceAb}`, (e) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real "click" event's own currentTarget is always the registered Element, never a bare EventTarget with no Element interface.
         const curr = e.currentTarget as Element;
         const cat_id = attrOf(curr, "id")!;
         const cat = this.#cats[cat_id]!;
@@ -464,6 +468,7 @@ export class AlbumSelector {
       const available = q(".prefill-results-item.available");
       off(available, `click${instanceAb}`);
       on(available, `click${instanceAb}`, (e) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real "click" event's own currentTarget is always the registered Element, never a bare EventTarget with no Element interface.
         const curr = e.currentTarget as Element;
         const cat_id = attrOf(curr, "id")!;
         const cat = this.#cats[cat_id]!;
@@ -480,6 +485,7 @@ export class AlbumSelector {
     const togglers = q(".display-subcat");
     off(togglers, `click${instanceAb}`);
     on(togglers, `click${instanceAb}`, (e) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real "click" event's own currentTarget is always the registered HTMLElement, never a bare EventTarget with no Element interface.
       const curr = e.currentTarget as HTMLElement;
       const cat_id = curr.id;
       const cat = this.#cats[cat_id]!;
@@ -518,6 +524,7 @@ export class AlbumSelector {
     );
     off(rows, `click${instanceAb}`);
     on(rows, `click${instanceAb}`, (e) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real "click" event's own currentTarget is always the registered Element, never a bare EventTarget with no Element interface.
       const curr = e.currentTarget as Element;
       const cat_id = attrOf(curr, "id")!;
       const cat = this.#searchCat[cat_id]!;
@@ -893,15 +900,12 @@ export class AlbumSelector {
       limit: this.#limitParam,
     };
 
-    void ajax({
+    void ajax<CategoryListOrAvailableResponse>({
       url: this.#methodPwg,
       type: "GET",
       dataType: "json",
       data: api_params,
-      success: (payload) => {
-        // for debug
-        // console.log(data);
-        const data = payload as CategoryListOrAvailableResponse;
+      success: (data) => {
         this.#rememberLevelSeparator(data);
         hide(q(".linkedAlbumPopInContainer .searching"));
         const cats = data.categories;
@@ -923,13 +927,12 @@ export class AlbumSelector {
       limit: this.#limitParam,
     };
 
-    void ajax({
+    void ajax<CategoryListOrAvailableResponse>({
       url: this.#methodPwg,
       type: "GET",
       dataType: "json",
       data: api_params,
-      success: (payload) => {
-        const data = payload as CategoryListOrAvailableResponse;
+      success: (data) => {
         this.#rememberLevelSeparator(data);
         const cats = data.categories.filter((c) => c.id !== Number(cat_id));
         const limit = data.limit!;
@@ -954,13 +957,12 @@ export class AlbumSelector {
     };
 
     show(AlbumSelector.selectors.iconSearchingSpin);
-    void ajax({
+    void ajax<CategoryListOrAvailableResponse>({
       url: this.#methodPwg,
       type: "GET",
       dataType: "json",
       data: api_params,
-      success: (payload) => {
-        const data = payload as CategoryListOrAvailableResponse;
+      success: (data) => {
         this.#rememberLevelSeparator(data);
         hide(AlbumSelector.selectors.iconSearchingSpin);
         const categories = data.categories;
@@ -1005,7 +1007,9 @@ export class AlbumSelector {
       return;
     }
 
-    void ajax({
+    void ajax<
+      operations["categoryCreate"]["responses"][201]["content"]["application/json"]
+    >({
       url: "api/v1/categories",
       type: "POST",
       contentType: "application/json",
@@ -1014,9 +1018,7 @@ export class AlbumSelector {
       },
       data: JSON.stringify(api_params),
       dataType: "json",
-      success: (payload) => {
-        const data =
-          payload as operations["categoryCreate"]["responses"][201]["content"]["application/json"];
+      success: (data) => {
         this.#get_album_by_id(data.id);
       },
       error: () => {
@@ -1026,16 +1028,16 @@ export class AlbumSelector {
   }
 
   #get_album_by_id(cat_id: string | number) {
-    void ajax({
+    void ajax<
+      operations["categoryList"]["responses"][200]["content"]["application/json"]
+    >({
       url: "api/v1/categories",
       type: "GET",
       dataType: "json",
       data: {
         parentId: cat_id,
       },
-      success: (payload) => {
-        const data =
-          payload as operations["categoryList"]["responses"][200]["content"]["application/json"];
+      success: (data) => {
         this.#select_new_album_and_close(data.categories[0]!);
       },
       error: () => {

@@ -17,9 +17,7 @@ import { ajax } from "./vendor/ajax";
 import { css, ready } from "./vendor/dom";
 
 function changeImgSrc(url: string, typeSave: string, typeMap: string): void {
-  const theImg = document.getElementById(
-    "theMainImage",
-  ) as HTMLImageElement | null;
+  const theImg = document.querySelector<HTMLImageElement>("#theMainImage");
   if (theImg) {
     theImg.removeAttribute("width");
     theImg.removeAttribute("height");
@@ -45,7 +43,7 @@ function changeImgSrc(url: string, typeSave: string, typeMap: string): void {
 const derivativeSwitchBox = document.getElementById("derivativeSwitchBox");
 if (derivativeSwitchBox) {
   derivativeSwitchBox.addEventListener("click", function (e) {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- tsc genuinely needs both casts here (confirmed directly against tsc: removing either produces a real TS2531/TS2339).
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion, @typescript-eslint/no-unsafe-type-assertion -- tsc genuinely needs both casts here (confirmed directly against tsc: removing either produces a real TS2531/TS2339); a real click inside the document always targets an HTMLElement.
     const link = (e.target as HTMLElement).closest(
       "[data-derivative-url]",
     ) as HTMLElement | null;
@@ -109,6 +107,7 @@ function addToCadie(
   });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- `disabled` isn't a real <a> property; this file's own addToCadie() sets it as a non-standard attribute-like flag, matching the original's real (if non-standard) behavior.
 const caddieLink = document.getElementById("caddieLink") as
   (HTMLAnchorElement & { disabled?: boolean }) | null;
 if (caddieLink) {

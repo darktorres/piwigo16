@@ -24,9 +24,7 @@ function fieldValue(id: string): string {
     : "";
 }
 
-const adminMail = document.getElementById(
-  "admin_mail",
-) as HTMLInputElement | null;
+const adminMail = document.querySelector<HTMLInputElement>("#admin_mail");
 
 ready(function () {
   document.querySelectorAll("a.externalLink").forEach((link) => {
@@ -99,9 +97,8 @@ ready(function () {
       }
     } else {
       addClass(row, "install-hidden-row");
-      const confirm = document.getElementById(
-        "confirm_overwrite",
-      ) as HTMLInputElement | null;
+      const confirm =
+        document.querySelector<HTMLInputElement>("#confirm_overwrite");
       if (confirm !== null) {
         confirm.checked = false;
       }
@@ -255,9 +252,7 @@ ready(function () {
   // also means no "submit" event fires here at all, so this can't be
   // implemented as a submit handler -- confirmed nothing else in this
   // file needs one.
-  const language = document.getElementById(
-    "language",
-  ) as HTMLSelectElement | null;
+  const language = document.querySelector<HTMLSelectElement>("#language");
   language?.addEventListener("change", function () {
     const form = language.form!;
     form.action = "install.php?language=" + encodeURIComponent(language.value);

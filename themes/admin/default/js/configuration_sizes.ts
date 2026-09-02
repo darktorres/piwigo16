@@ -56,8 +56,8 @@ document
   on(
     document.querySelectorAll("a[id^='sizeEditOpen-']"),
     "click",
-    function (event: Event): void {
-      const link = event.currentTarget as HTMLElement;
+    function (this: HTMLElement, event: Event): void {
+      const link = this;
       const sizeName = link.id.split("-")[1]!;
       toggle(document.querySelectorAll("#sizeEdit-" + sizeName));
       hide(link);
@@ -69,8 +69,8 @@ document
   on(
     document.querySelectorAll(".cropToggle"),
     "click",
-    function (event: Event): void {
-      const checkbox = event.currentTarget as HTMLElement;
+    function (this: HTMLElement): void {
+      const checkbox = this;
       const table = checkbox.closest("table.sizeEditForm");
       const labelBoxWidth =
         table === null ? [] : table.querySelectorAll("td.sizeEditWidth");
@@ -90,9 +90,9 @@ document
   on(
     document.querySelectorAll("#showDetails"),
     "click",
-    function (event: Event): void {
+    function (this: Element, event: Event): void {
       show(document.querySelectorAll(".sizeDetails"));
-      css(event.currentTarget as Element, "visibility", "hidden");
+      css(this, "visibility", "hidden");
       event.preventDefault();
       event.stopPropagation();
     },

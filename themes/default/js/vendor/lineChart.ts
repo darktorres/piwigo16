@@ -502,6 +502,7 @@ export class LineChart {
     toPixel: (p: LineChartPoint) => [number, number],
   ): void {
     const { ctx, plot } = this;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- this method's own caller only invokes it after checking `series.fillColor !== undefined`; that narrowing doesn't cross the function boundary.
     const [r, g, b] = series.fillColor as [number, number, number];
     const gradient = ctx.createLinearGradient(0, 400, 0, 0);
     gradient.addColorStop(0, `rgba(${String(r)},${String(g)},${String(b)},0)`);
@@ -509,6 +510,7 @@ export class LineChart {
 
     ctx.fillStyle = gradient;
     ctx.beginPath();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- this method's own caller only invokes it after checking `series.points.length !== 0`; that narrowing doesn't cross the function boundary.
     const first = toPixel(series.points[0] as LineChartPoint);
     ctx.moveTo(first[0], plot.top + plot.height);
     ctx.lineTo(first[0], first[1]);
@@ -516,7 +518,10 @@ export class LineChart {
       const [x, y] = toPixel(p);
       ctx.lineTo(x, y);
     }
-    const last = toPixel(series.points[series.points.length - 1] as LineChartPoint);
+    const last = toPixel(
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- this method's own caller only invokes it after checking `series.points.length !== 0`; that narrowing doesn't cross the function boundary.
+      series.points[series.points.length - 1] as LineChartPoint,
+    );
     ctx.lineTo(last[0], plot.top + plot.height);
     ctx.closePath();
     ctx.fill();

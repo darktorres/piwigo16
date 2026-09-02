@@ -41,11 +41,13 @@ function format(src: string): Promise<string> {
 function normalizeAst(node: unknown): unknown {
   if (Array.isArray(node)) {
     return node.map(normalizeAst).filter((n) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- every real AST node from this same parser is a plain object or null, this function's own recursive contract.
       const rec = n as Record<string, unknown> | null;
       return !(rec?.["type"] === "HtmlText" && rec["value"] === "");
     });
   }
   if (node === null || typeof node !== "object") return node;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- `object` has no index signature; every real AST node from this same parser is plain-object-shaped.
   const rec = node as Record<string, unknown>;
   const out: Record<string, unknown> = {};
   for (const k of Object.keys(rec)) {
@@ -59,6 +61,7 @@ function normalizeAst(node: unknown): unknown {
     )
       continue;
     if (k === "value" && rec["type"] === "HtmlText") {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- every real HtmlText AST node's own "value" field from this same parser is always a string.
       out["value"] = (rec["value"] as string).replace(/\s+/g, " ").trim();
       continue;
     }
@@ -128,6 +131,7 @@ describe("Latte Prettier plugin (tools/latte-prettier/)", () => {
       try {
         await format(readFileSync(file, "utf8"));
       } catch (e) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- prettier.format() and this file's own plugin/parser only ever throw real Error instances, standard JS practice.
         failures.push(`${file}: ${(e as Error).message.split("\n")[0]!}`);
       }
     }

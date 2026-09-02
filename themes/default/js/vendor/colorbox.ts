@@ -141,6 +141,7 @@ export function colorbox(
     if (!optionsByElement.has(el)) {
       registeredElements.push(el);
       el.addEventListener("click", (event) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "click" always dispatches a real MouseEvent; addEventListener()'s own handler param is typed generically via the native EventListener interface.
         clickHandler(el, event as MouseEvent);
       });
     }
@@ -367,6 +368,7 @@ function runPurge(): void {
 }
 
 function trapFocusHandler(event: FocusEvent): void {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real focus event's own target inside the document is always a Node, never a bare EventTarget with no Node interface.
   const target = event.target as Node;
   if (!boxEl.contains(target) && target !== overlayEl) {
     event.stopPropagation();
@@ -535,7 +537,10 @@ function launch(el: Element): void {
   if (!isOpen) {
     isOpen = true;
     isBusy = true;
-    lastFocusedEl = document.activeElement as HTMLElement | null;
+    lastFocusedEl =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
 
     boxEl.style.visibility = "hidden";
     boxEl.style.display = "block";

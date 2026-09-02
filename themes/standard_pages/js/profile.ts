@@ -67,14 +67,12 @@ type ApiKeyEntry =
 let user: UserPreferences = {
   username: pwg_getPageData<string>("username"),
   email: pwg_getPageData<string | null>("email"),
-  nb_image_page: val(
-    document.querySelectorAll('input[name="nb_image_page"]'),
-  ) as string,
-  theme: val(document.querySelectorAll('select[name="theme"]')) as string,
-  language: val(document.querySelectorAll('select[name="language"]')) as string,
-  recent_period: val(
-    document.querySelectorAll('input[name="recent_period"]'),
-  ) as string,
+  nb_image_page:
+    val(document.querySelectorAll('input[name="nb_image_page"]')) ?? "",
+  theme: val(document.querySelectorAll('select[name="theme"]')) ?? "",
+  language: val(document.querySelectorAll('select[name="language"]')) ?? "",
+  recent_period:
+    val(document.querySelectorAll('input[name="recent_period"]')) ?? "",
   opt_album: is(document.querySelectorAll("#opt_album"), ":checked"),
   opt_comment: is(document.querySelectorAll("#opt_comment"), ":checked"),
   opt_hits: is(document.querySelectorAll("#opt_hits"), ":checked"),
@@ -142,13 +140,14 @@ const no_time_elapsed = pwg_getPageString("right now");
 
 let PWG_TOKEN: string;
 ready(function () {
-  PWG_TOKEN = val(document.querySelectorAll("#pwg_token")) as string;
+  PWG_TOKEN = val(document.querySelectorAll("#pwg_token")) ?? "";
 
   on(
     document.querySelectorAll(".profile-section .display-section"),
     "click",
-    function (event: Event) {
-      const el = event.currentTarget as Element;
+    function (this: Element) {
+      const el = this;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       const display = data(el, "display") as string;
       const element = document.getElementById(display)!;
       const arrow = find(el, ".display-btn");
@@ -177,8 +176,8 @@ ready(function () {
   }, 100);
 
   on(document.querySelectorAll("#save_account"), "click", function () {
-    const mail = val(document.querySelectorAll("#email")) as string;
-    if (!mail || mail === "") {
+    const mail = val(document.querySelectorAll("#email"));
+    if (mail === undefined || mail === "") {
       show(document.querySelectorAll("#email_error"));
       return;
     }
@@ -188,16 +187,11 @@ ready(function () {
   if (canUpdatePreferences) {
     on(document.querySelectorAll("#save_preferences"), "click", function () {
       const values = {
-        nb_image_page: val(
-          document.querySelectorAll("#nb_image_page"),
-        ) as string,
-        theme: val(document.querySelectorAll('select[name="theme"]')) as string,
-        language: val(
-          document.querySelectorAll('select[name="language"]'),
-        ) as string,
-        recent_period: val(
-          document.querySelectorAll("#recent_period"),
-        ) as string,
+        nb_image_page: val(document.querySelectorAll("#nb_image_page")) ?? "",
+        theme: val(document.querySelectorAll('select[name="theme"]')) ?? "",
+        language:
+          val(document.querySelectorAll('select[name="language"]')) ?? "",
+        recent_period: val(document.querySelectorAll("#recent_period")) ?? "",
         expand: is(document.querySelectorAll("#opt_album"), ":checked"),
         show_nb_comments: is(
           document.querySelectorAll("#opt_comment"),
@@ -269,11 +263,10 @@ ready(function () {
   if (canUpdatePassword) {
     on(document.querySelectorAll("#save_password"), "click", function () {
       const passwords = {
-        password: val(document.querySelectorAll("#password")) as string,
-        new_password: val(document.querySelectorAll("#password_new")) as string,
-        conf_new_password: val(
-          document.querySelectorAll("#password_conf"),
-        ) as string,
+        password: val(document.querySelectorAll("#password")) ?? "",
+        new_password: val(document.querySelectorAll("#password_new")) ?? "",
+        conf_new_password:
+          val(document.querySelectorAll("#password_conf")) ?? "",
       };
       if (
         passwords.password === "" ||
@@ -336,7 +329,7 @@ ready(function () {
         "input, textarea, select",
       ).forEach((element) => {
         const inputName = attrOf(element, "name");
-        const inputValue = val(element) as string;
+        const inputValue = val(element);
         values[inputName!] = inputValue;
       });
       setInfos({ ...values });
@@ -376,8 +369,8 @@ ready(function () {
   on(
     document.querySelectorAll("#show_expired_list"),
     "click",
-    function (event: Event) {
-      const el = event.currentTarget as Element;
+    function (this: Element) {
+      const el = this;
       const api_list_expired = document.getElementById("api_key_list_expired")!;
       const isOpen = data(el, "show") === true;
       if (!isOpen) {
@@ -395,6 +388,7 @@ ready(function () {
   );
 
   on(window, "keydown", function (e: Event) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
     const key = (e as KeyboardEvent).key;
     const haveApiModal = isVisible(document.getElementById("api_modal")!);
     const haveApiEditModal = isVisible(
@@ -417,9 +411,9 @@ ready(function () {
   on(
     document.querySelectorAll('select[name="api_expiration"]'),
     "change",
-    function (event: Event) {
+    function (this: Element) {
       const custom_date = document.getElementById("api_custom_date")!;
-      const value = val(event.currentTarget as Element);
+      const value = val(this);
       if ("custom" === value) {
         custom_date.style.display = "flex";
       } else {
@@ -532,6 +526,7 @@ function setInfos(
     error: function (e) {
       pwgToaster({
         text:
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- safe regardless of the real shape: a malformed/non-object responseJSON just makes `.detail` read undefined, falling back to str_handle_error below.
           (e.responseJSON as { detail?: string } | undefined)?.detail ??
           str_handle_error,
         icon: "error",
@@ -561,6 +556,7 @@ function getAllApiKeys(reset: boolean = false) {
     error: function (e) {
       pwgToaster({
         text:
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- safe regardless of the real shape: a malformed/non-object responseJSON just makes `.detail` read undefined, falling back below.
           (e.responseJSON as { detail?: string } | undefined)?.detail ??
           str_handle_error + "getAllApiKeys",
         icon: "error",
@@ -585,9 +581,11 @@ function AddApiLine(lines: ApiKeyEntry[], reset: boolean) {
   );
 
   lines.forEach((line) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
     const api_line = document
       .getElementById("api_line")!
       .cloneNode(true) as Element;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see comment above.
     const api_collapse = document
       .getElementById("api_collapse")!
       .cloneNode(true) as Element;
@@ -655,8 +653,9 @@ function AddApiLine(lines: ApiKeyEntry[], reset: boolean) {
 function apiLineEvent() {
   const iconCollapse = document.querySelectorAll(".icon-collapse");
   off(iconCollapse, "click");
-  on(iconCollapse, "click", function (event: Event) {
-    const el = event.currentTarget as Element;
+  on(iconCollapse, "click", function (this: Element) {
+    const el = this;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
     const apiId = data(el, "api") as string;
     const api_collapse = document.getElementById(`api_collapse_${apiId}`)!;
     const api_line = document.getElementById(`api_${apiId}`)!;
@@ -681,25 +680,29 @@ function apiLineEvent() {
     ".api-tab-collapse .icon-clone",
   );
   off(cloneButtons, "click");
-  on(cloneButtons, "click", function (event: Event) {
-    const el = event.currentTarget as Element;
+  on(cloneButtons, "click", function (this: Element) {
+    const el = this;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
     const data_to_copy = data(el, "copy") as string;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see comment above.
     const selector = data(el, "success") as string;
     copyToClipboard(data_to_copy, str_copy_key_id, `#${selector}`);
   });
 
   const editButtons = document.querySelectorAll(".api-tab-line .edit-mode");
   off(editButtons, "click");
-  on(editButtons, "click", function (event: Event) {
-    const parent = (event.currentTarget as Element).parentElement;
+  on(editButtons, "click", function (this: Element) {
+    const parent = this.parentElement;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
     const selector = parent !== null ? (data(parent, "api") as string) : "";
     openApiEditModal(`#${selector}`);
   });
 
   const deleteButtons = document.querySelectorAll(".api-tab-line .delete-mode");
   off(deleteButtons, "click");
-  on(deleteButtons, "click", function (event: Event) {
-    const parent = (event.currentTarget as Element).parentElement;
+  on(deleteButtons, "click", function (this: Element) {
+    const parent = this.parentElement;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
     const selector = parent !== null ? (data(parent, "api") as string) : "";
     openApiRevokeModal(`#${selector}`);
   });
@@ -749,9 +752,7 @@ function closeApiModal() {
     setVal(document.querySelectorAll("#api_secret_key"), "");
     hide(document.querySelectorAll("#retrieves_keyapi"));
     show(document.querySelectorAll("#generate_keyapi"));
-    (document.getElementById(
-      "done_apikey",
-    ) as HTMLButtonElement | null)!.disabled = true;
+    document.querySelector<HTMLButtonElement>("#done_apikey")!.disabled = true;
     addClass(
       document.querySelectorAll("#api_key_copy_success, #api_id_copy_success"),
       "api-hide",
@@ -772,9 +773,8 @@ function successApiModal(secret: string, id: string) {
   on(apiSecretCopy, "click", function () {
     copyToClipboard(secret, str_copy_key_secret, "#api_key_copy_success");
 
-    const doneButton = document.getElementById(
-      "done_apikey",
-    ) as HTMLButtonElement;
+    const doneButton =
+      document.querySelector<HTMLButtonElement>("#done_apikey")!;
     doneButton.disabled = false;
     on(doneButton, "click", closeApiModal);
   });
@@ -790,6 +790,7 @@ function successApiModal(secret: string, id: string) {
 function openApiEditModal(selector: string) {
   const target = document.querySelector(selector)!;
   const value = textOf(find(target, ".api_name"));
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
   const pkid = data(find(target, ".api-icon-action")[0]!, "pkid") as string;
   setVal(document.querySelectorAll("#api_key_edit"), value);
   fadeIn(document.querySelectorAll("#api_modal_edit"));
@@ -806,7 +807,7 @@ function closeApiEditModal() {
 
 function saveApiEditEvents(pkid: string) {
   on(document.querySelectorAll("#save_api_edit"), "click", function () {
-    const value = val(document.querySelectorAll("#api_key_edit")) as string;
+    const value = val(document.querySelectorAll("#api_key_edit")) ?? "";
 
     if ("" === value) {
       show(document.querySelectorAll("#error_api_key_edit"));
@@ -836,6 +837,7 @@ function unbindApiEditEvents() {
 function openApiRevokeModal(selector: string) {
   const target = document.querySelector(selector)!;
   const apiName = textOf(find(target, ".api_name"));
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
   const pkid = data(find(target, ".api-icon-action")[0]!, "pkid") as string;
   const text_ = sprintf(str_revoke_key, apiName);
   text(document.querySelectorAll("#api_modal_revoke_title"), text_);
@@ -898,7 +900,7 @@ function copyToClipboard(
 
 function saveApiKeyEvent() {
   const handler = () => {
-    const api_name = val(document.querySelectorAll("#api_key_name")) as string;
+    const api_name = val(document.querySelectorAll("#api_key_name")) ?? "";
     let api_duration: string | number | undefined = val(
       document.querySelectorAll('select[name="api_expiration"]'),
     );
@@ -961,6 +963,7 @@ function saveApiKeyEvent() {
 
   on(document.querySelectorAll("#save_apikey"), "click.apikey", handler);
   on(window, "keydown.apikey", function (e: Event) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
     if ((e as KeyboardEvent).key === "Enter") {
       e.preventDefault();
       handler();

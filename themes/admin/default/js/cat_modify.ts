@@ -108,9 +108,8 @@ ready(function () {
         _data: operations["categoryUpdate"]["responses"][200]["content"]["application/json"],
       ) {
         is_visible = "true";
-        const catLocked = document.getElementById(
-          "cat-locked",
-        ) as HTMLInputElement | null;
+        const catLocked =
+          document.querySelector<HTMLInputElement>("#cat-locked");
         if (catLocked?.checked === true) {
           trigger([catLocked], "click");
         }
@@ -155,11 +154,10 @@ ready(function () {
       data: JSON.stringify({
         name: val(document.querySelectorAll("#cat-name")),
         comment: val(document.querySelectorAll("#cat-comment")),
-        visible: !(document.getElementById("cat-locked") as HTMLInputElement)
-          .checked,
-        commentable: (
-          document.getElementById("cat-commentable") as HTMLInputElement
-        ).checked,
+        visible:
+          !document.querySelector<HTMLInputElement>("#cat-locked")!.checked,
+        commentable:
+          document.querySelector<HTMLInputElement>("#cat-commentable")!.checked,
       }),
       success: function (
         _data: operations["categoryUpdate"]["responses"][200]["content"]["application/json"],
@@ -180,7 +178,7 @@ ready(function () {
           str_just_now,
         );
 
-        is_visible = (document.getElementById("cat-locked") as HTMLInputElement)
+        is_visible = document.querySelector<HTMLInputElement>("#cat-locked")!
           .checked
           ? "false"
           : "true";
@@ -250,9 +248,9 @@ ready(function () {
       }
     }
 
-    const button = document.getElementById(
-      "cat-properties-save",
-    ) as HTMLButtonElement | null;
+    const button = document.querySelector<HTMLButtonElement>(
+      "#cat-properties-save",
+    );
     if (button !== null) button.disabled = state;
   }
 
@@ -477,6 +475,7 @@ ready(function () {
     "click",
     function (e) {
       // Don't open the popin if you click on the album link
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real click inside the document always targets an Element (or null), never a bare EventTarget with no Element interface.
       if ((e.target as Element).localName !== "a") {
         ab.open();
       }
@@ -501,9 +500,8 @@ ready(function () {
         _data: operations["categoryUpdate"]["responses"][200]["content"]["application/json"],
       ) {
         save_button_set_loading(false);
-        const commentable = document.getElementById(
-          "cat-commentable",
-        ) as HTMLInputElement | null;
+        const commentable =
+          document.querySelector<HTMLInputElement>("#cat-commentable");
         if (commentable !== null && !commentable.checked) {
           trigger([commentable], "click");
         }
@@ -548,9 +546,8 @@ ready(function () {
         _data: operations["categoryUpdate"]["responses"][200]["content"]["application/json"],
       ) {
         save_button_set_loading(false);
-        const commentable = document.getElementById(
-          "cat-commentable",
-        ) as HTMLInputElement | null;
+        const commentable =
+          document.querySelector<HTMLInputElement>("#cat-commentable");
         if (commentable?.checked === true) {
           trigger([commentable], "click");
         }
@@ -595,8 +592,8 @@ ready(function () {
       if (descModal !== null) fadeToggle([descModal]);
     },
   );
-  on(textareas, "keyup", function (event: Event) {
-    const value = val([event.currentTarget as Element]) ?? "";
+  on(textareas, "keyup", function (this: Element) {
+    const value = val([this]) ?? "";
     setVal(textareas, value);
   });
   on(window, "click", function (e: Event) {
@@ -606,6 +603,7 @@ ready(function () {
   });
   on(document, "keyup", function (e: Event) {
     if (
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keyup" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
       (e as KeyboardEvent).key === "Escape" &&
       descModal !== null &&
       isVisible(descModal)
@@ -619,8 +617,8 @@ function checkAlbumLock() {
   if (is_visible === "true") {
     hide(document.querySelectorAll(".warnings"));
   } else {
-    document.querySelectorAll(".warnings").forEach((el) => {
-      (el as HTMLElement).style.display = "flex";
+    document.querySelectorAll<HTMLElement>(".warnings").forEach((el) => {
+      el.style.display = "flex";
     });
   }
 }
@@ -671,8 +669,8 @@ function activateCommentDropdown() {
   on(
     document.querySelectorAll(".toggle-comment-option"),
     "click",
-    function (event: Event) {
-      toggle(find([event.currentTarget as Element], ".comment-option"));
+    function (this: Element) {
+      toggle(find([this], ".comment-option"));
     },
   );
 
@@ -682,6 +680,7 @@ function activateCommentDropdown() {
     e.stopPropagation();
     let option_is_clicked = false;
     document.querySelectorAll(".comment-option span").forEach((el) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real mouseup event's own target inside the document is always a Node (or null), never a bare EventTarget with no Node interface.
       if (el.contains(e.target as Node)) {
         option_is_clicked = true;
       }

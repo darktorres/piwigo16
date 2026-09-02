@@ -267,6 +267,7 @@ export function cluetip(elements: Element | ArrayLike<Element>, options: ClueTip
       el,
       (event) => {
         attr(el, "title", "");
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- hover()'s own "mouseenter" binding always dispatches a real MouseEvent; its handler param is typed generically via the native EventListener interface.
         activate(el, content, width, positionBy, event as MouseEvent);
       },
       () => {

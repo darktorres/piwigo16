@@ -126,9 +126,7 @@ document
     show(document.querySelectorAll(".change_logo_container"));
     hide(document.querySelectorAll(".use_existing_logo_container"));
 
-    const logo = document.getElementById(
-      "std_pgs_logo",
-    ) as HTMLInputElement | null;
+    const logo = document.querySelector<HTMLInputElement>("#std_pgs_logo");
     if (logo !== null) {
       logo.value = "";
     }

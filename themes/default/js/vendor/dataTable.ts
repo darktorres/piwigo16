@@ -53,7 +53,7 @@ interface DataTableRow {
 }
 
 export interface DataTableApi {
-  row(tr: HTMLElement): DataTableRow;
+  row(tr: HTMLTableRowElement): DataTableRow;
 }
 
 interface ResolvedColumn {
@@ -318,10 +318,10 @@ export function dataTable(
   draw();
 
   return {
-    row(tr: HTMLElement): DataTableRow {
+    row(tr: HTMLTableRowElement): DataTableRow {
       return {
         remove(): { draw(): void } {
-          const index = masterRows.indexOf(tr as HTMLTableRowElement);
+          const index = masterRows.indexOf(tr);
           if (index !== -1) {
             masterRows.splice(index, 1);
           }

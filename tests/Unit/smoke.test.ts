@@ -6,7 +6,7 @@ describe("JS test scaffold", () => {
   });
 
   it("TypeScript types resolve", () => {
-    const x: number = 42;
+    const x = 42;
     expect(x).toBe(42);
   });
 });

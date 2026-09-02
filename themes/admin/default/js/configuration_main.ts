@@ -40,11 +40,8 @@ import { tipTip } from "../../../default/js/vendor/tiptip";
     on(
       document.querySelectorAll(selector),
       "change",
-      function (event: Event): void {
-        toggle(
-          document.querySelectorAll(target),
-          is(event.currentTarget as Element, ":checked"),
-        );
+      function (this: Element): void {
+        toggle(document.querySelectorAll(target), is(this, ":checked"));
       },
     );
   }
@@ -128,12 +125,13 @@ import { tipTip } from "../../../default/js/vendor/tiptip";
   on(
     document.querySelectorAll("#order_filters .addFilter"),
     "click",
-    function (event: Event): void {
-      const addFilter = event.currentTarget as Element;
+    function (this: Element): void {
+      const addFilter = this;
       const previous = addFilter.previousElementSibling;
       if (previous?.matches("span.filter") !== true) {
         return;
       }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
       const clone = previous.cloneNode(true) as Element;
       addFilter.parentElement?.insertBefore(clone, addFilter);
 
@@ -154,7 +152,7 @@ colorbox(document.querySelectorAll(".themeBoxes a"));
 on(
   document.querySelectorAll("input[name='mail_theme']"),
   "change",
-  function (event: Event): void {
+  function (this: Element): void {
     document.querySelectorAll("input[name='mail_theme']").forEach((radio) => {
       const themeSelect = radio.closest(".themeSelect");
       if (themeSelect !== null) {
@@ -162,7 +160,7 @@ on(
       }
     });
 
-    const checked = (event.currentTarget as Element).closest(".themeSelect");
+    const checked = this.closest(".themeSelect");
     if (checked !== null) {
       addClass(checked, "themeDefault");
     }

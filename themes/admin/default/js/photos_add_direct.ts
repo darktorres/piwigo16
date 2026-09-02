@@ -112,10 +112,69 @@ const uploaderPhotos = document.getElementById("uploader");
 const formatsUpdated: string[] = [];
 const formats: [string, string][] = [];
 
+const formatMode = pwg_getPageData<boolean>("display_formats");
+const haveFormatsOriginal = pwg_getPageData<boolean>("have_formats_original");
+const originalImageId: string | number = haveFormatsOriginal
+  ? pwg_getPageData<string>("original_image_id_str")
+  : -1;
+const rawImageFormatsExtensions = pwg_getPageData<string | false | null>(
+  "formats_ext_info",
+);
+const imageFormatsExtensions =
+  rawImageFormatsExtensions !== false && rawImageFormatsExtensions !== null
+    ? rawImageFormatsExtensions
+    : "";
+const nb_albums = pwg_getPageData<string>("nb_albums");
+const chunk_size = String(pwg_getPageData<number>("chunk_size")) + "kb";
+const max_file_size = String(pwg_getPageData<number>("max_file_size")) + "mb";
+const format_update_warning = pwg_getPageString(
+  "This format already exists, it will be overwritten !",
+);
+const format_remove = pwg_getPageString("Remove");
+const pwg_token = pwg_getPageData<string>("csrf_token");
+const photosAdded_label = pwg_getPageString("%d photos uploaded");
+const photosUpdated_label = pwg_getPageString("%d photos updated");
+const formatsAdded_label = pwg_getPageString("%d formats added for %d photos");
+const formatsUpdated_label = pwg_getPageString(
+  "%d formats updated for %d photos",
+);
+const batch_Label = pwg_getPageString("Manage this set of %d photos");
+const albumSummary_label = pwg_getPageString(
+  'Album "%s" now contains %d photos',
+);
+const str_format_warning = pwg_getPageString(
+  "Error when trying to detect formats",
+);
+const str_format_warning_multiple = pwg_getPageString(
+  "There is multiple image in the database with the following names : %s.",
+);
+const str_format_warning_notFound = pwg_getPageString(
+  "No picture found with the following name : %s.",
+);
+const str_and_X_others = pwg_getPageString("and %d more");
+const str_upload_in_progress = pwg_getPageString("Upload in progress");
+const str_drop_album_ab = pwg_getPageString("Drop into album");
+const file_ext = pwg_getPageData<string>("file_exts");
+const format_ext = pwg_getPageData<string>("format_ext");
+const uploadedPhotos: (number | string)[] = [];
+let uploadCategory: { id: string | number | undefined } | null = null;
+const addedPhotos: (number | string)[] = [];
+const updatedPhotos: (number | string)[] = [];
+const related_categories_ids = pwg_getPageData<number[]>(
+  "related_categories_ids",
+);
+
 /*--------------
 On DOM load
 --------------*/
 ready(function () {
+  const ab = new AlbumSelector({
+    selectedCategoriesIds: related_categories_ids,
+    selectAlbum: add_related_category,
+    adminMode: true,
+    modalTitle: str_drop_album_ab,
+  });
+
   // Moved out of photos_add_direct.latte's own inline onClick, which both
   // navigated and set a loading class. The URL it interpolated now rides on
   // the label as data-switch-format-mode-url, since a real listener cannot
@@ -168,13 +227,6 @@ ready(function () {
       });
     }
   }
-
-  const ab = new AlbumSelector({
-    selectedCategoriesIds: related_categories_ids,
-    selectAlbum: add_related_category,
-    adminMode: true,
-    modalTitle: str_drop_album_ab,
-  });
 
   // Open album selector event
   if (btnPhotosAS !== null) {
@@ -1087,55 +1139,3 @@ function add_first_album(add_cat: (id: string | number) => void) {
     },
   });
 }
-
-const formatMode = pwg_getPageData<boolean>("display_formats");
-const haveFormatsOriginal = pwg_getPageData<boolean>("have_formats_original");
-const originalImageId: string | number = haveFormatsOriginal
-  ? pwg_getPageData<string>("original_image_id_str")
-  : -1;
-const rawImageFormatsExtensions = pwg_getPageData<string | false | null>(
-  "formats_ext_info",
-);
-const imageFormatsExtensions =
-  rawImageFormatsExtensions !== false && rawImageFormatsExtensions !== null
-    ? rawImageFormatsExtensions
-    : "";
-const nb_albums = pwg_getPageData<string>("nb_albums");
-const chunk_size = String(pwg_getPageData<number>("chunk_size")) + "kb";
-const max_file_size = String(pwg_getPageData<number>("max_file_size")) + "mb";
-const format_update_warning = pwg_getPageString(
-  "This format already exists, it will be overwritten !",
-);
-const format_remove = pwg_getPageString("Remove");
-const pwg_token = pwg_getPageData<string>("csrf_token");
-const photosAdded_label = pwg_getPageString("%d photos uploaded");
-const photosUpdated_label = pwg_getPageString("%d photos updated");
-const formatsAdded_label = pwg_getPageString("%d formats added for %d photos");
-const formatsUpdated_label = pwg_getPageString(
-  "%d formats updated for %d photos",
-);
-const batch_Label = pwg_getPageString("Manage this set of %d photos");
-const albumSummary_label = pwg_getPageString(
-  'Album "%s" now contains %d photos',
-);
-const str_format_warning = pwg_getPageString(
-  "Error when trying to detect formats",
-);
-const str_format_warning_multiple = pwg_getPageString(
-  "There is multiple image in the database with the following names : %s.",
-);
-const str_format_warning_notFound = pwg_getPageString(
-  "No picture found with the following name : %s.",
-);
-const str_and_X_others = pwg_getPageString("and %d more");
-const str_upload_in_progress = pwg_getPageString("Upload in progress");
-const str_drop_album_ab = pwg_getPageString("Drop into album");
-const file_ext = pwg_getPageData<string>("file_exts");
-const format_ext = pwg_getPageData<string>("format_ext");
-const uploadedPhotos: (number | string)[] = [];
-let uploadCategory: { id: string | number | undefined } | null = null;
-const addedPhotos: (number | string)[] = [];
-const updatedPhotos: (number | string)[] = [];
-const related_categories_ids = pwg_getPageData<number[]>(
-  "related_categories_ids",
-);

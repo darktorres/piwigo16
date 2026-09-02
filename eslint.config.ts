@@ -216,6 +216,21 @@ export default defineConfig(
       // the ~103 call sites P51-C is about to convert to async/await.
       "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/no-misused-promises": "error",
+
+      // `considerDefaultExhaustiveForUnions: true` -- every remaining real
+      // site's `default` is a genuine, verified-correct catch-all for the
+      // rest of the union (comments.ts's author-status icon, history.ts's
+      // unrecognized-section fallback, user_list.ts's non-webmaster
+      // branch, ajax.ts's generic-object stringify, jcrop.ts's
+      // no-axis-pin corner drag) -- not a placeholder masking a missed
+      // case. The two sites where the switch's own parameter type was
+      // genuinely too wide (jcrop.ts's `oppositeLockCorner`/`getCorner`,
+      // each accepting a value neither real call site can ever pass) were
+      // narrowed for real instead of relying on this option.
+      "@typescript-eslint/switch-exhaustiveness-check": [
+        "error",
+        { considerDefaultExhaustiveForUnions: true },
+      ],
     },
   },
 );

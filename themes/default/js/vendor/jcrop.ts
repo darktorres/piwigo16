@@ -65,6 +65,7 @@ export interface JcropApi {
 }
 
 type Ord = "n" | "s" | "e" | "w" | "nw" | "ne" | "se" | "sw";
+type Corner = "nw" | "ne" | "se" | "sw";
 
 const HANDLE_ORDS: Ord[] = ["n", "s", "e", "w", "nw", "ne", "se", "sw"];
 const DRAGBAR_ORDS: Ord[] = ["n", "s", "e", "w"];
@@ -80,7 +81,10 @@ function px(n: number): string {
   return `${Math.round(n)}px`;
 }
 
-function oppositeLockCorner(ord: Ord | "move"): Ord {
+// Only ever called with a real Ord -- both call sites narrow away "move"
+// before reaching here (startDragMode's own early return, and this
+// function's own Corner-only return feeding back into itself).
+function oppositeLockCorner(ord: Ord): Corner {
   switch (ord) {
     case "n":
       return "sw";
@@ -98,8 +102,6 @@ function oppositeLockCorner(ord: Ord | "move"): Ord {
       return "nw";
     case "sw":
       return "ne";
-    default:
-      return "nw";
   }
 }
 
@@ -366,7 +368,9 @@ function initJcrop(origImg: HTMLImageElement, options: JcropOptions): JcropApi {
     return { x: a[0], y: a[1], x2: a[2], y2: a[3], w: a[2] - a[0], h: a[3] - a[1] };
   }
 
-  function getCorner(ord: Ord): [number, number] {
+  // Only ever called with the Corner oppositeLockCorner() returns -- a
+  // straight edge (n/s/e/w) never reaches here.
+  function getCorner(ord: Corner): [number, number] {
     const c = getFixed();
     switch (ord) {
       case "ne":
@@ -376,7 +380,6 @@ function initJcrop(origImg: HTMLImageElement, options: JcropOptions): JcropApi {
       case "se":
         return [c.x2, c.y2];
       case "sw":
-      default:
         return [c.x, c.y2];
     }
   }

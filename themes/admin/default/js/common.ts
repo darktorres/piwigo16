@@ -189,7 +189,7 @@ export function sprintf(...args: (string | number)[]): string {
         throw new Error("Expecting number but found " + typeof a);
       }
 
-      switch (m[7]) {
+      switch (m[7]!) {
         case "b":
           a = a.toString(2);
           break;

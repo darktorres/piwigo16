@@ -259,9 +259,10 @@ interface AlbumSelectorRemoveCallbackArgs {
 // `intro.ts`'s own `storage_details` shared global -- shape traced to
 // `IntroView.php`'s `storage_chart_data` property and the actual fields
 // `intro.ts`/`intro_tooltips.ts` both read.
-interface StorageDetails {
-  [type: string]: {
+type StorageDetails = Record<
+  string,
+  {
     total: { filesize: number; nb_files: number };
     details?: Record<string, { filesize: number; nb_files: number }>;
-  };
-}
+  }
+>;

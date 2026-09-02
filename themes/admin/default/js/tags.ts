@@ -1480,7 +1480,7 @@ function updatePage(): Promise<void> {
     cleanCheckmark();
     fadeIn(document.querySelectorAll(".pageLoad"));
     void fadeOpacity(tagBoxes, 0, 500).then(() => {
-      const displayTags: Promise<void> = new Promise((res, _rej) => {
+      const displayTags = new Promise<void>((res, _rej) => {
         const boxToRecycle = Math.min(dataToDisplay.length, tagBoxes.length);
 
         for (let i = 0; i < boxToRecycle; i++) {

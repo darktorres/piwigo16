@@ -32,11 +32,11 @@ function setDisplayCompact(): void {
       children(document.querySelectorAll(".categoryBox"), ".albumActions"),
       "a",
     ),
-    function (event: Event) {
-      css(event.currentTarget as Element, { color: "#000000" });
+    function (this: Element) {
+      css(this, { color: "#000000" });
     },
-    function (event: Event) {
-      css(event.currentTarget as Element, { color: "#848484" });
+    function (this: Element) {
+      css(this, { color: "#848484" });
     },
   );
   removeClass(document.querySelectorAll(".categoryBox"), "line_cat tile_cat");
@@ -180,8 +180,8 @@ function setDisplayLine(): void {
 
   hover(
     document.querySelectorAll(".categoryBox"),
-    function (event: Event) {
-      const box = event.currentTarget as Element;
+    function (this: Element) {
+      const box = this;
       css(box, "background", "#ffd7ad");
       css(children(box, ".albumInfos"), {
         color: "#515151",
@@ -195,8 +195,8 @@ function setDisplayLine(): void {
         "albumIconLineHover",
       );
     },
-    function (event: Event) {
-      const box = event.currentTarget as Element;
+    function (this: Element) {
+      const box = this;
       css(box, "background", "#fafafa");
       css(children(box, ".albumInfos"), {
         color: "#a9a9a9",
@@ -217,11 +217,11 @@ function setDisplayLine(): void {
       children(document.querySelectorAll(".categoryBox"), ".albumActions"),
       "a",
     ),
-    function (event: Event) {
-      css(event.currentTarget as Element, { color: "#000000" });
+    function (this: Element) {
+      css(this, { color: "#000000" });
     },
-    function (event: Event) {
-      css(event.currentTarget as Element, { color: "#515151" });
+    function (this: Element) {
+      css(this, { color: "#515151" });
     },
   );
 
@@ -370,11 +370,11 @@ function setDisplayTile(): void {
       children(document.querySelectorAll(".categoryBox"), ".albumActions"),
       "a",
     ),
-    function (event: Event) {
-      css(event.currentTarget as Element, { color: "#FFA646" });
+    function (this: Element) {
+      css(this, { color: "#FFA646" });
     },
-    function (event: Event) {
-      css(event.currentTarget as Element, { color: "#848484" });
+    function (this: Element) {
+      css(this, { color: "#848484" });
     },
   );
 
@@ -520,19 +520,11 @@ function AddHoverOnAlbumActions(): void {
   css(document.querySelectorAll(".albumActions"), "display", "none");
   hover(
     document.querySelectorAll(".categoryBox"),
-    function (event: Event) {
-      css(
-        children(event.currentTarget as Element, ".albumActions"),
-        "display",
-        "flex",
-      );
+    function (this: Element) {
+      css(children(this, ".albumActions"), "display", "flex");
     },
-    function (event: Event) {
-      css(
-        children(event.currentTarget as Element, ".albumActions"),
-        "display",
-        "none",
-      );
+    function (this: Element) {
+      css(children(this, ".albumActions"), "display", "none");
     },
   );
 }
@@ -543,6 +535,7 @@ ready(function () {
   }
 
   on(document.querySelectorAll(".addAlbum"), "click", function (e: Event) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real click inside the document always targets an Element (or null), never a bare EventTarget with no Element interface.
     if ((e.target as Element).className !== "cancelAddAlbum") {
       addClass(document.querySelectorAll(".addAlbum"), "input-mode");
 

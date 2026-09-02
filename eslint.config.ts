@@ -233,6 +233,10 @@ export default defineConfig(
       "@typescript-eslint/no-confusing-non-null-assertion": "error",
       "@typescript-eslint/no-useless-empty-export": "error",
       "@typescript-eslint/no-unsafe-type-assertion": "error",
+      "@typescript-eslint/no-use-before-define": [
+        "error",
+        { functions: false },
+      ],
     },
   },
 );

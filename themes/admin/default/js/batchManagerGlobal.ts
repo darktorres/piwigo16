@@ -59,6 +59,7 @@ ready(function () {
     const inputs: HTMLInputElement[] = [];
     let count = 0;
     find(container, "input[type=checkbox]").forEach((el) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified by the selector: only <input type=checkbox> elements can match "input[type=checkbox]".
       const checkbox = el as HTMLInputElement;
       const pos = count;
       inputs[count++] = checkbox;
@@ -70,6 +71,7 @@ ready(function () {
       // since dom.ts's `trigger()` has no jQuery-style extra-parameter
       // slot.
       on(checkbox, "shclick", function (shclickEvent: Event) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "shclick" is this same file's own real trigger() dispatch a few lines below, always a real CustomEvent with this detail shape.
         const event = (shclickEvent as CustomEvent<MouseEvent | KeyboardEvent>)
           .detail;
         if (event.shiftKey) {
@@ -120,6 +122,7 @@ ready(function () {
     document.querySelectorAll(".selected-associate-action"),
     "click",
     (e: Event) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real click inside the document always targets an Element (or null), never a bare EventTarget with no Element interface.
       const target = e.target as Element;
       if (target.classList.contains("remove-associate")) {
         ab_action.remove_selected_album(target.id);
@@ -329,9 +332,9 @@ export function getDerivativeUrls(queue: AjaxQueue) {
     types: [],
   };
   document
-    .querySelectorAll("#action_generate_derivatives input")
+    .querySelectorAll<HTMLInputElement>("#action_generate_derivatives input")
     .forEach((t) => {
-      if (is(t, ":checked")) params.types.push((t as HTMLInputElement).value);
+      if (is(t, ":checked")) params.types.push(t.value);
     });
   hide(document.querySelectorAll("#applyActionBlock"));
   hide(document.querySelectorAll(".permitActionListButton"));
@@ -445,6 +448,7 @@ on(window, "keypress", function (e: Event) {
   const haveAlbumSelector =
     addLinkedAlbum !== null && isVisible(addLinkedAlbum);
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keypress" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
   const keyEvent = e as KeyboardEvent;
   if (
     keyEvent.key === "Enter" &&
@@ -499,11 +503,9 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
       elements = all_elements;
     } else {
       document
-        .querySelectorAll('input[name="selection[]"]:checked')
+        .querySelectorAll<HTMLInputElement>('input[name="selection[]"]:checked')
         .forEach((el) => {
-          // Checkbox `.val()` is always its plain `value` attribute string
-          // (never string[]/undefined) -- never a multi-select.
-          elements!.push((el as HTMLInputElement).value);
+          elements!.push(el.value);
         });
     }
 
@@ -622,11 +624,9 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
     elements = all_elements;
   } else {
     document
-      .querySelectorAll('input[name="selection[]"]:checked')
+      .querySelectorAll<HTMLInputElement>('input[name="selection[]"]:checked')
       .forEach((el) => {
-        // Checkbox `.val()` is always its plain `value` attribute string
-        // (never string[]/undefined) -- never a multi-select.
-        elements!.push((el as HTMLInputElement).value);
+        elements!.push(el.value);
       });
   }
 

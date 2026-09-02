@@ -83,6 +83,15 @@ const str_album_comment_disallow = pwg_getPageString(
 const str_modal_ab = pwg_getPageString("New parent album");
 
 ready(function () {
+  // Modal description
+  // Genuine pre-existing implicit-global bug (no `var`/`let`/`const`
+  // anywhere) -- shared, harmlessly, between the allow-comments/
+  // disallow-comments handlers below (each assigns before reading, so
+  // sharing this declaration is behaviorally identical to the original
+  // accidental `window.temp_txt`). Declared here, scoped to this ready
+  // callback, since strict TS refuses a bare undeclared assignment.
+  let temp_txt: string;
+
   activateCommentDropdown();
   checkAlbumLock();
   const ab = new AlbumSelector({
@@ -575,14 +584,6 @@ ready(function () {
     });
   });
 
-  // Modal description
-  // Genuine pre-existing implicit-global bug (no `var`/`let`/`const`
-  // anywhere) -- shared, harmlessly, between the allow-comments/
-  // disallow-comments handlers above (each assigns before reading, so
-  // sharing this declaration is behaviorally identical to the original
-  // accidental `window.temp_txt`). Declared here, scoped to this ready
-  // callback, since strict TS refuses a bare undeclared assignment.
-  let temp_txt: string;
   const descModal = document.getElementById("desc-modal");
   const textareas = document.querySelectorAll(".sync-textarea");
   on(

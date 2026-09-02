@@ -180,6 +180,30 @@ function tag(id: string): HTMLDivElement {
   return el;
 }
 
+// ── Launch state ─────────────────────────────────────────────────────────
+
+interface ActiveState {
+  el: Element;
+  opts: ColorboxOptions;
+  related: Element[];
+  index: number;
+  w: number;
+  h: number;
+}
+
+let current: ActiveState | undefined;
+let isOpen = false;
+let isBusy = false;
+let isClosing = false;
+let requestSeq = 0;
+let interfaceWidth = 0;
+let interfaceHeight = 0;
+let loadedWidth = 0;
+let loadedHeight = 0;
+let lastFocusedEl: HTMLElement | null = null;
+let loadingTimer: ReturnType<typeof setTimeout> | undefined;
+let purgeCallbacks: (() => void)[] = [];
+
 function buildBox(): void {
   if (boxBuilt) {
     return;
@@ -309,30 +333,6 @@ function ensureBox(): void {
     document.body.append(overlayEl, boxEl);
   }
 }
-
-// ── Launch state ─────────────────────────────────────────────────────────
-
-interface ActiveState {
-  el: Element;
-  opts: ColorboxOptions;
-  related: Element[];
-  index: number;
-  w: number;
-  h: number;
-}
-
-let current: ActiveState | undefined;
-let isOpen = false;
-let isBusy = false;
-let isClosing = false;
-let requestSeq = 0;
-let interfaceWidth = 0;
-let interfaceHeight = 0;
-let loadedWidth = 0;
-let loadedHeight = 0;
-let lastFocusedEl: HTMLElement | null = null;
-let loadingTimer: ReturnType<typeof setTimeout> | undefined;
-let purgeCallbacks: (() => void)[] = [];
 
 function computeRelated(
   el: Element,

@@ -153,7 +153,7 @@ LocalStorageCache.prototype._init = function (
   this: LocalStorageCacheInstance,
   options: LocalStorageCacheOptions,
 ) {
-  this.key = options.key + "_" + options.serverId;
+  this.key = options.key! + "_" + options.serverId!;
   this.serverKey = options.serverKey;
   this.lifetime = options.lifetime ? options.lifetime * 1000 : 3600 * 1000;
   this.loader = options.loader!;
@@ -377,7 +377,7 @@ AbstractSelectizer.getRender = function <U extends Record<string, unknown>>(
     option_create: function (data: { input: string }, _escape: unknown) {
       return (
         '<div class="create">' +
-        lang["Add"] +
+        (lang["Add"] ?? "") +
         " <strong>" +
         data.input +
         "</strong>&hellip;</div>"
@@ -402,7 +402,7 @@ const CategoriesCache = function (
 
   options.loader = function (callback) {
     void ajax({
-      url: options.rootUrl + "api/v1/categories",
+      url: options.rootUrl! + "api/v1/categories",
       dataType: "json",
       success: function (
         data: operations["categoryList"]["responses"][200]["content"]["application/json"],
@@ -464,14 +464,14 @@ const TagsCache = function (
 
   options.loader = function (callback) {
     void ajax({
-      url: options.rootUrl + "api/v1/tags",
+      url: options.rootUrl! + "api/v1/tags",
       dataType: "json",
       success: function (
         data: operations["tagList"]["responses"][200]["content"]["application/json"],
       ) {
         const tags: ProcessedTag[] = data.tags.map(function (t) {
           const { urlName: _urlName, lastmodified: _lastmodified, ...rest } = t;
-          return { ...rest, id: "~~" + t.id + "~~" };
+          return { ...rest, id: "~~" + String(t.id) + "~~" };
         });
 
         callback(tags);
@@ -526,7 +526,7 @@ const GroupsCache = function (
 
   options.loader = function (callback) {
     void ajax({
-      url: options.rootUrl + "api/v1/groups",
+      url: options.rootUrl! + "api/v1/groups",
       dataType: "json",
       success: function (
         data: operations["groupList"]["responses"][200]["content"]["application/json"],
@@ -592,7 +592,8 @@ const UsersCache = function (
     // recursive loader
     (function load(page: number) {
       void ajax({
-        url: options.rootUrl + "api/v1/users?perPage=9999&page=" + page,
+        url:
+          options.rootUrl! + "api/v1/users?perPage=9999&page=" + String(page),
         dataType: "json",
         success: function (
           data: operations["userList"]["responses"][200]["content"]["application/json"],

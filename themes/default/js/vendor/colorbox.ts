@@ -426,17 +426,17 @@ let boxRect: BoxRect | undefined;
 let boxAnimFrame: number | undefined;
 
 function applyBoxCss(box: BoxRect): void {
-  boxEl.style.top = box.top + "px";
-  boxEl.style.left = box.left + "px";
-  boxEl.style.width = box.width + "px";
-  boxEl.style.height = box.height + "px";
+  boxEl.style.top = String(box.top) + "px";
+  boxEl.style.left = String(box.left) + "px";
+  boxEl.style.width = String(box.width) + "px";
+  boxEl.style.height = String(box.height) + "px";
 }
 
 function modalDimensions(): void {
   const boxWidth = parseFloat(boxEl.style.width) || 0;
   const boxHeight = parseFloat(boxEl.style.height) || 0;
-  const w = boxWidth - interfaceWidth + "px";
-  const h = boxHeight - interfaceHeight + "px";
+  const w = String(boxWidth - interfaceWidth) + "px";
+  const h = String(boxHeight - interfaceHeight) + "px";
   topBorderEl.style.width = w;
   bottomBorderEl.style.width = w;
   contentEl.style.width = w;
@@ -512,8 +512,8 @@ function positionBox(speed: number, onDone?: () => void): void {
     boxRect = target;
     isBusy = false;
 
-    wrapEl.style.width = target.width + "px";
-    wrapEl.style.height = target.height + "px";
+    wrapEl.style.width = String(target.width) + "px";
+    wrapEl.style.height = String(target.height) + "px";
 
     setTimeout(() => {
       window.addEventListener("resize", onWindowResize);
@@ -569,7 +569,7 @@ function launch(el: Element): void {
     current.h = initialHeight - loadedHeight - interfaceHeight;
 
     placeholder.style.width = "";
-    placeholder.style.height = current.h + "px";
+    placeholder.style.height = String(current.h) + "px";
 
     positionBox(0);
 
@@ -632,8 +632,8 @@ function load(): void {
         return;
       }
       setTimeout(() => {
-        img.style.width = img.naturalWidth + "px";
-        img.style.height = img.naturalHeight + "px";
+        img.style.width = String(img.naturalWidth) + "px";
+        img.style.height = String(img.naturalHeight) + "px";
         if (state.related.length > 1) {
           img.style.cursor = "pointer";
           img.addEventListener("click", () => {
@@ -683,11 +683,11 @@ function prep(node: Node): void {
   loadingBayEl.appendChild(loaded);
 
   const w = state.w || width(loaded);
-  loaded.style.width = w + "px";
+  loaded.style.width = String(w) + "px";
   loaded.style.overflow = "auto";
 
   const h = state.h || height(loaded);
-  loaded.style.height = h + "px";
+  loaded.style.height = String(h) + "px";
 
   contentEl.prepend(loaded);
   loadingBayEl.style.display = "none";

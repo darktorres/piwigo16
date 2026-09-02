@@ -270,7 +270,8 @@ async function fetchAndMergeActivityLines(
           date: row.dateFormatted,
           hour: row.occuredOn.split(" ")[1]!,
           user_id: row.performedBy,
-          username: row.performedByUsername || "user#" + row.performedBy,
+          username:
+            row.performedByUsername || "user#" + String(row.performedBy),
           detailsType: detailsType,
           details: details,
           counter: 1,
@@ -299,7 +300,7 @@ async function fetchAndMergeActivityLines(
 
     userLines.forEach((l) => {
       const usernames = l.object_id.map(
-        (uid2) => usernameOfId[uid2] || "user#" + uid2,
+        (uid2) => usernameOfId[uid2] || "user#" + String(uid2),
       );
       l.details.users = usernames;
       l.details.users_string = [...new Set(usernames)].join(", ");
@@ -455,7 +456,7 @@ function lineConstructor(line: MergedActivityLine) {
             break;
           default:
             final_albumInfos =
-              line.counter + " " + line.object + " " + line.action;
+              String(line.counter) + " " + line.object + " " + line.action;
             break;
         }
 
@@ -513,7 +514,7 @@ function lineConstructor(line: MergedActivityLine) {
             break;
           default:
             final_albumInfos =
-              line.counter + " " + line.object + " " + line.action;
+              String(line.counter) + " " + line.object + " " + line.action;
             break;
         }
 
@@ -571,7 +572,7 @@ function lineConstructor(line: MergedActivityLine) {
             break;
           default:
             final_albumInfos =
-              line.counter + " " + line.object + " " + line.action;
+              String(line.counter) + " " + line.object + " " + line.action;
             break;
         }
 
@@ -621,7 +622,7 @@ function lineConstructor(line: MergedActivityLine) {
             break;
           default:
             final_albumInfos =
-              line.counter + " " + line.object + " " + line.action;
+              String(line.counter) + " " + line.object + " " + line.action;
             break;
         }
 
@@ -678,7 +679,7 @@ function lineConstructor(line: MergedActivityLine) {
         );
         addClass(find(newLine, ".action-section"), "icon-user-1");
         html(find(newLine, ".action-name"), line.action);
-        final_albumInfos = "x" + line.counter;
+        final_albumInfos = "x" + String(line.counter);
         break;
     }
   } else {
@@ -736,7 +737,7 @@ function lineConstructor(line: MergedActivityLine) {
             break;
           default:
             final_albumInfos =
-              line.counter + " " + line.object + " " + line.action;
+              String(line.counter) + " " + line.object + " " + line.action;
             break;
         }
 
@@ -793,7 +794,7 @@ function lineConstructor(line: MergedActivityLine) {
             break;
           default:
             final_albumInfos =
-              line.counter + " " + line.object + " " + line.action;
+              String(line.counter) + " " + line.object + " " + line.action;
 
             break;
         }
@@ -851,7 +852,7 @@ function lineConstructor(line: MergedActivityLine) {
             break;
           default:
             final_albumInfos =
-              line.counter + " " + line.object + " " + line.action;
+              String(line.counter) + " " + line.object + " " + line.action;
             break;
         }
 
@@ -900,7 +901,7 @@ function lineConstructor(line: MergedActivityLine) {
             break;
           default:
             final_albumInfos =
-              line.counter + " " + line.object + " " + line.action;
+              String(line.counter) + " " + line.object + " " + line.action;
             break;
         }
 
@@ -955,7 +956,7 @@ function lineConstructor(line: MergedActivityLine) {
         );
         addClass(find(newLine, ".action-section"), "icon-user-1");
         html(find(newLine, ".action-name"), line.action);
-        final_albumInfos = "x" + line.counter;
+        final_albumInfos = "x" + String(line.counter);
         break;
     }
   }
@@ -975,7 +976,11 @@ function lineConstructor(line: MergedActivityLine) {
 
   /* Detail_section */
   html(find(newLine, ".detail-item-1"), line.ip_address ?? "");
-  attr(find(newLine, ".detail-item-1"), "title", "IP: " + line.ip_address);
+  attr(
+    find(newLine, ".detail-item-1"),
+    "title",
+    "IP: " + (line.ip_address ?? ""),
+  );
 
   if (line.detailsType == "script") {
     html(find(newLine, ".detail-item-2"), line.details.script ?? "");
@@ -1012,7 +1017,7 @@ function lineConstructor(line: MergedActivityLine) {
     remove(find(newLine, ".detail-item-3"));
   }
 
-  addClass(newLine, "uid-" + line.user_id);
+  addClass(newLine, "uid-" + String(line.user_id));
 
   displayLine(newLine);
 }
@@ -1140,7 +1145,7 @@ function page_reset() {
 ready(function () {
   append(
     document.querySelectorAll("h1"),
-    `<span class='badge-number'>` + (nb_users - 1) + `</span>`,
+    `<span class='badge-number'>` + String(nb_users - 1) + `</span>`,
   );
 
   // The `.selectize-input`/`.item[data-value]` markup below is

@@ -177,7 +177,7 @@ function resolveTimepickerLocale(jqueryCode: string | undefined): TimepickerLoca
 }
 
 function pad2(n: number): string {
-  return (n < 10 ? "0" : "") + n;
+  return (n < 10 ? "0" : "") + String(n);
 }
 
 function daysInMonth(year: number, month: number): number {
@@ -205,13 +205,13 @@ function formatLongDate(date: Date, locale: DatepickerLocale): string {
   // itself never appends it, confirmed against the real source
   // (`node_modules/jquery-ui/datepicker.js`'s only other reference).
   return (
-    locale.dayNames[date.getDay()] +
+    locale.dayNames[date.getDay()]! +
     " " +
-    date.getDate() +
+    String(date.getDate()) +
     " " +
-    locale.monthNames[date.getMonth()] +
+    locale.monthNames[date.getMonth()]! +
     " " +
-    date.getFullYear()
+    String(date.getFullYear())
   );
 }
 
@@ -246,7 +246,7 @@ function autoSizeLength(locale: DatepickerLocale): number {
 /** `$.datepicker.formatDate("yy-mm-dd", date)` -- the alt (hidden) field. */
 function formatIsoDate(date: Date): string {
   return (
-    date.getFullYear() +
+    String(date.getFullYear()) +
     "-" +
     pad2(date.getMonth() + 1) +
     "-" +
@@ -805,14 +805,14 @@ function showPopup(inst: Instance): void {
 
   popupEl.style.display = "block";
   const rect = inst.input.getBoundingClientRect();
-  popupEl.style.left = window.scrollX + rect.left + "px";
-  popupEl.style.top = window.scrollY + rect.bottom + "px";
+  popupEl.style.left = String(window.scrollX + rect.left) + "px";
+  popupEl.style.top = String(window.scrollY + rect.bottom) + "px";
 
   const popupRect = popupEl.getBoundingClientRect();
   const viewWidth = document.documentElement.clientWidth;
   if (popupRect.right > viewWidth) {
     popupEl.style.left =
-      Math.max(0, window.scrollX + viewWidth - popupRect.width) + "px";
+      String(Math.max(0, window.scrollX + viewWidth - popupRect.width)) + "px";
   }
 }
 

@@ -97,7 +97,7 @@ ready(function () {
 
   on(document.querySelectorAll(".unlock-album"), "click", function () {
     void ajax({
-      url: "api/v1/categories/" + album_id,
+      url: "api/v1/categories/" + String(album_id),
       type: "PATCH",
       dataType: "json",
       contentType: "application/json",
@@ -148,7 +148,7 @@ ready(function () {
     hide(document.querySelectorAll(".info-error,.info-message"));
 
     void ajax({
-      url: "api/v1/categories/" + album_id,
+      url: "api/v1/categories/" + String(album_id),
       type: "PATCH",
       dataType: "json",
       contentType: "application/json",
@@ -264,7 +264,7 @@ ready(function () {
         // eslint-disable-next-line @typescript-eslint/no-this-alias -- the classic callback-closure idiom: `this` (the jquery-confirm modal instance) needs to stay reachable inside the nested `success`/`error` callbacks below, which have their own `this`.
         const self = this;
         return ajax({
-          url: "api/v1/categories/" + album_id + "/orphan-impact",
+          url: "api/v1/categories/" + String(album_id) + "/orphan-impact",
           type: "GET",
           dataType: "json",
           success: function (
@@ -274,7 +274,10 @@ ready(function () {
               "<p>" +
               str_delete_album_and_his_x_subalbums
                 .replace("%s", "<strong>" + album_name + "</strong>")
-                .replace("%d", "<strong>" + nb_sub_albums + "</strong>") +
+                .replace(
+                  "%d",
+                  "<strong>" + String(nb_sub_albums) + "</strong>",
+                ) +
               "</p>";
 
             message += `<div class="cat-delete-modes">`;
@@ -336,7 +339,7 @@ ready(function () {
   function delete_album(photo_deletion_mode: string) {
     return new Promise<void>((res, rej) => {
       void ajax({
-        url: "api/v1/categories/" + album_id,
+        url: "api/v1/categories/" + String(album_id),
         type: "DELETE",
         contentType: "application/json",
         headers: { "X-CSRF-Token": pwg_token },
@@ -369,7 +372,9 @@ ready(function () {
 
       void ajax({
         url:
-          "api/v1/categories/" + album_id + "/actions/refresh-representative",
+          "api/v1/categories/" +
+          String(album_id) +
+          "/actions/refresh-representative",
         type: "POST",
         contentType: "application/json",
         headers: { "X-CSRF-Token": pwg_token },
@@ -424,7 +429,7 @@ ready(function () {
     }
 
     void ajax({
-      url: "api/v1/categories/" + album_id + "/representative",
+      url: "api/v1/categories/" + String(album_id) + "/representative",
       type: "DELETE",
       contentType: "application/json",
       headers: { "X-CSRF-Token": pwg_token },
@@ -481,7 +486,7 @@ ready(function () {
 
   on(document.querySelectorAll(".allow-comments"), "click", function () {
     void ajax({
-      url: "api/v1/categories/" + album_id,
+      url: "api/v1/categories/" + String(album_id),
       type: "PATCH",
       dataType: "json",
       contentType: "application/json",
@@ -528,7 +533,7 @@ ready(function () {
   });
   on(document.querySelectorAll(".disallow-comments"), "click", function () {
     void ajax({
-      url: "api/v1/categories/" + album_id,
+      url: "api/v1/categories/" + String(album_id),
       type: "PATCH",
       dataType: "json",
       contentType: "application/json",
@@ -647,7 +652,7 @@ function add_related_category({
     );
     append(
       document.querySelectorAll(".invisible-related-categories-select"),
-      "<option selected value=" + album.id + "></option>",
+      "<option selected value=" + String(album.id) + "></option>",
     );
 
     newSelectedAlbum();

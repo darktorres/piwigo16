@@ -626,7 +626,7 @@ ready(function () {
             Number(rectView.left.toFixed(0)) - 1 &&
           Number(rect.right.toFixed(0)) <= Number(rectView.right.toFixed(0)) + 1
         ) {
-          const tabId = attrOf(slide, "id");
+          const tabId = attrOf(slide, "id") ?? "";
           addClass(document.querySelectorAll("#name_" + tabId), "selected");
         }
       });
@@ -640,7 +640,7 @@ ready(function () {
   off(guestEditTabsheet, "click");
   on(guestEditTabsheet, "click", function (this: Element) {
     const tabName = attrOf(this, "id")!.split("_");
-    const tabId = tabName[1] + "_" + tabName[2] + "_" + tabName[3];
+    const tabId = tabName[1]! + "_" + tabName[2]! + "_" + tabName[3]!;
     document.querySelector("#" + tabId)?.scrollIntoView({
       behavior: "smooth",
     });
@@ -662,7 +662,7 @@ ready(function () {
             Number(rectView.left.toFixed(0)) - 1 &&
           Number(rect.right.toFixed(0)) <= Number(rectView.right.toFixed(0)) + 1
         ) {
-          const tabId = attrOf(slide, "id");
+          const tabId = attrOf(slide, "id") ?? "";
           addClass(document.querySelectorAll("#name_" + tabId), "selected");
         }
       });
@@ -1240,8 +1240,8 @@ let months: string[] = [];
 
 function getDateStr(date: string) {
   const date_arr = date.split("-");
-  const curr_month = months[parseInt(date_arr[1]!) - 1];
-  return curr_month + " " + date_arr[0];
+  const curr_month = months[parseInt(date_arr[1]!) - 1] ?? "";
+  return curr_month + " " + date_arr[0]!;
 }
 
 function setupRegisterDates(register_dates: string[]) {
@@ -1580,7 +1580,7 @@ function editTabsBind() {
   off(tabsheets, "click");
   on(tabsheets, "click", function (this: Element) {
     const tabName = attrOf(this, "id")!.split("_");
-    const tabId = tabName[1] + "_" + tabName[2];
+    const tabId = tabName[1]! + "_" + tabName[2]!;
 
     document.querySelector("#" + tabId)?.scrollIntoView({
       behavior: "smooth",
@@ -1604,7 +1604,7 @@ function check_tabs(title_tab_name_id: string) {
     }
     html(
       document.querySelectorAll("#mores_plugins_expand"),
-      "+" + countMoresPlugins,
+      "+" + String(countMoresPlugins),
     );
 
     const dropdown = document.querySelector("#dropdown_mores_plugins")!;
@@ -1871,7 +1871,9 @@ function open_main_user_modal(user_to_edit: UserRow) {
 function set_main_user_success() {
   const indexKey = current_users.findIndex((u) => u.id === owner_id);
   const new_main = find(
-    document.querySelectorAll('.user-container[key="' + indexKey + '"]'),
+    document.querySelectorAll(
+      '.user-container[key="' + String(indexKey) + '"]',
+    ),
     ".user-container-username",
   )[0];
   let king = document.querySelector("#the_king");
@@ -2165,7 +2167,7 @@ function fill_user_edit_summary(
   attr(
     find(pop_in, ".user-property-history a"),
     "href",
-    history_base_url + user_to_edit.id,
+    history_base_url + String(user_to_edit.id),
   );
 
   // Hide the copy password button and change modal copy password
@@ -2885,7 +2887,7 @@ function update_user_username() {
     return;
   }
   void ajax({
-    url: "api/v1/users/" + last_user_id,
+    url: "api/v1/users/" + String(last_user_id),
     type: "PATCH",
     contentType: "application/json",
     headers: { "X-CSRF-Token": pwg_token },
@@ -2943,7 +2945,7 @@ function update_user_password() {
   );
   ajax_data["password"] = newPassword;
   void ajax({
-    url: "api/v1/users/" + last_user_id,
+    url: "api/v1/users/" + String(last_user_id),
     type: "PATCH",
     contentType: "application/json",
     headers: { "X-CSRF-Token": pwg_token },
@@ -3002,7 +3004,7 @@ function update_user_info() {
 
   ajax_data = fill_ajax_data_from_container(ajax_data, pop_in_container);
   void ajax({
-    url: "api/v1/users/" + last_user_id,
+    url: "api/v1/users/" + String(last_user_id),
     type: "PATCH",
     contentType: "application/json",
     headers: { "X-CSRF-Token": pwg_token },
@@ -3127,7 +3129,7 @@ function update_guest_info() {
   ajax_data.email = undefined;
   ajax_data.status = undefined;
   void ajax({
-    url: "api/v1/users/" + guest_id,
+    url: "api/v1/users/" + String(guest_id),
     type: "PATCH",
     contentType: "application/json",
     headers: { "X-CSRF-Token": pwg_token },
@@ -3463,7 +3465,7 @@ function add_infos_to_new_user(
   ajax_data: Record<string, unknown>,
 ) {
   void ajax({
-    url: "api/v1/users/" + user_id,
+    url: "api/v1/users/" + String(user_id),
     type: "PATCH",
     contentType: "application/json",
     headers: { "X-CSRF-Token": pwg_token },
@@ -3540,7 +3542,7 @@ function add_infos_to_new_user(
 function send_new_user_password(user_id: number, mail: string) {
   const send_by_mail = mail === "" ? false : true;
   void ajax({
-    url: "api/v1/users/" + user_id + "/actions/generate-password-link",
+    url: "api/v1/users/" + String(user_id) + "/actions/generate-password-link",
     dataType: "json",
     type: "POST",
     contentType: "application/json",
@@ -3631,7 +3633,7 @@ function send_new_user_password(user_id: number, mail: string) {
 
 function delete_user(uid: number) {
   void ajax({
-    url: "api/v1/users/" + uid,
+    url: "api/v1/users/" + String(uid),
     type: "DELETE",
     headers: { "X-CSRF-Token": pwg_token },
     success: function (
@@ -3693,7 +3695,7 @@ function send_link_password(
   send_by_mail: boolean,
 ) {
   void ajax({
-    url: "api/v1/users/" + user_id + "/actions/generate-password-link",
+    url: "api/v1/users/" + String(user_id) + "/actions/generate-password-link",
     dataType: "json",
     type: "POST",
     contentType: "application/json",
@@ -3859,7 +3861,7 @@ function send_link_password(
 
 function set_main_user(user_id: number, new_username: string) {
   void ajax({
-    url: "api/v1/users/" + user_id + "/actions/set-main-user",
+    url: "api/v1/users/" + String(user_id) + "/actions/set-main-user",
     dataType: "json",
     type: "POST",
     contentType: "application/json",
@@ -4184,7 +4186,7 @@ ready(function () {
       request = Promise.all(
         userIds.map((id) =>
           ajax({
-            url: "api/v1/users/" + id,
+            url: "api/v1/users/" + String(id),
             method: "DELETE",
             headers: { "X-CSRF-Token": pwg_token },
           }),
@@ -4210,7 +4212,7 @@ ready(function () {
       request = Promise.all(
         userIds.map((id) =>
           ajax({
-            url: "api/v1/users/" + id,
+            url: "api/v1/users/" + String(id),
             method: "PATCH",
             contentType: "application/json",
             data: JSON.stringify({ [field]: value }),

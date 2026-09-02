@@ -50,10 +50,10 @@ interface PluginValueEntry {
 }
 
 interface ImageUpdateBody {
-  name?: string;
-  author?: string;
-  dateCreation?: string;
-  comment?: string;
+  name?: string | undefined;
+  author?: string | undefined;
+  dateCreation?: string | undefined;
+  comment?: string | undefined;
   categories?: string;
   tagIds?: string;
   level?: number;
@@ -167,6 +167,7 @@ ready(function () {
       if (fieldset === null) {
         return;
       }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       const pictureId = data(fieldset, "image_id") as string | number;
       if (user_interacted) {
         showUnsavedLocalBadge(pictureId);
@@ -182,6 +183,7 @@ ready(function () {
     document.querySelectorAll("input[data-datepicker]"),
     "change",
     function (this: Element) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       const pictureId = data(this.closest("fieldset")!, "image_id") as
         string | number;
       if (user_interacted) {
@@ -195,6 +197,7 @@ ready(function () {
   // 6), so a native listener sees it just like it always did for every
   // plain, non-selectized <select> on the page.
   on(document.querySelectorAll("select"), "change", function (this: Element) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
     const pictureId = data(this.closest("fieldset")!, "image_id") as
       string | number;
     if (user_interacted) {
@@ -210,6 +213,7 @@ ready(function () {
     function (this: Element) {
       user_interacted = true;
       const fieldset = this.closest("fieldset")!;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       const pictureId = data(fieldset, "image_id") as string | number;
       showUnsavedLocalBadge(pictureId);
     },
@@ -221,6 +225,7 @@ ready(function () {
     "click",
     function (this: Element) {
       const fieldset = this.closest("fieldset")!;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       const pictureId = data(fieldset, "image_id") as string | number;
       confirm({
         title: str_meta_warning,
@@ -273,6 +278,7 @@ ready(function () {
     "click",
     function (this: Element) {
       const fieldset = this.closest("fieldset")!;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       const pictureId = data(fieldset, "image_id") as string | number;
       confirm({
         title: str_are_you_sure,
@@ -344,6 +350,7 @@ ready(function () {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises -- fire-and-forget async click handler, same as the original .js: dom.ts's on() doesn't await a handler's return value either way.
     async function (this: Element) {
       const fieldset = this.closest("fieldset")!;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       const pictureId = data(fieldset, "image_id") as string | number;
       await saveChanges(pictureId);
     },
@@ -364,6 +371,7 @@ ready(function () {
     "click",
     function (this: Element) {
       const fieldset = this.closest("fieldset")!;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       b_current_picture_id = data(fieldset, "image_id") as string | number;
       ab.hardUpdate(all_related_categories_ids[b_current_picture_id] ?? []);
       ab.open();
@@ -373,10 +381,12 @@ ready(function () {
     document.querySelectorAll(".related-categories-container"),
     "click",
     (e: Event) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real click inside the document always targets an Element (or null), never a bare EventTarget with no Element interface.
       const eventTarget = e.target as Element;
       if (eventTarget.classList.contains("remove-item")) {
         const cat_id = attrOf(eventTarget, "id")!;
         const fieldset = eventTarget.closest("fieldset")!;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
         const picture_id = data(fieldset, "image_id") as string | number;
 
         remove_selected_category(cat_id, picture_id);
@@ -681,20 +691,20 @@ async function saveChanges(pictureId: string | number) {
     // Retrieve Infos
     const name = val(
       document.querySelectorAll("#picture-" + String(pictureId) + " #name"),
-    ) as string;
+    );
     const author = val(
       document.querySelectorAll("#picture-" + String(pictureId) + " #author"),
-    ) as string;
+    );
     const date_creation = val(
       document.querySelectorAll(
         "#picture-" + String(pictureId) + " #date_creation",
       ),
-    ) as string;
+    );
     const comment = val(
       document.querySelectorAll(
         "#picture-" + String(pictureId) + " #description",
       ),
-    ) as string;
+    );
     // `option:selected` is jQuery/Sizzle's own pseudo-selector, not real
     // CSS -- querySelectorAll throws on it. Reading the <select>'s own
     // `.value` gets the selected option's value directly.
@@ -707,9 +717,11 @@ async function saveChanges(pictureId: string | number) {
     // Get Tags
     const tags: (string | number)[] = [];
     document
-      .querySelectorAll("#picture-" + String(pictureId) + " #tags option")
+      .querySelectorAll<HTMLOptionElement>(
+        "#picture-" + String(pictureId) + " #tags option",
+      )
       .forEach((option) => {
-        tags.push((option as HTMLOptionElement).value);
+        tags.push(option.value);
       });
     const tagsStr = tags.join(",");
     const ajax_data: ImageUpdateBody = {
@@ -771,6 +783,7 @@ async function saveChanges(pictureId: string | number) {
 async function saveAllChanges() {
   const allField = Array.from(document.querySelectorAll("fieldset"));
   for (const field of allField) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
     const pictureId = data(field, "image_id") as string | number;
     await saveChanges(pictureId);
   }
@@ -785,8 +798,10 @@ function pluginFunctionMapInit() {
     // Genuinely dynamic third-party extension hook (Skeleton
     // extension's own convention: `<pluginId>_batchManagerSave`) --
     // no static type source for an arbitrary plugin-defined global.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- genuinely dynamic third-party extension hook; window has no static index signature for an arbitrary plugin-defined global.
     const fn = (window as unknown as Record<string, unknown>)[functionName];
     if (typeof fn === "function") {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- same dynamic extension hook: the Skeleton extension convention guarantees this real signature, but nothing statically enforces it.
       pluginFunctionMap[pluginId] = fn as (pictureId: string | number) => void;
     }
   });

@@ -79,9 +79,12 @@ describe("val", () => {
 
     setVal(set, "z");
 
-    expect(Array.from(set).map((el) => (el as HTMLInputElement).value)).toEqual(
-      ["z", "z"]
-    );
+    expect(
+      Array.from(set).map(
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified by this test's own markup: every element mounted here is a real <input>.
+        (el) => (el as HTMLInputElement).value,
+      ),
+    ).toEqual(["z", "z"]);
   });
 
   it("returns undefined for an element with no value", () => {
@@ -108,6 +111,7 @@ describe("val", () => {
 
     setVal(set, "not rendered anywhere");
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- val()'s own docblock: `.value` is written to any element, form-control or not, so there is no single real interface to narrow to.
     expect((Array.from(set)[0] as unknown as { value: string }).value).toBe(
       "not rendered anywhere"
     );
@@ -449,7 +453,7 @@ describe("children", () => {
   it("returns only direct children, not every descendant", () => {
     document.body.innerHTML =
       '<div class="t"><a>direct</a><span><a>nested</a></span></div>';
-    const el = document.querySelector(".t") as HTMLElement;
+    const el = document.querySelector<HTMLElement>(".t")!;
 
     const result = children(el, "a");
 
@@ -459,7 +463,7 @@ describe("children", () => {
 
   it("returns every direct child when no selector is given", () => {
     document.body.innerHTML = '<div class="t"><a></a><span></span></div>';
-    const el = document.querySelector(".t") as HTMLElement;
+    const el = document.querySelector<HTMLElement>(".t")!;
 
     expect(children(el)).toHaveLength(2);
   });

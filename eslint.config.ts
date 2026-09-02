@@ -199,9 +199,9 @@ export default defineConfig(
       ],
 
       // Beyond 14.x's own ruleset -- `tsconfig.json` already sets
-      // `isolatedModules: true`, which `consistent-type-imports` directly
-      // supports (a type-only import re-exported as a value would break
-      // isolated per-file transpilation).
+      // `verbatimModuleSyntax: true`, which `consistent-type-imports`
+      // directly supports (a type-only import re-exported as a value
+      // would break isolated per-file transpilation).
       "@typescript-eslint/consistent-type-imports": [
         "error",
         { fixStyle: "inline-type-imports" },

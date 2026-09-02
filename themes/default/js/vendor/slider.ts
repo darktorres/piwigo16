@@ -226,6 +226,7 @@ function bindMouse(el: HTMLElement): void {
     if (state === undefined) {
       return;
     }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "mousedown" always dispatches a real MouseEvent; on()'s own handler param is typed generically via the native EventListener interface.
     const event = e as MouseEvent;
     event.preventDefault();
 
@@ -242,6 +243,7 @@ function bindMouse(el: HTMLElement): void {
       if (liveState === undefined) {
         return;
       }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "mousemove" always dispatches a real MouseEvent; on()'s own handler param is typed generically via the native EventListener interface.
       const nv = normValueFromMouse(el, liveState, moveEvent as MouseEvent);
       slideTo(el, liveState, index, nv, moveEvent);
     };
@@ -270,6 +272,7 @@ function bindKeyboard(el: HTMLElement, handle: HTMLAnchorElement, index: number)
     if (state === undefined) {
       return;
     }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
     const event = e as KeyboardEvent;
     const curVal = state.values[index]!;
     let newVal: number;
@@ -456,6 +459,7 @@ export function slider(
   }
 
   if (optionsOrMethod === "values") {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- the jQuery-UI-style ("values", index, value) call convention always pairs this branch with a real numeric index; TS can't correlate two separate parameters like this.
     const index = keyOrIndex as number;
     state.values[index] = trimAlign(state, value!);
     refreshValue(el, state);

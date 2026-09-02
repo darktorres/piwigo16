@@ -919,7 +919,7 @@ export class AlbumSelector {
       success: (payload) => {
         const data = payload as CategoryListOrAvailableResponse;
         this.#rememberLevelSeparator(data);
-        const cats = data.categories.filter((c) => c.id != cat_id);
+        const cats = data.categories.filter((c) => c.id !== Number(cat_id));
         const limit = data.limit!;
         this.#prefill_results(cat_id, cats, limit);
       },

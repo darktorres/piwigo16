@@ -377,7 +377,7 @@ ready(function () {
     for (let i = 0; i < current_users.length; i++) {
       if (selection_ids.includes(current_users[i]!.id)) {
         selection.splice(
-          selection.findIndex((x) => x.id == current_users[i]!.id),
+          selection.findIndex((x) => x.id === current_users[i]!.id),
           1,
         );
       } else {
@@ -1373,7 +1373,7 @@ function create_user_selected_item(user: SelectionEntry): Element {
   html(find(new_elem, "p"), user.username!);
   on(find(new_elem, "a"), "click", () => {
     selection.splice(
-      selection.findIndex((i) => i.id == user.id),
+      selection.findIndex((i) => i.id === user.id),
       1,
     );
     update_selection_content();
@@ -1545,7 +1545,7 @@ function get_group_name_from_id(id: number) {
 
 function get_container_index_from_uid(uid: number) {
   for (let i = 0; i < current_users.length; i++) {
-    if (current_users[i]!.id == uid) {
+    if (current_users[i]!.id === uid) {
       return i;
     }
   }
@@ -1948,7 +1948,7 @@ function user_container_click(this: Element) {
     hide(find(container_checkbox, "i"));
     if (in_container) {
       removeClass(this, "container-selected");
-      selection = selection.filter((elem) => elem.id != curr_user.id);
+      selection = selection.filter((elem) => elem.id !== curr_user.id);
     }
   } else {
     attr(container_checkbox, "data-selected", "1");
@@ -2416,7 +2416,7 @@ function fill_user_edit_update(user_to_edit: UserRow, pop_in: Element) {
 }
 
 function fill_user_edit_permissions(user_to_edit: UserRow, pop_in: Element) {
-  if (user_to_edit.id != connected_user) {
+  if (user_to_edit.id !== connected_user) {
     // I'm not the connected user
     if (!is_owner(connected_user)) {
       // I'm not the owner, you need to test my permissions

@@ -619,7 +619,8 @@ function updateNbComments(nb: string | number) {
 }
 
 function showModalViewComment(id: string | number) {
-  const comment = commentsState.comments.filter((c) => c.id == id)[0] ?? null;
+  const comment =
+    commentsState.comments.filter((c) => c.id === Number(id))[0] ?? null;
   if (!comment || modalViewComment === null) return;
 
   const item = document.querySelector("#" + escapeId(id));

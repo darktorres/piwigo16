@@ -337,7 +337,7 @@ AbstractSelectizer.prototype._selectize = function (
           )?.style.setProperty("display", "none");
 
           instance.on("item_remove", (id) => {
-            if (id == defaultValue) {
+            if (String(id) === String(defaultValue)) {
               instance.addItem(id);
               (
                 instance

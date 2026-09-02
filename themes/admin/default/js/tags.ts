@@ -458,7 +458,7 @@ function setupTagbox(tagBox: Element): void {
   //Edit Name
   on(find(tagBox, ".dropdown-option.edit"), "click", function () {
     const id = data(tagBox, "id") as TagId;
-    const tagIndex = dataTags.findIndex((tag) => tag.id == id);
+    const tagIndex = dataTags.findIndex((tag) => tag.id === Number(id));
     // Non-null: `id` always comes from a real tag box, which was
     // itself rendered from this same `dataTags` array.
     const tagRawName =
@@ -560,7 +560,7 @@ function removeTag(id: TagId, name: string): void {
             .querySelector('.tag-box[data-id="' + String(id) + '"]')
             ?.remove();
           //Update data
-          dataTags = dataTags.filter((tag) => tag.id != id);
+          dataTags = dataTags.filter((tag) => tag.id !== Number(id));
           showMessage(str_tag_deleted.replace("%s", name));
           updateBadge();
           updateSearchInfo();
@@ -621,7 +621,7 @@ function renameTag(id: TagId, new_name: string): Promise<TagRenameResponse> {
         );
 
         //Update the data
-        const index = dataTags.findIndex((tag) => tag.id == id);
+        const index = dataTags.findIndex((tag) => tag.id === Number(id));
         // Non-null: `id` always identifies a real, currently-rendered
         // tag box, which was itself rendered from this same array.
         dataTags[index]!.name = data.name;
@@ -682,7 +682,7 @@ function duplicateTag(id: TagId, name: string): Promise<TagDuplicateResponse> {
         setupTagbox(newTag);
 
         //Update Data
-        const index = dataTags.findIndex((tag) => tag.id == id);
+        const index = dataTags.findIndex((tag) => tag.id === Number(id));
         dataTags.splice(index + 1, 0, {
           name: data.name,
           // Was missing entirely -- `TagRow.raw_name` is a required
@@ -763,8 +763,11 @@ function addSelectedItem(id: TagId): void {
       );
     } else {
       hide(document.querySelectorAll(".selection-other-tags"));
-      if (dataTags.findIndex((tag) => tag.id == id) > -1) {
-        createSelectionItem(id, dataTags.find((tag) => tag.id == id)!.name);
+      if (dataTags.findIndex((tag) => tag.id === Number(id)) > -1) {
+        createSelectionItem(
+          id,
+          dataTags.find((tag) => tag.id === Number(id))!.name,
+        );
       }
     }
   }
@@ -829,7 +832,7 @@ function removeSelectedItem(id: TagId): void {
           ) {
             isNotCreate = false;
             const indexOfTag = dataTags.findIndex(
-              (tag) => tag.id == selected[i],
+              (tag) => tag.id === Number(selected[i]),
             );
             createSelectionItem(selected[i]!, dataTags[indexOfTag]!.name);
           }
@@ -866,7 +869,7 @@ function updateMergeItems(): void {
         '<option value="' +
           String(id) +
           '">' +
-          dataTags.find((tag) => tag.id == id)!.name +
+          dataTags.find((tag) => tag.id === Number(id))!.name +
           "</option>",
       )[0]!,
     );
@@ -1030,7 +1033,7 @@ function selectInvert(data: TagRow[]): void {
 on(document.querySelectorAll("#DeleteSelectionMode"), "click", function () {
   const names: string[] = [];
   selected.forEach(function (id) {
-    names.push(dataTags.find((tag) => tag.id == id)!.name);
+    names.push(dataTags.find((tag) => tag.id === Number(id))!.name);
   });
 
   confirm({
@@ -1054,7 +1057,7 @@ on(document.querySelectorAll("#DeleteSelectionMode"), "click", function () {
 function removeSelectedTags(): void {
   const names: string[] = [];
   selected.forEach(function (id) {
-    names.push(dataTags.find((tag) => tag.id == id)!.name);
+    names.push(dataTags.find((tag) => tag.id === Number(id))!.name);
   });
 
   alert({
@@ -1146,7 +1149,7 @@ function mergeGroups(destination_id: TagId, merge_ids: TagId[]): void {
                 .querySelector('.tag-box[data-id="' + String(id) + '"]')
                 ?.remove();
               // Update data
-              dataTags = dataTags.filter((tag) => id != tag.id);
+              dataTags = dataTags.filter((tag) => Number(id) !== tag.id);
             }
           });
           if (data.imagesInMergedTag.length > 0) {
@@ -1169,7 +1172,7 @@ function mergeGroups(destination_id: TagId, merge_ids: TagId[]): void {
 
             // Update data
             const index = dataTags.findIndex(
-              (tag) => tag.id == data.destinationTagId,
+              (tag) => tag.id === data.destinationTagId,
             );
             dataTags[index]!.counter = data.imagesInMergedTag.length;
           }

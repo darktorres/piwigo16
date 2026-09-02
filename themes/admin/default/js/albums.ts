@@ -1182,13 +1182,13 @@ function getRank(
 ): number {
   const previousSibling = node.getPreviousSibling();
   if (previousSibling != null) {
-    if (node.id != ignoreId) {
+    if (node.id !== ignoreId) {
       return 1 + getRank(previousSibling, ignoreId);
     } else {
       return getRank(previousSibling, ignoreId);
     }
   } else {
-    if (node.id != ignoreId) {
+    if (node.id !== ignoreId) {
       return 1;
     } else {
       return 0;
@@ -1208,12 +1208,12 @@ function applyMove(moveInfo: JqTreeMoveInfo<AlbumNodeData>) {
   if (moveInfo.position == "after") {
     // Non-null: same "always a real parent" invariant as elsewhere in
     // this file (a move target is never the tree's own invisible root).
-    if (getId(previous_parent) != getId(target.parent!)) {
+    if (String(getId(previous_parent)) !== String(getId(target.parent!))) {
       moveParent = getId(target.parent!);
     }
     moveRank = getRank(target, id) + 1;
   } else if (moveInfo.position == "inside") {
-    if (getId(previous_parent) != getId(target)) {
+    if (String(getId(previous_parent)) !== String(getId(target))) {
       moveParent = getId(target);
       const currentNode = getAlbumTree().getNodeById(moveParent);
       if (
@@ -1226,7 +1226,7 @@ function applyMove(moveInfo: JqTreeMoveInfo<AlbumNodeData>) {
     }
     moveRank = 1;
   } else if (moveInfo.position == "before") {
-    if (getId(previous_parent) != getId(target.parent!)) {
+    if (String(getId(previous_parent)) !== String(getId(target.parent!))) {
       moveParent = getId(target.parent!);
     }
     moveRank = 1;
@@ -1369,7 +1369,7 @@ function findAlbumById(
   id: string | number,
 ): AlbumTreeNode | null {
   for (const album of a) {
-    if (album.id == id) {
+    if (album.id === String(id)) {
       return album;
     }
 

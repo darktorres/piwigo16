@@ -1479,7 +1479,7 @@ const getUserDisplay = function (
           blocks.item(blocks.length - 1)?.remove();
         }
 
-        usersInGroup = usersInGroup.filter((u) => u.id != user_id);
+        usersInGroup = usersInGroup.filter((u) => u.id !== Number(user_id));
 
         //Update member number
         updateMembernumber(
@@ -1529,7 +1529,7 @@ on(document.querySelectorAll(".AddUserBlock button"), "click", function () {
   // indexing above), narrowed to this file's real value shape.
   const id = selectize.getValue() as string | number;
 
-  if (id != "") {
+  if (String(id) !== "") {
     const loadState = new TemporaryState();
     loadState.changeHTML(
       document.querySelectorAll("#UserSubmit"),
@@ -1570,7 +1570,7 @@ on(document.querySelectorAll(".AddUserBlock button"), "click", function () {
           ]!,
         ) as { data: UserEntity[] };
         cached.data.forEach(function (u) {
-          if (u.id == id) {
+          if (u.id === Number(id)) {
             username = u.username;
           }
         });

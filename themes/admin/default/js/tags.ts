@@ -123,8 +123,8 @@ function createTagBox(
   rawNameArg: string | null = null,
 ): Element {
   const raw_name = rawNameArg ?? name;
-  const u_edit = "admin.php?page=batch_manager&filter=tag-" + id;
-  const u_view = "index.php?/tags/" + id + "-" + url_name;
+  const u_edit = "admin.php?page=batch_manager&filter=tag-" + String(id);
+  const u_view = "index.php?/tags/" + String(id) + "-" + url_name;
   // Non-null: the template block always exists in the page markup.
   // `name` is a plain string straight off the JSON API response, never
   // percent-encoded -- the legacy `unescape(name)` this replaced was a
@@ -142,7 +142,7 @@ function createTagBox(
   }
   const newTag = parseHtml(
     '<div class="tag-box test" data-id=' +
-      id +
+      String(id) +
       ' data-selected="0">' +
       markup +
       "</div>",
@@ -185,8 +185,8 @@ function recycleTagBox(
   });
 
   //Dropdown
-  const u_edit = "admin.php?page=batch_manager&filter=tag-" + id;
-  const u_view = "index.php?/tags/" + id + "-" + url_name;
+  const u_edit = "admin.php?page=batch_manager&filter=tag-" + String(id);
+  const u_view = "index.php?/tags/" + String(id) + "-" + url_name;
   attr(find(tagBox, ".dropdown-option.view"), "href", u_view);
   attr(find(tagBox, ".dropdown-option.manage"), "href", u_edit);
 
@@ -549,14 +549,16 @@ function removeTag(id: TagId, name: string): void {
     title: str_tag_deleted.replace("%s", name),
     content: function () {
       return ajax({
-        url: "api/v1/tags/" + id,
+        url: "api/v1/tags/" + String(id),
         type: "DELETE",
         headers: {
           "X-CSRF-Token": pwg_token,
         },
         dataType: "json",
         success: function (_data: TagDeleteResponse) {
-          document.querySelector('.tag-box[data-id="' + id + '"]')?.remove();
+          document
+            .querySelector('.tag-box[data-id="' + String(id) + '"]')
+            ?.remove();
           //Update data
           dataTags = dataTags.filter((tag) => tag.id != id);
           showMessage(str_tag_deleted.replace("%s", name));
@@ -576,7 +578,7 @@ function removeTag(id: TagId, name: string): void {
 function renameTag(id: TagId, new_name: string): Promise<TagRenameResponse> {
   return new Promise<TagRenameResponse>((resolve, reject) => {
     void ajax({
-      url: "api/v1/tags/" + id,
+      url: "api/v1/tags/" + String(id),
       type: "PATCH",
       contentType: "application/json",
       headers: {
@@ -590,26 +592,28 @@ function renameTag(id: TagId, new_name: string): Promise<TagRenameResponse> {
         html(
           document.querySelectorAll(
             '.tag-box[data-id="' +
-              id +
+              String(id) +
               '"] p, .tag-box[data-id="' +
-              id +
+              String(id) +
               '"] .tag-dropdown-header b',
           ),
           data.name,
         );
         attr(
           document.querySelectorAll(
-            '.tag-box[data-id="' + id + '"] .tag-name-editable',
+            '.tag-box[data-id="' + String(id) + '"] .tag-name-editable',
           ),
           "value",
           data.name,
         );
         attr(
-          document.querySelectorAll('.tag-box[data-id="' + id + '"] .tag-name'),
+          document.querySelectorAll(
+            '.tag-box[data-id="' + String(id) + '"] .tag-name',
+          ),
           "data-rawname",
           data.nameRaw,
         );
-        const u_view = "index.php?/tags/" + id + "-" + data.urlName;
+        const u_view = "index.php?/tags/" + String(id) + "-" + data.urlName;
         attr(
           document.querySelectorAll(".dropdown-option.view"),
           "href",
@@ -655,7 +659,7 @@ function duplicateTag(id: TagId, name: string): Promise<TagDuplicateResponse> {
     }
 
     void ajax({
-      url: "api/v1/tags/" + id + "/actions/duplicate",
+      url: "api/v1/tags/" + String(id) + "/actions/duplicate",
       type: "POST",
       contentType: "application/json",
       headers: {
@@ -672,7 +676,9 @@ function duplicateTag(id: TagId, name: string): Promise<TagDuplicateResponse> {
           data.urlName,
           data.count,
         );
-        document.querySelector('.tag-box[data-id="' + id + '"]')?.after(newTag);
+        document
+          .querySelector('.tag-box[data-id="' + String(id) + '"]')
+          ?.after(newTag);
         setupTagbox(newTag);
 
         //Update Data
@@ -767,7 +773,7 @@ function addSelectedItem(id: TagId): void {
 function createSelectionItem(id: TagId, name: string): void {
   const newItemStructure = parseHtml(
     '<div data-id="' +
-      id +
+      String(id) +
       '"><a class="icon-cancel"></a><p>' +
       name +
       "</p> </div>",
@@ -777,7 +783,7 @@ function createSelectionItem(id: TagId, name: string): void {
     ?.prepend(newItemStructure);
   on(
     document.querySelectorAll(
-      '.selection-mode-tag .tag-list div[data-id="' + id + '"] a',
+      '.selection-mode-tag .tag-list div[data-id="' + String(id) + '"] a',
     ),
     "click",
     function () {
@@ -793,18 +799,18 @@ function removeSelectedItem(id: TagId): void {
     });
 
     attr(
-      document.querySelectorAll('.tag-box[data-id="' + id + '"]'),
+      document.querySelectorAll('.tag-box[data-id="' + String(id) + '"]'),
       "data-selected",
       "0",
     );
     if (
       document.querySelectorAll(
-        '.selection-mode-tag .tag-list div[data-id="' + id + '"]',
+        '.selection-mode-tag .tag-list div[data-id="' + String(id) + '"]',
       ).length != 0
     ) {
       document
         .querySelectorAll(
-          '.selection-mode-tag .tag-list div[data-id="' + id + '"]',
+          '.selection-mode-tag .tag-list div[data-id="' + String(id) + '"]',
         )
         .forEach((el) => {
           el.remove();
@@ -817,7 +823,7 @@ function removeSelectedItem(id: TagId): void {
           if (
             document.querySelectorAll(
               '.selection-mode-tag .tag-list div[data-id="' +
-                selected[i] +
+                String(selected[i]) +
                 '"]',
             ).length == 0
           ) {
@@ -858,7 +864,7 @@ function updateMergeItems(): void {
     select?.appendChild(
       parseHtml(
         '<option value="' +
-          id +
+          String(id) +
           '">' +
           dataTags.find((tag) => tag.id == id)!.name +
           "</option>",
@@ -949,7 +955,9 @@ function selectAll(data: TagRow[]) {
     promises.push(
       new Promise<void>((res, _rej) => {
         attr(
-          document.querySelectorAll('.tag-box[data-id="' + tag.id + '"]'),
+          document.querySelectorAll(
+            '.tag-box[data-id="' + String(tag.id) + '"]',
+          ),
           "data-selected",
           "1",
         );
@@ -1001,7 +1009,7 @@ on(document.querySelectorAll("#selectInvert"), "click", function () {
 function selectInvert(data: TagRow[]): void {
   data.forEach((tag) => {
     const tagBox = document.querySelectorAll(
-      '.tag-box[data-id="' + tag.id + '"]',
+      '.tag-box[data-id="' + String(tag.id) + '"]',
     );
     if (attrOf(tagBox, "data-selected") == "1") {
       attr(tagBox, "data-selected", "0");
@@ -1057,7 +1065,7 @@ function removeSelectedTags(): void {
       return Promise.all(
         selected.map(function (id) {
           return ajax({
-            url: "api/v1/tags/" + id,
+            url: "api/v1/tags/" + String(id),
             type: "DELETE",
             headers: {
               "X-CSRF-Token": pwg_token,
@@ -1067,7 +1075,9 @@ function removeSelectedTags(): void {
         }),
       ).then(function () {
         selected.forEach(function (id) {
-          document.querySelector('.tag-box[data-id="' + id + '"]')?.remove();
+          document
+            .querySelector('.tag-box[data-id="' + String(id) + '"]')
+            ?.remove();
         });
 
         // Update Data
@@ -1095,7 +1105,7 @@ on(document.querySelectorAll(".ConfirmMergeButton"), "click", () => {
 function mergeGroups(destination_id: TagId, merge_ids: TagId[]): void {
   const destination_name = htmlOf(
     document.querySelectorAll(
-      '.tag-box[data-id="' + destination_id + '"] .tag-name',
+      '.tag-box[data-id="' + String(destination_id) + '"] .tag-name',
     ),
   )!;
   const merge_name: string[] = [];
@@ -1103,7 +1113,9 @@ function mergeGroups(destination_id: TagId, merge_ids: TagId[]): void {
   merge_ids.forEach((id) => {
     merge_name.push(
       htmlOf(
-        document.querySelectorAll('.tag-box[data-id="' + id + '"] .tag-name'),
+        document.querySelectorAll(
+          '.tag-box[data-id="' + String(id) + '"] .tag-name',
+        ),
       )!,
     );
   });
@@ -1131,7 +1143,7 @@ function mergeGroups(destination_id: TagId, merge_ids: TagId[]): void {
           data.deletedTagIds.forEach((id) => {
             if (data.destinationTagId != id) {
               document
-                .querySelector('.tag-box[data-id="' + id + '"]')
+                .querySelector('.tag-box[data-id="' + String(id) + '"]')
                 ?.remove();
               // Update data
               dataTags = dataTags.filter((tag) => id != tag.id);
@@ -1139,7 +1151,7 @@ function mergeGroups(destination_id: TagId, merge_ids: TagId[]): void {
           });
           if (data.imagesInMergedTag.length > 0) {
             const tagBox = document.querySelectorAll(
-              '.tag-box[data-id="' + data.destinationTagId + '"]',
+              '.tag-box[data-id="' + String(data.destinationTagId) + '"]',
             );
             show(
               find(
@@ -1454,7 +1466,7 @@ function updatePage(): Promise<void> {
         //Select selected tags
         selected.forEach((id) => {
           attr(
-            document.querySelectorAll('.tag-box[data-id="' + id + '"]'),
+            document.querySelectorAll('.tag-box[data-id="' + String(id) + '"]'),
             "data-selected",
             "1",
           );
@@ -1580,7 +1592,7 @@ ready(function () {
     ?.insertAdjacentHTML(
       "beforeend",
       '<span class="badge-number">' +
-        pwg_getPageData<number>("total") +
+        String(pwg_getPageData<number>("total")) +
         "</span>",
     );
 });

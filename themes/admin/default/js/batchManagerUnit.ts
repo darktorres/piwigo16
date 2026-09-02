@@ -316,7 +316,7 @@ ready(function () {
                     );
                     css(
                       document.querySelectorAll(
-                        'div[data-image_id="' + pictureId + '"]',
+                        'div[data-image_id="' + String(pictureId) + '"]',
                       ),
                       "display",
                       "flex",
@@ -456,7 +456,7 @@ function check_related_categories(
 ) {
   html(
     document.querySelectorAll(
-      "#picture-" + pictureId + " .linked-albums-badge",
+      "#picture-" + String(pictureId) + " .linked-albums-badge",
     ),
     String(selectedAlbum.length),
   );
@@ -516,7 +516,7 @@ function showUnsavedLocalBadge(pictureId: string | number) {
   hideErrorLocalBadge(pictureId);
   css(
     document.querySelectorAll(
-      "#picture-" + pictureId + " .local-unsaved-badge",
+      "#picture-" + String(pictureId) + " .local-unsaved-badge",
     ),
     "display",
     "block",
@@ -527,7 +527,7 @@ function showUnsavedLocalBadge(pictureId: string | number) {
 function hideUnsavedLocalBadge(pictureId: string | number) {
   css(
     document.querySelectorAll(
-      "#picture-" + pictureId + " .local-unsaved-badge",
+      "#picture-" + String(pictureId) + " .local-unsaved-badge",
     ),
     "display",
     "none",
@@ -542,7 +542,9 @@ function hideUnsavedLocalBadge(pictureId: string | number) {
 //Error badge
 function showErrorLocalBadge(pictureId: string | number) {
   css(
-    document.querySelectorAll("#picture-" + pictureId + " .local-error-badge"),
+    document.querySelectorAll(
+      "#picture-" + String(pictureId) + " .local-error-badge",
+    ),
     "display",
     "block",
   );
@@ -550,7 +552,9 @@ function showErrorLocalBadge(pictureId: string | number) {
 
 function hideErrorLocalBadge(pictureId: string | number) {
   css(
-    document.querySelectorAll("#picture-" + pictureId + " .local-error-badge"),
+    document.querySelectorAll(
+      "#picture-" + String(pictureId) + " .local-error-badge",
+    ),
     "display",
     "none",
   );
@@ -569,7 +573,7 @@ function updateSuccessGlobalBadge() {
 
 function showSuccessLocalBadge(pictureId: string | number) {
   const badge = document.querySelectorAll(
-    "#picture-" + pictureId + " .local-success-badge",
+    "#picture-" + String(pictureId) + " .local-success-badge",
   );
   css(badge, {
     display: "block",
@@ -585,7 +589,7 @@ function showSuccessLocalBadge(pictureId: string | number) {
 function hideSuccesLocalBadge(pictureId: string | number) {
   css(
     document.querySelectorAll(
-      "#picture-" + pictureId + " .local-success-badge",
+      "#picture-" + String(pictureId) + " .local-success-badge",
     ),
     "display",
     "none",
@@ -613,7 +617,7 @@ function hideSuccesGlobalBadge() {
 
 function showMetasyncSuccesBadge(pictureId: string | number) {
   const badge = document.querySelectorAll(
-    "#picture-" + pictureId + " .metasync-success",
+    "#picture-" + String(pictureId) + " .metasync-success",
   );
   css(badge, {
     display: "block",
@@ -629,12 +633,12 @@ function showMetasyncSuccesBadge(pictureId: string | number) {
 function disableLocalButton(pictureId: string | number) {
   addClass(
     document.querySelectorAll(
-      "#picture-" + pictureId + " .action-save-picture",
+      "#picture-" + String(pictureId) + " .action-save-picture",
     ),
     "disabled",
   );
   const icon = document.querySelectorAll(
-    "#picture-" + pictureId + " .action-save-picture i",
+    "#picture-" + String(pictureId) + " .action-save-picture i",
   );
   removeClass(icon, "icon-floppy");
   addClass(icon, "icon-spin6 animate-spin");
@@ -644,12 +648,12 @@ function disableLocalButton(pictureId: string | number) {
 function enableLocalButton(pictureId: string | number) {
   removeClass(
     document.querySelectorAll(
-      "#picture-" + pictureId + " .action-save-picture",
+      "#picture-" + String(pictureId) + " .action-save-picture",
     ),
     "disabled",
   );
   const icon = document.querySelectorAll(
-    "#picture-" + pictureId + " .action-save-picture i",
+    "#picture-" + String(pictureId) + " .action-save-picture i",
   );
   removeClass(icon, "icon-spin6 animate-spin");
   addClass(icon, "icon-floppy");
@@ -671,28 +675,32 @@ function enableGlobalButton() {
 
 async function saveChanges(pictureId: string | number) {
   const unsavedBadge = document.querySelector(
-    "#picture-" + pictureId + " .local-unsaved-badge",
+    "#picture-" + String(pictureId) + " .local-unsaved-badge",
   );
   if (unsavedBadge !== null && cssValue(unsavedBadge, "display") === "block") {
     disableLocalButton(pictureId);
     // Retrieve Infos
     const name = val(
-      document.querySelectorAll("#picture-" + pictureId + " #name"),
+      document.querySelectorAll("#picture-" + String(pictureId) + " #name"),
     ) as string;
     const author = val(
-      document.querySelectorAll("#picture-" + pictureId + " #author"),
+      document.querySelectorAll("#picture-" + String(pictureId) + " #author"),
     ) as string;
     const date_creation = val(
-      document.querySelectorAll("#picture-" + pictureId + " #date_creation"),
+      document.querySelectorAll(
+        "#picture-" + String(pictureId) + " #date_creation",
+      ),
     ) as string;
     const comment = val(
-      document.querySelectorAll("#picture-" + pictureId + " #description"),
+      document.querySelectorAll(
+        "#picture-" + String(pictureId) + " #description",
+      ),
     ) as string;
     // `option:selected` is jQuery/Sizzle's own pseudo-selector, not real
     // CSS -- querySelectorAll throws on it. Reading the <select>'s own
     // `.value` gets the selected option's value directly.
     const level = document.querySelector<HTMLSelectElement>(
-      "#picture-" + pictureId + " #level",
+      "#picture-" + String(pictureId) + " #level",
     )?.value;
     // Get Categories
     const categories = all_related_categories_ids[pictureId]!;
@@ -700,7 +708,7 @@ async function saveChanges(pictureId: string | number) {
     // Get Tags
     const tags: (string | number)[] = [];
     document
-      .querySelectorAll("#picture-" + pictureId + " #tags option")
+      .querySelectorAll("#picture-" + String(pictureId) + " #tags option")
       .forEach((option) => {
         tags.push((option as HTMLOptionElement).value);
       });
@@ -721,14 +729,14 @@ async function saveChanges(pictureId: string | number) {
       const pluginValues_selector = pluginValues[key_index]!.selector;
       const pluginValues_value = val(
         document.querySelectorAll(
-          "#picture-" + pictureId + " " + pluginValues_selector,
+          "#picture-" + String(pictureId) + " " + pluginValues_selector,
         ),
       );
       ajax_data[pluginValues[key_index]!.api_key] = pluginValues_value;
     }
 
     await ajax({
-      url: "api/v1/images/" + pictureId,
+      url: "api/v1/images/" + String(pictureId),
       method: "PATCH",
       contentType: "application/json",
       headers: {
@@ -799,43 +807,53 @@ function pluginSaveLoop(activePlugins: string[], pictureId: string | number) {
 // UPDATE BLOCKS
 function updateBlock(pictureId: string | number) {
   void ajax({
-    url: "api/v1/images/" + pictureId,
+    url: "api/v1/images/" + String(pictureId),
     type: "GET",
     dataType: "json",
     success: function (
       response: operations["imageGet"]["responses"][200]["content"]["application/json"],
     ) {
       setVal(
-        document.querySelectorAll("#picture-" + pictureId + " #name"),
+        document.querySelectorAll("#picture-" + String(pictureId) + " #name"),
         response.name,
       );
       setVal(
-        document.querySelectorAll("#picture-" + pictureId + " #author"),
+        document.querySelectorAll("#picture-" + String(pictureId) + " #author"),
         response.author ?? "",
       );
       setVal(
-        document.querySelectorAll("#picture-" + pictureId + " #date_creation"),
+        document.querySelectorAll(
+          "#picture-" + String(pictureId) + " #date_creation",
+        ),
         response.dateCreation ?? "",
       ); //TODO
       setVal(
-        document.querySelectorAll("#picture-" + pictureId + " #description"),
+        document.querySelectorAll(
+          "#picture-" + String(pictureId) + " #description",
+        ),
         response.comment,
       );
       setVal(
-        document.querySelectorAll("#picture-" + pictureId + " #level"),
+        document.querySelectorAll("#picture-" + String(pictureId) + " #level"),
         String(response.level),
       );
       text(
-        document.querySelectorAll("#picture-" + pictureId + " #filename"),
+        document.querySelectorAll(
+          "#picture-" + String(pictureId) + " #filename",
+        ),
         response.file,
       );
       text(
-        document.querySelectorAll("#picture-" + pictureId + " #filesize"),
+        document.querySelectorAll(
+          "#picture-" + String(pictureId) + " #filesize",
+        ),
         String(response.filesize ?? 0),
       );
       text(
-        document.querySelectorAll("#picture-" + pictureId + " #dimensions"),
-        (response.width ?? 0) + "x" + (response.height ?? 0),
+        document.querySelectorAll(
+          "#picture-" + String(pictureId) + " #dimensions",
+        ),
+        String(response.width ?? 0) + "x" + String(response.height ?? 0),
       );
       // updateTags(response.tags, pictureId); //Yet to be implemented (TODO)
       showMetasyncSuccesBadge(pictureId);

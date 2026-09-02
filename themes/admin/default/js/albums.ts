@@ -275,7 +275,7 @@ ready(() => {
     .querySelector("h1")
     ?.insertAdjacentHTML(
       "beforeend",
-      `<span class='badge-number'>` + nb_albums + `</span>`,
+      `<span class='badge-number'>` + String(nb_albums) + `</span>`,
     );
 
   treeEl = document.querySelector(".tree")!;
@@ -318,7 +318,9 @@ ready(() => {
   on(treeEl, "tree.open", function (e: Event) {
     const { node } = (e as CustomEvent<{ node: AlbumJqTreeNode }>).detail;
     html(
-      document.querySelectorAll('.move-cat-toogler[data-id="' + node.id + '"]'),
+      document.querySelectorAll(
+        '.move-cat-toogler[data-id="' + String(node.id) + '"]',
+      ),
       toggler_open,
     );
   });
@@ -326,7 +328,9 @@ ready(() => {
   on(treeEl, "tree.close", function (e: Event) {
     const { node } = (e as CustomEvent<{ node: AlbumJqTreeNode }>).detail;
     html(
-      document.querySelectorAll('.move-cat-toogler[data-id="' + node.id + '"]'),
+      document.querySelectorAll(
+        '.move-cat-toogler[data-id="' + String(node.id) + '"]',
+      ),
       toggler_close,
     );
   });
@@ -470,7 +474,7 @@ ready(() => {
     function (this: Element) {
       const catToEdit = data(this, "cat_id") as string | number;
       void ajax({
-        url: "api/v1/categories/" + catToEdit,
+        url: "api/v1/categories/" + String(catToEdit),
         type: "PATCH",
         contentType: "application/json",
         headers: { "X-CSRF-Token": pwg_token },
@@ -485,7 +489,7 @@ ready(() => {
         ) {
           const node_id = attrOf(
             find(
-              document.querySelectorAll("#cat-" + catToEdit),
+              document.querySelectorAll("#cat-" + String(catToEdit)),
               ".move-cat-toogler",
             ),
             "data-id",
@@ -607,7 +611,7 @@ ready(() => {
             setSubcatsBadge(parent_node);
 
             delegate(
-              document.querySelectorAll("#cat-" + parent_node.id),
+              document.querySelectorAll("#cat-" + String(parent_node.id)),
               "click",
               ".move-cat-toogler",
               function (this: Element) {
@@ -636,7 +640,7 @@ ready(() => {
             getAlbumTree().getNodeById(data.id)!,
           );
           animateScrollTop(
-            offset(document.querySelector("#cat-" + data.id)!).top -
+            offset(document.querySelector("#cat-" + String(data.id))!).top -
               screen.height / 2,
             "slow",
           );
@@ -696,7 +700,7 @@ ready(() => {
 function createAlbumNode(node: AlbumJqTreeNode, liEl: HTMLLIElement) {
   const icon = "<span class='%icon%'></span>";
   let title =
-    '<span data-id="' + node.id + '" class="move-cat-title-container ';
+    '<span data-id="' + String(node.id) + '" class="move-cat-title-container ';
   // Non-null: every real album node's `.parent` is either a real
   // parent album, or jqtree's own invisible tree root (never a bare
   // `null` for a node actually handed to `onCreateLi`) -- same
@@ -732,30 +736,30 @@ function createAlbumNode(node: AlbumJqTreeNode, liEl: HTMLLIElement) {
     '<a class="move-cat-add icon-add-album tiptip" title="' +
     str_add_album +
     '" href="#" data-aid="' +
-    node.id +
+    String(node.id) +
     '"></a>' +
     '<a class="move-cat-edit icon-pencil tiptip" title="' +
     str_edit_album +
     '" href="admin.php?page=album-' +
-    node.id +
+    String(node.id) +
     '"></a>' +
     '<a class="move-cat-upload icon-plus-circled tiptip" title="' +
     str_add_photo +
     '" href="admin.php?page=photos_add&album=' +
-    node.id +
+    String(node.id) +
     '"></a>' +
     '<a class="move-cat-see icon-eye tiptip" title="' +
     str_visit_gallery +
     '" href="index.php?/category/' +
-    node.id +
+    String(node.id) +
     '"></a>' +
     '<a data-id="' +
-    node.id +
+    String(node.id) +
     '" class="move-cat-order icon-sort-name-up tiptip" title="' +
     str_sort_order +
     '"></a>' +
     '<a data-id="' +
-    node.id +
+    String(node.id) +
     '" class="move-cat-delete icon-trash tiptip" title="' +
     str_delete_album +
     '" ></a>' +
@@ -765,7 +769,7 @@ function createAlbumNode(node: AlbumJqTreeNode, liEl: HTMLLIElement) {
 
   const cont = find(liEl, ".jqtree-element")[0]!;
   addClass(cont, "move-cat-container");
-  attr(cont, "id", "cat-" + node.id);
+  attr(cont, "id", "cat-" + String(node.id));
   html(cont, "");
 
   append(cont, actions);
@@ -824,7 +828,7 @@ function createAlbumNode(node: AlbumJqTreeNode, liEl: HTMLLIElement) {
   const colorId = Number(node.id) % 5;
   addClass(
     find(cont, "span.icon-folder-open, span.icon-sitemap"),
-    colors[colorId] + " node-icon",
+    (colors[colorId] ?? "") + " node-icon",
   );
 
   after(
@@ -834,10 +838,10 @@ function createAlbumNode(node: AlbumJqTreeNode, liEl: HTMLLIElement) {
       String(node.nb_subcats) +
       "</i>" +
       "<i class='icon-purple icon-picture nb-images'>" +
-      node.nb_images +
+      String(node.nb_images) +
       "</i>" +
       "<i class='icon-green icon-imagefolder-01 nb-sub-photos'>" +
-      node.nb_sub_photos +
+      String(node.nb_sub_photos) +
       "</i>" +
       "<div class='badge-dropdown'>" +
       "<span class='icon-blue icon-sitemap nb-subcats'>" +
@@ -972,7 +976,7 @@ function closeRenameAlbumPopIn() {
 
 function triggerDeleteAlbum(cat_id: string | number) {
   void ajax({
-    url: "api/v1/categories/" + cat_id + "/orphan-impact",
+    url: "api/v1/categories/" + String(cat_id) + "/orphan-impact",
     type: "GET",
     dataType: "json",
     success: function (
@@ -1045,7 +1049,7 @@ function openDeleteAlbumPopIn(cat_to_delete: string | number) {
   off(deleteSubmit, "click");
   on(deleteSubmit, "click", function () {
     void ajax({
-      url: "api/v1/categories/" + cat_to_delete,
+      url: "api/v1/categories/" + String(cat_to_delete),
       type: "DELETE",
       contentType: "application/json",
       headers: { "X-CSRF-Token": pwg_token },
@@ -1096,21 +1100,24 @@ function getAllSubAlbumsFromNode(node: AlbumJqTreeNode): number {
 function setSubcatsBadge(node: AlbumJqTreeNode) {
   if (node.children.length != 0) {
     const nbSubcats = find(
-      document.querySelectorAll("#cat-" + node.id),
+      document.querySelectorAll("#cat-" + String(node.id)),
       ".nb-subcats",
     );
     text(nbSubcats, String(node.children.length));
     show(nbSubcats, 100);
     text(
       find(
-        find(document.querySelectorAll("#cat-" + node.id), ".badge-dropdown"),
+        find(
+          document.querySelectorAll("#cat-" + String(node.id)),
+          ".badge-dropdown",
+        ),
         ".nb-subcats",
       ),
       x_nb_subcats.replace("%d", String(node.children.length)),
     );
   } else {
     hide(
-      find(document.querySelectorAll("#cat-" + node.id), ".nb-subcats"),
+      find(document.querySelectorAll("#cat-" + String(node.id)), ".nb-subcats"),
       100,
     );
   }
@@ -1128,12 +1135,18 @@ function goToNode(node: AlbumJqTreeNode, firstNode: AlbumJqTreeNode) {
     if (node != firstNode) {
       getAlbumTree().openNode(node);
       // console.log("parent id : " + node.parent.id);
-      show(document.querySelectorAll("#cat-" + node.parent.id));
-      addClass(document.querySelectorAll("#cat-" + node.parent.id), "imune");
+      show(document.querySelectorAll("#cat-" + String(node.parent.id)));
+      addClass(
+        document.querySelectorAll("#cat-" + String(node.parent.id)),
+        "imune",
+      );
     }
   } else {
     getAlbumTree().openNode(node);
-    addClass(document.querySelectorAll("#cat-" + firstNode.id), "animateFocus");
+    addClass(
+      document.querySelectorAll("#cat-" + String(firstNode.id)),
+      "animateFocus",
+    );
 
     showNodeChildrens(firstNode);
   }
@@ -1144,7 +1157,7 @@ function showNodeChildrens(node: AlbumJqTreeNode) {
     // console.log("childrens : " + node.children);
     node.children.forEach((child) => {
       // console.log("children : " + child.id, child.name);
-      addClass(document.querySelectorAll("#cat-" + child.id), "imune");
+      addClass(document.querySelectorAll("#cat-" + String(child.id)), "imune");
       showNodeChildrens(child);
     });
   }

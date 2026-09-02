@@ -116,7 +116,6 @@ ready(function () {
   );
 });
 
-const _nb_thumbs_page = pwg_getPageData<number>("nb_thumbs_page");
 const nb_thumbs_set = pwg_getPageData<number>("nb_thumbs_set");
 const applyOnDetails_pattern = pwg_getPageString("on the %d selected photos");
 export const all_elements =
@@ -372,16 +371,6 @@ ready(function () {
   on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
     const action = val(document.querySelectorAll('[name="selectAction"]'));
     if (action === "delete_derivatives") {
-      const _d_count = document.querySelectorAll(
-        "#confirmDel input[type=checkbox]:checked",
-      ).length;
-      const _e_count = is(
-        document.querySelectorAll('input[name="setSelected"]'),
-        ":checked",
-      )
-        ? nb_thumbs_set
-        : document.querySelectorAll(".thumbnails input[type=checkbox]:checked")
-            .length;
       if (
         !is(
           document.querySelectorAll("#confirmDel input[name=confirm_deletion]"),

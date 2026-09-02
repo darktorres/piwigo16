@@ -717,15 +717,6 @@ function progress_bar_start() {
   );
 }
 
-// Genuinely dead code, confirmed via a repo-wide grep (zero references
-// anywhere, not even from a template) -- kept, not deleted, prefixed
-// per this codebase's own `^_`-means-intentionally-unused convention:
-// `progress_end()` (a few lines up) does the exact same thing and is
-// the one actually called.
-function _progress_bar_end() {
-  hide(document.querySelectorAll("#uploadingActions"));
-}
-
 function progress_bar(val: number, max: number, _success: boolean) {
   const percent = parseInt(String((val / max) * 100));
   css(

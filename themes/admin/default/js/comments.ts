@@ -55,24 +55,21 @@ const str_comments_validated = pwg_getPageString(
 const str_and_others = pwg_getPageString("and %s others");
 
 const advancedFilters = document.getElementById("advancedFilters");
-const switchMode = document.getElementById(
-  "toggleSelectionMode",
-) as HTMLInputElement | null;
+const switchMode = document.querySelector<HTMLInputElement>(
+  "#toggleSelectionMode",
+);
 const commentContainer = document.getElementById("commentContainer");
 const commentsAll = document.getElementById("commentsAll");
 const commentsValidated = document.getElementById("commentsValidated");
 const commentsPending = document.getElementById("commentsPending");
 const commentsList = document.getElementById("commentsList");
 const commentsNb = document.querySelectorAll("#commentsNb a");
-const filterAuthor = document.getElementById(
-  "filter_author",
-) as HTMLSelectElement | null;
-const filterDateStart = document.getElementById(
-  "filter_date_start",
-) as HTMLInputElement | null;
-const filterDateEnd = document.getElementById(
-  "filter_date_end",
-) as HTMLInputElement | null;
+const filterAuthor =
+  document.querySelector<HTMLSelectElement>("#filter_author");
+const filterDateStart =
+  document.querySelector<HTMLInputElement>("#filter_date_start");
+const filterDateEnd =
+  document.querySelector<HTMLInputElement>("#filter_date_end");
 const commentsSelectController = document.getElementById(
   "commentsSelectController",
 );
@@ -116,6 +113,7 @@ interface CommentsFilterParams {
 // on document ready, below) populates it for real -- every real read of
 // `commentsState.comments`/`.paging` only happens from handlers wired up
 // after that first call succeeds.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- deliberate placeholder, never read before the unconditional getComments() call below replaces it with a real response.
 let commentsState: CommentListResponse = {} as CommentListResponse;
 const commentsParams: CommentsFilterParams = {
   status: "all",
@@ -132,8 +130,8 @@ ready(function () {
   on(
     document.querySelectorAll("#commentFilters"),
     "click",
-    function (event: Event) {
-      (event.currentTarget as Element).classList.toggle("advanced-filter-open");
+    function (this: Element) {
+      this.classList.toggle("advanced-filter-open");
       if (advancedFilters !== null) {
         toggle(advancedFilters);
       }
@@ -193,16 +191,15 @@ ready(function () {
   on(
     document.querySelectorAll(".tab-filters input"),
     "change",
-    function (event: Event) {
-      const target = event.currentTarget as Element;
-      commentsParams.status = target.getAttribute("data-status")!;
+    function (this: Element) {
+      commentsParams.status = this.getAttribute("data-status")!;
       commentsParams.page = 0;
       getComments(commentsParams);
     },
   );
 
-  on(commentsNb, "click", function (event: Event) {
-    const nb = (event.currentTarget as Element).textContent;
+  on(commentsNb, "click", function (this: Element) {
+    const nb = this.textContent;
     updateNbComments(nb);
     commentsParams.page = 0;
     getComments(commentsParams);
@@ -215,12 +212,10 @@ ready(function () {
   on(
     document.querySelectorAll("#commentSearchInput"),
     "input",
-    function (event: Event) {
+    function (this: HTMLInputElement) {
       clearTimeout(searchTimeOut);
-      const target = event.currentTarget as HTMLInputElement;
+      const target = this;
       searchTimeOut = setTimeout(() => {
-        // Real #commentSearchInput's own value: a plain text input, always
-        // a string.
         const search = target.value;
 
         delete commentsParams.author_id;
@@ -238,6 +233,7 @@ ready(function () {
   });
 
   on(window, "keydown", function (e: Event) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
     if ((e as KeyboardEvent).key === "Escape") {
       closeModalViewComment();
     }
@@ -299,6 +295,7 @@ function displayComments(comments: CommentListResponse["comments"]) {
   if (commentsList !== null) empty(commentsList);
   comments.forEach((comment: CommentEntry) => {
     if (template === null || commentsList === null) return;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
     const clone = template.cloneNode(true) as Element;
     removeClass(clone, "comment-template");
     addClass(clone, "comment");
@@ -365,9 +362,10 @@ function displayComments(comments: CommentListResponse["comments"]) {
   on(
     document.querySelectorAll(".comment-delete"),
     "click",
-    function (e: Event) {
+    function (this: Element, e: Event) {
       e.stopPropagation();
-      const id = data(e.currentTarget as Element, "idx") as string | number;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
+      const id = data(this, "idx") as string | number;
       deleteComment([id]);
     },
   );
@@ -376,9 +374,10 @@ function displayComments(comments: CommentListResponse["comments"]) {
   on(
     document.querySelectorAll(".comment-validate"),
     "click",
-    function (e: Event) {
+    function (this: Element, e: Event) {
       e.stopPropagation();
-      const id = data(e.currentTarget as Element, "idx") as string | number;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
+      const id = data(this, "idx") as string | number;
       validateComment([id]);
     },
   );
@@ -387,8 +386,9 @@ function displayComments(comments: CommentListResponse["comments"]) {
   on(
     document.querySelectorAll(".comment-content"),
     "click",
-    function (event: Event) {
-      const el = event.currentTarget as Element;
+    function (this: Element) {
+      const el = this;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       const id = data(el, "idx") as string | number;
       if (selectionMode) {
         const checkbox = find(el, ".comment-select-checkbox")[0];
@@ -479,10 +479,9 @@ function commentsDiplayPagination(paging: CommentListResponse["paging"]) {
     const arrows = document.querySelectorAll(".pagination-arrow");
     removeClass(arrows, "unavailable");
     off(arrows, "click");
-    on(arrows, "click", function (event: Event) {
-      const el = event.currentTarget as Element;
+    on(arrows, "click", function (this: Element) {
       let newPage = commentsParams.page;
-      if (el.classList.contains("left")) {
+      if (this.classList.contains("left")) {
         newPage = newPage - 1;
       } else {
         newPage = newPage + 1;
@@ -500,9 +499,8 @@ function commentsDiplayPagination(paging: CommentListResponse["paging"]) {
   on(
     document.querySelectorAll(".comments-paging"),
     "click",
-    function (event: Event) {
-      const el = event.currentTarget as Element;
-      const newPage = Number(el.getAttribute("data-page")) - 1;
+    function (this: Element) {
+      const newPage = Number(this.getAttribute("data-page")) - 1;
       commentsParams.page = newPage;
       getComments(commentsParams);
     },
@@ -828,8 +826,8 @@ function commentsUpdateSelection() {
   on(
     document.querySelectorAll(".comments-selected-remove"),
     "click",
-    function (event: Event) {
-      const id = (event.currentTarget as Element).id.split("_")[1];
+    function (this: Element) {
+      const id = this.id.split("_")[1];
       if (id === undefined || id === "") return;
       const target = document.querySelector(
         "#" + escapeId(id) + " .comment-content",

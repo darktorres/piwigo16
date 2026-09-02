@@ -214,9 +214,8 @@ ready(function () {
     "input",
     function (this: HTMLInputElement) {
       clearTimeout(searchTimeOut);
-      const target = this;
       searchTimeOut = setTimeout(() => {
-        const search = target.value;
+        const search = this.value;
 
         delete commentsParams.author_id;
         delete commentsParams.f_min_date;
@@ -387,11 +386,10 @@ function displayComments(comments: CommentListResponse["comments"]) {
     document.querySelectorAll(".comment-content"),
     "click",
     function (this: Element) {
-      const el = this;
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      const id = data(el, "idx") as string | number;
+      const id = data(this, "idx") as string | number;
       if (selectionMode) {
-        const checkbox = find(el, ".comment-select-checkbox")[0];
+        const checkbox = find(this, ".comment-select-checkbox")[0];
         if (checkbox === undefined) return;
 
         if (checkbox.classList.contains("icon-circle-empty")) {

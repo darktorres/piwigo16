@@ -1531,14 +1531,13 @@ on(
   document.querySelectorAll(".pagination-per-page a"),
   "click",
   function (this: Element) {
-    const target = this;
-    per_page = parseInt(htmlOf(target) ?? "");
+    per_page = parseInt(htmlOf(this) ?? "");
     updatePaginationMenu();
     removeClass(
       document.querySelectorAll(".pagination-per-page .selected"),
       "selected",
     );
-    addClass(target, "selected");
+    addClass(this, "selected");
     setCookie("pwg_tags_per_page", per_page);
   },
 );

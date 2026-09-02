@@ -181,32 +181,30 @@ function setDisplayLine(): void {
   hover(
     document.querySelectorAll(".categoryBox"),
     function (this: Element) {
-      const box = this;
-      css(box, "background", "#ffd7ad");
-      css(children(box, ".albumInfos"), {
+      css(this, "background", "#ffd7ad");
+      css(children(this, ".albumInfos"), {
         color: "#515151",
       });
-      css(children(children(box, ".albumActions"), "a"), {
+      css(children(children(this, ".albumActions"), "a"), {
         color: "#515151",
       });
 
       addClass(
-        children(children(children(box, ".albumTop"), ".albumIcon"), "span"),
+        children(children(children(this, ".albumTop"), ".albumIcon"), "span"),
         "albumIconLineHover",
       );
     },
     function (this: Element) {
-      const box = this;
-      css(box, "background", "#fafafa");
-      css(children(box, ".albumInfos"), {
+      css(this, "background", "#fafafa");
+      css(children(this, ".albumInfos"), {
         color: "#a9a9a9",
       });
-      css(children(children(box, ".albumActions"), "a"), {
+      css(children(children(this, ".albumActions"), "a"), {
         color: "#848484",
       });
 
       removeClass(
-        children(children(children(box, ".albumTop"), ".albumIcon"), "span"),
+        children(children(children(this, ".albumTop"), ".albumIcon"), "span"),
         "albumIconLineHover",
       );
     },

@@ -181,20 +181,19 @@ ready(function () {
     function (this: HTMLSelectElement) {
       hide(document.querySelectorAll("[id^=action_]"));
 
-      const el = this;
-      const action = el.value;
+      const action = this.value;
       // if (action == 'move') {
       //   action = 'associate';
       // }
 
       show(document.querySelectorAll("#action_" + action));
 
-      if (el.value !== "-1") {
+      if (this.value !== "-1") {
         show(document.querySelectorAll("#applyActionBlock"));
       } else {
         hide(document.querySelectorAll("#applyActionBlock"));
       }
-      if (el.value === "delete" || el.value === "delete_derivatives") {
+      if (this.value === "delete" || this.value === "delete_derivatives") {
         css(document.querySelectorAll("#confirmDel"), "visibility", "visible");
       } else {
         css(document.querySelectorAll("#confirmDel"), "visibility", "hidden");
@@ -205,7 +204,7 @@ ready(function () {
   on(
     document.querySelectorAll(".wrap1 label"),
     "click",
-    function (this: Element) {
+    function (this: Element, event: Event) {
       document
         .querySelectorAll<HTMLInputElement>("input[name=setSelected]")
         .forEach((el) => {
@@ -213,9 +212,8 @@ ready(function () {
         });
       trigger(document.querySelectorAll("input[name=setSelected]"), "change");
 
-      const label = this;
-      const li = label.closest("li");
-      const checkbox = Array.from(label.children).find(
+      const li = this.closest("li");
+      const checkbox = Array.from(this.children).find(
         (child): child is HTMLInputElement =>
           child.matches("input[type=checkbox]"),
       );
@@ -452,20 +450,21 @@ ready(function () {
     document.querySelectorAll("select[name=filter_prefilter]"),
     "change",
     function (this: HTMLSelectElement) {
-      const el = this;
-
-      toggle(document.querySelectorAll("#empty_caddie"), el.value === "caddie");
+      toggle(
+        document.querySelectorAll("#empty_caddie"),
+        this.value === "caddie",
+      );
       toggle(
         document.querySelectorAll("#duplicates_options"),
-        el.value === "duplicates",
+        this.value === "duplicates",
       );
       toggle(
         document.querySelectorAll("#delete_orphans"),
-        el.value === "no_album",
+        this.value === "no_album",
       );
       toggle(
         document.querySelectorAll("#sync_md5sum"),
-        el.value === "no_sync_md5sum",
+        this.value === "no_sync_md5sum",
       );
     },
   );

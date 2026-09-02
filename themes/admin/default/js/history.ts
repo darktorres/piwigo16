@@ -247,12 +247,11 @@ function activateLineOptions() {
     find(document.querySelectorAll(".search-line"), ".toggle-img-option"),
     "click",
     function (this: Element) {
-      const el = this;
       // jQuery's own `.toggle()` display-memory semantics apply here too --
       // use dom.ts's `toggle()` rather than a hand-rolled inline-style
       // check (see comments.ts's own finding for why the naive version is
       // wrong the moment the element starts hidden via a CSS class rule).
-      toggle(find(el, ".img-option"));
+      toggle(find(this, ".img-option"));
     },
   );
 

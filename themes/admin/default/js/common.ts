@@ -60,14 +60,13 @@ function fontCheckbox(): void {
     document.querySelectorAll(".font-checkbox input[type=checkbox]"),
     "change",
     function (this: Element): void {
-      const checkbox = this;
-      const icon = checkbox.previousElementSibling;
+      const icon = this.previousElementSibling;
       if (icon !== null) {
         // jQuery's `.removeClass()` with no argument clears every class.
         icon.className = "";
         addClass(
           icon,
-          is(checkbox, ":checked") ? "icon-check" : "icon-check-empty",
+          is(this, ":checked") ? "icon-check" : "icon-check-empty",
         );
       }
     },
@@ -92,10 +91,9 @@ function fontCheckbox(): void {
     document.querySelectorAll(".font-checkbox input[type=radio]"),
     "change",
     function (this: Element): void {
-      const radio = this;
       // Non-null: every real .font-checkbox radio in the template has a
       // `name` attribute.
-      const name = attrOf(radio, "name")!;
+      const name = attrOf(this, "name")!;
       document
         .querySelectorAll(`.font-checkbox input[type=radio][name="${name}"]`)
         .forEach((el) => {

@@ -230,14 +230,13 @@ function rebindMoveCatActions(): void {
     document.querySelectorAll(".move-cat-title-container"),
     "click",
     function (this: Element) {
-      const target = this;
       openRenameAlbumPopIn(
-        attrOf(find(target, ".move-cat-title"), "title") ?? undefined,
+        attrOf(find(this, ".move-cat-title"), "title") ?? undefined,
       );
       setData(
         document.querySelector(".RenameAlbumSubmit")!,
         "cat_id",
-        attrOf(target, "data-id")!,
+        attrOf(this, "data-id")!,
       );
     },
   );

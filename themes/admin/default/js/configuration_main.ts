@@ -126,14 +126,13 @@ import { tipTip } from "../../../default/js/vendor/tiptip";
     document.querySelectorAll("#order_filters .addFilter"),
     "click",
     function (this: Element): void {
-      const addFilter = this;
-      const previous = addFilter.previousElementSibling;
+      const previous = this.previousElementSibling;
       if (previous?.matches("span.filter") !== true) {
         return;
       }
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
       const clone = previous.cloneNode(true) as Element;
-      addFilter.parentElement?.insertBefore(clone, addFilter);
+      this.parentElement?.insertBefore(clone, this);
 
       const clonedSelect = clone.querySelector("select");
       if (clonedSelect !== null) {

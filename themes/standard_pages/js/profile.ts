@@ -146,11 +146,10 @@ ready(function () {
     document.querySelectorAll(".profile-section .display-section"),
     "click",
     function (this: Element) {
-      const el = this;
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      const display = data(el, "display") as string;
+      const display = data(this, "display") as string;
       const element = document.getElementById(display)!;
-      const arrow = find(el, ".display-btn");
+      const arrow = find(this, ".display-btn");
 
       if (hasClass(element, "open")) {
         // close
@@ -370,18 +369,17 @@ ready(function () {
     document.querySelectorAll("#show_expired_list"),
     "click",
     function (this: Element) {
-      const el = this;
       const api_list_expired = document.getElementById("api_key_list_expired")!;
-      const isOpen = data(el, "show") === true;
+      const isOpen = data(this, "show") === true;
       if (!isOpen) {
         api_list_expired.style.maxHeight = "max-content";
-        text(el, str_hide_expired);
+        text(this, str_hide_expired);
       } else {
         api_list_expired.style.maxHeight = "0";
-        text(el, str_show_expired);
+        text(this, str_show_expired);
       }
 
-      setData(el, "show", !isOpen);
+      setData(this, "show", !isOpen);
 
       resetSection("apikey-display", false, true);
     },
@@ -654,9 +652,8 @@ function apiLineEvent() {
   const iconCollapse = document.querySelectorAll(".icon-collapse");
   off(iconCollapse, "click");
   on(iconCollapse, "click", function (this: Element) {
-    const el = this;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-    const apiId = data(el, "api") as string;
+    const apiId = data(this, "api") as string;
     const api_collapse = document.getElementById(`api_collapse_${apiId}`)!;
     const api_line = document.getElementById(`api_${apiId}`)!;
 
@@ -681,11 +678,10 @@ function apiLineEvent() {
   );
   off(cloneButtons, "click");
   on(cloneButtons, "click", function (this: Element) {
-    const el = this;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-    const data_to_copy = data(el, "copy") as string;
+    const data_to_copy = data(this, "copy") as string;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see comment above.
-    const selector = data(el, "success") as string;
+    const selector = data(this, "success") as string;
     copyToClipboard(data_to_copy, str_copy_key_id, `#${selector}`);
   });
 

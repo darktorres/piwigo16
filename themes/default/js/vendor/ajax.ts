@@ -80,8 +80,12 @@ export interface AjaxOptions<T = unknown> {
  * undefined; `String(undefined)` sends `minDate=undefined`, which the API
  * rejects with a 422.
  */
+function isCallable(value: unknown): value is () => unknown {
+  return typeof value === "function";
+}
+
 function paramValue(value: unknown): string {
-  const resolved = typeof value === "function" ? value() : value;
+  const resolved = isCallable(value) ? value() : value;
 
   if (resolved === null || resolved === undefined) {
     return "";

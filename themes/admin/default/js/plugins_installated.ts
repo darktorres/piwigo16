@@ -520,11 +520,10 @@ ready(function () {
       document.querySelectorAll(".switch"),
       "change",
       function (this: Element) {
-        const switchEl = this;
         addClass(document.querySelectorAll(".pluginMiniBox"), "usable");
 
-        const toggleEl = find(switchEl, "#toggleSelectionMode")[0]!;
-        const row = switchEl.parentElement!.parentElement!;
+        const toggleEl = find(this, "#toggleSelectionMode")[0]!;
+        const row = this.parentElement!.parentElement!;
 
         if (is(toggleEl, ":checked")) {
           // Activating a plugin the PEM catalog reports as incompatible with
@@ -571,12 +570,11 @@ ready(function () {
       document.querySelectorAll(".switch input"),
       "click",
       function (this: Element, event: Event) {
-        const el = this;
-        addClass(el, "disabled");
+        addClass(this, "disabled");
         event.preventDefault();
         event.stopPropagation();
 
-        const id = el.parentElement!.parentElement!.parentElement!.id;
+        const id = this.parentElement!.parentElement!.parentElement!.id;
         stop(
           document.querySelectorAll("#" + id + " .pluginNotif"),
           false,
@@ -617,8 +615,7 @@ ready(function () {
     ),
     "click",
     function (this: Element) {
-      const el = this;
-      const pluginContent = el.closest(".pluginContent")!;
+      const pluginContent = this.closest(".pluginContent")!;
       const plugin_name = textOf(find(pluginContent, ".pluginName")).trim();
       const plugin_id = pluginContent.parentElement!.id;
       confirm({
@@ -650,8 +647,7 @@ ready(function () {
     ),
     "click",
     function (this: Element) {
-      const el = this;
-      const pluginContent = el.closest(".pluginContent")!;
+      const pluginContent = this.closest(".pluginContent")!;
       const plugin_name = textOf(find(pluginContent, ".pluginName")).trim();
       const plugin_id = pluginContent.parentElement!.id;
       confirm({
@@ -684,8 +680,7 @@ ready(function () {
     ),
     "click",
     function (this: Element) {
-      const el = this;
-      const pluginContent = el.closest(".pluginContent")!;
+      const pluginContent = this.closest(".pluginContent")!;
       const plugin_name = textOf(find(pluginContent, ".pluginName")).trim();
       const plugin_id = pluginContent.parentElement!.id;
       confirm({

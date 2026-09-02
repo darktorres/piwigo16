@@ -72,15 +72,14 @@ on(
   document.querySelectorAll(".delete-size-check"),
   "click",
   function (this: Element): void {
-    const checkbox = this;
-    if (attrOf(checkbox, "data-selected") === "1") {
-      attr(checkbox, "data-selected", "0");
-      hide(checkbox.querySelectorAll("i"));
+    if (attrOf(this, "data-selected") === "1") {
+      attr(this, "data-selected", "0");
+      hide(this.querySelectorAll("i"));
     } else {
-      attr(checkbox, "data-selected", "1");
-      show(checkbox.querySelectorAll("i"));
+      attr(this, "data-selected", "1");
+      show(this.querySelectorAll("i"));
     }
-    checkbox.dispatchEvent(new Event("change", { bubbles: true }));
+    this.dispatchEvent(new Event("change", { bubbles: true }));
   },
 );
 const firstDeleteSizeCheck = document.querySelector(".delete-size-check");

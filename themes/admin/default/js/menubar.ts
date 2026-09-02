@@ -23,9 +23,8 @@ ready(function () {
     document.querySelectorAll("input[name^='hide_']"),
     "click",
     function (this: HTMLInputElement): void {
-      const input = this;
-      const men = input.name.split("hide_");
-      if (input.checked) {
+      const men = this.name.split("hide_");
+      if (this.checked) {
         addClass(
           document.querySelectorAll("#menu_" + men[1]!),
           "menuLi_hidden",

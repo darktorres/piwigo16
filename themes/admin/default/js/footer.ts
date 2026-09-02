@@ -45,16 +45,8 @@ tipTip(document.querySelectorAll(".tiptip"), {
 on(
   document.querySelectorAll("a.externalLink"),
   "click",
-  function (event: Event): void {
-    // nodeType, not `instanceof Element`: instanceof is per-realm, and
-    // answering false for a node from another document is a failure mode
-    // this campaign has already hit once (docs/PLAN.md P49's own list).
-    // jQuery itself tests nodeType for the same reason.
-    const link = event.currentTarget as Node | null;
-    window.open(
-      (link?.nodeType === 1 ? (link as Element).getAttribute("href") : null) ??
-        undefined,
-    );
+  function (this: Element, event: Event): void {
+    window.open(this.getAttribute("href") ?? undefined);
     // jQuery treats a handler returning false as preventDefault() PLUS
     // stopPropagation(), so both are needed here -- returning false from a
     // native listener only does the former.

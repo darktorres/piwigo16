@@ -13,7 +13,7 @@ let el: HTMLElement;
 
 beforeEach(() => {
   document.body.innerHTML = `<div id="t"></div>`;
-  el = document.getElementById("t") as HTMLElement;
+  el = document.getElementById("t")!;
 });
 
 describe("parseEventSpec", () => {
@@ -153,6 +153,7 @@ describe("trigger() with namespaces", () => {
   it("carries detail and bubbles", () => {
     const seen: unknown[] = [];
     on(document.body, "tree.move", (event) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- trigger()'s own "tree.move" dispatch is always a real CustomEvent; on()'s own handler param is typed generically via the native EventListener interface.
       seen.push((event as CustomEvent).detail);
     });
 
@@ -176,7 +177,7 @@ describe("whitespace-separated specs", () => {
 
   beforeEach(() => {
     document.body.innerHTML = '<div id="multi"></div>';
-    multi = document.getElementById("multi") as HTMLElement;
+    multi = document.getElementById("multi")!;
   });
 
   it("binds one handler to several types", () => {
@@ -251,25 +252,25 @@ describe("delegated handlers", () => {
       '<a class="pick" href="#"><span id="inner">x</span></a>' +
       '<b id="other"></b>' +
       "</div>";
-    root = document.getElementById("root") as HTMLElement;
+    root = document.getElementById("root")!;
   });
 
   it("runs for an event originating inside a match", () => {
     const handler = vi.fn();
     delegate(root, "click", ".pick", handler);
 
-    (document.getElementById("inner") as HTMLElement).click();
+    (document.getElementById("inner")!).click();
 
     expect(handler).toHaveBeenCalledTimes(1);
   });
 
   it("calls the handler with the matched descendant, not the delegate", () => {
     let seen = "";
-    delegate(root, "click", ".pick", function (this: unknown) {
-      seen = (this as Element).className;
+    delegate(root, "click", ".pick", function (this: Element) {
+      seen = this.className;
     });
 
-    (document.getElementById("inner") as HTMLElement).click();
+    (document.getElementById("inner")!).click();
 
     // `this` is the anchor the selector matched -- the whole point of
     // delegation, and what a bare addEventListener cannot give.
@@ -280,7 +281,7 @@ describe("delegated handlers", () => {
     const handler = vi.fn();
     delegate(root, "click", ".pick", handler);
 
-    (document.getElementById("other") as HTMLElement).click();
+    (document.getElementById("other")!).click();
 
     expect(handler).not.toHaveBeenCalled();
   });
@@ -291,7 +292,7 @@ describe("delegated handlers", () => {
     // itself matches still does not fire for it.
     delegate(root, "click", "#root", handler);
 
-    (document.getElementById("inner") as HTMLElement).click();
+    (document.getElementById("inner")!).click();
 
     expect(handler).not.toHaveBeenCalled();
   });
@@ -302,15 +303,15 @@ describe("delegated handlers", () => {
       '<i id="leaf"></i></div></div></div>';
     const seen: string[] = [];
     delegate(
-      document.getElementById("root") as HTMLElement,
+      document.getElementById("root")!,
       "click",
       ".m",
-      function (this: unknown) {
-        seen.push((this as Element).id);
+      function (this: Element) {
+        seen.push(this.id);
       }
     );
 
-    (document.getElementById("leaf") as HTMLElement).click();
+    (document.getElementById("leaf")!).click();
 
     expect(seen).toEqual(["mid", "outer"]);
   });
@@ -321,16 +322,16 @@ describe("delegated handlers", () => {
       '<i id="leaf"></i></div></div></div>';
     const seen: string[] = [];
     delegate(
-      document.getElementById("root") as HTMLElement,
+      document.getElementById("root")!,
       "click",
       ".m",
-      function (this: unknown, event) {
-        seen.push((this as Element).id);
+      function (this: Element, event) {
+        seen.push(this.id);
         event.stopPropagation();
       }
     );
 
-    (document.getElementById("leaf") as HTMLElement).click();
+    (document.getElementById("leaf")!).click();
 
     expect(seen).toEqual(["mid"]);
   });
@@ -347,7 +348,7 @@ describe("delegated handlers", () => {
       );
     });
 
-    (document.getElementById("inner") as HTMLElement).click();
+    (document.getElementById("inner")!).click();
 
     expect(ownProperty).toBe(false);
   });
@@ -403,9 +404,9 @@ describe("binding to a whole set", () => {
   it("treats a single element as a set of one", () => {
     const handler = vi.fn();
     const [first] = Array.from(set);
-    on(first as HTMLElement, "click", handler);
+    on(first!, "click", handler);
 
-    (first as HTMLElement).click();
+    first!.click();
 
     expect(handler).toHaveBeenCalledTimes(1);
   });

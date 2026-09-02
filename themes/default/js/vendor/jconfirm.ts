@@ -136,6 +136,7 @@ function buildModal(options: JConfirmOptions): void {
   let boxClicked = false;
   let closed = false;
   const onEscape = (e: Event): void => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown"/"keyup" always dispatches a real KeyboardEvent; this handler's own listener registration is typed generically via the native EventListener interface.
     if ((e as KeyboardEvent).key === "Escape") {
       close();
     }

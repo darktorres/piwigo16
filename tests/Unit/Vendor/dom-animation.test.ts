@@ -13,7 +13,7 @@ let el: HTMLElement;
 beforeEach(() => {
   vi.useFakeTimers();
   document.body.innerHTML = `<div id="t" style="opacity:1"></div>`;
-  el = document.getElementById("t") as HTMLElement;
+  el = document.getElementById("t")!;
 });
 
 afterEach(() => {

@@ -150,6 +150,12 @@ export function selectize<
   const hasRemoveButton = multi && (init.plugins?.includes("remove_button") ?? false);
   const renderers = { ...defaultRenderers<U>(labelField), ...init.render };
 
+  // Declared here (assigned much further down, once its own real
+  // methods are built) so the click/event handlers registered before
+  // that point -- which only ever run later, on real user interaction
+  // -- can reference the same instance without a forward-reference.
+  let instance: SelectizeInstance<T, U>;
+
   const options: Record<string, U> = {};
   const order: string[] = [];
   const items: T[] = [];
@@ -592,7 +598,7 @@ export function selectize<
     }
   }
 
-  const instance: SelectizeInstance<T, U> = {
+  instance = {
     options,
     settings,
     getValue(): T | T[] {

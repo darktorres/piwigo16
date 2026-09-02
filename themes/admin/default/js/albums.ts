@@ -205,29 +205,32 @@ function animateScrollTop(targetTop: number, duration?: number | string): void {
 // verbatim, not something to narrow while translating.
 function rebindMoveCatActions(): void {
   off(document.querySelectorAll(".move-cat-add"), "click");
-  on(document.querySelectorAll(".move-cat-add"), "click", function (e: Event) {
-    e.preventDefault();
-    const target = e.currentTarget as Element;
-    const aid = data(target, "aid") as string | number;
-    openAddAlbumPopIn(aid);
-    setData(document.querySelector(".AddAlbumSubmit")!, "a-parent", aid);
-  });
+  on(
+    document.querySelectorAll(".move-cat-add"),
+    "click",
+    function (this: Element, e: Event) {
+      e.preventDefault();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
+      const aid = data(this, "aid") as string | number;
+      openAddAlbumPopIn(aid);
+      setData(document.querySelector(".AddAlbumSubmit")!, "a-parent", aid);
+    },
+  );
   off(document.querySelectorAll(".move-cat-delete"), "click");
   on(
     document.querySelectorAll(".move-cat-delete"),
     "click",
-    function (e: Event) {
-      triggerDeleteAlbum(
-        data(e.currentTarget as Element, "id") as string | number,
-      );
+    function (this: Element) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
+      triggerDeleteAlbum(data(this, "id") as string | number);
     },
   );
   off(document.querySelectorAll(".move-cat-title-container"), "click");
   on(
     document.querySelectorAll(".move-cat-title-container"),
     "click",
-    function (e: Event) {
-      const target = e.currentTarget as Element;
+    function (this: Element) {
+      const target = this;
       openRenameAlbumPopIn(
         attrOf(find(target, ".move-cat-title"), "title") ?? undefined,
       );
@@ -315,6 +318,7 @@ ready(() => {
   });
 
   on(treeEl, "tree.open", function (e: Event) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "tree.open" is jqtree.ts's own dispatchEvent(), always a real CustomEvent with this detail shape; on()'s own handler param is typed generically via the native EventListener interface.
     const { node } = (e as CustomEvent<{ node: AlbumJqTreeNode }>).detail;
     html(
       document.querySelectorAll(
@@ -325,6 +329,7 @@ ready(() => {
   });
 
   on(treeEl, "tree.close", function (e: Event) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "tree.close" is jqtree.ts's own dispatchEvent(), always a real CustomEvent with this detail shape; on()'s own handler param is typed generically via the native EventListener interface.
     const { node } = (e as CustomEvent<{ node: AlbumJqTreeNode }>).detail;
     html(
       document.querySelectorAll(
@@ -335,6 +340,7 @@ ready(() => {
   });
 
   on(treeEl, "tree.move", function (e: Event) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "tree.move" is jqtree.ts's own dispatchEvent(), always a real CustomEvent with this detail shape; on()'s own handler param is typed generically via the native EventListener interface.
     const event = e as CustomEvent<JqTreeMoveInfo<AlbumNodeData>>;
     event.preventDefault();
     const moveInfo = event.detail;
@@ -434,11 +440,9 @@ ready(() => {
       getAlbumTree().openNode(nodeToGo, false);
     }
 
-    const target = document.querySelector("#cat-" + openCat)!;
+    const target = document.querySelector<HTMLElement>("#cat-" + openCat)!;
     animateScrollTop(
-      offset(target).top -
-        windowHeight() / 2 +
-        outerHeight(target as HTMLElement) / 2,
+      offset(target).top - windowHeight() / 2 + outerHeight(target) / 2,
       500,
     );
   }
@@ -471,6 +475,7 @@ ready(() => {
     document.querySelectorAll(".RenameAlbumSubmit"),
     "click",
     function (this: Element) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       const catToEdit = data(this, "cat_id") as string | number;
       void ajax({
         url: "api/v1/categories/" + String(catToEdit),
@@ -526,6 +531,7 @@ ready(() => {
     ".move-cat-add",
     function (this: Element, e: Event) {
       e.preventDefault();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       const aid = data(this, "aid") as string | number;
       openAddAlbumPopIn(aid);
       setData(document.querySelector(".AddAlbumSubmit")!, "a-parent", aid);
@@ -550,6 +556,7 @@ ready(() => {
       const newAlbumName = val(
         document.querySelectorAll(".AddAlbumLabelUsername input"),
       );
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       const newAlbumParent = data(
         document.querySelector(".AddAlbumSubmit")!,
         "a-parent",
@@ -670,10 +677,9 @@ ready(() => {
   on(
     document.querySelectorAll(".move-cat-delete"),
     "click",
-    function (e: Event) {
-      triggerDeleteAlbum(
-        data(e.currentTarget as Element, "id") as string | number,
-      );
+    function (this: Element) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
+      triggerDeleteAlbum(data(this, "id") as string | number);
     },
   );
 
@@ -918,7 +924,9 @@ function openAddAlbumPopIn(parentAlbumId: string | number) {
     ".AddAlbumLabelUsername .user-property-input",
   );
   setVal(modalInput, "");
-  (modalInput[0] as HTMLElement | undefined)?.focus();
+  document
+    .querySelector<HTMLElement>(".AddAlbumLabelUsername .user-property-input")
+    ?.focus();
   off(modalInput, "keyup");
   on(modalInput, "keyup", function (this: Element) {
     if (val(this) !== "") {
@@ -929,10 +937,12 @@ function openAddAlbumPopIn(parentAlbumId: string | number) {
   const addAlbum = document.querySelectorAll("#AddAlbum");
   off(addAlbum, "keyup");
   on(addAlbum, "keyup", function (e: Event) {
-    if ((e as KeyboardEvent).key === "Enter") {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keyup" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+    const key = (e as KeyboardEvent).key;
+    if (key === "Enter") {
       document.querySelector<HTMLElement>(".AddAlbumSubmit")?.click();
     }
-    if ((e as KeyboardEvent).key === "Escape") {
+    if (key === "Escape") {
       closeAddAlbumPopIn();
     }
   });
@@ -963,6 +973,7 @@ function openRenameAlbumPopIn(replacedAlbumName: string | undefined) {
 
   off(document, "keypress");
   on(document, "keypress", function (e: Event) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keypress" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
     if ((e as KeyboardEvent).key === "Enter") {
       document.querySelector<HTMLElement>(".RenameAlbumSubmit")?.click();
     }

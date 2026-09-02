@@ -134,6 +134,7 @@ function shouldIgnoreFilterClick(
   target: EventTarget | null,
   ...extraClasses: string[]
 ): boolean {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real event's own target inside the document is always an Element (or null), never a bare EventTarget with no Element interface.
   const el = target as Element | null;
   if (el?.closest(".filter-form") != null) {
     return true;
@@ -302,6 +303,7 @@ ready(function () {
     const tagSearchEl =
       document.querySelector<HTMLSelectElement>("#tag-search")!;
     const tagSearchSelectize = getSelectizeInstance(tagSearchEl)!;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- #tag-search is a real <select multiple> (search_filters.inc.latte), so getValue() always returns an array here.
     (tagSearchSelectize.getValue() as (string | number)[]).forEach((id) => {
       tag_search_str +=
         (tagSearchSelectize.getItem(id)?.textContent ?? "")
@@ -773,6 +775,7 @@ ready(function () {
       document.querySelectorAll(".selected-categories-container"),
       "click",
       function (e: Event) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real click inside the document always targets an Element (or null), never a bare EventTarget with no Element interface.
         const target = e.target as Element;
         if (target.classList.contains("remove-item")) {
           ab.remove_selected_album(target.id);
@@ -830,6 +833,7 @@ ready(function () {
 
       let author_search_str = "";
       const authorsSelectize = getSelectizeInstance(el)!;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- #authors is a real <select multiple> (search_filters.inc.latte), so getValue() always returns an array here.
       (authorsSelectize.getValue() as (string | number)[]).forEach((id) => {
         author_search_str +=
           (authorsSelectize.getItem(id)?.textContent ?? "")
@@ -1440,7 +1444,9 @@ ready(function () {
   });
 
   on(document, "keyup", function (e: Event) {
-    if ((e as KeyboardEvent).key === "Escape") {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keyup" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+    const key = (e as KeyboardEvent).key;
+    if (key === "Escape") {
       trigger(
         document.querySelectorAll(
           ".filter-manager-popin .filter-manager-close",
@@ -1449,7 +1455,7 @@ ready(function () {
       );
       trigger(document.querySelectorAll("#closeModalQuickSearch"), "click");
     }
-    if ((e as KeyboardEvent).key === "Enter") {
+    if (key === "Enter") {
       document
         .querySelectorAll(".filter-form .filter-validate")
         .forEach((el) => {
@@ -1490,6 +1496,7 @@ ready(function () {
       document
         .querySelectorAll(".filter-manager-controller-container input")
         .forEach((el) => {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
           const wid = data(el, "wid") as string;
           if (is(el, ":checked")) {
             if (!isVisible(document.querySelector(".filter.filter-" + wid)!)) {
@@ -1511,6 +1518,7 @@ ready(function () {
       document
         .querySelectorAll(".filter-manager-controller-container input")
         .forEach((el) => {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
           const wid = data(el, "wid") as string;
           if (is(el, ":checked")) {
             if (!isVisible(document.querySelector(".filter.filter-" + wid)!)) {
@@ -1538,6 +1546,7 @@ ready(function () {
   });
 
   on(document, "keyup", function (e: Event) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keyup" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
     if ((e as KeyboardEvent).key === "Escape") {
       trigger(
         document.querySelectorAll(".tags-found-popin .tags-found-close"),
@@ -1673,6 +1682,7 @@ ready(function () {
             "show-filter-dropdown",
           );
           {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- #tag-search is a real <select multiple> (search_filters.inc.latte), so getValue() always returns an array here.
             const tagValue = getSelectizeInstance(
               document.querySelector<HTMLSelectElement>("#tag-search")!,
             )!.getValue() as (string | number)[];
@@ -1963,6 +1973,7 @@ ready(function () {
             );
 
             {
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- #authors is a real <select multiple> (search_filters.inc.latte), so getValue() always returns an array here.
               const authorValue = getSelectizeInstance(
                 document.querySelector<HTMLSelectElement>("#authors")!,
               )!.getValue() as (string | number)[];
@@ -2821,6 +2832,7 @@ function resize_filter_form() {
     const window_width = windowWidth();
     const left_distance = offset(filterEl).left;
     const filterForm = find(filterEl, ".filter-form");
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified by the selector: ".filter-form" is always a real HTMLElement (a <div> in this app's own markup, never SVG), and every real ".filter" container has exactly one.
     const filterFormFirst = filterForm[0] as HTMLElement;
     const filter_form_width = innerWidth(filterFormFirst);
     const too_left = left_distance + innerWidth(filterEl) - filter_form_width;

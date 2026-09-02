@@ -1,10 +1,8 @@
 import { pwg_getPageString } from "./page-data";
 
 function pwg_initQuickSearch() {
-  const input = document.getElementById(
-    "qsearchInput",
-  ) as HTMLInputElement | null;
-  const form = document.getElementById("quicksearch") as HTMLFormElement | null;
+  const input = document.querySelector<HTMLInputElement>("#qsearchInput");
+  const form = document.querySelector<HTMLFormElement>("#quicksearch");
   if (!input || !form) {
     return;
   }

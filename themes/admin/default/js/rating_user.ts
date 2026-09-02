@@ -80,9 +80,8 @@ const oTable = dataTable(rateTableEl, {
 });
 
 function uidFromCell(cell: HTMLElement): RatingUserCellData {
-  let tr: HTMLElement = cell;
-  while (tr.nodeName !== "TR") tr = tr.parentNode as HTMLElement;
-
+  const tr = cell.closest("tr")!;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
   return data(tr, "usr") as RatingUserCellData;
 }
 
@@ -112,10 +111,9 @@ ready(function () {
             text: confirm_msg,
             btnClass: "btn-red",
             action: function () {
-              const cell = (event.target as Element).parentNode as HTMLElement;
-              let trElement: HTMLElement = cell;
-              while (trElement.nodeName !== "TR")
-                trElement = trElement.parentNode as HTMLElement;
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real click inside the document always targets an Element (or null), never a bare EventTarget with no Element interface.
+              const cell = (event.target as Element).parentElement!;
+              const trElement = cell.closest("tr")!;
               fadeTo(trElement, 1000, 0.4);
               const tr = trElement;
               const ids = uidFromCell(cell);

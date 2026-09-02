@@ -125,7 +125,7 @@ ready(function () {
   on(
     document.querySelectorAll(".newsletter-hide"),
     "click",
-    function (event: Event): void {
+    function (this: Element, event: Event): void {
       hide(document.querySelectorAll(".promote-newsletter"));
 
       void ajax({
@@ -133,7 +133,7 @@ ready(function () {
         url: "admin.php?action=hide_newsletter_subscription",
       });
 
-      if (hasClass(event.currentTarget as Element, "newsletter-hide")) {
+      if (hasClass(this, "newsletter-hide")) {
         event.preventDefault();
         event.stopPropagation();
       }

@@ -71,6 +71,10 @@ interface ImageUpdateBody {
 // these pages never co-load.
 const activePlugins = pwg_getPageData<string[]>("active_plugins");
 
+const all_related_categories_ids = pwg_getPageData<RelatedCategoryIds>(
+  "all_related_categories_ids",
+);
+
 const tagsCache = new TagsCache({
   serverKey: pwg_getPageData<string>("cache_key_tags"),
   serverId: pwg_getPageData<string>("cache_key_hash"),
@@ -882,9 +886,6 @@ function updateBlock(pictureId: string | number) {
   });
 }
 
-const all_related_categories_ids = pwg_getPageData<RelatedCategoryIds>(
-  "all_related_categories_ids",
-);
 pluginFunctionMapInit();
 
 // TAGS UPDATE Yet to be implemented

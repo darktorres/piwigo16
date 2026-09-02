@@ -122,8 +122,8 @@ ready(function () {
         }, 5000);
       },
       error: function (
-        XMLHttpRequest,
-        textStatus: string,
+        _XMLHttpRequest,
+        _textStatus: string,
         errorThrows: string,
       ) {
         save_button_set_loading(false);
@@ -192,8 +192,8 @@ ready(function () {
         }, 5000);
       },
       error: function (
-        XMLHttpRequest,
-        textStatus: string,
+        _XMLHttpRequest,
+        _textStatus: string,
         errorThrows: string,
       ) {
         save_button_set_loading(false);
@@ -402,8 +402,8 @@ ready(function () {
           }
         },
         error: function (
-          XMLHttpRequest,
-          textStatus: string,
+          _XMLHttpRequest,
+          _textStatus: string,
           errorThrows: string,
         ) {
           console.error(errorThrows);
@@ -455,8 +455,8 @@ ready(function () {
         }
       },
       error: function (
-        XMLHttpRequest,
-        textStatus: string,
+        _XMLHttpRequest,
+        _textStatus: string,
         errorThrows: string,
       ) {
         console.error(errorThrows);

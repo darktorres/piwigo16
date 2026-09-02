@@ -238,7 +238,7 @@ ready(function () {
     min: 0,
     max: 5,
     step: 0.5,
-    slide: function (event: Event, ui: SliderUIParams) {
+    slide: function (_event: Event, ui: SliderUIParams) {
       updateRatingFilterLabel(ui.value!);
       applyFilter("rating", ui.value!);
     },
@@ -249,7 +249,7 @@ ready(function () {
     value: 0,
     min: 0,
     max: 6,
-    slide: function (event: Event, ui: SliderUIParams) {
+    slide: function (_event: Event, ui: SliderUIParams) {
       const [month] = value_to_month(ui.value!);
       updateRevisionFilterLabel(ui.value!);
       applyFilter("revision", month);
@@ -284,7 +284,7 @@ ready(function () {
     value: minCertification,
     min: minCertification,
     max: 3,
-    slide: function (event: Event, ui: SliderUIParams) {
+    slide: function (_event: Event, ui: SliderUIParams) {
       updateCertificationFilterLabel(ui.value!);
       applyFilter("certification", ui.value!);
     },

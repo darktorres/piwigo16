@@ -811,7 +811,7 @@ slider(
     min: 0,
     max: nb_image_page_values.length - 1,
     value: nb_image_page_init,
-    change: function (event: Event, ui: SliderUIParams) {
+    change: function (_event: Event, ui: SliderUIParams) {
       html(
         document.querySelectorAll(
           "#UserList .photos-select-bar .nb-img-page-infos",
@@ -819,7 +819,7 @@ slider(
         getNbImagePageInfoFromIdx(ui.value!),
       );
     },
-    slide: function (event: Event, ui: SliderUIParams) {
+    slide: function (_event: Event, ui: SliderUIParams) {
       html(
         document.querySelectorAll(
           "#UserList .photos-select-bar .nb-img-page-infos",
@@ -827,7 +827,7 @@ slider(
         getNbImagePageInfoFromIdx(ui.value!),
       );
     },
-    stop: function (event: Event, ui: SliderUIParams) {
+    stop: function (_event: Event, ui: SliderUIParams) {
       setVal(
         document.querySelectorAll(
           "#UserList .photos-select-bar input[name=nb_image_page]",
@@ -853,7 +853,7 @@ slider(
     min: 0,
     max: nb_image_page_values.length - 1,
     value: nb_image_page_init,
-    change: function (event: Event, ui: SliderUIParams) {
+    change: function (_event: Event, ui: SliderUIParams) {
       html(
         document.querySelectorAll(
           "#GuestUserList .photos-select-bar .nb-img-page-infos",
@@ -861,7 +861,7 @@ slider(
         getNbImagePageInfoFromIdx(ui.value!),
       );
     },
-    slide: function (event: Event, ui: SliderUIParams) {
+    slide: function (_event: Event, ui: SliderUIParams) {
       html(
         document.querySelectorAll(
           "#GuestUserList .photos-select-bar .nb-img-page-infos",
@@ -869,7 +869,7 @@ slider(
         getNbImagePageInfoFromIdx(ui.value!),
       );
     },
-    stop: function (event: Event, ui: SliderUIParams) {
+    stop: function (_event: Event, ui: SliderUIParams) {
       setVal(
         document.querySelectorAll(
           "#GuestUserList .photos-select-bar input[name=nb_image_page]",
@@ -901,7 +901,7 @@ slider(
     min: 0,
     max: nb_image_page_values.length - 1,
     value: nb_image_page_init,
-    change: function (event: Event, ui: SliderUIParams) {
+    change: function (_event: Event, ui: SliderUIParams) {
       html(
         document.querySelectorAll(
           "#permitActionUserList .photos-select-bar .nb-img-page-infos",
@@ -909,7 +909,7 @@ slider(
         getNbImagePageInfoFromIdx(ui.value!),
       );
     },
-    slide: function (event: Event, ui: SliderUIParams) {
+    slide: function (_event: Event, ui: SliderUIParams) {
       html(
         document.querySelectorAll(
           "#permitActionUserList .photos-select-bar .nb-img-page-infos",
@@ -917,7 +917,7 @@ slider(
         getNbImagePageInfoFromIdx(ui.value!),
       );
     },
-    stop: function (event: Event, ui: SliderUIParams) {
+    stop: function (_event: Event, ui: SliderUIParams) {
       setVal(
         document.querySelectorAll(
           "#permitActionUserList .photos-select-bar input[name=nb_image_page]",
@@ -944,7 +944,7 @@ slider(
     min: 0,
     max: recent_period_values.length - 1,
     value: recent_period_init,
-    change: function (event: Event, ui: SliderUIParams) {
+    change: function (_event: Event, ui: SliderUIParams) {
       html(
         document.querySelectorAll(
           "#UserList .period-select-bar .recent_period_infos",
@@ -952,7 +952,7 @@ slider(
         getRecentPeriodInfoFromIdx(ui.value!),
       );
     },
-    slide: function (event: Event, ui: SliderUIParams) {
+    slide: function (_event: Event, ui: SliderUIParams) {
       html(
         document.querySelectorAll(
           "#UserList .period-select-bar .recent_period_infos",
@@ -960,7 +960,7 @@ slider(
         getRecentPeriodInfoFromIdx(ui.value!),
       );
     },
-    stop: function (event: Event, ui: SliderUIParams) {
+    stop: function (_event: Event, ui: SliderUIParams) {
       setVal(
         document.querySelectorAll(
           "#UserList .period-select-bar input[name=recent_period]",
@@ -986,7 +986,7 @@ slider(
     min: 0,
     max: recent_period_values.length - 1,
     value: recent_period_init,
-    change: function (event: Event, ui: SliderUIParams) {
+    change: function (_event: Event, ui: SliderUIParams) {
       html(
         document.querySelectorAll(
           "#GuestUserList .period-select-bar .recent_period_infos",
@@ -994,7 +994,7 @@ slider(
         getRecentPeriodInfoFromIdx(ui.value!),
       );
     },
-    slide: function (event: Event, ui: SliderUIParams) {
+    slide: function (_event: Event, ui: SliderUIParams) {
       html(
         document.querySelectorAll(
           "#GuestUserList .period-select-bar .recent_period_infos",
@@ -1002,7 +1002,7 @@ slider(
         getRecentPeriodInfoFromIdx(ui.value!),
       );
     },
-    stop: function (event: Event, ui: SliderUIParams) {
+    stop: function (_event: Event, ui: SliderUIParams) {
       setVal(
         document.querySelectorAll(
           "#GuestUserList .period-select-bar input[name=recent_period]",
@@ -1028,7 +1028,7 @@ slider(
     min: 0,
     max: recent_period_values.length - 1,
     value: recent_period_init,
-    change: function (event: Event, ui: SliderUIParams) {
+    change: function (_event: Event, ui: SliderUIParams) {
       html(
         document.querySelectorAll(
           "#permitActionUserList .period-select-bar .recent_period_infos",
@@ -1036,7 +1036,7 @@ slider(
         getRecentPeriodInfoFromIdx(ui.value!),
       );
     },
-    slide: function (event: Event, ui: SliderUIParams) {
+    slide: function (_event: Event, ui: SliderUIParams) {
       html(
         document.querySelectorAll(
           "#permitActionUserList .period-select-bar .recent_period_infos",
@@ -1044,7 +1044,7 @@ slider(
         getRecentPeriodInfoFromIdx(ui.value!),
       );
     },
-    stop: function (event: Event, ui: SliderUIParams) {
+    stop: function (_event: Event, ui: SliderUIParams) {
       setVal(
         document.querySelectorAll(
           "#permitActionUserList .period-select-bar input[name=recent_period]",
@@ -1255,7 +1255,7 @@ function setupRegisterDates(register_dates: string[]) {
       min: 0,
       max: register_dates.length - 1,
       values: [0, register_dates.length - 1],
-      change: function (event: Event, ui: SliderUIParams) {
+      change: function (_event: Event, ui: SliderUIParams) {
         html(
           document.querySelectorAll(".advanced-filter .dates-infos"),
           sprintf(
@@ -1265,7 +1265,7 @@ function setupRegisterDates(register_dates: string[]) {
           ),
         );
       },
-      slide: function (event: Event, ui: SliderUIParams) {
+      slide: function (_event: Event, ui: SliderUIParams) {
         html(
           document.querySelectorAll(".advanced-filter .dates-infos"),
           sprintf(
@@ -1275,7 +1275,7 @@ function setupRegisterDates(register_dates: string[]) {
           ),
         );
       },
-      stop: function (event: Event, ui: SliderUIParams) {
+      stop: function (_event: Event, ui: SliderUIParams) {
         html(
           document.querySelectorAll(".advanced-filter .dates-infos"),
           sprintf(

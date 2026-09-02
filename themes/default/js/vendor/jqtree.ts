@@ -1278,7 +1278,7 @@ function isElementVisible(el: HTMLElement): boolean {
 
 function iterateVisibleNodes(
   root: TreeNode,
-  currentNode: TreeNode,
+  _currentNode: TreeNode,
   handlers: {
     handleFirstNode(node: TreeNode): void;
     handleOpenFolder(node: TreeNode, el: HTMLLIElement): boolean;

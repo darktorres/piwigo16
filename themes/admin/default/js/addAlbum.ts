@@ -176,8 +176,8 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
           }
         },
         error: function (
-          XMLHttpRequest,
-          textStatus: string,
+          _XMLHttpRequest,
+          _textStatus: string,
           errorThrows: string,
         ) {
           hide(document.querySelectorAll("#albumCreationLoading"));

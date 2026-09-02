@@ -656,7 +656,7 @@ ready(function () {
       },
 
       FileUploaded: function (
-        up: UploadQueue,
+        _up: UploadQueue,
         file: UploadQueueFile,
         info: TusUploadInfo,
       ) {
@@ -709,7 +709,7 @@ ready(function () {
         }
       },
 
-      Error: function (up: UploadQueue, error: TusErrorInfo) {
+      Error: function (_up: UploadQueue, error: TusErrorInfo) {
         // Called when file has finished uploading. `error` is a plain
         // {message, file} object built in uploadNextTusFile() below, from
         // a real HTTP status returned by the tus endpoint.

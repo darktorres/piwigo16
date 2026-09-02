@@ -757,7 +757,7 @@ async function saveChanges(pictureId: string | number) {
         // Method 1 for extension's save (see Skeleton extension for more details)
         pluginSaveLoop(activePlugins, pictureId);
       },
-      error: function (xhr, status: string, error: string) {
+      error: function (_xhr, _status: string, error: string) {
         enableLocalButton(pictureId);
         enableGlobalButton();
         hideUnsavedLocalBadge(pictureId);
@@ -860,7 +860,7 @@ function updateBlock(pictureId: string | number) {
       enableLocalButton(pictureId);
       enableGlobalButton();
     },
-    error: function (xhr, status: string, error: string) {
+    error: function (_xhr, status: string, error: string) {
       console.error("Error:", status, error);
       showErrorLocalBadge(pictureId);
       enableLocalButton(pictureId);

@@ -86,7 +86,7 @@ function trimAlign(state: SliderState, val: number): number {
   return parseFloat(aligned.toFixed(5));
 }
 
-function refreshValue(el: HTMLElement, state: SliderState): void {
+function refreshValue(_el: HTMLElement, state: SliderState): void {
   if (state.isRange) {
     let lastPercent = 0;
     state.handles.forEach((handle, i) => {

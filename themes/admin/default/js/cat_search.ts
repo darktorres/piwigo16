@@ -129,7 +129,7 @@ function searchAlbumByName(
   categories: AlbumTreeNode[],
   search: string,
   initialNbResult: number,
-  children?: boolean,
+  _children?: boolean,
   name: string = "",
 ): number {
   let nbResult = initialNbResult;

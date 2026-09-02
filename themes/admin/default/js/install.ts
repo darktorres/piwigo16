@@ -170,7 +170,7 @@ ready(function () {
           toggleOverwriteWarning(false, null);
         }
       },
-      error: function (jqXHR, textStatus: string) {
+      error: function (_jqXHR, textStatus: string) {
         if (textStatus === "abort") {
           return;
         }

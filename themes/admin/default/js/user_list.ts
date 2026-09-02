@@ -111,6 +111,96 @@ const plugins_load: string[] = [];
 const plugins_users_infos_table: { content_id: string; users_table: string }[] =
   [];
 let owner_username = "";
+let owner_id = pwg_getPageData<number>("owner");
+let per_page = 5;
+// Assigned much further down, once groups_arr has its real value (the
+// "Startup" sequence's own real dependency order) -- declared here so
+// the functions that read it, defined earlier in this file, don't
+// forward-reference it (they only ever run after Startup completes).
+let groupOptions: GroupOption[] = [];
+// Same reasoning as groupOptions above: assigned in the "Startup"
+// sequence near the bottom of the file (register_dates_str.split(",")),
+// but read by functions defined much earlier that only ever run once
+// Startup has completed.
+let register_dates: string[] = [];
+
+const title_msg = pwg_getPageString(
+  'Are you sure you want to delete the user "%s"?',
+);
+const confirm_msg = pwg_getPageString("Yes, I am sure");
+const cancel_msg = pwg_getPageString("No, I have changed my mind");
+const str_and_others_tags = pwg_getPageString("and %s others");
+const missingUsername = pwg_getPageString("Please, enter a login");
+const missingPassword = pwg_getPageString(
+  "Password is missing. Please enter the password.",
+);
+const missingConfPassword = pwg_getPageString(
+  "Password confirmation is missing. Please confirm the chosen password.",
+);
+const missingConfirm = pwg_getPageString("You need to confirm deletion");
+const fieldNotEmpty = pwg_getPageString("Name field must not be empty");
+const noMatchPassword = pwg_getPageString("The passwords do not match");
+const missingField = pwg_getPageString("Please complete all fields");
+const passwordCopied = pwg_getPageString("Password copied");
+const mailSentAt = pwg_getPageString("Mail sent to %s [%s].");
+const errorMailSent = pwg_getPageString("Error sending email");
+const cannotSendMail = pwg_getPageString(
+  "Cannot send an email to this user because he doesn't have an email address",
+);
+const mainUserContinue = pwg_getPageString(
+  "You are about to set %s as main user instead of %s, do you wish to continue ?",
+);
+const mainUserRewrite = pwg_getPageString(
+  "To be sure, please rewrite the word “%s” below",
+);
+const mainUserValidate = pwg_getPageString(
+  "You can now change the main user from %s to %s.",
+);
+const mainUserSuccess = pwg_getPageString("%s is the new main user");
+const mainUserStr = pwg_getPageString("Main user");
+const mainAskWebmaster = pwg_getPageString(
+  "You are not authorised to change the main user, please ask your webmaster",
+);
+const mainUserSet = pwg_getPageString("Set as main user");
+const mainUserUpgradeWebmaster = pwg_getPageString(
+  "This user must first be defined as the webmaster before it can be upgraded to the main user",
+);
+const errorStr = pwg_getPageString("an error happened");
+const copyLinkStr = pwg_getPageString("Copied link");
+const cantCopy = pwg_getPageString(
+  "You cannot copy the password if the connection to this site is not secure.",
+);
+const validLinkMail = pwg_getPageString(
+  'An activation link valid for %s has been sent to "%s". If the user doesn\'t receive the link, you can generate and copy a new one by editing the user and managing her password.',
+);
+const validLinkWithoutMail = pwg_getPageString(
+  "Copy the link below and send it to the user so the password can be set.",
+);
+const errorMailSentMsg = pwg_getPageString(
+  "An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user.",
+);
+
+const registered_str = pwg_getPageString("Registered");
+const last_visit_str = pwg_getPageString("Last visit");
+const dates_infos = pwg_getPageString("between %s and %s");
+const user_added_str = pwg_getPageString("User %s added");
+const filtered_users = pwg_getPageString("<b>%d</b> filtered users");
+const filtered_user = pwg_getPageString("<b>%d</b> filtered user");
+const history_base_url = pwg_getPageData<string>("u_history");
+
+const status_to_str: Record<string, string> = {
+  webmaster: pwg_getPageString("user_status_webmaster"),
+  admin: pwg_getPageString("user_status_admin"),
+  normal: pwg_getPageString("user_status_normal"),
+  generic: pwg_getPageString("user_status_generic"),
+  guest: pwg_getPageString("user_status_guest"),
+};
+
+const view_selector = pwg_getPageData<string>("view_selector");
+const pagination = String(pwg_getPageData<number>("pagination"));
+const connected_user_status = pwg_getPageData<string>("connected_user_status");
+const has_group = pwg_getPageData<string | null>("filter_group");
+
 /*----------------
 Escape of pop-in
 ----------------*/
@@ -1076,7 +1166,6 @@ html(
 Pagination
 ------------*/
 
-let per_page = 5;
 let actual_page = 1;
 let max_page = 1;
 let nb_filtered_users = 0;
@@ -1242,7 +1331,7 @@ function getDateStr(date: string) {
   return curr_month + " " + date_arr[0]!;
 }
 
-function setupRegisterDates(register_dates: string[]) {
+function setupRegisterDates(registerDatesList: string[]) {
   slider(
     document.querySelectorAll(
       ".advanced-filter .dates-select-bar .slider-bar-container",
@@ -1250,15 +1339,15 @@ function setupRegisterDates(register_dates: string[]) {
     {
       range: true,
       min: 0,
-      max: register_dates.length - 1,
-      values: [0, register_dates.length - 1],
+      max: registerDatesList.length - 1,
+      values: [0, registerDatesList.length - 1],
       change: function (_event: Event, ui: SliderUIParams) {
         html(
           document.querySelectorAll(".advanced-filter .dates-infos"),
           sprintf(
             dates_infos,
-            getDateStr(register_dates[ui.values![0]!]!),
-            getDateStr(register_dates[ui.values![1]!]!),
+            getDateStr(registerDatesList[ui.values![0]!]!),
+            getDateStr(registerDatesList[ui.values![1]!]!),
           ),
         );
       },
@@ -1267,8 +1356,8 @@ function setupRegisterDates(register_dates: string[]) {
           document.querySelectorAll(".advanced-filter .dates-infos"),
           sprintf(
             dates_infos,
-            getDateStr(register_dates[ui.values![0]!]!),
-            getDateStr(register_dates[ui.values![1]!]!),
+            getDateStr(registerDatesList[ui.values![0]!]!),
+            getDateStr(registerDatesList[ui.values![1]!]!),
           ),
         );
       },
@@ -1277,8 +1366,8 @@ function setupRegisterDates(register_dates: string[]) {
           document.querySelectorAll(".advanced-filter .dates-infos"),
           sprintf(
             dates_infos,
-            getDateStr(register_dates[ui.values![0]!]!),
-            getDateStr(register_dates[ui.values![1]!]!),
+            getDateStr(registerDatesList[ui.values![0]!]!),
+            getDateStr(registerDatesList[ui.values![1]!]!),
           ),
         );
         update_user_list();
@@ -1290,8 +1379,8 @@ function setupRegisterDates(register_dates: string[]) {
     document.querySelectorAll(".advanced-filter .dates-infos"),
     sprintf(
       dates_infos,
-      getDateStr(register_dates[0]!),
-      getDateStr(register_dates[register_dates.length - 1]!),
+      getDateStr(registerDatesList[0]!),
+      getDateStr(registerDatesList[registerDatesList.length - 1]!),
     ),
   );
 }
@@ -3912,80 +4001,6 @@ function set_main_user(user_id: number, new_username: string) {
   });
 }
 
-const title_msg = pwg_getPageString(
-  'Are you sure you want to delete the user "%s"?',
-);
-const confirm_msg = pwg_getPageString("Yes, I am sure");
-const cancel_msg = pwg_getPageString("No, I have changed my mind");
-const str_and_others_tags = pwg_getPageString("and %s others");
-const missingUsername = pwg_getPageString("Please, enter a login");
-const missingPassword = pwg_getPageString(
-  "Password is missing. Please enter the password.",
-);
-const missingConfPassword = pwg_getPageString(
-  "Password confirmation is missing. Please confirm the chosen password.",
-);
-const missingConfirm = pwg_getPageString("You need to confirm deletion");
-const fieldNotEmpty = pwg_getPageString("Name field must not be empty");
-const noMatchPassword = pwg_getPageString("The passwords do not match");
-const missingField = pwg_getPageString("Please complete all fields");
-const passwordCopied = pwg_getPageString("Password copied");
-const mailSentAt = pwg_getPageString("Mail sent to %s [%s].");
-const errorMailSent = pwg_getPageString("Error sending email");
-const cannotSendMail = pwg_getPageString(
-  "Cannot send an email to this user because he doesn't have an email address",
-);
-const mainUserContinue = pwg_getPageString(
-  "You are about to set %s as main user instead of %s, do you wish to continue ?",
-);
-const mainUserRewrite = pwg_getPageString(
-  "To be sure, please rewrite the word “%s” below",
-);
-const mainUserValidate = pwg_getPageString(
-  "You can now change the main user from %s to %s.",
-);
-const mainUserSuccess = pwg_getPageString("%s is the new main user");
-const mainUserStr = pwg_getPageString("Main user");
-const mainAskWebmaster = pwg_getPageString(
-  "You are not authorised to change the main user, please ask your webmaster",
-);
-const mainUserSet = pwg_getPageString("Set as main user");
-const mainUserUpgradeWebmaster = pwg_getPageString(
-  "This user must first be defined as the webmaster before it can be upgraded to the main user",
-);
-const errorStr = pwg_getPageString("an error happened");
-const copyLinkStr = pwg_getPageString("Copied link");
-const cantCopy = pwg_getPageString(
-  "You cannot copy the password if the connection to this site is not secure.",
-);
-const validLinkMail = pwg_getPageString(
-  'An activation link valid for %s has been sent to "%s". If the user doesn\'t receive the link, you can generate and copy a new one by editing the user and managing her password.',
-);
-const validLinkWithoutMail = pwg_getPageString(
-  "Copy the link below and send it to the user so the password can be set.",
-);
-const errorMailSentMsg = pwg_getPageString(
-  "An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user.",
-);
-
-const registered_str = pwg_getPageString("Registered");
-const last_visit_str = pwg_getPageString("Last visit");
-const dates_infos = pwg_getPageString("between %s and %s");
-const user_added_str = pwg_getPageString("User %s added");
-const filtered_users = pwg_getPageString("<b>%d</b> filtered users");
-const filtered_user = pwg_getPageString("<b>%d</b> filtered user");
-const history_base_url = pwg_getPageData<string>("u_history");
-
-const status_to_str: Record<string, string> = {
-  webmaster: pwg_getPageString("user_status_webmaster"),
-  admin: pwg_getPageString("user_status_admin"),
-  normal: pwg_getPageString("user_status_normal"),
-  generic: pwg_getPageString("user_status_generic"),
-  guest: pwg_getPageString("user_status_guest"),
-};
-
-const view_selector = pwg_getPageData<string>("view_selector");
-const pagination = String(pwg_getPageData<number>("pagination"));
 per_page = parseInt(pagination);
 
 months = [
@@ -4005,8 +4020,6 @@ months = [
 
 /* Template variables */
 connected_user = pwg_getPageData<number>("connected_user");
-const connected_user_status = pwg_getPageData<string>("connected_user_status");
-let owner_id = pwg_getPageData<number>("owner");
 owner_username = pwg_getPageData<string>("owner_username");
 const parsedGroupsArrName: unknown = JSON.parse(
   pwg_getPageData<string>("groups_arr_name"),
@@ -4026,11 +4039,8 @@ nb_days = pwg_getPageString("%d days");
 //per page is too long for the popin
 nb_photos = pwg_getPageString("%d photos");
 pwg_token = pwg_getPageData<string>("csrf_token");
-const has_group = pwg_getPageData<string | null>("filter_group");
-
-const register_dates_str = pwg_getPageData<string>("register_dates");
-const register_dates = register_dates_str.split(",");
-const groupOptions: GroupOption[] = groups_arr.map(function (x) {
+register_dates = pwg_getPageData<string>("register_dates").split(",");
+groupOptions = groups_arr.map(function (x) {
   return { value: x[0], label: x[1], isSelected: false };
 });
 

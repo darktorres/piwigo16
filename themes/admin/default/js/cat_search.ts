@@ -205,7 +205,7 @@ function addAlbumResult(
 }
 
 // Make the results appear one after one [and limit results to 100]
-function resultAppear(result: HTMLElement | null) {
+function resultAppear(result: Element | null) {
   if (result === null) {
     return;
   }
@@ -215,7 +215,7 @@ function resultAppear(result: HTMLElement | null) {
   const next = result.nextElementSibling;
   if (next !== null) {
     setTimeout(() => {
-      resultAppear(next as HTMLElement);
+      resultAppear(next);
     }, 50);
   }
 }

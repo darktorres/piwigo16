@@ -44,19 +44,19 @@ const queuedManager = new AjaxQueue({
 });
 
 function updateAll() {
-  document.querySelectorAll(".updateExtension").forEach((el) => {
+  document.querySelectorAll<HTMLElement>(".updateExtension").forEach((el) => {
     const div = el.closest("div");
     if (div !== null && cssValue(div, "display") === "block") {
-      (el as HTMLElement).click();
+      el.click();
     }
   });
 }
 
 function ignoreAll() {
-  document.querySelectorAll(".ignoreExtension").forEach((el) => {
+  document.querySelectorAll<HTMLElement>(".ignoreExtension").forEach((el) => {
     const div = el.closest("div");
     if (div !== null && cssValue(div, "display") === "block") {
-      (el as HTMLElement).click();
+      el.click();
     }
   });
 }
@@ -138,6 +138,7 @@ function updateExtension(type: string, id: string, revision: string) {
     },
     error: function (xhr: AjaxResponse) {
       const message =
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- safe regardless of the real shape: a malformed/non-object responseJSON just makes `.detail` read undefined, falling back below.
         (xhr.responseJSON as { detail?: string } | undefined)?.detail ??
         errorMsg;
       jGrowl(message, {

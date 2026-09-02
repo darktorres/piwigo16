@@ -71,6 +71,14 @@ type JqTreeNewNodeInfo<T extends Record<string, unknown>> = Partial<T> & {
   children?: JqTreeNodeData<T>[];
 };
 
+// Every `node as unknown as JqTreeNode<T>` / `treeNode as TreeNode` cast in
+// this file crosses the same real internal/public boundary: `class
+// TreeNode` below is the actual runtime implementation (genuinely not
+// generic -- its own `[key: string]: unknown` index signature and
+// `setData()`'s `for...of Object.entries(data)` loop copy every one of
+// `T`'s own keys directly onto the instance), while `JqTreeNode<T>` is
+// the public type callers see. TS has no way to verify that link
+// structurally; each cast states it instead.
 export type JqTreeNode<T extends Record<string, unknown>> = T & {
   id?: string | number;
   name: string;
@@ -198,7 +206,7 @@ class TreeNode {
       this.name = typeof data === "string" || typeof data === "number" ? String(data) : "";
       return;
     }
-    for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+    for (const [key, value] of Object.entries(data)) {
       if (key === "label") {
         this.name = String(value);
       } else if (key !== "children") {
@@ -323,8 +331,8 @@ class TreeNode {
   append(nodeInfo: unknown): TreeNode {
     const node = new TreeNode(nodeInfo);
     this.addChild(node);
-    if (typeof nodeInfo === "object" && nodeInfo !== null) {
-      const kids = (nodeInfo as Record<string, unknown>)["children"];
+    if (typeof nodeInfo === "object" && nodeInfo !== null && "children" in nodeInfo) {
+      const kids = nodeInfo.children;
       if (Array.isArray(kids) && kids.length) {
         node.loadFromData(kids as unknown[]);
       }
@@ -335,8 +343,8 @@ class TreeNode {
   prepend(nodeInfo: unknown): TreeNode {
     const node = new TreeNode(nodeInfo);
     this.addChildAtPosition(node, 0);
-    if (typeof nodeInfo === "object" && nodeInfo !== null) {
-      const kids = (nodeInfo as Record<string, unknown>)["children"];
+    if (typeof nodeInfo === "object" && nodeInfo !== null && "children" in nodeInfo) {
+      const kids = nodeInfo.children;
       if (Array.isArray(kids) && kids.length) {
         node.loadFromData(kids as unknown[]);
       }
@@ -405,6 +413,7 @@ function moveNode(
 function firstChildUl(li: HTMLLIElement): HTMLUListElement | null {
   for (const child of li.children) {
     if (child.tagName === "UL") {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified by the tagName check right above.
       return child as HTMLUListElement;
     }
   }
@@ -469,7 +478,7 @@ class JqTreeController<T extends Record<string, unknown>> {
 
   // Scroll-during-drag state (real source: lib/scroll_handler.js).
   scrollInitialized = false;
-  scrollParent: Element | null = null;
+  scrollParent: HTMLElement | null = null;
   scrollParentTop = 0;
   previousScrollTop = -1;
 
@@ -514,6 +523,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     const previousLi = node.element;
     const li = createLi(node, this.options.showEmptyFolder);
     node.element = li;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
     this.options.onCreateLi?.(node as unknown as JqTreeNode<T>, li);
     previousLi?.after(li);
     previousLi?.remove();
@@ -531,6 +541,7 @@ class JqTreeController<T extends Record<string, unknown>> {
       const li = createLi(child, this.options.showEmptyFolder);
       ul.appendChild(li);
       child.element = li;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
       this.options.onCreateLi?.(child as unknown as JqTreeNode<T>, li);
       if (child.hasChildren()) {
         this.createDomElements(li, child.children, false);
@@ -731,6 +742,7 @@ class JqTreeController<T extends Record<string, unknown>> {
   // ── Mouse/touch capture (real source: lib/mouse.widget.js) ───────────
 
   private readonly onMouseDown = (e: Event): void => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "mousedown" always dispatches a real MouseEvent; the class field is typed generically via the native EventListener interface.
     const event = e as MouseEvent;
     if (event.button !== 0) {
       return;
@@ -741,6 +753,7 @@ class JqTreeController<T extends Record<string, unknown>> {
   };
 
   private readonly onTouchStart = (e: Event): void => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "touchstart" always dispatches a real TouchEvent; the class field is typed generically via the native EventListener interface.
     const event = e as TouchEvent;
     if (event.touches.length > 1) {
       return;
@@ -750,11 +763,13 @@ class JqTreeController<T extends Record<string, unknown>> {
   };
 
   private readonly onMouseMove = (e: Event): void => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "mousemove" always dispatches a real MouseEvent; the class field is typed generically via the native EventListener interface.
     const event = e as MouseEvent;
     this.handleMouseMove(event, JqTreeController.positionInfoFromMouse(event));
   };
 
   private readonly onTouchMove = (e: Event): void => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "touchmove" always dispatches a real TouchEvent; the class field is typed generically via the native EventListener interface.
     const event = e as TouchEvent;
     if (event.touches.length > 1) {
       return;
@@ -764,10 +779,12 @@ class JqTreeController<T extends Record<string, unknown>> {
   };
 
   private readonly onMouseUp = (e: Event): void => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "mouseup" always dispatches a real MouseEvent; the class field is typed generically via the native EventListener interface.
     this.handleMouseUp(JqTreeController.positionInfoFromMouse(e as MouseEvent));
   };
 
   private readonly onTouchEnd = (e: Event): void => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "touchend" always dispatches a real TouchEvent; the class field is typed generically via the native EventListener interface.
     const event = e as TouchEvent;
     if (event.touches.length > 1) {
       return;
@@ -849,6 +866,7 @@ class JqTreeController<T extends Record<string, unknown>> {
   // ── Drag-and-drop handler (real source: lib/drag_and_drop_handler.js) ─
 
   private mouseCapture(positionInfo: PositionInfo): boolean {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real mouse/touch event's own target inside this tree is always an Element, never Text/Window/etc.
     const target = positionInfo.target as Element | null;
     if (target === null || target.matches("input,select,textarea")) {
       return false;
@@ -856,8 +874,9 @@ class JqTreeController<T extends Record<string, unknown>> {
     if (this.options.onIsMoveHandle && !this.options.onIsMoveHandle(target)) {
       return false;
     }
-    const li = target.closest("li.jqtree_common");
-    const node = li ? this.findNodeByElement(li as HTMLLIElement) : null;
+    const li = target.closest<HTMLLIElement>("li.jqtree_common");
+    const node = li ? this.findNodeByElement(li) : null;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
     if (node && this.options.onCanMove && !this.options.onCanMove(node as unknown as JqTreeNode<T>)) {
       this.currentItem = null;
       return false;
@@ -883,6 +902,7 @@ class JqTreeController<T extends Record<string, unknown>> {
       return false;
     }
     this.refreshHitAreas();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real mouse/touch event's own target inside this tree is always an Element, never Text/Window/etc.
     const target = positionInfo.target as Element;
     const targetOffset = offset(target);
     const node = this.currentItem;
@@ -927,6 +947,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     }
     if (!area && this.options.onDragMove) {
       this.options.onDragMove(
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
         this.currentItem as unknown as JqTreeNode<T>,
         positionInfo.originalEvent instanceof MouseEvent
           ? positionInfo.originalEvent
@@ -957,6 +978,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     this.positionInfo = null;
     if (!hadHoveredArea && currentItem && this.options.onDragStop) {
       this.options.onDragStop(
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
         currentItem as unknown as JqTreeNode<T>,
         positionInfo.originalEvent instanceof MouseEvent
           ? positionInfo.originalEvent
@@ -982,7 +1004,9 @@ class JqTreeController<T extends Record<string, unknown>> {
     }
     if (this.options.onCanMoveTo) {
       return this.options.onCanMoveTo(
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
         this.currentItem as unknown as JqTreeNode<T>,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
         area.node as unknown as JqTreeNode<T>,
         area.position,
       );
@@ -1066,9 +1090,12 @@ class JqTreeController<T extends Record<string, unknown>> {
       this.render(null);
     };
     const detail: JqTreeMoveInfo<T> = {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
       movedNode: movedNode as unknown as JqTreeNode<T>,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
       targetNode: targetNode as unknown as JqTreeNode<T>,
       position,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
       previousParent: previousParent as unknown as JqTreeNode<T> | null,
       doMove,
     };
@@ -1143,7 +1170,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     if (this.scrollParent) {
       const scrollParent = this.scrollParent;
       const distanceBottom =
-        this.scrollParentTop + (scrollParent as HTMLElement).offsetHeight - area.bottom;
+        this.scrollParentTop + scrollParent.offsetHeight - area.bottom;
       if (distanceBottom < 20) {
         scrollParent.scrollTop += 20;
         this.refreshHitAreas();
@@ -1170,7 +1197,7 @@ class JqTreeController<T extends Record<string, unknown>> {
       return;
     }
     if (this.scrollParent) {
-      const scrollParent = this.scrollParent as HTMLElement;
+      const scrollParent = this.scrollParent;
       const scrollParentOffset = offset(scrollParent);
       const canScrollRight = scrollParent.scrollLeft + scrollParent.clientWidth < scrollParent.scrollWidth;
       const canScrollLeft = scrollParent.scrollLeft > 0;
@@ -1427,6 +1454,7 @@ export function tree<T extends Record<string, unknown>>(
   // and invokes the real `onCreateLi` for every node, and the one real
   // consumer's own callback reads the instance straight back via
   // `getTreeInstance()` -- it must already be resolvable mid-init.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
   instances.set(el, controller as unknown as JqTreeController<never>);
   controller.init();
   return asInstance(controller);
@@ -1444,6 +1472,7 @@ export function getTreeInstance<T extends Record<string, unknown>>(
   el: Element,
 ): JqTreeInstance<T> | undefined {
   const controller = instances.get(el);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
   return controller ? asInstance(controller as unknown as JqTreeController<T>) : undefined;
 }
 
@@ -1451,30 +1480,41 @@ function asInstance<T extends Record<string, unknown>>(
   controller: JqTreeController<T>,
 ): JqTreeInstance<T> {
   return {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
     getNodeById: (id) => controller.getNodeById(id) as unknown as JqTreeNode<T> | null,
     getState: () => controller.getState(),
     openNode: (node, slide, onFinished) =>
       { controller.openNode(
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
         node as unknown as TreeNode,
         slide,
         onFinished
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
           ? (n) => { onFinished(n as unknown as JqTreeNode<T>); }
           : undefined,
       ); },
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
     closeNode: (node, slide) => { controller.closeNode(node as unknown as TreeNode, slide); },
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
     updateNode: (node, data) => { controller.updateNode(node as unknown as TreeNode, data); },
     appendNode: (newNodeInfo, parentNode) =>
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
       controller.appendNode(
         newNodeInfo,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
         parentNode as unknown as TreeNode | undefined,
       ) as unknown as JqTreeNode<T>,
     prependNode: (newNodeInfo, parentNode) =>
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
       controller.prependNode(
         newNodeInfo,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
         parentNode as unknown as TreeNode | undefined,
       ) as unknown as JqTreeNode<T>,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
     removeNode: (node) => { controller.removeNode(node as unknown as TreeNode); },
     loadData: (data, parentNode) =>
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
       { controller.loadData(data, parentNode as unknown as TreeNode); },
   };
 }

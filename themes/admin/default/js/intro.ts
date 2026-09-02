@@ -58,8 +58,8 @@ ready(function () {
       success: function (
         data: operations["extensionsCheckUpdates"]["responses"][200]["content"]["application/json"],
       ) {
-        const piwigo_update = data["piwigoNeedUpdate"];
-        const ext_update = data["extNeedUpdate"];
+        const piwigo_update = data.piwigoNeedUpdate;
+        const ext_update = data.extNeedUpdate;
         if (
           (piwigo_update === true || ext_update === true) &&
           !is(document.querySelectorAll(".warnings"), "div")

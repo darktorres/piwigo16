@@ -125,7 +125,7 @@ function updateExtension(type: string, id: string, revision: string) {
     success: function (
       data: operations["extensionUpdate"]["responses"][200]["content"]["application/json"],
     ) {
-      jGrowl(data["message"], {
+      jGrowl(data.message, {
         theme: "success",
         header: successHead,
         life: 4000,

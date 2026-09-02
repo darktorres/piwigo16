@@ -94,13 +94,13 @@ const dataElement = document.getElementById("data")!;
 // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- deliberate placeholder, immediately filled in below by real readData() calls before any other code can observe it.
 const data = {} as StatData;
 // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- readData() reads this server-rendered #data element's own JSON-object attribute, never adversarial input.
-data["hours"] = readData(dataElement, "hours") as StatDataPoint;
+data.hours = readData(dataElement, "hours") as StatDataPoint;
 // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- readData() reads this server-rendered #data element's own JSON-object attribute, never adversarial input.
-data["days"] = readData(dataElement, "days") as StatDataPoint;
+data.days = readData(dataElement, "days") as StatDataPoint;
 // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- readData() reads this server-rendered #data element's own JSON-object attribute, never adversarial input.
-data["months"] = readData(dataElement, "months") as StatDataPoint;
+data.months = readData(dataElement, "months") as StatDataPoint;
 // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- readData() reads this server-rendered #data element's own JSON-object attribute, never adversarial input.
-data["years"] = readData(dataElement, "years") as StatDataPoint;
+data.years = readData(dataElement, "years") as StatDataPoint;
 // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- readData() reads this server-rendered #data element's own JSON-object attribute, never adversarial input.
 data["compare-years"] = readData(dataElement, "compare-years") as StatDataPoint;
 // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- readData() reads this server-rendered #data element's own JSON-object attribute, never adversarial input.
@@ -210,7 +210,7 @@ function getMonthStatsDataset(): LineChartSeries[] {
   let colorIndice = 0;
   let lastDate: Date | undefined;
 
-  data["month-stats"]["month"].forEach((values: StatDataPoint) => {
+  data["month-stats"].month.forEach((values: StatDataPoint) => {
     const days_data: (number | undefined)[] = [];
     Object.keys(values).forEach(function (key) {
       lastDate = new Date(key);
@@ -236,7 +236,7 @@ function getMonthStatsDataset(): LineChartSeries[] {
     color: COMPARE_COLORS[4]!,
     points: Array.from({ length: 31 }, (_, day) => ({
       x: day,
-      y: data["month-stats"]["avg"],
+      y: data["month-stats"].avg,
     })),
   });
 

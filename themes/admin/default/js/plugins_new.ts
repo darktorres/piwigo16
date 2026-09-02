@@ -431,7 +431,7 @@ ready(function () {
         (filters.search === "" || pluginName.includes(filters.search)) &&
         (filters.author === "" || pluginAuthors.includes(filters.author)) &&
         (filters.tag === "" || pluginTags.includes(filters.tag)) &&
-        pluginRevisionOld <= filters["revision"]
+        pluginRevisionOld <= filters.revision
       );
     });
   }

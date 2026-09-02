@@ -409,7 +409,7 @@ AbstractSelectizer.getRender = function <U extends Record<string, unknown>>(
     option_create: function (entry: { input: string }, _escape: unknown) {
       return (
         '<div class="create">' +
-        (lang["Add"] ?? "") +
+        (lang.Add ?? "") +
         " <strong>" +
         entry.input +
         "</strong>&hellip;</div>"

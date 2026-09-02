@@ -246,6 +246,7 @@ ready(function () {
 const createGroup = function (group: Group): Element {
   //Setup the group
   const template = document.getElementById("group-template")!;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning #group-template, itself a real HTMLElement, always produces an HTMLElement (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
   const newgroup = template.cloneNode(true) as HTMLElement;
   newgroup.id = "group-" + String(group.id);
   attr(newgroup, "data-id", String(group.id));
@@ -306,6 +307,7 @@ ready(function () {
   });
 });
 const setupGroupBox = function (groupBox: Element) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
   const id = data(groupBox, "id") as string | number;
 
   /* Change background color of group block if checked in selection mode */
@@ -361,9 +363,10 @@ const setupGroupBox = function (groupBox: Element) {
     // spec), so it would never reach the native "submit" listener
     // registered below. `requestSubmit()` is the real equivalent of
     // "submit this form as if the user had".
-    (
-      find(groupBox, ".group-rename form")[0] as HTMLFormElement | undefined
-    )?.requestSubmit();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified by the selector: only <form> elements can match ".group-rename form".
+    const renameForm = find(groupBox, ".group-rename form")[0] as
+      HTMLFormElement | undefined;
+    renameForm?.requestSubmit();
   });
 
   on(find(groupBox, ".group-rename form"), "submit", function (e: Event) {
@@ -385,6 +388,7 @@ const setupGroupBox = function (groupBox: Element) {
     e.stopPropagation();
     let option_is_clicked = false;
     document.querySelectorAll("#GroupOptions div").forEach((option) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real mouseup event's own target inside the document is always a Node (or null), never a bare EventTarget with no Node interface.
       if (option.contains(e.target as Node | null)) {
         option_is_clicked = true;
       }
@@ -692,7 +696,12 @@ const setDefaultGroup = function (id: string | number, is_default: boolean) {
   const groupDefault = document.querySelectorAll(
     "#group-" + String(id) + " #GroupDefault",
   );
-  css(groupDefault, "width", outerHeight(groupDefault[0] as HTMLElement));
+  css(
+    groupDefault,
+    "width",
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- #GroupDefault is always a real HTMLElement (a <span>/<div> in this app's own markup, never SVG); the selector guarantees it exists here.
+    outerHeight(groupDefault[0] as HTMLElement),
+  );
   html(groupDefault, "<i class='icon-spin6 animate-spin'> </i>");
   removeClass(groupDefault, "icon-star");
   attr(groupDefault, "style", "pointer-events: none; text-align: center;");
@@ -1066,9 +1075,7 @@ on(document.querySelectorAll(".ConfirmMergeButton"), "click", function () {
   // value actually assigned or read.
   let name_dest = "";
   // Single-value <select>, never multi.
-  const dest_grp = val(
-    document.querySelectorAll("#MergeOptionsChoices"),
-  ) as string;
+  const dest_grp = val(document.querySelectorAll("#MergeOptionsChoices")) ?? "";
 
   document.querySelectorAll(".DeleteGroupList div").forEach((el) => {
     if (dest_grp !== attrOf(el, "data-id")) {
@@ -1160,7 +1167,7 @@ on(document.querySelectorAll(".ConfirmDeleteButton"), "click", function () {
   const names: string[] = [];
   const ids: (string | number)[] = [];
   document.querySelectorAll(".DeleteGroupList div").forEach((el) => {
-    const id = attrOf(el, "data-id") as string;
+    const id = attrOf(el, "data-id") ?? "";
     names.push(
       htmlOf(document.querySelectorAll("#group-" + id + " #group_name"))!,
     );
@@ -1235,6 +1242,7 @@ let selectize: SelectizeInstance<string | number, UserSelectOption>;
 // Initialize the cache -- placeholder cast, real init happens via
 // `new UsersCache(...)` inside updateUserSearch()/at module load
 // (below) before any handler that reads it can actually run.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- deliberate placeholder, replaced by a real `new UsersCache(...)` before any handler that reads it can actually run.
 let usersCache = {} as EntityCacheInstance<UserEntity>;
 
 let usersInGroup: GroupMemberDisplay[] = [];
@@ -1312,6 +1320,7 @@ ready(function () {
       }
     }
     document.querySelectorAll(".UsernameBlock").forEach((el) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       selectize.removeOption(data(el, "id") as string | number);
     });
   };
@@ -1367,9 +1376,10 @@ const openUserManager = function (grp_id: string | number) {
         } else return 1;
       });
       let i = 0;
-      const usersInGroupList = document.querySelector(".UsersInGroupList")!;
+      const usersInGroupList =
+        document.querySelector<HTMLElement>(".UsersInGroupList")!;
       while (
-        outerHeight(usersInGroupList as HTMLElement) <= maxOffsetUserCont &&
+        outerHeight(usersInGroupList) <= maxOffsetUserCont &&
         usersInGroup[i] !== undefined
       ) {
         usersInGroupList.appendChild(
@@ -1381,9 +1391,7 @@ const openUserManager = function (grp_id: string | number) {
         );
         i++;
       }
-      while (
-        (usersInGroupList as HTMLElement).offsetHeight > maxOffsetUserCont
-      ) {
+      while (usersInGroupList.offsetHeight > maxOffsetUserCont) {
         document
           .querySelectorAll(".UsernameBlock")
           .item(document.querySelectorAll(".UsernameBlock").length - 1)
@@ -1434,8 +1442,9 @@ const getUserDisplay = function (
       "</div>",
   )[0]!;
 
-  const usersInGroupList = document.querySelector(".UsersInGroupList")!;
-  while ((usersInGroupList as HTMLElement).offsetHeight > maxOffsetUserCont) {
+  const usersInGroupList =
+    document.querySelector<HTMLElement>(".UsersInGroupList")!;
+  while (usersInGroupList.offsetHeight > maxOffsetUserCont) {
     const blocks = document.querySelectorAll(".UsernameBlock");
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real runtime guard: NodeListOf.item() is typed non-nullable but really returns null for an out-of-range index (the list can be empty here).
     blocks.item(blocks.length - 1)?.remove();
@@ -1473,9 +1482,7 @@ const getUserDisplay = function (
 
         updateUserSearch();
 
-        while (
-          (usersInGroupList as HTMLElement).offsetHeight > maxOffsetUserCont
-        ) {
+        while (usersInGroupList.offsetHeight > maxOffsetUserCont) {
           const blocks = document.querySelectorAll(".UsernameBlock");
           // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real runtime guard: NodeListOf.item() is typed non-nullable but really returns null for an out-of-range index (the list can be empty here).
           blocks.item(blocks.length - 1)?.remove();
@@ -1526,9 +1533,11 @@ on(document.querySelectorAll(".CloseUserList"), "click", function () {
 on(document.querySelectorAll(".AddUserBlock button"), "click", function () {
   const grp_id =
     attrOf(document.querySelectorAll("#UserList"), "data-group_id") ?? "";
-  // Get selected ids -- `@types/selectize`'s own `getValue(): any` is a
-  // real, incomplete vendor declaration (same gap as `.storage`
-  // indexing above), narrowed to this file's real value shape.
+  // This instance is created without `multiple: true` (see
+  // createSelectize() call above), so its own `getValue(): T | T[]`
+  // signature -- shared with the multi-select case -- only ever returns
+  // a single T here, never an array.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified above: a non-multiple selectize instance's getValue() never returns an array.
   const id = selectize.getValue() as string | number;
 
   if (String(id) !== "") {
@@ -1600,10 +1609,9 @@ on(document.querySelectorAll(".AddUserBlock button"), "click", function () {
 
         usersInGroup.push({ username: username, id: id });
 
-        const usersInGroupList = document.querySelector(".UsersInGroupList")!;
-        while (
-          (usersInGroupList as HTMLElement).offsetHeight > maxOffsetUserCont
-        ) {
+        const usersInGroupList =
+          document.querySelector<HTMLElement>(".UsersInGroupList")!;
+        while (usersInGroupList.offsetHeight > maxOffsetUserCont) {
           const blocks = document.querySelectorAll(".UsernameBlock");
           // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real runtime guard: NodeListOf.item() is typed non-nullable but really returns null for an out-of-range index (the list can be empty here).
           blocks.item(blocks.length - 1)?.remove();
@@ -1629,10 +1637,12 @@ on(document.querySelectorAll(".input-user-name"), "input", function () {
   const searchString = String(
     val(document.querySelectorAll(".input-user-name")),
   ).toLowerCase();
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
   const grp_id = data(document.querySelector(".UserListPopIn")!, "group_id") as
     string | number;
   const container = document.querySelector(".UsersInGroupListContainer")!;
-  const usersInGroupList = document.querySelector(".UsersInGroupList")!;
+  const usersInGroupList =
+    document.querySelector<HTMLElement>(".UsersInGroupList")!;
   if (searchString !== "") {
     css(container, "min-height", cssValue(container, "height"));
     usersInGroup.forEach(function (u) {
@@ -1653,7 +1663,7 @@ on(document.querySelectorAll(".input-user-name"), "input", function () {
     html(document.querySelectorAll(".UsersInGroupList"), "");
     let i = 0;
     while (
-      outerHeight(usersInGroupList as HTMLElement) <= maxOffsetUserCont &&
+      outerHeight(usersInGroupList) <= maxOffsetUserCont &&
       usersInGroup[i] !== undefined
     ) {
       usersInGroupList.appendChild(
@@ -1666,7 +1676,7 @@ on(document.querySelectorAll(".input-user-name"), "input", function () {
     document.querySelectorAll(".AmountOfUsersShown strong:nth-child(1)"),
     String(document.querySelectorAll(".UsernameBlock").length),
   );
-  while ((usersInGroupList as HTMLElement).offsetHeight > maxOffsetUserCont) {
+  while (usersInGroupList.offsetHeight > maxOffsetUserCont) {
     const blocks = document.querySelectorAll(".UsernameBlock");
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real runtime guard: NodeListOf.item() is typed non-nullable but really returns null for an out-of-range index (the list can be empty here).
     blocks.item(blocks.length - 1)?.remove();
@@ -1710,12 +1720,14 @@ const serverId = pwg_getPageData<string>("cache_key_hash");
 const rootUrl = pwg_getPageData<string>("root_url");
 
 on(document, "keydown", function (e: Event) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
   if ((e as KeyboardEvent).key === "Escape") {
     fadeOut(document.querySelectorAll("#UserList"));
   }
 });
 on(document, "click", function (e: Event) {
   if (
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real click inside the document always targets an Element (or null), never a bare EventTarget with no Element interface.
     (e.target as Element | null)?.closest(".UserListPopInContainer") === null
   ) {
     fadeOut(document.querySelectorAll("#UserList"));

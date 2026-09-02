@@ -215,7 +215,10 @@ function toElements(target: Element | ArrayLike<Element>): Element[] {
  * every element's state first and only then writes, so a set of elements is
  * not measured against a layout its own earlier writes already changed.
  */
-function showHide(target: Element | ArrayLike<Element>, show: boolean): void {
+function showHide(
+  target: Element | ArrayLike<Element>,
+  shouldShow: boolean,
+): void {
   const elements = toElements(target).filter(
     (el): el is HTMLElement => el instanceof HTMLElement
   );
@@ -225,7 +228,7 @@ function showHide(target: Element | ArrayLike<Element>, show: boolean): void {
     let remembered = internalGet(el, "olddisplay");
     const display = el.style.display;
 
-    if (show) {
+    if (shouldShow) {
       // Clear an inline `none` first, to learn whether a stylesheet is what
       // is hiding this element.
       if (remembered === undefined && display === "none") {
@@ -246,8 +249,12 @@ function showHide(target: Element | ArrayLike<Element>, show: boolean): void {
   });
 
   elements.forEach((el, index) => {
-    if (!show || el.style.display === "none" || el.style.display === "") {
-      el.style.display = show ? (values[index] ?? "") : "none";
+    if (
+      !shouldShow ||
+      el.style.display === "none" ||
+      el.style.display === ""
+    ) {
+      el.style.display = shouldShow ? (values[index] ?? "") : "none";
     }
   });
 }
@@ -1154,30 +1161,30 @@ function augmentBox(
     return 0;
   }
 
-  let val = 0;
+  let total = 0;
   for (const side of BOX_SIDES[name]) {
     if (extra === "margin") {
-      val += styleNumber(styles, `margin-${side}`);
+      total += styleNumber(styles, `margin-${side}`);
     }
 
     if (isBorderBox) {
       // A border box already includes padding, so drop it for content.
       if (extra === "content") {
-        val -= styleNumber(styles, `padding-${side}`);
+        total -= styleNumber(styles, `padding-${side}`);
       }
       // Anything but margin excludes the border.
       if (extra !== "margin") {
-        val -= styleNumber(styles, `border-${side}-width`);
+        total -= styleNumber(styles, `border-${side}-width`);
       }
     } else {
-      val += styleNumber(styles, `padding-${side}`);
+      total += styleNumber(styles, `padding-${side}`);
       if (extra !== "padding") {
-        val += styleNumber(styles, `border-${side}-width`);
+        total += styleNumber(styles, `border-${side}-width`);
       }
     }
   }
 
-  return val;
+  return total;
 }
 
 /**
@@ -1268,18 +1275,18 @@ function measureBox(
 
   const isBorderBox = styles.getPropertyValue("box-sizing") === "border-box";
   let valueIsBorderBox = true;
-  let val = name === "width" ? el.offsetWidth : el.offsetHeight;
+  let size = name === "width" ? el.offsetWidth : el.offsetHeight;
 
-  if (val <= 0) {
+  if (size <= 0) {
     let raw = styles.getPropertyValue(name);
     if (parseFloat(raw) < 0) {
       raw = el.style.getPropertyValue(name);
     }
     valueIsBorderBox = isBorderBox;
-    val = parseFloat(raw) || 0;
+    size = parseFloat(raw) || 0;
   }
 
-  return val + augmentBox(styles, name, extra, valueIsBorderBox);
+  return size + augmentBox(styles, name, extra, valueIsBorderBox);
 }
 
 /** `.width()` -- content box, excluding padding and border. */
@@ -1788,9 +1795,9 @@ export function after(
  * dropped, which every call site here wants -- each parses one element out
  * of a template block.
  */
-export function parseHtml(html: string): Element[] {
+export function parseHtml(markup: string): Element[] {
   const template = document.createElement("template");
-  template.innerHTML = html;
+  template.innerHTML = markup;
 
   return Array.from(template.content.children);
 }

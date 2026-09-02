@@ -522,10 +522,10 @@ function setInfos(
     dataType: "json",
     data: body !== null ? JSON.stringify(body) : undefined,
     headers: { "X-CSRF-Token": PWG_TOKEN },
-    success: (data) => {
+    success: (response) => {
       user = { ...user, ...params };
       if (typeof callback === "function") {
-        callback(data);
+        callback(response);
         return;
       }
       pwgToaster({ text: str_infos_saved, icon: "success" });

@@ -191,19 +191,19 @@ LocalStorageCache.prototype.get = function (
     }
   }
 
-  this.loader(function (data) {
-    that.set.call(that, data);
-    callback(data);
+  this.loader(function (entities) {
+    that.set.call(that, entities);
+    callback(entities);
   });
 };
 
 /*
  * Manually set the cache content
- * @param data {mixed}
+ * @param entities {mixed}
  */
 LocalStorageCache.prototype.set = function (
   this: LocalStorageCacheInstance,
-  data: SelectizeEntity[],
+  entities: SelectizeEntity[],
 ) {
   try {
     if (this.ready) {
@@ -211,7 +211,7 @@ LocalStorageCache.prototype.set = function (
         JSON.stringify({
           timestamp: new Date().getTime(),
           key: this.serverKey,
-          data: data,
+          data: entities,
         });
     }
   } catch (e) {
@@ -325,22 +325,24 @@ AbstractSelectizer.prototype._selectize = function (
       }
 
       if (options.default !== undefined) {
-        const defaultValue = options.default;
+        // Captured into its own const: `options.default` is a mutable
+        // property TS can't narrow across the closures below.
+        const capturedDefault = options.default;
         // add default item
         if (instance.getValue() === "") {
-          instance.addItem(defaultValue);
+          instance.addItem(capturedDefault);
         }
 
         // if multiple: prevent item deletion
         if (el.multiple) {
           (
             instance
-              .getItem(defaultValue)
+              .getItem(capturedDefault)
               ?.querySelector(".remove") as HTMLElement | null
           )?.style.setProperty("display", "none");
 
           instance.on("item_remove", (id) => {
-            if (String(id) === String(defaultValue)) {
+            if (String(id) === String(capturedDefault)) {
               instance.addItem(id);
               (
                 instance
@@ -354,7 +356,7 @@ AbstractSelectizer.prototype._selectize = function (
         else {
           instance.on("dropdown_close", () => {
             if (instance.getValue() === "") {
-              instance.addItem(defaultValue);
+              instance.addItem(capturedDefault);
             }
           });
         }
@@ -371,18 +373,18 @@ AbstractSelectizer.getRender = function <U extends Record<string, unknown>>(
   const lang = rawLang ?? { Add: "Add" };
 
   return {
-    option: function (data: U, _escape: unknown) {
-      return '<div class="option">' + String(data[field_label]) + "</div>";
+    option: function (entry: U, _escape: unknown) {
+      return '<div class="option">' + String(entry[field_label]) + "</div>";
     },
-    item: function (data: U, _escape: unknown) {
-      return '<div class="item">' + String(data[field_label]) + "</div>";
+    item: function (entry: U, _escape: unknown) {
+      return '<div class="item">' + String(entry[field_label]) + "</div>";
     },
-    option_create: function (data: { input: string }, _escape: unknown) {
+    option_create: function (entry: { input: string }, _escape: unknown) {
       return (
         '<div class="create">' +
         (lang["Add"] ?? "") +
         " <strong>" +
-        data.input +
+        entry.input +
         "</strong>&hellip;</div>"
       );
     },
@@ -408,12 +410,14 @@ const CategoriesCache = function (
       url: options.rootUrl! + "api/v1/categories",
       dataType: "json",
       success: function (
-        data: operations["categoryList"]["responses"][200]["content"]["application/json"],
+        response: operations["categoryList"]["responses"][200]["content"]["application/json"],
       ) {
-        const cats: ProcessedCategory[] = data.categories.map(function (c, i) {
-          const { comment: _comment, uppercats: _uppercats, ...rest } = c;
-          return { ...rest, pos: i };
-        });
+        const cats: ProcessedCategory[] = response.categories.map(
+          function (c, i) {
+            const { comment: _comment, uppercats: _uppercats, ...rest } = c;
+            return { ...rest, pos: i };
+          },
+        );
 
         callback(cats);
       },
@@ -470,9 +474,9 @@ const TagsCache = function (
       url: options.rootUrl! + "api/v1/tags",
       dataType: "json",
       success: function (
-        data: operations["tagList"]["responses"][200]["content"]["application/json"],
+        response: operations["tagList"]["responses"][200]["content"]["application/json"],
       ) {
-        const tags: ProcessedTag[] = data.tags.map(function (t) {
+        const tags: ProcessedTag[] = response.tags.map(function (t) {
           const { urlName: _urlName, lastmodified: _lastmodified, ...rest } = t;
           return { ...rest, id: "~~" + String(t.id) + "~~" };
         });
@@ -532,9 +536,9 @@ const GroupsCache = function (
       url: options.rootUrl! + "api/v1/groups",
       dataType: "json",
       success: function (
-        data: operations["groupList"]["responses"][200]["content"]["application/json"],
+        response: operations["groupList"]["responses"][200]["content"]["application/json"],
       ) {
-        const groups: ProcessedGroup[] = data.groups.map(function (g) {
+        const groups: ProcessedGroup[] = response.groups.map(function (g) {
           const { lastmodified: _lastmodified, ...rest } = g;
           return rest;
         });
@@ -599,11 +603,11 @@ const UsersCache = function (
           options.rootUrl! + "api/v1/users?perPage=9999&page=" + String(page),
         dataType: "json",
         success: function (
-          data: operations["userList"]["responses"][200]["content"]["application/json"],
+          response: operations["userList"]["responses"][200]["content"]["application/json"],
         ) {
-          users = users.concat(data.users);
+          users = users.concat(response.users);
 
-          if (data.users.length === data.perPage) {
+          if (response.users.length === response.perPage) {
             load(page + 1);
           } else {
             callback(users);

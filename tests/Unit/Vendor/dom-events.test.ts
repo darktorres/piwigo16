@@ -172,71 +172,71 @@ describe("trigger() with namespaces", () => {
 });
 
 describe("whitespace-separated specs", () => {
-  let el: HTMLElement;
+  let multi: HTMLElement;
 
   beforeEach(() => {
     document.body.innerHTML = '<div id="multi"></div>';
-    el = document.getElementById("multi") as HTMLElement;
+    multi = document.getElementById("multi") as HTMLElement;
   });
 
   it("binds one handler to several types", () => {
     const handler = vi.fn();
-    on(el, "mouseleave click", handler);
+    on(multi, "mouseleave click", handler);
 
-    el.dispatchEvent(new Event("mouseleave"));
-    el.click();
+    multi.dispatchEvent(new Event("mouseleave"));
+    multi.click();
 
     expect(handler).toHaveBeenCalledTimes(2);
   });
 
   it("unbinds every type in the spec", () => {
     const handler = vi.fn();
-    on(el, "mouseleave click", handler);
-    off(el, "mouseleave click", handler);
+    on(multi, "mouseleave click", handler);
+    off(multi, "mouseleave click", handler);
 
-    el.dispatchEvent(new Event("mouseleave"));
-    el.click();
+    multi.dispatchEvent(new Event("mouseleave"));
+    multi.click();
 
     expect(handler).not.toHaveBeenCalled();
   });
 
   it("unbinds only the types named", () => {
     const handler = vi.fn();
-    on(el, "mouseleave click focus", handler);
-    off(el, "click", handler);
+    on(multi, "mouseleave click focus", handler);
+    off(multi, "click", handler);
 
-    el.click();
-    el.dispatchEvent(new Event("mouseleave"));
+    multi.click();
+    multi.dispatchEvent(new Event("mouseleave"));
 
     expect(handler).toHaveBeenCalledTimes(1);
   });
 
   it("keeps per-type namespaces when several types are given", () => {
     const handler = vi.fn();
-    on(el, "click.apply mouseleave.apply", handler);
+    on(multi, "click.apply mouseleave.apply", handler);
 
-    off(el, ".apply");
-    el.click();
+    off(multi, ".apply");
+    multi.click();
 
     expect(handler).not.toHaveBeenCalled();
   });
 
   it("an empty spec still means every type", () => {
     const handler = vi.fn();
-    on(el, "click", handler);
-    off(el, "");
+    on(multi, "click", handler);
+    off(multi, "");
 
-    el.click();
+    multi.click();
 
     expect(handler).not.toHaveBeenCalled();
   });
 
   it("tolerates surrounding and repeated whitespace", () => {
     const handler = vi.fn();
-    on(el, "  click   mouseleave  ", handler);
+    on(multi, "  click   mouseleave  ", handler);
 
-    el.click();
-    el.dispatchEvent(new Event("mouseleave"));
+    multi.click();
+    multi.dispatchEvent(new Event("mouseleave"));
 
     expect(handler).toHaveBeenCalledTimes(2);
   });
@@ -366,8 +366,8 @@ describe("binding to a whole set", () => {
     const handler = vi.fn();
     on(set, "click", handler);
 
-    set.forEach((el) => {
-      el.click();
+    set.forEach((item) => {
+      item.click();
     });
 
     expect(handler).toHaveBeenCalledTimes(3);
@@ -378,8 +378,8 @@ describe("binding to a whole set", () => {
     on(set, "click.ns", handler);
     off(set, ".ns");
 
-    set.forEach((el) => {
-      el.click();
+    set.forEach((item) => {
+      item.click();
     });
 
     expect(handler).not.toHaveBeenCalled();

@@ -571,7 +571,7 @@ ready(() => {
         }),
         dataType: "json",
         success: function (
-          data: operations["categoryCreate"]["responses"][201]["content"]["application/json"],
+          response: operations["categoryCreate"]["responses"][201]["content"]["application/json"],
         ) {
           const parent_node = getAlbumTree().getNodeById(newAlbumParent);
           if (
@@ -586,7 +586,7 @@ ready(() => {
           if (newAlbumPosition === "last") {
             getAlbumTree().appendNode(
               {
-                id: data.id,
+                id: response.id,
                 isEmptyFolder: true,
                 // Non-null: a required admin form field, always populated
                 // by the time this AJAX success handler runs.
@@ -597,7 +597,7 @@ ready(() => {
           } else {
             getAlbumTree().prependNode(
               {
-                id: data.id,
+                id: response.id,
                 isEmptyFolder: true,
                 // Non-null: a required admin form field, always populated
                 // by the time this AJAX success handler runs.
@@ -636,11 +636,11 @@ ready(() => {
           updateTitleBadge(nb_albums + 1);
 
           goToNode(
-            getAlbumTree().getNodeById(data.id)!,
-            getAlbumTree().getNodeById(data.id)!,
+            getAlbumTree().getNodeById(response.id)!,
+            getAlbumTree().getNodeById(response.id)!,
           );
           animateScrollTop(
-            offset(document.querySelector("#cat-" + String(data.id))!).top -
+            offset(document.querySelector("#cat-" + String(response.id))!).top -
               screen.height / 2,
             "slow",
           );
@@ -980,13 +980,13 @@ function triggerDeleteAlbum(cat_id: string | number) {
     type: "GET",
     dataType: "json",
     success: function (
-      data: operations["categoryOrphanImpact"]["responses"][200]["content"]["application/json"],
+      response: operations["categoryOrphanImpact"]["responses"][200]["content"]["application/json"],
     ) {
-      if (data.nbImagesRecursive === 0) {
+      if (response.nbImagesRecursive === 0) {
         hide(document.querySelectorAll(".deleteAlbumOptions"));
       } else {
         show(document.querySelectorAll(".deleteAlbumOptions"));
-        if (data.nbImagesAssociatedOutside === 0) {
+        if (response.nbImagesAssociatedOutside === 0) {
           hide(document.querySelectorAll("#IMAGES_ASSOCIATED_OUTSIDE"));
         } else {
           html(
@@ -998,11 +998,11 @@ function triggerDeleteAlbum(cat_id: string | number) {
               "#IMAGES_ASSOCIATED_OUTSIDE .innerText",
             )[0]!,
             has_images_associated_outside
-              .replace("%d", String(data.nbImagesRecursive))
-              .replace("%d", String(data.nbImagesAssociatedOutside)),
+              .replace("%d", String(response.nbImagesRecursive))
+              .replace("%d", String(response.nbImagesAssociatedOutside)),
           );
         }
-        if (data.nbImagesBecomingOrphan === 0) {
+        if (response.nbImagesBecomingOrphan === 0) {
           hide(document.querySelectorAll("#IMAGES_BECOMING_ORPHAN"));
         } else {
           html(
@@ -1013,7 +1013,7 @@ function triggerDeleteAlbum(cat_id: string | number) {
             document.querySelectorAll("#IMAGES_BECOMING_ORPHAN .innerText")[0]!,
             has_images_becomming_orphans.replace(
               "%d",
-              String(data.nbImagesBecomingOrphan),
+              String(response.nbImagesBecomingOrphan),
             ),
           );
         }
@@ -1305,10 +1305,10 @@ function changeParent(
       }),
       dataType: "json",
       success: function (
-        data: operations["categoryMove"]["responses"][200]["content"]["application/json"],
+        response: operations["categoryMove"]["responses"][200]["content"]["application/json"],
       ) {
         void changeRank(node, rank);
-        data.updatedCategories.forEach((cat) => {
+        response.updatedCategories.forEach((cat) => {
           const catNode = getAlbumTree().getNodeById(cat.categoryId)!;
           catNode.nb_sub_photos = cat.nbSubPhotos;
           getAlbumTree().updateNode(catNode, catNode.name);
@@ -1346,8 +1346,8 @@ function changeRank(node: string | number, rank: number | null) {
 
 function makePrivateHierarchy(node: AlbumJqTreeNode) {
   node.status = "private";
-  node.children.forEach((node) => {
-    makePrivateHierarchy(node);
+  node.children.forEach((child) => {
+    makePrivateHierarchy(child);
   });
 }
 

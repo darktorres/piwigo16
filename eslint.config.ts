@@ -231,6 +231,15 @@ export default defineConfig(
         "error",
         { considerDefaultExhaustiveForUnions: true },
       ],
+
+      // 57 real sites, each read individually. Overwhelmingly one
+      // recurring pattern: an ajax success-callback param named `data`
+      // shadowing the imported `data()` DOM helper -- renamed to
+      // `response` throughout. The rest were genuine per-site judgment
+      // calls (a closure-narrowing capture, a param whose type was wider
+      // than any real caller needed, a stale "bug preserved" comment this
+      // pass found was never actually a bug -- see configuration_main.ts).
+      "@typescript-eslint/no-shadow": "error",
     },
   },
 );

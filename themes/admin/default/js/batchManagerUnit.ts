@@ -388,7 +388,7 @@ ready(function () {
       }
     },
   );
-  pluginFunctionMapInit(activePlugins);
+  pluginFunctionMapInit();
 });
 
 // Genuinely dead code (zero callers, confirmed via grep) whose own
@@ -755,7 +755,7 @@ async function saveChanges(pictureId: string | number) {
         showSuccessLocalBadge(pictureId);
         updateSuccessGlobalBadge();
         // Method 1 for extension's save (see Skeleton extension for more details)
-        pluginSaveLoop(activePlugins, pictureId);
+        pluginSaveLoop(pictureId);
       },
       error: function (_xhr, _status: string, error: string) {
         enableLocalButton(pictureId);
@@ -780,7 +780,7 @@ async function saveAllChanges() {
 const pluginFunctionMap: Record<string, (pictureId: string | number) => void> =
   {};
 
-function pluginFunctionMapInit(activePlugins: string[]) {
+function pluginFunctionMapInit() {
   activePlugins.forEach(function (pluginId) {
     const functionName = pluginId + "_batchManagerSave";
     // Genuinely dynamic third-party extension hook (Skeleton
@@ -793,7 +793,7 @@ function pluginFunctionMapInit(activePlugins: string[]) {
   });
 }
 
-function pluginSaveLoop(activePlugins: string[], pictureId: string | number) {
+function pluginSaveLoop(pictureId: string | number) {
   if (activePlugins.length === 0) {
     return;
   }
@@ -871,7 +871,7 @@ function updateBlock(pictureId: string | number) {
 const all_related_categories_ids = pwg_getPageData<RelatedCategoryIds>(
   "all_related_categories_ids",
 );
-pluginFunctionMapInit(activePlugins);
+pluginFunctionMapInit();
 
 // TAGS UPDATE Yet to be implemented
 // function updateTags(tagsData, pictureId) {

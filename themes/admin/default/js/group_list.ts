@@ -200,14 +200,14 @@ ready(function () {
           }),
           dataType: "json",
           success: function (
-            data: operations["groupCreate"]["responses"][201]["content"]["application/json"],
+            response: operations["groupCreate"]["responses"][201]["content"]["application/json"],
           ) {
             loadState.reverse();
             setVal(
               document.querySelectorAll(".addGroupFormLabelAndInput input"),
               "",
             );
-            const group = data;
+            const group = response;
             const groupBox = createGroup(group);
             document.querySelector("#addGroupForm")?.after(groupBox);
             setupGroupBox(groupBox);
@@ -568,10 +568,10 @@ const renameGroup = function (id: string | number, newName: string) {
       }),
       dataType: "json",
       success: function (
-        data: operations["groupUpdate"]["responses"][200]["content"]["application/json"],
+        response: operations["groupUpdate"]["responses"][200]["content"]["application/json"],
       ) {
         loadState.reverse();
-        const confirmedName = data.name;
+        const confirmedName = response.name;
         //Display message
         html(
           find(
@@ -897,20 +897,20 @@ const duplicateAction = function (id: string | number) {
     }),
     dataType: "json",
     success: function (
-      data: operations["groupDuplicate"]["responses"][201]["content"]["application/json"],
+      response: operations["groupDuplicate"]["responses"][201]["content"]["application/json"],
     ) {
       loadState.reverse();
       hide(
         document.querySelectorAll("#group-" + String(id) + " #GroupOptions"),
       );
-      const group = data;
+      const group = response;
       const groupbox = createGroup(group);
       document.querySelector("#group-" + String(id))?.after(groupbox);
       setupGroupBox(groupbox);
       updateBadge();
 
-      if (data.isDefault) {
-        setupDefaultActions(data.id, true);
+      if (response.isDefault) {
+        setupDefaultActions(response.id, true);
       }
     },
     error: function (err) {
@@ -1132,8 +1132,8 @@ on(document.querySelectorAll(".ConfirmMergeButton"), "click", function () {
           groupIds: [dest_grp],
         },
         dataType: "json",
-        success: function (data: GroupUserListResponse) {
-          const number = data.users.length;
+        success: function (response: GroupUserListResponse) {
+          const number = response.users.length;
           html(
             document.querySelectorAll(
               "#group-" + dest_grp + " .group_number_users",
@@ -1342,7 +1342,7 @@ const openUserManager = function (grp_id: string | number) {
       groupIds: [grp_id],
     },
     dataType: "json",
-    success: function (data: GroupUserListResponse) {
+    success: function (response: GroupUserListResponse) {
       loadState.reverse();
       //Set the popin name
       html(
@@ -1361,7 +1361,7 @@ const openUserManager = function (grp_id: string | number) {
       fadeIn(document.querySelectorAll("#UserList"));
 
       //Fill with user blocks
-      usersInGroup = data.users;
+      usersInGroup = response.users;
       // Sort in alphabetic order
       usersInGroup.sort(function (a, b) {
         if (a.username.toLowerCase() < b.username.toLowerCase()) {

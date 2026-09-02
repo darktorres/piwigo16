@@ -2792,8 +2792,8 @@ function get_first_selection_usernames(callback: () => void) {
       exclude: [guest_id],
     },
     dataType: "json",
-    success: function (data: UserListResponse) {
-      const result = data.users;
+    success: function (response: UserListResponse) {
+      const result = response.users;
       for (let i = 0; i < result.length; i++) {
         const index = selection.findIndex((x) => x.id === result[i]!.id);
         if (index !== -1) {
@@ -2852,8 +2852,8 @@ function select_whole_set() {
     beforeSend: function () {
       show(document.querySelectorAll("#checkActions .loading"));
     },
-    success: function (data: UserListResponse) {
-      selection = data.users.map((x) => {
+    success: function (response: UserListResponse) {
+      selection = response.users.map((x) => {
         return { id: x.id };
       });
       hide(document.querySelectorAll("#checkActions .loading"));
@@ -2888,14 +2888,14 @@ function update_user_username() {
     data: JSON.stringify(ajax_data),
     dataType: "json",
     success: (
-      data: operations["userUpdate"]["responses"][200]["content"]["application/json"],
+      response: operations["userUpdate"]["responses"][200]["content"]["application/json"],
     ) => {
       if (last_user_index !== -1) {
         // "username" may be missing from a defensive-fallback response
         // (the row couldn't be re-fetched right after the update) --
         // the value we just successfully submitted is still correct.
         const updatedUsername =
-          "username" in data ? data.username : newUsername;
+          "username" in response ? response.username : newUsername;
         current_users[last_user_index]!.username = updatedUsername;
         html(
           document.querySelectorAll(
@@ -3082,9 +3082,9 @@ function get_guest_info() {
       userIds: [guest_id],
     },
     dataType: "json",
-    success: (data: UserListResponse) => {
-      if (data.users.length) {
-        guest_user = data.users[0]!;
+    success: (response: UserListResponse) => {
+      if (response.users.length) {
+        guest_user = response.users[0]!;
         fill_guest_edit();
       }
     },
@@ -3099,9 +3099,9 @@ function get_user_info(uid: number, callback: (() => void) | null = null) {
       userIds: [uid],
     },
     dataType: "json",
-    success: (data: UserListResponse) => {
-      if (data.users.length) {
-        const result_user = data.users[0]!;
+    success: (response: UserListResponse) => {
+      if (response.users.length) {
+        const result_user = response.users[0]!;
         fill_user_edit(result_user);
         callback?.();
       }
@@ -3220,8 +3220,8 @@ function update_user_list() {
     beforeSend: function () {
       show(document.querySelectorAll(".user-update-spinner"));
     },
-    success: function (data: UserListResponse) {
-      total_users = data.totalCount;
+    success: function (response: UserListResponse) {
+      total_users = response.totalCount;
       if (first_update) {
         document
           .querySelector("h1")
@@ -3231,9 +3231,9 @@ function update_user_list() {
           );
         first_update = false;
       }
-      nb_filtered_users = data.totalCount;
+      nb_filtered_users = response.totalCount;
       update_pagination_menu();
-      current_users = data.users;
+      current_users = response.users;
       generate_user_list();
       on(
         document.querySelectorAll(
@@ -3347,18 +3347,18 @@ function add_user() {
   // for debug
   // console.log(ajax_data);
 
-  const data: Record<string, unknown> = {
+  const payload: Record<string, unknown> = {
     username: ajax_data["username"],
     email: ajax_data["email"],
   };
 
   if ("generic" === ajax_data["status"]) {
-    data["password"] = val(document.querySelectorAll("#add_user_pass"));
-    data["passwordConfirm"] = val(
+    payload["password"] = val(document.querySelectorAll("#add_user_pass"));
+    payload["passwordConfirm"] = val(
       document.querySelectorAll("#add_user_confpass"),
     );
   } else {
-    data["autoPassword"] = true;
+    payload["autoPassword"] = true;
   }
 
   void ajax({
@@ -3366,7 +3366,7 @@ function add_user() {
     type: "POST",
     contentType: "application/json",
     headers: { "X-CSRF-Token": pwg_token },
-    data: JSON.stringify(data),
+    data: JSON.stringify(payload),
     dataType: "json",
     beforeSend: function () {
       css(
@@ -3435,10 +3435,10 @@ function add_user() {
       return undefined;
     },
     success: (
-      data: operations["userCreate"]["responses"][201]["content"]["application/json"],
+      response: operations["userCreate"]["responses"][201]["content"]["application/json"],
     ) => {
-      const new_user_id = data.id;
-      const default_group = "groups" in data ? data.groups : [];
+      const new_user_id = response.id;
+      const default_group = "groups" in response ? response.groups : [];
       ajax_data["groupIds"] = (ajax_data["groupIds"] as number[]).concat(
         default_group,
       );
@@ -3475,9 +3475,9 @@ function add_infos_to_new_user(
     }),
     dataType: "json",
     success: function (
-      data: operations["userUpdate"]["responses"][200]["content"]["application/json"],
+      response: operations["userUpdate"]["responses"][200]["content"]["application/json"],
     ) {
-      const new_user_id = data.id;
+      const new_user_id = response.id;
       update_user_list();
       // add_user_close();
       removeClass(
@@ -4035,7 +4035,7 @@ ready(function () {
     const action = val(
       document.querySelectorAll("select[name=selectAction]"),
     ) as string;
-    const data: Record<string, unknown> = {};
+    const actionData: Record<string, unknown> = {};
     switch (action) {
       case "delete":
         if (
@@ -4054,28 +4054,28 @@ ready(function () {
         }
         break;
       case "group_associate":
-        data["group_id"] = val(
+        actionData["group_id"] = val(
           document.querySelectorAll(
             "#permitActionUserList select[name=associate]",
           ),
         );
         break;
       case "group_dissociate":
-        data["group_id"] = val(
+        actionData["group_id"] = val(
           document.querySelectorAll(
             "#permitActionUserList select[name=dissociate]",
           ),
         );
         break;
       case "status":
-        data["status"] = val(
+        actionData["status"] = val(
           document.querySelectorAll(
             "#permitActionUserList select[name=status]",
           ),
         );
         break;
       case "enabled_high":
-        data["enabled_high"] =
+        actionData["enabled_high"] =
           attrOf(
             document.querySelectorAll(
               "#permitActionUserList .user-list-checkbox[name=enabled_high_yes]",
@@ -4086,31 +4086,31 @@ ready(function () {
             : false;
         break;
       case "level":
-        data["level"] = val(
+        actionData["level"] = val(
           document.querySelectorAll("#permitActionUserList select[name=level]"),
         );
         break;
       case "nb_image_page":
-        data["nb_image_page"] = val(
+        actionData["nb_image_page"] = val(
           document.querySelectorAll(
             "#permitActionUserList input[name=nb_image_page]",
           ),
         );
         break;
       case "theme":
-        data["theme"] = val(
+        actionData["theme"] = val(
           document.querySelectorAll("#permitActionUserList select[name=theme]"),
         );
         break;
       case "language":
-        data["language"] = val(
+        actionData["language"] = val(
           document.querySelectorAll(
             "#permitActionUserList select[name=language]",
           ),
         );
         break;
       case "recent_period":
-        data["recent_period"] =
+        actionData["recent_period"] =
           recent_period_values[
             slider(
               document.querySelectorAll(
@@ -4122,7 +4122,7 @@ ready(function () {
           ];
         break;
       case "expand":
-        data["expand"] =
+        actionData["expand"] =
           attrOf(
             document.querySelectorAll(
               "#permitActionUserList .user-list-checkbox[name=expand_yes]",
@@ -4133,7 +4133,7 @@ ready(function () {
             : false;
         break;
       case "show_nb_comments":
-        data["show_nb_comments"] =
+        actionData["show_nb_comments"] =
           attrOf(
             document.querySelectorAll(
               "#permitActionUserList .user-list-checkbox[name=show_nb_comments_yes]",
@@ -4144,7 +4144,7 @@ ready(function () {
             : false;
         break;
       case "show_nb_hits":
-        data["show_nb_hits"] =
+        actionData["show_nb_hits"] =
           attrOf(
             document.querySelectorAll(
               "#permitActionUserList .user-list-checkbox[name=show_nb_hits_yes]",
@@ -4160,7 +4160,7 @@ ready(function () {
         return false;
     }
 
-    // Translate the `data` bag above into the real /api/v1 request(s)
+    // Translate the `actionData` bag above into the real /api/v1 request(s)
     // -- one bulk group action, or one PATCH/DELETE per selected user
     // (there is no bulk-multi-id endpoint for Users).
     const userIds = selection.map((x) => x.id);
@@ -4196,7 +4196,7 @@ ready(function () {
       request = ajax({
         url:
           "api/v1/groups/" +
-          String(data["group_id"]) +
+          String(actionData["group_id"]) +
           "/actions/" +
           (action === "group_associate" ? "add-user" : "remove-user"),
         method: "POST",
@@ -4207,8 +4207,8 @@ ready(function () {
     } else {
       const field = fieldByAction[action]!;
       const value = numericFields.includes(field)
-        ? Number(data[action])
-        : data[action];
+        ? Number(actionData[action])
+        : actionData[action];
       request = Promise.all(
         userIds.map((id) =>
           ajax({

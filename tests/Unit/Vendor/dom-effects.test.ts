@@ -203,66 +203,66 @@ describe("show/hide/toggle durations", () => {
   });
 
   it("shows instantly with no argument", () => {
-    const el = document.getElementById("box") as HTMLElement;
-    hide(el);
+    const box = document.getElementById("box") as HTMLElement;
+    hide(box);
 
-    show(el);
+    show(box);
 
     // No tween ran, so nothing is left mid-animation.
-    expect(el.style.display).not.toBe("none");
-    expect(el.style.opacity).toBe("");
+    expect(box.style.display).not.toBe("none");
+    expect(box.style.opacity).toBe("");
   });
 
   it("treats a boolean as a forced state, not a duration", () => {
-    const el = document.getElementById("box") as HTMLElement;
+    const box = document.getElementById("box") as HTMLElement;
 
-    toggle(el, false);
+    toggle(box, false);
 
-    expect(el.style.display).toBe("none");
+    expect(box.style.display).toBe("none");
     // Instant: an animated toggle would have left the box mid-collapse.
-    expect(el.style.height).toBe("");
+    expect(box.style.height).toBe("");
   });
 
   it("animates the whole box, not just opacity, when given a duration", () => {
-    const el = document.getElementById("box") as HTMLElement;
-    hide(el);
+    const box = document.getElementById("box") as HTMLElement;
+    hide(box);
 
-    show(el, 400);
+    show(box, 400);
     vi.advanceTimersByTime(200);
 
     // jQuery's genFx("show", true) collapses height, width, opacity and
     // every margin and padding together.
-    expect(el.style.opacity).not.toBe("");
-    expect(el.style.height).not.toBe("");
-    expect(el.style.width).not.toBe("");
-    expect(el.style.paddingTop).not.toBe("");
-    expect(el.style.marginLeft).not.toBe("");
+    expect(box.style.opacity).not.toBe("");
+    expect(box.style.height).not.toBe("");
+    expect(box.style.width).not.toBe("");
+    expect(box.style.paddingTop).not.toBe("");
+    expect(box.style.marginLeft).not.toBe("");
   });
 
   it("restores the element's own styles when the animation ends", () => {
-    const el = document.getElementById("box") as HTMLElement;
-    hide(el);
+    const box = document.getElementById("box") as HTMLElement;
+    hide(box);
 
-    show(el, 400);
+    show(box, 400);
     vi.advanceTimersByTime(1000);
 
-    expect(el.style.display).not.toBe("none");
+    expect(box.style.display).not.toBe("none");
     // Every property the tween touched is handed back, not pinned at its
     // final tween value.
-    expect(el.style.height).toBe("");
-    expect(el.style.width).toBe("");
-    expect(el.style.opacity).toBe("");
-    expect(el.style.paddingTop).toBe("");
+    expect(box.style.height).toBe("");
+    expect(box.style.width).toBe("");
+    expect(box.style.opacity).toBe("");
+    expect(box.style.paddingTop).toBe("");
   });
 
   it("runs the callback of an animated hide once it is hidden", () => {
-    const el = document.getElementById("box") as HTMLElement;
+    const box = document.getElementById("box") as HTMLElement;
     const done = vi.fn();
 
-    hide(el, 400, done);
+    hide(box, 400, done);
     vi.advanceTimersByTime(1000);
 
     expect(done).toHaveBeenCalledTimes(1);
-    expect(el.style.display).toBe("none");
+    expect(box.style.display).toBe("none");
   });
 });

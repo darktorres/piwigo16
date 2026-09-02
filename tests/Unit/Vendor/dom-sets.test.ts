@@ -360,7 +360,7 @@ describe("albumBreadcrumbHtml", () => {
     // Must match HtmlService::getCatDisplayNameCache($uppercats,
     // 'admin.php?page=album-') exactly, because the same page renders rows
     // both ways -- server-side on load, here on selection.
-    const html = albumBreadcrumbHtml(
+    const resultHtml = albumBreadcrumbHtml(
       [
         { id: "1", name: "Top" },
         { id: "7", name: "Nested" },
@@ -368,7 +368,7 @@ describe("albumBreadcrumbHtml", () => {
       " / "
     );
 
-    expect(html).toBe(
+    expect(resultHtml).toBe(
       '<a href="admin.php?page=album-1">Top</a>' +
         "<span> / </span>" +
         '<a href="admin.php?page=album-7">Nested</a>'
@@ -382,7 +382,7 @@ describe("albumBreadcrumbHtml", () => {
   });
 
   it("honours a non-default separator", () => {
-    const html = albumBreadcrumbHtml(
+    const resultHtml = albumBreadcrumbHtml(
       [
         { id: "1", name: "A" },
         { id: "2", name: "B" },
@@ -390,20 +390,20 @@ describe("albumBreadcrumbHtml", () => {
       " > "
     );
 
-    expect(html).toContain("<span> &gt; </span>".replace("&gt;", ">"));
+    expect(resultHtml).toContain("<span> &gt; </span>".replace("&gt;", ">"));
   });
 
   it("passes an already-escaped name straight through", () => {
     // The server escapes segment names, the same convention `fullname`
     // follows. Escaping again here would render the entities literally.
-    const html = albumBreadcrumbHtml(
+    const resultHtml = albumBreadcrumbHtml(
       [{ id: "1", name: "Tom &amp; Jerry" }],
       " / "
     );
 
-    expect(html).toContain("Tom &amp; Jerry");
+    expect(resultHtml).toContain("Tom &amp; Jerry");
 
-    document.body.innerHTML = html;
+    document.body.innerHTML = resultHtml;
 
     expect(document.body.textContent).toBe("Tom & Jerry");
   });

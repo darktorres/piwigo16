@@ -33,22 +33,21 @@ export {};
       is(document.querySelectorAll(selector), ":checked"),
     );
 
-    // Same pre-existing closure bug as configuration_comments.ts's own
-    // copy of this pattern -- `selector` read from the outer loop's
-    // `var`, not passed into the IIFE the way `target` is. Preserved
-    // exactly.
-    (function (target) {
-      on(
-        document.querySelectorAll(selector),
-        "change",
-        function (event: Event): void {
-          toggle(
-            document.querySelectorAll(target),
-            is(event.currentTarget as Element, ":checked"),
-          );
-        },
-      );
-    })(target);
+    // No closure bug here, and no IIFE needed to avoid one --
+    // configuration_comments.ts's own copy of this pattern already
+    // established why: `for (const selector in ...)` gives each
+    // iteration its own binding, so both `selector` and `target` are
+    // already captured correctly without a wrapper.
+    on(
+      document.querySelectorAll(selector),
+      "change",
+      function (event: Event): void {
+        toggle(
+          document.querySelectorAll(target),
+          is(event.currentTarget as Element, ":checked"),
+        );
+      },
+    );
   }
 
   tipTip(document.querySelectorAll(".tiptip-with-img"), {

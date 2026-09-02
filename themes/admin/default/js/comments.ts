@@ -268,14 +268,14 @@ function getComments(params: CommentsFilterParams) {
       maxDate: params.f_max_date,
       imageId: params.image_id,
     },
-    success: (data: CommentListResponse) => {
+    success: (response: CommentListResponse) => {
       // for debug
-      // console.log(data);
-      commentsState = { ...data };
-      commentsDisplaySummary(data.summary);
-      displayComments(data.comments);
-      commentsDiplayPagination(data.paging);
-      commentsDisplayFilters(data.filters);
+      // console.log(response);
+      commentsState = { ...response };
+      commentsDisplaySummary(response.summary);
+      displayComments(response.comments);
+      commentsDiplayPagination(response.paging);
+      commentsDisplayFilters(response.filters);
 
       delete commentsParams.search;
     },

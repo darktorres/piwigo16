@@ -192,14 +192,14 @@ ready(function () {
   document.querySelectorAll(".pluginBox").forEach((el) => {
     const author = data(el, "author") as string;
     author.split(", ").forEach((name: string) => {
-      if (!authorNames.find((el) => el.value === name)) {
+      if (!authorNames.find((opt) => opt.value === name)) {
         authorNames.push({ value: name, text: name });
       }
     });
 
     const tags = data(el, "tags") as string;
     tags.split(", ").forEach((tag: string) => {
-      if (!tagsNames.find((el) => el.value === tag)) {
+      if (!tagsNames.find((opt) => opt.value === tag)) {
         tagsNames.push({ value: tag, text: tag });
       }
     });
@@ -257,8 +257,8 @@ ready(function () {
   });
 
   // All the slider values and it's corresponding month's number and label
-  function value_to_month(val: number): [number, string] {
-    switch (val) {
+  function value_to_month(sliderValue: number): [number, string] {
+    switch (sliderValue) {
       case 6:
         return [1, str_x_month.replace("%d", String(1))];
       case 5:
@@ -362,8 +362,8 @@ ready(function () {
     });
   }
 
-  function updateRevisionFilterLabel(val: number) {
-    const [, label] = value_to_month(val);
+  function updateRevisionFilterLabel(sliderValue: number) {
+    const [, label] = value_to_month(sliderValue);
     html(document.querySelectorAll(".revision-date"), label);
   }
 

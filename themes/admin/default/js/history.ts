@@ -376,15 +376,15 @@ function fillHistoryResult(ajaxParam: HistoryFilterParams) {
       empty(document.querySelectorAll(".tab"));
     },
     success: function (raw_data: HistorySearchResponse) {
-      const data = raw_data.lines;
+      const lines = raw_data.lines;
       maxPage = raw_data.maxPage;
       const summary = raw_data.summary;
 
       //clear lines before refill
 
-      if (data.length > 0) {
+      if (lines.length > 0) {
         let id = 0;
-        data.forEach((line) => {
+        lines.forEach((line) => {
           lineConstructor(line, id);
           id++;
         });

@@ -228,16 +228,16 @@ async function fetchAndMergeActivityLines(
     if (object !== undefined) params.object = object;
     if (id !== undefined && id !== null) params.objectId = id;
 
-    const data = (await ajax({
+    const response = (await ajax({
       url: "api/v1/activity",
       type: "GET",
       dataType: "json",
       data: params,
     })) as operations["activityList"]["responses"][200]["content"]["application/json"];
 
-    hasMore = data.hasMore;
+    hasMore = response.hasMore;
 
-    for (const row of data.activities) {
+    for (const row of response.activities) {
       offset++;
 
       if (lines.length >= ACTIVITY_DISPLAY_PAGE_SIZE) {

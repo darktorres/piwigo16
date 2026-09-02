@@ -222,9 +222,9 @@ ready(function () {
 // Confirmed live once already. Anything that lets the bundler decide
 // module evaluation order (shared chunks) has to re-verify this page.
 ready(function () {
-  const trigger = document.querySelector("[data-add-album]");
-  if (trigger !== null) {
-    pwgAddAlbum(trigger);
+  const triggerEl = document.querySelector("[data-add-album]");
+  if (triggerEl !== null) {
+    pwgAddAlbum(triggerEl);
   }
 });
 
@@ -717,14 +717,15 @@ function progress_bar_start() {
   );
 }
 
-function progress_bar(val: number, max: number, _success: boolean) {
-  const percent = parseInt(String((val / max) * 100));
+function progress_bar(current: number, max: number, _success: boolean) {
+  const percent = parseInt(String((current / max) * 100));
   css(
     document.querySelectorAll("#uploadingActions .progressbar"),
     "width",
     percent.toString() + "%",
   );
-  if (val === max) document.querySelector<HTMLElement>("#applyAction")?.click();
+  if (current === max)
+    document.querySelector<HTMLElement>("#applyAction")?.click();
 }
 
 on(

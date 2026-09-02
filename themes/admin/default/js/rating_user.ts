@@ -119,16 +119,16 @@ ready(function () {
                 trElement = trElement.parentNode as HTMLElement;
               fadeTo(trElement, 1000, 0.4);
               const tr = trElement;
-              const data = uidFromCell(cell);
+              const ids = uidFromCell(cell);
               void ajax({
                 url:
                   pwg_getPageData<string>("root_url") +
                   "api/v1/users/" +
-                  String(data.uid) +
+                  String(ids.uid) +
                   "/actions/delete-ratings",
                 method: "POST",
                 contentType: "application/json",
-                data: JSON.stringify({ anonymousId: data.aid || null }),
+                data: JSON.stringify({ anonymousId: ids.aid || null }),
                 headers: { "X-CSRF-Token": pwg_token },
                 error: function (jqXHR) {
                   stop(tr);

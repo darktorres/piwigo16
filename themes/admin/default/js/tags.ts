@@ -392,18 +392,23 @@ function addTag(name: string): Promise<void> {
         name: name,
       }),
       dataType: "json",
-      success: function (data: TagCreateResponse) {
-        const newTag = createTagBox(data.id, data.name, data.urlName, 0);
+      success: function (response: TagCreateResponse) {
+        const newTag = createTagBox(
+          response.id,
+          response.name,
+          response.urlName,
+          0,
+        );
         document.querySelector(".tag-container")?.prepend(newTag);
         setupTagbox(newTag);
         updateSearchInfo();
 
-        //Update the data
+        //Update the local tag list
         dataTags.unshift({
-          name: data.name,
-          raw_name: data.name,
-          id: data.id,
-          url_name: data.urlName,
+          name: response.name,
+          raw_name: response.name,
+          id: response.id,
+          url_name: response.urlName,
         });
         updateBadge();
         resolve();
@@ -496,8 +501,8 @@ function setupTagbox(tagBox: Element): void {
     void duplicateTag(
       data(tagBox, "id") as TagId,
       data(find(tagBox, ".tag-name")[0]!, "rawname") as string,
-    ).then((data) => {
-      showMessage(str_tag_created.replace("%s", data.name));
+    ).then((newTag) => {
+      showMessage(str_tag_created.replace("%s", newTag.name));
     });
   });
 }
@@ -586,7 +591,7 @@ function renameTag(id: TagId, new_name: string): Promise<TagRenameResponse> {
         name: new_name,
       }),
       dataType: "json",
-      success: function (data: TagRenameResponse) {
+      success: function (response: TagRenameResponse) {
         html(
           document.querySelectorAll(
             '.tag-box[data-id="' +
@@ -595,38 +600,38 @@ function renameTag(id: TagId, new_name: string): Promise<TagRenameResponse> {
               String(id) +
               '"] .tag-dropdown-header b',
           ),
-          data.name,
+          response.name,
         );
         attr(
           document.querySelectorAll(
             '.tag-box[data-id="' + String(id) + '"] .tag-name-editable',
           ),
           "value",
-          data.name,
+          response.name,
         );
         attr(
           document.querySelectorAll(
             '.tag-box[data-id="' + String(id) + '"] .tag-name',
           ),
           "data-rawname",
-          data.nameRaw,
+          response.nameRaw,
         );
-        const u_view = "index.php?/tags/" + String(id) + "-" + data.urlName;
+        const u_view = "index.php?/tags/" + String(id) + "-" + response.urlName;
         attr(
           document.querySelectorAll(".dropdown-option.view"),
           "href",
           u_view,
         );
 
-        //Update the data
+        //Update the local tag list
         const index = dataTags.findIndex((tag) => tag.id === Number(id));
         // Non-null: `id` always identifies a real, currently-rendered
         // tag box, which was itself rendered from this same array.
-        dataTags[index]!.name = data.name;
-        dataTags[index]!.raw_name = data.nameRaw;
-        dataTags[index]!.url_name = data.urlName;
+        dataTags[index]!.name = response.name;
+        dataTags[index]!.raw_name = response.nameRaw;
+        dataTags[index]!.url_name = response.urlName;
 
-        resolve(data);
+        resolve(response);
       },
       error: function (XMLHttpRequest) {
         if (XMLHttpRequest.status === 422) {
@@ -643,10 +648,10 @@ function duplicateTag(id: TagId, name: string): Promise<TagDuplicateResponse> {
   return new Promise<TagDuplicateResponse>((resolve, reject) => {
     let copy_name = name + str_copy;
 
-    const name_exist = function (name: string): boolean {
+    const name_exist = function (candidateName: string): boolean {
       let exist = false;
       document.querySelectorAll(".tag-box .tag-name").forEach((el) => {
-        if (htmlOf(el) === name) exist = true;
+        if (htmlOf(el) === candidateName) exist = true;
       });
       return exist;
     };
@@ -667,12 +672,12 @@ function duplicateTag(id: TagId, name: string): Promise<TagDuplicateResponse> {
         name: copy_name,
       }),
       dataType: "json",
-      success: function (data: TagDuplicateResponse) {
+      success: function (response: TagDuplicateResponse) {
         const newTag = createTagBox(
-          data.id,
-          data.name,
-          data.urlName,
-          data.count,
+          response.id,
+          response.name,
+          response.urlName,
+          response.count,
         );
         document
           .querySelector('.tag-box[data-id="' + String(id) + '"]')
@@ -682,7 +687,7 @@ function duplicateTag(id: TagId, name: string): Promise<TagDuplicateResponse> {
         //Update Data
         const index = dataTags.findIndex((tag) => tag.id === Number(id));
         dataTags.splice(index + 1, 0, {
-          name: data.name,
+          name: response.name,
           // Was missing entirely -- `TagRow.raw_name` is a required
           // field, and `tagDuplicate`'s own response has no separate
           // raw-name field to source it from (same gap `tagCreate`'s
@@ -690,14 +695,14 @@ function duplicateTag(id: TagId, name: string): Promise<TagDuplicateResponse> {
           // success handler above: the rendered `name` is the best
           // available stand-in until a real page reload re-fetches the
           // true raw name).
-          raw_name: data.name,
-          id: data.id,
-          url_name: data.urlName,
-          counter: data.count,
+          raw_name: response.name,
+          id: response.id,
+          url_name: response.urlName,
+          counter: response.count,
         });
         updateBadge();
         updateSearchInfo();
-        resolve(data);
+        resolve(response);
       },
       error: function (XMLHttpRequest) {
         reject(new Error(XMLHttpRequest.statusText));
@@ -950,9 +955,9 @@ on(document.querySelectorAll("#selectAll"), "click", function () {
   }
 });
 
-function selectAll(data: TagRow[]) {
+function selectAll(tags: TagRow[]) {
   const promises: Promise<void>[] = [];
-  data.forEach((tag) => {
+  tags.forEach((tag) => {
     promises.push(
       new Promise<void>((res, _rej) => {
         attr(
@@ -1007,8 +1012,8 @@ on(document.querySelectorAll("#selectInvert"), "click", function () {
   selectInvert(tagToDisplay());
 });
 
-function selectInvert(data: TagRow[]): void {
-  data.forEach((tag) => {
+function selectInvert(tags: TagRow[]): void {
+  tags.forEach((tag) => {
     const tagBox = document.querySelectorAll(
       '.tag-box[data-id="' + String(tag.id) + '"]',
     );
@@ -1140,9 +1145,9 @@ function mergeGroups(destination_id: TagId, merge_ids: TagId[]): void {
           mergeTagIds: merge_ids,
         }),
         dataType: "json",
-        success: function (data: TagMergeResponse) {
-          data.deletedTagIds.forEach((id) => {
-            if (data.destinationTagId !== id) {
+        success: function (response: TagMergeResponse) {
+          response.deletedTagIds.forEach((id) => {
+            if (response.destinationTagId !== id) {
               document
                 .querySelector('.tag-box[data-id="' + String(id) + '"]')
                 ?.remove();
@@ -1150,9 +1155,9 @@ function mergeGroups(destination_id: TagId, merge_ids: TagId[]): void {
               dataTags = dataTags.filter((tag) => id !== tag.id);
             }
           });
-          if (data.imagesInMergedTag.length > 0) {
+          if (response.imagesInMergedTag.length > 0) {
             const tagBox = document.querySelectorAll(
-              '.tag-box[data-id="' + String(data.destinationTagId) + '"]',
+              '.tag-box[data-id="' + String(response.destinationTagId) + '"]',
             );
             show(
               find(
@@ -1164,15 +1169,15 @@ function mergeGroups(destination_id: TagId, merge_ids: TagId[]): void {
               document.querySelectorAll(".tag-dropdown-header i"),
               str_number_photos.replace(
                 "%d",
-                String(data.imagesInMergedTag.length),
+                String(response.imagesInMergedTag.length),
               ),
             );
 
             // Update data
             const index = dataTags.findIndex(
-              (tag) => tag.id === data.destinationTagId,
+              (tag) => tag.id === response.destinationTagId,
             );
-            dataTags[index]!.counter = data.imagesInMergedTag.length;
+            dataTags[index]!.counter = response.imagesInMergedTag.length;
           }
           attr(document.querySelectorAll(".tag-box"), "data-selected", "0");
           clearSelection();

@@ -128,14 +128,14 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
           hide(document.querySelectorAll(".albumCreationButton"));
         },
         success: function (
-          data: operations["categoryCreate"]["responses"][201]["content"]["application/json"],
+          response: operations["categoryCreate"]["responses"][201]["content"]["application/json"],
         ) {
           hide(document.querySelectorAll("#albumCreationLoading"));
           show(document.querySelectorAll(".albumCreationButton"));
           closeColorbox();
 
           const newAlbum: AlbumOptionData = {
-            id: data.id,
+            id: response.id,
             name: name,
             fullname: name,
             global_rank: "0",

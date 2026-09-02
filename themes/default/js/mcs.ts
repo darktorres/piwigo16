@@ -2568,10 +2568,10 @@ function performSearch(params: Record<string, any>, reload: boolean = false) {
     dataType: "json",
     data: JSON.stringify(body),
     success: function (
-      data: operations["imageFilteredSearchCreate"]["responses"][201]["content"]["application/json"],
+      response: operations["imageFilteredSearchCreate"]["responses"][201]["content"]["application/json"],
     ) {
-      if (reload && typeof data.searchUrl !== "undefined") {
-        reloadPage(data.searchUrl);
+      if (reload && typeof response.searchUrl !== "undefined") {
+        reloadPage(response.searchUrl);
       }
     },
     error: function (e) {

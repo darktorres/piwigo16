@@ -21,12 +21,12 @@ ready(() => {
   document
     .getElementById("checkAutomaticCorrectionsLink")
     ?.addEventListener("click", (event) => {
-      DeselectAll(document.getElementById("c13y") as HTMLFormElement);
+      DeselectAll(document.querySelector<HTMLFormElement>("#c13y")!);
       const ids = pwg_getPageData<string[] | null>("c13y_do_check_ids") ?? [];
       ids.forEach(function (id: string) {
-        (
-          document.getElementById("c13y_selection-" + id) as HTMLInputElement
-        ).checked = true;
+        document.querySelector<HTMLInputElement>(
+          "#c13y_selection-" + id,
+        )!.checked = true;
       });
       event.preventDefault();
       event.stopPropagation();
@@ -45,8 +45,8 @@ function setAllC13yCheckboxes(checked: boolean): void {
 
 function DeselectAll(formulaire: HTMLFormElement) {
   for (const elt of formulaire.elements) {
-    if ((elt as HTMLInputElement).type === "checkbox") {
-      (elt as HTMLInputElement).checked = false;
+    if (elt instanceof HTMLInputElement && elt.type === "checkbox") {
+      elt.checked = false;
     }
   }
 }

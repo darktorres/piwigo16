@@ -227,6 +227,7 @@ async function fetchAndMergeActivityLines(
     if (object !== undefined) params.object = object;
     if (id !== undefined && id !== null) params.objectId = id;
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const response = (await ajax({
       url: "api/v1/activity",
       type: "GET",
@@ -286,6 +287,7 @@ async function fetchAndMergeActivityLines(
   const userLines = lines.filter((l) => l.object === "user");
   if (userLines.length > 0) {
     const allUserIds = [...new Set(userLines.flatMap((l) => l.object_id))];
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const userInfo = (await ajax({
       url: "api/v1/users",
       type: "GET",
@@ -386,6 +388,7 @@ async function get_user_activity(
 }
 
 function lineConstructor(line: MergedActivityLine) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
   const newLine = document.getElementById("-1")!.cloneNode(true) as Element;
 
   show(document.querySelectorAll(".tab-title"));
@@ -1133,6 +1136,7 @@ function append_pagination_item(page: number | null = null) {
       addClass(new_tag, "actual");
     }
     on(new_tag, "click", () => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       move_to_page(data(new_tag, "page") as number);
     });
   } else {
@@ -1184,6 +1188,7 @@ ready(function () {
           //{* call ajax sur activity list avec uid en param *}
           void get_user_activity(
             1,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
             value as string | number | undefined,
             action_filter,
             object_filter,
@@ -1233,7 +1238,9 @@ ready(function () {
           }
         } else {
           //{* call ajax sur activity list avec action et object en param *}
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
           const object = (value as string).split("/")[0];
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
           const action = (value as string).split("/")[1];
           void get_user_activity(
             1,

@@ -14,7 +14,7 @@ beforeEach(() => {
 
 function el(attrs = ""): HTMLElement {
   document.body.innerHTML = `<div id="t" ${attrs}></div>`;
-  return document.getElementById("t") as HTMLElement;
+  return document.getElementById("t")!;
 }
 
 describe("coerceDataAttribute", () => {
@@ -94,8 +94,8 @@ describe("data()", () => {
 
   it("keeps each element's store separate", () => {
     document.body.innerHTML = `<div id="a"></div><div id="b"></div>`;
-    const a = document.getElementById("a") as HTMLElement;
-    const b = document.getElementById("b") as HTMLElement;
+    const a = document.getElementById("a")!;
+    const b = document.getElementById("b")!;
     setData(a, "k", "A");
     setData(b, "k", "B");
     expect(data(a, "k")).toBe("A");

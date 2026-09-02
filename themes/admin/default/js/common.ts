@@ -93,7 +93,9 @@ function fontCheckbox(): void {
     "change",
     function (event: Event): void {
       const radio = event.currentTarget as Element;
-      const name = attrOf(radio, "name");
+      // Non-null: every real .font-checkbox radio in the template has a
+      // `name` attribute.
+      const name = attrOf(radio, "name")!;
       document
         .querySelectorAll(`.font-checkbox input[type=radio][name="${name}"]`)
         .forEach((el) => {

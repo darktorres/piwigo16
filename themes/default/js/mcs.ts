@@ -2615,7 +2615,7 @@ function display_related_category(
   append(
     document.querySelectorAll(".selected-categories-container"),
     `<div class="breadcrumb-item">
-      <span class="link-path">${cat_link_path}</span><span id="${cat_id}" class="mcs-icon ${prefix_icon}cancel remove-item"></span>
+      <span class="link-path">${cat_link_path ?? ""}</span><span id="${cat_id}" class="mcs-icon ${prefix_icon}cancel remove-item"></span>
     </div>`,
   );
 }

@@ -214,7 +214,7 @@ function getMonthStatsDataset(): LineChartSeries[] {
       label:
         lastDate === undefined
           ? ""
-          : `${str_months[lastDate.getMonth()]} ${String(lastDate.getFullYear())}`,
+          : `${str_months[lastDate.getMonth()]!} ${String(lastDate.getFullYear())}`,
       color: COMPARE_COLORS[colorIndice % COMPARE_COLORS.length]!,
       points: days_data
         .map((y, day): LineChartPoint | null =>

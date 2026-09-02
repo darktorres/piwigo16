@@ -128,7 +128,7 @@ describe("Latte Prettier plugin (tools/latte-prettier/)", () => {
       try {
         await format(readFileSync(file, "utf8"));
       } catch (e) {
-        failures.push(`${file}: ${(e as Error).message.split("\n")[0]}`);
+        failures.push(`${file}: ${(e as Error).message.split("\n")[0]!}`);
       }
     }
     expect(

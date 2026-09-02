@@ -583,7 +583,7 @@ function commentsDisplayAuthors(
     append(
       [filterAuthor],
       `
-      <option value="${a.author_id}">${a.author} (${a.nb_authors})</option>
+      <option value="${a.author_id ?? ""}">${a.author ?? ""} (${a.nb_authors})</option>
       `,
     );
   });

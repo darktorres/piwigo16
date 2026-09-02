@@ -137,7 +137,7 @@ function select_album_action({
   append(
     document.querySelectorAll(".selected-associate-action"),
     `<div class="selected-associate-item">
-      <span>${album.name}</span><span id="${album.id}" class="remove-associate icon-cancel-circled"></span>
+      <span>${album.name ?? ""}</span><span id="${album.id}" class="remove-associate icon-cancel-circled"></span>
       <input type="hidden" id="associate_input_${album.id}" name="associate[]" value="${album.id}">
     </div>`,
   );

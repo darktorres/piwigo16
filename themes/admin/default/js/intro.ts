@@ -95,7 +95,7 @@ ready(function () {
           <span class="promote-newsletter-title">${pwg_getPageString("Subscribe to our newsletter and stay updated!")}</span>
           <div class="promote-content subscribe-newsletter">
             <input type="text" id="newsletterSubscribeInput" value="${pwg_getPageData<string | null>("email") || ""}" class="left-side">
-            <a href="${pwg_getPageData<string | null>("subscribe_base_url")}${pwg_getPageData<string | null>("email") || ""}" id="newsletterSubscribeLink" class="right-side go-to-porg icon-thumbs-up newsletter-hide">${pwg_getPageString("Sign up to the newsletter")}</a>
+            <a href="${pwg_getPageData<string | null>("subscribe_base_url") ?? ""}${pwg_getPageData<string | null>("email") || ""}" id="newsletterSubscribeLink" class="right-side go-to-porg icon-thumbs-up newsletter-hide">${pwg_getPageString("Sign up to the newsletter")}</a>
           </div>
           <a href="${pwg_getPageData<string | null>("old_newsletters_url") || ""}" class="promote-link">${pwg_getPageString("See previous newsletters")}</a>
         </div>

@@ -741,7 +741,7 @@ function lineConstructor(line: HistoryLine, id: number) {
               value_str = stripHtml(value_str);
             }
             count_more++;
-            return `<b>${str_search_details[key]}</b> : ${value_str}`;
+            return `<b>${str_search_details[key]!}</b> : ${value_str}`;
           })
           .join(" <br />");
         const item3 = find(newLine, ".detail-item-3");

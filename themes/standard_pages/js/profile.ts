@@ -491,12 +491,12 @@ const API_KEY_ENDPOINTS: Record<
     body: { keyName: params.key_name, duration: params.duration },
   }),
   "pwg.users.api_key.edit": (params) => ({
-    url: `api/v1/session/api-keys/${params.pkid}`,
+    url: `api/v1/session/api-keys/${String(params.pkid)}`,
     httpMethod: "PATCH",
     body: { keyName: params.key_name },
   }),
   "pwg.users.api_key.revoke": (params) => ({
-    url: `api/v1/session/api-keys/${params.pkid}`,
+    url: `api/v1/session/api-keys/${String(params.pkid)}`,
     httpMethod: "DELETE",
     body: null,
   }),
@@ -636,9 +636,12 @@ function AddApiLine(lines: ApiKeyEntry[], reset: boolean) {
           `<i class="gallery-icon-skull api-skull"></i> <span>${line.expiredOn}</span>`,
         );
       } else {
+        // Non-null: this branch is `!line.isExpired` inside the outer
+        // `else` of `!line.revokedOn && !line.isExpired`, so
+        // `line.revokedOn` must be truthy here.
         html(
           find(api_line, ".api_expiration"),
-          `<i class="gallery-icon-skull api-skull"></i> <span>${line.revokedOn}</span>`,
+          `<i class="gallery-icon-skull api-skull"></i> <span>${line.revokedOn!}</span>`,
         );
       }
     }
@@ -714,7 +717,7 @@ function resetSection(
 
   if ("account-display" !== selector && scroll) {
     setTimeout(() => {
-      const el = document.getElementById(`${selector.split("-")[0]}-section`)!;
+      const el = document.getElementById(`${selector.split("-")[0]!}-section`)!;
       el.scrollIntoView({
         behavior: "smooth",
         block: "start",

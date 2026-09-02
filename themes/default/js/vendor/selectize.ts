@@ -101,12 +101,18 @@ const CREATE_SENTINEL = "$$selectize_create$$";
 // first place. Same WeakMap-of-state pattern `vendor/slider.ts` already
 // established for the identical problem, rather than a real DOM
 // property (which would need `unknown`-then-cast at every read site).
+// The WeakMap itself must hold one concrete instance type, so every real
+// instance is stored erased to `SelectizeInstance<never, never>` and cast
+// back to the caller's own T/U at each of the two boundary points below
+// (get and set) -- the real per-call-site generic is never actually
+// checked here, same as `vendor/slider.ts`'s identical pattern.
 const instances = new WeakMap<HTMLSelectElement, SelectizeInstance<never, never>>();
 
 export function getSelectizeInstance<
   T extends string | number = string | number,
   U extends Record<string, unknown> = Record<string, unknown>,
 >(el: HTMLSelectElement): SelectizeInstance<T, U> | undefined {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- WeakMap-erasure boundary, see comment above.
   return instances.get(el) as SelectizeInstance<T, U> | undefined;
 }
 
@@ -120,6 +126,13 @@ const defaultRenderers = <U extends Record<string, unknown>>(
     `<div class="create">Add <strong>${escape(data.input)}</strong>&hellip;</div>`,
 });
 
+// Every value this function itself reads back off the DOM (a
+// `data-value` attribute, the highlighted option's key, the create-input
+// text) round-trips through the DOM as a plain string, then gets cast to
+// this instance's own T at each such boundary below -- always safe
+// because every real call site in this app declares T as `string` or
+// `string | number`, never a bare `number`, so a string value is always
+// assignable to the real T no caller ever narrows further.
 export function selectize<
   T extends string | number = string | number,
   U extends Record<string, unknown> = Record<string, unknown>,
@@ -160,6 +173,7 @@ export function selectize<
   const domSelectedValues: string[] = [];
   Array.from(el.options).forEach((opt, i) => {
     if (opt.value === "") return;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- computed-key record built from valueField/labelField, whose real shape can't be statically checked against the caller's own U.
     const data = {
       [valueField]: opt.value,
       [labelField]: opt.textContent,
@@ -222,11 +236,13 @@ export function selectize<
     items.forEach((value) => {
       const data = options[String(value)];
       const html = renderers.item(
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- computed-key record built from valueField/labelField, whose real shape can't be statically checked against the caller's own U.
         data ?? ({ [valueField]: value, [labelField]: String(value) } as unknown as U),
         escapeHtml,
       );
       const wrapper = document.createElement("div");
       wrapper.innerHTML = html.trim();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- renderers.item() always returns exactly one non-empty root element, this file's own template convention (see SelectizeRenderers's own doc).
       const itemEl = wrapper.firstElementChild as HTMLElement;
       itemEl.setAttribute("data-value", String(value));
       if (hasRemoveButton) {
@@ -286,7 +302,14 @@ export function selectize<
   function sortedMatches(tokens: string[]): string[] {
     const matches = order.filter((value) => {
       const data = options[value]!;
-      if (items.includes(value as unknown as T)) return false;
+      // Was `items.includes(value as unknown as T)` -- `value` (from
+      // `order`) is always a string, but `items` can genuinely hold a
+      // real T set externally (e.g. `setValue(42)`), so a strict
+      // `.includes()` silently failed to exclude an already-selected
+      // numeric item from the dropdown. `String()` on both sides is the
+      // same key-comparison convention `addItem()`/`removeItem()` already
+      // use.
+      if (items.some((v) => String(v) === value)) return false;
       return matchesQuery(data, tokens);
     });
 
@@ -310,6 +333,7 @@ export function selectize<
     let node: Node | null;
      
     while ((node = walker.nextNode())) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- createTreeWalker(container, NodeFilter.SHOW_TEXT) guarantees nextNode() only ever returns a Text node (or null at the end).
       textNodes.push(node as Text);
     }
     textNodes.forEach((textNode) => {
@@ -333,6 +357,7 @@ export function selectize<
       const html = renderers.option(data, escapeHtml);
       const wrapper = document.createElement("div");
       wrapper.innerHTML = html.trim();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- renderers.option() always returns exactly one non-empty root element, this file's own template convention (see SelectizeRenderers's own doc).
       const optionEl = wrapper.firstElementChild as HTMLElement;
       optionEl.setAttribute("data-value", value);
       optionEl.setAttribute("data-selectable", "");
@@ -343,6 +368,7 @@ export function selectize<
       const html = renderers.option_create({ input: query }, escapeHtml);
       const wrapper = document.createElement("div");
       wrapper.innerHTML = html.trim();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- renderers.option_create() always returns exactly one non-empty root element, this file's own template convention (see SelectizeRenderers's own doc).
       const createEl = wrapper.firstElementChild as HTMLElement;
       createEl.setAttribute("data-selectable", "");
       createEl.setAttribute("data-create", "");
@@ -433,14 +459,17 @@ export function selectize<
       createFromInput();
       return;
     }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- DOM-string-to-T boundary, see selectize()'s own header comment.
     instance.addItem(highlighted as unknown as T);
   }
 
   function createFromInput(): void {
     const query = textInput.value.trim();
     if (query === "") return;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- computed-key record built from valueField/labelField, whose real shape can't be statically checked against the caller's own U.
     const data = { [valueField]: query, [labelField]: query } as unknown as U;
     instance.addOption(data);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- DOM-string-to-T boundary, see selectize()'s own header comment.
     instance.addItem(query as unknown as T);
   }
 
@@ -477,6 +506,7 @@ export function selectize<
   });
 
   on(textInput, "keydown", (evt) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
     const e = evt as KeyboardEvent;
     switch (e.key) {
       case "Escape":
@@ -511,6 +541,7 @@ export function selectize<
   });
 
   on(dropdownContent, "mousedown", (evt) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real mousedown inside dropdownContent always targets an HTMLElement (this file's own rendered option/create rows), never a bare EventTarget with no Element interface.
     const target = (evt.target as HTMLElement).closest<HTMLElement>("[data-selectable]");
     if (!target) return;
     evt.preventDefault();
@@ -519,10 +550,12 @@ export function selectize<
       return;
     }
     const value = target.getAttribute("data-value")!;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- DOM-string-to-T boundary, see selectize()'s own header comment.
     instance.addItem(value as unknown as T);
   });
 
   on(dropdownContent, "mousemove", (evt) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real mousemove inside dropdownContent always targets an HTMLElement (this file's own rendered option/create rows), never a bare EventTarget with no Element interface.
     const target = (evt.target as HTMLElement).closest<HTMLElement>("[data-selectable]");
     if (!target) return;
     highlighted = target.getAttribute("data-value");
@@ -530,6 +563,7 @@ export function selectize<
   });
 
   on(document, "mousedown", (evt) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real mousedown event's own target inside the document is always a Node (or null), never a bare EventTarget with no Node interface.
     if (!control.contains(evt.target as Node)) {
       closeDropdown();
     }
@@ -562,6 +596,7 @@ export function selectize<
     options,
     settings,
     getValue(): T | T[] {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- empty-selection placeholder, same DOM-string-to-T boundary as selectize()'s own header comment.
       return multi ? [...items] : (items[0] ?? ("" as unknown as T));
     },
     setValue(value, silent) {
@@ -604,6 +639,7 @@ export function selectize<
       if (event === "item_remove") {
         listeners.item_remove.push(handler);
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- SelectizeInstance.on()'s own interface declares one shared handler type `(value: T) => void` for both events, but a "dropdown_close" handler is always called with zero arguments -- a real, narrower shape than the declared union covers.
         listeners.dropdown_close.push(handler as () => void);
       }
     },
@@ -672,11 +708,13 @@ export function selectize<
   }
 
   domSelectedValues.forEach((value) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- DOM-string-to-T boundary, see selectize()'s own header comment.
     instance.addItem(value as unknown as T, true);
   });
   (init.items ?? []).forEach((value) => { instance.addItem(value, true); });
   renderItems();
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- WeakMap-erasure boundary, see comment above the WeakMap's own declaration.
   instances.set(el, instance as unknown as SelectizeInstance<never, never>);
   return instance;
 }

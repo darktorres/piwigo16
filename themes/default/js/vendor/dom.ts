@@ -389,9 +389,14 @@ function splitSpecs(spec: string): string[] {
  * would not work either -- `window.length` is its frame count.
  */
 function toTargets(target: EventTarget | ArrayLike<Element>): EventTarget[] {
+  // Feature-detection idiom, see this function's own leading comment:
+  // EventTarget/ArrayLike<Element> share no discriminant property, so
+  // telling them apart needs a probe, not a narrowable check.
+  /* eslint-disable @typescript-eslint/no-unsafe-type-assertion */
   return typeof (target as EventTarget).addEventListener === "function"
     ? [target as EventTarget]
     : Array.from(target as ArrayLike<Element>);
+  /* eslint-enable @typescript-eslint/no-unsafe-type-assertion */
 }
 
 /** `$(el).on("click.ns", handler)`, or several types, or a whole set. */
@@ -487,6 +492,7 @@ function delegateOne(
   on(target, spec, (event) => {
     // `nodeType`, not `instanceof Element`, for the same cross-realm reason
     // as `toTargets` above -- and because it is what jQuery itself checks.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real event's own target is always a Node (or null), never a bare EventTarget with no Node interface.
     const origin = event.target as Node | null;
     if (origin?.nodeType !== 1) {
       return;
@@ -503,6 +509,7 @@ function delegateOne(
     });
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- the nodeType !== 1 guard above already confirms origin is a real Element, not just a Node.
       let current: Element | null = origin as Element;
       while (current !== null && (current as EventTarget) !== target) {
         if (current.matches(selector)) {
@@ -517,6 +524,7 @@ function delegateOne(
     } finally {
       // Leave the event exactly as it was found: it may still be travelling
       // to other listeners after this one.
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- `delete` needs an index signature; Event's own real type has none for a property this code itself defined above via defineProperty.
       delete (event as unknown as Record<string, unknown>)["stopPropagation"];
     }
   });
@@ -636,11 +644,8 @@ export function resolveDuration(duration?: number | string): number {
   if (typeof duration === "number") {
     return duration;
   }
-  if (typeof duration === "string" && duration in FX_SPEEDS) {
-    return FX_SPEEDS[duration] as number;
-  }
-
-  return FX_SPEEDS["_default"] as number;
+  const speed = typeof duration === "string" ? FX_SPEEDS[duration] : undefined;
+  return speed ?? FX_SPEEDS["_default"]!;
 }
 
 /**
@@ -1362,6 +1367,7 @@ export function offset(el: Element): { top: number; left: number } {
  */
 export function offsetParent(el: HTMLElement): HTMLElement {
   const docElem = el.ownerDocument.documentElement;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- offsetParent's own real DOM signature returns a plain Element to also cover SVG, but every real caller here walks a plain HTML page with no SVG/foreignObject boundary.
   let parent = el.offsetParent as HTMLElement | null;
 
   while (
@@ -1369,6 +1375,7 @@ export function offsetParent(el: HTMLElement): HTMLElement {
     parent.nodeName.toLowerCase() !== "html" &&
     computedStyles(parent)?.getPropertyValue("position") === "static"
   ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- same real HTML-page guarantee as the initial assignment above.
     parent = parent.offsetParent as HTMLElement | null;
   }
 
@@ -1462,7 +1469,8 @@ export function css(
 ): void {
   const styles =
     typeof nameOrStyles === "string"
-      ? { [nameOrStyles]: value as string | number }
+      ? // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- the first overload above always pairs a string name with a required value; the implementation signature's own `value?` is only optional to also satisfy the second (styles-object) overload.
+        { [nameOrStyles]: value as string | number }
       : nameOrStyles;
 
   for (const [name, propValue] of Object.entries(styles)) {
@@ -1547,7 +1555,8 @@ export function val(target: Element | ArrayLike<Element>): string | undefined {
     return undefined;
   }
 
-  return (first as HTMLInputElement).value;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- this function's own docblock: `.value` is read from any element, form-control or not, so there is no single real interface to narrow to.
+  return (first as unknown as { value?: string }).value;
 }
 
 /** `.val(value)` -- writes to every element; see `val()`'s own docblock. */
@@ -1556,7 +1565,8 @@ export function setVal(
   value: string
 ): void {
   for (const el of toElements(target)) {
-    (el as HTMLInputElement).value = value;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- val()'s own docblock: `.value` is written to any element, form-control or not, so there is no single real interface to narrow to.
+    (el as unknown as { value: string }).value = value;
   }
 }
 
@@ -1584,6 +1594,7 @@ export function setDisabled(
 ): void {
   for (const el of toElements(target)) {
     if ("disabled" in el) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- this function's own docblock: `.disabled` is written to any element that has it (button, input, select, ...), so there is no single real interface to narrow to; the `in` check above is the real runtime guard.
       (el as unknown as { disabled: boolean }).disabled = disabled;
     }
   }

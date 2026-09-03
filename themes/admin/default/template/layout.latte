@@ -47,7 +47,7 @@
 {varType \Latte\Runtime\Html $THUMBNAILS}
 {varType string $TITLE}
 {varType string|null $TOGGLE_MOBILE_THEME_URL}
-{varType mixed $USERNAME}
+{varType string|null $USERNAME}
 {varType string $U_ADD_PHOTOS}
 {varType string $U_ADMIN}
 {varType string $U_ALBUMS}
@@ -57,7 +57,7 @@
 {varType string $U_CATEGORIES}
 {varType string $U_CAT_OPTIONS}
 {varType string $U_CAT_UPDATE}
-{varType mixed $U_CHANGE_THEME}
+{varType string $U_CHANGE_THEME}
 {varType string|null $U_COMMENTS}
 {varType string $U_CONFIG_DISPLAY}
 {varType string $U_CONFIG_GENERAL}
@@ -65,13 +65,13 @@
 {varType string $U_CONFIG_MENUBAR}
 {varType string $U_CONFIG_THEMES}
 {varType string $U_DISPLAY}
-{varType mixed $U_FAQ}
+{varType string $U_FAQ}
 {varType string $U_FAVORITE}
 {varType string $U_GROUPS}
 {varType string|null $U_HELP}
 {varType string $U_HISTORY_STAT}
 {varType string $U_HOME}
-{varType mixed $U_LOGOUT}
+{varType string $U_LOGOUT}
 {varType string $U_MAINTENANCE}
 {varType string $U_NOTIFICATION_BY_MAIL}
 {varType string $U_ORPHANS}
@@ -79,7 +79,7 @@
 {varType string|null $U_PREFETCH}
 {varType string $U_RATING}
 {varType string $U_RECENT_SET}
-{varType mixed $U_RETURN}
+{varType string $U_RETURN}
 {varType string $U_SITE_MANAGER}
 {varType string $U_TAGS}
 {varType string $U_UP}
@@ -194,7 +194,7 @@
 
       <div id="pwgHead">
         <a
-          href="{$U_RETURN|noescape}"
+          href="{$U_RETURN}"
           class="visit-gallery tiptip"
           title="{='Visit Gallery'|translate}"
         ><i class="icon-left-open"></i>{='Visit'|translate}</a>
@@ -221,12 +221,12 @@
 
           <a
             class="tiptip"
-            href="{$U_FAQ|noescape}"
+            href="{$U_FAQ}"
             title="{='Instructions to use Piwigo'|translate}"
           ><i
               class="icon-help-circled"
             ></i><span>{='Help Me'|translate}</span></a>
-          <a href="{$U_LOGOUT|noescape}"><i
+          <a href="{$U_LOGOUT}"><i
               class="icon-logout"
             ></i><span>{='Logout'|translate}</span></a>
         </div>
@@ -298,13 +298,13 @@
           <div class="whats_new_block_container">
             <div class="whats_new_block icon-blue whats_new_block_w_60">
               <h4><a
-                  href="{$RELEASE_NOTE_URL|noescape}"
+                  href="{$RELEASE_NOTE_URL}"
                   target="_blank"
                 >{='Brand new login & preferences with Standard pages !'|translate}</a></h4>
             </div>
             <div class="whats_new_block icon-purple whats_new_block_w_40">
               <h4><a
-                  href="{$RELEASE_NOTE_URL|noescape}"
+                  href="{$RELEASE_NOTE_URL}"
                   target="_blank"
                 >{='Two factor authentication is here'|translate}</a></h4>
             </div>
@@ -312,7 +312,7 @@
           <div class="whats_new_block_container">
             <div class="whats_new_block icon-green whats_new_block_w_100">
               <h4><a
-                  href="{$RELEASE_NOTE_URL|noescape}"
+                  href="{$RELEASE_NOTE_URL}"
                   target="_blank"
                 >{='UI redesigns that make a difference'|translate}</a></h4>
             </div>
@@ -324,7 +324,7 @@
             ></i> {='Ok, got it!'|translate}</button>
           <a
             class="buttonLike"
-            href="{$RELEASE_NOTE_URL|noescape}"
+            href="{$RELEASE_NOTE_URL}"
             target="_blank"
           ><i class="icon-book"></i> {='Read the release note'|translate}</a>
         </div>

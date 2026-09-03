@@ -16,6 +16,14 @@ use Piwigo\Core\TemplatePageContext;
  */
 final readonly class AdminPopuphelpPlaceholdersPageContext implements TemplatePageContext
 {
+    public function __construct(
+        public string $uReturn = '',
+        public string $username = '',
+        public string $uFaq = '',
+        public string $uChangeTheme = '',
+        public string $uLogout = '',
+    ) {}
+
     /**
      * @return array<string, mixed>
      */
@@ -23,11 +31,11 @@ final readonly class AdminPopuphelpPlaceholdersPageContext implements TemplatePa
     public function toArray(): array
     {
         return [
-            'U_RETURN' => '',
-            'USERNAME' => '',
-            'U_FAQ' => '',
-            'U_CHANGE_THEME' => '',
-            'U_LOGOUT' => '',
+            'U_RETURN' => $this->uReturn,
+            'USERNAME' => $this->username,
+            'U_FAQ' => $this->uFaq,
+            'U_CHANGE_THEME' => $this->uChangeTheme,
+            'U_LOGOUT' => $this->uLogout,
         ];
     }
 }

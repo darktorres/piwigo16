@@ -17,12 +17,12 @@
   {var $ref_level = 0}
   {foreach $categories as $cat}
     {if $cat->level > $ref_level}
-      {="<ul>"|noescape}
+      {='<ul>'|rawHtml}
     {else}
-      {="</li>"|noescape}
+      {='</li>'|rawHtml}
       {='</ul></li>'|closeTags:($ref_level - $cat->level)}
     {/if}
-    {="<li>"|noescape}
+    {='<li>'|rawHtml}
     {* No url means this row is only here to carry the tree's shape: an
        ancestor holding none of the current page's own items, so there is
        nothing to filter to. It renders as plain text rather than the
@@ -32,12 +32,12 @@
       {$cat->name}
     {elseif $cat->title !== null}
       <a
-        href="{$cat->url|noescape}"
+        href="{$cat->url}"
         title="{$cat->title}"
         rel="nofollow"
       >{$cat->name}</a>
     {else}
-      <a href="{$cat->url|noescape}" rel="nofollow">{$cat->name}</a>
+      <a href="{$cat->url}" rel="nofollow">{$cat->name}</a>
     {/if}
     <span
       n:if="$cat->countImages !== null and $cat->countImages > 0"

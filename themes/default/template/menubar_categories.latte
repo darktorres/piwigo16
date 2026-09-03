@@ -13,7 +13,7 @@
     class="pwg-state-default pwg-button menubarFilter"
     title="{='return to the display of all photos'|translate}"
   ><span class="pwg-icon pwg-icon-filter-del"></span></a>
-  <a href="{$categoriesUrl|noescape}">{='Albums'|translate}</a>
+  <a href="{$categoriesUrl}">{='Albums'|translate}</a>
 </dt>
 <dd>
   {*
@@ -30,14 +30,14 @@
   {var $ref_level = 0}
   {foreach $categories as $cat}
     {if $cat->level > $ref_level}
-      {="<ul>"|noescape}
+      {='<ul>'|rawHtml}
     {else}
-      {="</li>"|noescape}
+      {='</li>'|rawHtml}
       {='</ul></li>'|closeTags:($ref_level - $cat->level)}
     {/if}
-    {="<li" . ($cat->selected ? ' class="selected"' : '') . ">"|noescape}
+    {=($cat->selected ? '<li class="selected">' : '<li>')|rawHtml}
     <a
-      href="{$cat->url|noescape}"
+      href="{$cat->url}"
       {if $cat->isUppercat}
       rel="up"
       {/if}

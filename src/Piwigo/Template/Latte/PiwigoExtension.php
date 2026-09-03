@@ -120,6 +120,7 @@ final class PiwigoExtension extends Extension
             'str_repeat' => str_repeat(...),
             'replace' => self::replace(...),
             'closeTags' => self::closeTags(...),
+            'rawHtml' => self::rawHtml(...),
 
             // Date formatting. Registered so a row VO can carry the domain
             // value (a DateTimeInterface, or the raw datetime string a
@@ -317,5 +318,23 @@ final class PiwigoExtension extends Extension
     public static function closeTags(string $tag, int $count): Html
     {
         return new Html(str_repeat($tag, $count));
+    }
+
+    /**
+     * `menubar_categories.latte`/`menubar_related_categories.latte`'s own
+     * variable-depth breadcrumb *opener* -- the `<ul>`/`<li>` counterpart
+     * to {@see self::closeTags()} above, same reasoning: Latte's
+     * HTML-aware parser can't track a tag whose open/close pairing spans
+     * loop iterations, so these are written as raw text rather than real
+     * tracked HTML. Only ever called with a template-literal string (or
+     * one built purely from other literals, e.g. a hardcoded ` class=`
+     * fragment chosen by a bool -- never real row data interpolated in),
+     * matching `closeTags()`'s own real-call-site discipline (P59 Batch
+     * 6): this is not a general escape-bypass filter, and must not be
+     * used for anything sourced outside the calling template itself.
+     */
+    public static function rawHtml(string $html): Html
+    {
+        return new Html($html);
     }
 }

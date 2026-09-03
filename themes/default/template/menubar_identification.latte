@@ -5,23 +5,23 @@
     <p n:if="$user !== null">{='Hello'|translate} {$user->username} !</p>
     <ul>
       <li n:if="$guest !== null and $guest->registerUrl !== null"><a
-          href="{$guest->registerUrl|noescape}"
+          href="{$guest->registerUrl}"
           title="{='Create a new account'|translate}"
           rel="nofollow"
         >{='Register'|translate}</a></li>
       <li n:if="$guest !== null"><a
-          href="{$guest->loginUrl|noescape}"
+          href="{$guest->loginUrl}"
           rel="nofollow"
         >{='Login'|translate}</a></li>
       <li n:if="$user !== null and $user->logoutUrl !== null"><a
-          href="{$user->logoutUrl|noescape}"
+          href="{$user->logoutUrl}"
         >{='Logout'|translate}</a></li>
       <li n:if="$user !== null and $user->profileUrl !== null"><a
-          href="{$user->profileUrl|noescape}"
+          href="{$user->profileUrl}"
           title="{='edit user preferences'|translate}"
         >{='Profile'|translate}</a></li>
       <li n:if="$user !== null and $user->adminUrl !== null"><a
-          href="{$user->adminUrl|noescape}"
+          href="{$user->adminUrl}"
           title="{='available for administrators only'|translate}"
         >{='Administration'|translate}</a></li>
     </ul>
@@ -30,7 +30,7 @@
     {spaceless}
       <form
         method="post"
-        action="{$guest->loginUrl|noescape}"
+        action="{$guest->loginUrl}"
         id="quickconnect"
       >
         <fieldset>
@@ -74,7 +74,7 @@
             <span class="categoryActions">
               <a
                 n:if="$guest->registerUrl !== null"
-                href="{$guest->registerUrl|noescape}"
+                href="{$guest->registerUrl}"
                 title="{='Create a new account'|translate}"
                 class="pwg-state-default pwg-button"
                 rel="nofollow"
@@ -82,7 +82,7 @@
                 <span class="pwg-icon pwg-icon-register"></span>
               </a>
               <a
-                href="{$guest->lostPasswordUrl|noescape}"
+                href="{$guest->lostPasswordUrl}"
                 title="{='Forgot your password?'|translate}"
                 class="pwg-state-default pwg-button"
               >

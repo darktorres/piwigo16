@@ -142,6 +142,15 @@ test('closeTags returns an empty Html for a zero count', function (): void {
         ->toBe('');
 });
 
+// --- rawHtml ---------------------------------------------------------------
+
+test('rawHtml wraps a literal template-authored fragment as trusted Html', function (): void {
+    $result = PiwigoExtension::rawHtml('<li class="selected">');
+
+    expect((string) $result)
+        ->toBe('<li class="selected">');
+});
+
 /**
  * P58 step 2. The date filters exist so a row VO can carry the domain value
  * and let the template format it, instead of a producer baking a localized

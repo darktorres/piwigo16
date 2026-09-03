@@ -95,6 +95,7 @@ final class LatteAnalysisShims
         'nl2br',
         'str_repeat',
         'closeTags',
+        'rawHtml',
         'format_date',
         'time_since',
         'url_is_remote',
@@ -573,6 +574,11 @@ final class LatteAnalysisShims
     }
 
     public static function closeTags(string $tag, int $count): \Latte\Runtime\Html
+    {
+        throw new \LogicException('Analysis-only shim; never executed.');
+    }
+
+    public static function rawHtml(string $html): \Latte\Runtime\Html
     {
         throw new \LogicException('Analysis-only shim; never executed.');
     }

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Latte\Runtime\Html;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\LoadMode;
 use Piwigo\Picture\Projection\CommentListView;
@@ -17,7 +18,8 @@ function commentListViewRow(string $author, ?string $deleteUrl = null): CommentR
         id: 1,
         author: $author,
         date: '',
-        content: '',
+        content: new Html(''),
+        rawContent: null,
         websiteUrl: null,
         deleteUrl: $deleteUrl,
     );

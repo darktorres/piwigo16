@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Picture\Projection;
 
+use Latte\Runtime\Html;
 use Piwigo\Image\SrcImage;
 
 /**
@@ -28,6 +29,17 @@ use Piwigo\Image\SrcImage;
  * - `$pictureUrl`/`$srcImage`/`$alt` are the thumbnail and its link,
  *   set only by the comments page, since a photo's own thread is
  *   already on the photo.
+ *
+ * `$content`/`$rawContent` (P59 Batch 2) are two different values, not
+ * one field with two names: `$content` is always the `RenderCommentContent`
+ * event's own output -- htmlspecialchars()'d then markup-substituted
+ * (auto-linked URLs, `_underline_`, `*bold*`), genuinely safe pre-formed
+ * HTML, typed `Html` so `comment_list.latte`'s display blockquote can
+ * print it bare. `$rawContent` is the untouched, unescaped original --
+ * only ever printed into the edit-form `<textarea>` (a plain-text
+ * context Latte auto-escapes), never as markup. Retyping `$content`
+ * alone to `Html` would have been unsafe: before this split, the same
+ * field carried the raw value whenever `$inEdit` was true.
  */
 final readonly class CommentRow
 {
@@ -35,7 +47,8 @@ final readonly class CommentRow
         public int|string $id,
         public string $author,
         public string $date,
-        public ?string $content,
+        public Html $content,
+        public ?string $rawContent,
         public ?string $websiteUrl,
         public ?string $email = null,
         public ?string $deleteUrl = null,

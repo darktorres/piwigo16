@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Picture;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentEntity;
@@ -221,7 +222,6 @@ final class PictureCommentRenderer
                 $key = null;
                 $csrfToken = null;
                 $emailForRow = null;
-                $content = $contentEvent->commentContent;
 
                 // com.author_id allows NULL (anonymous/guest comments); no
                 // real user id is ever negative, so -1 is a safe
@@ -251,7 +251,6 @@ final class PictureCommentRenderer
                         $inEdit = true;
                         $key = new EphemeralKeyService($currentConfig)
                             ->generate(2, (string) $imageId);
-                        $content = $row->content;
                         $csrfToken = $csrfService->getToken();
                         $cancelUrl = $url_self;
                     }
@@ -276,7 +275,8 @@ final class PictureCommentRenderer
                     id: $row->id->value,
                     author: $authorEvent->commentAuthor,
                     date: DateHelper::formatDate($rowDate, ['day_name', 'day', 'month', 'year', 'time']),
-                    content: $content,
+                    content: new Html($contentEvent->commentContent),
+                    rawContent: $row->content,
                     // '' is what an empty website field is stored as;
                     // CommentRow treats absence as null so the template can
                     // ask one question instead of two.

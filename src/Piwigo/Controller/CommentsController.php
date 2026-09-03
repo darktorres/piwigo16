@@ -7,6 +7,7 @@ namespace Piwigo\Controller;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
@@ -570,7 +571,6 @@ final readonly class CommentsController implements ControllerInterface
                 $key = null;
                 $csrfToken = null;
                 $rowImageId = null;
-                $content = $contentEvent->commentContent;
 
                 if ($this->accessControl->isAdmin()) {
                     $emailForRow = $email;
@@ -601,7 +601,6 @@ final readonly class CommentsController implements ControllerInterface
                         $key = new EphemeralKeyService($this->currentConfig)
                             ->generate(2, $image_id);
                         $rowImageId = $image_id;
-                        $content = $comment->content;
                         $csrfToken = $this->csrfService->getToken();
                         $cancelUrl = $url_self;
                     }
@@ -624,7 +623,8 @@ final readonly class CommentsController implements ControllerInterface
                     id: $comment->commentId,
                     author: $authorEvent->commentAuthor,
                     date: DateHelper::formatDate($date, ['day_name', 'day', 'month', 'year', 'time']),
-                    content: $content,
+                    content: new Html($contentEvent->commentContent),
+                    rawContent: $comment->content,
                     websiteUrl: $comment->websiteUrl === '' ? null : $comment->websiteUrl,
                     email: $emailForRow,
                     deleteUrl: $deleteUrl,

@@ -306,7 +306,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
         self::assertFalse($rowA->inEdit, 'the non-matching comment must never be prefilled');
         self::assertTrue($rowB->inEdit, 'the matching comment must be prefilled');
-        self::assertSame('Second comment.', $rowB->content);
+        self::assertSame('Second comment.', $rowB->rawContent);
     }
 
     public function testRenderExposesEditAndDeleteLinksOnlyToTheCommentOwner(): void

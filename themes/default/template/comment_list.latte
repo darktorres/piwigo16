@@ -89,7 +89,7 @@
               id="contenteditid"
               rows="5"
               cols="80"
-            >{$comment->content}</textarea></p>
+            >{$comment->rawContent}</textarea></p>
           <p><label for="website_url">{='Website'|translate} :</label></p>
           <p><input
               type="text"
@@ -105,7 +105,7 @@
           </p>
         </form>
       {else}
-        <blockquote><div>{$comment->content|noescape}</div></blockquote>
+        <blockquote><div>{$comment->content}</div></blockquote>
       {/if}
     </div>
   </li>

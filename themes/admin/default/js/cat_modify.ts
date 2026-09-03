@@ -266,6 +266,7 @@ ready(function () {
   on(document.querySelectorAll(".deleteAlbum"), "click", function () {
     confirm({
       title: str_delete_album,
+      // eslint-disable-next-line @typescript-eslint/promise-function-async -- must return ajax()'s own AjaxThenable (jconfirm.ts's `isThenable()` checks for its real `.always()`); `async` would re-wrap it through `Promise.resolve()` and lose that method.
       content: function (this: JConfirmInstance) {
         // eslint-disable-next-line @typescript-eslint/no-this-alias -- the classic callback-closure idiom: `this` (the jquery-confirm modal instance) needs to stay reachable inside the nested `success`/`error` callbacks below, which have their own `this`.
         const self = this;
@@ -342,7 +343,7 @@ ready(function () {
     });
   });
 
-  function delete_album(photo_deletion_mode: string) {
+  async function delete_album(photo_deletion_mode: string) {
     return new Promise<void>((res, rej) => {
       void ajax({
         url: "api/v1/categories/" + String(album_id),

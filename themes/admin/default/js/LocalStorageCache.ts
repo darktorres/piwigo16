@@ -39,15 +39,6 @@ type ProcessedTag = Omit<TagAdmin, "id" | "urlName" | "lastmodified"> & {
 };
 type ProcessedGroup = Omit<GroupEntity, "lastmodified">;
 
-interface LocalStorageCacheOptions {
-  key?: string;
-  serverId?: string;
-  serverKey?: string;
-  rootUrl?: string;
-  lifetime?: number;
-  loader?: (callback: (data: SelectizeEntity[]) => void) => void;
-}
-
 // The real common structural contract `_selectize` (below) relies on --
 // every one of the 4 real entity shapes (Category/Tag/Group/User) has
 // a real `.id`, plus whatever other fields the render/filter functions
@@ -57,22 +48,15 @@ interface SelectizeEntity extends Record<string, unknown> {
   id: string | number;
 }
 
-interface LocalStorageCacheInstance {
-  key: string;
-  serverKey?: string | undefined;
-  lifetime: number;
-  loader: (callback: (data: SelectizeEntity[]) => void) => void;
-  storage: Storage;
-  ready: boolean;
-  _init(options: LocalStorageCacheOptions): void;
-  get(callback: (data: SelectizeEntity[]) => void): void;
-  set(data: SelectizeEntity[]): void;
-  clear(): void;
-}
-
-interface LocalStorageCacheCtor {
-  new (options: LocalStorageCacheOptions): LocalStorageCacheInstance;
-  prototype: LocalStorageCacheInstance;
+interface LocalStorageCacheOptions<
+  T extends SelectizeEntity = SelectizeEntity,
+> {
+  key?: string;
+  serverId?: string;
+  serverKey?: string;
+  rootUrl?: string;
+  lifetime?: number;
+  loader?: (callback: (data: T[]) => void) => void;
 }
 
 // The options a real call site passes to a Cache's own `.selectize()` --
@@ -87,39 +71,6 @@ interface EntitySelectizeCallOptions {
     data: SelectizeEntity[],
     options: EntitySelectizeCallOptions,
   ) => SelectizeEntity[];
-}
-
-interface AbstractSelectizerInstance extends LocalStorageCacheInstance {
-  _selectize(
-    targets: Element | ArrayLike<Element>,
-    globalOptions: EntitySelectizeCallOptions,
-  ): void;
-}
-
-interface AbstractSelectizerCtor {
-  new (): AbstractSelectizerInstance;
-  prototype: AbstractSelectizerInstance;
-  getRender<U extends Record<string, unknown>>(
-    field_label: string,
-    lang: { Add?: string } | undefined,
-  ): Required<SelectizeRenderers<U>>;
-}
-
-export interface EntityCacheInstance<
-  T extends SelectizeEntity,
-> extends AbstractSelectizerInstance {
-  loader: (callback: (data: T[]) => void) => void;
-  get(callback: (data: T[]) => void): void;
-  set(data: T[]): void;
-  selectize(
-    targets: Element | ArrayLike<Element>,
-    options?: EntitySelectizeCallOptions,
-  ): void;
-}
-
-interface EntityCacheCtor<T extends SelectizeEntity> {
-  new (options: LocalStorageCacheOptions): EntityCacheInstance<T>;
-  prototype: EntityCacheInstance<T>;
 }
 
 function toElements(target: Element | ArrayLike<Element>): HTMLSelectElement[] {
@@ -140,283 +91,256 @@ function toElements(target: Element | ArrayLike<Element>): HTMLSelectElement[] {
  *    - loader (required) function called to fetch data, takes a callback as first argument
  *        which must be called with the loaded date
  */
-// Every `as unknown as *Ctor`/`as *Instance` cast in this file is the same
-// prototype-based "class" emulation: a plain function assigned to a
-// `const`, with methods hung off its `.prototype` below, cast to a real
-// constructor-shaped interface TS has no structural way to verify from a
-// bare function expression. Real fix is converting this file to actual
-// ES6 `class`/`extends` syntax (a separate, already-scoped phase) --
-// until then each cast is this same irreducible gap, not a new one.
-// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-const LocalStorageCache = function (
-  this: LocalStorageCacheInstance,
-  options: LocalStorageCacheOptions,
-) {
-  this._init(options);
-} as unknown as LocalStorageCacheCtor;
+class LocalStorageCache<T extends SelectizeEntity = SelectizeEntity> {
+  key: string;
+  serverKey: string | undefined;
+  lifetime: number;
+  loader: (callback: (data: T[]) => void) => void;
+  storage: Storage;
+  ready: boolean;
 
-/*
- * Constructor (deported for easy inheritance)
- */
-LocalStorageCache.prototype._init = function (
-  this: LocalStorageCacheInstance,
-  options: LocalStorageCacheOptions,
-) {
-  this.key = options.key! + "_" + options.serverId!;
-  this.serverKey = options.serverKey;
-  this.lifetime =
-    options.lifetime !== undefined ? options.lifetime * 1000 : 3600 * 1000;
-  this.loader = options.loader!;
+  constructor(options: LocalStorageCacheOptions<T>) {
+    this.key = options.key! + "_" + options.serverId!;
+    this.serverKey = options.serverKey;
+    this.lifetime =
+      options.lifetime !== undefined ? options.lifetime * 1000 : 3600 * 1000;
+    this.loader = options.loader!;
 
-  this.storage = window.localStorage;
-  this.ready = Boolean(this.storage);
-};
-
-/*
- * Get the cache content
- * @param callback {function} called with the data as first parameter
- */
-LocalStorageCache.prototype.get = function (
-  this: LocalStorageCacheInstance,
-  callback: (data: SelectizeEntity[]) => void,
-) {
-  const now = new Date().getTime(),
-    // eslint-disable-next-line @typescript-eslint/no-this-alias -- pre-arrow-function idiom, needed so `this` survives into the loader's own callback below; a real behavior change (converting to a real arrow function here) is out of scope for a mechanical conversion.
-    that = this;
-
-  const stored = this.storage.getItem(this.key);
-  if (this.ready && stored !== null) {
-    const parsed: unknown = JSON.parse(stored);
-    const cache =
-      typeof parsed === "object" &&
-      parsed !== null &&
-      "timestamp" in parsed &&
-      typeof parsed.timestamp === "number" &&
-      "data" in parsed &&
-      Array.isArray(parsed.data)
-        ? // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- self-write/self-read cache (this same code wrote it via set() below); validating the shape/timestamp/array-ness above already rules out a foreign or corrupted entry, deep-validating every cached entity's own fields would be real over-engineering for a client-side invalidation check.
-          (parsed as {
-            timestamp: number;
-            key?: string;
-            data: SelectizeEntity[];
-          })
-        : { timestamp: 0, data: [] };
-
-    if (
-      now - cache.timestamp <= this.lifetime &&
-      cache.key === this.serverKey
-    ) {
-      callback(cache.data);
-      return;
-    }
+    this.storage = window.localStorage;
+    this.ready = Boolean(this.storage);
   }
 
-  this.loader(function (entities) {
-    that.set.call(that, entities);
-    callback(entities);
-  });
-};
+  /*
+   * Get the cache content
+   * @param callback {function} called with the data as first parameter
+   */
+  get(callback: (data: T[]) => void): void {
+    const now = new Date().getTime();
 
-/*
- * Manually set the cache content
- * @param entities {mixed}
- */
-LocalStorageCache.prototype.set = function (
-  this: LocalStorageCacheInstance,
-  entities: SelectizeEntity[],
-) {
-  try {
-    if (this.ready) {
-      this.storage.setItem(
-        this.key,
-        JSON.stringify({
-          timestamp: new Date().getTime(),
-          key: this.serverKey,
-          data: entities,
-        }),
-      );
-    }
-  } catch (e) {
-    console.error(
-      "Local storage error:",
-      e,
-      "Use of direct result from Piwigo API.",
-    );
-  }
-};
+    const stored = this.storage.getItem(this.key);
+    if (this.ready && stored !== null) {
+      const parsed: unknown = JSON.parse(stored);
+      const cache =
+        typeof parsed === "object" &&
+        parsed !== null &&
+        "timestamp" in parsed &&
+        typeof parsed.timestamp === "number" &&
+        "data" in parsed &&
+        Array.isArray(parsed.data)
+          ? // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- self-write/self-read cache (this same code wrote it via set() below); validating the shape/timestamp/array-ness above already rules out a foreign or corrupted entry, deep-validating every cached entity's own fields would be real over-engineering for a client-side invalidation check.
+            (parsed as {
+              timestamp: number;
+              key?: string;
+              data: T[];
+            })
+          : { timestamp: 0, data: [] };
 
-/*
- * Manually clear the cache
- */
-LocalStorageCache.prototype.clear = function (this: LocalStorageCacheInstance) {
-  if (this.ready) {
-    this.storage.removeItem(this.key);
-  }
-};
-
-/**
- * Abstract class containing common initialization code for selectize
- */
-// Prototype-based base "class" with no constructor logic of its own --
-// real init happens in _selectize()/_init().
-// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see LocalStorageCache's own leading comment.
-const AbstractSelectizer = function (
-  this: AbstractSelectizerInstance,
-  // eslint-disable-next-line @typescript-eslint/no-empty-function -- see comment above.
-) {} as unknown as AbstractSelectizerCtor;
-// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see LocalStorageCache's own leading comment.
-AbstractSelectizer.prototype = new LocalStorageCache(
-  {},
-) as unknown as AbstractSelectizerInstance;
-
-/*
- * Load Selectize with cache content
- * @param targets elements already initialized via `vendor/selectize.ts`'s
- *   own `selectize()` by the calling subclass's own `.selectize()` method
- *   (may have real `data-create`/`data-default`/`data-value` attributes)
- * @param options {object}
- *    - value (optional) list of preselected items (ids, or objects with "id" attribute")
- *    - default (optional) default value which will be forced if the select is emptyed
- *    - create (optional) allow item user creation
- *    - filter (optional) function called for each select before applying the data
- *      takes two parameters: cache data, options
- *      must return new data
- */
-AbstractSelectizer.prototype._selectize = function (
-  this: AbstractSelectizerInstance,
-  targets: Element | ArrayLike<Element>,
-  globalOptions: EntitySelectizeCallOptions,
-) {
-  const elements = toElements(targets);
-  elements.forEach((el) => {
-    setData(el, "cache", this);
-  });
-
-  this.get((cacheData) => {
-    elements.forEach((el) => {
-      let filtered: SelectizeEntity[];
-      let value: (string | number)[] | { id: string | number }[] | undefined;
-      const options = { ...globalOptions };
-      const instance = getSelectizeInstance<string | number, SelectizeEntity>(
-        el,
-      )!;
-
-      // apply filter function
-      if (options.filter !== undefined) {
-        filtered = options.filter.call(el, cacheData, options);
-      } else {
-        filtered = cacheData;
-      }
-
-      instance.settings.maxOptions = filtered.length + 100;
-
-      // active creation mode
-      if (el.hasAttribute("data-create")) {
-        options.create = true;
-      }
-      instance.settings.create = Boolean(options.create);
-
-      // load options
-      instance.load(function (callback) {
-        if (Object.keys(this.options).length === 0) {
-          callback(filtered);
-        }
-      });
-
-      // load items
       if (
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-        (value = data(el, "value") as
-          (string | number)[] | { id: string | number }[] | undefined)
+        now - cache.timestamp <= this.lifetime &&
+        cache.key === this.serverKey
       ) {
-        options.value = value;
+        callback(cache.data);
+        return;
       }
-      if (options.value !== undefined) {
-        options.value.forEach(
-          (cat: string | number | { id: string | number }) => {
-            if (typeof cat === "string" || typeof cat === "number") {
-              instance.addItem(cat);
-            } else {
-              instance.addItem(cat.id);
-            }
-          },
+    }
+
+    this.loader((entities) => {
+      this.set(entities);
+      callback(entities);
+    });
+  }
+
+  /*
+   * Manually set the cache content
+   * @param entities {mixed}
+   */
+  set(entities: T[]): void {
+    try {
+      if (this.ready) {
+        this.storage.setItem(
+          this.key,
+          JSON.stringify({
+            timestamp: new Date().getTime(),
+            key: this.serverKey,
+            data: entities,
+          }),
         );
       }
-
-      // set default
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      const rawDefault = data(el, "default") as string | number | undefined;
-      if (rawDefault !== undefined && rawDefault !== "") {
-        options.default = rawDefault;
-      }
-      if (options.default === "first") {
-        options.default = filtered[0] ? filtered[0].id : undefined;
-      }
-
-      if (options.default !== undefined) {
-        // Captured into its own const: `options.default` is a mutable
-        // property TS can't narrow across the closures below.
-        const capturedDefault = options.default;
-        // add default item
-        if (instance.getValue() === "") {
-          instance.addItem(capturedDefault);
-        }
-
-        // if multiple: prevent item deletion
-        if (el.multiple) {
-          instance
-            .getItem(capturedDefault)
-            ?.querySelector<HTMLElement>(".remove")
-            ?.style.setProperty("display", "none");
-
-          instance.on("item_remove", (id) => {
-            if (String(id) === String(capturedDefault)) {
-              instance.addItem(id);
-              instance
-                .getItem(id)
-                ?.querySelector<HTMLElement>(".remove")
-                ?.style.setProperty("display", "none");
-            }
-          });
-        }
-        // if single: restore default on blur
-        else {
-          instance.on("dropdown_close", () => {
-            if (instance.getValue() === "") {
-              instance.addItem(capturedDefault);
-            }
-          });
-        }
-      }
-    });
-  });
-};
-
-// redefine Selectize templates without escape
-AbstractSelectizer.getRender = function <U extends Record<string, unknown>>(
-  field_label: string,
-  rawLang: { Add?: string } | undefined,
-) {
-  const lang = rawLang ?? { Add: "Add" };
-
-  return {
-    option: function (entry: U, _escape: unknown) {
-      return '<div class="option">' + String(entry[field_label]) + "</div>";
-    },
-    item: function (entry: U, _escape: unknown) {
-      return '<div class="item">' + String(entry[field_label]) + "</div>";
-    },
-    option_create: function (entry: { input: string }, _escape: unknown) {
-      return (
-        '<div class="create">' +
-        (lang.Add ?? "") +
-        " <strong>" +
-        entry.input +
-        "</strong>&hellip;</div>"
+    } catch (e) {
+      console.error(
+        "Local storage error:",
+        e,
+        "Use of direct result from Piwigo API.",
       );
-    },
-  };
-};
+    }
+  }
+
+  /*
+   * Manually clear the cache
+   */
+  clear(): void {
+    if (this.ready) {
+      this.storage.removeItem(this.key);
+    }
+  }
+}
+
+/**
+ * Abstract class containing common initialization code for selectize.
+ * Never instantiated directly -- only its 4 concrete subclasses below
+ * are ever constructed with real options.
+ */
+abstract class AbstractSelectizer<
+  T extends SelectizeEntity,
+> extends LocalStorageCache<T> {
+  /*
+   * Load Selectize with cache content
+   * @param targets elements already initialized via `vendor/selectize.ts`'s
+   *   own `selectize()` by the calling subclass's own `.selectize()` method
+   *   (may have real `data-create`/`data-default`/`data-value` attributes)
+   * @param options {object}
+   *    - value (optional) list of preselected items (ids, or objects with "id" attribute")
+   *    - default (optional) default value which will be forced if the select is emptyed
+   *    - create (optional) allow item user creation
+   *    - filter (optional) function called for each select before applying the data
+   *      takes two parameters: cache data, options
+   *      must return new data
+   */
+  protected _selectize(
+    targets: Element | ArrayLike<Element>,
+    globalOptions: EntitySelectizeCallOptions,
+  ): void {
+    const elements = toElements(targets);
+    elements.forEach((el) => {
+      setData(el, "cache", this);
+    });
+
+    this.get((cacheData) => {
+      elements.forEach((el) => {
+        let filtered: SelectizeEntity[];
+        let value: (string | number)[] | { id: string | number }[] | undefined;
+        const options = { ...globalOptions };
+        const instance = getSelectizeInstance<string | number, SelectizeEntity>(
+          el,
+        )!;
+
+        // apply filter function
+        if (options.filter !== undefined) {
+          filtered = options.filter.call(el, cacheData, options);
+        } else {
+          filtered = cacheData;
+        }
+
+        instance.settings.maxOptions = filtered.length + 100;
+
+        // active creation mode
+        if (el.hasAttribute("data-create")) {
+          options.create = true;
+        }
+        instance.settings.create = Boolean(options.create);
+
+        // load options
+        instance.load(function (callback) {
+          if (Object.keys(this.options).length === 0) {
+            callback(filtered);
+          }
+        });
+
+        // load items
+        if (
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
+          (value = data(el, "value") as
+            (string | number)[] | { id: string | number }[] | undefined)
+        ) {
+          options.value = value;
+        }
+        if (options.value !== undefined) {
+          options.value.forEach(
+            (cat: string | number | { id: string | number }) => {
+              if (typeof cat === "string" || typeof cat === "number") {
+                instance.addItem(cat);
+              } else {
+                instance.addItem(cat.id);
+              }
+            },
+          );
+        }
+
+        // set default
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
+        const rawDefault = data(el, "default") as string | number | undefined;
+        if (rawDefault !== undefined && rawDefault !== "") {
+          options.default = rawDefault;
+        }
+        if (options.default === "first") {
+          options.default = filtered[0] ? filtered[0].id : undefined;
+        }
+
+        if (options.default !== undefined) {
+          // Captured into its own const: `options.default` is a mutable
+          // property TS can't narrow across the closures below.
+          const capturedDefault = options.default;
+          // add default item
+          if (instance.getValue() === "") {
+            instance.addItem(capturedDefault);
+          }
+
+          // if multiple: prevent item deletion
+          if (el.multiple) {
+            instance
+              .getItem(capturedDefault)
+              ?.querySelector<HTMLElement>(".remove")
+              ?.style.setProperty("display", "none");
+
+            instance.on("item_remove", (id) => {
+              if (String(id) === String(capturedDefault)) {
+                instance.addItem(id);
+                instance
+                  .getItem(id)
+                  ?.querySelector<HTMLElement>(".remove")
+                  ?.style.setProperty("display", "none");
+              }
+            });
+          }
+          // if single: restore default on blur
+          else {
+            instance.on("dropdown_close", () => {
+              if (instance.getValue() === "") {
+                instance.addItem(capturedDefault);
+              }
+            });
+          }
+        }
+      });
+    });
+  }
+
+  // redefine Selectize templates without escape
+  static getRender<U extends Record<string, unknown>>(
+    field_label: string,
+    rawLang: { Add?: string } | undefined,
+  ): Required<SelectizeRenderers<U>> {
+    const lang = rawLang ?? { Add: "Add" };
+
+    return {
+      option: function (entry: U, _escape: unknown) {
+        return '<div class="option">' + String(entry[field_label]) + "</div>";
+      },
+      item: function (entry: U, _escape: unknown) {
+        return '<div class="item">' + String(entry[field_label]) + "</div>";
+      },
+      option_create: function (entry: { input: string }, _escape: unknown) {
+        return (
+          '<div class="create">' +
+          (lang.Add ?? "") +
+          " <strong>" +
+          entry.input +
+          "</strong>&hellip;</div>"
+        );
+      },
+    };
+  }
+}
 
 /**
  * Special LocalStorage for admin categories list
@@ -426,67 +350,60 @@ AbstractSelectizer.getRender = function <U extends Record<string, unknown>>(
  *    - serverKey (required) state of collection server-side
  *    - rootUrl (required) used for the /api/v1 call
  */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see LocalStorageCache's own leading comment.
-const CategoriesCache = function (
-  this: EntityCacheInstance<ProcessedCategory>,
-  options: LocalStorageCacheOptions,
-) {
-  options.key = "categoriesAdminList";
+class CategoriesCache extends AbstractSelectizer<ProcessedCategory> {
+  constructor(options: LocalStorageCacheOptions<ProcessedCategory>) {
+    options.key = "categoriesAdminList";
 
-  options.loader = function (callback) {
-    void (async () => {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-        const response = (await ajax({
-          url: options.rootUrl! + "api/v1/categories",
-          dataType: "json",
-        })) as operations["categoryList"]["responses"][200]["content"]["application/json"];
+    options.loader = function (callback) {
+      void (async () => {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+          const response = (await ajax({
+            url: options.rootUrl! + "api/v1/categories",
+            dataType: "json",
+          })) as operations["categoryList"]["responses"][200]["content"]["application/json"];
 
-        const cats: ProcessedCategory[] = response.categories.map(
-          function (c, i) {
-            const { comment: _comment, uppercats: _uppercats, ...rest } = c;
-            return { ...rest, pos: i };
-          },
-        );
+          const cats: ProcessedCategory[] = response.categories.map(
+            function (c, i) {
+              const { comment: _comment, uppercats: _uppercats, ...rest } = c;
+              return { ...rest, pos: i };
+            },
+          );
 
-        callback(cats);
-      } catch (e) {
-        console.error(e instanceof AjaxError ? e.responseText : e);
-      }
-    })();
-  };
+          callback(cats);
+        } catch (e) {
+          console.error(e instanceof AjaxError ? e.responseText : e);
+        }
+      })();
+    };
 
-  this._init(options);
-} as unknown as EntityCacheCtor<ProcessedCategory>;
+    super(options);
+  }
 
-CategoriesCache.prototype =
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see LocalStorageCache's own leading comment.
-  new AbstractSelectizer() as unknown as EntityCacheInstance<ProcessedCategory>;
+  /*
+   * Init Selectize with cache content
+   * @see AbstractSelectizer._selectize
+   */
+  selectize(
+    targets: Element | ArrayLike<Element>,
+    rawOptions?: EntitySelectizeCallOptions,
+  ): void {
+    const options = rawOptions ?? {};
 
-/*
- * Init Selectize with cache content
- * @see AbstractSelectizer._selectize
- */
-CategoriesCache.prototype.selectize = function (
-  this: EntityCacheInstance<ProcessedCategory>,
-  targets: Element | ArrayLike<Element>,
-  rawOptions?: EntitySelectizeCallOptions,
-) {
-  const options = rawOptions ?? {};
-
-  toElements(targets).forEach((el) => {
-    createSelectize(el, {
-      valueField: "id",
-      labelField: "fullname",
-      sortField: "pos",
-      searchField: ["fullname"],
-      plugins: ["remove_button"],
-      render: AbstractSelectizer.getRender("fullname", options.lang),
+    toElements(targets).forEach((el) => {
+      createSelectize(el, {
+        valueField: "id",
+        labelField: "fullname",
+        sortField: "pos",
+        searchField: ["fullname"],
+        plugins: ["remove_button"],
+        render: AbstractSelectizer.getRender("fullname", options.lang),
+      });
     });
-  });
 
-  this._selectize(targets, options);
-};
+    this._selectize(targets, options);
+  }
+}
 
 /**
  * Special LocalStorage for admin tags list
@@ -496,65 +413,62 @@ CategoriesCache.prototype.selectize = function (
  *    - serverKey (required) state of collection server-side
  *    - rootUrl (required) used for the /api/v1 call
  */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see LocalStorageCache's own leading comment.
-const TagsCache = function (
-  this: EntityCacheInstance<ProcessedTag>,
-  options: LocalStorageCacheOptions,
-) {
-  options.key = "tagsAdminList";
+class TagsCache extends AbstractSelectizer<ProcessedTag> {
+  constructor(options: LocalStorageCacheOptions<ProcessedTag>) {
+    options.key = "tagsAdminList";
 
-  options.loader = function (callback) {
-    void (async () => {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-        const response = (await ajax({
-          url: options.rootUrl! + "api/v1/tags",
-          dataType: "json",
-        })) as operations["tagList"]["responses"][200]["content"]["application/json"];
+    options.loader = function (callback) {
+      void (async () => {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+          const response = (await ajax({
+            url: options.rootUrl! + "api/v1/tags",
+            dataType: "json",
+          })) as operations["tagList"]["responses"][200]["content"]["application/json"];
 
-        const tags: ProcessedTag[] = response.tags.map(function (t) {
-          const { urlName: _urlName, lastmodified: _lastmodified, ...rest } = t;
-          return { ...rest, id: "~~" + String(t.id) + "~~" };
-        });
+          const tags: ProcessedTag[] = response.tags.map(function (t) {
+            const {
+              urlName: _urlName,
+              lastmodified: _lastmodified,
+              ...rest
+            } = t;
+            return { ...rest, id: "~~" + String(t.id) + "~~" };
+          });
 
-        callback(tags);
-      } catch (e) {
-        console.error(e instanceof AjaxError ? e.responseText : e);
-      }
-    })();
-  };
+          callback(tags);
+        } catch (e) {
+          console.error(e instanceof AjaxError ? e.responseText : e);
+        }
+      })();
+    };
 
-  this._init(options);
-} as unknown as EntityCacheCtor<ProcessedTag>;
+    super(options);
+  }
 
-TagsCache.prototype =
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see LocalStorageCache's own leading comment.
-  new AbstractSelectizer() as unknown as EntityCacheInstance<ProcessedTag>;
+  /*
+   * Init Selectize with cache content
+   * @see AbstractSelectizer._selectize
+   */
+  selectize(
+    targets: Element | ArrayLike<Element>,
+    rawOptions?: EntitySelectizeCallOptions,
+  ): void {
+    const options = rawOptions ?? {};
 
-/*
- * Init Selectize with cache content
- * @see AbstractSelectizer._selectize
- */
-TagsCache.prototype.selectize = function (
-  this: EntityCacheInstance<ProcessedTag>,
-  targets: Element | ArrayLike<Element>,
-  rawOptions?: EntitySelectizeCallOptions,
-) {
-  const options = rawOptions ?? {};
-
-  toElements(targets).forEach((el) => {
-    createSelectize(el, {
-      valueField: "id",
-      labelField: "name",
-      sortField: "name",
-      searchField: ["name"],
-      plugins: ["remove_button"],
-      render: AbstractSelectizer.getRender("name", options.lang),
+    toElements(targets).forEach((el) => {
+      createSelectize(el, {
+        valueField: "id",
+        labelField: "name",
+        sortField: "name",
+        searchField: ["name"],
+        plugins: ["remove_button"],
+        render: AbstractSelectizer.getRender("name", options.lang),
+      });
     });
-  });
 
-  this._selectize(targets, options);
-};
+    this._selectize(targets, options);
+  }
+}
 
 /**
  * Special LocalStorage for admin groups list
@@ -564,65 +478,58 @@ TagsCache.prototype.selectize = function (
  *    - serverKey (required) state of collection server-side
  *    - rootUrl (required) used for the /api/v1 call
  */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see LocalStorageCache's own leading comment.
-const GroupsCache = function (
-  this: EntityCacheInstance<ProcessedGroup>,
-  options: LocalStorageCacheOptions,
-) {
-  options.key = "groupsAdminList";
+class GroupsCache extends AbstractSelectizer<ProcessedGroup> {
+  constructor(options: LocalStorageCacheOptions<ProcessedGroup>) {
+    options.key = "groupsAdminList";
 
-  options.loader = function (callback) {
-    void (async () => {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-        const response = (await ajax({
-          url: options.rootUrl! + "api/v1/groups",
-          dataType: "json",
-        })) as operations["groupList"]["responses"][200]["content"]["application/json"];
+    options.loader = function (callback) {
+      void (async () => {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+          const response = (await ajax({
+            url: options.rootUrl! + "api/v1/groups",
+            dataType: "json",
+          })) as operations["groupList"]["responses"][200]["content"]["application/json"];
 
-        const groups: ProcessedGroup[] = response.groups.map(function (g) {
-          const { lastmodified: _lastmodified, ...rest } = g;
-          return rest;
-        });
+          const groups: ProcessedGroup[] = response.groups.map(function (g) {
+            const { lastmodified: _lastmodified, ...rest } = g;
+            return rest;
+          });
 
-        callback(groups);
-      } catch (e) {
-        console.error(e instanceof AjaxError ? e.responseText : e);
-      }
-    })();
-  };
+          callback(groups);
+        } catch (e) {
+          console.error(e instanceof AjaxError ? e.responseText : e);
+        }
+      })();
+    };
 
-  this._init(options);
-} as unknown as EntityCacheCtor<ProcessedGroup>;
+    super(options);
+  }
 
-GroupsCache.prototype =
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see LocalStorageCache's own leading comment.
-  new AbstractSelectizer() as unknown as EntityCacheInstance<ProcessedGroup>;
+  /*
+   * Init Selectize with cache content
+   * @see AbstractSelectizer._selectize
+   */
+  selectize(
+    targets: Element | ArrayLike<Element>,
+    rawOptions?: EntitySelectizeCallOptions,
+  ): void {
+    const options = rawOptions ?? {};
 
-/*
- * Init Selectize with cache content
- * @see AbstractSelectizer._selectize
- */
-GroupsCache.prototype.selectize = function (
-  this: EntityCacheInstance<ProcessedGroup>,
-  targets: Element | ArrayLike<Element>,
-  rawOptions?: EntitySelectizeCallOptions,
-) {
-  const options = rawOptions ?? {};
-
-  toElements(targets).forEach((el) => {
-    createSelectize(el, {
-      valueField: "id",
-      labelField: "name",
-      sortField: "name",
-      searchField: ["name"],
-      plugins: ["remove_button"],
-      render: AbstractSelectizer.getRender("name", options.lang),
+    toElements(targets).forEach((el) => {
+      createSelectize(el, {
+        valueField: "id",
+        labelField: "name",
+        sortField: "name",
+        searchField: ["name"],
+        plugins: ["remove_button"],
+        render: AbstractSelectizer.getRender("name", options.lang),
+      });
     });
-  });
 
-  this._selectize(targets, options);
-};
+    this._selectize(targets, options);
+  }
+}
 
 /**
  * Special LocalStorage for admin users list
@@ -632,70 +539,65 @@ GroupsCache.prototype.selectize = function (
  *    - serverKey (required) state of collection server-side
  *    - rootUrl (required) used for the /api/v1 call
  */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see LocalStorageCache's own leading comment.
-const UsersCache = function (
-  this: EntityCacheInstance<UserEntity>,
-  options: LocalStorageCacheOptions,
-) {
-  options.key = "usersAdminList";
+class UsersCache extends AbstractSelectizer<UserEntity> {
+  constructor(options: LocalStorageCacheOptions<UserEntity>) {
+    options.key = "usersAdminList";
 
-  options.loader = function (callback) {
-    let users: UserEntity[] = [];
+    options.loader = function (callback) {
+      let users: UserEntity[] = [];
 
-    // recursive loader
-    void (async function load(page: number) {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-        const response = (await ajax({
-          url:
-            options.rootUrl! + "api/v1/users?perPage=9999&page=" + String(page),
-          dataType: "json",
-        })) as operations["userList"]["responses"][200]["content"]["application/json"];
+      // recursive loader
+      void (async function load(page: number) {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+          const response = (await ajax({
+            url:
+              options.rootUrl! +
+              "api/v1/users?perPage=9999&page=" +
+              String(page),
+            dataType: "json",
+          })) as operations["userList"]["responses"][200]["content"]["application/json"];
 
-        users = users.concat(response.users);
+          users = users.concat(response.users);
 
-        if (response.users.length === response.perPage) {
-          await load(page + 1);
-        } else {
-          callback(users);
+          if (response.users.length === response.perPage) {
+            await load(page + 1);
+          } else {
+            callback(users);
+          }
+        } catch (e) {
+          console.error(e instanceof AjaxError ? e.responseText : e);
         }
-      } catch (e) {
-        console.error(e instanceof AjaxError ? e.responseText : e);
-      }
-    })(0);
-  };
+      })(0);
+    };
 
-  this._init(options);
-} as unknown as EntityCacheCtor<UserEntity>;
+    super(options);
+  }
 
-UsersCache.prototype =
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see LocalStorageCache's own leading comment.
-  new AbstractSelectizer() as unknown as EntityCacheInstance<UserEntity>;
+  /*
+   * Init Selectize with cache content
+   * @see AbstractSelectizer._selectize
+   */
+  selectize(
+    targets: Element | ArrayLike<Element>,
+    rawOptions?: EntitySelectizeCallOptions,
+  ): void {
+    const options = rawOptions ?? {};
 
-/*
- * Init Selectize with cache content
- * @see AbstractSelectizer._selectize
- */
-UsersCache.prototype.selectize = function (
-  this: EntityCacheInstance<UserEntity>,
-  targets: Element | ArrayLike<Element>,
-  rawOptions?: EntitySelectizeCallOptions,
-) {
-  const options = rawOptions ?? {};
-
-  toElements(targets).forEach((el) => {
-    createSelectize(el, {
-      valueField: "id",
-      labelField: "username",
-      sortField: "username",
-      searchField: ["username"],
-      plugins: ["remove_button"],
-      render: AbstractSelectizer.getRender("username", options.lang),
+    toElements(targets).forEach((el) => {
+      createSelectize(el, {
+        valueField: "id",
+        labelField: "username",
+        sortField: "username",
+        searchField: ["username"],
+        plugins: ["remove_button"],
+        render: AbstractSelectizer.getRender("username", options.lang),
+      });
     });
-  });
 
-  this._selectize(targets, options);
-};
+    this._selectize(targets, options);
+  }
+}
 
 // LocalStorageCache itself (the 4 real exports' own shared base class)
 // stays module-private -- zero real consumers read it bare anywhere in

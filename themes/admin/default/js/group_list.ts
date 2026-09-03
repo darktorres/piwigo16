@@ -3,7 +3,7 @@ import { jConfirm_alert_options, TemporaryState } from "./common";
 import { UsersCache } from "./LocalStorageCache";
 // Type-only -- erased at compile time, so it never reaches Rollup's
 // module graph at all.
-import type { EntityCacheInstance, UserEntity } from "./LocalStorageCache";
+import type { UserEntity } from "./LocalStorageCache";
 
 import {
   pwg_getPageData,
@@ -48,9 +48,9 @@ import {
   valId,
 } from "../../../default/js/vendor/dom";
 
-// `UserEntity`/`EntityCacheInstance<T>` are LocalStorageCache.ts's own
-// real exported types now (docs/PLAN.md P48, that file's own module
-// conversion -- was a bare ambient-global read before that).
+// `UserEntity` is LocalStorageCache.ts's own real exported type now
+// (docs/PLAN.md P48, that file's own module conversion -- was a bare
+// ambient-global read before that).
 type Group = components["schemas"]["Group"];
 // The real `GET /api/v1/users?groupIds[]=...` response shape (same
 // underlying schema LocalStorageCache.ts's own `UserEntity` alias
@@ -1340,7 +1340,7 @@ let selectize: SelectizeInstance<string | number, UserSelectOption>;
 // `new UsersCache(...)` inside updateUserSearch()/at module load
 // (below) before any handler that reads it can actually run.
 // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- deliberate placeholder, replaced by a real `new UsersCache(...)` before any handler that reads it can actually run.
-let usersCache = {} as EntityCacheInstance<UserEntity>;
+let usersCache = {} as UsersCache;
 
 let usersInGroup: GroupMemberDisplay[] = [];
 

@@ -60,7 +60,7 @@ window.addEventListener("load", function () {
     });
 
     const screenImage = box.querySelectorAll<HTMLElement>(".preview-box img");
-    const first = screenImage[0];
+    const [first] = screenImage;
     const previewBox = box.querySelector<HTMLElement>(".preview-box");
     if (first === undefined || previewBox === null) {
       return;

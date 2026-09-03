@@ -9,7 +9,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { ajax } from "../../../default/js/vendor/ajax";
+import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
 import { cookie, setCookie } from "../../../default/js/vendor/cookie";
 import { alert, confirm } from "../../../default/js/vendor/jconfirm";
 import {
@@ -421,48 +421,42 @@ on(document.querySelectorAll("#add-tag .icon-validate"), "click", function () {
 });
 
 async function addTag(name: string): Promise<void> {
-  return new Promise<void>((resolve, reject) => {
-    void ajax({
+  let response: TagCreateResponse;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    response = (await ajax({
       url: "api/v1/tags",
       type: "POST",
-      contentType: "application/json",
+      json: {
+        name: name,
+      },
       headers: {
         "X-CSRF-Token": pwg_token,
       },
-      data: JSON.stringify({
-        name: name,
-      }),
       dataType: "json",
-      success: function (response: TagCreateResponse) {
-        const newTag = createTagBox(
-          response.id,
-          response.name,
-          response.urlName,
-          0,
-        );
-        document.querySelector(".tag-container")?.prepend(newTag);
-        setupTagbox(newTag);
-        updateSearchInfo();
-
-        //Update the local tag list
-        dataTags.unshift({
-          name: response.name,
-          raw_name: response.name,
-          id: response.id,
-          url_name: response.urlName,
-        });
-        updateBadge();
-        resolve();
-      },
-      error: function (err) {
-        if (err.status === 422) {
-          reject(new Error(str_already_exist.replace("%s", name)));
-          return;
-        }
-        reject(new Error(err.statusText));
-      },
+    })) as TagCreateResponse;
+  } catch (err) {
+    if (err instanceof AjaxError && err.status === 422) {
+      throw new Error(str_already_exist.replace("%s", name), { cause: err });
+    }
+    throw new Error(err instanceof AjaxError ? err.statusText : String(err), {
+      cause: err,
     });
+  }
+
+  const newTag = createTagBox(response.id, response.name, response.urlName, 0);
+  document.querySelector(".tag-container")?.prepend(newTag);
+  setupTagbox(newTag);
+  updateSearchInfo();
+
+  //Update the local tag list
+  dataTags.unshift({
+    name: response.name,
+    raw_name: response.name,
+    id: response.id,
+    url_name: response.urlName,
   });
+  updateBadge();
 }
 /*-------
  Setup Tag Box
@@ -629,139 +623,139 @@ async function renameTag(
   id: TagId,
   new_name: string,
 ): Promise<TagRenameResponse> {
-  return new Promise<TagRenameResponse>((resolve, reject) => {
-    void ajax({
+  let response: TagRenameResponse;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    response = (await ajax({
       url: "api/v1/tags/" + String(id),
       type: "PATCH",
-      contentType: "application/json",
+      json: {
+        name: new_name,
+      },
       headers: {
         "X-CSRF-Token": pwg_token,
       },
-      data: JSON.stringify({
-        name: new_name,
-      }),
       dataType: "json",
-      success: function (response: TagRenameResponse) {
-        html(
-          document.querySelectorAll(
-            '.tag-box[data-id="' +
-              String(id) +
-              '"] p, .tag-box[data-id="' +
-              String(id) +
-              '"] .tag-dropdown-header b',
-          ),
-          response.name,
-        );
-        attr(
-          document.querySelectorAll(
-            '.tag-box[data-id="' + String(id) + '"] .tag-name-editable',
-          ),
-          "value",
-          response.name,
-        );
-        attr(
-          document.querySelectorAll(
-            '.tag-box[data-id="' + String(id) + '"] .tag-name',
-          ),
-          "data-rawname",
-          response.nameRaw,
-        );
-        const u_view = "index.php?/tags/" + String(id) + "-" + response.urlName;
-        attr(
-          document.querySelectorAll(".dropdown-option.view"),
-          "href",
-          u_view,
-        );
-
-        //Update the local tag list
-        const index = dataTags.findIndex((tag) => tag.id === Number(id));
-        // Non-null: `id` always identifies a real, currently-rendered
-        // tag box, which was itself rendered from this same array.
-        dataTags[index]!.name = response.name;
-        dataTags[index]!.raw_name = response.nameRaw;
-        dataTags[index]!.url_name = response.urlName;
-
-        resolve(response);
-      },
-      error: function (XMLHttpRequest) {
-        if (XMLHttpRequest.status === 422) {
-          reject(new Error(str_already_exist.replace("%s", new_name)));
-          return;
-        }
-        reject(new Error(XMLHttpRequest.statusText));
-      },
+    })) as TagRenameResponse;
+  } catch (err) {
+    if (err instanceof AjaxError && err.status === 422) {
+      throw new Error(str_already_exist.replace("%s", new_name), {
+        cause: err,
+      });
+    }
+    throw new Error(err instanceof AjaxError ? err.statusText : String(err), {
+      cause: err,
     });
-  });
+  }
+
+  html(
+    document.querySelectorAll(
+      '.tag-box[data-id="' +
+        String(id) +
+        '"] p, .tag-box[data-id="' +
+        String(id) +
+        '"] .tag-dropdown-header b',
+    ),
+    response.name,
+  );
+  attr(
+    document.querySelectorAll(
+      '.tag-box[data-id="' + String(id) + '"] .tag-name-editable',
+    ),
+    "value",
+    response.name,
+  );
+  attr(
+    document.querySelectorAll(
+      '.tag-box[data-id="' + String(id) + '"] .tag-name',
+    ),
+    "data-rawname",
+    response.nameRaw,
+  );
+  const u_view = "index.php?/tags/" + String(id) + "-" + response.urlName;
+  attr(document.querySelectorAll(".dropdown-option.view"), "href", u_view);
+
+  //Update the local tag list
+  const index = dataTags.findIndex((tag) => tag.id === Number(id));
+  // Non-null: `id` always identifies a real, currently-rendered
+  // tag box, which was itself rendered from this same array.
+  dataTags[index]!.name = response.name;
+  dataTags[index]!.raw_name = response.nameRaw;
+  dataTags[index]!.url_name = response.urlName;
+
+  return response;
 }
 
 async function duplicateTag(
   id: TagId,
   name: string,
 ): Promise<TagDuplicateResponse> {
-  return new Promise<TagDuplicateResponse>((resolve, reject) => {
-    let copy_name = name + str_copy;
+  let copy_name = name + str_copy;
 
-    const name_exist = function (candidateName: string): boolean {
-      let exist = false;
-      document.querySelectorAll(".tag-box .tag-name").forEach((el) => {
-        if (htmlOf(el) === candidateName) exist = true;
-      });
-      return exist;
-    };
+  const name_exist = function (candidateName: string): boolean {
+    let exist = false;
+    document.querySelectorAll(".tag-box .tag-name").forEach((el) => {
+      if (htmlOf(el) === candidateName) exist = true;
+    });
+    return exist;
+  };
 
-    let i = 1;
-    while (name_exist(copy_name)) {
-      copy_name = name + str_other_copy.replace("%s", String(i++));
-    }
+  let i = 1;
+  while (name_exist(copy_name)) {
+    copy_name = name + str_other_copy.replace("%s", String(i++));
+  }
 
-    void ajax({
+  let response: TagDuplicateResponse;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    response = (await ajax({
       url: "api/v1/tags/" + String(id) + "/actions/duplicate",
       type: "POST",
-      contentType: "application/json",
+      json: {
+        name: copy_name,
+      },
       headers: {
         "X-CSRF-Token": pwg_token,
       },
-      data: JSON.stringify({
-        name: copy_name,
-      }),
       dataType: "json",
-      success: function (response: TagDuplicateResponse) {
-        const newTag = createTagBox(
-          response.id,
-          response.name,
-          response.urlName,
-          response.count,
-        );
-        document
-          .querySelector('.tag-box[data-id="' + String(id) + '"]')
-          ?.after(newTag);
-        setupTagbox(newTag);
-
-        //Update Data
-        const index = dataTags.findIndex((tag) => tag.id === Number(id));
-        dataTags.splice(index + 1, 0, {
-          name: response.name,
-          // Was missing entirely -- `TagRow.raw_name` is a required
-          // field, and `tagDuplicate`'s own response has no separate
-          // raw-name field to source it from (same gap `tagCreate`'s
-          // response has, worked around identically in addTag()'s own
-          // success handler above: the rendered `name` is the best
-          // available stand-in until a real page reload re-fetches the
-          // true raw name).
-          raw_name: response.name,
-          id: response.id,
-          url_name: response.urlName,
-          counter: response.count,
-        });
-        updateBadge();
-        updateSearchInfo();
-        resolve(response);
-      },
-      error: function (XMLHttpRequest) {
-        reject(new Error(XMLHttpRequest.statusText));
-      },
+    })) as TagDuplicateResponse;
+  } catch (err) {
+    throw new Error(err instanceof AjaxError ? err.statusText : String(err), {
+      cause: err,
     });
+  }
+
+  const newTag = createTagBox(
+    response.id,
+    response.name,
+    response.urlName,
+    response.count,
+  );
+  document
+    .querySelector('.tag-box[data-id="' + String(id) + '"]')
+    ?.after(newTag);
+  setupTagbox(newTag);
+
+  //Update Data
+  const index = dataTags.findIndex((tag) => tag.id === Number(id));
+  dataTags.splice(index + 1, 0, {
+    name: response.name,
+    // Was missing entirely -- `TagRow.raw_name` is a required
+    // field, and `tagDuplicate`'s own response has no separate
+    // raw-name field to source it from (same gap `tagCreate`'s
+    // response has, worked around identically in addTag()'s own
+    // success handler above: the rendered `name` is the best
+    // available stand-in until a real page reload re-fetches the
+    // true raw name).
+    raw_name: response.name,
+    id: response.id,
+    url_name: response.urlName,
+    counter: response.count,
   });
+  updateBadge();
+  updateSearchInfo();
+
+  return response;
 }
 
 /*-------
@@ -1122,7 +1116,7 @@ function removeSelectedTags(): void {
     content: async function () {
       // No bulk-delete endpoint (a REST single-resource DELETE per tag,
       // per P27's own design) -- fire one DELETE per selected tag.
-      return Promise.all(
+      await Promise.all(
         selected.map(async function (id) {
           return ajax({
             url: "api/v1/tags/" + String(id),
@@ -1133,21 +1127,21 @@ function removeSelectedTags(): void {
             dataType: "json",
           });
         }),
-      ).then(function () {
-        selected.forEach(function (id) {
-          document
-            .querySelector('.tag-box[data-id="' + String(id) + '"]')
-            ?.remove();
-        });
+      );
 
-        // Update Data
-        dataTags = dataTags.filter((tag) => !selected.includes(tag.id));
-
-        clearSelection();
-        updatePaginationMenu();
-        updateBadge();
-        updateSearchInfo();
+      selected.forEach(function (id) {
+        document
+          .querySelector('.tag-box[data-id="' + String(id) + '"]')
+          ?.remove();
       });
+
+      // Update Data
+      dataTags = dataTags.filter((tag) => !selected.includes(tag.id));
+
+      clearSelection();
+      updatePaginationMenu();
+      updateBadge();
+      updateSearchInfo();
     },
     ...jConfirm_alert_options,
   });

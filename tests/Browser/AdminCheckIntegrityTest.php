@@ -52,7 +52,7 @@ it('renders the integrity panel and loads its bundle when a real anomaly exists'
         $page->assertPresent('#checkAllLink');
 
         $loadsBundle = $page->script(
-            "Array.from(document.querySelectorAll('script[src]')).some(s => s.src.includes('checkIntegrity'))"
+            "Array.from(document.querySelectorAll('script[src]')).some(s => s.src.includes('check_integrity'))"
         );
 
         expect($loadsBundle)

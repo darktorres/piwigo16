@@ -21,7 +21,7 @@
           <li><a href="{$uTags|noescape}"><i
                 class="icon-tags"
               ></i>{='Tags'|translate}</a></li>
-          <li><a href="{$uRecentSet|noescape}"><i
+          <li><a href="{$uRecentSet}"><i
                 class="icon-clock"
               ></i>{='Recent photos'|translate}</a></li>
           <li><a href="{$uBatch|noescape}"><i
@@ -32,7 +32,7 @@
               ></i>{='Caddie'|translate}<span
                 class="adminMenubarCounter"
               >{$nbPhotosInCaddie}</span></a></li>
-          <li n:if="$nbOrphans > 0"><a href="{$uOrphans|noescape}"><i
+          <li n:if="$nbOrphans > 0"><a href="{$uOrphans}"><i
                 class="icon-heart-broken"
               ></i>{='Orphans'|translate}<span
                 class="adminMenubarCounter"
@@ -84,10 +84,10 @@
         ></i></dt>
       <dd>
         <ul>
-          <li n:if="$enableSynchronization"><a href="{$uCatUpdate|noescape}"><i
+          <li n:if="$enableSynchronization"><a href="{$uCatUpdate}"><i
                 class="icon-exchange"
               ></i>{='Synchronize'|translate}</a></li>
-          <li><a href="{$uHistoryStat|noescape}"><i
+          <li><a href="{$uHistoryStat}"><i
                 class="icon-signal"
               ></i>{='History'|translate}</a></li>
           <li><a href="{$uMaintenance|noescape}"><i
@@ -115,16 +115,16 @@
         ></i></dt>
       <dd>
         <ul>
-          <li><a href="{$uConfigGeneral|noescape}"><i
+          <li><a href="{$uConfigGeneral}"><i
                 class="icon-cog-alt"
               ></i>{='Options'|translate}</a></li>
-          <li><a href="{$uConfigMenubar|noescape}"><i
+          <li><a href="{$uConfigMenubar}"><i
                 class="icon-menu"
               ></i>{='Menu Management'|translate}</a></li>
-          <li><a href="{$uConfigLanguages|noescape}"><i
+          <li><a href="{$uConfigLanguages}"><i
                 class="icon-language"
               ></i>{='Languages'|translate}</a></li>
-          <li><a href="{$uConfigThemes|noescape}"><i
+          <li><a href="{$uConfigThemes}"><i
                 class="icon-brush"
               ></i>{='Themes'|translate}</a></li>
         </ul>

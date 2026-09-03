@@ -162,15 +162,18 @@ final readonly class SiteManagerSubController implements AdminSubControllerInter
             $id_int = $row->id;
             $galleries_url = $row->galleriesUrl;
             $is_remote = $this->urlService->urlIsRemote($galleries_url);
+            // Plain '&', not '&amp;': uSynchronize/uDelete (below) reach
+            // site_manager.latte as bare {...|noescape} prints
+            // (P59 Batch 5).
             $base_url = $this->urlService->getRootUrl() . 'admin.php';
             $base_url .= '?page=site_manager';
-            $base_url .= '&amp;site=' . $id;
-            $base_url .= '&amp;pwg_token=' . $this->csrfService->getToken();
-            $base_url .= '&amp;action=';
+            $base_url .= '&site=' . $id;
+            $base_url .= '&pwg_token=' . $this->csrfService->getToken();
+            $base_url .= '&action=';
 
             $update_url = $this->urlService->getRootUrl() . 'admin.php';
             $update_url .= '?page=site_update';
-            $update_url .= '&amp;site=' . $id;
+            $update_url .= '&site=' . $id;
 
             $tpl_sites[] = new SiteRow(
                 name: $galleries_url,

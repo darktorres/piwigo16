@@ -47,7 +47,7 @@ use Piwigo\Users\UserService;
  * validates the token itself. The token is embedded into all 4
  * *_baseurl template assigns below -- themes_installed.latte appends the
  * theme ID directly after each *_baseurl string (no add_url_params() call
- * to hook into), so the token goes before the trailing '&amp;theme=' so
+ * to hook into), so the token goes before the trailing '&theme=' so
  * the template's own {$theme.ID} concatenation still works.
  */
 final readonly class ThemesInstalledPageRenderer
@@ -181,10 +181,12 @@ final readonly class ThemesInstalledPageRenderer
         $this->eventDispatcher->dispatch(new ThemesInstalledPageRendered());
 
         $adminContent = $this->renderer->render(new ThemesInstalledView(
-            activateBaseUrl: $base_url . '&amp;action=activate&amp;pwg_token=' . $pwg_token . '&amp;theme=',
-            deactivateBaseUrl: $base_url . '&amp;action=deactivate&amp;pwg_token=' . $pwg_token . '&amp;theme=',
-            setDefaultBaseUrl: $base_url . '&amp;action=set_default&amp;pwg_token=' . $pwg_token . '&amp;theme=',
-            deleteBaseUrl: $base_url . '&amp;action=delete&amp;pwg_token=' . $pwg_token . '&amp;theme=',
+            // Plain '&', not '&amp;': all 4 reach themes_installed.latte as
+            // bare {...|noescape}{$theme->id} prints (P59 Batch 5).
+            activateBaseUrl: $base_url . '&action=activate&pwg_token=' . $pwg_token . '&theme=',
+            deactivateBaseUrl: $base_url . '&action=deactivate&pwg_token=' . $pwg_token . '&theme=',
+            setDefaultBaseUrl: $base_url . '&action=set_default&pwg_token=' . $pwg_token . '&theme=',
+            deleteBaseUrl: $base_url . '&action=delete&pwg_token=' . $pwg_token . '&theme=',
             tplThemes: $tpl_themes,
             isWebmaster: $this->accessControl->isWebmaster() ? 1 : 0,
             enableExtensionsInstall: $this->currentConfig->enableExtensionsInstall,

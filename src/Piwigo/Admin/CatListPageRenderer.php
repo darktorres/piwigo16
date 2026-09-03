@@ -156,7 +156,9 @@ final readonly class CatListPageRenderer
         }
         $form_action = $this->urlService->getRootUrl() . 'admin.php?page=cat_list';
         if ($parent_id !== null) {
-            $form_action .= '&amp;parent_id=' . $parent_id;
+            // Plain '&', not '&amp;': formAction reaches cat_list.latte as a
+            // bare {$formAction|noescape} print (P59 Batch 5).
+            $form_action .= '&parent_id=' . $parent_id;
         }
 
         $categories_nav = (string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation));
@@ -229,9 +231,11 @@ final readonly class CatListPageRenderer
                         'category' => $category->toArray(),
                     ]
                 ),
-                uChildren: $cat_list_url . '&amp;parent_id=' . $cat_id,
+                // Plain '&', not '&amp;': both reach cat_list.latte as bare
+                // {...|noescape} prints (P59 Batch 5).
+                uChildren: $cat_list_url . '&parent_id=' . $cat_id,
                 uEdit: $base_url . 'album-' . $cat_id,
-                uAddPhotosAlbum: $base_url . 'photos_add&amp;album=' . $cat_id,
+                uAddPhotosAlbum: $base_url . 'photos_add&album=' . $cat_id,
                 uMove: $base_url . 'albums#cat-' . $cat_id,
                 isVirtual: in_array($category->dir, [null, '', '0'], true),
                 catAdminAccess: $categoryService->catAdminAccess($cat_id, $this->currentUser),

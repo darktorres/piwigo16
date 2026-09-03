@@ -812,8 +812,12 @@ final readonly class PictureController implements ControllerInterface
                     // Projection\ImageFormat::toArray() rows (format_id/
                     // image_id/ext/filesize) -- narrow explicitly rather
                     // than trust a per-key type across that mix.
+                    // Plain '&', not '&amp;': download_url reaches
+                    // picture.latte as a bare {$format['download_url']|noescape}
+                    // print (P59 Batch 5 -- same idiom the 5 named
+                    // UrlService/PaginationService builders already fixed).
                     if (! isset($format['download_url'])) {
-                        $format['download_url'] = 'action.php?format=' . $format['format_id'] . '&amp;download';
+                        $format['download_url'] = 'action.php?format=' . $format['format_id'] . '&download';
                     }
 
                     $format_ext = $format['ext'];

@@ -63,7 +63,11 @@ final class PictureFormatsPageRenderer
             $formats[] = new PictureFormatRow(
                 formatId: $formatRow->formatId,
                 filesize: round($filesize / 1024.0, 2),
-                downloadUrl: 'action.php?format=' . $formatRow->formatId . '&amp;download',
+                // Plain '&', not '&amp;': downloadUrl reaches
+                // picture_formats.latte as a bare {$format->downloadUrl|noescape}
+                // print (P59 Batch 5 -- same idiom the 5 named
+                // UrlService/PaginationService builders already fixed).
+                downloadUrl: 'action.php?format=' . $formatRow->formatId . '&download',
                 label: $label,
             );
         }

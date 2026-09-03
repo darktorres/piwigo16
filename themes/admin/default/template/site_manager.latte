@@ -13,13 +13,13 @@
       >{$site->name}</a><br>({$site->type}, {$site->categories} {='Albums'|translate}, {$site->images|translate_dec:'%d photo','%d photos'})
     </td><td>
       [<a
-        href="{$site->uSynchronize|noescape}"
+        href="{$site->uSynchronize}"
         title="{='update the database from files'|translate}"
       >{='Synchronize'|translate}</a>]
       {if isset($site->uDelete)}
         [<a
           class="delete-site-button"
-          href="{$site->uDelete|noescape}"
+          href="{$site->uDelete}"
           title="{='delete this site and all its attached elements'|translate}"
         >{='delete'|translate}</a>]
       {/if}

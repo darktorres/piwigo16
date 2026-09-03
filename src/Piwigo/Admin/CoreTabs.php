@@ -29,6 +29,13 @@ use RuntimeException;
  * `linkStart`, `confLink`, `helpLink`, `baseUrl`, `adminPhotoBaseUrl`),
  * set by whichever controller is currently running; this class's whole
  * purpose is bridging those context fields into tabsheet entries.
+ *
+ * Every `'url'` value below joins its own params with plain '&', not
+ * '&amp;' (P59 Batch 5 -- the same ad-hoc-literal-'&amp;' idiom the 5
+ * named UrlService/PaginationService builders already fixed):
+ * `Tabsheet.php`'s own `TabSheetEntry::$url` reaches `tabsheet.latte` as
+ * a bare print, where Latte's auto-escape does the entity-encoding once,
+ * at print time.
  */
 final class CoreTabs
 {
@@ -158,22 +165,22 @@ final class CoreTabs
                 $link_start = self::contextField($this->context()->linkStart, 'linkStart');
                 $sheets['status'] = [
                     'caption' => '<span class="icon-lock"></span>' . $this->lang->t('Public / Private'),
-                    'url' => $link_start . 'cat_options&amp;section=status',
+                    'url' => $link_start . 'cat_options&section=status',
                 ];
                 $sheets['visible'] = [
                     'caption' => '<span class="icon-block"></span>' . $this->lang->t('Lock'),
-                    'url' => $link_start . 'cat_options&amp;section=visible',
+                    'url' => $link_start . 'cat_options&section=visible',
                 ];
                 if ($this->currentConfig->activateComments) {
                     $sheets['comments'] = [
                         'caption' => '<span class="icon-chat"></span>' . $this->lang->t('Comments'),
-                        'url' => $link_start . 'cat_options&amp;section=comments',
+                        'url' => $link_start . 'cat_options&section=comments',
                     ];
                 }
                 if ($this->currentConfig->allowRandomRepresentative) {
                     $sheets['representative'] = [
                         'caption' => $this->lang->t('Representative'),
-                        'url' => $link_start . 'cat_options&amp;section=representative',
+                        'url' => $link_start . 'cat_options&section=representative',
                     ];
                 }
                 break;
@@ -263,16 +270,16 @@ final class CoreTabs
                 $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets['installed'] = [
                     'caption' => '<span class="icon-menu"></span>' . $this->lang->t('List'),
-                    'url' => $my_base_url . '&amp;tab=installed',
+                    'url' => $my_base_url . '&tab=installed',
                 ];
                 if ($this->currentConfig->enableExtensionsInstall) {
                     $sheets['update'] = [
                         'caption' => '<span class="icon-arrows-cw"></span>' . $this->lang->t('Check for updates'),
-                        'url' => $my_base_url . '&amp;tab=update',
+                        'url' => $my_base_url . '&tab=update',
                     ];
                     $sheets['new'] = [
                         'caption' => '<span class="icon-plus-circled"></span>' . $this->lang->t('Add New Language'),
-                        'url' => $my_base_url . '&amp;tab=new',
+                        'url' => $my_base_url . '&tab=new',
                     ];
                 }
                 break;
@@ -289,15 +296,15 @@ final class CoreTabs
                 $base_url = self::contextField($this->context()->baseUrl, 'baseUrl');
                 $sheets['param'] = [
                     'caption' => $this->lang->t('Parameter'),
-                    'url' => $base_url . '?page=notification_by_mail&amp;mode=param',
+                    'url' => $base_url . '?page=notification_by_mail&mode=param',
                 ];
                 $sheets['subscribe'] = [
                     'caption' => $this->lang->t('Subscribe'),
-                    'url' => $base_url . '?page=notification_by_mail&amp;mode=subscribe',
+                    'url' => $base_url . '?page=notification_by_mail&mode=subscribe',
                 ];
                 $sheets['send'] = [
                     'caption' => $this->lang->t('Send'),
-                    'url' => $base_url . '?page=notification_by_mail&amp;mode=send',
+                    'url' => $base_url . '?page=notification_by_mail&mode=send',
                 ];
                 break;
 
@@ -322,16 +329,16 @@ final class CoreTabs
             case 'photos_add':
                 $sheets['direct'] = [
                     'caption' => '<span class="icon-upload"></span>' . $this->lang->t('Web Form'),
-                    'url' => PhotosAddDirectPageRenderer::baseUrl($this->urlService) . '&amp;section=direct',
+                    'url' => PhotosAddDirectPageRenderer::baseUrl($this->urlService) . '&section=direct',
                 ];
                 $sheets['applications'] = [
                     'caption' => '<span class="icon-network"></span>' . $this->lang->t('Applications'),
-                    'url' => PhotosAddDirectPageRenderer::baseUrl($this->urlService) . '&amp;section=applications',
+                    'url' => PhotosAddDirectPageRenderer::baseUrl($this->urlService) . '&section=applications',
                 ];
                 if ($this->currentConfig->enableSynchronization) {
                     $sheets['ftp'] = [
                         'caption' => '<span class="icon-exchange"></span>' . $this->lang->t('FTP + Synchronization'),
-                        'url' => PhotosAddDirectPageRenderer::baseUrl($this->urlService) . '&amp;section=ftp',
+                        'url' => PhotosAddDirectPageRenderer::baseUrl($this->urlService) . '&section=ftp',
                     ];
                 }
                 break;
@@ -340,16 +347,16 @@ final class CoreTabs
                 $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets['installed'] = [
                     'caption' => '<span class="icon-menu"></span>' . $this->lang->t('List'),
-                    'url' => $my_base_url . '&amp;tab=installed',
+                    'url' => $my_base_url . '&tab=installed',
                 ];
                 if ($this->currentConfig->enableExtensionsInstall) {
                     $sheets['update'] = [
                         'caption' => '<span class="icon-arrows-cw"></span>' . $this->lang->t('Check for updates'),
-                        'url' => $my_base_url . '&amp;tab=update',
+                        'url' => $my_base_url . '&tab=update',
                     ];
                     $sheets['new'] = [
                         'caption' => '<span class="icon-plus-circled"></span>' . $this->lang->t('Add New Plugin'),
-                        'url' => $my_base_url . '&amp;tab=new',
+                        'url' => $my_base_url . '&tab=new',
                     ];
                 }
                 break;
@@ -369,21 +376,21 @@ final class CoreTabs
                 $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets['installed'] = [
                     'caption' => '<span class="icon-menu"></span>' . $this->lang->t('List'),
-                    'url' => $my_base_url . '&amp;tab=installed',
+                    'url' => $my_base_url . '&tab=installed',
                 ];
                 if ($this->currentConfig->enableExtensionsInstall) {
                     $sheets['update'] = [
                         'caption' => '<span class="icon-arrows-cw"></span>' . $this->lang->t('Check for updates'),
-                        'url' => $my_base_url . '&amp;tab=update',
+                        'url' => $my_base_url . '&tab=update',
                     ];
                     $sheets['new'] = [
                         'caption' => '<span class="icon-plus-circled"></span>' . $this->lang->t('Add New Theme'),
-                        'url' => $my_base_url . '&amp;tab=new',
+                        'url' => $my_base_url . '&tab=new',
                     ];
                 }
                 $sheets['standard_pages'] = [
                     'caption' => '<span class="icon-cog-alt"></span>' . $this->lang->t('Standard pages'),
-                    'url' => $my_base_url . '&amp;tab=standard_pages',
+                    'url' => $my_base_url . '&tab=standard_pages',
                 ];
                 break;
 
@@ -400,7 +407,7 @@ final class CoreTabs
                 if ($this->currentConfig->enableExtensionsInstall) {
                     $sheets['ext'] = [
                         'caption' => $this->lang->t('Extensions'),
-                        'url' => $my_base_url . '&amp;tab=ext',
+                        'url' => $my_base_url . '&tab=ext',
                     ];
                 }
                 break;

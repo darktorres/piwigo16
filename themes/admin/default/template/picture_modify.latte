@@ -13,12 +13,12 @@
       ></a>
       <a
         class="icon-download"
-        href="{$uDownload|noescape}"
+        href="{$uDownload}"
         title="{='Download'|translate}"
       ></a>
       <a
         class="icon-signal"
-        href="{$uHistory|noescape}"
+        href="{$uHistory}"
         title="{='Visit history'|translate}"
       ></a>
       <a
@@ -29,7 +29,7 @@
       {if !url_is_remote($path)}
         <a
           class="icon-arrows-cw"
-          href="{$uSync|noescape}"
+          href="{$uSync}"
           title="{='Synchronize metadata'|translate}"
         ></a>
         <a

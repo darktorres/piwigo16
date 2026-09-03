@@ -69,7 +69,10 @@ final readonly class CatOptionsPageRenderer
         }
 
         $section = $catOptionsRequest->section;
-        $base_url = $this->urlService->getRootUrl() . 'admin.php?page=cat_options&amp;section=';
+        // Plain '&', not '&amp;': formAction (below) reaches
+        // cat_options.latte as a bare {$formAction|noescape} print
+        // (P59 Batch 5).
+        $base_url = $this->urlService->getRootUrl() . 'admin.php?page=cat_options&section=';
 
         // CoreTabs::setContext() must be called with linkStart before
         // Tabsheet renders this page's tab strip, or the tabs render with

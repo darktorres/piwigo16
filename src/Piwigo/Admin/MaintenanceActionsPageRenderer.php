@@ -98,7 +98,12 @@ final readonly class MaintenanceActionsPageRenderer
 
         $pwg_token = $this->csrfService
             ->getToken();
-        $url_format = $this->urlService->getRootUrl() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . $this->csrfService->getToken();
+        // Plain '&', not '&amp;': every real consumer of the 14 URLs built
+        // from this format is a bare template print, where Latte's own
+        // auto-escape does the entity-encoding once, at print time
+        // (P59 Batch 5 -- same idiom the 5 named UrlService/
+        // PaginationService builders already fixed).
+        $url_format = $this->urlService->getRootUrl() . 'admin.php?page=maintenance&action=%s&pwg_token=' . $this->csrfService->getToken();
 
         if (! $this->accessControl->isWebmaster()) {
             $this->pageState->addWarning(str_replace('%s', $this->lang->t('user_status_webmaster'), $this->lang->t('%s status is required to edit parameters.')));

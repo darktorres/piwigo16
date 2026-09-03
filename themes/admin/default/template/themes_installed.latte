@@ -86,7 +86,7 @@
           {if $theme->deletable}
             <a
               class="dropdown-option icon-trash delete-plugin-button delete-theme-button"
-              href="{$deleteBaseUrl|noescape}{$theme->id}"
+              href="{$deleteBaseUrl}{$theme->id}"
             >{='Delete'|translate}</a>
           {else}
             <span
@@ -97,7 +97,7 @@
         {/if}
         <a
           n:if="$theme->deactivable"
-          href="{$deactivateBaseUrl|noescape}{$theme->id}"
+          href="{$deactivateBaseUrl}{$theme->id}"
           class="showInfo-dropdown-action tiptip icon-cancel-circled"
           title="{='Forbid this theme to users'|translate}"
         >{='Deactivate'|translate}</a>
@@ -118,7 +118,7 @@
             {/if}
             {if !$theme->isDefault}
               <a
-                href="{$setDefaultBaseUrl|noescape}{$theme->id}"
+                href="{$setDefaultBaseUrl}{$theme->id}"
                 class="tiptip icon-star"
                 title="{='Set as default theme for unregistered and new users'|translate}"
               >{='Set as default'|translate}</a>
@@ -131,7 +131,7 @@
           {else}
             {if $theme->activable}
               <a
-                href="{$activateBaseUrl|noescape}{$theme->id}"
+                href="{$activateBaseUrl}{$theme->id}"
                 title="{='Make this theme available to users'|translate}"
                 class="icon-plus tiptip"
               >{='Activate'|translate}</a>

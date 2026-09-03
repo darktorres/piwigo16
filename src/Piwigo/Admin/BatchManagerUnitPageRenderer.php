@@ -457,8 +457,10 @@ final readonly class BatchManagerUnitPageRenderer
                     relatedCategories: $related_categories,
                     relatedCategoryIds: $related_category_ids_json === false ? '' : $related_category_ids_json,
                     uJumpto: (isset($url_img) and $user->level >= $media['image']['level']) ? $url_img : null,
-                    uDownload: 'action.php?id=' . $row_id_str . '&amp;part=e&amp;pwg_token=' . $this->csrfService->getToken() . '&amp;download',
-                    uHistory: $this->urlService->getRootUrl() . 'admin.php?page=history&amp;filter_image_id=' . $row_id_str,
+                    // Plain '&', not '&amp;': both reach batch_manager_unit.latte
+                    // as bare {...|noescape} prints (P59 Batch 5).
+                    uDownload: 'action.php?id=' . $row_id_str . '&part=e&pwg_token=' . $this->csrfService->getToken() . '&download',
+                    uHistory: $this->urlService->getRootUrl() . 'admin.php?page=history&filter_image_id=' . $row_id_str,
                     uActivity: $this->urlService->getRootUrl() . 'admin.php?page=user_activity&photo=' . $row_id_str,
                     path: $row_path,
                     levelSelected: is_numeric($selected_level) ? (int) $selected_level : null,

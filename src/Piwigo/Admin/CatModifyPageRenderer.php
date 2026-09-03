@@ -134,7 +134,10 @@ final class CatModifyPageRenderer
         $info_title = '';
         $u_manage_elements = null;
         if ($has_images) {
-            $u_manage_elements = $base_url . 'batch_manager&amp;filter=album-' . $category_id;
+            // Plain '&', not '&amp;': uManageElements reaches
+            // cat_modify.latte as a bare {$uManageElements|noescape}
+            // print (P59 Batch 5).
+            $u_manage_elements = $base_url . 'batch_manager&filter=album-' . $category_id;
 
             $row = $categoryService->getPhotoCountAndDateRange($category_id);
             $image_count = $row->count;
@@ -213,7 +216,9 @@ final class CatModifyPageRenderer
             $cat_min_dir = $this->getMinLocalDir($cat_full_dir);
 
             if ($currentConfig->enableSynchronization) {
-                $u_sync = $base_url . 'site_update&amp;site=' . $category_site_id . '&amp;cat_id=' . $category_id;
+                // Plain '&', not '&amp;': uSync reaches cat_modify.latte as
+                // a bare {$uSync|noescape} print (P59 Batch 5).
+                $u_sync = $base_url . 'site_update&site=' . $category_site_id . '&cat_id=' . $category_id;
             }
 
         }
@@ -257,8 +262,10 @@ final class CatModifyPageRenderer
             catAdminAccess: $categoryService->catAdminAccess($category_id, $currentUser),
             uDelete: $base_url . 'albums',
             uJumpto: $u_jumpto,
-            uAddPhotosAlbum: $base_url . 'photos_add&amp;album=' . $category_id,
-            uMove: $base_url . 'albums&amp;parent_id=' . $category_id,
+            // Plain '&', not '&amp;': both reach cat_modify.latte as bare
+            // {...|noescape} prints (P59 Batch 5).
+            uAddPhotosAlbum: $base_url . 'photos_add&album=' . $category_id,
+            uMove: $base_url . 'albums&parent_id=' . $category_id,
             uActivity: $urlService->getRootUrl() . 'admin.php?page=user_activity&album=' . $category_id,
             catCommentable: $cat_commentable,
             uManageElements: $u_manage_elements,

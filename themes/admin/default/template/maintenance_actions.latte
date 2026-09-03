@@ -7,34 +7,34 @@
     <div class="maintenance-action-group">
       {if isset($maintLockGallery)}
         <a
-          href="{$maintLockGallery|noescape}"
+          href="{$maintLockGallery}"
           class="lock-gallery-button {$maintActions['lock_gallery']['icon']} maintenance-action"
         >{$maintActions['lock_gallery']['label']}</a>
       {else}
         <a
-          href="{$maintUnlockGallery|noescape}"
+          href="{$maintUnlockGallery}"
           class="lock-gallery-button {$maintActions['unlock_gallery']['icon']} maintenance-action"
         >{$maintActions['unlock_gallery']['label']}</a>
       {/if}
       <a
-        href="{$maintCategories|noescape}"
+        href="{$maintCategories}"
         class="{$maintActions['categories']['icon']} maintenance-action"
       >{$maintActions['categories']['label']}</a>
       <a
-        href="{$maintImages|noescape}"
+        href="{$maintImages}"
         class="{$maintActions['images']['icon']} maintenance-action"
       >{$maintActions['images']['label']}</a>
       <a
-        href="{$maintDatabase|noescape}"
+        href="{$maintDatabase}"
         class="{$maintActions['database']['icon']} maintenance-action"
       >{$maintActions['database']['label']}</a>
       <a
-        href="{$maintC13y|noescape}"
+        href="{$maintC13y}"
         class="{$maintActions['c13y']['icon']} maintenance-action"
       >{$maintActions['c13y']['label']}</a>
       <a
         n:if="isset($uEmptyLounge)"
-        href="{$uEmptyLounge|noescape}"
+        href="{$uEmptyLounge}"
         class="{$maintActions['empty_lounge']['icon']} maintenance-action tiptip"
         title="{='There is currently %d photos in the lounge (upload buffer)'|translate:$loungeCounter}"
       >{$maintActions['empty_lounge']['label']}<span
@@ -48,31 +48,31 @@
       ></span>{='Purge Actions'|translate}</legend>
     <div class="maintenance-action-group">
       <a
-        href="{$maintUserCache|noescape}"
+        href="{$maintUserCache}"
         class="{$maintActions['user_cache']['icon']} maintenance-action"
       >{$maintActions['user_cache']['label']}</a>
       <a
-        href="{$maintOrphanTags|noescape}"
+        href="{$maintOrphanTags}"
         class="{$maintActions['delete_orphan_tags']['icon']} maintenance-action"
       >{$maintActions['delete_orphan_tags']['label']}</a>
       <a
-        href="{$maintHistoryDetail|noescape}"
+        href="{$maintHistoryDetail}"
         class="{$maintActions['history_detail']['icon']} maintenance-action purge-history-detail-button"
       >{$maintActions['history_detail']['label']}</a>
       <a
-        href="{$maintHistorySummary|noescape}"
+        href="{$maintHistorySummary}"
         class="{$maintActions['history_summary']['icon']} maintenance-action purge-history-summary-button"
       >{$maintActions['history_summary']['label']}</a>
       <a
-        href="{$maintSessions|noescape}"
+        href="{$maintSessions}"
         class="{$maintActions['sessions']['icon']} maintenance-action"
       >{$maintActions['sessions']['label']}</a>
       <a
-        href="{$maintFeeds|noescape}"
+        href="{$maintFeeds}"
         class="{$maintActions['feeds']['icon']} maintenance-action"
       >{$maintActions['feeds']['label']}</a>
       <a
-        href="{$maintSearch|noescape}"
+        href="{$maintSearch}"
         class="{$maintActions['search']['icon']} maintenance-action purge-search-history-button"
       >{$maintActions['search']['label']}</a>
     </div>
@@ -117,7 +117,7 @@
           ></span>{='Refresh'|translate}</a>
       </div>
       <a
-        href="{$maintCompiledTemplates|noescape}"
+        href="{$maintCompiledTemplates}"
         class="{$maintActions['compiled-templates']['icon']} maintenance-action"
       >{$maintActions['compiled-templates']['label']}
         <span class="multiple-compiledTemplate-sizes">

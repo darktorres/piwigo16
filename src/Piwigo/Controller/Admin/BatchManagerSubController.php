@@ -166,7 +166,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
         // CoreTabs::setContext() needs an explicit managerLink for this
         // page (same as ConfigurationSubController's own $conf_link), or
         // this page's tab strip renders broken relative hrefs.
-        $this->coreTabs->setContext(new CoreTabsContext(managerLink: $this->urlService->getRootUrl() . 'admin.php?page=batch_manager&amp;mode='));
+        $this->coreTabs->setContext(new CoreTabsContext(managerLink: $this->urlService->getRootUrl() . 'admin.php?page=batch_manager&mode='));
         $tabsheet = new Tabsheet();
         $tabsheet->setId('batch_manager');
         $tabsheet->select($tab, $this->eventDispatcher);

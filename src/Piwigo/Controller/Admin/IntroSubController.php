@@ -168,7 +168,12 @@ final readonly class IntroSubController implements AdminSubControllerInterface
         // locked album ?
         $locked_album = $this->categoryService->countByVisible(false);
         if ($locked_album > 0) {
-            $locked_album_url = $this->urlService->getRootUrl() . 'admin.php?page=cat_options&section=visible';
+            // '&amp;', not plain '&' (the reverse fix from most of P59
+            // Batch 5): $locked_album_url is embedded directly into this
+            // hand-built raw-HTML $message below (no auto-escape ever runs
+            // over it, same as $orphans_url above) -- was the one
+            // inconsistent site in this pattern.
+            $locked_album_url = $this->urlService->getRootUrl() . 'admin.php?page=cat_options&amp;section=visible';
 
             $message = '<a href="' . $locked_album_url . '"><i class="icon-cone"></i>';
             $message .= $this->lang->t('Locked album') . '</a>';
@@ -586,7 +591,9 @@ final readonly class IntroSubController implements AdminSubControllerInterface
             nbViews: AdminUiHelper::numberFormatHumanReadable($nb_views),
             nbPlugins: count($this->loadedPlugins->get()),
             storageUsed: str_replace(' ', '&nbsp;', $this->lang->t('%sGB', number_format($du_gb, $du_decimals))),
-            uQuickSync: $this->urlService->getRootUrl() . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . $this->csrfService->getToken(),
+            // Plain '&', not '&amp;': uQuickSync reaches intro.latte as a
+            // bare {$uQuickSync|noescape} print (P59 Batch 5).
+            uQuickSync: $this->urlService->getRootUrl() . 'admin.php?page=site_update&site=1&quick_sync=1&pwg_token=' . $this->csrfService->getToken(),
             checkForUpdates: $this->currentConfig->dashboardCheckForUpdates,
             nbComments: $nb_comments,
             activityWeekNumber: $week_number,

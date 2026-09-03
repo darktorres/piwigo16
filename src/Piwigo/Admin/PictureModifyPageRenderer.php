@@ -286,10 +286,21 @@ final readonly class PictureModifyPageRenderer
         $post_comment = $pictureModifyRequest->commentField;
         $comment_value = $post_comment ?? (is_string($row['comment'] ?? null) && $row['comment'] !== '' ? $row['comment'] : '');
 
-        $u_download = 'action.php?id=' . $image_id . '&amp;part=e&amp;pwg_token=' . $this->csrfService->getToken();
-        $u_sync = $admin_url_start . '&amp;sync_metadata=1&amp;pwg_token=' . $this->csrfService->getToken();
-        $u_delete = $admin_url_start . '&amp;delete=1&amp;pwg_token=' . $this->csrfService->getToken();
-        $u_history = $this->urlService->getRootUrl() . 'admin.php?page=history&amp;filter_image_id=' . $image_id;
+        // Plain '&', not '&amp;' (P59 Batch 5 -- same idiom the 5 named
+        // UrlService/PaginationService builders already fixed): uDownload/
+        // uSync/uHistory reach picture_modify.latte as bare {...|noescape}
+        // prints; uDelete/uHistory ALSO reach picture_modify.ts as raw
+        // page-data (pwg_getPageData('u_delete')/('u_history')), read from
+        // a <script type="application/json"> element's own .textContent --
+        // a "raw text" HTML element the browser never entity-decodes, so
+        // '&amp;' there was reaching JS (and window.location.href) as the
+        // literal 5-character text, corrupting the delete/history URL's
+        // real query-string separators. Confirmed real bug, not just an
+        // escaping-consistency cleanup.
+        $u_download = 'action.php?id=' . $image_id . '&part=e&pwg_token=' . $this->csrfService->getToken();
+        $u_sync = $admin_url_start . '&sync_metadata=1&pwg_token=' . $this->csrfService->getToken();
+        $u_delete = $admin_url_start . '&delete=1&pwg_token=' . $this->csrfService->getToken();
+        $u_history = $this->urlService->getRootUrl() . 'admin.php?page=history&filter_image_id=' . $image_id;
         $u_activity = $this->urlService->getRootUrl() . 'admin.php?page=user_activity&photo=' . $image_id;
         $path = is_string($row['path']) ? $row['path'] : '';
         $tn_src = DerivativeImage::url(ImageStdParams::MEDIUM, $src_image);

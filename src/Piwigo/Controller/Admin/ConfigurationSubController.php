@@ -570,14 +570,17 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // "General/Photo sizes/Watermark/Display/Comments/Search" tab strip
         // hrefs as admin.php?page=configuration&section=X instead of bare
         // relative paths.
-        $this->coreTabs->setContext(new CoreTabsContext(confLink: $this->urlService->getRootUrl() . 'admin.php?page=configuration&amp;section='));
+        $this->coreTabs->setContext(new CoreTabsContext(confLink: $this->urlService->getRootUrl() . 'admin.php?page=configuration&section='));
         $tabsheet = new Tabsheet();
         $tabsheet->setId('configuration');
         $tabsheet->select($page_section, $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate, $this->renderer);
 
+        // Plain '&', not '&amp;': $action reaches every configuration_*.latte
+        // as a bare {$fAction|noescape} print (P59 Batch 5 -- same idiom the
+        // 5 named UrlService/PaginationService builders already fixed).
         $action = $this->urlService->getRootUrl() . 'admin.php?page=configuration';
-        $action .= '&amp;section=' . $page_section;
+        $action .= '&section=' . $page_section;
 
         $u_help = $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=configuration';
         $pwg_token = $this->csrfService

@@ -128,9 +128,11 @@ final readonly class UserPermPageRenderer
                     ->getUsername(UserId::from($user_id))->value ?? ''
             ),
             categoriesBecauseOfGroups: $categories_because_of_groups,
+            // Plain '&', not '&amp;': formAction reaches user_perm.latte as
+            // a bare {$formAction|noescape} print (P59 Batch 5).
             formAction: $this->urlService->getRootUrl() .
                 'admin.php?page=user_perm' .
-                '&amp;user_id=' . $user_id,
+                '&user_id=' . $user_id,
             pwgToken: $this->csrfService
                 ->getToken(),
             doubleSelect: $doubleSelect,

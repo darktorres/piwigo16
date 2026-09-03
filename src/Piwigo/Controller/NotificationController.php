@@ -92,7 +92,10 @@ final readonly class NotificationController implements ControllerInterface
             $feed_url .= '?feed=' . $feedId;
         } else {
             $feed_url .= '?feed=' . $feedId;
-            $feed_image_only_url = $feed_url . '&amp;image_only';
+            // Plain '&', not '&amp;': feedImageOnlyUrl reaches
+            // notification.latte as a bare {$feedImageOnlyUrl|noescape}
+            // print (P59 Batch 5).
+            $feed_image_only_url = $feed_url . '&image_only';
         }
 
         $title = $this->lang->t('Notification');

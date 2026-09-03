@@ -84,7 +84,7 @@ final readonly class TagsPageRenderer
                 count($orphan_tag_names),
                 '<a
       class="icon-eye"
-      data-url="' . $this->urlService->getRootUrl() . 'admin.php?page=tags&amp;action=delete_orphans&amp;pwg_token=' . $this->csrfService->getToken() . '">'
+      data-url="' . $this->urlService->getRootUrl() . 'admin.php?page=tags&action=delete_orphans&pwg_token=' . $this->csrfService->getToken() . '">'
                 . $this->lang->t('Review') . '</a>'
             );
 

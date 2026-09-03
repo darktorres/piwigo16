@@ -137,8 +137,10 @@ final readonly class GroupPermPageRenderer
                 TypedRepository::narrow($this->entityManager->getRepository(GroupEntity::class), GroupRepository::class)
                     ->findName($groupId) ?? false
             ),
+            // Plain '&', not '&amp;': formAction reaches group_perm.latte as
+            // a bare {$formAction|noescape} print (P59 Batch 5).
             formAction: $this->urlService->getRootUrl() .
-                'admin.php?page=group_perm&amp;group_id=' .
+                'admin.php?page=group_perm&group_id=' .
                 $groupId->value,
             pwgToken: $this->csrfService
                 ->getToken(),

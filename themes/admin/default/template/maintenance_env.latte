@@ -5,7 +5,7 @@
     ></span> {='Environment'|translate}</legend>
   <ul class="bold-list">
     <li><a href="{$phpwgUrl}" class="externalLink">Piwigo</a> {$pwgVersion} <a
-        href="{$checkUpgradeUrl|noescape}&tab=env"
+        href="{$checkUpgradeUrl}&tab=env"
         class="icon-arrows-cw"
       >{='Check for upgrade'|translate}</a></li>
     <li
@@ -16,7 +16,7 @@
       n:if="$containerInfo !== 'none'"
     >{='Container info'|translate}: {$containerInfo}</li>
     <li>PHP: {$phpVersion} (<a
-        href="{$phpinfoUrl|noescape}"
+        href="{$phpinfoUrl}"
         class="externalLink"
       >{='Show info'|translate}</a>) [{$phpCurrentTimestamp}]</li>
     <li>{$dbEngine}: {$dbVersion} [{$dbCurrentDate}]</li>

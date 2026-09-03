@@ -325,7 +325,7 @@ final readonly class AdminShell
         $nb_photos_in_caddie = count(TypedRepository::narrow($this->entityManager->getRepository(CaddieEntity::class), CaddieRepository::class)->findElementIdsForUser($user_id));
 
         if ($nb_photos_in_caddie > 0) {
-            $u_caddie = $link_start . 'batch_manager&amp;filter=prefilter-caddie';
+            $u_caddie = $link_start . 'batch_manager&filter=prefilter-caddie';
         } else {
             $nb_photos_in_caddie = 0;
             $u_caddie = '';
@@ -353,7 +353,7 @@ final readonly class AdminShell
         $this->pageState->setNbPhotosTotal($nb_photos_total);
         $this->pageState->setNbOrphans($nb_orphans);
 
-        $u_orphans = $link_start . 'batch_manager&amp;filter=prefilter-no_album';
+        $u_orphans = $link_start . 'batch_manager&filter=prefilter-no_album';
 
         // Only for pages witch change permissions
         if (
@@ -451,7 +451,7 @@ final readonly class AdminShell
                 ->username?->value,
             enableSynchronization: $this->currentConfig->enableSynchronization,
             uSiteManager: $link_start . 'site_manager',
-            uHistoryStat: $link_start . 'stats&amp;year=' . Env::now()->format('Y') . '&amp;month=' . Env::now()->format('n'),
+            uHistoryStat: $link_start . 'stats&year=' . Env::now()->format('Y') . '&month=' . Env::now()->format('n'),
             uFaq: $link_start . 'help',
             uMaintenance: $link_start . 'maintenance',
             uNotificationByMail: $link_start . 'notification_by_mail',
@@ -463,9 +463,9 @@ final readonly class AdminShell
             uCategories: $link_start . 'cat_list',
             uAlbums: $link_start . 'albums',
             uCatOptions: $link_start . 'cat_options',
-            uCatUpdate: $link_start . 'site_update&amp;site=1',
+            uCatUpdate: $link_start . 'site_update&site=1',
             uRating: $link_start . 'rating',
-            uRecentSet: $link_start . 'batch_manager&amp;filter=prefilter-last_import',
+            uRecentSet: $link_start . 'batch_manager&filter=prefilter-last_import',
             uBatch: $link_start . 'batch_manager',
             uTags: $link_start . 'tags',
             uUsers: $link_start . 'user_list',
@@ -511,7 +511,7 @@ final readonly class AdminShell
             activeMenu: AdminUiHelper::getActiveMenu($page_slug),
             hasHelp: $template->getTemplateVars('U_HELP') !== null,
             enableSynchronization: $this->currentConfig->enableSynchronization,
-            uHistoryStat: $link_start . 'stats&amp;year=' . Env::now()->format('Y') . '&amp;month=' . Env::now()->format('n'),
+            uHistoryStat: $link_start . 'stats&year=' . Env::now()->format('Y') . '&month=' . Env::now()->format('n'),
             uMaintenance: $link_start . 'maintenance',
             uNotificationByMail: $link_start . 'notification_by_mail',
             uConfigGeneral: $link_start . 'configuration',
@@ -520,9 +520,9 @@ final readonly class AdminShell
             uConfigThemes: $link_start . 'themes',
             uAlbums: $link_start . 'albums',
             uCatOptions: $link_start . 'cat_options',
-            uCatUpdate: $link_start . 'site_update&amp;site=1',
+            uCatUpdate: $link_start . 'site_update&site=1',
             uRating: $link_start . 'rating',
-            uRecentSet: $link_start . 'batch_manager&amp;filter=prefilter-last_import',
+            uRecentSet: $link_start . 'batch_manager&filter=prefilter-last_import',
             uBatch: $link_start . 'batch_manager',
             uTags: $link_start . 'tags',
             uUsers: $link_start . 'user_list',

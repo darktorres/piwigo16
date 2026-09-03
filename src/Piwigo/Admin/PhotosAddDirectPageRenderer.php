@@ -353,7 +353,10 @@ final readonly class PhotosAddDirectPageRenderer
                 );
             }
 
-            $hide_warnings_link = self::baseUrl($this->urlService) . '&amp;hide_warnings=1';
+            // Plain '&', not '&amp;': hideWarningsLink reaches
+            // photos_add_direct.latte as a bare {$hideWarningsLink|noescape}
+            // print (P59 Batch 5).
+            $hide_warnings_link = self::baseUrl($this->urlService) . '&hide_warnings=1';
         }
 
         return [

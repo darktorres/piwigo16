@@ -94,7 +94,12 @@ final readonly class MaintenanceEnvPageRenderer
         new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->layoutState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->categoryService, $this->tagService, $this->htmlRenderer, $this->lang, $this->currentConfig, $this->inputValidator, $this->paths, $this->entityManager, $this->persistentCache)
             ->dispatch($action);
 
-        $url_format = $this->urlService->getRootUrl() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . $this->csrfService->getToken();
+        // Plain '&', not '&amp;': both real consumers (checkUpgradeUrl/
+        // phpinfoUrl) are bare template prints, where Latte's own
+        // auto-escape does the entity-encoding once, at print time
+        // (P59 Batch 5 -- the same ad-hoc-literal-'&amp;' idiom the 5
+        // named UrlService/PaginationService builders already fixed).
+        $url_format = $this->urlService->getRootUrl() . 'admin.php?page=maintenance&action=%s&pwg_token=' . $this->csrfService->getToken();
 
         $dbInfo = new DbInfo(DbConnection::build());
         // Env::now(), not date(): this is PHP's own clock as the page

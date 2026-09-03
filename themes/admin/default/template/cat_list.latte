@@ -47,7 +47,7 @@
       <span class="icon-plus-circled icon-blue icon-blue-full"></span>
       <p>{='Add Album'|translate}</p>
     </div>
-    <form action="{$formAction|noescape}" method="post">
+    <form action="{$formAction}" method="post">
       <input type="hidden" name="pwg_token" value="{$csrfToken}">
       <label for="virtual_name">{='Album name'|translate}</label>
       <input
@@ -96,7 +96,7 @@
             title="{='Edit'|translate}"
           ></span><span class="iconLegend">{='Edit'|translate}</span></a>
         <a
-          href="{$category->uChildren|noescape}"
+          href="{$category->uChildren}"
           class="actionTitle"
           {*title="{'sub-albums'|@translate}"*}
         ><span
@@ -139,7 +139,7 @@
             >{='Visit Gallery'|translate}</span></span>
         {/if}
         <a
-          href="{$category->uAddPhotosAlbum|noescape}"
+          href="{$category->uAddPhotosAlbum}"
           class="actionAdd"
           {*title="{'Add Photos'|@translate}"*}
         ><span

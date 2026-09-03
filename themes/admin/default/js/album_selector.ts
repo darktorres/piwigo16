@@ -35,7 +35,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { ajax } from "../../../default/js/vendor/ajax";
+import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
 import type { operations } from "../../../../openapi/client/schema";
 import {
   addClass,
@@ -420,7 +420,7 @@ export class AlbumSelector {
       } else {
         hide(AlbumSelector.selectors.iconCancelInput);
       }
-      this.#perform_albums_search(searchValue);
+      void this.#perform_albums_search(searchValue);
     });
 
     // event in admin mode
@@ -587,7 +587,7 @@ export class AlbumSelector {
   }
 
   #reset_album_selector() {
-    this.#prefill_search();
+    void this.#prefill_search();
     this.#reset_search_input(false);
     // AlbumSelector.selectors.searchInput.val('');
     // // AlbumSelector.selectors.searchInput.trigger("input");
@@ -614,7 +614,7 @@ export class AlbumSelector {
     html(AlbumSelector.selectors.limitReached, str_no_search_in_progress);
     empty(AlbumSelector.selectors.searchResult);
     if (prefill) {
-      this.#prefill_search();
+      void this.#prefill_search();
     }
   }
 
@@ -664,7 +664,7 @@ export class AlbumSelector {
     );
     off(AlbumSelector.selectors.linkedAddNewAlbum, `click${instanceAb}`);
     on(AlbumSelector.selectors.linkedAddNewAlbum, `click${instanceAb}`, () => {
-      this.#add_new_album(cat === "root" ? cat : cat.id);
+      void this.#add_new_album(cat === "root" ? cat : cat.id);
     });
 
     off(AlbumSelector.selectors.linkedAlbumCancel, `click${instanceAb}`);
@@ -891,7 +891,7 @@ export class AlbumSelector {
     return this.#in_admin_mode ? { parentId: cat_id } : { catId: cat_id };
   }
 
-  #prefill_search() {
+  async #prefill_search() {
     show(q(".linkedAlbumPopInContainer .searching"));
     const api_params = {
       ...this.#catIdParam(0),
@@ -900,26 +900,26 @@ export class AlbumSelector {
       limit: this.#limitParam,
     };
 
-    void ajax<CategoryListOrAvailableResponse>({
-      url: this.#methodPwg,
-      type: "GET",
-      dataType: "json",
-      data: api_params,
-      success: (data) => {
-        this.#rememberLevelSeparator(data);
-        hide(q(".linkedAlbumPopInContainer .searching"));
-        const cats = data.categories;
-        const limit = data.limit!;
-        this.#prefill_results("root", cats, limit);
-      },
-      error: function (e) {
-        hide(q(".linkedAlbumPopInContainer .searching"));
-        console.error("error : ", e.responseText);
-      },
-    });
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+      const data = (await ajax({
+        url: this.#methodPwg,
+        type: "GET",
+        dataType: "json",
+        data: api_params,
+      })) as CategoryListOrAvailableResponse;
+
+      this.#rememberLevelSeparator(data);
+      hide(q(".linkedAlbumPopInContainer .searching"));
+      const cats = data.categories;
+      const limit = data.limit!;
+      this.#prefill_results("root", cats, limit);
+    } catch (e) {
+      hide(q(".linkedAlbumPopInContainer .searching"));
+      console.error("error : ", e instanceof AjaxError ? e.responseText : e);
+    }
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await -- the call site (`#loadSubCatEvent`) relies on this always returning a real Promise (`.then(...)`), even though the body never needs to `await` anything itself: `ajax()`'s own `error` callback already handles failures internally, nothing here re-throws.
   async #prefill_search_subcats(cat_id: string | number) {
     const api_params = {
       ...this.#catIdParam(cat_id),
@@ -927,24 +927,28 @@ export class AlbumSelector {
       limit: this.#limitParam,
     };
 
-    void ajax<CategoryListOrAvailableResponse>({
-      url: this.#methodPwg,
-      type: "GET",
-      dataType: "json",
-      data: api_params,
-      success: (data) => {
-        this.#rememberLevelSeparator(data);
-        const cats = data.categories.filter((c) => c.id !== Number(cat_id));
-        const limit = data.limit!;
-        this.#prefill_results(cat_id, cats, limit);
-      },
-      error: (e) => {
-        console.error("prefill search error :", e);
-      },
-    });
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+      const data = (await ajax({
+        url: this.#methodPwg,
+        type: "GET",
+        dataType: "json",
+        data: api_params,
+      })) as CategoryListOrAvailableResponse;
+
+      this.#rememberLevelSeparator(data);
+      const cats = data.categories.filter((c) => c.id !== Number(cat_id));
+      const limit = data.limit!;
+      this.#prefill_results(cat_id, cats, limit);
+    } catch (e) {
+      console.error(
+        "prefill search error :",
+        e instanceof AjaxError ? e.responseText : e,
+      );
+    }
   }
 
-  #perform_albums_search(searchText: string) {
+  async #perform_albums_search(searchText: string) {
     if (searchText === "") {
       this.#reset_search_input(true);
       return;
@@ -957,41 +961,42 @@ export class AlbumSelector {
     };
 
     show(AlbumSelector.selectors.iconSearchingSpin);
-    void ajax<CategoryListOrAvailableResponse>({
-      url: this.#methodPwg,
-      type: "GET",
-      dataType: "json",
-      data: api_params,
-      success: (data) => {
-        this.#rememberLevelSeparator(data);
-        hide(AlbumSelector.selectors.iconSearchingSpin);
-        const { categories } = data;
-        this.#fill_results(categories);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+      const data = (await ajax({
+        url: this.#methodPwg,
+        type: "GET",
+        dataType: "json",
+        data: api_params,
+      })) as CategoryListOrAvailableResponse;
 
-        if (data.limit && data.limit.remainingCats > 0) {
+      this.#rememberLevelSeparator(data);
+      hide(AlbumSelector.selectors.iconSearchingSpin);
+      const { categories } = data;
+      this.#fill_results(categories);
+
+      if (data.limit && data.limit.remainingCats > 0) {
+        html(
+          AlbumSelector.selectors.limitReached,
+          str_result_limit.replace("%d", String(categories.length)),
+        );
+      } else {
+        if (categories.length === 1) {
+          html(AlbumSelector.selectors.limitReached, str_album_found);
+        } else {
           html(
             AlbumSelector.selectors.limitReached,
-            str_result_limit.replace("%d", String(categories.length)),
+            str_albums_found.replace("%d", String(categories.length)),
           );
-        } else {
-          if (categories.length === 1) {
-            html(AlbumSelector.selectors.limitReached, str_album_found);
-          } else {
-            html(
-              AlbumSelector.selectors.limitReached,
-              str_albums_found.replace("%d", String(categories.length)),
-            );
-          }
         }
-      },
-      error: (e) => {
-        hide(AlbumSelector.selectors.iconSearchingSpin);
-        console.error(e.responseText);
-      },
-    });
+      }
+    } catch (e) {
+      hide(AlbumSelector.selectors.iconSearchingSpin);
+      console.error(e instanceof AjaxError ? e.responseText : e);
+    }
   }
 
-  #add_new_album(cat_id: string | number) {
+  async #add_new_album(cat_id: string | number) {
     if (this.#loading_add) return;
     this.#loading_add = true;
     const cat_name = val(AlbumSelector.selectors.linkedAlbumInput);
@@ -1007,42 +1012,39 @@ export class AlbumSelector {
       return;
     }
 
-    void ajax<
-      operations["categoryCreate"]["responses"][201]["content"]["application/json"]
-    >({
-      url: "api/v1/categories",
-      type: "POST",
-      contentType: "application/json",
-      headers: {
-        "X-CSRF-Token": pwg_token,
-      },
-      data: JSON.stringify(api_params),
-      dataType: "json",
-      success: (data) => {
-        this.#get_album_by_id(data.id);
-      },
-      error: () => {
-        AlbumSelector.#show_new_album_error(str_an_error_has_occured);
-      },
-    });
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+      const data = (await ajax({
+        url: "api/v1/categories",
+        type: "POST",
+        json: api_params,
+        headers: {
+          "X-CSRF-Token": pwg_token,
+        },
+        dataType: "json",
+      })) as operations["categoryCreate"]["responses"][201]["content"]["application/json"];
+
+      void this.#get_album_by_id(data.id);
+    } catch {
+      AlbumSelector.#show_new_album_error(str_an_error_has_occured);
+    }
   }
 
-  #get_album_by_id(cat_id: string | number) {
-    void ajax<
-      operations["categoryList"]["responses"][200]["content"]["application/json"]
-    >({
-      url: "api/v1/categories",
-      type: "GET",
-      dataType: "json",
-      data: {
-        parentId: cat_id,
-      },
-      success: (data) => {
-        this.#select_new_album_and_close(data.categories[0]!);
-      },
-      error: () => {
-        AlbumSelector.#show_new_album_error(str_an_error_has_occured);
-      },
-    });
+  async #get_album_by_id(cat_id: string | number) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+      const data = (await ajax({
+        url: "api/v1/categories",
+        type: "GET",
+        dataType: "json",
+        data: {
+          parentId: cat_id,
+        },
+      })) as operations["categoryList"]["responses"][200]["content"]["application/json"];
+
+      this.#select_new_album_and_close(data.categories[0]!);
+    } catch {
+      AlbumSelector.#show_new_album_error(str_an_error_has_occured);
+    }
   }
 }

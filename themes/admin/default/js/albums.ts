@@ -20,8 +20,9 @@ import {
   append,
   attr,
   attrOf,
-  data,
+  dataId,
   delegate,
+  escapeId,
   fadeIn,
   fadeOut,
   find,
@@ -87,8 +88,10 @@ interface AlbumNodeData extends Record<string, unknown> {
 }
 type AlbumJqTreeNode = JqTreeNode<AlbumNodeData>;
 
-// Named `albumData` internally, not `data` -- avoids shadowing dom.ts's
-// own imported `data()` helper throughout this file. Re-exported as
+// Named `albumData` internally, not `data` -- this file no longer
+// imports dom.ts's own `data()` helper (P51-D: every call site
+// switched to `dataId()`), but kept off that name anyway to avoid
+// re-shadowing it if a future edit needs it back. Re-exported as
 // `data` below (its real, external name; cat_search.ts imports it as
 // such, docs/PLAN.md P48) to keep that contract unchanged.
 const albumData = pwg_getPageData<AlbumTreeNode[]>("album_data");
@@ -210,8 +213,7 @@ function rebindMoveCatActions(): void {
     "click",
     function (this: Element, e: Event) {
       e.preventDefault();
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      const aid = data(this, "aid") as string | number;
+      const aid = dataId(this, "aid");
       openAddAlbumPopIn(aid);
       setData(document.querySelector(".AddAlbumSubmit")!, "a-parent", aid);
     },
@@ -221,10 +223,7 @@ function rebindMoveCatActions(): void {
     document.querySelectorAll(".move-cat-delete"),
     "click",
     function (this: Element) {
-      void triggerDeleteAlbum(
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-        data(this, "id") as string | number,
-      );
+      void triggerDeleteAlbum(dataId(this, "id"));
     },
   );
   off(document.querySelectorAll(".move-cat-title-container"), "click");
@@ -238,7 +237,7 @@ function rebindMoveCatActions(): void {
       setData(
         document.querySelector(".RenameAlbumSubmit")!,
         "cat_id",
-        attrOf(this, "data-id")!,
+        Number(attrOf(this, "data-id")),
       );
     },
   );
@@ -441,7 +440,9 @@ ready(() => {
       getAlbumTree().openNode(nodeToGo, false);
     }
 
-    const target = document.querySelector<HTMLElement>("#cat-" + openCat)!;
+    const target = document.querySelector<HTMLElement>(
+      "#" + escapeId("cat-" + openCat),
+    )!;
     animateScrollTop(
       offset(target).top - windowHeight() / 2 + outerHeight(target) / 2,
       500,
@@ -461,7 +462,7 @@ ready(() => {
       setData(
         document.querySelector(".RenameAlbumSubmit")!,
         "cat_id",
-        attrOf(this, "data-id")!,
+        Number(attrOf(this, "data-id")),
       );
     },
   );
@@ -476,8 +477,7 @@ ready(() => {
     document.querySelectorAll(".RenameAlbumSubmit"),
     "click",
     function (this: Element) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      const catToEdit = data(this, "cat_id") as string | number;
+      const catToEdit = dataId(this, "cat_id");
       void (async () => {
         try {
           await ajax({
@@ -494,7 +494,9 @@ ready(() => {
 
           const node_id = attrOf(
             find(
-              document.querySelectorAll("#cat-" + String(catToEdit)),
+              document.querySelectorAll(
+                "#" + escapeId("cat-" + String(catToEdit)),
+              ),
               ".move-cat-toogler",
             ),
             "data-id",
@@ -531,8 +533,7 @@ ready(() => {
     ".move-cat-add",
     function (this: Element, e: Event) {
       e.preventDefault();
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      const aid = data(this, "aid") as string | number;
+      const aid = dataId(this, "aid");
       openAddAlbumPopIn(aid);
       setData(document.querySelector(".AddAlbumSubmit")!, "a-parent", aid);
     },
@@ -556,11 +557,10 @@ ready(() => {
       const newAlbumName = val(
         document.querySelectorAll(".AddAlbumLabelUsername input"),
       );
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      const newAlbumParent = data(
+      const newAlbumParent = dataId(
         document.querySelector(".AddAlbumSubmit")!,
         "a-parent",
-      ) as string | number;
+      );
       const newAlbumPosition = val(
         document.querySelectorAll("input[name=position]:checked"),
       );
@@ -573,7 +573,7 @@ ready(() => {
             type: "POST",
             json: {
               name: newAlbumName,
-              parentId: Number(newAlbumParent),
+              parentId: newAlbumParent,
               position: newAlbumPosition,
             },
             headers: { "X-CSRF-Token": pwg_token },
@@ -618,7 +618,9 @@ ready(() => {
             setSubcatsBadge(parent_node);
 
             delegate(
-              document.querySelectorAll("#cat-" + String(parent_node.id)),
+              document.querySelectorAll(
+                "#" + escapeId("cat-" + String(parent_node.id)),
+              ),
               "click",
               ".move-cat-toogler",
               function (this: Element) {
@@ -647,7 +649,11 @@ ready(() => {
             getAlbumTree().getNodeById(response.id)!,
           );
           animateScrollTop(
-            offset(document.querySelector("#cat-" + String(response.id))!).top -
+            offset(
+              document.querySelector(
+                "#" + escapeId("cat-" + String(response.id)),
+              )!,
+            ).top -
               screen.height / 2,
             "slow",
           );
@@ -678,10 +684,7 @@ ready(() => {
     document.querySelectorAll(".move-cat-delete"),
     "click",
     function (this: Element) {
-      void triggerDeleteAlbum(
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-        data(this, "id") as string | number,
-      );
+      void triggerDeleteAlbum(dataId(this, "id"));
     },
   );
 
@@ -906,7 +909,7 @@ function checkbox_click(this: Element) {
 // Genuinely dead code -- zero real callers found (confirmed via grep)
 // -- typed rather than left broken, same policy as other confirmed-dead
 // functions found this campaign.
-function openAddAlbumPopIn(parentAlbumId: string | number) {
+function openAddAlbumPopIn(parentAlbumId: number) {
   if (parentAlbumId !== 0) {
     html(
       document.querySelectorAll("#AddAlbum .AddIconTitle span"),
@@ -986,7 +989,7 @@ function closeRenameAlbumPopIn() {
   fadeOut(document.querySelectorAll("#RenameAlbum"));
 }
 
-async function triggerDeleteAlbum(cat_id: string | number): Promise<void> {
+async function triggerDeleteAlbum(cat_id: number): Promise<void> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const response = (await ajax({
@@ -1038,7 +1041,7 @@ async function triggerDeleteAlbum(cat_id: string | number): Promise<void> {
   }
 }
 
-function openDeleteAlbumPopIn(cat_to_delete: string | number) {
+function openDeleteAlbumPopIn(cat_to_delete: number) {
   fadeIn(document.querySelectorAll("#DeleteAlbum"));
   const node = getAlbumTree().getNodeById(cat_to_delete)!;
   if (node.children.length === 0) {
@@ -1112,7 +1115,7 @@ function getAllSubAlbumsFromNode(node: AlbumJqTreeNode): number {
 function setSubcatsBadge(node: AlbumJqTreeNode) {
   if (node.children.length !== 0) {
     const nbSubcats = find(
-      document.querySelectorAll("#cat-" + String(node.id)),
+      document.querySelectorAll("#" + escapeId("cat-" + String(node.id))),
       ".nb-subcats",
     );
     text(nbSubcats, String(node.children.length));
@@ -1120,7 +1123,7 @@ function setSubcatsBadge(node: AlbumJqTreeNode) {
     text(
       find(
         find(
-          document.querySelectorAll("#cat-" + String(node.id)),
+          document.querySelectorAll("#" + escapeId("cat-" + String(node.id))),
           ".badge-dropdown",
         ),
         ".nb-subcats",
@@ -1129,7 +1132,10 @@ function setSubcatsBadge(node: AlbumJqTreeNode) {
     );
   } else {
     hide(
-      find(document.querySelectorAll("#cat-" + String(node.id)), ".nb-subcats"),
+      find(
+        document.querySelectorAll("#" + escapeId("cat-" + String(node.id))),
+        ".nb-subcats",
+      ),
       100,
     );
   }
@@ -1147,16 +1153,22 @@ function goToNode(node: AlbumJqTreeNode, firstNode: AlbumJqTreeNode) {
     if (node !== firstNode) {
       getAlbumTree().openNode(node);
       // console.log("parent id : " + node.parent.id);
-      show(document.querySelectorAll("#cat-" + String(node.parent.id)));
+      show(
+        document.querySelectorAll(
+          "#" + escapeId("cat-" + String(node.parent.id)),
+        ),
+      );
       addClass(
-        document.querySelectorAll("#cat-" + String(node.parent.id)),
+        document.querySelectorAll(
+          "#" + escapeId("cat-" + String(node.parent.id)),
+        ),
         "imune",
       );
     }
   } else {
     getAlbumTree().openNode(node);
     addClass(
-      document.querySelectorAll("#cat-" + String(firstNode.id)),
+      document.querySelectorAll("#" + escapeId("cat-" + String(firstNode.id))),
       "animateFocus",
     );
 
@@ -1169,7 +1181,10 @@ function showNodeChildrens(node: AlbumJqTreeNode) {
     // console.log("childrens : " + node.children);
     node.children.forEach((child) => {
       // console.log("children : " + child.id, child.name);
-      addClass(document.querySelectorAll("#cat-" + String(child.id)), "imune");
+      addClass(
+        document.querySelectorAll("#" + escapeId("cat-" + String(child.id))),
+        "imune",
+      );
       showNodeChildrens(child);
     });
   }

@@ -4221,7 +4221,7 @@ ready(function () {
 
     if (action === "delete") {
       request = Promise.all(
-        userIds.map((id) =>
+        userIds.map(async (id) =>
           ajax({
             url: "api/v1/users/" + String(id),
             method: "DELETE",
@@ -4247,7 +4247,7 @@ ready(function () {
         ? Number(actionData[action])
         : actionData[action];
       request = Promise.all(
-        userIds.map((id) =>
+        userIds.map(async (id) =>
           ajax({
             url: "api/v1/users/" + String(id),
             method: "PATCH",

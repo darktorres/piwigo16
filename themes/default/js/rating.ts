@@ -1,4 +1,4 @@
-import { ajax } from "./vendor/ajax";
+import { ajax, AjaxError } from "./vendor/ajax";
 
 // Real consumer of scripts.ts's own top-level `pwgAddEventListener`
 // (docs/PLAN.md P48 -- was a bare ambient-global read, see that file's
@@ -110,27 +110,26 @@ function handleRatingMouseover(e: Event): void {
   updateRatingStarDisplay(target.initialRateValue);
 }
 
-function updateRating(e: Event) {
+function updateRating(e: Event): void {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- pwgAddEventListener() only ever binds this handler to a real gRatingButtons entry, always a real RatingButton at runtime.
   const rateButton = e.target as RatingButton;
-  if (rateButton.initialRateValue === gUserRating) return false; //nothing to do
+  if (rateButton.initialRateValue === gUserRating) return; //nothing to do
 
   for (const button of gRatingButtons) button.disabled = true;
-  void ajax<PwgRatingResult>({
-    url:
-      gRatingOptions.rootUrl +
-      "api/v1/images/" +
-      String(gRatingOptions.image_id) +
-      "/rating",
-    method: "PUT",
-    contentType: "application/json",
-    data: JSON.stringify({ rate: rateButton.initialRateValue }),
-    error: function (xhr) {
-      alert(String(xhr.status) + " " + xhr.statusText);
-      document.location.href =
-        rateButton.form!.action + "&rate=" + rateButton.initialRateValue;
-    },
-    success: function (result) {
+
+  void (async () => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+      const result = (await ajax({
+        url:
+          gRatingOptions.rootUrl +
+          "api/v1/images/" +
+          String(gRatingOptions.image_id) +
+          "/rating",
+        method: "PUT",
+        json: { rate: rateButton.initialRateValue },
+      })) as PwgRatingResult;
+
       gUserRating = rateButton.initialRateValue;
       for (const button of gRatingButtons) button.disabled = false;
       if (gRatingOptions.onSuccess) gRatingOptions.onSuccess(result);
@@ -145,9 +144,16 @@ function updateRating(e: Event) {
         while (idx < args.length) t = t.replace(rexp, String(args[idx++]));
         gRatingOptions.ratingSummaryElement.innerHTML = t;
       }
-    },
-  });
-  return false;
+    } catch (e2) {
+      alert(
+        e2 instanceof AjaxError
+          ? String(e2.status) + " " + e2.statusText
+          : String(e2),
+      );
+      document.location.href =
+        rateButton.form!.action + "&rate=" + rateButton.initialRateValue;
+    }
+  })();
 }
 
 (function () {

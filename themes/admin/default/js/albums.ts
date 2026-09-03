@@ -5,7 +5,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { ajax } from "../../../default/js/vendor/ajax";
+import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
 import { confirm } from "../../../default/js/vendor/jconfirm";
 import {
   getTreeInstance,
@@ -221,8 +221,10 @@ function rebindMoveCatActions(): void {
     document.querySelectorAll(".move-cat-delete"),
     "click",
     function (this: Element) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      triggerDeleteAlbum(data(this, "id") as string | number);
+      void triggerDeleteAlbum(
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
+        data(this, "id") as string | number,
+      );
     },
   );
   off(document.querySelectorAll(".move-cat-title-container"), "click");
@@ -476,20 +478,20 @@ ready(() => {
     function (this: Element) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       const catToEdit = data(this, "cat_id") as string | number;
-      void ajax({
-        url: "api/v1/categories/" + String(catToEdit),
-        type: "PATCH",
-        contentType: "application/json",
-        headers: { "X-CSRF-Token": pwg_token },
-        data: JSON.stringify({
-          name: val(
-            document.querySelectorAll(".RenameAlbumLabelUsername input"),
-          ),
-        }),
-        dataType: "json",
-        success: function (
-          _data: operations["categoryUpdate"]["responses"][200]["content"]["application/json"],
-        ) {
+      void (async () => {
+        try {
+          await ajax({
+            url: "api/v1/categories/" + String(catToEdit),
+            type: "PATCH",
+            json: {
+              name: val(
+                document.querySelectorAll(".RenameAlbumLabelUsername input"),
+              ),
+            },
+            headers: { "X-CSRF-Token": pwg_token },
+            dataType: "json",
+          });
+
           const node_id = attrOf(
             find(
               document.querySelectorAll("#cat-" + String(catToEdit)),
@@ -509,11 +511,10 @@ ready(() => {
           rebindMoveCatActions();
 
           closeRenameAlbumPopIn();
-        },
-        error: function (message) {
-          console.error(message);
-        },
-      });
+        } catch (e) {
+          console.error(e instanceof AjaxError ? e.responseText : e);
+        }
+      })();
     },
   );
 
@@ -564,20 +565,21 @@ ready(() => {
         document.querySelectorAll("input[name=position]:checked"),
       );
 
-      void ajax({
-        url: "api/v1/categories",
-        type: "POST",
-        contentType: "application/json",
-        headers: { "X-CSRF-Token": pwg_token },
-        data: JSON.stringify({
-          name: newAlbumName,
-          parentId: Number(newAlbumParent),
-          position: newAlbumPosition,
-        }),
-        dataType: "json",
-        success: function (
-          response: operations["categoryCreate"]["responses"][201]["content"]["application/json"],
-        ) {
+      void (async () => {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+          const response = (await ajax({
+            url: "api/v1/categories",
+            type: "POST",
+            json: {
+              name: newAlbumName,
+              parentId: Number(newAlbumParent),
+              position: newAlbumPosition,
+            },
+            headers: { "X-CSRF-Token": pwg_token },
+            dataType: "json",
+          })) as operations["categoryCreate"]["responses"][201]["content"]["application/json"];
+
           const parent_node = getAlbumTree().getNodeById(newAlbumParent);
           if (
             parent_node &&
@@ -655,9 +657,8 @@ ready(() => {
             document.querySelectorAll(".AddAlbumSubmit"),
             "notClickable",
           );
-        },
-        error: function (message) {
-          console.error(message);
+        } catch (e) {
+          console.error(e instanceof AjaxError ? e.responseText : e);
           text(
             document.querySelectorAll(".AddAlbumErrors"),
             str_album_name_empty,
@@ -667,8 +668,8 @@ ready(() => {
             document.querySelectorAll(".AddAlbumSubmit"),
             "notClickable",
           );
-        },
-      });
+        }
+      })();
     },
   );
 
@@ -677,8 +678,10 @@ ready(() => {
     document.querySelectorAll(".move-cat-delete"),
     "click",
     function (this: Element) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      triggerDeleteAlbum(data(this, "id") as string | number);
+      void triggerDeleteAlbum(
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
+        data(this, "id") as string | number,
+      );
     },
   );
 
@@ -983,57 +986,56 @@ function closeRenameAlbumPopIn() {
   fadeOut(document.querySelectorAll("#RenameAlbum"));
 }
 
-function triggerDeleteAlbum(cat_id: string | number) {
-  void ajax({
-    url: "api/v1/categories/" + String(cat_id) + "/orphan-impact",
-    type: "GET",
-    dataType: "json",
-    success: function (
-      response: operations["categoryOrphanImpact"]["responses"][200]["content"]["application/json"],
-    ) {
-      if (response.nbImagesRecursive === 0) {
-        hide(document.querySelectorAll(".deleteAlbumOptions"));
+async function triggerDeleteAlbum(cat_id: string | number): Promise<void> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    const response = (await ajax({
+      url: "api/v1/categories/" + String(cat_id) + "/orphan-impact",
+      type: "GET",
+      dataType: "json",
+    })) as operations["categoryOrphanImpact"]["responses"][200]["content"]["application/json"];
+
+    if (response.nbImagesRecursive === 0) {
+      hide(document.querySelectorAll(".deleteAlbumOptions"));
+    } else {
+      show(document.querySelectorAll(".deleteAlbumOptions"));
+      if (response.nbImagesAssociatedOutside === 0) {
+        hide(document.querySelectorAll("#IMAGES_ASSOCIATED_OUTSIDE"));
       } else {
-        show(document.querySelectorAll(".deleteAlbumOptions"));
-        if (response.nbImagesAssociatedOutside === 0) {
-          hide(document.querySelectorAll("#IMAGES_ASSOCIATED_OUTSIDE"));
-        } else {
-          html(
-            document.querySelectorAll("#IMAGES_ASSOCIATED_OUTSIDE .innerText"),
-            "",
-          );
-          append(
-            document.querySelectorAll(
-              "#IMAGES_ASSOCIATED_OUTSIDE .innerText",
-            )[0]!,
-            has_images_associated_outside
-              .replace("%d", String(response.nbImagesRecursive))
-              .replace("%d", String(response.nbImagesAssociatedOutside)),
-          );
-        }
-        if (response.nbImagesBecomingOrphan === 0) {
-          hide(document.querySelectorAll("#IMAGES_BECOMING_ORPHAN"));
-        } else {
-          html(
-            document.querySelectorAll("#IMAGES_BECOMING_ORPHAN .innerText"),
-            "",
-          );
-          append(
-            document.querySelectorAll("#IMAGES_BECOMING_ORPHAN .innerText")[0]!,
-            has_images_becomming_orphans.replace(
-              "%d",
-              String(response.nbImagesBecomingOrphan),
-            ),
-          );
-        }
+        html(
+          document.querySelectorAll("#IMAGES_ASSOCIATED_OUTSIDE .innerText"),
+          "",
+        );
+        append(
+          document.querySelectorAll(
+            "#IMAGES_ASSOCIATED_OUTSIDE .innerText",
+          )[0]!,
+          has_images_associated_outside
+            .replace("%d", String(response.nbImagesRecursive))
+            .replace("%d", String(response.nbImagesAssociatedOutside)),
+        );
       }
-    },
-    error: function (message) {
-      console.error(message);
-    },
-  }).done(function () {
+      if (response.nbImagesBecomingOrphan === 0) {
+        hide(document.querySelectorAll("#IMAGES_BECOMING_ORPHAN"));
+      } else {
+        html(
+          document.querySelectorAll("#IMAGES_BECOMING_ORPHAN .innerText"),
+          "",
+        );
+        append(
+          document.querySelectorAll("#IMAGES_BECOMING_ORPHAN .innerText")[0]!,
+          has_images_becomming_orphans.replace(
+            "%d",
+            String(response.nbImagesBecomingOrphan),
+          ),
+        );
+      }
+    }
+
     openDeleteAlbumPopIn(cat_id);
-  });
+  } catch (e) {
+    console.error(e instanceof AjaxError ? e.responseText : e);
+  }
 }
 
 function openDeleteAlbumPopIn(cat_to_delete: string | number) {
@@ -1057,19 +1059,21 @@ function openDeleteAlbumPopIn(cat_to_delete: string | number) {
   const deleteSubmit = document.querySelectorAll(".DeleteAlbumSubmit");
   off(deleteSubmit, "click");
   on(deleteSubmit, "click", function () {
-    void ajax({
-      url: "api/v1/categories/" + String(cat_to_delete),
-      type: "DELETE",
-      contentType: "application/json",
-      headers: { "X-CSRF-Token": pwg_token },
-      data: JSON.stringify({
-        photoDeletionMode: val(
-          document.querySelectorAll("input[name=photo_deletion_mode]:checked"),
-        ),
-      }),
-      success: function (
-        _raw_data: operations["categoryDelete"]["responses"][200]["content"]["application/json"],
-      ) {
+    void (async () => {
+      try {
+        await ajax({
+          url: "api/v1/categories/" + String(cat_to_delete),
+          type: "DELETE",
+          json: {
+            photoDeletionMode: val(
+              document.querySelectorAll(
+                "input[name=photo_deletion_mode]:checked",
+              ),
+            ),
+          },
+          headers: { "X-CSRF-Token": pwg_token },
+        });
+
         // Non-null: same "always a real parent, never bare null in
         // practice" invariant as createAlbumNode()'s own copy of this
         // comment above.
@@ -1081,11 +1085,10 @@ function openDeleteAlbumPopIn(cat_to_delete: string | number) {
         updateTitleBadge(nb_albums - 1);
         setSubcatsBadge(parentOfDeletedNode);
         closeDeleteAlbumPopIn();
-      },
-      error: function (message) {
-        console.error(message);
-      },
-    });
+      } catch (e) {
+        console.error(e instanceof AjaxError ? e.responseText : e);
+      }
+    })();
   });
 }
 
@@ -1275,82 +1278,71 @@ async function moveNode(
   node: string | number,
   rank: number | null,
   parent: string | number | null,
-) {
-  return new Promise<void>((res, rej) => {
+): Promise<void> {
+  try {
     if (parent != null) {
-      changeParent(node, parent, rank)
-        .then(() => {
-          res();
-        })
-        .catch(() => {
-          rej(new Error("move failed"));
-        });
+      await changeParent(node, parent, rank);
     } else if (rank != null) {
-      changeRank(node, rank)
-        .then(() => {
-          res();
-        })
-        .catch(() => {
-          rej(new Error("move failed"));
-        });
+      await changeRank(node, rank);
     }
-  });
+  } catch (e) {
+    throw new Error("move failed", { cause: e });
+  }
 }
 
 async function changeParent(
   node: string | number,
   parent: string | number,
   rank: number | null,
-) {
-  return new Promise<void>((res, rej) => {
-    void ajax({
+): Promise<void> {
+  let response: operations["categoryMove"]["responses"][200]["content"]["application/json"];
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    response = (await ajax({
       url: "api/v1/categories/actions/move",
       type: "POST",
-      contentType: "application/json",
-      headers: { "X-CSRF-Token": pwg_token },
-      data: JSON.stringify({
+      json: {
         categoryIds: [Number(node)],
         parentId: Number(parent),
-      }),
+      },
+      headers: { "X-CSRF-Token": pwg_token },
       dataType: "json",
-      success: function (
-        response: operations["categoryMove"]["responses"][200]["content"]["application/json"],
-      ) {
-        void changeRank(node, rank);
-        response.updatedCategories.forEach((cat) => {
-          const catNode = getAlbumTree().getNodeById(cat.categoryId)!;
-          catNode.nb_sub_photos = cat.nbSubPhotos;
-          getAlbumTree().updateNode(catNode, catNode.name);
-        });
-        res();
-      },
-      error: function (message) {
-        rej(new Error(message.statusText || "move failed"));
-      },
+    })) as operations["categoryMove"]["responses"][200]["content"]["application/json"];
+  } catch (e) {
+    throw new Error((e instanceof AjaxError && e.statusText) || "move failed", {
+      cause: e,
     });
+  }
+
+  void changeRank(node, rank);
+  response.updatedCategories.forEach((cat) => {
+    const catNode = getAlbumTree().getNodeById(cat.categoryId)!;
+    catNode.nb_sub_photos = cat.nbSubPhotos;
+    getAlbumTree().updateNode(catNode, catNode.name);
   });
 }
 
-async function changeRank(node: string | number, rank: number | null) {
-  return new Promise<void>((res, rej) => {
-    void ajax({
+async function changeRank(
+  node: string | number,
+  rank: number | null,
+): Promise<void> {
+  try {
+    await ajax({
       url: "api/v1/categories/actions/reorder",
       type: "POST",
-      contentType: "application/json",
-      headers: { "X-CSRF-Token": pwg_token },
-      data: JSON.stringify({
+      json: {
         categoryIds: [Number(node)],
         rank: Number(rank),
-      }),
+      },
+      headers: { "X-CSRF-Token": pwg_token },
       dataType: "json",
-      success: function (_data: unknown) {
-        res();
-      },
-      error: function (message) {
-        rej(new Error(message.statusText || "rank change failed"));
-      },
     });
-  });
+  } catch (e) {
+    throw new Error(
+      (e instanceof AjaxError && e.statusText) || "rank change failed",
+      { cause: e },
+    );
+  }
 }
 
 function makePrivateHierarchy(node: AlbumJqTreeNode) {

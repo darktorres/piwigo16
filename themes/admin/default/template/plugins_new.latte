@@ -212,7 +212,7 @@
             ><i
                 class="icon-flow-branch"
               ></i>{='Version %s'|translate:$plugin->version}</div>
-            <a class="pluginLink" href="{$plugin->url|noescape}"><i
+            <a class="pluginLink" href="{$plugin->url}"><i
                 class="icon-link"
               ></i>{='Website'|translate}</a>
           </div>
@@ -220,7 +220,7 @@
           <div class="pluginInstall">
             <a
               class="buttonLike buttonInstall"
-              href="{$plugin->installUrl|noescape}"
+              href="{$plugin->installUrl}"
             ><i class="icon-plus-circled"></i>{='Add'|translate}</a>
           </div>
         </div>
@@ -245,7 +245,7 @@
   <p>{='There is no other plugin available.'|translate}
     <a
       n:if="isset($betaUrl)"
-      href="{$betaUrl|noescape}"
+      href="{$betaUrl}"
       class="buttonLike icon-fire"
     >{='Show beta test plugins'|translate}</a>
   </p>

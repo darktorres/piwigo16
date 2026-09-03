@@ -176,21 +176,33 @@ final readonly class LanguagesNewPageRenderer
 
                 [$date] = explode(' ', $revision_date);
 
-                $url_auto_install = htmlentities($base_url)
-                  . '&amp;revision=' . $revision_id
-                  . '&amp;pwg_token=' . $this->csrfService->getToken()
+                // $revision_id/$download_url are untyped remote-PEM-payload
+                // data (this loop's own comment above), reaching
+                // languages_new.latte as bare
+                // {$language->installUrl|noescape}/{$language->downloadUrl|noescape}
+                // prints with no escaping anywhere else in this method --
+                // htmlspecialchars() them explicitly here, the same fix as
+                // P59 Batch 0's json_encode findings (confirmed real XSS
+                // via a crafted PEM catalog response otherwise).
+                $url_auto_install = htmlspecialchars($base_url)
+                  . '&revision=' . htmlspecialchars($revision_id)
+                  . '&pwg_token=' . $this->csrfService->getToken()
                 ;
 
                 $tpl_languages[] = new CatalogLanguageRow(
                     name: self::text($language['extension_name'] ?? null),
                     description: self::text($language['extension_description'] ?? null),
-                    url: $pem_base_url . '/extension_view.php?eid=' . $extension_id,
+                    // $extension_id is untyped remote-PEM-payload data,
+                    // reaching languages_new.latte as a bare
+                    // {$language->url|noescape} print (P59 Batch 5, same
+                    // fix as installUrl above).
+                    url: $pem_base_url . '/extension_view.php?eid=' . htmlspecialchars($extension_id),
                     version: self::text($language['revision_name'] ?? null),
                     versionDescription: self::text($language['revision_description'] ?? null),
                     date: $date,
                     author: self::text($language['author_name'] ?? null),
                     installUrl: $url_auto_install,
-                    downloadUrl: $download_url . '&amp;origin=piwigo_download',
+                    downloadUrl: htmlspecialchars($download_url) . '&origin=piwigo_download',
                 );
             }
         } else {

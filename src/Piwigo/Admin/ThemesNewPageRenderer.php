@@ -165,10 +165,17 @@ final readonly class ThemesNewPageRenderer
                 $extension_id_raw = $theme['extension_id'] ?? null;
                 $extension_id = is_scalar($extension_id_raw) ? (string) $extension_id_raw : '';
 
-                $url_auto_install = htmlentities($base_url)
-                  . '&amp;revision=' . $revision_id
-                  . '&amp;extension=' . $extension_id
-                  . '&amp;pwg_token=' . $this->csrfService->getToken()
+                // $revision_id/$extension_id are untyped remote-PEM-payload
+                // data (this loop's own comment above), reaching
+                // themes_new.latte as a bare {$theme['install_url']|noescape}
+                // print with no escaping anywhere else in this method --
+                // htmlspecialchars() them explicitly here, the same fix as
+                // P59 Batch 0's json_encode findings (confirmed real
+                // XSS via a crafted PEM catalog response otherwise).
+                $url_auto_install = htmlspecialchars($base_url)
+                  . '&revision=' . htmlspecialchars($revision_id)
+                  . '&extension=' . htmlspecialchars($extension_id)
+                  . '&pwg_token=' . $this->csrfService->getToken()
                 ;
 
                 // 'screenshot_url' matches the real upstream PEM wire

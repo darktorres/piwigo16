@@ -128,16 +128,24 @@ final class UpdatesExtPageRenderer
                 // this field; the update API only accepts a string.
                 $revision_id_raw = $ext_info['revision_id'] ?? null;
 
+                // $extension_id/$download_url are untyped remote-PEM-payload
+                // data ($ext_info = $data['server'] above), reaching
+                // updates_ext.latte as bare {$extension->url|noescape}/
+                // {$extension->downloadUrl|noescape} prints with no
+                // escaping anywhere else in this method --
+                // htmlspecialchars() them explicitly here, the same fix as
+                // P59 Batch 0's json_encode findings (confirmed real XSS
+                // via a crafted PEM catalog response otherwise).
                 $type_updates[] = new ExtensionUpdateRow(
                     id: (string) $extension_id,
                     revisionId: is_scalar($revision_id_raw) ? (string) $revision_id_raw : '',
                     extId: $ext_id,
                     name: $fs_ext->name,
-                    url: $pem_base_url . '/extension_view.php?eid=' . $extension_id . '#changelog',
+                    url: $pem_base_url . '/extension_view.php?eid=' . htmlspecialchars((string) $extension_id) . '#changelog',
                     revisionDescription: trim($revision_description, " \n\r"),
                     currentVersion: $fs_version,
                     newVersion: $revision_name,
-                    downloadUrl: $download_url . '&amp;origin=piwigo_download',
+                    downloadUrl: htmlspecialchars($download_url) . '&origin=piwigo_download',
                     ignored: in_array($ext_id, $ignored_ids, true),
                 );
             }

@@ -16,22 +16,22 @@
         class="{if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}"
       >
         <td><a
-            href="{$language->url|noescape}"
+            href="{$language->url}"
             class="externalLink cluetip"
             title="{$language->name}|{$language->description|htmlspecialchars|nl2br|noescape}"
           >{$language->name}</a></td>
         <td class="centered-cell"><a
-            href="{$language->url|noescape}"
+            href="{$language->url}"
             class="externalLink cluetip"
             title="{$language->name}|{$language->versionDescription|htmlspecialchars|nl2br|noescape}"
           >{$language->version}</a></td>
         <td>{$language->date}</td>
         <td>{$language->author}</td>
         <td class="centered-cell"><a
-            href="{$language->installUrl|noescape}"
+            href="{$language->installUrl}"
           >{='Install'|translate}</a>
           / <a
-            href="{$language->downloadUrl|noescape}"
+            href="{$language->downloadUrl}"
           >{='Download'|translate}</a>
         </td>
       </tr>

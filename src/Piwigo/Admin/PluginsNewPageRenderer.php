@@ -110,7 +110,12 @@ final readonly class PluginsNewPageRenderer
                     // a JS action, no need to provide plugin_id in URL, just link to the page of installed
                     // plugins, filtered on deactivated plugins. The webmaster will have to find its newly
                     // installed plugin and click on the activation switch.
-                    $activate_url = $this->urlService->getRootUrl() . 'admin.php?page=plugins&amp;filter=deactivated';
+                    // Plain '&', not '&amp;': $activate_url is embedded
+                    // directly into this hand-built '<a href="...">' info
+                    // message string below (no auto-escape ever runs over
+                    // it), matching the target's own already-'&'-based
+                    // query string once printed (P59 Batch 5).
+                    $activate_url = $this->urlService->getRootUrl() . 'admin.php?page=plugins&filter=deactivated';
 
                     $this->pageState->addInfo($this->lang->t('Plugin has been successfully copied'));
                     $this->pageState->addInfo('<a href="' . $activate_url . '">' . $this->lang->t('Activate it now') . '</a>');
@@ -200,10 +205,17 @@ final readonly class PluginsNewPageRenderer
                 $extension_id_raw = $plugin['extension_id'] ?? null;
                 $extension_id = is_scalar($extension_id_raw) ? (string) $extension_id_raw : '';
 
-                $url_auto_install = htmlentities($base_url)
-                  . '&amp;revision=' . $revision_id
-                  . '&amp;extension=' . $extension_id
-                  . '&amp;pwg_token=' . $this->csrfService->getToken()
+                // $revision_id/$extension_id are untyped remote-PEM-payload
+                // data, reaching plugins_new.latte as a bare
+                // {$plugin->installUrl|noescape} print with no escaping
+                // anywhere else in this method -- htmlspecialchars() them
+                // explicitly here, the same fix as P59 Batch 0's
+                // json_encode findings (confirmed real XSS via a crafted
+                // PEM catalog response otherwise).
+                $url_auto_install = htmlspecialchars($base_url)
+                  . '&revision=' . htmlspecialchars($revision_id)
+                  . '&extension=' . htmlspecialchars($extension_id)
+                  . '&pwg_token=' . $this->csrfService->getToken()
                 ;
 
                 // get the age of the last revision in days
@@ -274,7 +286,11 @@ final readonly class PluginsNewPageRenderer
                 $tpl_plugins[] = new CatalogPluginRow(
                     id: (int) $extension_id,
                     name: self::text($plugin['extension_name'] ?? null),
-                    url: $pem_base_url . '/extension_view.php?eid=' . $extension_id,
+                    // $extension_id is untyped remote-PEM-payload data,
+                    // reaching plugins_new.latte as a bare
+                    // {$plugin->url|noescape} print (P59 Batch 5, same fix
+                    // as installUrl above).
+                    url: $pem_base_url . '/extension_view.php?eid=' . htmlspecialchars($extension_id),
                     description: $ext_desc,
                     version: self::text($plugin['revision_name'] ?? null),
                     revisionSort: preg_replace('/[^0-9]/', '', (string) strtotime($revision_date_str)) ?? '',
@@ -296,7 +312,9 @@ final readonly class PluginsNewPageRenderer
 
         $beta_url = null;
         if (! $beta_test and (bool) preg_match('/(beta|RC)/', AppInfo::VERSION)) {
-            $beta_url = $base_url . '&amp;beta-test=true';
+            // Plain '&', not '&amp;': betaUrl reaches plugins_new.latte as a
+            // bare {$betaUrl|noescape} print (P59 Batch 5).
+            $beta_url = $base_url . '&beta-test=true';
         }
 
         $adminContent = $this->renderer->render(new PluginsNewView(

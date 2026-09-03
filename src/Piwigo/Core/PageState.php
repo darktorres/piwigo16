@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Latte\Runtime\Html;
 use Piwigo\Core\Projection\ApiKeyExpirationNotice;
 
 /**
@@ -30,22 +31,31 @@ use Piwigo\Core\Projection\ApiKeyExpirationNotice;
 final class PageState
 {
     /**
-     * @var list<string>
+     * Almost every real element is a plain translated string -- a message
+     * is `Html` only at the handful of call sites that hand-build a real
+     * `<a>`/`<span>` fragment into the message itself (P59 Batch 6); every
+     * add*() method below accepts either and stores it as-is.
+     * Html\HtmlService::flushMessageList() is the single place a plain
+     * string finally becomes `Html` (htmlspecialchars()'d), once, right
+     * before the template prints it bare -- not here, so this array stays
+     * a faithful record of exactly what each caller passed.
+     *
+     * @var list<string|Html>
      */
     public array $errors = [];
 
     /**
-     * @var list<string>
+     * @var list<string|Html>
      */
     public array $warnings = [];
 
     /**
-     * @var list<string>
+     * @var list<string|Html>
      */
     public array $messages = [];
 
     /**
-     * @var list<string>
+     * @var list<string|Html>
      */
     public array $infos = [];
 
@@ -145,22 +155,22 @@ final class PageState
         $this->commentRejectionReasons = [];
     }
 
-    public function addError(string $message): void
+    public function addError(string|Html $message): void
     {
         $this->errors[] = $message;
     }
 
-    public function addWarning(string $message): void
+    public function addWarning(string|Html $message): void
     {
         $this->warnings[] = $message;
     }
 
-    public function addMessage(string $message): void
+    public function addMessage(string|Html $message): void
     {
         $this->messages[] = $message;
     }
 
-    public function addInfo(string $message): void
+    public function addInfo(string|Html $message): void
     {
         $this->infos[] = $message;
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Maintenance;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
@@ -262,7 +263,10 @@ final readonly class MaintenanceActionDispatcher
                         $this->pageState->addInfo($this->lang->t('A new version of Piwigo is available.'));
 
                         $update_url = $this->urlService->getRootUrl() . 'admin.php?page=updates';
-                        $this->pageState->addInfo('<a href="' . $update_url . '">' . $this->lang->t('Update to Piwigo %s', $versions['latest']) . '</a>');
+                        // $versions['latest'] came from AppInfo::URL . '/download/latest_version', an
+                        // external response, embedded unescaped into this hand-built '<a>' message --
+                        // same XSS class as the piwigo.org news feed (P59 Batch 6, IntroSubController).
+                        $this->pageState->addInfo(new Html('<a href="' . $update_url . '">' . htmlspecialchars($this->lang->t('Update to Piwigo %s', $versions['latest'])) . '</a>'));
                     } else {
                         $this->pageState->addInfo($this->lang->t('You are running the latest version of Piwigo.'));
                     }

@@ -144,7 +144,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
             $message .= $this->lang->t('%d waiting for validation', $nb_pending_comments);
             $message .= ' <i class="icon-right"></i></a>';
 
-            $this->pageState->addMessage($message);
+            $this->pageState->addMessage(new Html($message));
         }
 
         // any orphan photo?
@@ -162,7 +162,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
             $message .= $this->lang->t('Orphans') . '</a>';
             $message .= '<span class="adminMenubarCounter">' . $nb_orphans . '</span>';
 
-            $this->pageState->addWarning($message);
+            $this->pageState->addWarning(new Html($message));
         }
 
         // locked album ?
@@ -179,7 +179,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
             $message .= $this->lang->t('Locked album') . '</a>';
             $message .= '<span class="adminMenubarCounter">' . (string) $locked_album . '</span>';
 
-            $this->pageState->addWarning($message);
+            $this->pageState->addWarning(new Html($message));
         }
 
         $this->filesystemIntegrityChecker->fsQuickCheck();
@@ -244,13 +244,20 @@ final readonly class IntroSubController implements AdminSubControllerInterface
                 $news_subject = $latest_news['subject'] ?? null;
                 $news_subject = is_string($news_subject) ? $news_subject : '';
 
-                $this->pageState->addMessage(sprintf(
+                // $news_url/$news_posted/$news_subject are raw, unvalidated
+                // fields off a remote piwigo.org JSON response
+                // (getLatestNews()'s own docblock above) -- htmlspecialchars()
+                // each before this hand-built HTML interpolation. Confirmed
+                // real XSS otherwise (a compromised or MITM'd news feed
+                // response reaching every admin's dashboard unescaped),
+                // same class as P59 Batch 5's PEM catalog findings.
+                $this->pageState->addMessage(new Html(sprintf(
                     '%s <a href="%s" title="%s" target="_blank"><i class="icon-bell"></i> %s</a>',
                     $this->lang->t('Latest Piwigo news'),
-                    $news_url,
-                    DateHelper::timeSince($news_posted_on, 'year') . ' (' . $news_posted . ')',
-                    $news_subject
-                ));
+                    htmlspecialchars($news_url),
+                    htmlspecialchars(DateHelper::timeSince($news_posted_on, 'year') . ' (' . $news_posted . ')'),
+                    htmlspecialchars($news_subject)
+                )));
             }
         }
 

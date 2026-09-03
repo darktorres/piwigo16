@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Html\Projection;
 
+use Latte\Runtime\Html;
+
 /**
  * `{templateType}` target for `infos_errors.latte`. Never rendered via
  * `Renderer::render()` -- reached only through 12 real bare
@@ -17,8 +19,8 @@ namespace Piwigo\Html\Projection;
 final readonly class InfosErrorsView
 {
     /**
-     * @param array<array-key, string>|null $errors
-     * @param array<array-key, string>|null $infos
+     * @param array<array-key, Html>|null $errors
+     * @param list<Html>|null $infos
      */
     public function __construct(
         public ?array $errors,

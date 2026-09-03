@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Latte\Runtime\Html;
 use Piwigo\Admin\Event\HelpPageRendered;
 use Piwigo\Admin\Projection\HelpView;
 use Piwigo\Admin\Request\HelpSectionRequest;
@@ -58,15 +59,15 @@ final class HelpPageRenderer
             ->language->value;
         $language_prefix = substr($user_language, 0, 3);
         if ($language_prefix === 'en_') {
-            $pageState->addMessage(sprintf(
+            $pageState->addMessage(new Html(sprintf(
                 'Need help to use Piwigo? <a href="%s" target="_blank">Check the online documentation</a> !',
                 'https://upstream.example.invalid/help/'
-            ));
+            )));
         } elseif ($language_prefix === 'fr_') {
-            $pageState->addMessage(sprintf(
+            $pageState->addMessage(new Html(sprintf(
                 'Besoin d\'aide pour utiliser Piwigo ? Consultez la <a href="%s" target="_blank">documentation en ligne</a> !',
                 'https://upstream.example.invalid/help/fr/'
-            ));
+            )));
         }
 
         return new AdminPageResult(content: $adminContent);

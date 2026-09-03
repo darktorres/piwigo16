@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Latte\Runtime\Html;
 use Nyholm\Psr7\Response;
 use Nyholm\Psr7\ServerRequest;
 use Override;
@@ -84,12 +85,12 @@ final class LanguageMiddlewareTest extends IntegrationTestCase
 
         $middleware->process(new ServerRequest('GET', '/'), $this->passthroughHandler());
 
-        self::assertSame(
-            [LangTestFactory::get()->t('Your authentication key is no longer valid.') . sprintf(
+        self::assertEquals(
+            [new Html(LangTestFactory::get()->t('Your authentication key is no longer valid.') . sprintf(
                 ' <a href="%s">%s</a>',
                 UrlServiceTestFactory::build()->getRootUrl() . 'identification.php',
                 LangTestFactory::get()->t('Login')
-            )],
+            ))],
             PageStateTestFactory::get()->errors
         );
     }

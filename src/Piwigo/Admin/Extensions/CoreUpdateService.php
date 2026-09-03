@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Extensions;
 
+use Latte\Runtime\Html;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\Projection\NewVersionsInfo;
 use Piwigo\Cache\ExtensionUpdateCachePool;
@@ -361,10 +362,10 @@ final readonly class CoreUpdateService
         if ($error !== '') {
             file_put_contents($this->paths->root . $dataLocation . 'update/log_error.txt', $error);
 
-            $this->pageState->addError($this->lang->t(
+            $this->pageState->addError(new Html($this->lang->t(
                 'An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href="%s">Click here to show log error</a>.',
                 $this->urlService->getRootUrl() . $dataLocation . 'update/log_error.txt'
-            ));
+            )));
             return;
         }
 

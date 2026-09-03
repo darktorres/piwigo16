@@ -132,7 +132,10 @@ final readonly class LanguagesNewPageRenderer
                 'temp_path_error' => $this->pageState->addError($this->lang->t('Can\'t create temporary file.')),
                 'dl_archive_error' => $this->pageState->addError($this->lang->t('Can\'t download archive.')),
                 'archive_error' => $this->pageState->addError($this->lang->t('Can\'t read or extract archive.')),
-                default => $this->pageState->addError($this->lang->t('An error occured during extraction (%s).', htmlspecialchars($installstatus))),
+                // A plain string, not Html -- HtmlService::flushMessageList()
+                // htmlspecialchars()'s it once at flush time (P59 Batch 6), so
+                // $installstatus must stay raw here to avoid a double-escape.
+                default => $this->pageState->addError($this->lang->t('An error occured during extraction (%s).', $installstatus)),
             };
         }
 

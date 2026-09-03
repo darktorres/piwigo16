@@ -1004,9 +1004,9 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             $updates[$field] = $value;
         }
 
-        // saveUploadFormConfig()'s $errors is only known as array<int, string>,
-        // narrower than PageState::$errors' list<string> -- round-trip through
-        // a local var and re-index on the way back in (same pattern as
+        // saveUploadFormConfig()'s $errors shares PageState::$errors' own
+        // element type (P59 Batch 6) -- round-trip through a local var and
+        // re-index on the way back in (same pattern as
         // PluginLoader::autoupdatePlugin()).
         $page_errors = $this->pageState->errors;
 

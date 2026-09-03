@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Html;
 
 use FilesystemIterator;
+use Latte\Runtime\Html;
 use LogicException;
 use Piwigo\Category\Event\RenderCategoryLiteralDescription;
 use Piwigo\Category\Projection\CategoryIdNamePermalink;
@@ -2228,9 +2229,9 @@ test('flushPageMessages assigns only the non-empty PageState fields', function (
 
     $template = CurrentTemplateTestFactory::get()->get();
     expect($template->getTemplateVars('errors'))
-        ->toBe(['Something went wrong'])
+        ->toEqual([new Html('Something went wrong')])
         ->and($template->getTemplateVars('infos'))
-        ->toBe(['Saved successfully'])
+        ->toEqual([new Html('Saved successfully')])
         ->and($template->getTemplateVars('warnings'))
         ->toBeNull()
         ->and($template->getTemplateVars('messages'))
@@ -2264,7 +2265,7 @@ test('flushPageMessages merges in and clears the session flash channel', functio
     try {
         HtmlServiceTestFactory::build()->flushPageMessages();
 
-        expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('errors'))->toBe(['Live error', 'Flashed error'])
+        expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('errors'))->toEqual([new Html('Live error'), new Html('Flashed error')])
             ->and($_SESSION)
             ->not->toHaveKey('page_errors');
     } finally {
@@ -2281,14 +2282,14 @@ test('flushPageMessages filters out non string session flash values defensively'
     try {
         HtmlServiceTestFactory::build()->flushPageMessages();
 
-        expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('infos'))->toBe(['Real info']);
+        expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('infos'))->toEqual([new Html('Real info')]);
     } finally {
         unset($_SESSION['page_infos']);
     }
 });
 
 test('flushPageMessages leaves a non-array session flash value untouched, without merging it in', function (): void {
-    // Real gap: a LogicalAndToLogicalOr mutation on flushMessageMode()'s
+    // Real gap: a LogicalAndToLogicalOr mutation on flushMessageList()'s
     // own guard (isset($_SESSION[...]) and is_array($_SESSION[...]))
     // only differs from the real `and` once the session value is set but
     // genuinely NOT an array -- the sibling "filters out non string
@@ -2323,8 +2324,8 @@ test('flushKeyedErrors assigns the keyed error bag under errors', function (): v
         'login_page_error' => 'Invalid username or password!',
     ]);
 
-    expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('errors'))->toBe([
-        'login_page_error' => 'Invalid username or password!',
+    expect(CurrentTemplateTestFactory::get()->get()->getTemplateVars('errors'))->toEqual([
+        'login_page_error' => new Html('Invalid username or password!'),
     ]);
 });
 
@@ -2360,9 +2361,9 @@ test('flushPageMessages then flushKeyedErrors overwrites errors but leaves infos
 
     $template = CurrentTemplateTestFactory::get()->get();
     expect($template->getTemplateVars('errors'))
-        ->toBe([
-            'login_page_error' => 'Invalid username or password!',
+        ->toEqual([
+            'login_page_error' => new Html('Invalid username or password!'),
         ])
         ->and($template->getTemplateVars('infos'))
-        ->toBe(['Some info']);
+        ->toEqual([new Html('Some info')]);
 });

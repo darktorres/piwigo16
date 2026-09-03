@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Html;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use LogicException;
 use Override;
 use Piwigo\Auth\AccessLevelChecker;
@@ -989,10 +990,10 @@ final readonly class HtmlService implements HtmlRenderingInterface
         if ($template->getTemplateVars('page_refresh') === null) {
             $pageState = $this->pageState;
             $template->assignContext(new PageMessagesContext(
-                errors: $this->flushMessageMode('errors', $pageState->errors),
-                infos: $this->flushMessageMode('infos', $pageState->infos),
-                warnings: $this->flushMessageMode('warnings', $pageState->warnings),
-                messages: $this->flushMessageMode('messages', $pageState->messages),
+                errors: $this->flushMessageList('errors', $pageState->errors),
+                infos: $this->flushMessageList('infos', $pageState->infos),
+                warnings: $this->flushMessageList('warnings', $pageState->warnings),
+                messages: $this->flushMessageList('messages', $pageState->messages),
             ));
         }
     }
@@ -1023,7 +1024,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
         $template = $this->currentTemplate->get();
         if ($template->getTemplateVars('page_refresh') === null) {
             $template->assignContext(new PageMessagesContext(
-                errors: $this->flushMessageMode('errors', $keyedErrors),
+                errors: $this->flushMessageMap('errors', $keyedErrors),
                 infos: null,
                 warnings: null,
                 messages: null,
@@ -1032,23 +1033,27 @@ final readonly class HtmlService implements HtmlRenderingInterface
     }
 
     /**
-     * $messages is either PageState's own list<string> (from
-     * flushPageMessages()) or flushKeyedErrors()'s own string-keyed error
-     * bag -- genuinely array<array-key, string> either way (per
-     * every real PageState field declaration and every real
-     * flushKeyedErrors() call site), not a vague mixed value
-     * type. $_SESSION['page_*'] is likewise always a plain list<string>
-     * in practice -- every real writer elsewhere in the codebase
-     * (comments.php, picture.php, admin/batch_manager*.php, ...) guards
-     * with is_array() before pushing a translated string -- but it still
-     * crosses a superglobal boundary PHPStan can't see through, so its
-     * elements are narrowed defensively here (array_filter(is_string()))
-     * rather than trusted.
+     * flushPageMessages()' own half of the P59 Batch 6 escaping choke
+     * point -- $messages is PageState's own list<string|Html>. $_SESSION[
+     * 'page_*'] is likewise always a plain list<string> in practice --
+     * every real writer elsewhere in the codebase (comments.php,
+     * picture.php, admin/batch_manager*.php, ...) guards with is_array()
+     * before pushing a translated string -- but it still crosses a
+     * superglobal boundary PHPStan can't see through, so its elements are
+     * narrowed defensively here (array_filter(is_string())) rather than
+     * trusted.
      *
-     * @param array<array-key, string> $messages
-     * @return array<array-key, string>|null
+     * The single place a plain string finally becomes `Html`:
+     * htmlspecialchars()'d once, here, right before the caller hands the
+     * result to a template that prints it bare -- an element that's
+     * already `Html` (one of the handful of callers that hand-built a
+     * real HTML fragment into the message itself) passes through
+     * untouched, since escaping it again would corrupt it.
+     *
+     * @param list<string|Html> $messages
+     * @return list<Html>|null
      */
-    private function flushMessageMode(string $mode, array $messages): ?array
+    private function flushMessageList(string $mode, array $messages): ?array
     {
         $session_key = 'page_' . $mode;
         if (isset($_SESSION[$session_key]) and is_array($_SESSION[$session_key])) {
@@ -1056,7 +1061,48 @@ final readonly class HtmlService implements HtmlRenderingInterface
             unset($_SESSION[$session_key]);
         }
 
-        return $messages !== [] ? $messages : null;
+        if ($messages === []) {
+            return null;
+        }
+
+        return array_values(array_map(
+            static fn (string|Html $message): Html => $message instanceof Html ? $message : new Html(htmlspecialchars($message)),
+            $messages
+        ));
+    }
+
+    /**
+     * flushKeyedErrors()' own half of the P59 Batch 6 escaping choke
+     * point -- same htmlspecialchars()-once conversion as
+     * {@see self::flushMessageList()}, but keys are preserved (no
+     * array_values()): flushKeyedErrors()'s own string-keyed error bag
+     * relies on this method to keep its keys (e.g. 'login_page_error')
+     * intact for the identification/password/register templates' own
+     * `isset($errors['...'])` lookups. Every real value across every real
+     * call site (Identification/Register/PasswordController) is a plain
+     * translated string, never Html, but the parameter stays string|Html
+     * to match {@see self::flushMessageList()}'s own element type rather
+     * than declare a narrower contract this method doesn't actually need.
+     *
+     * @param array<string, string|Html> $keyedErrors
+     * @return array<array-key, Html>|null
+     */
+    private function flushMessageMap(string $mode, array $keyedErrors): ?array
+    {
+        $session_key = 'page_' . $mode;
+        if (isset($_SESSION[$session_key]) and is_array($_SESSION[$session_key])) {
+            $keyedErrors = array_merge($keyedErrors, array_filter($_SESSION[$session_key], is_string(...)));
+            unset($_SESSION[$session_key]);
+        }
+
+        if ($keyedErrors === []) {
+            return null;
+        }
+
+        return array_map(
+            static fn (string|Html $message): Html => $message instanceof Html ? $message : new Html(htmlspecialchars($message)),
+            $keyedErrors
+        );
     }
 
     /**

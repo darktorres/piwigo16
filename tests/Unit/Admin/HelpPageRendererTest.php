@@ -130,7 +130,7 @@ test('render() shows the English documentation message for an en_ user and defau
             ->toBe('content=|title=Add Photos')
             ->and($pageState->messages)
             ->toHaveCount(1)
-            ->and($pageState->messages[0])->toContain('Check the online documentation');
+            ->and((string) $pageState->messages[0])->toContain('Check the online documentation');
     } finally {
         CurrentTemplateTestFactory::get()->reset();
         CurrentConfigTestFactory::get()->reset();

@@ -130,10 +130,13 @@ final readonly class ThemesNewPageRenderer
                     break;
 
                 default:
+                    // A plain string, not Html -- HtmlService::flushMessageList()
+                    // htmlspecialchars()'s it once at flush time (P59 Batch 6), so
+                    // $installStatus must stay raw here to avoid a double-escape.
                     $this->pageState->addError(
                         $this->lang->t(
                             'An error occured during extraction (%s).',
-                            htmlspecialchars($themesNewInstall->installStatus)
+                            $themesNewInstall->installStatus
                         )
                     );
             }

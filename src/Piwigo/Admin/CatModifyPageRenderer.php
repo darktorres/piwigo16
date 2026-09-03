@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use Latte\Runtime\Html;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Event\CatModifyPageRendered;
 use Piwigo\Admin\Event\CatModifyPageRendering;
@@ -114,7 +115,7 @@ final class CatModifyPageRenderer
         // uses to preselect the album's current parent.
 
         // We show or hide this warning in JS
-        $pageState->addWarning($lang->t('This album is currently locked, visible only to administrators.') . '<span class="icon-cone unlock-album">' . $lang->t('Unlock it') . '</span>');
+        $pageState->addWarning(new Html($lang->t('This album is currently locked, visible only to administrators.') . '<span class="icon-cone unlock-album">' . $lang->t('Unlock it') . '</span>'));
 
         $categories_nav = (string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation));
         $categories_parent_nav = (string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $parent_navigation));

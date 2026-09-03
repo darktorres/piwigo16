@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Admin\BatchManager\Projection\BulkManagerFilter;
@@ -416,7 +417,7 @@ final readonly class BatchManagerGlobalPageRenderer
 
             // synchronize metadata
             elseif ($action === 'metadata') {
-                $this->pageState->addInfo($this->lang->t('Metadata synchronized from file') . ' <span class="badge">' . count($collection) . '</span>');
+                $this->pageState->addInfo(new Html($this->lang->t('Metadata synchronized from file') . ' <span class="badge">' . count($collection) . '</span>'));
             } elseif ($action === 'delete_derivatives' && isset($post['del_derivatives_type']) && is_array($post['del_derivatives_type']) && count($post['del_derivatives_type']) > 0) {
                 foreach ($imageService->getPathsForFileDeletion($collection) as $info) {
                     $derivative_infos = new DerivativePathInfo($info->path, $info->representativeExt);

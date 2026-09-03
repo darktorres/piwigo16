@@ -173,7 +173,12 @@ final readonly class ProfileController implements ControllerInterface
 
         $profileFormHandler = new ProfileFormHandler($this->lang, $this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlService, $this->mailService, $this->currentConfig, $this->csrfService, $this->paths, new ConnectedWithSession());
 
-        $page_errors = $this->pageState->errors;
+        // saveFromPost()'s own first line resets $errors to [] unconditionally
+        // (it's a pure out-param, array<int, string>, narrower than
+        // PageState::$errors' list<string|Html> since P59 Batch 6), so the
+        // initial value here was always discarded -- no need to seed it from
+        // pageState->errors first.
+        $page_errors = [];
         $profileFormHandler->saveFromPost($user, $page_errors);
         $this->pageState->errors = array_values($page_errors);
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;
+    use Latte\Runtime\Html;
     use LogicException;
     use Override;
     use Piwigo\Auth\AccessControl;
@@ -1354,7 +1355,7 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
-         * @return list<string>
+         * @return list<string|Html>
          */
         private function pageErrors(): array
         {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Html\Projection;
 
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Core\TemplatePageContext;
 
@@ -27,17 +28,23 @@ use Piwigo\Core\TemplatePageContext;
 final readonly class PageMessagesContext implements TemplatePageContext
 {
     /**
-     * All 4 share {@see \Piwigo\Html\HtmlService::flushMessageMode()}'s
-     * own return type: array<array-key, string> (per
-     * every real PageState field declaration and every real
-     * flushKeyedErrors() call site -- values are always translated
-     * strings, only the key shape differs between the plain-list and
-     * keyed-bag callers).
+     * All 4 share {@see \Piwigo\Html\HtmlService::flushMessageList()}'s
+     * own return type -- each element is already htmlspecialchars()'d (a
+     * plain translated string) or genuinely safe pre-formed HTML (the
+     * handful of callers that hand-build a real `<a>`/`<span>` fragment
+     * into the message itself), so every real consumer
+     * (`infos_errors.latte`'s own `{foreach $errors as $error}{$error}`)
+     * prints it bare. `$errors` alone can also carry
+     * `flushKeyedErrors()`'s own string-keyed error bag (e.g.
+     * 'login_page_error' -- see that method's own docblock), hence
+     * `array<array-key, Html>` rather than `list<Html>` for that one
+     * field; `$infos`/`$warnings`/`$messages` only ever come from
+     * `flushPageMessages()`'s plain lists.
      *
-     * @param array<array-key, string>|null $errors
-     * @param array<array-key, string>|null $infos
-     * @param array<array-key, string>|null $warnings
-     * @param array<array-key, string>|null $messages
+     * @param array<array-key, Html>|null $errors
+     * @param list<Html>|null $infos
+     * @param list<Html>|null $warnings
+     * @param list<Html>|null $messages
      */
     public function __construct(
         public ?array $errors,

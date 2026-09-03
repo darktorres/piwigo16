@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityRepository;
@@ -545,7 +546,7 @@ final class PasswordController implements ControllerInterface
                 // to this request and would be discarded by that redirect.
                 // $_SESSION['page_errors'] is the same flash channel
                 // CommentsController's own moderate/redirect flow uses;
-                // HtmlService::flushMessageMode() merges it in regardless of
+                // HtmlService::flushMessageList() merges it in regardless of
                 // which controller's flushPageMessages() call reads it, so
                 // identification.php's own render picks this up for real.
                 if (! isset($_SESSION['page_errors']) or ! is_array($_SESSION['page_errors'])) {
@@ -711,7 +712,7 @@ final class PasswordController implements ControllerInterface
         $this->activityService->record('user', $user_id, 'reset_password_success');
 
         $this->pageState->addInfo($this->lang->t('Your password has been reset'));
-        $this->pageState->addInfo('<a href="' . $this->urlService->getRootUrl() . 'identification.php">' . $this->lang->t('Login') . '</a>');
+        $this->pageState->addInfo(new Html('<a href="' . $this->urlService->getRootUrl() . 'identification.php">' . $this->lang->t('Login') . '</a>'));
 
         return true;
     }

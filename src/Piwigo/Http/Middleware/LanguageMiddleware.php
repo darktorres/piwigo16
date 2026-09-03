@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Http\Middleware;
 
 use Doctrine\DBAL\Connection;
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityRepository;
@@ -146,10 +147,10 @@ final readonly class LanguageMiddleware implements MiddlewareInterface
         // in case an auth key was provided and is no longer valid, we must wait to
         // be here, with language loaded, to prepare the message
         if ($pageState->authKeyInvalid) {
-            $pageState->addError(
+            $pageState->addError(new Html(
                 $this->lang->t('Your authentication key is no longer valid.')
               . sprintf(' <a href="%s">%s</a>', $this->urlService->getRootUrl() . 'identification.php', $this->lang->t('Login'))
-            );
+            ));
         }
 
         // check if we need to notified user about api_key expiration

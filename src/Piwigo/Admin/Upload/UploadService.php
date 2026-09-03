@@ -13,6 +13,7 @@ use DOMElement;
 use DOMNode;
 use DOMXPath;
 use Exception;
+use Latte\Runtime\Html;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Admin\Image\ImageProcessingException;
@@ -155,10 +156,13 @@ final readonly class UploadService
 
     /**
      * $data is raw, unvalidated $_POST data (see the only real caller,
-     * ConfigurationSubController), not narrowed here.
+     * ConfigurationSubController), not narrowed here. $errors' own type
+     * matches PageState::$errors exactly (P59 Batch 6) -- the only real
+     * caller round-trips PageState::$errors through this by-ref param
+     * directly, and this method only ever appends plain strings to it.
      *
      * @param array<string, mixed> $data
-     * @param array<int, string> $errors
+     * @param array<int, string|Html> $errors
      * @param array<string, string> $form_errors
      */
     public function saveUploadFormConfig(array $data, array &$errors = [], array &$form_errors = []): bool

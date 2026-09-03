@@ -118,6 +118,9 @@ test('doTimeoutTreatment computes a real, positive estimated-time when some (but
     expect(count($errors))
         ->toBe($errorCountBefore + 1);
     $message = $errors[count($errors) - 1];
+    // A plain translator->plural() string, never Html, at this call site
+    // (NotificationByMailSubController's own timeout-treatment message).
+    assert(is_string($message));
     // English plural, untranslated (no admin.lang loaded in this Unit
     // suite) source wording -- "[Estimated time: %d seconds]" with a
     // real, positive digit substituted (not the "0 seconds" every

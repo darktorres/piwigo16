@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use DateInterval;
+use Latte\Runtime\Html;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
@@ -118,7 +119,7 @@ final readonly class PluginsNewPageRenderer
                     $activate_url = $this->urlService->getRootUrl() . 'admin.php?page=plugins&filter=deactivated';
 
                     $this->pageState->addInfo($this->lang->t('Plugin has been successfully copied'));
-                    $this->pageState->addInfo('<a href="' . $activate_url . '">' . $this->lang->t('Activate it now') . '</a>');
+                    $this->pageState->addInfo(new Html('<a href="' . $activate_url . '">' . $this->lang->t('Activate it now') . '</a>'));
 
                     $installed_plugin_id = $pluginsNewRequest->pluginId;
                     $installed_fs_plugin = $installed_plugin_id !== null ? ($extension_scanner->scanPlugins($this->paths, $this->currentUser, $this->currentConfig)[$installed_plugin_id] ?? null) : null;
@@ -143,7 +144,10 @@ final readonly class PluginsNewPageRenderer
                     break;
 
                 default:
-                    $this->pageState->addError($this->lang->t('An error occured during extraction (%s).', htmlspecialchars($pluginsNewRequest->installStatus)));
+                    // A plain string, not Html -- HtmlService::flushMessageList()
+                    // htmlspecialchars()'s it once at flush time (P59 Batch 6), so
+                    // installStatus must stay raw here to avoid a double-escape.
+                    $this->pageState->addError($this->lang->t('An error occured during extraction (%s).', $pluginsNewRequest->installStatus));
                     $this->pageState->addError($this->lang->t('Please check "plugins" folder and sub-folders permissions (CHMOD).'));
             }
         }

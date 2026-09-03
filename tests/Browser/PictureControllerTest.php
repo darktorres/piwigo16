@@ -808,7 +808,7 @@ it('rejects an edit_comment submission whose key is used before its 2-second min
     expect($postResult['status'])->toBe(200);
     expect($postResult['body'])->not->toContain('Fatal error');
     // $_SESSION['page_errors'][] does have a real reader: HtmlService::
-    // flushMessageMode() reads `$_SESSION['page_' . $mode]` generically
+    // flushMessageList() reads `$_SESSION['page_' . $mode]` generically
     // (not the literal string 'page_errors'), which a plain repo-wide grep
     // for that literal string misses -- the same
     // mechanism PasswordController's own fix (a873f5ca7d)
@@ -1701,7 +1701,7 @@ it('flashes an admin-authorization message via the session when a non-admin\'s c
         // queued via $_SESSION['page_infos'][], and $perform_redirect ends
         // up true from the 'validate' case, so a real redirect happens.
         // Follow it for real (not fetch(manual)'s opaque status) to prove
-        // HtmlService::flushMessageMode() -- which reads
+        // HtmlService::flushMessageList() -- which reads
         // `$_SESSION['page_' . $mode]` generically, not the literal string
         // 'page_infos' -- actually surfaces this on the next page, the
         // same mechanism PasswordController's own fix

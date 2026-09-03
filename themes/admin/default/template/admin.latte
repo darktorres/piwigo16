@@ -2,7 +2,7 @@
 {layout 'layout.latte'}
 {block content}
   <div id="menubar">
-    <div id="adminHome"><a href="{$uAdmin|noescape}" class="admin-main"><i
+    <div id="adminHome"><a href="{$uAdmin}" class="admin-main"><i
           class="icon-television"
         ></i> {='Dashboard'|translate}</a></div>
 
@@ -12,19 +12,19 @@
         ></i></dt>
       <dd>
         <ul>
-          <li><a href="{$uAddPhotos|noescape}"><i
+          <li><a href="{$uAddPhotos}"><i
                 class="icon-plus-circled"
               ></i>{='Add'|translate}</a></li>
-          <li n:if="$showRating"><a href="{$uRating|noescape}"><i
+          <li n:if="$showRating"><a href="{$uRating}"><i
                 class="icon-star"
               ></i>{='Rating'|translate}</a></li>
-          <li><a href="{$uTags|noescape}"><i
+          <li><a href="{$uTags}"><i
                 class="icon-tags"
               ></i>{='Tags'|translate}</a></li>
           <li><a href="{$uRecentSet}"><i
                 class="icon-clock"
               ></i>{='Recent photos'|translate}</a></li>
-          <li><a href="{$uBatch|noescape}"><i
+          <li><a href="{$uBatch}"><i
                 class="icon-th"
               ></i>{='Batch Manager'|translate}</a></li>
           <li n:if="$nbPhotosInCaddie > 0"><a href="{$uCaddie}"><i
@@ -46,10 +46,10 @@
         ></i></dt>
       <dd>
         <ul>
-          <li><a href="{$uAlbums|noescape}"><i
+          <li><a href="{$uAlbums}"><i
                 class="icon-folder-open"
               ></i>{='Manage'|translate}</a></li>
-          <li><a href="{$uCatOptions|noescape}"><i
+          <li><a href="{$uCatOptions}"><i
                 class="icon-pencil"
               ></i>{='Properties'|translate}</a></li>
         </ul>
@@ -61,20 +61,20 @@
         ></i></dt>
       <dd>
         <ul>
-          <li><a href="{$uUsers|noescape}"><i
+          <li><a href="{$uUsers}"><i
                 class="icon-user-add"
               ></i>{='Manage'|translate}</a></li>
-          <li><a href="{$uGroups|noescape}"><i
+          <li><a href="{$uGroups}"><i
                 class="icon-group"
               ></i>{='Groups'|translate}</a></li>
-          <li><a href="{$uNotificationByMail|noescape}"><i
+          <li><a href="{$uNotificationByMail}"><i
                 class="icon-mail-1"
               ></i>{='Notification'|translate}</a></li>
         </ul>
       </dd>
     </dl>
     <dl>
-      <dt><a href="{$uPlugins|noescape}" class="admin-main"><i
+      <dt><a href="{$uPlugins}" class="admin-main"><i
             class="icon-puzzle"
           ></i><span>{='Plugins'|translate}&nbsp;</span></a></dt>
     </dl>
@@ -90,10 +90,10 @@
           <li><a href="{$uHistoryStat}"><i
                 class="icon-signal"
               ></i>{='History'|translate}</a></li>
-          <li><a href="{$uMaintenance|noescape}"><i
+          <li><a href="{$uMaintenance}"><i
                 class="icon-tools"
               ></i>{='Maintenance'|translate}</a></li>
-          <li n:if="isset($uComments)"><a href="{$uComments|noescape}"><i
+          <li n:if="isset($uComments)"><a href="{$uComments}"><i
                 class="icon-chat"
               ></i>{='Comments'|translate}
               <span
@@ -101,7 +101,7 @@
                 class="adminMenubarCounter"
                 title="{='%d waiting for validation'|translate:$nbPendingComments}"
               >{$nbPendingComments}</span></a></li>
-          <li n:if="isset($uUpdates)"><a href="{$uUpdates|noescape}"><i
+          <li n:if="isset($uUpdates)"><a href="{$uUpdates}"><i
                 class="icon-arrows-cw"
               ></i>{='Updates'|translate}</a></li>
         </ul>
@@ -133,7 +133,7 @@
   </div> <!-- menubar -->
 
   <div id="content" class="content">
-    <h1>{$ADMIN_PAGE_TITLE|noescape}<span
+    <h1>{$ADMIN_PAGE_TITLE}<span
         class="admin-object-id"
       >{$ADMIN_PAGE_OBJECT_ID}</span></h1>
 
@@ -154,28 +154,28 @@
       <div n:if="isset($errors)" class="errors">
         <i class="eiw-icon icon-cancel"></i>
         <ul>
-          <li n:foreach="$errors as $error">{$error|noescape}</li>
+          <li n:foreach="$errors as $error">{$error}</li>
         </ul>
       </div>
 
       <div n:if="isset($infos)" class="infos">
         <i class="eiw-icon icon-ok"></i>
         <ul>
-          <li n:foreach="$infos as $info">{$info|noescape}</li>
+          <li n:foreach="$infos as $info">{$info}</li>
         </ul>
       </div>
 
       <div n:if="isset($warnings)" class="warnings">
         <i class="eiw-icon icon-attention"></i>
         <ul>
-          <li n:foreach="$warnings as $warning">{$warning|noescape}</li>
+          <li n:foreach="$warnings as $warning">{$warning}</li>
         </ul>
       </div>
 
       <div n:if="isset($messages)" class="messages">
         <i class="eiw-icon icon-info-circled-1"></i>
         <ul>
-          <li n:foreach="$messages as $message">{$message|noescape}</li>
+          <li n:foreach="$messages as $message">{$message}</li>
         </ul>
       </div>
     </div> {* .eiw *}

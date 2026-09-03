@@ -17,7 +17,7 @@
           n:if="isset($searchInSetAction) and $searchInSetAction"
           id="cmdSearchInSet"
         ><a
-            href="{$searchInSetUrl|noescape}"
+            href="{$searchInSetUrl}"
             title="{='Search in this set'|translate}"
             class="pwg-state-default pwg-button"
             rel="nofollow"
@@ -42,7 +42,7 @@
               <div class="switchBoxTitle">{='Related tags'|translate}</div>
               <a
                 n:foreach="$relatedTags as $tag"
-                href="{$tag['URL']|noescape}"
+                href="{$tag['URL']}"
                 title="{='display photos linked to this tag'|translate}"
               >
                 {$tag['name']}
@@ -66,12 +66,12 @@
                   n:if="!$iterator->first"
                 >
                 {if $image_order->selected}
-                  <span>&#x2714; </span>{$image_order->display|noescape}
+                  <span>&#x2714; </span>{$image_order->display}
                 {else}
                   <span class="u-invisible">&#x2714; </span><a
-                    href="{$image_order->url|noescape}"
+                    href="{$image_order->url}"
                     rel="nofollow"
-                  >{$image_order->display|noescape}</a>
+                  >{$image_order->display}</a>
                 {/if}
               {/foreach}
             </div>
@@ -95,7 +95,7 @@
                   <span>&#x2714; </span>{$image_derivative->display}
                 {else}
                   <span class="u-invisible">&#x2714; </span><a
-                    href="{$image_derivative->url|noescape}"
+                    href="{$image_derivative->url}"
                     rel="nofollow"
                   >{$image_derivative->display}</a>
                 {/if}
@@ -123,7 +123,7 @@
             >{='Caddie'|translate}</span>
           </a></li>
         <li n:if="isset($uEdit)" id="cmdEditAlbum"><a
-            href="{$uEdit|noescape}"
+            href="{$uEdit}"
             title="{='Edit album'|translate}"
             class="pwg-state-default pwg-button"
           >
@@ -142,7 +142,7 @@
               >{='slideshow'|translate}</span>
             </a>{/spaceless}</li>
         <li n:if="isset($uModeFlat)">{spaceless}<a
-              href="{$uModeFlat|noescape}"
+              href="{$uModeFlat}"
               title="{='display all photos in all sub-albums'|translate}"
               class="pwg-state-default pwg-button"
               rel="nofollow"
@@ -152,7 +152,7 @@
               >{='display all photos in all sub-albums'|translate}</span>
             </a>{/spaceless}</li>
         <li n:if="isset($uModeNormal)">{spaceless}<a
-              href="{$uModeNormal|noescape}"
+              href="{$uModeNormal}"
               title="{='return to normal view mode'|translate}"
               class="pwg-state-default pwg-button"
             >
@@ -161,7 +161,7 @@
               >{='return to normal view mode'|translate}</span>
             </a>{/spaceless}</li>
         <li n:if="isset($uModePosted)">{spaceless}<a
-              href="{$uModePosted|noescape}"
+              href="{$uModePosted}"
               title="{='display a calendar by posted date'|translate}"
               class="pwg-state-default pwg-button"
               rel="nofollow"
@@ -171,7 +171,7 @@
               >{='Calendar'|translate}</span>
             </a>{/spaceless}</li>
         <li n:if="isset($uModeCreated)">{spaceless}<a
-              href="{$uModeCreated|noescape}"
+              href="{$uModeCreated}"
               title="{='display a calendar by creation date'|translate}"
               class="pwg-state-default pwg-button"
               rel="nofollow"
@@ -211,7 +211,7 @@
               <div class="switchBoxTitle">{$action->label}</div>
               <a
                 n:foreach="$action->panel as $link"
-                href="{$link->url|noescape}"
+                href="{$link->url}"
                 rel="nofollow"
               >{if $link->icon !== null}<span
                     class="{$link->icon}"
@@ -283,7 +283,7 @@
       <em><strong>
           {foreach $tagSearchResults as $tag}
             {if !$iterator->first} &mdash; {/if} <a
-              href="{$tag['URL']|noescape}"
+              href="{$tag['URL']}"
             >{$tag['name']}</a>
           {/foreach}
         </strong></em>
@@ -300,7 +300,7 @@
       >
         <div>
           <p><a
-              href="{$searchInSetUrl|noescape}"
+              href="{$searchInSetUrl}"
               class="gallery-icon-search-folder"
               rel="nofollow"
             >{='Search in this set'|translate}</a></p>
@@ -326,7 +326,7 @@
               {else}
                 <a
                   class="tagLevel {if isset($tag['level'])}{$tag['level']}{/if}"
-                  href="{$tag['URL']|noescape}"
+                  href="{$tag['URL']}"
                   title="{='display photos linked to this tag'|translate}"
                 >
                   + {$tag['name']}<div

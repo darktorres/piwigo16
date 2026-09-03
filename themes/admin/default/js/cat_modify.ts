@@ -31,7 +31,7 @@ import {
   trigger,
   val,
 } from "../../../default/js/vendor/dom";
-import { ajax } from "../../../default/js/vendor/ajax";
+import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
 import {
   confirm,
   type JConfirmInstance,
@@ -104,18 +104,17 @@ ready(function () {
   });
 
   on(document.querySelectorAll(".unlock-album"), "click", function () {
-    void ajax({
-      url: "api/v1/categories/" + String(album_id),
-      type: "PATCH",
-      dataType: "json",
-      contentType: "application/json",
-      headers: { "X-CSRF-Token": pwg_token },
-      data: JSON.stringify({
-        visible: true,
-      }),
-      success: function (
-        _data: operations["categoryUpdate"]["responses"][200]["content"]["application/json"],
-      ) {
+    void (async () => {
+      try {
+        await ajax({
+          url: "api/v1/categories/" + String(album_id),
+          type: "PATCH",
+          dataType: "json",
+          json: {
+            visible: true,
+          },
+          headers: { "X-CSRF-Token": pwg_token },
+        });
         is_visible = "true";
         const catLocked =
           document.querySelector<HTMLInputElement>("#cat-locked");
@@ -127,21 +126,16 @@ ready(function () {
         setTimeout(function () {
           hide(document.querySelectorAll(".info-message"));
         }, 5000);
-      },
-      error: function (
-        _XMLHttpRequest,
-        _textStatus: string,
-        errorThrows: string,
-      ) {
+      } catch (err) {
         save_button_set_loading(false);
 
         show(document.querySelectorAll(".info-error"));
         setTimeout(function () {
           hide(document.querySelectorAll(".info-error"));
         }, 5000);
-        console.error(errorThrows);
-      },
-    });
+        console.error(err);
+      }
+    })();
   });
 
   tipTip(document.querySelectorAll(".tiptip"), {
@@ -154,23 +148,27 @@ ready(function () {
     save_button_set_loading(true);
     hide(document.querySelectorAll(".info-error,.info-message"));
 
-    void ajax({
-      url: "api/v1/categories/" + String(album_id),
-      type: "PATCH",
-      dataType: "json",
-      contentType: "application/json",
-      headers: { "X-CSRF-Token": pwg_token },
-      data: JSON.stringify({
-        name: val(document.querySelectorAll("#cat-name")),
-        comment: val(document.querySelectorAll("#cat-comment")),
-        visible:
-          !document.querySelector<HTMLInputElement>("#cat-locked")!.checked,
-        commentable:
-          document.querySelector<HTMLInputElement>("#cat-commentable")!.checked,
-      }),
-      success: function (
-        _data: operations["categoryUpdate"]["responses"][200]["content"]["application/json"],
-      ) {
+    // These 2 requests are independent (different endpoints, different
+    // success/error handling) and were fire-and-forget in the original
+    // -- each gets its own async IIFE rather than sequential awaits, to
+    // keep them firing concurrently instead of one waiting on the other.
+    void (async () => {
+      try {
+        await ajax({
+          url: "api/v1/categories/" + String(album_id),
+          type: "PATCH",
+          dataType: "json",
+          json: {
+            name: val(document.querySelectorAll("#cat-name")),
+            comment: val(document.querySelectorAll("#cat-comment")),
+            visible:
+              !document.querySelector<HTMLInputElement>("#cat-locked")!.checked,
+            commentable:
+              document.querySelector<HTMLInputElement>("#cat-commentable")!
+                .checked,
+          },
+          headers: { "X-CSRF-Token": pwg_token },
+        });
         save_button_set_loading(false);
 
         show(document.querySelectorAll(".info-message"));
@@ -196,50 +194,44 @@ ready(function () {
         setTimeout(function () {
           hide(document.querySelectorAll(".info-message"));
         }, 5000);
-      },
-      error: function (
-        _XMLHttpRequest,
-        _textStatus: string,
-        errorThrows: string,
-      ) {
+      } catch (err) {
         save_button_set_loading(false);
 
         show(document.querySelectorAll(".info-error"));
         setTimeout(function () {
           hide(document.querySelectorAll(".info-error"));
         }, 5000);
-        console.error(errorThrows);
-      },
-    });
+        console.error(err);
+      }
+    })();
 
     if (parent_album !== default_parent_album) {
-      void ajax({
-        url: "api/v1/categories/actions/move",
-        type: "POST",
-        dataType: "json",
-        contentType: "application/json",
-        headers: { "X-CSRF-Token": pwg_token },
-        data: JSON.stringify({
-          categoryIds: [album_id],
-          parentId: parent_album,
-        }),
-        success: function (
-          data: operations["categoryMove"]["responses"][200]["content"]["application/json"],
-        ) {
+      void (async () => {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+          const data = (await ajax({
+            url: "api/v1/categories/actions/move",
+            type: "POST",
+            dataType: "json",
+            json: {
+              categoryIds: [album_id],
+              parentId: parent_album,
+            },
+            headers: { "X-CSRF-Token": pwg_token },
+          })) as operations["categoryMove"]["responses"][200]["content"]["application/json"];
           html(
             document.querySelectorAll(".cat-modify-ariane"),
             data.newArianeString,
           );
           default_parent_album = parent_album;
-        },
-        error: function (e) {
+        } catch (e) {
           show(document.querySelectorAll(".info-error"));
           setTimeout(function () {
             hide(document.querySelectorAll(".info-error"));
           }, 5000);
-          console.error(e.responseText);
-        },
-      });
+          console.error(e instanceof AjaxError ? e.responseText : e);
+        }
+      })();
     }
   });
 
@@ -343,26 +335,17 @@ ready(function () {
     });
   });
 
-  async function delete_album(photo_deletion_mode: string) {
-    return new Promise<void>((res, rej) => {
-      void ajax({
-        url: "api/v1/categories/" + String(album_id),
-        type: "DELETE",
-        contentType: "application/json",
-        headers: { "X-CSRF-Token": pwg_token },
-        data: JSON.stringify({
-          photoDeletionMode: photo_deletion_mode,
-        }),
-        success: function (
-          _raw_data: operations["categoryDelete"]["responses"][200]["content"]["application/json"],
-        ) {
-          res();
-        },
-        error: function (message) {
-          // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- rejects with the real jqXHR error object, matching the original .catch()'s own console.log(err) usage; not a new Error, same as pre-P46.
-          rej(message);
-        },
-      });
+  async function delete_album(photo_deletion_mode: string): Promise<void> {
+    // ajax() already resolves/rejects a real promise -- the old
+    // manual `new Promise((res, rej) => ...)` wrapper here was purely
+    // replicating that, not adding anything.
+    await ajax({
+      url: "api/v1/categories/" + String(album_id),
+      type: "DELETE",
+      json: {
+        photoDeletionMode: photo_deletion_mode,
+      },
+      headers: { "X-CSRF-Token": pwg_token },
     });
   }
 
@@ -377,18 +360,20 @@ ready(function () {
         addClass(icon, "animate-spin");
       }
 
-      void ajax({
-        url:
-          "api/v1/categories/" +
-          String(album_id) +
-          "/actions/refresh-representative",
-        type: "POST",
-        contentType: "application/json",
-        headers: { "X-CSRF-Token": pwg_token },
-        dataType: "json",
-        success: function (
-          data: operations["categoryRefreshRepresentative"]["responses"][200]["content"]["application/json"],
-        ) {
+      void (async () => {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+          const data = (await ajax({
+            url:
+              "api/v1/categories/" +
+              String(album_id) +
+              "/actions/refresh-representative",
+            type: "POST",
+            contentType: "application/json",
+            headers: { "X-CSRF-Token": pwg_token },
+            dataType: "json",
+          })) as operations["categoryRefreshRepresentative"]["responses"][200]["content"]["application/json"];
+
           show(document.querySelectorAll("#deleteRepresentative"));
 
           attr(
@@ -407,21 +392,16 @@ ready(function () {
             removeClass(doneIcon, "icon-spin6");
             removeClass(doneIcon, "animate-spin");
           }
-        },
-        error: function (
-          _XMLHttpRequest,
-          _textStatus: string,
-          errorThrows: string,
-        ) {
-          console.error(errorThrows);
+        } catch (err) {
+          console.error(err instanceof AjaxError ? err.responseText : err);
           const errorIcon = document.querySelector("#refreshRepresentative i");
           if (errorIcon !== null) {
             addClass(errorIcon, "icon-ccw");
             removeClass(errorIcon, "icon-spin6");
             removeClass(errorIcon, "animate-spin");
           }
-        },
-      });
+        }
+      })();
 
       e.preventDefault();
     },
@@ -435,14 +415,17 @@ ready(function () {
       addClass(icon, "animate-spin");
     }
 
-    void ajax({
-      url: "api/v1/categories/" + String(album_id) + "/representative",
-      type: "DELETE",
-      contentType: "application/json",
-      headers: { "X-CSRF-Token": pwg_token },
-      dataType: "json",
-      // 204 No Content -- categoryDeleteRepresentative's real response has no body.
-      success: function (_data: unknown) {
+    void (async () => {
+      try {
+        // 204 No Content -- categoryDeleteRepresentative's real response has no body.
+        await ajax({
+          url: "api/v1/categories/" + String(album_id) + "/representative",
+          type: "DELETE",
+          contentType: "application/json",
+          headers: { "X-CSRF-Token": pwg_token },
+          dataType: "json",
+        });
+
         hide(document.querySelectorAll("#deleteRepresentative"));
         attr(
           document.querySelectorAll(".cat-modify-representative"),
@@ -460,21 +443,16 @@ ready(function () {
           removeClass(doneIcon, "icon-spin6");
           removeClass(doneIcon, "animate-spin");
         }
-      },
-      error: function (
-        _XMLHttpRequest,
-        _textStatus: string,
-        errorThrows: string,
-      ) {
-        console.error(errorThrows);
+      } catch (err) {
+        console.error(err instanceof AjaxError ? err.responseText : err);
         const errorIcon = document.querySelector("#deleteRepresentative i");
         if (errorIcon !== null) {
           addClass(errorIcon, "icon-cancel");
           removeClass(errorIcon, "icon-spin6");
           removeClass(errorIcon, "animate-spin");
         }
-      },
-    });
+      }
+    })();
 
     e.preventDefault();
   });
@@ -493,22 +471,21 @@ ready(function () {
   );
 
   on(document.querySelectorAll(".allow-comments"), "click", function () {
-    void ajax({
-      url: "api/v1/categories/" + String(album_id),
-      type: "PATCH",
-      dataType: "json",
-      contentType: "application/json",
-      headers: { "X-CSRF-Token": pwg_token },
-      data: JSON.stringify({
-        commentable: true,
-        applyCommentableToSubalbums: true,
-      }),
-      beforeSend: function () {
-        save_button_set_loading(true);
-      },
-      success: function (
-        _data: operations["categoryUpdate"]["responses"][200]["content"]["application/json"],
-      ) {
+    save_button_set_loading(true);
+
+    void (async () => {
+      try {
+        await ajax({
+          url: "api/v1/categories/" + String(album_id),
+          type: "PATCH",
+          dataType: "json",
+          json: {
+            commentable: true,
+            applyCommentableToSubalbums: true,
+          },
+          headers: { "X-CSRF-Token": pwg_token },
+        });
+
         save_button_set_loading(false);
         const commentable =
           document.querySelector<HTMLInputElement>("#cat-commentable");
@@ -527,34 +504,32 @@ ready(function () {
           hide(document.querySelectorAll(".info-message"));
           text(document.querySelectorAll(".info-message"), temp_txt);
         }, 5000);
-      },
-      error: function (e) {
-        console.error(e);
+      } catch (e) {
+        console.error(e instanceof AjaxError ? e.responseText : e);
         save_button_set_loading(false);
         show(document.querySelectorAll(".info-error"));
         setTimeout(function () {
           hide(document.querySelectorAll(".info-error"));
         }, 5000);
-      },
-    });
+      }
+    })();
   });
   on(document.querySelectorAll(".disallow-comments"), "click", function () {
-    void ajax({
-      url: "api/v1/categories/" + String(album_id),
-      type: "PATCH",
-      dataType: "json",
-      contentType: "application/json",
-      headers: { "X-CSRF-Token": pwg_token },
-      data: JSON.stringify({
-        commentable: false,
-        applyCommentableToSubalbums: true,
-      }),
-      beforeSend: function () {
-        save_button_set_loading(true);
-      },
-      success: function (
-        _data: operations["categoryUpdate"]["responses"][200]["content"]["application/json"],
-      ) {
+    save_button_set_loading(true);
+
+    void (async () => {
+      try {
+        await ajax({
+          url: "api/v1/categories/" + String(album_id),
+          type: "PATCH",
+          dataType: "json",
+          json: {
+            commentable: false,
+            applyCommentableToSubalbums: true,
+          },
+          headers: { "X-CSRF-Token": pwg_token },
+        });
+
         save_button_set_loading(false);
         const commentable =
           document.querySelector<HTMLInputElement>("#cat-commentable");
@@ -573,16 +548,15 @@ ready(function () {
           hide(document.querySelectorAll(".info-message"));
           text(document.querySelectorAll(".info-message"), temp_txt);
         }, 5000);
-      },
-      error: function (e) {
-        console.error(e);
+      } catch (e) {
+        console.error(e instanceof AjaxError ? e.responseText : e);
         save_button_set_loading(false);
         show(document.querySelectorAll(".info-error"));
         setTimeout(function () {
           hide(document.querySelectorAll(".info-error"));
         }, 5000);
-      },
-    });
+      }
+    })();
   });
 
   const descModal = document.getElementById("desc-modal");

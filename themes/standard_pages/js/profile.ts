@@ -387,7 +387,7 @@ ready(function () {
 
   on(window, "keydown", function (e: Event) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
-    const key = (e as KeyboardEvent).key;
+    const { key } = e as KeyboardEvent;
     const haveApiModal = isVisible(document.getElementById("api_modal")!);
     const haveApiEditModal = isVisible(
       document.getElementById("api_modal_edit")!,

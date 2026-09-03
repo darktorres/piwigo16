@@ -445,7 +445,7 @@ export function slider(
     return;
   }
 
-  const el = els[0];
+  const [el] = els;
   if (el === undefined) {
     return undefined;
   }

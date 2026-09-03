@@ -160,7 +160,7 @@
             {if $plugin->state === 'active'}
               {if $plugin->settingsUrl !== ''}
                 <div class="tiptip" title="{='Settings'|translate}">
-                  <a href="{$plugin->settingsUrl|noescape}"><span
+                  <a href="{$plugin->settingsUrl}"><span
                       class="icon-cog"
                     ></span></a>
                 </div>
@@ -172,7 +172,7 @@
             {elseif $plugin->state === 'inactive'}
               {if $plugin->settingsUrl !== ''}
                 <div class="tiptip" title="{='Settings'|translate}">
-                  <a href="{$plugin->settingsUrl|noescape}"><span
+                  <a href="{$plugin->settingsUrl}"><span
                       class="icon-cog"
                     ></span></a>
                 </div>
@@ -191,7 +191,7 @@
           <div class="PluginOptionsBlock dropdown">
             <div
               class="dropdown-option-content"
-            > {if $author !== null}{='By %s'|translate:$author|noescape} | {/if}{='Version'|translate} {$version|noescape}</div>
+            > {if $author !== null}{='By %s'|translate:$author|rawHtml} | {/if}{='Version'|translate} {$version|rawHtml}</div>
             <div class="pluginDescCompact">
               {$plugin->desc}
             </div>
@@ -214,7 +214,7 @@
             {if $plugin->state === 'active'}
               {if $plugin->settingsUrl !== ''}
                 <a
-                  href="{$plugin->settingsUrl|noescape}"
+                  href="{$plugin->settingsUrl}"
                   class="pluginActionLevel1 icon-cog"
                 >{='Settings'|translate}</a>
               {else}
@@ -226,7 +226,7 @@
             {elseif $plugin->state === 'inactive'}
               {if $plugin->settingsUrl !== ''}
                 <a
-                  href="{$plugin->settingsUrl|noescape}"
+                  href="{$plugin->settingsUrl}"
                   class="pluginUnavailableAction icon-cog"
                 >{='Settings'|translate}</a>
               {else}

@@ -21,7 +21,7 @@
                 {if $language_state === 'active'}
                   {if $language->deactivable}
                     <a
-                      href="{$language->uAction|noescape}&amp;action=deactivate"
+                      href="{$language->uAction}&amp;action=deactivate"
                       class="tiptip"
                       title="{='Forbid this language to users'|translate}"
                     >{='Deactivate'|translate}</a>
@@ -33,7 +33,7 @@
 
                   {if !$language->isDefault}
                     | <a
-                      href="{$language->uAction|noescape}&amp;action=set_default"
+                      href="{$language->uAction}&amp;action=set_default"
                       class="tiptip"
                       title="{='Set as default language for unregistered and new users'|translate}"
                     >{='Default'|translate}</a>
@@ -42,13 +42,13 @@
 
                 {if $language_state === 'inactive'}
                   <a
-                    href="{$language->uAction|noescape}&amp;action=activate"
+                    href="{$language->uAction}&amp;action=activate"
                     class="tiptip"
                     title="{='Make this language available to users'|translate}"
                   >{='Activate'|translate}</a>
                   {if $enableExtensionsInstall}
                     | <a
-                      href="{$language->uAction|noescape}&amp;action=delete"
+                      href="{$language->uAction}&amp;action=delete"
                       class="tiptip delete-lang-button"
                       title="{='Delete this language'|translate}"
                     >{='Delete'|translate}</a>

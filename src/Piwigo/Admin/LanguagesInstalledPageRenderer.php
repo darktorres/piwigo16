@@ -115,15 +115,15 @@ final readonly class LanguagesInstalledPageRenderer
         $tpl_languages = [];
 
         foreach ($fs_languages as $language_id => $language) {
-            // Explicit argSeparator: '&amp;' -- languages_installed.latte
-            // prints this with |noescape and appends its own literal
-            // '&amp;action=X' fragment after it, so this value's own
-            // internal separator must stay '&amp;'-encoded too (P59 Batch 1).
+            // Plain '&' -- languages_installed.latte prints this bare, no
+            // |noescape (P59): Latte's own auto-escape turns every '&' into
+            // '&amp;' once at print time, matching the template's own
+            // literal '&amp;action=X' suffix text.
             $uAction = $this->urlService->addUrlParams($base_url, [
                 'language' => $language_id,
                 'pwg_token' => $this->csrfService
                     ->getToken(),
-            ], argSeparator: '&amp;');
+            ]);
 
             $deactivable = true;
             $deactivateTooltip = null;

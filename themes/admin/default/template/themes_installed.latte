@@ -14,7 +14,7 @@
            own (lexically single) opening tags later in this same file,
            even though at runtime they always pair up correctly across
            loop iterations. *}
-        {="</div>\n        </fieldset>"|noescape}
+        {="</div>\n        </fieldset>"|rawHtml}
       {/if}
 
       {* <fieldset>/<div class="themeBoxes"> below, closing this same
@@ -22,7 +22,7 @@
          reasoning) -- both stay conceptually open past this block's own
          {/if}, spanning every remaining theme in this group, which
          Latte's HTML-aware parser can't verify statically either. *}
-      {="<fieldset>"|noescape}
+      {="<fieldset>"|rawHtml}
       <legend>
         {if $theme->state === 'active'}
           <span
@@ -34,7 +34,7 @@
           ></span>{='Inactive Themes'|translate}
         {/if}
       </legend>
-      {="<div class=\"themeBoxes\">"|noescape}
+      {="<div class=\"themeBoxes\">"|rawHtml}
       {var $field_name = $theme->state}
     {/if}
 
@@ -75,9 +75,9 @@
       <div class="showInfo-dropdown dropdown">
         <div class="showInfo-dropdown-header">
           {if $author !== null}
-            {='By %s'|translate:$author|noescape} |
+            {='By %s'|translate:$author|rawHtml} |
           {/if}
-          {='Version'|translate} {$version|noescape}
+          {='Version'|translate} {$version|rawHtml}
         </div>
         <div class="showInfo-dropdown-content">
           {$theme->desc}
@@ -146,5 +146,5 @@
       {/if}
     </div>
   {/foreach}
-  {="</div> <!-- themeBoxes -->\n</fieldset>"|noescape}
+  {="</div> <!-- themeBoxes -->\n</fieldset>"|rawHtml}
 </div> <!-- themesContent -->

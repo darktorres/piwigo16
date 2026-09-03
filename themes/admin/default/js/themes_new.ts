@@ -20,7 +20,7 @@ window.addEventListener("load", function () {
     // `first`, the sizing goes to all of them.
     const screenImages =
       themeBox.querySelectorAll<HTMLElement>(".preview-box img");
-    const first = screenImages[0];
+    const [first] = screenImages;
     const previewBox = themeBox.querySelector<HTMLElement>(".preview-box");
     if (first === undefined || previewBox === null) {
       return;

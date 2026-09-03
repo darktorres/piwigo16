@@ -70,7 +70,9 @@ final readonly class PictureView implements View, HasPageAssets, ExposesPageData
         public ?string $uSlideshowStop,
         public ?array $slideshowNav,
         public ?string $uSlideshowStart,
-        public string $sectionTitle,
+        // Html, not a plain string (P59 Batch 4): see
+        // Section\SectionContext::$sectionTitle's own docblock.
+        public Html $sectionTitle,
         public string $photo,
         public bool $isHome,
         public string $levelSeparator,

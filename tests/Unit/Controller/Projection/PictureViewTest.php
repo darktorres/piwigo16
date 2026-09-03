@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Latte\Runtime\Html;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\LoadMode;
 use Piwigo\Controller\Projection\PictureNavEntry;
@@ -41,7 +42,7 @@ function makePictureView(
         uSlideshowStop: null,
         slideshowNav: null,
         uSlideshowStart: null,
-        sectionTitle: '',
+        sectionTitle: new Html(''),
         photo: '1/1',
         isHome: false,
         levelSeparator: ' / ',

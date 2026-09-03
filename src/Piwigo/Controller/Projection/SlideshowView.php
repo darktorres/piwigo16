@@ -64,7 +64,9 @@ final readonly class SlideshowView implements View, HasPageAssets, ExposesPageDa
         public ?string $uSlideshowStop,
         public ?array $slideshowNav,
         public ?string $uSlideshowStart,
-        public string $sectionTitle,
+        // Html, not a plain string (P59 Batch 4): see
+        // Section\SectionContext::$sectionTitle's own docblock.
+        public Html $sectionTitle,
         public string $photo,
         public bool $isHome,
         public string $levelSeparator,

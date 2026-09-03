@@ -54,6 +54,16 @@ final readonly class SectionContext
         public ?string $chronologyStyle = null,
         public string $title = '',
         public string $comment = '',
+        // Stays a plain string (not Html) despite always being genuinely
+        // safe pre-formed HTML (SectionPopulator's own breadcrumb builder
+        // concatenates Home/section anchor links with Lang::t()-translated
+        // labels and a config-level separator, never user data) --
+        // toUrlParams() below round-trips this same value back into a URL
+        // param for a later parseSectionUrl() re-parse, which needs a plain
+        // string. Its own two template-facing consumers
+        // (Controller\Projection\IndexView::$title,
+        // Controller\Projection\PictureView::$sectionTitle) wrap it in Html
+        // at their own construction site instead (P59 Batch 4).
         public string $sectionTitle = '',
     ) {}
 

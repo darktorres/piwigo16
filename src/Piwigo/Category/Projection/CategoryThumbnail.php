@@ -39,6 +39,11 @@ use Piwigo\Image\SrcImage;
  * `RenderCategoryDescription` its value already went through -- so this
  * field is genuinely safe pre-formed HTML regardless of the
  * `allowHtmlDescriptions` setting.
+ *
+ * `$captionNbImages` is `Html` too (P59 Batch 4): its one real producer
+ * ({@see \Piwigo\Category\CategoryService::getDisplayImagesCount()}) joins
+ * `Lang::plural()`/`Lang::t()`'s own always-translator-authored strings
+ * with a hardcoded `'<br>'` literal, never user data.
  */
 final readonly class CategoryThumbnail
 {
@@ -47,7 +52,7 @@ final readonly class CategoryThumbnail
         public string $name,
         public string $url,
         public string $tnAlt,
-        public string $captionNbImages,
+        public Html $captionNbImages,
         public ?SrcImage $representative,
         public ?Html $description,
         public ?RecentIcon $iconTs = null,

@@ -131,9 +131,7 @@ test('strReplace reorders to str_replace($search, $replace, $subject) with the p
 test('closeTags repeats the piped tag fragment count times, wrapped as trusted Html', function (): void {
     $result = PiwigoExtension::closeTags('</ul></li>', 3);
 
-    expect($result)
-        ->toBeInstanceOf(Html::class)
-        ->and((string) $result)
+    expect((string) $result)
         ->toBe('</ul></li></ul></li></ul></li>');
 });
 

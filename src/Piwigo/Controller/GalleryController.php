@@ -218,7 +218,9 @@ final readonly class GalleryController implements ControllerInterface
         $template->assignContext(new CanonicalUrlPageContext($canonical_url));
 
         $title = $section_context->title;
-        $template_title = $section_context->sectionTitle;
+        // Html, not a plain string (P59 Batch 4): see
+        // Section\SectionContext::$sectionTitle's own docblock.
+        $template_title = new Html($section_context->sectionTitle);
         $nb_items = count($page_items);
 
         $categoryCountCategories = new MenubarRenderer()

@@ -10,7 +10,7 @@ function makeIndexView(bool $monthCalendarActive): IndexView
 {
     return new IndexView(
         thumbNavbar: Navbar::none(),
-        title: '',
+        title: new Html(''),
         nbItems: 0,
         uModeNormal: null,
         uModeFlat: null,

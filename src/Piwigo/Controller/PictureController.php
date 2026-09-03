@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
@@ -940,7 +941,11 @@ final readonly class PictureController implements ControllerInterface
             );
         }
 
-        $section_title = $section_context->sectionTitle;
+        // Html, not a plain string (P59 Batch 4): SectionPopulator's own
+        // section-title builder concatenates Home/section anchor links with
+        // Lang::t()-translated labels and a config-level separator, never
+        // user data -- see SectionContext::$sectionTitle's own docblock.
+        $section_title = new Html($section_context->sectionTitle);
         $photo = $title_nb;
         $is_home = $section_context->section === Section::Categories && $page_category === null;
         $level_separator = $this->currentConfig->levelSeparator;

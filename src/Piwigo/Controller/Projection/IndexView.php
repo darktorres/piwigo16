@@ -52,7 +52,10 @@ final readonly class IndexView implements View, HasPageAssets
      */
     public function __construct(
         public Navbar $thumbNavbar,
-        public string $title,
+        // Html, not a plain string (P59 Batch 4): see
+        // Section\SectionContext::$sectionTitle's own docblock -- this is
+        // that same value, under a differently-named field here.
+        public Html $title,
         public int $nbItems,
         public ?string $uModeNormal,
         public ?string $uModeFlat,

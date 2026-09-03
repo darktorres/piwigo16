@@ -428,14 +428,21 @@ final readonly class CategoryCatsRenderer
                         'category' => $category,
                     ]),
                     tnAlt: strip_tags($nameEvent->categoryName),
-                    captionNbImages: CategoryService::getDisplayImagesCount(
+                    // Html, not a plain string (P59 Batch 4): the '<br>'
+                    // separator is a hardcoded literal, never user data, and
+                    // Lang::plural()/Lang::t()'s own return values are always
+                    // developer/translator-authored strings, the same trust
+                    // level already relied on everywhere else they print
+                    // bare -- this was already printed with |noescape
+                    // before the retype, byte-for-byte unchanged.
+                    captionNbImages: new Html(CategoryService::getDisplayImagesCount(
                         $this->lang,
                         $catNbImages,
                         $catCountImages,
                         $catCountCategories,
                         true,
                         '<br>'
-                    ),
+                    )),
                     representative: $representativeSrcImage,
                     // Empty string treated the same as null: the template's
                     // own presence check used to be !== '' before this field

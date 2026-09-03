@@ -5,7 +5,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { ajax, type AjaxThenable } from "../../../default/js/vendor/ajax";
+import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
 import { confirm } from "../../../default/js/vendor/jconfirm";
 import {
   getSelectizeInstance,
@@ -422,7 +422,11 @@ ready(function () {
       setVal(document.querySelectorAll("#add_user_confpass"), password);
     },
   );
-  on(document.querySelectorAll(".AddUserSubmit"), "click", add_user);
+  on(
+    document.querySelectorAll(".AddUserSubmit"),
+    "click",
+    () => void add_user(),
+  );
   on(document.querySelectorAll(".AddUserCancel"), "click", add_user_close);
   on(document.querySelectorAll(".CloseAddUser"), "click", add_user_close);
 
@@ -432,7 +436,7 @@ ready(function () {
   /* Select */
 
   on(document.querySelectorAll("#selectSet"), "click", function (e: Event) {
-    select_whole_set();
+    void select_whole_set();
     e.preventDefault();
     return false;
   });
@@ -499,9 +503,13 @@ ready(function () {
   on(
     document.querySelectorAll(".advanced-filter-select"),
     "change",
-    update_user_list,
+    () => void update_user_list(),
   );
-  on(document.querySelectorAll("#user_search"), "input", update_user_list);
+  on(
+    document.querySelectorAll("#user_search"),
+    "input",
+    () => void update_user_list(),
+  );
 
   /*View manager*/
 
@@ -630,7 +638,7 @@ ready(function () {
   if (has_group !== null && has_group !== "") {
     advanced_filter_button_click();
     setVal(document.querySelectorAll("select[name='filter_group']"), has_group);
-    update_user_list();
+    void update_user_list();
   }
 
   on(document.querySelectorAll(".search-cancel"), "click", function () {
@@ -668,7 +676,7 @@ ready(function () {
         filter_by = "id DESC";
         break;
     }
-    update_user_list();
+    void update_user_list();
   });
   on(document.querySelectorAll("#usr-list-user"), "click", function () {
     css(icon_registered, "display", "none");
@@ -688,7 +696,7 @@ ready(function () {
         filter_by = "username ASC";
         break;
     }
-    update_user_list();
+    void update_user_list();
   });
 
   /* tabsheet pop in user */
@@ -761,11 +769,10 @@ function set_view_selector(view_type: string) {
   void ajax({
     url: "api/v1/session/preferences/user-manager-view",
     type: "PUT",
-    contentType: "application/json",
     dataType: "JSON",
-    data: JSON.stringify({
+    json: {
       value: view_type,
-    }),
+    },
   });
 }
 
@@ -795,7 +802,7 @@ function setDisplayCompact() {
   if (per_page < 10) {
     per_page = 10;
     update_pagination_menu();
-    update_user_list();
+    void update_user_list();
 
     removeClass(
       document.querySelectorAll("#pagination-per-page-5"),
@@ -1176,7 +1183,7 @@ function move_to_page(page: number) {
   if (page < 1 || page > max_page) return;
   actual_page = page;
   update_pagination_menu();
-  update_user_list();
+  void update_user_list();
 }
 
 on(document.querySelectorAll(".pagination-arrow.rigth"), "click", () => {
@@ -1194,17 +1201,16 @@ on(
     void ajax({
       url: "api/v1/session/preferences/user-manager-pagination",
       type: "PUT",
-      contentType: "application/json",
-      data: JSON.stringify({
+      json: {
         value: String(parseInt(htmlOf(this) ?? "0")),
         isJson: false,
-      }),
+      },
     });
 
     per_page = parseInt(htmlOf(this) ?? "0");
     actual_page = 1;
     update_pagination_menu();
-    update_user_list();
+    void update_user_list();
 
     const parent = this.parentElement;
     if (parent !== null) {
@@ -1370,7 +1376,7 @@ function setupRegisterDates(registerDatesList: string[]) {
             getDateStr(registerDatesList[ui.values![1]!]!),
           ),
         );
-        update_user_list();
+        void update_user_list();
       },
     },
   );
@@ -1504,7 +1510,7 @@ function fill_user_selected_list() {
     }
   }
   if (elems_with_username < 5 && elems_with_username !== selection.length) {
-    get_first_selection_usernames(generate_user_selected_items);
+    void get_first_selection_usernames(generate_user_selected_items);
   } else {
     generate_user_selected_items();
   }
@@ -2011,7 +2017,7 @@ function event_validate_main_user(new_main_username: string, user_id: number) {
   const validateBtn = document.querySelectorAll(".main-user-btn-validate");
   off(validateBtn, "click");
   on(validateBtn, "click", function () {
-    set_main_user(user_id, new_main_username);
+    void set_main_user(user_id, new_main_username);
   });
 }
 
@@ -2376,11 +2382,14 @@ function fill_user_edit_update(user_to_edit: UserRow, pop_in: Element) {
   on(
     updateBtn,
     "click",
-    user_to_edit.id === guest_id ? update_guest_info : update_user_info,
+    () =>
+      void (user_to_edit.id === guest_id
+        ? update_guest_info()
+        : update_user_info()),
   );
   const usernameValidate = find(pop_in, ".edit-username-validate");
   off(usernameValidate, "click");
-  on(usernameValidate, "click", update_user_username);
+  on(usernameValidate, "click", () => void update_user_username());
   const editModalPassword = find(pop_in, "#edit_modal_password");
   off(editModalPassword, "click");
   on(editModalPassword, "click", function () {
@@ -2393,7 +2402,7 @@ function fill_user_edit_update(user_to_edit: UserRow, pop_in: Element) {
     attr(sendPasswordLink, "title", "");
     off(sendPasswordLink, "click");
     on(sendPasswordLink, "click", function () {
-      send_link_password(
+      void send_link_password(
         user_to_edit.email,
         user_to_edit.username,
         user_to_edit.id,
@@ -2420,7 +2429,7 @@ function fill_user_edit_update(user_to_edit: UserRow, pop_in: Element) {
       document.querySelectorAll("#result_send_mail_copy_input"),
     );
     if (inputValue === "") {
-      send_link_password(
+      void send_link_password(
         user_to_edit.email,
         user_to_edit.username,
         user_to_edit.id,
@@ -2478,7 +2487,7 @@ function fill_user_edit_update(user_to_edit: UserRow, pop_in: Element) {
       html(errDiv, noMatchPassword);
       show_error_edit_user();
     } else {
-      update_user_password();
+      void update_user_password();
     }
   });
   const deleteBtn = find(pop_in, ".delete-user-button");
@@ -2492,7 +2501,7 @@ function fill_user_edit_update(user_to_edit: UserRow, pop_in: Element) {
           text: confirm_msg,
           btnClass: "btn-red",
           action: function () {
-            delete_user(user_to_edit.id);
+            void delete_user(user_to_edit.id);
           },
         },
         cancel: {
@@ -2879,31 +2888,37 @@ function fill_ajax_data_from_container(
 Ajax Requests
 ----------------*/
 
-function get_first_selection_usernames(callback: () => void) {
+async function get_first_selection_usernames(
+  callback: () => void,
+): Promise<void> {
   const first_ids = selection.slice(0, 50).map((x) => x.id);
-  void ajax({
-    url: "api/v1/users",
-    type: "GET",
-    data: {
-      order: "id",
-      userIds: first_ids,
-      exclude: [guest_id],
-    },
-    dataType: "json",
-    success: function (response: UserListResponse) {
-      const result = response.users;
-      for (const resultUser of result) {
-        const index = selection.findIndex((x) => x.id === resultUser.id);
-        if (index !== -1) {
-          selection[index]!.username = resultUser.username;
-        }
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    const response = (await ajax({
+      url: "api/v1/users",
+      type: "GET",
+      data: {
+        order: "id",
+        userIds: first_ids,
+        exclude: [guest_id],
+      },
+      dataType: "json",
+    })) as UserListResponse;
+    const result = response.users;
+    for (const resultUser of result) {
+      const index = selection.findIndex((x) => x.id === resultUser.id);
+      if (index !== -1) {
+        selection[index]!.username = resultUser.username;
       }
-      callback();
-    },
-  });
+    }
+    callback();
+  } catch {
+    // No error handling before conversion either -- a failure here
+    // silently leaves the selection's usernames unset.
+  }
 }
 
-function select_whole_set() {
+async function select_whole_set(): Promise<void> {
   const filterLevel = val(
     document.querySelectorAll(".advanced-filter-select[name=filter_level]"),
   );
@@ -2913,59 +2928,59 @@ function select_whole_set() {
   const filterStatus = val(
     document.querySelectorAll(".advanced-filter-select[name=filter_status]"),
   );
-  void ajax({
-    url: "api/v1/users",
-    type: "GET",
-    data: {
-      order: "id",
-      page: actual_page - 1,
-      perPage: 0,
-      exclude: [guest_id],
-      status:
-        filterStatus !== undefined && filterStatus !== "" ? [filterStatus] : [],
-      groupIds:
-        filterGroup !== undefined && filterGroup !== "" ? [filterGroup] : [],
-      minLevel: filterLevel,
-      maxLevel: filterLevel,
-      minRegister:
-        register_dates[
-          slider(
-            document.querySelectorAll(
-              ".dates-select-bar .slider-bar-container",
-            ),
-            "option",
-            "values",
-          )![0]!
-        ],
-      maxRegister:
-        register_dates[
-          slider(
-            document.querySelectorAll(
-              ".dates-select-bar .slider-bar-container",
-            ),
-            "option",
-            "values",
-          )![1]!
-        ],
-    },
-    dataType: "json",
-    beforeSend: function () {
-      show(document.querySelectorAll("#checkActions .loading"));
-    },
-    success: function (response: UserListResponse) {
-      selection = response.users.map((x) => {
-        return { id: x.id };
-      });
-      hide(document.querySelectorAll("#checkActions .loading"));
-      update_selection_content();
-    },
-    error: function () {
-      hide(document.querySelectorAll("#checkActions .loading"));
-    },
-  });
+  show(document.querySelectorAll("#checkActions .loading"));
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    const response = (await ajax({
+      url: "api/v1/users",
+      type: "GET",
+      data: {
+        order: "id",
+        page: actual_page - 1,
+        perPage: 0,
+        exclude: [guest_id],
+        status:
+          filterStatus !== undefined && filterStatus !== ""
+            ? [filterStatus]
+            : [],
+        groupIds:
+          filterGroup !== undefined && filterGroup !== "" ? [filterGroup] : [],
+        minLevel: filterLevel,
+        maxLevel: filterLevel,
+        minRegister:
+          register_dates[
+            slider(
+              document.querySelectorAll(
+                ".dates-select-bar .slider-bar-container",
+              ),
+              "option",
+              "values",
+            )![0]!
+          ],
+        maxRegister:
+          register_dates[
+            slider(
+              document.querySelectorAll(
+                ".dates-select-bar .slider-bar-container",
+              ),
+              "option",
+              "values",
+            )![1]!
+          ],
+      },
+      dataType: "json",
+    })) as UserListResponse;
+    selection = response.users.map((x) => {
+      return { id: x.id };
+    });
+    hide(document.querySelectorAll("#checkActions .loading"));
+    update_selection_content();
+  } catch {
+    hide(document.querySelectorAll("#checkActions .loading"));
+  }
 }
 
-function update_user_username() {
+async function update_user_username(): Promise<void> {
   const pop_in_container = document.querySelector("#UserList")!;
   const ajax_data: Record<string, unknown> = {};
   const newUsername = String(
@@ -2980,103 +2995,104 @@ function update_user_username() {
     fadeOut(failEl, 2500);
     return;
   }
-  void ajax({
-    url: "api/v1/users/" + String(last_user_id),
-    type: "PATCH",
-    contentType: "application/json",
-    headers: { "X-CSRF-Token": pwg_token },
-    data: JSON.stringify(ajax_data),
-    dataType: "json",
-    success: (
-      response: operations["userUpdate"]["responses"][200]["content"]["application/json"],
-    ) => {
-      if (last_user_index !== -1) {
-        // "username" may be missing from a defensive-fallback response
-        // (the row couldn't be re-fetched right after the update) --
-        // the value we just successfully submitted is still correct.
-        const updatedUsername =
-          "username" in response ? response.username : newUsername;
-        current_users[last_user_index]!.username = updatedUsername;
-        html(
-          document.querySelectorAll(
-            "#UserList .user-property-username .edit-username-title",
-          ),
-          updatedUsername,
-        );
-        html(
-          document.querySelectorAll("#UserList .user-property-initials span"),
-          get_initials(updatedUsername),
-        );
-        fill_container_user_info(
-          document.querySelectorAll("#user-table-content .user-container")[
-            last_user_index
-          ]!,
-          last_user_index,
-        );
-      }
-      hide(document.querySelectorAll(".user-property-username-change-input"));
-      fadeIn(document.querySelectorAll(".edit-username-success"));
-      on(
-        document.querySelectorAll("#close_username_success"),
-        "click",
-        function () {
-          hide(document.querySelectorAll(".edit-username-success"));
-          show(
-            document.querySelectorAll(".user-property-username-change-input"),
-          );
-          hide(document.querySelectorAll(".user-property-username-change"));
-        },
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    const response = (await ajax({
+      url: "api/v1/users/" + String(last_user_id),
+      type: "PATCH",
+      headers: { "X-CSRF-Token": pwg_token },
+      json: ajax_data,
+      dataType: "json",
+    })) as operations["userUpdate"]["responses"][200]["content"]["application/json"];
+    if (last_user_index !== -1) {
+      // "username" may be missing from a defensive-fallback response
+      // (the row couldn't be re-fetched right after the update) --
+      // the value we just successfully submitted is still correct.
+      const updatedUsername =
+        "username" in response ? response.username : newUsername;
+      current_users[last_user_index]!.username = updatedUsername;
+      html(
+        document.querySelectorAll(
+          "#UserList .user-property-username .edit-username-title",
+        ),
+        updatedUsername,
       );
-    },
-  });
+      html(
+        document.querySelectorAll("#UserList .user-property-initials span"),
+        get_initials(updatedUsername),
+      );
+      fill_container_user_info(
+        document.querySelectorAll("#user-table-content .user-container")[
+          last_user_index
+        ]!,
+        last_user_index,
+      );
+    }
+    hide(document.querySelectorAll(".user-property-username-change-input"));
+    fadeIn(document.querySelectorAll(".edit-username-success"));
+    on(
+      document.querySelectorAll("#close_username_success"),
+      "click",
+      function () {
+        hide(document.querySelectorAll(".edit-username-success"));
+        show(document.querySelectorAll(".user-property-username-change-input"));
+        hide(document.querySelectorAll(".user-property-username-change"));
+      },
+    );
+  } catch {
+    // No error handling before conversion either -- a failure here
+    // silently leaves the username change form open.
+  }
 }
 
-function update_user_password() {
+async function update_user_password(): Promise<void> {
   const pop_in_container = document.querySelector("#UserList")!;
   const ajax_data: Record<string, unknown> = {};
   const newPassword = String(
     val(find(pop_in_container, ".user-property-input-password")),
   );
   ajax_data["password"] = newPassword;
-  void ajax({
-    url: "api/v1/users/" + String(last_user_id),
-    type: "PATCH",
-    contentType: "application/json",
-    headers: { "X-CSRF-Token": pwg_token },
-    data: JSON.stringify(ajax_data),
-    dataType: "json",
-    success: () => {
-      hide(document.querySelectorAll(".user-property-password-change-inputs"));
-      fadeIn(document.querySelectorAll("#edit_password_success_change"));
+  try {
+    await ajax({
+      url: "api/v1/users/" + String(last_user_id),
+      type: "PATCH",
+      headers: { "X-CSRF-Token": pwg_token },
+      json: ajax_data,
+      dataType: "json",
+    });
+    hide(document.querySelectorAll(".user-property-password-change-inputs"));
+    fadeIn(document.querySelectorAll("#edit_password_success_change"));
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
-      if (window.isSecureContext && navigator.clipboard) {
-        on(document.querySelectorAll("#copy_password"), "click", function () {
-          copyToClipboard(newPassword);
-          html(
-            document.querySelectorAll("#password_msg_success"),
-            passwordCopied,
-          );
-        });
-      }
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
+    if (window.isSecureContext && navigator.clipboard) {
+      on(document.querySelectorAll("#copy_password"), "click", function () {
+        copyToClipboard(newPassword);
+        html(
+          document.querySelectorAll("#password_msg_success"),
+          passwordCopied,
+        );
+      });
+    }
 
-      on(
-        document.querySelectorAll("#close_password_success"),
-        "click",
-        function () {
-          hide(document.querySelectorAll(".user-property-password-change"));
-          hide(document.querySelectorAll("#edit_password_success_change"));
-          show(
-            document.querySelectorAll(".user-property-password-change-inputs"),
-          );
-          reset_input_password();
-        },
-      );
-    },
-  });
+    on(
+      document.querySelectorAll("#close_password_success"),
+      "click",
+      function () {
+        hide(document.querySelectorAll(".user-property-password-change"));
+        hide(document.querySelectorAll("#edit_password_success_change"));
+        show(
+          document.querySelectorAll(".user-property-password-change-inputs"),
+        );
+        reset_input_password();
+      },
+    );
+  } catch {
+    // No error handling before conversion either -- a failure here
+    // silently leaves the password change form open.
+  }
 }
 
-function update_user_info() {
+async function update_user_info(): Promise<void> {
   //Show spinner
   const btnIcon = document.querySelectorAll(".update-user-button i");
   removeClass(btnIcon, "icon-floppy");
@@ -3098,119 +3114,124 @@ function update_user_info() {
   }
 
   ajax_data = fill_ajax_data_from_container(ajax_data, pop_in_container);
-  void ajax({
-    url: "api/v1/users/" + String(last_user_id),
-    type: "PATCH",
-    contentType: "application/json",
-    headers: { "X-CSRF-Token": pwg_token },
-    data: JSON.stringify(ajax_data),
-    dataType: "json",
-    beforeSend: function () {
+  fadeOut(document.querySelectorAll("#UserList .update-user-fail"));
+  fadeOut(document.querySelectorAll("#UserList .update-user-success"));
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    const result_user = (await ajax({
+      url: "api/v1/users/" + String(last_user_id),
+      type: "PATCH",
+      headers: { "X-CSRF-Token": pwg_token },
+      json: ajax_data,
+      dataType: "json",
+    })) as operations["userUpdate"]["responses"][200]["content"]["application/json"];
+    if (last_user_index !== -1) {
+      current_users[last_user_index] = {
+        ...current_users[last_user_index]!,
+        ...result_user,
+      };
+      fill_container_user_info(
+        document.querySelectorAll("#user-table-content .user-container")[
+          last_user_index
+        ]!,
+        last_user_index,
+      );
+    }
+    const successEl = document.querySelectorAll(
+      "#UserList .update-user-success",
+    );
+    fadeIn(successEl);
+    delay(successEl, 1500);
+    fadeOut(successEl, 2500);
+
+    //Hide spinner
+    removeClass(btnIcon, "icon-spin6 animate-spin");
+    addClass(btnIcon, "icon-floppy");
+    removeClass(
+      document.querySelectorAll(".update-user-button"),
+      "unclickable",
+    );
+
+    // update plugins
+    if (Object.keys(plugins_get_functions).length > 0) {
+      Object.entries(plugins_set_functions).forEach((f) => {
+        f[1]();
+      });
+    }
+
+    // update who is the king -- `result_user` may be a defensive
+    // fallback (`{id}` only, missing `.status`); the merged
+    // `current_users` entry (old data overlaid with whatever the
+    // response did carry) is always a real, complete UserRow.
+    fill_who_is_the_king(
+      last_user_index !== -1 ? current_users[last_user_index]! : guest_user,
+      document.querySelector("#UserList")!,
+    );
+  } catch (e) {
+    const message =
+      (e instanceof AjaxError
+        ? // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- safe regardless of the real shape: a malformed/non-object responseJSON just makes `.detail` read undefined, falling back below.
+          (e.responseJSON as { detail?: string } | undefined)?.detail
+        : undefined) ?? errorStr;
+    html(document.querySelectorAll("#UserList .update-user-fail"), message);
+    fadeIn(document.querySelectorAll("#UserList .update-user-fail"));
+    addClass(btnIcon, "icon-floppy");
+    removeClass(btnIcon, "icon-spin6 animate-spin");
+    removeClass(
+      document.querySelectorAll(".update-user-button"),
+      "unclickable",
+    );
+    setTimeout(() => {
       fadeOut(document.querySelectorAll("#UserList .update-user-fail"));
-      fadeOut(document.querySelectorAll("#UserList .update-user-success"));
-    },
-    success: function (
-      result_user: operations["userUpdate"]["responses"][200]["content"]["application/json"],
-    ) {
-      if (last_user_index !== -1) {
-        current_users[last_user_index] = {
-          ...current_users[last_user_index]!,
-          ...result_user,
-        };
-        fill_container_user_info(
-          document.querySelectorAll("#user-table-content .user-container")[
-            last_user_index
-          ]!,
-          last_user_index,
-        );
-      }
-      const successEl = document.querySelectorAll(
-        "#UserList .update-user-success",
-      );
-      fadeIn(successEl);
-      delay(successEl, 1500);
-      fadeOut(successEl, 2500);
-
-      //Hide spinner
-      removeClass(btnIcon, "icon-spin6 animate-spin");
-      addClass(btnIcon, "icon-floppy");
-      removeClass(
-        document.querySelectorAll(".update-user-button"),
-        "unclickable",
-      );
-
-      // update plugins
-      if (Object.keys(plugins_get_functions).length > 0) {
-        Object.entries(plugins_set_functions).forEach((f) => {
-          f[1]();
-        });
-      }
-
-      // update who is the king -- `result_user` may be a defensive
-      // fallback (`{id}` only, missing `.status`); the merged
-      // `current_users` entry (old data overlaid with whatever the
-      // response did carry) is always a real, complete UserRow.
-      fill_who_is_the_king(
-        last_user_index !== -1 ? current_users[last_user_index]! : guest_user,
-        document.querySelector("#UserList")!,
-      );
-    },
-    error: function (jqXHR) {
-      const message =
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- safe regardless of the real shape: a malformed/non-object responseJSON just makes `.detail` read undefined, falling back below.
-        (jqXHR.responseJSON as { detail?: string } | undefined)?.detail ??
-        errorStr;
-      html(document.querySelectorAll("#UserList .update-user-fail"), message);
-      fadeIn(document.querySelectorAll("#UserList .update-user-fail"));
-      addClass(btnIcon, "icon-floppy");
-      removeClass(btnIcon, "icon-spin6 animate-spin");
-      removeClass(
-        document.querySelectorAll(".update-user-button"),
-        "unclickable",
-      );
-      setTimeout(() => {
-        fadeOut(document.querySelectorAll("#UserList .update-user-fail"));
-      }, 5000);
-    },
-  });
+    }, 5000);
+  }
 }
 
-function get_guest_info() {
-  void ajax({
-    url: "api/v1/users",
-    type: "GET",
-    data: {
-      userIds: [guest_id],
-    },
-    dataType: "json",
-    success: (response: UserListResponse) => {
-      if (response.users.length) {
-        guest_user = response.users[0]!;
-        fill_guest_edit();
-      }
-    },
-  });
+async function get_guest_info(): Promise<void> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    const response = (await ajax({
+      url: "api/v1/users",
+      type: "GET",
+      data: {
+        userIds: [guest_id],
+      },
+      dataType: "json",
+    })) as UserListResponse;
+    if (response.users.length) {
+      guest_user = response.users[0]!;
+      fill_guest_edit();
+    }
+  } catch {
+    // No error handling before conversion either.
+  }
 }
 
-function get_user_info(uid: number, callback: (() => void) | null = null) {
-  void ajax({
-    url: "api/v1/users",
-    type: "GET",
-    data: {
-      userIds: [uid],
-    },
-    dataType: "json",
-    success: (response: UserListResponse) => {
-      if (response.users.length) {
-        const result_user = response.users[0]!;
-        fill_user_edit(result_user);
-        callback?.();
-      }
-    },
-  });
+async function get_user_info(
+  uid: number,
+  callback: (() => void) | null = null,
+): Promise<void> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    const response = (await ajax({
+      url: "api/v1/users",
+      type: "GET",
+      data: {
+        userIds: [uid],
+      },
+      dataType: "json",
+    })) as UserListResponse;
+    if (response.users.length) {
+      const result_user = response.users[0]!;
+      fill_user_edit(result_user);
+      callback?.();
+    }
+  } catch {
+    // No error handling before conversion either.
+  }
 }
 
-function update_guest_info() {
+async function update_guest_info(): Promise<void> {
   //Show spinner
   const btnIcon = document.querySelectorAll(".update-user-button i");
   removeClass(btnIcon, "icon-floppy");
@@ -3224,42 +3245,38 @@ function update_guest_info() {
   ajax_data = fill_ajax_data_from_container(ajax_data, pop_in_container);
   ajax_data["email"] = undefined;
   ajax_data["status"] = undefined;
-  void ajax({
-    url: "api/v1/users/" + String(guest_id),
-    type: "PATCH",
-    contentType: "application/json",
-    headers: { "X-CSRF-Token": pwg_token },
-    data: JSON.stringify(ajax_data),
-    dataType: "json",
-    success: function (
-      _data: operations["userUpdate"]["responses"][200]["content"]["application/json"],
-    ) {
-      const successEl = document.querySelectorAll(
-        "#GuestUserList .update-user-success",
-      );
-      fadeIn(successEl);
-      delay(successEl, 1500);
-      fadeOut(successEl, 2500);
-      //Hide spinner
-      removeClass(btnIcon, "icon-spin6 animate-spin");
-      addClass(btnIcon, "icon-floppy");
-      removeClass(
-        document.querySelectorAll(".update-user-button"),
-        "unclickable",
-      );
-    },
-    error: function () {
-      removeClass(btnIcon, "icon-spin6 animate-spin");
-      addClass(btnIcon, "icon-floppy");
-      removeClass(
-        document.querySelectorAll(".update-user-button"),
-        "unclickable",
-      );
-    },
-  });
+  try {
+    await ajax({
+      url: "api/v1/users/" + String(guest_id),
+      type: "PATCH",
+      headers: { "X-CSRF-Token": pwg_token },
+      json: ajax_data,
+      dataType: "json",
+    });
+    const successEl = document.querySelectorAll(
+      "#GuestUserList .update-user-success",
+    );
+    fadeIn(successEl);
+    delay(successEl, 1500);
+    fadeOut(successEl, 2500);
+    //Hide spinner
+    removeClass(btnIcon, "icon-spin6 animate-spin");
+    addClass(btnIcon, "icon-floppy");
+    removeClass(
+      document.querySelectorAll(".update-user-button"),
+      "unclickable",
+    );
+  } catch {
+    removeClass(btnIcon, "icon-spin6 animate-spin");
+    addClass(btnIcon, "icon-floppy");
+    removeClass(
+      document.querySelectorAll(".update-user-button"),
+      "unclickable",
+    );
+  }
 }
 
-function update_user_list() {
+async function update_user_list(): Promise<void> {
   const update_data: Record<string, unknown> = {
     order: filter_by, // We want the most recent user first
     page: actual_page - 1,
@@ -3315,103 +3332,95 @@ function update_user_list() {
         )![1]!
       ];
   }
-  void ajax({
-    url: "api/v1/users",
-    type: "GET",
-    data: update_data,
-    dataType: "json",
-    beforeSend: function () {
-      show(document.querySelectorAll(".user-update-spinner"));
-    },
-    success: function (response: UserListResponse) {
-      total_users = response.totalCount;
-      if (first_update) {
-        document
-          .querySelector("h1")
-          ?.insertAdjacentHTML(
-            "beforeend",
-            `<span class='badge-number'>${total_users}</span>`,
-          );
-        first_update = false;
-      }
-      nb_filtered_users = response.totalCount;
-      update_pagination_menu();
-      current_users = response.users;
-      generate_user_list();
-      on(
+  show(document.querySelectorAll(".user-update-spinner"));
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    const response = (await ajax({
+      url: "api/v1/users",
+      type: "GET",
+      data: update_data,
+      dataType: "json",
+    })) as UserListResponse;
+    total_users = response.totalCount;
+    if (first_update) {
+      document
+        .querySelector("h1")
+        ?.insertAdjacentHTML(
+          "beforeend",
+          `<span class='badge-number'>${total_users}</span>`,
+        );
+      first_update = false;
+    }
+    nb_filtered_users = response.totalCount;
+    update_pagination_menu();
+    current_users = response.users;
+    generate_user_list();
+    on(
+      document.querySelectorAll(".user-col.user-first-col.user-container-edit"),
+      "click",
+      function (this: Element) {
+        const uid_index = Number(
+          attrOf(this.closest(".user-container")!, "key"),
+        );
+        last_user_id = current_users[uid_index]!.id;
+        last_user_index = uid_index;
+        fill_user_edit(current_users[uid_index]!);
+        fadeIn(document.querySelectorAll("#UserList"));
+        document.querySelector("#tab_properties")?.scrollIntoView({
+          behavior: "instant",
+        });
+      },
+    );
+    set_selected_to_selection();
+
+    hide(document.querySelectorAll(".user-update-spinner"));
+
+    let nb_filters = 0;
+    if (
+      val(
         document.querySelectorAll(
-          ".user-col.user-first-col.user-container-edit",
+          ".advanced-filter-select[name=filter_status]",
         ),
-        "click",
-        function (this: Element) {
-          const uid_index = Number(
-            attrOf(this.closest(".user-container")!, "key"),
-          );
-          last_user_id = current_users[uid_index]!.id;
-          last_user_index = uid_index;
-          fill_user_edit(current_users[uid_index]!);
-          fadeIn(document.querySelectorAll("#UserList"));
-          document.querySelector("#tab_properties")?.scrollIntoView({
-            behavior: "instant",
-          });
-        },
-      );
-      set_selected_to_selection();
+      ) !== ""
+    )
+      nb_filters += 1;
+    if (
+      val(
+        document.querySelectorAll(".advanced-filter-select[name=filter_group]"),
+      ) !== ""
+    )
+      nb_filters += 1;
+    if (
+      val(
+        document.querySelectorAll(".advanced-filter-select[name=filter_level]"),
+      ) !== ""
+    )
+      nb_filters += 1;
+    if (
+      slider(
+        document.querySelectorAll(".dates-select-bar .slider-bar-container"),
+        "option",
+        "values",
+      )![0] !== 0
+    )
+      nb_filters += 1;
+    if (
+      slider(
+        document.querySelectorAll(".dates-select-bar .slider-bar-container"),
+        "option",
+        "values",
+      )![1] !==
+      register_dates.length - 1
+    )
+      nb_filters += 1;
 
-      hide(document.querySelectorAll(".user-update-spinner"));
-
-      let nb_filters = 0;
-      if (
-        val(
-          document.querySelectorAll(
-            ".advanced-filter-select[name=filter_status]",
-          ),
-        ) !== ""
-      )
-        nb_filters += 1;
-      if (
-        val(
-          document.querySelectorAll(
-            ".advanced-filter-select[name=filter_group]",
-          ),
-        ) !== ""
-      )
-        nb_filters += 1;
-      if (
-        val(
-          document.querySelectorAll(
-            ".advanced-filter-select[name=filter_level]",
-          ),
-        ) !== ""
-      )
-        nb_filters += 1;
-      if (
-        slider(
-          document.querySelectorAll(".dates-select-bar .slider-bar-container"),
-          "option",
-          "values",
-        )![0] !== 0
-      )
-        nb_filters += 1;
-      if (
-        slider(
-          document.querySelectorAll(".dates-select-bar .slider-bar-container"),
-          "option",
-          "values",
-        )![1] !==
-        register_dates.length - 1
-      )
-        nb_filters += 1;
-
-      show_filter_infos(nb_filters);
-    },
-    error: () => {
-      hide(document.querySelectorAll(".user-update-spinner"));
-    },
-  });
+    show_filter_infos(nb_filters);
+  } catch {
+    hide(document.querySelectorAll(".user-update-spinner"));
+  }
 }
 
-function add_user() {
+async function add_user(): Promise<void> {
   const ajax_data: Record<string, unknown> = {};
   const groups_selected = Array.from(
     document.querySelectorAll(
@@ -3464,273 +3473,219 @@ function add_user() {
     payload["autoPassword"] = true;
   }
 
-  void ajax({
-    url: "api/v1/users",
-    type: "POST",
-    contentType: "application/json",
-    headers: { "X-CSRF-Token": pwg_token },
-    data: JSON.stringify(payload),
-    dataType: "json",
-    beforeSend: function () {
-      css(
+  css(
+    document.querySelectorAll("#AddUser .AddUserErrors"),
+    "visibility",
+    "hidden",
+  );
+  if (
+    val(
+      document.querySelectorAll(".AddUserLabelUsername .user-property-input"),
+    ) === ""
+  ) {
+    html(document.querySelectorAll("#AddUser .AddUserErrors"), missingUsername);
+    css(
+      document.querySelectorAll("#AddUser .AddUserErrors"),
+      "visibility",
+      "visible",
+    );
+    // Real, previously-live bug fixed here: the old `beforeSend`
+    // callback's `return false` was meant to cancel the request (real
+    // jQuery `beforeSend` semantics), but this app's own `ajax()` never
+    // checked `beforeSend`'s return value at all -- the POST fired
+    // regardless of this validation failing. A real early `return` here
+    // is the first time this validation actually prevents the request.
+    return;
+  }
+  if ("generic" === ajax_data["status"]) {
+    const pass = val(document.querySelectorAll("#add_user_pass"));
+    const confPass = val(document.querySelectorAll("#add_user_confpass"));
+    if ("" === pass) {
+      html(
         document.querySelectorAll("#AddUser .AddUserErrors"),
-        "visibility",
-        "hidden",
+        missingPassword,
       );
-      if (
-        val(
-          document.querySelectorAll(
-            ".AddUserLabelUsername .user-property-input",
-          ),
-        ) === ""
-      ) {
-        html(
-          document.querySelectorAll("#AddUser .AddUserErrors"),
-          missingUsername,
-        );
-        css(
-          document.querySelectorAll("#AddUser .AddUserErrors"),
-          "visibility",
-          "visible",
-        );
-        return false;
-      }
-      if ("generic" === ajax_data["status"]) {
-        const pass = val(document.querySelectorAll("#add_user_pass"));
-        const confPass = val(document.querySelectorAll("#add_user_confpass"));
-        if ("" === pass) {
-          html(
-            document.querySelectorAll("#AddUser .AddUserErrors"),
-            missingPassword,
-          );
-          css(
-            document.querySelectorAll("#AddUser .AddUserErrors"),
-            "visibility",
-            "visible",
-          );
-          return false;
-        }
-        if ("" === confPass) {
-          html(
-            document.querySelectorAll("#AddUser .AddUserErrors"),
-            missingConfPassword,
-          );
-          css(
-            document.querySelectorAll("#AddUser .AddUserErrors"),
-            "visibility",
-            "visible",
-          );
-          return false;
-        }
-        if (pass !== confPass) {
-          html(
-            document.querySelectorAll("#AddUser .AddUserErrors"),
-            noMatchPassword,
-          );
-          css(
-            document.querySelectorAll("#AddUser .AddUserErrors"),
-            "visibility",
-            "visible",
-          );
-          return false;
-        }
-      }
-      return undefined;
-    },
-    success: (
-      response: operations["userCreate"]["responses"][201]["content"]["application/json"],
-    ) => {
-      const new_user_id = response.id;
-      const default_group = "groups" in response ? response.groups : [];
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax_data["groupIds"] was set to groups_selected (a real number[]) earlier in this same function, the only writer before this read.
-      ajax_data["groupIds"] = (ajax_data["groupIds"] as number[]).concat(
-        default_group,
-      );
-      add_infos_to_new_user(new_user_id, ajax_data);
-    },
-    error: (jqXHR) => {
-      const message =
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- safe regardless of the real shape: a malformed/non-object responseJSON just makes `.detail` read undefined, falling back below.
-        (jqXHR.responseJSON as { detail?: string } | undefined)?.detail ??
-        errorStr;
-      html(document.querySelectorAll("#AddUser .AddUserErrors"), message);
       css(
         document.querySelectorAll("#AddUser .AddUserErrors"),
         "visibility",
         "visible",
       );
-    },
-  });
+      return;
+    }
+    if ("" === confPass) {
+      html(
+        document.querySelectorAll("#AddUser .AddUserErrors"),
+        missingConfPassword,
+      );
+      css(
+        document.querySelectorAll("#AddUser .AddUserErrors"),
+        "visibility",
+        "visible",
+      );
+      return;
+    }
+    if (pass !== confPass) {
+      html(
+        document.querySelectorAll("#AddUser .AddUserErrors"),
+        noMatchPassword,
+      );
+      css(
+        document.querySelectorAll("#AddUser .AddUserErrors"),
+        "visibility",
+        "visible",
+      );
+      return;
+    }
+  }
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    const response = (await ajax({
+      url: "api/v1/users",
+      type: "POST",
+      headers: { "X-CSRF-Token": pwg_token },
+      json: payload,
+      dataType: "json",
+    })) as operations["userCreate"]["responses"][201]["content"]["application/json"];
+    const new_user_id = response.id;
+    const default_group = "groups" in response ? response.groups : [];
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax_data["groupIds"] was set to groups_selected (a real number[]) earlier in this same function, the only writer before this read.
+    ajax_data["groupIds"] = (ajax_data["groupIds"] as number[]).concat(
+      default_group,
+    );
+    void add_infos_to_new_user(new_user_id, ajax_data);
+  } catch (e) {
+    const message =
+      (e instanceof AjaxError
+        ? // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- safe regardless of the real shape: a malformed/non-object responseJSON just makes `.detail` read undefined, falling back below.
+          (e.responseJSON as { detail?: string } | undefined)?.detail
+        : undefined) ?? errorStr;
+    html(document.querySelectorAll("#AddUser .AddUserErrors"), message);
+    css(
+      document.querySelectorAll("#AddUser .AddUserErrors"),
+      "visibility",
+      "visible",
+    );
+  }
 }
 
-function add_infos_to_new_user(
+async function add_infos_to_new_user(
   user_id: number,
   ajax_data: Record<string, unknown>,
-) {
-  void ajax({
-    url: "api/v1/users/" + String(user_id),
-    type: "PATCH",
-    contentType: "application/json",
-    headers: { "X-CSRF-Token": pwg_token },
-    data: JSON.stringify({
-      status: ajax_data["status"],
-      level: ajax_data["level"],
-      groupIds: ajax_data["groupIds"],
-      enabledHigh: ajax_data["enabledHigh"],
-    }),
-    dataType: "json",
-    success: function (
-      response: operations["userUpdate"]["responses"][200]["content"]["application/json"],
-    ) {
-      const new_user_id = response.id;
-      update_user_list();
-      // add_user_close();
-      removeClass(
-        document.querySelectorAll("#AddUserUpdated"),
-        "icon-red icon-cancel",
-      );
-      addClass(
-        document.querySelectorAll("#AddUserUpdated"),
-        "icon-green border-green icon-ok",
-      );
-      html(
-        document.querySelectorAll("#AddUserUpdatedText"),
-        user_added_str.replace("%s", String(ajax_data["username"])),
-      );
-      const status = ["webmaster", "admin", "normal"];
-      if (status.includes(String(ajax_data["status"]))) {
-        send_new_user_password(new_user_id, String(ajax_data["email"]));
+): Promise<void> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    const response = (await ajax({
+      url: "api/v1/users/" + String(user_id),
+      type: "PATCH",
+      headers: { "X-CSRF-Token": pwg_token },
+      json: {
+        status: ajax_data["status"],
+        level: ajax_data["level"],
+        groupIds: ajax_data["groupIds"],
+        enabledHigh: ajax_data["enabledHigh"],
+      },
+      dataType: "json",
+    })) as operations["userUpdate"]["responses"][200]["content"]["application/json"];
+    const new_user_id = response.id;
+    void update_user_list();
+    // add_user_close();
+    removeClass(
+      document.querySelectorAll("#AddUserUpdated"),
+      "icon-red icon-cancel",
+    );
+    addClass(
+      document.querySelectorAll("#AddUserUpdated"),
+      "icon-green border-green icon-ok",
+    );
+    html(
+      document.querySelectorAll("#AddUserUpdatedText"),
+      user_added_str.replace("%s", String(ajax_data["username"])),
+    );
+    const status = ["webmaster", "admin", "normal"];
+    if (status.includes(String(ajax_data["status"]))) {
+      void send_new_user_password(new_user_id, String(ajax_data["email"]));
+    } else {
+      add_user_close();
+    }
+    setVal(document.querySelectorAll("#AddUser .user-property-input"), "");
+    const editNow = document.querySelectorAll("#AddUserSuccess .edit-now");
+    off(editNow, "click");
+    on(editNow, "click", () => {
+      last_user_id = new_user_id;
+      last_user_index = get_container_index_from_uid(new_user_id);
+      if (last_user_index !== -1) {
+        fill_user_edit(current_users[last_user_index]!);
+        open_user_list();
       } else {
-        add_user_close();
+        void get_user_info(new_user_id, open_user_list);
       }
-      setVal(document.querySelectorAll("#AddUser .user-property-input"), "");
-      const editNow = document.querySelectorAll("#AddUserSuccess .edit-now");
-      off(editNow, "click");
-      on(editNow, "click", () => {
-        last_user_id = new_user_id;
-        last_user_index = get_container_index_from_uid(new_user_id);
-        if (last_user_index !== -1) {
-          fill_user_edit(current_users[last_user_index]!);
-          open_user_list();
-        } else {
-          get_user_info(new_user_id, open_user_list);
-        }
-      });
-      html(
-        document.querySelectorAll("#AddUserSuccess label span:first-child"),
-        user_added_str.replace("%s", String(ajax_data["username"])),
-      );
-      css(document.querySelectorAll("#AddUserSuccess"), "display", "flex");
-      html(
-        document.querySelectorAll(".badge-number"),
-        String(
-          Number(htmlOf(document.querySelectorAll(".badge-number")) ?? "0") + 1,
-        ),
-      );
-    },
-    error: function (jqXHR) {
-      const message =
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- safe regardless of the real shape: a malformed/non-object responseJSON just makes `.detail` read undefined, falling back below.
-        (jqXHR.responseJSON as { detail?: string } | undefined)?.detail ??
-        errorStr;
-      html(document.querySelectorAll("#AddUser .AddUserErrors"), message);
-      css(
-        document.querySelectorAll("#AddUser .AddUserErrors"),
-        "visibility",
-        "visible",
-      );
-    },
-  });
+    });
+    html(
+      document.querySelectorAll("#AddUserSuccess label span:first-child"),
+      user_added_str.replace("%s", String(ajax_data["username"])),
+    );
+    css(document.querySelectorAll("#AddUserSuccess"), "display", "flex");
+    html(
+      document.querySelectorAll(".badge-number"),
+      String(
+        Number(htmlOf(document.querySelectorAll(".badge-number")) ?? "0") + 1,
+      ),
+    );
+  } catch (e) {
+    const message =
+      (e instanceof AjaxError
+        ? // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- safe regardless of the real shape: a malformed/non-object responseJSON just makes `.detail` read undefined, falling back below.
+          (e.responseJSON as { detail?: string } | undefined)?.detail
+        : undefined) ?? errorStr;
+    html(document.querySelectorAll("#AddUser .AddUserErrors"), message);
+    css(
+      document.querySelectorAll("#AddUser .AddUserErrors"),
+      "visibility",
+      "visible",
+    );
+  }
 }
 
-function send_new_user_password(user_id: number, mail: string) {
+async function send_new_user_password(
+  user_id: number,
+  mail: string,
+): Promise<void> {
   const send_by_mail = mail === "" ? false : true;
-  void ajax({
-    url: "api/v1/users/" + String(user_id) + "/actions/generate-password-link",
-    dataType: "json",
-    type: "POST",
-    contentType: "application/json",
-    headers: { "X-CSRF-Token": pwg_token },
-    data: JSON.stringify({
-      sendByMail: send_by_mail,
-    }),
-    success: function (
-      response: operations["userGeneratePasswordLink"]["responses"][200]["content"]["application/json"],
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    const response = (await ajax({
+      url:
+        "api/v1/users/" + String(user_id) + "/actions/generate-password-link",
+      dataType: "json",
+      type: "POST",
+      headers: { "X-CSRF-Token": pwg_token },
+      json: {
+        sendByMail: send_by_mail,
+      },
+    })) as operations["userGeneratePasswordLink"]["responses"][200]["content"]["application/json"];
+    const password_container = document.querySelectorAll(
+      "#AddUserPasswordInputContainer",
+    );
+    show(password_container);
+    hide(document.querySelectorAll("#AddUserFieldContainer"));
+    fadeIn(document.querySelectorAll("#AddUserSuccessContainer"));
+    setVal(
+      document.querySelectorAll("#AddUserPasswordLink"),
+      response.generatedLink,
+    );
+    trigger(document.querySelectorAll("#AddUserPasswordLink"), "focus");
+    html(
+      document.querySelectorAll("#AddUserTextField"),
+      send_by_mail
+        ? sprintf(validLinkMail, response.timeValidation, `<b>${mail}</b>`)
+        : sprintf(validLinkWithoutMail, response.timeValidation),
+    );
+
+    if (
+      send_by_mail &&
+      (response.sendByMail === false || response.sendByMail === null)
     ) {
-      const password_container = document.querySelectorAll(
-        "#AddUserPasswordInputContainer",
-      );
-      show(password_container);
-      hide(document.querySelectorAll("#AddUserFieldContainer"));
-      fadeIn(document.querySelectorAll("#AddUserSuccessContainer"));
-      setVal(
-        document.querySelectorAll("#AddUserPasswordLink"),
-        response.generatedLink,
-      );
-      trigger(document.querySelectorAll("#AddUserPasswordLink"), "focus");
-      html(
-        document.querySelectorAll("#AddUserTextField"),
-        send_by_mail
-          ? sprintf(validLinkMail, response.timeValidation, `<b>${mail}</b>`)
-          : sprintf(validLinkWithoutMail, response.timeValidation),
-      );
-
-      if (
-        send_by_mail &&
-        (response.sendByMail === false || response.sendByMail === null)
-      ) {
-        removeClass(
-          document.querySelectorAll("#AddUserUpdated"),
-          "icon-green border-green icon-ok",
-        );
-        addClass(
-          document.querySelectorAll("#AddUserUpdated"),
-          "icon-red-error icon-cancel",
-        );
-        html(document.querySelectorAll("#AddUserUpdatedText"), errorMailSent);
-        html(
-          document.querySelectorAll("#AddUserTextField"),
-          sprintf(errorMailSentMsg, response.timeValidation),
-        );
-      } else if (
-        send_by_mail &&
-        response.sendByMail !== false &&
-        response.sendByMail !== null
-      ) {
-        hide(password_container);
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
-      if (window.isSecureContext && navigator.clipboard) {
-        const copyBtn = document.querySelectorAll("#AddUserCopyPassword");
-        off(copyBtn, "click");
-        on(copyBtn, "click", function () {
-          const successMsg = document.querySelectorAll("#AddUserUpdatedText");
-          fadeOut(successMsg);
-          copyToClipboard(response.generatedLink);
-          removeClass(
-            document.querySelectorAll("#AddUserUpdated"),
-            "icon-red icon-cancel",
-          );
-          addClass(
-            document.querySelectorAll("#AddUserUpdated"),
-            "icon-green border-green icon-ok",
-          );
-          html(successMsg, copyLinkStr);
-          fadeIn(successMsg);
-        });
-      }
-      const addUserButton = document.querySelectorAll("#AddUserButton");
-      off(addUserButton, "click");
-      on(addUserButton, "click", function () {
-        add_user_close();
-      });
-    },
-    error: function (jqXHR) {
-      const message =
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- safe regardless of the real shape: a malformed/non-object responseJSON just makes `.detail` read undefined, falling back below.
-        (jqXHR.responseJSON as { detail?: string } | undefined)?.detail ??
-        errorStr;
       removeClass(
         document.querySelectorAll("#AddUserUpdated"),
         "icon-green border-green icon-ok",
@@ -3739,29 +3694,80 @@ function send_new_user_password(user_id: number, mail: string) {
         document.querySelectorAll("#AddUserUpdated"),
         "icon-red-error icon-cancel",
       );
-      html(document.querySelectorAll("#AddUserUpdatedText"), message);
-    },
-  });
+      html(document.querySelectorAll("#AddUserUpdatedText"), errorMailSent);
+      html(
+        document.querySelectorAll("#AddUserTextField"),
+        sprintf(errorMailSentMsg, response.timeValidation),
+      );
+    } else if (
+      send_by_mail &&
+      response.sendByMail !== false &&
+      response.sendByMail !== null
+    ) {
+      hide(password_container);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
+    if (window.isSecureContext && navigator.clipboard) {
+      const copyBtn = document.querySelectorAll("#AddUserCopyPassword");
+      off(copyBtn, "click");
+      on(copyBtn, "click", function () {
+        const successMsg = document.querySelectorAll("#AddUserUpdatedText");
+        fadeOut(successMsg);
+        copyToClipboard(response.generatedLink);
+        removeClass(
+          document.querySelectorAll("#AddUserUpdated"),
+          "icon-red icon-cancel",
+        );
+        addClass(
+          document.querySelectorAll("#AddUserUpdated"),
+          "icon-green border-green icon-ok",
+        );
+        html(successMsg, copyLinkStr);
+        fadeIn(successMsg);
+      });
+    }
+    const addUserButton = document.querySelectorAll("#AddUserButton");
+    off(addUserButton, "click");
+    on(addUserButton, "click", function () {
+      add_user_close();
+    });
+  } catch (e) {
+    const message =
+      (e instanceof AjaxError
+        ? // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- safe regardless of the real shape: a malformed/non-object responseJSON just makes `.detail` read undefined, falling back below.
+          (e.responseJSON as { detail?: string } | undefined)?.detail
+        : undefined) ?? errorStr;
+    removeClass(
+      document.querySelectorAll("#AddUserUpdated"),
+      "icon-green border-green icon-ok",
+    );
+    addClass(
+      document.querySelectorAll("#AddUserUpdated"),
+      "icon-red-error icon-cancel",
+    );
+    html(document.querySelectorAll("#AddUserUpdatedText"), message);
+  }
 }
 
-function delete_user(uid: number) {
-  void ajax({
-    url: "api/v1/users/" + String(uid),
-    type: "DELETE",
-    headers: { "X-CSRF-Token": pwg_token },
-    success: function (
-      _data: operations["userDelete"]["responses"][200]["content"]["application/json"],
-    ) {
-      close_user_list();
-      update_user_list();
-      html(
-        document.querySelectorAll(".badge-number"),
-        String(
-          Number(htmlOf(document.querySelectorAll(".badge-number")) ?? "0") - 1,
-        ),
-      );
-    },
-  });
+async function delete_user(uid: number): Promise<void> {
+  try {
+    await ajax({
+      url: "api/v1/users/" + String(uid),
+      type: "DELETE",
+      headers: { "X-CSRF-Token": pwg_token },
+    });
+    close_user_list();
+    void update_user_list();
+    html(
+      document.querySelectorAll(".badge-number"),
+      String(
+        Number(htmlOf(document.querySelectorAll(".badge-number")) ?? "0") - 1,
+      ),
+    );
+  } catch {
+    // No error handling before conversion either.
+  }
 }
 
 function show_filter_infos(nb_filters: number) {
@@ -3801,143 +3807,65 @@ function show_filter_infos(nb_filters: number) {
   }
 }
 
-function send_link_password(
+async function send_link_password(
   email: string | null,
   username: string,
   user_id: number,
   send_by_mail: boolean,
-) {
-  void ajax({
-    url: "api/v1/users/" + String(user_id) + "/actions/generate-password-link",
-    dataType: "json",
-    type: "POST",
-    contentType: "application/json",
-    headers: { "X-CSRF-Token": pwg_token },
-    data: JSON.stringify({
-      sendByMail: send_by_mail,
-    }),
-    success: function (
-      response: operations["userGeneratePasswordLink"]["responses"][200]["content"]["application/json"],
-    ) {
-      setVal(
-        document.querySelectorAll("#result_send_mail_copy_input"),
-        response.generatedLink,
-      );
-      if (send_by_mail) {
-        if (response.sendByMail !== false && response.sendByMail !== null) {
-          removeClass(
-            document.querySelectorAll("#result_send_mail"),
-            "update-password-fail icon-red",
-          );
-          addClass(
-            document.querySelectorAll("#result_send_mail"),
-            "update-password-success icon-green",
-          );
-          removeClass(
-            document.querySelectorAll("#icon_password_msg_result_mail"),
-            "icon-cancel",
-          );
-          addClass(
-            document.querySelectorAll("#icon_password_msg_result_mail"),
-            "icon-ok",
-          );
-          const curr_mail = (
-            val(
-              document.querySelectorAll(
-                ".user-property-email .user-property-input",
-              ),
-            ) ?? ""
-          ).length
-            ? String(
-                val(
-                  document.querySelectorAll(
-                    ".user-property-email .user-property-input",
-                  ),
+): Promise<void> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    const response = (await ajax({
+      url:
+        "api/v1/users/" + String(user_id) + "/actions/generate-password-link",
+      dataType: "json",
+      type: "POST",
+      headers: { "X-CSRF-Token": pwg_token },
+      json: {
+        sendByMail: send_by_mail,
+      },
+    })) as operations["userGeneratePasswordLink"]["responses"][200]["content"]["application/json"];
+    setVal(
+      document.querySelectorAll("#result_send_mail_copy_input"),
+      response.generatedLink,
+    );
+    if (send_by_mail) {
+      if (response.sendByMail !== false && response.sendByMail !== null) {
+        removeClass(
+          document.querySelectorAll("#result_send_mail"),
+          "update-password-fail icon-red",
+        );
+        addClass(
+          document.querySelectorAll("#result_send_mail"),
+          "update-password-success icon-green",
+        );
+        removeClass(
+          document.querySelectorAll("#icon_password_msg_result_mail"),
+          "icon-cancel",
+        );
+        addClass(
+          document.querySelectorAll("#icon_password_msg_result_mail"),
+          "icon-ok",
+        );
+        const curr_mail = (
+          val(
+            document.querySelectorAll(
+              ".user-property-email .user-property-input",
+            ),
+          ) ?? ""
+        ).length
+          ? String(
+              val(
+                document.querySelectorAll(
+                  ".user-property-email .user-property-input",
                 ),
-              )
-            : (email ?? "");
-          html(
-            document.querySelectorAll("#password_msg_result_mail"),
-            sprintf(mailSentAt, username, curr_mail),
-          );
-        } else {
-          removeClass(
-            document.querySelectorAll("#result_send_mail"),
-            "update-password-success icon-green",
-          );
-          addClass(
-            document.querySelectorAll("#result_send_mail"),
-            "update-password-fail icon-red",
-          );
-          removeClass(
-            document.querySelectorAll("#icon_password_msg_result_mail"),
-            "icon-ok",
-          );
-          addClass(
-            document.querySelectorAll("#icon_password_msg_result_mail"),
-            "icon-cancel",
-          );
-          html(
-            document.querySelectorAll("#password_msg_result_mail"),
-            errorMailSent,
-          );
-        }
-        hide(document.querySelectorAll(".user-property-password-choice"));
-        fadeIn(document.querySelectorAll("#edit_password_result_mail"));
-        const closeBtn = document.querySelectorAll(
-          "#close_password_mail_close",
-        );
-        off(closeBtn, "click");
-        on(closeBtn, "click", function () {
-          reset_password_modals();
-        });
-      } else {
-        removeClass(
-          document.querySelectorAll("#result_send_mail_copy"),
-          "update-password-fail icon-red",
-        );
-        addClass(
-          document.querySelectorAll("#result_send_mail_copy"),
-          "update-password-success icon-green",
-        );
-        removeClass(
-          document.querySelectorAll("#result_send_mail_copy_icon"),
-          "icon-cancel",
-        );
-        addClass(
-          document.querySelectorAll("#result_send_mail_copy_icon"),
-          "icon-ok",
-        );
+              ),
+            )
+          : (email ?? "");
         html(
-          document.querySelectorAll("#result_send_mail_copy_msg"),
-          copyLinkStr,
+          document.querySelectorAll("#password_msg_result_mail"),
+          sprintf(mailSentAt, username, curr_mail),
         );
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
-        if (window.isSecureContext && navigator.clipboard) {
-          copyToClipboard(response.generatedLink);
-        }
-      }
-    },
-    error: function (err) {
-      console.error("Error send_link_password :", err);
-      if (!send_by_mail) {
-        removeClass(
-          document.querySelectorAll("#result_send_mail_copy"),
-          "update-password-success icon-green",
-        );
-        addClass(
-          document.querySelectorAll("#result_send_mail_copy"),
-          "update-password-fail icon-red",
-        );
-        removeClass(
-          document.querySelectorAll("#result_send_mail_copy_icon"),
-          "icon-ok",
-        );
-        addClass(
-          document.querySelectorAll("#result_send_mail_copy_icon"),
-          "icon-cancel",
-        );
-        html(document.querySelectorAll("#result_send_mail_copy_msg"), errorStr);
       } else {
         removeClass(
           document.querySelectorAll("#result_send_mail"),
@@ -3959,46 +3887,120 @@ function send_link_password(
           document.querySelectorAll("#password_msg_result_mail"),
           errorMailSent,
         );
-        hide(document.querySelectorAll(".user-property-password-choice"));
-        fadeIn(document.querySelectorAll("#edit_password_result_mail"));
-        const closeBtn = document.querySelectorAll(
-          "#close_password_mail_close",
-        );
-        off(closeBtn, "click");
-        on(closeBtn, "click", function () {
-          reset_password_modals();
-        });
       }
-    },
-  });
+      hide(document.querySelectorAll(".user-property-password-choice"));
+      fadeIn(document.querySelectorAll("#edit_password_result_mail"));
+      const closeBtn = document.querySelectorAll("#close_password_mail_close");
+      off(closeBtn, "click");
+      on(closeBtn, "click", function () {
+        reset_password_modals();
+      });
+    } else {
+      removeClass(
+        document.querySelectorAll("#result_send_mail_copy"),
+        "update-password-fail icon-red",
+      );
+      addClass(
+        document.querySelectorAll("#result_send_mail_copy"),
+        "update-password-success icon-green",
+      );
+      removeClass(
+        document.querySelectorAll("#result_send_mail_copy_icon"),
+        "icon-cancel",
+      );
+      addClass(
+        document.querySelectorAll("#result_send_mail_copy_icon"),
+        "icon-ok",
+      );
+      html(
+        document.querySelectorAll("#result_send_mail_copy_msg"),
+        copyLinkStr,
+      );
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
+      if (window.isSecureContext && navigator.clipboard) {
+        copyToClipboard(response.generatedLink);
+      }
+    }
+  } catch (err) {
+    console.error("Error send_link_password :", err);
+    if (!send_by_mail) {
+      removeClass(
+        document.querySelectorAll("#result_send_mail_copy"),
+        "update-password-success icon-green",
+      );
+      addClass(
+        document.querySelectorAll("#result_send_mail_copy"),
+        "update-password-fail icon-red",
+      );
+      removeClass(
+        document.querySelectorAll("#result_send_mail_copy_icon"),
+        "icon-ok",
+      );
+      addClass(
+        document.querySelectorAll("#result_send_mail_copy_icon"),
+        "icon-cancel",
+      );
+      html(document.querySelectorAll("#result_send_mail_copy_msg"), errorStr);
+    } else {
+      removeClass(
+        document.querySelectorAll("#result_send_mail"),
+        "update-password-success icon-green",
+      );
+      addClass(
+        document.querySelectorAll("#result_send_mail"),
+        "update-password-fail icon-red",
+      );
+      removeClass(
+        document.querySelectorAll("#icon_password_msg_result_mail"),
+        "icon-ok",
+      );
+      addClass(
+        document.querySelectorAll("#icon_password_msg_result_mail"),
+        "icon-cancel",
+      );
+      html(
+        document.querySelectorAll("#password_msg_result_mail"),
+        errorMailSent,
+      );
+      hide(document.querySelectorAll(".user-property-password-choice"));
+      fadeIn(document.querySelectorAll("#edit_password_result_mail"));
+      const closeBtn = document.querySelectorAll("#close_password_mail_close");
+      off(closeBtn, "click");
+      on(closeBtn, "click", function () {
+        reset_password_modals();
+      });
+    }
+  }
 }
 
-function set_main_user(user_id: number, new_username: string) {
-  void ajax({
-    url: "api/v1/users/" + String(user_id) + "/actions/set-main-user",
-    dataType: "json",
-    type: "POST",
-    contentType: "application/json",
-    headers: { "X-CSRF-Token": pwg_token },
-    success: function () {
-      const king = document.querySelectorAll("#who_is_the_king");
-      off(king, "click");
-      removeClass(
-        king,
-        "princes-of-this-piwigo royal-court-of-this-piwigo can-change",
-      );
-      addClass(king, "king-of-this-piwigo cannot-change");
-      attr(king, "title", mainUserStr);
-      tipTip(king);
+async function set_main_user(
+  user_id: number,
+  new_username: string,
+): Promise<void> {
+  try {
+    await ajax({
+      url: "api/v1/users/" + String(user_id) + "/actions/set-main-user",
+      dataType: "json",
+      type: "POST",
+      contentType: "application/json",
+      headers: { "X-CSRF-Token": pwg_token },
+    });
+    const king = document.querySelectorAll("#who_is_the_king");
+    off(king, "click");
+    removeClass(
+      king,
+      "princes-of-this-piwigo royal-court-of-this-piwigo can-change",
+    );
+    addClass(king, "king-of-this-piwigo cannot-change");
+    attr(king, "title", mainUserStr);
+    tipTip(king);
 
-      owner_id = user_id;
-      owner_username = new_username;
-      set_main_user_success();
-    },
-    error: function (err) {
-      console.error(err);
-    },
-  });
+    owner_id = user_id;
+    owner_username = new_username;
+    set_main_user_success();
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 per_page = parseInt(pagination);
@@ -4047,8 +4049,8 @@ groupOptions = groups_arr.map(function (x) {
 /* Startup */
 setupRegisterDates(register_dates);
 selectionMode(false);
-get_guest_info();
-update_user_list();
+void get_guest_info();
+void update_user_list();
 update_selection_content();
 
 tipTip(document.querySelectorAll(".icon-help-circled"), {
@@ -4071,196 +4073,204 @@ ready(function () {
   // which is not possible if this JS part is in a JS file
   // see #1571 on Github
   on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
-    const action = val(document.querySelectorAll("select[name=selectAction]"));
-    const actionData: Record<string, unknown> = {};
-    switch (action) {
-      case "delete":
-        if (
-          !(
+    void (async () => {
+      const action = val(
+        document.querySelectorAll("select[name=selectAction]"),
+      );
+      const actionData: Record<string, unknown> = {};
+      switch (action) {
+        case "delete":
+          if (
+            !(
+              attrOf(
+                document.querySelectorAll(
+                  "#permitActionUserList .user-list-checkbox[name=confirm_deletion]",
+                ),
+                "data-selected",
+              ) === "1"
+            )
+          ) {
+            alert(missingConfirm);
+            e.preventDefault();
+            return;
+          }
+          break;
+        case "group_associate":
+          actionData["group_id"] = val(
+            document.querySelectorAll(
+              "#permitActionUserList select[name=associate]",
+            ),
+          );
+          break;
+        case "group_dissociate":
+          actionData["group_id"] = val(
+            document.querySelectorAll(
+              "#permitActionUserList select[name=dissociate]",
+            ),
+          );
+          break;
+        case "status":
+          actionData["status"] = val(
+            document.querySelectorAll(
+              "#permitActionUserList select[name=status]",
+            ),
+          );
+          break;
+        case "enabled_high":
+          actionData["enabled_high"] =
             attrOf(
               document.querySelectorAll(
-                "#permitActionUserList .user-list-checkbox[name=confirm_deletion]",
+                "#permitActionUserList .user-list-checkbox[name=enabled_high_yes]",
               ),
               "data-selected",
             ) === "1"
-          )
-        ) {
-          alert(missingConfirm);
-          e.preventDefault();
-          return false;
-        }
-        break;
-      case "group_associate":
-        actionData["group_id"] = val(
-          document.querySelectorAll(
-            "#permitActionUserList select[name=associate]",
-          ),
-        );
-        break;
-      case "group_dissociate":
-        actionData["group_id"] = val(
-          document.querySelectorAll(
-            "#permitActionUserList select[name=dissociate]",
-          ),
-        );
-        break;
-      case "status":
-        actionData["status"] = val(
-          document.querySelectorAll(
-            "#permitActionUserList select[name=status]",
-          ),
-        );
-        break;
-      case "enabled_high":
-        actionData["enabled_high"] =
-          attrOf(
+              ? true
+              : false;
+          break;
+        case "level":
+          actionData["level"] = val(
             document.querySelectorAll(
-              "#permitActionUserList .user-list-checkbox[name=enabled_high_yes]",
+              "#permitActionUserList select[name=level]",
             ),
-            "data-selected",
-          ) === "1"
-            ? true
-            : false;
-        break;
-      case "level":
-        actionData["level"] = val(
-          document.querySelectorAll("#permitActionUserList select[name=level]"),
-        );
-        break;
-      case "nb_image_page":
-        actionData["nb_image_page"] = val(
-          document.querySelectorAll(
-            "#permitActionUserList input[name=nb_image_page]",
-          ),
-        );
-        break;
-      case "theme":
-        actionData["theme"] = val(
-          document.querySelectorAll("#permitActionUserList select[name=theme]"),
-        );
-        break;
-      case "language":
-        actionData["language"] = val(
-          document.querySelectorAll(
-            "#permitActionUserList select[name=language]",
-          ),
-        );
-        break;
-      case "recent_period":
-        actionData["recent_period"] =
-          recent_period_values[
-            slider(
+          );
+          break;
+        case "nb_image_page":
+          actionData["nb_image_page"] = val(
+            document.querySelectorAll(
+              "#permitActionUserList input[name=nb_image_page]",
+            ),
+          );
+          break;
+        case "theme":
+          actionData["theme"] = val(
+            document.querySelectorAll(
+              "#permitActionUserList select[name=theme]",
+            ),
+          );
+          break;
+        case "language":
+          actionData["language"] = val(
+            document.querySelectorAll(
+              "#permitActionUserList select[name=language]",
+            ),
+          );
+          break;
+        case "recent_period":
+          actionData["recent_period"] =
+            recent_period_values[
+              slider(
+                document.querySelectorAll(
+                  "#permitActionUserList .period-select-bar .slider-bar-container",
+                ),
+                "option",
+                "value",
+              )!
+            ];
+          break;
+        case "expand":
+          actionData["expand"] =
+            attrOf(
               document.querySelectorAll(
-                "#permitActionUserList .period-select-bar .slider-bar-container",
+                "#permitActionUserList .user-list-checkbox[name=expand_yes]",
               ),
-              "option",
-              "value",
-            )!
-          ];
-        break;
-      case "expand":
-        actionData["expand"] =
-          attrOf(
-            document.querySelectorAll(
-              "#permitActionUserList .user-list-checkbox[name=expand_yes]",
-            ),
-            "data-selected",
-          ) === "1"
-            ? true
-            : false;
-        break;
-      case "show_nb_comments":
-        actionData["show_nb_comments"] =
-          attrOf(
-            document.querySelectorAll(
-              "#permitActionUserList .user-list-checkbox[name=show_nb_comments_yes]",
-            ),
-            "data-selected",
-          ) === "1"
-            ? true
-            : false;
-        break;
-      case "show_nb_hits":
-        actionData["show_nb_hits"] =
-          attrOf(
-            document.querySelectorAll(
-              "#permitActionUserList .user-list-checkbox[name=show_nb_hits_yes]",
-            ),
-            "data-selected",
-          ) === "1"
-            ? true
-            : false;
-        break;
-      default:
-        alert("Unexpected action");
-        e.preventDefault();
-        return false;
-    }
+              "data-selected",
+            ) === "1"
+              ? true
+              : false;
+          break;
+        case "show_nb_comments":
+          actionData["show_nb_comments"] =
+            attrOf(
+              document.querySelectorAll(
+                "#permitActionUserList .user-list-checkbox[name=show_nb_comments_yes]",
+              ),
+              "data-selected",
+            ) === "1"
+              ? true
+              : false;
+          break;
+        case "show_nb_hits":
+          actionData["show_nb_hits"] =
+            attrOf(
+              document.querySelectorAll(
+                "#permitActionUserList .user-list-checkbox[name=show_nb_hits_yes]",
+              ),
+              "data-selected",
+            ) === "1"
+              ? true
+              : false;
+          break;
+        default:
+          alert("Unexpected action");
+          e.preventDefault();
+          return;
+      }
 
-    // Translate the `actionData` bag above into the real /api/v1 request(s)
-    // -- one bulk group action, or one PATCH/DELETE per selected user
-    // (there is no bulk-multi-id endpoint for Users).
-    const userIds = selection.map((x) => x.id);
-    const fieldByAction: Record<string, string> = {
-      status: "status",
-      enabled_high: "enabledHigh",
-      level: "level",
-      nb_image_page: "nbImagePage",
-      theme: "theme",
-      language: "language",
-      recent_period: "recentPeriod",
-      expand: "expand",
-      show_nb_comments: "showNbComments",
-      show_nb_hits: "showNbHits",
-    };
-    const numericFields = ["level", "nbImagePage", "recentPeriod"];
+      // Translate the `actionData` bag above into the real /api/v1 request(s)
+      // -- one bulk group action, or one PATCH/DELETE per selected user
+      // (there is no bulk-multi-id endpoint for Users).
+      const userIds = selection.map((x) => x.id);
+      const fieldByAction: Record<string, string> = {
+        status: "status",
+        enabled_high: "enabledHigh",
+        level: "level",
+        nb_image_page: "nbImagePage",
+        theme: "theme",
+        language: "language",
+        recent_period: "recentPeriod",
+        expand: "expand",
+        show_nb_comments: "showNbComments",
+        show_nb_hits: "showNbHits",
+      };
+      const numericFields = ["level", "nbImagePage", "recentPeriod"];
 
-    let request: Promise<unknown> | AjaxThenable;
-    show(document.querySelectorAll("#applyActionLoading"));
-    fadeOut(document.querySelectorAll("#applyActionBlock .infos"));
+      let request: Promise<unknown>;
+      show(document.querySelectorAll("#applyActionLoading"));
+      fadeOut(document.querySelectorAll("#applyActionBlock .infos"));
 
-    if (action === "delete") {
-      request = Promise.all(
-        userIds.map(async (id) =>
-          ajax({
-            url: "api/v1/users/" + String(id),
-            method: "DELETE",
-            headers: { "X-CSRF-Token": pwg_token },
-          }),
-        ),
-      );
-    } else if (action === "group_associate" || action === "group_dissociate") {
-      request = ajax({
-        url:
-          "api/v1/groups/" +
-          String(actionData["group_id"]) +
-          "/actions/" +
-          (action === "group_associate" ? "add-user" : "remove-user"),
-        method: "POST",
-        contentType: "application/json",
-        data: JSON.stringify({ userIds: userIds }),
-        headers: { "X-CSRF-Token": pwg_token },
-      });
-    } else {
-      const field = fieldByAction[action]!;
-      const value = numericFields.includes(field)
-        ? Number(actionData[action])
-        : actionData[action];
-      request = Promise.all(
-        userIds.map(async (id) =>
-          ajax({
-            url: "api/v1/users/" + String(id),
-            method: "PATCH",
-            contentType: "application/json",
-            data: JSON.stringify({ [field]: value }),
-            headers: { "X-CSRF-Token": pwg_token },
-          }),
-        ),
-      );
-    }
+      if (action === "delete") {
+        request = Promise.all(
+          userIds.map(async (id) =>
+            ajax({
+              url: "api/v1/users/" + String(id),
+              method: "DELETE",
+              headers: { "X-CSRF-Token": pwg_token },
+            }),
+          ),
+        );
+      } else if (
+        action === "group_associate" ||
+        action === "group_dissociate"
+      ) {
+        request = ajax({
+          url:
+            "api/v1/groups/" +
+            String(actionData["group_id"]) +
+            "/actions/" +
+            (action === "group_associate" ? "add-user" : "remove-user"),
+          method: "POST",
+          json: { userIds: userIds },
+          headers: { "X-CSRF-Token": pwg_token },
+        });
+      } else {
+        const field = fieldByAction[action]!;
+        const value = numericFields.includes(field)
+          ? Number(actionData[action])
+          : actionData[action];
+        request = Promise.all(
+          userIds.map(async (id) =>
+            ajax({
+              url: "api/v1/users/" + String(id),
+              method: "PATCH",
+              json: { [field]: value },
+              headers: { "X-CSRF-Token": pwg_token },
+            }),
+          ),
+        );
+      }
 
-    Promise.resolve(request)
-      .then(function () {
+      try {
+        await request;
         hide(document.querySelectorAll("#applyActionLoading"));
         fadeIn(document.querySelectorAll("#applyActionBlock .infos"));
         css(
@@ -4268,15 +4278,15 @@ ready(function () {
           "display",
           "inline-block",
         );
-        update_user_list();
+        void update_user_list();
         if (action === "delete") {
           selection = [];
           update_selection_content();
         }
-      })
-      .catch(function () {
+      } catch {
         hide(document.querySelectorAll("#applyActionLoading"));
-      });
+      }
+    })();
     e.preventDefault();
     return false;
   });

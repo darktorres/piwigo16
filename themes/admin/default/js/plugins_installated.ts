@@ -575,7 +575,7 @@ ready(function () {
         event.preventDefault();
         event.stopPropagation();
 
-        const id = this.parentElement!.parentElement!.parentElement!.id;
+        const { id } = this.parentElement!.parentElement!.parentElement!;
         stop(
           document.querySelectorAll("#" + id + " .pluginNotif"),
           false,
@@ -1002,7 +1002,7 @@ ready(function () {
 on(document, "mouseup", function (e: Event) {
   e.stopPropagation();
   document.querySelectorAll(".pluginBox").forEach((box) => {
-    const showOptions = find(box, ".showOptions")[0];
+    const [showOptions] = find(box, ".showOptions");
     if (
       showOptions === undefined ||
       (showOptions !== e.target &&

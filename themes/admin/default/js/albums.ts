@@ -1271,7 +1271,7 @@ function applyMove(moveInfo: JqTreeMoveInfo<AlbumNodeData>) {
     });
 }
 
-function moveNode(
+async function moveNode(
   node: string | number,
   rank: number | null,
   parent: string | number | null,
@@ -1297,7 +1297,7 @@ function moveNode(
   });
 }
 
-function changeParent(
+async function changeParent(
   node: string | number,
   parent: string | number,
   rank: number | null,
@@ -1331,7 +1331,7 @@ function changeParent(
   });
 }
 
-function changeRank(node: string | number, rank: number | null) {
+async function changeRank(node: string | number, rank: number | null) {
   return new Promise<void>((res, rej) => {
     void ajax({
       url: "api/v1/categories/actions/reorder",

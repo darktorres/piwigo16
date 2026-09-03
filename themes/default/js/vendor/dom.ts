@@ -226,7 +226,7 @@ function showHide(
 
   elements.forEach((el, index) => {
     let remembered = internalGet(el, "olddisplay");
-    const display = el.style.display;
+    const {display} = el.style;
 
     if (shouldShow) {
       // Clear an inline `none` first, to learn whether a stylesheet is what
@@ -1550,7 +1550,7 @@ export function textOf(target: Element | ArrayLike<Element>): string {
  * `updates_ext.ts`'s `#reset_ignore` (a `<div>`) is exactly such a caller.
  */
 export function val(target: Element | ArrayLike<Element>): string | undefined {
-  const first = toElements(target)[0];
+  const [first] = toElements(target);
   if (first === undefined) {
     return undefined;
   }

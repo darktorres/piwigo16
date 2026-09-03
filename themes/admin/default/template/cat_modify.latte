@@ -4,13 +4,13 @@
   <div class="cat-modify-header">
     <div class="cat-modify-ariane">
       <span class="icon-home"> /</span>
-      {$categoriesNav|noescape}
+      {$categoriesNav}
     </div>
 
     <div class="cat-modify-actions">
       <a
         class="icon-pulse tiptip"
-        href="{$uActivity|noescape}"
+        href="{$uActivity}"
         title="{='Activity'|translate}"
       ></a>
 
@@ -115,7 +115,7 @@
          it via var() (cat_modify.css, 4 directories deep), not the page --
          breaking $representant->picture->src's page-relative path. Kept
          as a full inline declaration instead. *}
-      style="background-image:url('{$representant->picture->src|noescape}')"
+      style="background-image:url('{$representant->picture->src}')"
       {/if}
     >
       <div
@@ -169,7 +169,7 @@
         <div
           class="icon-pencil"
           id="cat-parent"
-        >{$categoriesParentNav|noescape}</div>
+        >{$categoriesParentNav}</div>
       </div>
 
       {include 'include/album_selector.inc.latte'}
@@ -227,7 +227,7 @@
   <div class="cat-modify-footer">
     <div class="cat-modify-footer-start">
       {if $catAdminAccess}
-        <a class="cat-modify-footer-see-out" href="{$uJumpto|noescape}"><i
+        <a class="cat-modify-footer-see-out" href="{$uJumpto}"><i
             class="icon-left-open"
           ></i>{='Open in gallery'|translate}</a>
       {else}

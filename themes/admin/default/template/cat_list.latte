@@ -2,7 +2,7 @@
 <div class="selectedAlbum cat-list-album-path">
   <span
     class="icon-sitemap selectedAlbum-first"
-  >{$categoriesNav|noescape}</span>
+  >{$categoriesNav}</span>
   <div class="AlbumViewSelector">
     <input
       type="radio"
@@ -88,7 +88,7 @@
 
       <div class="albumActions">
         <a
-          href="{$category->uEdit|noescape}"
+          href="{$category->uEdit}"
           class="actionEdit"
           {*title="{'Edit'|@translate}"*}
         ><span
@@ -103,7 +103,7 @@
             class="icon-sitemap tiptip"
             title="{='sub-albums'|translate}"
           ></span><span class="iconLegend">{='sub-albums'|translate}</span></a>
-        <a href="{$category->uMove|noescape}" class="actionMove"><span
+        <a href="{$category->uMove}" class="actionMove"><span
             class="icon-move tiptip"
             title="{='Move'|translate}"
           ></span><span class="iconLegend">{='Move'|translate}</span></a>
@@ -117,7 +117,7 @@
          which is exactly what gating a jump-to-gallery link wants. *}
         {if $category->catAdminAccess}
           <a
-            href="{$category->uJumpto|noescape}"
+            href="{$category->uJumpto}"
             class="actionGalery"
             {*title="{'Visit Gallery'|@translate}"*}
           ><span
@@ -128,7 +128,7 @@
             >{='Visit Gallery'|translate}</span></a>
         {else}
           <span
-            href="{$category->uJumpto|noescape}"
+            href="{$category->uJumpto}"
             class="actionGalery"
             {*title="{'This album is private'|@translate}"*}
           ><span

@@ -4,7 +4,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { ajax } from "../../../default/js/vendor/ajax";
+import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
 import { alert, confirm } from "../../../default/js/vendor/jconfirm";
 import {
   addClass,
@@ -194,7 +194,7 @@ ready(function () {
     function (this: Element) {
       commentsParams.status = this.getAttribute("data-status")!;
       commentsParams.page = 0;
-      getComments(commentsParams);
+      void getComments(commentsParams);
     },
   );
 
@@ -202,7 +202,7 @@ ready(function () {
     const nb = this.textContent;
     updateNbComments(nb);
     commentsParams.page = 0;
-    getComments(commentsParams);
+    void getComments(commentsParams);
   });
 
   on(document.querySelectorAll("#closeModalViewComment"), "click", function () {
@@ -222,7 +222,7 @@ ready(function () {
         delete commentsParams.f_max_date;
 
         commentsParams.search = search;
-        getComments(commentsParams);
+        void getComments(commentsParams);
       }, 300);
     },
   );
@@ -241,44 +241,45 @@ ready(function () {
   // get comments and set display
   commentsParams.per_page = window.localStorage.getItem("adminCommentsNB") ?? 5;
   updateNbComments(commentsParams.per_page);
-  getComments(commentsParams);
+  void getComments(commentsParams);
 });
 
-function getComments(params: CommentsFilterParams) {
-  void ajax({
-    url: "api/v1/comments",
-    type: "GET",
-    dataType: "json",
-    data: {
-      status: params.status,
-      page: params.page,
-      perPage: params.per_page,
-      search: params.search,
-      authorId: params.author_id,
-      minDate: params.f_min_date,
-      maxDate: params.f_max_date,
-      imageId: params.image_id,
-    },
-    success: (response: CommentListResponse) => {
-      // for debug
-      // console.log(response);
-      commentsState = { ...response };
-      commentsDisplaySummary(response.summary);
-      displayComments(response.comments);
-      commentsDiplayPagination(response.paging);
-      commentsDisplayFilters(response.filters);
+async function getComments(params: CommentsFilterParams): Promise<void> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    const response = (await ajax({
+      url: "api/v1/comments",
+      type: "GET",
+      dataType: "json",
+      data: {
+        status: params.status,
+        page: params.page,
+        perPage: params.per_page,
+        search: params.search,
+        authorId: params.author_id,
+        minDate: params.f_min_date,
+        maxDate: params.f_max_date,
+        imageId: params.image_id,
+      },
+    })) as CommentListResponse;
 
-      delete commentsParams.search;
-    },
-    error: (e) => {
-      console.error(e);
-      alert({
-        title: str_an_error_has,
-        content: "",
-        ...jConfirm_warning_options,
-      });
-    },
-  });
+    // for debug
+    // console.log(response);
+    commentsState = { ...response };
+    commentsDisplaySummary(response.summary);
+    displayComments(response.comments);
+    commentsDiplayPagination(response.paging);
+    commentsDisplayFilters(response.filters);
+
+    delete commentsParams.search;
+  } catch (e) {
+    console.error(e instanceof AjaxError ? e.responseText : e);
+    alert({
+      title: str_an_error_has,
+      content: "",
+      ...jConfirm_warning_options,
+    });
+  }
 }
 
 function commentsDisplaySummary(summary: CommentListResponse["summary"]) {
@@ -377,7 +378,7 @@ function displayComments(comments: CommentListResponse["comments"]) {
       e.stopPropagation();
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       const id = data(this, "idx") as string | number;
-      validateComment([id]);
+      void validateComment([id]);
     },
   );
 
@@ -489,7 +490,7 @@ function commentsDiplayPagination(paging: CommentListResponse["paging"]) {
         return;
       }
       commentsParams.page = newPage;
-      getComments(commentsParams);
+      void getComments(commentsParams);
     });
   }
 
@@ -500,7 +501,7 @@ function commentsDiplayPagination(paging: CommentListResponse["paging"]) {
     function (this: Element) {
       const newPage = Number(this.getAttribute("data-page")) - 1;
       commentsParams.page = newPage;
-      getComments(commentsParams);
+      void getComments(commentsParams);
     },
   );
 }
@@ -540,7 +541,7 @@ function commentsDisplayFilters(filters: CommentListResponse["filters"]) {
 
       if (filterDateEnd !== null) filterDateEnd.min = min ?? "";
       commentsParams.page = 0;
-      getComments(commentsParams);
+      void getComments(commentsParams);
     });
   }
 
@@ -559,7 +560,7 @@ function commentsDisplayFilters(filters: CommentListResponse["filters"]) {
 
       if (filterDateStart !== null) filterDateStart.max = max ?? "";
       commentsParams.page = 0;
-      getComments(commentsParams);
+      void getComments(commentsParams);
     });
   }
 }
@@ -593,7 +594,7 @@ function commentsDisplayAuthors(
 
     commentsParams.page = 0;
     updateAuthorId = false;
-    getComments(commentsParams);
+    void getComments(commentsParams);
   });
 }
 
@@ -646,7 +647,7 @@ function showModalViewComment(id: string | number) {
       document.querySelectorAll("#commentsModalValidate"),
       "click",
       function () {
-        validateComment([id]);
+        void validateComment([id]);
         closeModalViewComment();
       },
     );
@@ -669,39 +670,36 @@ function closeModalViewComment() {
   off(document.querySelectorAll("#commentsModalDelete"), "click");
 }
 
-function validateComment(id: (string | number)[]) {
+async function validateComment(id: (string | number)[]): Promise<void> {
   const idLenght = id.length;
 
-  void ajax({
-    url: "api/v1/comments/actions/validate",
-    type: "POST",
-    contentType: "application/json",
-    headers: {
-      "X-CSRF-Token": pwg_token,
-    },
-    data: JSON.stringify({
-      commentIds: id,
-    }),
-    dataType: "json",
-    success: function (
-      _data: operations["commentValidate"]["responses"][200]["content"]["application/json"],
-    ) {
-      alert({
-        title: idLenght > 1 ? str_comments_validated : str_comment_validated,
-        content: "",
-        ...jConfirm_alert_options,
-      });
-      getComments(commentsParams);
-    },
-    error: function (e) {
-      console.error(e);
-      alert({
-        title: str_an_error_has,
-        content: "",
-        ...jConfirm_warning_options,
-      });
-    },
-  });
+  try {
+    await ajax({
+      url: "api/v1/comments/actions/validate",
+      type: "POST",
+      json: {
+        commentIds: id,
+      },
+      headers: {
+        "X-CSRF-Token": pwg_token,
+      },
+      dataType: "json",
+    });
+
+    alert({
+      title: idLenght > 1 ? str_comments_validated : str_comment_validated,
+      content: "",
+      ...jConfirm_alert_options,
+    });
+    void getComments(commentsParams);
+  } catch (e) {
+    console.error(e instanceof AjaxError ? e.responseText : e);
+    alert({
+      title: str_an_error_has,
+      content: "",
+      ...jConfirm_warning_options,
+    });
+  }
 }
 
 function deleteComment(id: (string | number)[]) {
@@ -720,27 +718,24 @@ function deleteComment(id: (string | number)[]) {
       confirm: {
         text: str_yes_delete_confirmation,
         btnClass: "btn-red",
-        action: function () {
-          void ajax({
-            url: "api/v1/comments/actions/delete",
-            type: "POST",
-            contentType: "application/json",
-            headers: {
-              "X-CSRF-Token": pwg_token,
-            },
-            data: JSON.stringify({
-              commentIds: id,
-            }),
-            dataType: "json",
-            success: function (
-              _data: operations["commentDelete"]["responses"][200]["content"]["application/json"],
-            ) {
-              getComments(commentsParams);
-            },
-            error: function (e) {
-              console.error(e);
-            },
-          });
+        action: async function () {
+          try {
+            await ajax({
+              url: "api/v1/comments/actions/delete",
+              type: "POST",
+              json: {
+                commentIds: id,
+              },
+              headers: {
+                "X-CSRF-Token": pwg_token,
+              },
+              dataType: "json",
+            });
+
+            void getComments(commentsParams);
+          } catch (e) {
+            console.error(e instanceof AjaxError ? e.responseText : e);
+          }
         },
       },
       cancel: {
@@ -836,7 +831,7 @@ function commentsUpdateSelection() {
 
   off(document.querySelectorAll("#ValisateSelectionMode"), "click");
   on(document.querySelectorAll("#ValisateSelectionMode"), "click", function () {
-    validateComment(commentsSelected);
+    void validateComment(commentsSelected);
     commentsUnselectAll();
   });
 
@@ -856,5 +851,5 @@ function commentsClearFilters() {
   delete commentsParams.search;
   delete commentsParams.f_min_date;
   delete commentsParams.f_max_date;
-  getComments(commentsParams);
+  void getComments(commentsParams);
 }

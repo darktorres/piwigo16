@@ -74,6 +74,14 @@
   margin-bottom: 5px;
 }
 
+/* Unlike user_list.php's own use of .advanced-filter-select-container,
+   this page never resets the <select>'s appearance, so its native
+   dropdown arrow already renders -- general.css's decorative fontello
+   arrow is a plain duplicate here, not a replacement for a hidden one. */
+.filter-part.elem-type .advanced-filter-select-container::before {
+  content: none;
+}
+
 .selectable-filter {
   width: calc(50% - 20px);
   display: flex;

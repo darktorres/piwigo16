@@ -4,7 +4,7 @@
    property -- :root is the only DOM-reachable common ancestor available here. *}
 <style>:root { --rating-tooltip-max-width: {=3 * $tnWidth}px; }</style>
 
-<form action="{$formAction|noescape}" method="GET">
+<form action="{$formAction}" method="GET">
   <fieldset>
     <noscript>
       <label>{='Sort by'|translate}
@@ -50,10 +50,10 @@
       <th class="dtc_stat">{='Variation'|translate}</th>
       <th
         class="dtc_stat"
-      >{_ 'Consensus deviation'|replace:' ','<br>'|noescape}</th>
+      >{_ 'Consensus deviation'|replace:' ','<br>'|rawHtml}</th>
       <th
         class="dtc_stat"
-      >{_ 'Consensus deviation'|replace:' ','<br>'|noescape} {$consensusTopNumber}</th>
+      >{_ 'Consensus deviation'|replace:' ','<br>'|rawHtml} {$consensusTopNumber}</th>
       {foreach $availableRates as $rate}
         <th class="dtc_rate">{$rate}</th>
       {/foreach}
@@ -70,9 +70,9 @@
         <td>{$rating->cv|number:3}</td><td>{$rating->cd|number:3}</td><td>{if $rating->cdTop !== null}{$rating->cdTop|number:3}{/if}</td>
         {foreach $rating->rates as $rate => $rates}
           <td>{if $rates !== []}
-              {capture $rate_over}{foreach $rates as $rate_arr}{breakIf $iterator->counter0 > 29}<img src="{$imageUrls[$rate_arr]->tn|noescape}" alt="thumb-{$rate_arr}" width="{$tnWidth}" height="{$tnWidth}">{/foreach}{/capture}
+              {capture $rate_over}{foreach $rates as $rate_arr}{breakIf $iterator->counter0 > 29}<img src="{$imageUrls[$rate_arr]->tn}" alt="thumb-{$rate_arr}" width="{$tnWidth}" height="{$tnWidth}">{/foreach}{/capture}
               <a
-                title="{=(string) $rate_over|htmlspecialchars|noescape}"
+                title="{=(string) $rate_over}"
               >{$rates|length}</a>
             {/if}</td>
         {/foreach}

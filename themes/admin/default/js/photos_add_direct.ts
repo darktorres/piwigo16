@@ -15,7 +15,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { ajax } from "../../../default/js/vendor/ajax";
+import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
 import { alert } from "../../../default/js/vendor/jconfirm";
 import * as Piecon from "../../../default/js/vendor/piecon";
 import {
@@ -214,7 +214,7 @@ ready(function () {
 
     if (btnAddFirstAlbum !== null) {
       on(btnAddFirstAlbum, "click", function () {
-        add_first_album(ab.select_album.bind(ab));
+        void add_first_album(ab.select_album.bind(ab));
       });
     }
 
@@ -242,20 +242,22 @@ ready(function () {
 
   // Upload logics
   on(document.querySelectorAll(".dont-show-again"), "click", function () {
-    void ajax({
-      url: "api/v1/session/preferences/promote-mobile-apps",
-      type: "PUT",
-      contentType: "application/json",
-      dataType: "JSON",
-      data: JSON.stringify({
-        value: "false",
-      }),
-      success: function (
-        _res: operations["sessionPreferenceSet"]["responses"][200]["content"]["application/json"],
-      ) {
+    void (async () => {
+      try {
+        await ajax({
+          url: "api/v1/session/preferences/promote-mobile-apps",
+          type: "PUT",
+          dataType: "JSON",
+          json: {
+            value: "false",
+          },
+        });
+
         hide(document.querySelectorAll(".promote-apps"));
-      },
-    });
+      } catch (e) {
+        console.error(e instanceof AjaxError ? e.responseText : e);
+      }
+    })();
   });
 
   on(
@@ -440,21 +442,17 @@ ready(function () {
 
           // If no original image is specified
           if (!haveFormatsOriginal) {
+            //ajax qui renvois les id des images dans la gallerie.
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+            const searchResponse = (await ajax({
+              url: "api/v1/images/formats/actions/search",
+              type: "POST",
+              json: {
+                filenames: fileNames,
+              },
+            })) as ImageFormatSearchResponse;
             const images_search: ImageFormatSearchResponse["results"] =
-              await new Promise((res, _rej) => {
-                //ajax qui renvois les id des images dans la gallerie.
-                void ajax({
-                  url: "api/v1/images/formats/actions/search",
-                  type: "POST",
-                  contentType: "application/json",
-                  data: JSON.stringify({
-                    filenames: fileNames,
-                  }),
-                  success: function (data: ImageFormatSearchResponse) {
-                    res(data.results);
-                  },
-                });
-              });
+              searchResponse.results;
 
             const notFound: string[] = [];
             const multiple: string[] = [];
@@ -773,18 +771,19 @@ ready(function () {
         Piecon.reset();
 
         if (!formatMode && uploadCategory) {
-          void ajax({
-            url: "api/v1/uploads/actions/complete-batch",
-            type: "POST",
-            contentType: "application/json",
-            headers: { "X-CSRF-Token": pwg_token },
-            data: JSON.stringify({
-              categoryId: Number(uploadCategory.id),
-            }),
-            dataType: "json",
-            success: function (
-              data: operations["uploadCompleteBatch"]["responses"][200]["content"]["application/json"],
-            ) {
+          void (async () => {
+            try {
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+              const data = (await ajax({
+                url: "api/v1/uploads/actions/complete-batch",
+                type: "POST",
+                json: {
+                  categoryId: Number(uploadCategory.id),
+                },
+                headers: { "X-CSRF-Token": pwg_token },
+                dataType: "json",
+              })) as operations["uploadCompleteBatch"]["responses"][200]["content"]["application/json"];
+
               // A real, fresh nb_photos/label straight from the server --
               // read here instead of a value captured mid-upload, since
               // that captured value would otherwise be stale by the time
@@ -802,8 +801,10 @@ ready(function () {
                 document.querySelectorAll(".infos ul"),
                 "<li>" + summaryHtml + "</li>",
               );
-            },
-          });
+            } catch (e) {
+              console.error(e instanceof AjaxError ? e.responseText : e);
+            }
+          })();
         }
 
         hide(
@@ -1116,26 +1117,26 @@ function hide_first_album(cat_name: string) {
   if (uploadForm !== null) fadeIn([uploadForm]);
 }
 
-function add_first_album(add_cat: (id: string | number) => void) {
+async function add_first_album(
+  add_cat: (id: string | number) => void,
+): Promise<void> {
   const params = {
     name: inputFirstAlbum !== null ? (val([inputFirstAlbum]) ?? "") : "",
   };
 
-  void ajax({
-    url: "api/v1/categories",
-    method: "POST",
-    contentType: "application/json",
-    headers: { "X-CSRF-Token": pwg_token },
-    dataType: "json",
-    data: JSON.stringify(params),
-    success: function (
-      res: operations["categoryCreate"]["responses"][201]["content"]["application/json"],
-    ) {
-      add_cat(res.id);
-      hide_first_album(params.name);
-    },
-    error: function () {
-      console.error("An error has occurred");
-    },
-  });
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    const res = (await ajax({
+      url: "api/v1/categories",
+      method: "POST",
+      json: params,
+      headers: { "X-CSRF-Token": pwg_token },
+      dataType: "json",
+    })) as operations["categoryCreate"]["responses"][201]["content"]["application/json"];
+
+    add_cat(res.id);
+    hide_first_album(params.name);
+  } catch (e) {
+    console.error("An error has occurred", e);
+  }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Latte\Runtime\Html;
 use Piwigo\Admin\Projection\UserPermView;
 use Piwigo\Admin\Request\UserPermSubmitRequest;
 use Piwigo\Auth\AccessControl;
@@ -98,7 +99,7 @@ final readonly class UserPermPageRenderer
 
             $categories_because_of_groups = [];
             foreach ($cats as $category) {
-                $categories_because_of_groups[] = $htmlRenderer->getCatDisplayNameCache($category->uppercats, null);
+                $categories_because_of_groups[] = new Html($htmlRenderer->getCatDisplayNameCache($category->uppercats, null));
             }
         }
 

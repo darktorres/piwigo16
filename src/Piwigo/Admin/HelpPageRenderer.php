@@ -50,7 +50,7 @@ final class HelpPageRenderer
         );
 
         $adminContent = $renderer->render(new HelpView(
-            helpContent: is_string($help_content_raw) ? $help_content_raw : '',
+            helpContent: new Html(is_string($help_content_raw) ? $help_content_raw : ''),
             helpSectionTitle: $tabsheet->sheets[$tabsheet->selected]->caption,
             enableSynchronization: $currentConfig->enableSynchronization,
         ));

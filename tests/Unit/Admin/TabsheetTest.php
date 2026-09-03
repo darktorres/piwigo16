@@ -110,13 +110,13 @@ test('add succeeds for a new tab name and fails for a duplicate one', function (
         ->toBeTrue();
     expect($tabsheet->sheets)
         ->toEqual([
-            'general' => new TabSheetEntry('General', '/admin.php?page=general'),
+            'general' => new TabSheetEntry(new Html('General'), '/admin.php?page=general'),
         ]);
 
     expect($tabsheet->add('general', 'General Again', '/admin.php?page=general2'))
         ->toBeFalse();
     // The failed add must not have overwritten the original entry.
-    expect($tabsheet->sheets['general'])->toEqual(new TabSheetEntry('General', '/admin.php?page=general'));
+    expect($tabsheet->sheets['general'])->toEqual(new TabSheetEntry(new Html('General'), '/admin.php?page=general'));
 });
 
 test('add with selected=true marks that tab as the selected one', function (): void {
@@ -137,7 +137,7 @@ test('delete removes an existing tab and returns true, or returns false for an u
         ->toBeTrue();
     expect($tabsheet->sheets)
         ->toEqual([
-            'advanced' => new TabSheetEntry('Advanced', '/advanced'),
+            'advanced' => new TabSheetEntry(new Html('Advanced'), '/advanced'),
         ]);
 
     expect($tabsheet->delete('not-a-real-tab'))
@@ -175,7 +175,7 @@ test('select picks the requested tab when it exists', function (): void {
     expect($tabsheet->selected)
         ->toBe('advanced');
     expect($tabsheet->getSelected())
-        ->toEqual(new TabSheetEntry('Advanced', '/advanced'));
+        ->toEqual(new TabSheetEntry(new Html('Advanced'), '/advanced'));
 });
 
 test('select falls back to the first remaining tab when the requested name does not exist', function (): void {
@@ -212,8 +212,8 @@ test('select applies a tabsheet_before_select handler that filters and appends t
 
         expect($tabsheet->sheets)
             ->toEqual([
-                'kept' => new TabSheetEntry('Kept', '/kept'),
-                'added-by-handler' => new TabSheetEntry('Added', '/added'),
+                'kept' => new TabSheetEntry(new Html('Kept'), '/kept'),
+                'added-by-handler' => new TabSheetEntry(new Html('Added'), '/added'),
             ]);
         expect($tabsheet->selected)
             ->toBe('added-by-handler');
@@ -243,7 +243,7 @@ test('select discards a handler-returned entry that does not match the expected 
 
         expect($tabsheet->sheets)
             ->toEqual([
-                'general' => new TabSheetEntry('General', '/general'),
+                'general' => new TabSheetEntry(new Html('General'), '/general'),
             ]);
     } finally {
         EventDispatcherTestFactory::get()->removeTypedHandler(TabsheetBeforeSelect::class, $handler);
@@ -276,7 +276,7 @@ test('select discards a well-shaped sheet entry keyed by an int, not just a malf
 
         expect($tabsheet->sheets)
             ->toEqual([
-                'general' => new TabSheetEntry('General', '/general'),
+                'general' => new TabSheetEntry(new Html('General'), '/general'),
             ]);
     } finally {
         EventDispatcherTestFactory::get()->removeTypedHandler(TabsheetBeforeSelect::class, $handler);

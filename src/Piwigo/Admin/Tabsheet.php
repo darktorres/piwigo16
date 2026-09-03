@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Latte\Runtime\Html;
 use Piwigo\Admin\Event\TabsheetBeforeSelect;
 use Piwigo\Admin\Projection\TabSheetEntry;
 use Piwigo\Admin\Projection\TabsheetHtmlPageContext;
@@ -54,7 +55,7 @@ final class Tabsheet
     public function add(string $name, string $caption, string $url, bool $selected = false): bool
     {
         if (! isset($this->sheets[$name])) {
-            $this->sheets[$name] = new TabSheetEntry($caption, $url);
+            $this->sheets[$name] = new TabSheetEntry(new Html($caption), $url);
             if ($selected) {
                 $this->selected = $name;
             }
@@ -102,7 +103,7 @@ final class Tabsheet
             if ($sheet instanceof TabSheetEntry) {
                 $filtered_sheets[$sheet_name] = $sheet;
             } elseif (is_array($sheet) && isset($sheet['caption'], $sheet['url']) && is_string($sheet['caption']) && is_string($sheet['url'])) {
-                $filtered_sheets[$sheet_name] = new TabSheetEntry($sheet['caption'], $sheet['url']);
+                $filtered_sheets[$sheet_name] = new TabSheetEntry(new Html($sheet['caption']), $sheet['url']);
             }
         }
         $this->sheets = $filtered_sheets;

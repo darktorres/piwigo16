@@ -40,7 +40,7 @@
       ></a>
       <select
         data-selectize="categories"
-        data-value="{$category|json_encode|htmlspecialchars|noescape}"
+        data-value="{$category|json_encode}"
         placeholder="{='No filter on album. Select one or type to search'|translate}"
         name="cat"
         class="rating-album-filter"
@@ -75,8 +75,8 @@
     valign="top"
     class="{if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}"
   >
-    <td><a href="{$image->uUrl|noescape}"><img
-          src="{$image->uThumb|noescape}"
+    <td><a href="{$image->uUrl}"><img
+          src="{$image->uThumb}"
           alt="{$image->file}"
           title="{$image->file}"
         ></a></td>

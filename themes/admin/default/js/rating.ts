@@ -10,7 +10,7 @@ import "./common";
 import { CategoriesCache } from "./LocalStorageCache";
 
 import { pwg_getPageData } from "../../../default/js/page-data";
-import { ajax } from "../../../default/js/vendor/ajax";
+import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
 import { getSelectizeInstance } from "../../../default/js/vendor/selectize";
 import {
   delegate,
@@ -88,7 +88,7 @@ delegate(
   "click",
   "a.icon-trash[data-image-id]",
   function (this: HTMLElement, event: Event): void {
-    del(
+    void del(
       this,
       Number(this.dataset["imageId"]),
       Number(this.dataset["userId"]),
@@ -99,7 +99,12 @@ delegate(
   },
 );
 
-function del(node: HTMLElement, id: number, uid: number, aid: string | null) {
+async function del(
+  node: HTMLElement,
+  id: number,
+  uid: number,
+  aid: string | null,
+): Promise<void> {
   // `closest("tr")` can return null for markup with no ancestor <tr> -- an
   // empty array here reproduces jQuery's own "operate on nothing" semantics
   // for fadeTo/stop/remove below, rather than skipping the ajax call.
@@ -111,26 +116,28 @@ function del(node: HTMLElement, id: number, uid: number, aid: string | null) {
     anonymousId: aid !== null && aid !== "" ? aid : null,
   };
 
-  void ajax({
-    url:
-      pwg_getPageData<string>("root_url") +
-      "api/v1/users/" +
-      String(uid) +
-      "/actions/delete-ratings",
-    method: "POST",
-    contentType: "application/json",
-    data: JSON.stringify(data),
-    headers: { "X-CSRF-Token": pwg_token },
-    error: function (jqXHR) {
-      stop(trSet);
-      fadeTo(trSet, 0, 1);
-      alert(String(jqXHR.status) + " " + jqXHR.statusText);
-    },
-    success: function (
-      result: operations["userDeleteRatings"]["responses"][200]["content"]["application/json"],
-    ) {
-      if (result.deletedCount) remove(trSet);
-      else alert(result.deletedCount);
-    },
-  });
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    const result = (await ajax({
+      url:
+        pwg_getPageData<string>("root_url") +
+        "api/v1/users/" +
+        String(uid) +
+        "/actions/delete-ratings",
+      method: "POST",
+      json: data,
+      headers: { "X-CSRF-Token": pwg_token },
+    })) as operations["userDeleteRatings"]["responses"][200]["content"]["application/json"];
+
+    if (result.deletedCount) remove(trSet);
+    else alert(result.deletedCount);
+  } catch (e) {
+    stop(trSet);
+    fadeTo(trSet, 0, 1);
+    alert(
+      e instanceof AjaxError
+        ? String(e.status) + " " + e.statusText
+        : String(e),
+    );
+  }
 }

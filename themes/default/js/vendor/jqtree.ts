@@ -499,8 +499,8 @@ class JqTreeController<T extends Record<string, unknown>> {
     this.root.loadFromData(this.options.data);
     this.render(null);
     if (this.options.dragAndDrop) {
-      on(this.el, "mousedown", this.onMouseDown);
-      on(this.el, "touchstart", this.onTouchStart);
+      on(this.el, "mousedown", this.#onMouseDown);
+      on(this.el, "touchstart", this.#onTouchStart);
     }
   }
 
@@ -578,11 +578,11 @@ class JqTreeController<T extends Record<string, unknown>> {
     let {parent} = node;
     while (parent) {
       if (parent.parent) {
-        this.doOpenNode(parent, false, undefined);
+        this.#doOpenNode(parent, false, undefined);
       }
       ({ parent } = parent);
     }
-    this.doOpenNode(node, slide, onFinished);
+    this.#doOpenNode(node, slide, onFinished);
   }
 
   closeNode(node: TreeNode, slideParam?: boolean): void {
@@ -590,7 +590,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     if (!(node.isFolder() || node.isEmptyFolder)) {
       return;
     }
-    this.doCloseNode(node, slide);
+    this.#doCloseNode(node, slide);
   }
 
   updateNode(node: TreeNode, data: unknown): void {
@@ -646,13 +646,13 @@ class JqTreeController<T extends Record<string, unknown>> {
     parentNode.is_loading = false;
     this.render(parentNode);
     if (this.isDragging) {
-      this.refreshHitAreas();
+      this.#refreshHitAreas();
     }
   }
 
   // ── Open/close (real source: lib/node_element.js FolderElement) ──────
 
-  private doOpenNode(
+  #doOpenNode(
     node: TreeNode,
     slide: boolean,
     onFinished: ((node: TreeNode) => void) | undefined,
@@ -678,7 +678,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     }
   }
 
-  private doCloseNode(node: TreeNode, slide: boolean): void {
+  #doCloseNode(node: TreeNode, slide: boolean): void {
     if (!node.is_open) {
       return;
     }
@@ -699,19 +699,19 @@ class JqTreeController<T extends Record<string, unknown>> {
     }
   }
 
-  private static mustShowBorderDropHint(node: TreeNode, position: JqTreePosition): boolean {
+  static #mustShowBorderDropHint(node: TreeNode, position: JqTreePosition): boolean {
     if (node.isFolder()) {
       return !node.is_open && position === "inside";
     }
     return position === "inside";
   }
 
-  private addDropHint(node: TreeNode, position: JqTreePosition): { remove(): void } {
+  #addDropHint(node: TreeNode, position: JqTreePosition): { remove(): void } {
     const li = node.element!;
-    if (JqTreeController.mustShowBorderDropHint(node, position)) {
+    if (JqTreeController.#mustShowBorderDropHint(node, position)) {
       const div = li.querySelector<HTMLElement>(":scope > .jqtree-element")!;
       const elWidth = width(li) || 0;
-      const w = Math.max(elWidth + this.getScrollLeft() - 4, 0);
+      const w = Math.max(elWidth + this.#getScrollLeft() - 4, 0);
       const elHeight = outerHeight(div) || 0;
       const h = Math.max(elHeight - 4, 0);
       const hint = document.createElement("span");
@@ -741,89 +741,89 @@ class JqTreeController<T extends Record<string, unknown>> {
 
   // ── Mouse/touch capture (real source: lib/mouse.widget.js) ───────────
 
-  private readonly onMouseDown = (e: Event): void => {
+  readonly #onMouseDown = (e: Event): void => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "mousedown" always dispatches a real MouseEvent; the class field is typed generically via the native EventListener interface.
     const event = e as MouseEvent;
     if (event.button !== 0) {
       return;
     }
-    if (this.handleMouseDown(JqTreeController.positionInfoFromMouse(event))) {
+    if (this.#handleMouseDown(JqTreeController.#positionInfoFromMouse(event))) {
       event.preventDefault();
     }
   };
 
-  private readonly onTouchStart = (e: Event): void => {
+  readonly #onTouchStart = (e: Event): void => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "touchstart" always dispatches a real TouchEvent; the class field is typed generically via the native EventListener interface.
     const event = e as TouchEvent;
     if (event.touches.length > 1) {
       return;
     }
     const touch = event.changedTouches[0]!;
-    this.handleMouseDown(JqTreeController.positionInfoFromTouch(touch, event));
+    this.#handleMouseDown(JqTreeController.#positionInfoFromTouch(touch, event));
   };
 
-  private readonly onMouseMove = (e: Event): void => {
+  readonly #onMouseMove = (e: Event): void => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "mousemove" always dispatches a real MouseEvent; the class field is typed generically via the native EventListener interface.
     const event = e as MouseEvent;
-    this.handleMouseMove(event, JqTreeController.positionInfoFromMouse(event));
+    this.#handleMouseMove(event, JqTreeController.#positionInfoFromMouse(event));
   };
 
-  private readonly onTouchMove = (e: Event): void => {
+  readonly #onTouchMove = (e: Event): void => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "touchmove" always dispatches a real TouchEvent; the class field is typed generically via the native EventListener interface.
     const event = e as TouchEvent;
     if (event.touches.length > 1) {
       return;
     }
     const touch = event.changedTouches[0]!;
-    this.handleMouseMove(event, JqTreeController.positionInfoFromTouch(touch, event));
+    this.#handleMouseMove(event, JqTreeController.#positionInfoFromTouch(touch, event));
   };
 
-  private readonly onMouseUp = (e: Event): void => {
+  readonly #onMouseUp = (e: Event): void => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "mouseup" always dispatches a real MouseEvent; the class field is typed generically via the native EventListener interface.
-    this.handleMouseUp(JqTreeController.positionInfoFromMouse(e as MouseEvent));
+    this.#handleMouseUp(JqTreeController.#positionInfoFromMouse(e as MouseEvent));
   };
 
-  private readonly onTouchEnd = (e: Event): void => {
+  readonly #onTouchEnd = (e: Event): void => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "touchend" always dispatches a real TouchEvent; the class field is typed generically via the native EventListener interface.
     const event = e as TouchEvent;
     if (event.touches.length > 1) {
       return;
     }
     const touch = event.changedTouches[0]!;
-    this.handleMouseUp(JqTreeController.positionInfoFromTouch(touch, event));
+    this.#handleMouseUp(JqTreeController.#positionInfoFromTouch(touch, event));
   };
 
-  private static positionInfoFromMouse(e: MouseEvent): PositionInfo {
+  static #positionInfoFromMouse(e: MouseEvent): PositionInfo {
     return { pageX: e.pageX, pageY: e.pageY, target: e.target, originalEvent: e };
   }
 
-  private static positionInfoFromTouch(touch: Touch, e: TouchEvent): PositionInfo {
+  static #positionInfoFromTouch(touch: Touch, e: TouchEvent): PositionInfo {
     return { pageX: touch.pageX, pageY: touch.pageY, target: touch.target, originalEvent: e };
   }
 
-  private handleMouseDown(positionInfo: PositionInfo): boolean {
+  #handleMouseDown(positionInfo: PositionInfo): boolean {
     if (this.isMouseStarted) {
-      this.handleMouseUp(positionInfo);
+      this.#handleMouseUp(positionInfo);
     }
     this.mouseDownInfo = positionInfo;
-    if (!this.mouseCapture(positionInfo)) {
+    if (!this.#mouseCapture(positionInfo)) {
       return false;
     }
-    this.startMouseHandlers();
+    this.#startMouseHandlers();
     return true;
   }
 
-  private startMouseHandlers(): void {
-    on(document, "mousemove", this.onMouseMove);
-    on(document, "touchmove", this.onTouchMove);
-    on(document, "mouseup", this.onMouseUp);
-    on(document, "touchend", this.onTouchEnd);
+  #startMouseHandlers(): void {
+    on(document, "mousemove", this.#onMouseMove);
+    on(document, "touchmove", this.#onTouchMove);
+    on(document, "mouseup", this.#onMouseUp);
+    on(document, "touchend", this.#onTouchEnd);
     if (this.mouseDelay) {
-      this.startMouseDelayTimer();
+      this.#startMouseDelayTimer();
     }
   }
 
-  private startMouseDelayTimer(): void {
+  #startMouseDelayTimer(): void {
     if (this.mouseDelayTimer != null) {
       clearTimeout(this.mouseDelayTimer);
     }
@@ -833,9 +833,9 @@ class JqTreeController<T extends Record<string, unknown>> {
     }, this.mouseDelay);
   }
 
-  private handleMouseMove(e: Event, positionInfo: PositionInfo): void {
+  #handleMouseMove(e: Event, positionInfo: PositionInfo): void {
     if (this.isMouseStarted) {
-      this.mouseDrag(positionInfo);
+      this.#mouseDrag(positionInfo);
       e.preventDefault();
       return;
     }
@@ -843,29 +843,29 @@ class JqTreeController<T extends Record<string, unknown>> {
       return;
     }
     if (this.mouseDownInfo) {
-      this.isMouseStarted = this.mouseStart(this.mouseDownInfo);
+      this.isMouseStarted = this.#mouseStart(this.mouseDownInfo);
     }
     if (this.isMouseStarted) {
-      this.mouseDrag(positionInfo);
+      this.#mouseDrag(positionInfo);
     } else {
-      this.handleMouseUp(positionInfo);
+      this.#handleMouseUp(positionInfo);
     }
   }
 
-  private handleMouseUp(positionInfo: PositionInfo): void {
-    off(document, "mousemove", this.onMouseMove);
-    off(document, "touchmove", this.onTouchMove);
-    off(document, "mouseup", this.onMouseUp);
-    off(document, "touchend", this.onTouchEnd);
+  #handleMouseUp(positionInfo: PositionInfo): void {
+    off(document, "mousemove", this.#onMouseMove);
+    off(document, "touchmove", this.#onTouchMove);
+    off(document, "mouseup", this.#onMouseUp);
+    off(document, "touchend", this.#onTouchEnd);
     if (this.isMouseStarted) {
       this.isMouseStarted = false;
-      this.mouseStop(positionInfo);
+      this.#mouseStop(positionInfo);
     }
   }
 
   // ── Drag-and-drop handler (real source: lib/drag_and_drop_handler.js) ─
 
-  private mouseCapture(positionInfo: PositionInfo): boolean {
+  #mouseCapture(positionInfo: PositionInfo): boolean {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real mouse/touch event's own target inside this tree is always an Element, never Text/Window/etc.
     const target = positionInfo.target as Element | null;
     if (target === null || target.matches("input,select,textarea")) {
@@ -875,7 +875,7 @@ class JqTreeController<T extends Record<string, unknown>> {
       return false;
     }
     const li = target.closest<HTMLLIElement>("li.jqtree_common");
-    const node = li ? this.findNodeByElement(li) : null;
+    const node = li ? this.#findNodeByElement(li) : null;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
     if (node && this.options.onCanMove && !this.options.onCanMove(node as unknown as JqTreeNode<T>)) {
       this.currentItem = null;
@@ -885,7 +885,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     return this.currentItem != null;
   }
 
-  private findNodeByElement(li: HTMLLIElement): TreeNode | null {
+  #findNodeByElement(li: HTMLLIElement): TreeNode | null {
     let found: TreeNode | null = null;
     this.root.iterate((node) => {
       if (node.element === li) {
@@ -897,11 +897,11 @@ class JqTreeController<T extends Record<string, unknown>> {
     return found;
   }
 
-  private mouseStart(positionInfo: PositionInfo): boolean {
+  #mouseStart(positionInfo: PositionInfo): boolean {
     if (!this.currentItem || positionInfo.pageX === undefined || positionInfo.pageY === undefined) {
       return false;
     }
-    this.refreshHitAreas();
+    this.#refreshHitAreas();
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real mouse/touch event's own target inside this tree is always an Element, never Text/Window/etc.
     const target = positionInfo.target as Element;
     const targetOffset = offset(target);
@@ -919,31 +919,31 @@ class JqTreeController<T extends Record<string, unknown>> {
     return true;
   }
 
-  private mouseDrag(positionInfo: PositionInfo): boolean {
+  #mouseDrag(positionInfo: PositionInfo): boolean {
     if (!this.currentItem || !this.dragElement || positionInfo.pageX === undefined || positionInfo.pageY === undefined) {
       return false;
     }
     this.dragElement.move(positionInfo.pageX, positionInfo.pageY);
     this.positionInfo = positionInfo;
-    const area = this.findHoveredArea(positionInfo.pageX, positionInfo.pageY);
-    const canMoveTo = this.canMoveToArea(area);
+    const area = this.#findHoveredArea(positionInfo.pageX, positionInfo.pageY);
+    const canMoveTo = this.#canMoveToArea(area);
     if (canMoveTo && area) {
       if (!area.node.isFolder()) {
-        this.stopOpenFolderTimer();
+        this.#stopOpenFolderTimer();
       }
       if (this.hoveredArea !== area) {
         this.hoveredArea = area;
-        if (JqTreeController.mustOpenFolderTimer(area)) {
-          this.startOpenFolderTimer(area.node);
+        if (JqTreeController.#mustOpenFolderTimer(area)) {
+          this.#startOpenFolderTimer(area.node);
         } else {
-          this.stopOpenFolderTimer();
+          this.#stopOpenFolderTimer();
         }
-        this.updateDropHint();
+        this.#updateDropHint();
       }
     } else {
       this.hoveredArea = null;
-      this.removeDropHint();
-      this.stopOpenFolderTimer();
+      this.#removeDropHint();
+      this.#stopOpenFolderTimer();
     }
     if (!area && this.options.onDragMove) {
       this.options.onDragMove(
@@ -954,12 +954,12 @@ class JqTreeController<T extends Record<string, unknown>> {
           : (positionInfo.originalEvent).changedTouches[0]!,
       );
     }
-    this.checkScrolling();
+    this.#checkScrolling();
     return true;
   }
 
-  private mouseStop(positionInfo: PositionInfo): boolean {
-    this.moveItem();
+  #mouseStop(positionInfo: PositionInfo): boolean {
+    this.#moveItem();
     // Real pre-existing bug found only by strict typechecking: this read
     // used to happen after the `this.hoveredArea = null` reset below,
     // making the `onDragStop`-vs-successful-move branch below always
@@ -969,7 +969,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     this.dragElement?.remove();
     this.dragElement = null;
     this.hoveredArea = null;
-    this.removeDropHint();
+    this.#removeDropHint();
     this.hitAreas = [];
     const {currentItem} = this;
     currentItem?.element?.classList.remove("jqtree-moving");
@@ -988,17 +988,17 @@ class JqTreeController<T extends Record<string, unknown>> {
     return false;
   }
 
-  private refreshHitAreas(): void {
+  #refreshHitAreas(): void {
     this.hitAreas = [];
     if (this.currentItem) {
-      this.hitAreas = generateHitAreas(this.root, this.currentItem, this.getTreeDimensions().bottom);
+      this.hitAreas = generateHitAreas(this.root, this.currentItem, this.#getTreeDimensions().bottom);
       if (this.isDragging) {
         this.currentItem.element?.classList.add("jqtree-moving");
       }
     }
   }
 
-  private canMoveToArea(area: HitArea | null): boolean {
+  #canMoveToArea(area: HitArea | null): boolean {
     if (!area || !this.currentItem) {
       return false;
     }
@@ -1014,13 +1014,13 @@ class JqTreeController<T extends Record<string, unknown>> {
     return true;
   }
 
-  private removeDropHint(): void {
+  #removeDropHint(): void {
     this.previousGhost?.remove();
     this.previousGhost = null;
   }
 
-  private findHoveredArea(x: number, y: number): HitArea | null {
-    const dimensions = this.getTreeDimensions();
+  #findHoveredArea(x: number, y: number): HitArea | null {
+    const dimensions = this.#getTreeDimensions();
     if (x < dimensions.left || y < dimensions.top || x > dimensions.right || y > dimensions.bottom) {
       return null;
     }
@@ -1040,41 +1040,41 @@ class JqTreeController<T extends Record<string, unknown>> {
     return null;
   }
 
-  private static mustOpenFolderTimer(area: HitArea): boolean {
+  static #mustOpenFolderTimer(area: HitArea): boolean {
     return area.node.isFolder() && !area.node.is_open && area.position === "inside";
   }
 
-  private updateDropHint(): void {
+  #updateDropHint(): void {
     if (!this.hoveredArea) {
       return;
     }
-    this.removeDropHint();
-    this.previousGhost = this.addDropHint(this.hoveredArea.node, this.hoveredArea.position);
+    this.#removeDropHint();
+    this.previousGhost = this.#addDropHint(this.hoveredArea.node, this.hoveredArea.position);
   }
 
-  private startOpenFolderTimer(folder: TreeNode): void {
-    this.stopOpenFolderTimer();
+  #startOpenFolderTimer(folder: TreeNode): void {
+    this.#stopOpenFolderTimer();
     this.openFolderTimer = window.setTimeout(() => {
-      this.doOpenNode(folder, this.options.slide, () => {
-        this.refreshHitAreas();
-        this.updateDropHint();
+      this.#doOpenNode(folder, this.options.slide, () => {
+        this.#refreshHitAreas();
+        this.#updateDropHint();
       });
     }, this.options.openFolderDelay);
   }
 
-  private stopOpenFolderTimer(): void {
+  #stopOpenFolderTimer(): void {
     if (this.openFolderTimer != null) {
       clearTimeout(this.openFolderTimer);
       this.openFolderTimer = null;
     }
   }
 
-  private moveItem(): void {
+  #moveItem(): void {
     if (
       !this.currentItem ||
       !this.hoveredArea ||
       this.hoveredArea.position === "none" ||
-      !this.canMoveToArea(this.hoveredArea)
+      !this.#canMoveToArea(this.hoveredArea)
     ) {
       return;
     }
@@ -1110,11 +1110,11 @@ class JqTreeController<T extends Record<string, unknown>> {
     }
   }
 
-  private getTreeDimensions(): { left: number; top: number; right: number; bottom: number } {
+  #getTreeDimensions(): { left: number; top: number; right: number; bottom: number } {
     const treeOffset = offset(this.el);
     const treeWidth = width(this.el) || 0;
     const treeHeight = outerHeight(this.el) || 0;
-    const left = treeOffset.left + this.getScrollLeft();
+    const left = treeOffset.left + this.#getScrollLeft();
     return {
       left,
       top: treeOffset.top,
@@ -1127,7 +1127,7 @@ class JqTreeController<T extends Record<string, unknown>> {
 
   // ── Scroll-during-drag (real source: lib/scroll_handler.js) ──────────
 
-  private ensureScrollInit(): void {
+  #ensureScrollInit(): void {
     if (this.scrollInitialized) {
       return;
     }
@@ -1147,21 +1147,21 @@ class JqTreeController<T extends Record<string, unknown>> {
     this.scrollInitialized = true;
   }
 
-  private getScrollLeft(): number {
-    this.ensureScrollInit();
+  #getScrollLeft(): number {
+    this.#ensureScrollInit();
     if (!this.scrollParent) {
       return 0;
     }
     return this.scrollParent.scrollLeft || 0;
   }
 
-  private checkScrolling(): void {
-    this.ensureScrollInit();
-    this.checkVerticalScrolling();
-    this.checkHorizontalScrolling();
+  #checkScrolling(): void {
+    this.#ensureScrollInit();
+    this.#checkVerticalScrolling();
+    this.#checkHorizontalScrolling();
   }
 
-  private checkVerticalScrolling(): void {
+  #checkVerticalScrolling(): void {
     const area = this.hoveredArea;
     if (!area || area.top === this.previousScrollTop) {
       return;
@@ -1173,11 +1173,11 @@ class JqTreeController<T extends Record<string, unknown>> {
         this.scrollParentTop + scrollParent.offsetHeight - area.bottom;
       if (distanceBottom < 20) {
         scrollParent.scrollTop += 20;
-        this.refreshHitAreas();
+        this.#refreshHitAreas();
         this.previousScrollTop = -1;
       } else if (area.top - this.scrollParentTop < 20) {
         scrollParent.scrollTop -= 20;
-        this.refreshHitAreas();
+        this.#refreshHitAreas();
         this.previousScrollTop = -1;
       }
     } else {
@@ -1191,7 +1191,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     }
   }
 
-  private checkHorizontalScrolling(): void {
+  #checkHorizontalScrolling(): void {
     const {positionInfo} = this;
     if (positionInfo?.pageX === undefined || positionInfo.pageY === undefined) {
       return;

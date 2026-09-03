@@ -420,7 +420,7 @@ on(document.querySelectorAll("#add-tag .icon-validate"), "click", function () {
   }
 });
 
-function addTag(name: string): Promise<void> {
+async function addTag(name: string): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     void ajax({
       url: "api/v1/tags",
@@ -596,6 +596,7 @@ function rename_tag_open(): void {
 function removeTag(id: TagId, name: string): void {
   alert({
     title: str_tag_deleted.replace("%s", name),
+    // eslint-disable-next-line @typescript-eslint/promise-function-async -- must return ajax()'s own AjaxThenable (jconfirm.ts's `isThenable()` checks for its real `.always()`); `async` would re-wrap it through `Promise.resolve()` and lose that method.
     content: function () {
       return ajax({
         url: "api/v1/tags/" + String(id),
@@ -624,7 +625,10 @@ function removeTag(id: TagId, name: string): void {
   });
 }
 
-function renameTag(id: TagId, new_name: string): Promise<TagRenameResponse> {
+async function renameTag(
+  id: TagId,
+  new_name: string,
+): Promise<TagRenameResponse> {
   return new Promise<TagRenameResponse>((resolve, reject) => {
     void ajax({
       url: "api/v1/tags/" + String(id),
@@ -690,7 +694,10 @@ function renameTag(id: TagId, new_name: string): Promise<TagRenameResponse> {
   });
 }
 
-function duplicateTag(id: TagId, name: string): Promise<TagDuplicateResponse> {
+async function duplicateTag(
+  id: TagId,
+  name: string,
+): Promise<TagDuplicateResponse> {
   return new Promise<TagDuplicateResponse>((resolve, reject) => {
     let copy_name = name + str_copy;
 
@@ -1002,7 +1009,7 @@ on(document.querySelectorAll("#selectAll"), "click", function () {
   }
 });
 
-function selectAll(tags: TagRow[]) {
+async function selectAll(tags: TagRow[]) {
   const promises: Promise<void>[] = [];
   tags.forEach((tag) => {
     promises.push(
@@ -1112,11 +1119,11 @@ function removeSelectedTags(): void {
 
   alert({
     title: str_tags_deleted.replace("%s", tagListToString(names)),
-    content: function () {
+    content: async function () {
       // No bulk-delete endpoint (a REST single-resource DELETE per tag,
       // per P27's own design) -- fire one DELETE per selected tag.
       return Promise.all(
-        selected.map(function (id) {
+        selected.map(async function (id) {
           return ajax({
             url: "api/v1/tags/" + String(id),
             type: "DELETE",
@@ -1177,6 +1184,7 @@ function mergeGroups(destination_id: TagId, merge_ids: TagId[]): void {
 
   alert({
     title: str_message,
+    // eslint-disable-next-line @typescript-eslint/promise-function-async -- must return ajax()'s own AjaxThenable (jconfirm.ts's `isThenable()` checks for its real `.always()`); `async` would re-wrap it through `Promise.resolve()` and lose that method.
     content: function () {
       return ajax({
         url: "api/v1/tags/actions/merge",
@@ -1451,7 +1459,7 @@ function movePage(toRigth = true): void {
 // matched element's own animation to finish before continuing -- dom.ts's
 // `animate()` runs its `complete` callback once per element, not once for
 // the whole set, so the aggregation has to happen here.
-function fadeOpacity(
+async function fadeOpacity(
   elements: Element[],
   to: number,
   duration: number,
@@ -1473,7 +1481,7 @@ function fadeOpacity(
   });
 }
 
-function updatePage(): Promise<void> {
+async function updatePage(): Promise<void> {
   return new Promise<void>((resolve, _reject) => {
     const dataToDisplay = tagToDisplay();
     const tagBoxes = Array.from(document.querySelectorAll(".tag-box"));

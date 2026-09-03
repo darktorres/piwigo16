@@ -273,12 +273,12 @@ class TreeNode {
   }
 
   isParentOf(node: TreeNode): boolean {
-    let parent = node.parent;
+    let {parent} = node;
     while (parent) {
       if (parent === this) {
         return true;
       }
-      parent = parent.parent;
+      ({ parent } = parent);
     }
     return false;
   }
@@ -575,12 +575,12 @@ class JqTreeController<T extends Record<string, unknown>> {
       return;
     }
     const slide = slideParam ?? this.options.slide;
-    let parent = node.parent;
+    let {parent} = node;
     while (parent) {
       if (parent.parent) {
         this.doOpenNode(parent, false, undefined);
       }
-      parent = parent.parent;
+      ({ parent } = parent);
     }
     this.doOpenNode(node, slide, onFinished);
   }
@@ -635,7 +635,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     if (!node.parent) {
       return;
     }
-    const parent = node.parent;
+    const {parent} = node;
     node.remove();
     this.render(parent);
   }
@@ -971,7 +971,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     this.hoveredArea = null;
     this.removeDropHint();
     this.hitAreas = [];
-    const currentItem = this.currentItem;
+    const {currentItem} = this;
     currentItem?.element?.classList.remove("jqtree-moving");
     this.currentItem = null;
     this.isDragging = false;
@@ -1080,7 +1080,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     }
     const movedNode = this.currentItem;
     const targetNode = this.hoveredArea.node;
-    const position = this.hoveredArea.position;
+    const {position} = this.hoveredArea;
     const previousParent = movedNode.parent;
     if (position === "inside") {
       targetNode.is_open = true;
@@ -1168,7 +1168,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     }
     this.previousScrollTop = area.top;
     if (this.scrollParent) {
-      const scrollParent = this.scrollParent;
+      const {scrollParent} = this;
       const distanceBottom =
         this.scrollParentTop + scrollParent.offsetHeight - area.bottom;
       if (distanceBottom < 20) {
@@ -1192,12 +1192,12 @@ class JqTreeController<T extends Record<string, unknown>> {
   }
 
   private checkHorizontalScrolling(): void {
-    const positionInfo = this.positionInfo;
+    const {positionInfo} = this;
     if (positionInfo?.pageX === undefined || positionInfo.pageY === undefined) {
       return;
     }
     if (this.scrollParent) {
-      const scrollParent = this.scrollParent;
+      const {scrollParent} = this;
       const scrollParentOffset = offset(scrollParent);
       const canScrollRight = scrollParent.scrollLeft + scrollParent.clientWidth < scrollParent.scrollWidth;
       const canScrollLeft = scrollParent.scrollLeft > 0;

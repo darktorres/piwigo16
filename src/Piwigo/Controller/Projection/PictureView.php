@@ -51,7 +51,7 @@ final readonly class PictureView implements View, HasPageAssets, ExposesPageData
      * @param array<string, bool> $displayInfo
      * @param array{IS_FAVORITE: bool, U_FAVORITE: string}|null $favorite
      * @param list<array<string, mixed>>|null $relatedTags
-     * @param list<string>|null $relatedCategories
+     * @param list<Html>|null $relatedCategories
      * @param list<ButtonContribution> $pluginPictureButtons
      * @param list<ActionContribution> $pluginPictureActions
      * @param list<PictureInfoRow> $pluginPictureInfoRows

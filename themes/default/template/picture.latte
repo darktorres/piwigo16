@@ -11,7 +11,7 @@
       <div class="browsePath">
         {$sectionTitle}<span
           class="browsePathSeparator"
-        >{$levelSeparator|noescape}</span><h2>{$navCurrent->element->title}</h2>
+        >{$levelSeparator}</span><h2>{$navCurrent->element->title}</h2>
       </div>
     </div>
 
@@ -144,7 +144,7 @@
               <div class="switchBoxTitle">{$action->label}</div>
               <a
                 n:foreach="$action->panel as $link"
-                href="{$link->url|noescape}"
+                href="{$link->url}"
                 rel="nofollow"
               >{if $link->icon !== null}<span
                     class="{$link->icon}"
@@ -240,7 +240,7 @@
                 <span class="thumbHover prevThumbHover"></span>
                 <img
                   class="{if $navPrevious->element->pathExt === 'svg'}svgImg{/if}"
-                  src="{if $navPrevious->element->pathExt === 'svg'}{$navPrevious->element->image->path|noescape}{else}{$navPrevious->element->derivatives['square']->getUrl()|noescape}{/if}"
+                  src="{if $navPrevious->element->pathExt === 'svg'}{$navPrevious->element->image->path}{else}{$navPrevious->element->derivatives['square']->getUrl()}{/if}"
                   alt="{$navPrevious->element->title}"
                 >
               </a>
@@ -267,7 +267,7 @@
                 <span class="thumbHover nextThumbHover"></span>
                 <img
                   class="{if $navNext->element->pathExt === 'svg'}svgImg{/if}"
-                  src="{if $navNext->element->pathExt === 'svg'}{$navNext->element->image->path|noescape}{else}{$navNext->element->derivatives['square']->getUrl()|noescape}{/if}"
+                  src="{if $navNext->element->pathExt === 'svg'}{$navNext->element->image->path}{else}{$navNext->element->derivatives['square']->getUrl()}{/if}"
                   alt="{$navNext->element->title}"
                 >
               </a>
@@ -329,7 +329,7 @@
                 <dt>{='Tags'|translate}</dt>
                 <dd>
                   {foreach $relatedTags as $tag}{if !$iterator->first}, {/if}<a
-                      href="{$tag['URL']|noescape}"
+                      href="{$tag['URL']}"
                     >{$tag['name']}</a>{/foreach}
                 </dd>
               </div>
@@ -340,7 +340,7 @@
                 <dd>
                   <ul>
                     {foreach $relatedCategories as $cat}
-                      <li>{$cat|noescape}</li>
+                      <li>{$cat}</li>
                     {/foreach}
                   </ul>
                 </dd>
@@ -386,7 +386,7 @@
                 </dt>
                 <dd>
                   <form
-                    action="{$rating['F_ACTION']|noescape}"
+                    action="{$rating['F_ACTION']}"
                     method="post"
                     id="rateForm"
                   >
@@ -462,7 +462,7 @@
               <h4>{='Add a comment'|translate}</h4>
               <form
                 method="post"
-                action="{$commentAdd->formAction|noescape}"
+                action="{$commentAdd->formAction}"
                 id="addComment"
               >
                 {if $commentAdd->showAuthor}

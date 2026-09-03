@@ -1151,11 +1151,11 @@ final readonly class PictureController implements ControllerInterface
             // Mirrors the narrowing in include/functions_html.inc.php
             // (get_cat_display_name_from_id()) for the same
             // 'upper_names' shape.
-            $related_categories_display[] = $this->htmlService
+            $related_categories_display[] = new Html($this->htmlService
                 ->getCatDisplayName(array_map(
                     static fn (CategoryIdNamePermalink $row): array => $row->toArray(),
                     $page_category->upperNames
-                ));
+                )));
         } else { // use only 1 sql query to get names for all related categories
             $ids = [];
             foreach ($related_categories as $category) {// add all uppercats to $ids
@@ -1168,7 +1168,7 @@ final readonly class PictureController implements ControllerInterface
                 foreach (explode(',', $category->uppercats) as $id) {
                     $cats[] = $cat_map[$id];
                 }
-                $related_categories_display[] = $this->htmlService->getCatDisplayName($cats);
+                $related_categories_display[] = new Html($this->htmlService->getCatDisplayName($cats));
             }
         }
 

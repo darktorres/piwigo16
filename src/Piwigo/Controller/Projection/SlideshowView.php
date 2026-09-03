@@ -48,7 +48,7 @@ final readonly class SlideshowView implements View, HasPageAssets, ExposesPageDa
      * @param array<string, bool> $displayInfo
      * @param array{IS_FAVORITE: bool, U_FAVORITE: string}|null $favorite
      * @param list<array<string, mixed>>|null $relatedTags
-     * @param list<string>|null $relatedCategories
+     * @param list<Html>|null $relatedCategories
      * @param list<array{TITLE: string, lines: array<string, mixed>}>|null $metadata
      * @param array{F_ACTION: string, USER_RATE: ?int, marks: list<int>}|null $rating
      * @param list<CommentRow>|null $comments

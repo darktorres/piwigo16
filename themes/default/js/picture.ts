@@ -13,7 +13,7 @@ import { phpWGOpenWindow } from "./scripts";
 import "./switchbox";
 
 import { pwg_getPageData, pwg_getPageString } from "./page-data";
-import { ajax } from "./vendor/ajax";
+import { ajax, AjaxError } from "./vendor/ajax";
 import { css, ready } from "./vendor/dom";
 
 function changeImgSrc(url: string, typeSave: string, typeMap: string): void {
@@ -85,26 +85,30 @@ ready(function () {
   }
 });
 
-function addToCadie(
+async function addToCadie(
   aElement: HTMLAnchorElement & { disabled?: boolean },
   id: unknown,
-): void {
+): Promise<void> {
   if (aElement.disabled === true) return;
   aElement.disabled = true;
-  void ajax({
-    url: pwg_getPageData<string>("root_url") + "api/v1/session/caddie",
-    method: "POST",
-    contentType: "application/json",
-    data: JSON.stringify({ imageIds: [id] }),
-    headers: { "X-CSRF-Token": pwg_getPageData<string>("csrf_token") },
-    error: function (jqXHR) {
-      alert(String(jqXHR.status) + " " + jqXHR.statusText);
-      document.location.href = aElement.href;
-    },
-    success: function (_result) {
-      aElement.disabled = false;
-    },
-  });
+
+  try {
+    await ajax({
+      url: pwg_getPageData<string>("root_url") + "api/v1/session/caddie",
+      method: "POST",
+      json: { imageIds: [id] },
+      headers: { "X-CSRF-Token": pwg_getPageData<string>("csrf_token") },
+    });
+
+    aElement.disabled = false;
+  } catch (e) {
+    alert(
+      e instanceof AjaxError
+        ? String(e.status) + " " + e.statusText
+        : String(e),
+    );
+    document.location.href = aElement.href;
+  }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- `disabled` isn't a real <a> property; this file's own addToCadie() sets it as a non-standard attribute-like flag, matching the original's real (if non-standard) behavior.
@@ -113,7 +117,7 @@ const caddieLink = document.getElementById("caddieLink") as
 if (caddieLink) {
   caddieLink.addEventListener("click", function (e) {
     e.preventDefault();
-    addToCadie(caddieLink, pwg_getPageData<string | number>("image_id"));
+    void addToCadie(caddieLink, pwg_getPageData<string | number>("image_id"));
   });
 }
 

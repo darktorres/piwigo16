@@ -7,15 +7,15 @@
       <div class="titrePage">
         <ul class="categoryActions"></ul>
         <h2><a
-            href="{$homeUrl|noescape}"
-          >{='Home'|translate}</a>{$LEVEL_SEPARATOR|noescape}{='Registration'|translate}</h2>
+            href="{$homeUrl}"
+          >{='Home'|translate}</a>{$LEVEL_SEPARATOR}{='Registration'|translate}</h2>
       </div>
 
       {include 'infos_errors.latte'}
 
       <form
         method="post"
-        action="{$formAction|noescape}"
+        action="{$formAction}"
         class="properties"
         name="register_form"
       >

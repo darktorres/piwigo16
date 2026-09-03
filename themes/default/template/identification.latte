@@ -6,14 +6,14 @@
     <div class="titrePage">
       <ul class="categoryActions"></ul>
       <h2><a
-          href="{$homeUrl|noescape}"
-        >{='Home'|translate}</a>{$LEVEL_SEPARATOR|noescape}{='Identification'|translate}</h2>
+          href="{$homeUrl}"
+        >{='Home'|translate}</a>{$LEVEL_SEPARATOR}{='Identification'|translate}</h2>
     </div>
 
     {include 'infos_errors.latte'}
 
     <form
-      action="{$loginAction|noescape}"
+      action="{$loginAction}"
       method="post"
       name="login_form"
       class="properties"
@@ -78,7 +78,7 @@
       <p>
         <a
           n:if="isset($register)"
-          href="{$register|noescape}"
+          href="{$register}"
           title="{='Register'|translate}"
           class="pwg-state-default pwg-button"
         >
@@ -88,7 +88,7 @@
         </a>
         <a
           n:if="isset($lostPassword)"
-          href="{$lostPassword|noescape}"
+          href="{$lostPassword}"
           title="{='Forgot your password?'|translate}"
           class="pwg-state-default pwg-button"
         >

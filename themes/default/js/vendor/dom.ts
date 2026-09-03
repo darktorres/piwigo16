@@ -823,26 +823,43 @@ function startValueInUnit(
 }
 
 class Tween implements Stoppable {
-  private readonly startedAt = Date.now();
+  readonly #startedAt = Date.now();
 
-  private timer: ReturnType<typeof setInterval> | null = null;
+  #timer: ReturnType<typeof setInterval> | null = null;
+
+  readonly #el: HTMLElement;
+  readonly #props: {
+    prop: string;
+    from: number;
+    to: number;
+    unit: string;
+  }[];
+  readonly #duration: number;
+  readonly #complete: (() => void) | undefined;
+  readonly #done: () => void;
 
   public constructor(
-    private readonly el: HTMLElement,
-    private readonly props: {
+    el: HTMLElement,
+    props: {
       prop: string;
       from: number;
       to: number;
       unit: string;
     }[],
-    private readonly duration: number,
-    private readonly complete: (() => void) | undefined,
-    private readonly done: () => void
-  ) {}
+    duration: number,
+    complete: (() => void) | undefined,
+    done: () => void
+  ) {
+    this.#el = el;
+    this.#props = props;
+    this.#duration = duration;
+    this.#complete = complete;
+    this.#done = done;
+  }
 
   public start(): void {
-    if (this.duration <= 0) {
-      this.finish(true);
+    if (this.#duration <= 0) {
+      this.#finish(true);
 
       return;
     }
@@ -854,46 +871,46 @@ class Tween implements Stoppable {
     // however many real frames pass before the first tick -- a visible
     // flash of the fully-open content right before it visibly snaps back
     // to the animation's actual starting point and grows from there.
-    this.tick();
-    this.timer = setInterval(() => {
-      this.tick();
+    this.#tick();
+    this.#timer = setInterval(() => {
+      this.#tick();
     }, FX_INTERVAL);
   }
 
-  private tick(): void {
-    const elapsed = Date.now() - this.startedAt;
-    const fraction = Math.min(1, elapsed / this.duration);
+  #tick(): void {
+    const elapsed = Date.now() - this.#startedAt;
+    const fraction = Math.min(1, elapsed / this.#duration);
     const eased = swing(fraction);
 
-    for (const { prop, from, to, unit } of this.props) {
-      setStyleValue(this.el, prop, from + (to - from) * eased, unit);
+    for (const { prop, from, to, unit } of this.#props) {
+      setStyleValue(this.#el, prop, from + (to - from) * eased, unit);
     }
 
     if (fraction >= 1) {
-      this.finish(true);
+      this.#finish(true);
     }
   }
 
   public stop(jumpToEnd: boolean): void {
-    if (this.timer !== null) {
-      clearInterval(this.timer);
-      this.timer = null;
+    if (this.#timer !== null) {
+      clearInterval(this.#timer);
+      this.#timer = null;
     }
-    this.finish(jumpToEnd);
+    this.#finish(jumpToEnd);
   }
 
-  private finish(applyEnd: boolean): void {
-    if (this.timer !== null) {
-      clearInterval(this.timer);
-      this.timer = null;
+  #finish(applyEnd: boolean): void {
+    if (this.#timer !== null) {
+      clearInterval(this.#timer);
+      this.#timer = null;
     }
     if (applyEnd) {
-      for (const { prop, to, unit } of this.props) {
-        setStyleValue(this.el, prop, to, unit);
+      for (const { prop, to, unit } of this.#props) {
+        setStyleValue(this.#el, prop, to, unit);
       }
-      this.complete?.call(this.el);
+      this.#complete?.call(this.#el);
     }
-    this.done();
+    this.#done();
   }
 }
 

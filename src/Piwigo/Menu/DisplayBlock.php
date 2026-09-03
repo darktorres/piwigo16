@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Menu;
 
+use Latte\Runtime\Html;
+
 /**
  * Represents a menu block ready for display in the BlockManager object.
  */
@@ -25,12 +27,13 @@ final class DisplayBlock
     private ?string $title = null;
 
     /**
-     * @var string|null the block's rendered HTML. MenubarRenderer renders
-     *   each block it knows about through its own typed View into this;
-     *   a block nothing fills stays null and BlockManager::apply() hides
-     *   it rather than emitting an empty `<dl>`.
+     * @var Html|null the block's rendered HTML -- Html, not string,
+     *   since MenubarRenderer fills it straight from Renderer::render()'s
+     *   own Html return. A block nothing fills stays null and
+     *   BlockManager::apply() hides it rather than emitting an empty
+     *   `<dl>`.
      */
-    public ?string $raw_content = null;
+    public ?Html $raw_content = null;
 
     /**
      * Zero real readers/writers anywhere in the codebase today -- reserved

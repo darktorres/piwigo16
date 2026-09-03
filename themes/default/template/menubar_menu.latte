@@ -21,7 +21,7 @@
   <ul>{spaceless}
       {foreach $links as $link}
         <li><a
-            href="{$link->url|noescape}"
+            href="{$link->url}"
             {if $link->title !== null}
             title="{$link->title}"
             {/if}

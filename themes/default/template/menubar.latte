@@ -2,7 +2,7 @@
 {if $blocks !== []}
   <div id="menubar">
     <dl n:foreach="$blocks as $id => $block" id="{$id}">
-      {$block->raw_content|noescape}
+      {$block->raw_content}
     </dl>
   </div><div id="menuSwitcher"></div>
 {/if}

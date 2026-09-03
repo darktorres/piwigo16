@@ -129,7 +129,7 @@ final class MenubarRenderer
                 }
             }
             if ($links !== []) {
-                $block->raw_content = (string) $renderer->render(new MenubarLinksView($links));
+                $block->raw_content = $renderer->render(new MenubarLinksView($links));
             }
         }
 
@@ -174,7 +174,7 @@ final class MenubarRenderer
             $nbTotalImages = $currentUser->get()
                 ->rawAttributes['nb_total_images'] ?? null;
 
-            $block->raw_content = (string) $renderer->render(new MenubarCategoriesView(
+            $block->raw_content = $renderer->render(new MenubarCategoriesView(
                 categories: $categoryRows,
                 categoriesUrl: $urlService->makeIndexUrl([
                     'section' => 'categories',
@@ -240,7 +240,7 @@ final class MenubarRenderer
             }
 
             if ($relatedCategories !== []) {
-                $block->raw_content = (string) $renderer->render(new MenubarRelatedCategoriesView($relatedCategories));
+                $block->raw_content = $renderer->render(new MenubarRelatedCategoriesView($relatedCategories));
             }
         }
 
@@ -268,7 +268,7 @@ final class MenubarRenderer
             }
 
             if ($tagRows !== []) {
-                $block->raw_content = (string) $renderer->render(new MenubarTagsView($tagRows));
+                $block->raw_content = $renderer->render(new MenubarTagsView($tagRows));
             }
         }
 
@@ -339,7 +339,7 @@ final class MenubarRenderer
                 noFollow: true,
             );
 
-            $block->raw_content = (string) $renderer->render(new MenubarSpecialsView($specials));
+            $block->raw_content = $renderer->render(new MenubarSpecialsView($specials));
         }
 
         if (($block = $menu->getBlock('mbMenu')) instanceof DisplayBlock) {
@@ -395,7 +395,7 @@ final class MenubarRenderer
                 );
             }
 
-            $block->raw_content = (string) $renderer->render(new MenubarMenuView(
+            $block->raw_content = $renderer->render(new MenubarMenuView(
                 quickSearch: true,
                 links: $menuLinks,
                 rootUrl: $urlService->getRootUrl(),
@@ -430,7 +430,7 @@ final class MenubarRenderer
             );
         }
         if (($block = $menu->getBlock('mbIdentification')) instanceof DisplayBlock) {
-            $block->raw_content = (string) $renderer->render(new MenubarIdentificationView(
+            $block->raw_content = $renderer->render(new MenubarIdentificationView(
                 identity: $identity,
                 loginRedirect: is_string($_SERVER['REQUEST_URI'] ?? null) ? $_SERVER['REQUEST_URI'] : '',
             ));

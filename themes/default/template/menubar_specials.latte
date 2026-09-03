@@ -3,7 +3,7 @@
 <dd>
   <ul>{spaceless}
       <li n:foreach="$specials as $link"><a
-          href="{$link->url|noescape}"
+          href="{$link->url}"
           title="{$link->title}"
           {if $link->noFollow}
           rel="nofollow"

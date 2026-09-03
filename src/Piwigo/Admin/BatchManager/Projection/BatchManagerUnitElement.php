@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\BatchManager\Projection;
 
+use Latte\Runtime\Html;
+
 /**
  * One photo row of the batch manager's unit tab, built by
  * {@see \Piwigo\Admin\BatchManagerUnitPageRenderer::render()}.
@@ -40,7 +42,7 @@ final readonly class BatchManagerUnitElement
 {
     /**
      * @param array<int, array{name: mixed, id: string}> $tags
-     * @param array<int, array{name: string, unlinkable: bool}> $relatedCategories
+     * @param array<int, array{name: Html, unlinkable: bool}> $relatedCategories
      */
     public function __construct(
         public int|string $id,

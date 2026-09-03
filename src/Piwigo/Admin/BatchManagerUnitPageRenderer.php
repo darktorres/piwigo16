@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Admin\BatchManager\Projection\BatchManagerUnitElement;
 use Piwigo\Admin\BatchManager\Projection\BulkManagerFilter;
@@ -347,10 +348,10 @@ final readonly class BatchManagerUnitPageRenderer
                     $item_category_id = $item['category_id'];
 
                     $name =
-                      $htmlRenderer->getCatDisplayNameCache(
+                      new Html($htmlRenderer->getCatDisplayNameCache(
                           $item['uppercats'],
                           $this->urlService->getRootUrl() . 'admin.php?page=album-'
-                      );
+                      ));
 
                     $related_categories[$item_category_id] = [
                         'name' => $name,
@@ -476,11 +477,11 @@ final readonly class BatchManagerUnitPageRenderer
         $subtemplates = $this->eventDispatcher->dispatch(new GetBatchManagerUnitElementSubtemplates([]))->paths;
 
         $adminContent = $this->renderer->render(new BatchManagerUnitView(
-            // Explicit escape: true -- batch_manager_unit.latte prints this
-            // with |noescape and appends its own literal '&amp;display=N'
-            // fragment after it, so this value's own internal separator
-            // must stay '&amp;'-encoded too (P59 Batch 1).
-            uElementsPage: $base_url . $this->urlService->getQueryStringDiff(['display', 'start'], escape: true),
+            // Plain '&' (not escape: true) -- batch_manager_unit.latte prints
+            // this bare, no |noescape (P59): Latte's own auto-escape turns
+            // every '&' into '&amp;' once at print time, matching the
+            // template's own literal '&amp;display=N' suffix text.
+            uElementsPage: $base_url . $this->urlService->getQueryStringDiff(['display', 'start']),
             levelOptions: PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang),
             csrfToken: $this->csrfService
                 ->getToken(),

@@ -21,15 +21,15 @@
       <div class="pagination-per-page">
         <span>{='photos per page'|translate} :</span>
         <a
-          href="{$uElementsPage|noescape}&amp;display=5"
+          href="{$uElementsPage}&amp;display=5"
           class="{if $perPage === 5}selected-pagination{/if}"
         >5</a>
         <a
-          href="{$uElementsPage|noescape}&amp;display=10"
+          href="{$uElementsPage}&amp;display=10"
           class="{if $perPage === 10}selected-pagination{/if}"
         >10</a>
         <a
-          href="{$uElementsPage|noescape}&amp;display=50"
+          href="{$uElementsPage}&amp;display=50"
           class="{if $perPage === 50}selected-pagination{/if}"
         >50</a>
       </div>
@@ -73,7 +73,7 @@
         </div>
         <div class="media-box">
           <img
-            src="{$element->tnSrc|noescape}"
+            src="{$element->tnSrc}"
             alt="imagename"
             class="media-box-embed {if $element->isWide}is-landscape{else}is-portrait{/if}"
           >
@@ -81,7 +81,7 @@
             <div class='picture-preview-actions'>
               <a
                 class="preview-box icon-zoom-square tiptip"
-                href="{$element->fileSrc|noescape}"
+                href="{$element->fileSrc}"
                 title="{='Zoom'|translate}"
               ></a>
               <a
@@ -219,7 +219,7 @@
             <select
               id="tags"
               data-selectize="tags"
-              data-value="{$element->tags|json_encode|htmlspecialchars|noescape}"
+              data-value="{$element->tags|json_encode}"
               placeholder="{='Type in a search term'|translate}"
               data-create="true"
               name="tags"
@@ -243,7 +243,7 @@
                 n:foreach="$element->relatedCategories as $key => $cat_path"
                 class="breadcrumb-item"
               >
-                <span class="link-path">{$cat_path['name']|noescape}</span>
+                <span class="link-path">{$cat_path['name']}</span>
                 {if $cat_path['unlinkable']}
                   <span
                     id="{$key}"
@@ -312,15 +312,15 @@
       <div class="pagination-per-page">
         <span>{='photos per page'|translate} :</span>
         <a
-          href="{$uElementsPage|noescape}&amp;display=5"
+          href="{$uElementsPage}&amp;display=5"
           class="{if $perPage === 5}selected-pagination{/if}"
         >5</a>
         <a
-          href="{$uElementsPage|noescape}&amp;display=10"
+          href="{$uElementsPage}&amp;display=10"
           class="{if $perPage === 10}selected-pagination{/if}"
         >10</a>
         <a
-          href="{$uElementsPage|noescape}&amp;display=50"
+          href="{$uElementsPage}&amp;display=50"
           class="{if $perPage === 50}selected-pagination{/if}"
         >50</a>
       </div>

@@ -232,7 +232,7 @@ export function ajax<T = unknown>(options: AjaxOptions<T>): AjaxThenable {
   const dataType = options.dataType?.toLowerCase();
   const isBodyless = method === "GET" || method === "HEAD";
 
-  let url = options.url;
+  let {url} = options;
   let body: BodyInit | undefined;
 
   // jQuery's default contentType. `contentType: false` suppresses the header

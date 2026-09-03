@@ -4,7 +4,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { ajax } from "../../../default/js/vendor/ajax";
+import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
 import { confirm } from "../../../default/js/vendor/jconfirm";
 import {
   attr,
@@ -44,7 +44,7 @@ document.querySelectorAll(".format-card").forEach((card) => {
           text: str_confirm_msg,
           btnClass: "btn-red",
           action: function () {
-            deleteFormat(card);
+            void deleteFormat(card);
           },
         },
         cancel: {
@@ -56,34 +56,34 @@ document.querySelectorAll(".format-card").forEach((card) => {
   });
 });
 
-function deleteFormat(card: Element) {
+async function deleteFormat(card: Element): Promise<void> {
   attr(
     card.querySelectorAll(".format-delete i"),
     "class",
     "icon-spin6 animate-spin",
   );
-  void ajax({
-    url: "api/v1/images/formats/actions/delete",
-    type: "POST",
-    contentType: "application/json",
-    headers: { "X-CSRF-Token": pwg_token },
-    data: JSON.stringify({
-      // `data-id` is a real attribute in picture_formats.latte, never
-      // written from JS, so the helper's store and jQuery's agree here --
-      // both just coerce the same attribute.
-      formatIds: [Number(data(card, "id"))],
-    }),
+
+  try {
     // 204 No Content -- imageFormatDelete's real response has no body.
-    success: function (_raw_data: unknown) {
-      fadeOut(card, "slow", () => {
-        remove(card);
-        if (document.querySelectorAll(".format-card").length === 0) {
-          show(document.querySelectorAll(".no-formats"));
-        }
-      });
-    },
-    error: function (message) {
-      console.error(message);
-    },
-  });
+    await ajax({
+      url: "api/v1/images/formats/actions/delete",
+      type: "POST",
+      json: {
+        // `data-id` is a real attribute in picture_formats.latte, never
+        // written from JS, so the helper's store and jQuery's agree here --
+        // both just coerce the same attribute.
+        formatIds: [Number(data(card, "id"))],
+      },
+      headers: { "X-CSRF-Token": pwg_token },
+    });
+
+    fadeOut(card, "slow", () => {
+      remove(card);
+      if (document.querySelectorAll(".format-card").length === 0) {
+        show(document.querySelectorAll(".no-formats"));
+      }
+    });
+  } catch (e) {
+    console.error(e instanceof AjaxError ? e.responseText : e);
+  }
 }

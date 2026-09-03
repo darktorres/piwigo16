@@ -46,7 +46,7 @@ ready(function () {
         // "true" in the DOM and the boolean `true` through jQuery's own
         // coercion, and this comparison is against the boolean.
         const inputs = column.querySelectorAll<HTMLInputElement>("input");
-        const input = inputs[0];
+        const [input] = inputs;
         if (input !== undefined && readData(input, "required") === true) {
           const errorMessages = column.querySelectorAll(".error-message");
           if (!input.value.trim()) {
@@ -188,7 +188,7 @@ document.querySelectorAll(".togglePassword").forEach((element) => {
 
 document.querySelectorAll("#other-languages a").forEach((link) => {
   link.addEventListener("click", function (e) {
-    const target = e.target;
+    const { target } = e;
     if (!(target instanceof Element)) {
       return;
     }

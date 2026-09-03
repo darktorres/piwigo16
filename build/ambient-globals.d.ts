@@ -118,7 +118,7 @@ interface Window {
   // `onclick="show_user_whats_new()"` / `onClick=
   // "hide_user_whats_new()"` attributes -- same `javascript:`/`onclick=`
   // exposure pattern as batchManagerGlobal.ts's own copy above.
-  hide_user_whats_new: () => void;
+  hide_user_whats_new: () => Promise<void>;
   show_user_whats_new: () => void;
 
   // updates_ext.ts's own 4 functions, called from

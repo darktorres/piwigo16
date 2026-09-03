@@ -6,7 +6,7 @@
 // a real module (gaining this import) without needing to be folded into
 // anyone else's bundle.
 import { pwg_getPageData } from "../../../default/js/page-data";
-import { ajax } from "../../../default/js/vendor/ajax";
+import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
 import { hide, on, show } from "../../../default/js/vendor/dom";
 import { tipTip } from "../../../default/js/vendor/tiptip";
 
@@ -55,20 +55,24 @@ on(
   },
 );
 
-function hide_user_whats_new() {
-  void ajax({
-    url:
-      "api/v1/session/preferences/show_whats_new_" +
-      pwg_getPageData<string>("whats_new_major_version"),
-    type: "PUT",
-    contentType: "application/json",
-    dataType: "JSON",
-    data: JSON.stringify({
-      value: JSON.stringify(false),
-      isJson: true,
-    }),
-  });
+async function hide_user_whats_new(): Promise<void> {
   hide(document.querySelectorAll("#whats_new"));
+
+  try {
+    await ajax({
+      url:
+        "api/v1/session/preferences/show_whats_new_" +
+        pwg_getPageData<string>("whats_new_major_version"),
+      type: "PUT",
+      dataType: "JSON",
+      json: {
+        value: JSON.stringify(false),
+        isJson: true,
+      },
+    });
+  } catch (e) {
+    console.error(e instanceof AjaxError ? e.responseText : e);
+  }
 }
 
 function show_user_whats_new() {

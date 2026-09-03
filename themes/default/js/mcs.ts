@@ -1445,7 +1445,7 @@ ready(function () {
 
   on(document, "keyup", function (e: Event) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keyup" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
-    const key = (e as KeyboardEvent).key;
+    const { key } = e as KeyboardEvent;
     if (key === "Escape") {
       trigger(
         document.querySelectorAll(

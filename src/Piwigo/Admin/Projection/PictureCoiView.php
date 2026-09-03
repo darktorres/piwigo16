@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
@@ -26,7 +27,7 @@ final readonly class PictureCoiView implements View, HasPageAssets, ExposesPageD
 {
     /**
      * @param array{l: float, t: float, r: float, b: float}|null $coi
-     * @param list<array{U_IMG: string, HTM_SIZE: string}> $croppedDerivatives
+     * @param list<array{U_IMG: string, HTM_SIZE: Html}> $croppedDerivatives
      */
     public function __construct(
         public string $alt,

@@ -67,7 +67,7 @@
                         title="{='Edit photo'|translate}"
                       ></a>
                       <a
-                        href="{$thumbnail->fileSrc|noescape}"
+                        href="{$thumbnail->fileSrc}"
                         class="preview-box icon-zoom-square"
                         title="{='Zoom'|translate}"
                       ></a>
@@ -81,7 +81,7 @@
                       src="{$thumbnail->thumb->getUrl()}"
                       alt="{$thumbnail->file}"
                       title="{$thumbnail->title}"
-                      {$thumbnail->thumb->getSizeHtm()|noescape}
+                      {$thumbnail->thumb->getSizeHtm()}
                     >
                   </span>
                 </label>
@@ -96,11 +96,11 @@
         >
           <div class="pagination-per-page">
             <span>{='display'|translate}</span>
-            <a href="{$U_DISPLAY|noescape}&amp;display=20">20</a>
-            <a href="{$U_DISPLAY|noescape}&amp;display=50">50</a>
-            <a href="{$U_DISPLAY|noescape}&amp;display=100">100</a>
+            <a href="{$U_DISPLAY}&amp;display=20">20</a>
+            <a href="{$U_DISPLAY}&amp;display=50">50</a>
+            <a href="{$U_DISPLAY}&amp;display=100">100</a>
             <a
-              href="{$U_DISPLAY|noescape}&amp;display=all"
+              href="{$U_DISPLAY}&amp;display=all"
             >{='all'|translate}</a>
           </div>
 

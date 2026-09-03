@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Image;
 
 use Exception;
+use Latte\Runtime\Html;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -397,14 +398,14 @@ final class DerivativeImage
     /**
      * Returns the size as HTML attributes.
      */
-    public function getSizeHtm(): string
+    public function getSizeHtm(): Html
     {
         $size = $this->getSize();
         if ($size !== null) {
-            return 'width="' . $size->width . '" height="' . $size->height . '"';
+            return new Html('width="' . $size->width . '" height="' . $size->height . '"');
         }
 
-        return '';
+        return new Html('');
     }
 
     /**

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Latte\Runtime\Html;
+
 /**
  * One entry of `picture_coi.latte`'s `$cropped_derivatives` list, built
  * by {@see \Piwigo\Admin\PictureCoiPageRenderer::render()} -- one row per
@@ -14,11 +16,11 @@ final readonly class CroppedDerivativeLink
 {
     public function __construct(
         public string $uImg,
-        public string $htmSize,
+        public Html $htmSize,
     ) {}
 
     /**
-     * @return array{U_IMG: string, HTM_SIZE: string}
+     * @return array{U_IMG: string, HTM_SIZE: Html}
      */
     public function toArray(): array
     {

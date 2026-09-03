@@ -4,9 +4,9 @@
     <legend>{='Photo sizes with crop'|translate}</legend>
     <img
       n:foreach="$croppedDerivatives as $deriv"
-      src="{$deriv['U_IMG']|noescape}"
+      src="{$deriv['U_IMG']}"
       alt="{$alt}"
-      {$deriv['HTM_SIZE']|noescape}
+      {$deriv['HTM_SIZE']}
     >
   </fieldset>
 
@@ -43,7 +43,7 @@
       value="{if isset($coi)}{$coi['b']}{/if}"
     >
 
-    <img id="jcrop" src="{$imgUrl|noescape}" alt="{$alt}">
+    <img id="jcrop" src="{$imgUrl}" alt="{$alt}">
 
     <p>
       <input type="submit" name="submit" value="{='Submit'|translate}">

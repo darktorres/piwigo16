@@ -2,7 +2,7 @@
 {if $current->pathExt === 'pdf' and $current->image->filesize < $pdfViewerFilesizeThreshold}
   <div>
     <embed
-      src="{$ROOT_URL}{$current->image->path|noescape}"
+      src="{$ROOT_URL}{$current->image->path}"
       type="application/pdf"
     />
   </div>
@@ -10,13 +10,13 @@
   <img
     class="file-ext-{$current->fileExt} path-ext-{$current->pathExt}"
     {if $current->pathExt === 'svg'}
-    src="{$current->image->path|noescape}"
+    src="{$current->image->path}"
     {elseif $selectedDerivative->isCached()}
-    src="{$selectedDerivative->getUrl()|noescape}"
-    {$selectedDerivative->getSizeHtm()|noescape}
+    src="{$selectedDerivative->getUrl()}"
+    {$selectedDerivative->getSizeHtm()}
     {else}
     src="{$ROOT_URL}{$themeconf['img_dir']}/ajax_loader.gif"
-    data-src="{$selectedDerivative->getUrl()|noescape}"
+    data-src="{$selectedDerivative->getUrl()}"
     {/if}
     alt="{$altImg}"
     id="theMainImage"
@@ -30,7 +30,7 @@
   >
     {='The PDF you requested is too large to display on this page.'|translate}
     <a
-      href="{$ROOT_URL}{$current->image->path|noescape}"
+      href="{$ROOT_URL}{$current->image->path}"
       target="_blank"
     >{='Click here to display it'|translate}</a>
   </div>

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Image;
 
 use Exception;
+use Latte\Runtime\Html;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -1002,7 +1003,7 @@ test('getSizeCss()/getSizeHtm()/getSizeHr() render the computed size, or an empt
         expect($derivative->getSizeCss())
             ->toBe('width:100px; height:75px');
         expect($derivative->getSizeHtm())
-            ->toBe('width="100" height="75"');
+            ->toEqual(new Html('width="100" height="75"'));
         expect($derivative->getSizeHr())
             ->toBe('100 x 75');
 
@@ -1029,7 +1030,7 @@ test('getSizeCss()/getSizeHtm()/getSizeHr() render the computed size, or an empt
         expect($unknownDerivative->getSizeCss())
             ->toBe('');
         expect($unknownDerivative->getSizeHtm())
-            ->toBe('');
+            ->toEqual(new Html(''));
         expect($unknownDerivative->getSizeHr())
             ->toBe('');
         expect($unknownDerivative->getScaledSize(50, 50))

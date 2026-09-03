@@ -196,6 +196,29 @@ final class BackupServiceTest extends IntegrationTestCase
     {
         $backupsDir = dirname(__DIR__, 2) . '/_data/backups';
         self::assertDirectoryExists($backupsDir, 'Precondition: repo checkout should already have this dir');
+
+        // rmdir() below requires an empty directory, but this one is a real,
+        // long-lived checkout path shared with every other real
+        // BackupService::create() call across this whole worker's lifetime
+        // (this repo runs no per-run-ephemeral CI sandbox -- see
+        // docs/REFERENCE.md's Restore section, referenced in this class's
+        // own docblock). A prior interrupted run, or a manually-triggered
+        // backup, can leave a real .tar.gz archive behind here that this
+        // test never created and has no other reason to know about -- found
+        // live via a real stray archive dated the day before this fix, which
+        // made rmdir() below silently fail (false, no exception) and the
+        // very next assertion fail with a confusing "directory still
+        // exists" instead of ever reaching this test's own real assertions.
+        // Every file this directory can legitimately hold is a disposable
+        // backup archive (BackupService's own class docblock), so clearing
+        // them first is safe regardless of which run produced them.
+        $staleGlob = glob($backupsDir . '/*');
+        foreach ($staleGlob !== false ? $staleGlob : [] as $stalePath) {
+            if (is_file($stalePath)) {
+                unlink($stalePath);
+            }
+        }
+
         rmdir($backupsDir);
         self::assertDirectoryDoesNotExist($backupsDir);
 

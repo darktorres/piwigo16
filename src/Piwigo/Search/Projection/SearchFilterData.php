@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Search\Projection;
 
+use Latte\Runtime\Html;
 use Piwigo\Config\FilterViewDefinition;
 
 /**
@@ -33,8 +34,8 @@ final readonly class SearchFilterData
      * @param array<array-key, int>|null $filetypes
      * @param array<int, int>|null $rating
      * @param array<array-key, int>|null $ratios
-     * @param list<string>|null $albumsFound
-     * @param list<string>|null $tagsFound
+     * @param list<Html>|null $albumsFound
+     * @param list<Html>|null $tagsFound
      */
     public function __construct(
         public array $displayFilter,

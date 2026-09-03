@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
+use Latte\Runtime\Html;
 use LogicException;
 use Override;
 use Piwigo\Config\CurrentConfig;
@@ -125,9 +126,10 @@ final class SearchFilterRendererTest extends IntegrationTestCase
             self::assertIsArray($result);
             self::assertCount(1, $result);
             $tagLink = $result[0];
-            self::assertIsString($tagLink);
-            self::assertStringNotContainsString('Wild & "Nature"</a>', $tagLink);
-            self::assertStringContainsString('Wild &amp; &quot;Nature&quot;</a>', $tagLink);
+            self::assertInstanceOf(Html::class, $tagLink);
+            $tagLinkString = (string) $tagLink;
+            self::assertStringNotContainsString('Wild & "Nature"</a>', $tagLinkString);
+            self::assertStringContainsString('Wild &amp; &quot;Nature&quot;</a>', $tagLinkString);
         } finally {
             $this->conn->executeStatement('DELETE FROM image_tag WHERE tag_id = ?', [$tagId]);
             $this->conn->executeStatement('DELETE FROM tags WHERE id = ?', [$tagId]);

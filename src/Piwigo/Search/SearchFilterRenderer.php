@@ -6,6 +6,7 @@ namespace Piwigo\Search;
 
 use DateTime;
 use Doctrine\DBAL\ArrayParameterType;
+use Latte\Runtime\Html;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Cache\SearchResultsCachePool;
 use Piwigo\Category\CategoryRepository;
@@ -863,7 +864,7 @@ final readonly class SearchFilterRenderer
      * This permission filter is real and load-bearing, not redundant.
      *
      * @param array<string, mixed> $page
-     * @return list<string>|null
+     * @return list<Html>|null
      */
     private function renderAlbumsFound(array $page, string $userId): ?array
     {
@@ -911,11 +912,11 @@ final readonly class SearchFilterRenderer
             $uppercats = $cat['uppercats'];
 
             $singleLink = false;
-            $albumsFound[] = $this->htmlRenderer->getCatDisplayNameCache(
+            $albumsFound[] = new Html($this->htmlRenderer->getCatDisplayNameCache(
                 $uppercats,
                 '',
                 $singleLink
-            );
+            ));
         }
 
         return count($albumsFound) > 0 ? $albumsFound : null;
@@ -942,7 +943,7 @@ final readonly class SearchFilterRenderer
 
     /**
      * @param array<string, mixed> $page
-     * @return list<string>|null
+     * @return list<Html>|null
      */
     private function renderTagsFound(array $page): ?array
     {
@@ -973,7 +974,7 @@ final readonly class SearchFilterRenderer
                     'tags' => [$tag],
                 ]
             );
-            $tagsFound[] = sprintf('<a href="%s">%s</a>', $url, htmlspecialchars($tag['name']));
+            $tagsFound[] = new Html(sprintf('<a href="%s">%s</a>', $url, htmlspecialchars($tag['name'])));
         }
 
         return count($tagsFound) > 0 ? $tagsFound : null;

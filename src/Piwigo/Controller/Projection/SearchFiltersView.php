@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Projection;
 
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Admin\Projection\AlbumSelectorView;
 use Piwigo\Admin\Projection\ColorboxView;
@@ -49,8 +50,8 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
      * @param array<array-key, int>|null $filetypes
      * @param array<int, int>|null $rating
      * @param array<array-key, int>|null $ratios
-     * @param list<string>|null $albumsFound
-     * @param list<string>|null $tagsFound
+     * @param list<Html>|null $albumsFound
+     * @param list<Html>|null $tagsFound
      */
     public function __construct(
         public array $displayFilter,

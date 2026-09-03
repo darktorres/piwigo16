@@ -167,12 +167,12 @@
               type="hidden"
               name="filter_category"
               id="filterCategoryValue"
-              value="{$filter_category_selected|json_encode|htmlspecialchars|noescape}"
+              value="{$filter_category_selected|json_encode}"
             >
             <span
               class="icon-sitemap"
               id="selectedAlbumNameFilter"
-            >{$filter_category_selected_name|noescape}</span>
+            >{$filter_category_selected_name}</span>
             <a class="icon-pencil" id="selectedAlbumEditFilter"></a>
           </div>
           <label class="font-checkbox"><span class="icon-check"></span><input
@@ -208,7 +208,7 @@
         ><span>[x]</span></a>
         <select
           data-selectize="tags"
-          data-value="{$filter_tags|json_encode|htmlspecialchars|noescape}"
+          data-value="{$filter_tags|json_encode}"
           placeholder="{='Type in a search term'|translate}"
           name="filter_tags[]"
           multiple

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Piwigo\Admin\Event\PhotosAddDirectPageRendered;
 use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Admin\Projection\FormatsOriginalInfo;
@@ -214,7 +215,7 @@ final readonly class PhotosAddDirectPageRenderer
      * render(), unlike the shared admin/include/*.inc.php files this
      * project has kept as real includes elsewhere.
      *
-     * @return array{chunkSize: int, maxFileSize: int, maxUploadWidth: ?float, maxUploadHeight: ?float, maxUploadResolution: ?float, originalResizeMaxwidth: ?int, originalResizeMaxheight: ?int, formAction: string, pwgToken: string, uploadFileTypes: string, fileExts: string, addToAlbum: ?string, selectedCategoryName: ?string, selectedCategory: list<int>, nbAlbums: int, setupErrors: list<string>, setupWarnings: list<string>, hideWarningsLink: ?string}
+     * @return array{chunkSize: int, maxFileSize: int, maxUploadWidth: ?float, maxUploadHeight: ?float, maxUploadResolution: ?float, originalResizeMaxwidth: ?int, originalResizeMaxheight: ?int, formAction: string, pwgToken: string, uploadFileTypes: string, fileExts: string, addToAlbum: ?Html, selectedCategoryName: ?Html, selectedCategory: list<int>, nbAlbums: int, setupErrors: list<string>, setupWarnings: list<string>, hideWarningsLink: ?string}
      */
     private function prepareUploadForm(PhotosAddDirectRequest $photosAddDirectRequest): array
     {
@@ -287,7 +288,7 @@ final readonly class PhotosAddDirectPageRenderer
             if ($album_id !== null && $uppercats !== null) {
                 $selected_category = [$album_id];
 
-                $add_to_album = $htmlRenderer->getCatDisplayNameCache($uppercats, null);
+                $add_to_album = new Html($htmlRenderer->getCatDisplayNameCache($uppercats, null));
             } else {
                 $htmlRenderer->pageNotFound($this->redirectService, $this->lang->t('Requested album does not exist'));
             }
@@ -298,7 +299,7 @@ final readonly class PhotosAddDirectPageRenderer
             if ($mostRecentCategoryInfo !== null) {
                 $selected_category = [$mostRecentCategoryInfo->categoryId];
                 $uppercats = $mostRecentCategoryInfo->uppercats;
-                $selected_category_name = $htmlRenderer->getCatDisplayNameCache($uppercats, null);
+                $selected_category_name = new Html($htmlRenderer->getCatDisplayNameCache($uppercats, null));
             }
         }
 

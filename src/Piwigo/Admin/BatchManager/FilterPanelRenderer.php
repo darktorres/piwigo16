@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\BatchManager;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Piwigo\Admin\BatchManager\Event\GetBatchManagerPrefilters;
 use Piwigo\Admin\BatchManager\Projection\BatchManagerPrefilter;
 use Piwigo\Admin\BatchManager\Projection\BulkManagerFilter;
@@ -207,7 +208,7 @@ final class FilterPanelRenderer
             filterLevelOptions: $level_options,
             filterLevelOptionsSelected: $filter_level_options_selected,
             filterTags: $filter_tags,
-            filterCategorySelectedName: strip_tags($selected_category_name),
+            filterCategorySelectedName: new Html(strip_tags($selected_category_name)),
             filterCategorySelected: $selected_category,
             filterSearchQuery: $filter->searchQuery,
             associatedCategories: $associated_categories,

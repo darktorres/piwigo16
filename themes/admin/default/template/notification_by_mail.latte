@@ -4,7 +4,7 @@
   method="post"
   name="notification_by_mail"
   id="notification_by_mail"
-  action="{$formAction|noescape}"
+  action="{$formAction}"
 >
   <input type="hidden" name="pwg_token" value="{$csrfToken}">
 
@@ -155,7 +155,7 @@
                 type="checkbox"
                 name="send_selection[]"
                 value="{$u['ID']}"
-                {$u['CHECKED']|noescape}
+                {$u['CHECKED']|rawHtml}
                 id="send_selection-{$u['ID']}"
               ></td>
           </tr>

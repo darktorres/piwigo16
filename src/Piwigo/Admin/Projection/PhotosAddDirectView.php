@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
@@ -23,6 +24,10 @@ use Piwigo\Template\Latte\Attribute\Template;
  * commented out (Smarty-era `{html_options ...}` syntax, not even this
  * project's own `n:foreach`-over-`<option>` convention), and
  * `CACHE_KEYS` has zero real references at all.
+ *
+ * `$addToAlbum`/`$selectedCategoryName` are Html, not string (P59):
+ * both are `getCatDisplayNameCache()` results, the same already-
+ * escaping trusted producer used elsewhere.
  */
 #[Template('photos_add_direct.latte')]
 final readonly class PhotosAddDirectView implements View, HasPageAssets, ExposesPageData
@@ -56,8 +61,8 @@ final readonly class PhotosAddDirectView implements View, HasPageAssets, Exposes
         public string $pwgToken,
         public string $uploadFileTypes,
         public string $fileExts,
-        public ?string $addToAlbum,
-        public ?string $selectedCategoryName,
+        public ?Html $addToAlbum,
+        public ?Html $selectedCategoryName,
         public array $selectedCategory,
         public int $nbAlbums,
         public array $setupErrors,

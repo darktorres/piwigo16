@@ -4,12 +4,19 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\BatchManager\Projection;
 
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Core\TemplatePageContext;
 
 /**
  * The template variable set assigned by
  * {@see \Piwigo\Admin\BatchManager\FilterPanelRenderer::render()}.
+ *
+ * `$filterCategorySelectedName` is Html, not string (P59): a
+ * `strip_tags()`'d `HtmlService::getCatDisplayNameFromId()` result --
+ * that producer already `htmlspecialchars()`s every real name it
+ * interpolates, and `strip_tags()` only removes the real `<a>` tags on
+ * top, never touching the escaped entities underneath.
  */
 final readonly class FilterPanelPageContext implements TemplatePageContext
 {
@@ -36,7 +43,7 @@ final readonly class FilterPanelPageContext implements TemplatePageContext
         public array $filterLevelOptions,
         public int $filterLevelOptionsSelected,
         public array $filterTags,
-        public string $filterCategorySelectedName,
+        public Html $filterCategorySelectedName,
         public ?int $filterCategorySelected,
         public ?string $filterSearchQuery,
         public array $associatedCategories,

@@ -17,11 +17,11 @@
       </div>
       <a
         class='dropdown-option icon-eye view{if !$has_image} u-hidden{/if}'
-        href="{$tag_U_VIEW|noescape}"
+        href="{$tag_U_VIEW}"
       > {='View in gallery'|translate}</a>
       <a
         class='dropdown-option icon-picture manage{if !$has_image} u-hidden{/if}'
-        href="{$tag_U_EDIT|noescape}"
+        href="{$tag_U_EDIT}"
       > {='Manage photos'|translate}</a>
       <a class='dropdown-option icon-pencil edit'> {='Edit'|translate}</a>
       <a
@@ -109,9 +109,9 @@
     <a id="selectInvert">{='Invert'|translate}</a>
   </div>
   <div
-    n:if='$warningTags !== ""'
+    n:if='(string) $warningTags !== ""'
     class='info-warning tag-info icon-attention not-in-selection-mode'
-  ><p> {$warningTags|noescape} </p></div>
+  ><p> {$warningTags} </p></div>
   <div
     class='info-message tag-info  icon-ok not-in-selection-mode{if $messageTags !== ""} u-flex{/if}'
   > <p> {$messageTags} </p> </div>
@@ -165,7 +165,7 @@
 
 <div
   class='tag-container'
-  data-tags='{$data|json_encode|htmlspecialchars|noescape}'
+  data-tags='{$data|json_encode}'
   data-per_page="{$perPage}"
 >
   <div

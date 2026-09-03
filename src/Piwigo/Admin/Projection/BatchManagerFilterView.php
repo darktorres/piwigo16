@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Latte\Runtime\Html;
 use Piwigo\Admin\BatchManager\Projection\BulkManagerFilter;
 use Piwigo\Admin\BatchManager\Projection\DimensionFilterOptions;
 use Piwigo\Admin\BatchManager\Projection\FilesizeFilterOptions;
@@ -68,7 +69,7 @@ final readonly class BatchManagerFilterView implements View
         public BulkManagerFilter $filter,
         public ?int $filter_category_selected,
         public ?string $filter_search_query,
-        public string $filter_category_selected_name,
+        public Html $filter_category_selected_name,
         public array $filter_level_options,
         public int $filter_level_options_selected,
         public array $filter_tags,

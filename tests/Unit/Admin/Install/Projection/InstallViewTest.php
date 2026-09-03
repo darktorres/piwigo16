@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Latte\Runtime\Html;
 use Piwigo\Admin\Install\Projection\InstallView;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\LoadMode;
@@ -28,7 +29,7 @@ function makeInstallView(array $themes): InstallView
         email: 'admin@example.com',
         fNewsletterSubscribe: false,
         fSendCredentialsByMail: false,
-        lInstallHelp: '',
+        lInstallHelp: new Html(''),
         install: null,
         errors: null,
         infos: null,

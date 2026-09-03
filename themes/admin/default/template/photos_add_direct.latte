@@ -104,7 +104,7 @@
     class="{if $displayFormats}format-mode{/if}{if $nbAlbums === 0} u-hidden{/if}"
     enctype="multipart/form-data"
     method="post"
-    action="{$formAction|noescape}"
+    action="{$formAction}"
   >
     {if !$displayFormats}
       <fieldset class="selectAlbum">
@@ -118,7 +118,7 @@
           <span
             class="icon-sitemap"
             id="selectedAlbumName"
-          >{if isset($addToAlbum)}{$addToAlbum|noescape}{elseif isset($selectedCategoryName)}{$selectedCategoryName|noescape}{/if}</span>
+          >{if isset($addToAlbum)}{$addToAlbum}{elseif isset($selectedCategoryName)}{$selectedCategoryName}{/if}</span>
           <a class="icon-pencil" id="selectedAlbumEdit"></a>
         </div>
         <div
@@ -138,11 +138,11 @@
           ></span>{='Picture to associate formats with'|translate}</legend>
         <a
           class='info-framed'
-          href='{$formatsOriginalInfo->editUrl|noescape}'
+          href='{$formatsOriginalInfo->editUrl}'
           title='{='Edit photo'|translate}'
         >
           <div class='info-framed-icon'>
-            <img src='{$formatsOriginalInfo->src|noescape}'>
+            <img src='{$formatsOriginalInfo->src}'>
           </div>
           <div class='info-framed-container'>
             <div class='info-framed-title'>{$formatsOriginalInfo->name}</div>

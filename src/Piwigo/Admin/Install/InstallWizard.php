@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install;
 
 use Doctrine\DBAL\Connection;
+use Latte\Runtime\Html;
 use LogicException;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityRepository;
@@ -760,7 +761,7 @@ final class InstallWizard
             email: '<span class="adminEmail">' . htmlspecialchars($this->adminMail) . '</span>',
             fNewsletterSubscribe: $this->isNewsletterSubscribe,
             fSendCredentialsByMail: $this->request->isSendCredentialsByMail,
-            lInstallHelp: $this->lang->t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', AppInfo::URL . '/forum'),
+            lInstallHelp: new Html($this->lang->t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', AppInfo::URL . '/forum')),
             install: $install_value,
             errors: count($this->errors) !== 0 ? $this->errors : null,
             infos: count($this->infos) !== 0 ? $this->infos : null,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Install\Projection;
 
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
@@ -29,6 +30,10 @@ use Piwigo\Template\ThemeChainEntry;
  * `applyThemeBase`) -- the controller reads it back via
  * `$template->getTemplateVars('themes')`, the same ambient-value
  * pattern every other P42-B ambient case uses.
+ *
+ * `$lInstallHelp` is Html, not string (P59): a `Lang::t()` translation
+ * whose `%s` substitution is a hardcoded `AppInfo::URL` constant, never
+ * user-supplied text.
  */
 #[Template('install.latte')]
 final readonly class InstallView implements View, HasPageAssets, ExposesPageData
@@ -57,7 +62,7 @@ final readonly class InstallView implements View, HasPageAssets, ExposesPageData
         public string $email,
         public bool $fNewsletterSubscribe,
         public bool $fSendCredentialsByMail,
-        public string $lInstallHelp,
+        public Html $lInstallHelp,
         public ?bool $install,
         public ?array $errors,
         public ?array $infos,

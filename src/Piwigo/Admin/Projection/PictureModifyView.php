@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
@@ -31,7 +32,7 @@ final readonly class PictureModifyView implements View, HasPageAssets, ExposesPa
      * @param array<int, array{name: mixed, id: string}> $tagSelection
      * @param array<array-key, string> $levelOptions
      * @param list<string> $levelOptionsSelected
-     * @param array<array-key, array{name: string, unlinkable: bool}> $relatedCategories
+     * @param array<array-key, array{name: Html, unlinkable: bool}> $relatedCategories
      * @param list<string> $relatedCategoriesIds
      * @param list<int> $representedAlbums
      * @param array<array-key, string> $cacheKeys

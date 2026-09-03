@@ -304,8 +304,8 @@
                       >
                       <span
                         class="cluetip"
-                        title="{='Piwigo Announcements Newsletter'|translate}|{_ 'Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it\'s important to know and upgrade) and when major events happen to the project. Only a few emails a year.'|htmlspecialchars|nl2br|noescape}"
-                      >{='Subscribe %s to Piwigo Announcements Newsletter'|translate:$email|noescape}</span>
+                        title="{='Piwigo Announcements Newsletter'|translate}|{_ 'Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it\'s important to know and upgrade) and when major events happen to the project. Only a few emails a year.'|nl2br}"
+                      >{='Subscribe %s to Piwigo Announcements Newsletter'|translate:$email|rawHtml}</span>
                     </label>
                     <br>
                     <label>
@@ -339,7 +339,7 @@
           </p>
         {/if}
       </div> {* content *}
-      <div class="install-help-row">{$lInstallHelp|noescape}</div>
+      <div class="install-help-row">{$lInstallHelp}</div>
     </div> {* the_page *}
 
     {=getPageDataScript()}

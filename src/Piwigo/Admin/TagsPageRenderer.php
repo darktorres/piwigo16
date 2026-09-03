@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Piwigo\Admin\Projection\TagRow;
 use Piwigo\Admin\Projection\TagsView;
 use Piwigo\Admin\Request\TagsActionRequest;
@@ -67,7 +68,7 @@ final readonly class TagsPageRenderer
             $this->redirectService->redirect($this->urlService->getRootUrl() . 'admin.php?page=tags');
         }
 
-        $warning_tags = '';
+        $warning_tags = new Html('');
 
         $orphan_tags = $tagService->getOrphanTags();
 
@@ -79,14 +80,14 @@ final readonly class TagsPageRenderer
         }
 
         if (count($orphan_tag_names) > 0) {
-            $warning_tags = sprintf(
+            $warning_tags = new Html(sprintf(
                 $this->lang->t('You have %d orphan tags %s'),
                 count($orphan_tag_names),
                 '<a
       class="icon-eye"
       data-url="' . $this->urlService->getRootUrl() . 'admin.php?page=tags&action=delete_orphans&pwg_token=' . $this->csrfService->getToken() . '">'
                 . $this->lang->t('Review') . '</a>'
-            );
+            ));
 
             $orphan_tag_names_array = '["';
             $orphan_tag_names_array .= implode(

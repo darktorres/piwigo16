@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Latte\Runtime\Html;
 use Piwigo\Admin\BatchManager\Projection\BatchManagerPrefilter;
 use Piwigo\Admin\BatchManager\Projection\BulkManagerFilter;
 use Piwigo\Admin\BatchManager\Projection\FilterPanelPageContext;
@@ -43,7 +44,7 @@ test('toArray flattens every property to its real Latte template variable name',
                 'id' => '1',
             ],
         ],
-        filterCategorySelectedName: 'Holidays',
+        filterCategorySelectedName: new Html('Holidays'),
         filterCategorySelected: 5,
         filterSearchQuery: 'sunset',
         associatedCategories: [
@@ -52,7 +53,7 @@ test('toArray flattens every property to its real Latte template variable name',
     );
 
     expect($context->toArray())
-        ->toBe([
+        ->toEqual([
             'conf_checksum_compute_blocksize' => 50,
             'prefilters' => [$prefilter],
             'filter' => $filter,
@@ -75,7 +76,7 @@ test('toArray flattens every property to its real Latte template variable name',
                     'id' => '1',
                 ],
             ],
-            'filter_category_selected_name' => 'Holidays',
+            'filter_category_selected_name' => new Html('Holidays'),
             'filter_category_selected' => 5,
             'filter_search_query' => 'sunset',
             'associated_categories' => [

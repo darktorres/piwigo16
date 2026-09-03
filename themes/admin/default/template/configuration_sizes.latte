@@ -1,5 +1,5 @@
 {templateType Piwigo\Controller\Admin\Projection\ConfigurationSizesView}
-<form method="post" action="{$fAction|noescape}" class="properties">
+<form method="post" action="{$fAction}" class="properties">
   <div id="configContent">
     <fieldset id="sizesConf">
       <legend><span
@@ -279,7 +279,7 @@
       </p>
       <p class="sizeDetails{if $ferrors !== null} u-block{/if}">
         <a
-          href="{$fAction|noescape}&action=restore_settings&pwg_token={$csrfToken}"
+          href="{$fAction}&action=restore_settings&pwg_token={$csrfToken}"
           class="restore-settings-button"
         >{='Reset to default values'|translate}</a>
       </p>

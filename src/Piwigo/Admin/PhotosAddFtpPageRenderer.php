@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Latte\Runtime\Html;
 use Piwigo\Admin\Projection\PhotosAddFtpView;
 use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\Lang;
@@ -27,7 +28,7 @@ final class PhotosAddFtpPageRenderer
         );
 
         $adminContent = $renderer->render(new PhotosAddFtpView(
-            ftpHelpContent: is_string($ftp_help_content_raw) ? $ftp_help_content_raw : '',
+            ftpHelpContent: new Html(is_string($ftp_help_content_raw) ? $ftp_help_content_raw : ''),
         ));
 
         return new AdminPageResult(

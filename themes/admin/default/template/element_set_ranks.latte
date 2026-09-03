@@ -1,5 +1,5 @@
 {templateType Piwigo\Admin\Projection\ElementSetRanksView}
-<form action="{$formAction|noescape}" method="post" id="element_set_ranks">
+<form action="{$formAction}" method="post" id="element_set_ranks">
   <input type="hidden" name="pwg_token" value="{$csrfToken}">
   <fieldset n:if="$thumbnails !== []">
     <legend><span
@@ -12,7 +12,7 @@
     <ul class="thumbnails">
       <li n:foreach="$thumbnails as $thumbnail" class="rank-of-image">
         <img
-          src="{$thumbnail->tnSrc|noescape}"
+          src="{$thumbnail->tnSrc}"
           class="thumbnail"
           alt="{$thumbnail->name}"
           title="{$thumbnail->name}"

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
@@ -26,6 +27,12 @@ use Piwigo\Template\Latte\Attribute\Template;
  * as selected. Null means none of them: the cookie holds a value that is
  * not one of the four the links offer. See
  * {@see \Piwigo\Admin\TagsPageRenderer::tagsPerPageSelected()}.
+ *
+ * `$warningTags` is Html, not string (P59): either empty, or a
+ * `Lang::t()` translation whose sprintf args are a plain int count and
+ * a hand-built `<a>` link (root URL + a hardcoded literal path +
+ * `CsrfService::getToken()`, a fixed-format HMAC hex string) --
+ * trusted throughout.
  */
 #[Template('tags.latte')]
 final readonly class TagsView implements View, HasPageAssets, ExposesPageData
@@ -37,7 +44,7 @@ final readonly class TagsView implements View, HasPageAssets, ExposesPageData
     public function __construct(
         public string $pwgToken,
         public string $orphanTagNamesArray,
-        public string $warningTags,
+        public Html $warningTags,
         public string $messageTags,
         public array $firstTags,
         public array $data,

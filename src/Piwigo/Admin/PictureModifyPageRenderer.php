@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Event\PictureModifyBeforeUpdate;
 use Piwigo\Admin\Event\PictureModifyPageRendered;
@@ -352,7 +353,7 @@ final readonly class PictureModifyPageRenderer
             date: $this->lang->t('Posted the %s', DateHelper::formatDate(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : false, ['day', 'month', 'year'])),
             age: $this->lang->t(ucfirst(DateHelper::timeSince(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : '', 'year'))),
             addedBy: $this->lang->t('Added by %s', $row['added_by']),
-            size: $this->lang->t('%s pixels, %.2f MB', (is_scalar($row['width']) ? (string) $row['width'] : '') . '&times;' . (is_scalar($row['height']) ? (string) $row['height'] : ''), (is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0) / 1024.0),
+            size: new Html($this->lang->t('%s pixels, %.2f MB', (is_scalar($row['width']) ? (string) $row['width'] : '') . '&times;' . (is_scalar($row['height']) ? (string) $row['height'] : ''), (is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0) / 1024.0)),
             stats: $intro_stats,
             id: $this->lang->t(is_string($row['id']) ? $row['id'] : ''),
             ext: $this->lang->t('%s file type', strtoupper(end($extTab))),
@@ -388,7 +389,7 @@ final readonly class PictureModifyPageRenderer
               );
 
             $related_categories[$row_category_id] = [
-                'name' => $name,
+                'name' => new Html($name),
                 'unlinkable' => $row_category_id !== $storage_category_id,
             ];
             $related_categories_ids[] = $row_category_id;

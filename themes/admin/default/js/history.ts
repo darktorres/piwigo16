@@ -378,9 +378,9 @@ function fillHistoryResult(ajaxParam: HistoryFilterParams) {
       empty(document.querySelectorAll(".tab"));
     },
     success: function (raw_data: HistorySearchResponse) {
-      const lines = raw_data.lines;
-      maxPage = raw_data.maxPage;
-      const summary = raw_data.summary;
+      const { lines } = raw_data;
+      ({ maxPage } = raw_data);
+      const { summary } = raw_data;
 
       //clear lines before refill
 

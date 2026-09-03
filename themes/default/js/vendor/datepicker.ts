@@ -615,7 +615,7 @@ function renderCalendar(): void {
   prevBtn.classList.toggle("ui-state-disabled", !canAdjustMonth(inst, -1));
   nextBtn.classList.toggle("ui-state-disabled", !canAdjustMonth(inst, 1));
 
-  const firstDay = inst.dpLocale.firstDay;
+  const {firstDay} = inst.dpLocale;
   const today = stripTime(new Date());
   const firstOfMonth = new Date(inst.drawYear, inst.drawMonth, 1);
   const leadDays = (firstOfMonth.getDay() - firstDay + 7) % 7;

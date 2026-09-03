@@ -31,7 +31,11 @@ import {
   uninstall_plugin_msg,
   x_plugins_found,
 } from "./plugins_installed_config";
-import { ajax, type AjaxResponse } from "../../../default/js/vendor/ajax";
+import {
+  ajax,
+  AjaxError,
+  type AjaxResponse,
+} from "../../../default/js/vendor/ajax";
 import { alert, confirm } from "../../../default/js/vendor/jconfirm";
 import {
   addClass,
@@ -98,61 +102,58 @@ function setDisplayLine(): void {
   hide(document.querySelectorAll(".pluginActionsSmallIcons"));
 }
 
-function activatePlugin(id: string): void {
+async function activatePlugin(id: string): Promise<void> {
   setDisabled(document.querySelectorAll("#" + id + " .switch"), true);
 
-  void ajax({
-    type: "POST",
-    dataType: "json",
-    contentType: "application/json",
-    headers: { "X-CSRF-Token": pwg_token },
-    url: "api/v1/plugins/" + id + "/actions/perform",
-    data: JSON.stringify({ action: "activate" }),
+  try {
     // 204 No Content -- pluginPerformAction's real response has no body.
-    success: function (_data: unknown) {
-      stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
-      html(
-        find(
-          document.querySelectorAll("#" + id + " .AddPluginSuccess"),
-          "label span:first-child",
-        ),
-        plugin_added_str,
-      );
-      css(
-        document.querySelectorAll("#" + id + " .AddPluginSuccess"),
-        "display",
-        "flex",
-      );
+    await ajax({
+      type: "POST",
+      dataType: "json",
+      json: { action: "activate" },
+      headers: { "X-CSRF-Token": pwg_token },
+      url: "api/v1/plugins/" + id + "/actions/perform",
+    });
 
-      nb_plugin.active += 1;
-      nb_plugin.inactive -= 1;
-      actualizeFilter();
-    },
-    error: function (e: AjaxResponse) {
-      console.error(e.responseText);
-      stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
-      html(
-        find(
-          document.querySelectorAll("#" + id + " .PluginActionError"),
-          "label span:first-child",
-        ),
-        plugin_action_error,
-      );
-      css(
-        document.querySelectorAll("#" + id + " .PluginActionError"),
-        "display",
-        "flex",
-      );
-      const errorEl = document.querySelectorAll(
-        "#" + id + " .PluginActionError",
-      );
-      delay(errorEl, 1500);
-      fadeOut(errorEl, 2500);
-    },
-  }).done(function (_data: unknown) {
+    stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
+    html(
+      find(
+        document.querySelectorAll("#" + id + " .AddPluginSuccess"),
+        "label span:first-child",
+      ),
+      plugin_added_str,
+    );
+    css(
+      document.querySelectorAll("#" + id + " .AddPluginSuccess"),
+      "display",
+      "flex",
+    );
+
+    nb_plugin.active += 1;
+    nb_plugin.inactive -= 1;
+    actualizeFilter();
+
     setDisabled(document.querySelectorAll("#" + id + " .switch"), false);
     fadeOut(document.querySelectorAll("#" + id + " .AddPluginSuccess"), 3000);
-  });
+  } catch (e) {
+    console.error(e instanceof AjaxError ? e.responseText : e);
+    stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
+    html(
+      find(
+        document.querySelectorAll("#" + id + " .PluginActionError"),
+        "label span:first-child",
+      ),
+      plugin_action_error,
+    );
+    css(
+      document.querySelectorAll("#" + id + " .PluginActionError"),
+      "display",
+      "flex",
+    );
+    const errorEl = document.querySelectorAll("#" + id + " .PluginActionError");
+    delay(errorEl, 1500);
+    fadeOut(errorEl, 2500);
+  }
 }
 
 /**
@@ -161,7 +162,7 @@ function activatePlugin(id: string): void {
  * the class bookkeeping.
  */
 function applyActivation(row: Element): void {
-  activatePlugin(row.id);
+  void activatePlugin(row.id);
 
   addClass(row, "plugin-active");
   removeClass(row, "plugin-inactive");
@@ -220,64 +221,61 @@ function confirmIncompatibleActivation(toggleEl: Element, row: Element): void {
   });
 }
 
-function disactivatePlugin(id: string): void {
+async function disactivatePlugin(id: string): Promise<void> {
   setDisabled(document.querySelectorAll("#" + id + " .switch"), true);
 
-  void ajax({
-    type: "POST",
-    dataType: "json",
-    contentType: "application/json",
-    headers: { "X-CSRF-Token": pwg_token },
-    url: "api/v1/plugins/" + id + "/actions/perform",
-    data: JSON.stringify({ action: "deactivate" }),
+  try {
     // 204 No Content -- pluginPerformAction's real response has no body.
-    success: function (_data: unknown) {
-      stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
-      html(
-        find(
-          document.querySelectorAll("#" + id + " .DeactivatePluginSuccess"),
-          "label span:first-child",
-        ),
-        plugin_deactivated_str,
-      );
-      css(
-        document.querySelectorAll("#" + id + " .DeactivatePluginSuccess"),
-        "display",
-        "flex",
-      );
+    await ajax({
+      type: "POST",
+      dataType: "json",
+      json: { action: "deactivate" },
+      headers: { "X-CSRF-Token": pwg_token },
+      url: "api/v1/plugins/" + id + "/actions/perform",
+    });
 
-      nb_plugin.inactive += 1;
-      nb_plugin.active -= 1;
-      actualizeFilter();
-    },
-    error: function (e: AjaxResponse) {
-      console.error(e);
-      stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
-      html(
-        find(
-          document.querySelectorAll("#" + id + " .PluginActionError"),
-          "label span:first-child",
-        ),
-        plugin_action_error,
-      );
-      css(
-        document.querySelectorAll("#" + id + " .PluginActionError"),
-        "display",
-        "flex",
-      );
-      const errorEl = document.querySelectorAll(
-        "#" + id + " .PluginActionError",
-      );
-      delay(errorEl, 1500);
-      fadeOut(errorEl, 2500);
-    },
-  }).done(function (_data: unknown) {
+    stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
+    html(
+      find(
+        document.querySelectorAll("#" + id + " .DeactivatePluginSuccess"),
+        "label span:first-child",
+      ),
+      plugin_deactivated_str,
+    );
+    css(
+      document.querySelectorAll("#" + id + " .DeactivatePluginSuccess"),
+      "display",
+      "flex",
+    );
+
+    nb_plugin.inactive += 1;
+    nb_plugin.active -= 1;
+    actualizeFilter();
+
     setDisabled(document.querySelectorAll("#" + id + " .switch"), false);
     fadeOut(
       document.querySelectorAll("#" + id + " .DeactivatePluginSuccess"),
       3000,
     );
-  });
+  } catch (e) {
+    console.error(e instanceof AjaxError ? e.responseText : e);
+    stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
+    html(
+      find(
+        document.querySelectorAll("#" + id + " .PluginActionError"),
+        "label span:first-child",
+      ),
+      plugin_action_error,
+    );
+    css(
+      document.querySelectorAll("#" + id + " .PluginActionError"),
+      "display",
+      "flex",
+    );
+    const errorEl = document.querySelectorAll("#" + id + " .PluginActionError");
+    delay(errorEl, 1500);
+    fadeOut(errorEl, 2500);
+  }
 }
 
 function deletePlugin(id: string, name: string): void {
@@ -330,100 +328,94 @@ function deletePlugin(id: string, name: string): void {
   });
 }
 
-function restorePlugin(id: string): void {
-  void ajax({
-    type: "POST",
-    dataType: "json",
-    contentType: "application/json",
-    headers: { "X-CSRF-Token": pwg_token },
-    url: "api/v1/plugins/" + id + "/actions/perform",
-    data: JSON.stringify({ action: "restore" }),
+async function restorePlugin(id: string): Promise<void> {
+  try {
     // 204 No Content -- pluginPerformAction's real response has no body.
-    success: function (_data: unknown) {
-      stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
-      html(
-        find(
-          document.querySelectorAll("#" + id + " .RestorePluginSuccess"),
-          "label span:first-child",
-        ),
-        plugin_restored_str,
-      );
-      css(
+    await ajax({
+      type: "POST",
+      dataType: "json",
+      json: { action: "restore" },
+      headers: { "X-CSRF-Token": pwg_token },
+      url: "api/v1/plugins/" + id + "/actions/perform",
+    });
+
+    stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
+    html(
+      find(
         document.querySelectorAll("#" + id + " .RestorePluginSuccess"),
-        "display",
-        "flex",
-      );
-    },
-    error: function (e: AjaxResponse) {
-      console.error(e);
-      stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
-      html(
-        find(
-          document.querySelectorAll("#" + id + " .PluginActionError"),
-          "label span:first-child",
-        ),
-        plugin_action_error,
-      );
-      css(
-        document.querySelectorAll("#" + id + " .PluginActionError"),
-        "display",
-        "flex",
-      );
-      const errorEl = document.querySelectorAll(
-        "#" + id + " .PluginActionError",
-      );
-      delay(errorEl, 1500);
-      fadeOut(errorEl, 2500);
-    },
-  }).done(function (_data: unknown) {
+        "label span:first-child",
+      ),
+      plugin_restored_str,
+    );
+    css(
+      document.querySelectorAll("#" + id + " .RestorePluginSuccess"),
+      "display",
+      "flex",
+    );
+
     fadeOut(
       document.querySelectorAll("#" + id + " .RestorePluginSuccess"),
       3000,
     );
-  });
+  } catch (e) {
+    console.error(e instanceof AjaxError ? e.responseText : e);
+    stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
+    html(
+      find(
+        document.querySelectorAll("#" + id + " .PluginActionError"),
+        "label span:first-child",
+      ),
+      plugin_action_error,
+    );
+    css(
+      document.querySelectorAll("#" + id + " .PluginActionError"),
+      "display",
+      "flex",
+    );
+    const errorEl = document.querySelectorAll("#" + id + " .PluginActionError");
+    delay(errorEl, 1500);
+    fadeOut(errorEl, 2500);
+  }
 }
 
-function uninstallPlugin(id: string): void {
-  void ajax({
-    type: "POST",
-    dataType: "json",
-    contentType: "application/json",
-    headers: { "X-CSRF-Token": pwg_token },
-    url: "api/v1/plugins/" + id + "/actions/perform",
-    data: JSON.stringify({ action: "uninstall" }),
+async function uninstallPlugin(id: string): Promise<void> {
+  try {
     // 204 No Content -- pluginPerformAction's real response has no body.
-    success: function (_data: unknown) {
-      document.getElementById(id)?.remove();
-      nb_plugin.other -= 1;
-      nb_plugin.all -= 1;
-      actualizeFilter();
-    },
-    error: function (e: AjaxResponse) {
-      stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
-      html(
-        find(
-          document.querySelectorAll("#" + id + " .PluginActionError"),
-          "label span:first-child",
-        ),
-        plugin_action_error,
-      );
-      css(
+    await ajax({
+      type: "POST",
+      dataType: "json",
+      json: { action: "uninstall" },
+      headers: { "X-CSRF-Token": pwg_token },
+      url: "api/v1/plugins/" + id + "/actions/perform",
+    });
+
+    document.getElementById(id)?.remove();
+    nb_plugin.other -= 1;
+    nb_plugin.all -= 1;
+    actualizeFilter();
+  } catch (e) {
+    stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
+    html(
+      find(
         document.querySelectorAll("#" + id + " .PluginActionError"),
-        "display",
-        "flex",
-      );
-      const errorEl = document.querySelectorAll(
-        "#" + id + " .PluginActionError",
-      );
-      delay(errorEl, 1500);
-      fadeOut(errorEl, 2500);
-      // Was `e.message` -- jqXHR has no such property (confirmed via
-      // @types/jquery's own jqXHR interface); the real server error body
-      // is JSON on `.responseText`, matching activatePlugin's own
-      // sibling error handler above.
-      console.error(e.responseText);
-    },
-  });
+        "label span:first-child",
+      ),
+      plugin_action_error,
+    );
+    css(
+      document.querySelectorAll("#" + id + " .PluginActionError"),
+      "display",
+      "flex",
+    );
+    const errorEl = document.querySelectorAll("#" + id + " .PluginActionError");
+    delay(errorEl, 1500);
+    fadeOut(errorEl, 2500);
+    // Was `e.message` -- jqXHR has no such property (confirmed via
+    // @types/jquery's own jqXHR interface); the real server error body
+    // is JSON on `.responseText`, matching activatePlugin's own
+    // sibling error handler above.
+    console.error(e instanceof AjaxError ? e.responseText : e);
+  }
 }
 
 ready(function () {
@@ -545,7 +537,7 @@ ready(function () {
 
           applyActivation(row);
         } else {
-          disactivatePlugin(row.id);
+          void disactivatePlugin(row.id);
 
           removeClass(row, "plugin-active");
           addClass(row, "plugin-inactive");
@@ -659,7 +651,7 @@ ready(function () {
             text: confirm_msg,
             btnClass: "btn-red",
             action: function () {
-              restorePlugin(plugin_id);
+              void restorePlugin(plugin_id);
             },
           },
           cancel: {
@@ -691,7 +683,7 @@ ready(function () {
             text: confirm_msg,
             btnClass: "btn-red",
             action: function () {
-              uninstallPlugin(plugin_id);
+              void uninstallPlugin(plugin_id);
             },
           },
           cancel: {
@@ -705,15 +697,20 @@ ready(function () {
 });
 
 function set_view_selector(view_type: string): void {
-  void ajax({
-    url: "api/v1/session/preferences/plugin-manager-view",
-    type: "PUT",
-    contentType: "application/json",
-    dataType: "JSON",
-    data: JSON.stringify({
-      value: view_type,
-    }),
-  });
+  void (async () => {
+    try {
+      await ajax({
+        url: "api/v1/session/preferences/plugin-manager-view",
+        type: "PUT",
+        dataType: "JSON",
+        json: {
+          value: view_type,
+        },
+      });
+    } catch (e) {
+      console.error(e instanceof AjaxError ? e.responseText : e);
+    }
+  })();
 }
 
 function actualizeFilter(): void {
@@ -806,22 +803,30 @@ ready(function () {
   });
 
   /* incompatible plugins */
-  void ajax({
-    method: "GET",
-    url: "admin.php",
-    // `page=plugins_installed` is upstream Piwigo's slug. This fork
-    // consolidated the per-tab slugs into `page=plugins` + `tab`
-    // (CoreTabs.php's own 'plugins' case), and an unrecognised slug
-    // still returns 200 with the default admin page's HTML -- so the
-    // old value made `dataType: "json"` fail to parse on every view,
-    // silently killing this whole handler.
-    data: { page: "plugins", tab: "installed", incompatible_plugins: true },
-    dataType: "json",
-    // Real shape confirmed via PluginsInstalledPageRenderer.php's own
-    // `echo json_encode($incompatible_plugins);` -- a plain array of
-    // plugin id strings, no OpenAPI coverage (legacy admin.php endpoint,
-    // not api/v1).
-    success: function (data: string[]) {
+  void (async () => {
+    try {
+      // Real shape confirmed via PluginsInstalledPageRenderer.php's own
+      // `echo json_encode($incompatible_plugins);` -- a plain array of
+      // plugin id strings, no OpenAPI coverage (legacy admin.php endpoint,
+      // not api/v1).
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+      const data = (await ajax({
+        method: "GET",
+        url: "admin.php",
+        // `page=plugins_installed` is upstream Piwigo's slug. This fork
+        // consolidated the per-tab slugs into `page=plugins` + `tab`
+        // (CoreTabs.php's own 'plugins' case), and an unrecognised slug
+        // still returns 200 with the default admin page's HTML -- so the
+        // old value made `dataType: "json"` fail to parse on every view,
+        // silently killing this whole handler.
+        data: {
+          page: "plugins",
+          tab: "installed",
+          incompatible_plugins: true,
+        },
+        dataType: "json",
+      })) as string[];
+
       for (const pluginId of data) {
         if (show_details)
           prepend(
@@ -844,8 +849,10 @@ ready(function () {
         fadeOut: 200,
         maxWidth: "250px",
       });
-    },
-  });
+    } catch (e) {
+      console.error(e instanceof AjaxError ? e.responseText : e);
+    }
+  })();
 
   /*Add the filter research*/
   document.onkeydown = function (e) {

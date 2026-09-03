@@ -283,6 +283,7 @@ function disactivatePlugin(id: string): void {
 function deletePlugin(id: string, name: string): void {
   alert({
     title: deleted_plugin_msg.replace("%s", name),
+    // eslint-disable-next-line @typescript-eslint/promise-function-async -- must return ajax()'s own AjaxThenable (jconfirm.ts's `isThenable()` checks for its real `.always()`); `async` would re-wrap it through `Promise.resolve()` and lose that method.
     content: function () {
       return ajax({
         type: "POST",

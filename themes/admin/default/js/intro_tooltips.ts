@@ -205,7 +205,7 @@ function resizeStorageTooltips(resize = false) {
       // an absent tooltip is a silent no-op rather than an error -- kept
       // rather than guarded, because guarding would change which branches run
       // below.
-      const firstTooltip = tooltips[0];
+      const [firstTooltip] = tooltips;
       const tooltipWidth =
         firstTooltip === undefined ? Number.NaN : innerWidth(firstTooltip);
       const chartTitle = document.querySelector<HTMLElement>(

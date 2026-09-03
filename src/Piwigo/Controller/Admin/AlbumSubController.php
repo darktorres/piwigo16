@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\AlbumNotificationPageRenderer;
@@ -101,7 +102,7 @@ final readonly class AlbumSubController implements AdminSubControllerInterface
         $category_name = $nameEvent->categoryName;
         $category_id_display = (string) $category->id->value;
         $template->assignContext(new AlbumSubControllerPageContext(
-            adminPageTitle: $this->lang->t('Edit album') . ' <strong>' . $category_name . '</strong>',
+            adminPageTitle: new Html($this->lang->t('Edit album') . ' <strong>' . htmlspecialchars($category_name) . '</strong>'),
             adminPageObjectId: '#' . $category_id_display,
         ));
 

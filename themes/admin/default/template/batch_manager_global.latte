@@ -81,7 +81,12 @@
                       src="{$thumbnail->thumb->getUrl()}"
                       alt="{$thumbnail->file}"
                       title="{$thumbnail->title}"
-                      {$thumbnail->thumb->getSizeHtm()}
+                      {* noescape kept on purpose: a bare print inside a
+                         tag's own attribute-list area is its own special
+                         Latte context, numeric-entity-encoded regardless
+                         of Html typing -- see picture_content.latte's own
+                         identical comment. *}
+                      {$thumbnail->thumb->getSizeHtm()|noescape}
                     >
                   </span>
                 </label>

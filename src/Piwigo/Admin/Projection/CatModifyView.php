@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
@@ -24,13 +25,22 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `album_selector.inc.latte`, which is entirely self-contained and
  * reads no external context beyond a local `{var $load_mode}`) and
  * `cat_modify.ts`'s `pwg_getPageData()` reads.
+ *
+ * `$categoriesNav`/`$categoriesParentNav` are Html, not string (P59
+ * correction): hand-built breadcrumbs starting with a literal
+ * `<a href="...">Home</a>` anchor, with more
+ * `getCatDisplayNameCache()`-produced `<a>` segments appended -- real
+ * markup, not just an escaped name. An earlier pass dropped these
+ * prints' own `|noescape` without also retyping the fields, corrupting
+ * the breadcrumbs into literal `&lt;a...&gt;` text (caught by
+ * `admin-album.html`'s own golden-HTML snapshot).
  */
 #[Template('cat_modify.latte')]
 final readonly class CatModifyView implements View, HasPageAssets, ExposesPageData
 {
     public function __construct(
-        public string $categoriesNav,
-        public string $categoriesParentNav,
+        public Html $categoriesNav,
+        public Html $categoriesParentNav,
         public int|string $parentCatId,
         public int $catId,
         public string $catName,

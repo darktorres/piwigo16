@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Projection;
 
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
@@ -23,6 +24,14 @@ use Piwigo\Template\Latte\Attribute\Template;
  * server paints checked. Null means none of them: the cookie holds a
  * value that is not one of the three. See
  * {@see \Piwigo\Admin\CatListPageRenderer::albumViewSelected()}.
+ *
+ * `$categoriesNav` is Html, not string (P59 correction): a hand-built
+ * breadcrumb starting with a literal `<a href="...">Home</a>` anchor,
+ * with more `getCatDisplayNameCache()`-produced `<a>` segments appended
+ * -- real markup, not just an escaped name. An earlier pass dropped
+ * this print's own `|noescape` without also retyping the field,
+ * corrupting the breadcrumb into literal `&lt;a...&gt;` text (caught by
+ * `admin-cat-list.html`'s own golden-HTML snapshot).
  */
 #[Template('cat_list.latte')]
 final readonly class CatListView implements View, HasPageAssets
@@ -31,7 +40,7 @@ final readonly class CatListView implements View, HasPageAssets
      * @param list<CategoryListRow> $categories
      */
     public function __construct(
-        public string $categoriesNav,
+        public Html $categoriesNav,
         public string $formAction,
         public string $csrfToken,
         public array $categories,

@@ -211,12 +211,19 @@ final readonly class PluginsNewPageRenderer
 
                 // $revision_id/$extension_id are untyped remote-PEM-payload
                 // data, reaching plugins_new.latte as a bare
-                // {$plugin->installUrl|noescape} print with no escaping
-                // anywhere else in this method -- htmlspecialchars() them
-                // explicitly here, the same fix as P59 Batch 0's
-                // json_encode findings (confirmed real XSS via a crafted
-                // PEM catalog response otherwise).
-                $url_auto_install = htmlspecialchars($base_url)
+                // {$plugin->installUrl} print, auto-escaped once by Latte
+                // -- htmlspecialchars() them explicitly here would double-
+                // escape (confirmed real XSS without this otherwise, via a
+                // crafted PEM catalog response, same fix as P59 Batch 0's
+                // json_encode findings). $base_url stays un-pre-escaped
+                // too (P59 correction): it's built from a hardcoded
+                // literal page slug/tab, not remote data, so
+                // htmlspecialchars()'ing it here double-escaped its own
+                // internal '&tab=' separator into '&amp;amp;tab=' once
+                // Latte's own single auto-escape pass ran over the whole
+                // string (caught by admin-plugins-new.html's own
+                // golden-HTML snapshot).
+                $url_auto_install = $base_url
                   . '&revision=' . htmlspecialchars($revision_id)
                   . '&extension=' . htmlspecialchars($extension_id)
                   . '&pwg_token=' . $this->csrfService->getToken()

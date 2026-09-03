@@ -91,7 +91,7 @@ final readonly class PhotoSubController implements AdminSubControllerInterface
         $tabsheet->assign($this->currentTemplate, $this->renderer);
 
         $template->assignContext(new AdminContentPageContext(
-            adminPageTitle: $this->lang->t('Edit photo') . ' <span class="image-id">#' . $get_image_id . '</span>',
+            adminPageTitle: new Html($this->lang->t('Edit photo') . ' <span class="image-id">#' . $get_image_id . '</span>'),
         ));
 
         if ($tab === 'properties') {

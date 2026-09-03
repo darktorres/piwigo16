@@ -27,12 +27,16 @@ use Piwigo\Core\TemplatePageContext;
  * assigns its own shared `$adminPageTitle` in a separate call, after
  * its per-tab renderer has already assigned `$adminContent`/`$helpUrl`
  * in its own.
+ *
+ * `$adminPageTitle` accepts `string|Html` (P59 correction) -- see
+ * {@see AdminPageResult::$pageTitle}'s own docblock, the field this one
+ * mirrors.
  */
 final readonly class AdminContentPageContext implements TemplatePageContext
 {
     public function __construct(
         public ?Html $adminContent = null,
-        public ?string $adminPageTitle = null,
+        public string|Html|null $adminPageTitle = null,
         public ?string $helpUrl = null,
     ) {}
 

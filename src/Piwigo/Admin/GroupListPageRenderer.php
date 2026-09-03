@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Piwigo\Admin\Projection\GroupListView;
 use Piwigo\Admin\Request\GroupListActionRequest;
 use Piwigo\Auth\AccessControl;
@@ -91,7 +92,7 @@ final readonly class GroupListPageRenderer
 
         return new AdminPageResult(
             content: $adminContent,
-            pageTitle: $this->lang->t('Groups') . ' <span class="badge-number">' . $group_counter . '</span>',
+            pageTitle: new Html($this->lang->t('Groups') . ' <span class="badge-number">' . $group_counter . '</span>'),
         );
     }
 }

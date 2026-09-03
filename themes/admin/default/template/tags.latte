@@ -174,7 +174,7 @@
     data-id='{$tag->id}'
     data-selected='0'
   >
-    {include tagContent, tag_name: $tag->name, tag_U_VIEW: sprintf('index.php?/tags/%s-%s', $tag->id, $tag->urlName), tag_U_EDIT: sprintf('admin.php?page=batch_manager&amp;filter=tag-%s', $tag->id), has_image: $tag->counter > 0, tag_count: $tag->counter, tag_raw_name: $tag->rawName}
+    {include tagContent, tag_name: $tag->name, tag_U_VIEW: sprintf('index.php?/tags/%s-%s', $tag->id, $tag->urlName), tag_U_EDIT: sprintf('admin.php?page=batch_manager&filter=tag-%s', $tag->id), has_image: $tag->counter > 0, tag_count: $tag->counter, tag_raw_name: $tag->rawName}
   </div>
 </div>
 <div class="emptyResearch"> {='No tag found'|translate} </div>

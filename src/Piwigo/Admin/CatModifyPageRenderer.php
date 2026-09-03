@@ -253,8 +253,8 @@ final class CatModifyPageRenderer
         }
 
         $adminContent = $renderer->render(new CatModifyView(
-            categoriesNav: $categories_nav,
-            categoriesParentNav: $categories_parent_nav,
+            categoriesNav: new Html($categories_nav),
+            categoriesParentNav: new Html($categories_parent_nav),
             parentCatId: $category_id_uppercat !== '' ? $category_id_uppercat : 0,
             catId: $category_id,
             catName: $category->name,

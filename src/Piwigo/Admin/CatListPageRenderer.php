@@ -244,7 +244,7 @@ final readonly class CatListPageRenderer
         }
 
         $adminContent = $this->renderer->render(new CatListView(
-            categoriesNav: $categories_nav,
+            categoriesNav: new Html($categories_nav),
             formAction: $form_action,
             csrfToken: $this->csrfService
                 ->getToken(),

@@ -6,7 +6,11 @@
       n:foreach="$croppedDerivatives as $deriv"
       src="{$deriv['U_IMG']}"
       alt="{$alt}"
-      {$deriv['HTM_SIZE']}
+      {* noescape kept on purpose: a bare print inside a tag's own
+         attribute-list area is its own special Latte context, numeric-
+         entity-encoded regardless of Html typing -- see
+         picture_content.latte's own identical comment. *}
+      {$deriv['HTM_SIZE']|noescape}
     >
   </fieldset>
 

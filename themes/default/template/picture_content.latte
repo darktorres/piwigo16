@@ -13,7 +13,14 @@
     src="{$current->image->path}"
     {elseif $selectedDerivative->isCached()}
     src="{$selectedDerivative->getUrl()}"
-    {$selectedDerivative->getSizeHtm()}
+    {* noescape kept on purpose: a bare print sitting inside a tag's own
+       attribute-list area (this position, not a quoted attribute VALUE)
+       is its own special Latte context -- the auto-escaper numeric-
+       entity-encodes it regardless of Html typing, corrupting the
+       "width=&quot;…&quot; height=&quot;…&quot;" fragment into literal
+       text. Confirmed via a standalone Latte::renderToString() probe.
+       getSizeHtm() is DerivativeImage's own established-safe producer. *}
+    {$selectedDerivative->getSizeHtm()|noescape}
     {else}
     src="{$ROOT_URL}{$themeconf['img_dir']}/ajax_loader.gif"
     data-src="{$selectedDerivative->getUrl()}"

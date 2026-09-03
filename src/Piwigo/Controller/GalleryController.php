@@ -540,7 +540,7 @@ final readonly class GalleryController implements ControllerInterface
                     }
 
                     $tpl_orders[$order_id] = new ImageOrderOption(
-                        display: $order->label,
+                        display: new Html($order->label),
                         url: $url . $order_id,
                         selected: (string) $order_idx === (string) $order_id,
                     );
@@ -613,7 +613,7 @@ final readonly class GalleryController implements ControllerInterface
 
                 foreach ($type_map as $params) {
                     $image_derivatives[] = new ImageOrderOption(
-                        display: $this->lang->t($params->type),
+                        display: new Html($this->lang->t($params->type)),
                         url: $url . $params->type,
                         selected: $params->type === $selected_type,
                     );

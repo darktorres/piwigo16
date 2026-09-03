@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
@@ -102,8 +103,8 @@ final readonly class AboutController implements ControllerInterface
         ]);
 
         $aboutView = new AboutView(
-            aboutMessage: is_string($about_message_raw) ? $about_message_raw : '',
-            themeAbout: is_string($theme_about) ? $theme_about : null,
+            aboutMessage: new Html(is_string($about_message_raw) ? $about_message_raw : ''),
+            themeAbout: is_string($theme_about) ? new Html($theme_about) : null,
         );
 
         $themeconf = $template->getTemplateVars('themeconf');

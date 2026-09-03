@@ -14,12 +14,23 @@ use Latte\Runtime\Html;
  * `$helpUrl` are optional for the exact same reason AdminContentPageContext's
  * own fields are: most pages keep AdminShell's own default title and have
  * no per-page help link.
+ *
+ * `$pageTitle` accepts `string|Html` (P59 correction): the vast
+ * majority of real callers pass a plain `Lang::t()` translation, safe
+ * to auto-escape as-is, but 2 (`GroupListPageRenderer`'s own
+ * `"Groups <span class=\"badge-number\">…</span>"`, and
+ * `PhotoSubController`'s own `"Edit photo <span
+ * class=\"image-id\">…</span>"`, which constructs {@see
+ * AdminContentPageContext} directly rather than through this class)
+ * hand-build real markup and must wrap it in `Html` explicitly --
+ * `admin.latte`'s own bare `{$ADMIN_PAGE_TITLE}` print already handles
+ * either shape correctly at runtime, per value.
  */
 final readonly class AdminPageResult
 {
     public function __construct(
         public Html $content,
-        public ?string $pageTitle = null,
+        public string|Html|null $pageTitle = null,
         public ?string $helpUrl = null,
     ) {}
 }

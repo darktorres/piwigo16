@@ -182,12 +182,17 @@ final readonly class LanguagesNewPageRenderer
                 // $revision_id/$download_url are untyped remote-PEM-payload
                 // data (this loop's own comment above), reaching
                 // languages_new.latte as bare
-                // {$language->installUrl|noescape}/{$language->downloadUrl|noescape}
-                // prints with no escaping anywhere else in this method --
-                // htmlspecialchars() them explicitly here, the same fix as
-                // P59 Batch 0's json_encode findings (confirmed real XSS
-                // via a crafted PEM catalog response otherwise).
-                $url_auto_install = htmlspecialchars($base_url)
+                // {$language->installUrl}/{$language->downloadUrl} prints,
+                // auto-escaped once by Latte -- htmlspecialchars() them
+                // explicitly here (confirmed real XSS without this
+                // otherwise, via a crafted PEM catalog response, same fix
+                // as P59 Batch 0's json_encode findings). $base_url stays
+                // un-pre-escaped (P59 correction): it's built from a
+                // hardcoded literal page slug/tab, not remote data --
+                // htmlspecialchars()'ing it here double-escaped its own
+                // internal '&tab=' separator once Latte's own single
+                // auto-escape pass ran over the whole string.
+                $url_auto_install = $base_url
                   . '&revision=' . htmlspecialchars($revision_id)
                   . '&pwg_token=' . $this->csrfService->getToken()
                 ;

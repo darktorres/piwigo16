@@ -59,7 +59,7 @@ import {
   sliders,
   show_filter_ratings,
 } from "./search_filters";
-import { ajax } from "./vendor/ajax";
+import { ajax, AjaxError } from "./vendor/ajax";
 import {
   getSelectizeInstance,
   selectize as createSelectize,
@@ -1394,7 +1394,7 @@ ready(function () {
   }
 
   if (filters_to_remove.length > 0) {
-    performSearch(PS_params, true);
+    void performSearch(PS_params, true);
   }
 
   // Adapt no result message
@@ -1432,7 +1432,7 @@ ready(function () {
           }
         }
       }
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
     });
   }
 
@@ -1531,7 +1531,7 @@ ready(function () {
           }
         });
       // Set second param to true to trigger reload
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
     },
   );
 
@@ -1639,7 +1639,7 @@ ready(function () {
     "click",
     function () {
       trigger(document.querySelectorAll(".filter-word"), "click");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
     },
   );
   on(
@@ -1647,7 +1647,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("word", "del");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
       if (
         !hasClass(document.querySelectorAll(".filter-word"), "filter-filled")
       ) {
@@ -1702,7 +1702,7 @@ ready(function () {
     "click",
     function () {
       trigger(document.querySelectorAll(".filter-tag"), "click");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
     },
   );
   on(
@@ -1710,7 +1710,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("tag", "del");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
       if (
         !hasClass(document.querySelectorAll(".filter-tag"), "filter-filled")
       ) {
@@ -1782,7 +1782,7 @@ ready(function () {
     "click",
     function () {
       trigger(document.querySelectorAll(".filter-date_posted"), "click");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
     },
   );
 
@@ -1791,7 +1791,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("date_posted", "del");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
       if (
         !hasClass(
           document.querySelectorAll(".filter-date_posted"),
@@ -1866,7 +1866,7 @@ ready(function () {
     "click",
     function () {
       trigger(document.querySelectorAll(".filter-date_created"), "click");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
     },
   );
 
@@ -1875,7 +1875,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("date_created", "del");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
       if (
         !hasClass(
           document.querySelectorAll(".filter-date_created"),
@@ -1926,7 +1926,7 @@ ready(function () {
     "click",
     function () {
       trigger(document.querySelectorAll(".filter-album"), "click");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
     },
   );
   on(
@@ -1934,7 +1934,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("album", "del");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
       if (
         !hasClass(document.querySelectorAll(".filter-album"), "filter-filled")
       ) {
@@ -1989,7 +1989,7 @@ ready(function () {
     "click",
     function () {
       trigger(document.querySelectorAll(".filter-authors"), "click");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
     },
   );
   on(
@@ -1997,7 +1997,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("authors", "del");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
       if (
         !hasClass(document.querySelectorAll(".filter-authors"), "filter-filled")
       ) {
@@ -2054,7 +2054,7 @@ ready(function () {
     "click",
     function () {
       trigger(document.querySelectorAll(".filter-added_by"), "click");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
     },
   );
   on(
@@ -2062,7 +2062,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("added_by", "del");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
       if (
         !hasClass(
           document.querySelectorAll(".filter-added_by"),
@@ -2123,7 +2123,7 @@ ready(function () {
     "click",
     function () {
       trigger(document.querySelectorAll(".filter-filetypes"), "click");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
     },
   );
   on(
@@ -2131,7 +2131,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("filetypes", "del");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
       if (
         !hasClass(
           document.querySelectorAll(".filter-filetypes"),
@@ -2187,7 +2187,7 @@ ready(function () {
     "click",
     function () {
       trigger(document.querySelectorAll(".filter-ratios"), "click");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
     },
   );
   on(
@@ -2195,7 +2195,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("ratios", "del");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
       if (
         !hasClass(document.querySelectorAll(".filter-ratios"), "filter-filled")
       ) {
@@ -2253,7 +2253,7 @@ ready(function () {
     "click",
     function () {
       trigger(document.querySelectorAll(".filter-ratings"), "click");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
     },
   );
   on(
@@ -2261,7 +2261,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("ratings", "del");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
       if (
         !hasClass(document.querySelectorAll(".filter-ratings"), "filter-filled")
       ) {
@@ -2322,7 +2322,7 @@ ready(function () {
       PS_params["filesize_max"] = filesize_max;
 
       trigger(document.querySelectorAll(".filter-filesize"), "click");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
     },
   );
 
@@ -2331,7 +2331,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("filesize", "del");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
       if (
         !hasClass(
           document.querySelectorAll(".filter-filesize"),
@@ -2387,7 +2387,7 @@ ready(function () {
       PS_params["height_max"] = height_max;
 
       trigger(document.querySelectorAll(".filter-height"), "click");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
     },
   );
 
@@ -2396,7 +2396,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("height", "del");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
       if (
         !hasClass(document.querySelectorAll(".filter-height"), "filter-filled")
       ) {
@@ -2449,7 +2449,7 @@ ready(function () {
       PS_params["width_max"] = width_max;
 
       trigger(document.querySelectorAll(".filter-width"), "click");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
     },
   );
 
@@ -2458,7 +2458,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("width", "del");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
       if (
         !hasClass(document.querySelectorAll(".filter-width"), "filter-filled")
       ) {
@@ -2506,7 +2506,7 @@ ready(function () {
     "click",
     function () {
       trigger(document.querySelectorAll(".filter-expert"), "click");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
     },
   );
   on(
@@ -2514,7 +2514,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("expert", "del");
-      performSearch(PS_params, true);
+      void performSearch(PS_params, true);
       if (
         !hasClass(document.querySelectorAll(".filter-expert"), "filter-filled")
       ) {
@@ -2528,7 +2528,10 @@ ready(function () {
   );
 });
 
-function performSearch(params: Record<string, any>, reload = false) {
+async function performSearch(
+  params: Record<string, any>,
+  reload = false,
+): Promise<void> {
   // PS_params uses snake_case field names (also used elsewhere in this
   // file to drive the active-filter-chip UI) -- translated to
   // POST /api/v1/images/searches's camelCase body shape here, the one
@@ -2571,36 +2574,34 @@ function performSearch(params: Record<string, any>, reload = false) {
     }
   });
 
-  void ajax({
-    url: "api/v1/images/searches",
-    type: "POST",
-    contentType: "application/json",
-    dataType: "json",
-    data: JSON.stringify(body),
-    success: function (
-      response: operations["imageFilteredSearchCreate"]["responses"][201]["content"]["application/json"],
-    ) {
-      if (reload && typeof response.searchUrl !== "undefined") {
-        reloadPage(response.searchUrl);
-      }
-    },
-    error: function (e) {
-      console.error(e);
-      append(
-        document.querySelectorAll(".filter-form "),
-        '<p class="error">Error</p>',
-      );
-      css(
-        find(document.querySelectorAll(".filter-validate"), ".validate-text"),
-        "display",
-        "block",
-      );
-      hide(find(document.querySelectorAll(".filter-validate"), ".loading"));
-      const removeFilterEls = document.querySelectorAll(".remove-filter");
-      removeClass(removeFilterEls, prefix_icon + "spin6 animate-spin");
-      addClass(removeFilterEls, prefix_icon + "cancel");
-    },
-  });
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    const response = (await ajax({
+      url: "api/v1/images/searches",
+      type: "POST",
+      json: body,
+      dataType: "json",
+    })) as operations["imageFilteredSearchCreate"]["responses"][201]["content"]["application/json"];
+
+    if (reload && typeof response.searchUrl !== "undefined") {
+      reloadPage(response.searchUrl);
+    }
+  } catch (e) {
+    console.error(e instanceof AjaxError ? e.responseText : e);
+    append(
+      document.querySelectorAll(".filter-form "),
+      '<p class="error">Error</p>',
+    );
+    css(
+      find(document.querySelectorAll(".filter-validate"), ".validate-text"),
+      "display",
+      "block",
+    );
+    hide(find(document.querySelectorAll(".filter-validate"), ".loading"));
+    const removeFilterEls = document.querySelectorAll(".remove-filter");
+    removeClass(removeFilterEls, prefix_icon + "spin6 animate-spin");
+    addClass(removeFilterEls, prefix_icon + "cancel");
+  }
 }
 
 function add_related_category({

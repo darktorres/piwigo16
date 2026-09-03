@@ -5,7 +5,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { ajax } from "../../../default/js/vendor/ajax";
+import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
 import { pwgDatepicker } from "../../../default/js/vendor/datepicker";
 import {
   addClass,
@@ -153,7 +153,7 @@ ready(() => {
       };
     }
 
-    fillHistoryResult(current_param);
+    void fillHistoryResult(current_param);
   });
 
   // `vendor/datepicker.ts`'s own native port dispatches a real native
@@ -169,7 +169,7 @@ ready(() => {
     if (current_param.start !== value) {
       current_param.start = value ?? "";
       current_param.pageNumber = 0;
-      fillHistoryResult(current_param);
+      void fillHistoryResult(current_param);
     }
   });
 
@@ -185,7 +185,7 @@ ready(() => {
       // which triggers an unnecessary ajax request
       // when you come to the history search page from a photo.
       if (newValue !== "1899-12-31") {
-        fillHistoryResult(current_param);
+        void fillHistoryResult(current_param);
       }
     }
   });
@@ -200,7 +200,7 @@ ready(() => {
     if (current_param.start !== "") {
       current_param.pageNumber = 0;
       current_param.start = "";
-      fillHistoryResult(current_param);
+      void fillHistoryResult(current_param);
     }
   });
 
@@ -213,22 +213,22 @@ ready(() => {
     if (current_param.end !== today) {
       current_param.end = today;
       current_param.pageNumber = 0;
-      fillHistoryResult(current_param);
+      void fillHistoryResult(current_param);
     }
   });
 
   on(document.querySelectorAll(".pagination-arrow.rigth"), "click", () => {
     current_param.pageNumber += 1;
-    fillHistoryResult(current_param);
+    void fillHistoryResult(current_param);
   });
 
   on(document.querySelectorAll(".pagination-arrow.left"), "click", () => {
     current_param.pageNumber -= 1;
-    fillHistoryResult(current_param);
+    void fillHistoryResult(current_param);
   });
 
   on(document.querySelectorAll(".refresh-results"), "click", function () {
-    fillHistoryResult(current_param);
+    void fillHistoryResult(current_param);
   });
 });
 
@@ -306,7 +306,7 @@ function fillSummaryResult(summary: HistorySummary) {
       if (current_param.user_id === "-1") {
         current_param.user_id = guest_id;
         addGuestFilter(str_guest);
-        fillHistoryResult(current_param);
+        void fillHistoryResult(current_param);
       }
     });
     // `.hover(fn)` with a single argument binds the same handler to both
@@ -345,7 +345,7 @@ function fillSummaryResult(summary: HistorySummary) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
           current_param.user_id = data(this, "user-id") as string | number;
           addUserFilter(member.username);
-          fillHistoryResult(current_param);
+          void fillHistoryResult(current_param);
         }
       });
       document.querySelector(".user-list")?.appendChild(new_user_item);
@@ -366,43 +366,40 @@ function showResults(doShow: boolean) {
   }
 }
 
-function fillHistoryResult(ajaxParam: HistoryFilterParams) {
-  let maxPage = 0;
-  void ajax({
-    url: "api/v1/history/search",
-    data: ajaxParam,
-    beforeSend: function () {
-      showResults(false);
-      removeClass(document.querySelectorAll(".loading"), "hide");
+async function fillHistoryResult(
+  ajaxParam: HistoryFilterParams,
+): Promise<void> {
+  showResults(false);
+  removeClass(document.querySelectorAll(".loading"), "hide");
+  hide(document.querySelectorAll(".noResults"));
+  empty(document.querySelectorAll(".tab"));
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    const raw_data = (await ajax({
+      url: "api/v1/history/search",
+      data: ajaxParam,
+    })) as HistorySearchResponse;
+
+    const { lines, maxPage, summary } = raw_data;
+
+    //clear lines before refill
+
+    if (lines.length > 0) {
+      let id = 0;
+      lines.forEach((line) => {
+        lineConstructor(line, id);
+        id++;
+      });
+
+      fillSummaryResult(summary);
+      showResults(true);
       hide(document.querySelectorAll(".noResults"));
-      empty(document.querySelectorAll(".tab"));
-    },
-    success: function (raw_data: HistorySearchResponse) {
-      const { lines } = raw_data;
-      ({ maxPage } = raw_data);
-      const { summary } = raw_data;
+    } else {
+      showResults(false);
+      show(document.querySelectorAll(".noResults"));
+    }
 
-      //clear lines before refill
-
-      if (lines.length > 0) {
-        let id = 0;
-        lines.forEach((line) => {
-          lineConstructor(line, id);
-          id++;
-        });
-
-        fillSummaryResult(summary);
-        showResults(true);
-        hide(document.querySelectorAll(".noResults"));
-      } else {
-        showResults(false);
-        show(document.querySelectorAll(".noResults"));
-      }
-    },
-    error: function (e) {
-      console.error(e);
-    },
-  }).done(() => {
     activateLineOptions();
     addClass(document.querySelectorAll(".loading"), "hide");
     updatePagination(maxPage);
@@ -412,7 +409,9 @@ function fillHistoryResult(ajaxParam: HistoryFilterParams) {
       fadeOut: 200,
       edgeOffset: 3,
     });
-  });
+  } catch (e) {
+    console.error(e instanceof AjaxError ? e.responseText : e);
+  }
 }
 
 function lineConstructor(line: HistoryLine, id: number) {
@@ -466,7 +465,7 @@ function lineConstructor(line: HistoryLine, id: number) {
       current_param.user_id = String(attrOf(this, "id"));
       current_param.pageNumber = 0;
       addUserFilter(htmlOf(this) ?? "");
-      fillHistoryResult(current_param);
+      void fillHistoryResult(current_param);
     });
   }
 
@@ -482,7 +481,7 @@ function lineConstructor(line: HistoryLine, id: number) {
       current_param.ip = (data(this, "ip") as string | undefined) ?? "";
       current_param.pageNumber = 0;
       addIpFilter(htmlOf(this) ?? "");
-      fillHistoryResult(current_param);
+      void fillHistoryResult(current_param);
     });
   }
 
@@ -494,7 +493,7 @@ function lineConstructor(line: HistoryLine, id: number) {
       current_param.image_id = imgId;
       current_param.pageNumber = 0;
       addImageFilter(imgId);
-      fillHistoryResult(current_param);
+      void fillHistoryResult(current_param);
     });
   }
 
@@ -897,7 +896,7 @@ function addUserFilter(username: string | null) {
 
     current_param.user_id = "-1";
     current_param.pageNumber = 0;
-    fillHistoryResult(current_param);
+    void fillHistoryResult(current_param);
     checkFilters();
     show(document.querySelectorAll(".summary-guests"));
   });
@@ -922,7 +921,7 @@ function addGuestFilter(username: string) {
 
     current_param.user_id = "-1";
     current_param.pageNumber = 0;
-    fillHistoryResult(current_param);
+    void fillHistoryResult(current_param);
     checkFilters();
   });
 
@@ -946,7 +945,7 @@ function addIpFilter(ip: string) {
 
     current_param.ip = "";
     current_param.pageNumber = 0;
-    fillHistoryResult(current_param);
+    void fillHistoryResult(current_param);
     checkFilters();
   });
 
@@ -969,7 +968,7 @@ function addImageFilter(img_id: string | number | null) {
 
     current_param.image_id = "";
     current_param.pageNumber = 0;
-    fillHistoryResult(current_param);
+    void fillHistoryResult(current_param);
     checkFilters();
   });
 
@@ -1065,12 +1064,16 @@ function setupGeoIpHover(ipEl: Element): void {
         { once: true },
       );
 
-      void ajax({
-        url: "api/v1/geoip",
-        type: "GET",
-        dataType: "json",
-        data: { ip: textOf(ipEl) },
-        success: function (geoData: GeoIpLookupResponse) {
+      void (async () => {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+          const geoData = (await ajax({
+            url: "api/v1/geoip",
+            type: "GET",
+            dataType: "json",
+            data: { ip: textOf(ipEl) },
+          })) as GeoIpLookupResponse;
+
           if (!geoData.available || geoData.fullName === undefined) return;
 
           let content = geoData.fullName;
@@ -1095,8 +1098,10 @@ function setupGeoIpHover(ipEl: Element): void {
           // (internally a "mouseover" listener translated via
           // relatedTarget), a real "mouseenter" reaches it directly.
           if (data(ipEl, "isOver") === true) trigger(ipEl, "mouseenter");
-        },
-      });
+        } catch (e) {
+          console.error(e instanceof AjaxError ? e.responseText : e);
+        }
+      })();
     },
     { once: true },
   );

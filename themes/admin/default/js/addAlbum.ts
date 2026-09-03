@@ -1,5 +1,5 @@
 import type { operations } from "../../../../openapi/client/schema";
-import { ajax } from "../../../default/js/vendor/ajax";
+import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
 import { closeColorbox, colorbox } from "../../../default/js/vendor/colorbox";
 import {
   css,
@@ -104,31 +104,31 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
         "hidden",
       );
 
-      void ajax({
-        url: "api/v1/categories",
-        type: "POST",
-        contentType: "application/json",
-        headers: {
-          "X-CSRF-Token": String(
-            val(document.querySelectorAll("input[name=pwg_token]")),
-          ),
-        },
-        dataType: "json",
-        data: JSON.stringify({
-          parentId: Number(parent_id),
-          name: name,
-        }),
-        beforeSend: function () {
-          css(
-            document.querySelectorAll("#albumCreationLoading"),
-            "display",
-            "inline-block",
-          );
-          hide(document.querySelectorAll(".albumCreationButton"));
-        },
-        success: function (
-          response: operations["categoryCreate"]["responses"][201]["content"]["application/json"],
-        ) {
+      void (async () => {
+        css(
+          document.querySelectorAll("#albumCreationLoading"),
+          "display",
+          "inline-block",
+        );
+        hide(document.querySelectorAll(".albumCreationButton"));
+
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+          const response = (await ajax({
+            url: "api/v1/categories",
+            type: "POST",
+            json: {
+              parentId: Number(parent_id),
+              name: name,
+            },
+            headers: {
+              "X-CSRF-Token": String(
+                val(document.querySelectorAll("input[name=pwg_token]")),
+              ),
+            },
+            dataType: "json",
+          })) as operations["categoryCreate"]["responses"][201]["content"]["application/json"];
+
           hide(document.querySelectorAll("#albumCreationLoading"));
           show(document.querySelectorAll(".albumCreationButton"));
           closeColorbox();
@@ -173,16 +173,15 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
           if (options.afterSelect) {
             options.afterSelect();
           }
-        },
-        error: function (
-          _XMLHttpRequest,
-          _textStatus: string,
-          errorThrows: string,
-        ) {
+        } catch (e) {
           hide(document.querySelectorAll("#albumCreationLoading"));
-          alert(errorThrows);
-        },
-      });
+          // Was the ajax() error callback's own 3rd (`errorThrown`) param --
+          // `response.statusText` for a real HTTP failure, or the literal
+          // "Invalid JSON" for a parse failure -- exactly what AjaxError's
+          // own `.message` is constructed from (see vendor/ajax.ts).
+          alert(e instanceof AjaxError ? e.message : String(e));
+        }
+      })();
     });
   }
 

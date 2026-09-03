@@ -240,7 +240,7 @@
             <span
               class="{if !$view['SELECTED']}u-invisible{/if}"
             >&#x2714; </span><a
-              href="{$view['VALUE']|noescape}"
+              href="{$view['VALUE']}"
             >{$view['CONTENT']}</a>
           {/foreach}
         </div>
@@ -249,7 +249,7 @@
       <h2
         n:if="isset($chronology)"
         class="calendarTitle"
-      >{$chronology['TITLE']|noescape}</h2>
+      >{$chronology['TITLE']}</h2>
     </div>{* <!-- titrePage --> *}
 
     <p
@@ -259,7 +259,7 @@
       <em><strong>
           {foreach $noSearchResults as $res}
             {if !$iterator->first} &mdash; {/if}
-            {$res|noescape}
+            {$res}
           {/foreach}
         </strong></em>
     </p>
@@ -267,11 +267,11 @@
     <p
       n:if="$categorySearchResults !== null"
       class="search_results"
-    >{='Album results for'|translate} <strong>{$QUERY_SEARCH|noescape}</strong> :
+    >{='Album results for'|translate} <strong>{$QUERY_SEARCH}</strong> :
       <em><strong>
           {foreach $categorySearchResults as $res}
             {if !$iterator->first} &mdash; {/if}
-            {$res|noescape}
+            {$res}
           {/foreach}
         </strong></em>
     </p>
@@ -279,7 +279,7 @@
     <p
       n:if="$tagSearchResults !== []"
       class="search_results"
-    >{='Tag results for'|translate} <strong>{$QUERY_SEARCH|noescape}</strong> :
+    >{='Tag results for'|translate} <strong>{$QUERY_SEARCH}</strong> :
       <em><strong>
           {foreach $tagSearchResults as $tag}
             {if !$iterator->first} &mdash; {/if} <a
@@ -316,7 +316,7 @@
               {if isset($tag['U_ADD'])}
                 <a
                   class="tagLevel {if isset($tag['level'])}{$tag['level']}{/if}"
-                  href="{$tag['U_ADD']|noescape}"
+                  href="{$tag['U_ADD']}"
                   title="{$tag['counter']|translate_dec:'%d photo is also linked to current tags','%d photos are also linked to current tags'}"
                   rel="nofollow"
                 >

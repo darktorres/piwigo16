@@ -202,6 +202,15 @@ abstract class CalendarBase
         for ($i = 0; $i < count($page_chronology_date); $i++) {
             $res .= $level_separator;
             $date_component = (string) $page_chronology_date[$i];
+            // Both $url (duplicateIndexUrl() embeds $chronology_date_slice's
+            // own tokens as literal, unencoded path segments -- safe against
+            // the usual '&' double-escape risk, not against '<'/'"' from a
+            // genuinely raw, request-parsed token, per render()'s own
+            // docblock) and the label (getDateComponentLabel()'s fallback
+            // branch returns $date_component itself when no config-defined
+            // label matches) need escaping before this hand-built HTML
+            // interpolation -- a real reflected-XSS gap otherwise (P59).
+            $label = htmlspecialchars($this->getDateComponentLabel($i, $date_component));
             if (isset($page_chronology_date[$i + 1])) {
                 $chronology_date_slice = array_slice($page_chronology_date, 0, $i + 1);
                 $url = $this->urlService->duplicateIndexUrl(
@@ -211,13 +220,13 @@ abstract class CalendarBase
                     ['start']
                 );
                 $res .=
-                  '<a href="' . $url . '">'
-                  . $this->getDateComponentLabel($i, $date_component)
+                  '<a href="' . htmlspecialchars($url) . '">'
+                  . $label
                   . '</a>';
             } else {
                 $res .=
                   '<span class="calInHere">'
-                  . $this->getDateComponentLabel($i, $date_component)
+                  . $label
                   . '</span>';
             }
         }

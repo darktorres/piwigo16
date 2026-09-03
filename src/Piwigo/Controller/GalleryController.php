@@ -461,7 +461,7 @@ final readonly class GalleryController implements ControllerInterface
                 usort($cats, $this->htmlService->nameCompare(...));
                 $hints = [];
                 foreach ($cats as $cat) {
-                    $hints[] = $this->htmlService->getCatDisplayName([$cat], '');
+                    $hints[] = new Html($this->htmlService->getCatDisplayName([$cat], ''));
                 }
                 $category_search_results = $hints;
             }
@@ -477,7 +477,7 @@ final readonly class GalleryController implements ControllerInterface
 
             if ($page_items === []) {
                 $search_query = $qsearchDetails['q'] ?? null;
-                $no_search_results = [htmlspecialchars(is_string($search_query) ? $search_query : '')];
+                $no_search_results = [new Html(htmlspecialchars(is_string($search_query) ? $search_query : ''))];
             } else {
                 $unmatched_terms = $qsearchDetails['unmatched_terms'] ?? null;
                 if (is_array($unmatched_terms) && $unmatched_terms !== []) {
@@ -489,7 +489,7 @@ final readonly class GalleryController implements ControllerInterface
                     // empty list would render the "no results for" panel with
                     // nothing in it (P58-B2).
                     if ($unmatched_terms !== []) {
-                        $no_search_results = array_map(htmlspecialchars(...), $unmatched_terms);
+                        $no_search_results = array_map(static fn (string $term): Html => new Html(htmlspecialchars($term)), $unmatched_terms);
                     }
                 }
             }

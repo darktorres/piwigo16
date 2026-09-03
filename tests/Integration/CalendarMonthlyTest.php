@@ -517,9 +517,9 @@ namespace Piwigo\Tests\Integration {
             ], $where->parameters);
 
             self::assertSame(
-                ' / <a href="/fake-index?' . json_encode([
+                ' / <a href="' . htmlspecialchars('/fake-index?' . json_encode([
                     'chronology_date' => [2024],
-                ], JSON_THROW_ON_ERROR) . '|removed=' . json_encode(['start'], JSON_THROW_ON_ERROR) . '">2024</a>'
+                ], JSON_THROW_ON_ERROR) . '|removed=' . json_encode(['start'], JSON_THROW_ON_ERROR)) . '">2024</a>'
                 . ' / <span class="calInHere">3</span>',
                 $calendar->getDisplayName()
             );
@@ -639,9 +639,9 @@ namespace Piwigo\Tests\Integration {
             $calendar->chronology_date = [2024, 'any'];
 
             self::assertSame(
-                ' / <a href="/fake-index?' . json_encode([
+                ' / <a href="' . htmlspecialchars('/fake-index?' . json_encode([
                     'chronology_date' => [2024],
-                ], JSON_THROW_ON_ERROR) . '|removed=' . json_encode(['start'], JSON_THROW_ON_ERROR) . '">2024</a>'
+                ], JSON_THROW_ON_ERROR) . '|removed=' . json_encode(['start'], JSON_THROW_ON_ERROR)) . '">2024</a>'
                 . ' / <span class="calInHere">All</span>',
                 $calendar->getDisplayName()
             );

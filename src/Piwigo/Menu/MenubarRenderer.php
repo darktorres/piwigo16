@@ -109,8 +109,11 @@ final class MenubarRenderer
         $query_search = null;
         if ($section_context instanceof SectionContext && $section_context->section === Section::Search && $section_context->qsearchDetails !== []) {
             $qsearch_q = $section_context->qsearchDetails['q'] ?? '';
-            $qsearch_q = is_string($qsearch_q) ? $qsearch_q : '';
-            $query_search = htmlspecialchars($qsearch_q);
+            // Not pre-escaped: both real consumers (index.latte's
+            // QUERY_SEARCH, menubar_menu.latte's own value="") print this
+            // bare, relying on Latte's own auto-escape once at print time
+            // (P59) -- htmlspecialchars()'ing it here too would double-escape.
+            $query_search = is_string($qsearch_q) ? $qsearch_q : '';
         }
 
         if ((bool) ($block = $menu->getBlock('mbLinks')) and ! self::emptyValue($currentConfig->links)) {

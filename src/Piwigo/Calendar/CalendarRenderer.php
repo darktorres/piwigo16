@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Calendar;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CalendarNavCachePool;
 use Piwigo\Calendar\Projection\CalendarChronologyPageContext;
@@ -261,7 +262,7 @@ final readonly class CalendarRenderer
             $calendar_title .= $calendar->getDisplayName();
             $template->assignContext(new CalendarChronologyPageContext(
                 fileChronologyView: 'month_calendar.latte',
-                chronologyTitle: $calendar_title,
+                chronologyTitle: new Html($calendar_title),
                 chronologyNavigationBars: $calendar->getChronologyNavigationBars(),
                 chronologyViews: $chronology_views,
             ));

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar\Projection;
 
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Core\TemplatePageContext;
 
@@ -31,7 +32,7 @@ final readonly class CalendarChronologyPageContext implements TemplatePageContex
      */
     public function __construct(
         public string $fileChronologyView,
-        public string $chronologyTitle,
+        public Html $chronologyTitle,
         public array $chronologyNavigationBars,
         public ?array $chronologyViews,
     ) {}

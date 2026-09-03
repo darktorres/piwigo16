@@ -182,8 +182,14 @@ final class MenubarRendererTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function testRenderEscapesTheQuerySearchValueForASearchSection(): void
+    public function testRenderAssignsTheRawQuerySearchValueForASearchSection(): void
     {
+        // Not pre-escaped (P59): both real consumers (index.latte's
+        // QUERY_SEARCH, menubar_menu.latte's own value="") print this bare,
+        // relying on Latte's own auto-escape once at print time -- escaping
+        // it here too would double-escape. QUERY_SEARCH itself still carries
+        // the raw value; the escaping assertion belongs to the template
+        // render, not this unit of work.
         $this->sectionContextRegistry->set(new SectionContext(
             section: Section::Search,
             qsearchDetails: [
@@ -193,7 +199,7 @@ final class MenubarRendererTest extends IntegrationTestCase
 
         $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager, new Renderer(CurrentTemplateTestFactory::get()));
 
-        self::assertSame('&lt;script&gt;alert(1)&lt;/script&gt;', $this->template->getTemplateVars('QUERY_SEARCH'));
+        self::assertSame('<script>alert(1)</script>', $this->template->getTemplateVars('QUERY_SEARCH'));
     }
 
     public function testRenderDoesNotAssignQuerySearchOutsideASearchSection(): void

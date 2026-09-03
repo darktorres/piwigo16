@@ -40,8 +40,8 @@ final readonly class IndexView implements View, HasPageAssets
 {
     /**
      * @param list<array<string, mixed>>|null $combinableTags
-     * @param list<string>|null $categorySearchResults
-     * @param list<string>|null $noSearchResults
+     * @param list<Html>|null $categorySearchResults
+     * @param list<Html>|null $noSearchResults
      * @param array<int, ImageOrderOption>|null $imageOrders
      * @param list<array<string, mixed>> $relatedTags empty when the panel
      *   has nothing to show, which is the only thing its `n:if` asks

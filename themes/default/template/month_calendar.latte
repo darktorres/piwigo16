@@ -2,10 +2,10 @@
 {if $chronology_navigation_bars !== []}
   <div n:foreach="$chronology_navigation_bars as $bar" class="calendarBar">
     <div n:if="isset($bar->previous)" class="calendar-nav-prev">&laquo; <a
-        href="{$bar->previous->url|noescape}"
+        href="{$bar->previous->url}"
       >{$bar->previous->label}</a></div>
     <div n:if="isset($bar->next)" class="calendar-nav-next"><a
-        href="{$bar->next->url|noescape}"
+        href="{$bar->next->url}"
       >{$bar->next->label}</a> &raquo;</div>
     {if $bar->items === []}
       &nbsp;
@@ -19,7 +19,7 @@
             {if isset($item->nbImages)}
             title="{$item->nbImages|translate_dec:'%d photo','%d photos'}"
             {/if}
-            href="{$item->url|noescape}"
+            href="{$item->url}"
           >{$item->label}</a>
         {/if}
       {/foreach}
@@ -33,14 +33,14 @@
     class="calendarCalBar"
   >
     <span class="calCalHead"><a
-        href="{$bar->uHead|noescape}"
+        href="{$bar->uHead}"
       >{$bar->headLabel}</a> ({$bar->nbImages})</span><br>
     <span
       n:foreach="$bar->items as $item"
       class="calCal{if !isset($item->url)}Empty{/if}"
     >
       {if isset($item->url)}
-        <a href="{$item->url|noescape}">{$item->label}</a>
+        <a href="{$item->url}">{$item->label}</a>
       {else}
         {$item->label}
       {/if}
@@ -74,9 +74,9 @@
               class="calForeDate"
             >{$day->day}</div>
             <div class="calImg">
-              <a href="{$day->uImgLink|noescape}">
+              <a href="{$day->uImgLink}">
                 <img
-                  src="{$day->image|noescape}"
+                  src="{$day->image}"
                   alt="{$day->imageAlt}"
                   title="{$day->nbElements|translate_dec:'%d photo','%d photos'}"
                 >

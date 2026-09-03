@@ -126,6 +126,24 @@ test('strReplace reorders to str_replace($search, $replace, $subject) with the p
         ->toBe('hello there');
 });
 
+// --- closeTags -----------------------------------------------------------
+
+test('closeTags repeats the piped tag fragment count times, wrapped as trusted Html', function (): void {
+    $result = PiwigoExtension::closeTags('</ul></li>', 3);
+
+    expect($result)
+        ->toBeInstanceOf(Html::class)
+        ->and((string) $result)
+        ->toBe('</ul></li></ul></li></ul></li>');
+});
+
+test('closeTags returns an empty Html for a zero count', function (): void {
+    $result = PiwigoExtension::closeTags('</ul></li>', 0);
+
+    expect((string) $result)
+        ->toBe('');
+});
+
 /**
  * P58 step 2. The date filters exist so a row VO can carry the domain value
  * and let the template format it, instead of a producer baking a localized

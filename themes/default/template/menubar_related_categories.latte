@@ -7,7 +7,7 @@
     Builds a variable-depth <ul>/<li> tree across loop iterations --
     every <ul>/<li> open and close below is printed as raw text, not a
     real tracked HTML tag: the actual nesting depth (how many levels to
-    open or close) is only known at runtime (str_repeat'd by
+    open or close) is only known at runtime (closeTags'd by
     $ref_level's own delta between iterations), which Latte's
     HTML-aware parser -- built for a fixed, statically-analyzable tag
     structure -- can't verify. Only the genuinely self-contained inner
@@ -20,7 +20,7 @@
       {="<ul>"|noescape}
     {else}
       {="</li>"|noescape}
-      {='</ul></li>'|str_repeat:($ref_level - $cat->level)|noescape}
+      {='</ul></li>'|closeTags:($ref_level - $cat->level)}
     {/if}
     {="<li>"|noescape}
     {* No url means this row is only here to carry the tree's shape: an
@@ -51,5 +51,5 @@
     >{$cat->countCategories}</span>
     {var $ref_level = $cat->level}
   {/foreach}
-  {='</li></ul>'|str_repeat:$ref_level|noescape}
+  {='</li></ul>'|closeTags:$ref_level}
 </dd>

@@ -119,6 +119,7 @@ final class PiwigoExtension extends Extension
             'nl2br' => nl2br(...),
             'str_repeat' => str_repeat(...),
             'replace' => self::replace(...),
+            'closeTags' => self::closeTags(...),
 
             // Date formatting. Registered so a row VO can carry the domain
             // value (a DateTimeInterface, or the raw datetime string a
@@ -299,5 +300,22 @@ final class PiwigoExtension extends Extension
     public static function replace(string $subject, string $search, string $replacement): string
     {
         return str_replace($search, $replacement, $subject);
+    }
+
+    /**
+     * `menubar_categories.latte`/`menubar_related_categories.latte`'s own
+     * variable-depth breadcrumb closer -- the number of `</ul></li>` (or
+     * `</li></ul>`) closing tags needed is only known at runtime (the
+     * difference between two nesting levels), so it can't be written out
+     * literally the way the rest of the breadcrumb markup is. Unlike the
+     * generic `|str_repeat` filter above (a plain string passthrough),
+     * this returns `Html` directly: the repeated fragment genuinely is
+     * structural markup, not text a caller could want re-escaped, so the
+     * call site prints it bare instead of composing `|str_repeat|noescape`
+     * (P59 Batch 3).
+     */
+    public static function closeTags(string $tag, int $count): Html
+    {
+        return new Html(str_repeat($tag, $count));
     }
 }

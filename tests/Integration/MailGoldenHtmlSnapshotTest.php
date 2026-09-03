@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
@@ -314,16 +315,16 @@ final class MailGoldenHtmlSnapshotTest extends IntegrationTestCase
             ],
             contentNewElementsSingle: null,
             globalNewLines: [
-                'Sample Album: 3 photos',
-                'Nested Sub Album: 2 photos',
+                new Html('Sample Album: 3 photos'),
+                new Html('Nested Sub Album: 2 photos'),
             ],
-            customMailContent: 'Fixture custom mail content.',
+            customMailContent: new Html('Fixture custom mail content.'),
             gotoGalleryTitle: 'Fixture Gallery',
             gotoGalleryUrl: $this->rootUrl,
             recentPosts: [
                 [
                     'TITLE' => 'Recent posts of 2026-08-01',
-                    'HTML_DATA' => '<p>Fixture recent-post body.</p>',
+                    'HTML_DATA' => new Html('<p>Fixture recent-post body.</p>'),
                 ],
             ],
         );

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Mail;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Piwigo\Auth\AuthService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Env;
@@ -581,13 +582,23 @@ final class NotificationByMailSender
                                     ];
                                 }
 
-                                $global_new_lines = $nbmSendDetailedContent ? $news : null;
+                                // NotificationService::addNewsLine()'s own hand-built
+                                // '<a href="...">...</a>' fragments -- every piece is
+                                // translated count text or a safe URL, never raw user
+                                // data (P59).
+                                $global_new_lines = $nbmSendDetailedContent ? array_map(static fn (string $line): Html => new Html($line), $news) : null;
 
                                 $nbmUserCustomizeMailContent =
                                   $this->eventDispatcher->dispatch(
                                       new NbmRenderUserCustomizeMailContent($customizeMailContent, $nbmUser)
                                   )->customizeMailContent;
-                                $custom_mail_content = ! in_array($nbmUserCustomizeMailContent, ['0', ''], true) ? $nbmUserCustomizeMailContent : null;
+                                // Admin/webmaster-authored trusted HTML (CurrentConfig::
+                                // $nbmComplementaryMailContent, or the 'send' form's own
+                                // send_customize_mail_content field, webmaster-only per
+                                // NotificationByMailSubController's own action gate) --
+                                // same trust boundary as CurrentConfig::$headerNotes/
+                                // $pageBanner (P59).
+                                $custom_mail_content = ! in_array($nbmUserCustomizeMailContent, ['0', ''], true) ? new Html($nbmUserCustomizeMailContent) : null;
 
                                 $recent_posts = [];
                                 $nbmSendRecentPostDates = $this->currentConfig->nbmSendRecentPostDates;
@@ -608,7 +619,7 @@ final class NotificationByMailSender
                                     foreach ($recentPostDates as $dateDetail) {
                                         $recent_posts[] = [
                                             'TITLE' => $this->notificationService->getTitleRecentPostDate($dateDetail),
-                                            'HTML_DATA' => $this->notificationService->getHtmlDescriptionRecentPostDate($dateDetail, $auth),
+                                            'HTML_DATA' => new Html($this->notificationService->getHtmlDescriptionRecentPostDate($dateDetail, $auth)),
                                         ];
                                     }
                                 }

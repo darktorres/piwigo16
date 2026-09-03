@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Mail\Projection;
 
+use Latte\Runtime\Html;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -43,8 +44,8 @@ final readonly class NotificationByMailView implements View
     /**
      * @param array{DATE_BETWEEN_1: string, DATE_BETWEEN_2: string}|null $contentNewElementsBetween
      * @param array{DATE_SINGLE: string}|null $contentNewElementsSingle
-     * @param array<int, string>|null $globalNewLines
-     * @param list<array{TITLE: string, HTML_DATA: string}> $recentPosts
+     * @param array<int, Html>|null $globalNewLines
+     * @param list<array{TITLE: string, HTML_DATA: Html}> $recentPosts
      */
     public function __construct(
         public string $username,
@@ -59,7 +60,7 @@ final readonly class NotificationByMailView implements View
         public ?array $contentNewElementsBetween,
         public ?array $contentNewElementsSingle,
         public ?array $globalNewLines,
-        public ?string $customMailContent,
+        public ?Html $customMailContent,
         public string $gotoGalleryTitle,
         public string $gotoGalleryUrl,
         public array $recentPosts,

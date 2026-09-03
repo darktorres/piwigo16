@@ -230,7 +230,7 @@ function buildModal(options: JConfirmOptions): void {
   // own default when the caller passes no `alert_content`) becomes a
   // literal `&nbsp;` placeholder in the original (`if(!this.content) this.content
   // = e`), not a collapsed-empty pane -- faithfully matched, not "cleaned up".
-  const content = options.content;
+  const {content} = options;
   if (typeof content === "function") {
     const result = content.call(instance);
     if (isThenable(result)) {

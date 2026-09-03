@@ -1612,7 +1612,7 @@ on(document.querySelectorAll(".AddUserBlock button"), "click", function () {
         };
         cached.data.forEach(function (u) {
           if (u.id === Number(id)) {
-            username = u.username;
+            ({ username } = u);
           }
         });
         const userBlock = getUserDisplay(username, id, grp_id);

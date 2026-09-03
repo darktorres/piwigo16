@@ -217,45 +217,45 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
     percent: 0,
   };
 
-  private readonly settings: UploadQueueOptions<TFileUploadedInfo>;
-  private readonly root: HTMLElement;
-  private readonly listeners = new Map<string, ((...args: unknown[]) => void)[]>();
-  private readonly options = new Map<string, unknown>();
-  private readonly extensionRegex: RegExp;
-  private readonly maxFileSize: number;
-  private listEl!: HTMLUListElement;
-  private totalStatusEl!: HTMLElement;
-  private totalSizeEl!: HTMLElement;
-  private fileInput!: HTMLInputElement;
+  readonly #settings: UploadQueueOptions<TFileUploadedInfo>;
+  readonly #root: HTMLElement;
+  readonly #listeners = new Map<string, ((...args: unknown[]) => void)[]>();
+  readonly #options = new Map<string, unknown>();
+  readonly #extensionRegex: RegExp;
+  readonly #maxFileSize: number;
+  #listEl!: HTMLUListElement;
+  #totalStatusEl!: HTMLElement;
+  #totalSizeEl!: HTMLElement;
+  #fileInput!: HTMLInputElement;
 
   constructor(target: HTMLElement, settings: UploadQueueOptions<TFileUploadedInfo>) {
-    this.root = target;
-    this.settings = settings;
-    this.extensionRegex = buildExtensionRegex(settings.filters.mime_types);
-    this.maxFileSize = parseSize(settings.filters.max_file_size);
+    this.#root = target;
+    this.#settings = settings;
+    this.#extensionRegex = buildExtensionRegex(settings.filters.mime_types);
+    this.#maxFileSize = parseSize(settings.filters.max_file_size);
   }
 
   bind(name: string, fn: (...args: unknown[]) => void): void {
-    const list = this.listeners.get(name) ?? [];
+    const list = this.#listeners.get(name) ?? [];
     list.push(fn);
-    this.listeners.set(name, list);
+    this.#listeners.set(name, list);
   }
 
   trigger(name: string, ...args: unknown[]): void {
-    for (const fn of this.listeners.get(name) ?? []) {
+    for (const fn of this.#listeners.get(name) ?? []) {
       fn(this, ...args);
     }
   }
 
   setOption(key: string, value: unknown): void {
-    this.options.set(key, value);
+    this.#options.set(key, value);
   }
 
   getOption(key?: string): unknown {
     if (key === undefined) {
-      return Object.fromEntries(this.options);
+      return Object.fromEntries(this.#options);
     }
-    return this.options.get(key);
+    return this.#options.get(key);
   }
 
   getFile(id: string): UploadQueueFile | undefined {
@@ -269,10 +269,10 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
       return;
     }
     const [removed] = this.files.splice(index, 1);
-    this.recomputeTotals();
+    this.#recomputeTotals();
     this.trigger("QueueChanged");
     this.trigger("FilesRemoved", [removed]);
-    this.renderFileList();
+    this.#renderFileList();
   }
 
   /**
@@ -301,14 +301,14 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
       }
     });
 
-    if (this.settings.preinit?.Init) {
+    if (this.#settings.preinit?.Init) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- bind()'s own real plupload-emulation signature is generic (`...args: unknown[]`); a real preinit.Init callback is always called with this real, narrower arg shape.
-      this.bind("Init", this.settings.preinit.Init as (...args: unknown[]) => void);
+      this.bind("Init", this.#settings.preinit.Init as (...args: unknown[]) => void);
     }
 
-    this.renderShell();
+    this.#renderShell();
 
-    const init = this.settings.init ?? {};
+    const init = this.#settings.init ?? {};
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Object.keys() always returns string[] even for a typed object (a real, well-known TS limitation); every real key of `init` is genuinely one of its own declared property names.
     for (const name of Object.keys(init) as (keyof typeof init)[]) {
       const fn = init[name];
@@ -319,28 +319,28 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
     }
 
     this.bind("FilesAdded", () => {
-      this.renderFileList();
+      this.#renderFileList();
     });
     this.bind("FilesRemoved", () => {
-      this.renderFileList();
+      this.#renderFileList();
     });
     this.bind("FileUploaded", (...args) => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- bind()/trigger()'s own real plupload-emulation signature is generic (`...args: unknown[]`); "FileUploaded" always carries this real payload shape at args[1].
-      UploadQueue.markFileStatus(args[1] as UploadQueueFile);
+      UploadQueue.#markFileStatus(args[1] as UploadQueueFile);
     });
     this.bind("UploadProgress", (...args) => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- bind()/trigger()'s own real plupload-emulation signature is generic (`...args: unknown[]`); "UploadProgress" always carries this real payload shape at args[1].
       const file = args[1] as UploadQueueFile;
-      UploadQueue.updatePerFileProgress(file);
-      UploadQueue.markFileStatus(file);
-      this.updateTotalProgressText();
+      UploadQueue.#updatePerFileProgress(file);
+      UploadQueue.#markFileStatus(file);
+      this.#updateTotalProgressText();
     });
 
     this.trigger("Init", { runtime: "html5" });
     this.trigger("PostInit");
   }
 
-  private recomputeTotals(): void {
+  #recomputeTotals(): void {
     let size = 0;
     let loaded = 0;
     let uploaded = 0;
@@ -370,17 +370,17 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
           : 0;
   }
 
-  private renderShell(): void {
+  #renderShell(): void {
     // eslint-disable-next-line @typescript-eslint/no-this-alias -- needs to stay reachable inside the delegated rename-click handler below, whose own `this` is rebound to the matched element by dom.ts's own delegate().
     const uploader = this;
-    this.root.textContent = "";
+    this.#root.textContent = "";
 
     const wrapper = document.createElement("div");
     wrapper.className = "plupload_wrapper plupload_scroll";
 
     const container = document.createElement("div");
     container.className = "plupload_container";
-    container.id = (this.root.id || "uploader") + "_container";
+    container.id = (this.#root.id || "uploader") + "_container";
 
     const inner = document.createElement("div");
     inner.className = "plupload";
@@ -388,9 +388,9 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
     const content = document.createElement("div");
     content.className = "plupload_content";
 
-    this.listEl = document.createElement("ul");
-    this.listEl.className = "plupload_filelist";
-    this.listEl.id = (this.root.id || "uploader") + "_filelist";
+    this.#listEl = document.createElement("ul");
+    this.#listEl.className = "plupload_filelist";
+    this.#listEl.id = (this.#root.id || "uploader") + "_filelist";
 
     const footer = document.createElement("div");
     footer.className = "plupload_filelist_footer";
@@ -400,65 +400,65 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
     footerName.className = "plupload_file_name";
     const footerStatus = document.createElement("div");
     footerStatus.className = "plupload_file_status";
-    this.totalStatusEl = document.createElement("span");
-    this.totalStatusEl.className = "plupload_total_status";
-    this.totalStatusEl.textContent = "0%";
-    footerStatus.append(this.totalStatusEl);
+    this.#totalStatusEl = document.createElement("span");
+    this.#totalStatusEl.className = "plupload_total_status";
+    this.#totalStatusEl.textContent = "0%";
+    footerStatus.append(this.#totalStatusEl);
     const footerSize = document.createElement("div");
     footerSize.className = "plupload_file_size";
-    this.totalSizeEl = document.createElement("span");
-    this.totalSizeEl.className = "plupload_total_file_size";
-    this.totalSizeEl.textContent = "0 b";
-    footerSize.append(this.totalSizeEl);
+    this.#totalSizeEl = document.createElement("span");
+    this.#totalSizeEl.className = "plupload_total_file_size";
+    this.#totalSizeEl.textContent = "0 b";
+    footerSize.append(this.#totalSizeEl);
     const footerClearer = document.createElement("div");
     footerClearer.className = "plupload_clearer";
     footer.append(footerName, footerStatus, footerSize, footerClearer);
 
-    content.append(this.listEl, footer);
+    content.append(this.#listEl, footer);
     inner.append(content);
     container.append(inner);
     wrapper.append(container);
-    this.root.append(wrapper);
+    this.#root.append(wrapper);
 
-    this.fileInput = document.createElement("input");
-    this.fileInput.type = "file";
-    this.fileInput.multiple = true;
-    this.fileInput.style.display = "none";
-    wrapper.append(this.fileInput);
+    this.#fileInput = document.createElement("input");
+    this.#fileInput.type = "file";
+    this.#fileInput.multiple = true;
+    this.#fileInput.style.display = "none";
+    wrapper.append(this.#fileInput);
 
-    const browseButton = document.getElementById(this.settings.browse_button);
+    const browseButton = document.getElementById(this.#settings.browse_button);
     browseButton?.addEventListener("click", (event) => {
       event.preventDefault();
-      this.fileInput.click();
+      this.#fileInput.click();
     });
-    this.fileInput.addEventListener("change", () => {
-      if (this.fileInput.files) {
-        this.addFiles(this.fileInput.files);
+    this.#fileInput.addEventListener("change", () => {
+      if (this.#fileInput.files) {
+        this.#addFiles(this.#fileInput.files);
       }
-      this.fileInput.value = "";
+      this.#fileInput.value = "";
     });
 
-    if (this.settings.dragdrop) {
-      this.listEl.addEventListener("dragenter", (event) => {
+    if (this.#settings.dragdrop) {
+      this.#listEl.addEventListener("dragenter", (event) => {
         event.preventDefault();
       });
-      this.listEl.addEventListener("dragover", (event) => {
+      this.#listEl.addEventListener("dragover", (event) => {
         event.preventDefault();
       });
-      this.listEl.addEventListener("drop", (event) => {
+      this.#listEl.addEventListener("drop", (event) => {
         event.preventDefault();
         if (event.dataTransfer) {
-          this.addFiles(event.dataTransfer.files);
+          this.#addFiles(event.dataTransfer.files);
         }
       });
     }
 
-    if (this.settings.rename) {
+    if (this.#settings.rename) {
       // Real source binds this delegated (`target.on('click', selector,
       // ...)`), not per-row -- survives the file list being wiped and
       // rebuilt on every add/remove.
       delegate(
-        this.root,
+        this.#root,
         "click",
         ".plupload_filelist .plupload_file_name span",
         function (this: HTMLElement): void {
@@ -467,10 +467,10 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
       );
     }
 
-    this.renderFileList();
+    this.#renderFileList();
   }
 
-  private addFiles(fileList: FileList): void {
+  #addFiles(fileList: FileList): void {
     const accepted: UploadQueueFile[] = [];
     for (const native of Array.from(fileList)) {
       const wrapped: UploadQueueFile = {
@@ -484,7 +484,7 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
         getNative: () => native,
       };
 
-      if (!this.extensionRegex.test(native.name)) {
+      if (!this.#extensionRegex.test(native.name)) {
         this.trigger("Error", {
           code: FILE_EXTENSION_ERROR,
           message: "File extension error.",
@@ -492,7 +492,7 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
         });
         continue;
       }
-      if (this.maxFileSize > 0 && native.size > this.maxFileSize) {
+      if (this.#maxFileSize > 0 && native.size > this.#maxFileSize) {
         this.trigger("Error", {
           code: FILE_SIZE_ERROR,
           message: "File size error.",
@@ -505,15 +505,15 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
 
     if (accepted.length > 0) {
       this.files.push(...accepted);
-      this.recomputeTotals();
+      this.#recomputeTotals();
       this.trigger("QueueChanged");
       this.trigger("FilesAdded", accepted);
-      this.renderFileList();
+      this.#renderFileList();
     }
   }
 
-  private renderFileList(): void {
-    this.listEl.textContent = "";
+  #renderFileList(): void {
+    this.#listEl.textContent = "";
 
     for (const file of this.files) {
       const li = document.createElement("li");
@@ -543,9 +543,9 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
       clearer.className = "plupload_clearer";
 
       li.append(nameDiv, actionDiv, statusDiv, sizeDiv, clearer);
-      this.listEl.append(li);
+      this.#listEl.append(li);
 
-      UploadQueue.markFileStatus(file);
+      UploadQueue.#markFileStatus(file);
 
       // Real source only ever binds this for a currently-QUEUED row
       // (`$('#'+file.id+'.plupload_delete a')`, a selector that only
@@ -560,15 +560,15 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
       }
     }
 
-    if (this.files.length === 0 && this.settings.dragdrop) {
+    if (this.files.length === 0 && this.#settings.dragdrop) {
       const dropText = document.createElement("li");
       dropText.className = "plupload_droptext";
       dropText.textContent = "Drag files here.";
-      this.listEl.append(dropText);
+      this.#listEl.append(dropText);
     }
   }
 
-  private static markFileStatus(file: UploadQueueFile): void {
+  static #markFileStatus(file: UploadQueueFile): void {
     const li = document.getElementById(file.id);
     if (li === null) {
       return;
@@ -591,7 +591,7 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
     }
   }
 
-  private static updatePerFileProgress(file: UploadQueueFile): void {
+  static #updatePerFileProgress(file: UploadQueueFile): void {
     const li = document.getElementById(file.id);
     const statusDiv = li?.querySelector(".plupload_file_status");
     if (statusDiv) {
@@ -599,9 +599,9 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
     }
   }
 
-  private updateTotalProgressText(): void {
-    this.totalStatusEl.textContent = String(this.total.percent) + "%";
-    this.totalSizeEl.textContent = formatSize(this.total.size);
+  #updateTotalProgressText(): void {
+    this.#totalStatusEl.textContent = String(this.total.percent) + "%";
+    this.#totalSizeEl.textContent = formatSize(this.total.size);
   }
 }
 

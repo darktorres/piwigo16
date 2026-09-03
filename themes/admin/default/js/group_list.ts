@@ -23,6 +23,8 @@ import {
   css,
   cssValue,
   data,
+  dataId,
+  escapeId,
   fadeIn,
   fadeOut,
   find,
@@ -43,6 +45,7 @@ import {
   toggle,
   trigger,
   val,
+  valId,
 } from "../../../default/js/vendor/dom";
 
 // `UserEntity`/`EntityCacheInstance<T>` are LocalStorageCache.ts's own
@@ -60,7 +63,7 @@ type GroupUserListResponse =
 // after a successful add-user call (before any refetch) -- only `id`/
 // `username` are ever read from either shape throughout this file.
 interface GroupMemberDisplay {
-  id: string | number;
+  id: number;
   username: string;
 }
 interface UserSelectOption extends Record<string, unknown> {
@@ -340,12 +343,20 @@ function createGroup(group: Group): Element {
  -------*/
 ready(function () {
   document.querySelectorAll(".GroupContainer").forEach((groupBox) => {
-    if (attrOf(groupBox, "id") !== "group-template") setupGroupBox(groupBox);
+    // Real, pre-existing bug found while adding dataId()'s own assertion
+    // (P51-D): `.GroupContainer` also matches `#group-template` (its own
+    // `data-id="template"`, a non-numeric placeholder -- group_list.latte's
+    // own `{include groupContent, grp_id: "template", ...}`) and
+    // `#addGroupForm` (no `data-id` at all -- it only shares the class for
+    // layout). Both used to silently reach `setupGroupBox()` with `id`
+    // ending up `undefined`, since nothing here ever checked; `typeof ===
+    // "number"` is the real, robust exclusion (every genuine group row's
+    // `data-id` is a real database row id), not a magic-string id match.
+    if (typeof data(groupBox, "id") === "number") setupGroupBox(groupBox);
   });
 });
 function setupGroupBox(groupBox: Element) {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-  const id = data(groupBox, "id") as string | number;
+  const id = dataId(groupBox, "id");
 
   /* Change background color of group block if checked in selection mode */
   on(
@@ -452,8 +463,10 @@ function setupGroupBox(groupBox: Element) {
   });
 }
 
-function toogleSelection(group_id: string | number, toggleOn: boolean) {
-  const groupBox = document.querySelectorAll("#group-" + String(group_id));
+function toogleSelection(group_id: number, toggleOn: boolean) {
+  const groupBox = document.querySelectorAll(
+    "#" + escapeId("group-" + String(group_id)),
+  );
   if (toggleOn) {
     setChecked(find(groupBox, ".Group-checkbox input"), true);
     addClass(groupBox, "GroupBackgroudSelected");
@@ -504,12 +517,14 @@ function toogleSelection(group_id: string | number, toggleOn: boolean) {
 }
 
 /* Group Ajax and Display Functions */
-function deleteGroup(id: string | number) {
+function deleteGroup(id: number) {
   confirm({
     title: str_delete.replace(
       "%s",
       htmlOf(
-        document.querySelectorAll("#group-" + String(id) + " #group_name"),
+        document.querySelectorAll(
+          "#" + escapeId("group-" + String(id)) + " #group_name",
+        ),
       )!,
     ),
     titleClass: "jconfirmDeleteConfirm",
@@ -523,7 +538,9 @@ function deleteGroup(id: string | number) {
         action: function () {
           const groupName = htmlOf(
             document.querySelectorAll(
-              "#group-" + String(id) + " .Group-name-container p",
+              "#" +
+                escapeId("group-" + String(id)) +
+                " .Group-name-container p",
             ),
           )!;
           alert({
@@ -541,7 +558,9 @@ function deleteGroup(id: string | number) {
                   success: function (
                     _data: operations["groupDelete"]["responses"][200]["content"]["application/json"],
                   ) {
-                    document.querySelector("#group-" + String(id))?.remove();
+                    document
+                      .querySelector("#" + escapeId("group-" + String(id)))
+                      ?.remove();
                     document
                       .querySelector(
                         '.DeleteGroupList div[data-id="' + String(id) + '"]',
@@ -573,25 +592,24 @@ function deleteGroup(id: string | number) {
   });
 }
 
-async function renameGroup(
-  id: string | number,
-  newName: string,
-): Promise<void> {
+async function renameGroup(id: number, newName: string): Promise<void> {
   const loadState = new TemporaryState();
   loadState.changeHTML(
     document.querySelectorAll(
-      "#group-" + String(id) + " .group-rename .validate",
+      "#" + escapeId("group-" + String(id)) + " .group-rename .validate",
     ),
     "<i class='animate-spin icon-spin6'></i>",
   );
   loadState.removeClass(
     document.querySelectorAll(
-      "#group-" + String(id) + " .group-rename .validate",
+      "#" + escapeId("group-" + String(id)) + " .group-rename .validate",
     ),
     "icon-ok",
   );
   loadState.changeAttribute(
-    document.querySelectorAll("#group-" + String(id) + " .group-rename span"),
+    document.querySelectorAll(
+      "#" + escapeId("group-" + String(id)) + " .group-rename span",
+    ),
     "style",
     "pointer-events: none",
   );
@@ -615,13 +633,13 @@ async function renameGroup(
       //Display message
       html(
         find(
-          document.querySelectorAll("#group-" + String(id)),
+          document.querySelectorAll("#" + escapeId("group-" + String(id))),
           ".groupMessage",
         ),
         str_renaming_done,
       );
       const groupMessage = find(
-        document.querySelectorAll("#group-" + String(id)),
+        document.querySelectorAll("#" + escapeId("group-" + String(id))),
         ".groupMessage",
       );
       fadeIn(groupMessage);
@@ -629,7 +647,10 @@ async function renameGroup(
         fadeOut(groupMessage);
       }, DELAY_FEEDBACK);
       html(
-        find(document.querySelectorAll("#group-" + String(id)), "#group_name"),
+        find(
+          document.querySelectorAll("#" + escapeId("group-" + String(id))),
+          "#group_name",
+        ),
         confirmedName,
       );
 
@@ -639,11 +660,14 @@ async function renameGroup(
       loadState.reverse();
       //Display error message
       html(
-        find(document.querySelectorAll("#group-" + String(id)), ".groupError"),
+        find(
+          document.querySelectorAll("#" + escapeId("group-" + String(id))),
+          ".groupError",
+        ),
         str_name_taken,
       );
       const groupError = find(
-        document.querySelectorAll("#group-" + String(id)),
+        document.querySelectorAll("#" + escapeId("group-" + String(id))),
         ".groupError",
       );
       fadeIn(groupError);
@@ -654,11 +678,14 @@ async function renameGroup(
   } else {
     loadState.reverse();
     html(
-      find(document.querySelectorAll("#group-" + String(id)), ".groupError"),
+      find(
+        document.querySelectorAll("#" + escapeId("group-" + String(id))),
+        ".groupError",
+      ),
       str_name_not_empty,
     );
     const groupError = find(
-      document.querySelectorAll("#group-" + String(id)),
+      document.querySelectorAll("#" + escapeId("group-" + String(id))),
       ".groupError",
     );
     fadeIn(groupError);
@@ -669,11 +696,11 @@ async function renameGroup(
 }
 
 // Hide or display rename form
-function displayRenameForm(doDisplay: boolean, grp_id: string | number) {
+function displayRenameForm(doDisplay: boolean, grp_id: number) {
   if (doDisplay) {
     css(
       find(
-        document.querySelectorAll("#group-" + String(grp_id)),
+        document.querySelectorAll("#" + escapeId("group-" + String(grp_id))),
         ".group-rename",
       ),
       "display",
@@ -681,13 +708,13 @@ function displayRenameForm(doDisplay: boolean, grp_id: string | number) {
     );
     hide(
       find(
-        document.querySelectorAll("#group-" + String(grp_id)),
+        document.querySelectorAll("#" + escapeId("group-" + String(grp_id))),
         ".Group-name-container .icon-pencil",
       ),
     );
     css(
       find(
-        document.querySelectorAll("#group-" + String(grp_id)),
+        document.querySelectorAll("#" + escapeId("group-" + String(grp_id))),
         ".Group-name-container p",
       ),
       "opacity",
@@ -696,20 +723,20 @@ function displayRenameForm(doDisplay: boolean, grp_id: string | number) {
   } else {
     hide(
       find(
-        document.querySelectorAll("#group-" + String(grp_id)),
+        document.querySelectorAll("#" + escapeId("group-" + String(grp_id))),
         ".group-rename",
       ),
     );
     removeAttr(
       find(
-        document.querySelectorAll("#group-" + String(grp_id)),
+        document.querySelectorAll("#" + escapeId("group-" + String(grp_id))),
         ".Group-name-container .icon-pencil",
       ),
       "style",
     );
     css(
       find(
-        document.querySelectorAll("#group-" + String(grp_id)),
+        document.querySelectorAll("#" + escapeId("group-" + String(grp_id))),
         ".Group-name-container p",
       ),
       "opacity",
@@ -719,11 +746,11 @@ function displayRenameForm(doDisplay: boolean, grp_id: string | number) {
 }
 
 const setDefaultGroup = async function (
-  id: string | number,
+  id: number,
   is_default: boolean,
 ): Promise<void> {
   const groupDefault = document.querySelectorAll(
-    "#group-" + String(id) + " #GroupDefault",
+    "#" + escapeId("group-" + String(id)) + " #GroupDefault",
   );
   css(
     groupDefault,
@@ -736,21 +763,21 @@ const setDefaultGroup = async function (
   attr(groupDefault, "style", "pointer-events: none; text-align: center;");
   addClass(
     find(
-      document.querySelectorAll("#group-" + String(id)),
+      document.querySelectorAll("#" + escapeId("group-" + String(id))),
       ".is-default-token",
     ),
     "icon-spin6",
   );
   addClass(
     find(
-      document.querySelectorAll("#group-" + String(id)),
+      document.querySelectorAll("#" + escapeId("group-" + String(id))),
       ".is-default-token",
     ),
     "animate-spin",
   );
   removeClass(
     find(
-      document.querySelectorAll("#group-" + String(id)),
+      document.querySelectorAll("#" + escapeId("group-" + String(id))),
       ".is-default-token",
     ),
     "icon-star",
@@ -767,7 +794,11 @@ const setDefaultGroup = async function (
       },
       dataType: "json",
     });
-    hide(document.querySelectorAll("#group-" + String(id) + " #GroupOptions"));
+    hide(
+      document.querySelectorAll(
+        "#" + escapeId("group-" + String(id)) + " #GroupOptions",
+      ),
+    );
     if (is_default) {
       setupDefaultActions(id, true);
     } else {
@@ -778,18 +809,22 @@ const setDefaultGroup = async function (
   }
 };
 
-function setupDefaultActions(id: string | number, is_default: boolean) {
+function setupDefaultActions(id: number, is_default: boolean) {
   attr(
-    document.querySelectorAll("#group-" + String(id) + " #GroupDefault"),
+    document.querySelectorAll(
+      "#" + escapeId("group-" + String(id)) + " #GroupDefault",
+    ),
     "style",
     "",
   );
   addClass(
-    document.querySelectorAll("#group-" + String(id) + " #GroupDefault"),
+    document.querySelectorAll(
+      "#" + escapeId("group-" + String(id)) + " #GroupDefault",
+    ),
     "icon-star",
   );
   const token = find(
-    document.querySelectorAll("#group-" + String(id)),
+    document.querySelectorAll("#" + escapeId("group-" + String(id))),
     ".is-default-token",
   );
   removeClass(token, "icon-spin6");
@@ -797,12 +832,15 @@ function setupDefaultActions(id: string | number, is_default: boolean) {
   addClass(token, "icon-star");
   if (is_default) {
     html(
-      find(document.querySelectorAll("#group-" + String(id)), "#GroupDefault"),
+      find(
+        document.querySelectorAll("#" + escapeId("group-" + String(id))),
+        "#GroupDefault",
+      ),
       str_unset_default,
     );
     attr(
       find(
-        document.querySelectorAll("#group-" + String(id)),
+        document.querySelectorAll("#" + escapeId("group-" + String(id))),
         ".is-default-token",
       ),
       "title",
@@ -813,18 +851,22 @@ function setupDefaultActions(id: string | number, is_default: boolean) {
     // "click")` (no handler argument) matches that, over its own
     // registry of `on()`-added listeners.
     off(
-      document.querySelectorAll("#group-" + String(id) + " #GroupDefault"),
+      document.querySelectorAll(
+        "#" + escapeId("group-" + String(id)) + " #GroupDefault",
+      ),
       "click",
     );
     removeClass(
       find(
-        document.querySelectorAll("#group-" + String(id)),
+        document.querySelectorAll("#" + escapeId("group-" + String(id))),
         ".is-default-token",
       ),
       "deactivate",
     );
     on(
-      document.querySelectorAll("#group-" + String(id) + " #GroupDefault"),
+      document.querySelectorAll(
+        "#" + escapeId("group-" + String(id)) + " #GroupDefault",
+      ),
       "click",
       function () {
         void setDefaultGroup(id, false);
@@ -832,7 +874,7 @@ function setupDefaultActions(id: string | number, is_default: boolean) {
     );
     on(
       find(
-        document.querySelectorAll("#group-" + String(id)),
+        document.querySelectorAll("#" + escapeId("group-" + String(id))),
         ".is-default-token",
       ),
       "click",
@@ -842,12 +884,15 @@ function setupDefaultActions(id: string | number, is_default: boolean) {
     );
   } else {
     html(
-      find(document.querySelectorAll("#group-" + String(id)), "#GroupDefault"),
+      find(
+        document.querySelectorAll("#" + escapeId("group-" + String(id))),
+        "#GroupDefault",
+      ),
       str_set_default,
     );
     attr(
       find(
-        document.querySelectorAll("#group-" + String(id)),
+        document.querySelectorAll("#" + escapeId("group-" + String(id))),
         ".is-default-token",
       ),
       "title",
@@ -855,13 +900,15 @@ function setupDefaultActions(id: string | number, is_default: boolean) {
     );
     addClass(
       find(
-        document.querySelectorAll("#group-" + String(id)),
+        document.querySelectorAll("#" + escapeId("group-" + String(id))),
         ".is-default-token",
       ),
       "deactivate",
     );
     on(
-      document.querySelectorAll("#group-" + String(id) + " #GroupDefault"),
+      document.querySelectorAll(
+        "#" + escapeId("group-" + String(id)) + " #GroupDefault",
+      ),
       "click",
       function () {
         void setDefaultGroup(id, true);
@@ -869,7 +916,7 @@ function setupDefaultActions(id: string | number, is_default: boolean) {
     );
     off(
       find(
-        document.querySelectorAll("#group-" + String(id)),
+        document.querySelectorAll("#" + escapeId("group-" + String(id))),
         ".is-default-token",
       ),
       "click",
@@ -877,24 +924,32 @@ function setupDefaultActions(id: string | number, is_default: boolean) {
   }
 }
 
-async function duplicateAction(id: string | number): Promise<void> {
+async function duplicateAction(id: number): Promise<void> {
   const loadState = new TemporaryState();
   loadState.changeHTML(
-    document.querySelectorAll("#group-" + String(id) + " #GroupDuplicate"),
+    document.querySelectorAll(
+      "#" + escapeId("group-" + String(id)) + " #GroupDuplicate",
+    ),
     "<i class='icon-spin6 animate-spin'> </i>",
   );
   loadState.removeClass(
-    document.querySelectorAll("#group-" + String(id) + " #GroupDuplicate"),
+    document.querySelectorAll(
+      "#" + escapeId("group-" + String(id)) + " #GroupDuplicate",
+    ),
     "icon-docs",
   );
   loadState.changeAttribute(
-    document.querySelectorAll("#group-" + String(id) + " #GroupDuplicate"),
+    document.querySelectorAll(
+      "#" + escapeId("group-" + String(id)) + " #GroupDuplicate",
+    ),
     "style",
     "pointer-events: none; text-align: center;",
   );
   let copy_name =
     (htmlOf(
-      document.querySelectorAll("#group-" + String(id) + " #group_name"),
+      document.querySelectorAll(
+        "#" + escapeId("group-" + String(id)) + " #group_name",
+      ),
     ) ?? "") + str_copy;
 
   const name_exist = function (name: string) {
@@ -909,7 +964,9 @@ async function duplicateAction(id: string | number): Promise<void> {
   while (name_exist(copy_name)) {
     copy_name =
       (htmlOf(
-        document.querySelectorAll("#group-" + String(id) + " #group_name"),
+        document.querySelectorAll(
+          "#" + escapeId("group-" + String(id)) + " #group_name",
+        ),
       ) ?? "") + str_other_copy.replace("%s", String(i++));
   }
 
@@ -927,10 +984,16 @@ async function duplicateAction(id: string | number): Promise<void> {
       dataType: "json",
     })) as operations["groupDuplicate"]["responses"][201]["content"]["application/json"];
     loadState.reverse();
-    hide(document.querySelectorAll("#group-" + String(id) + " #GroupOptions"));
+    hide(
+      document.querySelectorAll(
+        "#" + escapeId("group-" + String(id)) + " #GroupOptions",
+      ),
+    );
     const group = response;
     const groupbox = createGroup(group);
-    document.querySelector("#group-" + String(id))?.after(groupbox);
+    document
+      .querySelector("#" + escapeId("group-" + String(id)))
+      ?.after(groupbox);
     setupGroupBox(groupbox);
     updateBadge();
 
@@ -1090,13 +1153,19 @@ on(document.querySelectorAll(".ConfirmMergeButton"), "click", function () {
     // string, not the original `[]` placeholder, which never matched the
     // value actually assigned or read.
     let name_dest = "";
-    // Single-value <select>, never multi.
-    const dest_grp =
-      val(document.querySelectorAll("#MergeOptionsChoices")) ?? "";
+    // Single-value <select>, never multi. `valId()` returns null only when
+    // nothing is selected, which can't happen here -- the merge button is
+    // only reachable once 2+ groups are already selected, and each one adds
+    // a real <option> to this same <select> (see toogleSelection() above).
+    const dest_grp = valId(document.querySelectorAll("#MergeOptionsChoices"));
+    if (dest_grp === null) {
+      return;
+    }
 
     document.querySelectorAll(".DeleteGroupList div").forEach((el) => {
-      if (dest_grp !== attrOf(el, "data-id")) {
-        merge_group.push(Number(attrOf(el, "data-id")));
+      const elId = Number(attrOf(el, "data-id"));
+      if (dest_grp !== elId) {
+        merge_group.push(elId);
         name_merge.push(htmlOf(find(el, "p"))!);
       } else {
         name_dest = htmlOf(find(el, "p"))!;
@@ -1111,7 +1180,7 @@ on(document.querySelectorAll(".ConfirmMergeButton"), "click", function () {
           "X-CSRF-Token": pwg_token,
         },
         json: {
-          destinationGroupId: Number(dest_grp),
+          destinationGroupId: dest_grp,
           mergeGroupIds: merge_group,
         },
         dataType: "json",
@@ -1119,7 +1188,9 @@ on(document.querySelectorAll(".ConfirmMergeButton"), "click", function () {
       loadState.reverse();
       updateSelectionPanel("Selection");
       merge_group.forEach(function (id: number) {
-        const el = document.querySelectorAll("#group-" + String(id));
+        const el = document.querySelectorAll(
+          "#" + escapeId("group-" + String(id)),
+        );
         fadeOut(el, () => {
           el.forEach((one) => {
             one.remove();
@@ -1142,7 +1213,7 @@ on(document.querySelectorAll(".ConfirmMergeButton"), "click", function () {
 
       html(
         document.querySelectorAll(
-          "#group-" + dest_grp + " .group_number_users",
+          "#" + escapeId("group-" + String(dest_grp)) + " .group_number_users",
         ),
         "<i class='icon-spin6 animate-spin'> </i>",
       );
@@ -1159,7 +1230,9 @@ on(document.querySelectorAll(".ConfirmMergeButton"), "click", function () {
         const number = response.users.length;
         html(
           document.querySelectorAll(
-            "#group-" + dest_grp + " .group_number_users",
+            "#" +
+              escapeId("group-" + String(dest_grp)) +
+              " .group_number_users",
           ),
           String(number) +
             " " +
@@ -1183,11 +1256,15 @@ on(document.querySelectorAll(".ConfirmMergeButton"), "click", function () {
 on(document.querySelectorAll(".ConfirmDeleteButton"), "click", function () {
   void (async () => {
     const names: string[] = [];
-    const ids: (string | number)[] = [];
+    const ids: number[] = [];
     document.querySelectorAll(".DeleteGroupList div").forEach((el) => {
-      const id = attrOf(el, "data-id") ?? "";
+      const id = Number(attrOf(el, "data-id"));
       names.push(
-        htmlOf(document.querySelectorAll("#group-" + id + " #group_name"))!,
+        htmlOf(
+          document.querySelectorAll(
+            "#" + escapeId("group-" + String(id)) + " #group_name",
+          ),
+        )!,
       );
       ids.push(id);
     });
@@ -1211,7 +1288,7 @@ on(document.querySelectorAll(".ConfirmDeleteButton"), "click", function () {
     // per P27's own design) -- fire one DELETE per selected group.
     try {
       await Promise.all(
-        ids.map(async function (id: string | number) {
+        ids.map(async function (id: number) {
           return ajax({
             url: "api/v1/groups/" + String(id),
             type: "DELETE",
@@ -1223,12 +1300,14 @@ on(document.querySelectorAll(".ConfirmDeleteButton"), "click", function () {
         }),
       );
       document.querySelectorAll(".DeleteGroupList div").forEach((el) => {
-        const dataId = attrOf(el, "data-id");
+        const elId = Number(attrOf(el, "data-id"));
         el.remove();
-        document.querySelector("#group-" + String(dataId))?.remove();
+        document
+          .querySelector("#" + escapeId("group-" + String(elId)))
+          ?.remove();
         document
           .querySelector(
-            '#MergeOptionsChoices option[value="' + String(dataId) + '"]',
+            '#MergeOptionsChoices option[value="' + String(elId) + '"]',
           )
           ?.remove();
       });
@@ -1338,26 +1417,31 @@ ready(function () {
       }
     }
     document.querySelectorAll(".UsernameBlock").forEach((el) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      selectize.removeOption(data(el, "id") as string | number);
+      selectize.removeOption(dataId(el, "id"));
     });
   };
 });
 
 // Display the user manager for a specific group
-async function openUserManager(grp_id: string | number): Promise<void> {
+async function openUserManager(grp_id: number): Promise<void> {
   const loadState = new TemporaryState();
   loadState.removeClass(
-    document.querySelectorAll("#group-" + String(grp_id) + " #UserListTrigger"),
+    document.querySelectorAll(
+      "#" + escapeId("group-" + String(grp_id)) + " #UserListTrigger",
+    ),
     "icon-user-1",
   );
   loadState.changeAttribute(
-    document.querySelectorAll("#group-" + String(grp_id) + " #UserListTrigger"),
+    document.querySelectorAll(
+      "#" + escapeId("group-" + String(grp_id)) + " #UserListTrigger",
+    ),
     "style",
     "pointer-events: none",
   );
   loadState.changeHTML(
-    document.querySelectorAll("#group-" + String(grp_id) + " #UserListTrigger"),
+    document.querySelectorAll(
+      "#" + escapeId("group-" + String(grp_id)) + " #UserListTrigger",
+    ),
     "<i class='icon-spin6 animate-spin'> </i>",
   );
   try {
@@ -1375,7 +1459,9 @@ async function openUserManager(grp_id: string | number): Promise<void> {
     html(
       document.querySelectorAll(".group-name-block p"),
       (htmlOf(
-        document.querySelectorAll("#group-" + String(grp_id) + " #group_name"),
+        document.querySelectorAll(
+          "#" + escapeId("group-" + String(grp_id)) + " #group_name",
+        ),
       ) ?? "") +
         " / " +
         str_user_list,
@@ -1434,8 +1520,8 @@ async function openUserManager(grp_id: string | number): Promise<void> {
 //Add a user block
 function getUserDisplay(
   username: string,
-  user_id: string | number,
-  grp_id: string | number,
+  user_id: number,
+  grp_id: number,
 ): Element {
   const userBlock = parseHtml(
     '<div class="UsernameBlock" data-id=' +
@@ -1477,7 +1563,7 @@ function getUserDisplay(
             "X-CSRF-Token": pwg_token,
           },
           json: {
-            userIds: [Number(user_id)],
+            userIds: [user_id],
           },
           dataType: "json",
         });
@@ -1499,7 +1585,7 @@ function getUserDisplay(
           blocks.item(blocks.length - 1)?.remove();
         }
 
-        usersInGroup = usersInGroup.filter((u) => u.id !== Number(user_id));
+        usersInGroup = usersInGroup.filter((u) => u.id !== user_id);
 
         //Update member number
         updateMembernumber(
@@ -1517,7 +1603,7 @@ function getUserDisplay(
 }
 
 //Update member number function
-function updateMembernumber(number: number, grp_id: string | number) {
+function updateMembernumber(number: number, grp_id: number) {
   html(
     document.querySelectorAll(
       '.GroupContainer[data-id="' + String(grp_id) + '"] .group_number_users',
@@ -1545,8 +1631,9 @@ on(document.querySelectorAll(".CloseUserList"), "click", function () {
 // Adding Group Action
 on(document.querySelectorAll(".AddUserBlock button"), "click", function () {
   void (async () => {
-    const grp_id =
-      attrOf(document.querySelectorAll("#UserList"), "data-group_id") ?? "";
+    const grp_id = Number(
+      attrOf(document.querySelectorAll("#UserList"), "data-group_id"),
+    );
     // This instance is created without `multiple: true` (see
     // createSelectize() call above), so its own `getValue(): T | T[]`
     // signature -- shared with the multi-select case -- only ever returns
@@ -1554,7 +1641,15 @@ on(document.querySelectorAll(".AddUserBlock button"), "click", function () {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified above: a non-multiple selectize instance's getValue() never returns an array.
     const id = selectize.getValue() as string | number;
 
+    // `id` stays `string | number` here (not narrowed to `dataId`'s/
+    // `valId`'s plain `number`): a non-multiple selectize instance's own
+    // `getValue()` returns the literal string `""` as its "nothing
+    // selected" sentinel regardless of what `T` claims (`vendor/selectize.ts`'s
+    // own `items[0] ?? ("" as unknown as T)`) -- `String(id) !== ""` is the
+    // real, load-bearing check for that, and must run before `id` can be
+    // trusted as a real numeric option value.
     if (String(id) !== "") {
+      const numericId = Number(id);
       const loadState = new TemporaryState();
       loadState.changeHTML(
         document.querySelectorAll("#UserSubmit"),
@@ -1571,13 +1666,13 @@ on(document.querySelectorAll(".AddUserBlock button"), "click", function () {
       );
       try {
         await ajax({
-          url: "api/v1/groups/" + grp_id + "/actions/add-user",
+          url: "api/v1/groups/" + String(grp_id) + "/actions/add-user",
           type: "POST",
           headers: {
             "X-CSRF-Token": pwg_token,
           },
           json: {
-            userIds: [Number(id)],
+            userIds: [numericId],
           },
           dataType: "json",
         });
@@ -1594,11 +1689,11 @@ on(document.querySelectorAll(".AddUserBlock button"), "click", function () {
           data: UserEntity[];
         };
         cached.data.forEach(function (u) {
-          if (u.id === Number(id)) {
+          if (u.id === numericId) {
             ({ username } = u);
           }
         });
-        const userBlock = getUserDisplay(username, id, grp_id);
+        const userBlock = getUserDisplay(username, numericId, grp_id);
         document.querySelector(".UsersInGroupList")?.prepend(userBlock);
 
         fadeOut(dissociateUserInfo);
@@ -1619,7 +1714,7 @@ on(document.querySelectorAll(".AddUserBlock button"), "click", function () {
 
         updateUserSearch();
 
-        usersInGroup.push({ username: username, id: id });
+        usersInGroup.push({ username: username, id: numericId });
 
         const usersInGroupList =
           document.querySelector<HTMLElement>(".UsersInGroupList")!;
@@ -1648,9 +1743,7 @@ on(document.querySelectorAll(".input-user-name"), "input", function () {
   const searchString = String(
     val(document.querySelectorAll(".input-user-name")),
   ).toLowerCase();
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-  const grp_id = data(document.querySelector(".UserListPopIn")!, "group_id") as
-    string | number;
+  const grp_id = dataId(document.querySelector(".UserListPopIn")!, "group_id");
   const container = document.querySelector(".UsersInGroupListContainer")!;
   const usersInGroupList =
     document.querySelector<HTMLElement>(".UsersInGroupList")!;

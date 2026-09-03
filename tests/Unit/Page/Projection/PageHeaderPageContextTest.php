@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Latte\Runtime\Html;
 use Piwigo\Page\Projection\PageHeaderPageContext;
 
 // The 3 nullable keys are emitted with their null rather than omitted
@@ -12,7 +13,7 @@ use Piwigo\Page\Projection\PageHeaderPageContext;
 test('toArray emits all 13 keys, the 3 nullable ones as null', function (): void {
     $context = new PageHeaderPageContext(
         galleryTitle: 'My Gallery',
-        pageBanner: 'My Gallery',
+        pageBanner: new Html('My Gallery'),
         bodyId: 'theBody',
         contentEncoding: 'utf-8',
         pageTitle: 'Photos',
@@ -27,9 +28,9 @@ test('toArray emits all 13 keys, the 3 nullable ones as null', function (): void
     );
 
     expect($context->toArray())
-        ->toBe([
+        ->toEqual([
             'GALLERY_TITLE' => 'My Gallery',
-            'PAGE_BANNER' => 'My Gallery',
+            'PAGE_BANNER' => new Html('My Gallery'),
             'BODY_ID' => 'theBody',
             'CONTENT_ENCODING' => 'utf-8',
             'PAGE_TITLE' => 'Photos',
@@ -47,7 +48,7 @@ test('toArray emits all 13 keys, the 3 nullable ones as null', function (): void
 test('toArray includes header_notes/meta_ref/page_refresh when set', function (): void {
     $context = new PageHeaderPageContext(
         galleryTitle: 'My Gallery',
-        pageBanner: 'My Gallery',
+        pageBanner: new Html('My Gallery'),
         bodyId: '',
         contentEncoding: 'utf-8',
         pageTitle: 'Photos',
@@ -61,7 +62,7 @@ test('toArray includes header_notes/meta_ref/page_refresh when set', function ()
             'TIME' => '5',
             'U_REFRESH' => 'https://example.test/next',
         ],
-        headElements: ['<meta name="robots" content="noindex,nofollow">'],
+        headElements: [new Html('<meta name="robots" content="noindex,nofollow">')],
     );
 
     $result = $context->toArray();
@@ -72,5 +73,5 @@ test('toArray includes header_notes/meta_ref/page_refresh when set', function ()
             'TIME' => '5',
             'U_REFRESH' => 'https://example.test/next',
         ])
-        ->and($result['head_elements'])->toBe(['<meta name="robots" content="noindex,nofollow">']);
+        ->and($result['head_elements'])->toEqual([new Html('<meta name="robots" content="noindex,nofollow">')]);
 });

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Page;
 
+use Latte\Runtime\Html;
 use LogicException;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AdminContext;
@@ -96,9 +97,11 @@ final class PageHeaderRenderer
 
         $head_elements = [];
         if (! self::emptyValue($layoutState->metaRobots)) {
-            $head_elements[] = '<meta name="robots" content="'
+            // Keys are always literal strings ('noindex'/'nofollow', set by
+            // setMetaRobotsFlag()/setMetaRobots()), never user data.
+            $head_elements[] = new Html('<meta name="robots" content="'
                   . implode(',', array_keys($layoutState->metaRobots))
-                  . '">';
+                  . '">');
         }
         $metaRef = isset($layoutState->metaRobots['noindex']) ? null : 1;
 
@@ -115,13 +118,18 @@ final class PageHeaderRenderer
 
         $template->assignContext(new PageHeaderPageContext(
             galleryTitle: $conf_gallery_title,
-            pageBanner: $eventDispatcher->dispatch(new RenderPageBanner(
+            // $page_banner (LayoutState::$pageBanner ?? CurrentConfig::$pageBanner)
+            // and RenderPageBanner's own plugin-modifiable ->banner are both
+            // trusted, admin/plugin-authored HTML by design (the legacy
+            // "custom gallery banner" config feature), same trust boundary as
+            // CurrentConfig::$headerNotes (P59).
+            pageBanner: new Html($eventDispatcher->dispatch(new RenderPageBanner(
                 str_replace(
                     '%gallery_title%',
                     $conf_gallery_title,
                     $page_banner
                 )
-            ))->banner,
+            ))->banner),
             bodyId: $layoutState->bodyId,
             contentEncoding: 'utf-8',
             pageTitle: strip_tags($title),

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Page\Projection;
 
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Core\TemplatePageContext;
 
@@ -32,11 +33,11 @@ final readonly class PageHeaderPageContext implements TemplatePageContext
      * @param list<string> $bodyClasses
      * @param list<string>|null $headerNotes
      * @param array{TIME: string, U_REFRESH: string}|null $pageRefresh
-     * @param list<string> $headElements
+     * @param list<Html> $headElements
      */
     public function __construct(
         public string $galleryTitle,
-        public string $pageBanner,
+        public Html $pageBanner,
         public string $bodyId,
         public string $contentEncoding,
         public string $pageTitle,

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Page;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Piwigo\Asset\ViteManifest;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Config\CurrentConfig;
@@ -79,7 +80,7 @@ final readonly class PageTailRenderer
 
         $this->telemetrySender->send();
 
-        $queries_list = $this->currentConfig->showQueries ? $this->requestMetrics->debugOutput : null;
+        $queries_list = $this->currentConfig->showQueries ? new Html($this->requestMetrics->debugOutput) : null;
 
         $time = null;
         $count_queries = null;

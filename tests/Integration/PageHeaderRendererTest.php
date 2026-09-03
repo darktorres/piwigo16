@@ -12,6 +12,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\Page\Projection\DebugInfo;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\AdHocPageContext;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
@@ -141,6 +142,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
             // undefined-variable warning; real values are irrelevant.
             'APP_URL' => 'https://example.invalid',
             'VERSION' => '0',
+            'debug' => new DebugInfo(),
         ]));
 
         return $template->finalizeHtml($template->parse('page-header-test.latte'));

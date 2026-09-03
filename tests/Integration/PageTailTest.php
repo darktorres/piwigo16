@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Latte\Runtime\Html;
 use LogicException;
 use Override;
 use Piwigo\Bootstrap\PageTail;
@@ -165,12 +166,12 @@ final class PageTailTest extends IntegrationTestCase
                 'layoutPath' => dirname(__DIR__, 2) . '/themes/default/template/layout.latte',
                 // layout.latte's own header section (never this test's
                 // own concern) still renders as part of the full page --
-                // every required (not conditionally-assigned, see
-                // PageHeaderPageContext's own docblock) key
-                // PageHeaderRenderer::render() would normally assign,
-                // real values irrelevant.
+                // every key PageHeaderRenderer::render() would normally
+                // assign, real values irrelevant, including the 3 that
+                // are nullable but always present (PageHeaderPageContext's
+                // own docblock, P58-B2).
                 'GALLERY_TITLE' => 'Test Gallery',
-                'PAGE_BANNER' => '',
+                'PAGE_BANNER' => new Html(''),
                 'BODY_ID' => 'the_page',
                 'CONTENT_ENCODING' => 'utf-8',
                 'PAGE_TITLE' => 'Test',
@@ -179,6 +180,9 @@ final class PageTailTest extends IntegrationTestCase
                 'SHOW_MOBILE_APP_BANNER' => false,
                 'BODY_CLASSES' => [],
                 'head_elements' => [],
+                'header_notes' => null,
+                'meta_ref' => null,
+                'page_refresh' => null,
             ]));
             $output = $template->finalizeHtml($template->parse('page-tail-test.latte'));
             unlink($tplDir . 'page-tail-test.latte');

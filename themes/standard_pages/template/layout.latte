@@ -29,7 +29,7 @@
 {varType int $NB_ORPHANS}
 {varType int|null $NB_PENDING_COMMENTS}
 {varType int $NB_PHOTOS_IN_CADDIE}
-{varType string $PAGE_BANNER}
+{varType \Latte\Runtime\Html $PAGE_BANNER}
 {varType string $PAGE_TITLE}
 {varType array<array-key, mixed> $PLUGIN_INDEX_BUTTONS}
 {varType array<array-key, mixed> $PLUGIN_PICTURE_BUTTONS}
@@ -99,7 +99,7 @@
 {varType int $conf_checksum_compute_blocksize}
 {varType \Piwigo\Page\Projection\DebugInfo $debug}
 {varType \Piwigo\Admin\BatchManager\Projection\DimensionFilterOptions $dimensions}
-{varType array<array-key, string>|null $errors}
+{varType array<array-key, \Latte\Runtime\Html>|null $errors}
 {varType array{U_FAVORITE: string} $favorite}
 {varType \Piwigo\Admin\BatchManager\Projection\FilesizeFilterOptions $filesize}
 {varType \Piwigo\Admin\BatchManager\Projection\BulkManagerFilter $filter}
@@ -110,26 +110,26 @@
 {varType string|null $filter_search_query}
 {varType array<int, array{name: mixed, id: string}> $filter_tags}
 {varType \Piwigo\Controller\Projection\PictureNavEntry|null $first}
-{varType list<string> $footer_elements}
-{varType list<string> $head_elements}
+{varType list<\Latte\Runtime\Html> $footer_elements}
+{varType list<\Latte\Runtime\Html> $head_elements}
 {varType list<string> $header_msgs}
 {varType list<string>|null $header_notes}
-{varType array<array-key, string>|null $infos}
+{varType list<\Latte\Runtime\Html>|null $infos}
 {varType array<string, mixed> $lang_info}
 {varType \Piwigo\Controller\Projection\PictureNavEntry|null $last}
-{varType array<array-key, string>|null $messages}
+{varType list<\Latte\Runtime\Html>|null $messages}
 {varType int|null $meta_ref}
 {varType \Piwigo\Controller\Projection\PictureNavEntry|null $next}
 {varType list<string> $no_search_results}
 {varType array{TIME: string, U_REFRESH: string}|null $page_refresh}
-{varType list<array<mixed>> $prefilters}
+{varType list<\Piwigo\Admin\BatchManager\Projection\BatchManagerPrefilter> $prefilters}
 {varType \Piwigo\Controller\Projection\PictureNavEntry|null $previous}
 {varType \Piwigo\Template\TemplateAdapter $pwg}
 {varType list<array<string, mixed>>|null $related_tags}
 {varType array<mixed> $selection}
 {varType array<string, mixed> $themeconf}
 {varType list<\Piwigo\Template\ThemeChainEntry> $themes}
-{varType array<array-key, string>|null $warnings}
+{varType list<\Latte\Runtime\Html>|null $warnings}
 {* END varType *}
 {*
   P41 (docs/PLAN.md) shell layout -- merges header.latte + footer.latte's

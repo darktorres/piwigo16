@@ -178,6 +178,7 @@ export interface AjaxThenable extends Promise<unknown> {
   abort(): void;
 }
 
+// eslint-disable-next-line @typescript-eslint/promise-function-async -- must return this exact `promise` object (now carrying done()/fail()/always()/abort()), not a value; wrapping in `async` would re-resolve it through `Promise.resolve()` and strip those extra properties, breaking jconfirm.ts's own `isThenable()` check and 10 real `.done()`/`.fail()` call sites.
 function decorate(promise: Promise<unknown>, abort: () => void): AjaxThenable {
   // jQuery's jqXHR is not a native promise, so a failing request never
   // produced an unhandled-rejection event. This one would, on every request
@@ -191,11 +192,13 @@ function decorate(promise: Promise<unknown>, abort: () => void): AjaxThenable {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- AjaxThenable's own extra done()/fail()/always()/abort() methods are assigned onto this same promise object immediately below, a real boundary between "plain Promise" and "decorated with those methods".
   const thenable = promise as AjaxThenable;
 
+  // eslint-disable-next-line @typescript-eslint/promise-function-async -- returns `thenable` itself for chaining, not a value to await; `async` would re-wrap it through `Promise.resolve()` and drop the very done()/fail()/always()/abort() methods this method exists to expose.
   thenable.done = (handler) => {
     void promise.then(handler, () => undefined);
 
     return thenable;
   };
+  // eslint-disable-next-line @typescript-eslint/promise-function-async -- see thenable.done above.
   thenable.fail = (handler) => {
     void promise.catch((reason: unknown) => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- this same promise only ever rejects with a real AjaxError, constructed at this file's own 2 real rejection sites.
@@ -204,6 +207,7 @@ function decorate(promise: Promise<unknown>, abort: () => void): AjaxThenable {
 
     return thenable;
   };
+  // eslint-disable-next-line @typescript-eslint/promise-function-async -- see thenable.done above.
   thenable.always = (handler) => {
     void promise.then(
       () => {
@@ -222,6 +226,7 @@ function decorate(promise: Promise<unknown>, abort: () => void): AjaxThenable {
 }
 
 /** `$.ajax(options)`. */
+// eslint-disable-next-line @typescript-eslint/promise-function-async -- returns `decorate(pending, ...)` directly, the same real AjaxThenable object carrying done()/fail()/always()/abort(); `async` would re-wrap it through `Promise.resolve()` and lose them.
 export function ajax<T = unknown>(options: AjaxOptions<T>): AjaxThenable {
   const method = (options.method ?? options.type ?? "GET").toUpperCase();
   const dataType = options.dataType?.toLowerCase();

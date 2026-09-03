@@ -2532,7 +2532,20 @@ it('sizes tab: renders age labels for existing custom derivatives without error'
 // above check what lands in the config row; this one checks what the admin
 // actually experiences, which is the half that was broken.
 it('keeps a ticked display checkbox ticked after saving and reloading', function (): void {
-    $snapshot = H::snapshotConfig(['display_fromto', 'index_flat_icon', 'nb_categories_page', 'picture_informations']);
+    // Submitting the display tab defaults every unmentioned checkbox in
+    // this section to false (that's the very behavior 'untouched' below
+    // asserts on), so -- same rule as every other display-tab-saving test
+    // in this file -- the snapshot must cover the WHOLE
+    // ctDisplayCheckboxes() list, not just the fields this test itself
+    // sets. A narrower snapshot silently leaves every other display
+    // checkbox (index_sort_order_input, picture_sizes_icon,
+    // picture_navigation_icons, ...) stuck at false for the rest of the
+    // Browser suite run once restoreConfig() only restores what it
+    // snapshotted.
+    $snapshot = H::snapshotConfig(array_merge(
+        ['nb_categories_page', 'picture_informations'],
+        ctDisplayCheckboxes()
+    ));
 
     try {
         $page = H::asAdmin($this);

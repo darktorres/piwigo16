@@ -43,23 +43,23 @@
     {var $author = null}
     {if $theme->author !== ''}
       {if $theme->authorUrl !== null}
-        {var $author = ("<a href='%s'>%s</a>"|sprintf:$theme->authorUrl,$theme->author)}
+        {var $author = ("<a href='%s'>%s</a>"|sprintf:($theme->authorUrl|htmlspecialchars),($theme->author|htmlspecialchars))}
       {else}
-        {var $author = ('<u>' . $theme->author . '</u>')}
+        {var $author = ('<u>' . ($theme->author|htmlspecialchars) . '</u>')}
       {/if}
     {/if}
     {if $theme->visitUrl !== ''}
-      {var $version = ("<a class='externalLink' href='" . $theme->visitUrl . "'>" . $theme->version . "</a>")}
+      {var $version = ("<a class='externalLink' href='" . ($theme->visitUrl|htmlspecialchars) . "'>" . ($theme->version|htmlspecialchars) . "</a>")}
     {else}
-      {var $version = $theme->version}
+      {var $version = ($theme->version|htmlspecialchars)}
     {/if}
 
     <div class="themeBox{if $theme->isDefault} themeDefault{/if}">
       <div class="themeShot"><a
-          href="{$theme->screenshot|noescape}"
+          href="{$theme->screenshot}"
           class="preview-box"
           title="{$theme->name}"
-        ><img src="{$theme->screenshot|noescape}" alt=""></a></div>
+        ><img src="{$theme->screenshot}" alt=""></a></div>
       <div class="themeName" title="{$theme->name}">
         {$theme->name} <i
           n:if="$theme->isDefault"
@@ -107,7 +107,7 @@
           {if $theme->state === 'active'}
             {if $theme->adminUri !== null}
               <a
-                href="{$theme->adminUri|noescape}"
+                href="{$theme->adminUri}"
                 class="icon-cog"
               >{='Configuration'|translate}</a>
             {else}

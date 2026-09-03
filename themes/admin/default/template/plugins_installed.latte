@@ -95,16 +95,16 @@
       {var $author = null}
       {if $plugin->author !== ''}
         {if $plugin->authorUrl !== null}
-          {var $author = ("<a href='%s'>%s</a>"|sprintf:$plugin->authorUrl,$plugin->author)}
+          {var $author = ("<a href='%s'>%s</a>"|sprintf:($plugin->authorUrl|htmlspecialchars),($plugin->author|htmlspecialchars))}
         {else}
-          {var $author = ('<u>' . $plugin->author . '</u>')}
+          {var $author = ('<u>' . ($plugin->author|htmlspecialchars) . '</u>')}
         {/if}
       {/if}
 
       {if $plugin->visitUrl !== ''}
-        {var $version = ("<a class='externalLink' href='" . $plugin->visitUrl . "'>" . $plugin->version . "</a>")}
+        {var $version = ("<a class='externalLink' href='" . ($plugin->visitUrl|htmlspecialchars) . "'>" . ($plugin->version|htmlspecialchars) . "</a>")}
       {else}
-        {var $version = $plugin->version}
+        {var $version = ($plugin->version|htmlspecialchars)}
       {/if}
 
       <div

@@ -165,7 +165,7 @@
 
 <div
   class='tag-container'
-  data-tags='{$data|json_encode|noescape}'
+  data-tags='{$data|json_encode|htmlspecialchars|noescape}'
   data-per_page="{$perPage}"
 >
   <div

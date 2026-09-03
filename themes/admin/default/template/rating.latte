@@ -40,7 +40,7 @@
       ></a>
       <select
         data-selectize="categories"
-        data-value="{$category|json_encode|noescape}"
+        data-value="{$category|json_encode|htmlspecialchars|noescape}"
         placeholder="{='No filter on album. Select one or type to search'|translate}"
         name="cat"
         class="rating-album-filter"

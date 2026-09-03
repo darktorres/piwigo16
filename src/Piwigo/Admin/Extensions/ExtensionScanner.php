@@ -26,10 +26,17 @@ use Piwigo\Users\UserStatus;
  * get_fs_themes()/get_fs_languages() (plugins.class.php/themes.class.php/
  * languages.class.php). The common skeleton (directory iteration, name-
  * regex validation, marker-file check, name/version/uri/author/author_uri/
- * PEM-extension-id extraction, htmlspecialchars() pass) is ~95% identical
- * across the 3 methods; real per-type differences (language charset
- * conversion, plugin's webmaster-gated hasSettings flag) are handled
- * per-type below rather than forced into a false-generic shape.
+ * PEM-extension-id extraction) is ~95% identical across the 3 methods;
+ * real per-type differences (language charset conversion, plugin's
+ * webmaster-gated hasSettings flag) are handled per-type below rather than
+ * forced into a false-generic shape.
+ *
+ * Every string field returned is raw, untrusted scanned data (P59 Batch 0
+ * item 3) -- deliberately not HTML-escaped here. Escaping belongs at each
+ * real consumer's own sink: Latte's auto-escape for a bare template print,
+ * or an explicit |htmlspecialchars where a template hand-builds a raw-HTML
+ * fragment (e.g. plugins_installed.latte/themes_installed.latte's
+ * $author/$version composition) that itself prints with |noescape.
  *
  * Plugin/Theme read `plugin.json`/`theme.json` -- there is no legacy
  * `main.inc.php`/`themeconf.inc.php` header-comment scanning anywhere in
@@ -193,18 +200,24 @@ final class ExtensionScanner
         $authorUri = is_string($data['authorUri'] ?? null) && $data['authorUri'] !== '' ? $data['authorUri'] : null;
         $extension = $this->extractExtensionId($uri);
 
-        // IMPORTANT SECURITY! hasSettings is bool, not a display string --
-        // every other field here is HTML-escaped before reaching a real
-        // caller.
+        // Raw scanned values, deliberately NOT pre-escaped here: every
+        // string field is untrusted (author-controlled plugin.json
+        // content), and each real consumer decides how to escape it for
+        // its own sink -- Latte's auto-escape for a bare template print,
+        // an explicit |htmlspecialchars at the point a hand-built raw-HTML
+        // fragment embeds it (plugins_installed.latte's $author/$version
+        // composition). Pre-escaping here unconditionally double-escaped
+        // every bare print (updates_ext.latte's currentVersion/newVersion,
+        // plugins_installed.latte's name/desc).
         return new PluginScanRow(
-            name: htmlspecialchars($name),
-            version: htmlspecialchars($version),
-            uri: htmlspecialchars($uri),
-            description: htmlspecialchars($description),
-            author: htmlspecialchars($author),
+            name: $name,
+            version: $version,
+            uri: $uri,
+            description: $description,
+            author: $author,
             hasSettings: $hasSettings,
-            authorUri: $authorUri !== null ? htmlspecialchars($authorUri) : null,
-            extension: $extension !== null ? htmlspecialchars($extension) : null,
+            authorUri: $authorUri,
+            extension: $extension,
         );
     }
 
@@ -261,26 +274,28 @@ final class ExtensionScanner
             ? $urlService->getRootUrl() . 'admin.php?page=theme&theme=' . $themeId
             : null;
 
-        // IMPORTANT SECURITY! (only string fields -- mobile/activable/
-        // useStandardPages are real bools, which htmlspecialchars() can't
-        // accept under strict_types)
+        // Raw scanned values, deliberately NOT pre-escaped here -- same
+        // reasoning as scanPlugin() above: each real consumer (Latte's
+        // auto-escape for a bare print, an explicit |htmlspecialchars at
+        // the point themes_installed.latte hand-builds a raw-HTML
+        // fragment) decides how to escape it for its own sink.
         return new ThemeScanRow(
-            id: htmlspecialchars($themeId),
-            name: htmlspecialchars($name),
-            version: htmlspecialchars($version),
-            uri: htmlspecialchars($uri),
-            description: htmlspecialchars($description),
-            author: htmlspecialchars($author),
+            id: $themeId,
+            name: $name,
+            version: $version,
+            uri: $uri,
+            description: $description,
+            author: $author,
             // ThemeManifest deliberately has no 'mobile' field (see its own
             // docblock) -- "which installed theme serves mobile" stays a
             // pure admin/config pairing, never a manifest-declared fact.
             mobile: false,
-            screenshot: htmlspecialchars($screenshot),
-            authorUri: $authorUri !== null ? htmlspecialchars($authorUri) : null,
-            extension: $extension !== null ? htmlspecialchars($extension) : null,
-            parent: $parent !== null ? htmlspecialchars($parent) : null,
+            screenshot: $screenshot,
+            authorUri: $authorUri,
+            extension: $extension,
+            parent: $parent,
             useStandardPages: $useStandardPages,
-            adminUri: $adminUri !== null ? htmlspecialchars($adminUri) : null,
+            adminUri: $adminUri,
         );
     }
 
@@ -339,11 +354,12 @@ final class ExtensionScanner
             }
         }
 
-        // IMPORTANT SECURITY!
+        // Raw scanned value, deliberately NOT pre-escaped -- same reasoning
+        // as scanPlugin()/scanTheme() above.
         return new LanguageScanRow(
-            name: htmlspecialchars($name),
-            code: htmlspecialchars($languageId),
-            version: htmlspecialchars(AppInfo::VERSION),
+            name: $name,
+            code: $languageId,
+            version: AppInfo::VERSION,
             uri: '',
             author: '',
         );

@@ -439,10 +439,13 @@ test('scan reports hasSettings=false for a webmaster-gated plugin when the curre
     }
 });
 
-test('scan escapes special HTML characters in every string field it returns', function (): void {
-    // "IMPORTANT SECURITY!" pass (scanPlugin()'s/scanTheme()'s/
-    // scanLanguage()'s own htmlspecialchars() call) -- never actually
-    // exercised with a value containing anything to escape.
+test('scan returns special HTML characters raw, unescaped, in every string field it returns', function (): void {
+    // P59 Batch 0 item 3: the scanner used to run every string field
+    // through htmlspecialchars() ("IMPORTANT SECURITY!" pass), which
+    // double-escaped every real bare-print consumer (updates_ext.latte's
+    // currentVersion/newVersion, plugins_installed.latte's name/desc).
+    // Each real consumer now escapes for its own sink instead -- see
+    // ExtensionScanner's own class docblock.
     $root = extensionScannerFixtureRoot();
     try {
         $dir = $root . 'plugins/xss_plugin';
@@ -456,7 +459,7 @@ test('scan escapes special HTML characters in every string field it returns', fu
 
         expect($found)
             ->toHaveKey('xss_plugin')
-            ->and($found['xss_plugin']->name)->toBe('&lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;Quoted&quot;');
+            ->and($found['xss_plugin']->name)->toBe('<script>alert(1)</script> & "Quoted"');
     } finally {
         FilesystemHelper::deltree($root);
     }
@@ -573,14 +576,13 @@ test('scan extracts every optional theme manifest field from a fully-populated t
             ->toBeFalse()
             ->and($theme->useStandardPages)
             ->toBeTrue()
-            // Real string, not a bool -- htmlspecialchars() escaping (the
-            // "IMPORTANT SECURITY!" pass) turns '&' into '&amp;', so this
-            // deliberately checks for a substring rather than an exact
-            // scheme-and-host string that would depend on the untouched
-            // request-scoped RootPathOverride/SectionContextRegistry
-            // state this bare Unit test never seeds.
+            // Real string, not a bool -- deliberately checks for a
+            // substring rather than an exact scheme-and-host string that
+            // would depend on the untouched request-scoped
+            // RootPathOverride/SectionContextRegistry state this bare
+            // Unit test never seeds.
             ->and($theme->adminUri)
-            ->toContain('admin.php?page=theme&amp;theme=full_fixture_theme')
+            ->toContain('admin.php?page=theme&theme=full_fixture_theme')
             ->and($theme->screenshot)
             ->toBe($root . 'themes/full_fixture_theme/screenshot.png');
     } finally {
@@ -888,7 +890,7 @@ test('scan prefixes admin_uri with the real root url, not just the relative admi
 
         expect($found)
             ->toHaveKey('admin_uri_theme')
-            ->and($found['admin_uri_theme']->adminUri)->toBe('https://example.com/piwigo/admin.php?page=theme&amp;theme=admin_uri_theme');
+            ->and($found['admin_uri_theme']->adminUri)->toBe('https://example.com/piwigo/admin.php?page=theme&theme=admin_uri_theme');
     } finally {
         FilesystemHelper::deltree($root);
     }
@@ -949,12 +951,10 @@ test('scan actually uses the caller-supplied targetCharset, not just the default
 
         expect($found)
             ->toHaveKey('iso_charset_lang')
-            // Not an exact literal: htmlspecialchars()'s own UTF-8
-            // decoding of the now-iso-8859-1-encoded byte for 'é'
-            // (ENT_SUBSTITUTE's exact replacement) isn't what's under
-            // test here -- only that the conversion demonstrably
-            // happened at all, changing the bytes away from the
-            // untouched, still-valid-UTF-8 'café'.
+            // Not an exact literal: the precise iso-8859-1-encoded byte
+            // for 'é' isn't what's under test here -- only that the
+            // conversion demonstrably happened at all, changing the bytes
+            // away from the untouched, still-valid-UTF-8 'café'.
             ->and($found['iso_charset_lang']->name)->not->toBe('café')
             ->and($found['iso_charset_lang']->name)->toStartWith('caf');
     } finally {
@@ -1007,7 +1007,7 @@ test('scan does not corrupt language name/country when charset conversion fails 
     // this file's other unreadable-file tests) -- the real, correct code
     // must then keep the already-trimmed, unconverted value rather than
     // overwriting it with that `false` (which would otherwise blow up
-    // array_map(htmlspecialchars(...), ...) under strict_types). The
+    // the `string` constructor-property type under strict_types). The
     // padding on both header values also exercises trim() on each.
     $root = extensionScannerFixtureRoot();
     $poFile = $root . 'language/bogus_charset_lang/common.po';
@@ -1037,11 +1037,9 @@ test('scan does not corrupt language name/country when charset conversion fails 
     }
 });
 
-test('scan escapes special HTML characters in a language name', function (): void {
-    // array_map(htmlspecialchars(...), $language)
-    // -- the existing "escapes special HTML characters" test above only
-    // covers scanPlugin()'s own htmlspecialchars() pass, not
-    // scanLanguage()'s separate one.
+test('scan returns special HTML characters raw, unescaped, in a language name', function (): void {
+    // Mirrors the plugin-name coverage above, for scanLanguage()'s own
+    // regex-extracted name.
     $root = extensionScannerFixtureRoot();
     $poFile = $root . 'language/xss_lang/common.po';
     try {
@@ -1058,7 +1056,7 @@ test('scan escapes special HTML characters in a language name', function (): voi
 
         expect($found)
             ->toHaveKey('xss_lang')
-            ->and($found['xss_lang']->name)->toBe('&lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;Quoted&quot;');
+            ->and($found['xss_lang']->name)->toBe('<script>alert(1)</script> & "Quoted"');
     } finally {
         FilesystemHelper::deltree($root);
     }

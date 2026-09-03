@@ -210,9 +210,14 @@ final readonly class AdminShell
                 $url_params[] = $url_param . '=' . $url_value;
             }
 
+            // Deliberately NOT pre-encoded: this feeds RedirectService::redirect(),
+            // whose redirectHtml() branch renders redirect.latte, printing the URL
+            // through Latte's own auto-escape (no |noescape). Pre-encoding '&' here
+            // as well would double-escape it into '&amp;amp;' -- same reasoning as
+            // buildChangeThemeUrl()'s own docblock above.
             $redirect_url = 'admin.php';
             if (count($url_params) > 0) {
-                $redirect_url .= '?' . implode('&amp;', $url_params);
+                $redirect_url .= '?' . implode('&', $url_params);
             }
 
             $this->redirectService->redirect($redirect_url);

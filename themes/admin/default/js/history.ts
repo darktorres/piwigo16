@@ -14,6 +14,7 @@ import {
   attrOf,
   css,
   data,
+  dataId,
   delegate,
   empty,
   hide,
@@ -43,7 +44,7 @@ interface HistoryFilterParams {
   start: string;
   end: string;
   types: Record<number, string>;
-  user_id: string | number;
+  user_id: number;
   image_id: string | number | null;
   filename: string;
   ip: string;
@@ -124,16 +125,17 @@ ready(() => {
   if (current_param.image_id !== "") {
     addImageFilter(current_param.image_id);
   }
-  // `current_param.user_id` is `string | number` -- it starts as the raw
-  // JSON number PHP's own `int $userId`/`exposedPageData()` send (the
-  // `-1` "no filter" sentinel included), but every other write site in
-  // this file sets it to the *string* "-1" (or a string user id). A
-  // plain `!== "-1"` here compared a number to a string on first load,
-  // which is always true regardless of the real sentinel value -- the
-  // "Additional filters" user chip rendered unconditionally on every
-  // page load. `Number(...)` normalizes either representation, matching
-  // the comparison this file already uses correctly further down.
-  if (Number(current_param.user_id) !== -1) {
+  // `current_param.user_id` is now plain `number` (P51-D) -- it used to
+  // be `string | number`, and every write site but this file's own
+  // ready() check set it to the *string* "-1" (or a string user id),
+  // while PHP's own `int $userId`/`exposedPageData()` send a real JSON
+  // number. A plain `!== "-1"` here compared a number to a string on
+  // first load, which is always true regardless of the real sentinel
+  // value -- the "Additional filters" user chip rendered unconditionally
+  // on every page load. Narrowing every write site to a real number
+  // (rather than continuing to paper over it with `Number(...)` here)
+  // closes the bug class for good, not just this one comparison.
+  if (current_param.user_id !== -1) {
     addUserFilter(filter_user_name);
   }
 
@@ -315,7 +317,7 @@ function fillSummaryResult(summary: HistorySummary) {
       // Same string-vs-number sentinel mismatch as the ready() handler
       // above -- normalize via Number() rather than a strict string
       // compare.
-      if (Number(current_param.user_id) === -1) {
+      if (current_param.user_id === -1) {
         current_param.user_id = guest_id;
         addGuestFilter(str_guest);
         void fillHistoryResult(current_param);
@@ -353,9 +355,8 @@ function fillSummaryResult(summary: HistorySummary) {
       setData(new_user_item, "user-id", member.userId);
 
       on(new_user_item, "click", function (this: Element) {
-        if (Number(current_param.user_id) !== member.userId) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-          current_param.user_id = data(this, "user-id") as string | number;
+        if (current_param.user_id !== member.userId) {
+          current_param.user_id = dataId(this, "user-id");
           addUserFilter(member.username);
           void fillHistoryResult(current_param);
         }
@@ -472,12 +473,9 @@ function lineConstructor(line: HistoryLine, id: number) {
   );
 
   attr(find(newLine, ".user-name"), "id", String(line.userId));
-  // Same string-vs-number sentinel mismatch as the ready() handler
-  // above -- normalize via Number() rather than a strict string
-  // compare.
-  if (Number(current_param.user_id) === -1) {
+  if (current_param.user_id === -1) {
     on(find(newLine, ".user-name"), "click", function (this: Element) {
-      current_param.user_id = String(attrOf(this, "id"));
+      current_param.user_id = Number(attrOf(this, "id"));
       current_param.pageNumber = 0;
       addUserFilter(htmlOf(this) ?? "");
       void fillHistoryResult(current_param);
@@ -909,7 +907,7 @@ function addUserFilter(username: string | null) {
   on(find(newFilter, ".remove-filter"), "click", function (this: Element) {
     this.parentElement?.remove();
 
-    current_param.user_id = "-1";
+    current_param.user_id = -1;
     current_param.pageNumber = 0;
     void fillHistoryResult(current_param);
     checkFilters();
@@ -934,7 +932,7 @@ function addGuestFilter(username: string) {
   on(find(newFilter, ".remove-filter"), "click", function (this: Element) {
     this.parentElement?.remove();
 
-    current_param.user_id = "-1";
+    current_param.user_id = -1;
     current_param.pageNumber = 0;
     void fillHistoryResult(current_param);
     checkFilters();

@@ -826,6 +826,15 @@ class Tween implements Stoppable {
 
       return;
     }
+    // Apply the tween's own t=0 frame synchronously, before returning: the
+    // interval below doesn't fire for another FX_INTERVAL ms, and the
+    // caller (runEffect's show(el) for slideDown/fadeIn) already made the
+    // element visible at its natural, untweened size just before this
+    // runs. Without this, the browser paints that natural size for
+    // however many real frames pass before the first tick -- a visible
+    // flash of the fully-open content right before it visibly snaps back
+    // to the animation's actual starting point and grows from there.
+    this.tick();
     this.timer = setInterval(() => {
       this.tick();
     }, FX_INTERVAL);

@@ -11,7 +11,11 @@ if (PHP_SAPI !== 'cli') {
  * Latte template linter -- wraps Latte's bundled `Latte\Tools\Linter`
  * with `Piwigo\Template\Latte\PiwigoExtension` registered, so it
  * recognizes Piwigo's own filters/functions (`|translate`, `|noescape`,
- * `combineScript`, ...) instead of warning "Unknown filter".
+ * `combineScript`, ...) instead of warning "Unknown filter". Also runs
+ * P59's zero-tolerance `|noescape` gate (`tools/latte-noescape-gate.php`)
+ * against the full `themes/` tree, regardless of any custom scan path
+ * below -- a repo-wide invariant, not something a scoped invocation
+ * should skip.
  *
  * Two-process design -- `Latte\Tools\Linter` is `final`, its
  * `writeError()` writes warnings to STDERR (not STDOUT), and its
@@ -34,6 +38,18 @@ if (PHP_SAPI !== 'cli') {
 $paths = array_slice($argv, 1);
 
 $root = dirname(__DIR__);
+
+require $root . '/tools/latte-noescape-gate.php';
+/** @var array<string, int> $noescapeAllowlist */
+$noescapeAllowlist = require $root . '/tools/latte-noescape-allowlist.php';
+$noescapeViolations = scanNoescapeCorpus($root . '/themes', $noescapeAllowlist);
+if ($noescapeViolations !== []) {
+    fwrite(STDERR, 'Latte |noescape gate: ' . count($noescapeViolations) . " violation(s) -- failing build.\n");
+    foreach ($noescapeViolations as $violation) {
+        fwrite(STDERR, "  {$violation}\n");
+    }
+    exit(1);
+}
 $cmd = array_merge([PHP_BINARY, $root . '/bin/piwigo', 'lint:latte:inner'], $paths);
 
 $proc = proc_open(

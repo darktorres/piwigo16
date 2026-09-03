@@ -24,7 +24,7 @@ ready(() => {
     .querySelectorAll<HTMLInputElement>('[name="understand"]')
     .forEach((understand) => {
       understand.addEventListener("click", () => {
-        const checked = understand.checked;
+        const { checked } = understand;
         document
           .querySelectorAll<HTMLInputElement>('[name="submit"]')
           .forEach((submit) => (submit.disabled = !checked));

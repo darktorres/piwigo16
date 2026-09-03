@@ -1,7 +1,7 @@
 import type { operations } from "../../../../openapi/client/schema";
 
 import { pwg_getPageString } from "../../../default/js/page-data";
-import { ajax } from "../../../default/js/vendor/ajax";
+import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
 import { ready } from "../../../default/js/vendor/dom";
 
 const no_time_elapsed = pwg_getPageString("right now");
@@ -41,16 +41,15 @@ ready(function () {
         icon.classList.add("animate-spin");
       });
 
-      // The original wrapped this in a `new Promise` returned from the
-      // handler, purely to satisfy a lint rule during the TypeScript
-      // conversion -- jQuery's `.on()` ignores any return value that is not
-      // `false`, so nothing ever observed it. Dropped with the two
-      // eslint-disable comments it needed.
-      void ajax<CacheSizeResponse>({
-        url: "api/v1/cache-size",
-        type: "GET",
-        dataType: "json",
-        success: function (data) {
+      void (async () => {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+          const data = (await ajax({
+            url: "api/v1/cache-size",
+            type: "GET",
+            dataType: "json",
+          })) as CacheSizeResponse;
+
           const domElemToRefresh = [
             document.querySelectorAll<HTMLElement>(".cache-size-value"),
             document.querySelectorAll<HTMLElement>(".multiple-pictures-sizes"),
@@ -95,11 +94,10 @@ ready(function () {
           document.querySelectorAll(".animate-spin").forEach((node) => {
             node.classList.remove("animate-spin");
           });
-        },
-        error: function (message) {
-          console.error(message);
-        },
-      });
+        } catch (e) {
+          console.error(e instanceof AjaxError ? e.responseText : e);
+        }
+      })();
     });
   });
 });

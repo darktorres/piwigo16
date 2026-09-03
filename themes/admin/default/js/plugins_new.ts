@@ -1,7 +1,7 @@
 import { pwg_jconfirm_follow_href } from "./common";
 
 import { pwg_getPageString } from "../../../default/js/page-data";
-import { ajax } from "../../../default/js/vendor/ajax";
+import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
 import {
   addClass,
   data,
@@ -134,7 +134,13 @@ ready(function () {
     function (this: HTMLSelectElement): void {
       sortOrder = this.value;
       sortElements(document.querySelectorAll(".pluginBox"), sortPlugins);
-      void ajax({ url: "admin.php?plugins_new_order=" + sortOrder });
+      void (async () => {
+        try {
+          await ajax({ url: "admin.php?plugins_new_order=" + sortOrder });
+        } catch (e) {
+          console.error(e instanceof AjaxError ? e.responseText : e);
+        }
+      })();
     },
   );
 

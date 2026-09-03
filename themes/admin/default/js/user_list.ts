@@ -315,7 +315,7 @@ ready(function () {
     document.querySelectorAll(".icon-show-password"),
     "click",
     function (this: Element) {
-      const closestInput = siblingsOf(this)[0];
+      const [closestInput] = siblingsOf(this);
       if (closestInput === undefined) return;
       if (attrOf(closestInput, "type") === "password") {
         attr(closestInput, "type", "text");
@@ -1956,12 +1956,12 @@ function open_main_user_modal(user_to_edit: UserRow) {
 
 function set_main_user_success() {
   const indexKey = current_users.findIndex((u) => u.id === owner_id);
-  const new_main = find(
+  const [new_main] = find(
     document.querySelectorAll(
       '.user-container[key="' + String(indexKey) + '"]',
     ),
     ".user-container-username",
-  )[0];
+  );
   let king = document.querySelector("#the_king");
   if (king === null) {
     king = parseHtml(king_template)[0]!;
@@ -2080,7 +2080,7 @@ function get_initials(username: string): string {
   const words = username.toUpperCase().split(" ");
   let res = words[0]![0]!;
 
-  const secondWord = words[1];
+  const [, secondWord] = words;
   if (secondWord !== undefined && secondWord.length > 0) {
     res += secondWord[0]!;
   }

@@ -5,7 +5,11 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { ajax, type AjaxResponse } from "../../../default/js/vendor/ajax";
+import {
+  ajax,
+  AjaxError,
+  type AjaxResponse,
+} from "../../../default/js/vendor/ajax";
 import { AjaxQueue } from "../../../default/js/vendor/ajaxQueue";
 import { jGrowl } from "../../../default/js/vendor/jgrowl";
 import { confirm } from "../../../default/js/vendor/jconfirm";
@@ -61,26 +65,28 @@ function ignoreAll() {
   });
 }
 
-function resetIgnored() {
-  void ajax({
-    type: "POST",
-    url: "api/v1/extensions/updates/ignore",
-    contentType: "application/json",
-    headers: { "X-CSRF-Token": pwg_token },
-    dataType: "json",
-    data: JSON.stringify({ reset: true, type: extType }),
+async function resetIgnored(): Promise<void> {
+  try {
     // 204 No Content -- extensionsIgnoreUpdate's real response has no body.
-    success: function (_data: unknown) {
-      show(document.querySelectorAll(".pluginBox, fieldset"));
-      attr(document.querySelectorAll(".pluginBox"), "data-ignored", "false");
-      show(document.querySelectorAll("#update_all"));
-      show(document.querySelectorAll("#ignore_all"));
-      hide(document.querySelectorAll("#up_to_date"));
-      hide(document.querySelectorAll("#reset_ignore"));
-      hide(document.querySelectorAll("#ignored"));
-      checkFieldsets();
-    },
-  });
+    await ajax({
+      type: "POST",
+      url: "api/v1/extensions/updates/ignore",
+      json: { reset: true, type: extType },
+      headers: { "X-CSRF-Token": pwg_token },
+      dataType: "json",
+    });
+
+    show(document.querySelectorAll(".pluginBox, fieldset"));
+    attr(document.querySelectorAll(".pluginBox"), "data-ignored", "false");
+    show(document.querySelectorAll("#update_all"));
+    show(document.querySelectorAll("#ignore_all"));
+    hide(document.querySelectorAll("#up_to_date"));
+    hide(document.querySelectorAll("#reset_ignore"));
+    hide(document.querySelectorAll("#ignored"));
+    checkFieldsets();
+  } catch (e) {
+    console.error(e instanceof AjaxError ? e.responseText : e);
+  }
 }
 
 function checkFieldsets() {

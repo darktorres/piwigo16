@@ -127,7 +127,7 @@ interface Window {
   // `onClick="ignoreExtension(...)"` attributes -- same `javascript:`/
   // `onclick=` exposure pattern as footer.ts's own copy above.
   ignoreAll: () => void;
-  resetIgnored: () => void;
+  resetIgnored: () => Promise<void>;
   updateExtension: (type: string, id: string, revision: string) => void;
   ignoreExtension: (type: string, id: string) => void;
 

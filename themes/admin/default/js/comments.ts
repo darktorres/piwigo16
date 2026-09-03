@@ -389,7 +389,7 @@ function displayComments(comments: CommentListResponse["comments"]) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       const id = data(this, "idx") as string | number;
       if (selectionMode) {
-        const checkbox = find(this, ".comment-select-checkbox")[0];
+        const [checkbox] = find(this, ".comment-select-checkbox");
         if (checkbox === undefined) return;
 
         if (checkbox.classList.contains("icon-circle-empty")) {
@@ -618,14 +618,14 @@ function showModalViewComment(id: string | number) {
   const item = document.querySelector("#" + escapeId(id));
   text(find(modalViewComment, ".comment-datetime"), comment.date);
   remove(find(modalViewComment, ".comment-author"));
-  const infos = find(modalViewComment, ".comments-modal-infos")[0];
+  const [infos] = find(modalViewComment, ".comments-modal-infos");
   const authorClone =
     item !== null ? find(item, ".comment-author")[0] : undefined;
   if (infos !== undefined && authorClone !== undefined) {
     infos.insertBefore(authorClone.cloneNode(true), infos.firstChild);
   }
   attr(find(modalViewComment, ".comments-modal-img"), "src", comment.mediumUrl);
-  const imgI = find(modalViewComment, ".comments-modal-img-i")[0];
+  const [imgI] = find(modalViewComment, ".comments-modal-img-i");
   if (imgI !== undefined) {
     empty(imgI);
     append(
@@ -768,7 +768,7 @@ function commentsSelectAll() {
 
   commentsSelected = [];
   document.querySelectorAll(".comment-selected").forEach((el) => {
-    const id = el.id;
+    const { id } = el;
     commentsSelected.push(id);
   });
   commentsUpdateSelection();
@@ -785,7 +785,7 @@ function commentsInvertSelect() {
 
   commentsSelected = [];
   document.querySelectorAll(".comment-selected").forEach((el) => {
-    const id = el.id;
+    const { id } = el;
     commentsSelected.push(id);
   });
   commentsUpdateSelection();
@@ -825,7 +825,7 @@ function commentsUpdateSelection() {
     document.querySelectorAll(".comments-selected-remove"),
     "click",
     function (this: Element) {
-      const id = this.id.split("_")[1];
+      const [, id] = this.id.split("_");
       if (id === undefined || id === "") return;
       const target = document.querySelector(
         "#" + escapeId(id) + " .comment-content",

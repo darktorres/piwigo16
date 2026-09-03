@@ -13,6 +13,7 @@ import { pwg_getPageData } from "../../../default/js/page-data";
 import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
 import { getSelectizeInstance } from "../../../default/js/vendor/selectize";
 import {
+  dataId,
   delegate,
   fadeTo,
   hide,
@@ -90,8 +91,8 @@ delegate(
   function (this: HTMLElement, event: Event): void {
     void del(
       this,
-      Number(this.dataset["imageId"]),
-      Number(this.dataset["userId"]),
+      dataId(this, "imageId"),
+      dataId(this, "userId"),
       this.dataset["anonymousId"] ?? null,
     );
     event.preventDefault();

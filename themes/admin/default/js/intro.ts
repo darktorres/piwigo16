@@ -2,7 +2,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { ajax } from "../../../default/js/vendor/ajax";
+import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
 import {
   append,
   attr,
@@ -50,14 +50,16 @@ ready(function () {
   // that used to sit here was a genuine no-op and is not ported.
 
   if (pwg_getPageData<boolean>("check_for_updates")) {
-    void ajax({
-      type: "GET",
-      url: "api/v1/extensions/updates",
-      dataType: "json",
-      timeout: 5000,
-      success: function (
-        data: operations["extensionsCheckUpdates"]["responses"][200]["content"]["application/json"],
-      ) {
+    void (async () => {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+        const data = (await ajax({
+          type: "GET",
+          url: "api/v1/extensions/updates",
+          dataType: "json",
+          timeout: 5000,
+        })) as operations["extensionsCheckUpdates"]["responses"][200]["content"]["application/json"];
+
         const piwigo_update = data.piwigoNeedUpdate;
         const ext_update = data.extNeedUpdate;
         if (
@@ -78,8 +80,10 @@ ready(function () {
             document.querySelectorAll(".warnings ul"),
             "<li>" + ext_need_update_msg + "</li>",
           );
-      },
-    });
+      } catch (e) {
+        console.error(e instanceof AjaxError ? e.responseText : e);
+      }
+    })();
   }
 
   if (newsletter_base_url !== null && newsletter_base_url !== "") {
@@ -128,10 +132,16 @@ ready(function () {
     function (this: Element, event: Event): void {
       hide(document.querySelectorAll(".promote-newsletter"));
 
-      void ajax({
-        type: "GET",
-        url: "admin.php?action=hide_newsletter_subscription",
-      });
+      void (async () => {
+        try {
+          await ajax({
+            type: "GET",
+            url: "admin.php?action=hide_newsletter_subscription",
+          });
+        } catch (e) {
+          console.error(e instanceof AjaxError ? e.responseText : e);
+        }
+      })();
 
       if (hasClass(this, "newsletter-hide")) {
         event.preventDefault();

@@ -10,7 +10,7 @@ import {
   addClass,
   append,
   attr,
-  data,
+  dataId,
   empty,
   escapeId,
   fadeIn,
@@ -31,6 +31,7 @@ import {
   toggle,
   trigger,
   val,
+  valId,
 } from "../../../default/js/vendor/dom";
 import type { operations } from "../../../../openapi/client/schema";
 
@@ -100,7 +101,7 @@ interface CommentsFilterParams {
   page: number;
   per_page: number | string;
   search?: string;
-  author_id?: string | number;
+  author_id?: number;
   f_min_date?: string;
   f_max_date?: string;
   // Never actually set anywhere in this file (confirmed via grep) --
@@ -124,7 +125,7 @@ const commentsParams: CommentsFilterParams = {
 let updateAuthorId = true;
 let searchTimeOut: ReturnType<typeof setTimeout> | undefined;
 let selectionMode = false;
-let commentsSelected: (string | number)[] = [];
+let commentsSelected: number[] = [];
 
 ready(function () {
   on(
@@ -364,8 +365,7 @@ function displayComments(comments: CommentListResponse["comments"]) {
     "click",
     function (this: Element, e: Event) {
       e.stopPropagation();
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      const id = data(this, "idx") as string | number;
+      const id = dataId(this, "idx");
       deleteComment([id]);
     },
   );
@@ -376,8 +376,7 @@ function displayComments(comments: CommentListResponse["comments"]) {
     "click",
     function (this: Element, e: Event) {
       e.stopPropagation();
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      const id = data(this, "idx") as string | number;
+      const id = dataId(this, "idx");
       void validateComment([id]);
     },
   );
@@ -387,8 +386,7 @@ function displayComments(comments: CommentListResponse["comments"]) {
     document.querySelectorAll(".comment-content"),
     "click",
     function (this: Element) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      const id = data(this, "idx") as string | number;
+      const id = dataId(this, "idx");
       if (selectionMode) {
         const [checkbox] = find(this, ".comment-select-checkbox");
         if (checkbox === undefined) return;
@@ -583,12 +581,11 @@ function commentsDisplayAuthors(
 
   off(filterAuthor, "change");
   on(filterAuthor, "change", function () {
-    const authorId = filterAuthor.value;
+    const authorId = valId(filterAuthor);
 
-    if (!authorId) {
+    if (authorId === null) {
       delete commentsParams.author_id;
     } else {
-      // Real filter_author's own value: a plain <select>, always a string.
       commentsParams.author_id = authorId;
     }
 
@@ -611,9 +608,8 @@ function updateNbComments(nb: string | number) {
   window.localStorage.setItem("adminCommentsNB", String(nb));
 }
 
-function showModalViewComment(id: string | number) {
-  const comment =
-    commentsState.comments.find((c) => c.id === Number(id)) ?? null;
+function showModalViewComment(id: number) {
+  const comment = commentsState.comments.find((c) => c.id === id) ?? null;
   if (!comment || modalViewComment === null) return;
 
   const item = document.querySelector("#" + escapeId(id));
@@ -670,7 +666,7 @@ function closeModalViewComment() {
   off(document.querySelectorAll("#commentsModalDelete"), "click");
 }
 
-async function validateComment(id: (string | number)[]): Promise<void> {
+async function validateComment(id: number[]): Promise<void> {
   const idLenght = id.length;
 
   try {
@@ -702,7 +698,7 @@ async function validateComment(id: (string | number)[]): Promise<void> {
   }
 }
 
-function deleteComment(id: (string | number)[]) {
+function deleteComment(id: number[]) {
   const idLenght = id.length;
 
   confirm({
@@ -763,7 +759,7 @@ function commentsSelectAll() {
 
   commentsSelected = [];
   document.querySelectorAll(".comment-selected").forEach((el) => {
-    const { id } = el;
+    const id = Number(el.id);
     commentsSelected.push(id);
   });
   commentsUpdateSelection();
@@ -780,7 +776,7 @@ function commentsInvertSelect() {
 
   commentsSelected = [];
   document.querySelectorAll(".comment-selected").forEach((el) => {
-    const { id } = el;
+    const id = Number(el.id);
     commentsSelected.push(id);
   });
   commentsUpdateSelection();

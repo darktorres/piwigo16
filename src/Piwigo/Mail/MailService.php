@@ -42,6 +42,7 @@ use Piwigo\Mail\Projection\MailContent;
 use Piwigo\Mail\Projection\MailContentPageContext;
 use Piwigo\Mail\Projection\MailHeaderPageContext;
 use Piwigo\Mail\Projection\MailRecipient;
+use Piwigo\Mail\Projection\MailStyleBlockPageContext;
 use Piwigo\Mail\Projection\MailTitlePageContext;
 use Piwigo\Mail\Projection\NotificationAdminView;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -959,14 +960,14 @@ final class MailService implements MailerInterface
 
                     if ($contentType === 'text/html') {
                         $globalMailCssFilename = $this->resolveMailTemplateFilename($template, 'global-mail-css');
-                        if ($globalMailCssFilename !== null) {
-                            $template->assignVarFromTemplate('GLOBAL_MAIL_CSS', $globalMailCssFilename);
-                        }
+                        $globalMailCss = $globalMailCssFilename === null ? '' : $template->parse($globalMailCssFilename);
 
                         $themeMailCssFilename = $this->resolveMailTemplateFilename($template, 'mail-css-' . $args->theme);
-                        if ($themeMailCssFilename !== null) {
-                            $template->assignVarFromTemplate('MAIL_CSS', $themeMailCssFilename);
-                        }
+                        $themeMailCss = $themeMailCssFilename === null ? '' : $template->parse($themeMailCssFilename);
+
+                        $template->assignContext(new MailStyleBlockPageContext(
+                            mailStyleBlock: new Html('<style type="text/css">' . $globalMailCss . $themeMailCss . '</style>'),
+                        ));
                     }
                 }
 

@@ -17,11 +17,10 @@
 {varType string $F_ACTION}
 {varType string $GALLERY_TITLE}
 {varType string $GALLERY_URL}
-{varType \Latte\Runtime\Html $GLOBAL_MAIL_CSS}
 {varType string|null $INFO_AUTHOR}
 {varType string $INFO_FILE}
 {varType string $LEVEL_SEPARATOR}
-{varType \Latte\Runtime\Html $MAIL_CSS}
+{varType \Latte\Runtime\Html $MAIL_STYLE_BLOCK}
 {varType string $MAIL_SUBTITLE}
 {varType string $MAIL_TITLE}
 {varType \Latte\Runtime\Html $MENUBAR}
@@ -104,7 +103,7 @@
 {varType \Piwigo\Admin\BatchManager\Projection\FilesizeFilterOptions $filesize}
 {varType \Piwigo\Admin\BatchManager\Projection\BulkManagerFilter $filter}
 {varType int|null $filter_category_selected}
-{varType string $filter_category_selected_name}
+{varType \Latte\Runtime\Html $filter_category_selected_name}
 {varType array<int, string> $filter_level_options}
 {varType int $filter_level_options_selected}
 {varType string|null $filter_search_query}
@@ -160,18 +159,7 @@
     />
     <title>Piwigo Mail</title>
 
-    <style
-      type="text/css"
-    >
-    {* noescape kept on purpose: this prints inside <style>, a CSS
-       context, not HTML text -- Latte's auto-escaper CSS-escapes
-       (backslash-escapes) even an Html-typed value here, which
-       corrupts the stylesheet and breaks the mail's CSS inliner.
-       $GLOBAL_MAIL_CSS/$MAIL_CSS are theme-file CSS content
-       (Template::assignVarFromTemplate()), not user input. *}
-    {if isset($GLOBAL_MAIL_CSS)}{$GLOBAL_MAIL_CSS|noescape}{/if}
-    {if isset($MAIL_CSS)}{$MAIL_CSS|noescape}{/if}
-    </style>
+    {$MAIL_STYLE_BLOCK}
   </head>
 
   <body>

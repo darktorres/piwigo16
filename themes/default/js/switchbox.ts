@@ -14,7 +14,7 @@ import {
     document.querySelectorAll<HTMLElement>(link).forEach((linkEl) => {
       linkEl.addEventListener("click", function (event) {
         const boxes = document.querySelectorAll<HTMLElement>(box);
-        const first = boxes[0];
+        const [first] = boxes;
 
         // jQuery's dimension getters read the *first* element of a set while
         // its setters write to all of them, and the original relies on both

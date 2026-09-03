@@ -21,6 +21,7 @@ function stubFetch(
 ): void {
   vi.stubGlobal(
     "fetch",
+    // eslint-disable-next-line @typescript-eslint/promise-function-async -- no internal `await` needed (a pure stub), and adding `async` here would only trip the already-enabled require-await instead; behaviorally identical either way.
     vi.fn((url: string, init: RequestInit) => {
       calls.push({ url, init });
 
@@ -29,6 +30,7 @@ function stubFetch(
         statusText,
         ok: status >= 200 && status < 300,
         headers: new Headers(),
+        // eslint-disable-next-line @typescript-eslint/promise-function-async -- see comment above.
         text: () => Promise.resolve(bodyText),
       });
     })
@@ -269,12 +271,14 @@ describe("dataType omitted (jQuery's intelligent guess)", () => {
   it("parses JSON when the response says application/json", async () => {
     vi.stubGlobal(
       "fetch",
+      // eslint-disable-next-line @typescript-eslint/promise-function-async -- see stubFetch's own comment above: no internal `await` needed, and `async` would only trip require-await instead.
       vi.fn(() =>
         Promise.resolve({
           status: 200,
           statusText: "OK",
           ok: true,
           headers: new Headers({ "Content-Type": "application/json" }),
+          // eslint-disable-next-line @typescript-eslint/promise-function-async -- see comment above.
           text: () => Promise.resolve('{"lines":[]}'),
         })
       )
@@ -295,12 +299,14 @@ describe("dataType omitted (jQuery's intelligent guess)", () => {
   it("does not parse when an explicit non-json dataType is given", async () => {
     vi.stubGlobal(
       "fetch",
+      // eslint-disable-next-line @typescript-eslint/promise-function-async -- see stubFetch's own comment above: no internal `await` needed, and `async` would only trip require-await instead.
       vi.fn(() =>
         Promise.resolve({
           status: 200,
           statusText: "OK",
           ok: true,
           headers: new Headers({ "Content-Type": "application/json" }),
+          // eslint-disable-next-line @typescript-eslint/promise-function-async -- see comment above.
           text: () => Promise.resolve('{"a":1}'),
         })
       )
@@ -332,7 +338,7 @@ describe("abort()", () => {
     let seenSignal: AbortSignal | undefined;
     vi.stubGlobal(
       "fetch",
-      vi.fn((_url: string, init: RequestInit) => {
+      vi.fn(async (_url: string, init: RequestInit) => {
         seenSignal = init.signal ?? undefined;
 
         return new Promise((_resolve, reject) => {

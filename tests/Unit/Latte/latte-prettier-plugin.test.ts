@@ -29,7 +29,7 @@ function findLatteFiles(): string[] {
   return LATTE_ROOTS.flatMap(findLatteFilesIn);
 }
 
-function format(src: string): Promise<string> {
+async function format(src: string): Promise<string> {
   return prettier.format(src, { parser: "latte-ast", plugins: [plugin] });
 }
 

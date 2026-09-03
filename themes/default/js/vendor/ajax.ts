@@ -51,6 +51,15 @@ export interface AjaxOptions<T = unknown> {
   method?: string;
   data?: unknown;
   /**
+   * Shorthand for the ~66 real call sites that otherwise hand-pair
+   * `contentType: "application/json"` with `data: JSON.stringify({...})`.
+   * Stringifies `json` and forces `contentType` to `"application/json"`,
+   * same as writing both by hand. Ignored if `data` is also set --
+   * no real call site needs both, so this doesn't need a precedence rule
+   * beyond "don't pass both".
+   */
+  json?: unknown;
+  /**
    * Matched case-insensitively. jQuery lowercases it
    * (`s.dataType.toLowerCase()` in `ajaxSettings`), and four call sites
    * spell it "JSON".
@@ -238,20 +247,24 @@ export function ajax<T = unknown>(options: AjaxOptions<T>): AjaxThenable {
   // jQuery's default contentType. `contentType: false` suppresses the header
   // entirely, which is what a FormData upload needs.
   const contentType =
-    options.contentType ?? "application/x-www-form-urlencoded; charset=UTF-8";
+    options.json !== undefined
+      ? "application/json"
+      : (options.contentType ?? "application/x-www-form-urlencoded; charset=UTF-8");
 
-  if (options.data !== undefined && options.data !== null) {
-    const serialized = isPlainObject(options.data)
-      ? param(options.data)
-      : typeof options.data === "string"
-        ? options.data
-        : JSON.stringify(options.data);
+  const requestData =
+    options.json !== undefined ? JSON.stringify(options.json) : options.data;
+
+  if (requestData !== undefined && requestData !== null) {
+    const serialized = isPlainObject(requestData)
+      ? param(requestData)
+      : typeof requestData === "string"
+        ? requestData
+        : JSON.stringify(requestData);
 
     if (isBodyless) {
       url += (url.includes("?") ? "&" : "?") + serialized;
     } else {
-      body =
-        options.data instanceof FormData ? options.data : serialized;
+      body = requestData instanceof FormData ? requestData : serialized;
     }
   }
 

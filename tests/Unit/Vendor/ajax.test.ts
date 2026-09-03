@@ -136,6 +136,41 @@ describe("ajax() request shaping", () => {
   });
 });
 
+describe("json: option", () => {
+  it("stringifies json and sets contentType, same as hand-pairing data/contentType", async () => {
+    stubFetch(200, "{}");
+    await ajax({
+      url: "api/v1/tags",
+      type: "POST",
+      headers: { "X-CSRF-Token": "tok" },
+      json: { name: "vacation" },
+      dataType: "json",
+    });
+
+    const init = calls[0]?.init;
+    expect(init?.body).toBe('{"name":"vacation"}');
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own fetch() call always builds headers as a plain object, one of RequestInit's own several real HeadersInit shapes.
+    expect((init?.headers as Record<string, string>)["Content-Type"]).toBe(
+      "application/json"
+    );
+  });
+
+  it("ignores an explicit contentType, forcing application/json", async () => {
+    stubFetch(200, "{}");
+    await ajax({
+      url: "x",
+      type: "POST",
+      contentType: "text/plain",
+      json: { a: 1 },
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own fetch() call always builds headers as a plain object, one of RequestInit's own several real HeadersInit shapes.
+    expect((calls[0]?.init.headers as Record<string, string>)["Content-Type"]).toBe(
+      "application/json"
+    );
+  });
+});
+
 describe("ajax() response conversion", () => {
   it("parses JSON when dataType is json", async () => {
     stubFetch(200, '{"ok":true}');

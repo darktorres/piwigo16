@@ -16,15 +16,15 @@
     >
       <div class="thumbnailCategory">
         <div class="illustration">
-          <a href="{$cat->url|noescape}">
+          <a href="{$cat->url}">
             <img
               {if $cat->representative === null}
               src="{$ROOT_URL}{$themeconf['icon_dir']}/img_small.png"
               {elseif $derivative->isCached()}
-              src="{$derivative->getUrl()|noescape}"
+              src="{$derivative->getUrl()}"
               {else}
               src="{$ROOT_URL}{$themeconf['icon_dir']}/img_small.png"
-              data-src="{$derivative->getUrl()|noescape}"
+              data-src="{$derivative->getUrl()}"
               {/if}
               alt="{$cat->tnAlt}"
               title="{$cat->name|replace:'"',' '|stripTags} - {='display this album'|translate}"
@@ -33,7 +33,7 @@
         </div>
         <div class="description">
           <h3>
-            <a href="{$cat->url|noescape}">{$cat->name}</a>
+            <a href="{$cat->url}">{$cat->name}</a>
             <img
               n:if="$cat->iconTs !== null"
               title="{$cat->iconTs->title}"

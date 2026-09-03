@@ -169,7 +169,10 @@ final readonly class CategoryDefaultRenderer
             $rowPath = $row['path'];
             $rowFile = $row['file'];
 
-            $tnAlt = htmlspecialchars(strip_tags($name));
+            // Not pre-escaped (P59): thumbnails.latte prints this bare, no
+            // |noescape, relying on Latte's own auto-escape once at print
+            // time -- htmlspecialchars()'ing it here too would double-escape.
+            $tnAlt = strip_tags($name);
             $tnTitle = $this->htmlRenderer->getThumbnailTitle($row, $name, $desc);
             $srcImage = new SrcImage(SrcImageInfo::fromRow($row));
 

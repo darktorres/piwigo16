@@ -24,16 +24,16 @@
               class="thumbnailOverlay"
               data-image-id="{$thumbnail->id}"
             ><i class="{$overlay->icon}"></i></span>
-            <a href="{$thumbnail->url|noescape}">
+            <a href="{$thumbnail->url}">
               <img
                 class="thumbnail"
                 {if $derivative->isCached()}
-                src="{$derivative->getUrl()|noescape}"
+                src="{$derivative->getUrl()}"
                 {else}
                 src="{$ROOT_URL}{$themeconf['icon_dir']}/img_small.png"
-                data-src="{$derivative->getUrl()|noescape}"
+                data-src="{$derivative->getUrl()}"
                 {/if}
-                alt="{$thumbnail->tnAlt|noescape}"
+                alt="{$thumbnail->tnAlt}"
                 title="{$thumbnail->tnTitle}"
               >
             </a>

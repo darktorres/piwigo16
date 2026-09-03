@@ -9,7 +9,7 @@
 // duplicate-identifier conflict. Now that album_selector.ts is a real
 // module, its own types are module-private, so this file needs its own
 // local copy -- a pure type alias, safe to duplicate.
-import { ajax } from "../../../default/js/vendor/ajax";
+import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
 import { data, setData } from "../../../default/js/vendor/dom";
 import {
   getSelectizeInstance,
@@ -434,12 +434,14 @@ const CategoriesCache = function (
   options.key = "categoriesAdminList";
 
   options.loader = function (callback) {
-    void ajax({
-      url: options.rootUrl! + "api/v1/categories",
-      dataType: "json",
-      success: function (
-        response: operations["categoryList"]["responses"][200]["content"]["application/json"],
-      ) {
+    void (async () => {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+        const response = (await ajax({
+          url: options.rootUrl! + "api/v1/categories",
+          dataType: "json",
+        })) as operations["categoryList"]["responses"][200]["content"]["application/json"];
+
         const cats: ProcessedCategory[] = response.categories.map(
           function (c, i) {
             const { comment: _comment, uppercats: _uppercats, ...rest } = c;
@@ -448,8 +450,10 @@ const CategoriesCache = function (
         );
 
         callback(cats);
-      },
-    });
+      } catch (e) {
+        console.error(e instanceof AjaxError ? e.responseText : e);
+      }
+    })();
   };
 
   this._init(options);
@@ -500,20 +504,24 @@ const TagsCache = function (
   options.key = "tagsAdminList";
 
   options.loader = function (callback) {
-    void ajax({
-      url: options.rootUrl! + "api/v1/tags",
-      dataType: "json",
-      success: function (
-        response: operations["tagList"]["responses"][200]["content"]["application/json"],
-      ) {
+    void (async () => {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+        const response = (await ajax({
+          url: options.rootUrl! + "api/v1/tags",
+          dataType: "json",
+        })) as operations["tagList"]["responses"][200]["content"]["application/json"];
+
         const tags: ProcessedTag[] = response.tags.map(function (t) {
           const { urlName: _urlName, lastmodified: _lastmodified, ...rest } = t;
           return { ...rest, id: "~~" + String(t.id) + "~~" };
         });
 
         callback(tags);
-      },
-    });
+      } catch (e) {
+        console.error(e instanceof AjaxError ? e.responseText : e);
+      }
+    })();
   };
 
   this._init(options);
@@ -564,20 +572,24 @@ const GroupsCache = function (
   options.key = "groupsAdminList";
 
   options.loader = function (callback) {
-    void ajax({
-      url: options.rootUrl! + "api/v1/groups",
-      dataType: "json",
-      success: function (
-        response: operations["groupList"]["responses"][200]["content"]["application/json"],
-      ) {
+    void (async () => {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+        const response = (await ajax({
+          url: options.rootUrl! + "api/v1/groups",
+          dataType: "json",
+        })) as operations["groupList"]["responses"][200]["content"]["application/json"];
+
         const groups: ProcessedGroup[] = response.groups.map(function (g) {
           const { lastmodified: _lastmodified, ...rest } = g;
           return rest;
         });
 
         callback(groups);
-      },
-    });
+      } catch (e) {
+        console.error(e instanceof AjaxError ? e.responseText : e);
+      }
+    })();
   };
 
   this._init(options);
@@ -631,23 +643,25 @@ const UsersCache = function (
     let users: UserEntity[] = [];
 
     // recursive loader
-    (function load(page: number) {
-      void ajax({
-        url:
-          options.rootUrl! + "api/v1/users?perPage=9999&page=" + String(page),
-        dataType: "json",
-        success: function (
-          response: operations["userList"]["responses"][200]["content"]["application/json"],
-        ) {
-          users = users.concat(response.users);
+    void (async function load(page: number) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+        const response = (await ajax({
+          url:
+            options.rootUrl! + "api/v1/users?perPage=9999&page=" + String(page),
+          dataType: "json",
+        })) as operations["userList"]["responses"][200]["content"]["application/json"];
 
-          if (response.users.length === response.perPage) {
-            load(page + 1);
-          } else {
-            callback(users);
-          }
-        },
-      });
+        users = users.concat(response.users);
+
+        if (response.users.length === response.perPage) {
+          await load(page + 1);
+        } else {
+          callback(users);
+        }
+      } catch (e) {
+        console.error(e instanceof AjaxError ? e.responseText : e);
+      }
     })(0);
   };
 

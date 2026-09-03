@@ -418,8 +418,8 @@ final class CheckIntegrityTest extends IntegrationTestCase
         $list = $result->c13yList;
         self::assertFalse($list[0]->showCorrectionSuccessFct);
         self::assertFalse($list[0]->canSelect);
-        self::assertNotSame('', $list[0]->correctionErrorFct);
-        self::assertStringContainsString('forum', $list[0]->correctionErrorFct);
+        self::assertNotSame('', (string) $list[0]->correctionErrorFct);
+        self::assertStringContainsString('forum', (string) $list[0]->correctionErrorFct);
     }
 
     public function testDisplayOffersACallableUncorrectedAnomalyForAutomaticCorrection(): void

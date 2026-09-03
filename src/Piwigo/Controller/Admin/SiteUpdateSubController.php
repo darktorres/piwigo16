@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\CoreTabs;
@@ -186,7 +187,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
 
         $save_error = null;
         if ($this->pageState->noMd5sumNumber !== null) {
-            $save_error = '<a href="admin.php?page=batch_manager&amp;filter=prefilter-no_sync_md5sum">' . $this->lang->t('Some checksums are missing.') . '<i class="icon-right"></i></a>';
+            $save_error = new Html('<a href="admin.php?page=batch_manager&amp;filter=prefilter-no_sync_md5sum">' . $this->lang->t('Some checksums are missing.') . '<i class="icon-right"></i></a>');
         }
 
         // `footer_elements` accumulates real cross-branch shared state (a

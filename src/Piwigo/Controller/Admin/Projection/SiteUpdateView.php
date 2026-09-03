@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin\Projection;
 
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
@@ -18,10 +19,13 @@ use Piwigo\Template\Latte\Attribute\Template;
  * `$updateResult`/`$metadataResult` are each only set once their own
  * independently-gated sync stage (dirs/files, metadata) actually ran
  * this request. `$saveError` is only set when the previous sync run
- * left images with no md5sum computed. `$footerElements` accumulates
- * across whichever sync stages ran, `null` when none did.
- * `$categoryOptions` is {@see \Piwigo\Category\CategoryService}'s own
- * `category_options`/`category_options_selected` pair.
+ * left images with no md5sum computed -- Html, not string (P59): a
+ * hardcoded `<a>` link (with a literal, already-`&amp;`-escaped href)
+ * plus a `Lang::t()` translation, never attacker- or user-supplied
+ * text. `$footerElements` accumulates across whichever sync stages ran,
+ * `null` when none did. `$categoryOptions` is {@see
+ * \Piwigo\Category\CategoryService}'s own `category_options`/
+ * `category_options_selected` pair.
  */
 #[Template('site_update.latte')]
 final readonly class SiteUpdateView implements View, HasPageAssets
@@ -48,7 +52,7 @@ final readonly class SiteUpdateView implements View, HasPageAssets
         public array $introduction,
         public CategorySelectOptions $categoryOptions,
         public string $csrfToken,
-        public ?string $saveError,
+        public ?Html $saveError,
         public ?array $footerElements,
     ) {}
 

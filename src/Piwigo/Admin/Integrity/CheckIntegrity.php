@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Integrity;
 
 use Closure;
+use Latte\Runtime\Html;
 use LogicException;
 use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Admin\Integrity\Event\ListCheckIntegrity;
@@ -202,7 +203,7 @@ final class CheckIntegrity
                 $can_select = false;
                 $show_ignore_msg = false;
                 $show_correction_success_fct = false;
-                $correction_error_fct = '';
+                $correction_error_fct = new Html('');
                 $show_correction_fct = false;
                 $show_correction_bad_fct = false;
                 $correction_msg = '';
@@ -219,7 +220,7 @@ final class CheckIntegrity
                             if ($c13y->corrected) {
                                 $show_correction_success_fct = true;
                             } else {
-                                $correction_error_fct = $this->getHtlmLinksMoreInfo();
+                                $correction_error_fct = new Html($this->getHtlmLinksMoreInfo());
                             }
                         } elseif ($c13y->isCallable) {
                             $show_correction_fct = true;

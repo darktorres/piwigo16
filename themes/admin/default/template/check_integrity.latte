@@ -50,14 +50,14 @@
                     {if $c13y->showCorrectionSuccessFct}
                       {='Correction applied with success'|translate}
                     {/if}
-                    {if $c13y->correctionErrorFct !== ''}
+                    {if (string) $c13y->correctionErrorFct !== ''}
                       {='Correction applied with error'|translate}
                       <br>
-                      {$c13y->correctionErrorFct|noescape}
+                      {$c13y->correctionErrorFct}
                     {/if}
                     {if $c13y->correctionMsg !== ''}
                       <br
-                        n:if="$c13y->showCorrectionSuccessFct or $c13y->correctionErrorFct !== '' or $c13y->showCorrectionFct or $c13y->showCorrectionBadFct"
+                        n:if="$c13y->showCorrectionSuccessFct or (string) $c13y->correctionErrorFct !== '' or $c13y->showCorrectionFct or $c13y->showCorrectionBadFct"
                       >
                       {$c13y->correctionMsg|breakLines}
                     {/if}

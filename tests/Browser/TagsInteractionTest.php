@@ -132,6 +132,108 @@ it('creates a tag via the checkmark button, then deletes it via the dropdown', f
     H::assertNoServerErrors($page, 'tags add/delete flow');
 });
 
+it('merges two selected tags via the selection panel', function (): void {
+    // No prior test, jQuery-based or not, ever drove tags.ts's own
+    // selection-mode/merge flow (P51-D) -- mergeGroups()'s own
+    // destination id used to come from a bare `val() ?? ""` read
+    // (`dest_id`), now `valId()`. Real coverage closes that gap and
+    // exercises the real POST api/v1/tags/actions/merge round trip.
+    $page = H::asAdmin($this);
+    $page = H::navigateOk($page, '/admin.php?page=tags');
+
+    $timeoutMs = 10000;
+    $sourceName = 'Tags Merge Source ' . uniqid();
+    $destName = 'Tags Merge Dest ' . uniqid();
+    $encodedSource = json_encode($sourceName, JSON_THROW_ON_ERROR);
+    $encodedDest = json_encode($destName, JSON_THROW_ON_ERROR);
+
+    $waitForTagName = function (string $encodedName) use ($page, $timeoutMs): void {
+        $page->script(<<<JS
+            new Promise((resolve, reject) => {
+                const deadline = Date.now() + {$timeoutMs};
+                const check = () => {
+                    if (Array.from(document.querySelectorAll('.tag-name')).some((el) => el.textContent.trim() === {$encodedName})) return resolve(true);
+                    if (Date.now() > deadline) return reject(new Error('tag never appeared: ' + {$encodedName}));
+                    setTimeout(check, 100);
+                };
+                check();
+            })
+            JS);
+    };
+
+    $page->click('.add-tag-label');
+    $page->fill('#add-tag-input', $sourceName);
+    $page->click('#add-tag .icon-validate');
+    $waitForTagName($encodedSource);
+
+    $page->click('.add-tag-label');
+    $page->fill('#add-tag-input', $destName);
+    $page->click('#add-tag .icon-validate');
+    $waitForTagName($encodedDest);
+
+    // Enable selection mode, then select both new tags. `#toggleSelectionMode`
+    // is a real <input type=checkbox> with zero rendered size (a CSS
+    // "switch" toggle) -- its own <label class="switch"> wrapper is the
+    // real click target, same reasoning as `.add-tag-label` above.
+    $page->click('.selection-mode-group-manager .switch');
+    $page->script(<<<JS
+        Array.from(document.querySelectorAll('.tag-box')).find(
+            (el) => el.querySelector('.tag-name')?.textContent?.trim() === {$encodedSource}
+        ).click()
+        JS);
+    $page->script(<<<JS
+        Array.from(document.querySelectorAll('.tag-box')).find(
+            (el) => el.querySelector('.tag-name')?.textContent?.trim() === {$encodedDest}
+        ).click()
+        JS);
+
+    $page->click('#MergeSelectionMode');
+    $page->script(<<<JS
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + {$timeoutMs};
+            const check = () => {
+                if (document.getElementById('MergeOptionsChoices').options.length >= 2) return resolve(true);
+                if (Date.now() > deadline) return reject(new Error('merge options panel never populated'));
+                setTimeout(check, 100);
+            };
+            check();
+        })
+        JS);
+
+    // Pick the destination tag in #MergeOptionsChoices by its own visible
+    // option text (mergeGroups() reads this <select>'s value via valId()).
+    $page->script(<<<JS
+        (() => {
+            const select = document.getElementById('MergeOptionsChoices');
+            const option = Array.from(select.options).find((o) => o.textContent.trim() === {$encodedDest});
+            select.value = option.value;
+        })()
+        JS);
+    $page->click('.ConfirmMergeButton');
+
+    // mergeGroups()'s own alert() shows a loading-then-summary dialog whose
+    // `content` is a function returning ajax()'s own AjaxThenable (same
+    // pattern as jconfirm.ts's own documented "content as ajax()" usage) --
+    // the real DOM/data updates happen in that ajax call's own `success:`
+    // callback, independent of any button click on the dialog itself.
+    $page->script(<<<JS
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + {$timeoutMs};
+            const check = () => {
+                const sourceGone = !Array.from(document.querySelectorAll('.tag-name')).some((el) => el.textContent.trim() === {$encodedSource});
+                const destStillThere = Array.from(document.querySelectorAll('.tag-name')).some((el) => el.textContent.trim() === {$encodedDest});
+                if (sourceGone && destStillThere) return resolve(true);
+                if (Date.now() > deadline) return reject(new Error('merge never completed: source still present or destination gone'));
+                setTimeout(check, 100);
+            };
+            check();
+        })
+        JS);
+
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'tags merge flow');
+});
+
 it('persists the tags-per-page cookie across a real page reload', function (): void {
     // tags.ts's own setCookie() (themes/default/js/vendor/cookie.ts,
     // ported off jquery.cookie in P49-B group 2) writes the cookie

@@ -19,6 +19,7 @@ import {
   attrOf,
   css,
   data,
+  dataId,
   escapeId,
   fadeIn,
   fadeOut,
@@ -41,6 +42,7 @@ import {
   slideUp,
   trigger,
   val,
+  valId,
 } from "../../../default/js/vendor/dom";
 
 // Real per-row shape (P47), traced to TagsPageRenderer.php's own
@@ -54,11 +56,6 @@ interface TagRow {
   counter?: number;
   alt_names?: string;
 }
-
-// Mixed at runtime -- most callers read a real numeric `TagRow.id`, but
-// several DOM-attribute-sourced sites (`.attr("data-id")`, `.data("id")`)
-// hand back a string form of the same value.
-type TagId = string | number;
 
 type TagCreateResponse =
   operations["tagCreate"]["responses"][201]["content"]["application/json"];
@@ -298,13 +295,15 @@ on(document.querySelectorAll(".TagSubmit"), "click", function () {
   show(document.querySelectorAll(".TagLoading"));
   // Non-null: set_up_popin() always sets this id before the form is
   // submittable.
-  const $tagboxid = attrOf(
-    find(
-      document.querySelectorAll(".RenameTagPopInContainer"),
-      ".tag-property-input",
+  const $tagboxid = Number(
+    attrOf(
+      find(
+        document.querySelectorAll(".RenameTagPopInContainer"),
+        ".tag-property-input",
+      ),
+      "id",
     ),
-    "id",
-  )!;
+  );
   renameTag(
     $tagboxid,
     String(
@@ -322,7 +321,7 @@ on(document.querySelectorAll(".TagSubmit"), "click", function () {
       rename_tag_close();
       cleanCheckmark();
       const changedBox = document.querySelector(
-        '[data-id="' + $tagboxid + '"]',
+        '[data-id="' + String($tagboxid) + '"]',
       );
       if (changedBox !== null) {
         wrapWithDiv(changedBox, "tag-changed");
@@ -488,10 +487,10 @@ function setupTagbox(tagBox: Element): void {
     if (hasClass(document.querySelectorAll(".tag-container"), "selection")) {
       if (attrOf(tagBox, "data-selected") === "1") {
         attr(tagBox, "data-selected", "0");
-        removeSelectedItem(attrOf(tagBox, "data-id")!);
+        removeSelectedItem(Number(attrOf(tagBox, "data-id")));
       } else {
         attr(tagBox, "data-selected", "1");
-        addSelectedItem(attrOf(tagBox, "data-id")!);
+        addSelectedItem(Number(attrOf(tagBox, "data-id")));
       }
       updateSelectionContent();
     }
@@ -499,9 +498,8 @@ function setupTagbox(tagBox: Element): void {
 
   //Edit Name
   on(find(tagBox, ".dropdown-option.edit"), "click", function () {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-    const id = data(tagBox, "id") as TagId;
-    const tagIndex = dataTags.findIndex((tag) => tag.id === Number(id));
+    const id = dataId(tagBox, "id");
+    const tagIndex = dataTags.findIndex((tag) => tag.id === id);
     // Non-null: `id` always comes from a real tag box, which was
     // itself rendered from this same `dataTags` array.
     const tagRawName = dataTags[tagIndex]!.raw_name;
@@ -519,11 +517,7 @@ function setupTagbox(tagBox: Element): void {
           text: str_yes_delete_confirmation,
           btnClass: "btn-red",
           action: function () {
-            removeTag(
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-              data(tagBox, "id") as TagId,
-              htmlOf(find(tagBox, ".tag-name"))!,
-            );
+            removeTag(dataId(tagBox, "id"), htmlOf(find(tagBox, ".tag-name"))!);
           },
         },
         cancel: {
@@ -537,8 +531,7 @@ function setupTagbox(tagBox: Element): void {
   //Duplicate Tag
   on(find(tagBox, ".dropdown-option.duplicate"), "click", function () {
     void duplicateTag(
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      data(tagBox, "id") as TagId,
+      dataId(tagBox, "id"),
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       data(find(tagBox, ".tag-name")[0]!, "rawname") as string,
     ).then((newTag) => {
@@ -547,7 +540,7 @@ function setupTagbox(tagBox: Element): void {
   });
 }
 
-function set_up_popin(id: TagId, tagRawName: string, tagName: string): void {
+function set_up_popin(id: number, tagRawName: string, tagName: string): void {
   attr(
     find(
       document.querySelectorAll(".RenameTagPopInContainer"),
@@ -587,7 +580,7 @@ function rename_tag_open(): void {
   document.querySelector<HTMLElement>(".tag-property-input")?.focus();
 }
 
-function removeTag(id: TagId, name: string): void {
+function removeTag(id: number, name: string): void {
   alert({
     title: str_tag_deleted.replace("%s", name),
     // eslint-disable-next-line @typescript-eslint/promise-function-async -- must return ajax()'s own AjaxThenable (jconfirm.ts's `isThenable()` checks for its real `.always()`); `async` would re-wrap it through `Promise.resolve()` and lose that method.
@@ -604,7 +597,7 @@ function removeTag(id: TagId, name: string): void {
             .querySelector('.tag-box[data-id="' + String(id) + '"]')
             ?.remove();
           //Update data
-          dataTags = dataTags.filter((tag) => tag.id !== Number(id));
+          dataTags = dataTags.filter((tag) => tag.id !== id);
           showMessage(str_tag_deleted.replace("%s", name));
           updateBadge();
           updateSearchInfo();
@@ -620,7 +613,7 @@ function removeTag(id: TagId, name: string): void {
 }
 
 async function renameTag(
-  id: TagId,
+  id: number,
   new_name: string,
 ): Promise<TagRenameResponse> {
   let response: TagRenameResponse;
@@ -676,7 +669,7 @@ async function renameTag(
   attr(document.querySelectorAll(".dropdown-option.view"), "href", u_view);
 
   //Update the local tag list
-  const index = dataTags.findIndex((tag) => tag.id === Number(id));
+  const index = dataTags.findIndex((tag) => tag.id === id);
   // Non-null: `id` always identifies a real, currently-rendered
   // tag box, which was itself rendered from this same array.
   dataTags[index]!.name = response.name;
@@ -687,7 +680,7 @@ async function renameTag(
 }
 
 async function duplicateTag(
-  id: TagId,
+  id: number,
   name: string,
 ): Promise<TagDuplicateResponse> {
   let copy_name = name + str_copy;
@@ -737,7 +730,7 @@ async function duplicateTag(
   setupTagbox(newTag);
 
   //Update Data
-  const index = dataTags.findIndex((tag) => tag.id === Number(id));
+  const index = dataTags.findIndex((tag) => tag.id === id);
   dataTags.splice(index + 1, 0, {
     name: response.name,
     // Was missing entirely -- `TagRow.raw_name` is a required
@@ -761,7 +754,7 @@ async function duplicateTag(
 /*-------
  Selection mode
 -------*/
-let selected: TagId[] = [];
+let selected: number[] = [];
 const maxItemDisplayed = 5;
 
 setChecked(document.querySelectorAll("#toggleSelectionMode"), false);
@@ -795,7 +788,7 @@ function clearSelection(): void {
   updateSelectionContent();
 }
 
-function addSelectedItem(id: TagId): void {
+function addSelectedItem(id: number): void {
   if (!selected.includes(id)) {
     selected.push(id);
 
@@ -813,17 +806,14 @@ function addSelectedItem(id: TagId): void {
       );
     } else {
       hide(document.querySelectorAll(".selection-other-tags"));
-      if (dataTags.findIndex((tag) => tag.id === Number(id)) > -1) {
-        createSelectionItem(
-          id,
-          dataTags.find((tag) => tag.id === Number(id))!.name,
-        );
+      if (dataTags.findIndex((tag) => tag.id === id) > -1) {
+        createSelectionItem(id, dataTags.find((tag) => tag.id === id)!.name);
       }
     }
   }
 }
 
-function createSelectionItem(id: TagId, name: string): void {
+function createSelectionItem(id: number, name: string): void {
   const newItemStructure = parseHtml(
     '<div data-id="' +
       String(id) +
@@ -845,11 +835,9 @@ function createSelectionItem(id: TagId, name: string): void {
   );
 }
 
-function removeSelectedItem(id: TagId): void {
-  if (selected.findIndex((tag) => Number(tag) === Number(id)) > -1) {
-    selected = selected.filter((tag) => {
-      return parseInt(String(tag)) !== parseInt(String(id));
-    });
+function removeSelectedItem(id: number): void {
+  if (selected.includes(id)) {
+    selected = selected.filter((tag) => tag !== id);
 
     attr(
       document.querySelectorAll('.tag-box[data-id="' + String(id) + '"]'),
@@ -883,7 +871,7 @@ function removeSelectedItem(id: TagId): void {
           ) {
             isNotCreate = false;
             const indexOfTag = dataTags.findIndex(
-              (tag) => tag.id === Number(currentId),
+              (tag) => tag.id === currentId,
             );
             createSelectionItem(currentId, dataTags[indexOfTag]!.name);
           }
@@ -920,7 +908,7 @@ function updateMergeItems(): void {
         '<option value="' +
           String(id) +
           '">' +
-          dataTags.find((tag) => tag.id === Number(id))!.name +
+          dataTags.find((tag) => tag.id === id)!.name +
           "</option>",
       )[0]!,
     );
@@ -1084,7 +1072,7 @@ function selectInvert(tags: TagRow[]): void {
 on(document.querySelectorAll("#DeleteSelectionMode"), "click", function () {
   const names: string[] = [];
   selected.forEach(function (id) {
-    names.push(dataTags.find((tag) => tag.id === Number(id))!.name);
+    names.push(dataTags.find((tag) => tag.id === id)!.name);
   });
 
   confirm({
@@ -1108,7 +1096,7 @@ on(document.querySelectorAll("#DeleteSelectionMode"), "click", function () {
 function removeSelectedTags(): void {
   const names: string[] = [];
   selected.forEach(function (id) {
-    names.push(dataTags.find((tag) => tag.id === Number(id))!.name);
+    names.push(dataTags.find((tag) => tag.id === id)!.name);
   });
 
   alert({
@@ -1149,12 +1137,18 @@ function removeSelectedTags(): void {
 
 //Merge Tags
 on(document.querySelectorAll(".ConfirmMergeButton"), "click", () => {
-  // Single-value <select>, never multi.
-  const dest_id = val(document.querySelectorAll("#MergeOptionsChoices")) ?? "";
+  // Single-value <select>, never multi. `valId()` returns null only when
+  // nothing is selected, which can't happen here -- the merge button is
+  // only reachable once 2+ tags are already selected, and each one adds a
+  // real <option> to this same <select> (see updateMergeItems() above).
+  const dest_id = valId(document.querySelectorAll("#MergeOptionsChoices"));
+  if (dest_id === null) {
+    return;
+  }
   mergeGroups(dest_id, selected);
 });
 
-function mergeGroups(destination_id: TagId, merge_ids: TagId[]): void {
+function mergeGroups(destination_id: number, merge_ids: number[]): void {
   const destination_name = htmlOf(
     document.querySelectorAll(
       '.tag-box[data-id="' + String(destination_id) + '"] .tag-name',
@@ -1188,7 +1182,7 @@ function mergeGroups(destination_id: TagId, merge_ids: TagId[]): void {
           "X-CSRF-Token": pwg_token,
         },
         data: JSON.stringify({
-          destinationTagId: Number(destination_id),
+          destinationTagId: destination_id,
           mergeTagIds: merge_ids,
         }),
         dataType: "json",
@@ -1315,11 +1309,7 @@ function showMessage(message: string): void {
 /*-------
  Pagination
 -------*/
-// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-let per_page = data(
-  document.querySelector(".tag-container")!,
-  "per_page",
-) as number;
+let per_page = dataId(document.querySelector(".tag-container")!, "per_page");
 const pageItem = '<a data-page="%d">%d</a>';
 const pageEllipsis = "<span>...</span>";
 let promisePending = false;
@@ -1394,8 +1384,7 @@ function appendPaginationItem(page: number | null = null): void {
       addClass(newTag, "actual");
     }
     on(newTag, "click", () => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      actualPage = data(newTag, "page") as number;
+      actualPage = dataId(newTag, "page");
       updatePaginationMenu();
     });
   } else {

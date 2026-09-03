@@ -244,7 +244,7 @@ function activate(
 }
 
 export function cluetip(elements: Element | ArrayLike<Element>, options: ClueTipOptions): void {
-  const width = options.width;
+  const {width} = options;
   const positionBy = options.positionBy ?? "auto";
 
   // Real source creates its own shared `#cluetip` div the first time

@@ -2846,7 +2846,7 @@ msgid "Edit user"
 msgstr "Editar usuário"
 
 msgid "For security reason, authentication keys do not work for administrators."
-msgstr "\nPor razões de segurança, chaves de autenticação não funcionam para os administradores."
+msgstr "Por razões de segurança, chaves de autenticação não funcionam para os administradores."
 
 msgid "No recipient selected"
 msgstr "Nenhum destinatário seleccionado"
@@ -3983,7 +3983,7 @@ msgid "%d in whole branch"
 msgstr "%d em todo o ramo"
 
 msgid "During upload, if Piwigo detects the photo already exists, associate the existing photo to the destination album, without duplicating file"
-msgstr "Durante o upload, se o Piwigo detectar que a foto já existe, associe a foto existente ao álbum de destino, sem duplicar o arquivo\n"
+msgstr "Durante o upload, se o Piwigo detectar que a foto já existe, associe a foto existente ao álbum de destino, sem duplicar o arquivo"
 
 msgid "Put at the root"
 msgstr "Coloque na raiz"
@@ -4046,7 +4046,7 @@ msgid "Save"
 msgstr "Guardar"
 
 msgid "Select or create an album"
-msgstr "Selecione ou crie um álbum\n"
+msgstr "Selecione ou crie um álbum"
 
 msgid "System Activities"
 msgstr "Atividades do sistema"
@@ -4124,10 +4124,10 @@ msgid "Welcome to %s"
 msgstr "Bem-vindo(a) ao %s"
 
 msgid "%d photos were moved from the upload lounge to their albums"
-msgstr "%d fotos foram movidas da área de upload para os seus álbuns\n"
+msgstr "%d fotos foram movidas da área de upload para os seus álbuns"
 
 msgid "%s is the new main user"
-msgstr "%s é o novo utilizador principal\n"
+msgstr "%s é o novo utilizador principal"
 
 msgid "A photo library administrator has created the following account for you:"
 msgstr "Um administrador da biblioteca de fotografias criou a seguinte conta para si:"

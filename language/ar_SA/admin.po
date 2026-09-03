@@ -2147,7 +2147,7 @@ msgid "Add to caddie"
 msgstr "اضفها الي السلة"
 
 msgid "%s has been successfully updated."
-msgstr "\n%s تم تحديثه بنجاح "
+msgstr "%s تم تحديثه بنجاح "
 
 msgid "%s photos can not be regenerated"
 msgstr "%s لا يمكن إعادة إنشاء الصور"

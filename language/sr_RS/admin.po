@@ -3722,13 +3722,13 @@ msgid "Download all activities"
 msgstr "Преузми све активности"
 
 msgid "%s plugin found"
-msgstr "\nпронађен <b>%s</b> додатак"
+msgstr "пронађен <b>%s</b> додатак"
 
 msgid "%s plugins found"
 msgstr "пронађео <b>%s</b> додатака"
 
 msgid "%s status is required to edit parameters."
-msgstr "\n%s стање је потребно за уређивање овох параметра."
+msgstr "%s стање је потребно за уређивање овох параметра."
 
 msgid "%sGB"
 msgstr "%s GB"

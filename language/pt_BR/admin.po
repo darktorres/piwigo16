@@ -2846,7 +2846,7 @@ msgid "Edit user"
 msgstr "Editar usuário"
 
 msgid "For security reason, authentication keys do not work for administrators."
-msgstr "\nPor razões de segurança, chaves de autenticação não funcionam para os administradores."
+msgstr "Por razões de segurança, chaves de autenticação não funcionam para os administradores."
 
 msgid "No recipient selected"
 msgstr "Nenhum recipiente selecionado"
@@ -3329,7 +3329,7 @@ msgid "Drag and drop to reorder albums"
 msgstr "Arraste e solte para reordenar os álbuns "
 
 msgid "Compact View"
-msgstr "Visualização Compacta \n"
+msgstr "Visualização Compacta "
 
 msgid "Apply to the whole hierarchy"
 msgstr "Aplicar a toda a hierarquia "

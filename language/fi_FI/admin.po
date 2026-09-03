@@ -1889,7 +1889,7 @@ msgid "Save to permalink history"
 msgstr "Tallenna permalinkkien historiaan"
 
 msgid "The permalink name must be composed of a-z, A-Z, 0-9, \"-\", \"_\" or \"/\". It must not be numeric or start with number followed by \"-\""
-msgstr "Permalinkin nimen tulee koostua merkeistä a-z, A-Z, 0-9, \"-\", \"_\" tai \"/\". Se ei saa olla numeerinen tai alkaa numerolla jonka jälkeen on \"-\"\n"
+msgstr "Permalinkin nimen tulee koostua merkeistä a-z, A-Z, 0-9, \"-\", \"_\" tai \"/\". Se ei saa olla numeerinen tai alkaa numerolla jonka jälkeen on \"-\""
 
 msgid "Permalink %s is already used by album %s"
 msgstr "Permalink %s on jo käytössä albumissa %s"

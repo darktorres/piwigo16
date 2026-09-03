@@ -962,7 +962,7 @@ msgid "Show oldest comments first"
 msgstr "ابتدا قدیمی ترین دیدگاه ها را نشان بده"
 
 msgid "Successfully registered, you will soon receive an email with your connection settings. Welcome!"
-msgstr "خوش آمدید\nثبت نام شما با موفقیت انجام شد ، به زودی ایمیلی حاوی اطلاعات ورود برای شما فرستاده می شود.\n"
+msgstr "خوش آمدید\nثبت نام شما با موفقیت انجام شد ، به زودی ایمیلی حاوی اطلاعات ورود برای شما فرستاده می شود."
 
 msgid "Thank you for registering at %s!"
 msgstr "با سپاس از نام نویسی شما در %s !"
@@ -1045,10 +1045,10 @@ msgid "mandatory"
 msgstr "الزامی"
 
 msgid "Your website URL is invalid"
-msgstr "آدرس وب سایت شما نامعتبر است\n"
+msgstr "آدرس وب سایت شما نامعتبر است"
 
 msgid "Website"
-msgstr "سایت اینترنتی\n"
+msgstr "سایت اینترنتی"
 
 msgid "Email"
 msgstr "ایمیل"

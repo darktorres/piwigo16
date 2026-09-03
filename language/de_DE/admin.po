@@ -3512,7 +3512,7 @@ msgid "Has access to administration. Can only manage content: photos/albums/user
 msgstr "Hat Zugang zur Verwaltung. Kann nur Inhalte verwalten: Fotos/Alben/Benutzer/Tags/Gruppen."
 
 msgid "Has access to all administration functionnalities. Can manage both configuration and content."
-msgstr "Hat Zugang zu allen Verwaltungsfunktionen. Kann sowohl die Konfiguration als auch den Inhalt verwalten.\n"
+msgstr "Hat Zugang zu allen Verwaltungsfunktionen. Kann sowohl die Konfiguration als auch den Inhalt verwalten."
 
 msgid "Add a new user"
 msgstr "Einen neuen Benutzer hinzufügen"

@@ -82,7 +82,7 @@ msgid "Use quotes to search for an exact keyword or phrase."
 msgstr "Belirli bir anahtar kelimeyi veya ifadeyi aramak için tırnak işaretlerini kullanın."
 
 msgid "These operators can be used with numeric fields such as"
-msgstr "Bu operatörler, aşağıdaki gibi sayısal alanlarla kullanılabilir:\n"
+msgstr "Bu operatörler, aşağıdaki gibi sayısal alanlarla kullanılabilir:"
 
 msgid "Supported numeric operators"
 msgstr "Desteklenen sayısal operatörler"

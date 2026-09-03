@@ -576,7 +576,7 @@ msgid "Check your email for the confirmation link"
 msgstr "உறுதிப்படுத்தல் சுட்டிக்கு உங்கள் மின்னஞ்சலைப் பார்க்கவும்"
 
 msgid "Click here if your browser does not automatically forward you"
-msgstr "உங்கள் உலாவி தானாக முன் அனுப்பவில்லை என்றால் இங்கு அழுத்தவும்\n"
+msgstr "உங்கள் உலாவி தானாக முன் அனுப்பவில்லை என்றால் இங்கு அழுத்தவும்"
 
 msgid "Click on the photo to see it in high definition"
 msgstr "உயர் வரையறையாகப் பார்க்க படத்தின் மீது அழுத்தவும்"
@@ -1108,7 +1108,7 @@ msgid "Album name, A &rarr; Z"
 msgstr "ஆல்பத்தின் பெயர், ஒரு & rarr; Z"
 
 msgid "Link: %s"
-msgstr "\nஇணைப்பு:%s"
+msgstr "இணைப்பு:%s"
 
 msgid "piwigo_day_0"
 msgstr "ஞாயிறு"

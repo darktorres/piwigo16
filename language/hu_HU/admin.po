@@ -2735,7 +2735,7 @@ msgid "Show %s users"
 msgstr "%s felhasználó megjelenítése"
 
 msgid "All %d users are selected"
-msgstr "Összes, %d felhasználó kiválasztva\n\n"
+msgstr "Összes, %d felhasználó kiválasztva"
 
 msgid "Change password"
 msgstr "Jelszó módosítása"

@@ -2921,7 +2921,7 @@ msgid "No tags selected, no actions possible."
 msgstr "هیچ برچسبی انتخاب نشده، کاری قابل انجام نیست"
 
 msgid "Piwigo %s is available, please update"
-msgstr "ورژن %s از Piwigo آماده‌ی آپدیت کردن است\n"
+msgstr "ورژن %s از Piwigo آماده‌ی آپدیت کردن است"
 
 msgid "Piwigo Remote Sync is able to upload a whole folder hierarchy. If you run it again, only new photos will be uploaded."
 msgstr "Piwigo Remote Sync قابلیت این را دارد که یک پوشه(فولدر) را با تمام زیر مجموعه هایش آپلود کند. اگر مجدد این عملیات را انجام دهید فقط موارد جدید آپلود میشود."

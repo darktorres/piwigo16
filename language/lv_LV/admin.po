@@ -3065,7 +3065,7 @@ msgid "Search albums"
 msgstr "Meklēt albūmus"
 
 msgid "Search tips"
-msgstr "Meklēšanas padomi\n\n\n"
+msgstr "Meklēšanas padomi"
 
 msgid "Select"
 msgstr "Atlasīt"

@@ -2834,7 +2834,7 @@ msgid "based on"
 msgstr "基於"
 
 msgid "between %s and %s MB"
-msgstr "\n%s 和 %s MB之間"
+msgstr "%s 和 %s MB之間"
 
 msgid "date & time"
 msgstr "日期和時間"
@@ -2858,7 +2858,7 @@ msgid "For security reason, authentication keys do not work for administrators."
 msgstr "出於安全原因，認證密鑰對管理員工作不起作用。"
 
 msgid "No recipient selected"
-msgstr "\n沒有選擇收件人"
+msgstr "沒有選擇收件人"
 
 msgid "No user is permitted to see this private album"
 msgstr "沒有用戶被允許看到這個私人相冊"

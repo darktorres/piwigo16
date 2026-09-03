@@ -1096,7 +1096,7 @@ msgid "Link: %s"
 msgstr "Legatura: %s"
 
 msgid "Your authentication key is no longer valid."
-msgstr "\nCheia dvs. de autentificare nu mai este valabilă."
+msgstr "Cheia dvs. de autentificare nu mai este valabilă."
 
 msgid "generate random password"
 msgstr "generează parolă aleatoare"

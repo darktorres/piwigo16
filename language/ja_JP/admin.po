@@ -2507,7 +2507,7 @@ msgid "Minimum height"
 msgstr "最小高さ"
 
 msgid "Minimum width"
-msgstr "最小幅\n"
+msgstr "最小幅"
 
 msgid "Manage photos"
 msgstr "写真を管理する"

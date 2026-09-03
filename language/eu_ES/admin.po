@@ -656,7 +656,7 @@ msgstr[0] "album %d mugitua"
 msgstr[1] "%d album mugitu egin dira"
 
 msgid " and %d virtuals"
-msgstr "eta %d birtual\n"
+msgstr "eta %d birtual"
 
 msgid " and %d virtual"
 msgstr "eta %d birtual"

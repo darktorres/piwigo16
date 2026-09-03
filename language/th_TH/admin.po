@@ -2372,7 +2372,7 @@ msgid "Gallery unlocked"
 msgstr "แกลลอรี่ปลดล็อค"
 
 msgid "Generate multiple size images"
-msgstr "\nสร้างภาพหลายขนาด"
+msgstr "สร้างภาพหลายขนาด"
 
 msgid "Groups and users"
 msgstr "กลุ่มและผู้ใช้งาน"

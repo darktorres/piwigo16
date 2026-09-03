@@ -55,7 +55,7 @@ msgid "As a precaution, following themes have been deactivated. You must check f
 msgstr "ஒரு முன்னெச்சரிக்கையாக, பின்வரும் கருப்பொருள்கள் முடக்கப்பட்டிருக்கிறது. நீங்கள்  கண்டிப்பாக மேம்படுத்த கருப்பொருள்களை சரிபார்க்க வேண்டும் முன்பாக மறு செயலாக்க"
 
 msgid "As a precaution, following plugins have been deactivated. You must check for plugins upgrade before reactiving them:"
-msgstr "ஒரு முன்னெச்சரிக்கையாக, பின்வரும் செருகுநிரல்கள் முடக்கப்பட்டிருக்கிறது.நீங்கள் அவற்றை மேம்படுத்த செயலாக்க மீண்டும் செருகுநிரல்களை செயலாக்க வேண்டும்\n"
+msgstr "ஒரு முன்னெச்சரிக்கையாக, பின்வரும் செருகுநிரல்கள் முடக்கப்பட்டிருக்கிறது.நீங்கள் அவற்றை மேம்படுத்த செயலாக்க மீண்டும் செருகுநிரல்களை செயலாக்க வேண்டும்"
 
 msgid "All sub-albums of private albums become private"
 msgstr "அனைத்து துணை ஆல்பங்களின்\nதனியார் ஆல்பங்கள் தனியார் ஆக இருந்து"

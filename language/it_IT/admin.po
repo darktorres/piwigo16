@@ -2858,7 +2858,7 @@ msgid "Orphans"
 msgstr "Orfane"
 
 msgid "Recipients"
-msgstr "\nDestinatari"
+msgstr "Destinatari"
 
 msgid "Y Repeat"
 msgstr "Y Ripeti"

@@ -10,7 +10,7 @@ msgstr ""
 "X-Piwigo-Zero-Plural: false\n"
 
 msgid "%d associations"
-msgstr "\n"
+msgstr ""
 
 msgid "%d hour"
 msgstr "% d மணிநேரம்"
@@ -138,7 +138,7 @@ msgstr[1] "% d பயனர்கள் நீக்கப்பட்டன"
 
 msgid "%d user was not updated."
 msgid_plural "%d users were not updated."
-msgstr[0] "% d பயனாளர் மேம்படுத்தப்பட்டு இல்லை\n"
+msgstr[0] "% d பயனாளர் மேம்படுத்தப்பட்டு இல்லை"
 msgstr[1] "% d பயனர்கள் மேம்படுத்தப்பட்டு இல்லை."
 
 msgid "%d user was updated."
@@ -237,7 +237,7 @@ msgid "ACCESS_4"
 msgstr "வலை மேலாளர்கள் அணுகல்"
 
 msgid "ACCESS_5"
-msgstr "அணுகுவதற்கு இல்லை\n"
+msgstr "அணுகுவதற்கு இல்லை"
 
 msgid "Access type"
 msgstr "அணுகல் வகையான"
@@ -255,7 +255,7 @@ msgid "ACCESS_2"
 msgstr "பதிவு செய்த பயனர் அணுகல்"
 
 msgid "ACCESS_1"
-msgstr "அனைத்து அணுகல்\n"
+msgstr "அனைத்து அணுகல்"
 
 msgid "ACCESS_0"
 msgstr "இலவச அணுகல்"
@@ -474,7 +474,7 @@ msgid "Associate to album"
 msgstr "ஆல்பத்திற்கு இணைக்கவும்"
 
 msgid "Associated"
-msgstr "\nதொடர்புடையதாக"
+msgstr "தொடர்புடையதாக"
 
 msgid "Authorized"
 msgstr "அங்கீகரிக்கப்பட்ட"

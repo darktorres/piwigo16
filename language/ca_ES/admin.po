@@ -402,7 +402,7 @@ msgid "Webmaster cannot be deleted"
 msgstr "L'usuari Webmaster no es pot eliminar"
 
 msgid "You are running on development sources, no check possible."
-msgstr "Esteu treballant sobre un codi en desenvolupament. No hi ha comprovacions possible.\n"
+msgstr "Esteu treballant sobre un codi en desenvolupament. No hi ha comprovacions possible."
 
 msgid "You cannot delete your account"
 msgstr "No podeu eliminar el vostre compte."

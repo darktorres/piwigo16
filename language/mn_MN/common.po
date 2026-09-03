@@ -1120,10 +1120,10 @@ msgid "generate random password"
 msgstr "Дурын нууц үг үүсгэх"
 
 msgid "Album name, 1 &rarr; 5 &rarr; 10 &rarr; 100"
-msgstr "Цомгийн нэр, 1 &rarr; 5 &rarr; 10 &rarr; 100\n"
+msgstr "Цомгийн нэр, 1 &rarr; 5 &rarr; 10 &rarr; 100"
 
 msgid "Album name, 100 &rarr; 10 &rarr; 5 &rarr; 1"
-msgstr "Цомгийн нэр, 100 &rarr; 10 &rarr; 5 &rarr; 1\n"
+msgstr "Цомгийн нэр, 100 &rarr; 10 &rarr; 5 &rarr; 1"
 
 msgid "Related albums"
 msgstr "Холбоотой цомог"

@@ -118,7 +118,7 @@ msgid "Connection to server succeed, but it was impossible to connect to databas
 msgstr "ការភ្ជាប់ទៅកាន់ម៉ាស៊ីនមេបានជោគជ័យ តែការភ្ជាប់ទៅកាន់ database​ គឺមិនអាចធ្វើទៅបាន"
 
 msgid "webmaster login can't contain characters ' or \""
-msgstr "\nការចូលរបស់អ្នកគ្រប់គ្រងបណ្ដាញមិនអាចមានតួអក្សរ ' ឬ​ \""
+msgstr "ការចូលរបស់អ្នកគ្រប់គ្រងបណ្ដាញមិនអាចមានតួអក្សរ ' ឬ​ \""
 
 msgid "user password given by your host provider"
 msgstr "ពាក្យសម្ងាត់របស់អ្នកប្រើប្រាស់់ដែលបានផ្គត់ផ្គង់ដោយអ្នកផ្តល់​ host របស់អ្នក"

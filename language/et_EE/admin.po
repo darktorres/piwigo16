@@ -1184,7 +1184,7 @@ msgid "Manage"
 msgstr "Halda"
 
 msgid "Manual order"
-msgstr "Käsijärjestus\n"
+msgstr "Käsijärjestus"
 
 msgid "Maximum height"
 msgstr "Maksimum kõrgus"
@@ -2633,7 +2633,7 @@ msgid "Ratio"
 msgstr "Suhe"
 
 msgid "Operation in progress"
-msgstr "Kohandusi viiakse läbi.\n"
+msgstr "Kohandusi viiakse läbi."
 
 msgid "Keep in touch with Piwigo project, subscribe to Piwigo Announcement Newsletter. You will receive emails when a new release is available (sometimes including a security bug fix, it's important to know and upgrade) and when major events happen to the project. Only a few emails a year."
 msgstr "Hoia end Piwigo projektiga kursis! Telli Piwigo teadaannete infolehte. Sulle saadetakse meilile teadaanne kui uus Piwigo väljalase on saadaval (teinekord teavitatakse tähtsatest turvaparandustest) või muu suur sündmus toimub. Ainult paar infolehte aastas."

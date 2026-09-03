@@ -1090,7 +1090,7 @@ msgid "Album name, A &rarr; Z"
 msgstr "Albüm adı, A &rarr; Z"
 
 msgid "Album name, Z &rarr; A"
-msgstr "\nAlbüm adı, Z &rarr; A"
+msgstr "Albüm adı, Z &rarr; A"
 
 msgid "Link: %s"
 msgstr "Bağlantı: %s"

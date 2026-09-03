@@ -139,5 +139,5 @@ msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modif
 msgstr "Piwigo нь .htaccess файлыг үүсгэх/засах замаар Таны PHP 5.2-н тохиргоог өөрчлөхийг оролдлх болно."
 
 msgid "PHP version %s required (you are running on PHP %s)"
-msgstr "PHP-н %s хувилбар шаардлагатай (Таны ашиглаж буй PHP хувилбар: %s)\n"
+msgstr "PHP-н %s хувилбар шаардлагатай (Таны ашиглаж буй PHP хувилбар: %s)"
 

@@ -2846,7 +2846,7 @@ msgid "For security reason, authentication keys do not work for administrators."
 msgstr "От съображения за сигурност, уникалните ключове няма да работят за администратори."
 
 msgid "Each email sent will contain its own automatic authentication key on links, valid for %s."
-msgstr "Всеки изпратен имейл ще съдържа свой уникален ключ към линковете, валиден за %s.\n"
+msgstr "Всеки изпратен имейл ще съдържа свой уникален ключ към линковете, валиден за %s."
 
 msgid "Delete %d orphan photos"
 msgstr "Изтриване %d самотни снимки"
@@ -3242,7 +3242,7 @@ msgid "This is already the default theme"
 msgstr "Това вече е темата по подразбиране"
 
 msgid "This link is valid for %s. After this time, you will need to request a new link."
-msgstr "Линкът е валиден за %s. След този период, ще трябва да поискате нов линк.\n"
+msgstr "Линкът е валиден за %s. След този период, ще трябва да поискате нов линк."
 
 msgid "This photo is an orphan"
 msgstr "Тазни снимка не е включена в албум"
@@ -3419,7 +3419,7 @@ msgid "No format for this picture"
 msgstr "Няма формат за тази снимка"
 
 msgid "No picture found with the following name : %s."
-msgstr "Не е намерена снимка с това име: %s.\n"
+msgstr "Не е намерена снимка с това име: %s."
 
 msgid "No plugin activated"
 msgstr "Няма активни плъгини."
@@ -3935,7 +3935,7 @@ msgid "<b>1</b> album found"
 msgstr "намерен е <b>1</b> албум"
 
 msgid "A photo library administrator has created the following account for you:"
-msgstr "Администратор на фотогалерията е създал следния акаунт за вас::\n"
+msgstr "Администратор на фотогалерията е създал следния акаунт за вас::"
 
 msgid "Activate button \"%s\""
 msgstr "Активирайте бутон \"%s\""

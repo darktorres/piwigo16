@@ -3,7 +3,11 @@ import { pwgToaster } from "./toaster";
 import { sprintf } from "../../admin/default/js/common";
 
 import { pwg_getPageData, pwg_getPageString } from "../../default/js/page-data";
-import { ajax, type AjaxResponse } from "../../default/js/vendor/ajax";
+import {
+  ajax,
+  AjaxError,
+  type AjaxResponse,
+} from "../../default/js/vendor/ajax";
 import {
   addClass,
   attr,
@@ -180,7 +184,7 @@ ready(function () {
       show(document.querySelectorAll("#email_error"));
       return;
     }
-    setInfos({ email: mail });
+    void setInfos({ email: mail });
   });
 
   if (canUpdatePreferences) {
@@ -209,7 +213,7 @@ ready(function () {
         return;
       }
 
-      setInfos({ ...values });
+      void setInfos({ ...values });
     });
 
     on(document.querySelectorAll("#reset_preferences"), "click", function () {
@@ -282,7 +286,7 @@ ready(function () {
         });
         return;
       }
-      setInfos({ ...passwords });
+      void setInfos({ ...passwords });
       setVal(document.querySelectorAll("#password-section input"), "");
     });
 
@@ -331,7 +335,7 @@ ready(function () {
         const inputValue = val(element);
         values[inputName!] = inputValue;
       });
-      setInfos({ ...values });
+      void setInfos({ ...values });
     });
   });
 
@@ -425,7 +429,7 @@ ready(function () {
     hide(document.querySelectorAll("#error_api_key_date"));
   });
 
-  getAllApiKeys();
+  void getAllApiKeys();
 });
 
 /** `.siblings()` -- every other child of the element's own parent. */
@@ -493,7 +497,7 @@ const API_KEY_ENDPOINTS: Record<
   }),
 };
 
-function setInfos(
+async function setInfos(
   params: ProfileParams,
   method: keyof typeof API_KEY_ENDPOINTS = "pwg.users.setMyInfo",
   // The real response shape genuinely differs per dispatched endpoint
@@ -502,65 +506,66 @@ function setInfos(
   // `data`/`res` parameter to the shape that endpoint actually returns.
   callback: ((data: any) => void) | null = null,
   errCallback: ((e: AjaxResponse) => void) | null = null,
-) {
+): Promise<void> {
   // for debug
   // console.log('setInfos', params);
   const { url, httpMethod, body } = API_KEY_ENDPOINTS[method]!(params);
-  void ajax({
-    url: url,
-    method: httpMethod,
-    contentType: "application/json",
-    dataType: "json",
-    data: body !== null ? JSON.stringify(body) : undefined,
-    headers: { "X-CSRF-Token": PWG_TOKEN },
-    success: (response) => {
-      user = { ...user, ...params };
-      if (typeof callback === "function") {
-        callback(response);
-        return;
-      }
+
+  try {
+    const response = await ajax({
+      url: url,
+      method: httpMethod,
+      contentType: "application/json",
+      dataType: "json",
+      data: body !== null ? JSON.stringify(body) : undefined,
+      headers: { "X-CSRF-Token": PWG_TOKEN },
+    });
+
+    user = { ...user, ...params };
+    if (typeof callback === "function") {
+      callback(response);
+    } else {
       pwgToaster({ text: str_infos_saved, icon: "success" });
-    },
-    error: function (e) {
-      pwgToaster({
-        text:
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- safe regardless of the real shape: a malformed/non-object responseJSON just makes `.detail` read undefined, falling back to str_handle_error below.
-          (e.responseJSON as { detail?: string } | undefined)?.detail ??
-          str_handle_error,
-        icon: "error",
-      });
-      if (typeof errCallback === "function") {
-        errCallback(e);
-        return;
-      }
-    },
-  });
+    }
+  } catch (e) {
+    pwgToaster({
+      text:
+        (e instanceof AjaxError
+          ? // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- safe regardless of the real shape: a malformed/non-object responseJSON just makes `.detail` read undefined, falling back to str_handle_error below.
+            (e.responseJSON as { detail?: string } | undefined)?.detail
+          : undefined) ?? str_handle_error,
+      icon: "error",
+    });
+    if (typeof errCallback === "function" && e instanceof AjaxError) {
+      errCallback(e);
+    }
+  }
 }
 
-function getAllApiKeys(reset = false) {
-  void ajax({
-    url: "api/v1/session/api-keys",
-    type: "GET",
-    dataType: "json",
-    success: function (
-      res: operations["sessionApiKeyList"]["responses"][200]["content"]["application/json"],
-    ) {
-      if (res.apiKeys.length === 0) {
-        // No keys
-      } else {
-        AddApiLine(res.apiKeys, reset);
-      }
-    },
-    error: function (e) {
-      pwgToaster({
-        text:
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- safe regardless of the real shape: a malformed/non-object responseJSON just makes `.detail` read undefined, falling back below.
-          (e.responseJSON as { detail?: string } | undefined)?.detail ??
-          str_handle_error + "getAllApiKeys",
-        icon: "error",
-      });
-    },
-  });
+async function getAllApiKeys(reset = false): Promise<void> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    const res = (await ajax({
+      url: "api/v1/session/api-keys",
+      type: "GET",
+      dataType: "json",
+    })) as operations["sessionApiKeyList"]["responses"][200]["content"]["application/json"];
+
+    if (res.apiKeys.length === 0) {
+      // No keys
+    } else {
+      AddApiLine(res.apiKeys, reset);
+    }
+  } catch (e) {
+    pwgToaster({
+      text:
+        (e instanceof AjaxError
+          ? // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- safe regardless of the real shape: a malformed/non-object responseJSON just makes `.detail` read undefined, falling back below.
+            (e.responseJSON as { detail?: string } | undefined)?.detail
+          : undefined) ?? str_handle_error + "getAllApiKeys",
+      icon: "error",
+    });
+  }
 }
 
 function AddApiLine(lines: ApiKeyEntry[], reset: boolean) {
@@ -805,7 +810,7 @@ function saveApiEditEvents(pkid: string) {
       show(document.querySelectorAll("#error_api_key_edit"));
       return;
     }
-    setInfos(
+    void setInfos(
       {
         pkid,
         key_name: value,
@@ -814,7 +819,7 @@ function saveApiEditEvents(pkid: string) {
       // 204 No Content -- sessionApiKeyUpdate's real response has no body.
       (_res: unknown) => {
         pwgToaster({ text: str_api_edited, icon: "success" });
-        getAllApiKeys(true);
+        void getAllApiKeys(true);
         closeApiEditModal();
       },
     );
@@ -847,7 +852,7 @@ function closeApiRevokeModal() {
 
 function saveApiRevokeEvents(pkid: string) {
   on(document.querySelectorAll("#revoke_api_key"), "click", function () {
-    setInfos(
+    void setInfos(
       {
         pkid,
       },
@@ -855,7 +860,7 @@ function saveApiRevokeEvents(pkid: string) {
       // 204 No Content -- sessionApiKeyRevoke's real response has no body.
       (_res: unknown) => {
         pwgToaster({ text: str_api_revoked, icon: "success" });
-        getAllApiKeys(true);
+        void getAllApiKeys(true);
         closeApiRevokeModal();
       },
     );
@@ -934,7 +939,7 @@ function saveApiKeyEvent() {
       api_duration = Number(api_duration) || 1;
     }
 
-    setInfos(
+    void setInfos(
       {
         key_name: api_name,
         duration: api_duration,
@@ -944,7 +949,7 @@ function saveApiKeyEvent() {
         res: operations["sessionApiKeyCreate"]["responses"][201]["content"]["application/json"],
       ) => {
         pwgToaster({ text: str_api_added, icon: "success" });
-        getAllApiKeys(true);
+        void getAllApiKeys(true);
         successApiModal(res.apikeySecret, res.authKey);
       },
       (_err: unknown) => {

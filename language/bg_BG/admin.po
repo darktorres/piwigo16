@@ -3179,7 +3179,7 @@ msgid "This photo no longer exists"
 msgstr "Тази снимка не съществува вече"
 
 msgid "This picture is physically linked to this album, you can't dissociate them"
-msgstr "\n"
+msgstr "Тази снимка е физически свързана с този албум, не може да ги разасоциирате."
 
 msgid "Synchronization in progress"
 msgstr "Синхронизацията е в ход"

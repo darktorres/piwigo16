@@ -449,6 +449,27 @@ $validated_keys = [
         'Start Upload',
     ],
 
+    'nn_NO' => [
+        'status',
+        'test',
+        'IP',
+        'Element',
+        'Panorama',
+        'Piwigo for Android',
+        'Piwigo for iOS (iPhone, iPad, iPod Touch)',
+        'Send',
+        'Status',
+        'Zoom',
+        '%d Kb',
+        'IP: %s',
+        'Webmaster',
+        'Original',
+        'N/A',
+        'Filter',
+        'EXIF Metadata',
+        'Album',
+    ],
+
     'no_NO' => [
         'IP: %s',
         'Browser: %s',
@@ -551,7 +572,7 @@ $validated_keys = [
         '',
     ],
 
-    'sl_SL' => [
+    'sl_SI' => [
         '%d Kb',
         'Filter',
         'N/A',
@@ -586,6 +607,21 @@ $validated_keys = [
         'Element',
         'Host',
         'localhost, sql.multimania.com, toto.freesurf.fr',
+    ],
+
+    'sh_RS' => [
+        'IP',
+        'Element',
+        '%d Kb',
+        'Filter',
+        'Webmaster',
+        'IP: %s',
+        'Original',
+        'Host',
+    ],
+
+    'ta_IN' => [
+        'N/A',
     ],
 
     'sv_SE' => [

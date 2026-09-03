@@ -33,7 +33,7 @@ import {
   text,
   val,
 } from "../../../default/js/vendor/dom";
-import { ajax } from "../../../default/js/vendor/ajax";
+import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
 import { colorbox } from "../../../default/js/vendor/colorbox";
 import { confirm } from "../../../default/js/vendor/jconfirm";
 import { pwgDatepicker } from "../../../default/js/vendor/datepicker";
@@ -241,32 +241,29 @@ ready(function () {
           confirm: {
             text: str_meta_yes,
             btnClass: "btn-red",
-            action: function () {
+            action: async function () {
               disableLocalButton(pictureId);
-              void ajax({
-                type: "POST",
-                url: "api/v1/images/actions/sync-metadata",
-                contentType: "application/json",
-                headers: {
-                  "X-CSRF-Token": String(
-                    val(document.querySelectorAll("input[name=pwg_token]")),
-                  ),
-                },
-                data: JSON.stringify({
-                  imageIds: [pictureId],
-                }),
-                dataType: "json",
-                success: function (
-                  _data: operations["imageSyncMetadata"]["responses"][200]["content"]["application/json"],
-                ) {
-                  updateBlock(pictureId);
-                },
-                error: function (_data) {
-                  console.error("Error occurred");
-                  showErrorLocalBadge(pictureId);
-                  enableLocalButton(pictureId);
-                },
-              });
+              try {
+                await ajax({
+                  type: "POST",
+                  url: "api/v1/images/actions/sync-metadata",
+                  json: {
+                    imageIds: [pictureId],
+                  },
+                  headers: {
+                    "X-CSRF-Token": String(
+                      val(document.querySelectorAll("input[name=pwg_token]")),
+                    ),
+                  },
+                  dataType: "json",
+                });
+
+                void updateBlock(pictureId);
+              } catch (e) {
+                console.error(e instanceof AjaxError ? e.responseText : e);
+                showErrorLocalBadge(pictureId);
+                enableLocalButton(pictureId);
+              }
             },
           },
           cancel: {
@@ -294,49 +291,44 @@ ready(function () {
           confirm: {
             text: str_yes,
             btnClass: "btn-red",
-            action: function () {
+            action: async function () {
               const image_ids = [pictureId];
-              (function (ids: (string | number)[]) {
-                void ajax({
+              try {
+                await ajax({
                   type: "POST",
                   url: "api/v1/images/actions/delete",
-                  contentType: "application/json",
+                  json: {
+                    imageIds: image_ids.map(Number),
+                  },
                   headers: {
                     "X-CSRF-Token": String(
                       val(document.querySelectorAll("input[name=pwg_token]")),
                     ),
                   },
-                  data: JSON.stringify({
-                    imageIds: ids.map(Number),
-                  }),
                   dataType: "json",
-                  success: function (
-                    _data: operations["imageDelete"]["responses"][200]["content"]["application/json"],
-                  ) {
-                    remove(fieldset);
-                    css(document.querySelectorAll(".pagination-container"), {
-                      "pointer-events": "none",
-                      opacity: "0.5",
-                    });
-                    css(
-                      document.querySelectorAll(".button-reload"),
-                      "display",
-                      "block",
-                    );
-                    css(
-                      document.querySelectorAll(
-                        'div[data-image_id="' + String(pictureId) + '"]',
-                      ),
-                      "display",
-                      "flex",
-                    );
-                  },
-                  error: function (_data) {
-                    console.error("Error occurred");
-                    showErrorLocalBadge(pictureId);
-                  },
                 });
-              })(image_ids);
+
+                remove(fieldset);
+                css(document.querySelectorAll(".pagination-container"), {
+                  "pointer-events": "none",
+                  opacity: "0.5",
+                });
+                css(
+                  document.querySelectorAll(".button-reload"),
+                  "display",
+                  "block",
+                );
+                css(
+                  document.querySelectorAll(
+                    'div[data-image_id="' + String(pictureId) + '"]',
+                  ),
+                  "display",
+                  "flex",
+                );
+              } catch (e) {
+                console.error(e instanceof AjaxError ? e.responseText : e);
+                showErrorLocalBadge(pictureId);
+              }
             },
           },
           cancel: {
@@ -750,37 +742,34 @@ async function saveChanges(pictureId: string | number) {
       ajax_data[pluginValues[key_index]!.api_key] = pluginValues_value;
     }
 
-    await ajax({
-      url: "api/v1/images/" + String(pictureId),
-      method: "PATCH",
-      contentType: "application/json",
-      headers: {
-        "X-CSRF-Token": String(
-          val(document.querySelectorAll("input[name=pwg_token]")),
-        ),
-      },
-      dataType: "json",
-      data: JSON.stringify(ajax_data),
-      success: function (
-        _data: operations["imageUpdate"]["responses"][200]["content"]["application/json"],
-      ) {
-        enableLocalButton(pictureId);
-        enableGlobalButton();
-        hideUnsavedLocalBadge(pictureId);
-        showSuccessLocalBadge(pictureId);
-        updateSuccessGlobalBadge();
-        // Method 1 for extension's save (see Skeleton extension for more details)
-        pluginSaveLoop(pictureId);
-      },
-      error: function (_xhr, _status: string, error: string) {
-        enableLocalButton(pictureId);
-        enableGlobalButton();
-        hideUnsavedLocalBadge(pictureId);
-        showErrorLocalBadge(pictureId);
-        updateSuccessGlobalBadge();
-        console.error("Error:", error);
-      },
-    });
+    try {
+      await ajax({
+        url: "api/v1/images/" + String(pictureId),
+        method: "PATCH",
+        json: ajax_data,
+        headers: {
+          "X-CSRF-Token": String(
+            val(document.querySelectorAll("input[name=pwg_token]")),
+          ),
+        },
+        dataType: "json",
+      });
+
+      enableLocalButton(pictureId);
+      enableGlobalButton();
+      hideUnsavedLocalBadge(pictureId);
+      showSuccessLocalBadge(pictureId);
+      updateSuccessGlobalBadge();
+      // Method 1 for extension's save (see Skeleton extension for more details)
+      pluginSaveLoop(pictureId);
+    } catch (e) {
+      enableLocalButton(pictureId);
+      enableGlobalButton();
+      hideUnsavedLocalBadge(pictureId);
+      showErrorLocalBadge(pictureId);
+      updateSuccessGlobalBadge();
+      console.error("Error:", e instanceof AjaxError ? e.responseText : e);
+    }
   }
 }
 
@@ -823,67 +812,62 @@ function pluginSaveLoop(pictureId: string | number) {
   });
 }
 // UPDATE BLOCKS
-function updateBlock(pictureId: string | number) {
-  void ajax({
-    url: "api/v1/images/" + String(pictureId),
-    type: "GET",
-    dataType: "json",
-    success: function (
-      response: operations["imageGet"]["responses"][200]["content"]["application/json"],
-    ) {
-      setVal(
-        document.querySelectorAll("#picture-" + String(pictureId) + " #name"),
-        response.name,
-      );
-      setVal(
-        document.querySelectorAll("#picture-" + String(pictureId) + " #author"),
-        response.author ?? "",
-      );
-      setVal(
-        document.querySelectorAll(
-          "#picture-" + String(pictureId) + " #date_creation",
-        ),
-        response.dateCreation ?? "",
-      ); //TODO
-      setVal(
-        document.querySelectorAll(
-          "#picture-" + String(pictureId) + " #description",
-        ),
-        response.comment,
-      );
-      setVal(
-        document.querySelectorAll("#picture-" + String(pictureId) + " #level"),
-        String(response.level),
-      );
-      text(
-        document.querySelectorAll(
-          "#picture-" + String(pictureId) + " #filename",
-        ),
-        response.file,
-      );
-      text(
-        document.querySelectorAll(
-          "#picture-" + String(pictureId) + " #filesize",
-        ),
-        String(response.filesize ?? 0),
-      );
-      text(
-        document.querySelectorAll(
-          "#picture-" + String(pictureId) + " #dimensions",
-        ),
-        String(response.width ?? 0) + "x" + String(response.height ?? 0),
-      );
-      // updateTags(response.tags, pictureId); //Yet to be implemented (TODO)
-      showMetasyncSuccesBadge(pictureId);
-      enableLocalButton(pictureId);
-      enableGlobalButton();
-    },
-    error: function (_xhr, status: string, error: string) {
-      console.error("Error:", status, error);
-      showErrorLocalBadge(pictureId);
-      enableLocalButton(pictureId);
-    },
-  });
+async function updateBlock(pictureId: string | number): Promise<void> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    const response = (await ajax({
+      url: "api/v1/images/" + String(pictureId),
+      type: "GET",
+      dataType: "json",
+    })) as operations["imageGet"]["responses"][200]["content"]["application/json"];
+
+    setVal(
+      document.querySelectorAll("#picture-" + String(pictureId) + " #name"),
+      response.name,
+    );
+    setVal(
+      document.querySelectorAll("#picture-" + String(pictureId) + " #author"),
+      response.author ?? "",
+    );
+    setVal(
+      document.querySelectorAll(
+        "#picture-" + String(pictureId) + " #date_creation",
+      ),
+      response.dateCreation ?? "",
+    ); //TODO
+    setVal(
+      document.querySelectorAll(
+        "#picture-" + String(pictureId) + " #description",
+      ),
+      response.comment,
+    );
+    setVal(
+      document.querySelectorAll("#picture-" + String(pictureId) + " #level"),
+      String(response.level),
+    );
+    text(
+      document.querySelectorAll("#picture-" + String(pictureId) + " #filename"),
+      response.file,
+    );
+    text(
+      document.querySelectorAll("#picture-" + String(pictureId) + " #filesize"),
+      String(response.filesize ?? 0),
+    );
+    text(
+      document.querySelectorAll(
+        "#picture-" + String(pictureId) + " #dimensions",
+      ),
+      String(response.width ?? 0) + "x" + String(response.height ?? 0),
+    );
+    // updateTags(response.tags, pictureId); //Yet to be implemented (TODO)
+    showMetasyncSuccesBadge(pictureId);
+    enableLocalButton(pictureId);
+    enableGlobalButton();
+  } catch (e) {
+    console.error("Error:", e instanceof AjaxError ? e.responseText : e);
+    showErrorLocalBadge(pictureId);
+    enableLocalButton(pictureId);
+  }
 }
 
 pluginFunctionMapInit();

@@ -435,7 +435,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         CurrentConfigTestFactory::get()->commentsEmailMandatory = false;
         CurrentConfigTestFactory::get()->antiFloodTime = 0;
         $imageId = 3;
-        $_POST['author'] = 'Some Author';
+        $_POST['author'] = 'Author & Sons';
         $_POST['content'] = 'Rejected <b>content</b>.';
         $_POST['website_url'] = '';
         $_POST['email'] = '';
@@ -454,9 +454,14 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
             $commentAdd = $result->commentAdd;
             self::assertInstanceOf(CommentAddForm::class, $commentAdd);
-            self::assertSame('Some Author', $commentAdd->author);
-            // htmlspecialchars() escapes the tag markup.
-            self::assertSame('Rejected &lt;b&gt;content&lt;/b&gt;.', $commentAdd->content);
+            // Raw, not htmlspecialchars()'d (P59 Batch 5): same reasoning
+            // as $content below -- a plain, auto-escaped value= print.
+            self::assertSame('Author & Sons', $commentAdd->author);
+            // Raw, not htmlspecialchars()'d (P59 Batch 5): picture.latte
+            // echoes this into a bare textarea body, so Latte's own
+            // auto-escape does the entity-encoding at print time --
+            // pre-escaping here as well would double-escape it.
+            self::assertSame('Rejected <b>content</b>.', $commentAdd->content);
             self::assertSame('', $commentAdd->websiteUrl);
             self::assertSame('', $commentAdd->email);
         } finally {

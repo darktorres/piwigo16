@@ -311,23 +311,21 @@ final class PictureCommentRenderer
             $userEmailEmpty = ! $userEmail instanceof Email;
 
             // A rejected submission comes back into the form; a first
-            // render starts empty. `escapeSubmitted()` is where the old
-            // `$tplVar[strtoupper($k)] = ...` dynamic-key write went --
-            // four named fields, not a loop over a map whose keys had to
-            // match the array's by convention.
+            // render starts empty -- four named fields, not a loop over a
+            // map whose keys had to match the array's by convention.
             $rejected = $commentAction === 'reject';
 
             $commentAdd = new CommentAddForm(
                 formAction: $url_self,
                 key: $key,
-                content: $rejected ? self::escapeSubmitted($pictureCommentSubmitRequest->content) : '',
+                content: $rejected ? ($pictureCommentSubmitRequest->content ?? '') : '',
                 showAuthor: ! $accessLevelChecker->isClassicUser(),
                 authorMandatory: $currentConfig->commentsAuthorMandatory,
-                author: $rejected ? self::escapeSubmitted($pictureCommentSubmitRequest->author) : '',
-                websiteUrl: $rejected ? self::escapeSubmitted($pictureCommentSubmitRequest->websiteUrl) : '',
+                author: $rejected ? ($pictureCommentSubmitRequest->author ?? '') : '',
+                websiteUrl: $rejected ? ($pictureCommentSubmitRequest->websiteUrl ?? '') : '',
                 showEmail: ! $accessLevelChecker->isClassicUser() || $userEmailEmpty,
                 emailMandatory: $currentConfig->commentsEmailMandatory,
-                email: $rejected ? self::escapeSubmitted($pictureCommentSubmitRequest->email) : '',
+                email: $rejected ? ($pictureCommentSubmitRequest->email ?? '') : '',
                 showWebsite: $currentConfig->commentsEnableWebsite,
             );
         }
@@ -343,14 +341,5 @@ final class PictureCommentRenderer
             commentAdd: $commentAdd,
             commentList: $commentList,
         );
-    }
-
-    /**
-     * The submitted value, HTML-escaped for the `value=` attribute it is
-     * about to be echoed back into, or '' when the field was not sent.
-     */
-    private static function escapeSubmitted(?string $value): string
-    {
-        return $value !== null ? htmlspecialchars($value) : '';
     }
 }

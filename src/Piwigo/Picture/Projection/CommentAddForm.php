@@ -15,9 +15,11 @@ namespace Piwigo\Picture\Projection;
  * those inputs are omitted and the server fills them in.
  *
  * `$content`/`$author`/`$websiteUrl`/`$email` are empty on a first render
- * and carry the rejected submission back on a failed post, HTML-escaped
- * at construction because the template echoes them into `value=`
- * attributes.
+ * and carry the rejected submission back on a failed post, raw and
+ * unescaped: picture.latte echoes each into a `value=`/textarea body with
+ * no `|noescape`, so Latte's own auto-escape does the entity-encoding
+ * (P59 Batch 5 -- pre-escaping here as well double-escaped a submitted
+ * value containing '&', '<', or a quote).
  */
 final readonly class CommentAddForm
 {

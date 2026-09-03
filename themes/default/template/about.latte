@@ -7,15 +7,15 @@
       <ul class="categoryActions"></ul>
       <h2><a
           href="{$U_HOME}"
-        >{='Home'|translate}</a>{$LEVEL_SEPARATOR|noescape}{='About'|translate}</h2>
+        >{='Home'|translate}</a>{$LEVEL_SEPARATOR}{='About'|translate}</h2>
     </div>
 
     {include 'infos_errors.latte'}
 
     <div id="piwigoAbout">
-      {$aboutMessage|noescape}
+      {$aboutMessage}
       <ul n:if="isset($themeAbout)">
-        <li>{$themeAbout|noescape}</li>
+        <li>{$themeAbout}</li>
       </ul>
     </div>
   </div>

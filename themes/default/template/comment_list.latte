@@ -20,13 +20,13 @@
     {if $comment->srcImage !== null and $commentDerivativeParams !== null}
       {var $derivative = $pwg->derivative($commentDerivativeParams, $comment->srcImage)}
       <div class="illustration">
-        <a href="{$comment->pictureUrl|noescape}">
+        <a href="{$comment->pictureUrl}">
           <img
             {if $derivative->isCached()}
-            src="{$derivative->getUrl()|noescape}"
+            src="{$derivative->getUrl()}"
             {else}
             src="{$ROOT_URL}{$themeconf['icon_dir']}/img_small.png"
-            data-src="{$derivative->getUrl()|noescape}"
+            data-src="{$derivative->getUrl()}"
             {/if}
             alt="{$comment->alt}"
           >
@@ -44,7 +44,7 @@
           </a>{if $comment->validateUrl !== null or $comment->editUrl !== null or $comment->cancelUrl !== null} | {/if}
         {/if}
         {if $comment->cancelUrl !== null}
-          <a href="{$comment->cancelUrl|noescape}">
+          <a href="{$comment->cancelUrl}">
             {='Cancel'|translate}
           </a>{if $comment->validateUrl !== null} | {/if}
         {/if}

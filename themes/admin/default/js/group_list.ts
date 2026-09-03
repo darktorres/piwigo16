@@ -529,6 +529,7 @@ function deleteGroup(id: string | number) {
           alert({
             ...{
               title: str_group_deleted.replace("%s", groupName),
+              // eslint-disable-next-line @typescript-eslint/promise-function-async -- must return ajax()'s own AjaxThenable (jconfirm.ts's `isThenable()` checks for its real `.always()`); `async` would re-wrap it through `Promise.resolve()` and lose that method.
               content: function () {
                 return ajax({
                   url: "api/v1/groups/" + String(id),
@@ -1220,7 +1221,7 @@ on(document.querySelectorAll(".ConfirmDeleteButton"), "click", function () {
   // No bulk-delete endpoint (a REST single-resource DELETE per group,
   // per P27's own design) -- fire one DELETE per selected group.
   Promise.all(
-    ids.map(function (id: string | number) {
+    ids.map(async function (id: string | number) {
       return ajax({
         url: "api/v1/groups/" + String(id),
         type: "DELETE",

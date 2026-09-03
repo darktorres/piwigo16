@@ -92,6 +92,26 @@ export function removeData(el: Element, key: string): void {
   dataStore.get(el)?.delete(key);
 }
 
+/**
+ * Reads a `data-*` attribute expected to hold a row id (P51-D).
+ *
+ * `data()` already runs a numeric-looking attribute string through
+ * `coerceDataAttribute()`, which hands back a real JS `number` -- so this is
+ * a single, typed parse point, not a runtime conversion. Asserts rather than
+ * silently coercing a missing/`"null"`-valued attribute: `Number(null)` is
+ * `0` and `Number(undefined)` is `NaN`, either of which would mint a fake id
+ * instead of failing loudly.
+ */
+export function dataId(el: Element, key: string): number {
+  const value = data(el, key);
+  if (typeof value !== "number") {
+    throw new Error(
+      `dataId(): "${key}" is ${String(value)}, not a numeric data-* attribute`
+    );
+  }
+  return value;
+}
+
 // ── Visibility: show / hide ──────────────────────────────────────────────
 //
 // From node_modules/jquery/src/css.js's `showHide()` and
@@ -1577,6 +1597,27 @@ export function setVal(
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- val()'s own docblock: `.value` is written to any element, form-control or not, so there is no single real interface to narrow to.
     (el as unknown as { value: string }).value = value;
   }
+}
+
+/**
+ * Reads a `<select>`/`<input>` value expected to hold a row id (P51-D).
+ *
+ * Unlike `dataId()`, `val()`'s own value is a genuine string at runtime (the
+ * DOM's native `.value` is never auto-coerced) -- this is a real parse, not
+ * just a type fix. Returns `null` for an empty/absent value (no selection)
+ * rather than `Number("")`'s own `0`, so a real id 0 can never be confused
+ * with "nothing selected".
+ */
+export function valId(target: Element | ArrayLike<Element>): number | null {
+  const raw = val(target);
+  if (raw === undefined || raw === "") {
+    return null;
+  }
+  const parsed = Number(raw);
+  if (Number.isNaN(parsed)) {
+    throw new Error(`valId(): "${raw}" is not a numeric value`);
+  }
+  return parsed;
 }
 
 /** `.prop("checked", bool)` -- writes to every checkbox/radio in the set. */

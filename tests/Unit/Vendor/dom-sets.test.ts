@@ -25,6 +25,7 @@ import {
   text,
   textOf,
   val,
+  valId,
 } from "../../../themes/default/js/vendor/dom";
 
 // The one rule under test throughout: a setter writes to every element of
@@ -116,6 +117,32 @@ describe("val", () => {
       "not rendered anywhere"
     );
     expect(val(set)).toBe("not rendered anywhere");
+  });
+});
+
+describe("valId", () => {
+  it("parses a real numeric value", () => {
+    const set = mount('<select class="t"><option value="42" selected></option></select>');
+
+    expect(valId(set)).toBe(42);
+  });
+
+  it("returns null for an empty value instead of 0, so id 0 is never confused with \"nothing selected\"", () => {
+    const set = mount('<select class="t"><option value="" selected></option></select>');
+
+    expect(valId(set)).toBeNull();
+  });
+
+  it("returns null for an element with no value at all", () => {
+    const set = mount('<p class="t"></p>');
+
+    expect(valId(set)).toBeNull();
+  });
+
+  it("throws for a non-numeric value instead of returning NaN", () => {
+    const set = mount('<input class="t" value="abc">');
+
+    expect(() => valId(set)).toThrow(/valId/);
   });
 });
 

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   coerceDataAttribute,
   data,
+  dataId,
   parseHtml,
   removeData,
   setData,
@@ -100,6 +101,25 @@ describe("data()", () => {
     setData(b, "k", "B");
     expect(data(a, "k")).toBe("A");
     expect(data(b, "k")).toBe("B");
+  });
+});
+
+describe("dataId", () => {
+  it("returns the already-coerced number", () => {
+    const node = el('data-cat-id="42"');
+    expect(dataId(node, "catId")).toBe(42);
+  });
+
+  it("throws for a missing attribute instead of returning NaN", () => {
+    expect(() => dataId(el(), "missing")).toThrow(/dataId/);
+  });
+
+  it("throws for a non-numeric attribute instead of silently keeping it a string", () => {
+    expect(() => dataId(el('data-id="abc"'), "id")).toThrow(/dataId/);
+  });
+
+  it("throws for a literal \"null\" attribute rather than minting id 0", () => {
+    expect(() => dataId(el('data-id="null"'), "id")).toThrow(/dataId/);
   });
 });
 

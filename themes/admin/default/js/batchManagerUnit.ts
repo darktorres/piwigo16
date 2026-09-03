@@ -19,7 +19,7 @@ import {
   attrOf,
   css,
   cssValue,
-  data,
+  dataId,
   escapeId,
   fadeOut,
   hide,
@@ -142,7 +142,7 @@ const str_meta_warning = pwg_getPageString(
 const str_meta_yes = pwg_getPageString("I want to continue");
 const str_title_ab = pwg_getPageString("Associate to album");
 
-let b_current_picture_id: string | number | undefined;
+let b_current_picture_id: number | undefined;
 // Check Skeleton extension for more details about extensibility
 const pluginValues: PluginValueEntry[] = [];
 
@@ -171,8 +171,7 @@ ready(function () {
       if (fieldset === null) {
         return;
       }
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      const pictureId = data(fieldset, "image_id") as string | number;
+      const pictureId = dataId(fieldset, "image_id");
       if (user_interacted) {
         showUnsavedLocalBadge(pictureId);
       }
@@ -187,9 +186,7 @@ ready(function () {
     document.querySelectorAll("input[data-datepicker]"),
     "change",
     function (this: Element) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      const pictureId = data(this.closest("fieldset")!, "image_id") as
-        string | number;
+      const pictureId = dataId(this.closest("fieldset")!, "image_id");
       if (user_interacted) {
         showUnsavedLocalBadge(pictureId);
       }
@@ -201,9 +198,7 @@ ready(function () {
   // 6), so a native listener sees it just like it always did for every
   // plain, non-selectized <select> on the page.
   on(document.querySelectorAll("select"), "change", function (this: Element) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-    const pictureId = data(this.closest("fieldset")!, "image_id") as
-      string | number;
+    const pictureId = dataId(this.closest("fieldset")!, "image_id");
     if (user_interacted) {
       showUnsavedLocalBadge(pictureId);
     }
@@ -217,8 +212,7 @@ ready(function () {
     function (this: Element) {
       user_interacted = true;
       const fieldset = this.closest("fieldset")!;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      const pictureId = data(fieldset, "image_id") as string | number;
+      const pictureId = dataId(fieldset, "image_id");
       showUnsavedLocalBadge(pictureId);
     },
   );
@@ -229,8 +223,7 @@ ready(function () {
     "click",
     function (this: Element) {
       const fieldset = this.closest("fieldset")!;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      const pictureId = data(fieldset, "image_id") as string | number;
+      const pictureId = dataId(fieldset, "image_id");
       confirm({
         title: str_meta_warning,
         titleClass: "metadataSyncConfirm",
@@ -279,8 +272,7 @@ ready(function () {
     "click",
     function (this: Element) {
       const fieldset = this.closest("fieldset")!;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      const pictureId = data(fieldset, "image_id") as string | number;
+      const pictureId = dataId(fieldset, "image_id");
       confirm({
         title: str_are_you_sure,
         titleClass: "groupDeleteConfirm",
@@ -346,8 +338,7 @@ ready(function () {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises -- fire-and-forget async click handler, same as the original .js: dom.ts's on() doesn't await a handler's return value either way.
     async function (this: Element) {
       const fieldset = this.closest("fieldset")!;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      const pictureId = data(fieldset, "image_id") as string | number;
+      const pictureId = dataId(fieldset, "image_id");
       await saveChanges(pictureId);
     },
   );
@@ -367,8 +358,7 @@ ready(function () {
     "click",
     function (this: Element) {
       const fieldset = this.closest("fieldset")!;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      b_current_picture_id = data(fieldset, "image_id") as string | number;
+      b_current_picture_id = dataId(fieldset, "image_id");
       ab.hardUpdate(all_related_categories_ids[b_current_picture_id] ?? []);
       ab.open();
     },
@@ -382,8 +372,7 @@ ready(function () {
       if (eventTarget.classList.contains("remove-item")) {
         const cat_id = attrOf(eventTarget, "id")!;
         const fieldset = eventTarget.closest("fieldset")!;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-        const picture_id = data(fieldset, "image_id") as string | number;
+        const picture_id = dataId(fieldset, "image_id");
 
         remove_selected_category(cat_id, picture_id);
         check_related_categories(
@@ -396,18 +385,16 @@ ready(function () {
   pluginFunctionMapInit();
 });
 
-// Genuinely dead code (zero callers, confirmed via grep) whose own
+// Stale comment corrected (P51-D): this has a real caller (the
+// ".related-categories-container" click handler above, on a real
+// ".remove-item" click) -- not dead code. Its own former
 // `.find(c => c.id == pictureId)?.cat_ids` logic never matched
 // all_related_categories_ids's real shape anyway (a plain
 // picture-id-keyed object of category-id arrays, not an array of
-// `{id, cat_ids}` objects -- see RelatedCategoryIds above) -- fixed to
-// the real access pattern used by every other function in this file
-// rather than left uncompilable, since there's no real behavior to
-// preserve here either way.
-function remove_selected_category(
-  cat_id: string | number,
-  picture_id: string | number,
-) {
+// `{id, cat_ids}` objects -- see RelatedCategoryIds above); already
+// fixed to the real access pattern used by every other function in
+// this file.
+function remove_selected_category(cat_id: string | number, picture_id: number) {
   const cat_to_remove_index =
     all_related_categories_ids[picture_id]!.indexOf(cat_id);
   if (cat_to_remove_index > -1) {
@@ -456,12 +443,12 @@ function add_related_category({
 }
 
 function check_related_categories(
-  pictureId: string | number,
+  pictureId: number,
   selectedAlbum: (string | number)[],
 ) {
   html(
     document.querySelectorAll(
-      "#picture-" + String(pictureId) + " .linked-albums-badge",
+      "#" + escapeId("picture-" + String(pictureId)) + " .linked-albums-badge",
     ),
     String(selectedAlbum.length),
   );
@@ -516,12 +503,12 @@ function updateUnsavedGlobalBadge() {
   }
 }
 
-function showUnsavedLocalBadge(pictureId: string | number) {
+function showUnsavedLocalBadge(pictureId: number) {
   hideSuccesLocalBadge(pictureId);
   hideErrorLocalBadge(pictureId);
   css(
     document.querySelectorAll(
-      "#picture-" + String(pictureId) + " .local-unsaved-badge",
+      "#" + escapeId("picture-" + String(pictureId)) + " .local-unsaved-badge",
     ),
     "display",
     "block",
@@ -529,10 +516,10 @@ function showUnsavedLocalBadge(pictureId: string | number) {
   updateUnsavedGlobalBadge();
 }
 
-function hideUnsavedLocalBadge(pictureId: string | number) {
+function hideUnsavedLocalBadge(pictureId: number) {
   css(
     document.querySelectorAll(
-      "#picture-" + String(pictureId) + " .local-unsaved-badge",
+      "#" + escapeId("picture-" + String(pictureId)) + " .local-unsaved-badge",
     ),
     "display",
     "none",
@@ -545,20 +532,20 @@ function hideUnsavedLocalBadge(pictureId: string | number) {
 //   }
 // });
 //Error badge
-function showErrorLocalBadge(pictureId: string | number) {
+function showErrorLocalBadge(pictureId: number) {
   css(
     document.querySelectorAll(
-      "#picture-" + String(pictureId) + " .local-error-badge",
+      "#" + escapeId("picture-" + String(pictureId)) + " .local-error-badge",
     ),
     "display",
     "block",
   );
 }
 
-function hideErrorLocalBadge(pictureId: string | number) {
+function hideErrorLocalBadge(pictureId: number) {
   css(
     document.querySelectorAll(
-      "#picture-" + String(pictureId) + " .local-error-badge",
+      "#" + escapeId("picture-" + String(pictureId)) + " .local-error-badge",
     ),
     "display",
     "none",
@@ -576,9 +563,9 @@ function updateSuccessGlobalBadge() {
   }
 }
 
-function showSuccessLocalBadge(pictureId: string | number) {
+function showSuccessLocalBadge(pictureId: number) {
   const badge = document.querySelectorAll(
-    "#picture-" + String(pictureId) + " .local-success-badge",
+    "#" + escapeId("picture-" + String(pictureId)) + " .local-success-badge",
   );
   css(badge, {
     display: "block",
@@ -591,10 +578,10 @@ function showSuccessLocalBadge(pictureId: string | number) {
   }, 3000);
 }
 
-function hideSuccesLocalBadge(pictureId: string | number) {
+function hideSuccesLocalBadge(pictureId: number) {
   css(
     document.querySelectorAll(
-      "#picture-" + String(pictureId) + " .local-success-badge",
+      "#" + escapeId("picture-" + String(pictureId)) + " .local-success-badge",
     ),
     "display",
     "none",
@@ -620,9 +607,9 @@ function hideSuccesGlobalBadge() {
   css(document.querySelectorAll("global-succes-badge"), "display", "none");
 }
 
-function showMetasyncSuccesBadge(pictureId: string | number) {
+function showMetasyncSuccesBadge(pictureId: number) {
   const badge = document.querySelectorAll(
-    "#picture-" + String(pictureId) + " .metasync-success",
+    "#" + escapeId("picture-" + String(pictureId)) + " .metasync-success",
   );
   css(badge, {
     display: "block",
@@ -635,30 +622,30 @@ function showMetasyncSuccesBadge(pictureId: string | number) {
   }, 3000);
 }
 
-function disableLocalButton(pictureId: string | number) {
+function disableLocalButton(pictureId: number) {
   addClass(
     document.querySelectorAll(
-      "#picture-" + String(pictureId) + " .action-save-picture",
+      "#" + escapeId("picture-" + String(pictureId)) + " .action-save-picture",
     ),
     "disabled",
   );
   const icon = document.querySelectorAll(
-    "#picture-" + String(pictureId) + " .action-save-picture i",
+    "#" + escapeId("picture-" + String(pictureId)) + " .action-save-picture i",
   );
   removeClass(icon, "icon-floppy");
   addClass(icon, "icon-spin6 animate-spin");
   disableGlobalButton();
 }
 
-function enableLocalButton(pictureId: string | number) {
+function enableLocalButton(pictureId: number) {
   removeClass(
     document.querySelectorAll(
-      "#picture-" + String(pictureId) + " .action-save-picture",
+      "#" + escapeId("picture-" + String(pictureId)) + " .action-save-picture",
     ),
     "disabled",
   );
   const icon = document.querySelectorAll(
-    "#picture-" + String(pictureId) + " .action-save-picture i",
+    "#" + escapeId("picture-" + String(pictureId)) + " .action-save-picture i",
   );
   removeClass(icon, "icon-spin6 animate-spin");
   addClass(icon, "icon-floppy");
@@ -678,34 +665,38 @@ function enableGlobalButton() {
   addClass(icon, "icon-floppy");
 }
 
-async function saveChanges(pictureId: string | number) {
+async function saveChanges(pictureId: number) {
   const unsavedBadge = document.querySelector(
-    "#picture-" + String(pictureId) + " .local-unsaved-badge",
+    "#" + escapeId("picture-" + String(pictureId)) + " .local-unsaved-badge",
   );
   if (unsavedBadge !== null && cssValue(unsavedBadge, "display") === "block") {
     disableLocalButton(pictureId);
     // Retrieve Infos
     const name = val(
-      document.querySelectorAll("#picture-" + String(pictureId) + " #name"),
+      document.querySelectorAll(
+        "#" + escapeId("picture-" + String(pictureId)) + " #name",
+      ),
     );
     const author = val(
-      document.querySelectorAll("#picture-" + String(pictureId) + " #author"),
+      document.querySelectorAll(
+        "#" + escapeId("picture-" + String(pictureId)) + " #author",
+      ),
     );
     const date_creation = val(
       document.querySelectorAll(
-        "#picture-" + String(pictureId) + " #date_creation",
+        "#" + escapeId("picture-" + String(pictureId)) + " #date_creation",
       ),
     );
     const comment = val(
       document.querySelectorAll(
-        "#picture-" + String(pictureId) + " #description",
+        "#" + escapeId("picture-" + String(pictureId)) + " #description",
       ),
     );
     // `option:selected` is jQuery/Sizzle's own pseudo-selector, not real
     // CSS -- querySelectorAll throws on it. Reading the <select>'s own
     // `.value` gets the selected option's value directly.
     const level = document.querySelector<HTMLSelectElement>(
-      "#picture-" + String(pictureId) + " #level",
+      "#" + escapeId("picture-" + String(pictureId)) + " #level",
     )?.value;
     // Get Categories
     const categories = all_related_categories_ids[pictureId]!;
@@ -714,7 +705,7 @@ async function saveChanges(pictureId: string | number) {
     const tags: (string | number)[] = [];
     document
       .querySelectorAll<HTMLOptionElement>(
-        "#picture-" + String(pictureId) + " #tags option",
+        "#" + escapeId("picture-" + String(pictureId)) + " #tags option",
       )
       .forEach((option) => {
         tags.push(option.value);
@@ -736,7 +727,10 @@ async function saveChanges(pictureId: string | number) {
       const pluginValues_selector = pluginValues[key_index]!.selector;
       const pluginValues_value = val(
         document.querySelectorAll(
-          "#picture-" + String(pictureId) + " " + pluginValues_selector,
+          "#" +
+            escapeId("picture-" + String(pictureId)) +
+            " " +
+            pluginValues_selector,
         ),
       );
       ajax_data[pluginValues[key_index]!.api_key] = pluginValues_value;
@@ -776,14 +770,12 @@ async function saveChanges(pictureId: string | number) {
 async function saveAllChanges() {
   const allField = Array.from(document.querySelectorAll("fieldset"));
   for (const field of allField) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-    const pictureId = data(field, "image_id") as string | number;
+    const pictureId = dataId(field, "image_id");
     await saveChanges(pictureId);
   }
 }
 //PLUGINS SAVE METHOD
-const pluginFunctionMap: Record<string, (pictureId: string | number) => void> =
-  {};
+const pluginFunctionMap: Record<string, (pictureId: number) => void> = {};
 
 function pluginFunctionMapInit() {
   activePlugins.forEach(function (pluginId) {
@@ -795,12 +787,12 @@ function pluginFunctionMapInit() {
     const fn = (window as unknown as Record<string, unknown>)[functionName];
     if (typeof fn === "function") {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- same dynamic extension hook: the Skeleton extension convention guarantees this real signature, but nothing statically enforces it.
-      pluginFunctionMap[pluginId] = fn as (pictureId: string | number) => void;
+      pluginFunctionMap[pluginId] = fn as (pictureId: number) => void;
     }
   });
 }
 
-function pluginSaveLoop(pictureId: string | number) {
+function pluginSaveLoop(pictureId: number) {
   if (activePlugins.length === 0) {
     return;
   }
@@ -812,7 +804,7 @@ function pluginSaveLoop(pictureId: string | number) {
   });
 }
 // UPDATE BLOCKS
-async function updateBlock(pictureId: string | number): Promise<void> {
+async function updateBlock(pictureId: number): Promise<void> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const response = (await ajax({
@@ -822,40 +814,50 @@ async function updateBlock(pictureId: string | number): Promise<void> {
     })) as operations["imageGet"]["responses"][200]["content"]["application/json"];
 
     setVal(
-      document.querySelectorAll("#picture-" + String(pictureId) + " #name"),
+      document.querySelectorAll(
+        "#" + escapeId("picture-" + String(pictureId)) + " #name",
+      ),
       response.name,
     );
     setVal(
-      document.querySelectorAll("#picture-" + String(pictureId) + " #author"),
+      document.querySelectorAll(
+        "#" + escapeId("picture-" + String(pictureId)) + " #author",
+      ),
       response.author ?? "",
     );
     setVal(
       document.querySelectorAll(
-        "#picture-" + String(pictureId) + " #date_creation",
+        "#" + escapeId("picture-" + String(pictureId)) + " #date_creation",
       ),
       response.dateCreation ?? "",
     ); //TODO
     setVal(
       document.querySelectorAll(
-        "#picture-" + String(pictureId) + " #description",
+        "#" + escapeId("picture-" + String(pictureId)) + " #description",
       ),
       response.comment,
     );
     setVal(
-      document.querySelectorAll("#picture-" + String(pictureId) + " #level"),
+      document.querySelectorAll(
+        "#" + escapeId("picture-" + String(pictureId)) + " #level",
+      ),
       String(response.level),
     );
     text(
-      document.querySelectorAll("#picture-" + String(pictureId) + " #filename"),
+      document.querySelectorAll(
+        "#" + escapeId("picture-" + String(pictureId)) + " #filename",
+      ),
       response.file,
     );
     text(
-      document.querySelectorAll("#picture-" + String(pictureId) + " #filesize"),
+      document.querySelectorAll(
+        "#" + escapeId("picture-" + String(pictureId)) + " #filesize",
+      ),
       String(response.filesize ?? 0),
     );
     text(
       document.querySelectorAll(
-        "#picture-" + String(pictureId) + " #dimensions",
+        "#" + escapeId("picture-" + String(pictureId)) + " #dimensions",
       ),
       String(response.width ?? 0) + "x" + String(response.height ?? 0),
     );

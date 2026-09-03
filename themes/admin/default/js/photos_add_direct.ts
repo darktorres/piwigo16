@@ -693,7 +693,7 @@ ready(function () {
           options.format_of = file.format_of;
         } else {
           // options.category = $("select[name=category] option:selected").val();
-          options.category = ab.get_selected_albums()[0];
+          [options.category] = ab.get_selected_albums();
           // options.level = $("select[name=level] option:selected").val();
           options.name = file.name;
         }

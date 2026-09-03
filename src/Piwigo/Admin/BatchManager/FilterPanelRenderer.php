@@ -196,7 +196,11 @@ final class FilterPanelRenderer
             start: $pageStart,
             pwgToken: $csrfService
                 ->getToken(),
-            uDisplay: $baseUrl . $urlService->getQueryStringDiff(['display']),
+            // Explicit escape: true -- batch_manager_global.latte prints this
+            // with |noescape and appends its own literal '&amp;display=N'
+            // fragment after it, so this value's own internal separator
+            // must stay '&amp;'-encoded too (P59 Batch 1).
+            uDisplay: $baseUrl . $urlService->getQueryStringDiff(['display'], escape: true),
             fAction: $baseUrl . $urlService->getQueryStringDiff(['cat', 'start', 'tag', 'filter']),
             adminPageTitle: $lang->t('Batch Manager'),
             nbNoMd5sum: $nb_no_md5sum,

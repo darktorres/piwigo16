@@ -32,7 +32,7 @@ final class TotpTestFakeUrlService implements UrlServiceInterface
     }
 
     #[Override]
-    public function addUrlParams(string $url, array $params, string $argSeparator = '&amp;'): string
+    public function addUrlParams(string $url, array $params, string $argSeparator = '&'): string
     {
         throw new LogicException('not used by getOtpAuthUrl()/getQrCode()');
     }
@@ -110,7 +110,7 @@ final class TotpTestFakeUrlService implements UrlServiceInterface
     }
 
     #[Override]
-    public function getQueryStringDiff(array $rejects = [], bool $escape = true): string
+    public function getQueryStringDiff(array $rejects = [], bool $escape = false): string
     {
         throw new LogicException('not used by getOtpAuthUrl()/getQrCode()');
     }

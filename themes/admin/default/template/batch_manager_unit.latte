@@ -6,7 +6,7 @@
     <input type="hidden" name="element_ids" value="{$elementIds}">
   </div>
   {*Filters*}
-  <form method="post" action="{$F_ACTION|noescape}">
+  <form method="post" action="{$F_ACTION}">
     {var $filterTitle = ('Batch Manager Filter'|translate)}
     {var $filterSearchPlaceholder = ('Filters'|translate)}
     {include 'include/batch_manager_filter.inc.latte', title: $filterTitle, searchPlaceholder: $filterSearchPlaceholder}
@@ -40,7 +40,7 @@
             <a
               class="button-reload tiptip"
               title="{='Pagination has changed and needs to be reloaded !'|translate}"
-              href="{$F_ACTION|noescape}"
+              href="{$F_ACTION}"
             ><i class="icon-cw"></i></a>
             {include 'navigation_bar.latte', navbar: $navbar}{/if}
         </div>
@@ -331,7 +331,7 @@
             <a
               class="button-reload tiptip"
               title="{='Pagination has changed and needs to be reloaded !'|translate}"
-              href="{$F_ACTION|noescape}"
+              href="{$F_ACTION}"
             ><i class="icon-cw"></i></a>
             {include 'navigation_bar.latte', navbar: $navbar}{/if}
         </div>

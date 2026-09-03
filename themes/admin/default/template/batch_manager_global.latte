@@ -6,7 +6,7 @@
 {include 'include/add_album.inc.latte', load_mode: 'async'}
 
 <div id="batchManagerGlobal">
-  <form action="{$F_ACTION|noescape}" method="post">
+  <form action="{$F_ACTION}" method="post">
     <input type="hidden" name="start" value="{$START}">
     <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
     {var $filterTitle = ('Batch Manager Filter'|translate)}

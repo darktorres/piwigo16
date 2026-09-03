@@ -353,13 +353,17 @@ final readonly class NotificationService
 
         $nbElements = $dateDetail['nb_elements'];
 
+        // Both addUrlParams() calls below get an explicit '&amp;': $description
+        // is hand-built raw HTML this method returns directly (no auto-escape
+        // ever runs over it), unlike the majority of addUrlParams() callers
+        // that flow into a template print (P59 Batch 1).
         $description .=
               '<li>'
               . $this->translator->plural('%d new photo', '%d new photos', $nbElements)
               . ' ('
               . '<a href="' . $this->urlService->addUrlParams($this->urlService->makeIndexUrl([
                   'section' => 'recent_pics',
-              ]), $addUrlParams) . '">'
+              ]), $addUrlParams, argSeparator: '&amp;') . '">'
                 . $this->lang->t('Recent photos') . '</a>'
               . ')'
               . '</li><br>';
@@ -375,7 +379,8 @@ final readonly class NotificationService
                           'image_file' => $element['file'],
                       ]
                   ),
-                  $addUrlParams
+                  $addUrlParams,
+                  argSeparator: '&amp;'
               )
               . '"><img src="' . $tnSrc . '"></a>';
         }

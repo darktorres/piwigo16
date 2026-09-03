@@ -104,7 +104,7 @@
           {/spaceless}</li>
 
         <li n:if="isset($favorite)" id="cmdFavorite"><a
-            href="{$favorite['U_FAVORITE']|noescape}"
+            href="{$favorite['U_FAVORITE']}"
             title="{='delete all photos from your favorites'|translate}"
             class="pwg-state-default pwg-button"
             rel="nofollow"
@@ -114,7 +114,7 @@
             >{='delete all photos from your favorites'|translate}</span>
           </a></li>
         <li n:if="isset($uCaddie)" id="cmdCaddie"><a
-            href="{$uCaddie|noescape}"
+            href="{$uCaddie}"
             title="{='Add to caddie'|translate}"
             class="pwg-state-default pwg-button"
           >
@@ -132,7 +132,7 @@
             >{='Edit'|translate}</span>
           </a></li>
         <li n:if="isset($uSlideshow)" id="cmdSlideshow">{spaceless}<a
-              href="{$uSlideshow|noescape}"
+              href="{$uSlideshow}"
               title="{='slideshow'|translate}"
               class="pwg-state-default pwg-button"
               rel="nofollow"

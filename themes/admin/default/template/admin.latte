@@ -27,7 +27,7 @@
           <li><a href="{$uBatch|noescape}"><i
                 class="icon-th"
               ></i>{='Batch Manager'|translate}</a></li>
-          <li n:if="$nbPhotosInCaddie > 0"><a href="{$uCaddie|noescape}"><i
+          <li n:if="$nbPhotosInCaddie > 0"><a href="{$uCaddie}"><i
                 class="icon-flag"
               ></i>{='Caddie'|translate}<span
                 class="adminMenubarCounter"
@@ -143,7 +143,7 @@
     {if isset($U_HELP)}
       <ul class="HelpActions">
         <li><a
-            href="{$U_HELP|noescape}&amp;output=content_only"
+            href="{$U_HELP}&amp;output=content_only"
             title="{='Help'|translate}"
             class="help-popin"
           ><span class="icon-help-circled"></span></a></li>

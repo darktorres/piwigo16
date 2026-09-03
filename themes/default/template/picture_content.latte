@@ -43,7 +43,7 @@
         n:if="isset($previous)"
         shape="rect"
         coords="0,0,{($size->width / 4)|intval},{$size->height}"
-        href="{$previous->imgUrl|noescape}"
+        href="{$previous->imgUrl}"
         title="{='Previous'|translate} : {$previous->element->titleEsc|noescape}"
         alt="{$previous->element->titleEsc|noescape}"
       >
@@ -58,7 +58,7 @@
         n:if="isset($next)"
         shape="rect"
         coords="{($size->width / 1.33)|intval},0,{$size->width},{$size->height}"
-        href="{$next->imgUrl|noescape}"
+        href="{$next->imgUrl}"
         title="{='Next'|translate} : {$next->element->titleEsc|noescape}"
         alt="{$next->element->titleEsc|noescape}"
       >

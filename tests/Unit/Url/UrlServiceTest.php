@@ -8,7 +8,6 @@ use LogicException;
 use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Core\ApiContext;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
@@ -223,14 +222,14 @@ function urlServiceTestCategoryId(mixed $category): int
 //    and a real DB lookup instead of breaking, producing an uncaught
 //    ResponseReadyException) and passes on the real source.
 test('getActionUrl builds action.php with id/part, adding a bare download flag when requested', function (): void {
-    // addUrlParams()'s own default separator is the HTML-safe '&amp;' --
-    // see that method's own docblock example.
+    // addUrlParams()'s own default separator is a plain '&' (P59 Batch 1)
+    // -- see that method's own docblock example.
     $service = UrlServiceTestFactory::build();
 
     expect($service->getActionUrl(42, 'e', false))
-        ->toBe('action.php?id=42&amp;part=e');
+        ->toBe('action.php?id=42&part=e');
     expect($service->getActionUrl(42, 'e', true))
-        ->toBe('action.php?id=42&amp;part=e&amp;download');
+        ->toBe('action.php?id=42&part=e&download');
 });
 
 test('getGalleryHomeUrl returns a remote gallery_url unchanged', function (): void {
@@ -328,12 +327,22 @@ test('addUrlParams appends a query string to a URL with none', function (): void
     ]))->toBe('/x?a=b');
 });
 
-test('addUrlParams appends with the given separator to a URL that already has a query string', function (): void {
+test('addUrlParams appends with the default separator to a URL that already has a query string', function (): void {
     $service = UrlServiceTestFactory::build();
 
     expect($service->addUrlParams('/x?cat_id=10', [
         'a' => 'b',
-    ]))->toBe('/x?cat_id=10&amp;a=b');
+    ]))->toBe('/x?cat_id=10&a=b');
+});
+
+test('addUrlParams appends with an explicit separator to a URL that already has a query string', function (): void {
+    // Callers that embed the result into their own hand-built raw HTML
+    // (no auto-escape ever runs over it) pass this explicitly (P59 Batch 1).
+    $service = UrlServiceTestFactory::build();
+
+    expect($service->addUrlParams('/x?cat_id=10', [
+        'a' => 'b',
+    ], argSeparator: '&amp;'))->toBe('/x?cat_id=10&amp;a=b');
 });
 
 test('addUrlParams returns the URL unchanged for empty params', function (): void {
@@ -362,7 +371,7 @@ test('getQueryStringDiff removes rejected keys and keeps the rest', function ():
     $_SERVER['QUERY_STRING'] = 'a=1&b=2&c=3';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getQueryStringDiff(['b']))->toBe('?a=1&amp;c=3');
+    expect($service->getQueryStringDiff(['b']))->toBe('?a=1&c=3');
 });
 
 test('getQueryStringDiff can use a plain ampersand instead of the escaped form', function (): void {
@@ -796,9 +805,9 @@ test('getAbsoluteRootUrl falls back to the Host header when gallery_url has an e
 });
 
 /**
- * addUrlParams()'s `$is_first = false;` (line 210) FalseToTrue mutant and
- * its `(string) $val` (line 217) RemoveStringCast mutant are both confirmed
- * equivalents -- verified live the same sed-mutate-and-rerun way.
+ * addUrlParams()'s `$is_first = false;` FalseToTrue mutant and its
+ * `(string) $val` RemoveStringCast mutant are both confirmed equivalents --
+ * verified live the same sed-mutate-and-rerun way.
  *
  * - FalseToTrue: once mutated, $is_first never becomes false, so every
  *   iteration re-enters the `if ($is_first)` branch and re-evaluates
@@ -817,19 +826,6 @@ test('getAbsoluteRootUrl falls back to the Host header when gallery_url has an e
  *   `(string)` cast, so dropping the cast immediately before a
  *   concatenation is a no-op for every scalar value.
  */
-test('addUrlParams switches the default separator to a plain ampersand inside an API request context', function (): void {
-    KernelContainerOverride::with([
-        ApiContext::class => new ApiContext(true),
-    ], function (): void {
-        $service = UrlServiceTestFactory::build();
-
-        expect($service->addUrlParams('/x', [
-            'a' => 'b',
-            'c' => 'd',
-        ]))->toBe('/x?a=b&c=d');
-    });
-});
-
 test('addUrlParams appends an empty value for a non-scalar param', function (): void {
     $service = UrlServiceTestFactory::build();
 
@@ -2016,7 +2012,7 @@ test('getActionUrl prefixes action.php with a non-empty root URL', function (): 
         $service = UrlServiceTestFactory::build();
 
         expect($service->getActionUrl(42, 'e', false))
-            ->toBe('../action.php?id=42&amp;part=e');
+            ->toBe('../action.php?id=42&part=e');
     });
 });
 
@@ -2104,7 +2100,7 @@ test('getQueryStringDiff does not prefix a purely-numeric query key', function (
     $service = UrlServiceTestFactory::build();
 
     expect($service->getQueryStringDiff())
-        ->toBe('?0=foo&amp;a=1');
+        ->toBe('?0=foo&a=1');
 });
 
 test('filterState() returns the container-shared instance once Kernel has booted', function (): void {

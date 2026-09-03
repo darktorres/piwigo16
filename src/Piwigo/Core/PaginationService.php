@@ -50,7 +50,11 @@ final readonly class PaginationService
 
         $navbar = [];
         $pages_around = $this->currentConfig->paginatePagesAround;
-        $start_str = $cleanUrl ? '/' . $paramName . '-' : (! str_contains($url, '?') ? '?' : '&amp;') . $paramName . '=';
+        // Plain '&', not '&amp;': every real consumer of the built URLs
+        // below (Navbar::$urlFirst/$urlPrev/$urlNext/$urlLast/$pages) is a
+        // bare template print, where Latte's own auto-escape does the
+        // entity-encoding once, at print time (P59 Batch 1).
+        $start_str = $cleanUrl ? '/' . $paramName . '-' : (! str_contains($url, '?') ? '?' : '&') . $paramName . '=';
 
         if ($start < 0) {
             $start = 0;

@@ -1721,9 +1721,9 @@ test('getSrcImageUrlProtectionHandler uses "e" for an original image and "r" for
         ->toBeFalse();
 
     expect(htmlServiceTestSrcImageUrlProtection($service, 'ignored-input-url', $original))
-        ->toBe('action.php?id=7&amp;part=e')
+        ->toBe('action.php?id=7&part=e')
         ->and(htmlServiceTestSrcImageUrlProtection($service, 'ignored-input-url', $representative))
-        ->toBe('action.php?id=9&amp;part=r');
+        ->toBe('action.php?id=9&part=r');
 });
 
 test('getElementUrlProtectionHandler passes a non-image extension through unchanged when protection is scoped to images', function (): void {
@@ -1749,7 +1749,7 @@ test('getElementUrlProtectionHandler builds an action url for an image extension
     ]);
 
     expect($result)
-        ->toBe('action.php?id=3&amp;part=e');
+        ->toBe('action.php?id=3&part=e');
 });
 
 test('getElementUrlProtectionHandler builds an action url for any extension when protection is not scoped to images', function (): void {
@@ -1763,7 +1763,7 @@ test('getElementUrlProtectionHandler builds an action url for any extension when
     ]);
 
     expect($result)
-        ->toBe('action.php?id=5&amp;part=e');
+        ->toBe('action.php?id=5&part=e');
 });
 
 test('getElementUrlProtectionHandler defaults a missing id to an empty string, not a placeholder', function (): void {
@@ -1779,7 +1779,7 @@ test('getElementUrlProtectionHandler defaults a missing id to an empty string, n
     ]);
 
     expect($result)
-        ->toBe('action.php?id=&amp;part=e');
+        ->toBe('action.php?id=&part=e');
 });
 
 test('getElementUrlProtectionHandler defaults a non-int-non-string id to an empty string too', function (): void {
@@ -1798,7 +1798,7 @@ test('getElementUrlProtectionHandler defaults a non-int-non-string id to an empt
     ]);
 
     expect($result)
-        ->toBe('action.php?id=&amp;part=e');
+        ->toBe('action.php?id=&part=e');
 });
 
 test('accessDenied renders a 401 page instead of redirecting when a real (non-guest) user is already authenticated', function (): void {

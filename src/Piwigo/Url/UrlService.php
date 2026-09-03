@@ -18,7 +18,6 @@ use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Core\ApiContext;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -78,7 +77,6 @@ final readonly class UrlService implements UrlServiceInterface
         private RequestMountDepth $requestMountDepth,
         private CurrentConfig $currentConfig,
         private DeploymentPolicy $deploymentPolicy,
-        private ApiContext $apiContext,
         private CurrentUser $currentUser,
         private Lang $lang,
         private EventDispatcher $eventDispatcher,
@@ -324,18 +322,23 @@ final readonly class UrlService implements UrlServiceInterface
     /**
      * Adds one or more _GET style parameters to an url.
      * example: addUrlParams('/x', ['a'=>'b']) returns /x?a=b
-     * addUrlParams('/x?cat_id=10', ['a'=>'b']) returns /x?cat_id=10&amp;a=b
+     * addUrlParams('/x?cat_id=10', ['a'=>'b']) returns /x?cat_id=10&a=b
+     *
+     * Plain '&', not HTML-entity-encoded '&amp;': the vast majority of real
+     * callers hand the built URL to a template print, where Latte's own
+     * auto-escape does the entity-encoding once, at print time (P59 Batch 1)
+     * -- pre-encoding here as well would double-escape it. The minority of
+     * callers that embed the result directly into their own hand-built raw
+     * HTML (no auto-escape ever runs over it) pass an explicit
+     * `argSeparator: '&amp;'` instead (see HtmlService::getCatDisplayNameCache(),
+     * NotificationService::getHtmlDescriptionRecentPostDate()).
      *
      * @param array<int|string, mixed> $params
      */
     #[Override]
-    public function addUrlParams(string $url, array $params, string $argSeparator = '&amp;'): string
+    public function addUrlParams(string $url, array $params, string $argSeparator = '&'): string
     {
         if ($params !== []) {
-            if ($this->apiContext->isActive() and $argSeparator === '&amp;') {
-                $argSeparator = '&';
-            }
-
             $is_first = true;
             foreach ($params as $param => $val) {
                 if ($is_first) {
@@ -1059,11 +1062,21 @@ final readonly class UrlService implements UrlServiceInterface
     /**
      * Returns $_SERVER['QUERY_STRING'] whithout keys given in parameters.
      *
+     * `$escape` defaults to false (plain '&'), not HTML-entity-encoded
+     * '&amp;': the vast majority of real callers hand the result to a
+     * template print, where Latte's own auto-escape does the
+     * entity-encoding once, at print time (P59 Batch 1) -- pre-encoding
+     * here as well would double-escape it. Pass `escape: true` at a call
+     * site that instead embeds the result directly into its own
+     * hand-built raw HTML/markup, or that appends a further literal
+     * '&amp;'-joined fragment in the template itself (no auto-escape ever
+     * runs over either).
+     *
      * @param string[] $rejects
      * @param bool $escape escape *&* to *&amp;*
      */
     #[Override]
-    public function getQueryStringDiff(array $rejects = [], bool $escape = true): string
+    public function getQueryStringDiff(array $rejects = [], bool $escape = false): string
     {
         $query_string = $_SERVER['QUERY_STRING'] ?? null;
         if (! is_string($query_string) || $query_string === '') {

@@ -39,7 +39,7 @@
         class="actions"
       >
         {if $comment->deleteUrl !== null}
-          <a href="{$comment->deleteUrl|noescape}" data-confirm>
+          <a href="{$comment->deleteUrl}" data-confirm>
             {='Delete'|translate}
           </a>{if $comment->validateUrl !== null or $comment->editUrl !== null or $comment->cancelUrl !== null} | {/if}
         {/if}
@@ -51,14 +51,14 @@
         {if $comment->editUrl !== null and !$comment->inEdit}
           <a
             class="editComment"
-            href="{$comment->editUrl|noescape}#edit_comment"
+            href="{$comment->editUrl}#edit_comment"
           >
             {='Edit'|translate}
           </a>{if $comment->validateUrl !== null} | {/if}
         {/if}
         <a
           n:if="$comment->validateUrl !== null"
-          href="{$comment->validateUrl|noescape}"
+          href="{$comment->validateUrl}"
         >
           {='Validate'|translate}
         </a>&nbsp;
@@ -78,7 +78,7 @@
         <a name="edit_comment"></a>
         <form
           method="post"
-          action="{$comment->editUrl|noescape}"
+          action="{$comment->editUrl}"
           id="editComment"
         >
           <p><label

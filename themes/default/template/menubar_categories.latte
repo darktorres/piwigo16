@@ -2,14 +2,14 @@
 <dt>
   <a
     n:if="$startFilterUrl !== null"
-    href="{$startFilterUrl|noescape}"
+    href="{$startFilterUrl}"
     class="pwg-state-default pwg-button menubarFilter"
     title="{='display only recently posted photos'|translate}"
     rel="nofollow"
   ><span class="pwg-icon pwg-icon-filter"></span></a>
   <a
     n:if="$stopFilterUrl !== null"
-    href="{$stopFilterUrl|noescape}"
+    href="{$stopFilterUrl}"
     class="pwg-state-default pwg-button menubarFilter"
     title="{='return to the display of all photos'|translate}"
   ><span class="pwg-icon pwg-icon-filter-del"></span></a>

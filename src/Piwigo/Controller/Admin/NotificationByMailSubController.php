@@ -470,7 +470,7 @@ final readonly class NotificationByMailSubController implements AdminSubControll
                 if (count($untreated_check_key_list) !== 0) {
                     $notificationByMailService->deleteByCheckKeys($untreated_check_key_list);
 
-                    $redirectService->redirect($base_url . $urlService->getQueryStringDiff([], false), $lang->t('Operation in progress') . "\n" . $lang->t('Please wait...'));
+                    $redirectService->redirect($base_url . $urlService->getQueryStringDiff([]), $lang->t('Operation in progress') . "\n" . $lang->t('Please wait...'));
                 }
             }
         }

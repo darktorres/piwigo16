@@ -37,9 +37,12 @@ interface UrlServiceInterface
      * scalar-checked at its own use site (is_scalar()/is_array()/
      * is_string()) rather than assumed.
      *
+     * `$argSeparator` defaults to plain '&', not HTML-entity-encoded '&amp;'
+     * -- see the implementation's own docblock (P59 Batch 1).
+     *
      * @param array<int|string, mixed> $params
      */
-    public function addUrlParams(string $url, array $params, string $argSeparator = '&amp;'): string;
+    public function addUrlParams(string $url, array $params, string $argSeparator = '&'): string;
 
     /**
      * Build an index URL for a specific section. Same arbitrary-value
@@ -119,10 +122,13 @@ interface UrlServiceInterface
     /**
      * Returns $_SERVER['QUERY_STRING'] whithout keys given in parameters.
      *
+     * `$escape` defaults to false (plain '&') -- see the implementation's
+     * own docblock (P59 Batch 1).
+     *
      * @param string[] $rejects
      * @param bool $escape escape *&* to *&amp;*
      */
-    public function getQueryStringDiff(array $rejects = [], bool $escape = true): string;
+    public function getQueryStringDiff(array $rejects = [], bool $escape = false): string;
 
     /**
      * Returns true if the url is absolute (begins with http).

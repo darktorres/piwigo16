@@ -9,7 +9,6 @@ use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\TranslationsCachePool;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Core\ApiContext;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
@@ -43,7 +42,6 @@ final class UrlServiceTestFactory
             self::resolve(RequestMountDepth::class) ?? new RequestMountDepth(),
             self::resolve(CurrentConfig::class) ?? new CurrentConfig(),
             self::resolve(DeploymentPolicy::class) ?? new DeploymentPolicy(),
-            self::resolve(ApiContext::class) ?? new ApiContext(),
             self::resolve(CurrentUser::class) ?? new CurrentUser(new CurrentConfig()),
             self::resolve(Lang::class) ?? new Lang(new Translator(new CurrentConfig(), new TranslationsCachePool(CacheFactory::create(namespace: 'piwigo.translations'))), HtmlServiceTestFactory::build(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag()),
             self::resolve(EventDispatcher::class) ?? new EventDispatcher(),

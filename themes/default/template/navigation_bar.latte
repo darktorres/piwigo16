@@ -2,11 +2,11 @@
 <div class="navigationBar">
   {if $navbar->urlFirst !== null}
     <span class="navFirstLast"><a
-        href="{$navbar->urlFirst|noescape}"
+        href="{$navbar->urlFirst}"
         rel="first"
       >{='First'|translate}</a> |</span>
     <span class="navPrevNext"><a
-        href="{$navbar->urlPrev|noescape}"
+        href="{$navbar->urlPrev}"
         rel="prev"
       >{='Previous'|translate}</a> |</span>
   {else}
@@ -20,18 +20,18 @@
     {if $page === $navbar->currentPage}
       <span class="pageNumberSelected">{$page}</span>
     {else}
-      <a href="{$url|noescape}">{$page}</a>
+      <a href="{$url}">{$page}</a>
     {/if}
     {var $prev_page = $page}
   {/foreach}
 
   {if $navbar->urlNext !== null}
     <span class="navPrevNext">| <a
-        href="{$navbar->urlNext|noescape}"
+        href="{$navbar->urlNext}"
         rel="next"
       >{='Next'|translate}</a></span>
     <span class="navFirstLast">| <a
-        href="{$navbar->urlLast|noescape}"
+        href="{$navbar->urlLast}"
         rel="last"
       >{='Last'|translate}</a></span>
   {else}

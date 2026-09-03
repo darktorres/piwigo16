@@ -210,7 +210,12 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
         $is_first = true;
         foreach ($vars as $key => $value) {
             if (! in_array((string) $key, $get_rejects, true) and $key !== $get_param) {
-                $base_url .= $is_first ? '?' : '&amp;';
+                // Plain '&', not '&amp;' -- $base_url/$url below are embedded
+                // directly into this method's own hand-built raw-HTML
+                // $headers values (no auto-escape ever runs over them), so
+                // this needn't be entity-encoded any more than the rest of
+                // that hand-built markup is (P59 Batch 1).
+                $base_url .= $is_first ? '?' : '&';
                 $is_first = false;
 
                 if (! in_array((string) $key, ['page', 'psf', 'dpsf', 'pwg_token'], true)) {

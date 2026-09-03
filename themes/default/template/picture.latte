@@ -62,7 +62,7 @@
         {/if}
         {spaceless}{if isset($uSlideshowStart)}
             <a
-              href="{$uSlideshowStart|noescape}"
+              href="{$uSlideshowStart}"
               title="{='slideshow'|translate}"
               class="pwg-state-default pwg-button"
               rel="nofollow"
@@ -74,7 +74,7 @@
           {/if}{/spaceless}
         {spaceless}{if isset($uMetadata)}
             <a
-              href="{$uMetadata|noescape}"
+              href="{$uMetadata}"
               title="{='Show file metadata'|translate}"
               class="pwg-state-default pwg-button"
               rel="nofollow"
@@ -87,7 +87,7 @@
         {spaceless}{if isset($navCurrent->downloadUrl)}
             <a
               id="downloadSwitchLink"
-              href="{$navCurrent->downloadUrl|noescape}"
+              href="{$navCurrent->downloadUrl}"
               title="{='Download this file'|translate}"
               class="pwg-state-default pwg-button"
               rel="nofollow"
@@ -153,7 +153,7 @@
           {/spaceless}{/foreach}
         {spaceless}{if isset($favorite)}
             <a
-              href="{$favorite['U_FAVORITE']|noescape}"
+              href="{$favorite['U_FAVORITE']}"
               title="{if $favorite['IS_FAVORITE']}{='delete this photo from your favorites'|translate}{else}{='add this photo to your favorites'|translate}{/if}"
               class="pwg-state-default pwg-button"
               rel="nofollow"
@@ -168,7 +168,7 @@
         {spaceless}{if isset($uSetAsRepresentative)}
             <a
               id="cmdSetRepresentative"
-              href="{$uSetAsRepresentative|noescape}"
+              href="{$uSetAsRepresentative}"
               title="{='set as album representative'|translate}"
               class="pwg-state-default pwg-button"
               rel="nofollow"
@@ -194,7 +194,7 @@
         {spaceless}{if isset($uCaddie)}{* caddie management BEGIN *}
             <a
               id="caddieLink"
-              href="{$uCaddie|noescape}"
+              href="{$uCaddie}"
               title="{='Add to caddie'|translate}"
               class="pwg-state-default pwg-button"
               rel="nofollow"
@@ -218,7 +218,7 @@
         {if isset($uSlideshowStop)}
           <p>
             [ <a
-              href="{$uSlideshowStop|noescape}"
+              href="{$uSlideshowStop}"
             >{='stop the slideshow'|translate}</a> ]
           </p>
         {/if}
@@ -233,7 +233,7 @@
               <a
                 class="navThumb"
                 id="linkPrev"
-                href="{$navPrevious->imgUrl|noescape}"
+                href="{$navPrevious->imgUrl}"
                 title="{='Previous'|translate} : {$navPrevious->element->titleEsc|noescape}"
                 rel="prev"
               >
@@ -260,7 +260,7 @@
               <a
                 class="navThumb"
                 id="linkNext"
-                href="{$navNext->imgUrl|noescape}"
+                href="{$navNext->imgUrl}"
                 title="{='Next'|translate} : {$navNext->element->titleEsc|noescape}"
                 rel="next"
               >
@@ -518,7 +518,7 @@
                 <div id="pictureCommentNavBar">
                   {if $commentCount > 2}
                     <a
-                      href="{$commentsOrderUrl|noescape}#comments"
+                      href="{$commentsOrderUrl}#comments"
                       rel="nofollow"
                       class="commentsOrder"
                     >{$commentsOrderTitle}</a>

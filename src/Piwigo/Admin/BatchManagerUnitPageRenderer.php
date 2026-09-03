@@ -474,7 +474,11 @@ final readonly class BatchManagerUnitPageRenderer
         $subtemplates = $this->eventDispatcher->dispatch(new GetBatchManagerUnitElementSubtemplates([]))->paths;
 
         $adminContent = $this->renderer->render(new BatchManagerUnitView(
-            uElementsPage: $base_url . $this->urlService->getQueryStringDiff(['display', 'start']),
+            // Explicit escape: true -- batch_manager_unit.latte prints this
+            // with |noescape and appends its own literal '&amp;display=N'
+            // fragment after it, so this value's own internal separator
+            // must stay '&amp;'-encoded too (P59 Batch 1).
+            uElementsPage: $base_url . $this->urlService->getQueryStringDiff(['display', 'start'], escape: true),
             levelOptions: PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang),
             csrfToken: $this->csrfService
                 ->getToken(),

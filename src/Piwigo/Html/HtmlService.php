@@ -272,8 +272,12 @@ final readonly class HtmlService implements HtmlRenderingInterface
         if ($singleLink) {
             $uppercats_array = explode(',', $uppercats);
             $last_uppercat = array_pop($uppercats_array);
+            // Explicit '&amp;' -- $single_url is embedded directly into this
+            // method's own hand-built raw-HTML output below (no auto-escape
+            // ever runs over it), unlike the majority of addUrlParams()
+            // callers that flow into a template print (P59 Batch 1).
             $single_url = $this->urlService()
-                ->addUrlParams($this->urlService()->getRootUrl() . ($url ?? '') . $last_uppercat, $add_url_params);
+                ->addUrlParams($this->urlService()->getRootUrl() . ($url ?? '') . $last_uppercat, $add_url_params, argSeparator: '&amp;');
             $output .= '<a href="' . $single_url . '"';
             if (isset($linkClass)) {
                 $output .= ' class="' . $linkClass . '"';
@@ -295,6 +299,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
             if (! isset($url) or $singleLink) {
                 $output .= $cat_name_html;
             } elseif ($url === '') {
+                // Explicit '&amp;' -- same reasoning as $single_url above.
                 $output .= '
 <a href="'
                 . $this->urlService()->addUrlParams(
@@ -305,6 +310,7 @@ final readonly class HtmlService implements HtmlRenderingInterface
                             ],
                         ),
                     $add_url_params,
+                    argSeparator: '&amp;',
                 )
                 . '">' . $cat_name_html . '</a>';
             } else {

@@ -780,7 +780,7 @@ export class AlbumSelector {
       }
 
       if (rank !== "root") {
-        const item = q("#" + escapeId(rank) + ".search-result-item")[0];
+        const [item] = q("#" + escapeId(rank) + ".search-result-item");
         // `.css(name)` on an empty set is undefined, and parseInt of that
         // is NaN -- which then reaches `.css(prop, NaN)` and is skipped.
         // Preserved: an absent parent row leaves the margin untouched
@@ -965,7 +965,7 @@ export class AlbumSelector {
       success: (data) => {
         this.#rememberLevelSeparator(data);
         hide(AlbumSelector.selectors.iconSearchingSpin);
-        const categories = data.categories;
+        const { categories } = data;
         this.#fill_results(categories);
 
         if (data.limit && data.limit.remainingCats > 0) {

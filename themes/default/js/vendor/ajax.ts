@@ -22,19 +22,22 @@ export interface AjaxResponse {
 export class AjaxError extends Error implements AjaxResponse {
   public responseJSON?: unknown;
 
+  readonly #headers: Headers;
+
   public constructor(
     public readonly status: number,
     public readonly statusText: string,
     public readonly responseText: string,
-    private readonly headers: Headers,
+    headers: Headers,
     message: string
   ) {
     super(message);
+    this.#headers = headers;
     this.name = "AjaxError";
   }
 
   public getResponseHeader(name: string): string | null {
-    return this.headers.get(name);
+    return this.#headers.get(name);
   }
 }
 

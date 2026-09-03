@@ -12,7 +12,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { ajax } from "../../../default/js/vendor/ajax";
+import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
 import { confirm } from "../../../default/js/vendor/jconfirm";
 import { dataTable } from "../../../default/js/vendor/dataTable";
 import { tooltip } from "../../../default/js/vendor/tooltip";
@@ -117,28 +117,32 @@ ready(function () {
               fadeTo(trElement, 1000, 0.4);
               const tr = trElement;
               const ids = uidFromCell(cell);
-              void ajax({
-                url:
-                  pwg_getPageData<string>("root_url") +
-                  "api/v1/users/" +
-                  String(ids.uid) +
-                  "/actions/delete-ratings",
-                method: "POST",
-                contentType: "application/json",
-                data: JSON.stringify({ anonymousId: ids.aid || null }),
-                headers: { "X-CSRF-Token": pwg_token },
-                error: function (jqXHR) {
-                  stop(tr);
-                  fadeTo(tr, 0, 1);
-                  alert(String(jqXHR.status) + " " + jqXHR.statusText);
-                },
-                success: function (
-                  result: operations["userDeleteRatings"]["responses"][200]["content"]["application/json"],
-                ) {
+              void (async () => {
+                try {
+                  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+                  const result = (await ajax({
+                    url:
+                      pwg_getPageData<string>("root_url") +
+                      "api/v1/users/" +
+                      String(ids.uid) +
+                      "/actions/delete-ratings",
+                    method: "POST",
+                    json: { anonymousId: ids.aid || null },
+                    headers: { "X-CSRF-Token": pwg_token },
+                  })) as operations["userDeleteRatings"]["responses"][200]["content"]["application/json"];
+
                   if (result.deletedCount) oTable.row(tr).remove().draw();
                   else alert(result.deletedCount);
-                },
-              });
+                } catch (e) {
+                  stop(tr);
+                  fadeTo(tr, 0, 1);
+                  alert(
+                    e instanceof AjaxError
+                      ? String(e.status) + " " + e.statusText
+                      : String(e),
+                  );
+                }
+              })();
             },
           },
           cancel: {
@@ -187,19 +191,23 @@ ready(function () {
         { once: true },
       );
 
-      void ajax({
-        url: "api/v1/geoip",
-        // `aid` is an anonymous rater's IP with its last octet
-        // deliberately stripped for privacy (RateService::$anonymousId/
-        // PictureRateRenderer::$anonymous_id), so this reconstructs a
-        // plausible full IP -- good enough for a city-level lookup,
-        // since city blocks are coarser than a single host anyway. Must
-        // stay exactly this shape; it's the one piece of real logic in
-        // this call site.
-        type: "GET",
-        dataType: "json",
-        data: { ip: udata.aid + ".1" },
-        success: function (geoData: GeoIpLookupResponse) {
+      void (async () => {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+          const geoData = (await ajax({
+            url: "api/v1/geoip",
+            // `aid` is an anonymous rater's IP with its last octet
+            // deliberately stripped for privacy (RateService::$anonymousId/
+            // PictureRateRenderer::$anonymous_id), so this reconstructs a
+            // plausible full IP -- good enough for a city-level lookup,
+            // since city blocks are coarser than a single host anyway. Must
+            // stay exactly this shape; it's the one piece of real logic in
+            // this call site.
+            type: "GET",
+            dataType: "json",
+            data: { ip: udata.aid + ".1" },
+          })) as GeoIpLookupResponse;
+
           if (!geoData.available || geoData.fullName === undefined) return;
           let content = geoData.fullName;
           if (geoData.latitude != null && geoData.longitude != null) {
@@ -215,8 +223,10 @@ ready(function () {
               '">';
           }
           if (data(el, "isOver") === true) callback(content);
-        },
-      });
+        } catch (e) {
+          console.error(e instanceof AjaxError ? e.responseText : e);
+        }
+      })();
       return undefined;
     },
   });

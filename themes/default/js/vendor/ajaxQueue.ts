@@ -26,14 +26,17 @@ export interface AjaxQueueOptions {
 }
 
 export class AjaxQueue {
-  private readonly pending: (() => void)[] = [];
-  private readonly inFlightKeys = new Set<string>();
-  private inProgress = 0;
+  readonly #pending: (() => void)[] = [];
+  readonly #inFlightKeys = new Set<string>();
+  #inProgress = 0;
+  readonly #opts: AjaxQueueOptions;
 
-  public constructor(private readonly opts: AjaxQueueOptions) {}
+  public constructor(opts: AjaxQueueOptions) {
+    this.#opts = opts;
+  }
 
   public add<T = unknown>(requestOpts: AjaxOptions<T>): void {
-    const preventDoubleRequests = this.opts.preventDoubleRequests ?? true;
+    const preventDoubleRequests = this.#opts.preventDoubleRequests ?? true;
     const key =
       (requestOpts.method ?? requestOpts.type ?? "GET") +
       requestOpts.url +
@@ -41,34 +44,34 @@ export class AjaxQueue {
         ? requestOpts.data
         : JSON.stringify(requestOpts.data ?? {}));
 
-    if (preventDoubleRequests && this.inFlightKeys.has(key)) {
+    if (preventDoubleRequests && this.#inFlightKeys.has(key)) {
       return;
     }
 
-    this.pending.push(() => {
-      this.inFlightKeys.add(key);
-      this.inProgress++;
-      this.opts.beforeSend?.();
+    this.#pending.push(() => {
+      this.#inFlightKeys.add(key);
+      this.#inProgress++;
+      this.#opts.beforeSend?.();
 
       const origComplete = requestOpts.complete;
       void ajax({
         ...requestOpts,
         complete: (xhr, statusText) => {
-          this.inFlightKeys.delete(key);
-          this.inProgress--;
+          this.#inFlightKeys.delete(key);
+          this.#inProgress--;
           origComplete?.(xhr, statusText);
-          this.opts.complete?.();
-          this.dequeue();
+          this.#opts.complete?.();
+          this.#dequeue();
         },
       });
     });
 
-    this.dequeue();
+    this.#dequeue();
   }
 
-  private dequeue(): void {
-    while (this.inProgress < this.opts.maxRequests && this.pending.length > 0) {
-      this.pending.shift()!();
+  #dequeue(): void {
+    while (this.#inProgress < this.#opts.maxRequests && this.#pending.length > 0) {
+      this.#pending.shift()!();
     }
   }
 }

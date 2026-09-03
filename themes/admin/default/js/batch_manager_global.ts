@@ -439,7 +439,7 @@ ready(function () {
 
     progress_start();
     progress();
-    getDerivativeUrls(queue);
+    void getDerivativeUrls(queue);
     e.preventDefault();
     e.stopPropagation();
   });

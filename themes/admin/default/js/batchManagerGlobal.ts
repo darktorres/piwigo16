@@ -23,7 +23,7 @@ import {
 import { AlbumSelector } from "./album_selector";
 import { pwgAddAlbum } from "./addAlbum";
 import { pwg_getPageData } from "../../../default/js/page-data";
-import { ajax } from "../../../default/js/vendor/ajax";
+import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
 import { AjaxQueue } from "../../../default/js/vendor/ajaxQueue";
 import { colorbox } from "../../../default/js/vendor/colorbox";
 import { pwgDatepicker } from "../../../default/js/vendor/datepicker";
@@ -324,7 +324,7 @@ export function progress(success?: boolean) {
   }
 }
 
-export function getDerivativeUrls(queue: AjaxQueue) {
+export async function getDerivativeUrls(queue: AjaxQueue): Promise<void> {
   const ids = derivatives.elements!.splice(0, 500).map(Number);
   const params: { maxUrls: number; ids: number[]; types: string[] } = {
     maxUrls: 100000,
@@ -342,56 +342,62 @@ export function getDerivativeUrls(queue: AjaxQueue) {
   show(document.querySelectorAll("#regenerationMsg"));
   html(document.querySelectorAll("#regenerationText"), lang.generateMsg);
   progress_start();
-  void ajax({
-    type: "POST",
-    url: "api/v1/images/actions/missing-derivatives",
-    contentType: "application/json",
-    headers: {
-      "X-CSRF-Token": val(document.querySelectorAll("input[name=pwg_token]"))!,
-    },
-    data: JSON.stringify(params),
-    dataType: "json",
-    success: function (
-      responseData: operations["imageMissingDerivatives"]["responses"][200]["content"]["application/json"],
-    ) {
-      derivatives.total += responseData.urls.length;
-      html(
-        document.querySelectorAll("#regenerationStatus .badge-number"),
-        derivatives.done.toString() + "/" + derivatives.total.toString(),
-      );
-      progress();
-      for (const url of responseData.urls) {
-        queue.add({
-          type: "GET",
-          url: url + "&ajaxload=true",
-          dataType: "json",
-          success: function (_data: unknown) {
-            derivatives.done++;
-            html(
-              document.querySelectorAll("#regenerationStatus .badge-number"),
-              derivatives.done.toString() + "/" + derivatives.total.toString(),
-            );
-            progress(true);
-          },
-          error: function (_data: unknown) {
-            derivatives.done++;
-            html(
-              document.querySelectorAll("#regenerationStatus .badge-number"),
-              derivatives.done.toString() + "/" + derivatives.total.toString(),
-            );
-            progress(false);
-          },
-        });
-      }
-      if (derivatives.elements!.length)
-        setTimeout(
-          () => {
-            getDerivativeUrls(queue);
-          },
-          25 * (derivatives.total - derivatives.done),
+
+  let responseData: operations["imageMissingDerivatives"]["responses"][200]["content"]["application/json"];
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    responseData = (await ajax({
+      type: "POST",
+      url: "api/v1/images/actions/missing-derivatives",
+      json: params,
+      headers: {
+        "X-CSRF-Token": val(
+          document.querySelectorAll("input[name=pwg_token]"),
+        )!,
+      },
+      dataType: "json",
+    })) as operations["imageMissingDerivatives"]["responses"][200]["content"]["application/json"];
+  } catch (e) {
+    console.error(e instanceof AjaxError ? e.responseText : e);
+    return;
+  }
+
+  derivatives.total += responseData.urls.length;
+  html(
+    document.querySelectorAll("#regenerationStatus .badge-number"),
+    derivatives.done.toString() + "/" + derivatives.total.toString(),
+  );
+  progress();
+  for (const url of responseData.urls) {
+    queue.add({
+      type: "GET",
+      url: url + "&ajaxload=true",
+      dataType: "json",
+      success: function (_data: unknown) {
+        derivatives.done++;
+        html(
+          document.querySelectorAll("#regenerationStatus .badge-number"),
+          derivatives.done.toString() + "/" + derivatives.total.toString(),
         );
-    },
-  });
+        progress(true);
+      },
+      error: function (_data: unknown) {
+        derivatives.done++;
+        html(
+          document.querySelectorAll("#regenerationStatus .badge-number"),
+          derivatives.done.toString() + "/" + derivatives.total.toString(),
+        );
+        progress(false);
+      },
+    });
+  }
+  if (derivatives.elements!.length)
+    setTimeout(
+      () => {
+        void getDerivativeUrls(queue);
+      },
+      25 * (derivatives.total - derivatives.done),
+    );
 }
 
 function selectGenerateDerivAll() {
@@ -771,65 +777,65 @@ on(
       ),
       1000,
     );
-    add_md5sum_block(addBlockSize);
+    void add_md5sum_block(addBlockSize);
 
     e.preventDefault();
     e.stopPropagation();
   },
 );
 
-function add_md5sum_block(blockSize?: number) {
-  void ajax({
-    url: "api/v1/images/actions/set-md5sum",
-    type: "POST",
-    contentType: "application/json",
-    headers: {
-      "X-CSRF-Token": val(document.querySelectorAll("input[name=pwg_token]"))!,
-    },
-    dataType: "json",
-    data: JSON.stringify({
-      blockSize: blockSize,
-    }),
-    success: function (
-      responseData: operations["imageSetMd5sum"]["responses"][200]["content"]["application/json"],
-    ) {
-      html(
-        document.querySelectorAll("#md5sum_to_add"),
-        String(responseData.remainingCount),
-      );
+async function add_md5sum_block(blockSize?: number): Promise<void> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    const responseData = (await ajax({
+      url: "api/v1/images/actions/set-md5sum",
+      type: "POST",
+      json: {
+        blockSize: blockSize,
+      },
+      headers: {
+        "X-CSRF-Token": val(
+          document.querySelectorAll("input[name=pwg_token]"),
+        )!,
+      },
+      dataType: "json",
+    })) as operations["imageSetMd5sum"]["responses"][200]["content"]["application/json"];
 
-      const origin = document.querySelector("#md5sum_to_add")!;
-      const percent_remaining = Number(
-        (
-          (responseData.remainingCount * 100) /
-          Number(data(origin, "origin"))
-        ).toFixed(),
-      );
-      const percent_done = 100 - percent_remaining;
-      html(document.querySelectorAll("#md5sum_added"), String(percent_done));
-      if (responseData.remainingCount > 0) {
-        add_md5sum_block();
-      } else {
-        // time to refresh the whole page
-        let redirect_to = "admin.php?page=batch_manager";
-        redirect_to += "&action=sync_md5sum";
-        redirect_to += "&nb_md5sum_added=" + String(data(origin, "origin"));
+    html(
+      document.querySelectorAll("#md5sum_to_add"),
+      String(responseData.remainingCount),
+    );
 
-        window.location.href = redirect_to;
-      }
-    },
-    error: function (XMLHttpRequest) {
-      hide(document.querySelectorAll("#add_md5sum"));
-      show(document.querySelectorAll("#add_md5sum_error"));
-      html(
-        document.querySelectorAll("#add_md5sum_error"),
-        "error " +
-          String(XMLHttpRequest.status) +
-          " : " +
-          XMLHttpRequest.statusText,
-      );
-    },
-  });
+    const origin = document.querySelector("#md5sum_to_add")!;
+    const percent_remaining = Number(
+      (
+        (responseData.remainingCount * 100) /
+        Number(data(origin, "origin"))
+      ).toFixed(),
+    );
+    const percent_done = 100 - percent_remaining;
+    html(document.querySelectorAll("#md5sum_added"), String(percent_done));
+    if (responseData.remainingCount > 0) {
+      void add_md5sum_block();
+    } else {
+      // time to refresh the whole page
+      let redirect_to = "admin.php?page=batch_manager";
+      redirect_to += "&action=sync_md5sum";
+      redirect_to += "&nb_md5sum_added=" + String(data(origin, "origin"));
+
+      window.location.href = redirect_to;
+    }
+  } catch (e) {
+    hide(document.querySelectorAll("#add_md5sum"));
+    show(document.querySelectorAll("#add_md5sum_error"));
+    html(
+      document.querySelectorAll("#add_md5sum_error"),
+      "error " +
+        (e instanceof AjaxError
+          ? String(e.status) + " : " + e.statusText
+          : String(e)),
+    );
+  }
 }
 
 on(
@@ -850,64 +856,64 @@ on(
       1000,
     );
 
-    delete_orphans_block(deleteBlockSize);
+    void delete_orphans_block(deleteBlockSize);
 
     e.preventDefault();
     e.stopPropagation();
   },
 );
 
-function delete_orphans_block(blockSize?: number) {
-  void ajax({
-    url: "api/v1/images/actions/delete-orphans",
-    type: "POST",
-    contentType: "application/json",
-    headers: {
-      "X-CSRF-Token": val(document.querySelectorAll("input[name=pwg_token]"))!,
-    },
-    data: JSON.stringify({
-      blockSize: blockSize,
-    }),
-    dataType: "json",
-    success: function (
-      responseData: operations["imageDeleteOrphans"]["responses"][200]["content"]["application/json"],
-    ) {
-      html(
-        document.querySelectorAll("#orphans_to_delete"),
-        String(responseData.nbOrphans),
-      );
+async function delete_orphans_block(blockSize?: number): Promise<void> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    const responseData = (await ajax({
+      url: "api/v1/images/actions/delete-orphans",
+      type: "POST",
+      json: {
+        blockSize: blockSize,
+      },
+      headers: {
+        "X-CSRF-Token": val(
+          document.querySelectorAll("input[name=pwg_token]"),
+        )!,
+      },
+      dataType: "json",
+    })) as operations["imageDeleteOrphans"]["responses"][200]["content"]["application/json"];
 
-      const origin = document.querySelector("#orphans_to_delete")!;
-      const percent_remaining = Number(
-        (
-          (responseData.nbOrphans * 100) /
-          Number(data(origin, "origin"))
-        ).toFixed(),
-      );
-      const percent_done = 100 - percent_remaining;
-      html(document.querySelectorAll("#orphans_deleted"), String(percent_done));
+    html(
+      document.querySelectorAll("#orphans_to_delete"),
+      String(responseData.nbOrphans),
+    );
 
-      if (responseData.nbOrphans > 0) {
-        delete_orphans_block();
-      } else {
-        // time to refresh the whole page
-        let redirect_to = "admin.php?page=batch_manager";
-        redirect_to += "&action=delete_orphans";
-        redirect_to += "&nb_orphans_deleted=" + String(data(origin, "origin"));
+    const origin = document.querySelector("#orphans_to_delete")!;
+    const percent_remaining = Number(
+      (
+        (responseData.nbOrphans * 100) /
+        Number(data(origin, "origin"))
+      ).toFixed(),
+    );
+    const percent_done = 100 - percent_remaining;
+    html(document.querySelectorAll("#orphans_deleted"), String(percent_done));
 
-        window.location.href = redirect_to;
-      }
-    },
-    error: function (XMLHttpRequest) {
-      hide(document.querySelectorAll("#orphans_deletion"));
-      show(document.querySelectorAll("#orphans_deletion_error"));
-      html(
-        document.querySelectorAll("#orphans_deletion_error"),
-        "error " +
-          String(XMLHttpRequest.status) +
-          " : " +
-          XMLHttpRequest.statusText,
-      );
-    },
-  });
+    if (responseData.nbOrphans > 0) {
+      void delete_orphans_block();
+    } else {
+      // time to refresh the whole page
+      let redirect_to = "admin.php?page=batch_manager";
+      redirect_to += "&action=delete_orphans";
+      redirect_to += "&nb_orphans_deleted=" + String(data(origin, "origin"));
+
+      window.location.href = redirect_to;
+    }
+  } catch (e) {
+    hide(document.querySelectorAll("#orphans_deletion"));
+    show(document.querySelectorAll("#orphans_deletion_error"));
+    html(
+      document.querySelectorAll("#orphans_deletion_error"),
+      "error " +
+        (e instanceof AjaxError
+          ? String(e.status) + " : " + e.statusText
+          : String(e)),
+    );
+  }
 }

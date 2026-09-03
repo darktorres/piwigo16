@@ -101,8 +101,14 @@ final readonly class PageTailRenderer
         if (! self::emptyValue($this->currentConfig->mobileTheme) && (DeviceHelper::getDevice($this->sessionService) !== 'desktop' || DeviceHelper::mobileTheme($this->sessionService, $this->currentConfig))) {
             $request_uri = $_SERVER['REQUEST_URI'] ?? '';
             $request_uri = is_string($request_uri) ? $request_uri : '';
+            // Not pre-escaped (P59 Batch 5): toggleMobileThemeUrl reaches
+            // layout.latte as a bare {$TOGGLE_MOBILE_THEME_URL} print, where
+            // Latte's own auto-escape does the entity-encoding once, at
+            // print time -- htmlspecialchars()'ing $request_uri here too
+            // double-escaped it, corrupting the toggle link on any request
+            // whose query string carried more than one param.
             $toggleMobileThemeUrl = $this->urlService->addUrlParams(
-                htmlspecialchars($request_uri),
+                $request_uri,
                 [
                     'mobile' => DeviceHelper::mobileTheme($this->sessionService, $this->currentConfig) ? 'false' : 'true',
                 ]

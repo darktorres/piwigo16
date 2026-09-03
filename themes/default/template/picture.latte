@@ -11,7 +11,7 @@
       <div class="browsePath">
         {$sectionTitle}<span
           class="browsePathSeparator"
-        >{$levelSeparator|noescape}</span><h2>{$navCurrent->element->title|noescape}</h2>
+        >{$levelSeparator|noescape}</span><h2>{$navCurrent->element->title}</h2>
       </div>
     </div>
 
@@ -181,7 +181,7 @@
         {spaceless}{if isset($uPhotoAdmin)}
             <a
               id="cmdEditPhoto"
-              href="{$uPhotoAdmin|noescape}"
+              href="{$uPhotoAdmin}"
               title="{='Edit photo'|translate}"
               class="pwg-state-default pwg-button"
               rel="nofollow"
@@ -210,10 +210,10 @@
     <div id="theImageAndInfos">
       {var $imageId = $navCurrent->element->image->id->value}
       <div id="theImage" data-image-id="{$imageId}">
-        {$elementContent|noescape}
+        {$elementContent}
 
         {if isset($commentImg)}
-          <p class="imageComment">{$commentImg|noescape}</p>
+          <p class="imageComment">{$commentImg}</p>
         {/if}
         {if isset($uSlideshowStop)}
           <p>
@@ -234,21 +234,21 @@
                 class="navThumb"
                 id="linkPrev"
                 href="{$navPrevious->imgUrl}"
-                title="{='Previous'|translate} : {$navPrevious->element->titleEsc|noescape}"
+                title="{='Previous'|translate} : {$navPrevious->element->title}"
                 rel="prev"
               >
                 <span class="thumbHover prevThumbHover"></span>
                 <img
                   class="{if $navPrevious->element->pathExt === 'svg'}svgImg{/if}"
                   src="{if $navPrevious->element->pathExt === 'svg'}{$navPrevious->element->image->path|noescape}{else}{$navPrevious->element->derivatives['square']->getUrl()|noescape}{/if}"
-                  alt="{$navPrevious->element->titleEsc|noescape}"
+                  alt="{$navPrevious->element->title}"
                 >
               </a>
             {elseif isset($uUp)}
               <a
                 class="navThumb"
                 id="linkPrev"
-                href="{$uUp|noescape}"
+                href="{$uUp}"
                 title="{='Thumbnails'|translate}"
               >
                 <div
@@ -261,21 +261,21 @@
                 class="navThumb"
                 id="linkNext"
                 href="{$navNext->imgUrl}"
-                title="{='Next'|translate} : {$navNext->element->titleEsc|noescape}"
+                title="{='Next'|translate} : {$navNext->element->title}"
                 rel="next"
               >
                 <span class="thumbHover nextThumbHover"></span>
                 <img
                   class="{if $navNext->element->pathExt === 'svg'}svgImg{/if}"
                   src="{if $navNext->element->pathExt === 'svg'}{$navNext->element->image->path|noescape}{else}{$navNext->element->derivatives['square']->getUrl()|noescape}{/if}"
-                  alt="{$navNext->element->titleEsc|noescape}"
+                  alt="{$navNext->element->title}"
                 >
               </a>
             {elseif isset($uUp)}
               <a
                 class="navThumb"
                 id="linkNext"
-                href="{$uUp|noescape}"
+                href="{$uUp}"
                 title="{='Thumbnails'|translate}"
               >
                 <div
@@ -297,13 +297,13 @@
             {if $displayInfo['created_on'] and isset($infoCreationDate)}
               <div id="datecreate" class="imageInfo">
                 <dt>{='Created on'|translate}</dt>
-                <dd>{$infoCreationDate|noescape}</dd>
+                <dd>{$infoCreationDate}</dd>
               </div>
             {/if}
             {if $displayInfo['posted_on']}
               <div id="datepost" class="imageInfo">
                 <dt>{='Posted on'|translate}</dt>
-                <dd>{$infoPostedDate|noescape}</dd>
+                <dd>{$infoPostedDate}</dd>
               </div>
             {/if}
             {if $displayInfo['dimensions'] and isset($infoDimensions)}

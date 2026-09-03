@@ -21,11 +21,11 @@
     <div id="content">
       {var $imageId = $navCurrent->element->image->id->value}
       <div id="theImage" data-image-id="{$imageId}">
-        {$elementContent|noescape}
+        {$elementContent}
         <p
           n:if="isset($commentImg)"
           class="showlegend"
-        >{$commentImg|noescape}</p>
+        >{$commentImg}</p>
       </div>
     </div>
   </div>

@@ -88,7 +88,6 @@ final class PictureElementTestFactory
             fileExt: 'jpg',
             url: 'picture.php?/' . $id,
             title: 'Photo ' . $id,
-            titleEsc: 'Photo ' . $id,
             elementUrl: null,
             downloadUrl: null,
         );

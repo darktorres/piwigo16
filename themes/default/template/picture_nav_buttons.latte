@@ -79,7 +79,7 @@
     {spaceless}{if isset($navPrevious)}
         <a
           href="{$navPrevious->imgUrl}"
-          title="{='Previous'|translate} : {$navPrevious->element->titleEsc|noescape}"
+          title="{='Previous'|translate} : {$navPrevious->element->title}"
           class="pwg-state-default pwg-button"
         >
           <span class="pwg-icon pwg-icon-arrow-w"></span><span
@@ -116,7 +116,7 @@
     {spaceless}{if isset($navNext)}
         <a
           href="{$navNext->imgUrl}"
-          title="{='Next'|translate} : {$navNext->element->titleEsc|noescape}"
+          title="{='Next'|translate} : {$navNext->element->title}"
           class="pwg-state-default pwg-button pwg-button-icon-right"
         >
           <span class="pwg-icon pwg-icon-arrow-e"></span><span

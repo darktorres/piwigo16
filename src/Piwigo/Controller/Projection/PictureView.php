@@ -84,17 +84,29 @@ final readonly class PictureView implements View, HasPageAssets, ExposesPageData
         public ?string $uPhotoAdmin,
         public ?string $uCaddie,
         public ?array $favorite,
-        public ?string $commentImg,
+        // Html, not a plain string (P59 Batch 6): RenderElementDescription's
+        // default handler only runs pwgNl2br() over the raw photo comment,
+        // same permission-model trust level as Section\SectionContext's
+        // own category-comment field -- safe by convention (whoever can
+        // edit the photo), not universally safe.
+        public ?Html $commentImg,
         public ?string $infoAuthor,
-        public ?string $infoCreationDate,
-        public string $infoPostedDate,
+        // Html (P59 Batch 6): hand-built '<a href="...">'.$val.'</a>' from
+        // makeIndexUrl() (never '&') and DateHelper::formatDate() (never
+        // user data) -- genuinely safe pre-formed HTML.
+        public ?Html $infoCreationDate,
+        public Html $infoPostedDate,
         public ?string $infoDimensions,
         public ?string $infoFilesize,
         public string $infoVisits,
         public string $infoFile,
         public array $displayInfo,
         public int|false|null $pdfNbPages,
-        public string $elementContent,
+        // Html (P59 Batch 6): a nested Latte render of picture_content.latte
+        // itself (RenderElementContent's default handler), already
+        // correctly auto-escaped by that inner render -- same
+        // cast-and-wrap pattern as MailService's own $renderedContent.
+        public Html $elementContent,
         public ?string $uPrefetch,
         public ?array $relatedTags,
         public ?array $relatedCategories,

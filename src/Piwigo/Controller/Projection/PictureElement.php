@@ -40,7 +40,6 @@ final readonly class PictureElement
         public string $fileExt,
         public string $url,
         public string $title,
-        public string $titleEsc,
         public ?string $elementUrl,
         public ?string $downloadUrl,
     ) {}

@@ -21,7 +21,7 @@
     alt="{$altImg}"
     id="theMainImage"
     usemap="#map{$selectedDerivative->getType()}"
-    title="{if isset($COMMENT_IMG)}{$COMMENT_IMG|replace:'"',' '|stripTags}{else}{$current->titleEsc|noescape} - {$altImg}{/if}"
+    title="{if isset($COMMENT_IMG)}{$COMMENT_IMG|replace:'"',' '|stripTags}{else}{$current->title} - {$altImg}{/if}"
   >
 
   <div
@@ -44,8 +44,8 @@
         shape="rect"
         coords="0,0,{($size->width / 4)|intval},{$size->height}"
         href="{$previous->imgUrl}"
-        title="{='Previous'|translate} : {$previous->element->titleEsc|noescape}"
-        alt="{$previous->element->titleEsc|noescape}"
+        title="{='Previous'|translate} : {$previous->element->title}"
+        alt="{$previous->element->title}"
       >
       <area
         shape="rect"
@@ -59,8 +59,8 @@
         shape="rect"
         coords="{($size->width / 1.33)|intval},0,{$size->width},{$size->height}"
         href="{$next->imgUrl}"
-        title="{='Next'|translate} : {$next->element->titleEsc|noescape}"
-        alt="{$next->element->titleEsc|noescape}"
+        title="{='Next'|translate} : {$next->element->title}"
+        alt="{$next->element->title}"
       >
     </map>
   {/spaceless}{/foreach}

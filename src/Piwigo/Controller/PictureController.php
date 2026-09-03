@@ -682,8 +682,15 @@ final readonly class PictureController implements ControllerInterface
                         'start',
                     ]
                 ),
+                // $title alone, not also a separately-escaped titleEsc
+                // twin (P59 Batch 6): every real print site is a bare
+                // title=/alt= attribute value, so Latte's own auto-escape
+                // does the entity-encoding once, at print time -- this
+                // str_replace('"', '&quot;', ...) pre-escaping only the
+                // one character that could break out of a double-quoted
+                // attribute left '&'/'<'/'>' unescaped, and duplicated
+                // $title exactly once auto-escape covers it correctly.
                 title: $title,
-                titleEsc: str_replace('"', '&quot;', $title),
                 elementUrl: $element_url,
                 downloadUrl: $download_url,
             );
@@ -1016,7 +1023,7 @@ final readonly class PictureController implements ControllerInterface
         $current_comment = $picture['current']->image->comment ?? null;
         if (is_string($current_comment) && $current_comment !== '' && $current_comment !== '0') {
             $descriptionEvent = $this->eventDispatcher->dispatch(new RenderElementDescription($current_comment, 'picture_page_element_description'));
-            $comment_img = $descriptionEvent->elementDescription;
+            $comment_img = new Html($descriptionEvent->elementDescription);
         }
 
         // author
@@ -1038,7 +1045,7 @@ final readonly class PictureController implements ControllerInterface
                 ]
             );
             $info_creation_date =
-              '<a href="' . $url . '" rel="nofollow">' . $val . '</a>';
+              new Html('<a href="' . $url . '" rel="nofollow">' . $val . '</a>');
         }
 
         // date of availability -- date_available is nullable (a photo can
@@ -1063,9 +1070,9 @@ final readonly class PictureController implements ControllerInterface
                     'chronology_date' => explode('-', substr($date_available, 0, 10)),
                 ]
             );
-            $info_posted_date = '<a href="' . $url . '" rel="nofollow">' . $val . '</a>';
+            $info_posted_date = new Html('<a href="' . $url . '" rel="nofollow">' . $val . '</a>');
         } else {
-            $info_posted_date = '';
+            $info_posted_date = new Html('');
         }
 
         // size in pixels
@@ -1189,7 +1196,7 @@ final readonly class PictureController implements ControllerInterface
         // maybe someone wants a special display (call it before
         // page_header so that they can add stylesheets)
         $contentEvent = $this->eventDispatcher->dispatch(new RenderElementContent('', $picture['current']));
-        $element_content = $contentEvent->content;
+        $element_content = new Html($contentEvent->content);
 
         // After the dispatch above, not before: defaultPictureContent()'s
         // own cookie-to-session write is what settles which type is
@@ -1225,7 +1232,11 @@ final readonly class PictureController implements ControllerInterface
             navNext: $nav['next'] ?? null,
             navLast: $nav['last'] ?? null,
             uUp: $url_up,
-            commentImg: $comment_img,
+            // (string) $comment_img, not the Html value itself: this
+            // context's own field feeds layout.latte's meta description
+            // through |stripTags, a plain-text sink PictureView/
+            // SlideshowView's own imageComment paragraph isn't.
+            commentImg: $comment_img !== null ? (string) $comment_img : null,
             infoAuthor: $info_author,
             infoFile: $info_file,
             uPrefetch: $u_prefetch,

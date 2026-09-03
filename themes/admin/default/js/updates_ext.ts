@@ -164,7 +164,7 @@ const callback = (mutationList: MutationRecord[]) => {
       const popup = document.querySelectorAll("#jGrowl > *");
       popup.forEach((entry) => {
         if (entry.classList.contains("success")) {
-          const firstChild = entry.children[0];
+          const [firstChild] = entry.children;
           if (
             firstChild === undefined ||
             !(
@@ -177,7 +177,7 @@ const callback = (mutationList: MutationRecord[]) => {
         }
 
         if (entry.classList.contains("error")) {
-          const firstChild = entry.children[0];
+          const [firstChild] = entry.children;
           if (
             firstChild === undefined ||
             !(

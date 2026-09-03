@@ -4467,22 +4467,79 @@ TypeScript's own `DOM.Iterable` lib typings, that `HTMLCollection`
 real target environment before converting those 3 sites instead of
 assuming the classic "HTMLCollection isn't iterable" gotcha still held).
 
-**P51-B (scoped, not started)** — land `build/collectScriptEntries.ts`
-before any other sub-phase moves a file: scans `src/**/*.php` for real
-`AssetContribution::script()`/`::css()` calls (233 total call sites,
-re-confirmed), filtered to the ones whose path argument is a local `.ts`
-source path rather than a CDN URL or a built `dist/` path, and returns
-the canonical entry list. `vite.config.ts`'s `rollupOptions.input` points
-at it directly; `knip.json` converts to `knip.config.ts` and imports the
-same script for its own `entry` field. The real PHP registration becomes
-the single source of truth for both tools, so a future rename only needs
-its registration updated, never a matching knip/Vite config edit. Verify
-by diffing the scanner's output against today's hand-maintained
-`knip.json`/`vite.config.ts` lists on the *current*, pre-P51 file layout
--- they should match exactly, modulo the `standardPages`/`profile`/
-`build/*`/`openapi/client/index.ts` handful of non-page-asset entries,
-which stay hand-listed since nothing in `src/` registers those by the
-same mechanism.
+**P51-B done** — landed `build/collectScriptEntries.ts` before any other
+sub-phase moves a file: scans `src/**/*.php` for real
+`AssetContribution::script()` calls (83 real call sites, not 233/84 as
+originally estimated -- those earlier counts didn't exclude 2 real
+doc-comment/code-comment mentions of the method name; re-verified 3
+independent ways), extracting the 2nd positional literal string
+(mirroring the method's own real signature,
+`script(string $id, string $path, ...)`) to get **69 unique `.ts`
+paths**, plus 2 hardcoded exceptions genuinely unreachable via
+`AssetContribution` scanning (`build/vitals.ts`, resolved through a
+separate hardcoded `ViteManifest::resolve()` call in
+`PageTailRenderer.php`; `build/noop.ts`, a pure `ViteManifestTest.php`
+fixture) -- **71 total, an exact match with `knip.json`'s prior
+hand-maintained list, zero gaps either direction**. One real correction
+along the way: `themes/standard_pages/js/profile.ts`/`standard_pages.ts`
+were originally assumed to need hand-listing as non-page-asset
+exceptions "since nothing in `src/` registers those" -- false, both
+have real `AssetContribution::script()` registrations
+(`IdentificationView.php`/`ProfileView.php`/`PasswordView.php`/
+`RegisterView.php`) and are correctly scanner-derived; the only 2 real
+exceptions are the `build/*` pair above (`openapi/client/index.ts`
+stays knip-only, as originally scoped -- it was never a Vite entry).
+
+`vite.config.ts`'s `rollupOptions.input` now reads
+`collectScriptEntries().map(r)` -- **array form, not the prior
+hand-picked-camelCase-key Record** (`photosAddDirect`/`catModify`/etc.),
+since `ViteManifest::resolve()` keys its `dist/.vite/manifest.json`
+lookup by real source *path*, confirmed from its own doc comment, never
+by whatever alias Rollup used internally for the chunk name -- a
+hand-picked key bought nothing functionally. Still routed through the
+existing `r()` helper (kept -- still needed for the unrelated
+`resolve.alias["tus-js-client"]` entry) to preserve the absolute-path
+resolution every entry already relied on, avoiding Rollup's own
+cwd-relative-path footgun. Real, live-verified cost of the array form:
+the 4 basename collisions among the 69 paths (`rating.ts` admin+default
+theme; `notification_by_mail.ts`/`photos_add_direct.ts`/
+`picture_modify.ts`, each a bare file + its deliberate `pages/`-nested
+per-page-bundle counterpart, P48's own established pattern, not a
+smell) get less-descriptive auto-disambiguated chunk names
+(content-hash-only, no numeric suffix needed in practice) -- confirmed
+via a real `bun run build` that PHP's own resolution is unaffected
+either way (`dist/.vite/manifest.json`'s real entry keys matched the
+71-path set exactly) and that `vitals`'s own special-cased fixed
+filename (`entryFileNames`) still resolves correctly. `rating.ts`'s own
+collision will resolve for real once P51-I item 3 lands (rename to
+`rating_photo.ts`) -- deliberately left there, not pulled forward into
+this build-config-only sub-phase.
+
+`knip.json` converted to `knip.config.ts` (`import type { KnipConfig }
+from "knip"`, confirmed as the real public type export from knip's own
+installed package), importing `collectScriptEntries()` for its own
+`entry` field alongside the still-hand-listed
+`openapi/client/index.ts`; `project`/`ignoreDependencies` carried over
+unchanged. Needed adding `knip.config.ts` to `tsconfig.json`'s own
+`include` array (a real, necessary fix, not scope creep -- every sibling
+`*.config.ts` file is listed there too). A real regression net added
+alongside the scanner itself: `tests/Unit/Build/collectScriptEntries.test.ts`
+asserts *invariants* (non-empty, every entry a real existing `.ts` file,
+no duplicates, a handful of known-stable entries present) rather than an
+exact snapshot -- an exact-match test would itself have become a second
+hand-maintained list needing an update on every real new page,
+undermining this sub-phase's own point.
+
+Full validation green: `typecheck`/`lint:js`/`format`/`knip`/`vite build`,
+Unit+Arch (5576, 1 unrelated flaky rerun-clean), Integration (2180+),
+golden-html (91, all 89 diffs were either the expected chunk-filename
+change above or 2 already-existing stale baselines this change
+incidentally surfaced -- `popuphelp`'s own leftover `?v17.0.0` query
+string from a P49-A fix that landed without a rebaseline, and
+`install`'s own leftover jQuery/jquery-cluetip CDN script tags from
+cluetip's native port, same cause -- both confirmed pre-existing and
+unrelated by reading every one of the 90 diffs' own changed lines, none
+of which fell outside those 2 categories or the expected rename).
 
 **P51-C (scoped, not started)** — convert `ajax()` call sites from
 jQuery-shaped callbacks to async/await. `vendor/ajax.ts` already returns

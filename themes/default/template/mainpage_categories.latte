@@ -48,8 +48,8 @@
             >{$cat->infoDates}</p>
             <p class="Nb_images">{$cat->captionNbImages|noescape}</p>
             <p
-              n:if="$cat->description !== null && $cat->description !== ''"
-            >{$cat->description|noescape}</p>
+              n:if="$cat->description !== null"
+            >{$cat->description}</p>
           </div>
         </div>
       </div>

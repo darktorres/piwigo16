@@ -692,7 +692,7 @@ final readonly class GalleryController implements ControllerInterface
             categorySearchResults: $category_search_results,
             noSearchResults: $no_search_results,
             imageOrders: $image_orders,
-            contentDescription: $content_description,
+            contentDescription: $content_description !== null ? new Html($content_description) : null,
             uSlideshow: $u_slideshow,
             relatedTags: $related_tags_list,
             tagSearchResults: $tag_search_results,

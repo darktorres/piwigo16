@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Category\Projection;
 
+use Latte\Runtime\Html;
 use Piwigo\Core\Projection\RecentIcon;
 use Piwigo\Image\SrcImage;
 
@@ -29,6 +30,15 @@ use Piwigo\Image\SrcImage;
  * `$iconTs` and `$infoDates` are nullable because their producers are
  * conditional -- `index_new_icon` and `display_fromto` respectively -- which
  * is what the two "key present or absent" checks in the template meant.
+ *
+ * `$description` is `Html`, not a plain string (P59 Batch 2): its one real
+ * producer ({@see \Piwigo\Category\CategoryCatsRenderer::render()}) always
+ * runs it through `RenderCategoryLiteralDescription`'s own
+ * `strip_tags($desc, '<span><p><a><br><b><i><small><big><strong><em>')`
+ * pass -- unconditionally, unlike the earlier, permission-gated
+ * `RenderCategoryDescription` its value already went through -- so this
+ * field is genuinely safe pre-formed HTML regardless of the
+ * `allowHtmlDescriptions` setting.
  */
 final readonly class CategoryThumbnail
 {
@@ -39,7 +49,7 @@ final readonly class CategoryThumbnail
         public string $tnAlt,
         public string $captionNbImages,
         public ?SrcImage $representative,
-        public ?string $description,
+        public ?Html $description,
         public ?RecentIcon $iconTs = null,
         public ?string $infoDates = null,
     ) {}

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Category;
 
 use DateTimeImmutable;
+use Latte\Runtime\Html;
 use Piwigo\Cache\CategoryTreeCachePool;
 use Piwigo\Category\Event\IndexCategoryThumbnailsRendered;
 use Piwigo\Category\Event\IndexCategoryThumbnailsRendering;
@@ -386,6 +387,7 @@ final readonly class CategoryCatsRenderer
                 $categoryComment = $category['comment'] ?? null;
                 $descriptionEvent = $this->eventDispatcher->dispatch(new RenderCategoryDescription(is_string($categoryComment) ? $categoryComment : null, 'subcatify_category_description'));
                 $literalDescriptionEvent = $this->eventDispatcher->dispatch(new RenderCategoryLiteralDescription($descriptionEvent->categoryDescription));
+                $literalDescription = $literalDescriptionEvent->description ?? '';
 
                 // The merged array above stays the renderer's own working
                 // state; what the template gets is this (P58-A's §3). The
@@ -435,7 +437,11 @@ final readonly class CategoryCatsRenderer
                         '<br>'
                     ),
                     representative: $representativeSrcImage,
-                    description: $literalDescriptionEvent->description,
+                    // Empty string treated the same as null: the template's
+                    // own presence check used to be !== '' before this field
+                    // was Html-typed (P59 Batch 2) -- an empty <p> tag isn't
+                    // what an absent description means.
+                    description: $literalDescription !== '' ? new Html($literalDescription) : null,
                     iconTs: $iconTs,
                     infoDates: $infoDates,
                 );

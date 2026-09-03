@@ -67,7 +67,15 @@ final readonly class IndexView implements View, HasPageAssets
         public ?array $categorySearchResults,
         public ?array $noSearchResults,
         public ?array $imageOrders,
-        public ?string $contentDescription,
+        // Html, not a plain string (P59 Batch 2): sourced from
+        // SectionContext::$comment, itself GalleryController's own read of
+        // RenderCategoryDescription's output -- safe by permission model
+        // (raw HTML passes through untouched only when the admin-only
+        // allowHtmlDescriptions setting is on; otherwise HtmlRenderingListener
+        // still nl2br()s it but does NOT strip tags), a different, weaker
+        // guarantee than CategoryThumbnail::$description's own unconditional
+        // strip_tags-allowlist pass.
+        public ?Html $contentDescription,
         public ?string $uSlideshow,
         public array $relatedTags,
         public array $tagSearchResults,

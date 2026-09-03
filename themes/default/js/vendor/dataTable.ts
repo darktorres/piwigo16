@@ -128,7 +128,7 @@ export function dataTable(
   options: DataTableOptions,
 ): DataTableApi {
   const thead = table.tHead;
-  const tbodyEl = table.tBodies[0];
+  const [tbodyEl] = table.tBodies;
   const headerRow = thead?.rows[0];
   if (!thead || !tbodyEl || !headerRow) {
     throw new Error("dataTable() requires a <thead> row and a <tbody>");

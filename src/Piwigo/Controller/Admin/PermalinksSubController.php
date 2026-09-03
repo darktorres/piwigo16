@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
@@ -113,7 +114,7 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
         foreach ($activePermalinks as $row) {
             $categories[] = [
                 ...$row->toArray(),
-                'name' => $htmlRenderer->getCatDisplayNameCache($row->uppercats),
+                'name' => new Html($htmlRenderer->getCatDisplayNameCache($row->uppercats)),
             ];
         }
 
@@ -149,7 +150,7 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
                 dateDeleted: $permalinkRow->dateDeleted,
                 lastHit: $permalinkRow->lastHit,
                 hit: $permalinkRow->hit,
-                name: $htmlRenderer->getCatDisplayNameCache((string) $permalinkRow->catId),
+                name: new Html($htmlRenderer->getCatDisplayNameCache((string) $permalinkRow->catId)),
                 uDelete: $this->urlService->addUrlParams(
                     $url_del_base,
                     [
@@ -186,7 +187,7 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
     /**
      * @param array<int, string> $sortable_by
      * @param array<int, string> $get_rejects
-     * @return array{active: array<int, string>, headers: array<string, string>}
+     * @return array{active: array<int, string>, headers: array<string, Html>}
      */
     private function parseSortVariables(
         array $sortable_by,
@@ -247,7 +248,7 @@ final readonly class PermalinksSubController implements AdminSubControllerInterf
                 $disp = '<em>' . $disp . '</em>';
             }
             $headers[$template_var . strtoupper($field)] =
-                '<a href="' . $url . $anchor . '" title="' . $this->lang->t('Sort order') . '">' . $disp . '</a>';
+                new Html('<a href="' . $url . $anchor . '" title="' . $this->lang->t('Sort order') . '">' . $disp . '</a>');
         }
         return [
             'active' => $ret,

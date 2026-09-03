@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin\Projection;
 
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
@@ -28,15 +29,15 @@ final readonly class PermalinksView implements View, HasPageAssets, ExposesPageD
      */
     public function __construct(
         public int $nbCats,
-        public string $sortId,
-        public string $sortName,
-        public string $sortPermalink,
+        public Html $sortId,
+        public Html $sortName,
+        public Html $sortPermalink,
         public array $permalinks,
-        public string $sortOldCatId,
-        public string $sortOldPermalink,
-        public string $sortOldDateDeleted,
-        public string $sortOldLastHit,
-        public string $sortOldHit,
+        public Html $sortOldCatId,
+        public Html $sortOldPermalink,
+        public Html $sortOldDateDeleted,
+        public Html $sortOldLastHit,
+        public Html $sortOldHit,
         public string $csrfToken,
         public array $deletedPermalinks,
         public CategorySelectOptions $categoriesOptions,

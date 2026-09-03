@@ -53,16 +53,16 @@
     ></span>{='Permalinks'|translate}</legend>
   <table class="table2 permalinks-table">
     <tr class="throw">
-      <td>Id {$sortId|noescape}</td>
-      <td>{='Album'|translate} {$sortName|noescape}</td>
-      <td>{='Permalink'|translate} {$sortPermalink|noescape}</td>
+      <td>Id {$sortId}</td>
+      <td>{='Album'|translate} {$sortName}</td>
+      <td>{='Permalink'|translate} {$sortPermalink}</td>
     </tr>
     <tr
       n:foreach="$permalinks as $permalink"
       class="permalink-row {if $iterator->counter0 % 2 !== 0}row1{else}row2{/if}"
     >
       <td class="centered-cell">{$permalink->id}</td>
-      <td>{$permalink->name|noescape}</td>
+      <td>{$permalink->name}</td>
       <td>{$permalink->permalink}</td>
     </tr>
   </table>
@@ -76,12 +76,12 @@
     ></a></legend>
   <table class="table2 permalinks-table">
     <tr class="throw">
-      <td>Id {$sortOldCatId|noescape}</td>
+      <td>Id {$sortOldCatId}</td>
       <td>{='Album'|translate}</td>
-      <td>{='Permalink'|translate} {$sortOldPermalink|noescape}</td>
-      <td>{='Deleted on'|translate} {$sortOldDateDeleted|noescape}</td>
-      <td>{='Last hit'|translate} {$sortOldLastHit|noescape}</td>
-      <td>{='Hit'|translate} {$sortOldHit|noescape}</td>
+      <td>{='Permalink'|translate} {$sortOldPermalink}</td>
+      <td>{='Deleted on'|translate} {$sortOldDateDeleted}</td>
+      <td>{='Last hit'|translate} {$sortOldLastHit}</td>
+      <td>{='Hit'|translate} {$sortOldHit}</td>
       <td class="hit-history-spacer"></td>
     </tr>
     <tr
@@ -89,7 +89,7 @@
       class="permalink-row"
     >
       <td class="centered-cell">{$deletedPermalink->catId}</td>
-      <td>{$deletedPermalink->name|noescape}</td>
+      <td>{$deletedPermalink->name}</td>
       <td>{$deletedPermalink->permalink}</td>
       <td>{$deletedPermalink->dateDeleted}</td>
       <td>{$deletedPermalink->lastHit}</td>

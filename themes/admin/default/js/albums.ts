@@ -303,7 +303,7 @@ ready(() => {
         loadOnDemand(node);
       }
 
-      const open_nodes = getAlbumTree().getState().open_nodes;
+      const { open_nodes } = getAlbumTree().getState();
       if (!open_nodes.includes(node.id!)) {
         html(this, toggler_open);
         getAlbumTree().openNode(node);
@@ -623,7 +623,7 @@ ready(() => {
                 const node_id = parent_node.id;
                 const node = getAlbumTree().getNodeById(node_id);
                 if (node) {
-                  const open_nodes = getAlbumTree().getState().open_nodes;
+                  const { open_nodes } = getAlbumTree().getState();
                   if (!open_nodes.includes(node_id!)) {
                     html(this, toggler_open);
                     getAlbumTree().openNode(node);
@@ -787,7 +787,7 @@ function createAlbumNode(node: AlbumJqTreeNode, liEl: HTMLLIElement) {
 
   let toggler: string;
   if (node.haveChildren || node.children.length !== 0) {
-    const open_nodes = getAlbumTree().getState().open_nodes;
+    const { open_nodes } = getAlbumTree().getState();
     if (open_nodes.includes(node.id!)) {
       toggler = toggler_open;
     } else {
@@ -937,7 +937,7 @@ function openAddAlbumPopIn(parentAlbumId: string | number) {
   off(addAlbum, "keyup");
   on(addAlbum, "keyup", function (e: Event) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keyup" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
-    const key = (e as KeyboardEvent).key;
+    const { key } = e as KeyboardEvent;
     if (key === "Enter") {
       document.querySelector<HTMLElement>(".AddAlbumSubmit")?.click();
     }
@@ -1408,7 +1408,7 @@ function loadOnDemand(node: AlbumJqTreeNode) {
 }
 
 function openNodeOnDemand(node: AlbumJqTreeNode) {
-  const open_nodes = getAlbumTree().getState().open_nodes;
+  const { open_nodes } = getAlbumTree().getState();
   // Was `open_nodes.includes(node)` -- comparing the whole node object
   // against a list of plain ids, which real strict typing rejects
   // outright (`(string | number)[]` vs an object). Always evaluated to

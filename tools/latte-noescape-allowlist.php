@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit('This script can only be run from the command line.');
+}
+
 /**
  * P59's zero-tolerance `|noescape` gate allowlist -- see
  * `tools/latte-noescape-gate.php`. Every entry here is a real,

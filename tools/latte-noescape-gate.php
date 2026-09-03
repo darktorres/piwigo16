@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit('This script can only be run from the command line.');
+}
+
 /**
  * P59's zero-tolerance `|noescape` gate. Scans every `.latte` file
  * under a themes root for a literal `|noescape` filter use and

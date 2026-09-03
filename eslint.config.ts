@@ -249,6 +249,7 @@ export default defineConfig(
       "@typescript-eslint/no-inferrable-types": "error",
       "@typescript-eslint/dot-notation": "error",
       "@typescript-eslint/promise-function-async": "error",
+      "@typescript-eslint/prefer-destructuring": "error",
       // jQuery is fully gone (P49); guard against it ever coming back as
       // a dependency now that nothing in this config would otherwise
       // notice a reintroduced import.

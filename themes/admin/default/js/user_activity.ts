@@ -91,7 +91,7 @@ let activity_page = 1;
 let page_offsets: number[] = [0];
 let actual_page = 1;
 let end_page = false;
-let uid_filter: string | number | undefined;
+let uid_filter: number | undefined;
 let action_filter: string | undefined;
 let object_filter: string | undefined;
 let date_min_filter = pwg_getPageData<string>("activity_dates_min");
@@ -197,7 +197,7 @@ void get_user_activity(
  */
 async function fetchAndMergeActivityLines(
   startOffset: number,
-  uid: string | number | undefined,
+  uid: number | undefined,
   action: string | undefined,
   object: string | undefined,
   date: (string | undefined)[],
@@ -213,7 +213,7 @@ async function fetchAndMergeActivityLines(
       offset: number;
       dateMin?: string | undefined;
       dateMax?: string | undefined;
-      userId?: string | number;
+      userId?: number;
       action?: string;
       object?: string;
       objectId?: string | number;
@@ -313,7 +313,7 @@ async function fetchAndMergeActivityLines(
 
 async function get_user_activity(
   page: number,
-  uid: string | number | undefined,
+  uid: number | undefined,
   action: string | undefined,
   object: string | undefined,
   date: (string | undefined)[],
@@ -1188,8 +1188,10 @@ ready(function () {
           //{* call ajax sur activity list avec uid en param *}
           void get_user_activity(
             1,
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-            value as string | number | undefined,
+            // Excluded the "none" sentinel above -- data() already coerces
+            // a real numeric data-value to a real number; Number() is a
+            // no-op there and a real parse for any other case.
+            Number(value),
             action_filter,
             object_filter,
             [date_min_filter, date_max_filter],

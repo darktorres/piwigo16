@@ -108,7 +108,6 @@ msgstr "សៀវ​ភៅ​រូប​ថត %d កំពុង​ដាក�
 msgid "%d album moved"
 msgid_plural "%d albums moved"
 msgstr[0] "សៀវ​ភៅ​រូប​ថត %d បានផ្លាស់​ប្តូរ​ទី​តាំង​​"
-msgstr[1] "សៀវ​ភៅ​រូប​ថត %d បាន​ផ្លាស់​ប្តូរ​ទី​តាំង​"
 
 msgid "%d albums including"
 msgstr "សៀវ​ភៅ​រូប​ថត %d កំពុង​បញ្ចូល"
@@ -116,22 +115,18 @@ msgstr "សៀវ​ភៅ​រូប​ថត %d កំពុង​បញ្�
 msgid "%d anomaly has been corrected."
 msgid_plural "%d anomalies have been detected corrected."
 msgstr[0] "ភាព​មិន​ប្រ​ក្រ​តី​ចំនួន​ %d ត្រូវ​បាន​កែ​ប្រែ​"
-msgstr[1] "ភាព​ខុស​ប្រក្រតីចំនួន​ %d ត្រូវ​បាន​រក​ឃើញ​ និង​បាន​កែ​ប្រែ"
 
 msgid "%d anomaly has been detected."
 msgid_plural "%d anomalies have been detected."
 msgstr[0] "ភាព​មិន​ប្រ​ក្រ​តី​ចំនួន​ %d ត្រូវ​បាន​រក​ឃើញ​"
-msgstr[1] "ភាព​ខុស​ប្រក្រ​តី​ចំនួន​ %d ត្រូវ​បាន​រក​ឃើញ​"
 
 msgid "%d anomaly has been ignored."
 msgid_plural "%d anomalies have been ignored."
 msgstr[0] "ភាព​មិន​ប្រ​ក្រ​តី​ចំនួន​ %d មិន​បាន​ទទួល​យក"
-msgstr[1] "ភាព​ខុស​ប្រក្រ​តី​ចំនួន​ %d មិន​បាន​ទទួល​យក"
 
 msgid "%d anomaly has not been corrected."
 msgid_plural "%d anomalies have not been corrected."
 msgstr[0] "ភាព​មិន​ប្រ​ក្រ​តី​ចំនួន %d មិន​ទាន់​បាន​កែ​ប្រែ"
-msgstr[1] "ភាព​មិន​ប្រ​ក្រ​តី​ចំនួន​ %d មិ​នទាន់​​បាន​កែ​ប្រែ​"
 
 msgid "%d group"
 msgstr "%d ក្រុម​"
@@ -142,27 +137,22 @@ msgstr "%d ក្រុម​"
 msgid "%d guest"
 msgid_plural "%d guests"
 msgstr[0] "ភ្ញៀវ​ %d នាក់​​"
-msgstr[1] "ភ្ញៀវ​ %d នាក់​"
 
 msgid "%d line filtered"
 msgid_plural "%d lines filtered"
 msgstr[0] "​ច្រោះ​យក​ %d បន្ទាត់"
-msgstr[1] "ច្រោះ​យក​ %d បន្ទាត់​"
 
 msgid "%d mail was not sent."
 msgid_plural "%d mails were not sent."
 msgstr[0] "អ៊ីម៉ែល​ចំនួន %d មិន​បាន​ផ្ញើ​ចេញ​ទេ"
-msgstr[1] "អ៊ី​ម៉ែល​ចំនួន​ %d មិន​បាន​ផ្ញើ​ចេញ​ទេ​"
 
 msgid "%d mail was sent."
 msgid_plural "%d mails were sent."
 msgstr[0] "អ៊ី​ម៉ែល​ចំនួន​ %d បាន​ផ្ញើ​ចេញ​"
-msgstr[1] "អ៊ី​ម៉ែល​ចំនួន​ %d បាន​ផ្ញើ​ចេញ"
 
 msgid "%d member"
 msgid_plural "%d members"
 msgstr[0] "សមាជិក​ %d នាក់​"
-msgstr[1] "សមា​ជិក​ %d នាក់​"
 
 msgid "%d of %d photos selected"
 msgstr "%d នៃ​ %d រូប​ថត​បាន​ជ្រើស​រើស​"
@@ -170,7 +160,6 @@ msgstr "%d នៃ​ %d រូប​ថត​បាន​ជ្រើស​រ�
 msgid "%d photo was deleted"
 msgid_plural "%d photos were deleted"
 msgstr[0] "រូប​ថត​ %d បា​ន​លុប"
-msgstr[1] "រូប​ថត​ %d បាន​លុប"
 
 msgid "%d physical"
 msgstr "%d រូប​សណ្ឋាន​"
@@ -241,7 +230,6 @@ msgstr "%d រូប​​ពាក់​ព័ន្ធ​"
 msgid "%d parameter was updated."
 msgid_plural "%d parameters were updated."
 msgstr[0] "%d parameter បាន​បន្ទាន់​សម័យ."
-msgstr[1] "%d parameters បាន​បន្ទាន់​សម័យ."
 
 msgid "%d tag"
 msgstr "%d ស្លាក"
@@ -264,22 +252,18 @@ msgstr "%d មិត​អ្នក​ប្រើ​ប្រាស់​មា
 msgid "%d user deleted"
 msgid_plural "%d users deleted"
 msgstr[0] "អ្នក​ប្រើ​ប្រាស់​ %d បានលុប"
-msgstr[1] "អ្នក​ប្រើ​ប្រាស់​​ %d បាន​លុប"
 
 msgid "%d user was not updated."
 msgid_plural "%d users were not updated."
 msgstr[0] "%d អ្នក​ប្រើ​ប្រាស់​មិន​បាន​បន្ទាន់​សម័យ."
-msgstr[1] "អ្នក​ប្រើ​ប្រាស់​ %d មិន​បាន​បន្ទាន់​សម័យ"
 
 msgid "%d user was updated."
 msgid_plural "%d users were updated."
 msgstr[0] "%d អ្នក​ប្រើ​ប្រាស់​បាន​បន្ទាន់​សម័យ"
-msgstr[1] "អ្នក​ប្រើ​ប្រាស់ %d បាន​បន្ទាន់​សម័យ"
 
 msgid "%d user"
 msgid_plural "%d users"
 msgstr[0] "%d អ្នក​ប្រើ​ប្រាស់​"
-msgstr[1] "%d អ្នក​ប្រើ​ប្រាស់​"
 
 msgid "%d waiting for validation"
 msgstr "%d កំពុង​រង​ចាំ​ការ​បញ្ជាក់​សុពល​ភាព​"

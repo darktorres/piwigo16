@@ -602,7 +602,7 @@ function load(): void {
   runPurge();
 
   const state = current!;
-  const opts = state.opts;
+  const {opts} = state;
   const href = getHref(state.el, opts);
 
   const rawW = parsedSize(opts.width, "x");

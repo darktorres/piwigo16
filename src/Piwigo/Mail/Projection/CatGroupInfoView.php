@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Mail\Projection;
 
+use Latte\Runtime\Html;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
 
@@ -26,6 +27,11 @@ use Piwigo\Template\Latte\Attribute\Template;
  * filename, never through `Renderer::render()`'s own attribute
  * resolution, so the attribute here only serves
  * `ViewTemplateTypeRoundTripTest`/`VariableMapBuilder`.
+ *
+ * `$cplContent` is Html, not a plain string (P59): admin/webmaster-
+ * authored trusted content (AlbumNotificationPageRenderer's own
+ * "Album notification" admin form field), same trust boundary as
+ * {@see NotificationAdminView::$content}.
  */
 #[Template('mail/text/html/cat_group_info.latte')]
 final readonly class CatGroupInfoView implements View
@@ -37,6 +43,6 @@ final readonly class CatGroupInfoView implements View
         public array $img,
         public string $catName,
         public string $link,
-        public string $cplContent,
+        public Html $cplContent,
     ) {}
 }

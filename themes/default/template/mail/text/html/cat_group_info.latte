@@ -2,13 +2,13 @@
 <div id="cat_group_info">
   <h2>{='Informations'|translate}</h2>
   <p n:if="isset($img['link']) && isset($img['src'])"><a
-      href="{$img['link']|noescape}"
+      href="{$img['link']}"
       class="thumblnk"
     ><img src="{$img['src']}"></a></p>
   <p>{='Hello,'|translate}</p>
   <p>{='Discover album:'|translate} <a
-      href="{$link|noescape}"
+      href="{$link}"
     >{$catName}</a></p>
-  <p>{$cplContent|noescape}</p>
+  <p>{$cplContent}</p>
   <p>{='See you soon.'|translate}</p>
 </div>

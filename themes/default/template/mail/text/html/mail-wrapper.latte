@@ -163,6 +163,12 @@
     <style
       type="text/css"
     >
+    {* noescape kept on purpose: this prints inside <style>, a CSS
+       context, not HTML text -- Latte's auto-escaper CSS-escapes
+       (backslash-escapes) even an Html-typed value here, which
+       corrupts the stylesheet and breaks the mail's CSS inliner.
+       $GLOBAL_MAIL_CSS/$MAIL_CSS are theme-file CSS content
+       (Template::assignVarFromTemplate()), not user input. *}
     {if isset($GLOBAL_MAIL_CSS)}{$GLOBAL_MAIL_CSS|noescape}{/if}
     {if isset($MAIL_CSS)}{$MAIL_CSS|noescape}{/if}
     </style>
@@ -198,7 +204,7 @@ contact us on http://piwigo.org to find a solution on how
 to show the origin of the script... --> *}
 
                 {='Sent by'|translate} <a
-                  href="{$GALLERY_URL|noescape}"
+                  href="{$GALLERY_URL}"
                 >{$GALLERY_TITLE}</a>
                 - {='Powered by'|translate} <a
                   href="{$APP_URL}"

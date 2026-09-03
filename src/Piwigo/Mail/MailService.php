@@ -473,7 +473,7 @@ final class MailService implements MailerInterface
                 img: is_array($assign['IMG'] ?? null) ? self::catGroupImgShape($assign['IMG']) : [],
                 catName: is_string($assign['CAT_NAME'] ?? null) ? $assign['CAT_NAME'] : '',
                 link: is_string($assign['LINK'] ?? null) ? $assign['LINK'] : '',
-                cplContent: is_string($assign['CPL_CONTENT'] ?? null) ? $assign['CPL_CONTENT'] : '',
+                cplContent: new Html(is_string($assign['CPL_CONTENT'] ?? null) ? $assign['CPL_CONTENT'] : ''),
             ),
             default => null,
         };

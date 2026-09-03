@@ -76,8 +76,8 @@ function drawFavicon(percentage: number): void {
     return;
   }
 
-  const width = canvasEl.width;
-  const height = canvasEl.height;
+  const {width} = canvasEl;
+  const {height} = canvasEl;
   const radius = Math.min(width / 2, height / 2);
 
   context.clearRect(0, 0, width, height);

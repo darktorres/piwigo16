@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Projection;
 
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
@@ -24,12 +25,18 @@ use Piwigo\Template\Latte\Attribute\Template;
  * to tell which physical template resolved) can replicate that real
  * difference: the front-end file's own `combineScript('popuphelp',
  * ...)` call must NOT fire for the admin-context render.
+ *
+ * `$helpContent` is Html, not string (P59): a local `help/*.html` file
+ * shipped with the app (`$rawPage` is validated against
+ * `/^[a-z_]*$/` before either controller loads it), then run through
+ * the plugin-dispatched `GetPopupHelpContent` event -- the same
+ * plugin-authored trust tier as other event-mutated markup elsewhere.
  */
 #[Template('popuphelp.latte')]
 final readonly class PopuphelpView implements View, HasPageAssets
 {
     public function __construct(
-        public string $helpContent,
+        public Html $helpContent,
         public bool $isAdminContext,
     ) {}
 

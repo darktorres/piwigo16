@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap\Projection;
 
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
@@ -20,12 +21,19 @@ use Piwigo\Template\Latte\Attribute\Template;
  * -- it is assigned only when a refresh is actually scheduled. That is
  * never in doubt here: `redirectHtml()` hands the same URL to
  * `PageHeaderRenderer::prepareContext()` two lines before rendering this.
+ *
+ * `$redirectMsg` is Html, not string (P59): every real caller of
+ * `redirectHtml()`'s own `$msg` param -- directly, or through
+ * `HtmlService::pageForbidden()`/`badRequest()`/`pageNotFound()`, which
+ * concatenate it into a hand-built `<div><h1>...` string -- passes
+ * either a hardcoded literal or a `Lang::t()` translation, never
+ * attacker- or user-supplied data.
  */
 #[Template('redirect.latte')]
 final readonly class RedirectView implements View, HasPageAssets
 {
     public function __construct(
-        public string $redirectMsg,
+        public Html $redirectMsg,
         public string $refreshUrl,
     ) {}
 

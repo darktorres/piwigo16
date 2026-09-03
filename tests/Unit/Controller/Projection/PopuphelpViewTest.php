@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
+use Latte\Runtime\Html;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\LoadMode;
 use Piwigo\Controller\Projection\PopuphelpView;
 
 test('pageAssets registers popuphelp.js for the front-end context', function (): void {
-    $view = new PopuphelpView(helpContent: '', isAdminContext: false);
+    $view = new PopuphelpView(helpContent: new Html(''), isAdminContext: false);
 
     expect($view->pageAssets())
         ->toEqual([
@@ -16,7 +17,7 @@ test('pageAssets registers popuphelp.js for the front-end context', function ():
 });
 
 test('pageAssets registers nothing for the admin context', function (): void {
-    $view = new PopuphelpView(helpContent: '', isAdminContext: true);
+    $view = new PopuphelpView(helpContent: new Html(''), isAdminContext: true);
 
     expect($view->pageAssets())
         ->toBe([]);

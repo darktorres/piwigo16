@@ -75,7 +75,7 @@ final readonly class ProfileView implements View, HasPageAssets, ExposesPageData
         public bool $specialUser,
         public array $apiExpiration,
         public string $apiCurrentDate,
-        public string $apiEmailInfos,
+        public Html $apiEmailInfos,
         public bool $isStandardPagesTheme,
         public string $standardPagesSelectedSkin,
         public array $pluginProfileFields,

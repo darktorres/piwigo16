@@ -33,7 +33,7 @@ function makeProfileView(bool $isStandardPagesTheme): ProfileView
         specialUser: false,
         apiExpiration: [],
         apiCurrentDate: '',
-        apiEmailInfos: '',
+        apiEmailInfos: new Html(''),
         isStandardPagesTheme: $isStandardPagesTheme,
         standardPagesSelectedSkin: 'default',
         pluginProfileFields: [],

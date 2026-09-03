@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\PageTail;
@@ -97,7 +98,7 @@ final readonly class PopuphelpController implements ControllerInterface
 
         PageTail::prepareContext();
 
-        $html = $this->renderer->render(new PopuphelpView(helpContent: $help_content, isAdminContext: false));
+        $html = $this->renderer->render(new PopuphelpView(helpContent: new Html($help_content), isAdminContext: false));
         $body = $template->finalizeHtml((string) $html);
 
         return ResponseFactory::html($body);

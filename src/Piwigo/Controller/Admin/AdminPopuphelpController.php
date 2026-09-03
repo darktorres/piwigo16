@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\PageTail;
@@ -112,7 +113,7 @@ final readonly class AdminPopuphelpController implements ControllerInterface
 
         PageTail::prepareContext();
 
-        $html = $this->renderer->render(new PopuphelpView(helpContent: $help_content, isAdminContext: true));
+        $html = $this->renderer->render(new PopuphelpView(helpContent: new Html($help_content), isAdminContext: true));
         $body = $template->finalizeHtml((string) $html);
 
         return ResponseFactory::html($body);

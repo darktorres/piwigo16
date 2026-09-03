@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Latte\Runtime\Html;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
@@ -397,7 +398,7 @@ final readonly class ProfileFormHandler
             apiExpiration: $display_duration,
             apiSelectedExpiration: array_key_first($display_duration),
             apiCanManage: $this->connectedWithSession->get() === ConnectedWith::PwgUi,
-            apiEmailInfos: $email_notifications_infos,
+            apiEmailInfos: new Html($email_notifications_infos),
             pwgToken: $this->csrfService
                 ->getToken(),
         );

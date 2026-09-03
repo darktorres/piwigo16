@@ -286,7 +286,7 @@ export class LineChart {
     const height = canvas.clientHeight;
     ctx.clearRect(0, 0, width, height);
 
-    const config = this.config;
+    const {config} = this;
     if (config === null || config.series.length === 0 || width === 0) {
       return;
     }
@@ -456,7 +456,7 @@ export class LineChart {
     const y = plot.top + plot.height + TICK_GAP + FONT_SIZE / 2;
     const canvasWidth = canvas.clientWidth;
     for (const tick of ticks) {
-      const width = ctx.measureText(tick.label).width;
+      const {width} = ctx.measureText(tick.label);
       const left = Math.min(Math.max(tick.pixelX - width / 2, 0), canvasWidth - width);
       ctx.fillText(tick.label, left, y);
     }
@@ -564,7 +564,7 @@ export class LineChart {
   }
 
   private nearestIndex(mouseX: number): number | null {
-    const config = this.config;
+    const {config} = this;
     if (config === null) {
       return null;
     }
@@ -628,7 +628,7 @@ export class LineChart {
     const lines: { color: string; text: string }[] = [];
 
     if (config.xAxis.kind === "time") {
-      const series = config.series[0];
+      const [series] = config.series;
       const point = series?.points[index];
       if (series === undefined || point === undefined) {
         return;

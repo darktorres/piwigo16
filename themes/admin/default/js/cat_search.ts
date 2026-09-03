@@ -36,7 +36,7 @@ import {
 // structural typing accepts the real (wider) `data` value here without
 // a cast either way.
 interface AlbumTreeNode {
-  id: string | number;
+  id: string;
   name: string;
   children?: AlbumTreeNode[];
 }
@@ -137,7 +137,7 @@ function searchAlbumByName(
     }
 
     const currentName =
-      name + `<a href="${editLink + String(c.id)}">${c.name}</a>` + " / ";
+      name + `<a href="${editLink + c.id}">${c.name}</a>` + " / ";
 
     if (c.name.toLowerCase().includes(search.toLowerCase())) {
       const haveChild = (c.children?.length ?? 0) > 0;

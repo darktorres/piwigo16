@@ -207,86 +207,87 @@ interface PlotRect {
  * them separate).
  */
 export class LineChart {
-  private readonly canvas: HTMLCanvasElement;
+  readonly #canvas: HTMLCanvasElement;
 
-  private readonly ctx: CanvasRenderingContext2D;
+  readonly #ctx: CanvasRenderingContext2D;
 
-  private readonly numberFormat: Intl.NumberFormat;
+  readonly #numberFormat: Intl.NumberFormat;
 
-  private readonly resizeObserver: ResizeObserver;
+  readonly #resizeObserver: ResizeObserver;
 
-  private config: LineChartConfig | null = null;
+  #config: LineChartConfig | null = null;
 
-  private plot: PlotRect = { left: 0, top: 0, width: 0, height: 0 };
+  #plot: PlotRect = { left: 0, top: 0, width: 0, height: 0 };
 
-  private timeDomain = { min: 0, max: 1 };
+  #timeDomain = { min: 0, max: 1 };
 
-  private categoryCount = 0;
+  #categoryCount = 0;
 
-  private yMax = 1;
+  #yMax = 1;
 
-  private hoverIndex: number | null = null;
+  #hoverIndex: number | null = null;
 
-  private mouseX = 0;
+  #mouseX = 0;
 
-  private mouseY = 0;
+  #mouseY = 0;
 
   public constructor(canvas: HTMLCanvasElement, locale?: string) {
-    this.canvas = canvas;
+    this.#canvas = canvas;
     const ctx = canvas.getContext("2d");
     if (ctx === null) {
       throw new Error("LineChart requires a 2D canvas context");
     }
-    this.ctx = ctx;
-    this.numberFormat = new Intl.NumberFormat(locale);
+    this.#ctx = ctx;
+    this.#numberFormat = new Intl.NumberFormat(locale);
 
-    this.resizeObserver = new ResizeObserver(() => {
-      this.resize();
-      this.draw();
+    this.#resizeObserver = new ResizeObserver(() => {
+      this.#resize();
+      this.#draw();
     });
     const container = canvas.parentElement;
     if (container !== null) {
-      this.resizeObserver.observe(container);
+      this.#resizeObserver.observe(container);
     }
-    this.resize();
+    this.#resize();
 
     canvas.addEventListener("mousemove", (event) => {
-      this.onMouseMove(event);
+      this.#onMouseMove(event);
     });
     canvas.addEventListener("mouseleave", () => {
-      if (this.hoverIndex !== null) {
-        this.hoverIndex = null;
-        this.draw();
+      if (this.#hoverIndex !== null) {
+        this.#hoverIndex = null;
+        this.#draw();
       }
     });
   }
 
   public setData(config: LineChartConfig): void {
-    this.config = config;
-    this.hoverIndex = null;
-    this.draw();
+    this.#config = config;
+    this.#hoverIndex = null;
+    this.#draw();
   }
 
-  private resize(): void {
-    const container = this.canvas.parentElement;
-    const width = container === null ? this.canvas.clientWidth : container.clientWidth;
+  #resize(): void {
+    const container = this.#canvas.parentElement;
+    const width = container === null ? this.#canvas.clientWidth : container.clientWidth;
     const height = Math.round(width / ASPECT_RATIO);
     const dpr = window.devicePixelRatio || 1;
 
-    this.canvas.style.width = `${String(width)}px`;
-    this.canvas.style.height = `${String(height)}px`;
-    this.canvas.width = Math.round(width * dpr);
-    this.canvas.height = Math.round(height * dpr);
-    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.#canvas.style.width = `${String(width)}px`;
+    this.#canvas.style.height = `${String(height)}px`;
+    this.#canvas.width = Math.round(width * dpr);
+    this.#canvas.height = Math.round(height * dpr);
+    this.#ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  private draw(): void {
-    const { ctx, canvas } = this;
+  #draw(): void {
+    const ctx = this.#ctx;
+    const canvas = this.#canvas;
     const width = canvas.clientWidth;
     const height = canvas.clientHeight;
     ctx.clearRect(0, 0, width, height);
 
-    const {config} = this;
+    const config = this.#config;
     if (config === null || config.series.length === 0 || width === 0) {
       return;
     }
@@ -297,7 +298,7 @@ export class LineChart {
     const maxY = Math.max(1, ...config.series.flatMap((s) => s.points.map((p) => p.y)));
     const yTicks = niceTicks(maxY);
     const yLabelWidth = Math.max(
-      ...yTicks.ticks.map((t) => ctx.measureText(this.numberFormat.format(t)).width),
+      ...yTicks.ticks.map((t) => ctx.measureText(this.#numberFormat.format(t)).width),
     );
     const yAxisTitleWidth = config.yAxisLabel === undefined ? 0 : FONT_SIZE + TICK_GAP;
     const plotLeft = yAxisTitleWidth + yLabelWidth + TICK_GAP;
@@ -312,71 +313,72 @@ export class LineChart {
 
     const xTicks =
       config.xAxis.kind === "time"
-        ? this.fitTimeTicks(config.xAxis, config.series[0]?.points ?? [], plotRightEdge - plotLeft)
-        : this.fitCategoryTicks(config.xAxis.labels, plotRightEdge - plotLeft);
+        ? this.#fitTimeTicks(config.xAxis, config.series[0]?.points ?? [], plotRightEdge - plotLeft)
+        : this.#fitCategoryTicks(config.xAxis.labels, plotRightEdge - plotLeft);
     const plotBottom = height - PADDING_BOTTOM - FONT_SIZE - TICK_GAP;
 
-    this.plot = {
+    this.#plot = {
       left: plotLeft,
       top: plotTop,
       width: plotRightEdge - plotLeft,
       height: Math.max(1, plotBottom - plotTop),
     };
-    this.yMax = yTicks.max;
+    this.#yMax = yTicks.max;
 
     if (config.xAxis.kind === "time") {
       const xs = (config.series[0]?.points ?? []).map((p) => p.x);
-      this.timeDomain = { min: Math.min(...xs, 0), max: Math.max(...xs, 1) };
-      this.categoryCount = 0;
+      this.#timeDomain = { min: Math.min(...xs, 0), max: Math.max(...xs, 1) };
+      this.#categoryCount = 0;
     } else {
-      this.categoryCount = config.xAxis.labels.length;
+      this.#categoryCount = config.xAxis.labels.length;
     }
 
-    this.drawYAxis(yTicks, config.yAxisLabel);
-    this.drawXTicks(xTicks);
+    this.#drawYAxis(yTicks, config.yAxisLabel);
+    this.#drawXTicks(xTicks);
 
     for (const series of config.series) {
-      this.drawSeries(config.xAxis, series);
+      this.#drawSeries(config.xAxis, series);
     }
 
     if (legend !== null) {
-      this.drawLegend(legend, plotTop - legendHeight);
+      this.#drawLegend(legend, plotTop - legendHeight);
     }
 
-    if (this.hoverIndex !== null) {
-      this.drawTooltip(config);
+    if (this.#hoverIndex !== null) {
+      this.#drawTooltip(config);
     }
   }
 
-  private xScaleTime(x: number): number {
-    const { min, max } = this.timeDomain;
+  #xScaleTime(x: number): number {
+    const { min, max } = this.#timeDomain;
     const span = max - min || 1;
-    return this.plot.left + ((x - min) / span) * this.plot.width;
+    return this.#plot.left + ((x - min) / span) * this.#plot.width;
   }
 
-  private xScaleCategory(index: number): number {
-    const count = Math.max(1, this.categoryCount);
-    return this.plot.left + ((index + 0.5) / count) * this.plot.width;
+  #xScaleCategory(index: number): number {
+    const count = Math.max(1, this.#categoryCount);
+    return this.#plot.left + ((index + 0.5) / count) * this.#plot.width;
   }
 
-  private yScale(y: number): number {
-    return this.plot.top + this.plot.height - (y / this.yMax) * this.plot.height;
+  #yScale(y: number): number {
+    return this.#plot.top + this.#plot.height - (y / this.#yMax) * this.#plot.height;
   }
 
-  private drawYAxis(yTicks: NiceScale, axisLabel: string | undefined): void {
-    const { ctx, plot } = this;
+  #drawYAxis(yTicks: NiceScale, axisLabel: string | undefined): void {
+    const ctx = this.#ctx;
+    const plot = this.#plot;
     ctx.strokeStyle = GRID_COLOR;
     ctx.fillStyle = FONT_COLOR;
     ctx.textAlign = "right";
     ctx.lineWidth = 1;
 
     for (const tick of yTicks.ticks) {
-      const y = this.yScale(tick);
+      const y = this.#yScale(tick);
       ctx.beginPath();
       ctx.moveTo(plot.left, y);
       ctx.lineTo(plot.left + plot.width, y);
       ctx.stroke();
-      ctx.fillText(this.numberFormat.format(tick), plot.left - TICK_GAP, y);
+      ctx.fillText(this.#numberFormat.format(tick), plot.left - TICK_GAP, y);
     }
 
     if (axisLabel !== undefined) {
@@ -389,7 +391,7 @@ export class LineChart {
     }
   }
 
-  private fitTimeTicks(
+  #fitTimeTicks(
     axis: LineChartTimeAxis,
     points: LineChartPoint[],
     availableWidth: number,
@@ -408,29 +410,29 @@ export class LineChart {
       (d) => d.getTime() >= min && d.getTime() <= max,
     );
     const labeled = candidates.map((d) => ({ date: d, label: axis.tickFormat(d) }));
-    const maxLabelWidth = Math.max(20, ...labeled.map((t) => this.ctx.measureText(t.label).width));
+    const maxLabelWidth = Math.max(20, ...labeled.map((t) => this.#ctx.measureText(t.label).width));
     const maxFit = Math.max(1, Math.floor(availableWidth / (maxLabelWidth + 12)));
     const stride = Math.max(1, Math.ceil(labeled.length / maxFit));
 
     return labeled
       .filter((_, i) => i % stride === 0)
-      .map((t) => ({ pixelX: this.xScaleTimeForDomain(t.date.getTime(), min, max), label: t.label }));
+      .map((t) => ({ pixelX: this.#xScaleTimeForDomain(t.date.getTime(), min, max), label: t.label }));
   }
 
-  /** Ticks are positioned before `this.timeDomain` is set for the draw in progress. */
-  private xScaleTimeForDomain(x: number, min: number, max: number): number {
+  /** Ticks are positioned before `this.#timeDomain` is set for the draw in progress. */
+  #xScaleTimeForDomain(x: number, min: number, max: number): number {
     const span = max - min || 1;
-    return this.plot.left + ((x - min) / span) * this.plot.width;
+    return this.#plot.left + ((x - min) / span) * this.#plot.width;
   }
 
-  private fitCategoryTicks(
+  #fitCategoryTicks(
     labels: string[],
     availableWidth: number,
   ): { pixelX: number; label: string }[] {
     if (labels.length === 0) {
       return [];
     }
-    const maxLabelWidth = Math.max(10, ...labels.map((l) => this.ctx.measureText(l).width));
+    const maxLabelWidth = Math.max(10, ...labels.map((l) => this.#ctx.measureText(l).width));
     const maxFit = Math.max(1, Math.floor(availableWidth / (maxLabelWidth + 8)));
     const stride = Math.max(1, Math.ceil(labels.length / maxFit));
 
@@ -438,7 +440,7 @@ export class LineChart {
       .map((label, i) => ({ label, i }))
       .filter((_, i) => i % stride === 0)
       .map(({ label, i }) => ({
-        pixelX: this.plot.left + ((i + 0.5) / labels.length) * availableWidth,
+        pixelX: this.#plot.left + ((i + 0.5) / labels.length) * availableWidth,
         label,
       }));
   }
@@ -449,8 +451,10 @@ export class LineChart {
    * the plot area) -- shifted just enough to stay on-canvas instead,
    * confirmed live via a VR screenshot showing the real overflow.
    */
-  private drawXTicks(ticks: { pixelX: number; label: string }[]): void {
-    const { ctx, plot, canvas } = this;
+  #drawXTicks(ticks: { pixelX: number; label: string }[]): void {
+    const ctx = this.#ctx;
+    const plot = this.#plot;
+    const canvas = this.#canvas;
     ctx.fillStyle = FONT_COLOR;
     ctx.textAlign = "left";
     const y = plot.top + plot.height + TICK_GAP + FONT_SIZE / 2;
@@ -462,21 +466,21 @@ export class LineChart {
     }
   }
 
-  private drawSeries(
+  #drawSeries(
     axis: LineChartTimeAxis | LineChartCategoryAxis,
     series: LineChartSeries,
   ): void {
     if (series.points.length === 0) {
       return;
     }
-    const { ctx } = this;
+    const ctx = this.#ctx;
     const toPixel = (p: LineChartPoint): [number, number] => [
-      axis.kind === "time" ? this.xScaleTime(p.x) : this.xScaleCategory(p.x),
-      this.yScale(p.y),
+      axis.kind === "time" ? this.#xScaleTime(p.x) : this.#xScaleCategory(p.x),
+      this.#yScale(p.y),
     ];
 
     if (series.fillColor !== undefined) {
-      this.drawFill(series, toPixel);
+      this.#drawFill(series, toPixel);
     }
 
     ctx.strokeStyle = series.color;
@@ -497,11 +501,12 @@ export class LineChart {
    * `ctx.createLinearGradient(0, 400, 0, 0)` in the original -- a hardcoded
    * 400px span kept verbatim, see this file's own header comment.
    */
-  private drawFill(
+  #drawFill(
     series: LineChartSeries,
     toPixel: (p: LineChartPoint) => [number, number],
   ): void {
-    const { ctx, plot } = this;
+    const ctx = this.#ctx;
+    const plot = this.#plot;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- this method's own caller only invokes it after checking `series.fillColor !== undefined`; that narrowing doesn't cross the function boundary.
     const [r, g, b] = series.fillColor as [number, number, number];
     const gradient = ctx.createLinearGradient(0, 400, 0, 0);
@@ -527,8 +532,8 @@ export class LineChart {
     ctx.fill();
   }
 
-  private drawLegend(legend: { items: LegendItem[]; rowCount: number }, top: number): void {
-    const { ctx } = this;
+  #drawLegend(legend: { items: LegendItem[]; rowCount: number }, top: number): void {
+    const ctx = this.#ctx;
     ctx.textAlign = "left";
     for (const item of legend.items) {
       const y = top + item.row * LEGEND_ROW_HEIGHT + LEGEND_ROW_HEIGHT / 2;
@@ -539,32 +544,32 @@ export class LineChart {
     }
   }
 
-  private onMouseMove(event: MouseEvent): void {
-    if (this.config === null) {
+  #onMouseMove(event: MouseEvent): void {
+    if (this.#config === null) {
       return;
     }
     const x = event.offsetX;
     const y = event.offsetY;
-    const { plot } = this;
+    const plot = this.#plot;
     if (x < plot.left || x > plot.left + plot.width || y < plot.top || y > plot.top + plot.height) {
-      if (this.hoverIndex !== null) {
-        this.hoverIndex = null;
-        this.draw();
+      if (this.#hoverIndex !== null) {
+        this.#hoverIndex = null;
+        this.#draw();
       }
       return;
     }
 
-    const index = this.nearestIndex(x);
-    if (index !== this.hoverIndex || x !== this.mouseX || y !== this.mouseY) {
-      this.hoverIndex = index;
-      this.mouseX = x;
-      this.mouseY = y;
-      this.draw();
+    const index = this.#nearestIndex(x);
+    if (index !== this.#hoverIndex || x !== this.#mouseX || y !== this.#mouseY) {
+      this.#hoverIndex = index;
+      this.#mouseX = x;
+      this.#mouseY = y;
+      this.#draw();
     }
   }
 
-  private nearestIndex(mouseX: number): number | null {
-    const {config} = this;
+  #nearestIndex(mouseX: number): number | null {
+    const config = this.#config;
     if (config === null) {
       return null;
     }
@@ -577,7 +582,7 @@ export class LineChart {
       let best = 0;
       let bestDist = Infinity;
       points.forEach((p, i) => {
-        const dist = Math.abs(this.xScaleTime(p.x) - mouseX);
+        const dist = Math.abs(this.#xScaleTime(p.x) - mouseX);
         if (dist < bestDist) {
           bestDist = dist;
           best = i;
@@ -586,14 +591,14 @@ export class LineChart {
       return best;
     }
 
-    const count = this.categoryCount;
+    const count = this.#categoryCount;
     if (count === 0) {
       return null;
     }
     let best = 0;
     let bestDist = Infinity;
     for (let i = 0; i < count; i += 1) {
-      const dist = Math.abs(this.xScaleCategory(i) - mouseX);
+      const dist = Math.abs(this.#xScaleCategory(i) - mouseX);
       if (dist < bestDist) {
         bestDist = dist;
         best = i;
@@ -618,8 +623,8 @@ export class LineChart {
    * rather than two separate real interaction-mode algorithms for a
    * single already-small chart.
    */
-  private drawTooltip(config: LineChartConfig): void {
-    const index = this.hoverIndex;
+  #drawTooltip(config: LineChartConfig): void {
+    const index = this.#hoverIndex;
     if (index === null) {
       return;
     }
@@ -634,7 +639,7 @@ export class LineChart {
         return;
       }
       title = config.xAxis.tooltipFormat(new Date(point.x));
-      lines.push({ color: series.color, text: `${series.label}: ${this.numberFormat.format(point.y)}` });
+      lines.push({ color: series.color, text: `${series.label}: ${this.#numberFormat.format(point.y)}` });
     } else {
       title = config.xAxis.labels[index] ?? "";
       for (const series of config.series) {
@@ -642,7 +647,7 @@ export class LineChart {
         if (point !== undefined) {
           lines.push({
             color: series.color,
-            text: `${series.label}: ${this.numberFormat.format(point.y)}`,
+            text: `${series.label}: ${this.#numberFormat.format(point.y)}`,
           });
         }
       }
@@ -651,11 +656,12 @@ export class LineChart {
       }
     }
 
-    this.paintTooltip(title, lines);
+    this.#paintTooltip(title, lines);
   }
 
-  private paintTooltip(title: string, lines: { color: string; text: string }[]): void {
-    const { ctx, canvas } = this;
+  #paintTooltip(title: string, lines: { color: string; text: string }[]): void {
+    const ctx = this.#ctx;
+    const canvas = this.#canvas;
     const PADDING = 8;
     const LINE_HEIGHT = FONT_SIZE + 4;
 
@@ -666,13 +672,13 @@ export class LineChart {
     const boxWidth = Math.max(titleWidth, bodyWidth) + PADDING * 2;
     const boxHeight = PADDING * 2 + LINE_HEIGHT * (lines.length + 1);
 
-    let x = this.mouseX + 12;
-    let y = this.mouseY - boxHeight - 8;
+    let x = this.#mouseX + 12;
+    let y = this.#mouseY - boxHeight - 8;
     if (x + boxWidth > canvas.clientWidth) {
-      x = this.mouseX - boxWidth - 12;
+      x = this.#mouseX - boxWidth - 12;
     }
     if (y < 0) {
-      y = this.mouseY + 12;
+      y = this.#mouseY + 12;
     }
 
     ctx.fillStyle = "rgba(0,0,0,0.8)";

@@ -140,7 +140,7 @@ export function selectize<
   const valueField = init.valueField ?? "value";
   const labelField = init.labelField ?? "text";
   const searchField = init.searchField ?? [labelField];
-  const sortField = init.sortField;
+  const {sortField} = init;
   const multi = el.multiple;
   const maxItems = multi ? Infinity : 1;
   // Real `remove_button` plugin's own definition: `if (this.settings.mode

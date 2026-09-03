@@ -124,7 +124,16 @@ ready(() => {
   if (current_param.image_id !== "") {
     addImageFilter(current_param.image_id);
   }
-  if (current_param.user_id !== "-1") {
+  // `current_param.user_id` is `string | number` -- it starts as the raw
+  // JSON number PHP's own `int $userId`/`exposedPageData()` send (the
+  // `-1` "no filter" sentinel included), but every other write site in
+  // this file sets it to the *string* "-1" (or a string user id). A
+  // plain `!== "-1"` here compared a number to a string on first load,
+  // which is always true regardless of the real sentinel value -- the
+  // "Additional filters" user chip rendered unconditionally on every
+  // page load. `Number(...)` normalizes either representation, matching
+  // the comparison this file already uses correctly further down.
+  if (Number(current_param.user_id) !== -1) {
     addUserFilter(filter_user_name);
   }
 
@@ -303,7 +312,10 @@ function fillSummaryResult(summary: HistorySummary) {
     );
     addClass(summaryGuestsData, "icon-plus-circled");
     on(summaryGuestsData, "click", function () {
-      if (current_param.user_id === "-1") {
+      // Same string-vs-number sentinel mismatch as the ready() handler
+      // above -- normalize via Number() rather than a strict string
+      // compare.
+      if (Number(current_param.user_id) === -1) {
         current_param.user_id = guest_id;
         addGuestFilter(str_guest);
         void fillHistoryResult(current_param);
@@ -460,7 +472,10 @@ function lineConstructor(line: HistoryLine, id: number) {
   );
 
   attr(find(newLine, ".user-name"), "id", String(line.userId));
-  if (current_param.user_id === "-1") {
+  // Same string-vs-number sentinel mismatch as the ready() handler
+  // above -- normalize via Number() rather than a strict string
+  // compare.
+  if (Number(current_param.user_id) === -1) {
     on(find(newLine, ".user-name"), "click", function (this: Element) {
       current_param.user_id = String(attrOf(this, "id"));
       current_param.pageNumber = 0;

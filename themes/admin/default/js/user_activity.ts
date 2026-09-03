@@ -235,7 +235,7 @@ async function fetchAndMergeActivityLines(
       data: params,
     })) as operations["activityList"]["responses"][200]["content"]["application/json"];
 
-    hasMore = response.hasMore;
+    ({ hasMore } = response);
 
     for (const row of response.activities) {
       offset++;
@@ -1042,7 +1042,7 @@ function get_initials(username: string) {
   const words = username.toUpperCase().split(" ");
   let res = words[0]![0]!;
 
-  const secondWord = words[1];
+  const [, secondWord] = words;
   if (secondWord !== undefined && secondWord.length > 0) {
     res += secondWord[0]!;
   }
@@ -1239,9 +1239,7 @@ ready(function () {
         } else {
           //{* call ajax sur activity list avec action et object en param *}
           // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-          const object = (value as string).split("/")[0];
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-          const action = (value as string).split("/")[1];
+          const [object, action] = (value as string).split("/");
           void get_user_activity(
             1,
             uid_filter,

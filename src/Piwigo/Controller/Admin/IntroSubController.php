@@ -597,7 +597,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
             nbRates: $stats->nbRates,
             nbViews: AdminUiHelper::numberFormatHumanReadable($nb_views),
             nbPlugins: count($this->loadedPlugins->get()),
-            storageUsed: str_replace(' ', '&nbsp;', $this->lang->t('%sGB', number_format($du_gb, $du_decimals))),
+            storageUsed: new Html(str_replace(' ', '&nbsp;', $this->lang->t('%sGB', number_format($du_gb, $du_decimals)))),
             // Plain '&', not '&amp;': uQuickSync reaches intro.latte as a
             // bare {$uQuickSync|noescape} print (P59 Batch 5).
             uQuickSync: $this->urlService->getRootUrl() . 'admin.php?page=site_update&site=1&quick_sync=1&pwg_token=' . $this->csrfService->getToken(),

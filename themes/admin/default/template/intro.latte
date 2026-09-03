@@ -4,21 +4,21 @@
 
 <div class="intro-page-container">
   <div class="stat-boxes">
-    <a n:if="$nbPhotos > 1" class="stat-box" href="{$U_ADD_PHOTOS|noescape}">
+    <a n:if="$nbPhotos > 1" class="stat-box" href="{$U_ADD_PHOTOS}">
       <i class="icon-picture icon-yellow"></i>
       <span class="number">{$nbPhotos|number}</span><span
         class="caption"
       >{='Photos'|translate}</span>
     </a>
 
-    <a n:if="$nbAlbums > 1" class="stat-box" href="{$U_ALBUMS|noescape}">
+    <a n:if="$nbAlbums > 1" class="stat-box" href="{$U_ALBUMS}">
       <i class="icon-sitemap icon-red"></i>
       <span class="number">{$nbAlbums}</span><span
         class="caption"
       >{='Albums'|translate}</span>
     </a>
 
-    <a n:if="$nbTags > 1" class="stat-box" href="{$U_TAGS|noescape}">
+    <a n:if="$nbTags > 1" class="stat-box" href="{$U_TAGS}">
       <i class="icon-tags icon-yellow"></i>
       <span class="number">{$nbTags}</span><span
         class="caption"
@@ -26,7 +26,7 @@
       >{='Tags'|translate}</span>
     </a>
 
-    <a n:if="$nbUsers > 2" class="stat-box" href="{$U_USERS|noescape}">
+    <a n:if="$nbUsers > 2" class="stat-box" href="{$U_USERS}">
       <i class="icon-users icon-purple"></i>
       {* -1 because we don't count the "guest" user *}
       <span class="number">{$nbUsers - 1}</span><span
@@ -34,35 +34,35 @@
       >{='Users'|translate}</span>
     </a>
 
-    <a n:if="$nbGroups > 0" class="stat-box" href="{$U_GROUPS|noescape}">
+    <a n:if="$nbGroups > 0" class="stat-box" href="{$U_GROUPS}">
       <i class="icon-group icon-purple"></i>
       <span class="number">{$nbGroups}</span><span
         class="caption"
       >{='Groups'|translate}</span>
     </a>
 
-    <a n:if="$nbComments > 1" class="stat-box" href="{$U_COMMENTS|noescape}">
+    <a n:if="$nbComments > 1" class="stat-box" href="{$U_COMMENTS}">
       <i class="icon-chat icon-blue"></i>
       <span class="number">{$nbComments}</span><span
         class="caption"
       >{='Comments'|translate}</span>
     </a>
 
-    <a n:if="$nbRates > 0" class="stat-box" href="{$U_RATING|noescape}">
+    <a n:if="$nbRates > 0" class="stat-box" href="{$U_RATING}">
       <i class="icon-star icon-yellow"></i>
       <span class="number">{$nbRates}</span><span
         class="caption"
       >{='Rating'|translate}</span>
     </a>
 
-    <a n:if="$nbViews > 0" class="stat-box" href="{$U_HISTORY_STAT|noescape}">
+    <a n:if="$nbViews > 0" class="stat-box" href="{$U_HISTORY_STAT}">
       <i class="icon-signal icon-blue"></i>
       <span class="number">{$nbViews}</span><span
         class="caption"
       >{='Pages seen'|translate}</span>
     </a>
 
-    <a n:if="$nbPlugins > 0" class="stat-box" href="{$U_PLUGINS|noescape}">
+    <a n:if="$nbPlugins > 0" class="stat-box" href="{$U_PLUGINS}">
       <i class="icon-puzzle icon-green"></i>
       <span class="number">{$nbPlugins}</span><span
         class="caption"
@@ -71,7 +71,7 @@
 
     <div class="stat-box">
       <i class="icon-hdd icon-blue"></i>
-      <span class="number">{$storageUsed|noescape}</span><span
+      <span class="number">{$storageUsed}</span><span
         class="caption"
       >{='Storage used'|translate}</span>
     </div>

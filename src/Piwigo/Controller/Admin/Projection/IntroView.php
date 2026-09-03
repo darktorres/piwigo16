@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin\Projection;
 
+use Latte\Runtime\Html;
 use Override;
 use Piwigo\Activity\Projection\ActivityDay;
 use Piwigo\Admin\Projection\ColorboxView;
@@ -58,7 +59,7 @@ final readonly class IntroView implements View, HasPageAssets, ExposesPageData
         public int $nbRates,
         public string $nbViews,
         public int $nbPlugins,
-        public string $storageUsed,
+        public Html $storageUsed,
         public string $uQuickSync,
         public bool $checkForUpdates,
         public int $nbComments,

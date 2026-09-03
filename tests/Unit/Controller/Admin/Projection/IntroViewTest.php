@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Latte\Runtime\Html;
 use Piwigo\Controller\Admin\Projection\IntroView;
 
 /**
@@ -26,7 +27,7 @@ function makeIntroView(?string $subscribeBaseUrl, array $storageChartData): Intr
         nbRates: 0,
         nbViews: '0',
         nbPlugins: 0,
-        storageUsed: '0GB',
+        storageUsed: new Html('0GB'),
         uQuickSync: '',
         checkForUpdates: false,
         nbComments: 0,

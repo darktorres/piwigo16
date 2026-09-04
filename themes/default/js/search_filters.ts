@@ -1,4 +1,4 @@
-import type { PwgDoubleSliderOptions } from "../../admin/default/js/doubleSlider";
+import type { PwgDoubleSliderOptions } from "./doubleSlider";
 import { pwg_getPageData, pwg_getPageString } from "./page-data";
 
 interface SearchAllwordsRule {

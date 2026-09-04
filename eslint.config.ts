@@ -99,7 +99,7 @@ export default defineConfig(
     files: [
       "themes/default/js/mcs.ts",
       "themes/admin/default/js/history.ts",
-      "themes/admin/default/js/sprintf.ts",
+      "themes/default/js/sprintf.ts",
       "themes/standard_pages/js/profile.ts",
       "build/ambient-globals.d.ts",
     ],

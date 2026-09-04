@@ -5,7 +5,7 @@ import type { operations } from "../../../../openapi/client/schema";
 // including the real, accepted "2 independent class copies on this
 // page" consequence of batchManagerFilter.ts's own separate direct
 // import).
-import { AlbumSelector } from "./album_selector";
+import { AlbumSelector } from "../../../default/js/album_selector";
 import { CategoriesCache, TagsCache } from "./LocalStorageCache";
 
 import {

@@ -3,13 +3,13 @@ import type { operations } from "../../../openapi/client/schema";
 // AlbumSelector` (docs/PLAN.md P48 -- was a `window.AlbumSelector`
 // read, see that file's own leading comment for the full real-consumer
 // list).
-import { AlbumSelector } from "../../admin/default/js/album_selector";
-import { sprintf } from "../../admin/default/js/sprintf";
+import { AlbumSelector } from "./album_selector";
+import { sprintf } from "./sprintf";
 // This file has exactly one real registrant page (SearchFiltersView),
 // but doubleSlider.ts itself has 2 real file-level consumers (this
 // file and batchManagerFilter.ts, each its own separate Vite entry),
 // so Rollup emits it as a shared chunk.
-import { pwgDoubleSlider } from "../../admin/default/js/doubleSlider";
+import { pwgDoubleSlider } from "./doubleSlider";
 // Real consumer of search_filters.ts's own exports (docs/PLAN.md P48,
 // search_filters.ts's own batch -- was bare-global reads before that).
 // This file is search_filters.ts's only real consumer

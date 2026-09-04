@@ -31,12 +31,9 @@
 // `sprintf` comes from sprintf.ts by plain import; sprintf.ts is itself
 // another shared chunk.
 import { sprintf } from "./sprintf";
-import {
-  pwg_getPageData,
-  pwg_getPageString,
-} from "../../../default/js/page-data";
-import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
-import type { operations } from "../../../../openapi/client/schema";
+import { pwg_getPageData, pwg_getPageString } from "./page-data";
+import { ajax, AjaxError } from "./vendor/ajax";
+import type { operations } from "../../../openapi/client/schema";
 import {
   addClass,
   after,
@@ -63,7 +60,7 @@ import {
   show,
   trigger,
   val,
-} from "../../../default/js/vendor/dom";
+} from "./vendor/dom";
 
 // Real shapes for the 2 real GET endpoints this file's own #methodPwg
 // switches between (admin mode: /categories; non-admin: /categories/available),

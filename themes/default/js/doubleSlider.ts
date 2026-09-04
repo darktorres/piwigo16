@@ -1,17 +1,10 @@
 import { sprintf } from "./sprintf";
-import {
-  data,
-  find,
-  html,
-  off,
-  on,
-  setVal,
-} from "../../../default/js/vendor/dom";
+import { data, find, html, off, on, setVal } from "./vendor/dom";
 import {
   slider,
   type SliderOptions,
   type SliderUIParams,
-} from "../../../default/js/vendor/slider";
+} from "./vendor/slider";
 
 /**
  * Real first-party wrapper around `themes/default/js/vendor/slider.ts`'s

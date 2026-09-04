@@ -15,7 +15,7 @@ import {
   strAlbumsFound,
   strResultLimit,
   strAlbumFound,
-} from "./album_selector";
+} from "../../../default/js/album_selector";
 // Real consumer of albums.ts's own top-level `data` (docs/PLAN.md P48,
 // albums.ts's own batch -- was a `window.data` read before that).
 // albums.ts stays its own standalone Vite entry, unlike every other

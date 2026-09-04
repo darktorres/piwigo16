@@ -8,8 +8,8 @@ import type { operations, components } from "../../../../openapi/client/schema";
 // Real consumer of album_selector.ts's own top-level `class
 // AlbumSelector` (docs/PLAN.md P48 -- was a bare ambient-global read,
 // see that file's own leading comment for the full real-consumer list).
-import { AlbumSelector } from "./album_selector";
-import { sprintf } from "./sprintf";
+import { AlbumSelector } from "../../../default/js/album_selector";
+import { sprintf } from "../../../default/js/sprintf";
 import { jConfirmWarningOptions } from "./jconfirmPresets";
 
 import {

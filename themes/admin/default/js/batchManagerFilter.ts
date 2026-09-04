@@ -12,8 +12,8 @@
 // shared chunk, so both consumers now hold the *same* class and the
 // single-active-popup coordination its module state was written for
 // actually works.
-import { AlbumSelector } from "./album_selector";
-import { pwgDoubleSlider } from "./doubleSlider";
+import { AlbumSelector } from "../../../default/js/album_selector";
+import { pwgDoubleSlider } from "../../../default/js/doubleSlider";
 
 import {
   pwg_getPageData,

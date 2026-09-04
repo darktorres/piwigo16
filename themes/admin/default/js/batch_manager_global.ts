@@ -45,7 +45,7 @@ import {
 // (common.ts); the P51-I split made that dependency explicit instead
 // of leaving it accidental.
 import "./common";
-import { sprintf } from "./sprintf";
+import { sprintf } from "../../../default/js/sprintf";
 import { CategoriesCache, TagsCache } from "./LocalStorageCache";
 // Real consumer of album_selector.ts's own top-level `class
 // AlbumSelector` (docs/PLAN.md P48 -- was a `window.AlbumSelector`
@@ -53,7 +53,7 @@ import { CategoriesCache, TagsCache } from "./LocalStorageCache";
 // list, including the real, accepted "2 independent class copies on
 // this page" consequence of batchManagerFilter.ts's own separate direct
 // import).
-import { AlbumSelector } from "./album_selector";
+import { AlbumSelector } from "../../../default/js/album_selector";
 import { pwgAddAlbum } from "./addAlbum";
 import {
   pwg_getPageData,

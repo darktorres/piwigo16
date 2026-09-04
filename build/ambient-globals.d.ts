@@ -69,42 +69,15 @@ interface Window {
   // like dead/private state to the tree-shaker and minifier alike, even
   // though a sibling entry calls it as a bare global. Declared here (not
   // inferred from the assignment) so every consumer file's own bare
-  // reference -- e.g. `pwg_getPageData(...)` in picture.ts, which never
-  // imports anything -- type-checks too.
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- mirrors page-data.ts's own signature; see the note there.
-  pwg_getPageData: <T = unknown>(key: string) => T;
-  pwg_getPageString: (key: string) => string;
+  // reference type-checks too. `pwg_getPageData`/`pwg_getPageString`'s
+  // own ambient entries and the 23-member search_filters.ts-derived
+  // block below them were both confirmed-dead and deleted here (P51-H):
+  // every real consumer imports them directly now (`picture.ts` for the
+  // former; `mcs.ts` for the latter, whose own P51-G camelCase renames
+  // -- `globalParams`/`fullnameOfCat`/`searchId`/etc. -- left these
+  // snake_case ambient names doubly stale).
   popuphelp: (url: string) => void;
   pwg_tryFocus: (id: string) => void;
-
-  // search_filters.ts's own page-data-derived globals, real bare reads
-  // in mcs.ts. `global_params`/`fullname_of_cat` stay `any` -- the
-  // parsed JSON's own shape is a complex nested search-filter query
-  // object neither file re-derives real types for. Every other entry
-  // here is a real page-data-typed primitive or a translated string.
-  global_params: any;
-  fullname_of_cat: any;
-  search_id: string | undefined;
-  str_word_widget_label: string;
-  str_tags_widget_label: string;
-  str_album_widget_label: string;
-  str_author_widget_label: string;
-  str_added_by_widget_label: string;
-  str_filetypes_widget_label: string;
-  str_rating_widget_label: string;
-  str_no_rating: string;
-  str_between_rating: string;
-  str_filesize_widget_label: string;
-  str_width_widget_label: string;
-  str_height_widget_label: string;
-  str_ratio_widget_label: string;
-  str_ratios_label: Record<string, string>;
-  str_expert_widget_label: string;
-  str_empty_search_top_alt: string;
-  str_empty_search_bot_alt: string;
-  str_search_in_ab: string;
-  prefix_icon: string;
-  show_filter_ratings: boolean;
 
   // batchManagerGlobal.ts's own 4 functions, called from
   // batch_manager_global.latte's own `href="javascript:

@@ -18,12 +18,13 @@ use Piwigo\Common\ValueObject\UserId;
  * the one real caller (`Controller\Api\Comments\CommentListController`)
  * already has
  * validated ids and `Y-m-d H:i:s`-formatted date strings, so building the VOs there (instead of at every
- * consumption site) is a pure typing win. `CommentEntity::$authorId`
- * itself deliberately stays plain `?int` (see that entity's own
- * docblock -- a cross-domain foreign-key-column scope boundary), so
- * `CommentRepository`'s DQL consumer still unwraps `->value` there;
- * `$imageId`/`$minDate`/`$maxDate` compare directly against
- * already-VO-typed entity columns, no unwrap needed on that path.
+ * consumption site) is a pure typing win. `Comment\Projection\Comment::
+ * $authorId` itself deliberately stays plain `?int` (see that
+ * Projection's own docblock -- extracted via DQL's `IDENTITY()`, which
+ * never hydrates a VO), so `CommentRepository`'s DQL consumer still
+ * unwraps `->value` there; `$imageId`/`$minDate`/`$maxDate` compare
+ * directly against already-VO-typed entity columns, no unwrap needed on
+ * that path.
  */
 final readonly class CommentApiCriteria
 {

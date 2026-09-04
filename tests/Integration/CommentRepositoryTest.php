@@ -104,7 +104,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
             'authorId' => 3,
         ]);
 
-        $deleted = $this->repo->delete([$id], 999);
+        $deleted = $this->repo->delete([$id], UserId::from(999));
 
         self::assertSame(0, $deleted);
         self::assertNotNull($this->fetchContent($id));
@@ -116,7 +116,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
             'authorId' => 3,
         ]);
 
-        $deleted = $this->repo->delete([$id], 3);
+        $deleted = $this->repo->delete([$id], UserId::from(3));
 
         self::assertSame(1, $deleted);
     }
@@ -157,7 +157,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
                 websiteUrl: null,
                 validated: true,
             ),
-            999
+            UserId::from(999)
         );
 
         self::assertFalse($updated);
@@ -222,8 +222,8 @@ final class CommentRepositoryTest extends IntegrationTestCase
             'email' => null,
         ]);
 
-        self::assertSame(1, $this->repo->countRecentComments(4, null, 3600));
-        self::assertSame(0, $this->repo->countRecentComments(4, null, 0));
+        self::assertSame(1, $this->repo->countRecentComments(UserId::from(4), null, 3600));
+        self::assertSame(0, $this->repo->countRecentComments(UserId::from(4), null, 0));
     }
 
     public function testCountRecentCommentsRestrictsToTheAnonymousIdPrefix(): void
@@ -243,8 +243,8 @@ final class CommentRepositoryTest extends IntegrationTestCase
             'email' => null,
         ]);
 
-        self::assertSame(1, $this->repo->countRecentComments(2, '10.0.2', 3600));
-        self::assertSame(0, $this->repo->countRecentComments(2, '10.0.99', 3600));
+        self::assertSame(1, $this->repo->countRecentComments(UserId::from(2), '10.0.2', 3600));
+        self::assertSame(0, $this->repo->countRecentComments(UserId::from(2), '10.0.99', 3600));
     }
 
     public function testUsernameExistsMatchesAnExistingUsername(): void

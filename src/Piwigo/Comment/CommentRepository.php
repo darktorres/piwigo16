@@ -101,7 +101,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      *
      * @param list<CommentId> $ids
      */
-    public function delete(array $ids, ?int $authorId): int
+    public function delete(array $ids, ?UserId $authorId): int
     {
         if ($ids === []) {
             return 0;
@@ -134,7 +134,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * original update_user_comment()'s non-admin restriction). Returns
      * whether a row was actually updated.
      */
-    public function update(CommentId $id, CommentUpdateData $data, ?int $authorId): bool
+    public function update(CommentId $id, CommentUpdateData $data, ?UserId $authorId): bool
     {
         $qb = $this->getEntityManager()
             ->createQueryBuilder()
@@ -216,7 +216,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * not MySQL-specific), just spelled with a different argument order
      * than MySQL's own `SUBDATE(date, INTERVAL n unit)` syntax.
      */
-    public function countRecentComments(int $authorId, ?string $anonymousIdPrefix, int $antiFloodSeconds): int
+    public function countRecentComments(UserId $authorId, ?string $anonymousIdPrefix, int $antiFloodSeconds): int
     {
         // Env::now() rather than SQL's NOW() (the real DB-server clock) --
         // matches SessionRepository's own reasoning: invisible to

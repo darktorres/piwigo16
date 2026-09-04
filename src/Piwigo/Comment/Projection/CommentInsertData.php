@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Comment\Projection;
 
+use Piwigo\Common\ValueObject\UserId;
+
 /**
  * {@see \Piwigo\Comment\CommentService::insertComment()}'s own working
  * state -- `$author`/`$content`/`$imageId`/`$websiteUrl`/`$email` are
@@ -15,6 +17,14 @@ namespace Piwigo\Comment\Projection;
  * mutate the caller's own instance across its many conditional
  * branches, same rationale as {@see \Piwigo\Admin\Integrity\Projection\
  * AnomalyRow}/{@see \Piwigo\Controller\Projection\ImageOrderOption}.
+ *
+ * `$authorId` is `?UserId` (P51-J), unlike
+ * {@see \Piwigo\Comment\Projection\Comment}'s own identically-named
+ * field, which deliberately stays `?int` -- that one is extracted via
+ * DQL's `IDENTITY()`, which never hydrates a VO; this one is set by
+ * `insertComment()` itself from a real, already-known-valid source (the
+ * current session's own `CurrentUser::get()->id`, or the configured
+ * guest id), never a raw external boundary read.
  */
 final class CommentInsertData
 {
@@ -26,7 +36,7 @@ final class CommentInsertData
         public ?string $email = null,
         public string $ip = '',
         public string $agent = '',
-        public ?int $authorId = null,
+        public ?UserId $authorId = null,
         public ?int $id = null,
     ) {}
 
@@ -52,7 +62,12 @@ final class CommentInsertData
         }
 
         if ($this->authorId !== null) {
-            $result['author_id'] = $this->authorId;
+            // Unwrapped: this array feeds UserCommentCheck's own
+            // array<string, mixed> event payload, a legacy filter meant
+            // for third-party plugin consumption -- kept a plain scalar
+            // there, same as every other Latte/JSON/plugin-event
+            // boundary in this codebase.
+            $result['author_id'] = $this->authorId->value;
         }
 
         if ($this->id !== null) {

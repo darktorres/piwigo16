@@ -20,6 +20,7 @@ use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -211,7 +212,7 @@ final readonly class CommentService
             }
 
             $guestId = $this->currentConfig->guestId;
-            $comm->authorId = $guestId;
+            $comm->authorId = UserId::from($guestId);
 
             // if a guest tries to use the name of an already existing user,
             // they must be rejected
@@ -226,7 +227,7 @@ final readonly class CommentService
         } else {
             $user = $this->currentUser->get();
             $comm->author = $user->username->value ?? '';
-            $comm->authorId = $user->id->value;
+            $comm->authorId = $user->id;
         }
 
         if (self::emptyValue($comm->content)) {
@@ -290,8 +291,8 @@ final readonly class CommentService
 
         $trimmedIp = implode('.', $ipComponents);
 
-        // $comm->authorId was set to an int unconditionally in both
-        // branches above.
+        // $comm->authorId was set to a real UserId unconditionally in
+        // both branches above.
         $authorId = $comm->authorId;
 
         $antiFloodTime = $this->currentConfig->antiFloodTime;
@@ -318,7 +319,7 @@ final readonly class CommentService
 
             $id = $this->repo->insert([
                 'author' => $author,
-                'authorId' => $authorId,
+                'authorId' => $authorId->value,
                 'anonymousId' => $comm->ip,
                 'content' => $content,
                 'validated' => $commentAction === 'validate',
@@ -372,7 +373,7 @@ final readonly class CommentService
         $authorId = null;
         if (! $this->accessLevelChecker->isAdmin()) {
             $authorId = $this->currentUser->get()
-                ->id->value;
+                ->id;
         }
 
         if ($this->repo->delete($ids, $authorId) === 0) {
@@ -458,7 +459,7 @@ final readonly class CommentService
             $authorId = null;
             if (! $this->accessLevelChecker->isAdmin()) {
                 $authorId = $this->currentUser->get()
-                    ->id->value;
+                    ->id;
             }
 
             $content = is_string($comment['content']) ? $comment['content'] : '';

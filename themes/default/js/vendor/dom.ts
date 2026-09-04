@@ -662,9 +662,6 @@ const FX_SPEEDS: Record<string, number> = {
   _default: 400,
 };
 
-/** jQuery's own tick interval (`jQuery.fx.interval`), not rAF. */
-const FX_INTERVAL = 13;
-
 /** Properties jQuery treats as unitless (`jQuery.cssNumber`). */
 const CSS_NUMBER = new Set([
   "opacity",
@@ -823,9 +820,8 @@ function startValueInUnit(
 }
 
 class Tween implements Stoppable {
-  readonly #startedAt = Date.now();
-
-  #timer: ReturnType<typeof setInterval> | null = null;
+  #startTimestamp: number | null = null;
+  #rafId: number | null = null;
 
   readonly #el: HTMLElement;
   readonly #props: {
@@ -864,45 +860,61 @@ class Tween implements Stoppable {
       return;
     }
     // Apply the tween's own t=0 frame synchronously, before returning: the
-    // interval below doesn't fire for another FX_INTERVAL ms, and the
+    // first rAF callback doesn't fire until the next paint, and the
     // caller (runEffect's show(el) for slideDown/fadeIn) already made the
     // element visible at its natural, untweened size just before this
     // runs. Without this, the browser paints that natural size for
     // however many real frames pass before the first tick -- a visible
     // flash of the fully-open content right before it visibly snaps back
     // to the animation's actual starting point and grows from there.
-    this.#tick();
-    this.#timer = setInterval(() => {
-      this.#tick();
-    }, FX_INTERVAL);
+    this.#applyFraction(0);
+    this.#rafId = requestAnimationFrame((timestamp) => {
+      this.#tick(timestamp);
+    });
   }
 
-  #tick(): void {
-    const elapsed = Date.now() - this.#startedAt;
+  // `timestamp` is the same DOMHighResTimeStamp requestAnimationFrame's own
+  // callback always receives -- comparable across calls, but not to
+  // Date.now() (different clock, different epoch). #startTimestamp is
+  // seeded from the first one actually delivered rather than computed
+  // eagerly at construction time, since the gap between construction and
+  // the first real paint is itself part of what a rAF-driven duration
+  // should measure.
+  #tick(timestamp: number): void {
+    this.#startTimestamp ??= timestamp;
+    const elapsed = timestamp - this.#startTimestamp;
     const fraction = Math.min(1, elapsed / this.#duration);
+    this.#applyFraction(fraction);
+
+    if (fraction >= 1) {
+      this.#finish(true);
+    } else {
+      this.#rafId = requestAnimationFrame((ts) => {
+        this.#tick(ts);
+      });
+    }
+  }
+
+  #applyFraction(fraction: number): void {
     const eased = swing(fraction);
 
     for (const { prop, from, to, unit } of this.#props) {
       setStyleValue(this.#el, prop, from + (to - from) * eased, unit);
     }
-
-    if (fraction >= 1) {
-      this.#finish(true);
-    }
   }
 
   public stop(jumpToEnd: boolean): void {
-    if (this.#timer !== null) {
-      clearInterval(this.#timer);
-      this.#timer = null;
+    if (this.#rafId !== null) {
+      cancelAnimationFrame(this.#rafId);
+      this.#rafId = null;
     }
     this.#finish(jumpToEnd);
   }
 
   #finish(applyEnd: boolean): void {
-    if (this.#timer !== null) {
-      clearInterval(this.#timer);
-      this.#timer = null;
+    if (this.#rafId !== null) {
+      cancelAnimationFrame(this.#rafId);
+      this.#rafId = null;
     }
     if (applyEnd) {
       for (const { prop, to, unit } of this.#props) {

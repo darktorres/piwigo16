@@ -74,7 +74,6 @@ const HANDLE_OPACITY = 0.5;
 const BORDER_OPACITY = 0.4;
 const BG_COLOR = "black";
 const BG_OPACITY = 0.6;
-const ANIMATION_DELAY = 20;
 const SWING_SPEED = 3;
 
 function px(n: number): string {
@@ -729,7 +728,7 @@ function initJcrop(origImg: HTMLImageElement, options: JcropOptions): JcropApi {
           setPressed([current[0], current[1]]);
           setCurrent([current[2], current[3]]);
           update(false);
-          window.setTimeout(step, ANIMATION_DELAY);
+          requestAnimationFrame(step);
         } else {
           setPressed([current[0], current[1]]);
           setCurrent([current[2], current[3]]);

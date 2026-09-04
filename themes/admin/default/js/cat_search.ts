@@ -26,6 +26,7 @@ import { data } from "./albums";
 import {
   fadeIn,
   hide,
+  html,
   parseHtml,
   ready,
   show,
@@ -59,13 +60,6 @@ ready(function () {
   });
 });
 
-/** jQuery's `.html(value)` writes to every element of the set. */
-function setHtml(selector: string, value: string): void {
-  document.querySelectorAll(selector).forEach((element) => {
-    element.innerHTML = value;
-  });
-}
-
 // Update the page according to the search field
 function updateSearch() {
   // `String($(".search-input").val())` on an empty set is the literal
@@ -76,7 +70,7 @@ function updateSearch() {
   // element's own listener is the only caller.
   const input = document.querySelector<HTMLInputElement>(".search-input");
   const string = input === null ? "undefined" : input.value;
-  setHtml(".search-album-result", "");
+  html(document.querySelectorAll(".search-album-result"), "");
   hide(document.querySelectorAll(".search-album-noresult"));
   hide(document.querySelectorAll(".limit-album-reached"));
   if (string === "") {
@@ -96,18 +90,21 @@ function updateSearch() {
 
     if (nbResult !== 1) {
       if (nbResult >= RESULT_LIMIT) {
-        setHtml(
-          ".search-album-num-result",
+        html(
+          document.querySelectorAll(".search-album-num-result"),
           strResultLimit.replace("%d", String(nbResult)),
         );
       } else {
-        setHtml(
-          ".search-album-num-result",
+        html(
+          document.querySelectorAll(".search-album-num-result"),
           strAlbumsFound.replace("%d", String(nbResult)),
         );
       }
     } else {
-      setHtml(".search-album-num-result", strAlbumFound);
+      html(
+        document.querySelectorAll(".search-album-num-result"),
+        strAlbumFound,
+      );
     }
 
     if (nbResult !== 0) {
@@ -196,8 +193,8 @@ function addAlbumResult(
     // `.show(duration)` folds the whole box open -- height, width, opacity,
     // margins and padding together -- not a fade.
     show(document.querySelectorAll(".limit-album-reached"), 1000);
-    setHtml(
-      ".limit-album-reached",
+    html(
+      document.querySelectorAll(".limit-album-reached"),
       strResultLimit.replace("%d", String(nbResult)),
     );
   }

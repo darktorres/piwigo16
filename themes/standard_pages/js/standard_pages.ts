@@ -4,17 +4,11 @@ import {
   data as readData,
   delegate,
   hide,
+  html,
   on,
   ready,
   show,
 } from "../../default/js/vendor/dom";
-
-/** jQuery's `.html(value)` writes to every element of the set. */
-function setHtmlAll(targets: ArrayLike<Element>, value: string): void {
-  for (const element of Array.from(targets)) {
-    element.innerHTML = value;
-  }
-}
 
 const modeCookie = getCookie("mode");
 if ("" !== modeCookie) {
@@ -259,7 +253,7 @@ function pwg_checkPasswordMatchStdPages(
 
   const check = (): void => {
     if (pass2.value !== "" && pass1.value !== pass2.value) {
-      setHtmlAll(
+      html(
         errorMessages,
         '<i class="gallery-icon-attention-circled"></i> ' +
           pwg_getPageString("The passwords do not match"),
@@ -289,7 +283,7 @@ function pwg_checkEmailFormatStdPages(rootId: string, fieldId: string) {
 
   const check = (): void => {
     if (field.value !== "" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field.value)) {
-      setHtmlAll(
+      html(
         errorMessages,
         '<i class="gallery-icon-attention-circled"></i> ' +
           pwg_getPageString(

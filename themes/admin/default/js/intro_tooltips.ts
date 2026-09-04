@@ -10,6 +10,7 @@ import {
   cssValue,
   data as readData,
   hide,
+  html,
   innerHeight,
   innerWidth,
   offset,
@@ -22,13 +23,6 @@ import {
   width,
   windowHeight,
 } from "../../../default/js/vendor/dom";
-
-/** jQuery's `.html(value)` writes to every element of the set. */
-function setHtml(selector: string, value: string): void {
-  document.querySelectorAll(selector).forEach((element) => {
-    element.innerHTML = value;
-  });
-}
 
 ready(function () {
   Object.entries(storageDetails).forEach(([type, rawInfos]) => {
@@ -47,13 +41,16 @@ ready(function () {
     const strSize = strSizeTypeString.replace("%s", sizeNb);
 
     // Display head of Tooltip
-    setHtml(
-      "#storage-title-" + type,
+    html(
+      document.querySelectorAll("#storage-title-" + type),
       "<b>" + (translateType[type] ?? "") + "</b>",
     );
-    setHtml("#storage-size-" + type, "<b>" + strSize + "</b>");
-    setHtml(
-      "#storage-files-" + type,
+    html(
+      document.querySelectorAll("#storage-size-" + type),
+      "<b>" + strSize + "</b>",
+    );
+    html(
+      document.querySelectorAll("#storage-files-" + type),
       "<p>" +
         (infos.total.nb_files
           ? translateFiles.replace("%d", String(infos.total.nb_files))

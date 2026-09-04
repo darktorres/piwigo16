@@ -7,7 +7,7 @@ per-phase files drifted against each other and was consolidated into
 these two.
 
 `17.x-rewrite` replays `16.x-rewrite`'s modernization as 55 sequential
-backbone phases (P0–P55, in 10 epochs A–J), rebuilt from `origin/16.x`
+backbone phases (P0–P57, in 10 epochs A–J), rebuilt from `origin/16.x`
 rather than upgraded in place. Every backend phase is sequenced before
 every frontend phase. The work is dual-purpose: a *replay* of work that
 has a reference implementation on `16.x-rewrite`, plus *greenfield*
@@ -85,6 +85,18 @@ Three structural changes produced that drift:
   move off the JSON/XML envelope), and **P27** (public API v1 — REST +
   OpenAPI 3.1 + tus, WS deleted here). Old P26–P53 shift to new P28–P55
   unchanged in scope and order — only the numbers move.
+- **i18n modernization inserted as new P54 on 2026-09-03, cascading +1
+  through everything after it.** Found via a full translation-system
+  audit (`docs/translation-audit.md`) during a session otherwise fixing
+  individual `.po` defects — the root cause (gettext's
+  literal-English-as-key design, raw ternary plural math) turned out to
+  be architectural, not fixable file-by-file, so it earned its own phase
+  rather than staying a cleanup task. Placed right after P53 (per-page
+  TS architecture audit, itself inserted right after P52 CSS
+  architecture modernization in an earlier session) since it's the same
+  kind of modernize-existing-infrastructure work, ahead of the
+  new-feature track. Old P54–P59 shift to new P55–P60 unchanged in
+  scope and order — only the numbers move.
 
 ## Status
 
@@ -144,12 +156,13 @@ Three structural changes produced that drift:
 | P51 | TS modernization | Done (all of P51-A through P51-AA closed) — P51-A through L done (P51-D closed with a narrower final scope than planned — see its own entry below for the `album_selector.ts` cluster excluded outright; P51-G/H/I all closed with a broader final scope than planned instead; P51-J closed with a narrower final scope than planned — its own entry below has the excluded `Projection\Comment::$authorId` target; P51-K's own follow-up investigation found its 41-docblock target already moot and carved its bulk-array-ids target out into a new P51-K2, whose own real count — 38, not the ~46 first estimated — is corrected in its own entry; P51-K2's own originally-planned second batch, K2b, was investigated and found unnecessary, contradicting this campaign's own established `CategoryService`-stays-primitive precedent, see its own entry below; P51-L closed via a user-chosen risk-prioritized audit rather than a literal re-read of all 423 touched files, see its own entry below, with a full green closing suite gate bar one confirmed-flaky, unrelated Browser test); P51-M (third-party ESLint plugin exploration) done for `eslint-plugin-sonarjs` (116 real sites across every `recommended` rule but `no-unused-vars`, all fixed — see its own entry below for the real bugs found along the way); `eslint-plugin-unicorn` stays deferred (4,314 sites, mostly fighting this codebase's own deliberate conventions, see its own entry); P51-N (eliminate inline-`onclick=`/`window.X` coupling, found during P51-G planning) done — 12 real sites across 4 files converted, not the 15-across-6 first estimated (3 sites correctly excluded as different, already-legitimate `window.X` shapes — see its own entry below for a real `ReferenceError` bug found and fixed along the way); P51-O (close the `no-non-null-assertion` warn population left open by P51-A) done — 679 real sites across 59 files under `themes/**` closed (the rule is now `"error"`), the explicitly out-of-scope 43-site `tests/Unit/*.test.ts` remainder kept at `"warn"` via a scoped override — see its own entry below for the shared `valueAt()` helper and a real `getInitials()` bug found and fixed along the way; P51-P (make `ajax()`'s return type genuinely generic) done — 56 real call sites across 24 files converted to `await ajax<Foo>({...})`, collapsing the largest duplicated `no-unsafe-type-assertion` disable bucket, net zero new unsafe-cast sites in the vendor file itself — see its own entry below; P51-Q (typed `data<T>()` accessor) done — 43 real `data-*`-read call sites across 13 files converted to `data<T>(el, key)`, closing the second-largest `no-unsafe-type-assertion` disable bucket, plus a real non-null-assertion-in-disguise bug found and fixed in `users/activity.ts` along the way — see its own entry below; P51-R (backend: retype `UserRepository`'s 5 raw-int id params to `ImageId`/`UserId`) done — closes a genuine, live double-parse bug in `FavoriteAddController.php` plus 4 other real call sites, and drops a redundant internal `UserId::tryFrom()` validation layer and 3 now-redundant `ParameterType::INTEGER` binds found along the way — see its own entry below; P51-S (backend: retype `TagRepository`'s 2 raw-int id params to `TagId`) done — fixes a double-parse-per-request bug in 3 controllers, each parsing the same route-param id 2-3 separate times — see its own entry below; P51-T (backend: `ImageRepository`, close `FormatId`/`ImageId` raw-int gaps at 5 methods) done — retypes `findFormatById()`/`updateFormatFilesize()`/`insertFormat()` (now returns `FormatId`)/`updateDimensions()`/`findByIdOrFilePattern()` (the latter's `0`-sentinel became a nullable `?ImageId`), plus a call-site-only unwrap for `SrcImage::getSize()`'s "degrades to 0" DTO contract and a found-along-the-way `ActionRequest::$formatId` retype — see its own entry below; P51-W/X (P51-H addenda: stale `ambient-globals.d.ts` comment fixed, dead commented-out debug code removed) done, comment/dead-code-only; P51-U (typed `cloneElement<T>()` helper) done — 19 real `.cloneNode(true) as X` sites across 9 files converted, closing the third `no-unsafe-type-assertion` disable bucket after P51-P/Q — see its own entry below; P51-V (tsconfig: `allowUnreachableCode`/`allowUnusedLabels`/`noUncheckedSideEffectImports`) done — the first 2 flags are free tree-wide, the third surfaces 2 real dead `throw` sites in `jcrop.ts`'s `oppositeLockCorner()`/`getCorner()`, moved into each switch's own `default:` branch rather than deleted outright to keep `consistent-return` satisfied — see its own entry below; P51-Y (shared `copyToClipboard()` helper) done — 6 real sites across `users/list.ts`/`profile.ts` converted, verified via a manual Playwright smoke test since this path has no automated Browser-test coverage — see its own entry below; P51-Z (shared `escapeHtml()`/`escapeRegExp()` helpers) done — absorbs 2 independent duplication pairs across `selectize.ts`/`jqtree.ts`/`uploadQueue.ts`, each fold adopting the real superset implementation — see its own entry below; P51-AA (`install.latte`'s one leftover inline `onchange=` site, adjacent to P51-N) done — moved into `install.ts`'s own change listener, also fixed an unrelated pre-existing stale golden-html modulepreload link found along the way — see its own entry below. P51-O through P51-AA's gap-analysis sequence is now fully closed | 17 |
 | P52 | CSS architecture modernization | Not started — Tailwind call resolved (not adopted); full design scoped below (P52-A through J), work itself unstarted | 0 |
 | P53 | Per-page TS architecture audit (post-P51) | Not started — a dedicated gap analysis of `vendor/`-port and Piwigo's-own per-page TS files beyond P51's own scope; verdict is targeted cleanup, not a rewrite, 18 items (P53-A through P53-R) scoped, sequencing across them open | 18 |
-| P54 | Picture pipeline (new feature) | Not started | 0 |
-| P55 | Dark mode (new feature) | Not started | 0 |
-| P56 | Real quality gates | Not started | 0 |
-| P57 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
-| P58 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
-| P59 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | **DONE** — **A 843 → 0, B 376 → 0**, and the CAMPAIGN-PENDING block is gone from `phpstan.neon`. All 26 identifier-wide ignores retired, each forced out by `reportUnmatchedIgnoredErrors` rather than noticed; 2 more left the *permanent* groups (`empty.variable`, `foreach.valueOverwrite`). Twenty-three live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
+| P54 | i18n modernization: gettext/`.po` → `symfony/translation` + ICU MessageFormat, semantic ids | Not started — found via a full translation-system audit (322 `.po` files, ~2,000+ call sites); see its own plan detail below | 0 |
+| P55 | Picture pipeline (new feature) | Not started | 0 |
+| P56 | Dark mode (new feature) | Not started | 0 |
+| P57 | Real quality gates | Not started | 0 |
+| P58 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
+| P59 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
+| P60 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | **DONE** — **A 843 → 0, B 376 → 0**, and the CAMPAIGN-PENDING block is gone from `phpstan.neon`. All 26 identifier-wide ignores retired, each forced out by `reportUnmatchedIgnoredErrors` rather than noticed; 2 more left the *permanent* groups (`empty.variable`, `foreach.valueOverwrite`). Twenty-three live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -801,7 +814,7 @@ root every system needs.
 a single `assignContext()` call. Zero `Template::assign()` calls with a
 string or array key remain in `src/Piwigo`. 130 context classes shipped
 when this phase closed; **28 remain**, P40 having replaced the rest with
-typed `View` classes — which is also what shrank P59-A, since a
+typed `View` classes — which is also what shrank P60-A, since a
 `{templateType}` template takes its variable types from the View's own
 reflected properties rather than from a context's `array<*, mixed>`.
 
@@ -1302,7 +1315,7 @@ restructure work is scoped.
 The one commit tagged `chore(p32): delete doc/` is an unrelated narrow
 cleanup that borrowed a pre-consolidation number for this same phase.
 
-### Epoch J — Presentation, templating & extension surface (P31–P55)
+### Epoch J — Presentation, templating & extension surface (P31–P57)
 
 Sequenced after every backend phase. Order within the epoch: the
 completed Latte foundation, then refactor and modernization (same
@@ -1333,7 +1346,7 @@ visibility on `Template::assign()`/`append()` now enforces the same
 invariant.
 
 Scope was narrowed from the original plan: the "+ asset pipeline" clause
-is split out to P36 and P54. Every `p31.x` commit is a `.tpl` → `.latte`
+is split out to P36 and P55. Every `p31.x` commit is a `.tpl` → `.latte`
 conversion or Smarty cleanup, nothing manifest-, combiner- or
 image-format-related.
 
@@ -1360,13 +1373,13 @@ typed `@var` injection and shim-rewritten filter calls into
 `_analysis/phpstan-latte/`, analysed by plain `phpstan analyse` with
 errors mapped back to real `.latte` lines via an `errorFormatter.table!`
 override. Two follow-up campaigns shrink its remaining scoped ignores;
-they had no owner until **P59** picked them up, and the figures recorded
+they had no owner until **P60** picked them up, and the figures recorded
 here originally (~1,400 and ~450) were both stale — re-measured
 2026-08-28 as **843** and **376**. The first was also mis-described as
 "context-docblock enrichment": P40's View migration has since made the
 dominant cause a producer calling `->toArray()` on an already-typed VO
 one line before handing it to the View, so the fix is deleting the
-flatten rather than writing a docblock. See P59.
+flatten rather than writing a docblock. See P60.
 
 *Format half*: no prior art existed even in the reference, so it is
 genuinely new work. `tools/latte-prettier/` is a real Prettier plugin —
@@ -6375,7 +6388,7 @@ re-verified by a second agent that re-derived the fact itself). What
 follows is the result: the final, verified design. Depends on P39 (real
 per-page CSS files must exist first); **not** parallelizable with all of
 `P46-P51` as originally scoped once P52-J is in scope — see that
-sub-item's note below. Feeds P55 (token names must exist first).
+sub-item's note below. Feeds P56 (token names must exist first).
 
 **The Tailwind decision, pulled forward and resolved: not adopted.**
 Decided before P40 started (adopting late would mean rewriting `class=`
@@ -6408,7 +6421,7 @@ conversion). `themes/standard_pages` (independent chain: `"parent":
 ships its own 11-color skin system with light/dark background images
 (`skins/{default,teal,green,…}.css` × light/dark) and live
 `accent-color`/`color-scheme` usage — the closest existing precedent to
-P55's dark-mode work.
+P56's dark-mode work.
 
 Three first-party icon systems are in scope, all converting to SVG
 (P52-G): `themes/default/iconset.css` (PNG background-position
@@ -6573,7 +6586,7 @@ assume the technique transfers unchanged.
 8 pure-CSS/asset modernizations: color tokens in **`oklch()`**, not hex
 (perceptually-uniform, wide-gamut, and what makes relative-color-syntax
 derivations well-behaved); **`light-dark()` + `color-scheme`
-generalized to all 5 chains now**, not deferred to P55 —
+generalized to all 5 chains now**, not deferred to P56 —
 `standard_pages` already uses `accent-color`/`color-scheme` in its
 skins today; **`@property`** for typed custom properties on the
 z-index/spacing scales; **relative color syntax with explicit units**
@@ -6689,7 +6702,7 @@ own explicit call, not silence).
 
 Design tokens are semantic/role-based, never literal —
 `--color-surface`, `--color-border`, `--color-text-primary`,
-`--color-accent`, never `--color-gray-3c3c3c`. This is what lets P54
+`--color-accent`, never `--color-gray-3c3c3c`. This is what lets P56
 land as pure value redefinition in a `dark` variant of the `tokens`
 layer rather than a second markup pass. Color tokens are defined in
 `oklch()`, seeded from the real duplicated literals, with an explicit
@@ -6706,7 +6719,7 @@ Color tokens carry light/dark values via `light-dark()` from the
 start, gated by `color-scheme` on `:root` — generalizing
 `standard_pages`'s live `accent-color`/`color-scheme` usage to all 5
 chains. Each token becomes `--color-surface: light-dark(oklch(...),
-oklch(...));`; P55 then only needs to flip `color-scheme` per user
+oklch(...));`; P56 then only needs to flip `color-scheme` per user
 preference. Hover/active/pressed state shades derive via relative color
 syntax **with explicit percentage units on every channel that needs
 one**: `hsl(from var(--color-accent) h s calc(l * 90%))`, not
@@ -6841,7 +6854,7 @@ quick_search.css`, `print.css`, 92 IDs). Same full sweep. Delete
 858-line `theme.css` + 11-skin light/dark system, 85-96 IDs per file).
 Own `tokens.css` already scoped in P52-B; same full sweep applied to
 `theme.css` and all 11 skin files. Cross-reference this chain's
-existing light/dark skin mechanism against P55's later needs.
+existing light/dark skin mechanism against P56's later needs.
 
 **P52-G (scoped, not started)** — SVG icon-system rewrite, all three
 systems. `iconset.css` (8 `.latte` templates —
@@ -7606,41 +7619,63 @@ full 144-site retype, not a partial one, since a half-converted
 `psParams` (some sites typed, some still indexing loosely) is worse
 than either extreme.
 
+**P54 — i18n modernization.** Found via a full translation-system audit
+(`docs/translation-audit.md`): 322 `.po` files across 70 real-catalog
+locale directories (`ar_MA`/`te_IN` are empty stubs), on the order of
+2,000+ translation call sites, and a root cause deeper than any single
+defect — gettext's literal-English-sentence-as-key design and its raw
+ternary plural math are why 26 locales (49 files) silently fall back to
+English for ordinary counts today, invisibly, and why the fixture DB's
+zero non-English coverage let that ship unnoticed. Scope: replace
+`gettext/gettext`+`gettext/translator` with `symfony/translation`
+configured for ICU MessageFormat, move from source-text-as-key to
+semantic ids (renaming English wording no longer touches every other
+locale's file), author real CLDR-correct plural categories per locale
+instead of gettext's 2-form data, and add the non-English regression
+coverage the test suite has never had. Full plan, phased 0–6, adversarially
+validated across ten manual passes plus an independent 53-agent workflow
+re-checking 83 extracted claims (21 corrections found and folded in,
+including two significant ones: the Latte template parser doesn't
+actually carry the source offsets the planned call-site rewrite needs,
+and 413 real `pwg_getPageString()` call sites in `.ts` were nearly left
+out of scope entirely): `.claude/plans/abundant-bubbling-sutherland.md`
+(session-local plan file, not committed). Not started.
+
 #### New-feature track — lands last
 
-**P54 — Picture pipeline.** `<picture>` AVIF/WebP variants plus ThumbHash
+**P55 — Picture pipeline.** `<picture>` AVIF/WebP variants plus ThumbHash
 blur-up placeholders: new image formats and a new loading-placeholder UX.
 Independent of the refactor track; kept last per the modernize-first
 ordering rather than for a technical dependency. Soft-depends on P36 if
 generated variants should be served through the Vite manifest.
 
-**P55 — Dark mode.** A new user-facing capability (theme toggle,
+**P56 — Dark mode.** A new user-facing capability (theme toggle,
 `prefers-color-scheme`). Depends on P52 — it needs the modernized cascade
 layers and custom properties to add a theme dimension onto cleanly.
 
 #### Closing gate
 
-**P56 — Real quality gates.** `lighthouserc.json` has no `assert` block
+**P57 — Real quality gates.** `lighthouserc.json` has no `assert` block
 today and is collect-only; `.size-limit.json` has one 1 KB placeholder
 budget, whose own name still cites a pre-renumbering phase. Wires real
 Lighthouse perf, a11y and best-practices thresholds and real per-entry
 `size-limit` budgets, and decides whether the risk register's claimed
-"a11y gate" becomes a real automated check. Needs P35–P55's real bundles,
+"a11y gate" becomes a real automated check. Needs P35–P56's real bundles,
 templates and features to measure against.
 
-**P57 — Codebase-wide non-DI audit.** Found while reviewing `Template`
+**P58 — Codebase-wide non-DI audit.** Found while reviewing `Template`
 during P43-G, then extended codebase-wide: a full sweep of every
 `Kernel::container()` call site outside `config/container.php` (225
 across 38 files). Most are already-correct, deliberate design (the
 `Bootstrap` service-locator/orchestration layer, `RedirectService`'s
-established static-resolver pattern) — real scope is two groups. P57-A:
+established static-resolver pattern) — real scope is two groups. P58-A:
 12 domain-service classes with a lazy container-resolver method
 alongside a real constructor; 11 confirmed correctly static (many real
 manual construction sites, a genuine DI-container cycle on
 `HtmlService`, or serving a sibling static method), 1 real conversion
 (`MailService`'s `processCache()`/`currentConfigService()`, undocumented
-and — checked directly — carrying no construction-time cost). P57-B: 8
-fully static-only utility classes plus 2 reclassified from P57-A; 7
+and — checked directly — carrying no construction-time cost). P58-B: 8
+fully static-only utility classes plus 2 reclassified from P58-A; 7
 confirmed genuinely convertible once real callers are checked (most
 already have a real constructor of their own — `DateHelper`,
 `FilesystemHelper`, `PermissionCacheInvalidator`, `ImageBackend`,
@@ -7653,7 +7688,7 @@ phase — no ordering constraint, land whenever convenient. Re-verify
 every call-site count above at execution time rather than trusting this
 snapshot to stay accurate.
 
-**P58 — `default`/`standard_pages` theme-duplication investigation.**
+**P59 — `default`/`standard_pages` theme-duplication investigation.**
 Found while adding live client-side validation to
 `install`/`register`/`profile`/`password` (a duplicate `id="login"` on
 `standard_pages/register.latte`'s own email field, a bug this exact
@@ -7747,7 +7782,7 @@ further apart (the `profile` id mismatch above is the cautionary
 example) rather than committing to either merge or permanent
 duplication.
 
-**P59 — phpstan-latte CAMPAIGN-PENDING.** `phpstan.neon`'s
+**P60 — phpstan-latte CAMPAIGN-PENDING.** `phpstan.neon`'s
 CAMPAIGN-PENDING block holds 26 identifier-wide `ignoreErrors` entries
 scoped to `_analysis/phpstan-latte/*` — P32's two named follow-up
 campaigns, described there and never scheduled. No phase owned them and
@@ -7774,8 +7809,8 @@ carries the wrong type; `assign.php` maps those pairs onto fix
 techniques. Re-run `phpstan-latte:compile` first — a stale compile
 changes the count.
 
-Opened at **P59-A 843** across 74 templates and 63 View classes and
-**P59-B 376** across 72 (P32 recorded ~1,400 and ~450). **A is closed at
+Opened at **P60-A 843** across 74 templates and 63 View classes and
+**P60-B 376** across 72 (P32 recorded ~1,400 and ~450). **A is closed at
 0**; B stands at **314** -- the 62 that have gone were not B work, but
 `empty()`/`==` guards A had to restate on its way past, since `empty()` on
 an object is always false and a comparison against a newly-typed value can
@@ -7796,7 +7831,7 @@ step does not model include arguments. All seven render through
 `MenubarBlockView`, `DisplayBlock::$template`/`$data` and `MenubarView`'s
 asset dispatch went with it.
 
-*P59-A0/A0b (done, `3e6255a4d9`, `fc763eaa57`).* 81 of A's raw 924 were
+*P60-A0/A0b (done, `3e6255a4d9`, `fc763eaa57`).* 81 of A's raw 924 were
 `booleanNot.exprNotBoolean` reading `Latte\Runtime\Template|null` —
 Latte's own compiled `{block}` guard, not template source. A0b refiled 22
 more, the `$ʟ_it ?? null` chaining Latte emits for `{foreach}` in any
@@ -7819,7 +7854,7 @@ its own. A stub *replaces* the real docblock, so Latte's own
 must stay invariant — PHP's own `\CachingIterator` declares invariance
 and `@template-covariant` is rejected outright.
 
-*P59-A — type the producer → View → template chain.* The dominant cause
+*P60-A — type the producer → View → template chain.* The dominant cause
 is not a missing type: it is a typed VO flattened to an array at the View
 constructor, one line before the template that needed it. `assign.php`
 sorts every traced pair into eight fix techniques — these are techniques,
@@ -7940,7 +7975,7 @@ normalizes the checkout path, a pixel baseline cannot. That table's shape
 lives in three places — the file's own docblock and a `@var` over each
 consumer's `require` — and all three must move together.
 
-*P59-B — modernize the template source.* Ordered strictly after A: 154
+*P60-B — modernize the template source.* Ordered strictly after A: 154
 of B's 268 loose comparisons and 28 of its 103 `empty()` calls have
 `mixed` on one side and are undecidable until A lands, and tightening
 types *creates* new always-true/false findings, which are the
@@ -8186,7 +8221,7 @@ as `mixed`. `$ADMIN_PAGE_TITLE` is the case that surfaced it; the
 annotation was present and looked right in the compiled output, which is
 why it read as a template problem rather than a tool one.
 
-## Greenfield tracks (T3, cuttable — outside the P0–P59 backbone)
+## Greenfield tracks (T3, cuttable — outside the P0–P60 backbone)
 
 All entirely cuttable, never gating a backbone commit, dropped first on
 overrun. None have started; each depends on backbone phases that have not
@@ -8261,7 +8296,7 @@ tooling — `axe-core`, `pa11y`, or a Lighthouse `assert` block scoped to
 the a11y category — exists anywhere in this repo. What actually ran
 during P31's 139-template conversion was the VR baseline plus manual
 per-template review, and both stay in place for whatever templates P38
-and later still touch. Making it real is P56's call.
+and later still touch. Making it real is P57's call.
 
 ## MySQL infrastructure notes
 

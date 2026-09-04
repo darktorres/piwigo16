@@ -249,11 +249,12 @@ final readonly class PermissionService
 
         // normalize: real callers pass a mix of int and numeric-string ids
         $categoryIds = array_values(array_map(intval(...), $categoryIds));
+        $categoryIdVos = array_filter(array_map(CategoryId::tryFrom(...), $categoryIds), static fn (mixed $id): bool => $id instanceof CategoryId);
 
         // make sure categories are private and select uppercats or subcats
-        $catIds = $this->categoryRepo->findUppercatIds($categoryIds);
+        $catIds = $this->categoryRepo->findUppercatIds($categoryIdVos);
         if ($applyOnSub) {
-            $catIds = array_merge($catIds, $this->categoryRepo->findSubcategoryIds($categoryIds));
+            $catIds = array_merge($catIds, $this->categoryRepo->findSubcategoryIds($categoryIdVos));
         }
 
         $catIdsForQuery = array_values($catIds);

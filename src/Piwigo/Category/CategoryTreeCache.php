@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Category;
 
 use Piwigo\Category\Projection\ComputedCategoryRow;
+use Piwigo\Common\ValueObject\CategoryId;
 use Psr\Cache\CacheItemPoolInterface;
 
 /**
@@ -55,7 +56,7 @@ final readonly class CategoryTreeCache
         // $cats array that way internally.
         $rollupByCatId = $this->service->getComputedCategories($userId, $level, $forbiddenCategories, null)['categories'];
 
-        $names = $this->repo->findNamesByIds(array_keys($rollupByCatId));
+        $names = $this->repo->findNamesByIds(array_map(CategoryId::from(...), array_keys($rollupByCatId)));
 
         $merged = [];
         foreach ($rollupByCatId as $catId => $row) {

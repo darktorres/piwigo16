@@ -120,7 +120,7 @@ test('findById() returns null for a missing category', function (): void {
 
 test('findNamesByIds() keys by id', function (): void {
     $names = categoryTestRepo()
-        ->findNamesByIds([1, 2]);
+        ->findNamesByIds([CategoryId::from(1), CategoryId::from(2)]);
 
     expect($names['1']->name)
         ->toBe('Sample Album')
@@ -136,7 +136,7 @@ test('findNamesByIds() returns empty for no ids', function (): void {
 test('findSubcategoryIds() matches via uppercats path', function (): void {
     // category 2's uppercats is "1,2" -- it's a subcategory of 1.
     $ids = categoryTestRepo()
-        ->findSubcategoryIds([1]);
+        ->findSubcategoryIds([CategoryId::from(1)]);
     sort($ids);
 
     expect($ids)
@@ -381,7 +381,7 @@ test('findCommonCategories() returns empty for no items', function (): void {
 
 test('findCategoriesByIds() returns matching rows', function (): void {
     $cats = categoryTestRepo()
-        ->findCategoriesByIds([1, 2]);
+        ->findCategoriesByIds([CategoryId::from(1), CategoryId::from(2)]);
 
     $names = array_column($cats, 'name');
     sort($names);
@@ -407,7 +407,7 @@ test('findComputedCategoriesRollup() includes rank', function (): void {
 
 test('findFullCategoriesByIds() returns every column', function (): void {
     $cats = categoryTestRepo()
-        ->findFullCategoriesByIds([1]);
+        ->findFullCategoriesByIds([CategoryId::from(1)]);
 
     expect($cats)
         ->toHaveCount(1);
@@ -453,9 +453,9 @@ test('findStorageLinkedImageIds() returns matching images', function (): void {
         $conn->executeStatement('UPDATE images SET storage_category_id = 1 WHERE id = 1');
 
         $repo = categoryTestRepo();
-        expect($repo->findStorageLinkedImageIds([1]))
+        expect($repo->findStorageLinkedImageIds([CategoryId::from(1)]))
             ->toBe([1])
-            ->and($repo->findStorageLinkedImageIds([2]))
+            ->and($repo->findStorageLinkedImageIds([CategoryId::from(2)]))
             ->toBe([]);
     } finally {
         $conn->executeStatement('UPDATE images SET storage_category_id = NULL WHERE id = 1');
@@ -493,7 +493,7 @@ test('findDistinctLinkedImageIds() returns empty for no ids', function (): void 
 });
 
 test('findNonOrphanImageIds() returns empty for no image ids', function (): void {
-    expect(categoryTestRepo()->findNonOrphanImageIds([], [2]))
+    expect(categoryTestRepo()->findNonOrphanImageIds([], [CategoryId::from(2)]))
         ->toBe([]);
 });
 
@@ -504,7 +504,7 @@ test('findNonOrphanImageIds() keeps only images still linked outside the exclude
     // is a real "still has another home" diff, not just "was in the
     // requested list".
     $ids = categoryTestRepo()
-        ->findNonOrphanImageIds([1, 2, 3, 4, 5], [2]);
+        ->findNonOrphanImageIds([1, 2, 3, 4, 5], [CategoryId::from(2)]);
     sort($ids);
 
     expect($ids)
@@ -516,7 +516,7 @@ test('deleteUserAccessForUsersAndCategories() is a no-op for no user ids', funct
     $before = categoryTestCountRows('user_access', $conn);
 
     categoryTestRepoForConn($conn)
-        ->deleteUserAccessForUsersAndCategories([], [1]);
+        ->deleteUserAccessForUsersAndCategories([], [CategoryId::from(1)]);
 
     expect(categoryTestCountRows('user_access', $conn))
         ->toBe($before);
@@ -527,7 +527,7 @@ test('deleteGroupAccessForGroupsAndCategories() is a no-op for no group ids', fu
     $before = categoryTestCountRows('group_access', $conn);
 
     categoryTestRepoForConn($conn)
-        ->deleteGroupAccessForGroupsAndCategories([], [1]);
+        ->deleteGroupAccessForGroupsAndCategories([], [CategoryId::from(1)]);
 
     expect(categoryTestCountRows('group_access', $conn))
         ->toBe($before);
@@ -701,7 +701,7 @@ test('findDateRangeByCategory() returns the min and max creation date', function
     // NULL it again in a finally block, which both understated what the
     // aggregate had to do (MIN == MAX) and wrote to shared fixture data.
     $range = categoryTestRepo()
-        ->findDateRangeByCategory([1], categoryTestNoPermissionRestriction());
+        ->findDateRangeByCategory([CategoryId::from(1)], categoryTestNoPermissionRestriction());
     expect($range)
         ->toHaveCount(1);
     $entry = array_first($range);
@@ -725,7 +725,7 @@ test('findImageIdsOutsideCategories() returns ids linked to other categories', f
     // rows (images 1, 2, 3) -- category 2's images (4, 5) are dropped,
     // proving the NOT IN condition actually reaches the query.
     $ids = categoryTestRepo()
-        ->findImageIdsOutsideCategories([2]);
+        ->findImageIdsOutsideCategories([CategoryId::from(2)]);
     sort($ids);
 
     expect($ids)
@@ -770,7 +770,7 @@ test('setRepresentativeImageForCategories() is a no-op for no ids', function ():
 test('setRepresentativeImageForCategories() updates every listed category', function (): void {
     $conn = DbConnection::build();
     categoryTestRepoForConn($conn)
-        ->setRepresentativeImageForCategories([1, 2], 3);
+        ->setRepresentativeImageForCategories([CategoryId::from(1), CategoryId::from(2)], 3);
 
     $repId1 = $conn->createQueryBuilder()
         ->select('representative_picture_id')
@@ -907,7 +907,7 @@ test('findPrivateCategoriesGrantedToUser() excludes group-authorized ids', funct
 
     // Same user_access grant, but category 1 is already covered via a
     // group membership -- must be excluded from this result.
-    expect($repo->findPrivateCategoriesGrantedToUser(3, ['1']))
+    expect($repo->findPrivateCategoriesGrantedToUser(3, [CategoryId::from(1)]))
         ->toBe([]);
 });
 
@@ -972,8 +972,8 @@ test('findPrivateCategoriesExcluding() filters out the given ids', function (): 
 
     $repo = categoryTestRepoForConn($conn);
     $none = array_values(array_intersect(array_column($repo->findPrivateCategoriesExcluding([]), 'id'), [1, 2]));
-    $exclude1 = array_values(array_intersect(array_column($repo->findPrivateCategoriesExcluding(['1']), 'id'), [1, 2]));
-    $excludeBoth = array_values(array_intersect(array_column($repo->findPrivateCategoriesExcluding(['1', '2']), 'id'), [1, 2]));
+    $exclude1 = array_values(array_intersect(array_column($repo->findPrivateCategoriesExcluding([CategoryId::from(1)]), 'id'), [1, 2]));
+    $excludeBoth = array_values(array_intersect(array_column($repo->findPrivateCategoriesExcluding([CategoryId::from(1), CategoryId::from(2)]), 'id'), [1, 2]));
 
     expect($none)
         ->toBe([1, 2])
@@ -1295,7 +1295,7 @@ test('findPhotoCountAndDateRange() is zero for a category without images', funct
 
 test('findDistinctImageIdsInCategories() returns the linked images', function (): void {
     $ids = categoryTestRepo()
-        ->findDistinctImageIdsInCategories([1]);
+        ->findDistinctImageIdsInCategories([CategoryId::from(1)]);
     sort($ids);
     expect($ids)
         ->toBe([1, 2, 3]);

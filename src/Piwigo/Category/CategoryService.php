@@ -317,7 +317,7 @@ final readonly class CategoryService
                 ),
             ];
         } else {
-            $names = $this->repo->findNamesByIds(array_map(intval(...), $upperIds));
+            $names = $this->repo->findNamesByIds(array_filter(array_map(CategoryId::tryFrom(...), $upperIds), static fn (mixed $id): bool => $id instanceof CategoryId));
 
             $upperNames = [];
             foreach ($upperIds as $upperId) {
@@ -390,7 +390,9 @@ final readonly class CategoryService
      */
     public function getSubcategoryIds(array $ids): array
     {
-        return $this->repo->findSubcategoryIds($ids);
+        $catIds = array_filter(array_map(CategoryId::tryFrom(...), $ids), static fn (mixed $id): bool => $id instanceof CategoryId);
+
+        return $this->repo->findSubcategoryIds($catIds);
     }
 
     /**
@@ -612,7 +614,9 @@ final readonly class CategoryService
             ? $this->permissionService->getPermissionCriteria()
             : new PermissionCriteria(null, null, null, null, null, null);
 
-        return $this->repo->findCommonCategories($items, $max, $excludedCatIds, $criteria);
+        $excludedCatIdVos = array_filter(array_map(CategoryId::tryFrom(...), $excludedCatIds), static fn (mixed $id): bool => $id instanceof CategoryId);
+
+        return $this->repo->findCommonCategories($items, $max, $excludedCatIdVos, $criteria);
     }
 
     /**
@@ -645,7 +649,7 @@ final readonly class CategoryService
             }
         }
 
-        $listingRows = $this->repo->findCategoriesByIds(array_map(intval(...), array_keys($catIds)));
+        $listingRows = $this->repo->findCategoriesByIds(array_filter(array_map(CategoryId::tryFrom(...), array_keys($catIds)), static fn (mixed $id): bool => $id instanceof CategoryId));
         usort($listingRows, static fn (CategoryListingRow $a, CategoryListingRow $b): int => strnatcasecmp($a->globalRank ?? '', $b->globalRank ?? ''));
 
         $cats = array_map(
@@ -732,7 +736,9 @@ final readonly class CategoryService
             );
         }
 
-        return $this->repo->findSubcategoryIds($validatedIds);
+        $catIds = array_filter(array_map(CategoryId::tryFrom(...), $validatedIds), static fn (mixed $id): bool => $id instanceof CategoryId);
+
+        return $this->repo->findSubcategoryIds($catIds);
     }
 
     /**
@@ -965,11 +971,17 @@ final readonly class CategoryService
      * Admin\UserPermPageRenderer's own "category options: authorized" list.
      *
      * @param  list<string>  $groupAuthorizedCatIds
+     *
+     * Bridges to {@see CategoryRepository::findPrivateCategoriesGrantedToUser()}'s
+     * own `array<CategoryId>` boundary via `tryFrom()`, not `from()`: real
+     * callers pass unvalidated request-derived strings here.
      */
     public function displaySelectPrivateGrantedToUser(int $userId, array $groupAuthorizedCatIds, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
+        $catIds = array_filter(array_map(CategoryId::tryFrom(...), $groupAuthorizedCatIds), static fn (mixed $id): bool => $id instanceof CategoryId);
+
         return $this->sortAndDisplaySelectCategories(
-            $this->repo->findPrivateCategoriesGrantedToUser($userId, $groupAuthorizedCatIds),
+            $this->repo->findPrivateCategoriesGrantedToUser($userId, $catIds),
             [],
             $htmlRenderer
         );
@@ -992,11 +1004,17 @@ final readonly class CategoryService
      * options: not yet authorized" list.
      *
      * @param  list<string>  $excludeCatIds
+     *
+     * Bridges to {@see CategoryRepository::findPrivateCategoriesExcluding()}'s
+     * own `array<CategoryId>` boundary via `tryFrom()`, not `from()`: real
+     * callers pass unvalidated request-derived strings here.
      */
     public function displaySelectPrivateExcluding(array $excludeCatIds, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
+        $catIds = array_filter(array_map(CategoryId::tryFrom(...), $excludeCatIds), static fn (mixed $id): bool => $id instanceof CategoryId);
+
         return $this->sortAndDisplaySelectCategories(
-            $this->repo->findPrivateCategoriesExcluding($excludeCatIds),
+            $this->repo->findPrivateCategoriesExcluding($catIds),
             [],
             $htmlRenderer
         );
@@ -1147,6 +1165,7 @@ final readonly class CategoryService
         // add sub-category ids to the given ids : if a category is deleted, all
         // sub-categories must be so
         $ids = $this->getSubcatIds($ids);
+        $catIdVos = array_filter(array_map(CategoryId::tryFrom(...), $ids), static fn (mixed $id): bool => $id instanceof CategoryId);
 
         $imageService = $this->imageService($activityLogger, $sessionService, $eventDispatcher, $entityManager);
 
@@ -1157,16 +1176,16 @@ final readonly class CategoryService
         // this genuinely atomic means separating the two -- commit the
         // database change, then reconcile the filesystem from recorded
         // state -- which is a larger change than this one.
-        $elementIds = $this->repo->findStorageLinkedImageIds($ids);
+        $elementIds = $this->repo->findStorageLinkedImageIds($catIdVos);
         $imageService->deleteElements($elementIds, $urlService);
 
         // now, should we delete photos that are virtually linked to the category?
         if ($photoDeletionMode === 'delete_orphans' || $photoDeletionMode === 'force_delete') {
-            $imageIdsLinked = $this->repo->findDistinctLinkedImageIds($ids);
+            $imageIdsLinked = $this->repo->findDistinctLinkedImageIds($catIdVos);
 
             if (count($imageIdsLinked) > 0) {
                 if ($photoDeletionMode === 'delete_orphans') {
-                    $imageIdsNotOrphans = $this->repo->findNonOrphanImageIds($imageIdsLinked, $ids);
+                    $imageIdsNotOrphans = $this->repo->findNonOrphanImageIds($imageIdsLinked, $catIdVos);
                     $imageIdsToDelete = array_diff($imageIdsLinked, $imageIdsNotOrphans);
                 } else {
                     $imageIdsToDelete = $imageIdsLinked;
@@ -1190,7 +1209,7 @@ final readonly class CategoryService
         // constraint, a failure between them left permalinks pointing at
         // categories that no longer existed and nothing to clean them up.
         // One statement now, so there is no window to protect.
-        $this->repo->deleteCategoriesByIds($ids);
+        $this->repo->deleteCategoriesByIds($catIdVos);
 
         $eventDispatcher->dispatch(new DeleteCategories($ids));
         $activityLogger->record('album', $ids, 'delete', [
@@ -1219,7 +1238,7 @@ final readonly class CategoryService
         $wrongRepresentant = $this->repo->findWrongRepresentativeCategoryIds($ids);
 
         if (count($wrongRepresentant) > 0) {
-            $this->repo->clearRepresentativePictureIds($wrongRepresentant);
+            $this->repo->clearRepresentativePictureIds(array_map(CategoryId::from(...), $wrongRepresentant));
         }
 
         if (! $this->currentConfig->allowRandomRepresentative) {
@@ -1406,11 +1425,11 @@ final readonly class CategoryService
             if ($unlockChild) {
                 $cats = array_merge($cats, $this->getSubcatIds($categories));
             }
-            $this->repo->updateCategoryVisibility($cats, true);
+            $this->repo->updateCategoryVisibility(array_filter(array_map(CategoryId::tryFrom(...), $cats), static fn (mixed $id): bool => $id instanceof CategoryId), true);
         } else {
             // locking a category => all its child categories become locked
             $subcats = $this->getSubcatIds($categories);
-            $this->repo->updateCategoryVisibility($subcats, false);
+            $this->repo->updateCategoryVisibility(array_filter(array_map(CategoryId::tryFrom(...), $subcats), static fn (mixed $id): bool => $id instanceof CategoryId), false);
         }
 
         return null;
@@ -1429,7 +1448,8 @@ final readonly class CategoryService
      */
     public function setCatCommentable(array $categories, bool|string $value): void
     {
-        $this->repo->updateCategoryCommentable($categories, filter_var($value, FILTER_VALIDATE_BOOLEAN));
+        $catIds = array_filter(array_map(CategoryId::tryFrom(...), $categories), static fn (mixed $id): bool => $id instanceof CategoryId);
+        $this->repo->updateCategoryCommentable($catIds, filter_var($value, FILTER_VALIDATE_BOOLEAN));
     }
 
     /**
@@ -1466,7 +1486,8 @@ final readonly class CategoryService
      */
     public function clearRepresentativePictures(array $categories): void
     {
-        $this->repo->clearRepresentativePictureIds(array_values($categories));
+        $catIds = array_filter(array_map(CategoryId::tryFrom(...), array_values($categories)), static fn (mixed $id): bool => $id instanceof CategoryId);
+        $this->repo->clearRepresentativePictureIds($catIds);
     }
 
     /**
@@ -1505,13 +1526,13 @@ final readonly class CategoryService
         // make public a category => all its parent categories become public
         if ($value === CategoryStatus::Public->value) {
             $uppercats = $this->getUppercatIds($categories);
-            $this->repo->updateCategoryStatus($uppercats, CategoryStatus::Public->value);
+            $this->repo->updateCategoryStatus(array_filter(array_map(CategoryId::tryFrom(...), $uppercats), static fn (mixed $id): bool => $id instanceof CategoryId), CategoryStatus::Public->value);
         }
 
         // make a category private => all its child categories become private
         if ($value === CategoryStatus::Private->value) {
             $subcats = $this->getSubcatIds($categories);
-            $this->repo->updateCategoryStatus($subcats, CategoryStatus::Private->value);
+            $this->repo->updateCategoryStatus(array_filter(array_map(CategoryId::tryFrom(...), $subcats), static fn (mixed $id): bool => $id instanceof CategoryId), CategoryStatus::Private->value);
 
             // We have to keep permissions consistant: a sub-album can't be
             // permitted to a user or group if its parent album is not permitted to
@@ -1549,7 +1570,7 @@ final readonly class CategoryService
             $topCategories = [];
             $parentIds = [];
 
-            $allCategories = $this->repo->findCategoriesByIds(array_values(array_map(intval(...), $categories)));
+            $allCategories = $this->repo->findCategoriesByIds(array_filter(array_map(CategoryId::tryFrom(...), $categories), static fn (mixed $id): bool => $id instanceof CategoryId));
             usort($allCategories, self::compareByGlobalRank(...));
 
             foreach ($allCategories as $cat) {
@@ -1584,7 +1605,8 @@ final readonly class CategoryService
             $parentCats = [];
 
             if (count($parentIds) > 0) {
-                $parentCats = $this->repo->findStatusByIds($parentIds);
+                $parentCatIds = array_filter(array_map(CategoryId::tryFrom(...), $parentIds), static fn (mixed $id): bool => $id instanceof CategoryId);
+                $parentCats = $this->repo->findStatusByIds($parentCatIds);
             }
 
             foreach ($topCategories as $topCategory) {
@@ -1603,6 +1625,7 @@ final readonly class CategoryService
                 }
 
                 $subcats = $this->getSubcatIds([$topCategoryId]);
+                $subcatIds = array_filter(array_map(CategoryId::tryFrom(...), $subcats), static fn (mixed $id): bool => $id instanceof CategoryId);
 
                 foreach (CategoryAccessTarget::cases() as $target) {
                     // what are the permissions user/group of the reference album
@@ -1615,7 +1638,7 @@ final readonly class CategoryService
                     }
 
                     // step 3, remove the inconsistant permissions from sub-albums
-                    $this->repo->deleteInconsistentAccess($target, $refAccess, $subcats);
+                    $this->repo->deleteInconsistentAccess($target, $refAccess, $subcatIds);
                 }
             }
         }
@@ -1626,10 +1649,18 @@ final readonly class CategoryService
      *
      * @param int[] $catIds
      * @return int[]
+     *
+     * Bridges to {@see CategoryRepository::findUppercatIds()}'s own
+     * `array<CategoryId>` boundary via `tryFrom()`, not `from()`: an
+     * invalid id here silently drops (same "doesn't match anything"
+     * behavior a bulk lookup already had before this VO conversion),
+     * rather than throwing and aborting the whole batch.
      */
     public function getUppercatIds(array $catIds): array
     {
-        return $this->repo->findUppercatIds($catIds);
+        $ids = array_filter(array_map(CategoryId::tryFrom(...), $catIds), static fn (mixed $id): bool => $id instanceof CategoryId);
+
+        return $this->repo->findUppercatIds($ids);
     }
 
     /**
@@ -1654,7 +1685,8 @@ final readonly class CategoryService
      */
     public function denyGroupAccess(array $groupIds, array $catIds): void
     {
-        $this->repo->deleteGroupAccessForGroupsAndCategories($groupIds, $catIds);
+        $catIdVos = array_filter(array_map(CategoryId::tryFrom(...), $catIds), static fn (mixed $id): bool => $id instanceof CategoryId);
+        $this->repo->deleteGroupAccessForGroupsAndCategories($groupIds, $catIdVos);
     }
 
     /**
@@ -1663,7 +1695,8 @@ final readonly class CategoryService
      */
     public function denyUserAccess(array $userIds, array $catIds): void
     {
-        $this->repo->deleteUserAccessForUsersAndCategories($userIds, $catIds);
+        $catIdVos = array_filter(array_map(CategoryId::tryFrom(...), $catIds), static fn (mixed $id): bool => $id instanceof CategoryId);
+        $this->repo->deleteUserAccessForUsersAndCategories($userIds, $catIdVos);
     }
 
     /**
@@ -1680,7 +1713,9 @@ final readonly class CategoryService
      */
     public function getRefDatesByCategoryIds(array $categoryIds, CategoryRefDateField $field, CategoryRefDateAggregate $minmax): array
     {
-        return $this->repo->findRefDatesByCategoryIds($categoryIds, $field, $minmax);
+        $catIds = array_filter(array_map(CategoryId::tryFrom(...), $categoryIds), static fn (mixed $id): bool => $id instanceof CategoryId);
+
+        return $this->repo->findRefDatesByCategoryIds($catIds, $field, $minmax);
     }
 
     /**
@@ -1689,7 +1724,9 @@ final readonly class CategoryService
      */
     public function getUppercatsById(array $ids): array
     {
-        return $this->repo->findUppercatsById($ids);
+        $catIds = array_filter(array_map(CategoryId::tryFrom(...), $ids), static fn (mixed $id): bool => $id instanceof CategoryId);
+
+        return $this->repo->findUppercatsById($catIds);
     }
 
     public function updateImageOrder(CategoryId $catId, ?string $imageOrder): void
@@ -1759,7 +1796,7 @@ final readonly class CategoryService
 
         $catDirs = $this->repo->findCategoryDirsById();
         $galleriesUrl = $siteGalleriesUrlLookup->findAllGalleriesUrls();
-        $categories = $this->repo->findCategoriesForFulldirs(array_map(intval(...), $catIds));
+        $categories = $this->repo->findCategoriesForFulldirs(array_filter(array_map(CategoryId::tryFrom(...), $catIds), static fn (mixed $id): bool => $id instanceof CategoryId));
 
         $catDirsCallback = function (array $m) use ($catDirs): string {
             $matchedId = $m[1] ?? null;
@@ -1861,9 +1898,10 @@ final readonly class CategoryService
         }
 
         $newParentSql = $newParent < 1 ? 'NULL' : (string) $newParent;
+        $categoryIdVos = array_filter(array_map(CategoryId::tryFrom(...), $categoryIds), static fn (mixed $id): bool => $id instanceof CategoryId);
 
         $categories = [];
-        foreach ($this->repo->findCategoriesForMove($categoryIds) as $row) {
+        foreach ($this->repo->findCategoriesForMove($categoryIdVos) as $row) {
             $rowHasParent = $row->idUppercat !== null && $row->idUppercat !== 0;
 
             $categories[$row->id] =
@@ -1891,8 +1929,8 @@ final readonly class CategoryService
         }
 
         $entityManager->getConnection()
-            ->transactional(function () use ($categoryIds, $newParentSql, $categories, $entityManager): void {
-                $this->repo->updateCategoryParent($categoryIds, $newParentSql);
+            ->transactional(function () use ($categoryIdVos, $newParentSql, $categories, $entityManager): void {
+                $this->repo->updateCategoryParent($categoryIdVos, $newParentSql);
 
                 $this->updateUppercats();
                 $this->updateGlobalRank();
@@ -2113,7 +2151,7 @@ final readonly class CategoryService
      */
     public function clearRepresentativeImage(CategoryId $categoryId): void
     {
-        $this->repo->clearRepresentativePictureIds([$categoryId->value]);
+        $this->repo->clearRepresentativePictureIds([$categoryId]);
     }
 
     /**
@@ -2121,7 +2159,8 @@ final readonly class CategoryService
      */
     public function setRepresentativeImageForCategories(array $categoryIds, int $imageId): void
     {
-        $this->repo->setRepresentativeImageForCategories($categoryIds, $imageId);
+        $catIds = array_filter(array_map(CategoryId::tryFrom(...), $categoryIds), static fn (mixed $id): bool => $id instanceof CategoryId);
+        $this->repo->setRepresentativeImageForCategories($catIds, $imageId);
     }
 
     /**
@@ -2154,19 +2193,27 @@ final readonly class CategoryService
      */
     public function getCategoriesByIds(array $ids): array
     {
+        $catIds = array_filter(array_map(CategoryId::tryFrom(...), $ids), static fn (mixed $id): bool => $id instanceof CategoryId);
+
         return array_map(
             static fn (CategoryListingRow $row): array => $row->toArray(),
-            $this->repo->findCategoriesByIds($ids)
+            $this->repo->findCategoriesByIds($catIds)
         );
     }
 
     /**
      * @param list<int> $excludeCategoryIds
      * @return list<int>
+     *
+     * Bridges to {@see CategoryRepository::findPrivateCategoryIdsGrantedToUser()}'s
+     * own `array<CategoryId>` boundary via `tryFrom()`, not `from()`: an
+     * invalid id here silently drops rather than throwing.
      */
     public function getPrivateCategoryIdsGrantedToUser(int $userId, array $excludeCategoryIds): array
     {
-        return $this->repo->findPrivateCategoryIdsGrantedToUser($userId, $excludeCategoryIds);
+        $catIds = array_filter(array_map(CategoryId::tryFrom(...), $excludeCategoryIds), static fn (mixed $id): bool => $id instanceof CategoryId);
+
+        return $this->repo->findPrivateCategoryIdsGrantedToUser($userId, $catIds);
     }
 
     public function countAllCategories(): int
@@ -2230,9 +2277,11 @@ final readonly class CategoryService
      */
     public function getIdsNamesUppercatsForIds(array $categoryIds): array
     {
+        $catIds = array_filter(array_map(CategoryId::tryFrom(...), $categoryIds), static fn (mixed $id): bool => $id instanceof CategoryId);
+
         return array_map(
             static fn (CategoryIdNameUppercat $row): array => $row->toArray(),
-            $this->repo->findIdsNamesUppercatsForIds($categoryIds)
+            $this->repo->findIdsNamesUppercatsForIds($catIds)
         );
     }
 
@@ -2267,7 +2316,9 @@ final readonly class CategoryService
      */
     public function getDistinctImageIdsInCategories(array $categoryIds): array
     {
-        return $this->repo->findDistinctImageIdsInCategories($categoryIds);
+        $catIds = array_filter(array_map(CategoryId::tryFrom(...), $categoryIds), static fn (mixed $id): bool => $id instanceof CategoryId);
+
+        return $this->repo->findDistinctImageIdsInCategories($catIds);
     }
 
     /**
@@ -2276,7 +2327,9 @@ final readonly class CategoryService
      */
     public function getDirsByIds(array $ids): array
     {
-        return $this->repo->findDirsByIds($ids);
+        $catIds = array_filter(array_map(CategoryId::tryFrom(...), $ids), static fn (mixed $id): bool => $id instanceof CategoryId);
+
+        return $this->repo->findDirsByIds($catIds);
     }
 
     public function getGalleriesUrlForCategory(int $categoryId, SiteGalleriesUrlLookupInterface $siteGalleriesUrlLookup): ?string
@@ -2313,9 +2366,11 @@ final readonly class CategoryService
      */
     public function getNamesByIds(array $ids): array
     {
+        $catIds = array_filter(array_map(CategoryId::tryFrom(...), $ids), static fn (mixed $id): bool => $id instanceof CategoryId);
+
         return array_map(
             static fn (CategoryIdNamePermalink $row): array => $row->toArray(),
-            $this->repo->findNamesByIds($ids)
+            $this->repo->findNamesByIds($catIds)
         );
     }
 
@@ -2337,7 +2392,9 @@ final readonly class CategoryService
      */
     public function getExistingIds(array $ids): array
     {
-        return $this->repo->findExistingIds($ids);
+        $catIds = array_filter(array_map(CategoryId::tryFrom(...), $ids), static fn (mixed $id): bool => $id instanceof CategoryId);
+
+        return $this->repo->findExistingIds($catIds);
     }
 
     /**
@@ -2347,7 +2404,10 @@ final readonly class CategoryService
      */
     public function getIdsAmongExcluding(array $ids, array $excludeIds): array
     {
-        return $this->repo->findIdsAmongExcluding($ids, $excludeIds);
+        $catIds = array_filter(array_map(CategoryId::tryFrom(...), $ids), static fn (mixed $id): bool => $id instanceof CategoryId);
+        $excludeCatIds = array_filter(array_map(CategoryId::tryFrom(...), $excludeIds), static fn (mixed $id): bool => $id instanceof CategoryId);
+
+        return $this->repo->findIdsAmongExcluding($catIds, $excludeCatIds);
     }
 
     /**
@@ -2411,7 +2471,9 @@ final readonly class CategoryService
      */
     public function getSubcategoryCountsByParent(array $parentIds): array
     {
-        return $this->repo->findSubcategoryCountsByParent($parentIds);
+        $catIds = array_filter(array_map(CategoryId::tryFrom(...), $parentIds), static fn (mixed $id): bool => $id instanceof CategoryId);
+
+        return $this->repo->findSubcategoryCountsByParent($catIds);
     }
 
     /**
@@ -2420,7 +2482,9 @@ final readonly class CategoryService
      */
     public function getRankInfoByIds(array $ids): array
     {
-        return $this->repo->findRankInfoByIds($ids);
+        $catIds = array_filter(array_map(CategoryId::tryFrom(...), $ids), static fn (mixed $id): bool => $id instanceof CategoryId);
+
+        return $this->repo->findRankInfoByIds($catIds);
     }
 
     /**
@@ -2445,7 +2509,9 @@ final readonly class CategoryService
      */
     public function getMoveDetailsByIds(array $ids): array
     {
-        return $this->repo->findMoveDetailsByIds($ids);
+        $catIds = array_filter(array_map(CategoryId::tryFrom(...), $ids), static fn (mixed $id): bool => $id instanceof CategoryId);
+
+        return $this->repo->findMoveDetailsByIds($catIds);
     }
 
     /**
@@ -2454,7 +2520,9 @@ final readonly class CategoryService
      */
     public function getDistinctLinkedImageIds(array $ids): array
     {
-        return $this->repo->findDistinctLinkedImageIds($ids);
+        $catIds = array_filter(array_map(CategoryId::tryFrom(...), $ids), static fn (mixed $id): bool => $id instanceof CategoryId);
+
+        return $this->repo->findDistinctLinkedImageIds($catIds);
     }
 
     /**
@@ -2472,7 +2540,9 @@ final readonly class CategoryService
      */
     public function getNonOrphanImageIds(array $imageIds, array $excludeIds): array
     {
-        return $this->repo->findNonOrphanImageIds($imageIds, $excludeIds);
+        $excludeCatIds = array_filter(array_map(CategoryId::tryFrom(...), $excludeIds), static fn (mixed $id): bool => $id instanceof CategoryId);
+
+        return $this->repo->findNonOrphanImageIds($imageIds, $excludeCatIds);
     }
 
     /**
@@ -2481,7 +2551,9 @@ final readonly class CategoryService
      */
     public function getImageIdsOutsideCategories(array $excludeIds): array
     {
-        return $this->repo->findImageIdsOutsideCategories($excludeIds);
+        $excludeCatIds = array_filter(array_map(CategoryId::tryFrom(...), $excludeIds), static fn (mixed $id): bool => $id instanceof CategoryId);
+
+        return $this->repo->findImageIdsOutsideCategories($excludeCatIds);
     }
 
     /**
@@ -2542,7 +2614,9 @@ final readonly class CategoryService
      */
     public function getUppercatsColumns(array $ids): array
     {
-        return $this->repo->findUppercatsColumns($ids);
+        $catIds = array_filter(array_map(CategoryId::tryFrom(...), $ids), static fn (mixed $id): bool => $id instanceof CategoryId);
+
+        return $this->repo->findUppercatsColumns($catIds);
     }
 
     public function getNextId(): int

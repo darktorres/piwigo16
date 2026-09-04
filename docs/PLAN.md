@@ -5235,32 +5235,179 @@ enumerated guesses the original text used):
   matching the P51-A2 precedent for a large investigation-driven addition
   found mid-phase.
 
-**P51-K2 (scoped, not started)** — backend: narrow `CategoryRepository`'s
-46 bulk `array $ids`-taking methods (25 in `CategoryRepository.php`, 21
-in `CategoryService.php`) from `array<int>`/loosely-typed arrays to
-`array<CategoryId>`, following the proven `FeedRepository`/
+**P51-K2 (scoped, not started; scope corrected below after starting
+execution)** — backend: narrow `CategoryRepository`/`CategoryService`'s
+bulk array-of-ids-taking methods from `array<int>`/loosely-typed arrays
+to `array<CategoryId>`, following the proven `FeedRepository`/
 `GroupRepository`/`CommentRepository` pattern: accept `array<CategoryId>`
 at the signature, unwrap via `array_map(static fn (CategoryId $id): int
 => $id->value, $ids)` immediately before any `IN (:x)` bind, keep
 `ArrayParameterType::INTEGER` explicit on every such bind (single-value
 binds elsewhere in the same methods, if any, pass the VO directly per
-the already-proven pattern). Real per-method external caller counts
-(repository-layer methods are almost all called only from
-`CategoryService.php` itself; the service layer carries the real
-external fan-out, `getSubcatIds` largest at 12 files) are recorded in
-P51-K's own closing note above -- use them to route execution
-service-outward-in per method, not file-by-file. Several of these
-methods' own existing docblocks already flag that real callers "don't
-guarantee a list" (`array_unique()`/`array_merge()` results) -- keep
-`array_values()` before binding wherever that caveat already applies,
-same as today. Independent of every frontend sub-phase; depends only on
-P51-K (this phase converts the `array<CategoryId>` producers this
-carve-out consumes). Verification: scoped PHPStan + full-repo PHPStan,
-ECS, and the full `CategoryRepositoryTest`/`CategoryServiceTest`/
-`EffectiveForbiddenCategoriesCacheTest` suite plus every other Integration/
-Unit test file touched by a real caller update (traced per method, not
-assumed from this list). Update `docs/PLAN.md`'s own entry to "Done"
-with the real final scope once complete, same pattern as P51-K.
+the already-proven pattern).
+
+**Correction to the "46 methods" count in P51-K's own closing note
+above**: that count was produced by grepping only for the literal
+parameter name `$ids`, which missed every method using `$catIds`/
+`$categoryIds`/`$excludeCatIds`/`$parentIds`/`$groupAuthorizedCatIds`/
+etc. instead -- the same class of grep-pattern gap already documented
+repeatedly in `feedback_grep_verification_gotchas_index.md`, just for a
+name-matching grep this time instead of a `--include` flag. A full pass
+over every method signature in both files, read for real semantics (not
+name-guessed), found:
+
+- **38 `CategoryRepository.php` methods** have at least one
+  genuinely category-id-shaped array parameter in scope: `findNamesByIds`,
+  `findSubcategoryIds`, `findCategoriesByIds`, `findFullCategoriesByIds`,
+  `findStorageLinkedImageIds`, `findDistinctLinkedImageIds`,
+  `findImageIdsOutsideCategories` (`$excludeIds`),
+  `findNonOrphanImageIds` (`$excludeIds` only -- `$imageIds` is
+  image-domain, out of scope),
+  `deleteUserAccessForUsersAndCategories` (`$catIds` only -- `$userIds`
+  is `UserId`-domain, out of scope),
+  `deleteGroupAccessForGroupsAndCategories` (`$catIds` only -- `$groupIds`
+  is `GroupId`-domain; both params already wrap through
+  `GroupId::from()`/`CategoryId::from()` internally before binding, so
+  this one simplifies rather than just retypes),
+  `deleteCategoriesByIds`, `clearRepresentativePictureIds`,
+  `updateCategoryVisibility`, `updateCategoryCommentable`,
+  `updateCategoryStatus`, `findStatusByIds`, `findUppercatsColumns`,
+  `findUppercatsById`, `findRefDatesByCategoryIds`, `findUppercatIds`,
+  `findCategoriesForFulldirs`, `findCategoriesForMove`,
+  `updateCategoryParent`, `findDirsByIds`, `findExistingIds`,
+  `findIdsAmongExcluding` (both `$ids`/`$excludeIds`), `findRankInfoByIds`,
+  `findMoveDetailsByIds`, `deleteInconsistentAccess` (`$catIds` only --
+  `$keepIds` is user/group-domain depending on `$target`, out of scope),
+  `findPrivateCategoriesGrantedToUser` (`$groupAuthorizedCatIds` only --
+  `$userId` already handled via `UserId::tryFrom()`),
+  `findPrivateCategoriesExcluding`,
+  `findPrivateCategoryIdsGrantedToUser` (`$excludeCategoryIds` only),
+  `findDateRangeByCategory`, `findIdsNamesUppercatsForIds`,
+  `findDistinctImageIdsInCategories`, `setRepresentativeImageForCategories`
+  (`$categoryIds` only), `findSubcategoryCountsByParent` (`$parentIds` --
+  still category ids, just naming the parent-category axis),
+  `findCommonCategories` (`$excludedCatIds` only -- `$itemIds` is a
+  different domain per its own docblock).
+- **Explicitly excluded, checked and rejected, not just missed**:
+  `findWrongRepresentativeCategoryIds`/`findCategoriesNeedingRandomRepresentative`/
+  their shared private `restrictToCategoryIds()` helper -- all three take
+  `array|int|string $ids = 'all'`, a heterogeneous shape coupled to
+  `CategoryService::updateCategory()`'s own public `array|int|string
+  $ids = 'all'` boundary (itself out of this campaign's id-typing scope,
+  a legacy-shaped flexible parameter, not a plain id array); their scalar
+  branch already dispatches through `CategoryId::tryFrom()` internally,
+  as safe as this campaign's own pattern gets without reshaping that
+  wider public boundary too. `findIdsAndImageOrderWithConditions()`
+  takes a `list<SqlCondition>`, not a raw id array. Real per-method
+  external caller counts (repository-layer methods are almost all called
+  only from `CategoryService.php` itself; the service layer carries the
+  real external fan-out) are recorded in P51-K's own closing note above.
+- **`CategoryService.php`'s own ~21 wrapper methods** (`getSubcategoryIds`,
+  `getSubcatIds`, `getCommonCategories`, `getRelatedCategoriesMenu`,
+  `getRelatedCategoriesMenuWithUrls`, `deleteCategories`, `getUppercatIds`,
+  `denyGroupAccess`, `denyUserAccess`, `getRefDatesByCategoryIds`,
+  `getUppercatsById`, `getFulldirs`, `moveCategories`,
+  `setRepresentativeImageForCategories`, `getCategoriesByIds`,
+  `getPrivateCategoryIdsGrantedToUser`, `getIdsNamesUppercatsForIds`,
+  `getDistinctImageIdsInCategories`, `getDirsByIds`, `getNamesByIds`,
+  `getExistingIds`, `getIdsAmongExcluding`, `getSubcategoryCountsByParent`,
+  `getRankInfoByIds`, `getMoveDetailsByIds`, `getDistinctLinkedImageIds`,
+  `getNonOrphanImageIds`, `getImageIdsOutsideCategories`,
+  `getUppercatsColumns`, `displaySelectPrivateGrantedToUser`,
+  `displaySelectPrivateExcluding`) mirror the repository layer 1:1 --
+  same in/out-of-scope-per-param split, checked the same way once the
+  repository layer's own conversion is done and each service method's
+  real external callers are traced (this list is a starting map from the
+  repository-layer read above, not yet independently re-verified against
+  every service method's own body -- do that as each one is converted,
+  not assumed from this table).
+
+**Execution split into two batches given the corrected, much larger
+real size** (mirrors the P51-A2/P51-K carve-out precedent for scope
+found larger than planned mid-phase, and the standing "commit as soon as
+a sub-item is done" instruction).
+
+**P51-K2a (Done)** converted all 38 `CategoryRepository.php` signatures
+(one param each, or two for `findIdsAmongExcluding`) plus their internal
+`IN`/`NOT IN`-clause bindings (`array_map(static fn (CategoryId $id):
+int => $id->value, $ids)` immediately before each bind, keeping every
+bind's existing/added explicit `ArrayParameterType::INTEGER`). Every
+docblock that named the parameter `list<CategoryId>` was relaxed to
+`array<CategoryId>` -- PHPStan's own `argument.type` pass caught that a
+`list<T>` contract cannot accept the `array_filter(array_map(...))`
+bridging shape used at almost every call site (an `array_filter()`
+result is not statically provable as re-indexed), and none of these 38
+methods actually depend on contiguous 0-indexed keys (each only
+`array_map`s/`foreach`s/binds the array, never index-accesses it) -- the
+same "real callers don't guarantee a list" reasoning several of this
+file's own pre-existing docblocks already used for other parameters,
+just not consistently applied to the newly-VO-typed ones at first.
+
+Bridged every real caller found by an exhaustive tree-wide grep (not
+just `CategoryService.php`, which the "starting map" table above
+undercounted): `CategoryService.php` itself (every wrapper method, plus
+several deeper non-wrapper internal call sites the table's one-line-per-
+method view missed entirely -- multi-step methods like
+`setCatStatusWithinTransaction()`/`deleteCategories()`/`moveCategories()`
+call more than one converted repository method against the same
+underlying id array, sometimes reusing a variable that must stay `int[]`
+for an unrelated purpose (an `ActivityLogger`/`EventDispatcher` payload)
+alongside the newly-needed `CategoryId[]` bridge -- solved by
+introducing a second, bridged-only local variable rather than mutating
+the shared one), `PermissionService::addPermissionOnCategory()`
+(L2aCoreDomain caller reaching `CategoryRepository` directly, bypassing
+`CategoryService` on purpose per its own docblock -- missed by a
+`CategoryService.php`-only search), `CategoryCatsRenderer.php` (2 sites)
+and `Search\SearchFilterRenderer.php` (1 site, needed a new `CategoryId`
+import) reaching `CategoryRepository` directly too, and
+`CategoryTreeCache.php` (1 site, its own `CategoryRepository $repo`
+property, also needed a new import) -- found only by grepping every
+`CategoryRepository`-typed property/constructor-param across the whole
+tree, not assumed from the plan's own starting list. One real, separate
+pre-existing bug found and fixed along the way:
+`CategoryService::clearRepresentativeImage()` was passing
+`[$categoryId->value]` (unwrapping a VO it already held, back to a raw
+int) into what was about to become a `CategoryId[]`-only parameter --
+simplified to `[$categoryId]` directly. Chose `CategoryId::from()` only
+where the bridged value traces to an already-persisted row's own id
+(e.g. a DB-hydrated `ComputedCategoryRow::$catId`/`CategoryListingRow`
+result already used with `from()` elsewhere in the same loop);
+`CategoryId::tryFrom()` + `array_filter()` everywhere else, preserving
+each site's pre-existing "an invalid id just doesn't match anything"
+behavior instead of introducing a new throw a bulk operation didn't have
+before. Updated both `CategoryRepositoryTest` files' (Unit + Integration)
+literal-array call sites for the 38 methods via verified, exact-match
+scripted substitutions (each pairing checked against the literal source
+already read, not a blind regex) -- `CategoryServiceTest`/
+`EffectiveForbiddenCategoriesCacheTest` needed no changes, since they
+only exercise `CategoryService`'s own (still-`array<int>`) public
+boundary. Verified via a scoped PHPStan pass on the full touched diff
+(clean, after the `list`→`array` docblock relaxation), a full-repo
+PHPStan pass (the same 18 pre-existing, unrelated `PictureElement::
+$titleEsc` Latte errors, zero touching `Category`), ECS, the full
+`CategoryRepositoryTest`/`CategoryServiceTest`/
+`EffectiveForbiddenCategoriesCacheTest` Integration suite (180/180) and
+Unit suite (189/189, plus `PermissionServiceTest`), a scoped
+`PermissionServiceTest` Integration run (11/11, including its own
+"apply on sub also grants the subcategory" case exercising the
+`addPermissionOnCategory()` bridge), `CategoryCatsRendererTest`/
+`SearchFilterRendererTest` Integration (11/11, including the
+`findDateRangeByCategory()`-exercising "shows the date range" case), and
+2 targeted Browser tests covering `SearchFilterRenderer::
+renderAlbumsFound()` specifically (the only test coverage, Browser-only,
+for that exact bridge) -- both green.
+
+**P51-K2b (scoped, not started)** converts `CategoryService.php`'s ~21
+public wrapper signatures themselves to `array<CategoryId>` and updates
+every real external caller (traced fresh per method with a tree-wide
+grep against `CategoryRepository`-typed AND `CategoryService`-typed
+properties both -- P51-K2a's own experience shows the plan's "starting
+map" undercounts real callers reliably enough that a fresh, exhaustive
+trace is required, not an incremental patch of the existing table).
+Verification: same suite as P51-K2a, plus every other Integration/Unit
+test file a real caller update touches (traced per method, not assumed).
+Update `docs/PLAN.md`'s own entry to "Done" with the real final scope
+once complete, same pattern as P51-K.
 
 **P51-L (scoped, not started)** — closing re-read and full-suite gate. A
 re-read of every file actually touched by P51-A through P51-K2, done

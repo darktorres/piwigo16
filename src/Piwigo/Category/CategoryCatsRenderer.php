@@ -172,8 +172,9 @@ final readonly class CategoryCatsRenderer
         // findFullCategoriesByIds() returns typed Category
         // projections -- unboxed to array here since $fullById feeds
         // array_merge() below, which a readonly object can't participate in.
+        // $catIds are already-persisted rows' own ids, so from() is safe.
         $fullById = [];
-        foreach ($categoryRepo->findFullCategoriesByIds($catIds) as $full) {
+        foreach ($categoryRepo->findFullCategoriesByIds(array_map(CategoryId::from(...), $catIds)) as $full) {
             $fullById[$full->id->value] = $full->toArray();
         }
 
@@ -261,7 +262,7 @@ final readonly class CategoryCatsRenderer
 
         if ($this->currentConfig->displayFromto) {
             if (count($categoryIds) > 0) {
-                $datesOfCategory = $this->categoryRepo->findDateRangeByCategory($categoryIds, $this->permissionService->getPermissionCriteria());
+                $datesOfCategory = $this->categoryRepo->findDateRangeByCategory(array_map(CategoryId::from(...), $categoryIds), $this->permissionService->getPermissionCriteria());
             }
         }
 

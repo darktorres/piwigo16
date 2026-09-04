@@ -111,7 +111,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testFindNamesByIdsKeysById(): void
         {
-            $names = $this->repo->findNamesByIds([1, 2]);
+            $names = $this->repo->findNamesByIds([CategoryId::from(1), CategoryId::from(2)]);
 
             self::assertSame('Sample Album', $names['1']->name);
             self::assertSame('Nested Sub Album', $names['2']->name);
@@ -125,7 +125,7 @@ namespace Piwigo\Tests\Integration {
         public function testFindSubcategoryIdsMatchesViaUppercatsPath(): void
         {
             // category 2's uppercats is "1,2" -- it's a subcategory of 1.
-            $ids = $this->repo->findSubcategoryIds([1]);
+            $ids = $this->repo->findSubcategoryIds([CategoryId::from(1)]);
             sort($ids);
 
             self::assertSame([1, 2], $ids);
@@ -348,7 +348,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testFindCategoriesByIdsReturnsMatchingRows(): void
         {
-            $cats = $this->repo->findCategoriesByIds([1, 2]);
+            $cats = $this->repo->findCategoriesByIds([CategoryId::from(1), CategoryId::from(2)]);
 
             $names = array_column($cats, 'name');
             sort($names);
@@ -372,7 +372,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testFindFullCategoriesByIdsReturnsEveryColumn(): void
         {
-            $cats = $this->repo->findFullCategoriesByIds([1]);
+            $cats = $this->repo->findFullCategoriesByIds([CategoryId::from(1)]);
 
             self::assertCount(1, $cats);
             $cat = $cats[0];
@@ -410,8 +410,8 @@ namespace Piwigo\Tests\Integration {
             try {
                 $this->conn->executeStatement('UPDATE images SET storage_category_id = 1 WHERE id = 1');
 
-                self::assertSame([1], $this->repo->findStorageLinkedImageIds([1]));
-                self::assertSame([], $this->repo->findStorageLinkedImageIds([2]));
+                self::assertSame([1], $this->repo->findStorageLinkedImageIds([CategoryId::from(1)]));
+                self::assertSame([], $this->repo->findStorageLinkedImageIds([CategoryId::from(2)]));
             } finally {
                 $this->conn->executeStatement('UPDATE images SET storage_category_id = NULL WHERE id = 1');
             }
@@ -452,7 +452,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testFindNonOrphanImageIdsReturnsEmptyForNoImageIds(): void
         {
-            self::assertSame([], $this->repo->findNonOrphanImageIds([], [2]));
+            self::assertSame([], $this->repo->findNonOrphanImageIds([], [CategoryId::from(2)]));
         }
 
         public function testFindNonOrphanImageIdsKeepsOnlyImagesStillLinkedOutsideTheExcludedCategories(): void
@@ -462,7 +462,7 @@ namespace Piwigo\Tests\Integration {
             // category 2, the excluded one -- they don't survive, proving this
             // is a real "still has another home" diff, not just "was in the
             // requested list".
-            $ids = $this->repo->findNonOrphanImageIds([1, 2, 3, 4, 5], [2]);
+            $ids = $this->repo->findNonOrphanImageIds([1, 2, 3, 4, 5], [CategoryId::from(2)]);
             sort($ids);
 
             self::assertSame([1, 2, 3], $ids);
@@ -472,7 +472,7 @@ namespace Piwigo\Tests\Integration {
         {
             $before = $this->countRows('user_access');
 
-            $this->repo->deleteUserAccessForUsersAndCategories([], [1]);
+            $this->repo->deleteUserAccessForUsersAndCategories([], [CategoryId::from(1)]);
 
             $after = $this->countRows('user_access');
             self::assertSame($before, $after);
@@ -482,7 +482,7 @@ namespace Piwigo\Tests\Integration {
         {
             $before = $this->countRows('group_access');
 
-            $this->repo->deleteGroupAccessForGroupsAndCategories([], [1]);
+            $this->repo->deleteGroupAccessForGroupsAndCategories([], [CategoryId::from(1)]);
 
             $after = $this->countRows('group_access');
             self::assertSame($before, $after);
@@ -643,7 +643,7 @@ namespace Piwigo\Tests\Integration {
             // date and NULL it again in a finally block, which both
             // understated what the aggregate had to do (MIN == MAX) and wrote
             // to shared fixture data.
-            $range = $this->repo->findDateRangeByCategory([1], self::noPermissionRestriction());
+            $range = $this->repo->findDateRangeByCategory([CategoryId::from(1)], self::noPermissionRestriction());
             self::assertCount(1, $range);
             $entry = array_first($range);
 
@@ -661,7 +661,7 @@ namespace Piwigo\Tests\Integration {
             // Excluding category 2 leaves only category 1's own image_category
             // rows (images 1, 2, 3) -- category 2's images (4, 5) are dropped,
             // proving the NOT IN condition actually reaches the query.
-            $ids = $this->repo->findImageIdsOutsideCategories([2]);
+            $ids = $this->repo->findImageIdsOutsideCategories([CategoryId::from(2)]);
             sort($ids);
 
             self::assertSame([1, 2, 3], $ids);
@@ -703,7 +703,7 @@ namespace Piwigo\Tests\Integration {
         public function testSetRepresentativeImageForCategoriesUpdatesEveryListedCategory(): void
         {
             try {
-                $this->repo->setRepresentativeImageForCategories([1, 2], 3);
+                $this->repo->setRepresentativeImageForCategories([CategoryId::from(1), CategoryId::from(2)], 3);
 
                 $repId1 = $this->conn->createQueryBuilder()
                     ->select('representative_picture_id')
@@ -743,7 +743,7 @@ namespace Piwigo\Tests\Integration {
             self::assertEquals([
                 new CategoryIdNameUppercat(1, 'Sample Album', null),
                 new CategoryIdNameUppercat(2, 'Nested Sub Album', 1),
-            ], $this->repo->findIdsNamesUppercatsForIds(['1', '2']));
+            ], $this->repo->findIdsNamesUppercatsForIds([CategoryId::from(1), CategoryId::from(2)]));
         }
 
         public function testFindDirsByIdsReturnsNullForAVirtualCategory(): void
@@ -753,7 +753,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame([
                 1 => null,
                 2 => null,
-            ], $this->repo->findDirsByIds([1, 2]));
+            ], $this->repo->findDirsByIds([CategoryId::from(1), CategoryId::from(2)]));
         }
 
         public function testFindDirsByIdsReturnsTheRealDirForAPhysicalCategory(): void
@@ -764,7 +764,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertSame([
                     1 => 'sample_album',
                     2 => null,
-                ], $this->repo->findDirsByIds([1, 2]));
+                ], $this->repo->findDirsByIds([CategoryId::from(1), CategoryId::from(2)]));
             } finally {
                 $this->conn->executeStatement('UPDATE categories SET dir = NULL WHERE id = 1');
             }
@@ -787,24 +787,24 @@ namespace Piwigo\Tests\Integration {
 
         public function testFindIdsAmongExcludingReturnsEmptyForNoIds(): void
         {
-            self::assertSame([], $this->repo->findIdsAmongExcluding([], [2]));
+            self::assertSame([], $this->repo->findIdsAmongExcluding([], [CategoryId::from(2)]));
         }
 
         public function testFindIdsAmongExcludingReturnsMatchingIdsWhenNothingIsExcluded(): void
         {
-            $ids = $this->repo->findIdsAmongExcluding([1, 2], []);
+            $ids = $this->repo->findIdsAmongExcluding([CategoryId::from(1), CategoryId::from(2)], []);
             sort($ids);
             self::assertSame([1, 2], $ids);
         }
 
         public function testFindIdsAmongExcludingDropsExcludedIds(): void
         {
-            self::assertSame([1], $this->repo->findIdsAmongExcluding([1, 2], [2]));
+            self::assertSame([1], $this->repo->findIdsAmongExcluding([CategoryId::from(1), CategoryId::from(2)], [CategoryId::from(2)]));
         }
 
         public function testFindIdsAmongExcludingDropsNonExistentIds(): void
         {
-            self::assertSame([1], $this->repo->findIdsAmongExcluding([1, 999999], []));
+            self::assertSame([1], $this->repo->findIdsAmongExcluding([CategoryId::from(1), CategoryId::from(999999)], []));
         }
 
         public function testFindSubcategoryCountsByParentReturnsEmptyForNoParentIds(): void
@@ -907,7 +907,7 @@ namespace Piwigo\Tests\Integration {
 
                 // Same user_access grant, but category 1 is already covered via a
                 // group membership -- must be excluded from this result.
-                self::assertSame([], $this->repo->findPrivateCategoriesGrantedToUser(3, ['1']));
+                self::assertSame([], $this->repo->findPrivateCategoriesGrantedToUser(3, [CategoryId::from(1)]));
             } finally {
                 $this->conn->executeStatement('DELETE FROM user_access WHERE user_id = 3 AND cat_id = 1');
             }
@@ -961,8 +961,8 @@ namespace Piwigo\Tests\Integration {
             $this->conn->executeStatement("UPDATE categories SET status = 'private'");
 
             self::assertSame([1, 2], array_column($this->repo->findPrivateCategoriesExcluding([]), 'id'));
-            self::assertSame([2], array_column($this->repo->findPrivateCategoriesExcluding(['1']), 'id'));
-            self::assertSame([], array_column($this->repo->findPrivateCategoriesExcluding(['1', '2']), 'id'));
+            self::assertSame([2], array_column($this->repo->findPrivateCategoriesExcluding([CategoryId::from(1)]), 'id'));
+            self::assertSame([], array_column($this->repo->findPrivateCategoriesExcluding([CategoryId::from(1), CategoryId::from(2)]), 'id'));
         }
 
         public function testFindIdNameUppercatsRankAppliesTheGivenCondition(): void
@@ -1186,7 +1186,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testFindDistinctImageIdsInCategoriesReturnsTheLinkedImages(): void
         {
-            $ids = $this->repo->findDistinctImageIdsInCategories([1]);
+            $ids = $this->repo->findDistinctImageIdsInCategories([CategoryId::from(1)]);
             sort($ids);
             self::assertSame([1, 2, 3], $ids);
         }

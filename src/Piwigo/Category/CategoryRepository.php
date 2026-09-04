@@ -135,13 +135,16 @@ final readonly class CategoryRepository
     }
 
     /**
-     * @param  list<int>  $ids
+     * @param  array<CategoryId>  $ids
      * @return array<int, CategoryIdNamePermalink> keyed by id
      *
      * Real DQL -- single-table, static WHERE, no join DQL can't express.
      * `c.id`/`c.permalink` are custom-Typed (`category_id`/`permalink`),
      * so `getArrayResult()` (Gotcha #1) returns real VO instances for
-     * them -- unwrapped below.
+     * them -- unwrapped below. `$ids` unwraps to raw ints before the
+     * `IN`-clause bind (array-parameter binding doesn't route through a
+     * custom field Type, see {@see \Piwigo\Group\GroupRepository}'s own
+     * docblock).
      */
     public function findNamesByIds(array $ids): array
     {
@@ -152,7 +155,7 @@ final readonly class CategoryRepository
         $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.permalink')
             ->where('c.id IN (:ids)')
-            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+            ->setParameter('ids', array_map(static fn (CategoryId $id): int => $id->value, $ids), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 
@@ -246,7 +249,7 @@ final readonly class CategoryRepository
      * original free function used (`DB_REGEX_OPERATOR`, platform-specific:
      * `REGEXP` on MySQL/MariaDB).
      *
-     * @param  list<int>  $ids
+     * @param  array<CategoryId>  $ids
      * @return list<int>
      *
      * `REGEXP`'s MySQL/MariaDB-specific *operator name* is portable via a
@@ -255,7 +258,9 @@ final readonly class CategoryRepository
      * getRegexpExpression()`. Real DQL -- see that class's own docblock
      * for the real remaining Postgres-portability caveat (the pattern
      * *syntax* below, not just the operator, would need a
-     * platform-specific rewrite for genuine Postgres support).
+     * platform-specific rewrite for genuine Postgres support). Each
+     * `$categoryId` is spliced into the pattern string as `->value`, not a
+     * bound parameter -- unrelated to the `IN`-clause VO-array caveat.
      */
     public function findSubcategoryIds(array $ids): array
     {
@@ -269,7 +274,7 @@ final readonly class CategoryRepository
         $clauses = [];
         foreach ($ids as $num => $categoryId) {
             $param = 'id' . $num;
-            $qb->setParameter($param, '(^|,)' . $categoryId . '(,|$)');
+            $qb->setParameter($param, '(^|,)' . $categoryId->value . '(,|$)');
             $clauses[] = 'REGEXP(c.uppercats, :' . $param . ') = true';
         }
 
@@ -558,7 +563,7 @@ final readonly class CategoryRepository
 
     /**
      * @param  list<int>  $itemIds
-     * @param  list<int>  $excludedCatIds
+     * @param  array<CategoryId>  $excludedCatIds
      * @return array<int, CategoryUppercatsCounter> keyed by id
      *
      * Uses a typed {@see PermissionCriteria} -- the one real caller applies
@@ -567,6 +572,9 @@ final readonly class CategoryRepository
      * ({@see \Piwigo\Image\ImageCategoryEntity}), and
      * {@see PermissionCriteria}'s `*Condition()` methods work identically
      * against a DQL query builder (see {@see applyCondition()}).
+     * `$itemIds` is image-domain, stays raw int; `$excludedCatIds`
+     * unwraps to raw ints before its own `IN`-clause bind (see
+     * {@see findNamesByIds()}'s own note above).
      */
     public function findCommonCategories(array $itemIds, ?int $max, array $excludedCatIds, PermissionCriteria $criteria): array
     {
@@ -590,7 +598,7 @@ final readonly class CategoryRepository
 
         if ($excludedCatIds !== []) {
             $qb->andWhere('ic.category NOT IN (:excludedCatIds)')
-                ->setParameter('excludedCatIds', $excludedCatIds, ArrayParameterType::INTEGER);
+                ->setParameter('excludedCatIds', array_map(static fn (CategoryId $id): int => $id->value, $excludedCatIds), ArrayParameterType::INTEGER);
         }
 
         if ($max !== null) {
@@ -623,11 +631,13 @@ final readonly class CategoryRepository
      * narrower 6-column contract than the full Category Projection, see
      * findFullCategoriesByIds()'s own docblock.
      *
-     * @param  list<int>  $ids
+     * @param  array<CategoryId>  $ids
      * @return list<CategoryListingRow>
      *
      * Real DQL -- single-table, static WHERE. `c.id`/`c.permalink` are
-     * custom-Typed -- see this class's own Gotcha #1 note above.
+     * custom-Typed -- see this class's own Gotcha #1 note above. `$ids`
+     * unwraps to raw ints before the `IN`-clause bind (see
+     * {@see findNamesByIds()}'s own note above).
      */
     public function findCategoriesByIds(array $ids): array
     {
@@ -638,7 +648,7 @@ final readonly class CategoryRepository
         $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.permalink', 'c.idUppercat AS id_uppercat', 'c.uppercats', 'c.globalRank AS global_rank')
             ->where('c.id IN (:ids)')
-            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+            ->setParameter('ids', array_map(static fn (CategoryId $id): int => $id->value, $ids), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 
@@ -670,12 +680,14 @@ final readonly class CategoryRepository
      * being displayed on one page -- never the whole tree, unlike
      * CategoryTreeCache's own cached rollup.
      *
-     * @param  list<int>  $ids
+     * @param  array<CategoryId>  $ids
      * @return list<Category>
      *
      * Fetches the full entity (object hydration, same as {@see findById()})
      * instead of a `SELECT *` DBAL row, and maps through {@see
-     * Category::fromEntity()} instead of {@see Category::fromRow()}.
+     * Category::fromEntity()} instead of {@see Category::fromRow()}. `$ids`
+     * unwraps to raw ints before the `IN`-clause bind (see
+     * {@see findNamesByIds()}'s own note above).
      */
     public function findFullCategoriesByIds(array $ids): array
     {
@@ -685,7 +697,7 @@ final readonly class CategoryRepository
 
         $entities = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->where('c.id IN (:ids)')
-            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+            ->setParameter('ids', array_map(static fn (CategoryId $id): int => $id->value, $ids), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getResult();
 
@@ -709,7 +721,7 @@ final readonly class CategoryRepository
     }
 
     /**
-     * @param  list<int>  $ids
+     * @param  array<CategoryId>  $ids
      * @return list<int>
      *
      * Real DQL -- `images` is owned by the Image domain (`Piwigo\Image`,
@@ -720,6 +732,8 @@ final readonly class CategoryRepository
      * `ImageEntity::$storageCategory`'s owning side lives on `Image`, not
      * `CategoryEntity`, so this filters through the bare association path
      * the same way it filtered through the plain scalar column before.
+     * `$ids` unwraps to raw ints before the `IN`-clause bind (see
+     * {@see findNamesByIds()}'s own note above).
      */
     public function findStorageLinkedImageIds(array $ids): array
     {
@@ -734,7 +748,7 @@ final readonly class CategoryRepository
                 ->select('i.id')
                 ->from(ImageEntity::class, 'i')
                 ->where('i.storageCategory IN (:ids)')
-                ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+                ->setParameter('ids', array_map(static fn (CategoryId $id): int => $id->value, $ids), ArrayParameterType::INTEGER)
                 ->getQuery()
                 ->getSingleColumnResult()
         ));
@@ -780,7 +794,7 @@ final readonly class CategoryRepository
     }
 
     /**
-     * @param  list<int>  $ids
+     * @param  array<CategoryId>  $ids
      * @return list<int>
      *
      * Real DQL -- single-table; `image_category` is mapped
@@ -790,7 +804,8 @@ final readonly class CategoryRepository
      * (a bare association path there changes the generated SQL itself,
      * not just how the result is read), so `getSingleColumnResult()`'s own
      * "never applies a custom Type" safety (Gotcha #4) is no longer the
-     * relevant reasoning here.
+     * relevant reasoning here. `$ids` unwraps to raw ints before the
+     * `IN`-clause bind (see {@see findNamesByIds()}'s own note above).
      */
     public function findDistinctLinkedImageIds(array $ids): array
     {
@@ -803,7 +818,7 @@ final readonly class CategoryRepository
             ->select('DISTINCT IDENTITY(ic.image)')
             ->from(ImageCategoryEntity::class, 'ic')
             ->where('ic.category IN (:ids)')
-            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+            ->setParameter('ids', array_map(static fn (CategoryId $id): int => $id->value, $ids), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getSingleColumnResult();
 
@@ -816,16 +831,15 @@ final readonly class CategoryRepository
      * that would become orphaned by dropping $excludeIds.
      *
      * @param  list<int>  $imageIds
-     * @param  list<int>  $excludeIds
+     * @param  array<CategoryId>  $excludeIds
      * @return list<int>
      *
      * Real DQL -- single-table; `image_category` is mapped
-     * ({@see ImageCategoryEntity}). Both filtered columns bind as
-     * `ArrayParameterType::INTEGER` IN-lists (raw ints, not wrapped
-     * through CategoryId -- the IN-clause array bind doesn't route
-     * through a field's custom Doctrine Type reliably, same established
-     * convention as {@see deleteGroupAccessForGroupsAndCategories()}
-     * elsewhere in this class). `$excludeIds` is still spliced in unconditionally,
+     * ({@see ImageCategoryEntity}). `$imageIds` is image-domain, stays raw
+     * int; `$excludeIds` unwraps to raw ints before its own `IN`-clause
+     * bind (see {@see findNamesByIds()}'s own note above), same
+     * established convention as {@see deleteGroupAccessForGroupsAndCategories()}
+     * elsewhere in this class. `$excludeIds` is still spliced in unconditionally,
      * even when empty.
      */
     public function findNonOrphanImageIds(array $imageIds, array $excludeIds): array
@@ -841,7 +855,7 @@ final readonly class CategoryRepository
             ->where('ic.image IN (:imageIds)')
             ->andWhere('ic.category NOT IN (:excludeIds)')
             ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER)
-            ->setParameter('excludeIds', $excludeIds, ArrayParameterType::INTEGER)
+            ->setParameter('excludeIds', array_map(static fn (CategoryId $id): int => $id->value, $excludeIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getSingleColumnResult();
 
@@ -859,13 +873,14 @@ final readonly class CategoryRepository
      * matching row so the caller can avoid sending a huge `image_id IN
      * (...)` list when the recursive set is large).
      *
-     * @param  list<int>  $excludeIds
+     * @param  array<CategoryId>  $excludeIds
      * @return list<int>
      *
      * Real DQL -- single-table; `image_category` is mapped
      * ({@see ImageCategoryEntity}). No DISTINCT -- this method
      * deliberately returns every matching row, see the class comment
-     * above.
+     * above. `$excludeIds` unwraps to raw ints before the `IN`-clause
+     * bind (see {@see findNamesByIds()}'s own note above).
      */
     public function findImageIdsOutsideCategories(array $excludeIds): array
     {
@@ -874,7 +889,7 @@ final readonly class CategoryRepository
             ->select('IDENTITY(ic.image)')
             ->from(ImageCategoryEntity::class, 'ic')
             ->where('ic.category NOT IN (:excludeIds)')
-            ->setParameter('excludeIds', $excludeIds, ArrayParameterType::INTEGER)
+            ->setParameter('excludeIds', array_map(static fn (CategoryId $id): int => $id->value, $excludeIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getSingleColumnResult();
 
@@ -890,7 +905,7 @@ final readonly class CategoryRepository
      * ON DELETE CASCADE, so deleting the category removes them.
      *
      * @param  array<int>  $userIds
-     * @param  array<int>  $catIds
+     * @param  array<CategoryId>  $catIds
      */
     public function deleteUserAccessForUsersAndCategories(array $userIds, array $catIds): void
     {
@@ -904,7 +919,7 @@ final readonly class CategoryRepository
             ->where('ua.userId IN (:userIds)')
             ->andWhere('ua.catId IN (:catIds)')
             ->setParameter('userIds', $userIds, ArrayParameterType::INTEGER)
-            ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER)
+            ->setParameter('catIds', array_map(static fn (CategoryId $id): int => $id->value, $catIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();
@@ -912,13 +927,14 @@ final readonly class CategoryRepository
 
     /**
      * Same as {@see deleteUserAccessForUsersAndCategories()}, for groups.
-     * Both arrays wrap through the VO before binding: GroupAccessEntity's
-     * columns are custom-typed, and the IN-clause array bind does not route
-     * through a field's Doctrine Type reliably, so the ints are unwrapped
-     * again with an explicit ArrayParameterType::INTEGER.
+     * `$groupIds` wraps through {@see GroupId} before binding;
+     * GroupAccessEntity's columns are custom-typed, and the IN-clause
+     * array bind does not route through a field's Doctrine Type reliably,
+     * so the ints are unwrapped again with an explicit
+     * ArrayParameterType::INTEGER.
      *
      * @param  array<int>  $groupIds
-     * @param  array<int>  $catIds
+     * @param  array<CategoryId>  $catIds
      */
     public function deleteGroupAccessForGroupsAndCategories(array $groupIds, array $catIds): void
     {
@@ -932,14 +948,17 @@ final readonly class CategoryRepository
             ->where('ga.groupId IN (:groupIds)')
             ->andWhere('ga.catId IN (:catIds)')
             ->setParameter('groupIds', array_map(static fn (int $id): int => GroupId::from($id)->value, $groupIds), ArrayParameterType::INTEGER)
-            ->setParameter('catIds', array_map(static fn (int $id): int => CategoryId::from($id)->value, $catIds), ArrayParameterType::INTEGER)
+            ->setParameter('catIds', array_map(static fn (CategoryId $id): int => $id->value, $catIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();
     }
 
     /**
-     * @param  list<int>  $ids
+     * @param  array<CategoryId>  $ids
+     *
+     * `$ids` unwraps to raw ints before the `IN`-clause bind (see
+     * {@see findNamesByIds()}'s own note above).
      */
     public function deleteCategoriesByIds(array $ids): void
     {
@@ -951,7 +970,7 @@ final readonly class CategoryRepository
         $em->createQueryBuilder()
             ->delete(CategoryEntity::class, 'c')
             ->where('c.id IN (:ids)')
-            ->setParameter('ids', $ids)
+            ->setParameter('ids', array_map(static fn (CategoryId $id): int => $id->value, $ids), ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();
@@ -1038,7 +1057,10 @@ final readonly class CategoryRepository
     }
 
     /**
-     * @param  list<int>  $ids
+     * @param  array<CategoryId>  $ids
+     *
+     * `$ids` unwraps to raw ints before the `IN`-clause bind (see
+     * {@see findNamesByIds()}'s own note above).
      */
     public function clearRepresentativePictureIds(array $ids): void
     {
@@ -1054,7 +1076,7 @@ final readonly class CategoryRepository
             ->where('c.id IN (:ids)')
             ->setParameter('null', null)
             ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
-            ->setParameter('ids', $ids)
+            ->setParameter('ids', array_map(static fn (CategoryId $id): int => $id->value, $ids), ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();
@@ -1191,8 +1213,10 @@ final readonly class CategoryRepository
     }
 
     /**
-     * @param  array<int>  $ids  real callers (getUppercatIds()/getSubcatIds()'s
-     *   own array_unique()/array_merge() results) don't guarantee a list
+     * @param  array<CategoryId>  $ids  real callers (getUppercatIds()/getSubcatIds()'s
+     *   own array_unique()/array_merge() results) don't guarantee a list;
+     *   unwraps to raw ints before the `IN`-clause bind (see
+     *   {@see findNamesByIds()}'s own note above)
      */
     public function updateCategoryVisibility(array $ids, bool $visible): void
     {
@@ -1208,14 +1232,14 @@ final readonly class CategoryRepository
             ->where('c.id IN (:ids)')
             ->setParameter('visible', $visible)
             ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
-            ->setParameter('ids', array_values($ids))
+            ->setParameter('ids', array_map(static fn (CategoryId $id): int => $id->value, array_values($ids)), ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();
     }
 
     /**
-     * @param  array<int>  $ids  same non-list caveat as {@see updateCategoryVisibility()}
+     * @param  array<CategoryId>  $ids  same non-list caveat as {@see updateCategoryVisibility()}
      */
     public function updateCategoryCommentable(array $ids, bool $commentable): void
     {
@@ -1231,14 +1255,14 @@ final readonly class CategoryRepository
             ->where('c.id IN (:ids)')
             ->setParameter('commentable', $commentable)
             ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
-            ->setParameter('ids', array_values($ids))
+            ->setParameter('ids', array_map(static fn (CategoryId $id): int => $id->value, array_values($ids)), ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();
     }
 
     /**
-     * @param  array<int>  $ids  same non-list caveat as {@see updateCategoryVisibility()}
+     * @param  array<CategoryId>  $ids  same non-list caveat as {@see updateCategoryVisibility()}
      */
     public function updateCategoryStatus(array $ids, string $status): void
     {
@@ -1254,7 +1278,7 @@ final readonly class CategoryRepository
             ->where('c.id IN (:ids)')
             ->setParameter('status', $status)
             ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
-            ->setParameter('ids', array_values($ids))
+            ->setParameter('ids', array_map(static fn (CategoryId $id): int => $id->value, array_values($ids)), ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();
@@ -1298,14 +1322,15 @@ final readonly class CategoryRepository
     }
 
     /**
-     * @param  list<int>  $ids
+     * @param  array<CategoryId>  $ids
      * @return array<int, CategoryIdStatus> keyed by id
      *
      * Real DQL -- single-table, static WHERE. `c.id` is custom-Typed
      * (`category_id`) -- `$row['id']` used directly as an array key here
      * would be a fatal TypeError against a real CategoryId object, unlike
      * this class's other Gotcha #1 sites which only silently return a
-     * wrong scalar.
+     * wrong scalar. `$ids` unwraps to raw ints before the `IN`-clause
+     * bind (see {@see findNamesByIds()}'s own note above).
      */
     public function findStatusByIds(array $ids): array
     {
@@ -1316,7 +1341,7 @@ final readonly class CategoryRepository
         $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.status')
             ->where('c.id IN (:ids)')
-            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+            ->setParameter('ids', array_map(static fn (CategoryId $id): int => $id->value, $ids), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 
@@ -1380,12 +1405,14 @@ final readonly class CategoryRepository
     /**
      * @param  list<int>  $keepIds  a non-empty list is guaranteed by the
      *   caller ({@see \Piwigo\Db\NoMatchSentinel::ID} is substituted when
-     *   no reference access exists)
-     * @param  list<int>  $catIds
+     *   no reference access exists); user/group-domain depending on
+     *   $target, stays raw int
+     * @param  array<CategoryId>  $catIds
      *
      * `$table`/`$field` are {@see CategoryAccessTarget}'s bounded enum,
      * not arbitrary runtime strings. Real DQL -- see that enum's own
-     * docblock.
+     * docblock. `$catIds` unwraps to raw ints before its own `IN`-clause
+     * bind (see {@see findNamesByIds()}'s own note above).
      */
     public function deleteInconsistentAccess(CategoryAccessTarget $target, array $keepIds, array $catIds): void
     {
@@ -1399,18 +1426,20 @@ final readonly class CategoryRepository
             ->where("t.{$fieldProperty} NOT IN (:keepIds)")
             ->andWhere('t.catId IN (:catIds)')
             ->setParameter('keepIds', $keepIds, ArrayParameterType::INTEGER)
-            ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER)
+            ->setParameter('catIds', array_map(static fn (CategoryId $id): int => $id->value, $catIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();
     }
 
     /**
-     * @param  array<int>  $ids  real callers don't guarantee a list
+     * @param  array<CategoryId>  $ids  real callers don't guarantee a list
      * @return list<string>
      *
      * Real DQL -- single-table, static WHERE; uppercats is a plain string
-     * column, so getSingleColumnResult() returns ordinary strings.
+     * column, so getSingleColumnResult() returns ordinary strings. `$ids`
+     * unwraps to raw ints before the `IN`-clause bind (see
+     * {@see findNamesByIds()}'s own note above).
      */
     public function findUppercatsColumns(array $ids): array
     {
@@ -1421,7 +1450,7 @@ final readonly class CategoryRepository
         return array_values(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.uppercats')
             ->where('c.id IN (:ids)')
-            ->setParameter('ids', array_values($ids), ArrayParameterType::INTEGER)
+            ->setParameter('ids', array_map(static fn (CategoryId $id): int => $id->value, array_values($ids)), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getSingleColumnResult()));
     }
@@ -1431,14 +1460,15 @@ final readonly class CategoryRepository
      * plain list -- CategoryAdminService::getCategoriesRefDate() needs to
      * look a specific category's uppercats back up by id while iterating.
      *
-     * @param  list<int>  $ids
+     * @param  array<CategoryId>  $ids
      * @return array<int, string> keyed by id
      *
      * Real DQL -- single-table, static WHERE; `c.id` is custom-Typed
      * (`category_id`) -- see this class's own Gotcha #1 note above.
      * `fetchAllKeyValue()` has no direct DQL equivalent, so the
      * id=>uppercats map is built from `getArrayResult()`'s own rows
-     * instead.
+     * instead. `$ids` unwraps to raw ints before the `IN`-clause bind
+     * (see {@see findNamesByIds()}'s own note above).
      */
     public function findUppercatsById(array $ids): array
     {
@@ -1449,7 +1479,7 @@ final readonly class CategoryRepository
         $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.uppercats')
             ->where('c.id IN (:ids)')
-            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+            ->setParameter('ids', array_map(static fn (CategoryId $id): int => $id->value, $ids), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 
@@ -1480,13 +1510,14 @@ final readonly class CategoryRepository
      * string for a date column, a number for a numeric one) -- genuinely
      * arbitrary by design, not just unnarrowed.
      *
-     * @param  list<int>  $categoryIds
+     * @param  array<CategoryId>  $categoryIds
      * @return array<int, mixed> keyed by category_id
      *
      * `$field`/`$minmax` are {@see CategoryRefDateField}/
      * {@see CategoryRefDateAggregate}'s bounded enums, not arbitrary
      * runtime strings. Real DQL -- see {@see CategoryRefDateField}'s own
-     * docblock.
+     * docblock. `$categoryIds` unwraps to raw ints before the `IN`-clause
+     * bind (see {@see findNamesByIds()}'s own note above).
      */
     public function findRefDatesByCategoryIds(array $categoryIds, CategoryRefDateField $field, CategoryRefDateAggregate $minmax): array
     {
@@ -1502,7 +1533,7 @@ final readonly class CategoryRepository
             ->from(ImageCategoryEntity::class, 'ic')
             ->innerJoin('ic.image', 'i')
             ->where('ic.category IN (:categoryIds)')
-            ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER)
+            ->setParameter('categoryIds', array_map(static fn (CategoryId $id): int => $id->value, $categoryIds), ArrayParameterType::INTEGER)
             ->groupBy('ic.category')
             ->getQuery()
             ->getArrayResult();
@@ -1530,7 +1561,7 @@ final readonly class CategoryRepository
      * constructor-injects `PermissionService`, a real circular-construction
      * risk), so this lives at the repository layer both can reach.
      *
-     * @param array<int> $catIds
+     * @param array<CategoryId> $catIds
      * @return array<int>
      */
     public function findUppercatIds(array $catIds): array
@@ -1540,7 +1571,7 @@ final readonly class CategoryRepository
         }
 
         $uppercats = [];
-        foreach ($this->findUppercatsColumns(array_map(intval(...), $catIds)) as $uppercatsCsv) {
+        foreach ($this->findUppercatsColumns($catIds) as $uppercatsCsv) {
             $uppercats = array_merge(
                 $uppercats,
                 array_map(intval(...), explode(',', $uppercatsCsv))
@@ -1622,14 +1653,16 @@ final readonly class CategoryRepository
     }
 
     /**
-     * @param  array<int>  $ids  real callers don't guarantee a list
+     * @param  array<CategoryId>  $ids  real callers don't guarantee a list
      * @return list<CategoryFulldirRow>
      *
      * Real DQL -- single-table, static WHERE. `c.id` is custom-Typed
      * (`category_id`) -- see this class's own Gotcha #1 note above.
      * `IDENTITY(c.site)` extracts the raw FK id without hydrating the
      * associated `SiteEntity` -- a bare path here would hydrate it
-     * instead, since this is a `SELECT`, not a `WHERE`.
+     * instead, since this is a `SELECT`, not a `WHERE`. `$ids` unwraps to
+     * raw ints before the `IN`-clause bind (see {@see findNamesByIds()}'s
+     * own note above).
      */
     public function findCategoriesForFulldirs(array $ids): array
     {
@@ -1641,7 +1674,7 @@ final readonly class CategoryRepository
             ->select('c.id', 'c.uppercats', 'IDENTITY(c.site) AS site_id')
             ->where('c.dir IS NOT NULL')
             ->andWhere('c.id IN (:ids)')
-            ->setParameter('ids', array_values($ids), ArrayParameterType::INTEGER)
+            ->setParameter('ids', array_map(static fn (CategoryId $id): int => $id->value, array_values($ids)), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 
@@ -1746,17 +1779,19 @@ final readonly class CategoryRepository
     }
 
     /**
-     * @param  array<int>  $ids  real callers don't guarantee a list
+     * @param  array<CategoryId>  $ids  real callers don't guarantee a list
      * @return list<CategoryMoveRow>
      *
      * Real DQL -- single-table, static WHERE, all 4 columns plain-typed.
+     * `$ids` unwraps to raw ints before the `IN`-clause bind (see
+     * {@see findNamesByIds()}'s own note above).
      */
     public function findCategoriesForMove(array $ids): array
     {
         $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.idUppercat AS id_uppercat', 'c.status', 'c.uppercats')
             ->where('c.id IN (:ids)')
-            ->setParameter('ids', array_values($ids), ArrayParameterType::INTEGER)
+            ->setParameter('ids', array_map(static fn (CategoryId $id): int => $id->value, array_values($ids)), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 
@@ -1794,7 +1829,9 @@ final readonly class CategoryRepository
      * parameter (int or null) rather than embedded unquoted into the SQL,
      * now that this is a DQL bulk update against the owned CategoryEntity.
      *
-     * @param  array<int>  $ids  real callers don't guarantee a list
+     * @param  array<CategoryId>  $ids  real callers don't guarantee a list;
+     *   unwraps to raw ints before the `IN`-clause bind (see
+     *   {@see findNamesByIds()}'s own note above)
      */
     public function updateCategoryParent(array $ids, string $newParent): void
     {
@@ -1810,7 +1847,7 @@ final readonly class CategoryRepository
             ->where('c.id IN (:ids)')
             ->setParameter('newParent', $newParent === 'NULL' ? null : (int) $newParent)
             ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
-            ->setParameter('ids', array_values($ids))
+            ->setParameter('ids', array_map(static fn (CategoryId $id): int => $id->value, array_values($ids)), ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();
@@ -1998,7 +2035,7 @@ final readonly class CategoryRepository
      * user_access, minus any category already covered by one of the
      * user's own group memberships ($groupAuthorizedCatIds).
      *
-     * @param list<string> $groupAuthorizedCatIds
+     * @param array<CategoryId> $groupAuthorizedCatIds
      * @return list<CategoryIdNameUppercatsRank>
      *
      * `user_access` is mapped ({@see UserAccessEntity}, no declared
@@ -2013,7 +2050,8 @@ final readonly class CategoryRepository
      * only by is_numeric() (not a positive-int guarantee). tryFrom(), not
      * from(): a malformed value can never match a real user_access row
      * either way, so it short-circuits to "no private categories" instead
-     * of throwing.
+     * of throwing. `$groupAuthorizedCatIds` unwraps to raw ints before its
+     * own `IN`-clause bind (see {@see findNamesByIds()}'s own note above).
      */
     public function findPrivateCategoriesGrantedToUser(int $userId, array $groupAuthorizedCatIds = []): array
     {
@@ -2032,7 +2070,7 @@ final readonly class CategoryRepository
 
         if ($groupAuthorizedCatIds !== []) {
             $qb->andWhere($qb->expr()->notIn('ua.catId', ':groupAuthorized'))
-                ->setParameter('groupAuthorized', array_map(intval(...), $groupAuthorizedCatIds), ArrayParameterType::INTEGER);
+                ->setParameter('groupAuthorized', array_map(static fn (CategoryId $id): int => $id->value, $groupAuthorizedCatIds), ArrayParameterType::INTEGER);
         }
 
         return self::narrowIdNameUppercatsRankRows($qb->getQuery()->getArrayResult());
@@ -2086,10 +2124,12 @@ final readonly class CategoryRepository
      * separate `NOT IN` clauses on the original pre-migration queries,
      * logically identical to one `NOT IN` over their union.
      *
-     * @param list<string> $excludeCatIds
+     * @param array<CategoryId> $excludeCatIds
      * @return list<CategoryIdNameUppercatsRank>
      *
-     * Single-table, static WHERE plus an optional NOT IN.
+     * Single-table, static WHERE plus an optional NOT IN. `$excludeCatIds`
+     * unwraps to raw ints before its own `IN`-clause bind (see
+     * {@see findNamesByIds()}'s own note above).
      */
     public function findPrivateCategoriesExcluding(array $excludeCatIds): array
     {
@@ -2100,7 +2140,7 @@ final readonly class CategoryRepository
 
         if ($excludeCatIds !== []) {
             $qb->andWhere($qb->expr()->notIn('c.id', ':excludeCatIds'))
-                ->setParameter('excludeCatIds', array_map(intval(...), $excludeCatIds), ArrayParameterType::INTEGER);
+                ->setParameter('excludeCatIds', array_map(static fn (CategoryId $id): int => $id->value, $excludeCatIds), ArrayParameterType::INTEGER);
         }
 
         // See findPrivateCategoriesGrantedToGroup()'s
@@ -2473,7 +2513,7 @@ final readonly class CategoryRepository
      * First/last photo creation date per category (`CategoryCatsRenderer`'s
      * "from/to" date-range display, gated by `CurrentConfig::displayFromto()`).
      *
-     * @param  list<int>  $categoryIds
+     * @param  array<CategoryId>  $categoryIds
      * @return array<int, CategoryDateRange> keyed by category id
      *   -- PHP auto-coerces a numeric string array key to int regardless of
      *   how it's written, so `int` (not `string`) is the real runtime key
@@ -2484,7 +2524,9 @@ final readonly class CategoryRepository
      * `MIN(...)`/`MAX(...)` are aliased as `from_date`/`to_date`, not
      * `from`/`to`: `FROM` is a DQL keyword and DQL has no backtick-escaping
      * syntax. This row shape is internal to this method (rebuilt into the
-     * `from`/`to`-keyed return array below), not a public contract.
+     * `from`/`to`-keyed return array below), not a public contract. `$categoryIds`
+     * unwraps to raw ints before the `IN`-clause bind (see
+     * {@see findNamesByIds()}'s own note above).
      */
     public function findDateRangeByCategory(array $categoryIds, PermissionCriteria $criteria): array
     {
@@ -2498,7 +2540,7 @@ final readonly class CategoryRepository
             ->from(ImageCategoryEntity::class, 'ic')
             ->innerJoin('ic.image', 'i')
             ->where('ic.category IN (:categoryIds)')
-            ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER)
+            ->setParameter('categoryIds', array_map(static fn (CategoryId $id): int => $id->value, $categoryIds), ArrayParameterType::INTEGER)
             ->groupBy('ic.category');
 
         SqlCondition::combine(
@@ -2635,11 +2677,13 @@ final readonly class CategoryRepository
      * PictureModifyPageRenderer's own "make this photo the thumbnail for
      * every newly-checked album" step.
      *
-     * @param list<int> $categoryIds
+     * @param array<CategoryId> $categoryIds
      *
      * Single-table, static SET/WHERE. Same "caller clears the
      * EntityManager afterward" contract as {@see setRepresentativeImage()}
-     * above (both real callers already do).
+     * above (both real callers already do). `$categoryIds` unwraps to raw
+     * ints before the `IN`-clause bind (see {@see findNamesByIds()}'s own
+     * note above).
      */
     public function setRepresentativeImageForCategories(array $categoryIds, int $imageId): void
     {
@@ -2655,7 +2699,7 @@ final readonly class CategoryRepository
             ->where('c.id IN (:categoryIds)')
             ->setParameter('imageId', $imageId)
             ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
-            ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER)
+            ->setParameter('categoryIds', array_map(static fn (CategoryId $id): int => $id->value, $categoryIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
     }
@@ -2741,7 +2785,7 @@ final readonly class CategoryRepository
      * membership) -- Admin\UserPermPageRenderer's own "authorized
      * individually" listing.
      *
-     * @param list<int> $excludeCategoryIds
+     * @param array<CategoryId> $excludeCategoryIds
      * @return list<int>
      *
      * `user_access` is mapped ({@see UserAccessEntity}), joined via
@@ -2751,7 +2795,8 @@ final readonly class CategoryRepository
      * Same UserId::tryFrom() boundary-safety reasoning as
      * {@see findPrivateCategoriesGrantedToUser()} above -- this method's
      * own real caller reaches it via the identical Admin\UserPermPageRenderer
-     * URL param.
+     * URL param. `$excludeCategoryIds` unwraps to raw ints before its own
+     * `IN`-clause bind (see {@see findNamesByIds()}'s own note above).
      */
     public function findPrivateCategoryIdsGrantedToUser(int $userId, array $excludeCategoryIds): array
     {
@@ -2770,7 +2815,7 @@ final readonly class CategoryRepository
 
         if ($excludeCategoryIds !== []) {
             $qb->andWhere($qb->expr()->notIn('ua.catId', ':excludeCategoryIds'))
-                ->setParameter('excludeCategoryIds', $excludeCategoryIds, ArrayParameterType::INTEGER);
+                ->setParameter('excludeCategoryIds', array_map(static fn (CategoryId $id): int => $id->value, $excludeCategoryIds), ArrayParameterType::INTEGER);
         }
 
         return array_values(array_map(
@@ -2927,17 +2972,19 @@ final readonly class CategoryRepository
      * id/name/id_uppercat for $categoryIds -- Admin\AlbumsPageRenderer's
      * own auto-order sort-and-save step.
      *
-     * @param list<string> $categoryIds
+     * @param array<CategoryId> $categoryIds
      * @return list<CategoryIdNameUppercat>
      *
-     * Single-table, static WHERE, all 3 columns plain-typed.
+     * Single-table, static WHERE, all 3 columns plain-typed. `$categoryIds`
+     * unwraps to raw ints before the `IN`-clause bind (see
+     * {@see findNamesByIds()}'s own note above).
      */
     public function findIdsNamesUppercatsForIds(array $categoryIds): array
     {
         $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.idUppercat AS id_uppercat')
             ->where('c.id IN (:categoryIds)')
-            ->setParameter('categoryIds', array_map(intval(...), $categoryIds), ArrayParameterType::INTEGER)
+            ->setParameter('categoryIds', array_map(static fn (CategoryId $id): int => $id->value, $categoryIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 
@@ -3086,7 +3133,7 @@ final readonly class CategoryRepository
      * CatModifyPageRenderer's own recursive (including sub-albums) photo
      * count.
      *
-     * @param list<int> $categoryIds
+     * @param array<CategoryId> $categoryIds
      * @return list<int>
      *
      * Single-table; `image_category` is mapped
@@ -3101,7 +3148,7 @@ final readonly class CategoryRepository
             ->select('DISTINCT IDENTITY(ic.image)')
             ->from(ImageCategoryEntity::class, 'ic')
             ->where('ic.category IN (:categoryIds)')
-            ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER)
+            ->setParameter('categoryIds', array_map(static fn (CategoryId $id): int => $id->value, $categoryIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getSingleColumnResult();
 
@@ -3112,11 +3159,13 @@ final readonly class CategoryRepository
      * `dir` keyed by id for $ids -- Admin\CatModifyPageRenderer's own
      * getLocalDir() path-segment resolution.
      *
-     * @param list<int|string> $ids
+     * @param array<CategoryId> $ids
      * @return array<int, ?string> keyed by id -- CategoryEntity::$dir is a
      *   nullable string column (only set for on-disk "physical" categories)
      *
-     * Single-table, static WHERE, both columns plain-typed.
+     * Single-table, static WHERE, both columns plain-typed. `$ids` unwraps
+     * to raw ints before the `IN`-clause bind (see {@see findNamesByIds()}'s
+     * own note above).
      */
     public function findDirsByIds(array $ids): array
     {
@@ -3127,7 +3176,7 @@ final readonly class CategoryRepository
         $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.dir')
             ->where('c.id IN (:ids)')
-            ->setParameter('ids', array_map(intval(...), $ids), ArrayParameterType::INTEGER)
+            ->setParameter('ids', array_map(static fn (CategoryId $id): int => $id->value, $ids), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 
@@ -3242,10 +3291,11 @@ final readonly class CategoryRepository
      * Ids from $ids that really exist -- CategoryService's own "do these
      * categories really exist" checks.
      *
-     * @param  list<int>  $ids
+     * @param  array<CategoryId>  $ids
      * @return list<int>
      *
-     * Single-table, static WHERE.
+     * Single-table, static WHERE. `$ids` unwraps to raw ints before the
+     * `IN`-clause bind (see {@see findNamesByIds()}'s own note above).
      */
     public function findExistingIds(array $ids): array
     {
@@ -3258,7 +3308,7 @@ final readonly class CategoryRepository
             $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
                 ->select('c.id')
                 ->where('c.id IN (:ids)')
-                ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+                ->setParameter('ids', array_map(static fn (CategoryId $id): int => $id->value, $ids), ArrayParameterType::INTEGER)
                 ->getQuery()
                 ->getSingleColumnResult()
         ));
@@ -3270,9 +3320,12 @@ final readonly class CategoryRepository
      * (subcategory ids already resolved by CategoryService::getSubcatIds(),
      * narrowed to real, non-forbidden ones).
      *
-     * @param  list<int>  $ids
-     * @param  list<int>  $excludeIds
+     * @param  array<CategoryId>  $ids
+     * @param  array<CategoryId>  $excludeIds
      * @return list<int>
+     *
+     * Both arrays unwrap to raw ints before their own `IN`-clause bind
+     * (see {@see findNamesByIds()}'s own note above).
      */
     public function findIdsAmongExcluding(array $ids, array $excludeIds): array
     {
@@ -3283,11 +3336,11 @@ final readonly class CategoryRepository
         $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id')
             ->where('c.id IN (:ids)')
-            ->setParameter('ids', $ids, ArrayParameterType::INTEGER);
+            ->setParameter('ids', array_map(static fn (CategoryId $id): int => $id->value, $ids), ArrayParameterType::INTEGER);
 
         if ($excludeIds !== []) {
             $qb->andWhere('c.id NOT IN (:excludeIds)')
-                ->setParameter('excludeIds', $excludeIds, ArrayParameterType::INTEGER);
+                ->setParameter('excludeIds', array_map(static fn (CategoryId $id): int => $id->value, $excludeIds), ArrayParameterType::INTEGER);
         }
 
         return array_values(array_map(
@@ -3576,13 +3629,15 @@ final readonly class CategoryRepository
      * Subcategory counts grouped by parent id -- `CategoryListController`'s
      * own non-recursive "nb_categories" column.
      *
-     * @param  list<int>  $parentIds
+     * @param  array<CategoryId>  $parentIds
      * @return array<int, int> keyed by id_uppercat -- the `(string)` cast
      *   below never actually produces a string key for a real
      *   id_uppercat value: PHP normalizes any canonical decimal-integer
      *   string key back to int at the point of array assignment.
      *
-     * Single-table, standard COUNT + GROUP BY aggregate.
+     * Single-table, standard COUNT + GROUP BY aggregate. `$parentIds`
+     * unwraps to raw ints before the `IN`-clause bind (see
+     * {@see findNamesByIds()}'s own note above).
      */
     public function findSubcategoryCountsByParent(array $parentIds): array
     {
@@ -3594,7 +3649,7 @@ final readonly class CategoryRepository
             ->select('c.idUppercat AS id_uppercat', 'COUNT(c.id) AS nb_subcats')
             ->where('c.idUppercat IN (:parentIds)')
             ->groupBy('c.idUppercat')
-            ->setParameter('parentIds', $parentIds, ArrayParameterType::INTEGER)
+            ->setParameter('parentIds', array_map(static fn (CategoryId $id): int => $id->value, $parentIds), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 
@@ -3619,10 +3674,12 @@ final readonly class CategoryRepository
      * "does the category really exist" check plus the sibling data it
      * needs afterward.
      *
-     * @param  list<int>  $ids
+     * @param  array<CategoryId>  $ids
      * @return list<CategoryRankInfoRow>
      *
-     * Single-table, static WHERE, all 3 columns plain-typed.
+     * Single-table, static WHERE, all 3 columns plain-typed. `$ids` unwraps
+     * to raw ints before the `IN`-clause bind (see {@see findNamesByIds()}'s
+     * own note above).
      */
     public function findRankInfoByIds(array $ids): array
     {
@@ -3633,7 +3690,7 @@ final readonly class CategoryRepository
         $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.idUppercat AS id_uppercat', 'c.rank')
             ->where('c.id IN (:ids)')
-            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+            ->setParameter('ids', array_map(static fn (CategoryId $id): int => $id->value, $ids), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 
@@ -3724,10 +3781,12 @@ final readonly class CategoryRepository
      * {@see findCategoriesForMove()} above (that one is
      * id/id_uppercat/status/uppercats, for a different real caller).
      *
-     * @param  list<int>  $ids
+     * @param  array<CategoryId>  $ids
      * @return list<CategoryMoveDetailRow>
      *
-     * Single-table, static WHERE, all 4 columns plain-typed.
+     * Single-table, static WHERE, all 4 columns plain-typed. `$ids`
+     * unwraps to raw ints before the `IN`-clause bind (see
+     * {@see findNamesByIds()}'s own note above).
      */
     public function findMoveDetailsByIds(array $ids): array
     {
@@ -3738,7 +3797,7 @@ final readonly class CategoryRepository
         $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.dir', 'c.uppercats')
             ->where('c.id IN (:ids)')
-            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+            ->setParameter('ids', array_map(static fn (CategoryId $id): int => $id->value, $ids), ArrayParameterType::INTEGER)
             ->getQuery()
             ->getArrayResult();
 

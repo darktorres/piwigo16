@@ -12,6 +12,7 @@ use Piwigo\Cache\SearchResultsCachePool;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\Projection\Category;
 use Piwigo\Common\Enum\Section;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\FilterViewDefinition;
 use Piwigo\Core\CurrentLogger;
@@ -901,9 +902,10 @@ final readonly class SearchFilterRenderer
         // Category projections -- unboxed to array here since
         // nameCompare()'s signature (shared with every other name-sort
         // call site in this project) takes array<string, mixed>.
+        $allowedCatIdVos = array_filter(array_map(CategoryId::tryFrom(...), $allowedCatIds), static fn (mixed $id): bool => $id instanceof CategoryId);
         $cats = array_map(
             static fn (Category $cat): array => $cat->toArray(),
-            $this->categoryRepo->findFullCategoriesByIds($allowedCatIds)
+            $this->categoryRepo->findFullCategoriesByIds($allowedCatIdVos)
         );
         usort($cats, $this->htmlRenderer->nameCompare(...));
 

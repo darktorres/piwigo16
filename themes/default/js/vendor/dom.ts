@@ -1605,7 +1605,7 @@ export function textOf(target: Element | ArrayLike<Element>): string {
  * own `.value` -- an inert, non-form-control elements included, own
  * property, never reflected in what renders. Faithfully mirrored here
  * rather than restricted to input/select/textarea, since
- * `updates_ext.ts`'s `#reset_ignore` (a `<div>`) is exactly such a caller.
+ * `updates/ext.ts`'s `#reset_ignore` (a `<div>`) is exactly such a caller.
  */
 export function val(target: Element | ArrayLike<Element>): string | undefined {
   const [first] = toElements(target);

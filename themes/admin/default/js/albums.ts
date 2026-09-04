@@ -99,7 +99,7 @@ type AlbumJqTreeNode = JqTreeNode<AlbumNodeData>;
 // imports dom.ts's own `data()` helper (P51-D: every call site
 // switched to `dataId()`), but kept off that name anyway to avoid
 // re-shadowing it if a future edit needs it back. Re-exported as
-// `data` below (its real, external name; cat_search.ts imports it as
+// `data` below (its real, external name; categories/search.ts imports it as
 // such, docs/PLAN.md P48) to keep that contract unchanged.
 const albumData = pwg_getPageData<AlbumTreeNode[]>("album_data");
 export { albumData as data };
@@ -120,8 +120,8 @@ const xNbSubPhotos = pwg_getPageString("%d pictures in sub-albums");
 
 // Not `str_albums_found`/`str_result_limit`/`str_album_found` too --
 // AlbumsView.php's own exposedStrings() carries all 3, but the real
-// reader is cat_search.ts, which imports them from album_selector.ts's
-// own real exports instead (cat_search.ts's own leading comment: a
+// reader is categories/search.ts, which imports them from album_selector.ts's
+// own real exports instead (categories/search.ts's own leading comment: a
 // genuine, coincidental same-wording duplicate, not the semantically
 // "correct" owner). This file's own former local `const str_album_found`
 // copy was real dead code -- confirmed zero consumers anywhere, `.ts`
@@ -1426,5 +1426,5 @@ function openNodeOnDemand(node: AlbumJqTreeNode) {
   }
 }
 
-// `data` is a real export now (docs/PLAN.md P48) -- cat_search.ts
+// `data` is a real export now (docs/PLAN.md P48) -- categories/search.ts
 // imports it directly, no more `window.` latching.

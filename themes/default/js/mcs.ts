@@ -7,7 +7,7 @@ import { AlbumSelector } from "./album_selector";
 import { sprintf } from "./sprintf";
 // This file has exactly one real registrant page (SearchFiltersView),
 // but doubleSlider.ts itself has 2 real file-level consumers (this
-// file and batchManagerFilter.ts, each its own separate Vite entry),
+// file and batch_manager/filter.ts, each its own separate Vite entry),
 // so Rollup emits it as a shared chunk.
 import { pwgDoubleSlider } from "./doubleSlider";
 // Real consumer of search_filters.ts's own exports (docs/PLAN.md P48,

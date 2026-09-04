@@ -1,6 +1,6 @@
 // Native port of jQuery UI's tooltip widget (P49-C), real source read from
 // the vendored `jquery-ui@1.10.4` bundle's own `tooltip.js`. Narrowed hard
-// to `rating_user.ts`'s own one real call site: a delegated
+// to `ratings/user.ts`'s own one real call site: a delegated
 // `items: ".usr,[title]"` match against `#rateTable`'s own descendants
 // (real, because `dataTable()`'s own redraws replace row elements on
 // paging/sorting/filtering -- a listener bound directly to each row at

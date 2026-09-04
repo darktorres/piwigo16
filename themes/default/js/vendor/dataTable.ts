@@ -1,6 +1,6 @@
 // Native port of the legacy DataTables 1.10.11 jQuery plugin (P49-C), real
 // source read from the vendored `datatables.net@1.10.11` bundle's own
-// `js/jquery.dataTables.js` (15267 lines). `rating_user.ts` is the ONLY
+// `js/jquery.dataTables.js` (15267 lines). `ratings/user.ts` is the ONLY
 // real consumer anywhere in this app (confirmed via a repo-wide grep for
 // `dataTable`/`DataTable`), so this isn't a generic reimplementation of
 // the plugin's own vast real option surface -- just the one real

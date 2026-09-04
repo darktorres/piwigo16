@@ -61,7 +61,7 @@ final readonly class PluginsNewView implements View, HasPageAssets, ExposesPageD
             // jquery.ui's *script* (the CSS registration above stays,
             // still real -- the native slider port renders the
             // identical class structure it themes).
-            AssetContribution::script('pluginsNew', 'themes/admin/default/js/plugins_new.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('pluginsNew', 'themes/admin/default/js/plugins/new.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
         ];
     }

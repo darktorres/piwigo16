@@ -8,7 +8,7 @@ use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * P49-A conversion of themes/admin/default/js/batchManagerFilter.ts -- 0%
+ * P49-A conversion of themes/admin/default/js/batch_manager/filter.ts -- 0%
  * prior live-interaction coverage (BatchManagerUnitPageRendererTest.php/
  * BatchManagerGlobalPageRendererTest.php only ever POST real filter
  * values directly, never exercise the addFilter/removeFilter dropdown UI
@@ -140,7 +140,7 @@ it('drags the widths slider min handle inward, then snaps it back via the choice
     $page = H::navigateOk($page, '/admin.php?page=batch_manager&mode=unit');
 
     // `pwgDoubleSlider()` runs unconditionally at page load for all 4
-    // dimension sliders (`batchManagerFilter.ts`'s own `ready()`), so
+    // dimension sliders (`batch_manager/filter.ts`'s own `ready()`), so
     // `[data-slider=widths]` is already a real, live slider here --
     // only its *container* (`#filter_dimension`) is hidden until
     // enabled, and a hidden element can't be clicked/dragged for real.

@@ -127,7 +127,7 @@ it('rejects a submission without a valid CSRF token', function (): void {
 });
 
 /**
- * site_manager.ts's own "create a new site" toggle, the file's only
+ * site/manager.ts's own "create a new site" toggle, the file's only
  * behaviour outside the delete-confirm plugin. Converted off jQuery in
  * P49-A, and this is what makes that conversion checkable: the form starts
  * hidden by a CSS class (`u-hidden`), not an inline style, so `show()` has

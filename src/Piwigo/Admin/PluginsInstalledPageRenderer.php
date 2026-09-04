@@ -39,7 +39,7 @@ use Piwigo\Users\UserStatus;
  * "plugins" page slug, dispatched by PluginsSubController) -- lists
  * installed plugins.
  *
- * No CSRF gap here -- plugins_installated.ts's real
+ * No CSRF gap here -- plugins/installed.ts's real
  * activate/deactivate/delete/restore flow calls the already
  * `X-CSRF-Token`-protected `POST /api/v1/plugins/{id}/actions/perform`
  * (`Controller\Api\Extensions\PluginPerformActionController`).

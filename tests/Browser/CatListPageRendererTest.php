@@ -307,7 +307,7 @@ it('renders the visit-gallery link for an album the admin can access', function 
 
 /**
  * The layout radio the server paints `checked` is load-bearing, not
- * decoration: `cat_list.ts`'s own ready handler branches on
+ * decoration: `categories/list.ts`'s own ready handler branches on
  * `$("#displayCompact").is(":checked")` / `#displayLine` / `#displayTile`
  * and applies the matching layout. It never checks a radio itself, so
  * whatever `CatListPageRenderer::albumViewSelected()` decides is what the
@@ -319,7 +319,7 @@ function catListSetViewCookie(Webpage|PendingAwaitablePage|AwaitableWebpage $pag
 
     // Deliberately no `path=`: that makes the browser scope this to the
     // document's own directory, which is exactly what jQuery.cookie does
-    // with no options -- and cat_list.ts has already written
+    // with no options -- and categories/list.ts has already written
     // `pwg_album_manager_view=tile` there by the time this runs. Writing
     // with `path=/` instead creates a *second* cookie of the same name
     // that the browser sends alongside the first, and the server reads
@@ -355,7 +355,7 @@ it('checks no layout radio at all when the cookie holds a value none of them off
     // Preserved from the template's own `== 'compact'`/`== 'line'`/
     // `== 'tile'` comparisons, which all three answered false for an
     // unrecognised value -- so the page rendered with no radio checked and
-    // cat_list.ts applied no layout. Pinned rather than tidied: silently
+    // categories/list.ts applied no layout. Pinned rather than tidied: silently
     // promoting it to tile would be a behaviour change smuggled in under a
     // typing pass.
     $page = catListSetViewCookie(H::asAdmin($this), 'mosaic');

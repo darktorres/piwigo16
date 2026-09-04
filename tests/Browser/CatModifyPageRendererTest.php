@@ -166,7 +166,7 @@ it('formats a multi-date info-title ("added between") when its photos span more 
 // Category 2's own fixture parent is category 1 (id_uppercat=1) -- this
 // asserts the real parent id reaches the typed page-data JSON island
 // cat_modify.latte exposes it into (cat_id, parent_cat_id). A raw HTTP
-// GET can't observe cat_modify.ts's own runtime computation of
+// GET can't observe categories/modify.ts's own runtime computation of
 // related_categories_ids, so this checks the JSON island's source
 // values directly instead -- PageDataPayload::toJson() is a plain
 // json_encode(), so an int value renders as a bare number, not a

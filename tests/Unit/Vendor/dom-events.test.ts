@@ -86,7 +86,7 @@ describe("namespaced off()", () => {
   });
 
   it("supports the off-then-on replace idiom without stacking handlers", () => {
-    // batchManagerFilter.ts and user_list.ts both rebind this way; without
+    // batch_manager/filter.ts and users/list.ts both rebind this way; without
     // real namespace removal the old handler would survive and fire twice.
     const first = vi.fn();
     const second = vi.fn();

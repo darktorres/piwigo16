@@ -7,7 +7,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 /**
  * P49-A conversion of themes/admin/default/js/batchManagerGlobal.ts --
  * the file this campaign deliberately converted last, its own documented
- * module-cycle exception (see that file's and batch_manager_global.ts's
+ * module-cycle exception (see that file's and batch_manager/global.ts's
  * own leading comments, now resolved).
  *
  * Covers the one thing neither BatchManagerGlobalInteractionTest.php nor

@@ -191,7 +191,7 @@ it('validates a comment via its button and jGrowl-free success flow removes it f
 
         // Still-jQuery jquery-confirm success alert -- assert on its own
         // rendered text rather than the whole page, same reasoning as
-        // rating_user.ts's own confirm-dialog test earlier in this
+        // ratings/user.ts's own confirm-dialog test earlier in this
         // campaign.
         $page->script(<<<'JS'
             new Promise((resolve, reject) => {

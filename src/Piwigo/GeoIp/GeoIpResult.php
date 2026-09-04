@@ -8,7 +8,7 @@ namespace Piwigo\GeoIp;
  * One IP lookup's result. `$fullName` joins city/region/country the same
  * order the original jquery.geoip.js callback built it client-side
  * ("city, region, country", skipping any part that's empty), kept here so
- * both real callers (history.ts's connection log, rating_user.ts's
+ * both real callers (history.ts's connection log, ratings/user.ts's
  * anonymous-rater tooltip) render an identical string without duplicating
  * the join logic.
  */

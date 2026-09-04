@@ -58,7 +58,7 @@ final readonly class CatPermView implements View, HasPageAssets, ExposesPageData
     {
         return [
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
-            AssetContribution::script('cat_perm', 'themes/admin/default/js/cat_perm.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('cat_perm', 'themes/admin/default/js/categories/perm.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/cat_perm.css', id: 'cat_perm'),
         ];
     }

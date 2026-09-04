@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * P49-A conversion of themes/admin/default/js/batch_manager_global.ts --
+ * P49-A conversion of themes/admin/default/js/batch_manager/global.ts --
  * BatchManagerGlobalPageRendererTest.php/BatchManagerSubControllerTest.php
  * already cover every server-side submission branch; this file covers
  * the client-side-only behaviors the conversion touched: the action

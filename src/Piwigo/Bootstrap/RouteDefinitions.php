@@ -337,7 +337,7 @@ final class RouteDefinitions
         ], methods: ['GET']));
 
         // Real replacement for jquery.geoip.js's own dead-endpoint JSONP
-        // call -- admin only, history.ts's/rating_user.ts's IP-hover
+        // call -- admin only, history.ts's/ratings/user.ts's IP-hover
         // tooltip.
         $routes->add('api_v1_geoip', new Route('/api/v1/geoip', defaults: [
             '_controller' => GeoIpLookupController::class,

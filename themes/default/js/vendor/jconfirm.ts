@@ -22,15 +22,15 @@ import { off, on } from "./dom";
  * `onOpenBefore`/`onOpen`/`onDestroy`/`onAction`/`contentLoaded` callback
  * are real options of the original too, never set by any real call site
  * here either. `onClose` is the one callback option that IS real,
- * load-bearing usage: `plugins_installated.ts`'s own
+ * load-bearing usage: `plugins/installed.ts`'s own
  * `confirmIncompatibleActivation()` relies on it firing for every
  * dismissal path (a button, background click, or Escape alike) to revert
  * a toggle switch that visually flips before the confirm even opens.
  *
  * `content` as a function returning a thenable exposing `.always()`
  * (this app's own `ajax()` helper's real `AjaxThenable` shape) is real,
- * load-bearing usage (`cat_modify.ts`, `plugins_installated.ts`,
- * `group_list.ts`, `tags.ts`'s own delete-tag/merge-tags flows): while
+ * load-bearing usage (`categories/modify.ts`, `plugins/installed.ts`,
+ * `users/group_list.ts`, `tags.ts`'s own delete-tag/merge-tags flows): while
  * that thenable is pending, the modal opens with a loading spinner and
  * whatever content the caller's own success/error callback pushes via
  * the instance's `setContent()`, not a value read off the settled

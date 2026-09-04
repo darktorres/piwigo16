@@ -6,7 +6,7 @@ use PHPUnit\Framework\Assert;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * P49-A conversion of themes/admin/default/js/configuration_main.ts -- 0%
+ * P49-A conversion of themes/admin/default/js/configuration/main.ts -- 0%
  * live-interaction coverage before this (no existing Browser test file for
  * this page at all).
  *

@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * P49-A conversion of themes/admin/default/js/configuration_sizes.ts --
+ * P49-A conversion of themes/admin/default/js/configuration/sizes.ts --
  * 0% live-interaction coverage before this (no existing Browser test file
  * for this page at all).
  *

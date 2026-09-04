@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * P49-A conversion of themes/admin/default/js/maintenance_actions.ts -- 0%
+ * P49-A conversion of themes/admin/default/js/maintenance/actions.ts -- 0%
  * live-interaction coverage before this (MaintenanceActionsPageRendererTest.php
  * only ever asserts the rendered page or drives raw POSTs).
  *

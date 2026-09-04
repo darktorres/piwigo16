@@ -8,7 +8,7 @@ use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * P49-A conversion of themes/admin/default/js/updates_ext.ts -- 0% JS
+ * P49-A conversion of themes/admin/default/js/updates/ext.ts -- 0% JS
  * coverage before this (UpdatesExtPageRendererTest.php only ever asserts
  * the two early-return guard branches for a plain-admin/disabled-install
  * visit). In this environment `getPendingUpdates()` genuinely reaches

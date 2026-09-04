@@ -27,7 +27,7 @@ describe("collectScriptEntries()", () => {
   it("includes real, long-lived registered pages, as a floor against a broken regex", () => {
     const entries = collectScriptEntries();
 
-    expect(entries).toContain("themes/admin/default/js/user_list.ts");
+    expect(entries).toContain("themes/admin/default/js/users/list.ts");
     expect(entries).toContain("themes/admin/default/js/tags.ts");
     expect(entries).toContain("themes/default/js/mcs.ts");
   });

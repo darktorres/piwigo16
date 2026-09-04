@@ -9,7 +9,7 @@ use PHPUnit\Framework\Assert;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * P49-A conversion of themes/admin/default/js/plugins_new.ts -- 0% prior
+ * P49-A conversion of themes/admin/default/js/plugins/new.ts -- 0% prior
  * JS coverage (PluginsNewPageRendererTest.php's own docblock confirms
  * `getServerExtensions()` always fails in this offline environment, so
  * `$plugins` is always `[]` and `.pluginBox` never renders through a live
@@ -29,7 +29,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * `updateRevisionFilterLabel(0)` calls at load). The `sortElements()`
  * test below sidesteps PEM reachability entirely: it injects its own
  * deterministic, real-template-shaped `.pluginBox` fixture rows (same
- * technique `updates_ext.ts`'s own interaction test uses), rather than
+ * technique `updates/ext.ts`'s own interaction test uses), rather than
  * depending on whatever `getServerExtensions()` returns right now.
  *
  * `.selectize()` (group 6) and `pwg_jconfirm_follow_href` (jquery-confirm,
@@ -136,7 +136,7 @@ it('dragging the rating slider to its max end fills every star', function (): vo
         })()
         JS);
 
-    // displayStars(5) (plugins_new.ts) fills every `data-star="0..4"`
+    // displayStars(5) (plugins/new.ts) fills every `data-star="0..4"`
     // span's own nested `<i>` with `icon-star` and drops that span's
     // `icon-star-empty` -- the zero-state test above already covers the
     // opposite (all-empty) end; this is the other one, reached for real
@@ -204,7 +204,7 @@ it('reloads with the beta-test query param set after toggling the switch', funct
 
 it('renders a real plugin\'s half-star rating without crashing on an unquoted attribute selector', function (): void {
     // Confirmed live: getServerExtensions() genuinely reaches PEM in this
-    // environment (same surprise as updates_ext.ts's page) and returns at
+    // environment (same surprise as updates/ext.ts's page) and returns at
     // least one real available plugin -- this test's own setup found one
     // with a 4.5 rating, which is exactly the value that crashed
     // displayStars() before its attribute-selector values were quoted
@@ -271,7 +271,7 @@ it('sorts .pluginBox rows by name via the sort-order select, in ascending order'
     // getServerExtensions() may or may not reach PEM right now (see this
     // file's own docblock) -- inject a deterministic, real-template-shaped
     // fixture as the ONLY '.pluginBox' rows (same "clear then inject"
-    // technique updates_ext.ts's own interaction test uses), so the
+    // technique updates/ext.ts's own interaction test uses), so the
     // sortElements() assertion below doesn't depend on whatever PEM
     // returns (or doesn't) right now.
     $page = H::asAdmin($this);

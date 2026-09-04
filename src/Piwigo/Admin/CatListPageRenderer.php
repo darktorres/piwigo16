@@ -263,7 +263,7 @@ final readonly class CatListPageRenderer
      * `pwg_album_manager_view` cookie.
      *
      * Absent, empty or `'0'` means no preference yet and the tile layout
-     * wins -- `cat_list.ts` writes `'tile'` on its own next tick. A value
+     * wins -- `categories/list.ts` writes `'tile'` on its own next tick. A value
      * that is none of the three checks nothing at all, which is what the
      * template's own `== 'compact'`/`== 'line'`/`== 'tile'` comparisons
      * did with a value they did not recognise.

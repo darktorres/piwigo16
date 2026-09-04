@@ -27,7 +27,7 @@ final readonly class DimensionFilterOptions
     ) {}
 
     /**
-     * The `"dimensions"` page-data payload batchManagerFilter.ts reads
+     * The `"dimensions"` page-data payload batch_manager/filter.ts reads
      * through `pwg_getPageData()`. Not a template flatten -- the template
      * reads this object's own properties -- so the key names here answer
      * to that one JS consumer and nothing else, and the four `ratio_*`

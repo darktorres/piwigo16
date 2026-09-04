@@ -235,7 +235,7 @@ final class CookieService
 
     /**
      * The album manager's layout preference -- `tile`, `line` or
-     * `compact` -- written by `cat_list.ts`.
+     * `compact` -- written by `categories/list.ts`.
      */
     public function getAlbumManagerView(): ?string
     {

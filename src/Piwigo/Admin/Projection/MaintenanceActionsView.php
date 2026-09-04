@@ -76,8 +76,8 @@ final readonly class MaintenanceActionsView implements View, HasPageAssets, Expo
             // order: 10 is required, see issue 1080.
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::css('themes/admin/default/css/pages/maintenance_actions.css', id: 'maintenance_actions'),
-            AssetContribution::script('maintenance_actions', 'themes/admin/default/js/maintenance_actions.ts', loadMode: LoadMode::Footer),
-            AssetContribution::script('ajax', 'themes/admin/default/js/maintenance.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('maintenance_actions', 'themes/admin/default/js/maintenance/actions.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('ajax', 'themes/admin/default/js/maintenance/maintenance.ts', loadMode: LoadMode::Footer),
         ];
     }
 

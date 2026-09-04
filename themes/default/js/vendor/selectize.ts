@@ -171,7 +171,7 @@ export function selectize<
 
   // Real `<option>` children seed the pool exactly like the original's
   // own `init_select()` -- this app's own direct (non-cache) call sites
-  // (album_notification.ts, group_list.ts's `.AddUserBlock`, plugins_new.ts's
+  // (album_notification.ts, users/group_list.ts's `.AddUserBlock`, plugins/new.ts's
   // author/tag-filter) all rely on this.
   // Real `init_select()`'s own `if ($option.is(':selected')) settings_element.
   // items.push(value);` -- a server-rendered `<option selected>` (real usage:
@@ -269,7 +269,7 @@ export function selectize<
     input.classList.toggle("has-items", items.length > 0);
     input.classList.toggle("has-options", order.length > 0);
     // Real `refreshClasses()`'s own `.full`/`.not-full` toggle
-    // (`isFull()`) -- `user_activity.ts`'s own filter-panel logic reads
+    // (`isFull()`) -- `users/activity.ts`'s own filter-panel logic reads
     // `.selectize-input.full` directly to know a single-select control
     // already has a value.
     input.classList.toggle("full", items.length >= maxItems);

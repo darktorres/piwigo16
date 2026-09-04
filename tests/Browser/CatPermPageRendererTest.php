@@ -111,7 +111,7 @@ it('submits a status/group permission change and persists it', function (): void
 });
 
 /**
- * cat_perm.ts's own status toggle, converted off jQuery in P49-A.
+ * categories/perm.ts's own status toggle, converted off jQuery in P49-A.
  *
  * `#privateOptions` carries no `u-hidden` class -- the server always
  * renders it visible and the script hides it on load for a public album,

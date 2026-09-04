@@ -164,7 +164,7 @@ it('renders a zero consensus-deviation-top as 0.000 rather than an empty cell', 
 });
 
 /**
- * P49-A conversion of themes/admin/default/js/rating_user.ts's own delete
+ * P49-A conversion of themes/admin/default/js/ratings/user.ts's own delete
  * flow -- 0% JS coverage before this: every other test in this file only
  * asserts the rendered page. This drives the full round trip: the
  * delegated .del click (reading the username via `this.closest("tr")`),

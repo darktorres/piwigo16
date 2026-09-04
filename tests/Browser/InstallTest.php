@@ -77,7 +77,7 @@ it('completes a fresh install end-to-end', function (): void {
 
         // Real, mutation-verified coverage for cluetip.ts (P49-B) --
         // this newsletter-subscribe span is this page's one real
-        // `positionBy: "bottomTop"` call site (languages_new.ts's own is
+        // `positionBy: "bottomTop"` call site (languages/new.ts's own is
         // the "auto"/real-default one, covered by its own
         // LanguagesNewInteractionTest.php). Asserted here, rather than
         // in a test of its own, for the same reason the mail-mirroring

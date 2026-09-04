@@ -18,7 +18,7 @@ namespace Piwigo\Admin\Projection;
  * `plugins_new.latte` runs it through the `format_date` and `time_since`
  * filters, which are the same `DateHelper` calls the producer used to make
  * eagerly. `$revisionSort` is the separate, digits-only `strtotime()` value
- * `plugins_new.ts` sorts on through `data-revision`; it is not a rendered
+ * `plugins/new.ts` sorts on through `data-revision`; it is not a rendered
  * date and does not go through a filter.
  *
  * `$id` doubles as the "post date" sort key: `data-date` carries it, and the

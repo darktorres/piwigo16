@@ -104,7 +104,7 @@ it('rejects an install request from a non-webmaster session', function (): void 
 });
 
 /**
- * languages_new.ts's whole body is one cluetip call inside a ready()
+ * languages/new.ts's whole body is one cluetip call inside a ready()
  * wrapper. `cluetip()` itself is now a native port
  * (`vendor/cluetip.ts`, P49-B) rather than a jQuery library call, so
  * what needs proving here is that the ready() callback still fires and

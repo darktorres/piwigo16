@@ -41,7 +41,7 @@ final readonly class LanguagesInstalledView implements View, HasPageAssets, Expo
     {
         return [
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
-            AssetContribution::script('languages_installed', 'themes/admin/default/js/languages_installed.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('languages_installed', 'themes/admin/default/js/languages/installed.ts', loadMode: LoadMode::Footer),
         ];
     }
 

@@ -4,7 +4,7 @@
  * single canonical source repo or package anywhere. jQuery's version also
  * accepts a `getSortable` second parameter (sort by one element but
  * reposition another, e.g. a parent row) -- this app's one real call site
- * (`plugins_new.ts`'s `.pluginBox` grid) never uses it, so it isn't
+ * (`plugins/new.ts`'s `.pluginBox` grid) never uses it, so it isn't
  * ported.
  *
  * Requires every element to share the same parentNode (true of that real

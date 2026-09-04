@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * P49-A conversion of themes/admin/default/js/user_list.ts -- by far the
+ * P49-A conversion of themes/admin/default/js/users/list.ts -- by far the
  * largest file converted this campaign (3378 lines, 6 jQuery-UI slider
  * instances, 3 selectize instances, a dozen `pop_in: Element` helper
  * functions threaded through the whole add/edit user flow).

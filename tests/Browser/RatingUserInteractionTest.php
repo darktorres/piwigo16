@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * P49-C conversion of themes/admin/default/js/rating_user.ts's own
+ * P49-C conversion of themes/admin/default/js/ratings/user.ts's own
  * dataTable()/tooltip() pair (`vendor/dataTable.ts`/`vendor/tooltip.ts`,
  * ported off datatables.net and jQuery UI's own tooltip widget). Neither
  * had any live JS coverage before this: RatingUserPageRendererTest.php's

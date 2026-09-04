@@ -56,7 +56,7 @@ final readonly class ConfigurationSizesView implements View, HasPageAssets, Expo
     {
         return [
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
-            AssetContribution::script('configuration_sizes', 'themes/admin/default/js/configuration_sizes.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('configuration_sizes', 'themes/admin/default/js/configuration/sizes.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/configuration_sizes.css', id: 'configuration_sizes'),
         ];
     }

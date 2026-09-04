@@ -2,14 +2,14 @@
 // declarer pre-P48, see git history for the pre-P48 shape). 8 real
 // consumer files (all found via a direct grep, not just this file's own
 // prior "12 real registrant pages" comment further down, which named
-// only 6): cat_search.ts (bare `strAlbumsFound`/`strResultLimit`
+// only 6): categories/search.ts (bare `strAlbumsFound`/`strResultLimit`
 // reads only, no `AlbumSelector` instantiation -- registered on
 // albums.php via a NEW `AssetContribution` this same batch adds, a
-// real pre-existing gap: cat_search.ts's own bare reads never had a
+// real pre-existing gap: categories/search.ts's own bare reads never had a
 // real runtime source before, since albums.php never embedded this
 // file's script), and picture_modify.ts/photos_add_direct.ts/
-// cat_modify.ts/batchManagerUnit.ts/batch_manager_global.ts/
-// batchManagerFilter.ts/mcs.ts (all `new AlbumSelector(...)`).
+// categories/modify.ts/batch_manager/unit.ts/batch_manager/global.ts/
+// batch_manager/filter.ts/mcs.ts (all `new AlbumSelector(...)`).
 //
 // Every consumer imports this file directly, and Rollup emits it once
 // as a shared chunk, so there is exactly one `AlbumSelector` class per
@@ -18,8 +18,8 @@
 // That is a change worth recording, because it silently *fixed*
 // something. While each consumer was handed a private duplicate, the 2
 // pages carrying 2 consumer files (batch_manager_unit.php:
-// batchManagerUnit.ts + batchManagerFilter.ts; batch_manager_global.php:
-// batch_manager_global.ts + batchManagerFilter.ts) loaded 2 independent
+// batch_manager/unit.ts + batch_manager/filter.ts; batch_manager_global.php:
+// batch_manager/global.ts + batch_manager/filter.ts) loaded 2 independent
 // copies of this class, so `activeAlbumSelector`'s single-active-popup
 // coordination (below) did not span both widgets on those pages -- each
 // copy tracked its own module state. That was documented as an accepted
@@ -95,16 +95,16 @@ const strPlusAlbumsFound = pwg_getPageString(
 );
 const strAlbumSelected = pwg_getPageString("Album already selected");
 const strNoSearchInProgress = pwg_getPageString("No search in progress");
-// Real cross-file exports -- cat_search.ts's own sole real need from
+// Real cross-file exports -- categories/search.ts's own sole real need from
 // this file (docs/PLAN.md P48, see the leading comment further down).
 export const strAlbumsFound = pwg_getPageString("<b>%d</b> albums found");
 // A real, genuinely coincidental duplicate of albums.ts's own
 // identically-named, identically-worded `const strAlbumFound`
-// (cat_search.ts's own leading comment has the full history) --
+// (categories/search.ts's own leading comment has the full history) --
 // exported here (not fixed to import from albums.ts instead, that
 // file's own P48 conversion is a separate future batch) purely because
 // this file becoming a real module would otherwise silently turn
-// cat_search.ts's existing bare read into a real TS2304 compile error,
+// categories/search.ts's existing bare read into a real TS2304 compile error,
 // not because this is the semantically "correct" owner.
 export const strAlbumFound = pwg_getPageString("<b>1</b> album found");
 export const strResultLimit = pwg_getPageString(
@@ -140,14 +140,14 @@ window.addEventListener("keypress", function (e) {
   }
 });
 
-// Real pre-existing bug, found via plugins_installed_config.ts's own
+// Real pre-existing bug, found via plugins/installed_config.ts's own
 // P48 module conversion: this file's own `#create_album()` reads
 // `pwgToken` bare with no local declaration of its own, relying on
 // TypeScript's ambient whole-program resolution to satisfy the
 // type-checker (any non-module file's own top-level `pwgToken`
 // declaration, anywhere in the program, used to suffice). At runtime
 // this had no real source at all on any of this file's own 12 real
-// registrant pages -- `plugins_installed_config.ts`, the only file
+// registrant pages -- `plugins/installed_config.ts`, the only file
 // that ever set `window.pwgToken`, is registered on exactly one real
 // page (`plugins_installed.php`), which never embeds `AlbumSelector`.
 // The `X-CSRF-Token` header `#create_album()` sends has been

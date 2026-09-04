@@ -1033,7 +1033,7 @@ function checkFilters() {
 // GET /api/v1/geoip's own response shape -- the real replacement for
 // jquery.geoip.js's client-side call to the long-dead freegeoip.net
 // JSONP endpoint (docs/PLAN.md P49-B group 1's own finding). Same type
-// rating_user.ts's own copy of this call reads.
+// ratings/user.ts's own copy of this call reads.
 type GeoIpLookupResponse =
   operations["geoIpLookup"]["responses"][200]["content"]["application/json"];
 

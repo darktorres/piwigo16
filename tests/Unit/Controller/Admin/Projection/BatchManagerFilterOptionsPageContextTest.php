@@ -53,7 +53,7 @@ test('toArray passes both value objects through without flattening', function ()
         ]);
 });
 
-test('toPageData keeps the JSON payload batchManagerFilter.ts reads, omitting absent ratio categories', function (): void {
+test('toPageData keeps the JSON payload batch_manager/filter.ts reads, omitting absent ratio categories', function (): void {
     $dimensions = new DimensionFilterOptions(
         widths: '600,1920',
         heights: '480,1080',

@@ -24,7 +24,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * against both the template's own body (and its included
  * `album_selector.inc.latte`, which is entirely self-contained and
  * reads no external context beyond a local `{var $load_mode}`) and
- * `cat_modify.ts`'s `pwg_getPageData()` reads.
+ * `categories/modify.ts`'s `pwg_getPageData()` reads.
  *
  * `$categoriesNav`/`$categoriesParentNav` are Html, not string (P59
  * correction): hand-built breadcrumbs starting with a literal
@@ -79,7 +79,7 @@ final readonly class CatModifyView implements View, HasPageAssets, ExposesPageDa
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('cat_modify', 'themes/admin/default/js/cat_modify.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('cat_modify', 'themes/admin/default/js/categories/modify.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),

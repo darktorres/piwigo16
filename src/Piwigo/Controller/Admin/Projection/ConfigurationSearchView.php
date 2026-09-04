@@ -39,7 +39,7 @@ final readonly class ConfigurationSearchView implements View, HasPageAssets, Exp
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('configuration_search', 'themes/admin/default/js/configuration_search.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('configuration_search', 'themes/admin/default/js/configuration/search.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
         ];
     }
@@ -48,7 +48,7 @@ final readonly class ConfigurationSearchView implements View, HasPageAssets, Exp
      * `configuration_search.latte`'s own unconditional
      * `{do exposeData('filters_names', $search['filters_names'])}`
      * (docs/PLAN.md's P42-B). The key name is the one
-     * `configuration_search.ts` reads through `pwg_getPageData()` and
+     * `configuration/search.ts` reads through `pwg_getPageData()` and
      * does not follow the property rename.
      */
     #[Override]

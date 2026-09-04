@@ -82,7 +82,7 @@ interface MultipartParams {
 }
 
 // `addRelatedCategory` is declared here too, independently of the
-// same-named functions in mcs.js/cat_modify.ts/batchManagerUnit.ts/
+// same-named functions in mcs.js/categories/modify.ts/batch_manager/unit.ts/
 // picture_modify.ts (docs/PLAN.md P46-B's own finding) -- safe since
 // these pages never co-load.
 //

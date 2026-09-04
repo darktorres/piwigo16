@@ -4,7 +4,7 @@ import { addClass, css, off, on, removeClass } from "./dom";
  * Port of jQuery UI 1.10.4's `ui.slider` widget (real source read from
  * `jquery-ui@1.10.4/ui/jquery.ui.slider.js`, vendored via the combined
  * `jquery-ui.js` CDN bundle this app loads). Horizontal only -- no real
- * call site (`user_list.ts`, `plugins_new.ts`, `doubleSlider.ts`'s own
+ * call site (`users/list.ts`, `plugins/new.ts`, `doubleSlider.ts`'s own
  * `pwgDoubleSlider`) ever sets `orientation`, `animate`, or `distance`.
  * Mouse + keyboard only: no touch-normalization plugin
  * (jquery-ui-touch-punch or similar) is registered anywhere in this
@@ -26,7 +26,7 @@ import { addClass, css, off, on, removeClass } from "./dom";
  * but `stop`/`change` only once, at release). This treats every
  * keydown as an atomic slide+stop+change instead. No real call site's
  * `slide`/`change`/`stop` callbacks differ in a way that distinguishes
- * "still holding" from "released" (`user_list.ts`'s all three re-render
+ * "still holding" from "released" (`users/list.ts`'s all three re-render
  * the same label; `stop` additionally commits the value) and no test
  * can practically simulate raw key-repeat through a real browser
  * driver, so the two are observably identical here.

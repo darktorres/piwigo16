@@ -8,7 +8,7 @@ use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * P49-A conversion of themes/admin/default/js/plugins_installated.ts --
+ * P49-A conversion of themes/admin/default/js/plugins/installed.ts --
  * PluginsInstalledPageRendererTest.php covers the page-render/session
  * branches, and PluginsIncompatiblePanelTest.php already covers the
  * incompatible-plugin confirm-before-activate path end to end (including
@@ -49,7 +49,7 @@ function pluginsInteractionFixtureCreate(): string
         'id' => PLUGINS_INTERACTION_FIXTURE_ID,
         'name' => 'Plugins Interaction Fixture Plugin',
         'version' => '1.0.0',
-        'description' => 'Browser-test fixture for plugins_installated.ts (P49-A).',
+        'description' => 'Browser-test fixture for plugins/installed.ts (P49-A).',
         'author' => 'piwigo-tests',
         'license' => 'MIT',
         'minPiwigo' => '16.3.0',

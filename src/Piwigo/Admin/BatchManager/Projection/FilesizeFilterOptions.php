@@ -20,7 +20,7 @@ final readonly class FilesizeFilterOptions
     ) {}
 
     /**
-     * The `"filesize"` page-data payload batchManagerFilter.ts reads
+     * The `"filesize"` page-data payload batch_manager/filter.ts reads
      * through `pwg_getPageData()`; the template reads this object's own
      * properties instead.
      *

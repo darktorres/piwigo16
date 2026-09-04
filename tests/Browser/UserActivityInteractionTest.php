@@ -8,7 +8,7 @@ use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * P49-A conversion of themes/admin/default/js/user_activity.ts -- 0% prior
+ * P49-A conversion of themes/admin/default/js/users/activity.ts -- 0% prior
  * JS coverage (UserActivityPageRendererTest.php only ever asserts the
  * server-rendered "additional filter" resolution and the CSV export
  * route, never the client-side activity-list build/pagination/filter-

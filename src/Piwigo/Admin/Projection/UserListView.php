@@ -77,7 +77,7 @@ final readonly class UserListView implements View, HasPageAssets, ExposesPageDat
      * `{capture $tmpFooterScript}...{/capture}{do footerScript(...)}`
      * block (100% static JS, zero Latte/PHP interpolation) is NOT
      * declared here as page data -- its content was moved directly
-     * into `themes/admin/default/js/user_list.ts`, the same real asset
+     * into `themes/admin/default/js/users/list.ts`, the same real asset
      * file the `user_list` script id below already registers.
      */
     #[Override]
@@ -94,7 +94,7 @@ final readonly class UserListView implements View, HasPageAssets, ExposesPageDat
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
             // order: 10 is required, see issue 1080.
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
-            AssetContribution::script('user_list', 'themes/admin/default/js/user_list.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('user_list', 'themes/admin/default/js/users/list.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/user_list.css', id: 'user_list'),
         ];
     }

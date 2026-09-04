@@ -3,7 +3,7 @@
 // (`node_modules/jquery-ui/datepicker.js`, jQuery UI 1.10.4;
 // `node_modules/jquery-timepicker-addon/src/jquery-ui-timepicker-addon.js`,
 // `github:trentrichardson/jQuery-Timepicker-Addon#v1.4.4`), across all 4
-// real call sites (`batch_manager_global.ts`/`batchManagerUnit.ts`/
+// real call sites (`batch_manager/global.ts`/`batch_manager/unit.ts`/
 // `picture_modify.ts`'s own `{showTimepicker:true, cancelButton:...}`
 // creation-date pickers, `history.ts`'s own plain (no time, no cancel
 // button) start/end search-range pickers) plus `datepicker.ts`'s own
@@ -719,7 +719,7 @@ function writeValue(inst: Instance): void {
   // `jquery-timepicker-addon`'s own real `_updateDateTime()` (its
   // monkeypatched `_updateDatepicker`) unconditionally `.trigger("change")`s
   // the *visible* field, not the alt field, every time it writes a
-  // value -- `batchManagerUnit.ts`'s own per-photo "unsaved changes"
+  // value -- `batch_manager/unit.ts`'s own per-photo "unsaved changes"
   // listener depends on seeing this real event.
   inst.input.dispatchEvent(new Event("change", { bubbles: true }));
 }

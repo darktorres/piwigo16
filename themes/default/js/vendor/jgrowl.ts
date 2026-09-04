@@ -3,7 +3,7 @@ import { fadeIn, fadeOut, hover, on } from "./dom";
 /**
  * Port of jgrowl@1.3.0's own `$.jGrowl(message, options)` wrapper form
  * (real source read from the CDN, `jgrowl@1.3.0/jquery.jgrowl.js`) --
- * the only form either real call site (`updates_ext.ts`) uses, never the
+ * the only form either real call site (`updates/ext.ts`) uses, never the
  * per-container `$.fn.jGrowl()`/instance-method forms. Ported options:
  * `theme`, `header`, `life`, `sticky` -- the only ones any real call
  * site sets; `pool`, `group`, `position`, `glue`, `themeState`,
@@ -29,7 +29,7 @@ import { fadeIn, fadeOut, hover, on } from "./dom";
  * insertion. This port inserts directly (before the close-all button
  * when one exists, so it stays last; appended otherwise), reaching the
  * identical end DOM order without needing an inert placeholder node --
- * confirmed harmless against `updates_ext.ts`'s own `#jGrowl > *`
+ * confirmed harmless against `updates/ext.ts`'s own `#jGrowl > *`
  * MutationObserver, which only ever looks for `.success`/`.error`
  * classes no anchor node would carry anyway.
  */

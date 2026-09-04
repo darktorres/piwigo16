@@ -10,7 +10,7 @@ import {
  * Real first-party wrapper around `themes/default/js/vendor/slider.ts`'s
  * dual-handle (`range: true`) mode -- `container` is the
  * `[data-slider=...]` element both real consumers
- * (`batchManagerFilter.ts`, `mcs.ts`) already select; the actual slider
+ * (`batch_manager/filter.ts`, `mcs.ts`) already select; the actual slider
  * track builds inside its `.slider-slider` child, and `.slider-choice`
  * preset buttons (each carrying real `data-min`/`data-max` attributes)
  * jump the slider to a specific index pair.

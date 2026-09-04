@@ -55,7 +55,7 @@ final readonly class RatingUserView implements View, HasPageAssets, ExposesPageD
      * `{do combineCss(...)}`x2 (docs/PLAN.md's P42-B). No jQuery-UI theme
      * CSS was ever registered on this page (tooltip styling didn't need
      * it), and no `jquery.dataTables`/`jquery.ui` script is registered
-     * here either: `rating_user.ts` has zero real jQuery/jQuery-UI/
+     * here either: `ratings/user.ts` has zero real jQuery/jQuery-UI/
      * datatables.net calls.
      */
     #[Override]
@@ -68,7 +68,7 @@ final readonly class RatingUserView implements View, HasPageAssets, ExposesPageD
             // direct import now (docs/PLAN.md P48) -- the separate
             // `core.scripts` registration this page used to carry is
             // dropped.
-            AssetContribution::script('rating_user', 'themes/admin/default/js/rating_user.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('rating_user', 'themes/admin/default/js/ratings/user.ts', loadMode: LoadMode::Footer),
         ];
     }
 

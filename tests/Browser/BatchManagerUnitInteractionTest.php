@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * P49-A conversion of themes/admin/default/js/batchManagerUnit.ts --
+ * P49-A conversion of themes/admin/default/js/batch_manager/unit.ts --
  * AdminAlbumSelectorTest.php's own "names the album in the unit batch
  * manager..." test already covers the AlbumSelector/add_related_category
  * flow end to end. What neither that test nor

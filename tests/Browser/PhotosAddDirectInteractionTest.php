@@ -16,7 +16,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *
  * Three handlers this file wires up have no reachable template call
  * site at all (confirmed by grep across every admin template, matching
- * the same class of finding already recorded for cat_modify.ts's
+ * the same class of finding already recorded for categories/modify.ts's
  * `.unlock-album`): `#showPermissions`/`.showFieldset`,
  * `#uploadWarningsSummary a.showInfo` + its `#uploadWarnings` target,
  * and (unreachably in this fixture, since it always has albums)
@@ -108,7 +108,7 @@ it('toggles the upload-options panel open and closed', function (): void {
         ->toBeTrue();
 
     // slideToggle() has no completion callback here, but the same
-    // animation-duration race documented in user_activity.ts's own test
+    // animation-duration race documented in users/activity.ts's own test
     // applies: give it time to fully settle before toggling again.
     $sleep($page, 500);
 

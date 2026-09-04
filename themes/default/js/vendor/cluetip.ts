@@ -2,7 +2,7 @@
 // from the vendored `jquery-cluetip@1.2.6` package (`node_modules/
 // jquery-cluetip/jquery.cluetip.js`). Two real, live call sites --
 // `install.ts`'s newsletter-subscribe span (`positionBy: "bottomTop"`)
-// and `languages_new.ts`'s per-language external-link cells (the real
+// and `languages/new.ts`'s per-language external-link cells (the real
 // default, `positionBy: "auto"`) -- both call `.cluetip({width: 300,
 // splitTitle: "|"[, positionBy]})` on a `title="A|B"`-attributed
 // element and nothing else: no `rel`-attribute/ajax/local content

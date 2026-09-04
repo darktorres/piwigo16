@@ -8,7 +8,7 @@ use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * P49-A conversion of themes/admin/default/js/cat_list.ts --
+ * P49-A conversion of themes/admin/default/js/categories/list.ts --
  * CatListPageRendererTest.php only covers the server-rendered album list
  * itself; this file covers the client-side-only behaviors the conversion
  * touched: the compact/line/tile view switch (each its own heavy
@@ -122,7 +122,7 @@ it('reveals the add-album input mode on click, and cancels back out of it', func
 });
 
 it('persists the view-mode cookie across a real page reload', function (): void {
-    // cat_list.ts's own setCookie() (themes/default/js/vendor/cookie.ts,
+    // categories/list.ts's own setCookie() (themes/default/js/vendor/cookie.ts,
     // ported off jquery.cookie in P49-B group 2) writes the cookie the
     // SERVER reads back (CookieService, src/Piwigo/Auth/CookieService.php)
     // to decide which radio is checked on load. CatListPageRendererTest.php's

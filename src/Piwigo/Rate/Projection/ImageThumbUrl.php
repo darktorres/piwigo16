@@ -13,7 +13,7 @@ namespace Piwigo\Rate\Projection;
  *
  * It carried a second `page` field, a makePictureUrl() result, until P58-A:
  * the flatten emitted it as a key and neither the template nor
- * rating_user.ts ever read it, before or after. It was costing a URL build
+ * ratings/user.ts ever read it, before or after. It was costing a URL build
  * per rated image for nothing.
  */
 final readonly class ImageThumbUrl

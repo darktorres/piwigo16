@@ -10,7 +10,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 // End-to-end cover for the incompatible-plugins panel, which was dead from
 // P40 until P48 and had no test of any kind (docs/PLAN.md). The whole
 // feature hangs off one jQuery.ajax call in
-// themes/admin/default/js/plugins_installated.ts: it GETs admin.php with
+// themes/admin/default/js/plugins/installed.ts: it GETs admin.php with
 // `dataType: "json"`, and everything downstream -- the .warning marker, the
 // `incompatible` row class, the confirm-before-activate guard on .activate
 // -- lives in that call's own success handler.
@@ -192,7 +192,7 @@ it('asks before activating an incompatible plugin, and reverts the switch when r
         incompatible_fixture_wait_for_marker($page, $id);
 
         // The change handler is bound only when is_webmaster is truthy
-        // (plugins_installated.ts's own `if (isWebmaster != 0)`), so assert
+        // (plugins/installed.ts's own `if (isWebmaster != 0)`), so assert
         // that first: otherwise the switch would simply do nothing and the
         // "no activation happened" assertions below would pass for entirely
         // the wrong reason.

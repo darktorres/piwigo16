@@ -36,7 +36,7 @@ final readonly class LanguagesNewView implements View, HasPageAssets
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('languages_new', 'themes/admin/default/js/languages_new.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('languages_new', 'themes/admin/default/js/languages/new.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/languages_new.css', id: 'languages_new'),
         ];
     }

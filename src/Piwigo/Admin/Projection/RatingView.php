@@ -67,10 +67,10 @@ final readonly class RatingView implements View, HasPageAssets, ExposesPageData
             // P48) -- the separate
             // `core.scripts` registration this page used to carry is
             // dropped. Renamed from rating.ts (docs/PLAN.md P51-I item 3)
-            // to disambiguate from rating_user.ts -- both delete ratings
+            // to disambiguate from ratings/user.ts -- both delete ratings
             // (of one photo vs. by one user), but only this name says
             // which axis.
-            AssetContribution::script('rating_photo', 'themes/admin/default/js/rating_photo.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('rating_photo', 'themes/admin/default/js/ratings/photo.ts', loadMode: LoadMode::Footer),
         ];
     }
 

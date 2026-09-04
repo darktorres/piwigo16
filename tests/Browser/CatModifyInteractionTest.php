@@ -8,7 +8,7 @@ use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * P49-A conversion of themes/admin/default/js/cat_modify.ts -- 0% prior
+ * P49-A conversion of themes/admin/default/js/categories/modify.ts -- 0% prior
  * live-interaction coverage (CatModifyPageRendererTest.php only ever
  * asserts the rendered page).
  *
@@ -135,7 +135,7 @@ it('locks the album via the switch and persists it through #cat-properties-save'
     // `.switch input` is visually hidden (opacity:0) -- the real click
     // target is the wrapping <label>, same pattern as every other
     // toggle-switch in this campaign (common.ts's font-checkbox,
-    // plugins_new.ts's beta-test switch).
+    // plugins/new.ts's beta-test switch).
     $page->click("label[for='cat-locked']");
     $page->click('#cat-properties-save');
 

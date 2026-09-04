@@ -47,7 +47,7 @@ final readonly class AlbumsView implements View, HasPageAssets, ExposesPageData
             // order: 10 is required, see issue 1080.
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::script('albums', 'themes/admin/default/js/albums.ts', loadMode: LoadMode::Footer),
-            AssetContribution::script('cat_search', 'themes/admin/default/js/cat_search.ts', loadMode: LoadMode::Footer, dependsOn: ['albums']),
+            AssetContribution::script('cat_search', 'themes/admin/default/js/categories/search.ts', loadMode: LoadMode::Footer, dependsOn: ['albums']),
             AssetContribution::css('themes/admin/default/css/pages/albums.css', id: 'albums'),
         ];
     }

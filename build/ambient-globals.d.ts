@@ -29,7 +29,7 @@ interface Window {
   popuphelp: (url: string) => void;
   pwg_tryFocus: (id: string) => void;
 
-  // batch_manager_global.ts's own 4 functions, called from
+  // batch_manager/global.ts's own 4 functions, called from
   // batch_manager_global.latte's own `href="javascript:
   // selectGenerateDerivAll()"`-style pseudo-protocol links.
   selectGenerateDerivAll: () => void;
@@ -40,11 +40,11 @@ interface Window {
   // footer.ts's own 2 functions, called from layout.latte's own
   // `onclick="show_user_whats_new()"` / `onClick=
   // "hide_user_whats_new()"` attributes -- same `javascript:`/`onclick=`
-  // exposure pattern as batch_manager_global.ts's own copy above.
+  // exposure pattern as batch_manager/global.ts's own copy above.
   hide_user_whats_new: () => Promise<void>;
   show_user_whats_new: () => void;
 
-  // updates_ext.ts's own 4 functions, called from
+  // updates/ext.ts's own 4 functions, called from
   // updates_ext.latte's own `onClick="ignoreAll()"` /
   // `onClick="resetIgnored()"` / `onClick="updateExtension(...)"` /
   // `onClick="ignoreExtension(...)"` attributes -- same `javascript:`/
@@ -54,7 +54,7 @@ interface Window {
   updateExtension: (type: string, id: string, revision: string) => void;
   ignoreExtension: (type: string, id: string) => void;
 
-  // group_list.ts's own 2 functions -- `hideAddGroupForm` is called
+  // users/group_list.ts's own 2 functions -- `hideAddGroupForm` is called
   // from group_list.latte's own `onclick="hideAddGroupForm()"`
   // attribute; `updateSelectionPanel` is called from a
   // dynamically-set `onclick`/`OnClick` HTML attribute string this
@@ -64,7 +64,7 @@ interface Window {
   hideAddGroupForm: () => void;
   updateSelectionPanel: (changedState?: string) => void;
 
-  // user_list.ts's own public plugin extension point -- JSDoc-documented
+  // users/list.ts's own public plugin extension point -- JSDoc-documented
   // for third-party plugins to call from their own separately-loaded
   // `<script>` tags.
   plugin_add_tab_in_user_modal: (
@@ -141,8 +141,8 @@ interface AlbumSelectorOptions {
 // consumer's `selectAlbum` callback (`this.#selectAlbum = (args) =>
 // selectAlbum.call(null, { ...args, newSelectedAlbum, addSelectedAlbum,
 // getSelectedAlbum })`). Shared across every real `selectAlbum:`
-// consumer (`batchManagerFilter.ts`, `cat_modify.ts`,
-// `batch_manager_global.ts`, `mcs.ts`, `batchManagerUnit.ts`,
+// consumer (`batch_manager/filter.ts`, `categories/modify.ts`,
+// `batch_manager/global.ts`, `mcs.ts`, `batch_manager/unit.ts`,
 // `picture_modify.ts`, `photos_add_direct.ts`) -- grows if a future
 // consumer needs more of `album`'s own real shape than `id`/`name`.
 interface AlbumSelectorCallbackArgs {

@@ -120,7 +120,7 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             // (all 3 have several real registrant pages, so a plain
             // import isn't safe here -- Design §4), plus both of this
             // page's own real shared-library files, batchManagerGlobal.ts
-            // and batch_manager_global.ts, which this pair's own batch
+            // and batch_manager/global.ts, which this pair's own batch
             // found must merge into ONE bundle at ONE LoadMode (see both
             // files' own leading comments) rather than staying 2
             // separate (page × LoadMode) entries the way most pages'
@@ -129,14 +129,14 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             // registration), so it can never be safely duplicated the
             // way addAlbum.ts's direct import is. Footer (not
             // batchManagerGlobal.ts's former Async) is the merged mode,
-            // matching batch_manager_global.ts's own former mode. No more
+            // matching batch_manager/global.ts's own former mode. No more
             // `jquery.ui.timepicker-addon` dependency -- datepicker.ts is
             // fully native now too (P49-B); `jquery-ui.css` below (kept
             // for its own sake, not via that former dependency's
             // cascade-promotion) still themes the native port's reused
             // class names. No plain `dependsOn: ['jquery']` either
             // (P49-C) -- confirmed zero real jQuery calls left anywhere
-            // in `batchManagerGlobal.ts`/`batch_manager_global.ts`
+            // in `batchManagerGlobal.ts`/`batch_manager/global.ts`
             // (`pwgAddAlbum` is a real named ES import now, not a
             // `jQuery.fn.pwgAddAlbum` plugin registration). The
             // `jquery.progressBar` script is dropped outright too --
@@ -163,7 +163,7 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
             AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui'),
             AssetContribution::css('https://cdn.jsdelivr.net/gh/trentrichardson/jQuery-Timepicker-Addon@v1.4.4/dist/jquery-ui-timepicker-addon.min.css'),
-            AssetContribution::script('batchManagerFilter', 'themes/admin/default/js/batchManagerFilter.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('batchManagerFilter', 'themes/admin/default/js/batch_manager/filter.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/components/batch_manager_filter.css', id: 'batch_manager_filter'),
             // quick_search.latte's own contribution, reached via
             // batch_manager_filter.inc.latte's own {include} of it --

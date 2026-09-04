@@ -17,7 +17,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * `GET /api/v1/geoip?ip=<ip>` -- real replacement for jquery.geoip.js's
  * client-side call to the long-dead http://freegeoip.net/json/<ip>
  * (docs/PLAN.md P49-B group 1's own finding), admin only (both real
- * callers, history.ts's connection log and rating_user.ts's anonymous-
+ * callers, history.ts's connection log and ratings/user.ts's anonymous-
  * rater tooltip, are admin-only pages).
  *
  * Always 200: `{"available": false}` is an expected "nothing to show"

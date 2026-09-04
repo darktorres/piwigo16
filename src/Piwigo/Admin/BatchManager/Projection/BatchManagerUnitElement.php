@@ -22,7 +22,7 @@ use Latte\Runtime\Html;
  *
  * Eight of the merged keys are gone, having no reader in this page's
  * template, in `BatchManagerUnitView::exposedPageData()`, or in
- * `batchManagerUnit.ts`: LEGEND, LEVEL, is_svg, TITLE, REGISTRATION_DATE,
+ * `batch_manager/unit.ts`: LEGEND, LEVEL, is_svg, TITLE, REGISTRATION_DATE,
  * tag_selection (a duplicate of TAGS), U_DELETE and U_SYNC.
  *
  * `$relatedCategoryIds` is the one field the template never touches:

@@ -7,7 +7,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 /**
  * Real, mutation-verified interactive coverage of `vendor/cluetip.ts`
  * (P49-B) on its one real "auto"-positioned call site,
- * `languages_new.ts`. `LanguagesNewPageRendererTest.php`'s own coverage
+ * `languages/new.ts`. `LanguagesNewPageRendererTest.php`'s own coverage
  * only ever proves cluetip's shared `#cluetip` element gets created on
  * load -- none of this was ever behaviorally tested before, jQuery-based
  * or not: the actual hover-activate/position/content/deactivate cycle.

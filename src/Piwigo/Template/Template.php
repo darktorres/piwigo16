@@ -1091,7 +1091,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * with `$asset->version === false` (`PageAssets::resolveScripts()`/
      * `resolveModulePreloads()`), since a JS module's own URL must match
      * exactly everywhere it's reached from -- an inter-chunk `import`
-     * Vite itself emits (e.g. `cat_search.ts` importing `albums.ts`'s
+     * Vite itself emits (e.g. `categories/search.ts` importing `albums.ts`'s
      * `data`, docs/PLAN.md P48's `dependsOn` convention) never carries a
      * query string, so a versioned `<script src>` for the same file
      * would be a *different* URL to the browser's module registry,

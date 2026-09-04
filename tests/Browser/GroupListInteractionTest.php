@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * P49-A conversion of themes/admin/default/js/group_list.ts.
+ * P49-A conversion of themes/admin/default/js/users/group_list.ts.
  *
  * Stays jQuery, each marked at its call site: $.confirm()/$.alert()
  * (jquery-confirm, P49-B group 5) and selectize() (P49-B group 6, both
@@ -26,7 +26,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *
  * Every `[data-id=...]`/`[value=...]`-style attribute selector built
  * from an interpolated group id was rewritten quoted, same risk class
- * already fixed in tags.ts/batchManagerUnit.ts.
+ * already fixed in tags.ts/batch_manager/unit.ts.
  */
 it('renames a group via the checkmark button, then deletes it via the selection panel', function (): void {
     $page = H::asAdmin($this);

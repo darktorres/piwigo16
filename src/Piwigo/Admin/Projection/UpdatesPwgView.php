@@ -85,7 +85,7 @@ final readonly class UpdatesPwgView implements View, HasPageAssets
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('updates_pwg', 'themes/admin/default/js/updates_pwg.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('updates_pwg', 'themes/admin/default/js/updates/pwg.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/updates_pwg.css', id: 'updates_pwg'),
         ];
     }

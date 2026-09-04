@@ -457,10 +457,7 @@ function lineConstructor(line: HistoryLine, id: number) {
 
   removeClass(newLine, "hide");
 
-  /* console log to help debug */
-  // console.log(line);
   attr(newLine, "id", String(id));
-  // console.log(id);
 
   html(find(newLine, ".date-day"), line.dateFormatted ?? "");
   html(find(newLine, ".date-hour"), line.time);
@@ -606,8 +603,6 @@ function lineConstructor(line: HistoryLine, id: number) {
       hide(find(newLine, ".type-id"));
       break;
     case "search": {
-      // for debug
-      // console.log('search n° : ', line.searchId, ' ', line.searchDetails);
       const { searchDetails } = line;
       // Genuinely heterogeneous per-filter-type search-criteria data
       // (same nature as search_filters.ts's own global_params/

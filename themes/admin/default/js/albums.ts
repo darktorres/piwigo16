@@ -1142,12 +1142,10 @@ function updateTitleBadge(newNbAlbums: number) {
 }
 
 function goToNode(node: AlbumJqTreeNode, firstNode: AlbumJqTreeNode) {
-  // console.log(firstNode.id, node.id);
   if (node.parent) {
     goToNode(node.parent, firstNode);
     if (node !== firstNode) {
       getAlbumTree().openNode(node);
-      // console.log("parent id : " + node.parent.id);
       show(
         document.querySelectorAll(
           "#" + escapeId("cat-" + String(node.parent.id)),
@@ -1173,9 +1171,7 @@ function goToNode(node: AlbumJqTreeNode, firstNode: AlbumJqTreeNode) {
 
 function showNodeChildrens(node: AlbumJqTreeNode) {
   if (node.children.length > 0) {
-    // console.log("childrens : " + node.children);
     node.children.forEach((child) => {
-      // console.log("children : " + child.id, child.name);
       addClass(
         document.querySelectorAll("#" + escapeId("cat-" + String(child.id))),
         "imune",

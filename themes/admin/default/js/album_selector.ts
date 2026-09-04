@@ -285,7 +285,6 @@ export class AlbumSelector {
   }
 
   #init() {
-    // console.log('init id:', activeAlbumSelector.instanceId);
     if (this.#inAdminMode && this.#showRootBtn) {
       addClass(AlbumSelector.selectors.linkedAlbumPopInContainer, "big");
     }
@@ -796,8 +795,6 @@ export class AlbumSelector {
 
     this.#loadPickAlbumEvent();
     this.#loadSubCatEvent();
-    // for debug
-    // console.log(limit);
     if (limit.remainingCats > 0) {
       const text = sprintf(
         strPlusAlbumsFound,

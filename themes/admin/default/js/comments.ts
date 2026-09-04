@@ -262,8 +262,6 @@ async function getComments(params: CommentsFilterParams): Promise<void> {
       },
     })) as CommentListResponse;
 
-    // for debug
-    // console.log(response);
     commentsState = { ...response };
     commentsDisplaySummary(response.summary);
     displayComments(response.comments);

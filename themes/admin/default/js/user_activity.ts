@@ -163,8 +163,6 @@ const actionInfosTagsDeleted = pwg_getPageString("%d tags deleted");
 const actionInfosTagsEdited = pwg_getPageString("%d tags edited");
 const actionInfosTagsMoved = pwg_getPageString("%d tags moved");
 
-//{*<-- Getting and Displaying Activities -->*}
-
 // Declared before the immediately-invoked call below: getUserActivity()
 // itself is hoisted (a function declaration), but this const binding
 // would otherwise still be in its temporal dead zone at that call site
@@ -395,13 +393,11 @@ function lineConstructor(line: MergedActivityLine) {
   hide(document.querySelectorAll(".activity-noresult"));
   removeClass(newLine, "hide");
 
-  /* console log to help debug
-    {* console.log(line); *}*/
   attr(newLine, "id", String(line.id));
 
   let finalAlbumInfos: string;
 
-  //{* Determines wich string need to be placed in the line constructed *}
+  // Determines which string needs to be placed in the line constructed
 
   if (line.counter > 1) {
     // pluriel
@@ -1049,8 +1045,6 @@ function getInitials(username: string) {
   return res;
 }
 
-//{* Pagination *}
-
 function moveToPage(page: number) {
   if (page < 0) return;
   actualPage = page;
@@ -1175,7 +1169,6 @@ ready(function () {
         );
         const value = item !== null ? data(item, "value") : undefined;
         if (value === "none") {
-          //{* call ajax sur activity list sans uid *}
           void getUserActivity(
             1,
             undefined,
@@ -1185,7 +1178,6 @@ ready(function () {
             additionalFiltValue,
           );
         } else {
-          //{* call ajax sur activity list avec uid en param *}
           void getUserActivity(
             1,
             // Excluded the "none" sentinel above -- data() already coerces
@@ -1218,7 +1210,6 @@ ready(function () {
         );
         const value = item !== null ? data(item, "value") : undefined;
         if (value === "none") {
-          //{* call ajax sur activity list sans action et object *}
           if (additionalFiltType !== false) {
             void getUserActivity(
               1,
@@ -1239,7 +1230,6 @@ ready(function () {
             );
           }
         } else {
-          //{* call ajax sur activity list avec action et object en param *}
           // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
           const [object, action] = (value as string).split("/");
           void getUserActivity(

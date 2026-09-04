@@ -9,10 +9,34 @@ function str_repeat(i: string, m: number): string {
   return o.join("");
 }
 
+/**
+ * Uniform integer in `[min, max)`. Its one real caller
+ * (`users/list.ts`'s own `genPassword()`) feeds this into a generated
+ * password, so this draws from `crypto.getRandomValues()` rather than
+ * `Math.random()` -- the latter is not a cryptographically secure PRNG
+ * in any JS engine, and its internal state can be predicted from
+ * enough samples. Rejection sampling (drop values above the largest
+ * multiple of `range` a `Uint32` can hold) keeps the result uniform
+ * rather than introducing modulo bias.
+ */
 export function getRandomInt(min: number, max: number): number {
   const lo = Math.ceil(min);
   const hi = Math.floor(max);
-  return Math.floor(Math.random() * (hi - lo)) + lo;
+  const range = hi - lo;
+  if (range <= 0) {
+    return lo;
+  }
+
+  const totalUint32Values = 0x100000000;
+  const rejectionLimit = Math.floor(totalUint32Values / range) * range;
+  const buf = new Uint32Array(1);
+  let value: number;
+  do {
+    crypto.getRandomValues(buf);
+    value = buf[0]!;
+  } while (value >= rejectionLimit);
+
+  return lo + (value % range);
 }
 
 export function sprintf(...args: (string | number)[]): string {

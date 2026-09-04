@@ -451,7 +451,9 @@ function myInfoBody(params: ProfileParams) {
     recent_period: "recentPeriod",
     show_nb_comments: "showNbComments",
     show_nb_hits: "showNbHits",
+    // eslint-disable-next-line sonarjs/no-hardcoded-passwords -- false positive: these are wire-format field-name keys (a rename map), not actual password values.
     new_password: "newPassword",
+    // eslint-disable-next-line sonarjs/no-hardcoded-passwords -- see above.
     conf_new_password: "confNewPassword",
   };
   const numeric = ["nbImagePage", "recentPeriod"];

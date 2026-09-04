@@ -1201,10 +1201,7 @@ function getId(parent: AlbumJqTreeNode): string | number {
   }
 }
 
-function getRank(
-  node: AlbumJqTreeNode,
-  ignoreId: string | number | null = null,
-): number {
+function getRank(node: AlbumJqTreeNode, ignoreId: string | number): number {
   const previousSibling = node.getPreviousSibling();
   if (previousSibling != null) {
     if (node.id !== ignoreId) {

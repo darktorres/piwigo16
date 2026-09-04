@@ -1,5 +1,6 @@
 import { pwg_getPageString } from "../../../default/js/pageData";
 import { ajax, type AjaxThenable } from "../../../default/js/vendor/utils/ajax";
+import { looksLikeEmail } from "../../../default/js/vendor/utils/email";
 import { cluetip } from "../../../default/js/vendor/widgets/cluetip";
 import {
   addClass,
@@ -219,13 +220,10 @@ ready(function () {
     }
   }
 
-  // A deliberate approximation of PHP's FILTER_VALIDATE_EMAIL, not a
-  // byte-for-byte mirror (not practically replicable in JS) -- the
-  // server remains authoritative on submit.
   function checkAdminEmailFormat() {
     const value = fieldValue("admin_mail").trim();
     const error = q("#admin_mail-error");
-    if (value !== "" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    if (value !== "" && !looksLikeEmail(value)) {
       setText(
         error,
         pwg_getPageString(

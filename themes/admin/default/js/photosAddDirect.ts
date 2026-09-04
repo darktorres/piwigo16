@@ -510,8 +510,6 @@ ready(function () {
               }
             });
 
-            files.filter((f) => imagesSearch[f.id]!.status === "found");
-
             // If a file is not found or found more than one time
             if (notFound.length || multiple.length) {
               const [multStr, notFoundStr] = [multiple, notFound].map(
@@ -905,6 +903,7 @@ function extractTusErrorDetail(err: Error | TusDetailedError) {
       if (body?.detail) {
         return body.detail;
       }
+      // eslint-disable-next-line sonarjs/no-ignored-exceptions -- intentional: the fallthrough below is the real handling, not an omission.
     } catch (_e) {
       // Not a problem+json body (e.g. a network-level failure) -- fall
       // through to the generic message below.

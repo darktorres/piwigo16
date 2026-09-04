@@ -1,7 +1,9 @@
+import type { ESLint, Linter } from "eslint";
 import { defineConfig } from "eslint/config";
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import globals from "globals";
+import sonarjs from "eslint-plugin-sonarjs";
 
 // Prettier is deliberately NOT wired in here (no eslint-plugin-prettier) — same
 // separation of concerns P0 kept between ECS (style) and PHPStan (correctness).
@@ -260,5 +262,27 @@ export default defineConfig(
         },
       ],
     },
+  },
+  {
+    // P51-M: eslint-plugin-sonarjs's own `recommended` config, adopted in
+    // full (measured at 119 real sites across 29 rules against the
+    // P51-A–L-final tree) -- small, genuinely bug/security-focused
+    // (ReDoS, hardcoded passwords, identical functions, ignored
+    // exceptions), unlike eslint-plugin-unicorn's `recommended` (4,314
+    // sites, mostly fighting this codebase's own deliberate conventions
+    // -- see docs/PLAN.md's own P51-M entry for the full analysis).
+    // Spread directly (not `extends: [...]`) -- eslint-plugin-sonarjs's own
+    // `recommended` config object's types are too loose for this project's
+    // `exactOptionalPropertyTypes` to accept through ESLint's own
+    // `ExtendsElement` type. Its real runtime shape (confirmed directly
+    // against the installed package) is a single flat
+    // `{name, plugins, rules, settings}` object, never the array branch its
+    // own union type also allows -- narrowed with an explicit cast.
+    files: ["**/*.ts"],
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- see comment above; eslint-plugin-sonarjs's own `configs` index signature is untyped, and `recommended` is confirmed to be the flat object shape, not its own type's array alternative.
+    ...(sonarjs.configs!["recommended"] as {
+      plugins: Record<string, ESLint.Plugin>;
+      rules: Linter.RulesRecord;
+    }),
   },
 );

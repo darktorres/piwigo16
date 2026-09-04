@@ -13,6 +13,7 @@ import {
   ready,
   show,
 } from "../../default/js/vendor/utils/dom";
+import { looksLikeEmail } from "../../default/js/vendor/utils/email";
 
 const modeCookie = cookie("mode");
 if (modeCookie !== undefined) {
@@ -268,7 +269,7 @@ function pwg_checkEmailFormatStdPages(rootId: string, fieldId: string) {
     field.closest(".column-flex")?.querySelectorAll(".error-message") ?? [];
 
   const check = (): void => {
-    if (field.value !== "" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field.value)) {
+    if (field.value !== "" && !looksLikeEmail(field.value)) {
       html(
         errorMessages,
         '<i class="gallery-icon-attention-circled"></i> ' +

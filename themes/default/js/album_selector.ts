@@ -235,6 +235,7 @@ export class AlbumSelector {
     modalTitle = "",
     modalSearchPlaceholder = "",
   }: AlbumSelectorOptions) {
+    // eslint-disable-next-line sonarjs/pseudo-random -- not security-sensitive: a per-instance CSS class-scoping suffix, only needs to avoid colliding with another instance on the same page.
     this.instanceId = `AlbumSelector-${Math.random().toString(36).substring(2, 9)}`;
     this.#inAdminMode = adminMode;
     this.#methodPwg = adminMode

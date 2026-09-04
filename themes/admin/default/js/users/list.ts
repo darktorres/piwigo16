@@ -1390,9 +1390,7 @@ function genPassword() {
 
   password = "";
   for (i = 0; i < length; i++) {
-    password += characterSet.charAt(
-      Math.floor(Math.random() * characterSet.length),
-    );
+    password += characterSet.charAt(getRandomInt(0, characterSet.length));
   }
 
   return password;
@@ -1898,6 +1896,7 @@ function generateRandomString() {
   let result = "";
   const c = 5;
   for (let i = 0; i < c; i++) {
+    // eslint-disable-next-line sonarjs/pseudo-random -- not security-sensitive: this generates a confirmation string the admin types back to confirm changing the main/webmaster user (a misclick guard, not a secret or token), reviewed per this rule's own "make sure it's safe here" intent.
     result += string.charAt(Math.floor(Math.random() * string.length));
   }
   return result;
@@ -2152,6 +2151,7 @@ Fill the pop-in values
 
 function getStatusIndex(status: string | null) {
   for (let i = 0; i < statusArr.length; i++) {
+    // eslint-disable-next-line sonarjs/different-types-comparison -- real bug in the rule, confirmed via a minimal repro: it flags any `T | undefined` (here, `statusArr[i]`, widened by `noUncheckedIndexedAccess`) compared against a `T | null` value as "always false", ignoring that the shared `string` branch genuinely overlaps and can match.
     if (statusArr[i] === status) {
       return i;
     }
@@ -2319,12 +2319,14 @@ function fillUserEditPreferences(userToEdit: UserRow, popIn: Element) {
     sliderKeyPhotos,
   );
   find(popIn, ".user-property-theme select option").forEach((option) => {
+    // eslint-disable-next-line sonarjs/different-types-comparison -- same rule limitation as getStatusIndex() above: `val()`'s real `string | undefined` return type compared against a real `string | null` field is not "always false", the rule just mishandles the undefined/null mismatch.
     if (val(option) === userToEdit.theme) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified by the selector: only <option> elements can match "select option".
       (option as HTMLOptionElement).selected = true;
     }
   });
   find(popIn, ".user-property-lang select option").forEach((option) => {
+    // eslint-disable-next-line sonarjs/different-types-comparison -- same rule limitation as getStatusIndex() above.
     if (val(option) === userToEdit.language) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified by the selector: only <option> elements can match "select option".
       (option as HTMLOptionElement).selected = true;

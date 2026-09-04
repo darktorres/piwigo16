@@ -19,6 +19,7 @@
 // investigation simply didn't find (Design §1's own "don't assume the
 // taxonomy is exhaustive" caution).
 import { pwg_getPageString } from "./pageData";
+import { looksLikeEmail } from "./vendor/utils/email";
 
 export function phpWGOpenWindow(
   theURL: string,
@@ -124,10 +125,7 @@ function pwg_checkEmailFormat(fieldId: string, errorId: string): void {
   }
 
   function check() {
-    if (
-      field!.value !== "" &&
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field!.value)
-    ) {
+    if (field!.value !== "" && !looksLikeEmail(field!.value)) {
       error!.textContent = pwg_getPageString(
         "mail address must be like xxx@yyy.eee (example : jack@altern.org)",
       );

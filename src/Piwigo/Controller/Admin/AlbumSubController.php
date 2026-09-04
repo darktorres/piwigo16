@@ -19,6 +19,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\Event\RenderCategoryName;
 use Piwigo\Category\Projection\Category;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Controller\Admin\Projection\AlbumSubControllerPageContext;
@@ -83,8 +84,11 @@ final readonly class AlbumSubController implements AdminSubControllerInterface
         $adminAlbumBaseUrl = $this->urlService->getRootUrl() . 'admin.php?page=album-' . $cat_id;
         $this->coreTabs->setContext(new CoreTabsContext(adminAlbumBaseUrl: $adminAlbumBaseUrl));
 
-        $category = new CategoryRepository($this->entityManager, $this->currentConfig)
-            ->findById($cat_id);
+        $catId = CategoryId::tryFrom($cat_id);
+        $category = $catId instanceof CategoryId
+            ? new CategoryRepository($this->entityManager, $this->currentConfig)
+                ->findById($catId)
+            : null;
         if (! $category instanceof Category) {
             $this->htmlRenderer
                 ->fatalError('unknown album');

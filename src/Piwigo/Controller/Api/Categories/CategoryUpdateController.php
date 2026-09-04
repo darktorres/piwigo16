@@ -52,8 +52,9 @@ final readonly class CategoryUpdateController implements ControllerInterface
         $routeArgs = $request->getAttribute('route_args');
         $rawId = is_array($routeArgs) ? ($routeArgs['id'] ?? null) : null;
         $categoryId = is_string($rawId) ? (int) $rawId : 0;
+        $categoryIdVo = CategoryId::tryFrom($categoryId);
 
-        $category = $this->categoryRepository->findById($categoryId);
+        $category = $categoryIdVo instanceof CategoryId ? $this->categoryRepository->findById($categoryIdVo) : null;
         if (! $category instanceof Category) {
             return ResponseFactory::problem('Not Found', 404, 'This album does not exist.');
         }
@@ -102,8 +103,7 @@ final readonly class CategoryUpdateController implements ControllerInterface
             'fields' => implode(',', array_keys($update)),
         ]);
 
-        $updated = $this->categoryRepository->findById($categoryId);
-        assert($updated instanceof Category);
+        $updated = $this->categoryRepository->findById($categoryIdVo);
 
         return ResponseFactory::json(CategoryPresenter::toArray($updated));
     }

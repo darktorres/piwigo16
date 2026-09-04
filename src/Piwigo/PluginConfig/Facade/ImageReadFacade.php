@@ -6,6 +6,7 @@ namespace Piwigo\PluginConfig\Facade;
 
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Image\ImageRepository;
 
@@ -51,6 +52,11 @@ final readonly class ImageReadFacade
 
     public function getRepresentativePictureId(int $categoryId): ?int
     {
-        return $this->categoryRepository->findById($categoryId)?->representativePictureId;
+        $categoryIdVo = CategoryId::tryFrom($categoryId);
+        if (! $categoryIdVo instanceof CategoryId) {
+            return null;
+        }
+
+        return $this->categoryRepository->findById($categoryIdVo)?->representativePictureId;
     }
 }

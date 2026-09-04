@@ -138,8 +138,11 @@ final readonly class ElementSetRanksPageRenderer
 
         $base_url = $this->urlService->getRootUrl() . 'admin.php';
 
-        $category = new CategoryRepository($this->entityManager, $this->currentConfig)
-            ->findById($category_id);
+        $categoryId = CategoryId::tryFrom($category_id);
+        $category = $categoryId instanceof CategoryId
+            ? new CategoryRepository($this->entityManager, $this->currentConfig)
+                ->findById($categoryId)
+            : null;
         if (! $category instanceof Category) {
             $htmlRenderer->pageNotFound($this->redirectService, 'Requested album does not exist');
         }

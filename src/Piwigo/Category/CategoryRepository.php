@@ -127,14 +127,9 @@ final readonly class CategoryRepository
         return $this->em->find(CategoryEntity::class, $id);
     }
 
-    public function findById(int $id): ?Category
+    public function findById(CategoryId $id): ?Category
     {
-        $catId = CategoryId::tryFrom($id);
-        if (! $catId instanceof CategoryId) {
-            return null;
-        }
-
-        $entity = $this->find($catId);
+        $entity = $this->find($id);
 
         return $entity instanceof CategoryEntity ? Category::fromEntity($entity) : null;
     }
@@ -221,7 +216,7 @@ final readonly class CategoryRepository
      * `c.id`/`c.permalink` are custom-Typed -- see this class's own
      * Gotcha #1 note above.
      */
-    public function findIdNamePermalinkById(int $id): ?CategoryIdNamePermalink
+    public function findIdNamePermalinkById(CategoryId $id): ?CategoryIdNamePermalink
     {
         $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.permalink')
@@ -303,7 +298,7 @@ final readonly class CategoryRepository
      * custom DQL function ({@see \Piwigo\Db\DqlFunction\RandFunction}) as
      * {@see findRandomImageIdInCategory()}.
      */
-    public function findRandomImageId(int $catId, string $uppercats, bool $recursive, PermissionCriteria $criteria): ?int
+    public function findRandomImageId(CategoryId $catId, string $uppercats, bool $recursive, PermissionCriteria $criteria): ?int
     {
         $scope = $recursive
             ? '(c.id = :catId OR c.uppercats LIKE :uppercatsLike)'
@@ -1565,10 +1560,15 @@ final readonly class CategoryRepository
      * association -- `IDENTITY()` is needed in the `SELECT` regardless of
      * hydration mode, so `getSingleColumnResult()`'s own "never applies a
      * custom Type" safety (Gotcha #4) isn't the relevant reasoning here
-     * anymore. `$categoryId` binds as the raw scalar the association
-     * comparison expects, not wrapped in `CategoryId`.
+     * anymore. `$categoryId` binds as a real `CategoryId` VO directly
+     * against `ic.category` (a real association) -- confirmed live
+     * (P51-K) that Doctrine's parameter processing applies a registered
+     * custom Type's `convertToDatabaseValue()` by matching the bound
+     * value's own PHP class, regardless of whether the target path is a
+     * plain scalar-Typed column or an association's underlying FK; no
+     * `->value` unwrap needed.
      */
-    public function findRandomImageIdInCategory(int $categoryId): ?int
+    public function findRandomImageIdInCategory(CategoryId $categoryId): ?int
     {
         $values = $this->em
             ->createQueryBuilder()
@@ -1700,17 +1700,18 @@ final readonly class CategoryRepository
     public function updateImagePathsForCategory(CategoryId $categoryId, string $fulldir): void
     {
         // i.storageCategory is an association now -- the bare path in
-        // WHERE resolves to the raw join column either way, but the bound
-        // parameter must be a raw scalar, not the CategoryId VO: binding
-        // the VO directly only worked against the old scalar-Typed column,
-        // where the field's own custom Type handled the conversion.
+        // WHERE resolves to the raw join column either way, and (P51-K,
+        // confirmed live) binding the CategoryId VO directly here works
+        // identically to a raw scalar bind, same as against a plain
+        // scalar-Typed column -- see findRandomImageIdInCategory()'s own
+        // docblock.
         $this->em
             ->createQueryBuilder()
             ->update(ImageEntity::class, 'i')
             ->set('i.path', "CONCAT(:fulldir, '/', i.file)")
             ->where('i.storageCategory = :categoryId')
             ->setParameter('fulldir', $fulldir)
-            ->setParameter('categoryId', $categoryId->value)
+            ->setParameter('categoryId', $categoryId)
             ->getQuery()
             ->execute();
     }
@@ -1729,7 +1730,7 @@ final readonly class CategoryRepository
      * (`SqlWalker::walkPathExpression()`), so a raw scalar bind still works
      * unwrapped -- same as binding a plain int against `c.id` above.
      */
-    public function setRepresentativeImage(int $categoryId, int $imageId): void
+    public function setRepresentativeImage(CategoryId $categoryId, int $imageId): void
     {
         $this->em
             ->createQueryBuilder()
@@ -1781,11 +1782,9 @@ final readonly class CategoryRepository
      * (same idiom as {@see findById()}/{@see updateImageOrder()} elsewhere
      * in this class), rather than a partial-column select.
      */
-    public function findCategoryUppercatsById(int $id): ?string
+    public function findCategoryUppercatsById(CategoryId $id): ?string
     {
-        $catId = CategoryId::tryFrom($id);
-
-        return $catId instanceof CategoryId ? $this->find($catId)?->uppercats : null;
+        return $this->find($id)?->uppercats;
     }
 
     /**
@@ -1821,12 +1820,10 @@ final readonly class CategoryRepository
      * id is the PK, same $this->find()-based idiom as
      * {@see findCategoryUppercatsById()} above.
      */
-    public function findCategoryStatus(int $id): ?string
+    public function findCategoryStatus(CategoryId $id): ?string
     {
-        $catId = CategoryId::tryFrom($id);
-
-        return $catId instanceof CategoryId ? $this->find($catId)?->status
-            ->value : null;
+        return $this->find($id)?->status
+            ->value;
     }
 
     /**
@@ -2361,13 +2358,13 @@ final readonly class CategoryRepository
      * Stays on DBAL -- dynamic caller-supplied column=>value map, same
      * reason as {@see insertCategory()} above.
      */
-    public function updateCategoryAfterInsert(int|string $id, array $data): void
+    public function updateCategoryAfterInsert(CategoryId $id, array $data): void
     {
         $em = $this->em;
         $data['lastmodified'] = Env::now()->format('Y-m-d H:i:s');
         new BatchWriter($em->getConnection())
             ->singleUpdate('categories', $data, [
-                'id' => $id,
+                'id' => $id->value,
             ]);
         $em->clear();
     }
@@ -3006,13 +3003,13 @@ final readonly class CategoryRepository
      * `image_category` is mapped ({@see ImageCategoryEntity}). A COUNT
      * aggregate always returns exactly one row, so there's no LIMIT to
      * preserve. `ic.category` is a real association -- `IDENTITY()` is
-     * needed inside the `COUNT()` regardless of hydration mode, and the
-     * bound `$categoryId` is the raw scalar an association comparison
-     * expects, not wrapped in {@see CategoryId} (that VO-wrapping
-     * convention was for the old scalar-Typed column; an association has
-     * no field-level custom Type to consult during binding).
+     * needed inside the `COUNT()` regardless of hydration mode. The bound
+     * `$categoryId` is a real {@see CategoryId} VO passed directly --
+     * confirmed live (P51-K) that binding works identically for an
+     * association's own comparison as for a plain scalar-Typed column,
+     * see {@see findRandomImageIdInCategory()}'s own docblock.
      */
-    public function hasImages(int $categoryId): bool
+    public function hasImages(CategoryId $categoryId): bool
     {
         $count = $this->em
             ->createQueryBuilder()
@@ -3042,7 +3039,7 @@ final readonly class CategoryRepository
      * `substr($dateAvailable, 0, 10)` reproduces `DATE(date_available)`'s
      * output exactly.
      */
-    public function findPhotoCountAndDateRange(int $categoryId): PhotoCountDateRange
+    public function findPhotoCountAndDateRange(CategoryId $categoryId): PhotoCountDateRange
     {
         $rows = $this->em
             ->createQueryBuilder()
@@ -3203,7 +3200,7 @@ final readonly class CategoryRepository
      * Single-table, static WHERE; $forbiddenIds is a plain int list
      * computed in PHP before the query runs, not a raw fragment.
      */
-    public function existsAndNotForbidden(int $catId, string $forbiddenCategoriesCsv): bool
+    public function existsAndNotForbidden(CategoryId $catId, string $forbiddenCategoriesCsv): bool
     {
         $forbiddenIds = array_map(intval(...), array_filter(explode(',', $forbiddenCategoriesCsv), is_numeric(...)));
         if ($forbiddenIds === []) {
@@ -3229,7 +3226,7 @@ final readonly class CategoryRepository
      *
      * Single-table, static WHERE, COUNT aggregate.
      */
-    public function existsById(int $id): bool
+    public function existsById(CategoryId $id): bool
     {
         $value = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('COUNT(c.id)')
@@ -3799,7 +3796,7 @@ final readonly class CategoryRepository
      *
      * @return list<CategorySyncCandidateRow>
      */
-    public function findSyncCandidatesForSite(int $siteId, ?int $catId, bool $recursive): array
+    public function findSyncCandidatesForSite(int $siteId, ?CategoryId $catId, bool $recursive): array
     {
         $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id AS id', 'c.uppercats AS uppercats', 'c.globalRank AS global_rank', 'c.status AS status', 'c.visible AS visible')
@@ -3810,7 +3807,7 @@ final readonly class CategoryRepository
         if ($catId !== null) {
             if ($recursive) {
                 $qb->andWhere('REGEXP(c.uppercats, :uppercatsLike) = true')
-                    ->setParameter('uppercatsLike', '(^|,)' . $catId . '(,|$)');
+                    ->setParameter('uppercatsLike', '(^|,)' . $catId->value . '(,|$)');
             } else {
                 $qb->andWhere('c.id = :catId')
                     ->setParameter('catId', $catId);

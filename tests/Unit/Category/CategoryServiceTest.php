@@ -800,7 +800,7 @@ test('deleteCategories() delete_orphans mode preserves an image still linked els
 
         $service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), EntityManagerFactory::build($conn), 'delete_orphans');
 
-        expect($repo->findById($tempId))
+        expect($repo->findById(CategoryId::from($tempId)))
             ->toBeNull();
         $stillLinked = $conn->createQueryBuilder()
             ->select('COUNT(*) AS c')
@@ -875,7 +875,7 @@ test('deleteSite() deletes the site\'s categories and dispatches DeleteSite for 
         try {
             $service->deleteSite($siteId, new CategoryServiceUnitTestFakeActivityLogger(), UrlServiceTestFactory::build(), new SessionService(TypedRepository::narrow(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), EntityManagerFactory::build($conn));
 
-            expect($repo->findById((int) $categoryId))
+            expect($repo->findById(CategoryId::from((int) $categoryId)))
                 ->toBeNull();
             expect($siteRepo->findGalleriesUrlById($siteId))
                 ->toBeNull();
@@ -1075,9 +1075,9 @@ test('setCatStatus() public makes parent categories public too', function (): vo
 
     $service->setCatStatus([2], 'public', EntityManagerFactory::build($conn));
 
-    expect($repo->findCategoryStatus(1))
+    expect($repo->findCategoryStatus(CategoryId::from(1)))
         ->toBe('public')
-        ->and($repo->findCategoryStatus(2))
+        ->and($repo->findCategoryStatus(CategoryId::from(2)))
         ->toBe('public');
 });
 
@@ -1529,7 +1529,7 @@ test('moveCategories() to root sets parent status public', function (): void {
         ->fetchOne();
     expect($idUppercat)
         ->toBeNull();
-    expect($repo->findCategoryStatus(2))
+    expect($repo->findCategoryStatus(CategoryId::from(2)))
         ->toBe('public');
 });
 
@@ -1581,7 +1581,7 @@ test('moveCategories() into a private parent cascades private status', function 
         // themselves only fires on this branch.
         $service->moveCategories([2], $activityLogger, PageStateTestFactory::get(), EntityManagerFactory::build($conn), $privateParentId);
 
-        expect($repo->findCategoryStatus(2))
+        expect($repo->findCategoryStatus(CategoryId::from(2)))
             ->toBe('private');
     } finally {
         // Move category 2 back under its real fixture parent (1) via the

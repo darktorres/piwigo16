@@ -830,7 +830,7 @@ namespace Piwigo\Tests\Integration {
 
             $this->service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), EntityManagerFactory::build($this->conn), 'delete_orphans');
 
-            self::assertNull($this->repo->findById($tempId));
+            self::assertNull($this->repo->findById(CategoryId::from($tempId)));
             $stillLinked = $this->conn->createQueryBuilder()
                 ->select('COUNT(*) AS c')
                 ->from('image_category')
@@ -878,7 +878,7 @@ namespace Piwigo\Tests\Integration {
             try {
                 $this->service->deleteSite($siteId, new CategoryServiceFakeActivityLogger(), UrlServiceTestFactory::build(), new SessionService(TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), SessionRepository::class), CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), EntityManagerFactory::build($this->conn));
 
-                self::assertNull($this->repo->findById((int) $categoryId));
+                self::assertNull($this->repo->findById(CategoryId::from((int) $categoryId)));
                 self::assertNull($siteRepo->findGalleriesUrlById($siteId));
             } finally {
                 EventDispatcherTestFactory::get()->removeTypedHandler(DeleteSite::class, $handler);
@@ -1054,8 +1054,8 @@ namespace Piwigo\Tests\Integration {
 
             $this->service->setCatStatus([2], 'public', EntityManagerFactory::build($this->conn));
 
-            self::assertSame('public', $this->repo->findCategoryStatus(1));
-            self::assertSame('public', $this->repo->findCategoryStatus(2));
+            self::assertSame('public', $this->repo->findCategoryStatus(CategoryId::from(1)));
+            self::assertSame('public', $this->repo->findCategoryStatus(CategoryId::from(2)));
         }
 
         public function testSetCatStatusPrivateUsesThePrivateParentAsThePermissionReference(): void
@@ -1435,7 +1435,7 @@ namespace Piwigo\Tests\Integration {
                     ->executeQuery()
                     ->fetchOne();
                 self::assertNull($idUppercat);
-                self::assertSame('public', $this->repo->findCategoryStatus(2));
+                self::assertSame('public', $this->repo->findCategoryStatus(CategoryId::from(2)));
             } finally {
                 $this->conn->executeStatement(
                     "UPDATE categories SET id_uppercat = 1, uppercats = '1,2', global_rank = '1.1' WHERE id = 2"
@@ -1470,7 +1470,7 @@ namespace Piwigo\Tests\Integration {
                 // categories themselves only fires on this branch.
                 $this->service->moveCategories([2], $activityLogger, PageStateTestFactory::get(), EntityManagerFactory::build($this->conn), $privateParentId);
 
-                self::assertSame('private', $this->repo->findCategoryStatus(2));
+                self::assertSame('private', $this->repo->findCategoryStatus(CategoryId::from(2)));
             } finally {
                 $this->conn->executeStatement(
                     "UPDATE categories SET id_uppercat = 1, uppercats = '1,2', global_rank = '1.1', status = 'public' WHERE id = 2"

@@ -143,7 +143,7 @@ final readonly class SearchController implements ControllerInterface
             $forbidden_categories_csv = $forbidden_categories !== '' ? $forbidden_categories : '0';
 
             $category_accessible = $this->categoryService
-                ->existsAndNotForbidden($catId->value, $forbidden_categories_csv);
+                ->existsAndNotForbidden($catId, $forbidden_categories_csv);
             if (! $category_accessible) {
                 $this->htmlRenderer
                     ->pageNotFound($this->redirectService, $this->lang->t('Requested album does not exist'));

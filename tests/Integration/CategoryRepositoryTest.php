@@ -97,7 +97,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testFindByIdReturnsATypedCategoryProjection(): void
         {
-            $cat = $this->repo->findById(1);
+            $cat = $this->repo->findById(CategoryId::from(1));
 
             self::assertInstanceOf(Category::class, $cat);
             self::assertEquals(CategoryId::from(1), $cat->id);
@@ -106,7 +106,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testFindByIdReturnsNullForAMissingCategory(): void
         {
-            self::assertNull($this->repo->findById(999999));
+            self::assertNull($this->repo->findById(CategoryId::from(999999)));
         }
 
         public function testFindNamesByIdsKeysById(): void
@@ -138,7 +138,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testFindRandomImageIdReturnsAnImageFromTheCategory(): void
         {
-            $imageId = $this->repo->findRandomImageId(1, '1', false, self::noPermissionRestriction());
+            $imageId = $this->repo->findRandomImageId(CategoryId::from(1), '1', false, self::noPermissionRestriction());
 
             self::assertContains($imageId, [1, 2, 3]);
         }
@@ -151,7 +151,7 @@ namespace Piwigo\Tests\Integration {
             // the pool beyond category 1's own (1, 2, 3).
             $found = [];
             for ($i = 0; $i < 30; $i++) {
-                $imageId = $this->repo->findRandomImageId(1, '1', true, self::noPermissionRestriction());
+                $imageId = $this->repo->findRandomImageId(CategoryId::from(1), '1', true, self::noPermissionRestriction());
                 if ($imageId !== null) {
                     $found[$imageId] = true;
                 }
@@ -166,7 +166,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testFindRandomImageIdReturnsNullWhenPermissionConditionExcludesEverything(): void
         {
-            self::assertNull($this->repo->findRandomImageId(1, '1', false, new PermissionCriteria([1], null, null, null, null, null)));
+            self::assertNull($this->repo->findRandomImageId(CategoryId::from(1), '1', false, new PermissionCriteria([1], null, null, null, null, null)));
         }
 
         public function testFindRandomImageIdInCategoryReturnsAnImageFromTheCategory(): void
@@ -176,13 +176,13 @@ namespace Piwigo\Tests\Integration {
             // very unlikely a single lucky pick masks a query that's actually
             // broken (e.g. always returning the same row, or the wrong pool).
             for ($i = 0; $i < 10; $i++) {
-                self::assertContains($this->repo->findRandomImageIdInCategory(1), [1, 2, 3]);
+                self::assertContains($this->repo->findRandomImageIdInCategory(CategoryId::from(1)), [1, 2, 3]);
             }
         }
 
         public function testFindRandomImageIdInCategoryReturnsNullForACategoryWithoutImages(): void
         {
-            self::assertNull($this->repo->findRandomImageIdInCategory(999));
+            self::assertNull($this->repo->findRandomImageIdInCategory(CategoryId::from(999)));
         }
 
         public function testFindComputedCategoriesRollupReturnsOneRowPerCategory(): void
@@ -492,14 +492,14 @@ namespace Piwigo\Tests\Integration {
         {
             $this->repo->deleteCategoriesByIds([]);
 
-            self::assertNotNull($this->repo->findById(1));
+            self::assertNotNull($this->repo->findById(CategoryId::from(1)));
         }
 
         public function testClearRepresentativePictureIdsIsANoOpForNoIds(): void
         {
             $this->repo->clearRepresentativePictureIds([]);
 
-            $cat = $this->repo->findById(1);
+            $cat = $this->repo->findById(CategoryId::from(1));
             self::assertNotNull($cat);
         }
 
@@ -539,7 +539,7 @@ namespace Piwigo\Tests\Integration {
         {
             $this->repo->updateCategoryStatus([], 'private');
 
-            self::assertSame('public', $this->repo->findCategoryStatus(1));
+            self::assertSame('public', $this->repo->findCategoryStatus(CategoryId::from(1)));
         }
 
         public function testUpdateImageOrderIsANoOpForAMissingCategory(): void
@@ -548,7 +548,7 @@ namespace Piwigo\Tests\Integration {
             // returns early instead of dereferencing a null entity.
             $this->repo->updateImageOrder(CategoryId::from(999999), 'name ASC');
 
-            self::assertNull($this->repo->findById(999999));
+            self::assertNull($this->repo->findById(CategoryId::from(999999)));
         }
 
         public function testFindStatusByIdsReturnsEmptyForNoIds(): void
@@ -585,7 +585,7 @@ namespace Piwigo\Tests\Integration {
         {
             $this->repo->updateCategoryParent([], 'NULL');
 
-            $cat = $this->repo->findById(2);
+            $cat = $this->repo->findById(CategoryId::from(2));
             self::assertNotNull($cat);
             $idUppercat = $this->conn->createQueryBuilder()
                 ->select('id_uppercat')
@@ -653,7 +653,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testFindIdNamePermalinkByIdReturnsNullForAMissingCategory(): void
         {
-            self::assertNull($this->repo->findIdNamePermalinkById(999999));
+            self::assertNull($this->repo->findIdNamePermalinkById(CategoryId::from(999999)));
         }
 
         public function testFindImageIdsOutsideCategoriesReturnsIdsLinkedToOtherCategories(): void
@@ -681,7 +681,7 @@ namespace Piwigo\Tests\Integration {
         {
             $this->repo->updateFields(CategoryId::from(1), []);
 
-            $cat = $this->repo->findById(1);
+            $cat = $this->repo->findById(CategoryId::from(1));
             self::assertNotNull($cat);
             self::assertSame('Sample Album', $cat->name);
         }
@@ -1153,12 +1153,12 @@ namespace Piwigo\Tests\Integration {
 
         public function testHasImagesIsTrueForACategoryWithImages(): void
         {
-            self::assertTrue($this->repo->hasImages(1));
+            self::assertTrue($this->repo->hasImages(CategoryId::from(1)));
         }
 
         public function testHasImagesIsFalseForACategoryWithoutImages(): void
         {
-            self::assertFalse($this->repo->hasImages(999));
+            self::assertFalse($this->repo->hasImages(CategoryId::from(999)));
         }
 
         public function testFindPhotoCountAndDateRangeMatchesTheFixture(): void
@@ -1168,7 +1168,7 @@ namespace Piwigo\Tests\Integration {
             // docblock at the top of this file / test_find_add_method_
             // breakdown_groups_by_storage_category_presence's own comment
             // elsewhere), so min and max both resolve to that same date.
-            $row = $this->repo->findPhotoCountAndDateRange(1);
+            $row = $this->repo->findPhotoCountAndDateRange(CategoryId::from(1));
 
             self::assertSame(3, $row->count);
             self::assertSame('2026-08-01', $row->minDate);
@@ -1177,7 +1177,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testFindPhotoCountAndDateRangeIsZeroForACategoryWithoutImages(): void
         {
-            $row = $this->repo->findPhotoCountAndDateRange(999);
+            $row = $this->repo->findPhotoCountAndDateRange(CategoryId::from(999));
 
             self::assertSame(0, $row->count);
             self::assertNull($row->minDate);

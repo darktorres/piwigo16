@@ -10,6 +10,7 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\Projection\Category;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Http\AdminGuard;
 use Piwigo\Http\ControllerInterface;
@@ -64,7 +65,9 @@ final readonly class CategoryRefreshRepresentativeController implements Controll
         $this->categoryService->setRandomRepresentant([$categoryId]);
         $this->activityService->record('album', $categoryId, 'edit');
 
-        $category = $this->categoryRepository->findById($categoryId);
+        // existsById() above already confirmed this is a real, positive
+        // category id.
+        $category = $this->categoryRepository->findById(CategoryId::from($categoryId));
         assert($category instanceof Category);
 
         $representativePictureId = $category->representativePictureId;

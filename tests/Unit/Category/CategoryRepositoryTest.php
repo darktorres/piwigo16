@@ -100,7 +100,7 @@ afterEach(function (): void {
 
 test('findById() returns a typed Category projection', function (): void {
     $cat = categoryTestRepo()
-        ->findById(1);
+        ->findById(CategoryId::from(1));
 
     expect($cat)
         ->toBeInstanceOf(Category::class);
@@ -114,7 +114,7 @@ test('findById() returns a typed Category projection', function (): void {
 });
 
 test('findById() returns null for a missing category', function (): void {
-    expect(categoryTestRepo()->findById(999999))
+    expect(categoryTestRepo()->findById(CategoryId::from(999999)))
         ->toBeNull();
 });
 
@@ -150,7 +150,7 @@ test('findSubcategoryIds() returns empty for no ids', function (): void {
 
 test('findRandomImageId() returns an image from the category', function (): void {
     $imageId = categoryTestRepo()
-        ->findRandomImageId(1, '1', false, categoryTestNoPermissionRestriction());
+        ->findRandomImageId(CategoryId::from(1), '1', false, categoryTestNoPermissionRestriction());
 
     expect($imageId)
         ->toBeIn([1, 2, 3]);
@@ -164,7 +164,7 @@ test('findRandomImageId() recursive includes subcategory images', function (): v
     $found = [];
     for ($i = 0; $i < 30; $i++) {
         $imageId = categoryTestRepo()
-            ->findRandomImageId(1, '1', true, categoryTestNoPermissionRestriction());
+            ->findRandomImageId(CategoryId::from(1), '1', true, categoryTestNoPermissionRestriction());
         if ($imageId !== null) {
             $found[$imageId] = true;
         }
@@ -180,7 +180,7 @@ test('findRandomImageId() recursive includes subcategory images', function (): v
 });
 
 test('findRandomImageId() returns null when the permission condition excludes everything', function (): void {
-    expect(categoryTestRepo()->findRandomImageId(1, '1', false, new PermissionCriteria([1], null, null, null, null, null)))
+    expect(categoryTestRepo()->findRandomImageId(CategoryId::from(1), '1', false, new PermissionCriteria([1], null, null, null, null, null)))
         ->toBeNull();
 });
 
@@ -191,13 +191,13 @@ test('findRandomImageIdInCategory() returns an image from the category', functio
     // broken (e.g. always returning the same row, or the wrong pool).
     $repo = categoryTestRepo();
     for ($i = 0; $i < 10; $i++) {
-        expect($repo->findRandomImageIdInCategory(1))
+        expect($repo->findRandomImageIdInCategory(CategoryId::from(1)))
             ->toBeIn([1, 2, 3]);
     }
 });
 
 test('findRandomImageIdInCategory() returns null for a category without images', function (): void {
-    expect(categoryTestRepo()->findRandomImageIdInCategory(999))
+    expect(categoryTestRepo()->findRandomImageIdInCategory(CategoryId::from(999)))
         ->toBeNull();
 });
 
@@ -536,14 +536,14 @@ test('deleteGroupAccessForGroupsAndCategories() is a no-op for no group ids', fu
 test('deleteCategoriesByIds() is a no-op for no ids', function (): void {
     categoryTestRepo()->deleteCategoriesByIds([]);
 
-    expect(categoryTestRepo()->findById(1))
+    expect(categoryTestRepo()->findById(CategoryId::from(1)))
         ->not->toBeNull();
 });
 
 test('clearRepresentativePictureIds() is a no-op for no ids', function (): void {
     categoryTestRepo()->clearRepresentativePictureIds([]);
 
-    expect(categoryTestRepo()->findById(1))
+    expect(categoryTestRepo()->findById(CategoryId::from(1)))
         ->not->toBeNull();
 });
 
@@ -582,7 +582,7 @@ test('updateCategoryCommentable() is a no-op for no ids', function (): void {
 test('updateCategoryStatus() is a no-op for no ids', function (): void {
     categoryTestRepo()->updateCategoryStatus([], 'private');
 
-    expect(categoryTestRepo()->findCategoryStatus(1))
+    expect(categoryTestRepo()->findCategoryStatus(CategoryId::from(1)))
         ->toBe('public');
 });
 
@@ -592,7 +592,7 @@ test('updateImageOrder() is a no-op for a missing category', function (): void {
     categoryTestRepo()
         ->updateImageOrder(CategoryId::from(999999), 'name ASC');
 
-    expect(categoryTestRepo()->findById(999999))
+    expect(categoryTestRepo()->findById(CategoryId::from(999999)))
         ->toBeNull();
 });
 
@@ -629,7 +629,7 @@ test('findCategoriesForFulldirs() returns empty for no ids', function (): void {
 test('updateCategoryParent() is a no-op for no ids', function (): void {
     categoryTestRepo()->updateCategoryParent([], 'NULL');
 
-    expect(categoryTestRepo()->findById(2))
+    expect(categoryTestRepo()->findById(CategoryId::from(2)))
         ->not->toBeNull();
     $idUppercat = DbConnection::build()->createQueryBuilder()
         ->select('id_uppercat')
@@ -716,7 +716,7 @@ test('findDateRangeByCategory() returns the min and max creation date', function
 });
 
 test('findIdNamePermalinkById() returns null for a missing category', function (): void {
-    expect(categoryTestRepo()->findIdNamePermalinkById(999999))
+    expect(categoryTestRepo()->findIdNamePermalinkById(CategoryId::from(999999)))
         ->toBeNull();
 });
 
@@ -746,7 +746,7 @@ test('updateFields() is a no-op for no data', function (): void {
     categoryTestRepo()->updateFields(CategoryId::from(1), []);
 
     $cat = categoryTestRepo()
-        ->findById(1);
+        ->findById(CategoryId::from(1));
     expect($cat)
         ->not->toBeNull();
     expect($cat?->name)
@@ -1257,12 +1257,12 @@ test('findPhotoCountsByCategory() counts direct images', function (): void {
 });
 
 test('hasImages() is true for a category with images', function (): void {
-    expect(categoryTestRepo()->hasImages(1))
+    expect(categoryTestRepo()->hasImages(CategoryId::from(1)))
         ->toBeTrue();
 });
 
 test('hasImages() is false for a category without images', function (): void {
-    expect(categoryTestRepo()->hasImages(999))
+    expect(categoryTestRepo()->hasImages(CategoryId::from(999)))
         ->toBeFalse();
 });
 
@@ -1271,7 +1271,7 @@ test('findPhotoCountAndDateRange() matches the fixture', function (): void {
     // date_available (2026-08-01 00:00:00), so min and max both resolve
     // to that same date.
     $row = categoryTestRepo()
-        ->findPhotoCountAndDateRange(1);
+        ->findPhotoCountAndDateRange(CategoryId::from(1));
 
     expect($row->count)
         ->toBe(3)
@@ -1283,7 +1283,7 @@ test('findPhotoCountAndDateRange() matches the fixture', function (): void {
 
 test('findPhotoCountAndDateRange() is zero for a category without images', function (): void {
     $row = categoryTestRepo()
-        ->findPhotoCountAndDateRange(999);
+        ->findPhotoCountAndDateRange(CategoryId::from(999));
 
     expect($row->count)
         ->toBe(0)

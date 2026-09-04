@@ -10,6 +10,7 @@ use Override;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilterState;
@@ -204,7 +205,7 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
         $emptyId = $categoryRepo->insertCategory([
             'name' => 'Empty Test Album',
         ]);
-        $categoryRepo->updateCategoryAfterInsert($emptyId, [
+        $categoryRepo->updateCategoryAfterInsert(CategoryId::from((int) $emptyId), [
             'uppercats' => (string) $emptyId,
         ]);
 

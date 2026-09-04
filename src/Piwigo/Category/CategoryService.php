@@ -294,7 +294,8 @@ final readonly class CategoryService
 
     public function getCategoryInfo(int $id): ?CategoryInfo
     {
-        $cat = $this->repo->findById($id);
+        $catId = CategoryId::tryFrom($id);
+        $cat = $catId instanceof CategoryId ? $this->repo->findById($catId) : null;
         if (! $cat instanceof Category) {
             return null;
         }
@@ -471,7 +472,7 @@ final readonly class CategoryService
             return null;
         }
 
-        return $this->repo->findRandomImageId($query->id->value, $query->uppercats, $recursive, $this->permissionService->getPermissionCriteria());
+        return $this->repo->findRandomImageId($query->id, $query->uppercats, $recursive, $this->permissionService->getPermissionCriteria());
     }
 
     /**
@@ -1728,7 +1729,7 @@ final readonly class CategoryService
     {
         $datas = [];
         foreach ($categories as $categoryId) {
-            $representative = $this->repo->findRandomImageIdInCategory($categoryId);
+            $representative = $this->repo->findRandomImageIdInCategory(CategoryId::from($categoryId));
 
             $datas[] = [
                 'id' => $categoryId,
@@ -1876,7 +1877,7 @@ final readonly class CategoryService
         // is the movement possible? The movement is impossible if you try to move
         // a category in a sub-category or itself
         if ($newParentSql !== 'NULL') {
-            $newParentUppercats = $this->repo->findCategoryUppercatsById((int) $newParentSql);
+            $newParentUppercats = $this->repo->findCategoryUppercatsById(CategoryId::from((int) $newParentSql));
             assert($newParentUppercats !== null);
 
             foreach ($categories as $category) {
@@ -1900,7 +1901,7 @@ final readonly class CategoryService
                 if ($newParentSql === 'NULL') {
                     $parentStatus = CategoryStatus::Public->value;
                 } else {
-                    $parentStatus = $this->repo->findCategoryStatus((int) $newParentSql);
+                    $parentStatus = $this->repo->findCategoryStatus(CategoryId::from((int) $newParentSql));
                 }
 
                 if ($parentStatus === CategoryStatus::Private->value) {
@@ -2027,7 +2028,7 @@ final readonly class CategoryService
             ->transactional(function () use ($insert, $uppercatsPrefix, $currentUser, $options, $userRepository): int|string {
                 $insertedId = $this->repo->insertCategory($insert);
 
-                $this->repo->updateCategoryAfterInsert($insertedId, [
+                $this->repo->updateCategoryAfterInsert(CategoryId::from((int) $insertedId), [
                     'uppercats' => $uppercatsPrefix . $insertedId,
                     // This UPDATE is an unconditional, immediate follow-up to the
                     // INSERT above (needs the auto-generated id first) -- part of
@@ -2100,7 +2101,7 @@ final readonly class CategoryService
      */
     public function setRepresentativeImage(int $categoryId, int $imageId): void
     {
-        $this->repo->setRepresentativeImage($categoryId, $imageId);
+        $this->repo->setRepresentativeImage(CategoryId::from($categoryId), $imageId);
     }
 
     /**
@@ -2248,12 +2249,16 @@ final readonly class CategoryService
 
     public function hasImages(int $categoryId): bool
     {
-        return $this->repo->hasImages($categoryId);
+        $catId = CategoryId::tryFrom($categoryId);
+
+        return $catId instanceof CategoryId && $this->repo->hasImages($catId);
     }
 
     public function getPhotoCountAndDateRange(int $categoryId): PhotoCountDateRange
     {
-        return $this->repo->findPhotoCountAndDateRange($categoryId);
+        $catId = CategoryId::tryFrom($categoryId);
+
+        return $catId instanceof CategoryId ? $this->repo->findPhotoCountAndDateRange($catId) : new PhotoCountDateRange(0, null, null);
     }
 
     /**
@@ -2281,7 +2286,9 @@ final readonly class CategoryService
 
     public function getCategoryUppercatsById(int $id): ?string
     {
-        return $this->repo->findCategoryUppercatsById($id);
+        $catId = CategoryId::tryFrom($id);
+
+        return $catId instanceof CategoryId ? $this->repo->findCategoryUppercatsById($catId) : null;
     }
 
     /**
@@ -2292,7 +2299,7 @@ final readonly class CategoryService
         return $this->repo->findActivePermalinksList($orderByColumn);
     }
 
-    public function existsAndNotForbidden(int $catId, string $forbiddenCategoriesCsv): bool
+    public function existsAndNotForbidden(CategoryId $catId, string $forbiddenCategoriesCsv): bool
     {
         return $this->repo->existsAndNotForbidden($catId, $forbiddenCategoriesCsv);
     }
@@ -2314,7 +2321,9 @@ final readonly class CategoryService
 
     public function existsById(int $id): bool
     {
-        return $this->repo->existsById($id);
+        $catId = CategoryId::tryFrom($id);
+
+        return $catId instanceof CategoryId && $this->repo->existsById($catId);
     }
 
     public function getRandomRepresentativeIdAmongSubcategories(string $uppercats, PermissionCriteria $criteria): ?string
@@ -2546,9 +2555,24 @@ final readonly class CategoryService
      */
     public function getSyncCandidatesForSite(int $siteId, ?int $catId, bool $recursive): array
     {
+        // A non-null, non-positive $catId can't match any real category
+        // (ids start at 1) -- short-circuits to the same "matches
+        // nothing" outcome the original raw-int bind produced for an
+        // id no row has, rather than CategoryId::tryFrom() silently
+        // widening this to "no filter at all" once null and "invalid"
+        // both had to map to the same repository-side value.
+        if ($catId !== null) {
+            $categoryId = CategoryId::tryFrom($catId);
+            if (! $categoryId instanceof CategoryId) {
+                return [];
+            }
+        } else {
+            $categoryId = null;
+        }
+
         return array_map(
             static fn (CategorySyncCandidateRow $row): array => $row->toArray(),
-            $this->repo->findSyncCandidatesForSite($siteId, $catId, $recursive)
+            $this->repo->findSyncCandidatesForSite($siteId, $categoryId, $recursive)
         );
     }
 

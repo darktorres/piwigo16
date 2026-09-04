@@ -15,6 +15,7 @@ use Piwigo\Bootstrap\AdminAccessor;
 use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Projection\AdminPageResult;
@@ -283,8 +284,11 @@ final readonly class PhotosAddDirectPageRenderer
             $album_id = $photosAddDirectRequest->albumId;
 
             // test if album really exists
-            $uppercats = new CategoryRepository($this->entityManager, $this->currentConfig)
-                ->findCategoryUppercatsById($album_id ?? 0);
+            $albumIdVo = CategoryId::tryFrom($album_id ?? 0);
+            $uppercats = $albumIdVo instanceof CategoryId
+                ? new CategoryRepository($this->entityManager, $this->currentConfig)
+                    ->findCategoryUppercatsById($albumIdVo)
+                : null;
             if ($album_id !== null && $uppercats !== null) {
                 $selected_category = [$album_id];
 

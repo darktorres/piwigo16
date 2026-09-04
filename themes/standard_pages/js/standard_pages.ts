@@ -1,5 +1,9 @@
 import { pwg_getPageString } from "../../default/js/page-data";
 import {
+  cookie,
+  setCookie as setCookieShared,
+} from "../../default/js/vendor/cookie";
+import {
   css,
   data as readData,
   delegate,
@@ -10,8 +14,8 @@ import {
   show,
 } from "../../default/js/vendor/dom";
 
-const modeCookie = getCookie("mode");
-if ("" !== modeCookie) {
+const modeCookie = cookie("mode");
+if (modeCookie !== undefined) {
   toggleMode(modeCookie);
 } else {
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -126,29 +130,11 @@ function toggleMode(mode: string) {
   }
 }
 
-function setCookie(cname: string, cvalue: string, exdays: number) {
-  const d = new Date();
-  d.setTime(d.getTime() + exdays * 24 * 60 * 60 * 1000);
-  const expires = "expires=" + d.toUTCString();
-  document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+function setCookie(cname: string, cvalue: string, exdays: number): void {
+  setCookieShared(cname, cvalue, exdays);
   if (cname === "lang") {
     location.reload();
   }
-}
-
-function getCookie(cname: string) {
-  const name = cname + "=";
-  const decodedCookie = decodeURIComponent(document.cookie);
-  const ca = decodedCookie.split(";");
-  for (let c of ca) {
-    while (c.startsWith(" ")) {
-      c = c.substring(1);
-    }
-    if (c.startsWith(name)) {
-      return c.substring(name.length, c.length);
-    }
-  }
-  return "";
 }
 
 document.querySelectorAll(".togglePassword").forEach((element) => {

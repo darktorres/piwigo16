@@ -42,9 +42,22 @@ export function cookie(name: string): string | undefined {
 }
 
 /**
- * `$.cookie(name, value)` -- a session cookie, no expires/path/domain
- * (the original's own defaults when no `options` argument is passed).
+ * `$.cookie(name, value, { expires: days })` -- a session cookie by
+ * default (no expires/path/domain, the original's own defaults when no
+ * `options` argument is passed), or one expiring after `days` days when
+ * given, matching jquery.cookie.js v1.4.1's own real `Date` computation
+ * (`days * 864e5` ms) for a numeric `expires` option.
  */
-export function setCookie(name: string, value: string | number): void {
-  document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(String(value))}`;
+export function setCookie(
+  name: string,
+  value: string | number,
+  days?: number
+): void {
+  let expires = "";
+  if (days !== undefined) {
+    const date = new Date();
+    date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+    expires = `; expires=${date.toUTCString()}`;
+  }
+  document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(String(value))}${expires}`;
 }

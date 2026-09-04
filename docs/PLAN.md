@@ -143,12 +143,13 @@ Three structural changes produced that drift:
 | P50 | Lit component catalog (conditional on P49) | Skipped — P49-B ported every vendored widget natively to vanilla TS, including this entry's own named candidates (selectize for tag autocomplete, jqtree for tree picker); no widget was left needing a framework, and no `lit`/`lit-element` dependency exists anywhere in `package.json` | 0 |
 | P51 | TS modernization | In progress — P51-A through F done (P51-D closed with a narrower final scope than planned — see its own entry below for the `album_selector.ts` cluster excluded outright); P51-G through L scoped, not started; P51-M (third-party plugin exploration) measured and deferred until P51-A–L land; P51-N (eliminate inline-`onclick=` `window.X` coupling, found during P51-G planning) scoped, not started, sequencing relative to A–M open; P51-O through P51-AA (13 further items found by a dedicated gap analysis of A–N's own coverage) scoped, not started, sequencing relative to A–N open | 17 |
 | P52 | CSS architecture modernization | Not started — Tailwind call resolved (not adopted), work itself unstarted | 0 |
-| P53 | Picture pipeline (new feature) | Not started | 0 |
-| P54 | Dark mode (new feature) | Not started | 0 |
-| P55 | Real quality gates | Not started | 0 |
-| P56 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
-| P57 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
-| P58 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | **DONE** — **A 843 → 0, B 376 → 0**, and the CAMPAIGN-PENDING block is gone from `phpstan.neon`. All 26 identifier-wide ignores retired, each forced out by `reportUnmatchedIgnoredErrors` rather than noticed; 2 more left the *permanent* groups (`empty.variable`, `foreach.valueOverwrite`). Twenty-three live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
+| P53 | Per-page TS architecture audit (post-P51) | Not started — a dedicated gap analysis of `vendor/`-port and Piwigo's-own per-page TS files beyond P51's own scope; verdict is targeted cleanup, not a rewrite, 18 items (P53-A through P53-R) scoped, sequencing across them open | 18 |
+| P54 | Picture pipeline (new feature) | Not started | 0 |
+| P55 | Dark mode (new feature) | Not started | 0 |
+| P56 | Real quality gates | Not started | 0 |
+| P57 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
+| P58 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
+| P59 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | **DONE** — **A 843 → 0, B 376 → 0**, and the CAMPAIGN-PENDING block is gone from `phpstan.neon`. All 26 identifier-wide ignores retired, each forced out by `reportUnmatchedIgnoredErrors` rather than noticed; 2 more left the *permanent* groups (`empty.variable`, `foreach.valueOverwrite`). Twenty-three live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -800,7 +801,7 @@ root every system needs.
 a single `assignContext()` call. Zero `Template::assign()` calls with a
 string or array key remain in `src/Piwigo`. 130 context classes shipped
 when this phase closed; **28 remain**, P40 having replaced the rest with
-typed `View` classes — which is also what shrank P58-A, since a
+typed `View` classes — which is also what shrank P59-A, since a
 `{templateType}` template takes its variable types from the View's own
 reflected properties rather than from a context's `array<*, mixed>`.
 
@@ -1332,7 +1333,7 @@ visibility on `Template::assign()`/`append()` now enforces the same
 invariant.
 
 Scope was narrowed from the original plan: the "+ asset pipeline" clause
-is split out to P36 and P53. Every `p31.x` commit is a `.tpl` → `.latte`
+is split out to P36 and P54. Every `p31.x` commit is a `.tpl` → `.latte`
 conversion or Smarty cleanup, nothing manifest-, combiner- or
 image-format-related.
 
@@ -1359,13 +1360,13 @@ typed `@var` injection and shim-rewritten filter calls into
 `_analysis/phpstan-latte/`, analysed by plain `phpstan analyse` with
 errors mapped back to real `.latte` lines via an `errorFormatter.table!`
 override. Two follow-up campaigns shrink its remaining scoped ignores;
-they had no owner until **P58** picked them up, and the figures recorded
+they had no owner until **P59** picked them up, and the figures recorded
 here originally (~1,400 and ~450) were both stale — re-measured
 2026-08-28 as **843** and **376**. The first was also mis-described as
 "context-docblock enrichment": P40's View migration has since made the
 dominant cause a producer calling `->toArray()` on an already-typed VO
 one line before handing it to the View, so the fix is deleting the
-flatten rather than writing a docblock. See P58.
+flatten rather than writing a docblock. See P59.
 
 *Format half*: no prior art existed even in the reference, so it is
 genuinely new work. `tools/latte-prettier/` is a real Prettier plugin —
@@ -5647,41 +5648,721 @@ as-is rather than partially replaced. P52's own scope here is
 therefore `@container`/`@layer` modernization of that existing
 architecture, not a utility-framework migration.
 
+**P53 — per-page TS architecture audit (post-P51).** A dedicated
+multi-agent audit run after P51-A through P51-AA were scoped, answering
+a direct question: does this codebase's remaining jQuery-plugin-shaped
+`vendor/` ports and its own per-page admin/default/standard_pages TS
+files warrant a from-scratch rewrite, or targeted cleanup? Verdict:
+targeted cleanup, not a rewrite. 11 file-clusters were surveyed (3
+vendor-port clusters, 8 own-file clusters); 10 of 11 produced at least
+one real, non-duplicate finding, but every finding is bounded to one
+file or a small handful of files sharing one copy-pasted shape -- never
+"this subsystem's design is wrong." One cluster (admin shared chrome --
+`common.ts`/`intro.ts`/`intro_tooltips.ts`/`admin.ts`/`autosize.ts`/`menubar.ts`/`footer.ts`)
+came back clean outright once P51-H/I/N/Z land. Three of the items below
+(P53-B, P53-C, P53-D) surfaced genuine pre-existing correctness bugs (a
+null-deref risk, a stale UI counter, an inconsistent Enter-to-submit
+keybinding), which is itself evidence for a punch-list over a rewrite
+-- a rewrite risks re-introducing exactly this class of bug blind,
+where reading-then-fixing each site in place found and closed it.
+P53-A/O are the only library-or-native-API-replacement candidates
+that survived first-pass verification; P53-P/Q/R below are 3 further
+candidates that a stricter, more risk-averse second verification
+pass rejected as "not worth the churn given real X" -- included here
+anyway, on this project's own standing instruction that diff size and
+churn are not costs this user weighs, so an honest tradeoff writeup
+is not the same as a veto. Every item is independent unless its own
+text says otherwise; sequencing across A-R is open.
+
+**P53-A (scoped, not started)** -- native `<dialog>`/`showModal()` for
+colorbox's overlay/focus-trap/Escape plumbing. `vendor/colorbox.ts`'s
+hand-rolled modal plumbing can be replaced by the native `<dialog>`
+element's `showModal()`/`::backdrop`/built-in focus containment and
+`Escape`->`cancel` semantics -- confirmed Baseline widely available
+since March 2022 (~96-97% global support, live-checked 2026-09-03).
+`buildBox()` (`colorbox.ts:207-328`) currently builds and positions
+a manually-created `#cboxOverlay` div alongside `#colorbox`, and
+`launch()`/`close()` (`:529-587`, `:761-791`) hand-roll everything the
+browser now does for free: a `focusout`-based trap (`trapFocusHandler()`,
+`:370-377`), a document-level `keydown` listener's `Escape` branch
+(`:311-313`, the `ArrowLeft`/`ArrowRight` group-navigation branch at
+`:319-324` stays untouched), and a one-line `click` listener on the
+overlay for click-outside-to-close (`:303-305`).
+
+Fix: make `boxEl` a real `<dialog id="colorbox">` opened via
+`showModal()`; delete `trapFocusHandler()` and its `focus` listener
+entirely (native focus containment replaces it); delete the `Escape`
+branch of the `keydown` listener (native `cancel`/`close` events
+replace it, still needs a listener to run existing cleanup); point
+overlay-click-to-close at `boxEl` itself (`event.target === boxEl`),
+since native `::backdrop` covers the rest of the viewport. One
+real complication: `close()` currently fades both `overlayEl` and
+`boxEl` via the shared `fadeTo()`/`stop()` helpers, which write to
+a real element's `.style.opacity` -- `::backdrop` has no such JS
+handle, so the overlay fade needs a small first-party CSS transition
+(`.closing::backdrop{opacity:0;transition:opacity 300ms}`) instead,
+alongside the still-JS-driven box fade. `<dialog>`'s default UA styling
+also needs neutralizing via a small first-party stylesheet addition
+-- this project already layers first-party CSS next to CDN vendor
+CSS elsewhere (`batch_manager_filter.css` beside `jquery-ui.css` in
+`BatchManagerGlobalView`), so this isn't a new pattern.
+
+Confirmed not already covered: P51-H's colorbox mention (this doc's
+own P51-H entry above) is scoped strictly to `animateBox()`'s RAF
+resize-tween vs. `dom.ts`'s shared `animate()` -- a timing question,
+distinct from this overlay/focus-trap/modal-semantics surface. No
+other P51 sub-item mentions `<dialog>`/`::backdrop`/focus-trap.
+
+**Real open prerequisite, found while verifying the sibling P53-P
+candidate below**: this project's own committed browserslist floor
+(`.browserslistrc`, landed P35, Done) pins Chrome/Edge>=94, Firefox>=93,
+Safari>=15 -- and native `<dialog>`/`showModal()` real support is
+Chrome 37+, Firefox 98+, Safari 15.4+, meaning Firefox 93-97 and
+Safari 15.0-15.3 sit inside this project's own stated floor but
+lack `<dialog>` entirely. This wasn't flagged during this item's own
+first-pass verification but applies identically here as it does to
+P53-P -- resolve as one shared prerequisite decision (bump the floor,
+or accept graceful degradation/feature-detection for the gap versions)
+before executing either P53-A or P53-P, not twice independently.
+
+Tradeoff: deletes ~15-20 lines of hand-rolled focus-trap/Escape logic in
+favor of correct native focus-containment and ARIA-modal semantics --
+a real robustness/accessibility win -- at the cost of a small new CSS
+surface, the floor question above, and a bounded 8-page VR re-baseline
+(`batchManagerGlobal.ts`, `picture_modify.ts`, `batchManagerUnit.ts`,
+`themes_installed.ts`, `configuration_main.ts`, `admin_help.ts`,
+`photos_add_applications.ts`, `addAlbum.ts` -- the complete, confirmed
+call-site set). VR/golden-html run on real Playwright browsers, not
+jsdom, so there's no test-tooling gap. Scope stays partial by design:
+the elastic grow/reposition tween, the 3x3 grid border-strip DOM,
+photo-group navigation, and content-loading branches are untouched.
+
+Sequencing: worth doing once P51-A..AA closes out; not urgent enough
+to interrupt it. Do in the same pass as P53-P below, since both need
+the same floor prerequisite resolved once.
+
+**P53-B (scoped, not started)** -- route group_list.ts's 2 unguarded
+raw localStorage reads through UsersCache's own get() API (fixes a
+real null-deref crash risk). `group_list.ts` bypasses `UsersCache`'s
+own public `get()` API with 2 direct, unguarded `localStorage` reads:
+`group_list.ts:1396` (`updateUserSearch()`) and `:1679` (add-user success
+handler) both do `JSON.parse(usersCache.storage.getItem(usersCache.key)!)
+as {...}` directly against the cache's private-in-spirit fields, each
+carrying an `eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion`
+justified as "always-seeded by now." That invariant is enforced
+only by a distant module-load block (`:1797-1805`, `// temporary
+fix for #1283`) that triggers the async seed via `.selectize()`
+-- an inline comment at `:1391-1394` incorrectly attributes the
+seeding to a different, local `new UsersCache(...)` call which (per
+`LocalStorageCache.ts:102-111`) does nothing but assign fields. Neither
+read site awaits or synchronizes with the real async write: on a
+cold/cleared cache or a `serverKey` bump, `.getItem()` returns `null`,
+`JSON.parse(null)` coerces to `JSON.parse("null")` (no throw), and the
+subsequent `cached.data.forEach(...)` throws `TypeError: Cannot read
+properties of null`. `grep -rn "\.storage\.getItem\|\.storage\.setItem"
+themes/` confirms these are the only 2 non-`LocalStorageCache.ts`
+sites in the whole tree reaching into a cache's raw storage; every
+other consumer (`album_selector.ts`, `cat_modify.ts`, `tags.ts`, and
+`group_list.ts`'s own seeding call) goes through `.selectize()`/`.get()`
+as designed.
+
+Fix: replace both direct reads with `usersCache.get((users) =>
+{ ...existing post-read body... })`, moving each site's logic
+inside the callback. This removes both `no-unsafe-type-assertion`
+disables and the ad-hoc cast, and removes 2 of `group_list.ts`'s 25
+`no-non-null-assertion` sites P51-O would otherwise treat generically.
+
+Tradeoff: real, narrow correctness fix -- but ships two open risks that
+must close in the same change: (1) no browser/interaction test currently
+exercises the group user-search or add-user flow at all (`grep` across
+`tests/Browser/*.php` for `UserSearch|AddUserBlock|UsersInGroupList`
+returns nothing) -- a real interaction test covering both rewritten
+sites must be authored as part of this work; (2) `UsersCache`'s loader
+silently swallows its own AJAX failures and never invokes `get()`'s
+callback on error, so each site's post-read UI-update logic would
+now silently no-op on a cold-load network failure instead of throwing
+into the existing `try/catch`/`loadState.reverse()` path -- needs an
+explicit, reviewed per-site decision, not an assumed-safe wrap.
+
+Sequencing: standalone, no dependency on other P53 items.
+
+**P53-C (scoped, not started)** -- encapsulate plugins_installated.ts's
+nbPlugin counter and dedupe its notify/error DOM blocks (fixes a real
+stale-counter bug). `plugins_installated.ts` (1022 lines) mutates the
+plain `nbPlugin` counter object (`plugins_installed_config.ts:32-41`)
+directly at 7 sites -- `activatePlugin` (:132-133), `disactivatePlugin`
+(:251-252), `deletePlugin`'s success callback (:296-297), `uninstallPlugin`
+(:393-394), each individually responsible for calling `actualizeFilter()`
+right after -- plus a full 4-field manual reassignment repeated 3x
+inside the live-search `input` handler (:918-921/965-968/972-975).
+Nothing enforces the mutate-then-refresh pairing, and it has already
+lapsed once for real: `restorePlugin` (:331-379) performs its ajax call
+and DOM notice but never touches `nbPlugin` or calls `actualizeFilter()`
+at all, so the `.filter-badge` counts and tab-visibility logic go stale
+after a successful restore until the next reload or search keystroke
+-- a genuine live bug, not a hypothetical.
+
+Separately, `grep -n "PluginActionError" plugins_installated.ts`
+finds 18 hits = 6 verbatim ~7-line copies of the same error-notice
+sequence (`stop()` -> `find/html(message)` -> `css(display:flex)`
+-> `delay(1500)` -> `fadeOut(2500)`), and a sibling 3x-duplicated
+success-notice sequence differing only in CSS-class suffix and
+message string.
+
+Fix: give `nbPlugin` a small local controller (`PluginCounts`, readonly
+getters, `activate()`/`deactivate()`/`remove()`/`restore()`/`setAll(counts)`
+mutators that call `actualizeFilter()` themselves) -- `restore()`
+fixes the confirmed counter-refresh gap as part of this same change,
+not as a drive-by. Extract the two duplicated DOM sequences into
+`showPluginNotice(id, className, message)` and `showPluginActionError(id,
+message?)`, replacing all 9 call sites.
+
+Tradeoff: same-file/local-module only, no golden-html/VR risk from the
+extraction mechanics. Real care points: the live-search `forEach` needs
+`setAll()` to accept all 4 fields atomically; all 9 notice call sites'
+exact timing (1500ms/2500ms/3000ms) and per-site class/message pairing
+must be preserved byte-for-byte; the `restorePlugin` fix changes real
+runtime behavior (filter badges now update after a restore, where
+today they silently don't) and needs a manual verification pass on
+the plugins_installed admin page, since no golden-html/VR/browser
+test currently exercises this path.
+
+**P53-D (scoped, not started)** -- unify profile.ts's three duplicated
+API-key modal lifecycles (fixes an Enter-to-submit inconsistency;
+needs new Browser tests). `profile.ts`'s three API-key modals (create,
+edit, revoke) duplicate the same open/bind-save/unbind/close lifecycle
+across 12 functions (~240 lines, `:728-971`). The duplication has
+already drifted into a real bug: `saveApiKeyEvent` (:896-965) binds a
+namespaced `'click.apikey'` handler plus a `window` `'keydown.apikey'`
+Enter-to-submit handler, both cleaned up via `off(..., '.apikey')`;
+`saveApiEditEvents` (:803-825) and `saveApiRevokeEvents` (:851-866)
+instead bind/unbind a bare unnamespaced `'click'` with no Enter
+handling at all -- so today Enter submits the create-key form but
+silently does nothing on edit or revoke-confirmation, undocumented
+as intentional anywhere in the code.
+
+Fix: extract the shared shape into one small controller local to
+`profile.ts` (grepped every other theme JS file for this modal-quad
+shape and found none -- it's specific to this page) taking `{open, close,
+bindSave(handler, {enterSubmits, namespace}), unbind}`, and re-express
+all three modals as instantiations with their own field-reset logic.
+Whoever executes this must decide and document whether Enter-submit
+is deliberately create-only (revoke is destructive, so accidental
+Enter there would be worse) or a bug to fix uniformly. Must preserve
+`saveApiKeyEvent`'s self-rebinding retry-on-error (:951-953).
+
+Tradeoff: medium risk, contingent on adding real test coverage in the
+same change -- there is zero automated Browser/Integration coverage
+of any of these three modals today (grepped every relevant DOM id
+-- `api_modal`, `api_key_name`, `save_apikey`, `revoke_api_key`,
+`save_api_edit` -- across `tests/` with no hits; `ProfileInteractionTest.php`'s
+two existing tests cover only the preferences-section toggle and
+password-mismatch validation). This item's scope must include writing
+3-4 new Browser test cases (create incl. Enter-key path, edit, revoke)
+in the same commit as the refactor, not relying on a manual pass
+alone for a live event-binding-lifecycle change. Same-file-only, no
+Latte/markup change, so no golden-html/VR gating regardless.
+
+**P53-E (scoped, not started)** -- extract shared block-chunking/progress-polling
+helpers in batchManagerGlobal.ts. 4 copies of the same
+block-chunking/progress-polling shape live inside `batchManagerGlobal.ts`
+(916 lines). `progressStart()` (:288-295, exported) and `progressBarStart()`
+(:730-737) are byte-identical 2-line bodies under two names --
+delete one, update both call sites (:537, :656). `addMd5sumBlock()`
+(:784-836) and `deleteOrphansBlock()` (:863-916) are a near-identical
+recursive block-polling pair: both `await ajax()` a POST with `json:
+{blockSize}`, read a differently-named remaining-count field, compute
+the character-for-character identical `percentRemaining`/`percentDone`
+formula, and either recurse or redirect. Separately, the `#applyAction`
+click handler's metadata branch (:495-596) and delete branch (:598-728)
+both compute the same `blockSize`, chunk `elements` the same way, and
+call `queuedManager.add({...})` with matching success/error shapes
+-- differing only in URL, payload, response field, and the delete
+branch's extra trailing hidden-input append.
+
+Fix: unify `progressStart`/`progressBarStart` into one function (trivial,
+do first). Extract the shared percent-math and redirect-string-building
+from the md5sum/orphans pair, evaluating a fuller `pollRemainingBlock(url,
+originSelector, targetSelector, responseField, redirectAction)`
+unification if the two response-field/selector params stay clean under
+one signature. Extract a shared `runInBlocks<T>(items, blockSize,
+makeRequest, onFinish?)` for the `#applyAction` branches -- but
+only if the resulting parameterized call sites read cleaner than
+today's duplication.
+
+Tradeoff: no markup/VR risk (pure JS logic). Real behavioral risk
+is confined to async request/response wiring inside a destructive
+delete path and an admin maintenance path, neither covered by VR
+or Browser tests today -- needs a manual Playwright re-check of
+`batch_manager_global.php`'s delete/sync-metadata/set-md5sum/delete-orphans
+flows post-refactor. The `#applyAction` unification touches the
+bulk-photo-delete path specifically, so it should land as its own
+commit separable from the two low-risk mechanical dedups, so a problem
+there doesn't block the safer wins.
+
+**P53-F (scoped, not started)** -- cat_list.ts's 3 view-mode functions:
+convert 89 imperative css() calls to CSS classes, matching user_list.ts's
+existing sibling pattern. `cat_list.ts`'s three view-mode switchers
+(`setDisplayCompact` :18-172, `setDisplayLine` :174-353, `setDisplayTile`
+:355-502) hand-set view-mode presentation via 89 `css()` calls (62 on
+fresh `document.querySelectorAll()` results) -- the single heaviest
+`css()` user in `themes/admin/default/js/`, and every argument is
+a hardcoded literal, so nothing here requires JS. `cat_list.css`'s
+existing "Tiles display" block is partly shadowed at runtime by
+`setDisplayTile()`'s redundant inline re-assertion of the same
+properties, and `setDisplayLine`/`setDisplayCompact` have no CSS-class
+backing at all. This codebase already has the correct pattern for this
+exact widget: `user_list.ts`'s own `setDisplayTile`/`setDisplayLine`/`setDisplayCompact`
+(:775-800) use zero `css()` calls -- pure `addClass`/`removeClass` backed
+by ~200 lines of real class-scoped CSS in `user_list.css:1738-1913`.
+
+Fix: add a `compact_cat` class alongside the existing `line_cat`/`tile_cat`
+toggles already present in `cat_list.ts`; move all 89 literal
+style blocks into class-scoped rules in `cat_list.css` following
+`user_list.css`'s structure; collapse each `setDisplay*` function to
+a `removeClass`/`addClass` swap plus the genuine `hover()` wiring,
+which stays in JS.
+
+Tradeoff: bounded, static-value-only refactor with a working in-tree
+precedent to copy -- but gated by an album-list VR re-baseline across
+all 3 view states, plus an explicit check of two real theme-CSS files
+that already key off `line_cat`/`tile_cat`: `themes/admin/default/theme.css:253-257`
+and, more delicately, `themes/admin/roma/theme.css:1038-1049`, whose
+`.categoryBox.line_cat:hover` rule uses `!important` and currently
+sits below JS-set inline hover colors in the cascade -- removing those
+inline sets changes what wins there, so roma-theme hover behavior
+needs an explicit visual check, not just default-theme VR. Confirmed
+not covered by P51 (P51-H's only `cat_list.ts` mention is unrelated
+dead-code removal). Scope stays `cat_list.ts` only -- do not fold
+in `user_list.ts` (already correct) or `plugins_installated.ts` (a
+separate, smaller cluster).
+
+**P53-G (scoped, not started)** -- extract shared setup helpers for
+mcs.ts's 6 near-identical filter-widget blocks (3 range-slider + 3
+checkbox-list). Of `mcs.ts`'s 14 "Setup <X> filter" blocks (2864-line
+file), two groups of 3 are near copy-paste duplicates. The range-slider
+group -- filesize (:1116-1203), height (:1204-1279), width (:1280-1355),
+~230 lines -- share display-toggle/checked-controller/slider-info/`pwgDoubleSlider()`
+init shape, with two real behavioral asymmetries that must not be lost
+in extraction: only filesize wires a `stop: onFilesizeSlideStop`
+callback syncing into text inputs, and filesize's filled-check tests
+only `max > 0` where height/width test `min > 0 && max > 0`. The
+checkbox-list group -- filetypes (:922-973), ratios (:975-1022),
+ratings (:1024-1114), ~190 lines -- share
+display-toggle/checked-controller/label-loop/precheck/clear-handler
+shape, differing in label-building detail.
+
+Fix: extract `setupRangeFilterWidget({field, sliderKey, cssPrefix, label,
+stop?})` (with `stop` and the filled-predicate both parameterized) and
+`setupCheckboxListFilterWidget({field, cssPrefix, label, labelLookup?})`,
+each called once per widget, replacing ~420 lines with two ~50-60-line
+helpers plus 6 short call sites. Leave the other 8 widgets (word/tags
+AND-OR mode, categories's AlbumSelector integration, date presets,
+expert textarea) untouched -- their per-field logic doesn't collapse
+into either shape without distortion.
+
+Tradeoff: DOM-class-string-driven with no compile-time link between a
+`cssPrefix` parameter and the Latte-rendered class it targets, so the
+gate must be the SearchFiltersView browser/VR suite (all 6 widgets'
+open/apply/clear/chip-removal flows), not just typecheck/lint/format --
+a mistyped prefix during the mechanical lift fails silently at runtime.
+
+Sequencing: land after P51-H -- its own "replace accumulate+`.slice(0,-N)`
+with `Array.prototype.join()`" bullet already touches these same
+filetypes/ratios/ratings blocks, so extracting first would mean
+P51-H's fix has to be redone through the new helper instead of once,
+in place.
+
+**P53-H (scoped, not started)** -- replace batchManagerUnit.ts's 28x
+repeated string-built per-picture selector scoping with the codebase's
+own existing scoped-query helper. `batchManagerUnit.ts` rebuilds the
+literal fragment `"#" + escapeId("picture-" + String(pictureId)) + "
+<selector>"` from scratch at 28 call sites across ~15 badge/button-state
+helpers, each re-querying `document.querySelectorAll(...)` from the
+document root instead of using `vendor/dom.ts`'s own `find(target,
+selector)`, which the sibling file `batchManagerGlobal.ts` and
+`comments.ts` already use for exactly this scoped-descendant-query shape.
+
+Fix: add one local helper, `function pictureScope(pictureId: number):
+Element | null { return document.getElementById("picture-" +
+String(pictureId)); }` (ids are already unique per picture per
+`batch_manager_unit.latte:62`, so `getElementById` is simpler than
+rebuilding a CSS id-selector string), and replace each of the 28
+sites with `find(pictureScope(pictureId), selector)`. Every function
+keeps its exact current `pictureId: number` signature -- several are
+reached from async contexts where caching an element reference across
+an awaited `ajax()` call risks going stale.
+
+Tradeoff: real benefit is code-hygiene/DRY only -- no meaningful
+performance win, since id-selector lookups are already effectively
+O(1). Risk is low: pure internal refactor, no markup change, zero
+VR/golden-html exposure; verify with the existing
+`tests/Browser/BatchManagerUnitInteractionTest.php` plus
+typecheck/lint/format.
+
+**P53-I (scoped, not started)** -- dedupe rating.ts/rating_user.ts's
+delete-ratings call, and the 6-file h1-badge-append duplication. Two
+small, unrelated-but-adjacent duplications in the admin ratings/users
+cluster. (1) `rating.ts`'s `del()` (:103-144) and `rating_user.ts`'s
+confirm-dialog `action()` callback (:113-146) independently build
+the identical `POST api/v1/users/{uid}/actions/delete-ratings` call
+-- same header, same typed cast, same catch-block shape. `grep -rn
+"delete-ratings" themes/` confirms these are the only 2 call sites. (2)
+6 files hand-roll the same `<span class='badge-number'>{count}</span>`
+append onto a page's `<h1>`: `rating.ts`, `rating_user.ts`, `permalinks.ts`
+do it via a byte-identical `forEach`+`insertAdjacentHTML` block;
+`user_list.ts:3328-3332` and `albums.ts:275-278` via single-element
+`querySelector`; `user_activity.ts:1155-1157` already gets the same
+result through `append()`, which already exists in `vendor/dom.ts`
+as a drop-in replacement.
+
+Fix: extract a shared `deleteRatings(uid, pwgToken, opts)` wrapping the
+POST+auth+cast+error handling (each caller keeps its own DOM-update
+branch -- `rating_user.ts`'s DataTable row-removal is real, load-bearing
+behavior, not duplication, and must not be flattened). Convert
+`rating.ts`/`rating_user.ts`/`permalinks.ts` to call the existing
+`append()` directly; convert `user_list.ts`/`albums.ts` too, but first
+confirm each page only ever renders one `<h1>` (append() targets every
+match, unlike today's single-element query).
+
+Tradeoff: both small (2 sites / 5 sites), no new dependency, resulting
+markup identical -- verify with each page's existing golden-html/VR/browser
+coverage post-conversion rather than assuming no-op, especially
+confirming `user_list.ts`/`albums.ts` render exactly one `<h1>`
+before switching semantics from append-to-first to append-to-all-matches.
+
+**P53-J (scoped, not started)** -- cat_modify.ts: extract
+flashError()/flashMessage() to replace 9 inline show/setTimeout(5000)/hide
+repeats. `cat_modify.ts` (667 lines) has the identical 4-line
+show/`setTimeout(...,5000)`/hide flash-banner block independently
+inlined in 5 separate catch handlers (`.info-error`), plus the
+`.info-message` sibling variant inlined 4 more times, 2 of which
+additionally save/restore a `tempTxt` module-level variable around a
+text swap. `tags.ts`, in the same admin-theme cluster, independently
+arrived at local `showError()`/`showMessage()` helpers for the identical
+selectors, confirming "extract a local flash-banner helper" is already
+this codebase's own convention for this concern.
+
+Fix: add `flashError()` and `flashMessage(replacementText?)` local
+to `cat_modify.ts`, replacing all 9 call sites with one-line calls
+and deleting the repeated `let tempTxt` read/write pairs in favor of
+the parameter.
+
+Tradeoff: genuinely low risk -- same-file extraction, no markup/DOM-shape
+or timing change, so no VR/golden-html re-baseline expected. The one
+implementation risk: the two "richer" `.info-message` sites must
+preserve the tempTxt save/restore behavior exactly while the two
+"simple" sites must not gain a spurious text-swap. No automated test
+targets this setTimeout-driven UI micro-interaction; verify with a
+manual smoke pass over album-properties-save/unlock/comment-toggle flows.
+
+**P53-K, P53-L, P53-M (scoped, not started, one bundled commit)** --
+3 small shared-binder extractions in the admin configuration/site/maintenance/plugin
+cluster, each individually too small to justify its own commit but
+real and non-overlapping: (K) `configuration_comments.ts` (:6-32,
+raw `querySelector`/`addEventListener`) and `configuration_main.ts`
+(:21-47, dom.ts's `is()`/`on()`) build the same `Record<string,string>`
+trigger->target checkbox-visibility map and re-toggle loop -- the
+duplication is self-acknowledged, `configuration_main.ts`'s own comment
+(:35-39) says its closure-safety explanation was already established
+by "configuration_comments.ts's own copy of this pattern," confirming
+a later author copy-pasted the earlier file's logic and comment rather
+than sharing either; add `bindCheckedToggle(targets: Record<string,
+string>): void` to `vendor/dom.ts` and convert both files' loops to
+one call each (while touching `configuration_comments.ts`, also note
+its `checkActivateComments()` a few lines below is a third, single-pair
+instance of the same concern -- note only, don't necessarily convert).
+(L) `maintenance_actions.ts` (:9-69) contains 5 back-to-back blocks
+of the identical shape -- resolve `confirmMsg`/`cancelMsg`, then
+`querySelectorAll`+`forEach`+`pwg_jconfirm_follow_href(button, {...})`
+-- against 5 different button classes; `site_manager.ts:21-32` and
+`configuration_sizes.ts:14-28` repeat the same shape once each, 7
+in-cluster call sites confirmed by direct read; add `bindConfirmButtons(selector,
+title, content?)` next to `pwg_jconfirm_follow_href()` (co-locate with
+wherever P51-I step 1 relocates it), taking an already-resolved
+`title: string` not a translation key (`lock-gallery-button`'s
+title is chosen conditionally between two keys, a titleKey-lookup
+signature would silently lose that). (M) `themes_installed.ts:19-32`
+and `languages_installed.ts:6-26` each hand-roll the identical 4-step
+sequence (select delete buttons -> extract the item's display name
+via a `.closest()` lookup -> build a `%s`-substituted title via
+`pwg_getPageString()` -> call `pwg_jconfirm_follow_href()`), differing
+only in selectors and name-extractor; `plugins_new.ts:160-168`'s
+install-confirm block shares the same shape; add `confirmDeleteByName(buttonSelector,
+boxSelector, nameExtractor, titleTemplate)` sited in the same module
+P51-I item 1 already plans to create, and have all 3 call sites use it.
+
+Tradeoff: all 3 are behavior-preserving, no new VR baselines expected
+beyond a manual smoke pass on each touched admin page's
+checkboxes/confirm-buttons post-conversion. Land as one bundled
+commit sequenced after P51-I step 1's `common.ts` split, since L
+and M both target the exact module that split creates -- landing
+before it means redoing the relocation once P51-I lands.
+
+**P53-N (scoped, not started)** -- merge standard_pages.ts's two
+duplicate `.column-flex input` "input" listener registrations.
+`standard_pages.ts`'s `ready()` callback (:34-98) registers an
+`input` listener on every `.column-flex input` element twice, back to
+back: (:75-85) does `setCustomValidity('')` then `hide(errorMessages)`;
+(:88-97) immediately re-runs the identical query and registers a
+handler that only calls `hide(errorMessages)` -- a strict subset of
+the first block's work, recomputing the same lookup independently.
+Neither block explains why there are two registrations, unlike
+this file's other preserved-jQuery-quirk comments -- this reads as
+two originally-separate jQuery snippets ported 1:1 without dedup,
+not intentional.
+
+Fix: delete the second registration (:87-97), keep the first, which
+already performs a strict superset of the deleted block's work.
+
+Tradeoff: very low risk -- single file, 11-line deletion, no
+markup/VR-baseline change (listener count only), no new dependency.
+Verify via existing `tests/Browser/StandardPagesFormBehaviourTest.php`,
+`RegisterControllerTest.php`, `PasswordControllerTest.php`, which
+already exercise these exact forms' error-message show/hide behavior.
+Not covered by P51 (P51-H's dead-code bullet names this file only
+for its `setHtmlAll()`/cookie reimplementations, never this listener
+duplication).
+
+**P53-O (watchlist, not actionable today)** -- autogrow.ts shadow-div
+-> CSS `field-sizing: content`. `vendor/autogrow.ts` (52 lines, one
+real call site: `autosize.ts:7`) is a hand-maintained port of a
+Facebook-derived jQuery snippet -- its own docblock confirms no real
+off-the-shelf equivalent package exists. The native CSS replacement,
+`field-sizing: content`, would delete the whole file (shadow-`<div>`,
+HTML-escaping, `change`/`keyup`/`keydown` listeners) in favor of
+one stylesheet rule plus a min/max-height clamp. Not usable today:
+live-checked MDN/caniuse on 2026-09-03 show `field-sizing: content`
+only reached Baseline in June 2026 (Chrome 123 / Edge 123 / Firefox
+152 / Safari 26.2, 85.81% global), while this project's committed floor
+(`.browserslistrc`, P35) is Chrome>=94/Edge>=94/Firefox>=93/Safari>=15
+-- 20+ majors below on every engine, a hard platform-support fact
+rather than a churn judgment. Kept only as a passive note so the
+file isn't re-investigated from scratch later: if the floor is ever
+deliberately raised past Chrome 123/Firefox 152/Safari 26.2 for
+unrelated reasons, re-check caniuse coverage at that time, then swap
+`autosize.ts`'s `autogrow()` call for the CSS property and delete
+`vendor/autogrow.ts`, re-running golden-html/VR on every page with a
+`<textarea>` since the native content-box growth won't pixel-match the
+shadow-div mechanics exactly even though both are functionally auto-grow.
+
+**P53-P (scoped, not started)** -- jconfirm.ts: replace hand-rolled
+backdrop/Escape/scroll-lock/focus wiring with native `<dialog>`.showModal(),
+same shape as P53-A but for the confirm-dialog widget rather than the
+lightbox. `vendor/jconfirm.ts` (268 lines) has a reference-counted
+`openCount` scroll-lock (line 89, 155-157, 220-221), a manual
+`keyup`/Escape listener installed/torn down per instance (138-143/149/218),
+and a `boxClicked`-flag click-outside hack across two listeners
+(136, 209-217); the box gets `tabindex="-1"` (line 100) with no
+real focus trap. 14 real call sites confirmed (`grep -rln 'from
+"[^"]*vendor/jconfirm"' themes --include=*.ts`): `albums.ts`,
+`batchManagerUnit.ts`, `cat_modify.ts`, `comments.ts`, `common.ts`,
+`group_list.ts`, `photos_add_direct.ts`, `picture_formats.ts`,
+`picture_modify.ts`, `plugins_installated.ts`, `rating_user.ts`,
+`tags.ts`, `updates_ext.ts`, `user_list.ts`. Both theme CSS files
+carry 12 `jconfirm`-tied rules each (24 total), keyed to
+`.jconfirm-box`/`.jconfirm-bg`/`.jconfirm-animation-zoom`.
+
+**Same real prerequisite as P53-A**: this project's own `.browserslistrc`
+floor (Firefox>=93, Safari>=15) sits partly below real `<dialog>` support
+(Firefox 98+, Safari 15.4+) -- Firefox 93-97 and Safari 15.0-15.3 lack
+`<dialog>` entirely. Resolve once, shared with P53-A, before executing
+either: either accept raising the effective floor for these two engine
+ranges, or ship a feature-detected fallback to the existing hand-rolled
+implementation for those versions specifically (not a full second
+implementation -- `if (!("showModal" in HTMLDialogElement.prototype))`
+gating the whole `<dialog>` path per-widget is enough, falling back
+to today's code unchanged).
+
+Fix: same shape as P53-A -- `<dialog>` + `showModal()`, delete the
+manual focus-trap/Escape/click-outside/scroll-lock code (native
+`<dialog>` provides all four for free, including the scroll-lock
+`openCount` counter becomes unnecessary once the browser's own modal
+stack owns it), re-wire `onClose` against the real `cancel`/`close`
+event pair (`Escape` fires both; a button-driven `close()` call fires
+only `close`) so every caller's must-fire-on-every-dismissal-path
+contract (confirmed real via `plugins_installated.ts`'s own usage)
+still holds, add a small first-party UA-style reset
+(`dialog{padding:0;border:none;background:transparent}`) and re-derive
+the existing 160ms zoom/scale transition off the dialog's own box,
+and re-verify backdrop-click detection against the real nested
+`jconfirm-box-container`/`jc-bs3-container` wrapper markup rather
+than assuming a flat 1:1 swap.
+
+Tradeoff: real accessibility/robustness win (correct focus containment,
+standard modal semantics) across the most heavily-used confirm-dialog
+widget in the admin theme, at real cost: the shared floor prerequisite
+above, VR/golden-html re-baseline across all 14 real call sites
+(larger blast radius than P53-A's 8), and careful preservation of
+`onClose`'s fire-on-every-path contract. Land together with P53-A
+once the floor question is settled -- doing the floor analysis
+and the UA-style-reset/CSS-transition groundwork once for both
+widgets is real, avoidable duplicated effort if done as two separate,
+un-sequenced tickets.
+
+**P53-Q (scoped, not started)** -- replace tiptip.ts's hand-rolled
+flip/clamp math with `@floating-ui/dom`; leave cluetip.ts and tooltip.ts
+as they are. Re-reading closely rather than treating "3 tooltip-shaped
+files" as one uniform group: `tiptip.ts`'s `activate()` (:141-199) is
+a clean "reference rect vs. floating rect" problem -- positions purely
+off the trigger element's own `offset()`/`outerWidth`/`outerHeight`
+-- the exact shape `@floating-ui/dom`'s `computePosition()` targets
+directly, so a real, close-to-mechanical swap. `tooltip.ts`'s
+`positionTooltip()` (:41-51) is a trivial 10-line vertical-only
+flip off `getBoundingClientRect()` -- already about as simple as this
+kind of code gets, not worth touching. `cluetip.ts`'s `activate()`
+(:153-244) is a genuine hybrid: `posX` is computed from the trigger's
+rect in some branches (:182-186) but overridden by the raw mouse event's
+`pageX`/`pageY` in others (:188-204, 226-239) -- e.g. line 203's fallback
+centers the tip on mouse position, not the trigger element at all --
+which doesn't map onto Floating UI's single-reference-element model
+without a hand-written virtual-element adapter reconstructing this
+same branching, meaning most of cluetip's positioning logic would
+still be hand-written, just inside custom middleware instead of
+`activate()`. Scope this item to `tiptip.ts` only for that reason,
+not all 3.
+
+Library facts, live-verified 2026-09-03 (not assumed from training
+data): `@floating-ui/dom` latest is 1.8.0, published 2026-07-11,
+GitHub pushed to as recently as 2026-08-26, 32.7k stars, not archived
+-- genuinely actively maintained. Bundlephobia reports 8,209 bytes
+gzip for the package itself, but it is not zero-dependency as a
+first pass claimed -- it pulls in `@floating-ui/core` (~22KB raw)
+and `@floating-ui/utils` (~9KB raw) as real, separately-installed
+npm packages (same-org monorepo, still real added dependencies).
+
+**Real prior-decision context, not a veto**: P49 ("Remove jQuery +
+retire other abandoned/outdated vendored JS deps," Done) deliberately
+eliminated every third-party JS runtime dependency from this app,
+replacing each with zero-dependency hand-owned vanilla TS specifically
+so Piwigo doesn't carry vendored runtime code it doesn't fully control --
+`tiptip.ts`'s own header comment documents this exact lineage (a narrow,
+scoped-down port of the TipTip plugin). Adding `@floating-ui/dom` (+2
+transitive packages) reopens that closed direction for one file.
+This is real, relevant context for whoever schedules this item --
+not a reason it's pre-rejected here, since this user's own standing
+instruction is that a real prior architectural decision is a fact to
+weigh, not an automatic stop, and "most proper" can mean re-opening a
+settled tradeoff when the concrete win (real declarative positioning
+math, actively-maintained upstream, small verified footprint) is
+judged real.
+
+Tradeoff: the win is readability/maintainability of already-correct
+arithmetic, not a new capability or a fixed defect. Real cost: 3 new
+transitive dependencies to vet/track, and a full Visual Regression re-run
+across every real tooltip-bearing baseline in the app (`rating_user.ts`'s
+GeoIP tooltip, every admin `.tiptip` element) to re-prove pixel parity
+for the exact `+5`/`+8`/`+12`/`+13`-style fudge-constant behavior
+today's baselines already lock in. Whoever schedules this should weigh
+it explicitly against P49's own direction rather than by default; if
+scheduled, `tiptip.ts` only, not `cluetip.ts`/`tooltip.ts`.
+
+**P53-R (scoped, not started)** -- give mcs.ts's `psParams` module-level
+search-state bag a real, hand-authored typed shape (not `Record<string,
+any>`), reopening a decision P51-A3 made on narrower terms. `let
+psParams: Record<string, any> = {};` (`mcs.ts:104`, reset in `ready()`
+:200-204) is read/written at 144 real sites, including `performSearch(psParams,
+true)` (31 real call sites) and a `for (const key in psParams)` dynamic
+"clear all" loop (:1421-1430, iterating whatever keys happen to
+be currently set and resetting each to `[]`/`""`, skipping an
+`excludeParams` allowlist) -- confirmed real, additional touch-surface
+beyond the two mutation/read paths already known.
+
+**What P51-A3 already decided, and why revisiting it is a real option,
+not a mistake to avoid**: P51-A3's `strict-boolean-expressions`
+hardening pass (this doc's own entry above) already looked directly
+at this exact variable and named it one of "the handful of genuinely
+`any`/heterogeneous values" it chose to mark `Boolean(x)` rather than
+narrow further -- a considered call, not an oversight. Separately,
+`updateFilters()`'s dynamic-delete site (`mcs.ts:2719`) already
+carries an `eslint-disable-next-line no-dynamic-delete` explaining a
+`Map` wrapper was weighed and declined once before ("a search-parameter
+bag keyed by the filter name chosen at runtime, serialised straight
+to the API; a Map would have to be converted back on every request").
+Both are real, considered prior decisions on this exact variable --
+named here so whoever executes this item does so with full awareness,
+not because a prior decision is by itself a reason not to do better
+work now.
+
+**Real correction to the shape of the fix**: `search_filters.ts`'s
+exported `SearchFields` type is NOT a ready-made shape for `psParams`
+-- they describe different things. `SearchFields` (`search_filters.ts:45-63`)
+is the server-rendered *initial rule* shape (`cat: SearchCategoryRule
+{words, sub_inc}`, `tags: SearchTagsRule {words, mode}`, `allwords:
+SearchAllwordsRule {words, mode, fields}`, `date_posted: SearchDateRule
+{preset, custom}`); `psParams` is a completely different, flat,
+pre-flattened *outgoing request* shape with different field names
+(`categories`/`categories_withsubs` not `cat`/`sub_inc`; `allwords`
+as a bare string plus sibling `allwords_mode`/`allwords_fields`
+instead of one object; `date_posted_preset`/`date_posted_custom`
+instead of one `date_posted`). A real fix means hand-authoring a new
+~20-field flat interface from `performSearch()`'s own body-builder
+object (`mcs.ts:2530-2547`, the one place every flat key name is
+enumerated together) as its real source of truth -- not a quick reuse
+of an existing type.
+
+Fix: author a new interface (e.g. `SearchPostParams`) matching the
+real flat shape read out of `performSearch()`'s body-builder; retype
+`psParams` to it (keeping an index-signature-compatible shape, since
+the `for...in` clear-all loop at :1421-1430 needs to keep enumerating
+whatever subset of keys is currently set -- a class with named private
+fields would need its own custom enumeration method to replicate that
+loop, so a plain interface/index-signature is the simpler-to-verify
+choice over the alternative class-based shape); update all 144 sites'
+reads/writes to the new named fields, paying particular attention to
+each filter's real delete-vs-empty-string semantics (`performSearch()`'s
+body-builder distinguishes them per field via `!= null`/truthy checks
+that must not collapse together during the retype).
+
+Tradeoff: this is a large, easy-to-get-subtly-wrong diff (144 sites, the
+single largest static file in the theme, gated by SearchFiltersView's
+full VR/golden-html/browser suite for zero intended behavior change)
+for a compile-time-typo-catching benefit with no evidence of a real
+production bug this exact bag (as opposed to the separate, already-fixed
+`globalParams` mirroring bug elsewhere) has ever caused. Real, honestly
+stated. Scheduled here anyway, on this user's own standing instruction
+that diff size and the absence of a live bug are not by themselves
+reasons to leave a `Record<string, any>` in place when a real typed
+shape is derivable -- but whoever executes it should budget for the
+full 144-site retype, not a partial one, since a half-converted
+`psParams` (some sites typed, some still indexing loosely) is worse
+than either extreme.
+
 #### New-feature track — lands last
 
-**P53 — Picture pipeline.** `<picture>` AVIF/WebP variants plus ThumbHash
+**P54 — Picture pipeline.** `<picture>` AVIF/WebP variants plus ThumbHash
 blur-up placeholders: new image formats and a new loading-placeholder UX.
 Independent of the refactor track; kept last per the modernize-first
 ordering rather than for a technical dependency. Soft-depends on P36 if
 generated variants should be served through the Vite manifest.
 
-**P54 — Dark mode.** A new user-facing capability (theme toggle,
+**P55 — Dark mode.** A new user-facing capability (theme toggle,
 `prefers-color-scheme`). Depends on P52 — it needs the modernized cascade
 layers and custom properties to add a theme dimension onto cleanly.
 
 #### Closing gate
 
-**P55 — Real quality gates.** `lighthouserc.json` has no `assert` block
+**P56 — Real quality gates.** `lighthouserc.json` has no `assert` block
 today and is collect-only; `.size-limit.json` has one 1 KB placeholder
 budget, whose own name still cites a pre-renumbering phase. Wires real
 Lighthouse perf, a11y and best-practices thresholds and real per-entry
 `size-limit` budgets, and decides whether the risk register's claimed
-"a11y gate" becomes a real automated check. Needs P35–P54's real bundles,
+"a11y gate" becomes a real automated check. Needs P35–P55's real bundles,
 templates and features to measure against.
 
-**P56 — Codebase-wide non-DI audit.** Found while reviewing `Template`
+**P57 — Codebase-wide non-DI audit.** Found while reviewing `Template`
 during P43-G, then extended codebase-wide: a full sweep of every
 `Kernel::container()` call site outside `config/container.php` (225
 across 38 files). Most are already-correct, deliberate design (the
 `Bootstrap` service-locator/orchestration layer, `RedirectService`'s
-established static-resolver pattern) — real scope is two groups. P56-A:
+established static-resolver pattern) — real scope is two groups. P57-A:
 12 domain-service classes with a lazy container-resolver method
 alongside a real constructor; 11 confirmed correctly static (many real
 manual construction sites, a genuine DI-container cycle on
 `HtmlService`, or serving a sibling static method), 1 real conversion
 (`MailService`'s `processCache()`/`currentConfigService()`, undocumented
-and — checked directly — carrying no construction-time cost). P56-B: 8
-fully static-only utility classes plus 2 reclassified from P56-A; 7
+and — checked directly — carrying no construction-time cost). P57-B: 8
+fully static-only utility classes plus 2 reclassified from P57-A; 7
 confirmed genuinely convertible once real callers are checked (most
 already have a real constructor of their own — `DateHelper`,
 `FilesystemHelper`, `PermissionCacheInvalidator`, `ImageBackend`,
@@ -5694,7 +6375,7 @@ phase — no ordering constraint, land whenever convenient. Re-verify
 every call-site count above at execution time rather than trusting this
 snapshot to stay accurate.
 
-**P57 — `default`/`standard_pages` theme-duplication investigation.**
+**P58 — `default`/`standard_pages` theme-duplication investigation.**
 Found while adding live client-side validation to
 `install`/`register`/`profile`/`password` (a duplicate `id="login"` on
 `standard_pages/register.latte`'s own email field, a bug this exact
@@ -5788,7 +6469,7 @@ further apart (the `profile` id mismatch above is the cautionary
 example) rather than committing to either merge or permanent
 duplication.
 
-**P58 — phpstan-latte CAMPAIGN-PENDING.** `phpstan.neon`'s
+**P59 — phpstan-latte CAMPAIGN-PENDING.** `phpstan.neon`'s
 CAMPAIGN-PENDING block holds 26 identifier-wide `ignoreErrors` entries
 scoped to `_analysis/phpstan-latte/*` — P32's two named follow-up
 campaigns, described there and never scheduled. No phase owned them and
@@ -5815,8 +6496,8 @@ carries the wrong type; `assign.php` maps those pairs onto fix
 techniques. Re-run `phpstan-latte:compile` first — a stale compile
 changes the count.
 
-Opened at **P58-A 843** across 74 templates and 63 View classes and
-**P58-B 376** across 72 (P32 recorded ~1,400 and ~450). **A is closed at
+Opened at **P59-A 843** across 74 templates and 63 View classes and
+**P59-B 376** across 72 (P32 recorded ~1,400 and ~450). **A is closed at
 0**; B stands at **314** -- the 62 that have gone were not B work, but
 `empty()`/`==` guards A had to restate on its way past, since `empty()` on
 an object is always false and a comparison against a newly-typed value can
@@ -5837,7 +6518,7 @@ step does not model include arguments. All seven render through
 `MenubarBlockView`, `DisplayBlock::$template`/`$data` and `MenubarView`'s
 asset dispatch went with it.
 
-*P58-A0/A0b (done, `3e6255a4d9`, `fc763eaa57`).* 81 of A's raw 924 were
+*P59-A0/A0b (done, `3e6255a4d9`, `fc763eaa57`).* 81 of A's raw 924 were
 `booleanNot.exprNotBoolean` reading `Latte\Runtime\Template|null` —
 Latte's own compiled `{block}` guard, not template source. A0b refiled 22
 more, the `$ʟ_it ?? null` chaining Latte emits for `{foreach}` in any
@@ -5860,7 +6541,7 @@ its own. A stub *replaces* the real docblock, so Latte's own
 must stay invariant — PHP's own `\CachingIterator` declares invariance
 and `@template-covariant` is rejected outright.
 
-*P58-A — type the producer → View → template chain.* The dominant cause
+*P59-A — type the producer → View → template chain.* The dominant cause
 is not a missing type: it is a typed VO flattened to an array at the View
 constructor, one line before the template that needed it. `assign.php`
 sorts every traced pair into eight fix techniques — these are techniques,
@@ -5981,7 +6662,7 @@ normalizes the checkout path, a pixel baseline cannot. That table's shape
 lives in three places — the file's own docblock and a `@var` over each
 consumer's `require` — and all three must move together.
 
-*P58-B — modernize the template source.* Ordered strictly after A: 154
+*P59-B — modernize the template source.* Ordered strictly after A: 154
 of B's 268 loose comparisons and 28 of its 103 `empty()` calls have
 `mixed` on one side and are undecidable until A lands, and tightening
 types *creates* new always-true/false findings, which are the
@@ -6227,7 +6908,7 @@ as `mixed`. `$ADMIN_PAGE_TITLE` is the case that surfaced it; the
 annotation was present and looked right in the compiled output, which is
 why it read as a template problem rather than a tool one.
 
-## Greenfield tracks (T3, cuttable — outside the P0–P58 backbone)
+## Greenfield tracks (T3, cuttable — outside the P0–P59 backbone)
 
 All entirely cuttable, never gating a backbone commit, dropped first on
 overrun. None have started; each depends on backbone phases that have not
@@ -6302,7 +6983,7 @@ tooling — `axe-core`, `pa11y`, or a Lighthouse `assert` block scoped to
 the a11y category — exists anywhere in this repo. What actually ran
 during P31's 139-template conversion was the VR baseline plus manual
 per-template review, and both stay in place for whatever templates P38
-and later still touch. Making it real is P55's call.
+and later still touch. Making it real is P56's call.
 
 ## MySQL infrastructure notes
 

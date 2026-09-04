@@ -1,15 +1,11 @@
 // Ambient declarations for genuinely first-party shared global state:
-// `Window.SwitchBox`/`Window._pwgRatingAutoQueue` and the rest of
-// `interface Window` below, plus a few standalone-library/shared-shape
-// types. Nothing here augments a third-party package's own ambient types.
+// `Window._pwgRatingAutoQueue` and the rest of `interface Window`
+// below, plus a few standalone-library/shared-shape types. Nothing
+// here augments a third-party package's own ambient types.
+// `Window.SwitchBox`/`SwitchBoxQueue`'s own former copy of this same
+// queue-based deferred-init pattern retired in favor of a plain
+// registerSwitchBox() export (P51-H) -- see switchbox.ts's own header.
 
-interface SwitchBoxQueue {
-  push(link: string, box: string): void;
-  // Only present during the "queue array" phase -- the live `{push: fn}`
-  // handler switchbox.ts's own IIFE replaces it with has neither.
-  length?: number;
-  [index: number]: string | undefined;
-}
 // Duplicates rating.ts's own local types: rating.ts is a non-module
 // script, so these can't be `import`ed without turning it into one
 // (which would break its other ambient declarations) -- kept
@@ -38,23 +34,10 @@ interface RatingAutoQueue {
 }
 
 interface Window {
-  // `index.ts`/`picture.ts` push onto this before `switchbox.ts` (loaded
-  // later, footer-positioned) replaces it with a live `{push: fn}`
-  // handler. Both real shapes agree on "has a `push(link, box)` method"
-  // (an array's own real `.push` signature is looser, but every real
-  // call site already only ever passes 2 strings either way), and
-  // switchbox.ts's own queue-drain read needs the array-like
-  // `.length`/`[i]` members too -- one `SwitchBoxQueue` type covers both
-  // real phases, not a modeled union: a precise union of the 2 distinct
-  // shapes buys no real safety here, since every real caller/callee
-  // already agrees on the args.
-  SwitchBox?: SwitchBoxQueue;
-
   // `picture.ts` pushes a rating-options object onto this (queue array)
   // if `rating.ts` hasn't loaded yet; `rating.ts`'s own IIFE drains the
   // queue then replaces it with a live `{push: fn}` handler for any
-  // later pusher. Same shape-shifting pattern as `SwitchBox` above.
-  // `window.` prefix is load-bearing, not decorative: a bare (or
+  // later pusher. `window.` prefix is load-bearing, not decorative: a bare (or
   // `var`-declared) reference to this same identifier only resolves as
   // a real global outside any wrapping scope -- once an entry is
   // wrapped in its own IIFE (see vite.config.ts's banner/footer

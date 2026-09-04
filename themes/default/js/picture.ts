@@ -1,16 +1,16 @@
 // Real consumer of scripts.ts's own top-level `phpWGOpenWindow`
 // (docs/PLAN.md P48 -- was a bare ambient-global read, see that file's
 // own leading comment for the full real-consumer list). This file
-// itself becomes a real module as a result (previously non-module) --
-// `window.SwitchBox`/`window._pwgRatingAutoQueue` below are a separate,
-// already-established queue-based deferred-init pattern (P47's
-// SwitchBoxQueue/RatingAutoQueue redesign), not a plain function
-// exposure, and stay exactly as they are.
+// itself becomes a real module as a result (previously non-module).
+// `window._pwgRatingAutoQueue` below is a separate, still-real
+// queue-based deferred-init pattern (P47's RatingAutoQueue design) --
+// `window.SwitchBox`'s own former copy of that pattern retired in
+// favor of a plain registerSwitchBox() import (P51-H): both of this
+// file's and index.ts's own pushes already ran after `import
+// "./switchbox"` resolved, so the queue-drain branch could never see
+// anything actually queued.
 import { phpWGOpenWindow } from "./scripts";
-// switchbox.ts's own side effect only (docs/PLAN.md P48) -- drains
-// `window.SwitchBox`; this file is one of its 2 real pushers (the
-// other is IndexView's own index.ts).
-import "./switchbox";
+import { registerSwitchBox } from "./switchbox";
 
 import { pwg_getPageData, pwg_getPageString } from "./page-data";
 import { ajax, AjaxError } from "./vendor/ajax";
@@ -58,10 +58,7 @@ if (derivativeSwitchBox) {
     );
   });
 }
-(window.SwitchBox = window.SwitchBox ?? ([] as string[])).push(
-  "#derivativeSwitchLink",
-  "#derivativeSwitchBox",
-);
+registerSwitchBox("#derivativeSwitchLink", "#derivativeSwitchBox");
 
 const originalLink = document.getElementById("originalLink");
 if (originalLink) {
@@ -78,10 +75,7 @@ if (originalLink) {
 ready(function () {
   if (document.getElementById("downloadSwitchBox")) {
     document.getElementById("downloadSwitchLink")?.removeAttribute("href");
-    (window.SwitchBox = window.SwitchBox ?? ([] as string[])).push(
-      "#downloadSwitchLink",
-      "#downloadSwitchBox",
-    );
+    registerSwitchBox("#downloadSwitchLink", "#downloadSwitchBox");
   }
 });
 

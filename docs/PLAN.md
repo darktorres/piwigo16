@@ -5505,58 +5505,30 @@ as a follow-up rather than a full lettered sub-item, but cleanly out
 of scope for every currently-scoped entry (P51-A2's own enabled-flag
 list never names these 3), so either home works.
 
-**P51-W (scoped, not started)** — P51-H addendum: `build/ambient-globals.d.ts`'s
-`pwg_token` comment block (156-167) is stale/fictional post-P48. The
-comment justifies skipping an ambient `declare const pwg_token` by
-describing a `var`-based cross-file redeclaration mechanism and cites
-`albums.js`'s `var pwg_token = pwg_getPageData('csrf_token');` as an
-example. Neither exists: `grep -rn "var pwg_token" --include="*.ts"
-.` returns 0 hits tree-wide (the string appears only inside this
-comment), and there is no `albums.js` at all (only `albums.ts`,
-which has 0 references to `pwg_token`). The real state is a single
-declarer: `grep -rn "const pwg_token" --include="*.ts" .` finds
-exactly one, `themes/admin/default/js/rating.ts:85` (`const pwg_token
-= pwg_getPageData<string>("csrf_token");`), and `rating.ts` is a
-genuine ES module (real top-level `import`s), so this is an ordinary
-module-scoped local, not a global -- no redeclaration-tolerance trick
-is in play or needed. Fix: replace the comment with a short, accurate
-note (or delete it) stating `pwg_token` is a single module-local
-`const` with no ambient declaration needed. Comment-only, zero
-runtime/type-check impact.
+**P51-W (Done)** — P51-H addendum: `build/ambient-globals.d.ts`'s
+`pwg_token` comment block was stale on two counts, not just the one
+originally found -- re-verified fresh rather than trusting the gap
+analysis's own citation, which had itself gone stale in the meantime.
+The fictional `albums.js`/`var pwg_token` example was confirmed absent
+as described, but the analysis's own "real state" citation
+(`rating.ts:85`'s `const pwg_token`) had *also* been renamed to
+`pwgToken` by P51-G, landed between the gap analysis and this item's
+own execution. Replaced with an accurate note: `pwgToken` needs no
+ambient declaration because each of its 12 real declarers is an
+ordinary module-scoped `const` in a real ES module, genuinely
+invisible outside its own file -- there was never a shared global here
+to declare, `var`-tolerance or otherwise. Comment-only.
 
-Fold into P51-H's existing `ambient-globals.d.ts` pass. Another
-engineer had this exact file open with uncommitted WIP when this gap
-analysis ran (git status showed `build/ambient-globals.d.ts` modified)
--- coordinate/sequence with whatever landed for P51-G/P51-N rather
-than applying blind, and re-verify this comment block still reads
-the same before touching it.
-
-**P51-X (scoped, not started)** — P51-H addendum: dead commented-out
-debug code in 5 more files P51-H's enumeration doesn't name. A tree-wide
-re-grep for commented-out `console.log`/`warn`/`error`/`debug` calls
-finds 20 real matches across 8 files, not the 8 files P51-H's own "30
-lines across 8 files" bullet names -- 4 overlap (`photos_add_direct.ts`,
-`user_list.ts`, `batchManagerUnit.ts`, `profile.ts`) but 4 don't:
-`album_selector.ts` (2: lines 288, 800), `albums.ts` (4: 1145, 1150,
-1176, 1178), `comments.ts` (1: 266), `history.ts` (3: 461, 463, 614)
--- 10 real dead lines P51-H's text would close without touching. A
-related grep for leftover Latte/Smarty `{* ... *}` fossils mixed into
-JS comments surfaces 8 more sites, all in `user_activity.ts` (166,
-399, 404, 1052, 1178, 1188, 1221, 1242) -- also absent from P51-H's
-list. 7 of the 8 are pure dead fossils; one (line 398-399) is itself
-a commented-out `console.log` wrapped in leftover Latte delimiters.
-The 8th (line 404, `//{* Determines wich string need to be placed
-in the line constructed *}`, a real "wich" typo) reads as genuine
--- if garbled -- documentation and should be reworded into a plain
-`//` comment, not bulk-deleted. Fold these 18 lines across 5 files
-into P51-H's existing dead-code bullet, extending its file list from
-8 to 13.
-
-Very low risk, pure deletion (except the one reword). All 5 target
-files were mid-flight WIP under another engineer's uncommitted P51-G
-rename work when this gap analysis ran; the diffs touch only variable
-identifiers, not these comment lines, but re-grep once more before
-execution to confirm.
+**P51-X (Done)** — P51-H addendum: dead commented-out debug code in 5
+more files P51-H's own enumeration didn't name. Re-verified every site
+fresh against current source (line numbers had shifted from the gap
+analysis's own citations after several since-landed P51-G/P51-H edits
+to these same files) before deleting: 10 commented-out `console.log()`
+calls (`album_selector.ts` x2, `albums.ts` x4, `comments.ts` x1,
+`history.ts` x3) and 8 leftover Latte/Smarty `{* ... *}` comment
+fossils in `user_activity.ts` -- 7 pure dead fossils deleted, the 8th
+(a garbled but genuine "Determines wich string need to be placed" note)
+reworded into a plain `//` comment with the typo fixed, not deleted.
 
 **P51-Y (scoped, not started)** — extract a shared `copyToClipboard()`
 helper into `vendor/dom.ts`. The whole `.ts` tree has exactly 2

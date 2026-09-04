@@ -30,7 +30,7 @@ import { off, on } from "../utils/dom";
  * `content` as a function returning a thenable exposing `.always()`
  * (this app's own `ajax()` helper's real `AjaxThenable` shape) is real,
  * load-bearing usage (`categories/modify.ts`, `plugins/installed.ts`,
- * `users/group_list.ts`, `tags.ts`'s own delete-tag/merge-tags flows): while
+ * `users/groupList.ts`, `tags.ts`'s own delete-tag/merge-tags flows): while
  * that thenable is pending, the modal opens with a loading spinner and
  * whatever content the caller's own success/error callback pushes via
  * the instance's `setContent()`, not a value read off the settled

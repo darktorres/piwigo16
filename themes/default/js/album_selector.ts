@@ -7,7 +7,7 @@
 // albums.php via a NEW `AssetContribution` this same batch adds, a
 // real pre-existing gap: categories/search.ts's own bare reads never had a
 // real runtime source before, since albums.php never embedded this
-// file's script), and picture_modify.ts/photos_add_direct.ts/
+// file's script), and pictureModify.ts/photosAddDirect.ts/
 // categories/modify.ts/batch_manager/unit.ts/batch_manager/global.ts/
 // batch_manager/filter.ts/mcs.ts (all `new AlbumSelector(...)`).
 //
@@ -31,7 +31,7 @@
 // `sprintf` comes from sprintf.ts by plain import; sprintf.ts is itself
 // another shared chunk.
 import { sprintf } from "./sprintf";
-import { pwg_getPageData, pwg_getPageString } from "./page-data";
+import { pwg_getPageData, pwg_getPageString } from "./pageData";
 import { ajax, AjaxError } from "./vendor/utils/ajax";
 import type { operations } from "../../../openapi/client/schema";
 import {
@@ -140,20 +140,20 @@ window.addEventListener("keypress", function (e) {
   }
 });
 
-// Real pre-existing bug, found via plugins/installed_config.ts's own
+// Real pre-existing bug, found via plugins/installedConfig.ts's own
 // P48 module conversion: this file's own `#create_album()` reads
 // `pwgToken` bare with no local declaration of its own, relying on
 // TypeScript's ambient whole-program resolution to satisfy the
 // type-checker (any non-module file's own top-level `pwgToken`
 // declaration, anywhere in the program, used to suffice). At runtime
 // this had no real source at all on any of this file's own 12 real
-// registrant pages -- `plugins/installed_config.ts`, the only file
+// registrant pages -- `plugins/installedConfig.ts`, the only file
 // that ever set `window.pwgToken`, is registered on exactly one real
 // page (`plugins_installed.php`), which never embeds `AlbumSelector`.
 // The `X-CSRF-Token` header `#create_album()` sends has been
 // `undefined` at runtime on every real page using this class. Fixed
 // with the same local-declaration pattern every other real consumer
-// (tags.ts, comments.ts, etc.) already uses -- `page-data.ts` exposes
+// (tags.ts, comments.ts, etc.) already uses -- `pageData.ts` exposes
 // the real CSRF token per-page already, no cross-file sharing needed.
 const pwgToken = pwg_getPageData<string>("csrf_token");
 

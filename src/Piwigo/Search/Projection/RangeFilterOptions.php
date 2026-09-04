@@ -12,7 +12,7 @@ namespace Piwigo\Search\Projection;
  * literal, so one class serves all three (P58-A).
  *
  * `$list` is the comma-joined option set the slider is built from --
- * `search_filters.ts` reads it straight off the page data and does
+ * `searchFilters.ts` reads it straight off the page data and does
  * `.split(",").map(Number)`, so it stays a single string rather than
  * becoming a list here.
  *
@@ -34,7 +34,7 @@ final readonly class RangeFilterOptions
 
     /**
      * The page-data shape, for `exposedPageData()`. Not a template flatten:
-     * this is the JSON boundary, and `search_filters.ts` reads these exact
+     * this is the JSON boundary, and `searchFilters.ts` reads these exact
      * key names back out through `pwg_getPageData('filesize'|'height'|
      * 'width')`, so they are part of a contract with the client and are
      * written out here rather than derived.

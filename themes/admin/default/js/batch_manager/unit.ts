@@ -11,7 +11,7 @@ import { CategoriesCache, TagsCache } from "../LocalStorageCache";
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../../default/js/page-data";
+} from "../../../../default/js/pageData";
 import {
   addClass,
   albumBreadcrumbHtml,
@@ -67,7 +67,7 @@ interface ImageUpdateBody {
 
 // `addRelatedCategory` is declared here too, independently of the
 // same-named functions in mcs.js/categories/modify.ts/photos_add_direct.js/
-// picture_modify.ts (docs/PLAN.md P46-B's own finding) -- safe since
+// pictureModify.ts (docs/PLAN.md P46-B's own finding) -- safe since
 // these pages never co-load.
 const activePlugins = pwg_getPageData<string[]>("active_plugins");
 

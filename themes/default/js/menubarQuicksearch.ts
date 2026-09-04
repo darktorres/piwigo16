@@ -1,4 +1,4 @@
-import { pwg_getPageString } from "./page-data";
+import { pwg_getPageString } from "./pageData";
 
 function pwg_initQuickSearch() {
   const input = document.querySelector<HTMLInputElement>("#qsearchInput");

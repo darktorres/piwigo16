@@ -68,7 +68,7 @@ final readonly class ThumbnailsView implements View, HasPageAssets, ExposesPageD
 
         return [
             AssetContribution::css('themes/default/css/pages/thumbnails.css', id: 'thumbnails'),
-            AssetContribution::script('thumbnails.loader', 'themes/default/js/thumbnails.loader.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('thumbnails.loader', 'themes/default/js/thumbnailsLoader.ts', loadMode: LoadMode::Footer),
         ];
     }
 

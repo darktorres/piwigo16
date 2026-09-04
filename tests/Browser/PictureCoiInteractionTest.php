@@ -97,7 +97,7 @@ it('draws a new center-of-interest selection by dragging on the crop image', fun
     $result = H::scriptJson($page, jcropPointerDragScript(<<<'JS'
         const rect = holder.getBoundingClientRect();
         // makeTestImage() defaults to 200x150, well under the 500x400
-        // box picture_coi.ts asks Jcrop for, so display pixels equal
+        // box pictureCoi.ts asks Jcrop for, so display pixels equal
         // real image pixels (no additional presize() scale-down).
         const sx = rect.left + 20, sy = rect.top + 15, ex = rect.left + 120, ey = rect.top + 75;
         dispatch('pointerdown', sx, sy);

@@ -171,11 +171,11 @@ export function selectize<
 
   // Real `<option>` children seed the pool exactly like the original's
   // own `init_select()` -- this app's own direct (non-cache) call sites
-  // (album_notification.ts, users/group_list.ts's `.AddUserBlock`, plugins/new.ts's
+  // (albumNotification.ts, users/groupList.ts's `.AddUserBlock`, plugins/new.ts's
   // author/tag-filter) all rely on this.
   // Real `init_select()`'s own `if ($option.is(':selected')) settings_element.
   // items.push(value);` -- a server-rendered `<option selected>` (real usage:
-  // `album_notification.ts`'s own `.who_option select`) must still come up
+  // `albumNotification.ts`'s own `.who_option select`) must still come up
   // pre-selected, not just contribute to the searchable pool.
   const domSelectedValues: string[] = [];
   Array.from(el.options).forEach((opt, i) => {

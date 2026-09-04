@@ -1,6 +1,6 @@
 import type { operations } from "../../../../../openapi/client/schema";
 
-import { pwg_getPageString } from "../../../../default/js/page-data";
+import { pwg_getPageString } from "../../../../default/js/pageData";
 import { ajax, AjaxError } from "../../../../default/js/vendor/utils/ajax";
 import { ready } from "../../../../default/js/vendor/utils/dom";
 

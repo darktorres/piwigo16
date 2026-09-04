@@ -1,4 +1,4 @@
-// Consumer of themes/admin/default/js/plugins/installed_config.ts's own
+// Consumer of themes/admin/default/js/plugins/installedConfig.ts's own
 // real exports now (docs/PLAN.md P48 -- was ambient window-global
 // latching). jConfirmAlertOptions/jConfirmConfirmOptions now import
 // from jconfirmPresets.ts too (its own P51-I split of what used to be
@@ -38,7 +38,7 @@ import {
   strRestoreDef,
   uninstallPluginMsg,
   xPluginsFound,
-} from "./installed_config";
+} from "./installedConfig";
 import {
   ajax,
   AjaxError,

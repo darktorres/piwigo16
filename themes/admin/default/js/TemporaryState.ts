@@ -22,7 +22,7 @@ function toElements(target: Element | ArrayLike<Element>): Element[] {
 // Class to implement a temporary state and reverse it
 //
 // Converted off jQuery with tags.ts (P49-A) -- its other real caller,
-// users/group_list.ts, is still unconverted, so its own 8 call sites pass
+// users/groupList.ts, is still unconverted, so its own 8 call sites pass
 // `document.querySelectorAll(...)` in place of their prior `$(...)`
 // without the rest of that file changing.
 export class TemporaryState {

@@ -8,7 +8,7 @@
 import "../common";
 import { pwg_jconfirm_follow_href } from "../jconfirmPresets";
 
-import { pwg_getPageString } from "../../../../default/js/page-data";
+import { pwg_getPageString } from "../../../../default/js/pageData";
 import {
   css,
   hide,

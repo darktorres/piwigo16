@@ -1,4 +1,4 @@
-import { pwg_getPageData } from "./page-data";
+import { pwg_getPageData } from "./pageData";
 import { on } from "./vendor/utils/dom";
 
 on(document, "keydown", function (e: Event) {

@@ -78,7 +78,7 @@ final readonly class PhotosAddDirectView implements View, HasPageAssets, Exposes
      *
      * The `jquery.plupload`/`jquery.plupload.queue` scripts and the
      * per-locale `plupload_i18n-{code}` one are all dropped (P49-C):
-     * `photos_add_direct.ts` no longer uses plupload as a jQuery-family
+     * `photosAddDirect.ts` no longer uses plupload as a jQuery-family
      * library at all (native `vendor/utils/uploadQueue.ts` replaces it
      * entirely). The plugin's own CSS stays -- real, still-needed
      * visual styling for the same classnames the native port's own
@@ -115,14 +115,14 @@ final readonly class PhotosAddDirectView implements View, HasPageAssets, Exposes
             // LocalStorageCache.ts's own registration dropped outright
             // (docs/PLAN.md's P48, LocalStorageCache.ts's own batch) --
             // a real, pre-existing dead registration, confirmed
-            // directly: neither this page's own photos_add_direct.ts
+            // directly: neither this page's own photosAddDirect.ts
             // nor album_selector.ts's own AlbumSelector class (the only
             // other first-party file this page loads) reads any of
             // LocalStorageCache.ts's 4 real exported classes, and that
             // file has zero top-level side effects of its own to
             // preserve either.
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
-            AssetContribution::script('add_photo', 'themes/admin/default/js/photos_add_direct.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('add_photo', 'themes/admin/default/js/photosAddDirect.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/photos_add_direct.css', id: 'photos_add_direct'),
             ...new AlbumSelectorView()
                 ->pageAssets(),

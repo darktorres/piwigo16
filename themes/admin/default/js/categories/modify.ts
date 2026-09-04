@@ -8,7 +8,7 @@ import { jConfirmConfirmOptions } from "../jconfirmPresets";
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../../default/js/page-data";
+} from "../../../../default/js/pageData";
 import {
   addClass,
   albumBreadcrumbHtml,
@@ -40,7 +40,7 @@ import { tipTip } from "../../../../default/js/vendor/widgets/tiptip";
 
 // `addRelatedCategory` is declared here too, independently of the
 // same-named functions in mcs.js/batchManagerUnit.js/
-// batch_manager/filter.ts(no)/photos_add_direct.js/picture_modify.ts
+// batch_manager/filter.ts(no)/photos_add_direct.js/pictureModify.ts
 // (docs/PLAN.md P46-B's own finding) -- safe since these pages never
 // co-load, and this file's own `export {}` module isolation makes the
 // safety even more robust than before.

@@ -2,7 +2,7 @@ import type { operations } from "../../../openapi/client/schema";
 import { pwgToaster } from "./toaster";
 import { sprintf } from "../../default/js/sprintf";
 
-import { pwg_getPageData, pwg_getPageString } from "../../default/js/page-data";
+import { pwg_getPageData, pwg_getPageString } from "../../default/js/pageData";
 import {
   ajax,
   AjaxError,

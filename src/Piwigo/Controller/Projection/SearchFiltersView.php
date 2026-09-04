@@ -97,14 +97,14 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
             AssetContribution::css('themes/default/css/search.css', order: -100),
             AssetContribution::css('themes/default/css/' . $this->colorscheme . '-search.css', order: -100),
             AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),
-            // search_filters.ts's own registration dropped (docs/PLAN.md
-            // P48, search_filters.ts's own batch) -- mcs.ts is its one
+            // searchFilters.ts's own registration dropped (docs/PLAN.md
+            // P48, searchFilters.ts's own batch) -- mcs.ts is its one
             // real consumer file anywhere, so its code folds directly
             // into mcs.ts's own bundle via a plain `import` instead
             // (Design §4: exactly one real reaching entry). Real,
-            // accepted timing change: search_filters.ts's own data-setup
+            // accepted timing change: searchFilters.ts's own data-setup
             // code ran at this page's Footer before, now runs at mcs.ts's
-            // own Async instead -- safe since search_filters.ts has zero
+            // own Async instead -- safe since searchFilters.ts has zero
             // independent runtime behavior of its own (pure
             // `pwg_getPageData()`/`pwg_getPageString()` value setup, no
             // event handlers, no template reads it directly either).
@@ -112,7 +112,7 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
             // below (docs/PLAN.md's P48, album_selector.ts's own batch): this
             // file's real direct import of album_selector.ts embeds that
             // file's own top-level `pwg_getPageString()` calls directly
-            // into this bundle, a real new dependency on page-data.ts
+            // into this bundle, a real new dependency on pageData.ts
             // having already run that didn't exist before this batch.
             //
             // `loadMode: Footer` (was Async): doubleSlider.ts's own

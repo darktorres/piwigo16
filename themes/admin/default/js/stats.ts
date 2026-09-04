@@ -8,7 +8,7 @@ import {
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../default/js/page-data";
+} from "../../../default/js/pageData";
 import { data as readData, ready } from "../../../default/js/vendor/utils/dom";
 
 const strNumberPageVisited = pwg_getPageString("Page Visited");

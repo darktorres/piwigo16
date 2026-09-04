@@ -20,6 +20,6 @@ test('pageAssets registers the links script', function (): void {
 
     expect($view->pageAssets())
         ->toEqual([
-            AssetContribution::script('menubar-links', 'themes/default/js/menubar-links.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('menubar-links', 'themes/default/js/menubarLinks.ts', loadMode: LoadMode::Footer),
         ]);
 });

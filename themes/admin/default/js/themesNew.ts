@@ -1,6 +1,6 @@
 import { scaleThemeScreenshot } from "./themeScreenshotScaling";
 
-import { pwg_getPageData } from "../../../default/js/page-data";
+import { pwg_getPageData } from "../../../default/js/pageData";
 
 document
   .querySelectorAll<HTMLImageElement>(".themeShotImg")

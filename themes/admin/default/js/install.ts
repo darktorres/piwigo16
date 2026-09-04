@@ -1,4 +1,4 @@
-import { pwg_getPageString } from "../../../default/js/page-data";
+import { pwg_getPageString } from "../../../default/js/pageData";
 import { ajax, type AjaxThenable } from "../../../default/js/vendor/utils/ajax";
 import { cluetip } from "../../../default/js/vendor/widgets/cluetip";
 import {

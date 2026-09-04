@@ -1,7 +1,7 @@
 import { pwg_jconfirm_follow_href } from "./jconfirmPresets";
 import { scaleThemeScreenshot } from "./themeScreenshotScaling";
 
-import { pwg_getPageString } from "../../../default/js/page-data";
+import { pwg_getPageString } from "../../../default/js/pageData";
 import { colorbox } from "../../../default/js/vendor/widgets/colorbox";
 import {
   attrOf,

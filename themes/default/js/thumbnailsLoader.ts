@@ -1,4 +1,4 @@
-import { pwg_getPageData } from "./page-data";
+import { pwg_getPageData } from "./pageData";
 import { AjaxQueue } from "./vendor/utils/ajaxQueue";
 import { attr, data, hide, ready, show } from "./vendor/utils/dom";
 

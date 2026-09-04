@@ -58,7 +58,7 @@ import { pwgAddAlbum } from "../addAlbum";
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../../default/js/page-data";
+} from "../../../../default/js/pageData";
 import { ajax, AjaxError } from "../../../../default/js/vendor/utils/ajax";
 import { AjaxQueue } from "../../../../default/js/vendor/utils/ajaxQueue";
 import { colorbox } from "../../../../default/js/vendor/widgets/colorbox";

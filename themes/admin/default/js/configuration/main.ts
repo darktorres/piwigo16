@@ -1,6 +1,6 @@
 import "../common";
 
-import { pwg_getPageData } from "../../../../default/js/page-data";
+import { pwg_getPageData } from "../../../../default/js/pageData";
 import { colorbox } from "../../../../default/js/vendor/widgets/colorbox";
 import {
   addClass,

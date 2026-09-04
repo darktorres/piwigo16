@@ -10,13 +10,13 @@ import { sprintf } from "./sprintf";
 // file and batch_manager/filter.ts, each its own separate Vite entry),
 // so Rollup emits it as a shared chunk.
 import { pwgDoubleSlider } from "./doubleSlider";
-// Real consumer of search_filters.ts's own exports (docs/PLAN.md P48,
-// search_filters.ts's own batch -- was bare-global reads before that).
-// This file is search_filters.ts's only real consumer
+// Real consumer of searchFilters.ts's own exports (docs/PLAN.md P48,
+// searchFilters.ts's own batch -- was bare-global reads before that).
+// This file is searchFilters.ts's only real consumer
 // anywhere (confirmed directly -- history.ts's own leading comment
 // mentions `globalParams`/`fullnameOfCat` only in prose, not a real
 // bare-identifier read), so a plain import is safe (Design §4) --
-// search_filters.ts's own former standalone entry/registration is gone
+// searchFilters.ts's own former standalone entry/registration is gone
 // too (SearchFiltersView's own leading comment).
 //
 // `globalParams` is read-only here, and deliberately so. It used to
@@ -58,7 +58,7 @@ import {
   prefixIcon,
   sliders,
   showFilterRatings,
-} from "./search_filters";
+} from "./searchFilters";
 import { ajax, AjaxError } from "./vendor/utils/ajax";
 import {
   getSelectizeInstance,

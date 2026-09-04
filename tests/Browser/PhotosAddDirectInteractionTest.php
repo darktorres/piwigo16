@@ -8,7 +8,7 @@ use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * P49-A conversion of themes/admin/default/js/photos_add_direct.ts -- 0%
+ * P49-A conversion of themes/admin/default/js/photosAddDirect.ts -- 0%
  * prior live-interaction coverage (PhotosAddDirectPageRendererTest.php
  * only ever asserts the rendered page, or drives a preference/config
  * change directly through the server rather than the client-side handler
@@ -340,7 +340,7 @@ it('removes a queued file when its action icon is clicked', function (): void {
  * `PhotosAddDirectPageRendererTest.php`'s own "lists a real photo's
  * existing formats..." test uses) rather than the filename-search
  * branch: a name with no matching photo gets the row removed by
- * `photos_add_direct.ts`'s own real `FilesAdded` handler before there's
+ * `photosAddDirect.ts`'s own real `FilesAdded` handler before there's
  * anything left to click.
  */
 it('renames a queued file by clicking its name in formats mode', function (): void {

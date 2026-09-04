@@ -1,11 +1,11 @@
-// Real consumer of page-data.ts's own top-level `pwg_getPageData`
-// (docs/PLAN.md P48, page-data.ts's own batch -- was a bare
+// Real consumer of pageData.ts's own top-level `pwg_getPageData`
+// (docs/PLAN.md P48, pageData.ts's own batch -- was a bare
 // ambient-global read before that). This import doesn't change this
 // file's own "stays its own standalone entry, unfolded" status below:
 // nothing else imports footer.ts itself, so it's safe for it to become
 // a real module (gaining this import) without needing to be folded into
 // anyone else's bundle.
-import { pwg_getPageData } from "../../../default/js/page-data";
+import { pwg_getPageData } from "../../../default/js/pageData";
 import { ajax, AjaxError } from "../../../default/js/vendor/utils/ajax";
 import { hide, on, show } from "../../../default/js/vendor/utils/dom";
 import { tipTip } from "../../../default/js/vendor/widgets/tiptip";

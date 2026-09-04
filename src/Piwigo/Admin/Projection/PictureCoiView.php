@@ -52,7 +52,7 @@ final readonly class PictureCoiView implements View, HasPageAssets, ExposesPageD
         return [
             AssetContribution::css('https://cdn.jsdelivr.net/gh/tapmodo/Jcrop@v0.9.12/css/jquery.Jcrop.css'),
             AssetContribution::css('themes/admin/default/css/pages/picture_coi.css', id: 'picture_coi'),
-            AssetContribution::script('picture_coi', 'themes/admin/default/js/picture_coi.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('picture_coi', 'themes/admin/default/js/pictureCoi.ts', loadMode: LoadMode::Footer),
         ];
     }
 

@@ -51,7 +51,7 @@ final readonly class MenubarMenuView implements View, HasPageAssets, ExposesPage
         }
 
         return [
-            AssetContribution::script('menubar-quicksearch', 'themes/default/js/menubar-quicksearch.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('menubar-quicksearch', 'themes/default/js/menubarQuicksearch.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/css/components/menubar_menu.css', id: 'menubar_menu'),
         ];
     }

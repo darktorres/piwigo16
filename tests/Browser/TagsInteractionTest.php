@@ -14,7 +14,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * `TemporaryState` (themes/admin/default/js/common.ts) converted off
  * jQuery together with this file -- it wraps no library of its own, and
  * this file's add-tag flow is its only currently-converted real caller
- * (users/group_list.ts's own 8 call sites keep working via a same-commit
+ * (users/groupList.ts's own 8 call sites keep working via a same-commit
  * touch-up: they now pass `document.querySelectorAll(...)` in place of
  * `$(...)`, with the rest of that still-unconverted file unchanged).
  *

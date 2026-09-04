@@ -49,7 +49,7 @@ final readonly class CategoryCatsView implements View, HasPageAssets, ExposesPag
     {
         return [
             AssetContribution::css('themes/default/css/pages/mainpage_categories.css', id: 'mainpage_categories'),
-            AssetContribution::script('thumbnails.loader', 'themes/default/js/thumbnails.loader.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('thumbnails.loader', 'themes/default/js/thumbnailsLoader.ts', loadMode: LoadMode::Footer),
         ];
     }
 

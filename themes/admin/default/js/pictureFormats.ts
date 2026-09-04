@@ -3,7 +3,7 @@ import { jConfirmConfirmOptions } from "./jconfirmPresets";
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../default/js/page-data";
+} from "../../../default/js/pageData";
 import { ajax, AjaxError } from "../../../default/js/vendor/utils/ajax";
 import { confirm } from "../../../default/js/vendor/widgets/jconfirm";
 import {

@@ -1,4 +1,4 @@
-import { pwg_getPageString } from "../../../../default/js/page-data";
+import { pwg_getPageString } from "../../../../default/js/pageData";
 import { hide, ready, show } from "../../../../default/js/vendor/utils/dom";
 
 ready(() => {

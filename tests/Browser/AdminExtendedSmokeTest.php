@@ -114,7 +114,7 @@ foreach ($routes as $name => $path) {
 }
 
 /**
- * photos_add_applications.ts is one colorbox call inside a ready()
+ * photosAddApplications.ts is one colorbox call inside a ready()
  * wrapper. colorbox is now a real native port (P49-B, `vendor/
  * colorbox.ts`); P49-A converted the wrapper, so what needs proving is
  * that the callback still fires.

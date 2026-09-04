@@ -70,7 +70,7 @@ test('pageAssets registers the 3 entries and exposedPageData includes error_icon
         expect($view->pageAssets())
             ->toEqual([
                 AssetContribution::css('themes/default/css/pages/thumbnails.css', id: 'thumbnails'),
-                AssetContribution::script('thumbnails.loader', 'themes/default/js/thumbnails.loader.ts', loadMode: LoadMode::Footer),
+                AssetContribution::script('thumbnails.loader', 'themes/default/js/thumbnailsLoader.ts', loadMode: LoadMode::Footer),
             ]);
         expect($view->exposedPageData())
             ->toBe([

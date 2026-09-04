@@ -95,7 +95,7 @@ final readonly class AdminShellView implements View, HasPageAssets, ExposesPageD
                 ...$assets,
                 ...new ColorboxView()
                     ->pageAssets(),
-                AssetContribution::script('admin_help', 'themes/admin/default/js/admin_help.ts', loadMode: LoadMode::Footer),
+                AssetContribution::script('admin_help', 'themes/admin/default/js/adminHelp.ts', loadMode: LoadMode::Footer),
             ];
         }
 

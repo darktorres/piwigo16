@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * P49-A conversion of themes/default/js/thumbnails.loader.ts. A snapshot
+ * P49-A conversion of themes/default/js/thumbnailsLoader.ts. A snapshot
  * (golden-html/VR) cannot see this behaviour at all: thumbnails.latte
  * renders the placeholder `img_small.png` + `data-src` markup identically
  * whether or not the JS afterward ever swaps it for the real derivative --
@@ -23,7 +23,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * confirmed live, not assumed: both produced a direct `_data/i/...`
  * `src` with no `data-src` at all for a brand-new, never-generated photo.
  * Only style 0 makes a fresh photo (unique per test, via uniqid()) render
- * the placeholder thumbnails.loader.ts actually swaps out.
+ * the placeholder thumbnailsLoader.ts actually swaps out.
  */
 it('replaces the placeholder thumbnail with the real derivative via the ajax queue', function (): void {
     $snapshot = H::snapshotConfig(['derivative_url_style']);
@@ -77,7 +77,7 @@ it('replaces the placeholder thumbnail with the real derivative via the ajax que
             throw new RuntimeException('unexpected result shape: ' . var_export($result, true));
         }
 
-        // `data-src` is the ajaxload URL (i.php?/...) thumbnails.loader.ts
+        // `data-src` is the ajaxload URL (i.php?/...) thumbnailsLoader.ts
         // requests -- untouched by the swap, jQuery never removed it either.
         // The response's `result.url` is a *different*, now-cached direct
         // link (DerivativeImage::isCached() is true by the time the

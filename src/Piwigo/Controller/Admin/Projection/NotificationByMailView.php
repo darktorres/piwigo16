@@ -53,7 +53,7 @@ final readonly class NotificationByMailView implements View, HasPageAssets
             // autosize.ts's own `jquery.autogrow` dependency is gone too
             // -- autogrow is a native port now (P49-B group 1).
             AssetContribution::script('notification_by_mail_page', 'themes/admin/default/js/pages/notification_by_mail.ts', loadMode: LoadMode::Footer),
-            AssetContribution::script('notification_by_mail', 'themes/admin/default/js/notification_by_mail.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('notification_by_mail', 'themes/admin/default/js/notificationByMail.ts', loadMode: LoadMode::Footer),
         ];
     }
 }

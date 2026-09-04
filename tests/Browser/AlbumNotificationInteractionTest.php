@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * P49-A conversion of themes/admin/default/js/album_notification.ts.
+ * P49-A conversion of themes/admin/default/js/albumNotification.ts.
  * AlbumNotificationPageRendererTest.php's own tests all POST directly via
  * H::adminPost(), bypassing this file's own JS entirely -- neither the
  * who_group/who_users panel toggle nor the submit-time recipient guard had
@@ -99,7 +99,7 @@ it('blocks the send when no recipient is actually selected, allows it once one i
     // Always prevents the real submission ourselves, then reports whether
     // the app's own handler already had -- this decouples "did the app
     // want to block it" from "does this test actually navigate away".
-    // Registered after album_notification.ts's own submit listener
+    // Registered after albumNotification.ts's own submit listener
     // (attached during ready(), well before this call), so it observes
     // that handler's final defaultPrevented state.
     $page->script(<<<'JS'
@@ -118,7 +118,7 @@ it('blocks the send when no recipient is actually selected, allows it once one i
     // DOM (P49-B group 6), not a direct API call: click the control to
     // open the dropdown, then click the real `[data-value="1"]` option
     // row -- the same real DOM state `whoSelect.selectedOptions`
-    // (album_notification.ts's own submit guard) reads afterward. User
+    // (albumNotification.ts's own submit guard) reads afterward. User
     // id 1 is fixture_admin, always a valid recipient for a public album
     // (AlbumNotificationPageRendererTest.php's own sibling test already
     // sends to this same id).

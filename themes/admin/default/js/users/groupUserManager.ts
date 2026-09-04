@@ -1,12 +1,12 @@
-// Extracted from users/group_list.ts's own "Manage User Part" (docs/PLAN.md
+// Extracted from users/groupList.ts's own "Manage User Part" (docs/PLAN.md
 // P51-I item 5) -- a genuinely separable concern: this popup manages
-// one group's member list, reached from users/group_list.ts through exactly
+// one group's member list, reached from users/groupList.ts through exactly
 // one call boundary (openUserManager(), wired to the "manage members"
-// trigger), plus DOM-only coupling for users/group_list.ts's own rendered
+// trigger), plus DOM-only coupling for users/groupList.ts's own rendered
 // ".GroupContainer .group_number_users" badge (updateMembernumber()
 // below writes to it by selector, the same loose coupling common.ts's
 // fontCheckbox() already uses across many unrelated pages). No shared
-// mutable state with users/group_list.ts's own group CRUD/selection code.
+// mutable state with users/groupList.ts's own group CRUD/selection code.
 import { TemporaryState } from "../TemporaryState";
 import { UsersCache } from "../LocalStorageCache";
 // Type-only -- erased at compile time, so it never reaches Rollup's
@@ -16,7 +16,7 @@ import type { UserEntity } from "../LocalStorageCache";
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../../default/js/page-data";
+} from "../../../../default/js/pageData";
 import { ajax } from "../../../../default/js/vendor/utils/ajax";
 import {
   selectize as createSelectize,
@@ -46,10 +46,10 @@ import {
 import type { operations } from "../../../../../openapi/client/schema";
 
 // Same real `GET /api/v1/users?groupIds[]=...` response shape
-// users/group_list.ts's own merge-into-group flow also reads -- duplicated
+// users/groupList.ts's own merge-into-group flow also reads -- duplicated
 // here rather than imported, matching this codebase's established
 // per-file local-alias convention for OpenAPI-derived shapes (e.g.
-// users/list.ts's own `UserRow` alongside users/group_list.ts's `Group`).
+// users/list.ts's own `UserRow` alongside users/groupList.ts's `Group`).
 type GroupUserListResponse =
   operations["userList"]["responses"][200]["content"]["application/json"];
 // This popup's own `usersInGroup` list holds either a real fetched user

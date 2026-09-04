@@ -2,7 +2,7 @@
 // library -- jqtree, group 6B, is already ported; this closes the
 // group out entirely), real source read from `github:tapmodo/
 // Jcrop#v0.9.12`'s own `js/jquery.Jcrop.js`. One real consumer,
-// `picture_coi.ts`'s center-of-interest cropper (a single `Jcrop(el,
+// `pictureCoi.ts`'s center-of-interest cropper (a single `Jcrop(el,
 // {boxWidth, boxHeight, onChange, onRelease}, initCallback?)` call on a
 // real `<img id="jcrop">`), which narrows the real surface hard:
 //
@@ -25,7 +25,7 @@
 //   real) -- the whole "reconfigure a live instance" surface is dead
 //   weight and isn't ported; this module only ever initializes once.
 // - The returned instance's only real consumer use is `animateTo()`
-//   (`picture_coi.ts`'s own init callback, when a stored `coi` exists) --
+//   (`pictureCoi.ts`'s own init callback, when a stored `coi` exists) --
 //   `setImage`/`setSelect`/`tellSelect`/`tellScaled`/`setClass`/
 //   `disable`/`enable`/`cancel`/`release`/`destroy`/`focus`/
 //   `getBounds`/`getWidgetSize`/`getScaleFactor`/`getOptions`/`ui` are

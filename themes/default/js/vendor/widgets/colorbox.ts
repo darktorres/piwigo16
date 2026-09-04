@@ -2,8 +2,8 @@
 // `jquery.colorbox` package (`node_modules/jquery.colorbox/
 // jquery.colorbox.js`, `github:jackmoore/colorbox#1.5.14`). 8 real call
 // sites across 7 admin `.ts` files (`batch_manager/global.ts`,
-// `picture_modify.ts`, `batch_manager/unit.ts`, `themes_installed.ts`,
-// `configuration/main.ts`, `admin_help.ts`, `photos_add_applications.ts`,
+// `pictureModify.ts`, `batch_manager/unit.ts`, `themesInstalled.ts`,
+// `configuration/main.ts`, `adminHelp.ts`, `photosAddApplications.ts`,
 // plus `addAlbum.ts`'s own `pwgAddAlbum()`), every one of them driving
 // the SAME shared singleton box/overlay the original itself builds only
 // once (`appendHTML()`'s own `if (!$box)` guard) -- this port keeps that
@@ -13,11 +13,11 @@
 // Narrowed hard to what these 8 real call sites actually reach:
 // - Modes: `photo` (forced via `{photo:true}` or auto-detected via the
 //   real `photoRegex`), `inline` (`addAlbum.ts`'s own add-album popup,
-//   the one real user of it), and the ajax/HTML fallback (`admin_help.ts`'s
+//   the one real user of it), and the ajax/HTML fallback (`adminHelp.ts`'s
 //   `.help-popin`, whose href is a page URL, not an image) -- `iframe`/
 //   `html`/`data` (ajax POST body) are real, unreachable modes and
 //   aren't ported.
-// - Grouping (`rel`): only `photos_add_applications.ts` ever passes a
+// - Grouping (`rel`): only `photosAddApplications.ts` ever passes a
 //   `rel` (a constant `"group1"` shared by all 9 elements), so next/
 //   prev/counter/loop/preloading are real, load-bearing behavior --
 //   `slideshow` is a real, always-off default (never set `true` by any
@@ -29,7 +29,7 @@
 //   dead code here and aren't ported; positioning is always the
 //   original's own "center in the viewport" default.
 // - `width`/`height` are real (`addAlbum.ts`: `650`/`"auto"`;
-//   `admin_help.ts`: `"500px"`) -- `"auto"` is the original's own
+//   `adminHelp.ts`: `"500px"`) -- `"auto"` is the original's own
 //   `parseInt("auto",10) === NaN` accident that falls through to
 //   measuring the loaded content directly; ported as an explicit
 //   "unset" case instead of replicating the NaN arithmetic, same

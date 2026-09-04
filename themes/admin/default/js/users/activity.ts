@@ -11,7 +11,7 @@ import "../common";
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../../default/js/page-data";
+} from "../../../../default/js/pageData";
 import { ajax } from "../../../../default/js/vendor/utils/ajax";
 import { selectize } from "../../../../default/js/vendor/widgets/selectize";
 import {

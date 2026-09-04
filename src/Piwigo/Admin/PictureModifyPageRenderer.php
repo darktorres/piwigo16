@@ -290,7 +290,7 @@ final readonly class PictureModifyPageRenderer
         // Plain '&', not '&amp;' (P59 Batch 5 -- same idiom the 5 named
         // UrlService/PaginationService builders already fixed): uDownload/
         // uSync/uHistory reach picture_modify.latte as bare {...|noescape}
-        // prints; uDelete/uHistory ALSO reach picture_modify.ts as raw
+        // prints; uDelete/uHistory ALSO reach pictureModify.ts as raw
         // page-data (pwg_getPageData('u_delete')/('u_history')), read from
         // a <script type="application/json"> element's own .textContent --
         // a "raw text" HTML element the browser never entity-decodes, so

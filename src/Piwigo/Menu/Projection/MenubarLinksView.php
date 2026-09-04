@@ -46,7 +46,7 @@ final readonly class MenubarLinksView implements View, HasPageAssets
     public function pageAssets(): array
     {
         return [
-            AssetContribution::script('menubar-links', 'themes/default/js/menubar-links.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('menubar-links', 'themes/default/js/menubarLinks.ts', loadMode: LoadMode::Footer),
         ];
     }
 }

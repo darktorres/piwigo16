@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * P49-A conversion of themes/admin/default/js/element_set_ranks.ts.
+ * P49-A conversion of themes/admin/default/js/elementSetRanks.ts.
  * ElementSetRanksPageRendererTest.php's own tests only ever assert the
  * page's initial render or POST the form directly -- neither exercises
  * this file's own JS: the image_order_choice radio toggle, or the

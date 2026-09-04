@@ -20,7 +20,7 @@ interface Window {
   // though a sibling entry calls it as a bare global. Declared here (not
   // inferred from the assignment) so every consumer file's own bare
   // reference type-checks too. `pwg_getPageData`/`pwg_getPageString`'s
-  // own ambient entries and the 23-member search_filters.ts-derived
+  // own ambient entries and the 23-member searchFilters.ts-derived
   // block below them were both confirmed-dead and deleted here (P51-H):
   // every real consumer imports them directly now (`picture.ts` for the
   // former; `mcs.ts` for the latter, whose own P51-G camelCase renames
@@ -54,7 +54,7 @@ interface Window {
   updateExtension: (type: string, id: string, revision: string) => void;
   ignoreExtension: (type: string, id: string) => void;
 
-  // users/group_list.ts's own 2 functions -- `hideAddGroupForm` is called
+  // users/groupList.ts's own 2 functions -- `hideAddGroupForm` is called
   // from group_list.latte's own `onclick="hideAddGroupForm()"`
   // attribute; `updateSelectionPanel` is called from a
   // dynamically-set `onclick`/`OnClick` HTML attribute string this
@@ -143,7 +143,7 @@ interface AlbumSelectorOptions {
 // getSelectedAlbum })`). Shared across every real `selectAlbum:`
 // consumer (`batch_manager/filter.ts`, `categories/modify.ts`,
 // `batch_manager/global.ts`, `mcs.ts`, `batch_manager/unit.ts`,
-// `picture_modify.ts`, `photos_add_direct.ts`) -- grows if a future
+// `pictureModify.ts`, `photosAddDirect.ts`) -- grows if a future
 // consumer needs more of `album`'s own real shape than `id`/`name`.
 interface AlbumSelectorCallbackArgs {
   album: {
@@ -177,7 +177,7 @@ interface AlbumSelectorRemoveCallbackArgs {
 
 // `intro.ts`'s own `storage_details` shared global -- shape traced to
 // `IntroView.php`'s `storage_chart_data` property and the actual fields
-// `intro.ts`/`intro_tooltips.ts` both read.
+// `intro.ts`/`introTooltips.ts` both read.
 type StorageDetails = Record<
   string,
   {

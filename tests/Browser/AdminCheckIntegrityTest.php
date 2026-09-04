@@ -20,7 +20,7 @@ function c13yPanelText(string $html): string
     return trim((string) preg_replace('/\s+/', ' ', strip_tags($matches[0])));
 }
 
-// check_integrity.ts had no coverage in any suite, and could not get any from
+// checkIntegrity.ts had no coverage in any suite, and could not get any from
 // the shared route table: IntroSubController renders CheckIntegrityView only
 // when `$c13yResult !== null` -- that is, only when the integrity check
 // actually finds an anomaly. The fixture gallery is clean, so `/admin.php`
@@ -52,7 +52,7 @@ it('renders the integrity panel and loads its bundle when a real anomaly exists'
         $page->assertPresent('#checkAllLink');
 
         $loadsBundle = $page->script(
-            "Array.from(document.querySelectorAll('script[src]')).some(s => s.src.includes('check_integrity'))"
+            "Array.from(document.querySelectorAll('script[src]')).some(s => s.src.includes('checkIntegrity'))"
         );
 
         expect($loadsBundle)
@@ -219,7 +219,7 @@ it('applies a selected correction when the correction button is pressed', functi
  * The template rendered them as `name="Apply selected corrections"` and
  * `name="Ignore selected anomalies"`, while C13yTreatmentRequest::fromArray()
  * looks for `c13y_submit_correction` and `c13y_submit_ignore` -- and nothing
- * anywhere set those, not the template and not check_integrity.ts. So either
+ * anywhere set those, not the template and not checkIntegrity.ts. So either
  * button submitted the form, the request resolved `mode` to null, and the
  * page re-rendered unchanged: no correction applied, no anomaly ignored.
  *

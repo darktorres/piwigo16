@@ -28,7 +28,7 @@ test('pageAssets and exposedStrings carry the quick-search form when it is shown
 
     expect($view->pageAssets())
         ->toEqual([
-            AssetContribution::script('menubar-quicksearch', 'themes/default/js/menubar-quicksearch.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('menubar-quicksearch', 'themes/default/js/menubarQuicksearch.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/default/css/components/menubar_menu.css', id: 'menubar_menu'),
         ]);
     expect($view->exposedStrings())

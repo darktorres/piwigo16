@@ -15,7 +15,7 @@ import { phpWGOpenWindow } from "./scripts";
 import { registerSwitchBox } from "./switchbox";
 import { pushRatingAutoQueue } from "./ratingAutoQueue";
 
-import { pwg_getPageData, pwg_getPageString } from "./page-data";
+import { pwg_getPageData, pwg_getPageString } from "./pageData";
 import { ajax, AjaxError } from "./vendor/utils/ajax";
 import { css, ready } from "./vendor/utils/dom";
 

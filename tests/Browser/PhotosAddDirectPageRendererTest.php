@@ -176,7 +176,7 @@ it('shows the original-resize dimensions warning when original_resize is enabled
 it('skips the mobile-app-promotion computation entirely once the user has dismissed it', function (): void {
     $page = H::asAdmin($this);
 
-    // Real client flow (themes/admin/default/js/photos_add_direct.ts's
+    // Real client flow (themes/admin/default/js/photosAddDirect.ts's
     // ".dont-show-again" handler): a real `PUT /api/v1/session/
     // preferences/promote-mobile-apps` write, using the literal JSON
     // string value 'false' (not a JSON boolean) -- PreferencesService::

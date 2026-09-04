@@ -18,7 +18,7 @@ import { openUserManager } from "./groupUserManager";
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../../default/js/page-data";
+} from "../../../../default/js/pageData";
 import { ajax } from "../../../../default/js/vendor/utils/ajax";
 import { alert, confirm } from "../../../../default/js/vendor/widgets/jconfirm";
 import {
@@ -1307,7 +1307,7 @@ on(document.querySelectorAll(".ConfirmDeleteButton"), "click", function () {
 });
 
 // Explicit `window.` exposure -- required at runtime, not decorative
-// (see plugins/installed_config.ts's own leading comment for the full
+// (see plugins/installedConfig.ts's own leading comment for the full
 // explanation). `hideAddGroupForm` is called from group_list.latte's
 // own `onclick="hideAddGroupForm()"` attribute; `updateSelectionPanel`
 // is called from a dynamically-set `onclick` HTML attribute

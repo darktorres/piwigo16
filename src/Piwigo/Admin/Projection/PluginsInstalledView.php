@@ -20,7 +20,7 @@ use Piwigo\Template\Latte\Attribute\Template;
  * declares one), not a fixed structural shape worth minting its own DTO
  * for here. No `$baseUrl`/`$maxInactiveBeforeHide`/`$pluginStates`
  * field -- confirmed dead against both the template's own body and
- * `plugins/installed_config.ts`'s `pwg_getPageData()` reads.
+ * `plugins/installedConfig.ts`'s `pwg_getPageData()` reads.
  */
 #[Template('plugins_installed.latte')]
 final readonly class PluginsInstalledView implements View, HasPageAssets, ExposesPageData
@@ -52,7 +52,7 @@ final readonly class PluginsInstalledView implements View, HasPageAssets, Expose
         return [
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
             // Real per-page bundle entry (docs/PLAN.md's P48) -- folds
-            // plugins/installed_config.ts/plugins/installed.ts's code
+            // plugins/installedConfig.ts/plugins/installed.ts's code
             // in via real imports instead of the 2 separate script
             // tags this used to register.
             AssetContribution::script('plugins_installed_page', 'themes/admin/default/js/pages/plugins_installed.ts', loadMode: LoadMode::Footer),

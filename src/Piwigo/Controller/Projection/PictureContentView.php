@@ -59,7 +59,7 @@ final readonly class PictureContentView implements View, HasPageAssets, ExposesP
         }
 
         return [
-            AssetContribution::script('thumbnails.loader', 'themes/default/js/thumbnails.loader.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('thumbnails.loader', 'themes/default/js/thumbnailsLoader.ts', loadMode: LoadMode::Footer),
         ];
     }
 

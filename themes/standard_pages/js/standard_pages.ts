@@ -1,4 +1,4 @@
-import { pwg_getPageString } from "../../default/js/page-data";
+import { pwg_getPageString } from "../../default/js/pageData";
 import {
   cookie,
   setCookie as setCookieShared,

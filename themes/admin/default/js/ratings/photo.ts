@@ -9,7 +9,7 @@ import "../../../../default/js/scripts";
 import "../common";
 import { CategoriesCache } from "../LocalStorageCache";
 
-import { pwg_getPageData } from "../../../../default/js/page-data";
+import { pwg_getPageData } from "../../../../default/js/pageData";
 import { ajax, AjaxError } from "../../../../default/js/vendor/utils/ajax";
 import { getSelectizeInstance } from "../../../../default/js/vendor/widgets/selectize";
 import {

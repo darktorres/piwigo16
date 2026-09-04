@@ -4,7 +4,7 @@ import { sprintf } from "../../../default/js/sprintf";
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../default/js/page-data";
+} from "../../../default/js/pageData";
 import { ajax, AjaxError } from "../../../default/js/vendor/utils/ajax";
 import { pwgDatepicker } from "../../../default/js/vendor/widgets/datepicker";
 import {
@@ -605,7 +605,7 @@ function lineConstructor(line: HistoryLine, id: number) {
     case "search": {
       const { searchDetails } = line;
       // Genuinely heterogeneous per-filter-type search-criteria data
-      // (same nature as search_filters.ts's own global_params/
+      // (same nature as searchFilters.ts's own global_params/
       // fullname_of_cat, deferred to P48) -- each key's real value
       // shape (string[], a nested object, or an opaque `filetypes`
       // blob) varies by which filter was active on the saved search

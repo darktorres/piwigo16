@@ -82,7 +82,7 @@ final readonly class IntroView implements View, HasPageAssets, ExposesPageData
             ...new ColorboxView()
                 ->pageAssets(),
             // Real per-page bundle entry (docs/PLAN.md's P48) -- folds
-            // intro.ts/intro_tooltips.ts's code in via real imports
+            // intro.ts/introTooltips.ts's code in via real imports
             // instead of the 2 separate script tags this used to
             // register. No longer depends on `jquery.cluetip`: this
             // page never rendered any `.cluetip`-classed markup, so

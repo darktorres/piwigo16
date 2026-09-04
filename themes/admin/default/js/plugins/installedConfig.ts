@@ -6,7 +6,7 @@
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../../default/js/page-data";
+} from "../../../../default/js/pageData";
 
 /* incompatible message */
 export const incompatibleMsg = pwg_getPageString(

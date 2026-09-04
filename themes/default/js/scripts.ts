@@ -18,7 +18,7 @@
 // converting it would risk silently breaking a real caller this
 // investigation simply didn't find (Design §1's own "don't assume the
 // taxonomy is exhaustive" caution).
-import { pwg_getPageString } from "./page-data";
+import { pwg_getPageString } from "./pageData";
 
 export function phpWGOpenWindow(
   theURL: string,
@@ -149,7 +149,7 @@ pwg_checkEmailFormat("mail_address", "mail_address-error");
 pwg_checkPasswordMatch("use_new_pwd", "passwordConf", "passwordConf-error");
 
 // Explicit `window.` exposure -- required, not decorative (see
-// page-data.ts's own copy of this comment for the full explanation).
+// pageData.ts's own copy of this comment for the full explanation).
 // `pwg_checkPasswordMatch`/`pwg_checkEmailFormat` don't need this: both
 // are only ever called from within this same file, immediately above.
 // `phpWGOpenWindow`/`pwgAddEventListener` no longer need this either

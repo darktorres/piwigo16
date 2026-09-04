@@ -18,7 +18,7 @@ import { pwgDoubleSlider } from "../../../../default/js/doubleSlider";
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../../default/js/page-data";
+} from "../../../../default/js/pageData";
 import {
   addClass,
   attrOf,
@@ -39,7 +39,7 @@ import {
 } from "../../../../default/js/vendor/utils/dom";
 
 // `sliders` here is a genuinely independent, unrelated top-level
-// `const` from search_filters.ts's own real exported `sliders` (a
+// `const` from searchFilters.ts's own real exported `sliders` (a
 // different theme, a different page, never co-loaded) -- this file's
 // own `export {}` module isolation keeps the two from ever colliding
 // regardless.

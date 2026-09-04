@@ -105,10 +105,10 @@ final readonly class InstallView implements View, HasPageAssets, ExposesPageData
         // folded into this bundle (docs/PLAN.md P48).
         //
         // Keeping that registration was in fact actively broken. P48 also
-        // removed page-data.ts as a Vite entry, so it has no manifest
+        // removed pageData.ts as a Vite entry, so it has no manifest
         // entry, and PageAssets::resolvePath() falls back to the raw
         // source path for anything it cannot resolve -- meaning this page
-        // emitted `<script src="themes/default/js/page-data.ts">` and
+        // emitted `<script src="themes/default/js/pageData.ts">` and
         // served the browser raw TypeScript.
         $assets[] = AssetContribution::script('install', 'themes/admin/default/js/install.ts', loadMode: LoadMode::Footer);
 

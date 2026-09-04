@@ -4,7 +4,7 @@
 // `node_modules/jquery-timepicker-addon/src/jquery-ui-timepicker-addon.js`,
 // `github:trentrichardson/jQuery-Timepicker-Addon#v1.4.4`), across all 4
 // real call sites (`batch_manager/global.ts`/`batch_manager/unit.ts`/
-// `picture_modify.ts`'s own `{showTimepicker:true, cancelButton:...}`
+// `pictureModify.ts`'s own `{showTimepicker:true, cancelButton:...}`
 // creation-date pickers, `history.ts`'s own plain (no time, no cancel
 // button) start/end search-range pickers) plus `datepicker.ts`'s own
 // former `jQuery.fn.pwgDatepicker` wrapper, folded directly into this
@@ -43,7 +43,7 @@
 //   `vendor/utils/datepickerLocales.ts` carries every one of the two real,
 //   authoritative locale sets verbatim (extracted from the real
 //   upstream files, not hand-translated), keyed the same way
-//   `Lang::langInfo()['jquery_code']` resolves; `admin_help.ts`-style
+//   `Lang::langInfo()['jquery_code']` resolves; `adminHelp.ts`-style
 //   `pwg_getPageData<string>("jquery_code")` (`AdminShellFramePageContext`'s
 //   own new field, since this is the first native port needing a
 //   locale identifier client-side rather than picking a script to load

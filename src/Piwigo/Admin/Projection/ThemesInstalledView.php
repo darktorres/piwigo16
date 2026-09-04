@@ -42,7 +42,7 @@ final readonly class ThemesInstalledView implements View, HasPageAssets, Exposes
             ...new ColorboxView()
                 ->pageAssets(),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
-            AssetContribution::script('themes_installed', 'themes/admin/default/js/themes_installed.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('themes_installed', 'themes/admin/default/js/themesInstalled.ts', loadMode: LoadMode::Footer),
         ];
     }
 

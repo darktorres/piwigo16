@@ -15,7 +15,7 @@ import { jConfirmWarningOptions } from "./jconfirmPresets";
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../default/js/page-data";
+} from "../../../default/js/pageData";
 import { ajax, AjaxError } from "../../../default/js/vendor/utils/ajax";
 import { alert } from "../../../default/js/vendor/widgets/jconfirm";
 import * as Piecon from "../../../default/js/vendor/widgets/piecon";
@@ -83,7 +83,7 @@ interface MultipartParams {
 
 // `addRelatedCategory` is declared here too, independently of the
 // same-named functions in mcs.js/categories/modify.ts/batch_manager/unit.ts/
-// picture_modify.ts (docs/PLAN.md P46-B's own finding) -- safe since
+// pictureModify.ts (docs/PLAN.md P46-B's own finding) -- safe since
 // these pages never co-load.
 //
 // tus-js-client is imported from its own npm package and bundled, not

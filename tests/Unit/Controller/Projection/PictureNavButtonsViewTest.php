@@ -42,7 +42,7 @@ test('pageAssets registers picture_nav_buttons.js unconditionally', function ():
 
     expect($view->pageAssets())
         ->toEqual([
-            AssetContribution::script('picture_nav_buttons', 'themes/default/js/picture_nav_buttons.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('picture_nav_buttons', 'themes/default/js/pictureNavButtons.ts', loadMode: LoadMode::Footer),
         ]);
 });
 

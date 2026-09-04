@@ -24,7 +24,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *
  * `TemporaryState` (also common.ts) is not converted or tested here: it
  * stays jQuery-typed, deferred to whichever of its 2 real callers
- * (users/group_list.ts, tags.ts) converts first (see the class's own docblock).
+ * (users/groupList.ts, tags.ts) converts first (see the class's own docblock).
  * `pwg_jconfirm_follow_href` stays jQuery (jquery-confirm, P49-B group 5).
  */
 

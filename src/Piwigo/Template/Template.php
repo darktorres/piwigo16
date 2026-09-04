@@ -184,9 +184,9 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * registration below, alongside `$isAdminLayout` -- unconditional
      * there would add admin-only scripts to a page family that never
      * wanted them. No longer also gates a `page-data` script
-     * registration (docs/PLAN.md's P48, page-data.ts's own batch) --
+     * registration (docs/PLAN.md's P48, pageData.ts's own batch) --
      * that centralized registration is gone; every real consumer
-     * imports page-data.ts's exports directly instead.
+     * imports pageData.ts's exports directly instead.
      */
     private bool $themeBaseApplied = false;
 
@@ -845,7 +845,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             // init timing would reorder same-priority ties instead.
             //
             // No more separate `page-data` script registration here
-            // (docs/PLAN.md's P48, page-data.ts's own batch): every real
+            // (docs/PLAN.md's P48, pageData.ts's own batch): every real
             // `.ts` consumer of `pwg_getPageData`/`pwg_getPageString`
             // (48 files, confirmed via a direct grep, not assumed) now
             // imports them directly via a direct import instead of

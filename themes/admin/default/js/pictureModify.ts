@@ -7,7 +7,7 @@ import { CategoriesCache, TagsCache } from "./LocalStorageCache";
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../default/js/page-data";
+} from "../../../default/js/pageData";
 import { colorbox } from "../../../default/js/vendor/widgets/colorbox";
 import { confirm } from "../../../default/js/vendor/widgets/jconfirm";
 import { pwgDatepicker } from "../../../default/js/vendor/widgets/datepicker";

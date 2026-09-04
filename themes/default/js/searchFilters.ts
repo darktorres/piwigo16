@@ -1,5 +1,5 @@
 import type { PwgDoubleSliderOptions } from "./doubleSlider";
-import { pwg_getPageData, pwg_getPageString } from "./page-data";
+import { pwg_getPageData, pwg_getPageString } from "./pageData";
 
 interface SearchAllwordsRule {
   words: string[];

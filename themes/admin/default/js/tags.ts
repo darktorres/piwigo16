@@ -15,7 +15,7 @@ import { TemporaryState } from "./TemporaryState";
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../default/js/page-data";
+} from "../../../default/js/pageData";
 import { ajax, AjaxError } from "../../../default/js/vendor/utils/ajax";
 import { cookie, setCookie } from "../../../default/js/vendor/utils/cookie";
 import { alert, confirm } from "../../../default/js/vendor/widgets/jconfirm";

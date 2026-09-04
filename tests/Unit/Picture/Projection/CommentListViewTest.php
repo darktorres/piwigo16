@@ -38,7 +38,7 @@ test('pageAssets registers only the 2 unconditional entries when no comment is d
     expect($view->pageAssets())
         ->toEqual([
             AssetContribution::css('themes/default/css/pages/comment_list.css', id: 'comment_list'),
-            AssetContribution::script('thumbnails.loader', 'themes/default/js/thumbnails.loader.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('thumbnails.loader', 'themes/default/js/thumbnailsLoader.ts', loadMode: LoadMode::Footer),
         ]);
 });
 

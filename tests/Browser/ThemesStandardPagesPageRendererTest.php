@@ -100,7 +100,7 @@ it('persists the selected logo option and skin across a later plain visit', func
 });
 
 /**
- * themes_standard_pages.ts's own "scroll mini to show the selected one" --
+ * themesStandardPages.ts's own "scroll mini to show the selected one" --
  * 0% live-interaction coverage before this. Two real, independent bugs
  * found live and fixed here: `.std_pgs_mini_previews` (the scroll
  * container) has no `position` rule of its own, so it was never the real

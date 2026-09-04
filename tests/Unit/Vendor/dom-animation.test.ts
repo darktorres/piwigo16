@@ -73,7 +73,7 @@ describe("animate()", () => {
   });
 
   it("honours a unit given in the target value", () => {
-    // users/group_list.ts animates `top: "20%"` -- the unit must survive.
+    // users/groupList.ts animates `top: "20%"` -- the unit must survive.
     animate(el, { top: "20%" }, 10);
     vi.advanceTimersByTime(50);
     expect(el.style.top).toBe("20%");

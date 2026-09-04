@@ -3,7 +3,7 @@
 // Narrowed hard to what the 2 real call sites actually use:
 // `menubar.ts`'s own vertical-only menu-block reordering
 // (`axis: "y"`, `opacity: 0.8`, no `handle` -- the whole `<li>` drags)
-// and `element_set_ranks.ts`'s own free (both-axis) thumbnail-grid
+// and `elementSetRanks.ts`'s own free (both-axis) thumbnail-grid
 // reordering (`opacity: 0.7`, `handle: ".rank-of-image, .rank-of-image
 // img"` -- real, but every real `<li>` here is 100% covered by those 2
 // selectors already, so it has no actual restricting effect on the one
@@ -23,7 +23,7 @@
 // `.closest()` check would never have matched anyway), and its own
 // real manual-position `<input>` is unconditionally force-hidden
 // (`hide(".menuPos")`) the moment this file's own `ready()` runs;
-// `element_set_ranks.ts`'s own `<input>` is `class="u-hidden"`. No
+// `elementSetRanks.ts`'s own `<input>` is `class="u-hidden"`. No
 // real, currently-visible click target inside either real sortable
 // item is a bare `input`/`textarea`/`button`/`select`/`option` at all.
 //
@@ -116,7 +116,7 @@ function bindItem(
       // pair). Copies the real item's own class list (the same
       // class-copying approach `vendor/widgets/selectize.ts`'s own
       // `$wrapper.addClass(classes)` already uses) rather than just
-      // its size: `element_set_ranks.ts`'s own real thumbnail grid
+      // its size: `elementSetRanks.ts`'s own real thumbnail grid
       // floats its items (`float: left`), and a bare, unclassed
       // placeholder doesn't inherit that, so it never actually held a
       // slot in the row -- confirmed live, every sibling shifted left
@@ -226,7 +226,7 @@ function reorder(
     return;
   }
 
-  // Free/grid mode (element_set_ranks.ts's own real thumbnail grid):
+  // Free/grid mode (elementSetRanks.ts's own real thumbnail grid):
   // still requires literally hovering over a candidate cell, since a
   // 2D grid can't collapse to a single "past/not past" ordering.
   for (const sibling of candidates) {

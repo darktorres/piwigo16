@@ -50,7 +50,7 @@ final readonly class GroupListView implements View, HasPageAssets, ExposesPageDa
             ...new ColorboxView()
                 ->pageAssets(),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css'),
-            AssetContribution::script('group_list', 'themes/admin/default/js/users/group_list.ts', loadMode: LoadMode::Footer),
+            AssetContribution::script('group_list', 'themes/admin/default/js/users/groupList.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),

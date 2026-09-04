@@ -3,7 +3,7 @@ import { delegate } from "./dom";
 // Native port of plupload 2.1.2's HTML5-runtime `plupload.Uploader` +
 // `jquery.plupload.queue.js`'s own file-list widget (P49-C), real source
 // read from the vendored `moxiecode/plupload@v2.1.2` tag (`js/plupload.dev.js`,
-// `js/jquery.plupload.queue/jquery.plupload.queue.js`). `photos_add_direct.ts`
+// `js/jquery.plupload.queue/jquery.plupload.queue.js`). `photosAddDirect.ts`
 // is the ONLY real consumer anywhere in this app.
 //
 // Both real upstream files are far larger than what's ported here: plupload
@@ -13,7 +13,7 @@ import { delegate } from "./dom";
 // own native upload transport. None of that applies to this app's one real
 // call site: `runtimes: "html5"` is hardcoded (a modern, Chromium-based test
 // matrix needs nothing else), and the actual byte transfer was already fully
-// replaced by tus-js-client earlier in this campaign (`photos_add_direct.ts`'s
+// replaced by tus-js-client earlier in this campaign (`photosAddDirect.ts`'s
 // own leading comment) -- plupload's own real uploading/chunking/resizing
 // code, and everything gated behind `uploader.state === STARTED` (`.start()`/
 // `.stop()`/`StateChanged`/`disableBrowse()`), is dead here: `#startUpload`'s
@@ -22,7 +22,7 @@ import { delegate } from "./dom";
 // narrowed to exactly the file-selection/drag-drop/validation/queue-UI
 // surface that stays real once the transport is tus: `bind`/`trigger`
 // (multi-listener, matching real plupload's registration-order semantics --
-// `photos_add_direct.ts`'s own `preinit`/`init` maps and this module's own
+// `photosAddDirect.ts`'s own `preinit`/`init` maps and this module's own
 // internal queue-widget listeners for the same event both still need to
 // fire, in the real relative order jquery.plupload.queue.js/plupload.dev.js
 // established: this module's own file-list rendering always runs LAST for a
@@ -96,7 +96,7 @@ interface UploadQueueError {
   message: string;
   // Always real/present at every real trigger site in this module (both
   // the file-selection validation errors below and every tus error
-  // `photos_add_direct.ts` itself builds) -- required, not optional, so
+  // `photosAddDirect.ts` itself builds) -- required, not optional, so
   // a handler that always reads `error.file` (as this app's own real
   // `Error` handler does) type-checks without an unsound cast.
   file: UploadQueueFile;

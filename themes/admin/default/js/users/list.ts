@@ -8,7 +8,7 @@ import { jConfirmConfirmOptions } from "../jconfirmPresets";
 import {
   pwg_getPageData,
   pwg_getPageString,
-} from "../../../../default/js/page-data";
+} from "../../../../default/js/pageData";
 import { ajax, AjaxError } from "../../../../default/js/vendor/utils/ajax";
 import { confirm } from "../../../../default/js/vendor/widgets/jconfirm";
 import {
@@ -4255,7 +4255,7 @@ ready(function () {
 });
 
 // Explicit `window.` exposure -- required at runtime, not decorative
-// (see plugins/installed_config.ts's own leading comment for the full
+// (see plugins/installedConfig.ts's own leading comment for the full
 // explanation): `pluginAddTabInUserModal`'s own JSDoc documents it
 // as a real public extension point third-party plugins call from their
 // own, separately-loaded `<script>` tags -- this file's own top-level

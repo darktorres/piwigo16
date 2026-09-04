@@ -1,7 +1,7 @@
 // Native port of Piecon (P49-C), real source read from the vendored
 // package (`github:lipka/piecon#0.5.0`, an abandoned upstream fork
 // pin -- last real upstream commit years ago). The one real call site
-// (`photos_add_direct.ts`'s own upload-progress favicon indicator)
+// (`photosAddDirect.ts`'s own upload-progress favicon indicator)
 // only ever calls `Piecon.setProgress(percentage)`/`.reset()` --
 // `.setOptions()` is never called, so the original's own configurable
 // `color`/`background`/`shadow`/`fallback` options collapse to their

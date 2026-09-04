@@ -1,6 +1,6 @@
 import "../common";
 
-import { pwg_getPageData } from "../../../../default/js/page-data";
+import { pwg_getPageData } from "../../../../default/js/pageData";
 import { hide, show, toggle } from "../../../../default/js/vendor/utils/dom";
 
 (function () {

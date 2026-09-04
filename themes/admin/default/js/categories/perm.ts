@@ -1,7 +1,7 @@
 import "../common";
 import { GroupsCache, UsersCache } from "../LocalStorageCache";
 
-import { pwg_getPageData } from "../../../../default/js/page-data";
+import { pwg_getPageData } from "../../../../default/js/pageData";
 import {
   hide,
   on,

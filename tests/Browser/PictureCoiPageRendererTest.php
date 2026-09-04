@@ -160,7 +160,7 @@ it('renders a real 404 "Page not found" response for a nonexistent image_id', fu
 });
 
 /**
- * picture_coi.ts's own coordinate maths, converted off jQuery in P49-A;
+ * pictureCoi.ts's own coordinate maths, converted off jQuery in P49-A;
  * Jcrop itself is native too now (P49-B group 6, `vendor/widgets/jcrop.ts`).
  *
  * The round trip is the assertion. With a COI already stored, Jcrop's init
@@ -178,7 +178,7 @@ it('renders a real 404 "Page not found" response for a nonexistent image_id', fu
  *
  * The settled values ARE pinned, because everything feeding them is
  * fixed: H::makeTestImage() defaults to 200x150 (only its label varies),
- * and picture_coi.ts asks Jcrop for a 500x400 box. The stored 0.1/0.2/
+ * and pictureCoi.ts asks Jcrop for a 500x400 box. The stored 0.1/0.2/
  * 0.8/0.9 comes back as 0.12/0.2/0.8/0.92 -- Jcrop rounds the selection
  * to whole pixels, which on a 200px axis is 0.005 per pixel. Change
  * either the image size or the box and these move; that is a real signal,

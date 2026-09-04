@@ -7,8 +7,8 @@ import {
 /**
  * jQuery reads dimensions off the first element of a set and writes to
  * every one, and both halves are kept: the measurement comes from
- * `first`, the sizing goes to all of them. Shared by themes_installed.ts
- * and themes_new.ts, whose own copies of this were previously
+ * `first`, the sizing goes to all of them. Shared by themesInstalled.ts
+ * and themesNew.ts, whose own copies of this were previously
  * near-identical (P51-H).
  */
 export function scaleThemeScreenshot(themeBox: Element): void {

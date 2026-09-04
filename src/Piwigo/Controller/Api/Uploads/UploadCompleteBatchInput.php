@@ -6,7 +6,7 @@ namespace Piwigo\Controller\Api\Uploads;
 
 /**
  * `POST /api/v1/uploads/actions/complete-batch` body DTO -- carries only
- * `categoryId` (confirmed against the real caller, `photos_add_direct.ts`).
+ * `categoryId` (confirmed against the real caller, `photosAddDirect.ts`).
  * An `imageId` field is deliberately not carried: it would have zero real
  * reader, no production listener consumes it.
  */

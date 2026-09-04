@@ -858,7 +858,6 @@ async function updateBlock(pictureId: number): Promise<void> {
       ),
       String(response.width ?? 0) + "x" + String(response.height ?? 0),
     );
-    // updateTags(response.tags, pictureId); //Yet to be implemented (TODO)
     showMetasyncSuccesBadge(pictureId);
     enableLocalButton(pictureId);
     enableGlobalButton();
@@ -870,22 +869,3 @@ async function updateBlock(pictureId: number): Promise<void> {
 }
 
 pluginFunctionMapInit();
-
-// TAGS UPDATE Yet to be implemented
-// function updateTags(tagsData, pictureId) {
-//   const $tagsUpdate = $('#tags-'+pictureId).selectize({
-//     create: true,
-//     persist: false
-// });
-//   const selectizeTags = $tagsUpdate[0].selectize;
-//   const transformedData = tagsData.map(function(item) {
-//       return {
-//           value: item.id,
-//           text: item.name
-//       };
-//   })
-//   console.log(transformedData);
-//   selectizeTags.clearOptions();
-//   selectizeTags.addOption(transformedData);
-//   selectizeTags.refreshOptions(true);
-// };

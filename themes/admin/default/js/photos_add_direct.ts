@@ -663,11 +663,6 @@ ready(function () {
         show(document.querySelectorAll("#uploadingActions"));
         hide(document.querySelectorAll(".format-mode-group-manager"));
         hide(document.querySelectorAll("#selectedAlbumEdit"));
-        // if (!formatMode) {
-        //   var categorySelectedId = $("select[name=category] option:selected").val();
-        //   var categorySelectedPath = $("select[name=category]")[0].selectize.getItem(categorySelectedId).text();
-        //   $('.selectedAlbum').show().find('span').html(categorySelectedPath);
-        // }
 
         // warn user if she wants to leave page while upload is running
         on(window, "beforeunload", function (e: Event) {
@@ -766,8 +761,6 @@ ready(function () {
 
       UploadComplete: function (_up: UploadQueue, _files: UploadQueueFile[]) {
         // Called when all files are either uploaded or failed
-        //console.log('[UploadComplete]');
-
         Piecon.reset();
 
         if (!formatMode && uploadCategory) {

@@ -81,7 +81,6 @@ function updateSearch() {
   hide(document.querySelectorAll(".limit-album-reached"));
   if (string === "") {
     // help button unnecessary so do not show
-    // $('.search-album-help').show();
     show(document.querySelectorAll(".search-album-ghost"));
     hide(document.querySelectorAll(".search-album-num-result"));
     hideSearchContainer();

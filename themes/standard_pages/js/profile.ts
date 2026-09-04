@@ -505,8 +505,6 @@ async function setInfos(
   callback: ((data: any) => void) | null = null,
   errCallback: ((e: AjaxResponse) => void) | null = null,
 ): Promise<void> {
-  // for debug
-  // console.log('setInfos', params);
   const { url, httpMethod, body } = API_KEY_ENDPOINTS[method]!(params);
 
   try {
@@ -879,10 +877,6 @@ function copyToClipboard(
     void navigator.clipboard.writeText(copy);
     if (selector !== null && selector !== "") {
       removeClass(document.querySelectorAll(selector), "api-hide");
-      // auto hide
-      // setTimeout(() => {
-      //   $(selector).addClass('api-hide');
-      // }, 1000);
     } else {
       pwgToaster({ text: message, icon: "success" });
     }

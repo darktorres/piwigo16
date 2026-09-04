@@ -212,14 +212,6 @@ on(document, "keydown", function (e: Event) {
   }
 });
 
-//get out of pop in via clicking outside pop in
-//$(document).on('click', function (e) {
-//    console.log($(e.target));
-//    if ($(e.target) && $(e.target).closest(".UserListPopInContainer").length === 0) {
-//        $("#UserList").fadeOut();
-//    }
-//});
-
 /*----------------
 Group Selectize
 ----------------*/
@@ -631,8 +623,6 @@ ready(function () {
       break;
   }
 
-  //$("#pagination-per-page-"+pagination).trigger('click');
-
   if (hasGroup !== null && hasGroup !== "") {
     advancedFilterButtonClick();
     setVal(document.querySelectorAll("select[name='filter_group']"), hasGroup);
@@ -705,13 +695,9 @@ ready(function () {
       const slides = Array.from(this.children);
       const rectView = this.getBoundingClientRect();
       removeClass(document.querySelectorAll(".edit-user-tabsheet"), "selected");
-      // for debug
-      // console.log('RECT REFERENCES left / right', rectView.left.toFixed(0), ' / ', rectView.right.toFixed(0));
 
       slides.forEach((slide) => {
         const rect = slide.getBoundingClientRect();
-        // for debug
-        // console.log('rect',$(this).attr('id'), ' left / right : ', rect.left, ' / ', rect.right);
         if (
           Number(rect.left.toFixed(0)) >=
             Number(rectView.left.toFixed(0)) - 1 &&
@@ -859,9 +845,7 @@ const recentPeriodValues = [
   30, 40, 50, 60, 80, 99,
 ];
 const recentPeriodInit = 0;
-//const recentPeriodInit = getSliderKeyFromValue($('.period-select-bar input[name=recent_period]').val(), recentPeriodValues);
 const nbImagePageInit = 0;
-//const nbImagePageInit = getSliderKeyFromValue($('.photos-select-bar input[name=nb_image_page]').val(), nbImagePageValues);
 
 /**
  * find the key from a value in the startStopValues array
@@ -887,7 +871,6 @@ function getNbImagePageInfoFromIdx(idx: number) {
 
 function getRecentPeriodInfoFromIdx(idx: number) {
   return sprintf(nbDays, recentPeriodValues[idx]!);
-  //return recentPeriodValues[idx].toString();
 }
 
 /* Photos bar slider */
@@ -2194,7 +2177,6 @@ function fillUserEditSummary(
   popIn: Element,
   isGuest: boolean,
 ) {
-  // console.log(isGuest);
   if (isGuest) {
     const initialSpan = find(popIn, ".user-property-initials span");
     removeClass(initialSpan, colorIcons.join(" "));
@@ -2789,7 +2771,6 @@ function fillAjaxDataFromProperties(
     popIn,
     ".user-property-group .selectize-input .item",
   ).map((el) => parseInt(attrOf(el, "data-value")!));
-  // console.log(groupsSelected);
   ajaxData["email"] = val(find(popIn, ".user-property-email input"));
   if (
     connectedUserStatus === "admin" &&
@@ -2800,7 +2781,6 @@ function fillAjaxDataFromProperties(
   } else if (connectedUserStatus === "webmaster") {
     ajaxData["status"] = val(find(popIn, ".user-property-status select"));
   }
-  // console.log(ajaxData['status']);
   ajaxData["level"] = Number(val(find(popIn, ".user-property-level select")));
   ajaxData["groupIds"] = groupsSelected.length === 0 ? [-1] : groupsSelected;
   ajaxData["enabledHigh"] =
@@ -3436,9 +3416,6 @@ async function addUser(): Promise<void> {
       ? true
       : false;
   ajaxData["groupIds"] = groupsSelected;
-
-  // for debug
-  // console.log(ajaxData);
 
   const payload: Record<string, unknown> = {
     username: ajaxData["username"],

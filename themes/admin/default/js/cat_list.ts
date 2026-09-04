@@ -55,16 +55,6 @@ function setDisplayCompact(): void {
     flexDirection: "column",
   });
 
-  // $(".albumIcon").css({
-  //     height: "80px"
-  // });
-
-  // $(".albumIcon span").css({
-  //     fontSize: "19px",
-  //     width: "27px",
-  //     padding: "10px"
-  // });
-
   css(document.querySelectorAll(".albumIcon"), {
     height: "60px",
   });

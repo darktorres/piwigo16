@@ -485,9 +485,6 @@ ready(function () {
       },
     );
 
-    // For debug
-    // $('.date_posted-option-container').find(':input').show();
-
     // On custom date input select
     on(
       document.querySelectorAll(
@@ -643,9 +640,6 @@ ready(function () {
           document.querySelectorAll(".date_created-option input"),
           "change",
         );
-
-        // $('.date_created-option input').removeAttr('disabled');
-        // $('.date_created-option input').removeClass('grey-icon');
       },
     );
 

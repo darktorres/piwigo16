@@ -569,11 +569,7 @@ function lineConstructor(line: HistoryLine, id: number) {
         html(find(newLine, ".type-id"), "#" + String(line.tagIds[0]));
       }
 
-      let detailStr = "";
-      line.tagNames.forEach((tag) => {
-        detailStr += tag + ", ";
-      });
-      detailStr = detailStr.slice(0, -2);
+      const detailStr = line.tagNames.join(", ");
       const detailItem1 = find(newLine, ".detail-item-1");
       html(detailItem1, detailStr);
       attr(detailItem1, "title", detailStr);

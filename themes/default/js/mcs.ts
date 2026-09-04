@@ -212,21 +212,15 @@ ready(function () {
       true,
     );
 
-    let wordSearchStr = "";
     const wordSearchWords = allwordsRule.words;
-    wordSearchWords.forEach((word) => {
-      wordSearchStr += word + " ";
-    });
-    setVal(
-      document.querySelectorAll("#word-search"),
-      wordSearchStr.slice(0, -1),
-    );
+    const wordSearchStr = wordSearchWords.join(" ");
+    setVal(document.querySelectorAll("#word-search"), wordSearchStr);
 
     if (wordSearchWords.length > 0) {
       addClass(document.querySelectorAll(".filter-word"), "filter-filled");
       html(
         document.querySelectorAll(".filter-word .search-words"),
-        wordSearchStr.slice(0, -1),
+        wordSearchStr,
       );
     } else {
       html(
@@ -266,7 +260,7 @@ ready(function () {
       },
     );
 
-    psParams["allwords"] = wordSearchStr.slice(0, -1);
+    psParams["allwords"] = wordSearchStr;
     psParams["allwords_fields"] = wordSearchFields;
     psParams["allwords_mode"] = wordSearchMode;
 
@@ -299,22 +293,22 @@ ready(function () {
       true,
     );
 
-    let tagSearchStr = "";
     const tagSearchEl =
       document.querySelector<HTMLSelectElement>("#tag-search")!;
     const tagSearchSelectize = getSelectizeInstance(tagSearchEl)!;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- #tag-search is a real <select multiple> (search_filters.inc.latte), so getValue() always returns an array here.
-    (tagSearchSelectize.getValue() as (string | number)[]).forEach((id) => {
-      tagSearchStr +=
+    const tagSearchStr = (tagSearchSelectize.getValue() as (string | number)[])
+      .map((id) =>
         (tagSearchSelectize.getItem(id)?.textContent ?? "")
           .replace(/\(\d+ \w+\)×/, "")
-          .trim() + ", ";
-    });
+          .trim(),
+      )
+      .join(", ");
     if (tagsRule.words.length > 0) {
       addClass(document.querySelectorAll(".filter-tag"), "filter-filled");
       text(
         document.querySelectorAll(".filter.filter-tag .search-words"),
-        tagSearchStr.slice(0, -2),
+        tagSearchStr,
       );
     } else {
       text(
@@ -747,11 +741,12 @@ ready(function () {
       true,
     );
 
-    let albumWidgetValue = "";
     catRule.words.forEach((cat_id) => {
       displayRelatedCategory(cat_id, fullnameOfCat[cat_id]);
-      albumWidgetValue += (fullnameOfCat[cat_id] ?? "") + ", ";
     });
+    const albumWidgetValue = catRule.words
+      .map((cat_id) => fullnameOfCat[cat_id] ?? "")
+      .join(", ");
 
     // Load Album Selector
     ab = new AlbumSelector({
@@ -781,7 +776,7 @@ ready(function () {
       addClass(document.querySelectorAll(".filter-album"), "filter-filled");
       html(
         document.querySelectorAll(".filter-album .search-words"),
-        albumWidgetValue.slice(0, -2),
+        albumWidgetValue,
       );
     } else {
       html(
@@ -825,21 +820,22 @@ ready(function () {
         true,
       );
 
-      let authorSearchStr = "";
       const authorsSelectize = getSelectizeInstance(el)!;
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- #authors is a real <select multiple> (search_filters.inc.latte), so getValue() always returns an array here.
-      (authorsSelectize.getValue() as (string | number)[]).forEach((id) => {
-        authorSearchStr +=
+      const authorIds = authorsSelectize.getValue() as (string | number)[];
+      const authorSearchStr = authorIds
+        .map((id) =>
           (authorsSelectize.getItem(id)?.textContent ?? "")
             .replace(/\(\d+ \w+\)×/, "")
-            .trim() + ", ";
-      });
+            .trim(),
+        )
+        .join(", ");
 
       if (authorRule.words.length > 0) {
         addClass(document.querySelectorAll(".filter-authors"), "filter-filled");
         text(
           document.querySelectorAll(".filter.filter-authors .search-words"),
-          authorSearchStr.slice(0, -2),
+          authorSearchStr,
         );
       } else {
         text(
@@ -922,16 +918,13 @@ ready(function () {
       true,
     );
 
-    let filetypesSearchStr = "";
-    filetypesFilter.forEach((ft) => {
-      filetypesSearchStr += ft + ", ";
-    });
+    const filetypesSearchStr = filetypesFilter.join(", ");
 
     if (filetypesFilter.length > 0) {
       addClass(document.querySelectorAll(".filter-filetypes"), "filter-filled");
       text(
         document.querySelectorAll(".filter.filter-filetypes .search-words"),
-        filetypesSearchStr.toUpperCase().slice(0, -2),
+        filetypesSearchStr.toUpperCase(),
       );
 
       // `?? ""` for a name-less input: no filter list ever holds the
@@ -975,16 +968,15 @@ ready(function () {
       true,
     );
 
-    let ratiosSearchStr = "";
-    ratiosFilter.forEach((ft) => {
-      ratiosSearchStr += (strRatiosLabel[ft] ?? "") + ", ";
-    });
+    const ratiosSearchStr = ratiosFilter
+      .map((ft) => strRatiosLabel[ft] ?? "")
+      .join(", ");
 
     if (ratiosFilter.length > 0) {
       addClass(document.querySelectorAll(".filter-ratios"), "filter-filled");
       text(
         document.querySelectorAll(".filter.filter-ratios .search-words"),
-        ratiosSearchStr.slice(0, -2),
+        ratiosSearchStr,
       );
 
       document.querySelectorAll(".ratios-option input").forEach((el) => {

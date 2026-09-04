@@ -1602,7 +1602,7 @@ export function val(target: Element | ArrayLike<Element>): string | undefined {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- this function's own docblock: `.value` is read from any element, form-control or not, so there is no single real interface to narrow to.
-  return (first as unknown as { value?: string }).value;
+  return (first as { value?: string }).value;
 }
 
 /** `.val(value)` -- writes to every element; see `val()`'s own docblock. */
@@ -1662,7 +1662,7 @@ export function setDisabled(
   for (const el of toElements(target)) {
     if ("disabled" in el) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- this function's own docblock: `.disabled` is written to any element that has it (button, input, select, ...), so there is no single real interface to narrow to; the `in` check above is the real runtime guard.
-      (el as unknown as { disabled: boolean }).disabled = disabled;
+      (el as { disabled: boolean }).disabled = disabled;
     }
   }
 }

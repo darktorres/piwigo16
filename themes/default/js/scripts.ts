@@ -65,22 +65,7 @@ export function pwgAddEventListener(
   evt: string,
   fn: EventListenerOrEventListenerObject,
 ): void {
-  if (typeof window.addEventListener !== "undefined")
-    elem.addEventListener(evt, fn, false);
-  // Legacy IE-only fallback, realistically dead in any evergreen browser
-  // this project's own P35 browserslist floor targets -- lib.dom.d.ts
-  // itself has no ambient type for `attachEvent` (removed with IE),
-  // hence the local interface rather than a real DOM type.
-  else {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- IE-only fallback; lib.dom.d.ts has no ambient type for attachEvent at all (removed with IE), so there is no real interface to narrow to.
-    const legacyElem = elem as unknown as {
-      attachEvent(
-        event: string,
-        handler: EventListenerOrEventListenerObject,
-      ): boolean;
-    };
-    legacyElem.attachEvent("on" + evt, fn);
-  }
+  elem.addEventListener(evt, fn, false);
 }
 
 function pwg_tryFocus(id: string): void {

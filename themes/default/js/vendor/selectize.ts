@@ -467,7 +467,7 @@ export function selectize<
       return;
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- DOM-string-to-T boundary, see selectize()'s own header comment.
-    instance.addItem(highlighted as unknown as T);
+    instance.addItem(highlighted as T);
   }
 
   function createFromInput(): void {
@@ -477,7 +477,7 @@ export function selectize<
     const data = { [valueField]: query, [labelField]: query } as unknown as U;
     instance.addOption(data);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- DOM-string-to-T boundary, see selectize()'s own header comment.
-    instance.addItem(query as unknown as T);
+    instance.addItem(query as T);
   }
 
   function moveHighlight(direction: 1 | -1): void {
@@ -558,7 +558,7 @@ export function selectize<
     }
     const value = target.getAttribute("data-value")!;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- DOM-string-to-T boundary, see selectize()'s own header comment.
-    instance.addItem(value as unknown as T);
+    instance.addItem(value as T);
   });
 
   on(dropdownContent, "mousemove", (evt) => {
@@ -604,7 +604,7 @@ export function selectize<
     settings,
     getValue(): T | T[] {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- empty-selection placeholder, same DOM-string-to-T boundary as selectize()'s own header comment.
-      return multi ? [...items] : (items[0] ?? ("" as unknown as T));
+      return multi ? [...items] : (items[0] ?? ("" as T));
     },
     setValue(value, silent) {
       instance.clear(true);
@@ -716,7 +716,7 @@ export function selectize<
 
   domSelectedValues.forEach((value) => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- DOM-string-to-T boundary, see selectize()'s own header comment.
-    instance.addItem(value as unknown as T, true);
+    instance.addItem(value as T, true);
   });
   (init.items ?? []).forEach((value) => { instance.addItem(value, true); });
   renderItems();

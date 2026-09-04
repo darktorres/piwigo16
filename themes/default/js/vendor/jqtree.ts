@@ -1096,7 +1096,7 @@ class JqTreeController<T extends Record<string, unknown>> {
       targetNode: targetNode as unknown as JqTreeNode<T>,
       position,
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
-      previousParent: previousParent as unknown as JqTreeNode<T> | null,
+      previousParent: previousParent as JqTreeNode<T> | null,
       doMove,
     };
     const event = new CustomEvent("tree.move", {
@@ -1481,7 +1481,7 @@ function asInstance<T extends Record<string, unknown>>(
 ): JqTreeInstance<T> {
   return {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
-    getNodeById: (id) => controller.getNodeById(id) as unknown as JqTreeNode<T> | null,
+    getNodeById: (id) => controller.getNodeById(id) as JqTreeNode<T> | null,
     getState: () => controller.getState(),
     openNode: (node, slide, onFinished) =>
       { controller.openNode(
@@ -1502,14 +1502,14 @@ function asInstance<T extends Record<string, unknown>>(
       controller.appendNode(
         newNodeInfo,
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
-        parentNode as unknown as TreeNode | undefined,
+        parentNode as TreeNode | undefined,
       ) as unknown as JqTreeNode<T>,
     prependNode: (newNodeInfo, parentNode) =>
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
       controller.prependNode(
         newNodeInfo,
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
-        parentNode as unknown as TreeNode | undefined,
+        parentNode as TreeNode | undefined,
       ) as unknown as JqTreeNode<T>,
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
     removeNode: (node) => { controller.removeNode(node as unknown as TreeNode); },

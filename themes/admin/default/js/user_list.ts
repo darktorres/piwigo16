@@ -2646,8 +2646,8 @@ function fillUserEdit(userToEdit: UserRow) {
     });
   }
   const keyUserToEdit = Object.keys(userToEdit);
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- pluginAddTabInUserModal's own extension point needs dynamic-by-name field access into a real UserRow; the string keys it's called with come from each plugin's own registration, not user input.
-  const userToEditRecord = userToEdit as unknown as Record<string, unknown>;
+  // pluginAddTabInUserModal's own extension point needs dynamic-by-name field access into a real UserRow; the string keys it's called with come from each plugin's own registration, not user input.
+  const userToEditRecord = userToEdit as Record<string, unknown>;
   pluginsUsersInfosTable.forEach((i) => {
     setVal(document.querySelectorAll("#" + i.content_id), "");
     if (keyUserToEdit.includes(i.users_table)) {

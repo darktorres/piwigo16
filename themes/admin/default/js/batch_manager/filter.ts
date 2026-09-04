@@ -36,7 +36,7 @@ import {
   slideToggle,
   slideUp,
   val,
-} from "../../../../default/js/vendor/dom";
+} from "../../../../default/js/vendor/utils/dom";
 
 // `sliders` here is a genuinely independent, unrelated top-level
 // `const` from search_filters.ts's own real exported `sliders` (a
@@ -284,7 +284,7 @@ ready(function () {
   });
 
   // Filter JS Validation -- reads the real underlying <select>'s value,
-  // which selectize (`vendor/selectize.ts`, P49-B group 6) keeps synced
+  // which selectize (`vendor/widgets/selectize.ts`, P49-B group 6) keeps synced
   // and now dispatches a real native "change" event for.
   on(
     document.querySelectorAll('.filterBlock select[data-selectize="tags"]'),

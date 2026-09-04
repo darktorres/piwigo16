@@ -34,10 +34,10 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *
  * `.selectize()` (group 6) and `pwg_jconfirm_follow_href` (jquery-confirm,
  * group 5) are both real native calls now. `.sortElements()` (jquery.sort) converted to
- * `sortElements()` (`themes/default/js/vendor/sortElements.ts`) in P49-B
+ * `sortElements()` (`themes/default/js/vendor/utils/sortElements.ts`) in P49-B
  * group 1, `.tipTip()` to `tipTip()` (`themes/default/js/vendor/
  * tiptip.ts`) in group 2, and jQuery UI's `.slider()` to `slider()`
- * (`themes/default/js/vendor/slider.ts`) in group 4 -- the drag test
+ * (`themes/default/js/vendor/widgets/slider.ts`) in group 4 -- the drag test
  * below is real new coverage for that conversion, not just a
  * regression check: no prior test, jQuery-based or not, ever drove the
  * slider itself, only its zero-state render.
@@ -111,7 +111,7 @@ it('dragging the rating slider to its max end fills every star', function (): vo
     // The panel has to be open first: a hidden (`display: none`)
     // `.notation-filter-slider` has a zero-width `getBoundingClientRect()`,
     // which the slider's own click-position math (`themes/default/js/
-    // vendor/slider.ts`) would divide by, and a real user can't drag a
+    // vendor/widgets/slider.ts`) would divide by, and a real user can't drag a
     // hidden slider either.
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=plugins&tab=new');

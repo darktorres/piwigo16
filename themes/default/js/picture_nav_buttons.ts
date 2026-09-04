@@ -1,5 +1,5 @@
 import { pwg_getPageData } from "./page-data";
-import { on } from "./vendor/dom";
+import { on } from "./vendor/utils/dom";
 
 on(document, "keydown", function (e: Event) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.

@@ -7,8 +7,8 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
-import { alert, confirm } from "../../../default/js/vendor/jconfirm";
+import { ajax, AjaxError } from "../../../default/js/vendor/utils/ajax";
+import { alert, confirm } from "../../../default/js/vendor/widgets/jconfirm";
 import {
   addClass,
   append,
@@ -35,7 +35,7 @@ import {
   trigger,
   val,
   valId,
-} from "../../../default/js/vendor/dom";
+} from "../../../default/js/vendor/utils/dom";
 import type { operations } from "../../../../openapi/client/schema";
 
 const strYesDeleteConfirmation = pwg_getPageString("Yes, delete");
@@ -248,7 +248,7 @@ ready(function () {
 
 async function getComments(params: CommentsFilterParams): Promise<void> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const response = (await ajax({
       url: "api/v1/comments",
       type: "GET",

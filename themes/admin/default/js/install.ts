@@ -1,6 +1,6 @@
 import { pwg_getPageString } from "../../../default/js/page-data";
-import { ajax, type AjaxThenable } from "../../../default/js/vendor/ajax";
-import { cluetip } from "../../../default/js/vendor/cluetip";
+import { ajax, type AjaxThenable } from "../../../default/js/vendor/utils/ajax";
+import { cluetip } from "../../../default/js/vendor/widgets/cluetip";
 import {
   addClass,
   on,
@@ -8,7 +8,7 @@ import {
   removeClass,
   setVal,
   text as setText,
-} from "../../../default/js/vendor/dom";
+} from "../../../default/js/vendor/utils/dom";
 
 /** Every selector here is an id or an id list; static, as jQuery's were. */
 function q(selector: string): HTMLElement[] {

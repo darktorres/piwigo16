@@ -32,11 +32,11 @@ import {
   show,
   text,
   val,
-} from "../../../../default/js/vendor/dom";
-import { ajax, AjaxError } from "../../../../default/js/vendor/ajax";
-import { colorbox } from "../../../../default/js/vendor/colorbox";
-import { confirm } from "../../../../default/js/vendor/jconfirm";
-import { pwgDatepicker } from "../../../../default/js/vendor/datepicker";
+} from "../../../../default/js/vendor/utils/dom";
+import { ajax, AjaxError } from "../../../../default/js/vendor/utils/ajax";
+import { colorbox } from "../../../../default/js/vendor/widgets/colorbox";
+import { confirm } from "../../../../default/js/vendor/widgets/jconfirm";
+import { pwgDatepicker } from "../../../../default/js/vendor/widgets/datepicker";
 
 // Real shape confirmed via BatchManagerUnitPageRenderer.php's own
 // `$related_category_ids[] = $item_category_id; ... json_encode(...)`
@@ -178,7 +178,7 @@ ready(function () {
     },
   );
 
-  // Specific handler for datepicker inputs: `vendor/datepicker.ts`'s
+  // Specific handler for datepicker inputs: `vendor/widgets/datepicker.ts`'s
   // own native port dispatches a real native "change" event on the
   // visible field (matching the original's own real
   // `this.$input.trigger("change")`), so a native listener sees it.
@@ -193,7 +193,7 @@ ready(function () {
     },
   );
 
-  // `vendor/selectize.ts`'s own `triggerChange()` now dispatches a real
+  // `vendor/widgets/selectize.ts`'s own `triggerChange()` now dispatches a real
   // native "change" event on the original (hidden) <select> (P49-B group
   // 6), so a native listener sees it just like it always did for every
   // plain, non-selectized <select> on the page.
@@ -803,7 +803,7 @@ function pluginSaveLoop(pictureId: number) {
 // UPDATE BLOCKS
 async function updateBlock(pictureId: number): Promise<void> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const response = (await ajax({
       url: "api/v1/images/" + String(pictureId),
       type: "GET",

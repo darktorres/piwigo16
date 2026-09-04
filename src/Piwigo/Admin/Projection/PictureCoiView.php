@@ -43,7 +43,7 @@ final readonly class PictureCoiView implements View, HasPageAssets, ExposesPageD
      * "htmlHead() -- fully migrated, not an exception" design note) plus
      * `{do combineScript(...)}`x1/`{do combineCss(...)}`x1
      * (docs/PLAN.md's P42-B). Jcrop's own CDN script registration is
-     * gone (P49-B group 6, `vendor/jcrop.ts`) -- its CSS stays, kept for
+     * gone (P49-B group 6, `vendor/widgets/jcrop.ts`) -- its CSS stays, kept for
      * its real `.jcrop-*` class names this module's own DOM still uses.
      */
     #[Override]

@@ -30,13 +30,13 @@ import {
   toggle,
   trigger,
   val,
-} from "../../../../default/js/vendor/dom";
-import { ajax, AjaxError } from "../../../../default/js/vendor/ajax";
+} from "../../../../default/js/vendor/utils/dom";
+import { ajax, AjaxError } from "../../../../default/js/vendor/utils/ajax";
 import {
   confirm,
   type JConfirmInstance,
-} from "../../../../default/js/vendor/jconfirm";
-import { tipTip } from "../../../../default/js/vendor/tiptip";
+} from "../../../../default/js/vendor/widgets/jconfirm";
+import { tipTip } from "../../../../default/js/vendor/widgets/tiptip";
 
 // `addRelatedCategory` is declared here too, independently of the
 // same-named functions in mcs.js/batchManagerUnit.js/
@@ -207,7 +207,7 @@ ready(function () {
     if (parentAlbum !== defaultParentAlbum) {
       void (async () => {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
           const data = (await ajax({
             url: "api/v1/categories/actions/move",
             type: "POST",
@@ -358,7 +358,7 @@ ready(function () {
 
       void (async () => {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
           const data = (await ajax({
             url:
               "api/v1/categories/" +

@@ -5,7 +5,7 @@
 // import replaces the separate `core.scripts` script tag
 // BatchManagerUnitView used to register directly -- this page doesn't
 // read any of scripts.ts's own real exports, just needs its side
-// effects. `vendor/datepicker.ts` (P49-B, native port) is imported
+// effects. `vendor/widgets/datepicker.ts` (P49-B, native port) is imported
 // directly by `batch_manager/unit.ts` itself now, not registered as a
 // separate side-effect import here.
 import "../autosize";

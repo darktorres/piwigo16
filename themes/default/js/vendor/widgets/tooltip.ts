@@ -14,7 +14,7 @@
 // viewport's own bottom edge, which is all a GeoIP city name (plus an
 // optional static map image) or a raw title string ever needs.
 //
-// Delegation itself needs no `vendor/dom.ts`-style "mouseenter doesn't
+// Delegation itself needs no `vendor/utils/dom.ts`-style "mouseenter doesn't
 // bubble" translation: jQuery UI's own real `_create()` binds plain,
 // *bubbling* "mouseover"/"focusin" directly on `this.element` (the
 // container) and resolves the actual matched descendant per event via

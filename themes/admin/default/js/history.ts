@@ -5,8 +5,8 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
-import { pwgDatepicker } from "../../../default/js/vendor/datepicker";
+import { ajax, AjaxError } from "../../../default/js/vendor/utils/ajax";
+import { pwgDatepicker } from "../../../default/js/vendor/widgets/datepicker";
 import {
   addClass,
   append,
@@ -32,8 +32,8 @@ import {
   textOf,
   toggle,
   trigger,
-} from "../../../default/js/vendor/dom";
-import { tipTip } from "../../../default/js/vendor/tiptip";
+} from "../../../default/js/vendor/utils/dom";
+import { tipTip } from "../../../default/js/vendor/widgets/tiptip";
 
 type HistorySearchResponse =
   operations["historySearch"]["responses"][200]["content"]["application/json"];
@@ -165,7 +165,7 @@ ready(() => {
     void fillHistoryResult(currentParam);
   });
 
-  // `vendor/datepicker.ts`'s own native port dispatches a real native
+  // `vendor/widgets/datepicker.ts`'s own native port dispatches a real native
   // "change" event (bubbling) on the visible field on init/selection --
   // matching the original's own real `this.$input.trigger("change")`
   // -- so a native listener on the `.date-start`/`.date-end` ancestor
@@ -386,7 +386,7 @@ async function fillHistoryResult(
   empty(document.querySelectorAll(".tab"));
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const rawData = (await ajax({
       url: "api/v1/history/search",
       data: ajaxParam,
@@ -1068,7 +1068,7 @@ function setupGeoIpHover(ipEl: Element): void {
 
       void (async () => {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
           const geoData = (await ajax({
             url: "api/v1/geoip",
             type: "GET",

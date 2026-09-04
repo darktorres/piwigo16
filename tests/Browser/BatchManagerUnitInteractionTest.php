@@ -25,7 +25,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *
  * jquery-confirm, colorbox, selectize, and pwgDatepicker are all real
  * native calls now (P49-B) -- selectize's own `triggerChange()` and
- * `vendor/datepicker.ts`'s own `writeValue()` both dispatch a real
+ * `vendor/widgets/datepicker.ts`'s own `writeValue()` both dispatch a real
  * native "change" event, so the `<select>`/`input[data-datepicker]`
  * change listeners are native too.
  */

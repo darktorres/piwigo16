@@ -1,7 +1,13 @@
 import "./common";
 
-import { hide, on, ready, show, val } from "../../../default/js/vendor/dom";
-import { selectize } from "../../../default/js/vendor/selectize";
+import {
+  hide,
+  on,
+  ready,
+  show,
+  val,
+} from "../../../default/js/vendor/utils/dom";
+import { selectize } from "../../../default/js/vendor/widgets/selectize";
 
 ready(function () {
   on(document.querySelectorAll("input[name=who]"), "change", function (): void {

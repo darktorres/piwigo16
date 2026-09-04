@@ -16,9 +16,9 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
-import { cookie, setCookie } from "../../../default/js/vendor/cookie";
-import { alert, confirm } from "../../../default/js/vendor/jconfirm";
+import { ajax, AjaxError } from "../../../default/js/vendor/utils/ajax";
+import { cookie, setCookie } from "../../../default/js/vendor/utils/cookie";
+import { alert, confirm } from "../../../default/js/vendor/widgets/jconfirm";
 import {
   addClass,
   animate,
@@ -50,7 +50,7 @@ import {
   trigger,
   val,
   valId,
-} from "../../../default/js/vendor/dom";
+} from "../../../default/js/vendor/utils/dom";
 
 // Real per-row shape (P47), traced to TagsPageRenderer.php's own
 // `$all_tags` construction (`name`/`id`/`url_name`/`raw_name` always
@@ -427,7 +427,7 @@ on(document.querySelectorAll("#add-tag .icon-validate"), "click", function () {
 async function addTag(name: string): Promise<void> {
   let response: TagCreateResponse;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     response = (await ajax({
       url: "api/v1/tags",
       type: "POST",
@@ -623,7 +623,7 @@ async function renameTag(
 ): Promise<TagRenameResponse> {
   let response: TagRenameResponse;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     response = (await ajax({
       url: "api/v1/tags/" + String(id),
       type: "PATCH",
@@ -705,7 +705,7 @@ async function duplicateTag(
 
   let response: TagDuplicateResponse;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     response = (await ajax({
       url: "api/v1/tags/" + String(id) + "/actions/duplicate",
       type: "POST",

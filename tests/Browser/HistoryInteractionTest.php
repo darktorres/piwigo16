@@ -16,7 +16,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * a filter.
  *
  * `.date-start`/`.date-end`'s "change" listeners are native now (P49-B,
- * `vendor/datepicker.ts`) -- the native port's own `writeValue()`
+ * `vendor/widgets/datepicker.ts`) -- the native port's own `writeValue()`
  * dispatches a real, bubbling native "change" event on the visible
  * field (matching the original's own real
  * `this.$input.trigger("change")`), so a plain `addEventListener`

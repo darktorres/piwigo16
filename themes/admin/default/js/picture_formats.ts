@@ -4,8 +4,8 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
-import { confirm } from "../../../default/js/vendor/jconfirm";
+import { ajax, AjaxError } from "../../../default/js/vendor/utils/ajax";
+import { confirm } from "../../../default/js/vendor/widgets/jconfirm";
 import {
   attr,
   data,
@@ -14,7 +14,7 @@ import {
   on,
   remove,
   show,
-} from "../../../default/js/vendor/dom";
+} from "../../../default/js/vendor/utils/dom";
 
 const pwgToken = pwg_getPageData<string>("csrf_token");
 const strConfirmDeleteFormat = pwg_getPageString("Delete %s format ?");

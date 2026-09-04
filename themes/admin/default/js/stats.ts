@@ -4,19 +4,19 @@ import {
   type LineChartPoint,
   type LineChartSeries,
   type LineChartUnit,
-} from "../../../default/js/vendor/lineChart";
+} from "../../../default/js/vendor/widgets/lineChart";
 import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { data as readData, ready } from "../../../default/js/vendor/dom";
+import { data as readData, ready } from "../../../default/js/vendor/utils/dom";
 
 const strNumberPageVisited = pwg_getPageString("Page Visited");
 const strAvg = pwg_getPageString("Average last 12 months");
 const strMonthsTosplit = pwg_getPageData<string>("month_labels");
 const strMonths = strMonthsTosplit.split("~");
 
-// See vendor/lineChart.ts's own header comment: `moment.locale()` never
+// See vendor/widgets/lineChart.ts's own header comment: `moment.locale()` never
 // actually took effect in production (no `moment/locale/*` file was ever
 // imported), so this is a real, deliberate improvement over the old
 // behaviour, not a preserved quirk -- `Intl.DateTimeFormat` needs no
@@ -88,7 +88,7 @@ interface StatData {
 // objects, and the coercion that turns a brace-wrapped attribute into a
 // parsed object is jQuery's, not the DOM's. `dataset` would hand back the
 // raw strings and every `Object.keys()` below would walk the characters of
-// one. `readData()` (vendor/dom.ts) reproduces that same coercion natively
+// one. `readData()` (vendor/utils/dom.ts) reproduces that same coercion natively
 // (P49-C).
 const dataElement = document.getElementById("data")!;
 // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- deliberate placeholder, immediately filled in below by real readData() calls before any other code can observe it.

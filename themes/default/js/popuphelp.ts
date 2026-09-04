@@ -1,4 +1,4 @@
-import { hide, show } from "./vendor/dom";
+import { hide, show } from "./vendor/utils/dom";
 
 if (Boolean(window.opener) || window.name !== "") {
   const closeLink = document.getElementById("closeLink");

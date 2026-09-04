@@ -12,8 +12,8 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../../default/js/page-data";
-import { ajax } from "../../../../default/js/vendor/ajax";
-import { selectize } from "../../../../default/js/vendor/selectize";
+import { ajax } from "../../../../default/js/vendor/utils/ajax";
+import { selectize } from "../../../../default/js/vendor/widgets/selectize";
 import {
   addClass,
   append,
@@ -32,7 +32,7 @@ import {
   show,
   slideToggle,
   val,
-} from "../../../../default/js/vendor/dom";
+} from "../../../../default/js/vendor/utils/dom";
 
 type UserListResponse =
   operations["userList"]["responses"][200]["content"]["application/json"];
@@ -225,7 +225,7 @@ async function fetchAndMergeActivityLines(
     if (object !== undefined) params.object = object;
     if (id !== undefined && id !== null) params.objectId = id;
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const response = (await ajax({
       url: "api/v1/activity",
       type: "GET",
@@ -285,7 +285,7 @@ async function fetchAndMergeActivityLines(
   const userLines = lines.filter((l) => l.object === "user");
   if (userLines.length > 0) {
     const allUserIds = [...new Set(userLines.flatMap((l) => l.object_id))];
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const userInfo = (await ajax({
       url: "api/v1/users",
       type: "GET",
@@ -1152,7 +1152,7 @@ ready(function () {
   );
 
   // The `.selectize-input`/`.item[data-value]` markup below is
-  // `vendor/selectize.ts`'s own real, rendered DOM (P49-B group 6).
+  // `vendor/widgets/selectize.ts`'s own real, rendered DOM (P49-B group 6).
   on(
     document.querySelectorAll("select.user-selecter"),
     "change",

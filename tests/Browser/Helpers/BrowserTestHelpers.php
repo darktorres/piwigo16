@@ -2643,7 +2643,7 @@ final class BrowserTestHelpers
      * exercise the upload UI itself) don't need a real page load either,
      * which this skips entirely. `PhotosAddDirectInteractionTest.php`'s own
      * tests drive the real admin upload UI directly (a real
-     * `<input type="file">`, `vendor/uploadQueue.ts`'s own real native
+     * `<input type="file">`, `vendor/utils/uploadQueue.ts`'s own real native
      * port) when that UI is what's actually under test.
      */
     public static function uploadPhotoViaApi(string $imagePath, int $albumId, string $name): int

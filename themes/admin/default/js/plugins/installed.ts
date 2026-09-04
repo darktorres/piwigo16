@@ -43,8 +43,8 @@ import {
   ajax,
   AjaxError,
   type AjaxResponse,
-} from "../../../../default/js/vendor/ajax";
-import { alert, confirm } from "../../../../default/js/vendor/jconfirm";
+} from "../../../../default/js/vendor/utils/ajax";
+import { alert, confirm } from "../../../../default/js/vendor/widgets/jconfirm";
 import {
   addClass,
   css,
@@ -67,8 +67,8 @@ import {
   toggle,
   trigger,
   val,
-} from "../../../../default/js/vendor/dom";
-import { tipTip } from "../../../../default/js/vendor/tiptip";
+} from "../../../../default/js/vendor/utils/dom";
+import { tipTip } from "../../../../default/js/vendor/widgets/tiptip";
 
 function setDisplayClassic(): void {
   removeClass(
@@ -817,7 +817,7 @@ ready(function () {
       // `echo json_encode($incompatible_plugins);` -- a plain array of
       // plugin id strings, no OpenAPI coverage (legacy admin.php endpoint,
       // not api/v1).
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
       const data = (await ajax({
         method: "GET",
         url: "admin.php",

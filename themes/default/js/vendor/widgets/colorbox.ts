@@ -60,7 +60,7 @@
 // `#cboxContent`, `.cboxPhoto`, `cboxElement`, ...) matches the
 // original's own naming exactly so the existing stylesheet applies
 // without modification.
-import { ajax } from "./ajax";
+import { ajax } from "../utils/ajax";
 import {
   fadeTo,
   height,
@@ -71,7 +71,7 @@ import {
   width,
   windowHeight,
   windowWidth,
-} from "./dom";
+} from "../utils/dom";
 
 export interface ColorboxOptions {
   photo?: boolean;
@@ -651,7 +651,7 @@ function load(): void {
   } else if (href) {
     void (async () => {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
         const html = (await ajax({
           url: href,
           dataType: "html",

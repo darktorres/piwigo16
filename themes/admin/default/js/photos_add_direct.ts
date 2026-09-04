@@ -16,9 +16,9 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
-import { alert } from "../../../default/js/vendor/jconfirm";
-import * as Piecon from "../../../default/js/vendor/piecon";
+import { ajax, AjaxError } from "../../../default/js/vendor/utils/ajax";
+import { alert } from "../../../default/js/vendor/widgets/jconfirm";
+import * as Piecon from "../../../default/js/vendor/widgets/piecon";
 import {
   DONE,
   FAILED,
@@ -26,7 +26,7 @@ import {
   uploadQueue,
   type UploadQueue,
   type UploadQueueFile,
-} from "../../../default/js/vendor/uploadQueue";
+} from "../../../default/js/vendor/utils/uploadQueue";
 import {
   addClass,
   append,
@@ -48,7 +48,7 @@ import {
   slideToggle,
   trigger,
   val,
-} from "../../../default/js/vendor/dom";
+} from "../../../default/js/vendor/utils/dom";
 
 type ImageFormatSearchResponse =
   operations["imageFormatSearch"]["responses"][200]["content"]["application/json"];
@@ -88,7 +88,7 @@ interface MultipartParams {
 //
 // tus-js-client is imported from its own npm package and bundled, not
 // a CDN-supplied global. Piecon and plupload are both real native ports
-// now (`vendor/piecon.ts`/`vendor/uploadQueue.ts`, P49-C) -- no npm
+// now (`vendor/widgets/piecon.ts`/`vendor/utils/uploadQueue.ts`, P49-C) -- no npm
 // package, no CDN script, and no jQuery dependency for either any more.
 
 /*--------------
@@ -293,7 +293,7 @@ ready(function () {
     css(document.querySelectorAll(".moxie-shim-html5"), "display", "none");
   });
 
-  // Native port now (P49-C, `vendor/uploadQueue.ts`) -- `browse_button`/
+  // Native port now (P49-C, `vendor/utils/uploadQueue.ts`) -- `browse_button`/
   // `filters`/`rename`/`dragdrop`/`preinit`/`init` are this file's own
   // real, unmodified original options; `container`/`runtimes`/`url`/
   // `chunkSize` are dropped (see that module's own leading comment for
@@ -444,7 +444,7 @@ ready(function () {
           // If no original image is specified
           if (!haveFormatsOriginal) {
             //ajax qui renvois les id des images dans la gallerie.
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
             const searchResponse = (await ajax({
               url: "api/v1/images/formats/actions/search",
               type: "POST",
@@ -767,7 +767,7 @@ ready(function () {
         if (!formatMode && uploadCategory) {
           void (async () => {
             try {
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
               const data = (await ajax({
                 url: "api/v1/uploads/actions/complete-batch",
                 type: "POST",
@@ -1022,7 +1022,7 @@ function uploadNextTusFile(
         operations["imageGet"]["responses"][200]["content"]["application/json"]
       > = {};
       try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
         imageInfo = (await ajax({
           url: "api/v1/images/" + String(result.imageId),
           type: "GET",
@@ -1119,7 +1119,7 @@ async function addFirstAlbum(
   };
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const res = (await ajax({
       url: "api/v1/categories",
       method: "POST",

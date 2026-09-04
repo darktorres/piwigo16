@@ -9,7 +9,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *
  * `$.confirm()`/`$.alert()` stay jQuery (jquery-confirm, P49-B group 5).
  * `$.cookie()` converted to `cookie()`/`setCookie()`
- * (`themes/default/js/vendor/cookie.ts`) in P49-B group 2.
+ * (`themes/default/js/vendor/utils/cookie.ts`) in P49-B group 2.
  *
  * `TemporaryState` (themes/admin/default/js/common.ts) converted off
  * jQuery together with this file -- it wraps no library of its own, and
@@ -235,7 +235,7 @@ it('merges two selected tags via the selection panel', function (): void {
 });
 
 it('persists the tags-per-page cookie across a real page reload', function (): void {
-    // tags.ts's own setCookie() (themes/default/js/vendor/cookie.ts,
+    // tags.ts's own setCookie() (themes/default/js/vendor/utils/cookie.ts,
     // ported off jquery.cookie in P49-B group 2) writes the cookie
     // TagsPageRenderer reads back to pre-select a page-size link on load.
     // TagsPageRendererTest.php's own coverage of that server-side read

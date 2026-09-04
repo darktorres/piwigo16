@@ -12,8 +12,8 @@ import {
   ready,
   removeClass,
   show,
-} from "../../../../default/js/vendor/dom";
-import { cookie, setCookie } from "../../../../default/js/vendor/cookie";
+} from "../../../../default/js/vendor/utils/dom";
+import { cookie, setCookie } from "../../../../default/js/vendor/utils/cookie";
 
 function setDisplayCompact(): void {
   removeIconDesc();

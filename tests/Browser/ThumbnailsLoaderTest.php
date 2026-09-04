@@ -11,7 +11,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * whether or not the JS afterward ever swaps it for the real derivative --
  * only a live page can tell the two apart. `jQuery.manageAjax` (jquery.
  * ajaxmanager) converted to `AjaxQueue`
- * (`themes/default/js/vendor/ajaxQueue.ts`) in P49-B group 2, alongside
+ * (`themes/default/js/vendor/utils/ajaxQueue.ts`) in P49-B group 2, alongside
  * this file's own conversion.
  *
  * DerivativeImage::isCached() only checks the derivative file's real mtime

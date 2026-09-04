@@ -6,7 +6,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
  * P49-C conversion of themes/admin/default/js/ratings/user.ts's own
- * dataTable()/tooltip() pair (`vendor/dataTable.ts`/`vendor/tooltip.ts`,
+ * dataTable()/tooltip() pair (`vendor/widgets/dataTable.ts`/`vendor/widgets/tooltip.ts`,
  * ported off datatables.net and jQuery UI's own tooltip widget). Neither
  * had any live JS coverage before this: RatingUserPageRendererTest.php's
  * own tests only ever assert the server-rendered page (or, for the one
@@ -124,7 +124,7 @@ it('shows a title-based tooltip on hover and removes it on mouseleave', function
     // work too, but this page has 2 real `<h1>`s (the shared admin
     // header's own brand heading, and this page's "Rating" heading) --
     // dispatching "mouseleave" directly is simpler and exercises the
-    // exact same native listener `vendor/tooltip.ts`'s own `openTooltip()`
+    // exact same native listener `vendor/widgets/tooltip.ts`'s own `openTooltip()`
     // binds on the target.
     $page->script(
         "document.querySelector('#rateTable tbody tr:first-child td[title]')"

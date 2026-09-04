@@ -16,8 +16,8 @@ import { registerSwitchBox } from "./switchbox";
 import { pushRatingAutoQueue } from "./ratingAutoQueue";
 
 import { pwg_getPageData, pwg_getPageString } from "./page-data";
-import { ajax, AjaxError } from "./vendor/ajax";
-import { css, ready } from "./vendor/dom";
+import { ajax, AjaxError } from "./vendor/utils/ajax";
+import { css, ready } from "./vendor/utils/dom";
 
 function changeImgSrc(url: string, typeSave: string, typeMap: string): void {
   const theImg = document.querySelector<HTMLImageElement>("#theMainImage");

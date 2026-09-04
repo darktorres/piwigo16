@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ready } from "../../../themes/default/js/vendor/dom";
+import { ready } from "../../../themes/default/js/vendor/utils/dom";
 
 function setReadyState(state: DocumentReadyState): void {
   Object.defineProperty(document, "readyState", {

@@ -1,4 +1,4 @@
-import { fadeIn, fadeOut, hover, on } from "./dom";
+import { fadeIn, fadeOut, hover, on } from "../utils/dom";
 
 /**
  * Port of jgrowl@1.3.0's own `$.jGrowl(message, options)` wrapper form

@@ -1,11 +1,11 @@
-import { attrOf, on } from "../../../default/js/vendor/dom";
-import { confirm } from "../../../default/js/vendor/jconfirm";
+import { attrOf, on } from "../../../default/js/vendor/utils/dom";
+import { confirm } from "../../../default/js/vendor/widgets/jconfirm";
 
 // `draggable`/`theme`/`animation`/`useBootstrap`/`animateFromElement`/
 // `typeAnimated`/`backgroundDismiss` all dropped from these 4 presets:
 // every real call site across the whole app set them to the exact same
 // values (confirmed via a full grep, not assumed), so `themes/default/js/
-// vendor/jconfirm.ts`'s own port of `$.confirm`/`$.alert` (P49-B group 5)
+// vendor/widgets/jconfirm.ts`'s own port of `$.confirm`/`$.alert` (P49-B group 5)
 // hardcodes them instead of taking them as options at all.
 export const jConfirmAlertOptions = {
   icon: "icon-ok",

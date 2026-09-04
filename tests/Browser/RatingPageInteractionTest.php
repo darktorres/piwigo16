@@ -11,7 +11,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * (a real ajax round trip, fade, and row removal) and the album-filter
  * show/hide toggle.
  *
- * That second one is the interesting one: `vendor/selectize.ts`'s own
+ * That second one is the interesting one: `vendor/widgets/selectize.ts`'s own
  * `triggerChange()` (P49-B group 6) dispatches a real native "change"
  * event on the underlying `<select>` for every value change (including
  * the removeAlbumFilter click's own `.clear()`), which rating.ts's own

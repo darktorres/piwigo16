@@ -8,7 +8,7 @@ import {
   ready,
   slideDown,
   slideUp,
-} from "../../../default/js/vendor/dom";
+} from "../../../default/js/vendor/utils/dom";
 
 interface LightAccordionOptions {
   header?: string;

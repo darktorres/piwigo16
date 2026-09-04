@@ -7,7 +7,7 @@ import {
   position,
   toggle,
   windowWidth,
-} from "./vendor/dom";
+} from "./vendor/utils/dom";
 
 export function registerSwitchBox(link: string, box: string): void {
   document.querySelectorAll<HTMLElement>(link).forEach((linkEl) => {

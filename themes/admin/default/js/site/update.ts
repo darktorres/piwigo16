@@ -1,4 +1,4 @@
-import { hide, show } from "../../../../default/js/vendor/dom";
+import { hide, show } from "../../../../default/js/vendor/utils/dom";
 
 document.querySelectorAll("#syncFiles label").forEach((label) => {
   label.addEventListener("click", () => {

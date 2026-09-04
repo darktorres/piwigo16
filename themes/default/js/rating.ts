@@ -1,4 +1,4 @@
-import { ajax, AjaxError } from "./vendor/ajax";
+import { ajax, AjaxError } from "./vendor/utils/ajax";
 
 // Real consumer of scripts.ts's own top-level `pwgAddEventListener`
 // (docs/PLAN.md P48 -- was a bare ambient-global read, see that file's
@@ -110,7 +110,7 @@ function updateRating(e: Event): void {
 
   void (async () => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
       const result = (await ajax({
         url:
           gRatingOptions.rootUrl +

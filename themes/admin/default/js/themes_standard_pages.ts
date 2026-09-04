@@ -1,6 +1,6 @@
 import "./common";
 
-import { hide, ready, show } from "../../../default/js/vendor/dom";
+import { hide, ready, show } from "../../../default/js/vendor/utils/dom";
 
 // Update preview when user clicks on mini previews
 const miniPreviewImages = document.querySelectorAll<HTMLImageElement>(

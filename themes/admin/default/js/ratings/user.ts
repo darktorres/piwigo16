@@ -12,10 +12,10 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../../default/js/page-data";
-import { ajax, AjaxError } from "../../../../default/js/vendor/ajax";
-import { confirm } from "../../../../default/js/vendor/jconfirm";
-import { dataTable } from "../../../../default/js/vendor/dataTable";
-import { tooltip } from "../../../../default/js/vendor/tooltip";
+import { ajax, AjaxError } from "../../../../default/js/vendor/utils/ajax";
+import { confirm } from "../../../../default/js/vendor/widgets/jconfirm";
+import { dataTable } from "../../../../default/js/vendor/widgets/dataTable";
+import { tooltip } from "../../../../default/js/vendor/widgets/tooltip";
 import {
   attrOf,
   data,
@@ -28,7 +28,7 @@ import {
   removeData,
   setData,
   stop,
-} from "../../../../default/js/vendor/dom";
+} from "../../../../default/js/vendor/utils/dom";
 
 ready(function () {
   // jQuery's `$("h1").append(...)` appended to every matching heading, not
@@ -51,7 +51,7 @@ interface RatingUserCellData {
   aid: string;
 }
 
-// Native port now (P49-C, `vendor/dataTable.ts`) -- the legacy
+// Native port now (P49-C, `vendor/widgets/dataTable.ts`) -- the legacy
 // aTargets/asSorting/bSearchable/bSortable/sType hungarian-notation
 // option shape below is this file's own real, unmodified original
 // options object, just re-typed against the vendor module's own
@@ -119,7 +119,7 @@ ready(function () {
               const ids = uidFromCell(cell);
               void (async () => {
                 try {
-                  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+                  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
                   const result = (await ajax({
                     url:
                       pwg_getPageData<string>("root_url") +
@@ -163,7 +163,7 @@ type GeoIpLookupResponse =
   operations["geoIpLookup"]["responses"][200]["content"]["application/json"];
 
 ready(function () {
-  // Native port now (P49-C, `vendor/tooltip.ts`) -- `items: ".usr,[title]"`
+  // Native port now (P49-C, `vendor/widgets/tooltip.ts`) -- `items: ".usr,[title]"`
   // still relies on the vendor module's own real delegated binding (a
   // matching descendant at hover time, not at bind time) to keep working
   // after #rateTable's own dataTable() redraws its rows on
@@ -193,7 +193,7 @@ ready(function () {
 
       void (async () => {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
           const geoData = (await ajax({
             url: "api/v1/geoip",
             // `aid` is an anonymous rater's IP with its last octet

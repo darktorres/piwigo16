@@ -6,7 +6,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
  * P49-B native port of jQuery UI's datepicker widget + jquery-timepicker-
- * addon (`themes/default/js/vendor/datepicker.ts`, `pwgDatepicker`) --
+ * addon (`themes/default/js/vendor/widgets/datepicker.ts`, `pwgDatepicker`) --
  * the last unstarted P49-B surface. No prior test, jQuery-based or not,
  * ever drove the calendar/time-slider/cancel/unset UI itself; every
  * existing datepicker-adjacent test (BatchManagerUnitInteractionTest.php,
@@ -38,7 +38,7 @@ it('opens the calendar, selects a day, adjusts the time via the hour/minute slid
     $page->click('input[data-datepicker="date_creation"]');
 
     // Only real, non-other-month, non-disabled days render as `<a
-    // class="ui-state-default">` (vendor/datepicker.ts's own
+    // class="ui-state-default">` (vendor/widgets/datepicker.ts's own
     // renderCalendar()) -- day 15 exists, and is never "other month", in
     // every real month, so this is robust regardless of the current date.
     $page->script(<<<'JS'
@@ -77,7 +77,7 @@ it('opens the calendar, selects a day, adjusts the time via the hour/minute slid
     $beforeHour = (int) $m[2];
     $beforeMinute = (int) $m[3];
 
-    // vendor/slider.ts's own hour/minute sliders (min:0/max:23,
+    // vendor/widgets/slider.ts's own hour/minute sliders (min:0/max:23,
     // min:0/max:59) clamp rather than wrap at their own bound
     // (`if (curVal === state.max) return;`) -- accounted for here rather
     // than assuming modulo wraparound, so this stays correct at the
@@ -85,7 +85,7 @@ it('opens the calendar, selects a day, adjusts the time via the hour/minute slid
     $expectedHour = min($beforeHour + 1, 23);
     $expectedMinute = min($beforeMinute + 1, 59);
 
-    // vendor/slider.ts's own keyboard handling (ArrowUp/step:1) fires a
+    // vendor/widgets/slider.ts's own keyboard handling (ArrowUp/step:1) fires a
     // real slide+stop+change synchronously -- no waiting needed.
     $page->script(<<<'JS'
         document.querySelector('.ui_tpicker_hour_slider .ui-slider-handle')
@@ -217,7 +217,7 @@ it('clears the value when the unset link is clicked', function (): void {
 
 /**
  * `history.php`'s own real `data-datepicker-start`/`data-datepicker-end`
- * cross-linking (`vendor/datepicker.ts`'s own `linkRange()`): closing
+ * cross-linking (`vendor/widgets/datepicker.ts`'s own `linkRange()`): closing
  * the start picker with a day selected constrains the end picker's own
  * calendar, disabling every day before it -- the one real behavior
  * `picture_modify.php`'s own single, unlinked picker above can't cover.
@@ -244,7 +244,7 @@ it("constrains the end picker's calendar to the start picker's own selected day"
     $page->click('input[data-datepicker="end"]');
 
     // Both pickers open with no prior `selected` to the same, current
-    // month (vendor/datepicker.ts's own `showPopup()`: `base = inst.
+    // month (vendor/widgets/datepicker.ts's own `showPopup()`: `base = inst.
     // selected ?? stripTime(new Date())`), so day 14 (the day right
     // before the real day 15 just selected on start) is guaranteed to
     // be in the end picker's own currently-drawn month too.

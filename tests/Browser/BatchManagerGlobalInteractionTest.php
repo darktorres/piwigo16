@@ -19,7 +19,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * had kept this file's own listener jQuery-bound: the old trigger side
  * needed it). Not exercised here: both handlers' own bodies reach into
  * `derivatives`/`progress_start`/`getDerivativeUrls`/`AjaxQueue`
- * (`themes/default/js/vendor/ajaxQueue.ts`, ported off jquery.ajaxmanager
+ * (`themes/default/js/vendor/utils/ajaxQueue.ts`, ported off jquery.ajaxmanager
  * in P49-B group 2), which is exactly what
  * BatchManagerSubControllerTest.php's real form-submission tests already
  * cover end to end.

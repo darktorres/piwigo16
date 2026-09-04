@@ -17,11 +17,11 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../../default/js/page-data";
-import { ajax } from "../../../../default/js/vendor/ajax";
+import { ajax } from "../../../../default/js/vendor/utils/ajax";
 import {
   selectize as createSelectize,
   type SelectizeInstance,
-} from "../../../../default/js/vendor/selectize";
+} from "../../../../default/js/vendor/widgets/selectize";
 import {
   addClass,
   attr,
@@ -42,7 +42,7 @@ import {
   ready,
   removeClass,
   val,
-} from "../../../../default/js/vendor/dom";
+} from "../../../../default/js/vendor/utils/dom";
 import type { operations } from "../../../../../openapi/client/schema";
 
 // Same real `GET /api/v1/users?groupIds[]=...` response shape
@@ -195,7 +195,7 @@ export async function openUserManager(grpId: number): Promise<void> {
     "<i class='icon-spin6 animate-spin'> </i>",
   );
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const response = (await ajax({
       url: "api/v1/users",
       type: "GET",
@@ -392,7 +392,7 @@ on(document.querySelectorAll(".AddUserBlock button"), "click", function () {
     // `id` stays `string | number` here (not narrowed to `dataId`'s/
     // `valId`'s plain `number`): a non-multiple selectize instance's own
     // `getValue()` returns the literal string `""` as its "nothing
-    // selected" sentinel regardless of what `T` claims (`vendor/selectize.ts`'s
+    // selected" sentinel regardless of what `T` claims (`vendor/widgets/selectize.ts`'s
     // own `items[0] ?? ("" as unknown as T)`) -- `String(id) !== ""` is the
     // real, load-bearing check for that, and must run before `id` can be
     // trusted as a real numeric option value.

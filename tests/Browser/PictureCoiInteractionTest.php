@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * Real, mutation-verified interactive coverage of `vendor/jcrop.ts`
+ * Real, mutation-verified interactive coverage of `vendor/widgets/jcrop.ts`
  * (P49-B group 6, the last "group 6"-labeled library) -- drawing a new
  * selection, moving it, and resizing it via a handle. None of this was
  * ever behaviorally tested before, jQuery-based or not:

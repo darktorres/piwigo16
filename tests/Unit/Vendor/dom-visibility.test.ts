@@ -7,7 +7,7 @@ import {
   isVisible,
   show,
   toggle,
-} from "../../../themes/default/js/vendor/dom";
+} from "../../../themes/default/js/vendor/utils/dom";
 
 beforeEach(() => {
   document.head.innerHTML = "";

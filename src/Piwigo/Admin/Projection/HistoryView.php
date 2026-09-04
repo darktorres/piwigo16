@@ -45,7 +45,7 @@ final readonly class HistoryView implements View, HasPageAssets, ExposesPageData
             // P48/P49-B): it existed only to trigger Rollup's shared
             // chunking of `datepicker.ts`, itself a side-effect-only
             // import with no other real code of its own. Now that
-            // `vendor/datepicker.ts` (P49-B, native port) is imported
+            // `vendor/widgets/datepicker.ts` (P49-B, native port) is imported
             // directly by `history.ts` below, that indirection has no
             // remaining purpose. `jquery-ui.css`/
             // `jquery-ui-timepicker-addon.min.css` still theme the

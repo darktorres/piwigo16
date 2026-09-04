@@ -9,13 +9,13 @@
 // duplicate-identifier conflict. Now that album_selector.ts is a real
 // module, its own types are module-private, so this file needs its own
 // local copy -- a pure type alias, safe to duplicate.
-import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
-import { data, setData } from "../../../default/js/vendor/dom";
+import { ajax, AjaxError } from "../../../default/js/vendor/utils/ajax";
+import { data, setData } from "../../../default/js/vendor/utils/dom";
 import {
   getSelectizeInstance,
   selectize as createSelectize,
   type SelectizeRenderers,
-} from "../../../default/js/vendor/selectize";
+} from "../../../default/js/vendor/widgets/selectize";
 import type { operations } from "../../../../openapi/client/schema";
 
 type CategoryAdmin =
@@ -60,7 +60,7 @@ interface LocalStorageCacheOptions<
 }
 
 // The options a real call site passes to a Cache's own `.selectize()` --
-// distinct from `vendor/selectize.ts`'s own `SelectizeOptions` (the
+// distinct from `vendor/widgets/selectize.ts`'s own `SelectizeOptions` (the
 // low-level widget-init options), imported below under its real name.
 interface EntitySelectizeCallOptions {
   value?: (string | number)[] | { id: string | number }[];
@@ -195,7 +195,7 @@ abstract class AbstractSelectizer<
 > extends LocalStorageCache<T> {
   /*
    * Load Selectize with cache content
-   * @param targets elements already initialized via `vendor/selectize.ts`'s
+   * @param targets elements already initialized via `vendor/widgets/selectize.ts`'s
    *   own `selectize()` by the calling subclass's own `.selectize()` method
    *   (may have real `data-create`/`data-default`/`data-value` attributes)
    * @param options {object}
@@ -357,7 +357,7 @@ class CategoriesCache extends AbstractSelectizer<ProcessedCategory> {
     options.loader = function (callback) {
       void (async () => {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
           const response = (await ajax({
             url: options.rootUrl! + "api/v1/categories",
             dataType: "json",
@@ -420,7 +420,7 @@ class TagsCache extends AbstractSelectizer<ProcessedTag> {
     options.loader = function (callback) {
       void (async () => {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
           const response = (await ajax({
             url: options.rootUrl! + "api/v1/tags",
             dataType: "json",
@@ -485,7 +485,7 @@ class GroupsCache extends AbstractSelectizer<ProcessedGroup> {
     options.loader = function (callback) {
       void (async () => {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
           const response = (await ajax({
             url: options.rootUrl! + "api/v1/groups",
             dataType: "json",
@@ -549,7 +549,7 @@ class UsersCache extends AbstractSelectizer<UserEntity> {
       // recursive loader
       void (async function load(page: number) {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
           const response = (await ajax({
             url:
               options.rootUrl! +

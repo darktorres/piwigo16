@@ -9,7 +9,7 @@ import {
   show,
   trigger,
   val,
-} from "../../../default/js/vendor/dom";
+} from "../../../default/js/vendor/utils/dom";
 
 // Real declarer of `fontCheckbox` -- wraps no library (docs/PLAN.md's own
 // P49 plugin table lists it "wraps: --"), so it converts fully now rather

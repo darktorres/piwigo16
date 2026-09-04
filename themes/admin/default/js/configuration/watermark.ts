@@ -1,7 +1,7 @@
 import "../common";
 
 import { pwg_getPageData } from "../../../../default/js/page-data";
-import { hide, show, toggle } from "../../../../default/js/vendor/dom";
+import { hide, show, toggle } from "../../../../default/js/vendor/utils/dom";
 
 (function () {
   const select = document.querySelector<HTMLSelectElement>("#wSelect");

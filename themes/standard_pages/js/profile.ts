@@ -7,7 +7,7 @@ import {
   ajax,
   AjaxError,
   type AjaxResponse,
-} from "../../default/js/vendor/ajax";
+} from "../../default/js/vendor/utils/ajax";
 import {
   addClass,
   attr,
@@ -34,7 +34,7 @@ import {
   textOf,
   trigger,
   val,
-} from "../../default/js/vendor/dom";
+} from "../../default/js/vendor/utils/dom";
 
 interface DefaultUserValues {
   nb_image_page: number;
@@ -540,7 +540,7 @@ async function setInfos(
 
 async function getAllApiKeys(reset = false): Promise<void> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const res = (await ajax({
       url: "api/v1/session/api-keys",
       type: "GET",

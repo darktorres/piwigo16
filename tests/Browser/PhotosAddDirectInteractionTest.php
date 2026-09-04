@@ -25,7 +25,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * translation-only, and a handler binding zero elements is harmless.
  *
  * `.pluploadQueue()` is a real native port now (P49-C,
- * `vendor/uploadQueue.ts`) -- see the tests further down for its own
+ * `vendor/utils/uploadQueue.ts`) -- see the tests further down for its own
  * real file-selection/validation/queue/drag-drop coverage. `$.alert()`
  * (jquery-confirm, group 5) is untouched and unexercised here (it needs a
  * real ambiguous-filename detection during a real upload).
@@ -122,13 +122,13 @@ it('toggles the upload-options panel open and closed', function (): void {
 });
 
 /**
- * Piecon (P49-C native port, `vendor/piecon.ts`) -- no prior test, npm
+ * Piecon (P49-C native port, `vendor/widgets/piecon.ts`) -- no prior test, npm
  * package or not, ever drove its own favicon-drawing behavior. plupload
- * is a real native port now too (P49-C, `vendor/uploadQueue.ts`), which
+ * is a real native port now too (P49-C, `vendor/utils/uploadQueue.ts`), which
  * exposes no global the way `jQuery('#uploader').pluploadQueue()` used
  * to (matching this whole campaign's own module-scoping convention) --
  * so this drives a real file through the real upload queue's own hidden
- * `<input type="file">` (`vendor/uploadQueue.ts`'s own real
+ * `<input type="file">` (`vendor/utils/uploadQueue.ts`'s own real
  * browse-button proxy target) and a real click on `#startUpload`,
  * reaching Piecon through the real `UploadProgress`/`UploadComplete`
  * pipeline via an actual tus upload rather than any internals stub.
@@ -171,7 +171,7 @@ it('draws a progress favicon during upload and resets it on complete', function 
 });
 
 /**
- * `vendor/uploadQueue.ts`'s own real per-file extension-filter rejection
+ * `vendor/utils/uploadQueue.ts`'s own real per-file extension-filter rejection
  * -- real algorithm read from `plupload.dev.js`'s own `mime_types` file
  * filter, real alert() text read from `jquery.plupload.queue.js`'s own
  * `Error` binding. A disallowed extension is never even added to the
@@ -228,8 +228,8 @@ it('rejects a disallowed file extension with an alert and an appended error', fu
 });
 
 /**
- * `vendor/uploadQueue.ts`'s own real drag-and-drop -- the real drop
- * zone is the file list `<ul>` itself (`vendor/uploadQueue.ts`'s own
+ * `vendor/utils/uploadQueue.ts`'s own real drag-and-drop -- the real drop
+ * zone is the file list `<ul>` itself (`vendor/utils/uploadQueue.ts`'s own
  * leading comment: matches `jquery.plupload.queue.js`'s own real
  * `settings.drop_element = id + '_filelist'`), not the wider
  * `#uploadForm`/`#uploader` container.
@@ -270,7 +270,7 @@ it('queues a file dropped onto the file list', function (): void {
 });
 
 /**
- * `vendor/uploadQueue.ts`'s own real per-file remove-from-queue click
+ * `vendor/utils/uploadQueue.ts`'s own real per-file remove-from-queue click
  * (only reachable for a still-QUEUED row, matching
  * `jquery.plupload.queue.js`'s own real `$('#'+id+'.plupload_delete a')`
  * selector scoping).
@@ -332,7 +332,7 @@ it('removes a queued file when its action icon is clicked', function (): void {
 });
 
 /**
- * `vendor/uploadQueue.ts`'s own real click-to-rename (`rename: formatMode`
+ * `vendor/utils/uploadQueue.ts`'s own real click-to-rename (`rename: formatMode`
  * -- only enabled once formats mode is real, matching
  * `PhotosAddDirectRequest::fromGlobals()`'s own `$isFormatsEnabled &&
  * isset($get['formats'])` gate). Targets a real existing photo via

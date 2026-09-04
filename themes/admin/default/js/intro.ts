@@ -2,7 +2,7 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
+import { ajax, AjaxError } from "../../../default/js/vendor/utils/ajax";
 import {
   append,
   attr,
@@ -14,7 +14,7 @@ import {
   prepend,
   ready,
   val,
-} from "../../../default/js/vendor/dom";
+} from "../../../default/js/vendor/utils/dom";
 import type { operations } from "../../../../openapi/client/schema";
 
 const piwigoNeedUpdateMsg =
@@ -50,7 +50,7 @@ ready(function () {
   if (pwg_getPageData<boolean>("check_for_updates")) {
     void (async () => {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
         const data = (await ajax({
           type: "GET",
           url: "api/v1/extensions/updates",

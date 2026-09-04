@@ -1,7 +1,7 @@
 import "../common";
 
 import { pwg_getPageData } from "../../../../default/js/page-data";
-import { hide, show } from "../../../../default/js/vendor/dom";
+import { hide, show } from "../../../../default/js/vendor/utils/dom";
 
 const filtersNames = pwg_getPageData<string[]>("filters_names");
 

@@ -1,4 +1,8 @@
-import { css, innerHeight, innerWidth } from "../../../default/js/vendor/dom";
+import {
+  css,
+  innerHeight,
+  innerWidth,
+} from "../../../default/js/vendor/utils/dom";
 
 /**
  * jQuery reads dimensions off the first element of a set and writes to

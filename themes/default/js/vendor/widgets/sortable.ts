@@ -44,7 +44,7 @@
 // pointer, so it never crosses the threshold, and the click reaches
 // the checkbox exactly as before. Mouse and touch are unified through
 // native Pointer Events (the same deliberate simplification
-// `vendor/jcrop.ts`'s own leading comment already documents), not the
+// `vendor/widgets/jcrop.ts`'s own leading comment already documents), not the
 // original's own separate mouse/touch listener pairs.
 //
 // Reordering itself uses a plain midpoint-crossing swap (compare the
@@ -114,7 +114,7 @@ function bindItem(
       // `position: fixed` (real, visible behavior -- jQuery UI's own
       // sortable does this too, via its own `helper`/placeholder
       // pair). Copies the real item's own class list (the same
-      // class-copying approach `vendor/selectize.ts`'s own
+      // class-copying approach `vendor/widgets/selectize.ts`'s own
       // `$wrapper.addClass(classes)` already uses) rather than just
       // its size: `element_set_ranks.ts`'s own real thumbnail grid
       // floats its items (`float: left`), and a bare, unclassed

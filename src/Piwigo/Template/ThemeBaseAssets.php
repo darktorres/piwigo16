@@ -28,7 +28,7 @@ use Piwigo\Asset\LoadMode;
  * elsewhere.
  *
  * None of the 3 register `jquery` any more (P49-C): with plupload's
- * native port (`vendor/uploadQueue.ts`) landing, every real first-party
+ * native port (`vendor/utils/uploadQueue.ts`) landing, every real first-party
  * and vendored jQuery/jQuery-UI/datatables.net consumer in the whole
  * app is gone -- confirmed via a repo-wide grep for `jQuery(`/bare
  * `$(`/`.dataTable(`/`.pluploadQueue(`/`.size(`/`.enableShiftClick(`,
@@ -117,7 +117,7 @@ final readonly class ThemeBaseAssets
      * instead, for a file with zero real exports to gain from module
      * conversion. Its own `dependsOn: ['jquery.tipTip']` was dropped in
      * P49-B group 2: `footer.ts` now imports the ported tooltip
-     * (`themes/default/js/vendor/tiptip.ts`) directly, a real ES-module
+     * (`themes/default/js/vendor/widgets/tiptip.ts`) directly, a real ES-module
      * dependency the bundler already orders correctly, rather than a
      * runtime `<script>`-tag load order this registration had to spell
      * out.

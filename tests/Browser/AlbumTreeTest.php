@@ -10,7 +10,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 /**
  * Behavioural regression net for the album tree (admin/themes/admin/
  * default/js/albums.ts, native since P49-B group 6B —
- * `themes/default/js/vendor/jqtree.ts`). Assertions describe what the
+ * `themes/default/js/vendor/widgets/jqtree.ts`). Assertions describe what the
  * user sees, not implementation details.
  *
  * Drag-and-drop reordering *is* covered below, unlike 16.x-v2's own
@@ -21,7 +21,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * exactly like any other native handler. Pest Browser's own
  * locator-to-locator `drag()` helper still isn't used, since it can't
  * target the sub-row-height "before"/"inside"/"after" hit-area bands
- * `vendor/jqtree.ts`'s own hit-area generator produces (`docs/PLAN.md`'s
+ * `vendor/widgets/jqtree.ts`'s own hit-area generator produces (`docs/PLAN.md`'s
  * P49-B group 6B entry) — a raw dispatched sequence gives pixel control
  * the helper doesn't.
  */
@@ -236,7 +236,7 @@ it('add-album from header creates a new node visible in the tree', function (): 
 });
 
 it('drag-and-drop reorders a root album to right after its sibling', function (): void {
-    // Real, mutation-verified coverage of `vendor/jqtree.ts`'s own
+    // Real, mutation-verified coverage of `vendor/widgets/jqtree.ts`'s own
     // drag-and-drop handler (P49-B group 6B) -- the hardest single piece
     // of new code in the whole P49 campaign, and never behaviourally
     // driven before (see this file's own leading comment for why the
@@ -385,7 +385,7 @@ it('drag-and-drop re-parents a root album onto its sibling', function (): void {
     // "after"), which shows a border drop-hint around the whole row
     // rather than a ghost insertion line (`mustShowBorderDropHint()`
     // returns true for a non-folder node at "inside" unconditionally --
-    // real source, `vendor/jqtree.ts`), and takes `applyMove()`'s
+    // real source, `vendor/widgets/jqtree.ts`), and takes `applyMove()`'s
     // `changeParent()` API path rather than `changeRank()`. Confirms the
     // moved album actually nests inside the target's own subtree in the
     // real re-rendered DOM, not just that some AJAX call fired.

@@ -22,7 +22,7 @@ import {
   show,
   width,
   windowHeight,
-} from "../../../default/js/vendor/dom";
+} from "../../../default/js/vendor/utils/dom";
 
 ready(function () {
   Object.entries(storageDetails).forEach(([type, rawInfos]) => {

@@ -31,7 +31,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * login) is the only way to make this deterministic.
  *
  * `.selectize()` (user/action filter dropdowns) is a real native call now
- * (P49-B group 6, `vendor/selectize.ts`) -- this test still only reads
+ * (P49-B group 6, `vendor/widgets/selectize.ts`) -- this test still only reads
  * its own rendered `.selectize-input`/`.item[data-value]` markup, same as
  * before.
  */

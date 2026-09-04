@@ -13,7 +13,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * checks the "manual order" radio after a drag.
  *
  * `.sortable(...)` is a real native port now (P49-C,
- * `vendor/sortable.ts`) -- its own `pointerdown`/`pointermove`/
+ * `vendor/widgets/sortable.ts`) -- its own `pointerdown`/`pointermove`/
  * `pointerup` mechanics respond to plain `page->mouse` events directly
  * (unlike jQuery UI's own mouse-based dragging, which never responded
  * to Playwright's HTML5-drag-event-based `dragTo()`, the reason this
@@ -64,7 +64,7 @@ it('renumbers rank_of_image to the new order and selects manual order after a re
 
     // Real mouse drag: pointerdown on the first <li>, pointermove to
     // land inside the last <li>'s own bounding box (past its own
-    // midpoint, so vendor/sortable.ts's own reorder() places the
+    // midpoint, so vendor/widgets/sortable.ts's own reorder() places the
     // dragged item after it), pointerup to drop.
     $newOrder = $page->script(<<<'JS'
         (() => {

@@ -9,10 +9,10 @@ import {
   ajax,
   AjaxError,
   type AjaxResponse,
-} from "../../../../default/js/vendor/ajax";
-import { AjaxQueue } from "../../../../default/js/vendor/ajaxQueue";
-import { jGrowl } from "../../../../default/js/vendor/jgrowl";
-import { confirm } from "../../../../default/js/vendor/jconfirm";
+} from "../../../../default/js/vendor/utils/ajax";
+import { AjaxQueue } from "../../../../default/js/vendor/utils/ajaxQueue";
+import { jGrowl } from "../../../../default/js/vendor/widgets/jgrowl";
+import { confirm } from "../../../../default/js/vendor/widgets/jconfirm";
 import {
   attr,
   attrOf,
@@ -23,7 +23,7 @@ import {
   setVal,
   show,
   toggle,
-} from "../../../../default/js/vendor/dom";
+} from "../../../../default/js/vendor/utils/dom";
 
 // ignoreAll/resetIgnored/updateExtension/ignoreExtension are called
 // from updates_ext.latte's own onClick= attributes -- window.X = X
@@ -160,7 +160,7 @@ const targetNode = document.getElementById("theAdminPage");
 
 const config = { attributes: false, childList: true, subtree: true };
 
-// jGrowl (themes/default/js/vendor/jgrowl.ts, ported off jquery.jgrowl
+// jGrowl (themes/default/js/vendor/widgets/jgrowl.ts, ported off jquery.jgrowl
 // in P49-B group 3) builds its own toast popups under #jGrowl; this
 // MutationObserver only reads/writes the resulting DOM nodes, nothing
 // of jgrowl.ts's own internal state.

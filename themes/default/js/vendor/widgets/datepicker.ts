@@ -40,7 +40,7 @@
 //   regional[code]`/`$.timepicker.regional[code]` and calling
 //   `setDefaults()` -- a real, live production behavior for this
 //   install's 72 real installed languages, not an unreachable option.
-//   `vendor/datepickerLocales.ts` carries every one of the two real,
+//   `vendor/utils/datepickerLocales.ts` carries every one of the two real,
 //   authoritative locale sets verbatim (extracted from the real
 //   upstream files, not hand-translated), keyed the same way
 //   `Lang::langInfo()['jquery_code']` resolves; `admin_help.ts`-style
@@ -74,7 +74,7 @@
 //   this format need" detection always resolves to just those two,
 //   both real, always-visible sliders (`controlType` never overridden
 //   from its own real default, `"slider"`) -- reusing the already-
-//   ported `vendor/slider.ts` rather than reimplementing jQuery UI's
+//   ported `vendor/widgets/slider.ts` rather than reimplementing jQuery UI's
 //   slider widget again. No grids, no slider-access touch integration,
 //   no per-instance `minTime`/`maxTime` (never set; the *cross-picker*
 //   `minDate`/`maxDate` linking only ever constrains whole days here,
@@ -99,7 +99,7 @@ import {
   TIMEPICKER_LOCALES,
   type DatepickerLocale,
   type TimepickerLocale,
-} from "./datepickerLocales";
+} from "../utils/datepickerLocales";
 
 export interface PwgDatepickerOptions {
   showTimepicker?: boolean;

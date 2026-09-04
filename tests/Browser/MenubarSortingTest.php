@@ -13,7 +13,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * write in the real submit handler had no live coverage before this.
  *
  * `.sortable(...)`/`.sortable("toArray")` are a real native port now
- * (P49-C, `vendor/sortable.ts`) -- see the third test below for a real
+ * (P49-C, `vendor/widgets/sortable.ts`) -- see the third test below for a real
  * drag, closing a gap neither this file's own 2 pre-existing tests
  * (which only ever read the widget's *un-dragged* default DOM order)
  * nor jQuery UI's own former mouse-based dragging (Playwright's HTML5-
@@ -111,7 +111,7 @@ it('reorders a menu block with a real drag and writes that order on submit', fun
         ->toBeGreaterThanOrEqual(3);
 
     // Real pointer drag: the first block, dropped past the third block's
-    // own midpoint -- vendor/sortable.ts's own real pointerdown/
+    // own midpoint -- vendor/widgets/sortable.ts's own real pointerdown/
     // pointermove/pointerup listeners.
     $newOrder = array_values(H::scriptArray($page, <<<'JS'
         (() => {

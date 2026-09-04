@@ -1,4 +1,4 @@
-import { on } from "./dom";
+import { on } from "../utils/dom";
 
 /**
  * Port of selectize.js v0.11.2's own `$.fn.selectize()` (real source read
@@ -98,14 +98,14 @@ const CREATE_SENTINEL = "$$selectize_create$$";
 // that way later (`albumParent.selectize`, `$select[0]!.selectize`,
 // `jQuery("#tag-search")[0]!.selectize`), sometimes from a completely
 // different function than the one that called `selectize()` in the
-// first place. Same WeakMap-of-state pattern `vendor/slider.ts` already
+// first place. Same WeakMap-of-state pattern `vendor/widgets/slider.ts` already
 // established for the identical problem, rather than a real DOM
 // property (which would need `unknown`-then-cast at every read site).
 // The WeakMap itself must hold one concrete instance type, so every real
 // instance is stored erased to `SelectizeInstance<never, never>` and cast
 // back to the caller's own T/U at each of the two boundary points below
 // (get and set) -- the real per-call-site generic is never actually
-// checked here, same as `vendor/slider.ts`'s identical pattern.
+// checked here, same as `vendor/widgets/slider.ts`'s identical pattern.
 const instances = new WeakMap<HTMLSelectElement, SelectizeInstance<never, never>>();
 
 export function getSelectizeInstance<

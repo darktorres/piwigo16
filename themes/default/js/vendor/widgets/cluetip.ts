@@ -74,7 +74,7 @@ import {
   innerWidth,
   windowWidth,
   windowHeight,
-} from "./dom";
+} from "../utils/dom";
 
 export interface ClueTipOptions {
   width: number;

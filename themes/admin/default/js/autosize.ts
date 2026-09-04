@@ -1,5 +1,5 @@
-import { css, ready } from "../../../default/js/vendor/dom";
-import { autogrow } from "../../../default/js/vendor/autogrow";
+import { css, ready } from "../../../default/js/vendor/utils/dom";
+import { autogrow } from "../../../default/js/vendor/widgets/autogrow";
 
 ready(function () {
   css(document.querySelectorAll("textarea"), "overflow-y", "hidden");

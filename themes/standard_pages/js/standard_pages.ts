@@ -2,7 +2,7 @@ import { pwg_getPageString } from "../../default/js/page-data";
 import {
   cookie,
   setCookie as setCookieShared,
-} from "../../default/js/vendor/cookie";
+} from "../../default/js/vendor/utils/cookie";
 import {
   css,
   data as readData,
@@ -12,7 +12,7 @@ import {
   on,
   ready,
   show,
-} from "../../default/js/vendor/dom";
+} from "../../default/js/vendor/utils/dom";
 
 const modeCookie = cookie("mode");
 if (modeCookie !== undefined) {

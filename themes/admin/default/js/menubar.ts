@@ -8,8 +8,11 @@ import {
   ready,
   removeClass,
   show,
-} from "../../../default/js/vendor/dom";
-import { sortable, sortableToArray } from "../../../default/js/vendor/sortable";
+} from "../../../default/js/vendor/utils/dom";
+import {
+  sortable,
+  sortableToArray,
+} from "../../../default/js/vendor/widgets/sortable";
 
 ready(function () {
   hide(document.querySelectorAll(".menuPos"));

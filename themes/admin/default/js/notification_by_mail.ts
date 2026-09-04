@@ -1,4 +1,4 @@
-import { ready } from "../../../default/js/vendor/dom";
+import { ready } from "../../../default/js/vendor/utils/dom";
 
 /**
  * `return false` from a jQuery handler is both preventDefault() and

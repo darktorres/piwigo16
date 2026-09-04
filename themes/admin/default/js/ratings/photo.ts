@@ -10,8 +10,8 @@ import "../common";
 import { CategoriesCache } from "../LocalStorageCache";
 
 import { pwg_getPageData } from "../../../../default/js/page-data";
-import { ajax, AjaxError } from "../../../../default/js/vendor/ajax";
-import { getSelectizeInstance } from "../../../../default/js/vendor/selectize";
+import { ajax, AjaxError } from "../../../../default/js/vendor/utils/ajax";
+import { getSelectizeInstance } from "../../../../default/js/vendor/widgets/selectize";
 import {
   dataId,
   delegate,
@@ -23,7 +23,7 @@ import {
   show,
   stop,
   val,
-} from "../../../../default/js/vendor/dom";
+} from "../../../../default/js/vendor/utils/dom";
 
 const categoriesCache = new CategoriesCache({
   serverKey: pwg_getPageData<string>("cache_key_categories"),
@@ -59,7 +59,7 @@ function checkCatFilter() {
 }
 
 checkCatFilter();
-// `vendor/selectize.ts`'s own `triggerChange()` dispatches a real native
+// `vendor/widgets/selectize.ts`'s own `triggerChange()` dispatches a real native
 // `change` event on the underlying `<select>` on every value change
 // (typing/picking an option, or the `clear()` above), so a plain native
 // listener now sees it -- unlike jQuery's own internal `.trigger('change')`
@@ -118,7 +118,7 @@ async function del(
   };
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const result = (await ajax({
       url:
         pwg_getPageData<string>("root_url") +

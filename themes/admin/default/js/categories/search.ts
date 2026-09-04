@@ -30,7 +30,7 @@ import {
   parseHtml,
   ready,
   show,
-} from "../../../../default/js/vendor/dom";
+} from "../../../../default/js/vendor/utils/dom";
 
 // Narrower local shape than albums.ts's own real `AlbumTreeNode` --
 // only the fields `searchAlbumByName()` below actually reads. TS's

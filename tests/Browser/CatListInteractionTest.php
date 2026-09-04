@@ -16,7 +16,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * reveal/cancel.
  *
  * `$.cookie(...)` converted to `cookie()`/`setCookie()`
- * (`themes/default/js/vendor/cookie.ts`) in P49-B group 2.
+ * (`themes/default/js/vendor/utils/cookie.ts`) in P49-B group 2.
  */
 it('switches between compact/line/tile views, restyling categoryBox and its classes', function (): void {
     $page = H::asAdmin($this);
@@ -122,7 +122,7 @@ it('reveals the add-album input mode on click, and cancels back out of it', func
 });
 
 it('persists the view-mode cookie across a real page reload', function (): void {
-    // categories/list.ts's own setCookie() (themes/default/js/vendor/cookie.ts,
+    // categories/list.ts's own setCookie() (themes/default/js/vendor/utils/cookie.ts,
     // ported off jquery.cookie in P49-B group 2) writes the cookie the
     // SERVER reads back (CookieService, src/Piwigo/Auth/CookieService.php)
     // to decide which radio is checked on load. CatListPageRendererTest.php's

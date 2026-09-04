@@ -13,7 +13,7 @@ import {
   stop,
   windowHeight,
   windowWidth,
-} from "./dom";
+} from "../utils/dom";
 
 /**
  * Port of jquery.tipTip.js v1.3 (real source read from

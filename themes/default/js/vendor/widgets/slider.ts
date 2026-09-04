@@ -1,4 +1,4 @@
-import { addClass, css, off, on, removeClass } from "./dom";
+import { addClass, css, off, on, removeClass } from "../utils/dom";
 
 /**
  * Port of jQuery UI 1.10.4's `ui.slider` widget (real source read from

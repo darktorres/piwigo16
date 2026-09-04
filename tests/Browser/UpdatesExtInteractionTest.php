@@ -35,8 +35,8 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *
  * `jquery-confirm` (P49-B group 5) stays jQuery; only the DOM work
  * around it converted. `jquery.ajaxmanager` converted to `AjaxQueue`
- * (`themes/default/js/vendor/ajaxQueue.ts`) in P49-B group 2, and
- * `jgrowl` converted to `jGrowl` (`themes/default/js/vendor/jgrowl.ts`)
+ * (`themes/default/js/vendor/utils/ajaxQueue.ts`) in P49-B group 2, and
+ * `jgrowl` converted to `jGrowl` (`themes/default/js/vendor/widgets/jgrowl.ts`)
  * in P49-B group 3.
  */
 function updatesExtPluginBoxHtml(string $type, string $id, bool $ignored): string

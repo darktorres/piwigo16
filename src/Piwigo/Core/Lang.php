@@ -577,7 +577,7 @@ final class Lang
      * load()'s PO path uses this so callers that still read
      * $lang_info['language_name']/['country']/['direction']/['code']/
      * ['zero_plural']/['parent']/['jquery_code'] (admin Latte templates,
-     * getParentLanguage(), vendor/datepickerLocales.ts's own locale
+     * getParentLanguage(), vendor/utils/datepickerLocales.ts's own locale
      * lookup) keep working unchanged after the .lang.php source files are
      * gone -- see php-to-po-fn.php's own X-Piwigo-* header list for what's
      * preserved and why. No `plupload_code` any more (P49-C): its only

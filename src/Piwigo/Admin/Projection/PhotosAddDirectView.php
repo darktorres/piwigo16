@@ -79,7 +79,7 @@ final readonly class PhotosAddDirectView implements View, HasPageAssets, Exposes
      * The `jquery.plupload`/`jquery.plupload.queue` scripts and the
      * per-locale `plupload_i18n-{code}` one are all dropped (P49-C):
      * `photos_add_direct.ts` no longer uses plupload as a jQuery-family
-     * library at all (native `vendor/uploadQueue.ts` replaces it
+     * library at all (native `vendor/utils/uploadQueue.ts` replaces it
      * entirely). The plugin's own CSS stays -- real, still-needed
      * visual styling for the same classnames the native port's own
      * markup produces, with zero jQuery/plupload-runtime dependency of

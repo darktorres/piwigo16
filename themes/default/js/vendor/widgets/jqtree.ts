@@ -43,7 +43,7 @@ import {
   width,
   windowHeight,
   windowWidth,
-} from "./dom";
+} from "../utils/dom";
 
 type JqTreePosition = "before" | "after" | "inside" | "none";
 
@@ -1464,7 +1464,7 @@ export function tree<T extends Record<string, unknown>>(
  * `jQuery(el).tree("getNodeById", ...)`/etc -- the instance stashed by
  * `tree()` above, for a call site in a different function/file than the
  * one that initialized it (same WeakMap-instance-lookup pattern as
- * `vendor/selectize.ts`/`vendor/slider.ts`, since the original library
+ * `vendor/widgets/selectize.ts`/`vendor/widgets/slider.ts`, since the original library
  * stashes its instance directly on the DOM element and every real call
  * site reads it back that way).
  */

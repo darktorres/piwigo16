@@ -2,7 +2,7 @@ import { pwg_jconfirm_follow_href } from "./jconfirmPresets";
 import { scaleThemeScreenshot } from "./themeScreenshotScaling";
 
 import { pwg_getPageString } from "../../../default/js/page-data";
-import { colorbox } from "../../../default/js/vendor/colorbox";
+import { colorbox } from "../../../default/js/vendor/widgets/colorbox";
 import {
   attrOf,
   fadeOut,
@@ -10,7 +10,7 @@ import {
   hasClass,
   on,
   ready,
-} from "../../../default/js/vendor/dom";
+} from "../../../default/js/vendor/utils/dom";
 
 const confirmMsg = pwg_getPageString("Yes, I am sure");
 const cancelMsg = pwg_getPageString("No, I have changed my mind");

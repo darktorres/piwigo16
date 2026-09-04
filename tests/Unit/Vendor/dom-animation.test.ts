@@ -6,7 +6,7 @@ import {
   resolveDuration,
   stop,
   swing,
-} from "../../../themes/default/js/vendor/dom";
+} from "../../../themes/default/js/vendor/utils/dom";
 
 let el: HTMLElement;
 

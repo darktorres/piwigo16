@@ -7,7 +7,7 @@ import {
   on,
   parseEventSpec,
   trigger,
-} from "../../../themes/default/js/vendor/dom";
+} from "../../../themes/default/js/vendor/utils/dom";
 
 let el: HTMLElement;
 

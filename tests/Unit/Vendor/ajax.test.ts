@@ -5,7 +5,7 @@ import {
   AjaxError,
   param,
   type AjaxResponse,
-} from "../../../themes/default/js/vendor/ajax";
+} from "../../../themes/default/js/vendor/utils/ajax";
 
 interface FetchCall {
   url: string;

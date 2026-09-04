@@ -1,7 +1,7 @@
 import "../common";
 
 import { pwg_getPageData } from "../../../../default/js/page-data";
-import { colorbox } from "../../../../default/js/vendor/colorbox";
+import { colorbox } from "../../../../default/js/vendor/widgets/colorbox";
 import {
   addClass,
   attr,
@@ -14,8 +14,8 @@ import {
   setVal,
   toggle,
   val,
-} from "../../../../default/js/vendor/dom";
-import { tipTip } from "../../../../default/js/vendor/tiptip";
+} from "../../../../default/js/vendor/utils/dom";
+import { tipTip } from "../../../../default/js/vendor/widgets/tiptip";
 
 (function () {
   const targets: Record<string, string> = {

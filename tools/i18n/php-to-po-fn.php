@@ -55,7 +55,7 @@ function convert_lang_php_to_po(string $phpFile, string $locale, array $pairs): 
     $zeroPlural = ! in_array($lang_info['zero_plural'] ?? null, [null, false, 0, '0', '', []], true) ? 'true' : 'false';
     // parent: real fallback-chain data (5 locales, e.g. en_GB -> en_UK),
     // read by get_parent_language()/load_language(). jquery_code: real,
-    // actively read by vendor/datepickerLocales.ts (P49-C's native
+    // actively read by vendor/utils/datepickerLocales.ts (P49-C's native
     // datepicker port) to pick the right locale entry -- losing it would
     // silently break admin-panel calendar localization for every
     // non-English-code locale that has one. No `plupload_code` any more

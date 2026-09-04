@@ -26,7 +26,7 @@ import {
   textOf,
   val,
   valId,
-} from "../../../themes/default/js/vendor/dom";
+} from "../../../themes/default/js/vendor/utils/dom";
 
 // The one rule under test throughout: a setter writes to every element of
 // the set, a getter reads the first, and both are silent on an empty set.

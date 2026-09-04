@@ -106,7 +106,7 @@ it('rejects an install request from a non-webmaster session', function (): void 
 /**
  * languages/new.ts's whole body is one cluetip call inside a ready()
  * wrapper. `cluetip()` itself is now a native port
- * (`vendor/cluetip.ts`, P49-B) rather than a jQuery library call, so
+ * (`vendor/widgets/cluetip.ts`, P49-B) rather than a jQuery library call, so
  * what needs proving here is that the ready() callback still fires and
  * that cluetip's own shared `#cluetip` element gets created -- its
  * real, eager, hover-independent init side effect, matching the

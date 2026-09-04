@@ -1,4 +1,4 @@
-import { off, on } from "./dom";
+import { off, on } from "../utils/dom";
 
 /**
  * Port of jquery-confirm v3.3.4's own `$.confirm`/`$.alert` (real source

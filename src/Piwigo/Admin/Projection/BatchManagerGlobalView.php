@@ -141,7 +141,7 @@ final readonly class BatchManagerGlobalView implements View, HasPageAssets, Expo
             // `jQuery.fn.pwgAddAlbum` plugin registration). The
             // `jquery.progressBar` script is dropped outright too --
             // `progress_bar()`'s own real implementation is plain
-            // `css()` (`vendor/dom.ts`), never that plugin's own real
+            // `css()` (`vendor/utils/dom.ts`), never that plugin's own real
             // `.progressBar()` API, confirmed via a repo-wide grep.
             AssetContribution::script('batch_manager_global_page', 'themes/admin/default/js/pages/batch_manager_global.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/batch_manager_global.css', id: 'batch_manager_global'),

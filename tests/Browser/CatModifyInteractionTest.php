@@ -164,7 +164,7 @@ it('locks the album via the switch and persists it through #cat-properties-save'
 });
 
 it('deletes the album via .deleteAlbum, loading its confirm dialog content from a real ajax call', function (): void {
-    // Real, load-bearing behavior of themes/default/js/vendor/jconfirm.ts
+    // Real, load-bearing behavior of themes/default/js/vendor/widgets/jconfirm.ts
     // (P49-B group 5) that no other Browser test exercises: a `content`
     // function returning this app's own `ajax()` thenable opens the
     // dialog with a loading spinner first, then the *success callback*

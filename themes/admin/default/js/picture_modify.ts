@@ -8,9 +8,9 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { colorbox } from "../../../default/js/vendor/colorbox";
-import { confirm } from "../../../default/js/vendor/jconfirm";
-import { pwgDatepicker } from "../../../default/js/vendor/datepicker";
+import { colorbox } from "../../../default/js/vendor/widgets/colorbox";
+import { confirm } from "../../../default/js/vendor/widgets/jconfirm";
+import { pwgDatepicker } from "../../../default/js/vendor/widgets/datepicker";
 import {
   addClass,
   albumBreadcrumbHtml,
@@ -24,7 +24,7 @@ import {
   remove,
   removeClass,
   show,
-} from "../../../default/js/vendor/dom";
+} from "../../../default/js/vendor/utils/dom";
 
 //
 // `addRelatedCategory`/`removeRelatedCategory` are declared here

@@ -6,9 +6,9 @@
 // a real module (gaining this import) without needing to be folded into
 // anyone else's bundle.
 import { pwg_getPageData } from "../../../default/js/page-data";
-import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
-import { hide, on, show } from "../../../default/js/vendor/dom";
-import { tipTip } from "../../../default/js/vendor/tiptip";
+import { ajax, AjaxError } from "../../../default/js/vendor/utils/ajax";
+import { hide, on, show } from "../../../default/js/vendor/utils/dom";
+import { tipTip } from "../../../default/js/vendor/widgets/tiptip";
 
 // This file's own registration stays its own standalone Vite entry,
 // unfolded (docs/PLAN.md P48, this file's own catalog line's

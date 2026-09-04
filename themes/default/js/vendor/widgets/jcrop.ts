@@ -18,7 +18,7 @@
 //   reachable (dragging past the image edges) is, including one exact,
 //   pre-existing quirk in the original's own `getRect()` (its `x1 >
 //   boundx` branch computes `delta` from `boundy`, not `boundx`) --
-//   ported literally, not "fixed", same policy `vendor/jqtree.ts`'s own
+//   ported literally, not "fixed", same policy `vendor/widgets/jqtree.ts`'s own
 //   header already documents for its hit-area arithmetic.
 // - `trueSize`/`setSelect`/`setOptions`/`outerImage`/`addClass` are
 //   never used (no second `.setOptions()`/`.Jcrop("api")` call anywhere
@@ -42,7 +42,7 @@
 //   touch-capability-detection shim -- a deliberate simplification,
 //   not a literal translation, since every real target browser here
 //   already dispatches pointer events for both input kinds.
-import { height, offset, width } from "./dom";
+import { height, offset, width } from "../utils/dom";
 
 interface JcropSelection {
   x: number;

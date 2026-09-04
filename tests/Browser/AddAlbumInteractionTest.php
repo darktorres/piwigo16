@@ -12,11 +12,11 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * popup.
  *
  * `colorbox(trigger, ...)` is a real native call now too (P49-B,
- * `vendor/colorbox.ts`) -- `pwgAddAlbum` itself converted from a
+ * `vendor/widgets/colorbox.ts`) -- `pwgAddAlbum` itself converted from a
  * `jQuery.fn` extension to a plain function in the same pass.
  * `cache.selectize(albumParent, ...)` (LocalStorageCache.ts's own
  * AbstractSelectizer) is a real native call now (P49-B group 6,
- * `vendor/selectize.ts`) -- the cache lookup below reads real state off
+ * `vendor/widgets/selectize.ts`) -- the cache lookup below reads real state off
  * the rendered DOM (`select.value`, the widget's own `.item` markup)
  * rather than a since-removed `.selectize` instance property.
  */

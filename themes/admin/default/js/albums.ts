@@ -12,15 +12,15 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../default/js/page-data";
-import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
-import { confirm } from "../../../default/js/vendor/jconfirm";
+import { ajax, AjaxError } from "../../../default/js/vendor/utils/ajax";
+import { confirm } from "../../../default/js/vendor/widgets/jconfirm";
 import {
   getTreeInstance,
   tree,
   type JqTreeInstance,
   type JqTreeMoveInfo,
   type JqTreeNode,
-} from "../../../default/js/vendor/jqtree";
+} from "../../../default/js/vendor/widgets/jqtree";
 import {
   addClass,
   after,
@@ -49,10 +49,10 @@ import {
   text,
   val,
   windowHeight,
-} from "../../../default/js/vendor/dom";
-import { tipTip } from "../../../default/js/vendor/tiptip";
+} from "../../../default/js/vendor/utils/dom";
+import { tipTip } from "../../../default/js/vendor/widgets/tiptip";
 
-// `vendor/jqtree.ts`'s own real per-row shape (P49-B group 6B), traced to
+// `vendor/widgets/jqtree.ts`'s own real per-row shape (P49-B group 6B), traced to
 // AlbumsPageRenderer.php's own `assocToOrderedTree()` -- the raw JSON
 // tree fed into `tree(el, {data: ...})` and returned by `pwg_getPageData
 // ("album_data")`, *before* jqtree wraps each row into a live node.
@@ -76,7 +76,7 @@ interface AlbumTreeNode extends Record<string, unknown> {
   haveChildren?: AlbumTreeNode[];
 }
 
-// The extra, real per-node data `vendor/jqtree.ts`'s generic node type
+// The extra, real per-node data `vendor/widgets/jqtree.ts`'s generic node type
 // carries alongside its own base fields (`.id`/`.parent`/`.children`/
 // `.getLevel()`/...) -- every own-property of the raw `AlbumTreeNode`
 // data becomes a real property on the resulting live node, simultaneously
@@ -135,7 +135,7 @@ const delayAutoOpen = pwg_getPageData<number>("delay_auto_open");
 // Assigned once, at the top of `ready()` below, before the tree is
 // initialized -- every other module-level function reads the live
 // instance back through `getAlbumTree()` (same WeakMap-instance-lookup
-// pattern `vendor/jqtree.ts` documents), matching the original's own
+// pattern `vendor/widgets/jqtree.ts` documents), matching the original's own
 // repeated `jQuery(".tree").tree(...)` re-selection at each call site.
 let treeEl: HTMLElement;
 function getAlbumTree(): JqTreeInstance<AlbumNodeData> {
@@ -288,7 +288,7 @@ ready(() => {
   treeEl = document.querySelector(".tree")!;
 
   // Real init options only (P49-B group 6B): `autoOpen`/`onCanSelectNode`
-  // are dropped from `vendor/jqtree.ts`'s own options surface entirely,
+  // are dropped from `vendor/widgets/jqtree.ts`'s own options surface entirely,
   // since this is the library's one real consumer and it always passes
   // `autoOpen: false` (no restore-from-storage, no auto-expand) and
   // permanently disables node selection -- see that module's own header
@@ -572,7 +572,7 @@ ready(() => {
 
       void (async () => {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
           const response = (await ajax({
             url: "api/v1/categories",
             type: "POST",
@@ -993,7 +993,7 @@ function closeRenameAlbumPopIn() {
 
 async function triggerDeleteAlbum(cat_id: number): Promise<void> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const response = (await ajax({
       url: "api/v1/categories/" + String(cat_id) + "/orphan-impact",
       type: "GET",
@@ -1310,7 +1310,7 @@ async function changeParent(
 ): Promise<void> {
   let response: operations["categoryMove"]["responses"][200]["content"]["application/json"];
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     response = (await ajax({
       url: "api/v1/categories/actions/move",
       type: "POST",

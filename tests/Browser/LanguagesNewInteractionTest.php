@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * Real, mutation-verified interactive coverage of `vendor/cluetip.ts`
+ * Real, mutation-verified interactive coverage of `vendor/widgets/cluetip.ts`
  * (P49-B) on its one real "auto"-positioned call site,
  * `languages/new.ts`. `LanguagesNewPageRendererTest.php`'s own coverage
  * only ever proves cluetip's shared `#cluetip` element gets created on

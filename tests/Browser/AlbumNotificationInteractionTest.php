@@ -114,7 +114,7 @@ it('blocks the send when no recipient is actually selected, allows it once one i
     expect($blockedWithNoSelection)
         ->toBeTrue();
 
-    // Real user interaction through `vendor/selectize.ts`'s own rendered
+    // Real user interaction through `vendor/widgets/selectize.ts`'s own rendered
     // DOM (P49-B group 6), not a direct API call: click the control to
     // open the dropdown, then click the real `[data-value="1"]` option
     // row -- the same real DOM state `whoSelect.selectedOptions`

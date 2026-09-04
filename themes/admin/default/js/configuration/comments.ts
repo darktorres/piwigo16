@@ -1,6 +1,6 @@
 import "../common";
 
-import { toggle } from "../../../../default/js/vendor/dom";
+import { toggle } from "../../../../default/js/vendor/utils/dom";
 
 (function () {
   const targets: Record<string, string> = {

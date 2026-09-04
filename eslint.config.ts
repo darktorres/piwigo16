@@ -254,7 +254,7 @@ export default defineConfig(
           paths: [
             {
               name: "jquery",
-              message: "jQuery was removed in P49 -- use vendor/dom.ts.",
+              message: "jQuery was removed in P49 -- use vendor/utils/dom.ts.",
             },
           ],
         },

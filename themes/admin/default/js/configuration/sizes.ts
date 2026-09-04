@@ -17,7 +17,7 @@ import {
   on,
   show,
   toggle,
-} from "../../../../default/js/vendor/dom";
+} from "../../../../default/js/vendor/utils/dom";
 
 const titleMsg = pwg_getPageString(
   "Are you sure you want to restore to default settings?",

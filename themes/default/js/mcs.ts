@@ -59,11 +59,11 @@ import {
   sliders,
   showFilterRatings,
 } from "./search_filters";
-import { ajax, AjaxError } from "./vendor/ajax";
+import { ajax, AjaxError } from "./vendor/utils/ajax";
 import {
   getSelectizeInstance,
   selectize as createSelectize,
-} from "./vendor/selectize";
+} from "./vendor/widgets/selectize";
 import {
   addClass,
   append,
@@ -99,7 +99,7 @@ import {
   trigger,
   val,
   windowWidth,
-} from "./vendor/dom";
+} from "./vendor/utils/dom";
 
 let psParams: Record<string, any> = {};
 
@@ -2552,7 +2552,7 @@ async function performSearch(
   });
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const response = (await ajax({
       url: "api/v1/images/searches",
       type: "POST",

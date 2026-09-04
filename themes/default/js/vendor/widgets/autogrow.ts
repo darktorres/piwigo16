@@ -1,4 +1,4 @@
-import { css, cssValue, height, html, on, width } from "./dom";
+import { css, cssValue, height, html, on, width } from "../utils/dom";
 
 /**
  * Port of jquery.autogrow-textarea.js's own `$.fn.autogrow()` -- there is

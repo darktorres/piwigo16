@@ -32,7 +32,7 @@
 // another shared chunk.
 import { sprintf } from "./sprintf";
 import { pwg_getPageData, pwg_getPageString } from "./page-data";
-import { ajax, AjaxError } from "./vendor/ajax";
+import { ajax, AjaxError } from "./vendor/utils/ajax";
 import type { operations } from "../../../openapi/client/schema";
 import {
   addClass,
@@ -60,7 +60,7 @@ import {
   show,
   trigger,
   val,
-} from "./vendor/dom";
+} from "./vendor/utils/dom";
 
 // Real shapes for the 2 real GET endpoints this file's own #methodPwg
 // switches between (admin mode: /categories; non-admin: /categories/available),
@@ -888,7 +888,7 @@ export class AlbumSelector {
     };
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
       const data = (await ajax({
         url: this.#methodPwg,
         type: "GET",
@@ -915,7 +915,7 @@ export class AlbumSelector {
     };
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
       const data = (await ajax({
         url: this.#methodPwg,
         type: "GET",
@@ -949,7 +949,7 @@ export class AlbumSelector {
 
     show(AlbumSelector.selectors.iconSearchingSpin);
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
       const data = (await ajax({
         url: this.#methodPwg,
         type: "GET",
@@ -1000,7 +1000,7 @@ export class AlbumSelector {
     }
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
       const data = (await ajax({
         url: "api/v1/categories",
         type: "POST",
@@ -1019,7 +1019,7 @@ export class AlbumSelector {
 
   async #getAlbumById(catId: string | number) {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
       const data = (await ajax({
         url: "api/v1/categories",
         type: "GET",

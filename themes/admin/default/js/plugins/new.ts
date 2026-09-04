@@ -11,7 +11,7 @@ import "../common";
 import { pwg_jconfirm_follow_href } from "../jconfirmPresets";
 
 import { pwg_getPageString } from "../../../../default/js/page-data";
-import { ajax, AjaxError } from "../../../../default/js/vendor/ajax";
+import { ajax, AjaxError } from "../../../../default/js/vendor/utils/ajax";
 import {
   addClass,
   data,
@@ -26,14 +26,14 @@ import {
   show,
   trigger,
   val,
-} from "../../../../default/js/vendor/dom";
-import { selectize as createSelectize } from "../../../../default/js/vendor/selectize";
+} from "../../../../default/js/vendor/utils/dom";
+import { selectize as createSelectize } from "../../../../default/js/vendor/widgets/selectize";
 import {
   slider,
   type SliderUIParams,
-} from "../../../../default/js/vendor/slider";
-import { sortElements } from "../../../../default/js/vendor/sortElements";
-import { tipTip } from "../../../../default/js/vendor/tiptip";
+} from "../../../../default/js/vendor/widgets/slider";
+import { sortElements } from "../../../../default/js/vendor/utils/sortElements";
+import { tipTip } from "../../../../default/js/vendor/widgets/tiptip";
 
 const strConfirmMsg = pwg_getPageString("Yes, I am sure");
 const strCancelMsg = pwg_getPageString("No, I have changed my mind");

@@ -161,7 +161,7 @@ it('renders a real 404 "Page not found" response for a nonexistent image_id', fu
 
 /**
  * picture_coi.ts's own coordinate maths, converted off jQuery in P49-A;
- * Jcrop itself is native too now (P49-B group 6, `vendor/jcrop.ts`).
+ * Jcrop itself is native too now (P49-B group 6, `vendor/widgets/jcrop.ts`).
  *
  * The round trip is the assertion. With a COI already stored, Jcrop's init
  * callback calls animateTo() with pixel coordinates from_coi() derives
@@ -184,7 +184,7 @@ it('renders a real 404 "Page not found" response for a nonexistent image_id', fu
  * either the image size or the box and these move; that is a real signal,
  * not noise, and the diff will say which.
  *
- * What the invariants DO catch is a failure `vendor/jcrop.ts`'s own port
+ * What the invariants DO catch is a failure `vendor/widgets/jcrop.ts`'s own port
  * genuinely reintroduced once already this session, confirmed live
  * against a real uploaded photo before this test suite even ran: cloning
  * `#jcrop` (real source's own approach, faithfully ported) re-triggers

@@ -14,7 +14,7 @@ import {
   width,
   windowHeight,
   windowWidth,
-} from "../../../themes/default/js/vendor/dom";
+} from "../../../themes/default/js/vendor/utils/dom";
 
 // happy-dom reports offsetWidth/offsetHeight as 0 and getBoundingClientRect
 // as an all-zero rect, so every measurement below exercises the

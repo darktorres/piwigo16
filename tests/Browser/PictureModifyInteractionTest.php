@@ -11,7 +11,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *
  * `.selectize()`, jquery-confirm's own `confirm()`, `colorbox()`, and
  * `pwgDatepicker()` are all real native calls now (P49-B, `vendor/
- * jconfirm.ts`/`vendor/selectize.ts`/`vendor/colorbox.ts`/`vendor/
+ * jconfirm.ts`/`vendor/widgets/selectize.ts`/`vendor/widgets/colorbox.ts`/`vendor/
  * datepicker.ts`).
  */
 it('removes a linked album, updating the badge and showing the orphan message', function (): void {
@@ -108,7 +108,7 @@ it('shows a delete-confirmation dialog', function (): void {
 });
 
 it('creates a brand-new tag via the selectize control, typing it and pressing Enter', function (): void {
-    // Real, mutation-verified coverage of `vendor/selectize.ts`'s own
+    // Real, mutation-verified coverage of `vendor/widgets/selectize.ts`'s own
     // `create: true` + Enter-to-create flow (P49-B group 6) -- no prior
     // test, jQuery-based or not, ever drove selectize's search input or
     // its keyboard handling at all, only its zero-state render or direct

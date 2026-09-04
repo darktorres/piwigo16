@@ -1,5 +1,5 @@
 import { pwg_getPageData } from "../../../default/js/page-data";
-import { hide, ready, show } from "../../../default/js/vendor/dom";
+import { hide, ready, show } from "../../../default/js/vendor/utils/dom";
 
 ready(() => {
   // jQuery's `$("h1").append(...)` appended to every matching heading, not

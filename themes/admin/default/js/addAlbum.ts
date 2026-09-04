@@ -1,6 +1,9 @@
 import type { operations } from "../../../../openapi/client/schema";
-import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
-import { closeColorbox, colorbox } from "../../../default/js/vendor/colorbox";
+import { ajax, AjaxError } from "../../../default/js/vendor/utils/ajax";
+import {
+  closeColorbox,
+  colorbox,
+} from "../../../default/js/vendor/widgets/colorbox";
 import {
   css,
   data,
@@ -10,8 +13,8 @@ import {
   setVal,
   show,
   val,
-} from "../../../default/js/vendor/dom";
-import { getSelectizeInstance } from "../../../default/js/vendor/selectize";
+} from "../../../default/js/vendor/utils/dom";
+import { getSelectizeInstance } from "../../../default/js/vendor/widgets/selectize";
 
 interface AlbumOptionData extends Record<string, unknown> {
   id: string | number;
@@ -113,7 +116,7 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
         hide(document.querySelectorAll(".albumCreationButton"));
 
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
           const response = (await ajax({
             url: "api/v1/categories",
             type: "POST",
@@ -178,7 +181,7 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
           // Was the ajax() error callback's own 3rd (`errorThrown`) param --
           // `response.statusText` for a real HTTP failure, or the literal
           // "Invalid JSON" for a parse failure -- exactly what AjaxError's
-          // own `.message` is constructed from (see vendor/ajax.ts).
+          // own `.message` is constructed from (see vendor/utils/ajax.ts).
           alert(e instanceof AjaxError ? e.message : String(e));
         }
       })();

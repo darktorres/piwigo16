@@ -1,13 +1,13 @@
 import { sprintf } from "./sprintf";
-import { data, find, html, off, on, setVal } from "./vendor/dom";
+import { data, find, html, off, on, setVal } from "./vendor/utils/dom";
 import {
   slider,
   type SliderOptions,
   type SliderUIParams,
-} from "./vendor/slider";
+} from "./vendor/widgets/slider";
 
 /**
- * Real first-party wrapper around `themes/default/js/vendor/slider.ts`'s
+ * Real first-party wrapper around `themes/default/js/vendor/widgets/slider.ts`'s
  * dual-handle (`range: true`) mode -- `container` is the
  * `[data-slider=...]` element both real consumers
  * (`batch_manager/filter.ts`, `mcs.ts`) already select; the actual slider

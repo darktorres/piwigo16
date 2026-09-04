@@ -1,7 +1,7 @@
 import { pwg_jconfirm_follow_href } from "../jconfirmPresets";
 
 import { pwg_getPageString } from "../../../../default/js/page-data";
-import { hide, on, ready, show } from "../../../../default/js/vendor/dom";
+import { hide, on, ready, show } from "../../../../default/js/vendor/utils/dom";
 
 ready(function () {
   // A single link, but queried as a set: the "create a site" block is only

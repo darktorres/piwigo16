@@ -32,7 +32,7 @@ function photosAddApplicationsInteractionOpened(mixed $opened): array
 }
 
 /**
- * P49-B native port of colorbox (`themes/default/js/vendor/colorbox.ts`).
+ * P49-B native port of colorbox (`themes/default/js/vendor/widgets/colorbox.ts`).
  * No prior test, jQuery-based or not, ever drove colorbox's own click-
  * to-open/group-navigation/counter/close behavior -- only its
  * registration marker (`AdminExtendedSmokeTest.php`'s own "binds

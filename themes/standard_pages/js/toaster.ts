@@ -1,4 +1,4 @@
-import { fadeOut } from "../../default/js/vendor/dom";
+import { fadeOut } from "../../default/js/vendor/utils/dom";
 
 export interface PwgToasterInfo {
   text: string;

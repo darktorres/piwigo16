@@ -36,7 +36,7 @@ import {
   toggle,
   trigger,
   val,
-} from "../../../../default/js/vendor/dom";
+} from "../../../../default/js/vendor/utils/dom";
 // common.ts's own side effects (font-checkbox init, search-cancel
 // bindings) -- batch_manager_filter.inc.latte's own `.font-checkbox`
 // filter checkboxes (included by batch_manager_global.latte) need
@@ -59,11 +59,11 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../../default/js/page-data";
-import { ajax, AjaxError } from "../../../../default/js/vendor/ajax";
-import { AjaxQueue } from "../../../../default/js/vendor/ajaxQueue";
-import { colorbox } from "../../../../default/js/vendor/colorbox";
-import { pwgDatepicker } from "../../../../default/js/vendor/datepicker";
-import { tipTip } from "../../../../default/js/vendor/tiptip";
+import { ajax, AjaxError } from "../../../../default/js/vendor/utils/ajax";
+import { AjaxQueue } from "../../../../default/js/vendor/utils/ajaxQueue";
+import { colorbox } from "../../../../default/js/vendor/widgets/colorbox";
+import { pwgDatepicker } from "../../../../default/js/vendor/widgets/datepicker";
+import { tipTip } from "../../../../default/js/vendor/widgets/tiptip";
 import type { operations } from "../../../../../openapi/client/schema";
 
 const lang = {
@@ -229,7 +229,7 @@ async function getDerivativeUrls(queue: AjaxQueue): Promise<void> {
 
   let responseData: operations["imageMissingDerivatives"]["responses"][200]["content"]["application/json"];
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     responseData = (await ajax({
       type: "POST",
       url: "api/v1/images/actions/missing-derivatives",
@@ -1217,7 +1217,7 @@ on(
 
 async function addMd5sumBlock(blockSize?: number): Promise<void> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const responseData = (await ajax({
       url: "api/v1/images/actions/set-md5sum",
       type: "POST",
@@ -1296,7 +1296,7 @@ on(
 
 async function deleteOrphansBlock(blockSize?: number): Promise<void> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const responseData = (await ajax({
       url: "api/v1/images/actions/delete-orphans",
       type: "POST",

@@ -1,5 +1,5 @@
 import { pwg_getPageData } from "../../../default/js/page-data";
-import { ready } from "../../../default/js/vendor/dom";
+import { ready } from "../../../default/js/vendor/utils/dom";
 
 ready(() => {
   document

@@ -7,9 +7,9 @@ import {
   ready,
   show,
   val,
-} from "../../../default/js/vendor/dom";
-import { sortable } from "../../../default/js/vendor/sortable";
-import { tipTip } from "../../../default/js/vendor/tiptip";
+} from "../../../default/js/vendor/utils/dom";
+import { sortable } from "../../../default/js/vendor/widgets/sortable";
+import { tipTip } from "../../../default/js/vendor/widgets/tiptip";
 
 ready(function () {
   function checkOrderOptions() {

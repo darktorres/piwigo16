@@ -10,7 +10,7 @@ import {
   hide,
   on,
   show,
-} from "../../../../default/js/vendor/dom";
+} from "../../../../default/js/vendor/utils/dom";
 
 const confirmMsg = pwg_getPageString("Yes, I am sure");
 const cancelMsg = pwg_getPageString("No, I have changed my mind");

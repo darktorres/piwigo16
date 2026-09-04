@@ -76,18 +76,14 @@ interface Window {
   ) => void;
 }
 
-// `pwg_token` (the CSRF token) is independently declared per-page by
-// whichever file happens to be that page's own top-level script
-// (`albums.js`'s own `var pwg_token = pwg_getPageData('csrf_token');`
-// is one of several -- declared per-page, safe because no two
-// declarers ever co-load on the same page). No ambient `declare const`
-// needed here at all, unlike every other "consumer needs its declarer
-// typed ambiently" case in this file: `var` (unlike `let`/`const`)
-// allows unlimited redeclaration in the same scope, so once any one
-// real `var pwg_token = ...` exists anywhere in the shared
-// type-checking program, every consumer's bare read resolves through
-// it. An ambient `declare const pwg_token` here would conflict with
-// that real `var` declaration (TS2451), so none is declared.
+// `pwgToken` (the CSRF token) needs no ambient declaration at all,
+// unlike every other "consumer needs its declarer typed ambiently"
+// case in this file: each of its 12 real declarers
+// (`const pwgToken = pwg_getPageData<string>("csrf_token");`) is a
+// real ES module's own module-scoped local, invisible outside that
+// one file -- there is no shared global here to declare, and no
+// cross-file redeclaration to reconcile, since real ES modules don't
+// share scope the way classic same-page `<script>` tags used to.
 
 // Vendored standalone-library globals (not jQuery plugins).
 // `plupload`'s own namespace/constants/`Uploader` class are real,

@@ -9,7 +9,7 @@ import type { operations, components } from "../../../../openapi/client/schema";
 // AlbumSelector` (docs/PLAN.md P48 -- was a bare ambient-global read,
 // see that file's own leading comment for the full real-consumer list).
 import { AlbumSelector } from "./album_selector";
-import { sprintf, jConfirm_warning_options } from "./common";
+import { sprintf, jConfirmWarningOptions } from "./common";
 
 import {
   pwg_getPageData,
@@ -80,7 +80,7 @@ interface MultipartParams {
   update_mode?: boolean;
 }
 
-// `add_related_category` is declared here too, independently of the
+// `addRelatedCategory` is declared here too, independently of the
 // same-named functions in mcs.js/cat_modify.ts/batchManagerUnit.ts/
 // picture_modify.ts (docs/PLAN.md P46-B's own finding) -- safe since
 // these pages never co-load.
@@ -124,43 +124,43 @@ const imageFormatsExtensions =
   rawImageFormatsExtensions !== false && rawImageFormatsExtensions !== null
     ? rawImageFormatsExtensions
     : "";
-const nb_albums = pwg_getPageData<string>("nb_albums");
-const chunk_size = String(pwg_getPageData<number>("chunk_size")) + "kb";
-const max_file_size = String(pwg_getPageData<number>("max_file_size")) + "mb";
-const format_update_warning = pwg_getPageString(
+const nbAlbums = pwg_getPageData<string>("nb_albums");
+const chunkSize = String(pwg_getPageData<number>("chunk_size")) + "kb";
+const maxFileSize = String(pwg_getPageData<number>("max_file_size")) + "mb";
+const formatUpdateWarning = pwg_getPageString(
   "This format already exists, it will be overwritten !",
 );
-const format_remove = pwg_getPageString("Remove");
-const pwg_token = pwg_getPageData<string>("csrf_token");
-const photosAdded_label = pwg_getPageString("%d photos uploaded");
-const photosUpdated_label = pwg_getPageString("%d photos updated");
-const formatsAdded_label = pwg_getPageString("%d formats added for %d photos");
-const formatsUpdated_label = pwg_getPageString(
+const formatRemove = pwg_getPageString("Remove");
+const pwgToken = pwg_getPageData<string>("csrf_token");
+const photosAddedLabel = pwg_getPageString("%d photos uploaded");
+const photosUpdatedLabel = pwg_getPageString("%d photos updated");
+const formatsAddedLabel = pwg_getPageString("%d formats added for %d photos");
+const formatsUpdatedLabel = pwg_getPageString(
   "%d formats updated for %d photos",
 );
-const batch_Label = pwg_getPageString("Manage this set of %d photos");
-const albumSummary_label = pwg_getPageString(
+const batchLabel = pwg_getPageString("Manage this set of %d photos");
+const albumSummaryLabel = pwg_getPageString(
   'Album "%s" now contains %d photos',
 );
-const str_format_warning = pwg_getPageString(
+const strFormatWarning = pwg_getPageString(
   "Error when trying to detect formats",
 );
-const str_format_warning_multiple = pwg_getPageString(
+const strFormatWarningMultiple = pwg_getPageString(
   "There is multiple image in the database with the following names : %s.",
 );
-const str_format_warning_notFound = pwg_getPageString(
+const strFormatWarningNotFound = pwg_getPageString(
   "No picture found with the following name : %s.",
 );
-const str_and_X_others = pwg_getPageString("and %d more");
-const str_upload_in_progress = pwg_getPageString("Upload in progress");
-const str_drop_album_ab = pwg_getPageString("Drop into album");
-const file_ext = pwg_getPageData<string>("file_exts");
-const format_ext = pwg_getPageData<string>("format_ext");
+const strAndXOthers = pwg_getPageString("and %d more");
+const strUploadInProgress = pwg_getPageString("Upload in progress");
+const strDropAlbumAb = pwg_getPageString("Drop into album");
+const fileExt = pwg_getPageData<string>("file_exts");
+const formatExt = pwg_getPageData<string>("format_ext");
 const uploadedPhotos: (number | string)[] = [];
 let uploadCategory: { id: string | number | undefined } | null = null;
 const addedPhotos: (number | string)[] = [];
 const updatedPhotos: (number | string)[] = [];
-const related_categories_ids = pwg_getPageData<number[]>(
+const relatedCategoriesIds = pwg_getPageData<number[]>(
   "related_categories_ids",
 );
 
@@ -169,10 +169,10 @@ On DOM load
 --------------*/
 ready(function () {
   const ab = new AlbumSelector({
-    selectedCategoriesIds: related_categories_ids,
-    selectAlbum: add_related_category,
+    selectedCategoriesIds: relatedCategoriesIds,
+    selectAlbum: addRelatedCategory,
     adminMode: true,
-    modalTitle: str_drop_album_ab,
+    modalTitle: strDropAlbumAb,
   });
 
   // Moved out of photos_add_direct.latte's own inline onClick, which both
@@ -194,27 +194,27 @@ ready(function () {
 
   // First album event
   // Genuine pre-existing bug found via strict typing: PhotosAddDirectView.php's
-  // own exposedPageData() exposes `nb_albums` as a *string* (`(string)
+  // own exposedPageData() exposes `nbAlbums` as a *string* (`(string)
   // $this->nbAlbums`), so a brand-new gallery's real "0" value was
   // truthy (`!"0"` is `false`, unlike `!0`) -- the "add your first
   // album" onboarding flow this check exists for could never actually
   // trigger. Fixed to a real numeric comparison.
-  if (Number(nb_albums) === 0) {
+  if (Number(nbAlbums) === 0) {
     if (btnFirstAlbum !== null) {
       on(btnFirstAlbum, "click", function () {
-        open_new_album_modal();
+        openNewAlbumModal();
       });
     }
 
     if (closeModalFirstAlbum !== null) {
       on(closeModalFirstAlbum, "click", function () {
-        close_new_album_modal();
+        closeNewAlbumModal();
       });
     }
 
     if (btnAddFirstAlbum !== null) {
       on(btnAddFirstAlbum, "click", function () {
-        void add_first_album(ab.select_album.bind(ab));
+        void addFirstAlbum(ab.selectAlbum.bind(ab));
       });
     }
 
@@ -295,8 +295,8 @@ ready(function () {
   // Native port now (P49-C, `vendor/uploadQueue.ts`) -- `browse_button`/
   // `filters`/`rename`/`dragdrop`/`preinit`/`init` are this file's own
   // real, unmodified original options; `container`/`runtimes`/`url`/
-  // `chunk_size` are dropped (see that module's own leading comment for
-  // why each is real but dead here -- `chunk_size` in particular still
+  // `chunkSize` are dropped (see that module's own leading comment for
+  // why each is real but dead here -- `chunkSize` in particular still
   // drives the real tus chunk size directly, in uploadNextTusFile()
   // below, just no longer duplicated into this config too).
   uploadQueue(uploaderPhotos!, {
@@ -304,12 +304,12 @@ ready(function () {
 
     filters: {
       // Maximum file size
-      max_file_size,
+      max_file_size: maxFileSize,
       // Specify what files to browse for
       mime_types: [
         {
           title: "Image files",
-          extensions: formatMode ? format_ext : file_ext,
+          extensions: formatMode ? formatExt : fileExt,
         },
       ],
     },
@@ -420,13 +420,13 @@ ready(function () {
                     `
               <a target="_blank" href="admin.php?page=photo-${forms[1].trim()}-formats">
                 <span class="icon-attention update-warning">
-                  ${format_update_warning}
+                  ${formatUpdateWarning}
                 </span>
               </a>
               <a class="remove-format" id="remove_${forms[0]}">
                 <span class = "icon-cancel-circled">
                 </span>
-                ${format_remove}
+                ${formatRemove}
               </a>`,
                   );
                 });
@@ -451,14 +451,14 @@ ready(function () {
                 filenames: fileNames,
               },
             })) as ImageFormatSearchResponse;
-            const images_search: ImageFormatSearchResponse["results"] =
+            const imagesSearch: ImageFormatSearchResponse["results"] =
               searchResponse.results;
 
             const notFound: string[] = [];
             const multiple: string[] = [];
 
             files.forEach((f) => {
-              const search = images_search[f.id]!;
+              const search = imagesSearch[f.id]!;
               if (search.status === "found") {
                 f.format_of = String(search.imageId);
                 formats.push([f.id, f.format_of]);
@@ -483,13 +483,13 @@ ready(function () {
                         `
                   <a target="_blank" href="admin.php?page=photo-${f.format_of!.trim()}-formats">
                     <span class="icon-attention update-warning">
-                      ${format_update_warning}
+                      ${formatUpdateWarning}
                     </span>
                   </a>
                   <a class="remove-format" id="remove_${f.id}">
                     <span class = "icon-cancel-circled">
                     </span>
-                    ${format_remove}
+                    ${formatRemove}
                   </a>`,
                       );
                     });
@@ -509,7 +509,7 @@ ready(function () {
               }
             });
 
-            files.filter((f) => images_search[f.id]!.status === "found");
+            files.filter((f) => imagesSearch[f.id]!.status === "found");
 
             // If a file is not found or found more than one time
             if (notFound.length || multiple.length) {
@@ -522,7 +522,7 @@ ready(function () {
 
                   // Add "and X more" if necessary
                   if (tab.length > 5) {
-                    tab[5] = str_and_X_others.replace(
+                    tab[5] = strAndXOthers.replace(
                       "%d",
                       String(tab.length - 5),
                     );
@@ -533,15 +533,15 @@ ready(function () {
               );
 
               alert({
-                title: str_format_warning,
+                title: strFormatWarning,
                 content:
                   (notFound.length
-                    ? `<p>${str_format_warning_notFound.replace("%s", notFoundStr!.join(", "))}</p>`
+                    ? `<p>${strFormatWarningNotFound.replace("%s", notFoundStr!.join(", "))}</p>`
                     : "") +
                   (multiple.length
-                    ? `<p>${str_format_warning_multiple.replace("%s", multStr!.join(", "))}</p>`
+                    ? `<p>${strFormatWarningMultiple.replace("%s", multStr!.join(", "))}</p>`
                     : ""),
-                ...jConfirm_warning_options,
+                ...jConfirmWarningOptions,
               });
             }
           } else {
@@ -578,13 +578,13 @@ ready(function () {
                       `
                 <a target="_blank" href="admin.php?page=photo-${String(originalImageId).trim()}-formats">
                   <span class="icon-attention update-warning">
-                    ${format_update_warning}
+                    ${formatUpdateWarning}
                   </span>
                 </a>
                 <a class="remove-format" id="remove_${f.id}">
                   <span class = "icon-cancel-circled">
                   </span>
-                  ${format_remove}
+                  ${formatRemove}
                 </a>`,
                     );
                   });
@@ -625,13 +625,13 @@ ready(function () {
                   `
             <a target="_blank" href="admin.php?page=photo-${forms[1].trim()}-formats">
               <span class="icon-attention update-warning">
-                ${format_update_warning}
+                ${formatUpdateWarning}
               </span>
             </a>
             <a class="remove-format" id="remove_${forms[0]}">
               <span class = "icon-cancel-circled">
               </span>
-              ${format_remove}
+              ${formatRemove}
             </a>`,
                 );
               });
@@ -672,7 +672,7 @@ ready(function () {
         // warn user if she wants to leave page while upload is running
         on(window, "beforeunload", function (e: Event) {
           e.preventDefault();
-          return str_upload_in_progress;
+          return strUploadInProgress;
         });
 
         // no more change on category/level
@@ -684,14 +684,14 @@ ready(function () {
 
         // You can override settings before the file is uploaded
         const options: MultipartParams = {
-          pwg_token: pwg_token,
+          pwg_token: pwgToken,
         };
 
         if (formatMode) {
           options.format_of = file.format_of;
         } else {
           // options.category = $("select[name=category] option:selected").val();
-          [options.category] = ab.get_selected_albums();
+          [options.category] = ab.getSelectedAlbums();
           // options.level = $("select[name=level] option:selected").val();
           options.name = file.name;
         }
@@ -780,7 +780,7 @@ ready(function () {
                 json: {
                   categoryId: Number(uploadCategory.id),
                 },
-                headers: { "X-CSRF-Token": pwg_token },
+                headers: { "X-CSRF-Token": pwgToken },
                 dataType: "json",
               })) as operations["uploadCompleteBatch"]["responses"][200]["content"]["application/json"];
 
@@ -789,7 +789,7 @@ ready(function () {
               // that captured value would otherwise be stale by the time
               // this batch-complete summary line renders.
               const summaryHtml = sprintf(
-                albumSummary_label,
+                albumSummaryLabel,
                 '<a href="admin.php?page=album-' +
                   String(data.category.id) +
                   '">' +
@@ -813,19 +813,19 @@ ready(function () {
 
         const infoTextAdd = formatMode
           ? sprintf(
-              formatsAdded_label,
+              formatsAddedLabel,
               addedPhotos.length,
               [...new Set(addedPhotos)].length,
             )
-          : sprintf(photosAdded_label, addedPhotos.length);
+          : sprintf(photosAddedLabel, addedPhotos.length);
 
         const infoTextUpdate = formatMode
           ? sprintf(
-              formatsUpdated_label,
+              formatsUpdatedLabel,
               updatedPhotos.length,
               [...new Set(updatedPhotos)].length,
             )
-          : sprintf(photosUpdated_label, updatedPhotos.length);
+          : sprintf(photosUpdatedLabel, updatedPhotos.length);
 
         if (addedPhotos.length && updatedPhotos.length) {
           append(
@@ -852,11 +852,11 @@ ready(function () {
           "admin.php?page=photos_add&section=direct&batch=" +
             [...new Set(uploadedPhotos)].join(",") +
             "&pwg_token=" +
-            pwg_token,
+            pwgToken,
         );
         html(
           document.querySelectorAll(".batchLink"),
-          sprintf(batch_Label, uploadedPhotos.length),
+          sprintf(batchLabel, uploadedPhotos.length),
         );
 
         show(document.querySelectorAll(".afterUploadActions"));
@@ -978,9 +978,9 @@ function uploadNextTusFile(
 
   activeTusUpload = new Upload(file.getNative(), {
     endpoint: "api/v1/uploads",
-    chunkSize: parseInt(chunk_size) * 1024,
+    chunkSize: parseInt(chunkSize) * 1024,
     retryDelays: [0, 1000, 3000, 5000],
-    headers: { "X-CSRF-Token": pwg_token },
+    headers: { "X-CSRF-Token": pwgToken },
     metadata: metadata,
     onProgress: function (bytesUploaded: number, bytesTotal: number) {
       file.loaded = bytesUploaded;
@@ -1059,7 +1059,7 @@ function uploadNextTusFile(
 General functions
 --------------*/
 
-function add_related_category({
+function addRelatedCategory({
   album,
   newSelectedAlbum,
 }: AlbumSelectorCallbackArgs) {
@@ -1082,10 +1082,10 @@ function add_related_category({
   if (addPhotosAS !== null) hide(addPhotosAS);
   if (selectedAlbum !== null) fadeIn([selectedAlbum]);
 
-  enable_uploader();
+  enableUploader();
 }
 
-function enable_uploader() {
+function enableUploader() {
   if (btnAddFiles !== null) removeAttr(btnAddFiles, "disabled");
   if (chooseAlbumFirst !== null) hide(chooseAlbumFirst);
   if (uploaderPhotos !== null) show(uploaderPhotos);
@@ -1095,17 +1095,17 @@ function enable_uploader() {
 First album functions
 -------------------*/
 
-function open_new_album_modal() {
+function openNewAlbumModal() {
   if (inputFirstAlbum !== null) setVal([inputFirstAlbum], "");
   if (modalFirstAlbum !== null) fadeIn([modalFirstAlbum]);
   inputFirstAlbum?.focus();
 }
 
-function close_new_album_modal() {
+function closeNewAlbumModal() {
   if (modalFirstAlbum !== null) fadeOut([modalFirstAlbum]);
 }
 
-function hide_first_album(cat_name: string) {
+function hideFirstAlbum(cat_name: string) {
   if (modalFirstAlbum !== null) hide(modalFirstAlbum);
   hide(firstAlbum);
 
@@ -1113,11 +1113,11 @@ function hide_first_album(cat_name: string) {
   if (selectedAlbumName !== null) html([selectedAlbumName], cat_name);
   if (selectedAlbum !== null) show(selectedAlbum);
 
-  enable_uploader();
+  enableUploader();
   if (uploadForm !== null) fadeIn([uploadForm]);
 }
 
-async function add_first_album(
+async function addFirstAlbum(
   add_cat: (id: string | number) => void,
 ): Promise<void> {
   const params = {
@@ -1130,12 +1130,12 @@ async function add_first_album(
       url: "api/v1/categories",
       method: "POST",
       json: params,
-      headers: { "X-CSRF-Token": pwg_token },
+      headers: { "X-CSRF-Token": pwgToken },
       dataType: "json",
     })) as operations["categoryCreate"]["responses"][201]["content"]["application/json"];
 
     add_cat(res.id);
-    hide_first_album(params.name);
+    hideFirstAlbum(params.name);
   } catch (e) {
     console.error("An error has occurred", e);
   }

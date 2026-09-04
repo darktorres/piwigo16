@@ -9,64 +9,62 @@ import {
 } from "../../../default/js/page-data";
 
 /* incompatible message */
-export const incompatible_msg = pwg_getPageString(
+export const incompatibleMsg = pwg_getPageString(
   "WARNING! This plugin does not seem to be compatible with this version of Piwigo.",
 );
-// Dialog *content* now, paired with incompatible_msg as the title (see
+// Dialog *content* now, paired with incompatibleMsg as the title (see
 // plugins_installated.ts's own incompatible-plugin activation guard). The
 // leading "\n" it used to carry only made sense while this was concatenated
 // onto a title string, where it rendered as nothing anyway.
-export const activate_msg = pwg_getPageString(
-  "Do you want to activate anyway?",
-);
+export const activateMsg = pwg_getPageString("Do you want to activate anyway?");
 
 /* group action */
-export const pwg_token = pwg_getPageData<string>("csrf_token");
+export const pwgToken = pwg_getPageData<string>("csrf_token");
 interface CountTypesPlugins {
   active: number;
   inactive: number;
   missing: number;
   merged: number;
 }
-const count_types_plugins = pwg_getPageData<CountTypesPlugins>(
+const countTypesPlugins = pwg_getPageData<CountTypesPlugins>(
   "count_types_plugins",
 );
-export const nb_plugin = {
+export const nbPlugin = {
   all:
-    count_types_plugins.active +
-    count_types_plugins.inactive +
-    count_types_plugins.missing +
-    count_types_plugins.merged,
-  active: count_types_plugins.active,
-  inactive: count_types_plugins.inactive,
-  other: count_types_plugins.missing + count_types_plugins.merged,
+    countTypesPlugins.active +
+    countTypesPlugins.inactive +
+    countTypesPlugins.missing +
+    countTypesPlugins.merged,
+  active: countTypesPlugins.active,
+  inactive: countTypesPlugins.inactive,
+  other: countTypesPlugins.missing + countTypesPlugins.merged,
 };
-export const confirm_msg = pwg_getPageString("Yes, I am sure");
-export const cancel_msg = pwg_getPageString("No, I have changed my mind");
-export const delete_plugin_msg = pwg_getPageString(
+export const confirmMsg = pwg_getPageString("Yes, I am sure");
+export const cancelMsg = pwg_getPageString("No, I have changed my mind");
+export const deletePluginMsg = pwg_getPageString(
   'Are you sure you want to delete the plugin "%s"?',
 );
-export const deleted_plugin_msg = pwg_getPageString('Plugin "%s" deleted!');
-export const restore_plugin_msg = pwg_getPageString(
+export const deletedPluginMsg = pwg_getPageString('Plugin "%s" deleted!');
+export const restorePluginMsg = pwg_getPageString(
   'Are you sure you want to restore the plugin "%s"?',
 );
-export const uninstall_plugin_msg = pwg_getPageString(
+export const uninstallPluginMsg = pwg_getPageString(
   'Are you sure you want to uninstall the plugin "%s"?',
 );
-export const plugin_added_str = pwg_getPageString("Activated");
-export const plugin_deactivated_str = pwg_getPageString("Deactivated");
-export const plugin_restored_str = pwg_getPageString("Restored");
-export const plugin_action_error = pwg_getPageString("an error happened");
-export const not_webmaster = pwg_getPageString("Webmaster status required");
-export const nothing_found = pwg_getPageString("No plugins found");
-export const x_plugins_found = pwg_getPageString("%s plugins found");
-export const plugin_found = pwg_getPageString("%s plugin found");
+export const pluginAddedStr = pwg_getPageString("Activated");
+export const pluginDeactivatedStr = pwg_getPageString("Deactivated");
+export const pluginRestoredStr = pwg_getPageString("Restored");
+export const pluginActionError = pwg_getPageString("an error happened");
+export const notWebmaster = pwg_getPageString("Webmaster status required");
+export const nothingFound = pwg_getPageString("No plugins found");
+export const xPluginsFound = pwg_getPageString("%s plugins found");
+export const pluginFound = pwg_getPageString("%s plugin found");
 export const isWebmaster = pwg_getPageData<number>("is_webmaster");
-export const str_restore_def = pwg_getPageString(
+export const strRestoreDef = pwg_getPageString(
   "While restoring this plugin, it will be reset to its original parameters and associated data is going to be reset",
 );
 
-export const show_details = pwg_getPageData<boolean>("show_details");
+export const showDetails = pwg_getPageData<boolean>("show_details");
 
 const searchParams = new URLSearchParams(window.location.search);
-export const plugin_filter = searchParams.get("filter");
+export const pluginFilter = searchParams.get("filter");

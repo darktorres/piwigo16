@@ -11,10 +11,10 @@ import {
 } from "../../../default/js/page-data";
 import { data as readData, ready } from "../../../default/js/vendor/dom";
 
-const str_number_page_visited = pwg_getPageString("Page Visited");
-const str_avg = pwg_getPageString("Average last 12 months");
-const str_months_tosplit = pwg_getPageData<string>("month_labels");
-const str_months = str_months_tosplit.split("~");
+const strNumberPageVisited = pwg_getPageString("Page Visited");
+const strAvg = pwg_getPageString("Average last 12 months");
+const strMonthsTosplit = pwg_getPageData<string>("month_labels");
+const strMonths = strMonthsTosplit.split("~");
 
 // See vendor/lineChart.ts's own header comment: `moment.locale()` never
 // actually took effect in production (no `moment/locale/*` file was ever
@@ -54,14 +54,14 @@ function dayMonth(date: Date): string {
 
 type DataType = "hours" | "days" | "months" | "years";
 
-const str_tooltip_format: Record<DataType, (date: Date) => string> = {
+const strTooltipFormat: Record<DataType, (date: Date) => string> = {
   hours: (date) => timeFormat.format(date),
   days: dayMonth,
   months: (date) => monthLongYearFormat.format(date),
   years: (date) => yearFormat.format(date),
 };
 
-const str_unit_format: Record<LineChartUnit, (date: Date) => string> = {
+const strUnitFormat: Record<LineChartUnit, (date: Date) => string> = {
   day: (date) => weekdayLongFormat.format(date),
   month: (date) => monthShortYearFormat.format(date),
   year: (date) => yearFormat.format(date),
@@ -109,7 +109,7 @@ data["month-stats"] = readData(dataElement, "month-stats") as {
   avg: number;
 };
 
-const data_unit: Record<DataType, LineChartUnit> = {
+const dataUnit: Record<DataType, LineChartUnit> = {
   hours: "day",
   days: "month",
   months: "year",
@@ -133,13 +133,13 @@ function changeData(dataType: DataType): void {
     const config: LineChartConfig = {
       xAxis: {
         kind: "time",
-        unit: data_unit[dataType],
-        tickFormat: str_unit_format[data_unit[dataType]],
-        tooltipFormat: str_tooltip_format[dataType],
+        unit: dataUnit[dataType],
+        tickFormat: strUnitFormat[dataUnit[dataType]],
+        tooltipFormat: strTooltipFormat[dataType],
       },
       series: [
         {
-          label: str_number_page_visited,
+          label: strNumberPageVisited,
           color: LINE_COLOR,
           fillColor: FILL_RGB,
           points: getValues(data[dataType]),
@@ -150,10 +150,10 @@ function changeData(dataType: DataType): void {
     chart.setData(config);
   } else if (dataType === "years") {
     chart.setData({
-      xAxis: { kind: "category", labels: str_months },
+      xAxis: { kind: "category", labels: strMonths },
       series: getComparedYearDataset(),
       legend: true,
-      yAxisLabel: str_number_page_visited,
+      yAxisLabel: strNumberPageVisited,
     });
   } else if (dataType === "months") {
     const days = Array.from({ length: 31 }, (_, i) => String(i + 1));
@@ -161,7 +161,7 @@ function changeData(dataType: DataType): void {
       xAxis: { kind: "category", labels: days },
       series: getMonthStatsDataset(),
       legend: true,
-      yAxisLabel: str_number_page_visited,
+      yAxisLabel: strNumberPageVisited,
     });
   }
   // "hours"/"days" are unreachable here: the compare-mode toggle handler
@@ -211,18 +211,18 @@ function getMonthStatsDataset(): LineChartSeries[] {
   let lastDate: Date | undefined;
 
   data["month-stats"].month.forEach((values: StatDataPoint) => {
-    const days_data: (number | undefined)[] = [];
+    const daysData: (number | undefined)[] = [];
     Object.keys(values).forEach(function (key) {
       lastDate = new Date(key);
-      days_data[lastDate.getUTCDate() - 1] = values[key]!;
+      daysData[lastDate.getUTCDate() - 1] = values[key]!;
     });
     datasets.push({
       label:
         lastDate === undefined
           ? ""
-          : `${str_months[lastDate.getMonth()]!} ${String(lastDate.getFullYear())}`,
+          : `${strMonths[lastDate.getMonth()]!} ${String(lastDate.getFullYear())}`,
       color: COMPARE_COLORS[colorIndice % COMPARE_COLORS.length]!,
-      points: days_data
+      points: daysData
         .map((y, day): LineChartPoint | null =>
           y === undefined ? null : { x: day, y },
         )
@@ -232,7 +232,7 @@ function getMonthStatsDataset(): LineChartSeries[] {
   });
 
   datasets.push({
-    label: str_avg,
+    label: strAvg,
     color: COMPARE_COLORS[4]!,
     points: Array.from({ length: 31 }, (_, day) => ({
       x: day,

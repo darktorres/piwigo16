@@ -14,18 +14,18 @@ import { pwgDoubleSlider } from "../../admin/default/js/doubleSlider";
 // search_filters.ts's own batch -- was bare-global reads before that).
 // This file is search_filters.ts's only real consumer
 // anywhere (confirmed directly -- history.ts's own leading comment
-// mentions `global_params`/`fullname_of_cat` only in prose, not a real
+// mentions `globalParams`/`fullnameOfCat` only in prose, not a real
 // bare-identifier read), so a plain import is safe (Design §4) --
 // search_filters.ts's own former standalone entry/registration is gone
 // too (SearchFiltersView's own leading comment).
 //
-// `global_params` is read-only here, and deliberately so. It used to
+// `globalParams` is read-only here, and deliberately so. It used to
 // carry a second, parallel copy of the filter state: every widget
-// handler wrote the chosen values into `global_params.fields.*` right
-// beside the `PS_params.*` write next to it. Nothing ever read that
-// copy back -- every `global_params` read in this file runs in the
+// handler wrote the chosen values into `globalParams.fields.*` right
+// beside the `psParams.*` write next to it. Nothing ever read that
+// copy back -- every `globalParams` read in this file runs in the
 // setup pass below, before any handler can fire; `performSearch()`
-// builds its request body out of `PS_params` alone; and a search
+// builds its request body out of `psParams` alone; and a search
 // reloads the page, so the next read starts from a fresh
 // server-rendered value either way. Those writes are gone (P49-A,
 // typing pass), which also removed several that had drifted to shapes
@@ -34,30 +34,30 @@ import { pwgDoubleSlider } from "../../admin/default/js/doubleSlider";
 // where it is `{string: ...}`, `allwords.words` as the raw input text
 // where it is a word list. Add a read before adding a write back.
 import {
-  global_params,
-  fullname_of_cat,
-  search_id,
-  str_word_widget_label,
-  str_tags_widget_label,
-  str_album_widget_label,
-  str_author_widget_label,
-  str_added_by_widget_label,
-  str_filetypes_widget_label,
-  str_rating_widget_label,
-  str_no_rating,
-  str_between_rating,
-  str_filesize_widget_label,
-  str_width_widget_label,
-  str_height_widget_label,
-  str_ratio_widget_label,
-  str_ratios_label,
-  str_expert_widget_label,
-  str_empty_search_top_alt,
-  str_empty_search_bot_alt,
-  str_search_in_ab,
-  prefix_icon,
+  globalParams,
+  fullnameOfCat,
+  searchId,
+  strWordWidgetLabel,
+  strTagsWidgetLabel,
+  strAlbumWidgetLabel,
+  strAuthorWidgetLabel,
+  strAddedByWidgetLabel,
+  strFiletypesWidgetLabel,
+  strRatingWidgetLabel,
+  strNoRating,
+  strBetweenRating,
+  strFilesizeWidgetLabel,
+  strWidthWidgetLabel,
+  strHeightWidgetLabel,
+  strRatioWidgetLabel,
+  strRatiosLabel,
+  strExpertWidgetLabel,
+  strEmptySearchTopAlt,
+  strEmptySearchBotAlt,
+  strSearchInAb,
+  prefixIcon,
   sliders,
-  show_filter_ratings,
+  showFilterRatings,
 } from "./search_filters";
 import { ajax, AjaxError } from "./vendor/ajax";
 import {
@@ -101,7 +101,7 @@ import {
   windowWidth,
 } from "./vendor/dom";
 
-let PS_params: Record<string, any> = {};
+let psParams: Record<string, any> = {};
 
 function siblingsOf(el: Element): Element[] {
   const parent = el.parentElement;
@@ -144,29 +144,29 @@ function shouldIgnoreFilterClick(
 
 ready(function () {
   let ab: AlbumSelectorInstance;
-  // Genuinely heterogeneous -- pushed values are `PS_params[key]`
-  // (`PS_params: Record<string, any>`, this campaign's own
+  // Genuinely heterogeneous -- pushed values are `psParams[key]`
+  // (`psParams: Record<string, any>`, this campaign's own
   // "Record<string, any> only where genuinely heterogeneous"
   // allowance), whose real shape varies per filter (string, array, or
   // number depending on which filter pushed it).
-  const empty_filters_list: any[] = [];
+  const emptyFiltersList: any[] = [];
   // Confirmed via grep: never pushed to anywhere in this file, so
-  // `filters_to_remove.length > 0` (below) is always false and
-  // `performSearch(PS_params, true)` there never actually runs -- a
+  // `filtersToRemove.length > 0` (below) is always false and
+  // `performSearch(psParams, true)` there never actually runs -- a
   // real, pre-existing dead branch, not something this typing pass
   // fixes (deciding what should populate it is a design question, not
   // a type gap). Typed to its most plausible intended shape (filter
   // name strings, matching `updateFilters()`'s own `filterName` param)
   // rather than left as `any[]`.
-  const filters_to_remove: string[] = [];
+  const filtersToRemove: string[] = [];
 
   addClass(
     document.querySelectorAll(".linkedAlbumPopInContainer .ClosePopIn"),
-    prefix_icon + "cancel",
+    prefixIcon + "cancel",
   );
   addClass(
     document.querySelectorAll(".linkedAlbumPopInContainer .searching"),
-    prefix_icon + "spin6",
+    prefixIcon + "spin6",
   );
   hide(document.querySelectorAll(".linkedAlbumPopInContainer .searching"));
   css(document.querySelectorAll(".AddIconContainer"), "display", "none");
@@ -200,50 +200,50 @@ ready(function () {
 
   // Declare params sent to pwg.images.filteredSearch.update
   // PS for performSearch()
-  PS_params = {};
-  PS_params["search_id"] = search_id;
+  psParams = {};
+  psParams["searchId"] = searchId;
 
   // Setup word filter
-  const allwords_rule = global_params.fields.allwords;
-  if (allwords_rule) {
+  const allwordsRule = globalParams.fields.allwords;
+  if (allwordsRule) {
     css(document.querySelectorAll(".filter-word"), "display", "flex");
     setChecked(
       document.querySelectorAll(".filter-manager-controller.word"),
       true,
     );
 
-    let word_search_str = "";
-    const word_search_words = allwords_rule.words;
-    word_search_words.forEach((word) => {
-      word_search_str += word + " ";
+    let wordSearchStr = "";
+    const wordSearchWords = allwordsRule.words;
+    wordSearchWords.forEach((word) => {
+      wordSearchStr += word + " ";
     });
     setVal(
       document.querySelectorAll("#word-search"),
-      word_search_str.slice(0, -1),
+      wordSearchStr.slice(0, -1),
     );
 
-    if (word_search_words.length > 0) {
+    if (wordSearchWords.length > 0) {
       addClass(document.querySelectorAll(".filter-word"), "filter-filled");
       html(
         document.querySelectorAll(".filter-word .search-words"),
-        word_search_str.slice(0, -1),
+        wordSearchStr.slice(0, -1),
       );
     } else {
       html(
         document.querySelectorAll(".filter-word .search-words"),
-        str_word_widget_label,
+        strWordWidgetLabel,
       );
     }
 
-    const word_search_fields = allwords_rule.fields;
-    word_search_fields.forEach((field_name) => {
+    const wordSearchFields = allwordsRule.fields;
+    wordSearchFields.forEach((field_name) => {
       setChecked(document.querySelectorAll("#" + field_name), true);
     });
 
-    const word_search_mode = allwords_rule.mode;
+    const wordSearchMode = allwordsRule.mode;
     setChecked(
       document.querySelectorAll(
-        `.word-search-options input[value="${word_search_mode}"]`,
+        `.word-search-options input[value="${wordSearchMode}"]`,
       ),
       true,
     );
@@ -266,27 +266,27 @@ ready(function () {
       },
     );
 
-    PS_params["allwords"] = word_search_str.slice(0, -1);
-    PS_params["allwords_fields"] = word_search_fields;
-    PS_params["allwords_mode"] = word_search_mode;
+    psParams["allwords"] = wordSearchStr.slice(0, -1);
+    psParams["allwords_fields"] = wordSearchFields;
+    psParams["allwords_mode"] = wordSearchMode;
 
-    empty_filters_list.push(PS_params["allwords"]);
+    emptyFiltersList.push(psParams["allwords"]);
   }
 
   //Hide filter spinner
   hide(document.querySelectorAll(".filter-spinner"));
 
   // Setup tag filter
-  const tags_rule = global_params.fields.tags;
+  const tagsRule = globalParams.fields.tags;
   document.querySelectorAll<HTMLSelectElement>("#tag-search").forEach((el) => {
     createSelectize(el, {
       plugins: ["remove_button"],
       maxOptions: el.querySelectorAll("option").length,
-      items: tags_rule?.words,
+      items: tagsRule?.words,
     });
   });
 
-  if (tags_rule) {
+  if (tagsRule) {
     css(document.querySelectorAll(".filter-tag"), "display", "flex");
     setChecked(
       document.querySelectorAll(".filter-manager-controller.tags"),
@@ -294,32 +294,32 @@ ready(function () {
     );
     setChecked(
       document.querySelectorAll(
-        `.filter-tag-form .search-params input[value="${tags_rule.mode}"]`,
+        `.filter-tag-form .search-params input[value="${tagsRule.mode}"]`,
       ),
       true,
     );
 
-    let tag_search_str = "";
+    let tagSearchStr = "";
     const tagSearchEl =
       document.querySelector<HTMLSelectElement>("#tag-search")!;
     const tagSearchSelectize = getSelectizeInstance(tagSearchEl)!;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- #tag-search is a real <select multiple> (search_filters.inc.latte), so getValue() always returns an array here.
     (tagSearchSelectize.getValue() as (string | number)[]).forEach((id) => {
-      tag_search_str +=
+      tagSearchStr +=
         (tagSearchSelectize.getItem(id)?.textContent ?? "")
           .replace(/\(\d+ \w+\)×/, "")
           .trim() + ", ";
     });
-    if (tags_rule.words.length > 0) {
+    if (tagsRule.words.length > 0) {
       addClass(document.querySelectorAll(".filter-tag"), "filter-filled");
       text(
         document.querySelectorAll(".filter.filter-tag .search-words"),
-        tag_search_str.slice(0, -2),
+        tagSearchStr.slice(0, -2),
       );
     } else {
       text(
         document.querySelectorAll(".filter.filter-tag .search-words"),
-        str_tags_widget_label,
+        strTagsWidgetLabel,
       );
     }
 
@@ -337,41 +337,41 @@ ready(function () {
       },
     );
 
-    PS_params["tags"] = tags_rule.words.length > 0 ? tags_rule.words : "";
-    PS_params["tags_mode"] = tags_rule.mode;
+    psParams["tags"] = tagsRule.words.length > 0 ? tagsRule.words : "";
+    psParams["tags_mode"] = tagsRule.mode;
 
-    empty_filters_list.push(PS_params["tags"]);
+    emptyFiltersList.push(psParams["tags"]);
   }
 
   // Setup Date post filter
-  const date_posted_rule = global_params.fields.date_posted;
-  if (date_posted_rule) {
+  const datePostedRule = globalParams.fields.date_posted;
+  if (datePostedRule) {
     css(document.querySelectorAll(".filter-date_posted"), "display", "flex");
     setChecked(
       document.querySelectorAll(".filter-manager-controller.date_posted"),
       true,
     );
 
-    if (date_posted_rule.preset !== "") {
+    if (datePostedRule.preset !== "") {
       // If filter is used and not empty check preset date option
       setChecked(
-        document.querySelectorAll("#date_posted-" + date_posted_rule.preset),
+        document.querySelectorAll("#date_posted-" + datePostedRule.preset),
         true,
       );
-      // `label#" + date_posted_rule.preset` is an ID selector fragment,
+      // `label#" + datePostedRule.preset` is an ID selector fragment,
       // and preset can be a bare digit-leading value too (e.g. "30d",
       // not just the "custom" sub-case below) -- same escapeId() fix as
       // that branch, same reason.
-      let date_posted_str = textOf(
+      let datePostedStr = textOf(
         document.querySelectorAll(
-          `.date_posted-option label#${escapeId(date_posted_rule.preset)} .date-period`,
+          `.date_posted-option label#${escapeId(datePostedRule.preset)} .date-period`,
         ),
       );
 
       // if option is custom check custom dates
-      if ("custom" === date_posted_rule.preset) {
-        date_posted_str = "";
-        const customArray = date_posted_rule.custom;
+      if ("custom" === datePostedRule.preset) {
+        datePostedStr = "";
+        const customArray = datePostedRule.custom;
 
         // Was `$(customArray).each(function (index) { ... this.substring(1,
         // $(this).length) ... })`. Same iteration, same values: jQuery
@@ -408,14 +408,14 @@ ready(function () {
           // throws a SyntaxError under native querySelectorAll the
           // first time a custom date filter is active, a real bug
           // Sizzle tolerated silently.
-          date_posted_str += textOf(
+          datePostedStr += textOf(
             document.querySelectorAll(
               `.date_posted-option label#${escapeId(customValue)} .date-period`,
             ),
           );
 
           if (customArray.length > 1 && index !== customArray.length - 1) {
-            date_posted_str += ", ";
+            datePostedStr += ", ";
           }
         });
 
@@ -431,7 +431,7 @@ ready(function () {
       );
       text(
         document.querySelectorAll(".filter.filter-date_posted .search-words"),
-        date_posted_str,
+        datePostedStr,
       );
     }
 
@@ -539,47 +539,47 @@ ready(function () {
       );
     }
 
-    PS_params["date_posted_preset"] = date_posted_rule.preset;
+    psParams["date_posted_preset"] = datePostedRule.preset;
     // Was `custom != ""`, which compared the array against a string:
     // `[].toString()` is `""`, so it read as an emptiness test by way of
     // loose equality. `length > 0` states that directly. The one input
     // the two disagree on is `[""]`, which no producer can build (every
     // entry carries a one-character type prefix).
-    PS_params["date_posted_custom"] =
-      date_posted_rule.custom.length > 0 ? date_posted_rule.custom : "";
+    psParams["date_posted_custom"] =
+      datePostedRule.custom.length > 0 ? datePostedRule.custom : "";
 
-    empty_filters_list.push(PS_params["date_posted_preset"]);
-    empty_filters_list.push(PS_params["date_posted_custom"]);
+    emptyFiltersList.push(psParams["date_posted_preset"]);
+    emptyFiltersList.push(psParams["date_posted_custom"]);
   }
 
   // Setup Date creation filter
 
-  const date_created_rule = global_params.fields.date_created;
-  if (date_created_rule) {
+  const dateCreatedRule = globalParams.fields.date_created;
+  if (dateCreatedRule) {
     css(document.querySelectorAll(".filter-date_created"), "display", "flex");
     setChecked(
       document.querySelectorAll(".filter-manager-controller.date_created"),
       true,
     );
 
-    if (date_created_rule.preset !== "") {
+    if (dateCreatedRule.preset !== "") {
       // If filter is used and not empty check preset date option
       setChecked(
-        document.querySelectorAll("#date_created-" + date_created_rule.preset),
+        document.querySelectorAll("#date_created-" + dateCreatedRule.preset),
         true,
       );
       // Same digit-leading-preset bug as the date_posted block above
       // (e.g. preset "30d"), same escapeId() fix.
-      let date_created_str = textOf(
+      let dateCreatedStr = textOf(
         document.querySelectorAll(
-          `.date_created-option label#${escapeId(date_created_rule.preset)} .date-period`,
+          `.date_created-option label#${escapeId(dateCreatedRule.preset)} .date-period`,
         ),
       );
 
       // if option is custom check custom dates
-      if ("custom" === date_created_rule.preset) {
-        date_created_str = "";
-        const customArray = date_created_rule.custom;
+      if ("custom" === dateCreatedRule.preset) {
+        dateCreatedStr = "";
+        const customArray = dateCreatedRule.custom;
 
         // Same jQuery-set rewrite as the date_posted block above.
         customArray.forEach((customEntry, index) => {
@@ -603,14 +603,14 @@ ready(function () {
 
           // Same digit-leading-ID bug as the date_posted block above,
           // same fix.
-          date_created_str += textOf(
+          dateCreatedStr += textOf(
             document.querySelectorAll(
               `.date_created-option label#${escapeId(customValue)} .date-period`,
             ),
           );
 
           if (customArray.length > 1 && index !== customArray.length - 1) {
-            date_created_str += ", ";
+            dateCreatedStr += ", ";
           }
         });
 
@@ -626,7 +626,7 @@ ready(function () {
       );
       text(
         document.querySelectorAll(".filter.filter-date_created .search-words"),
-        date_created_str,
+        dateCreatedStr,
       );
     }
 
@@ -735,36 +735,36 @@ ready(function () {
       );
     }
 
-    PS_params["date_created_preset"] = date_created_rule.preset;
+    psParams["date_created_preset"] = dateCreatedRule.preset;
     // Same `custom != ""` rewrite as the date_posted block above.
-    PS_params["date_created_custom"] =
-      date_created_rule.custom.length > 0 ? date_created_rule.custom : "";
+    psParams["date_created_custom"] =
+      dateCreatedRule.custom.length > 0 ? dateCreatedRule.custom : "";
 
-    empty_filters_list.push(PS_params["date_created_preset"]);
-    empty_filters_list.push(PS_params["date_created_custom"]);
+    emptyFiltersList.push(psParams["date_created_preset"]);
+    emptyFiltersList.push(psParams["date_created_custom"]);
   }
 
   // Setup album filter
-  const cat_rule = global_params.fields.cat;
-  if (cat_rule) {
+  const catRule = globalParams.fields.cat;
+  if (catRule) {
     css(document.querySelectorAll(".filter-album"), "display", "flex");
     setChecked(
       document.querySelectorAll(".filter-manager-controller.album"),
       true,
     );
 
-    let album_widget_value = "";
-    cat_rule.words.forEach((cat_id) => {
-      display_related_category(cat_id, fullname_of_cat[cat_id]);
-      album_widget_value += (fullname_of_cat[cat_id] ?? "") + ", ";
+    let albumWidgetValue = "";
+    catRule.words.forEach((cat_id) => {
+      displayRelatedCategory(cat_id, fullnameOfCat[cat_id]);
+      albumWidgetValue += (fullnameOfCat[cat_id] ?? "") + ", ";
     });
 
     // Load Album Selector
     ab = new AlbumSelector({
-      selectedCategoriesIds: cat_rule.words,
-      selectAlbum: add_related_category,
-      removeSelectedAlbum: remove_related_category,
-      modalTitle: str_search_in_ab,
+      selectedCategoriesIds: catRule.words,
+      selectAlbum: addRelatedCategory,
+      removeSelectedAlbum: removeRelatedCategory,
+      modalTitle: strSearchInAb,
     });
 
     on(document.querySelectorAll(".add-album-button"), "click", function () {
@@ -778,25 +778,25 @@ ready(function () {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real click inside the document always targets an Element (or null), never a bare EventTarget with no Element interface.
         const target = e.target as Element;
         if (target.classList.contains("remove-item")) {
-          ab.remove_selected_album(target.id);
+          ab.removeSelectedAlbum(target.id);
         }
       },
     );
 
-    if (cat_rule.words.length > 0) {
+    if (catRule.words.length > 0) {
       addClass(document.querySelectorAll(".filter-album"), "filter-filled");
       html(
         document.querySelectorAll(".filter-album .search-words"),
-        album_widget_value.slice(0, -2),
+        albumWidgetValue.slice(0, -2),
       );
     } else {
       html(
         document.querySelectorAll(".filter-album .search-words"),
-        str_album_widget_label,
+        strAlbumWidgetLabel,
       );
     }
 
-    if (cat_rule.sub_inc) {
+    if (catRule.sub_inc) {
       setChecked(document.querySelectorAll("#search-sub-cats"), true);
     }
 
@@ -810,47 +810,47 @@ ready(function () {
       },
     );
 
-    PS_params["categories"] = cat_rule.words.length > 0 ? cat_rule.words : "";
-    PS_params["categories_withsubs"] = cat_rule.sub_inc;
+    psParams["categories"] = catRule.words.length > 0 ? catRule.words : "";
+    psParams["categories_withsubs"] = catRule.sub_inc;
 
-    empty_filters_list.push(PS_params["categories"]);
+    emptyFiltersList.push(psParams["categories"]);
   }
 
   // Setup author filter
-  const author_rule = global_params.fields.author;
+  const authorRule = globalParams.fields.author;
   document.querySelectorAll<HTMLSelectElement>("#authors").forEach((el) => {
     createSelectize(el, {
       plugins: ["remove_button"],
       maxOptions: el.querySelectorAll("option").length,
-      items: author_rule?.words,
+      items: authorRule?.words,
     });
-    if (author_rule) {
+    if (authorRule) {
       css(document.querySelectorAll(".filter-authors"), "display", "flex");
       setChecked(
         document.querySelectorAll(".filter-manager-controller.author"),
         true,
       );
 
-      let author_search_str = "";
+      let authorSearchStr = "";
       const authorsSelectize = getSelectizeInstance(el)!;
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- #authors is a real <select multiple> (search_filters.inc.latte), so getValue() always returns an array here.
       (authorsSelectize.getValue() as (string | number)[]).forEach((id) => {
-        author_search_str +=
+        authorSearchStr +=
           (authorsSelectize.getItem(id)?.textContent ?? "")
             .replace(/\(\d+ \w+\)×/, "")
             .trim() + ", ";
       });
 
-      if (author_rule.words.length > 0) {
+      if (authorRule.words.length > 0) {
         addClass(document.querySelectorAll(".filter-authors"), "filter-filled");
         text(
           document.querySelectorAll(".filter.filter-authors .search-words"),
-          author_search_str.slice(0, -2),
+          authorSearchStr.slice(0, -2),
         );
       } else {
         text(
           document.querySelectorAll(".filter.filter-authors .search-words"),
-          str_author_widget_label,
+          strAuthorWidgetLabel,
         );
       }
 
@@ -862,45 +862,44 @@ ready(function () {
         },
       );
 
-      PS_params["authors"] =
-        author_rule.words.length > 0 ? author_rule.words : "";
+      psParams["authors"] = authorRule.words.length > 0 ? authorRule.words : "";
 
-      empty_filters_list.push(PS_params["authors"]);
+      emptyFiltersList.push(psParams["authors"]);
     }
   });
 
   // Setup added_by filter
-  const added_by_ids = global_params.fields.added_by;
-  if (added_by_ids) {
+  const addedByIds = globalParams.fields.added_by;
+  if (addedByIds) {
     css(document.querySelectorAll(".filter-added_by"), "display", "flex");
     setChecked(
       document.querySelectorAll(".filter-manager-controller.added_by"),
       true,
     );
 
-    if (added_by_ids.length > 0) {
+    if (addedByIds.length > 0) {
       addClass(document.querySelectorAll(".filter-added_by"), "filter-filled");
 
-      const added_by_names: string[] = [];
+      const addedByNames: string[] = [];
 
       document.querySelectorAll(".added_by-option").forEach((el) => {
         const input = find(el, "input");
-        const added_by_id = parseInt(String(attrOf(input, "name")));
+        const addedById = parseInt(String(attrOf(input, "name")));
 
-        if (added_by_ids.includes(added_by_id)) {
+        if (addedByIds.includes(addedById)) {
           setChecked(input, true);
-          added_by_names.push(textOf(find(el, ".added_by-name")));
+          addedByNames.push(textOf(find(el, ".added_by-name")));
         }
       });
 
       text(
         document.querySelectorAll(".filter.filter-added_by .search-words"),
-        added_by_names.join(", "),
+        addedByNames.join(", "),
       );
     } else {
       text(
         document.querySelectorAll(".filter.filter-added_by .search-words"),
-        str_added_by_widget_label,
+        strAddedByWidgetLabel,
       );
     }
 
@@ -915,43 +914,43 @@ ready(function () {
       },
     );
 
-    PS_params["added_by"] = added_by_ids.length > 0 ? added_by_ids : "";
+    psParams["added_by"] = addedByIds.length > 0 ? addedByIds : "";
 
-    empty_filters_list.push(PS_params["added_by"]);
+    emptyFiltersList.push(psParams["added_by"]);
   }
 
   // Setup filetypes filter
-  const filetypes_filter = global_params.fields.filetypes;
-  if (filetypes_filter) {
+  const filetypesFilter = globalParams.fields.filetypes;
+  if (filetypesFilter) {
     css(document.querySelectorAll(".filter-filetypes"), "display", "flex");
     setChecked(
       document.querySelectorAll(".filter-manager-controller.filetypes"),
       true,
     );
 
-    let filetypes_search_str = "";
-    filetypes_filter.forEach((ft) => {
-      filetypes_search_str += ft + ", ";
+    let filetypesSearchStr = "";
+    filetypesFilter.forEach((ft) => {
+      filetypesSearchStr += ft + ", ";
     });
 
-    if (filetypes_filter.length > 0) {
+    if (filetypesFilter.length > 0) {
       addClass(document.querySelectorAll(".filter-filetypes"), "filter-filled");
       text(
         document.querySelectorAll(".filter.filter-filetypes .search-words"),
-        filetypes_search_str.toUpperCase().slice(0, -2),
+        filetypesSearchStr.toUpperCase().slice(0, -2),
       );
 
       // `?? ""` for a name-less input: no filter list ever holds the
       // empty string, so it misses exactly as the old `undefined` did.
       document.querySelectorAll(".filetypes-option input").forEach((el) => {
-        if (filetypes_filter.includes(attrOf(el, "name") ?? "")) {
+        if (filetypesFilter.includes(attrOf(el, "name") ?? "")) {
           setChecked(el, true);
         }
       });
     } else {
       text(
         document.querySelectorAll(".filter.filter-filetypes .search-words"),
-        str_filetypes_widget_label,
+        strFiletypesWidgetLabel,
       );
     }
 
@@ -968,42 +967,41 @@ ready(function () {
       },
     );
 
-    PS_params["filetypes"] =
-      filetypes_filter.length > 0 ? filetypes_filter : "";
+    psParams["filetypes"] = filetypesFilter.length > 0 ? filetypesFilter : "";
 
-    empty_filters_list.push(PS_params["filetypes"]);
+    emptyFiltersList.push(psParams["filetypes"]);
   }
 
   // Setup Ratio filter
-  const ratios_filter = global_params.fields.ratios;
-  if (ratios_filter) {
+  const ratiosFilter = globalParams.fields.ratios;
+  if (ratiosFilter) {
     css(document.querySelectorAll(".filter-ratios"), "display", "flex");
     setChecked(
       document.querySelectorAll(".filter-manager-controller.ratios"),
       true,
     );
 
-    let ratios_search_str = "";
-    ratios_filter.forEach((ft) => {
-      ratios_search_str += (str_ratios_label[ft] ?? "") + ", ";
+    let ratiosSearchStr = "";
+    ratiosFilter.forEach((ft) => {
+      ratiosSearchStr += (strRatiosLabel[ft] ?? "") + ", ";
     });
 
-    if (ratios_filter.length > 0) {
+    if (ratiosFilter.length > 0) {
       addClass(document.querySelectorAll(".filter-ratios"), "filter-filled");
       text(
         document.querySelectorAll(".filter.filter-ratios .search-words"),
-        ratios_search_str.slice(0, -2),
+        ratiosSearchStr.slice(0, -2),
       );
 
       document.querySelectorAll(".ratios-option input").forEach((el) => {
-        if (ratios_filter.includes(attrOf(el, "name") ?? "")) {
+        if (ratiosFilter.includes(attrOf(el, "name") ?? "")) {
           setChecked(el, true);
         }
       });
     } else {
       text(
         document.querySelectorAll(".filter.filter-ratios .search-words"),
-        str_ratio_widget_label,
+        strRatioWidgetLabel,
       );
     }
 
@@ -1018,62 +1016,62 @@ ready(function () {
       },
     );
 
-    PS_params["ratios"] = ratios_filter.length > 0 ? ratios_filter : "";
+    psParams["ratios"] = ratiosFilter.length > 0 ? ratiosFilter : "";
 
-    empty_filters_list.push(PS_params["ratios"]);
+    emptyFiltersList.push(psParams["ratios"]);
   }
 
   // Setup rating filter
-  const ratings_filter = global_params.fields.ratings;
-  if (ratings_filter && show_filter_ratings) {
+  const ratingsFilter = globalParams.fields.ratings;
+  if (ratingsFilter && showFilterRatings) {
     css(document.querySelectorAll(".filter-ratings"), "display", "flex");
     setChecked(
       document.querySelectorAll(".filter-manager-controller.ratings"),
       true,
     );
 
-    let ratings_search_str = "";
+    let ratingsSearchStr = "";
     // Entries are strings, not numbers (`SearchRules::toArray()` emits
     // `list<string>`, and the API rejects a non-string entry with a
     // 422) -- the `0 ==` test and the `- 1` below were both running on
     // JS's own coercion, which `Number()` now states outright. The
     // label itself keeps using the raw entry, exactly as before.
-    ratings_filter.forEach((rating, i) => {
+    ratingsFilter.forEach((rating, i) => {
       if (Number(rating) === 0) {
-        ratings_search_str += str_no_rating;
-        if (ratings_filter.length > 1) {
-          ratings_search_str += ", ";
+        ratingsSearchStr += strNoRating;
+        if (ratingsFilter.length > 1) {
+          ratingsSearchStr += ", ";
         }
       } else {
-        const str_between = str_between_rating.split("%d");
-        ratings_search_str +=
-          str_between[0]! +
+        const strBetween = strBetweenRating.split("%d");
+        ratingsSearchStr +=
+          strBetween[0]! +
           String(Number(rating) - 1) +
-          str_between[1]! +
+          strBetween[1]! +
           rating +
-          str_between[2]!;
-        if (ratings_filter.length - 1 !== i) {
-          ratings_search_str += ", ";
+          strBetween[2]!;
+        if (ratingsFilter.length - 1 !== i) {
+          ratingsSearchStr += ", ";
         }
       }
     });
 
-    if (ratings_filter.length > 0) {
+    if (ratingsFilter.length > 0) {
       addClass(document.querySelectorAll(".filter-ratings"), "filter-filled");
       text(
         document.querySelectorAll(".filter.filter-ratings .search-words"),
-        ratings_search_str,
+        ratingsSearchStr,
       );
 
       document.querySelectorAll(".ratings-option input").forEach((el) => {
-        if (ratings_filter.includes(attrOf(el, "name") ?? "")) {
+        if (ratingsFilter.includes(attrOf(el, "name") ?? "")) {
           setChecked(el, true);
         }
       });
     } else {
       text(
         document.querySelectorAll(".filter.filter-ratings .search-words"),
-        str_rating_widget_label,
+        strRatingWidgetLabel,
       );
     }
 
@@ -1088,9 +1086,9 @@ ready(function () {
       },
     );
 
-    PS_params["ratings"] = ratings_filter.length > 0 ? ratings_filter : "";
+    psParams["ratings"] = ratingsFilter.length > 0 ? ratingsFilter : "";
 
-    empty_filters_list.push(PS_params["ratings"]);
+    emptyFiltersList.push(psParams["ratings"]);
   }
 
   // Real `pwgDoubleSlider({ stop })` callback (`themes/admin/default/js/
@@ -1117,8 +1115,8 @@ ready(function () {
 
   // Setup filesize filter
   if (
-    global_params.fields.filesize_min != null &&
-    global_params.fields.filesize_max != null
+    globalParams.fields.filesize_min != null &&
+    globalParams.fields.filesize_max != null
   ) {
     css(document.querySelectorAll(".filter-filesize"), "display", "flex");
     setChecked(
@@ -1144,7 +1142,7 @@ ready(function () {
       // $filesizeMin` & co). `Number()` is what `> 0` was already doing
       // to a string operand -- a relational comparison against a number
       // coerces via ToNumber -- just written out.
-      Number(global_params.fields.filesize_max) > 0
+      Number(globalParams.fields.filesize_max) > 0
     ) {
       addClass(document.querySelectorAll(".filter-filesize"), "filter-filled");
       html(
@@ -1158,7 +1156,7 @@ ready(function () {
     } else {
       text(
         document.querySelectorAll(".filter.filter-filesize .search-words"),
-        str_filesize_widget_label,
+        strFilesizeWidgetLabel,
       );
     }
 
@@ -1190,23 +1188,23 @@ ready(function () {
           );
           text(
             document.querySelectorAll(".filter.filter-filesize .search-words"),
-            str_filesize_widget_label,
+            strFilesizeWidgetLabel,
           );
         }
       },
     );
 
-    PS_params["filesize_min"] = global_params.fields.filesize_min ?? "";
-    PS_params["filesize_max"] = global_params.fields.filesize_max ?? "";
+    psParams["filesize_min"] = globalParams.fields.filesize_min ?? "";
+    psParams["filesize_max"] = globalParams.fields.filesize_max ?? "";
 
-    empty_filters_list.push(PS_params["filesize_min"]);
-    empty_filters_list.push(PS_params["filesize_max"]);
+    emptyFiltersList.push(psParams["filesize_min"]);
+    emptyFiltersList.push(psParams["filesize_max"]);
   }
 
   // Setup Height filter
   if (
-    global_params.fields.height_min != null &&
-    global_params.fields.height_max != null
+    globalParams.fields.height_min != null &&
+    globalParams.fields.height_max != null
   ) {
     css(document.querySelectorAll(".filter-height"), "display", "flex");
     setChecked(
@@ -1228,8 +1226,8 @@ ready(function () {
     );
 
     if (
-      Number(global_params.fields.height_min) > 0 &&
-      Number(global_params.fields.height_max) > 0
+      Number(globalParams.fields.height_min) > 0 &&
+      Number(globalParams.fields.height_max) > 0
     ) {
       addClass(document.querySelectorAll(".filter-height"), "filter-filled");
       html(
@@ -1243,7 +1241,7 @@ ready(function () {
     } else {
       text(
         document.querySelectorAll(".filter.filter-height .search-words"),
-        str_height_widget_label,
+        strHeightWidgetLabel,
       );
     }
 
@@ -1266,23 +1264,23 @@ ready(function () {
           );
           text(
             document.querySelectorAll(".filter.filter-height .search-words"),
-            str_height_widget_label,
+            strHeightWidgetLabel,
           );
         }
       },
     );
 
-    PS_params["height_min"] = global_params.fields.height_min ?? "";
-    PS_params["height_max"] = global_params.fields.height_max ?? "";
+    psParams["height_min"] = globalParams.fields.height_min ?? "";
+    psParams["height_max"] = globalParams.fields.height_max ?? "";
 
-    empty_filters_list.push(PS_params["height_min"]);
-    empty_filters_list.push(PS_params["height_max"]);
+    emptyFiltersList.push(psParams["height_min"]);
+    emptyFiltersList.push(psParams["height_max"]);
   }
 
   // Setup Width filter
   if (
-    global_params.fields.width_min != null &&
-    global_params.fields.width_max != null
+    globalParams.fields.width_min != null &&
+    globalParams.fields.width_max != null
   ) {
     css(document.querySelectorAll(".filter-width"), "display", "flex");
     setChecked(
@@ -1304,8 +1302,8 @@ ready(function () {
     );
 
     if (
-      Number(global_params.fields.width_min) > 0 &&
-      Number(global_params.fields.width_max) > 0
+      Number(globalParams.fields.width_min) > 0 &&
+      Number(globalParams.fields.width_max) > 0
     ) {
       addClass(document.querySelectorAll(".filter-width"), "filter-filled");
       html(
@@ -1319,7 +1317,7 @@ ready(function () {
     } else {
       text(
         document.querySelectorAll(".filter.filter-width .search-words"),
-        str_width_widget_label,
+        strWidthWidgetLabel,
       );
     }
 
@@ -1342,41 +1340,41 @@ ready(function () {
           );
           text(
             document.querySelectorAll(".filter.filter-width .search-words"),
-            str_width_widget_label,
+            strWidthWidgetLabel,
           );
         }
       },
     );
 
-    PS_params["width_min"] = global_params.fields.width_min ?? "";
-    PS_params["width_max"] = global_params.fields.width_max ?? "";
+    psParams["width_min"] = globalParams.fields.width_min ?? "";
+    psParams["width_max"] = globalParams.fields.width_max ?? "";
 
-    empty_filters_list.push(PS_params["width_min"]);
-    empty_filters_list.push(PS_params["width_max"]);
+    emptyFiltersList.push(psParams["width_min"]);
+    emptyFiltersList.push(psParams["width_max"]);
   }
 
   // Setup Expert filter
-  const expert_rule = global_params.fields.expert;
-  if (expert_rule) {
+  const expertRule = globalParams.fields.expert;
+  if (expertRule) {
     css(document.querySelectorAll(".filter-expert"), "display", "flex");
     setChecked(
       document.querySelectorAll(".filter-manager-controller.expert"),
       true,
     );
 
-    const expert_search_str = expert_rule.string;
-    setVal(document.querySelectorAll("#expert-search"), expert_search_str);
+    const expertSearchStr = expertRule.string;
+    setVal(document.querySelectorAll("#expert-search"), expertSearchStr);
 
-    if (expert_search_str.length > 0) {
+    if (expertSearchStr.length > 0) {
       addClass(document.querySelectorAll(".filter-expert"), "filter-filled");
       text(
         document.querySelectorAll(".filter.filter-expert .search-words"),
-        expert_search_str,
+        expertSearchStr,
       );
     } else {
       text(
         document.querySelectorAll(".filter.filter-expert .search-words"),
-        str_expert_widget_label,
+        strExpertWidgetLabel,
       );
     }
 
@@ -1388,51 +1386,51 @@ ready(function () {
       },
     );
 
-    PS_params["expert"] = expert_search_str.length > 0 ? expert_search_str : "";
+    psParams["expert"] = expertSearchStr.length > 0 ? expertSearchStr : "";
 
-    empty_filters_list.push(PS_params["expert"]);
+    emptyFiltersList.push(psParams["expert"]);
   }
 
-  if (filters_to_remove.length > 0) {
-    void performSearch(PS_params, true);
+  if (filtersToRemove.length > 0) {
+    void performSearch(psParams, true);
   }
 
   // Adapt no result message
   if (document.querySelectorAll(".filter-filled").length === 0) {
     html(
       document.querySelectorAll(".mcs-no-result .text .top"),
-      str_empty_search_top_alt,
+      strEmptySearchTopAlt,
     );
     html(
       document.querySelectorAll(".mcs-no-result .text .bot"),
-      str_empty_search_bot_alt,
+      strEmptySearchBotAlt,
     );
   }
 
   if (
-    !empty_filters_list.every(
+    !emptyFiltersList.every(
       (param) => param === "" || param === null || typeof param === "undefined",
     )
   ) {
     addClass(document.querySelectorAll(".clear-all"), "clickable");
     on(document.querySelectorAll(".clear-all.clickable"), "click", function () {
-      const exclude_params = [
-        "search_id",
+      const excludeParams = [
+        "searchId",
         "allwords_mode",
         "allwords_fields",
         "tags_mode",
         "categories_withsubs",
       ];
-      for (const key in PS_params) {
-        if (!exclude_params.includes(key)) {
+      for (const key in psParams) {
+        if (!excludeParams.includes(key)) {
           if ("date_posted_custom" === key || "date_created_custom" === key) {
-            PS_params[key] = [];
+            psParams[key] = [];
           } else {
-            PS_params[key] = "";
+            psParams[key] = "";
           }
         }
       }
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
     });
   }
 
@@ -1531,7 +1529,7 @@ ready(function () {
           }
         });
       // Set second param to true to trigger reload
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
     },
   );
 
@@ -1614,22 +1612,19 @@ ready(function () {
             "show-filter-dropdown",
           );
 
-          PS_params["allwords"] = val(
-            document.querySelectorAll("#word-search"),
-          );
-          PS_params["allwords_mode"] = attrOf(
+          psParams["allwords"] = val(document.querySelectorAll("#word-search"));
+          psParams["allwords_mode"] = attrOf(
             document.querySelectorAll(".word-search-options input:checked"),
             "value",
           );
 
-          const new_fields: (string | undefined)[] = [];
+          const newFields: (string | undefined)[] = [];
           document
             .querySelectorAll(".filter-word-form .search-params input:checked")
             .forEach((el) => {
-              new_fields.push(attrOf(el, "name") ?? undefined);
+              newFields.push(attrOf(el, "name") ?? undefined);
             });
-          PS_params["allwords_fields"] =
-            new_fields.length > 0 ? new_fields : "";
+          psParams["allwords_fields"] = newFields.length > 0 ? newFields : "";
         }
       },
     );
@@ -1639,7 +1634,7 @@ ready(function () {
     "click",
     function () {
       trigger(document.querySelectorAll(".filter-word"), "click");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
     },
   );
   on(
@@ -1647,7 +1642,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("word", "del");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
       if (
         !hasClass(document.querySelectorAll(".filter-word"), "filter-filled")
       ) {
@@ -1686,9 +1681,9 @@ ready(function () {
             const tagValue = getSelectizeInstance(
               document.querySelector<HTMLSelectElement>("#tag-search")!,
             )!.getValue() as (string | number)[];
-            PS_params["tags"] = tagValue.length > 0 ? tagValue : "";
+            psParams["tags"] = tagValue.length > 0 ? tagValue : "";
           }
-          PS_params["tags_mode"] = val(
+          psParams["tags_mode"] = val(
             document.querySelectorAll(
               ".filter-tag-form .search-params input:checked",
             ),
@@ -1702,7 +1697,7 @@ ready(function () {
     "click",
     function () {
       trigger(document.querySelectorAll(".filter-tag"), "click");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
     },
   );
   on(
@@ -1710,7 +1705,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("tag", "del");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
       if (
         !hasClass(document.querySelectorAll(".filter-tag"), "filter-filled")
       ) {
@@ -1754,7 +1749,7 @@ ready(function () {
               ),
             );
 
-            PS_params["date_posted_preset"] = presetValue ?? "";
+            psParams["date_posted_preset"] = presetValue ?? "";
 
             if ("custom" === presetValue) {
               const customDates: (string | number | string[] | undefined)[] =
@@ -1768,7 +1763,7 @@ ready(function () {
                   customDates.push(val([el]));
                 });
 
-              PS_params["date_posted_custom"] =
+              psParams["date_posted_custom"] =
                 customDates.length > 0 ? customDates : "";
             }
           }
@@ -1782,7 +1777,7 @@ ready(function () {
     "click",
     function () {
       trigger(document.querySelectorAll(".filter-date_posted"), "click");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
     },
   );
 
@@ -1791,7 +1786,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("date_posted", "del");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
       if (
         !hasClass(
           document.querySelectorAll(".filter-date_posted"),
@@ -1838,7 +1833,7 @@ ready(function () {
               ),
             );
 
-            PS_params["date_created_preset"] = presetValue ?? "";
+            psParams["date_created_preset"] = presetValue ?? "";
 
             if ("custom" === presetValue) {
               const customDates: (string | number | string[] | undefined)[] =
@@ -1852,7 +1847,7 @@ ready(function () {
                   customDates.push(val([el]));
                 });
 
-              PS_params["date_created_custom"] =
+              psParams["date_created_custom"] =
                 customDates.length > 0 ? customDates : "";
             }
           }
@@ -1866,7 +1861,7 @@ ready(function () {
     "click",
     function () {
       trigger(document.querySelectorAll(".filter-date_created"), "click");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
     },
   );
 
@@ -1875,7 +1870,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("date_created", "del");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
       if (
         !hasClass(
           document.querySelectorAll(".filter-date_created"),
@@ -1912,9 +1907,9 @@ ready(function () {
             document.querySelectorAll(".filter-album"),
             "show-filter-dropdown",
           );
-          PS_params["categories"] =
-            ab.get_selected_albums().length > 0 ? ab.get_selected_albums() : "";
-          PS_params["categories_withsubs"] =
+          psParams["categories"] =
+            ab.getSelectedAlbums().length > 0 ? ab.getSelectedAlbums() : "";
+          psParams["categories_withsubs"] =
             document.querySelectorAll("input[name='search-sub-cats']:checked")
               .length !== 0;
         }
@@ -1926,7 +1921,7 @@ ready(function () {
     "click",
     function () {
       trigger(document.querySelectorAll(".filter-album"), "click");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
     },
   );
   on(
@@ -1934,7 +1929,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("album", "del");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
       if (
         !hasClass(document.querySelectorAll(".filter-album"), "filter-filled")
       ) {
@@ -1977,7 +1972,7 @@ ready(function () {
               const authorValue = getSelectizeInstance(
                 document.querySelector<HTMLSelectElement>("#authors")!,
               )!.getValue() as (string | number)[];
-              PS_params["authors"] = authorValue.length > 0 ? authorValue : "";
+              psParams["authors"] = authorValue.length > 0 ? authorValue : "";
             }
           }
         },
@@ -1989,7 +1984,7 @@ ready(function () {
     "click",
     function () {
       trigger(document.querySelectorAll(".filter-authors"), "click");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
     },
   );
   on(
@@ -1997,7 +1992,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("authors", "del");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
       if (
         !hasClass(document.querySelectorAll(".filter-authors"), "filter-filled")
       ) {
@@ -2035,15 +2030,14 @@ ready(function () {
               "show-filter-dropdown",
             );
 
-            const added_by_array: (string | undefined)[] = [];
+            const addedByArray: (string | undefined)[] = [];
             document
               .querySelectorAll(".added_by-option input:checked")
               .forEach((el) => {
-                added_by_array.push(attrOf(el, "name") ?? undefined);
+                addedByArray.push(attrOf(el, "name") ?? undefined);
               });
 
-            PS_params["added_by"] =
-              added_by_array.length > 0 ? added_by_array : "";
+            psParams["added_by"] = addedByArray.length > 0 ? addedByArray : "";
           }
         },
       );
@@ -2054,7 +2048,7 @@ ready(function () {
     "click",
     function () {
       trigger(document.querySelectorAll(".filter-added_by"), "click");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
     },
   );
   on(
@@ -2062,7 +2056,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("added_by", "del");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
       if (
         !hasClass(
           document.querySelectorAll(".filter-added_by"),
@@ -2103,15 +2097,15 @@ ready(function () {
               "show-filter-dropdown",
             );
 
-            const filetypes_array: (string | undefined)[] = [];
+            const filetypesArray: (string | undefined)[] = [];
             document
               .querySelectorAll(".filetypes-option input:checked")
               .forEach((el) => {
-                filetypes_array.push(attrOf(el, "name") ?? undefined);
+                filetypesArray.push(attrOf(el, "name") ?? undefined);
               });
 
-            PS_params["filetypes"] =
-              filetypes_array.length > 0 ? filetypes_array : "";
+            psParams["filetypes"] =
+              filetypesArray.length > 0 ? filetypesArray : "";
           }
         },
       );
@@ -2123,7 +2117,7 @@ ready(function () {
     "click",
     function () {
       trigger(document.querySelectorAll(".filter-filetypes"), "click");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
     },
   );
   on(
@@ -2131,7 +2125,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("filetypes", "del");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
       if (
         !hasClass(
           document.querySelectorAll(".filter-filetypes"),
@@ -2169,14 +2163,14 @@ ready(function () {
             "show-filter-dropdown",
           );
 
-          const ratios_array: (string | undefined)[] = [];
+          const ratiosArray: (string | undefined)[] = [];
           document
             .querySelectorAll(".ratios-option input:checked")
             .forEach((el) => {
-              ratios_array.push(attrOf(el, "name") ?? undefined);
+              ratiosArray.push(attrOf(el, "name") ?? undefined);
             });
 
-          PS_params["ratios"] = ratios_array.length > 0 ? ratios_array : "";
+          psParams["ratios"] = ratiosArray.length > 0 ? ratiosArray : "";
         }
       },
     );
@@ -2187,7 +2181,7 @@ ready(function () {
     "click",
     function () {
       trigger(document.querySelectorAll(".filter-ratios"), "click");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
     },
   );
   on(
@@ -2195,7 +2189,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("ratios", "del");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
       if (
         !hasClass(document.querySelectorAll(".filter-ratios"), "filter-filled")
       ) {
@@ -2232,16 +2226,15 @@ ready(function () {
               document.querySelectorAll(".filter-ratings"),
               "show-filter-dropdown",
             );
-            const ratings_array: (string | undefined)[] = [];
+            const ratingsArray: (string | undefined)[] = [];
 
             document
               .querySelectorAll(".ratings-option input:checked")
               .forEach((el) => {
-                ratings_array.push(attrOf(el, "name") ?? undefined);
+                ratingsArray.push(attrOf(el, "name") ?? undefined);
               });
 
-            PS_params["ratings"] =
-              ratings_array.length > 0 ? ratings_array : "";
+            psParams["ratings"] = ratingsArray.length > 0 ? ratingsArray : "";
           }
         },
       );
@@ -2253,7 +2246,7 @@ ready(function () {
     "click",
     function () {
       trigger(document.querySelectorAll(".filter-ratings"), "click");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
     },
   );
   on(
@@ -2261,7 +2254,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("ratings", "del");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
       if (
         !hasClass(document.querySelectorAll(".filter-ratings"), "filter-filled")
       ) {
@@ -2307,22 +2300,22 @@ ready(function () {
     document.querySelectorAll(".filter-filesize .filter-validate"),
     "click",
     function () {
-      const filesize_min = Math.floor(
+      const filesizeMin = Math.floor(
         Number(
           val(document.querySelectorAll("input[name=filter_filesize_min]")),
         ) * 1024,
       );
-      const filesize_max = Math.ceil(
+      const filesizeMax = Math.ceil(
         Number(
           val(document.querySelectorAll("input[name=filter_filesize_max]")),
         ) * 1024,
       );
 
-      PS_params["filesize_min"] = filesize_min;
-      PS_params["filesize_max"] = filesize_max;
+      psParams["filesize_min"] = filesizeMin;
+      psParams["filesize_max"] = filesizeMax;
 
       trigger(document.querySelectorAll(".filter-filesize"), "click");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
     },
   );
 
@@ -2331,7 +2324,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("filesize", "del");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
       if (
         !hasClass(
           document.querySelectorAll(".filter-filesize"),
@@ -2376,18 +2369,18 @@ ready(function () {
     document.querySelectorAll(".filter-height .filter-validate"),
     "click",
     function () {
-      const height_min = val(
+      const heightMin = val(
         document.querySelectorAll("input[name=filter_height_min]"),
       );
-      const height_max = val(
+      const heightMax = val(
         document.querySelectorAll("input[name=filter_height_max]"),
       );
 
-      PS_params["height_min"] = height_min;
-      PS_params["height_max"] = height_max;
+      psParams["height_min"] = heightMin;
+      psParams["height_max"] = heightMax;
 
       trigger(document.querySelectorAll(".filter-height"), "click");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
     },
   );
 
@@ -2396,7 +2389,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("height", "del");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
       if (
         !hasClass(document.querySelectorAll(".filter-height"), "filter-filled")
       ) {
@@ -2438,18 +2431,18 @@ ready(function () {
     document.querySelectorAll(".filter-width .filter-validate"),
     "click",
     function () {
-      const width_min = val(
+      const widthMin = val(
         document.querySelectorAll("input[name=filter_width_min]"),
       );
-      const width_max = val(
+      const widthMax = val(
         document.querySelectorAll("input[name=filter_width_max]"),
       );
 
-      PS_params["width_min"] = width_min;
-      PS_params["width_max"] = width_max;
+      psParams["width_min"] = widthMin;
+      psParams["width_max"] = widthMax;
 
       trigger(document.querySelectorAll(".filter-width"), "click");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
     },
   );
 
@@ -2458,7 +2451,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("width", "del");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
       if (
         !hasClass(document.querySelectorAll(".filter-width"), "filter-filled")
       ) {
@@ -2493,9 +2486,7 @@ ready(function () {
             "show-filter-dropdown",
           );
 
-          PS_params["expert"] = val(
-            document.querySelectorAll("#expert-search"),
-          );
+          psParams["expert"] = val(document.querySelectorAll("#expert-search"));
         }
       },
     );
@@ -2506,7 +2497,7 @@ ready(function () {
     "click",
     function () {
       trigger(document.querySelectorAll(".filter-expert"), "click");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
     },
   );
   on(
@@ -2514,7 +2505,7 @@ ready(function () {
     "click",
     function () {
       updateFilters("expert", "del");
-      void performSearch(PS_params, true);
+      void performSearch(psParams, true);
       if (
         !hasClass(document.querySelectorAll(".filter-expert"), "filter-filled")
       ) {
@@ -2532,7 +2523,7 @@ async function performSearch(
   params: Record<string, any>,
   reload = false,
 ): Promise<void> {
-  // PS_params uses snake_case field names (also used elsewhere in this
+  // psParams uses snake_case field names (also used elsewhere in this
   // file to drive the active-filter-chip UI) -- translated to
   // POST /api/v1/images/searches's camelCase body shape here, the one
   // place that actually sends it. `expert` has no equivalent on this
@@ -2555,9 +2546,9 @@ async function performSearch(
     ratios: params["ratios"],
     ratings: params["ratings"],
   };
-  const hasSearchId = Boolean(params["search_id"]);
+  const hasSearchId = Boolean(params["searchId"]);
   if (hasSearchId) {
-    body["searchId"] = params["search_id"];
+    body["searchId"] = params["searchId"];
   }
   (
     [
@@ -2599,16 +2590,16 @@ async function performSearch(
     );
     hide(find(document.querySelectorAll(".filter-validate"), ".loading"));
     const removeFilterEls = document.querySelectorAll(".remove-filter");
-    removeClass(removeFilterEls, prefix_icon + "spin6 animate-spin");
-    addClass(removeFilterEls, prefix_icon + "cancel");
+    removeClass(removeFilterEls, prefixIcon + "spin6 animate-spin");
+    addClass(removeFilterEls, prefixIcon + "cancel");
   }
 }
 
-function add_related_category({
+function addRelatedCategory({
   album,
   addSelectedAlbum,
 }: AlbumSelectorCallbackArgs) {
-  display_related_category(album.id, album.name);
+  displayRelatedCategory(album.id, album.name);
   append(
     document.querySelectorAll(".invisible-related-categories-select"),
     `<option selected value="${album.id}"></option>`,
@@ -2616,9 +2607,7 @@ function add_related_category({
   addSelectedAlbum();
 }
 
-function remove_related_category({
-  id_album,
-}: AlbumSelectorRemoveCallbackArgs) {
+function removeRelatedCategory({ id_album }: AlbumSelectorRemoveCallbackArgs) {
   // `id_album` is a raw category id (e.g. "42"), written below as this
   // element's own bare `id` attribute -- digit-leading, so it needs
   // escapeId() under native querySelector (Sizzle tolerated it
@@ -2626,14 +2615,14 @@ function remove_related_category({
   document.querySelector("#" + escapeId(id_album))?.parentElement?.remove();
 }
 
-function display_related_category(
+function displayRelatedCategory(
   cat_id: string | number,
   cat_link_path: string | undefined,
 ) {
   append(
     document.querySelectorAll(".selected-categories-container"),
     `<div class="breadcrumb-item">
-      <span class="link-path">${cat_link_path ?? ""}</span><span id="${cat_id}" class="mcs-icon ${prefix_icon}cancel remove-item"></span>
+      <span class="link-path">${cat_link_path ?? ""}</span><span id="${cat_id}" class="mcs-icon ${prefixIcon}cancel remove-item"></span>
     </div>`,
   );
 }
@@ -2642,92 +2631,92 @@ function updateFilters(filterName: string, mode: "add" | "del") {
   switch (filterName) {
     case "word":
       if (mode === "add") {
-        PS_params["allwords"] = "";
-        PS_params["allwords_mode"] = "AND";
-        PS_params["allwords_fields"] = [];
+        psParams["allwords"] = "";
+        psParams["allwords_mode"] = "AND";
+        psParams["allwords_fields"] = [];
       } else {
-        delete PS_params["allwords"];
-        delete PS_params["allwords_mode"];
-        delete PS_params["allwords_fields"];
+        delete psParams["allwords"];
+        delete psParams["allwords_mode"];
+        delete psParams["allwords_fields"];
       }
       break;
 
     case "tag":
       if (mode === "add") {
-        PS_params["tags"] = "";
-        PS_params["tags_mode"] = "AND";
+        psParams["tags"] = "";
+        psParams["tags_mode"] = "AND";
       } else {
-        delete PS_params["tags"];
-        delete PS_params["tags_mode"];
+        delete psParams["tags"];
+        delete psParams["tags_mode"];
       }
       break;
 
     case "album":
       if (mode === "add") {
-        PS_params["categories"] = "";
-        PS_params["categories_withsubs"] = false;
+        psParams["categories"] = "";
+        psParams["categories_withsubs"] = false;
       } else {
-        delete PS_params["categories"];
-        delete PS_params["categories_withsubs"];
+        delete psParams["categories"];
+        delete psParams["categories_withsubs"];
       }
       break;
 
     case "date_posted":
       if (mode === "add") {
-        PS_params["date_posted_preset"] = "";
-        PS_params["date_posted_custom"] = [];
+        psParams["date_posted_preset"] = "";
+        psParams["date_posted_custom"] = [];
       } else {
-        delete PS_params["date_posted_preset"];
-        delete PS_params["date_posted_custom"];
+        delete psParams["date_posted_preset"];
+        delete psParams["date_posted_custom"];
       }
       break;
 
     case "date_created":
       if (mode === "add") {
-        PS_params["date_created_preset"] = "";
-        PS_params["date_created_custom"] = [];
+        psParams["date_created_preset"] = "";
+        psParams["date_created_custom"] = [];
       } else {
-        delete PS_params["date_created_preset"];
-        delete PS_params["date_created_custom"];
+        delete psParams["date_created_preset"];
+        delete psParams["date_created_custom"];
       }
       break;
 
     case "filesize":
       if (mode === "add") {
-        PS_params["filesize_min"] = "";
-        PS_params["filesize_max"] = "";
+        psParams["filesize_min"] = "";
+        psParams["filesize_max"] = "";
       } else {
-        delete PS_params["filesize_min"];
-        delete PS_params["filesize_max"];
+        delete psParams["filesize_min"];
+        delete psParams["filesize_max"];
       }
       break;
 
     case "height":
       if (mode === "add") {
-        PS_params["height_min"] = "";
-        PS_params["height_max"] = "";
+        psParams["height_min"] = "";
+        psParams["height_max"] = "";
       } else {
-        delete PS_params["height_min"];
-        delete PS_params["height_max"];
+        delete psParams["height_min"];
+        delete psParams["height_max"];
       }
       break;
 
     case "width":
       if (mode === "add") {
-        PS_params["width_min"] = "";
-        PS_params["width_max"] = "";
+        psParams["width_min"] = "";
+        psParams["width_max"] = "";
       } else {
-        delete PS_params["width_min"];
-        delete PS_params["width_max"];
+        delete psParams["width_min"];
+        delete psParams["width_max"];
       }
       break;
 
     default:
       if (mode === "add") {
-        PS_params[filterName] = "";
+        psParams[filterName] = "";
       } else {
         // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- a search-parameter bag keyed by the filter name chosen at runtime, serialised straight to the API; a Map would have to be converted back on every request.
-        delete PS_params[filterName];
+        delete psParams[filterName];
       }
       break;
   }
@@ -2825,45 +2814,45 @@ function updateDateFilters(selector: string) {
 /**
  * Replace the filter_form elements if they exceed the window
  */
-function resize_filter_form() {
+function resizeFilterForm() {
   document.querySelectorAll(".form_mobile_arrow").forEach((el) => {
     el.remove();
   });
   document.querySelectorAll<HTMLElement>(".filter").forEach((filterEl) => {
-    const window_width = windowWidth();
-    const left_distance = offset(filterEl).left;
+    const currentWindowWidth = windowWidth();
+    const leftDistance = offset(filterEl).left;
     const filterForm = find(filterEl, ".filter-form");
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified by the selector: ".filter-form" is always a real HTMLElement (a <div> in this app's own markup, never SVG), and every real ".filter" container has exactly one.
     const filterFormFirst = filterForm[0] as HTMLElement;
-    const filter_form_width = innerWidth(filterFormFirst);
-    const too_left = left_distance + innerWidth(filterEl) - filter_form_width;
-    const is_desktop = window.matchMedia("(min-width: 600px)").matches;
+    const filterFormWidth = innerWidth(filterFormFirst);
+    const tooLeft = leftDistance + innerWidth(filterEl) - filterFormWidth;
+    const isDesktop = window.matchMedia("(min-width: 600px)").matches;
     css(filterForm, "left", "0px");
-    const margin_left = is_desktop ? 15 : 0;
+    const marginLeft = isDesktop ? 15 : 0;
 
-    if (left_distance + filter_form_width > window_width) {
-      const check_left = too_left < 0 ? Math.abs(too_left - margin_left) : 0;
-      const mobile_marg = is_desktop ? 0 : 2;
-      const replace_form_width =
-        -filter_form_width + innerWidth(filterEl) + check_left - mobile_marg;
-      css(filterForm, "left", String(replace_form_width) + "px");
+    if (leftDistance + filterFormWidth > currentWindowWidth) {
+      const checkLeft = tooLeft < 0 ? Math.abs(tooLeft - marginLeft) : 0;
+      const mobileMarg = isDesktop ? 0 : 2;
+      const replaceFormWidth =
+        -filterFormWidth + innerWidth(filterEl) + checkLeft - mobileMarg;
+      css(filterForm, "left", String(replaceFormWidth) + "px");
     }
-    if (!is_desktop) {
-      const left_arrow = offset(filterEl).left + innerWidth(filterEl) / 2;
+    if (!isDesktop) {
+      const leftArrow = offset(filterEl).left + innerWidth(filterEl) / 2;
       prepend(
         filterForm,
         '<svg width="10" height="10" viewBox="0 0 14 14" class="form_mobile_arrow" style="left:' +
-          String(left_arrow) +
+          String(leftArrow) +
           'px"><polygon class="arrow-border" points="7,0 14,14 0,14"/><polygon class="arrow-fill" points="7,1 13.5,14 0.5,14"/></svg>',
       );
     }
   });
 }
 on(window, "load", function () {
-  resize_filter_form();
+  resizeFilterForm();
 });
 on(window, "resize", function () {
-  resize_filter_form();
+  resizeFilterForm();
 });
 
 on(document.querySelectorAll(".help-popin-search"), "click", function () {

@@ -14,10 +14,10 @@ import {
   ready,
 } from "../../../default/js/vendor/dom";
 
-const confirm_msg = pwg_getPageString("Yes, I am sure");
-const cancel_msg = pwg_getPageString("No, I have changed my mind");
+const confirmMsg = pwg_getPageString("Yes, I am sure");
+const cancelMsg = pwg_getPageString("No, I have changed my mind");
 document.querySelectorAll(".delete-theme-button").forEach(function (button) {
-  const theme_name = attrOf(
+  const themeName = attrOf(
     button.closest(".themeBox")?.querySelectorAll(".themeName") ?? [],
     "title",
   );
@@ -25,9 +25,9 @@ document.querySelectorAll(".delete-theme-button").forEach(function (button) {
     'Are you sure you want to delete the theme "%s"?',
   );
   pwg_jconfirm_follow_href(button, {
-    alert_title: title.replace("%s", theme_name!),
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg,
+    alert_title: title.replace("%s", themeName!),
+    alert_confirm: confirmMsg,
+    alert_cancel: cancelMsg,
   });
 });
 

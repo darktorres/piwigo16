@@ -10,9 +10,9 @@
 // entry's own import statements" warning no longer applies.
 import {
   lang,
-  all_elements,
-  str_add_alb_associate,
-  str_select_alb_associate,
+  allElements,
+  strAddAlbAssociate,
+  strSelectAlbAssociate,
 } from "./batch_manager_global";
 // Real consumer of album_selector.ts's own top-level `class
 // AlbumSelector` (docs/PLAN.md P48 -- was a `window.AlbumSelector`
@@ -52,8 +52,8 @@ import type { operations } from "../../../../openapi/client/schema";
 
 /* Shift-click: select all photos between the click and the shift+click */
 ready(function () {
-  let last_clicked = 0;
-  let last_clickedstatus = true;
+  let lastClicked = 0;
+  let lastClickedStatus = true;
 
   function enableShiftClick(container: Element): void {
     const inputs: HTMLInputElement[] = [];
@@ -75,27 +75,27 @@ ready(function () {
         const event = (shclickEvent as CustomEvent<MouseEvent | KeyboardEvent>)
           .detail;
         if (event.shiftKey) {
-          let first = last_clicked;
+          let first = lastClicked;
           let last = pos;
           if (first > last) {
             first = pos;
-            last = last_clicked;
+            last = lastClicked;
           }
 
           for (let i = first; i <= last; i++) {
             const input = inputs[i]!;
-            input.checked = last_clickedstatus;
+            input.checked = lastClickedStatus;
             trigger([input], "change");
             const li = input.closest("li");
-            if (last_clickedstatus) {
+            if (lastClickedStatus) {
               li?.classList.add("thumbSelected");
             } else {
               li?.classList.remove("thumbSelected");
             }
           }
         } else {
-          last_clicked = pos;
-          last_clickedstatus = checkbox.checked;
+          lastClicked = pos;
+          lastClickedStatus = checkbox.checked;
         }
       });
       on(checkbox, "click", function (event: Event) {
@@ -108,14 +108,14 @@ ready(function () {
     enableShiftClick(thumbnailsContainer);
   }
 
-  const ab_action = new AlbumSelector({
+  const abAction = new AlbumSelector({
     adminMode: true,
-    selectAlbum: select_album_action,
-    removeSelectedAlbum: remove_album_action,
+    selectAlbum: selectAlbumAction,
+    removeSelectedAlbum: removeAlbumAction,
   });
 
   on(document.querySelectorAll("#associate_as"), "click", function () {
-    ab_action.open();
+    abAction.open();
   });
 
   on(
@@ -125,18 +125,18 @@ ready(function () {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real click inside the document always targets an Element (or null), never a bare EventTarget with no Element interface.
       const target = e.target as Element;
       if (target.classList.contains("remove-associate")) {
-        ab_action.remove_selected_album(target.id);
+        abAction.removeSelectedAlbum(target.id);
       }
     },
   );
 });
 
 /* ********** Album Selector */
-function select_album_action({
+function selectAlbumAction({
   album,
   addSelectedAlbum,
 }: AlbumSelectorCallbackArgs) {
-  html(document.querySelectorAll("#associate_as p"), str_add_alb_associate);
+  html(document.querySelectorAll("#associate_as p"), strAddAlbAssociate);
   append(
     document.querySelectorAll(".selected-associate-action"),
     `<div class="selected-associate-item">
@@ -147,11 +147,11 @@ function select_album_action({
   addSelectedAlbum();
 }
 
-function remove_album_action({
+function removeAlbumAction({
   id_album,
   getSelectedAlbum,
 }: AlbumSelectorRemoveCallbackArgs) {
-  // `id_album` is the raw album id `select_album_action()` wrote above
+  // `id_album` is the raw album id `selectAlbumAction()` wrote above
   // as this chip's own bare `id` attribute -- digit-leading, so it
   // needs escapeId() under native querySelector (same bug class as
   // mcs.ts's remove_related_category()).
@@ -161,10 +161,7 @@ function remove_album_action({
   )[0]?.parentElement?.remove();
   const selected = getSelectedAlbum();
   if (!selected.length) {
-    html(
-      document.querySelectorAll("#associate_as p"),
-      str_select_alb_associate,
-    );
+    html(document.querySelectorAll("#associate_as p"), strSelectAlbAssociate);
   }
 }
 
@@ -288,7 +285,7 @@ export const derivatives: Derivatives = {
   },
 };
 
-export function progress_start() {
+export function progressStart() {
   show(document.querySelectorAll("#uploadingActions"));
   css(
     document.querySelectorAll("#uploadingActions .progress-bar"),
@@ -297,7 +294,7 @@ export function progress_start() {
   );
 }
 
-function progress_end() {
+function progressEnd() {
   hide(document.querySelectorAll("#uploadingActions"));
 }
 
@@ -319,7 +316,7 @@ export function progress(success?: boolean) {
   }
 
   if (derivatives.finished()) {
-    progress_end();
+    progressEnd();
     document.querySelector<HTMLElement>("#applyAction")?.click();
   }
 }
@@ -341,7 +338,7 @@ export async function getDerivativeUrls(queue: AjaxQueue): Promise<void> {
   hide(document.querySelectorAll("#confirmDel"));
   show(document.querySelectorAll("#regenerationMsg"));
   html(document.querySelectorAll("#regenerationText"), lang.generateMsg);
-  progress_start();
+  progressStart();
 
   let responseData: operations["imageMissingDerivatives"]["responses"][200]["content"]["application/json"];
   try {
@@ -493,7 +490,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
     return;
   }
 
-  let progressBar_max: number;
+  let progressBarMax: number;
 
   if (val(document.querySelectorAll('[name="selectAction"]')) === "metadata") {
     e.preventDefault();
@@ -506,7 +503,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
     elements = [];
 
     if (is(document.querySelector("input[name=setSelected]")!, ":checked")) {
-      elements = all_elements;
+      elements = allElements;
     } else {
       document
         .querySelectorAll<HTMLInputElement>('input[name="selection[]"]:checked')
@@ -519,27 +516,27 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
 
     // Local alias for the definitely-assigned value, kept for
     // readability. The non-null assertion this used to need is gone:
-    // it was only necessary while `all_elements` arrived typed as `any`
+    // it was only necessary while `allElements` arrived typed as `any`
     // through a direct import, which defeated control-flow narrowing of
     // the outer `let elements`. With the real `(string | number)[]`
     // type restored, both assignment branches narrow it properly.
     const syncElements = elements;
 
-    progressBar_max = syncElements.length;
+    progressBarMax = syncElements.length;
     let todo = 0;
     const syncBlockSize = Math.min(
       Number((syncElements.length / 2).toFixed()),
       1000,
     );
-    let image_ids = [];
+    let imageIds = [];
 
     hide(document.querySelectorAll("#applyActionBlock"));
     hide(document.querySelectorAll(".permitActionListButton"));
     hide(document.querySelectorAll("#confirmDel"));
     show(document.querySelectorAll("#regenerationMsg"));
-    progress_bar_start();
+    progressBarStart();
     for (let i = 0; i < syncElements.length; i++) {
-      image_ids.push(syncElements[i]);
+      imageIds.push(syncElements[i]);
       if (
         i % syncBlockSize !== syncBlockSize - 1 &&
         i !== syncElements.length - 1
@@ -547,7 +544,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
         continue;
       }
 
-      // `todo`/`progressBar_max` are a running counter and a fixed total
+      // `todo`/`progressBarMax` are a running counter and a fixed total
       // shared across every batch's own async callback, not a
       // per-iteration snapshot -- each callback must see the live value
       // as later batches complete, which is exactly what a real closure
@@ -578,9 +575,9 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
             }
             html(
               document.querySelectorAll("#regenerationStatus .badge-number"),
-              todo.toString() + "/" + progressBar_max.toString(),
+              todo.toString() + "/" + progressBarMax.toString(),
             );
-            progress_bar(todo, progressBar_max, false);
+            progressBar(todo, progressBarMax, false);
           },
           // eslint-disable-next-line @typescript-eslint/no-loop-func -- see comment above the IIFE.
           error: function (_data: unknown) {
@@ -588,13 +585,13 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
             /*TODO: user feedback*/
             html(
               document.querySelectorAll("#regenerationStatus .badge-number"),
-              todo.toString() + "/" + progressBar_max.toString(),
+              todo.toString() + "/" + progressBarMax.toString(),
             );
-            progress_bar(todo, progressBar_max, false);
+            progressBar(todo, progressBarMax, false);
           },
         });
-      })(image_ids);
-      image_ids = [];
+      })(imageIds);
+      imageIds = [];
     }
   }
 
@@ -627,7 +624,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
   elements = [];
 
   if (is(document.querySelector("input[name=setSelected]")!, ":checked")) {
-    elements = all_elements;
+    elements = allElements;
   } else {
     document
       .querySelectorAll<HTMLInputElement>('input[name="selection[]"]:checked')
@@ -637,16 +634,16 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
   }
 
   // Local alias, same as syncElements above -- and likewise no longer
-  // needs a non-null assertion now that `all_elements` has a real type.
+  // needs a non-null assertion now that `allElements` has a real type.
   const deleteElements = elements;
 
-  progressBar_max = deleteElements.length;
+  progressBarMax = deleteElements.length;
   let todo = 0;
   const deleteBlockSize = Math.min(
     Number((deleteElements.length / 2).toFixed()),
     1000,
   );
-  let image_ids = [];
+  let imageIds = [];
 
   hide(document.querySelectorAll("#applyActionBlock"));
   hide(document.querySelectorAll(".permitActionListButton"));
@@ -656,9 +653,9 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
     lang.deleteProgressMessage,
   );
   show(document.querySelectorAll("#regenerationMsg"));
-  progress_bar_start();
+  progressBarStart();
   for (let i = 0; i < deleteElements.length; i++) {
-    image_ids.push(deleteElements[i]);
+    imageIds.push(deleteElements[i]);
     if (
       i % deleteBlockSize !== deleteBlockSize - 1 &&
       i !== deleteElements.length - 1
@@ -666,7 +663,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
       continue;
     }
 
-    // `todo`/`progressBar_max` are a running counter and a fixed total
+    // `todo`/`progressBarMax` are a running counter and a fixed total
     // shared across every batch's own async callback, not a
     // per-iteration snapshot -- each callback must see the live value
     // as later batches complete, which is exactly what a real closure
@@ -698,9 +695,9 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
           /*TODO: user feedback if isError*/
           html(
             document.querySelectorAll("#regenerationStatus .badge-number"),
-            todo.toString() + "/" + progressBar_max.toString(),
+            todo.toString() + "/" + progressBarMax.toString(),
           );
-          progress_bar(todo, progressBar_max, false);
+          progressBar(todo, progressBarMax, false);
         },
         // eslint-disable-next-line @typescript-eslint/no-loop-func -- see comment above the IIFE.
         error: function (_data: unknown) {
@@ -708,14 +705,14 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
           /*TODO: user feedback*/
           html(
             document.querySelectorAll("#regenerationStatus .badge-number"),
-            todo.toString() + "/" + progressBar_max.toString(),
+            todo.toString() + "/" + progressBarMax.toString(),
           );
-          progress_bar(todo, progressBar_max, false);
+          progressBar(todo, progressBarMax, false);
         },
       });
-    })(image_ids);
+    })(imageIds);
 
-    image_ids = [];
+    imageIds = [];
   }
 
   /* tell PHP how many photos were deleted */
@@ -730,7 +727,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
   e.stopPropagation();
 });
 
-function progress_bar_start() {
+function progressBarStart() {
   show(document.querySelectorAll("#uploadingActions"));
   css(
     document.querySelectorAll("#uploadingActions .progress-bar"),
@@ -739,7 +736,7 @@ function progress_bar_start() {
   );
 }
 
-function progress_bar(current: number, max: number, _success: boolean) {
+function progressBar(current: number, max: number, _success: boolean) {
   const percent = parseInt(String((current / max) * 100));
   css(
     document.querySelectorAll("#uploadingActions .progressbar"),
@@ -777,14 +774,14 @@ on(
       ),
       1000,
     );
-    void add_md5sum_block(addBlockSize);
+    void addMd5sumBlock(addBlockSize);
 
     e.preventDefault();
     e.stopPropagation();
   },
 );
 
-async function add_md5sum_block(blockSize?: number): Promise<void> {
+async function addMd5sumBlock(blockSize?: number): Promise<void> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const responseData = (await ajax({
@@ -807,23 +804,23 @@ async function add_md5sum_block(blockSize?: number): Promise<void> {
     );
 
     const origin = document.querySelector("#md5sum_to_add")!;
-    const percent_remaining = Number(
+    const percentRemaining = Number(
       (
         (responseData.remainingCount * 100) /
         Number(data(origin, "origin"))
       ).toFixed(),
     );
-    const percent_done = 100 - percent_remaining;
-    html(document.querySelectorAll("#md5sum_added"), String(percent_done));
+    const percentDone = 100 - percentRemaining;
+    html(document.querySelectorAll("#md5sum_added"), String(percentDone));
     if (responseData.remainingCount > 0) {
-      void add_md5sum_block();
+      void addMd5sumBlock();
     } else {
       // time to refresh the whole page
-      let redirect_to = "admin.php?page=batch_manager";
-      redirect_to += "&action=sync_md5sum";
-      redirect_to += "&nb_md5sum_added=" + String(data(origin, "origin"));
+      let redirectTo = "admin.php?page=batch_manager";
+      redirectTo += "&action=sync_md5sum";
+      redirectTo += "&nb_md5sum_added=" + String(data(origin, "origin"));
 
-      window.location.href = redirect_to;
+      window.location.href = redirectTo;
     }
   } catch (e) {
     hide(document.querySelectorAll("#add_md5sum"));
@@ -856,14 +853,14 @@ on(
       1000,
     );
 
-    void delete_orphans_block(deleteBlockSize);
+    void deleteOrphansBlock(deleteBlockSize);
 
     e.preventDefault();
     e.stopPropagation();
   },
 );
 
-async function delete_orphans_block(blockSize?: number): Promise<void> {
+async function deleteOrphansBlock(blockSize?: number): Promise<void> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const responseData = (await ajax({
@@ -886,24 +883,24 @@ async function delete_orphans_block(blockSize?: number): Promise<void> {
     );
 
     const origin = document.querySelector("#orphans_to_delete")!;
-    const percent_remaining = Number(
+    const percentRemaining = Number(
       (
         (responseData.nbOrphans * 100) /
         Number(data(origin, "origin"))
       ).toFixed(),
     );
-    const percent_done = 100 - percent_remaining;
-    html(document.querySelectorAll("#orphans_deleted"), String(percent_done));
+    const percentDone = 100 - percentRemaining;
+    html(document.querySelectorAll("#orphans_deleted"), String(percentDone));
 
     if (responseData.nbOrphans > 0) {
-      void delete_orphans_block();
+      void deleteOrphansBlock();
     } else {
       // time to refresh the whole page
-      let redirect_to = "admin.php?page=batch_manager";
-      redirect_to += "&action=delete_orphans";
-      redirect_to += "&nb_orphans_deleted=" + String(data(origin, "origin"));
+      let redirectTo = "admin.php?page=batch_manager";
+      redirectTo += "&action=delete_orphans";
+      redirectTo += "&nb_orphans_deleted=" + String(data(origin, "origin"));
 
-      window.location.href = redirect_to;
+      window.location.href = redirectTo;
     }
   } catch (e) {
     hide(document.querySelectorAll("#orphans_deletion"));

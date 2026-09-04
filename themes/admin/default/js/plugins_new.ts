@@ -22,12 +22,12 @@ import { slider, type SliderUIParams } from "../../../default/js/vendor/slider";
 import { sortElements } from "../../../default/js/vendor/sortElements";
 import { tipTip } from "../../../default/js/vendor/tiptip";
 
-const str_confirm_msg = pwg_getPageString("Yes, I am sure");
-const str_cancel_msg = pwg_getPageString("No, I have changed my mind");
-const str_install_title = pwg_getPageString(
+const strConfirmMsg = pwg_getPageString("Yes, I am sure");
+const strCancelMsg = pwg_getPageString("No, I have changed my mind");
+const strInstallTitle = pwg_getPageString(
   'Are you sure you want to install the plugin "%s"?',
 );
-const strs_certification: Record<string, string> = {
+const strsCertification: Record<string, string> = {
   "-1": pwg_getPageString("This plugin is incompatible with your version"),
   "0": pwg_getPageString(
     "This plugin have no update since 3 years ! It may be outdated",
@@ -36,11 +36,11 @@ const strs_certification: Record<string, string> = {
   "2": pwg_getPageString("This plugin was updated less than 6 months ago"),
   "3": pwg_getPageString("This plugin have been updated recently"),
 };
-const str_x_month = pwg_getPageString("%d month");
-const str_x_months = pwg_getPageString("%d months");
-const str_x_year = pwg_getPageString("%d year");
-const str_x_years = pwg_getPageString("%d years");
-const str_from_begining = pwg_getPageString("since the beginning");
+const strXMonth = pwg_getPageString("%d month");
+const strXMonths = pwg_getPageString("%d months");
+const strXYear = pwg_getPageString("%d year");
+const strXYears = pwg_getPageString("%d years");
+const strFromBegining = pwg_getPageString("since the beginning");
 
 // <-- Define sort orders -->
 let sortOrder = "date";
@@ -93,35 +93,35 @@ ready(function () {
   on(
     document.querySelectorAll(".advanced-filter-btn"),
     "click",
-    advanced_filter_button_click,
+    advancedFilterButtonClick,
   );
   on(
     document.querySelectorAll(".advanced-filter span.icon-cancel"),
     "click",
-    advanced_filter_hide,
+    advancedFilterHide,
   );
 
-  function advanced_filter_button_click() {
+  function advancedFilterButtonClick() {
     if (
       !hasClass(
         document.querySelectorAll(".advanced-filter"),
         "advanced-filter-open",
       )
     ) {
-      advanced_filter_show();
+      advancedFilterShow();
     } else {
-      advanced_filter_hide();
+      advancedFilterHide();
     }
   }
 
-  function advanced_filter_show() {
+  function advancedFilterShow() {
     addClass(
       document.querySelectorAll(".advanced-filter-btn, .advanced-filter"),
       "advanced-filter-open",
     );
   }
 
-  function advanced_filter_hide() {
+  function advancedFilterHide() {
     removeClass(
       document.querySelectorAll(".advanced-filter-btn, .advanced-filter"),
       "advanced-filter-open",
@@ -160,11 +160,11 @@ ready(function () {
   document.querySelectorAll(".buttonInstall").forEach((el) => {
     const box = el.closest(".pluginBox");
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-    const plugin_name = box !== null ? (data(box, "name") as string) : "";
+    const pluginName = box !== null ? (data(box, "name") as string) : "";
     pwg_jconfirm_follow_href(el, {
-      alert_title: str_install_title.replace("%s", plugin_name),
-      alert_confirm: str_confirm_msg,
-      alert_cancel: str_cancel_msg,
+      alert_title: strInstallTitle.replace("%s", pluginName),
+      alert_confirm: strConfirmMsg,
+      alert_cancel: strCancelMsg,
     });
   });
 
@@ -258,29 +258,29 @@ ready(function () {
     min: 0,
     max: 6,
     slide: function (_event: Event, ui: SliderUIParams) {
-      const [month] = value_to_month(ui.value!);
+      const [month] = valueToMonth(ui.value!);
       updateRevisionFilterLabel(ui.value!);
       applyFilter("revision", month);
     },
   });
 
   // All the slider values and it's corresponding month's number and label
-  function value_to_month(sliderValue: number): [number, string] {
+  function valueToMonth(sliderValue: number): [number, string] {
     switch (sliderValue) {
       case 6:
-        return [1, str_x_month.replace("%d", String(1))];
+        return [1, strXMonth.replace("%d", String(1))];
       case 5:
-        return [3, str_x_months.replace("%d", String(3))];
+        return [3, strXMonths.replace("%d", String(3))];
       case 4:
-        return [6, str_x_months.replace("%d", String(6))];
+        return [6, strXMonths.replace("%d", String(6))];
       case 3:
-        return [12, str_x_year.replace("%d", String(1))];
+        return [12, strXYear.replace("%d", String(1))];
       case 2:
-        return [24, str_x_years.replace("%d", String(2))];
+        return [24, strXYears.replace("%d", String(2))];
       case 1:
-        return [60, str_x_years.replace("%d", String(5))];
+        return [60, strXYears.replace("%d", String(5))];
       default:
-        return [Number.MAX_SAFE_INTEGER, str_from_begining];
+        return [Number.MAX_SAFE_INTEGER, strFromBegining];
     }
   }
 
@@ -362,7 +362,7 @@ ready(function () {
     );
     if (certifNode === null) return;
     certifNode.setAttribute("data-certification", String(value));
-    certifNode.setAttribute("title", strs_certification[String(value)]!);
+    certifNode.setAttribute("title", strsCertification[String(value)]!);
     tipTip(certifNode, {
       delay: 0,
       fadeIn: 200,
@@ -371,7 +371,7 @@ ready(function () {
   }
 
   function updateRevisionFilterLabel(sliderValue: number) {
-    const [, label] = value_to_month(sliderValue);
+    const [, label] = valueToMonth(sliderValue);
     html(document.querySelectorAll(".revision-date"), label);
   }
 
@@ -395,7 +395,7 @@ ready(function () {
     // `.revision-date-filter-slider`'s -- looks like a likely
     // copy-paste bug (both sliders start at 0 so it's not currently
     // observable), flagged rather than silently changed.
-    revision: value_to_month(
+    revision: valueToMonth(
       slider(
         document.querySelectorAll(".certification-filter-slider"),
         "value",

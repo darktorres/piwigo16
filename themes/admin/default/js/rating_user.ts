@@ -6,7 +6,7 @@ import type { operations } from "../../../../openapi/client/schema";
 // (`popuphelp`/`pwg_tryFocus`'s own `window.X` assignments, the
 // `[data-confirm]` click guard).
 import "../../../default/js/scripts";
-import { jConfirm_confirm_options } from "./common";
+import { jConfirmConfirmOptions } from "./common";
 
 import {
   pwg_getPageData,
@@ -43,7 +43,7 @@ ready(function () {
   });
 });
 
-const pwg_token = pwg_getPageData<string>("csrf_token");
+const pwgToken = pwg_getPageData<string>("csrf_token");
 
 // rating_user.latte's own `data-usr='{"uid":...,"aid":"..."}'` literal.
 interface RatingUserCellData {
@@ -96,19 +96,19 @@ ready(function () {
     ".del",
     function (this: Element, event: Event): void {
       event.preventDefault();
-      const title_msg = pwg_getPageString(
+      const titleMsg = pwg_getPageString(
         'Are you sure you want to delete the ratings of the user "%s"?',
       );
-      const confirm_msg = pwg_getPageString("Yes, I am sure");
-      const cancel_msg = pwg_getPageString("No, I have changed my mind");
+      const confirmMsg = pwg_getPageString("Yes, I am sure");
+      const cancelMsg = pwg_getPageString("No, I have changed my mind");
       const trAncestor = this.closest("tr");
-      const usr_name =
+      const usrName =
         trAncestor === null ? "" : (htmlOf(find(trAncestor, ".usr")) ?? "");
       confirm({
-        title: title_msg.replace("%s", usr_name),
+        title: titleMsg.replace("%s", usrName),
         buttons: {
           confirm: {
-            text: confirm_msg,
+            text: confirmMsg,
             btnClass: "btn-red",
             action: function () {
               // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real click inside the document always targets an Element (or null), never a bare EventTarget with no Element interface.
@@ -128,7 +128,7 @@ ready(function () {
                       "/actions/delete-ratings",
                     method: "POST",
                     json: { anonymousId: ids.aid || null },
-                    headers: { "X-CSRF-Token": pwg_token },
+                    headers: { "X-CSRF-Token": pwgToken },
                   })) as operations["userDeleteRatings"]["responses"][200]["content"]["application/json"];
 
                   if (result.deletedCount) oTable.row(tr).remove().draw();
@@ -146,10 +146,10 @@ ready(function () {
             },
           },
           cancel: {
-            text: cancel_msg,
+            text: cancelMsg,
           },
         },
-        ...jConfirm_confirm_options,
+        ...jConfirmConfirmOptions,
       });
     },
   );

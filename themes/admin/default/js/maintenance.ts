@@ -4,8 +4,8 @@ import { pwg_getPageString } from "../../../default/js/page-data";
 import { ajax, AjaxError } from "../../../default/js/vendor/ajax";
 import { ready } from "../../../default/js/vendor/dom";
 
-const no_time_elapsed = pwg_getPageString("right now");
-const unit_MB = pwg_getPageString("%s MB");
+const noTimeElapsed = pwg_getPageString("right now");
+const unitMb = pwg_getPageString("%s MB");
 
 type CacheSizeResponse =
   operations["cacheSize"]["responses"][200]["content"]["application/json"];
@@ -20,17 +20,17 @@ function displayResponse(
     // jQuery's `.html()` writes to every element of the set, not just the
     // first, so each of these three selectors keeps writing to all matches.
     domElem[index]!.forEach((node) => {
-      node.innerHTML = unit_MB.replace("%s", values[index]!);
+      node.innerHTML = unitMb.replace("%s", values[index]!);
     });
   }
 
   for (const mDiv of mDivs) {
     const mDivName = mDiv.getAttribute("name")!;
-    mDiv.title = unit_MB.replace("%s", mValues[mDivName]!);
+    mDiv.title = unitMb.replace("%s", mValues[mDivName]!);
   }
 
   document.querySelectorAll(".cache-lastCalculated-value").forEach((node) => {
-    node.innerHTML = no_time_elapsed;
+    node.innerHTML = noTimeElapsed;
   });
 }
 

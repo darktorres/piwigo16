@@ -6,10 +6,10 @@ import {
 } from "../../../default/js/page-data";
 import { attr, attrOf, hide, on, show } from "../../../default/js/vendor/dom";
 
-const confirm_msg = pwg_getPageString("Yes, I am sure");
-const cancel_msg = pwg_getPageString("No, I have changed my mind");
+const confirmMsg = pwg_getPageString("Yes, I am sure");
+const cancelMsg = pwg_getPageString("No, I have changed my mind");
 document.querySelectorAll(".lock-gallery-button").forEach(function (button) {
-  const gallery_tip = pwg_getPageString(
+  const galleryTip = pwg_getPageString(
     "A locked gallery is only visible to administrators",
   );
   const lockUrl = pwg_getPageData<string | null>("u_maint_lock_gallery");
@@ -20,9 +20,9 @@ document.querySelectorAll(".lock-gallery-button").forEach(function (button) {
 
   pwg_jconfirm_follow_href(button, {
     alert_title: title,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg,
-    alert_content: gallery_tip,
+    alert_confirm: confirmMsg,
+    alert_cancel: cancelMsg,
+    alert_content: galleryTip,
   });
 });
 document
@@ -31,8 +31,8 @@ document
     const title = pwg_getPageString("Purge history detail");
     pwg_jconfirm_follow_href(button, {
       alert_title: title,
-      alert_confirm: confirm_msg,
-      alert_cancel: cancel_msg,
+      alert_confirm: confirmMsg,
+      alert_cancel: cancelMsg,
     });
   });
 document
@@ -41,8 +41,8 @@ document
     const title = pwg_getPageString("Purge history summary");
     pwg_jconfirm_follow_href(button, {
       alert_title: title,
-      alert_confirm: confirm_msg,
-      alert_cancel: cancel_msg,
+      alert_confirm: confirmMsg,
+      alert_cancel: cancelMsg,
     });
   });
 document
@@ -51,8 +51,8 @@ document
     const title = pwg_getPageString("Purge search history");
     pwg_jconfirm_follow_href(button, {
       alert_title: title,
-      alert_confirm: confirm_msg,
-      alert_cancel: cancel_msg,
+      alert_confirm: confirmMsg,
+      alert_cancel: cancelMsg,
     });
   });
 document
@@ -63,8 +63,8 @@ document
     );
     pwg_jconfirm_follow_href(button, {
       alert_title: title,
-      alert_confirm: confirm_msg,
-      alert_cancel: cancel_msg,
+      alert_confirm: confirmMsg,
+      alert_cancel: cancelMsg,
     });
   });
 
@@ -103,17 +103,17 @@ if (firstDeleteSizeCheck !== null) {
     }
   });
 }
-const delete_deriv_URL = "admin.php?page=maintenance&action=derivatives&";
+const deleteDerivUrl = "admin.php?page=maintenance&action=derivatives&";
 on(
   document.querySelectorAll(".delete-size-check"),
   "change",
   function (): void {
-    const delete_deriv_with_token =
-      delete_deriv_URL +
+    const deleteDerivWithToken =
+      deleteDerivUrl +
       "pwg_token=" +
       pwg_getPageData<string>("pwg_token") +
       "&";
-    let types_str;
+    let typesStr;
     const selected: string[] = [];
     document.querySelectorAll(".delete-size-check").forEach((el) => {
       if (attrOf(el, "data-selected") === "1") {
@@ -124,14 +124,14 @@ on(
       attr(document.querySelectorAll(".delete-sizes"), "href", "");
     } else {
       if (selected[0] === "all") {
-        types_str = "all";
+        typesStr = "all";
       } else {
-        types_str = selected.join("_");
+        typesStr = selected.join("_");
       }
       attr(
         document.querySelectorAll(".delete-sizes"),
         "href",
-        delete_deriv_with_token + "type=" + types_str,
+        deleteDerivWithToken + "type=" + typesStr,
       );
     }
   },

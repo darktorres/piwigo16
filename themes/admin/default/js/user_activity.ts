@@ -71,117 +71,117 @@ interface MergedActivityLine {
   counter: number;
 }
 
-const nb_users = pwg_getPageData<number>("nb_users");
+const nbUsers = pwg_getPageData<number>("nb_users");
 
-const additional_filt_type = pwg_getPageData<string | false>(
+const additionalFiltType = pwg_getPageData<string | false>(
   "additional_filt_type",
 );
-const additional_filt_value = pwg_getPageData<string | null>(
+const additionalFiltValue = pwg_getPageData<string | null>(
   "additional_filt_value",
 );
 
-const color_icons = [
+const colorIcons = [
   "icon-red",
   "icon-blue",
   "icon-yellow",
   "icon-purple",
   "icon-green",
 ];
-let activity_page = 1;
-let page_offsets: number[] = [0];
-let actual_page = 1;
-let end_page = false;
-let uid_filter: number | undefined;
-let action_filter: string | undefined;
-let object_filter: string | undefined;
-let date_min_filter = pwg_getPageData<string>("activity_dates_min");
-let date_max_filter = pwg_getPageData<string>("activity_dates_max");
+let activityPage = 1;
+let pageOffsets: number[] = [0];
+let actualPage = 1;
+let endPage = false;
+let uidFilter: number | undefined;
+let actionFilter: string | undefined;
+let objectFilter: string | undefined;
+let dateMinFilter = pwg_getPageData<string>("activity_dates_min");
+let dateMaxFilter = pwg_getPageData<string>("activity_dates_max");
 
-const date_min = pwg_getPageData<string>("activity_dates_min");
-const date_max = pwg_getPageData<string>("activity_dates_max");
+const dateMin = pwg_getPageData<string>("activity_dates_min");
+const dateMax = pwg_getPageData<string>("activity_dates_max");
 
-const page_ellipsis = "<span>...</span>";
-const page_item = '<a data-page="%d">%d</a>';
-const users_key = pwg_getPageString("Users");
+const pageEllipsis = "<span>...</span>";
+const pageItem = '<a data-page="%d">%d</a>';
+const usersKey = pwg_getPageString("Users");
 
-const actionType_add = pwg_getPageString("add");
-const actionType_delete = pwg_getPageString("deletion");
-const actionType_move = pwg_getPageString("move");
-const actionType_edit = pwg_getPageString("edit");
-const actionType_login = pwg_getPageString("login");
-const actionType_logout = pwg_getPageString("logout");
+const actionTypeAdd = pwg_getPageString("add");
+const actionTypeDelete = pwg_getPageString("deletion");
+const actionTypeMove = pwg_getPageString("move");
+const actionTypeEdit = pwg_getPageString("edit");
+const actionTypeLogin = pwg_getPageString("login");
+const actionTypeLogout = pwg_getPageString("logout");
 
-const actionInfos_album_added = pwg_getPageString("%d album added");
-const actionInfos_album_deleted = pwg_getPageString("%d album deleted");
-const actionInfos_album_edited = pwg_getPageString("%d album edited");
-const actionInfos_album_moved = pwg_getPageString("%d album moved");
+const actionInfosAlbumAdded = pwg_getPageString("%d album added");
+const actionInfosAlbumDeleted = pwg_getPageString("%d album deleted");
+const actionInfosAlbumEdited = pwg_getPageString("%d album edited");
+const actionInfosAlbumMoved = pwg_getPageString("%d album moved");
 
-const actionInfos_albums_added = pwg_getPageString("%d albums added");
-const actionInfos_albums_deleted = pwg_getPageString("%d albums deleted");
-const actionInfos_albums_edited = pwg_getPageString("%d albums edited");
-const actionInfos_albums_moved = pwg_getPageString("%d albums moved");
+const actionInfosAlbumsAdded = pwg_getPageString("%d albums added");
+const actionInfosAlbumsDeleted = pwg_getPageString("%d albums deleted");
+const actionInfosAlbumsEdited = pwg_getPageString("%d albums edited");
+const actionInfosAlbumsMoved = pwg_getPageString("%d albums moved");
 
-const actionInfos_user_added = pwg_getPageString("%d user added");
-const actionInfos_user_deleted = pwg_getPageString("%d user deleted");
-const actionInfos_user_edited = pwg_getPageString("%d user edited");
-const actionInfos_user_logged_in = pwg_getPageString("%d user logged in");
-const actionInfos_user_logged_out = pwg_getPageString("%d user logged out");
+const actionInfosUserAdded = pwg_getPageString("%d user added");
+const actionInfosUserDeleted = pwg_getPageString("%d user deleted");
+const actionInfosUserEdited = pwg_getPageString("%d user edited");
+const actionInfosUserLoggedIn = pwg_getPageString("%d user logged in");
+const actionInfosUserLoggedOut = pwg_getPageString("%d user logged out");
 
-const actionInfos_users_added = pwg_getPageString("%d users added");
-const actionInfos_users_deleted = pwg_getPageString("%d users deleted");
-const actionInfos_users_edited = pwg_getPageString("%d users edited");
-const actionInfos_users_logged_in = pwg_getPageString("%d users logged in");
-const actionInfos_users_logged_out = pwg_getPageString("%d users logged out");
+const actionInfosUsersAdded = pwg_getPageString("%d users added");
+const actionInfosUsersDeleted = pwg_getPageString("%d users deleted");
+const actionInfosUsersEdited = pwg_getPageString("%d users edited");
+const actionInfosUsersLoggedIn = pwg_getPageString("%d users logged in");
+const actionInfosUsersLoggedOut = pwg_getPageString("%d users logged out");
 
-const actionInfos_photo_added = pwg_getPageString("%d photo added");
-const actionInfos_photo_deleted = pwg_getPageString("%d photo deleted");
-const actionInfos_photo_edited = pwg_getPageString("%d photo edited");
-const actionInfos_photo_moved = pwg_getPageString("%d photo moved");
+const actionInfosPhotoAdded = pwg_getPageString("%d photo added");
+const actionInfosPhotoDeleted = pwg_getPageString("%d photo deleted");
+const actionInfosPhotoEdited = pwg_getPageString("%d photo edited");
+const actionInfosPhotoMoved = pwg_getPageString("%d photo moved");
 
-const actionInfos_photos_added = pwg_getPageString("%d photos added");
-const actionInfos_photos_deleted = pwg_getPageString("%d photos deleted");
-const actionInfos_photos_edited = pwg_getPageString("%d photos edited");
-const actionInfos_photos_moved = pwg_getPageString("%d photos moved");
+const actionInfosPhotosAdded = pwg_getPageString("%d photos added");
+const actionInfosPhotosDeleted = pwg_getPageString("%d photos deleted");
+const actionInfosPhotosEdited = pwg_getPageString("%d photos edited");
+const actionInfosPhotosMoved = pwg_getPageString("%d photos moved");
 
-const actionInfos_group_added = pwg_getPageString("%d group added");
-const actionInfos_group_deleted = pwg_getPageString("%d group deleted");
-const actionInfos_group_edited = pwg_getPageString("%d group edited");
-const actionInfos_group_moved = pwg_getPageString("%d group moved");
+const actionInfosGroupAdded = pwg_getPageString("%d group added");
+const actionInfosGroupDeleted = pwg_getPageString("%d group deleted");
+const actionInfosGroupEdited = pwg_getPageString("%d group edited");
+const actionInfosGroupMoved = pwg_getPageString("%d group moved");
 
-const actionInfos_groups_added = pwg_getPageString("%d groups added");
-const actionInfos_groups_deleted = pwg_getPageString("%d groups deleted");
-const actionInfos_groups_edited = pwg_getPageString("%d groups edited");
-const actionInfos_groups_moved = pwg_getPageString("%d groups moved");
+const actionInfosGroupsAdded = pwg_getPageString("%d groups added");
+const actionInfosGroupsDeleted = pwg_getPageString("%d groups deleted");
+const actionInfosGroupsEdited = pwg_getPageString("%d groups edited");
+const actionInfosGroupsMoved = pwg_getPageString("%d groups moved");
 
-const actionInfos_tag_added = pwg_getPageString("%d tag added");
-const actionInfos_tag_deleted = pwg_getPageString("%d tag deleted");
-const actionInfos_tag_edited = pwg_getPageString("%d tag edited");
-const actionInfos_tag_moved = pwg_getPageString("%d tag moved");
+const actionInfosTagAdded = pwg_getPageString("%d tag added");
+const actionInfosTagDeleted = pwg_getPageString("%d tag deleted");
+const actionInfosTagEdited = pwg_getPageString("%d tag edited");
+const actionInfosTagMoved = pwg_getPageString("%d tag moved");
 
-const actionInfos_tags_added = pwg_getPageString("%d tags added");
-const actionInfos_tags_deleted = pwg_getPageString("%d tags deleted");
-const actionInfos_tags_edited = pwg_getPageString("%d tags edited");
-const actionInfos_tags_moved = pwg_getPageString("%d tags moved");
+const actionInfosTagsAdded = pwg_getPageString("%d tags added");
+const actionInfosTagsDeleted = pwg_getPageString("%d tags deleted");
+const actionInfosTagsEdited = pwg_getPageString("%d tags edited");
+const actionInfosTagsMoved = pwg_getPageString("%d tags moved");
 
 //{*<-- Getting and Displaying Activities -->*}
 
-// Declared before the immediately-invoked call below: get_user_activity()
+// Declared before the immediately-invoked call below: getUserActivity()
 // itself is hoisted (a function declaration), but this const binding
 // would otherwise still be in its temporal dead zone at that call site
 // since top-level script execution reaches it before this line.
 const ACTIVITY_DISPLAY_PAGE_SIZE = 100;
 
-if (additional_filt_type !== false) {
-  object_filter = additional_filt_type;
+if (additionalFiltType !== false) {
+  objectFilter = additionalFiltType;
 }
 
-void get_user_activity(
-  activity_page,
-  uid_filter,
-  action_filter,
-  object_filter,
-  [date_min_filter, date_max_filter],
-  additional_filt_value,
+void getUserActivity(
+  activityPage,
+  uidFilter,
+  actionFilter,
+  objectFilter,
+  [dateMinFilter, dateMaxFilter],
+  additionalFiltValue,
 );
 
 /*
@@ -311,7 +311,7 @@ async function fetchAndMergeActivityLines(
   return { lines: lines, endPage: !hasMore, nextOffset: offset };
 }
 
-async function get_user_activity(
+async function getUserActivity(
   page: number,
   uid: number | undefined,
   action: string | undefined,
@@ -347,7 +347,7 @@ async function get_user_activity(
 
   try {
     const merged = await fetchAndMergeActivityLines(
-      page_offsets[page - 1]!,
+      pageOffsets[page - 1]!,
       uid,
       action,
       object,
@@ -355,11 +355,11 @@ async function get_user_activity(
       id,
     );
 
-    uid_filter = uid;
-    action_filter = action;
-    object_filter = object;
-    date_min_filter = date[0]!;
-    date_max_filter = date[1]!;
+    uidFilter = uid;
+    actionFilter = action;
+    objectFilter = object;
+    dateMinFilter = date[0]!;
+    dateMaxFilter = date[1]!;
 
     hide(document.querySelectorAll(".loading"));
 
@@ -371,9 +371,9 @@ async function get_user_activity(
       emptyLine();
     }
 
-    end_page = merged.endPage;
-    if (!page_offsets.includes(merged.nextOffset)) {
-      page_offsets.push(merged.nextOffset);
+    ({ endPage } = merged);
+    if (!pageOffsets.includes(merged.nextOffset)) {
+      pageOffsets.push(merged.nextOffset);
     }
 
     removeClass(
@@ -381,7 +381,7 @@ async function get_user_activity(
       "icon-spin6",
     );
     show(document.querySelectorAll(".pagination-item-container"));
-    update_pagination_menu();
+    updatePaginationMenu();
   } catch (e: unknown) {
     console.error("ajax call failed", e);
   }
@@ -399,7 +399,7 @@ function lineConstructor(line: MergedActivityLine) {
     {* console.log(line); *}*/
   attr(newLine, "id", String(line.id));
 
-  let final_albumInfos: string;
+  let finalAlbumInfos: string;
 
   //{* Determines wich string need to be placed in the line constructed *}
 
@@ -410,14 +410,14 @@ function lineConstructor(line: MergedActivityLine) {
         addClass(find(newLine, ".action-type"), "icon-blue");
         addClass(
           find(newLine, ".user-pic"),
-          color_icons[(line.user_id ?? 0) % 5]!,
+          colorIcons[(line.user_id ?? 0) % 5]!,
         );
         addClass(find(newLine, ".action-icon"), "icon-pencil");
 
-        html(find(newLine, ".action-name"), actionType_edit);
+        html(find(newLine, ".action-name"), actionTypeEdit);
         switch (line.object) {
           case "user":
-            final_albumInfos = actionInfos_users_edited.replace(
+            finalAlbumInfos = actionInfosUsersEdited.replace(
               "%d",
               String(line.counter),
             );
@@ -425,7 +425,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "album":
-            final_albumInfos = actionInfos_albums_edited.replace(
+            finalAlbumInfos = actionInfosAlbumsEdited.replace(
               "%d",
               String(line.counter),
             );
@@ -433,7 +433,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "group":
-            final_albumInfos = actionInfos_groups_edited.replace(
+            finalAlbumInfos = actionInfosGroupsEdited.replace(
               "%d",
               String(line.counter),
             );
@@ -441,7 +441,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "photo":
-            final_albumInfos = actionInfos_photos_edited.replace(
+            finalAlbumInfos = actionInfosPhotosEdited.replace(
               "%d",
               String(line.counter),
             );
@@ -449,7 +449,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "tag":
-            final_albumInfos = actionInfos_tags_edited.replace(
+            finalAlbumInfos = actionInfosTagsEdited.replace(
               "%d",
               String(line.counter),
             );
@@ -457,7 +457,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           default:
-            final_albumInfos =
+            finalAlbumInfos =
               String(line.counter) + " " + line.object + " " + line.action;
             break;
         }
@@ -468,14 +468,14 @@ function lineConstructor(line: MergedActivityLine) {
         addClass(find(newLine, ".action-type"), "icon-green");
         addClass(
           find(newLine, ".user-pic"),
-          color_icons[(line.user_id ?? 0) % 5]!,
+          colorIcons[(line.user_id ?? 0) % 5]!,
         );
         addClass(find(newLine, ".action-icon"), "icon-plus");
 
-        html(find(newLine, ".action-name"), actionType_add);
+        html(find(newLine, ".action-name"), actionTypeAdd);
         switch (line.object) {
           case "user":
-            final_albumInfos = actionInfos_users_added.replace(
+            finalAlbumInfos = actionInfosUsersAdded.replace(
               "%d",
               String(line.counter),
             );
@@ -483,7 +483,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "album":
-            final_albumInfos = actionInfos_albums_added.replace(
+            finalAlbumInfos = actionInfosAlbumsAdded.replace(
               "%d",
               String(line.counter),
             );
@@ -491,7 +491,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "group":
-            final_albumInfos = actionInfos_groups_added.replace(
+            finalAlbumInfos = actionInfosGroupsAdded.replace(
               "%d",
               String(line.counter),
             );
@@ -499,7 +499,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "photo":
-            final_albumInfos = actionInfos_photos_added.replace(
+            finalAlbumInfos = actionInfosPhotosAdded.replace(
               "%d",
               String(line.counter),
             );
@@ -507,7 +507,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "tag":
-            final_albumInfos = actionInfos_tags_added.replace(
+            finalAlbumInfos = actionInfosTagsAdded.replace(
               "%d",
               String(line.counter),
             );
@@ -515,7 +515,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           default:
-            final_albumInfos =
+            finalAlbumInfos =
               String(line.counter) + " " + line.object + " " + line.action;
             break;
         }
@@ -526,14 +526,14 @@ function lineConstructor(line: MergedActivityLine) {
         addClass(find(newLine, ".action-type"), "icon-red");
         addClass(
           find(newLine, ".user-pic"),
-          color_icons[(line.user_id ?? 0) % 5]!,
+          colorIcons[(line.user_id ?? 0) % 5]!,
         );
         addClass(find(newLine, ".action-icon"), "icon-trash-1");
 
-        html(find(newLine, ".action-name"), actionType_delete);
+        html(find(newLine, ".action-name"), actionTypeDelete);
         switch (line.object) {
           case "user":
-            final_albumInfos = actionInfos_users_deleted.replace(
+            finalAlbumInfos = actionInfosUsersDeleted.replace(
               "%d",
               String(line.counter),
             );
@@ -541,7 +541,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "album":
-            final_albumInfos = actionInfos_albums_deleted.replace(
+            finalAlbumInfos = actionInfosAlbumsDeleted.replace(
               "%d",
               String(line.counter),
             );
@@ -549,7 +549,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "group":
-            final_albumInfos = actionInfos_groups_deleted.replace(
+            finalAlbumInfos = actionInfosGroupsDeleted.replace(
               "%d",
               String(line.counter),
             );
@@ -557,7 +557,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "photo":
-            final_albumInfos = actionInfos_photos_deleted.replace(
+            finalAlbumInfos = actionInfosPhotosDeleted.replace(
               "%d",
               String(line.counter),
             );
@@ -565,7 +565,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "tag":
-            final_albumInfos = actionInfos_tags_deleted.replace(
+            finalAlbumInfos = actionInfosTagsDeleted.replace(
               "%d",
               String(line.counter),
             );
@@ -573,7 +573,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           default:
-            final_albumInfos =
+            finalAlbumInfos =
               String(line.counter) + " " + line.object + " " + line.action;
             break;
         }
@@ -584,14 +584,14 @@ function lineConstructor(line: MergedActivityLine) {
         addClass(find(newLine, ".action-type"), "icon-yellow");
         addClass(
           find(newLine, ".user-pic"),
-          color_icons[(line.user_id ?? 0) % 5]!,
+          colorIcons[(line.user_id ?? 0) % 5]!,
         );
         addClass(find(newLine, ".action-icon"), "icon-move");
 
-        html(find(newLine, ".action-name"), actionType_move);
+        html(find(newLine, ".action-name"), actionTypeMove);
         switch (line.object) {
           case "album":
-            final_albumInfos = actionInfos_albums_moved.replace(
+            finalAlbumInfos = actionInfosAlbumsMoved.replace(
               "%d",
               String(line.counter),
             );
@@ -599,7 +599,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "group":
-            final_albumInfos = actionInfos_groups_moved.replace(
+            finalAlbumInfos = actionInfosGroupsMoved.replace(
               "%d",
               String(line.counter),
             );
@@ -607,7 +607,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "photo":
-            final_albumInfos = actionInfos_photos_moved.replace(
+            finalAlbumInfos = actionInfosPhotosMoved.replace(
               "%d",
               String(line.counter),
             );
@@ -615,7 +615,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "tag":
-            final_albumInfos = actionInfos_tags_moved.replace(
+            finalAlbumInfos = actionInfosTagsMoved.replace(
               "%d",
               String(line.counter),
             );
@@ -623,7 +623,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           default:
-            final_albumInfos =
+            finalAlbumInfos =
               String(line.counter) + " " + line.object + " " + line.action;
             break;
         }
@@ -634,14 +634,14 @@ function lineConstructor(line: MergedActivityLine) {
         addClass(find(newLine, ".action-type"), "icon-purple");
         addClass(
           find(newLine, ".user-pic"),
-          color_icons[(line.user_id ?? 0) % 5]!,
+          colorIcons[(line.user_id ?? 0) % 5]!,
         );
         addClass(find(newLine, ".action-icon"), "icon-key");
         addClass(find(newLine, ".action-section"), "icon-user-1");
 
-        html(find(newLine, ".action-name"), actionType_login);
+        html(find(newLine, ".action-name"), actionTypeLogin);
 
-        final_albumInfos = actionInfos_users_logged_in.replace(
+        finalAlbumInfos = actionInfosUsersLoggedIn.replace(
           "%d",
           String(line.counter),
         );
@@ -653,20 +653,20 @@ function lineConstructor(line: MergedActivityLine) {
         if (line.user_id !== 2) {
           addClass(
             find(newLine, ".user-pic"),
-            color_icons[(line.user_id ?? 0) % 5]!,
+            colorIcons[(line.user_id ?? 0) % 5]!,
           );
         } else {
           addClass(
             find(newLine, ".user-pic"),
-            color_icons[(line.object_id[0] ?? 0) % 5]!,
+            colorIcons[(line.object_id[0] ?? 0) % 5]!,
           );
         }
         addClass(find(newLine, ".action-icon"), "icon-logout");
         addClass(find(newLine, ".action-section"), "icon-user-1");
 
-        html(find(newLine, ".action-name"), actionType_logout);
+        html(find(newLine, ".action-name"), actionTypeLogout);
 
-        final_albumInfos = actionInfos_users_logged_out.replace(
+        finalAlbumInfos = actionInfosUsersLoggedOut.replace(
           "%d",
           String(line.counter),
         );
@@ -677,11 +677,11 @@ function lineConstructor(line: MergedActivityLine) {
         addClass(find(newLine, ".action-type"), "icon-purple");
         addClass(
           find(newLine, ".user-pic"),
-          color_icons[(line.user_id ?? 0) % 5]!,
+          colorIcons[(line.user_id ?? 0) % 5]!,
         );
         addClass(find(newLine, ".action-section"), "icon-user-1");
         html(find(newLine, ".action-name"), line.action);
-        final_albumInfos = "x" + String(line.counter);
+        finalAlbumInfos = "x" + String(line.counter);
         break;
     }
   } else {
@@ -691,14 +691,14 @@ function lineConstructor(line: MergedActivityLine) {
         addClass(find(newLine, ".action-type"), "icon-blue");
         addClass(
           find(newLine, ".user-pic"),
-          color_icons[(line.user_id ?? 0) % 5]!,
+          colorIcons[(line.user_id ?? 0) % 5]!,
         );
         addClass(find(newLine, ".action-icon"), "icon-pencil");
 
-        html(find(newLine, ".action-name"), actionType_edit);
+        html(find(newLine, ".action-name"), actionTypeEdit);
         switch (line.object) {
           case "user":
-            final_albumInfos = actionInfos_user_edited.replace(
+            finalAlbumInfos = actionInfosUserEdited.replace(
               "%d",
               String(line.counter),
             );
@@ -706,7 +706,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "album":
-            final_albumInfos = actionInfos_album_edited.replace(
+            finalAlbumInfos = actionInfosAlbumEdited.replace(
               "%d",
               String(line.counter),
             );
@@ -714,7 +714,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "group":
-            final_albumInfos = actionInfos_group_edited.replace(
+            finalAlbumInfos = actionInfosGroupEdited.replace(
               "%d",
               String(line.counter),
             );
@@ -722,7 +722,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "photo":
-            final_albumInfos = actionInfos_photo_edited.replace(
+            finalAlbumInfos = actionInfosPhotoEdited.replace(
               "%d",
               String(line.counter),
             );
@@ -730,7 +730,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "tag":
-            final_albumInfos = actionInfos_tag_edited.replace(
+            finalAlbumInfos = actionInfosTagEdited.replace(
               "%d",
               String(line.counter),
             );
@@ -738,7 +738,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           default:
-            final_albumInfos =
+            finalAlbumInfos =
               String(line.counter) + " " + line.object + " " + line.action;
             break;
         }
@@ -748,14 +748,14 @@ function lineConstructor(line: MergedActivityLine) {
         addClass(find(newLine, ".action-type"), "icon-green");
         addClass(
           find(newLine, ".user-pic"),
-          color_icons[(line.user_id ?? 0) % 5]!,
+          colorIcons[(line.user_id ?? 0) % 5]!,
         );
         addClass(find(newLine, ".action-icon"), "icon-plus");
 
-        html(find(newLine, ".action-name"), actionType_add);
+        html(find(newLine, ".action-name"), actionTypeAdd);
         switch (line.object) {
           case "user":
-            final_albumInfos = actionInfos_user_added.replace(
+            finalAlbumInfos = actionInfosUserAdded.replace(
               "%d",
               String(line.counter),
             );
@@ -763,7 +763,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "album":
-            final_albumInfos = actionInfos_album_added.replace(
+            finalAlbumInfos = actionInfosAlbumAdded.replace(
               "%d",
               String(line.counter),
             );
@@ -771,7 +771,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "group":
-            final_albumInfos = actionInfos_group_added.replace(
+            finalAlbumInfos = actionInfosGroupAdded.replace(
               "%d",
               String(line.counter),
             );
@@ -779,7 +779,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "photo":
-            final_albumInfos = actionInfos_photo_added.replace(
+            finalAlbumInfos = actionInfosPhotoAdded.replace(
               "%d",
               String(line.counter),
             );
@@ -787,7 +787,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "tag":
-            final_albumInfos = actionInfos_tag_added.replace(
+            finalAlbumInfos = actionInfosTagAdded.replace(
               "%d",
               String(line.counter),
             );
@@ -795,7 +795,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           default:
-            final_albumInfos =
+            finalAlbumInfos =
               String(line.counter) + " " + line.object + " " + line.action;
 
             break;
@@ -806,14 +806,14 @@ function lineConstructor(line: MergedActivityLine) {
         addClass(find(newLine, ".action-type"), "icon-red");
         addClass(
           find(newLine, ".user-pic"),
-          color_icons[(line.user_id ?? 0) % 5]!,
+          colorIcons[(line.user_id ?? 0) % 5]!,
         );
         addClass(find(newLine, ".action-icon"), "icon-trash-1");
 
-        html(find(newLine, ".action-name"), actionType_delete);
+        html(find(newLine, ".action-name"), actionTypeDelete);
         switch (line.object) {
           case "user":
-            final_albumInfos = actionInfos_user_deleted.replace(
+            finalAlbumInfos = actionInfosUserDeleted.replace(
               "%d",
               String(line.counter),
             );
@@ -821,7 +821,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "album":
-            final_albumInfos = actionInfos_album_deleted.replace(
+            finalAlbumInfos = actionInfosAlbumDeleted.replace(
               "%d",
               String(line.counter),
             );
@@ -829,7 +829,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "group":
-            final_albumInfos = actionInfos_group_deleted.replace(
+            finalAlbumInfos = actionInfosGroupDeleted.replace(
               "%d",
               String(line.counter),
             );
@@ -837,7 +837,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "photo":
-            final_albumInfos = actionInfos_photo_deleted.replace(
+            finalAlbumInfos = actionInfosPhotoDeleted.replace(
               "%d",
               String(line.counter),
             );
@@ -845,7 +845,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "tag":
-            final_albumInfos = actionInfos_tag_deleted.replace(
+            finalAlbumInfos = actionInfosTagDeleted.replace(
               "%d",
               String(line.counter),
             );
@@ -853,7 +853,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           default:
-            final_albumInfos =
+            finalAlbumInfos =
               String(line.counter) + " " + line.object + " " + line.action;
             break;
         }
@@ -863,14 +863,14 @@ function lineConstructor(line: MergedActivityLine) {
         addClass(find(newLine, ".action-type"), "icon-yellow");
         addClass(
           find(newLine, ".user-pic"),
-          color_icons[(line.user_id ?? 0) % 5]!,
+          colorIcons[(line.user_id ?? 0) % 5]!,
         );
         addClass(find(newLine, ".action-icon"), "icon-move");
 
-        html(find(newLine, ".action-name"), actionType_move);
+        html(find(newLine, ".action-name"), actionTypeMove);
         switch (line.object) {
           case "album":
-            final_albumInfos = actionInfos_album_moved.replace(
+            finalAlbumInfos = actionInfosAlbumMoved.replace(
               "%d",
               String(line.counter),
             );
@@ -878,7 +878,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "group":
-            final_albumInfos = actionInfos_group_moved.replace(
+            finalAlbumInfos = actionInfosGroupMoved.replace(
               "%d",
               String(line.counter),
             );
@@ -886,7 +886,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "photo":
-            final_albumInfos = actionInfos_photo_moved.replace(
+            finalAlbumInfos = actionInfosPhotoMoved.replace(
               "%d",
               String(line.counter),
             );
@@ -894,7 +894,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           case "tag":
-            final_albumInfos = actionInfos_tag_moved.replace(
+            finalAlbumInfos = actionInfosTagMoved.replace(
               "%d",
               String(line.counter),
             );
@@ -902,7 +902,7 @@ function lineConstructor(line: MergedActivityLine) {
 
             break;
           default:
-            final_albumInfos =
+            finalAlbumInfos =
               String(line.counter) + " " + line.object + " " + line.action;
             break;
         }
@@ -912,14 +912,14 @@ function lineConstructor(line: MergedActivityLine) {
         addClass(find(newLine, ".action-type"), "icon-purple");
         addClass(
           find(newLine, ".user-pic"),
-          color_icons[(line.user_id ?? 0) % 5]!,
+          colorIcons[(line.user_id ?? 0) % 5]!,
         );
         addClass(find(newLine, ".action-icon"), "icon-key");
         addClass(find(newLine, ".action-section"), "icon-user-1");
 
-        html(find(newLine, ".action-name"), actionType_login);
+        html(find(newLine, ".action-name"), actionTypeLogin);
 
-        final_albumInfos = actionInfos_user_logged_in.replace(
+        finalAlbumInfos = actionInfosUserLoggedIn.replace(
           "%d",
           String(line.counter),
         );
@@ -930,20 +930,20 @@ function lineConstructor(line: MergedActivityLine) {
         if (line.user_id !== 2) {
           addClass(
             find(newLine, ".user-pic"),
-            color_icons[(line.user_id ?? 0) % 5]!,
+            colorIcons[(line.user_id ?? 0) % 5]!,
           );
         } else {
           addClass(
             find(newLine, ".user-pic"),
-            color_icons[(line.object_id[0] ?? 0) % 5]!,
+            colorIcons[(line.object_id[0] ?? 0) % 5]!,
           );
         }
         addClass(find(newLine, ".action-icon"), "icon-logout");
         addClass(find(newLine, ".action-section"), "icon-user-1");
 
-        html(find(newLine, ".action-name"), actionType_logout);
+        html(find(newLine, ".action-name"), actionTypeLogout);
 
-        final_albumInfos = actionInfos_user_logged_out.replace(
+        finalAlbumInfos = actionInfosUserLoggedOut.replace(
           "%d",
           String(line.counter),
         );
@@ -954,16 +954,16 @@ function lineConstructor(line: MergedActivityLine) {
         addClass(find(newLine, ".action-type"), "icon-purple");
         addClass(
           find(newLine, ".user-pic"),
-          color_icons[(line.user_id ?? 0) % 5]!,
+          colorIcons[(line.user_id ?? 0) % 5]!,
         );
         addClass(find(newLine, ".action-section"), "icon-user-1");
         html(find(newLine, ".action-name"), line.action);
-        final_albumInfos = "x" + String(line.counter);
+        finalAlbumInfos = "x" + String(line.counter);
         break;
     }
   }
 
-  html(find(newLine, ".action-infos-test"), final_albumInfos);
+  html(find(newLine, ".action-infos-test"), finalAlbumInfos);
 
   /* Action_section */
   html(find(newLine, ".nb_items"), String(line.counter));
@@ -974,7 +974,7 @@ function lineConstructor(line: MergedActivityLine) {
 
   /* User _Section */
   html(find(newLine, ".user-name"), line.username);
-  html(find(newLine, ".user-pic"), get_initials(line.username));
+  html(find(newLine, ".user-pic"), getInitials(line.username));
 
   /* Detail_section */
   html(find(newLine, ".detail-item-1"), line.ip_address ?? "");
@@ -998,7 +998,7 @@ function lineConstructor(line: MergedActivityLine) {
     line.details.agent !== ""
   ) {
     const isConnectedWith = Boolean(line.details.connected_with);
-    const api_key = isConnectedWith ? "API Key, " : "";
+    const apiKey = isConnectedWith ? "API Key, " : "";
     const details = isConnectedWith
       ? '<i class="icon-key"></i>' + line.details.agent
       : line.details.agent;
@@ -1006,19 +1006,19 @@ function lineConstructor(line: MergedActivityLine) {
     attr(
       find(newLine, ".detail-item-3"),
       "title",
-      api_key + "User-Agent: " + line.details.agent,
+      apiKey + "User-Agent: " + line.details.agent,
     );
   } else if (
     line.details.users &&
     line.action !== "logout" &&
     line.action !== "login"
   ) {
-    const user_string = [...new Set(line.details.users)].toString();
-    html(find(newLine, ".detail-item-3"), user_string);
+    const userString = [...new Set(line.details.users)].toString();
+    html(find(newLine, ".detail-item-3"), userString);
     attr(
       find(newLine, ".detail-item-3"),
       "title",
-      users_key + ": " + user_string,
+      usersKey + ": " + userString,
     );
   } else {
     remove(find(newLine, ".detail-item-3"));
@@ -1038,7 +1038,7 @@ function emptyLine() {
   show(document.querySelectorAll(".activity-noresult"));
 }
 
-function get_initials(username: string) {
+function getInitials(username: string) {
   const words = username.toUpperCase().split(" ");
   let res = words[0]![0]!;
 
@@ -1051,32 +1051,32 @@ function get_initials(username: string) {
 
 //{* Pagination *}
 
-function move_to_page(page: number) {
+function moveToPage(page: number) {
   if (page < 0) return;
-  actual_page = page;
-  update_pagination_menu(page);
-  void get_user_activity(
+  actualPage = page;
+  updatePaginationMenu(page);
+  void getUserActivity(
     page,
-    uid_filter,
-    action_filter,
-    object_filter,
-    [date_min_filter, date_max_filter],
-    additional_filt_value,
+    uidFilter,
+    actionFilter,
+    objectFilter,
+    [dateMinFilter, dateMaxFilter],
+    additionalFiltValue,
   );
 }
 
 on(document.querySelectorAll(".pagination-arrow.rigth"), "click", () => {
-  move_to_page(actual_page + 1);
+  moveToPage(actualPage + 1);
 });
 
 on(document.querySelectorAll(".pagination-arrow.left"), "click", () => {
-  move_to_page(actual_page - 1);
+  moveToPage(actualPage - 1);
 });
 
-function update_pagination_menu(_page?: number) {
+function updatePaginationMenu(_page?: number) {
   updateArrows();
-  update_pagination_items();
-  if (end_page && actual_page === 1) {
+  updatePaginationItems();
+  if (endPage && actualPage === 1) {
     hide(document.querySelectorAll(".pagination-container"));
   } else {
     show(document.querySelectorAll(".pagination-container"));
@@ -1084,7 +1084,7 @@ function update_pagination_menu(_page?: number) {
 }
 
 function updateArrows() {
-  if (actual_page === 1) {
+  if (actualPage === 1) {
     addClass(
       document.querySelectorAll(".pagination-arrow.left"),
       "unavailable",
@@ -1095,7 +1095,7 @@ function updateArrows() {
       "unavailable",
     );
   }
-  if (end_page) {
+  if (endPage) {
     addClass(
       document.querySelectorAll(".pagination-arrow.rigth"),
       "unavailable",
@@ -1108,53 +1108,53 @@ function updateArrows() {
   }
 }
 
-function update_pagination_items() {
+function updatePaginationItems() {
   remove(document.querySelectorAll(".pagination-item-container a"));
   remove(document.querySelectorAll(".pagination-item-container span"));
 
-  append_pagination_item(1);
+  appendPaginationItem(1);
 
-  if (actual_page > 2) {
-    append_pagination_item();
+  if (actualPage > 2) {
+    appendPaginationItem();
   }
-  if (actual_page !== 1) {
-    append_pagination_item(actual_page);
+  if (actualPage !== 1) {
+    appendPaginationItem(actualPage);
   }
-  if (!end_page) {
-    append_pagination_item();
+  if (!endPage) {
+    appendPaginationItem();
   }
 }
 
-function append_pagination_item(page: number | null = null) {
+function appendPaginationItem(page: number | null = null) {
   const container = document.querySelector(".pagination-item-container");
   if (container === null) return;
 
   if (page != null) {
-    const new_tag = parseHtml(page_item.replace(/%d/g, String(page)))[0]!;
-    container.appendChild(new_tag);
-    if (actual_page === page) {
-      addClass(new_tag, "actual");
+    const newTag = parseHtml(pageItem.replace(/%d/g, String(page)))[0]!;
+    container.appendChild(newTag);
+    if (actualPage === page) {
+      addClass(newTag, "actual");
     }
-    on(new_tag, "click", () => {
+    on(newTag, "click", () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      move_to_page(data(new_tag, "page") as number);
+      moveToPage(data(newTag, "page") as number);
     });
   } else {
-    container.appendChild(parseHtml(page_ellipsis)[0]!);
+    container.appendChild(parseHtml(pageEllipsis)[0]!);
   }
 }
 
-function page_reset() {
-  activity_page = 1;
-  page_offsets = [0];
-  actual_page = 1;
-  end_page = false;
+function pageReset() {
+  activityPage = 1;
+  pageOffsets = [0];
+  actualPage = 1;
+  endPage = false;
 }
 
 ready(function () {
   append(
     document.querySelectorAll("h1"),
-    `<span class='badge-number'>` + String(nb_users - 1) + `</span>`,
+    `<span class='badge-number'>` + String(nbUsers - 1) + `</span>`,
   );
 
   // The `.selectize-input`/`.item[data-value]` markup below is
@@ -1169,33 +1169,33 @@ ready(function () {
           "full",
         )
       ) {
-        page_reset();
+        pageReset();
         const item = document.querySelector(
           ".user-selecter .selectize-input .item",
         );
         const value = item !== null ? data(item, "value") : undefined;
         if (value === "none") {
           //{* call ajax sur activity list sans uid *}
-          void get_user_activity(
+          void getUserActivity(
             1,
             undefined,
-            action_filter,
-            object_filter,
-            [date_min_filter, date_max_filter],
-            additional_filt_value,
+            actionFilter,
+            objectFilter,
+            [dateMinFilter, dateMaxFilter],
+            additionalFiltValue,
           );
         } else {
           //{* call ajax sur activity list avec uid en param *}
-          void get_user_activity(
+          void getUserActivity(
             1,
             // Excluded the "none" sentinel above -- data() already coerces
             // a real numeric data-value to a real number; Number() is a
             // no-op there and a real parse for any other case.
             Number(value),
-            action_filter,
-            object_filter,
-            [date_min_filter, date_max_filter],
-            additional_filt_value,
+            actionFilter,
+            objectFilter,
+            [dateMinFilter, dateMaxFilter],
+            additionalFiltValue,
           );
         }
       }
@@ -1212,43 +1212,43 @@ ready(function () {
           "full",
         )
       ) {
-        page_reset();
+        pageReset();
         const item = document.querySelector(
           ".action-selecter .selectize-input .item",
         );
         const value = item !== null ? data(item, "value") : undefined;
         if (value === "none") {
           //{* call ajax sur activity list sans action et object *}
-          if (additional_filt_type !== false) {
-            void get_user_activity(
+          if (additionalFiltType !== false) {
+            void getUserActivity(
               1,
-              uid_filter,
+              uidFilter,
               undefined,
-              object_filter,
-              [date_min_filter, date_max_filter],
-              additional_filt_value,
+              objectFilter,
+              [dateMinFilter, dateMaxFilter],
+              additionalFiltValue,
             );
           } else {
-            void get_user_activity(
+            void getUserActivity(
               1,
-              uid_filter,
+              uidFilter,
               undefined,
               undefined,
-              [date_min_filter, date_max_filter],
-              additional_filt_value,
+              [dateMinFilter, dateMaxFilter],
+              additionalFiltValue,
             );
           }
         } else {
           //{* call ajax sur activity list avec action et object en param *}
           // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
           const [object, action] = (value as string).split("/");
-          void get_user_activity(
+          void getUserActivity(
             1,
-            uid_filter,
+            uidFilter,
             action,
             object,
-            [date_min_filter, date_max_filter],
-            additional_filt_value,
+            [dateMinFilter, dateMaxFilter],
+            additionalFiltValue,
           );
         }
       }
@@ -1259,24 +1259,24 @@ ready(function () {
     document.querySelectorAll("#date_min_activity"),
     "change",
     function (): void {
-      page_reset();
+      pageReset();
       const minVal = val(document.querySelectorAll("#date_min_activity"));
       if (minVal === "") {
         document
           .getElementById("date_max_activity")!
-          .setAttribute("min", date_min);
+          .setAttribute("min", dateMin);
       } else {
         document
           .getElementById("date_max_activity")!
           .setAttribute("min", String(minVal));
       }
-      void get_user_activity(
-        activity_page,
-        uid_filter,
-        action_filter,
-        object_filter,
-        [minVal, date_max_filter],
-        additional_filt_value,
+      void getUserActivity(
+        activityPage,
+        uidFilter,
+        actionFilter,
+        objectFilter,
+        [minVal, dateMaxFilter],
+        additionalFiltValue,
       );
     },
   );
@@ -1285,24 +1285,24 @@ ready(function () {
     document.querySelectorAll("#date_max_activity"),
     "change",
     function (): void {
-      page_reset();
+      pageReset();
       const maxVal = val(document.querySelectorAll("#date_max_activity"));
       if (maxVal === "") {
         document
           .getElementById("date_min_activity")!
-          .setAttribute("max", date_max);
+          .setAttribute("max", dateMax);
       } else {
         document
           .getElementById("date_min_activity")!
           .setAttribute("max", String(maxVal));
       }
-      void get_user_activity(
-        activity_page,
-        uid_filter,
-        action_filter,
-        object_filter,
-        [date_min_filter, maxVal],
-        additional_filt_value,
+      void getUserActivity(
+        activityPage,
+        uidFilter,
+        actionFilter,
+        objectFilter,
+        [dateMinFilter, maxVal],
+        additionalFiltValue,
       );
     },
   );
@@ -1318,7 +1318,7 @@ ready(function () {
       selectize(el, {}).clear();
     });
 
-  if (additional_filt_type !== false) {
+  if (additionalFiltType !== false) {
     addClass(
       document.querySelectorAll("#activityMoreFilters"),
       "extend-padding",

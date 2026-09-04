@@ -30,8 +30,8 @@ ready(function () {
     document.querySelectorAll("form#categoryNotify"),
     "submit",
     function (event: Event): void {
-      let who_selected = false;
-      const who_option = String(
+      let whoSelected = false;
+      const whoOption = String(
         val(document.querySelectorAll("input[name=who]:checked")),
       );
 
@@ -39,13 +39,13 @@ ready(function () {
       // CSS selector, and querySelectorAll throws a SyntaxError on it.
       // `HTMLSelectElement.selectedOptions` is the native equivalent.
       const whoSelect = document.querySelector<HTMLSelectElement>(
-        ".who_" + who_option + " select",
+        ".who_" + whoOption + " select",
       );
       if (whoSelect !== null && whoSelect.selectedOptions.length > 0) {
-        who_selected = true;
+        whoSelected = true;
       }
 
-      if (!who_selected) {
+      if (!whoSelected) {
         show(document.querySelectorAll(".actionButtons .errors"));
         event.preventDefault();
       } else {

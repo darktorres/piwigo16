@@ -1,5 +1,5 @@
 import type { components, operations } from "../../../../openapi/client/schema";
-import { jConfirm_alert_options, TemporaryState } from "./common";
+import { jConfirmAlertOptions, TemporaryState } from "./common";
 import { UsersCache } from "./LocalStorageCache";
 // Type-only -- erased at compile time, so it never reaches Rollup's
 // module graph at all.
@@ -73,37 +73,33 @@ interface UserSelectOption extends Record<string, unknown> {
 
 const DELAY_FEEDBACK = 3000;
 
-const pwg_token = pwg_getPageData<string>("csrf_token");
-const str_member_default = pwg_getPageString("member");
-const str_members_default = pwg_getPageString("members");
-const str_group_created = pwg_getPageString("Group added");
-const str_renaming_done = pwg_getPageString("Group renamed");
-const str_name_taken = pwg_getPageString("Name is already taken");
-const str_name_not_empty = pwg_getPageString("Name field must not be empty");
-const str_group_deleted = pwg_getPageString('Group "%s" succesfully deleted');
-const str_groups_deleted = pwg_getPageString("Groups {%s} succesfully deleted");
-const str_set_default = pwg_getPageString("Set as group for new users");
-const str_unset_default = pwg_getPageString("Unset as group for new users");
-const str_delete = pwg_getPageString(
+const pwgToken = pwg_getPageData<string>("csrf_token");
+const strMemberDefault = pwg_getPageString("member");
+const strMembersDefault = pwg_getPageString("members");
+const strGroupCreated = pwg_getPageString("Group added");
+const strRenamingDone = pwg_getPageString("Group renamed");
+const strNameTaken = pwg_getPageString("Name is already taken");
+const strNameNotEmpty = pwg_getPageString("Name field must not be empty");
+const strGroupDeleted = pwg_getPageString('Group "%s" succesfully deleted');
+const strGroupsDeleted = pwg_getPageString("Groups {%s} succesfully deleted");
+const strSetDefault = pwg_getPageString("Set as group for new users");
+const strUnsetDefault = pwg_getPageString("Unset as group for new users");
+const strDelete = pwg_getPageString(
   'Are you sure you want to delete group "%s"?',
 );
-const str_yes_delete_confirmation = pwg_getPageString("Yes, delete");
-const str_no_delete_confirmation = pwg_getPageString(
-  "No, I have changed my mind",
-);
-const str_user_associated = pwg_getPageString("User associated");
-const str_user_dissociate = pwg_getPageString(
-  "Dissociate user from this group",
-);
-const str_user_dissociated = pwg_getPageString(
+const strYesDeleteConfirmation = pwg_getPageString("Yes, delete");
+const strNoDeleteConfirmation = pwg_getPageString("No, I have changed my mind");
+const strUserAssociated = pwg_getPageString("User associated");
+const strUserDissociate = pwg_getPageString("Dissociate user from this group");
+const strUserDissociated = pwg_getPageString(
   'User "%s" dissociated from this group',
 );
-const str_user_list = pwg_getPageString("Manage the members");
-const str_merged_into = pwg_getPageString(
+const strUserList = pwg_getPageString("Manage the members");
+const strMergedInto = pwg_getPageString(
   'Group(s) {%s1} succesfully merged into "%s2"',
 );
-const str_copy = pwg_getPageString(" (copy)");
-const str_other_copy = pwg_getPageString(" (copy %s)");
+const strCopy = pwg_getPageString(" (copy)");
+const strOtherCopy = pwg_getPageString(" (copy %s)");
 
 const serverKey = pwg_getPageData<string>("cache_key_users");
 const serverId = pwg_getPageData<string>("cache_key_hash");
@@ -234,7 +230,7 @@ ready(function () {
               url: "api/v1/groups",
               type: "POST",
               headers: {
-                "X-CSRF-Token": pwg_token,
+                "X-CSRF-Token": pwgToken,
               },
               json: {
                 name: name,
@@ -254,7 +250,7 @@ ready(function () {
             loadState.reverse();
             html(
               document.querySelectorAll("#addGroupForm .groupError"),
-              str_name_not_empty,
+              strNameNotEmpty,
             );
             fadeIn(document.querySelectorAll("#addGroupForm .groupError"));
             const errorEl = document.querySelectorAll(
@@ -268,7 +264,7 @@ ready(function () {
           loadState.reverse();
           html(
             document.querySelectorAll("#addGroupForm .groupError"),
-            str_name_not_empty,
+            strNameNotEmpty,
           );
           fadeIn(document.querySelectorAll("#addGroupForm .groupError"));
           const errorEl = document.querySelectorAll(
@@ -307,7 +303,7 @@ function createGroup(group: Group): Element {
     find(newgroup, ".group_number_users"),
     String(group.nbUsers) +
       " " +
-      (group.nbUsers > 1 ? str_members_default : str_member_default),
+      (group.nbUsers > 1 ? strMembersDefault : strMemberDefault),
   );
   html(find(newgroup, ".group_name-editable"), group.name);
   attr(
@@ -329,7 +325,7 @@ function createGroup(group: Group): Element {
   addClass(find(newgroup, ".icon-users-1"), colors[colorId]!);
 
   //Place group in first Place
-  html(find(newgroup, ".groupMessage"), str_group_created);
+  html(find(newgroup, ".groupMessage"), strGroupCreated);
   fadeIn(find(newgroup, ".groupMessage"));
   const groupMessage = find(newgroup, ".groupMessage");
   setTimeout(() => {
@@ -346,7 +342,7 @@ ready(function () {
     // Real, pre-existing bug found while adding dataId()'s own assertion
     // (P51-D): `.GroupContainer` also matches `#group-template` (its own
     // `data-id="template"`, a non-numeric placeholder -- group_list.latte's
-    // own `{include groupContent, grp_id: "template", ...}`) and
+    // own `{include groupContent, grpId: "template", ...}`) and
     // `#addGroupForm` (no `data-id` at all -- it only shares the class for
     // layout). Both used to silently reach `setupGroupBox()` with `id`
     // ending up `undefined`, since nothing here ever checked; `typeof ===
@@ -434,15 +430,15 @@ function setupGroupBox(groupBox: Element) {
 
   on(document, "mouseup", function (e: Event) {
     e.stopPropagation();
-    let option_is_clicked = false;
+    let optionIsClicked = false;
     document.querySelectorAll("#GroupOptions div").forEach((option) => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real mouseup event's own target inside the document is always a Node (or null), never a bare EventTarget with no Node interface.
       if (option.contains(e.target as Node | null)) {
-        option_is_clicked = true;
+        optionIsClicked = true;
       }
     });
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real false positive from closure mutation: option_is_clicked is set inside the forEach callback above, which the rule doesn't track (same class as dom.ts's stopped).
-    if (!option_is_clicked) {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real false positive from closure mutation: optionIsClicked is set inside the forEach callback above, which the rule doesn't track (same class as dom.ts's stopped).
+    if (!optionIsClicked) {
       hide(find(groupBox, "#GroupOptions"));
     }
   });
@@ -519,7 +515,7 @@ function toogleSelection(group_id: number, toggleOn: boolean) {
 /* Group Ajax and Display Functions */
 function deleteGroup(id: number) {
   confirm({
-    title: str_delete.replace(
+    title: strDelete.replace(
       "%s",
       htmlOf(
         document.querySelectorAll(
@@ -533,7 +529,7 @@ function deleteGroup(id: number) {
     type: "red",
     buttons: {
       confirm: {
-        text: str_yes_delete_confirmation,
+        text: strYesDeleteConfirmation,
         btnClass: "btn-red",
         action: function () {
           const groupName = htmlOf(
@@ -545,14 +541,14 @@ function deleteGroup(id: number) {
           )!;
           alert({
             ...{
-              title: str_group_deleted.replace("%s", groupName),
+              title: strGroupDeleted.replace("%s", groupName),
               // eslint-disable-next-line @typescript-eslint/promise-function-async -- must return ajax()'s own AjaxThenable (jconfirm.ts's `isThenable()` checks for its real `.always()`); `async` would re-wrap it through `Promise.resolve()` and lose that method.
               content: function () {
                 return ajax({
                   url: "api/v1/groups/" + String(id),
                   type: "DELETE",
                   headers: {
-                    "X-CSRF-Token": pwg_token,
+                    "X-CSRF-Token": pwgToken,
                   },
                   dataType: "json",
                   success: function (
@@ -581,12 +577,12 @@ function deleteGroup(id: number) {
                 });
               },
             },
-            ...jConfirm_alert_options,
+            ...jConfirmAlertOptions,
           });
         },
       },
       cancel: {
-        text: str_no_delete_confirmation,
+        text: strNoDeleteConfirmation,
       },
     },
   });
@@ -621,7 +617,7 @@ async function renameGroup(id: number, newName: string): Promise<void> {
         url: "api/v1/groups/" + String(id),
         type: "PATCH",
         headers: {
-          "X-CSRF-Token": pwg_token,
+          "X-CSRF-Token": pwgToken,
         },
         json: {
           name: newName,
@@ -636,7 +632,7 @@ async function renameGroup(id: number, newName: string): Promise<void> {
           document.querySelectorAll("#" + escapeId("group-" + String(id))),
           ".groupMessage",
         ),
-        str_renaming_done,
+        strRenamingDone,
       );
       const groupMessage = find(
         document.querySelectorAll("#" + escapeId("group-" + String(id))),
@@ -664,7 +660,7 @@ async function renameGroup(id: number, newName: string): Promise<void> {
           document.querySelectorAll("#" + escapeId("group-" + String(id))),
           ".groupError",
         ),
-        str_name_taken,
+        strNameTaken,
       );
       const groupError = find(
         document.querySelectorAll("#" + escapeId("group-" + String(id))),
@@ -682,7 +678,7 @@ async function renameGroup(id: number, newName: string): Promise<void> {
         document.querySelectorAll("#" + escapeId("group-" + String(id))),
         ".groupError",
       ),
-      str_name_not_empty,
+      strNameNotEmpty,
     );
     const groupError = find(
       document.querySelectorAll("#" + escapeId("group-" + String(id))),
@@ -696,11 +692,11 @@ async function renameGroup(id: number, newName: string): Promise<void> {
 }
 
 // Hide or display rename form
-function displayRenameForm(doDisplay: boolean, grp_id: number) {
+function displayRenameForm(doDisplay: boolean, grpId: number) {
   if (doDisplay) {
     css(
       find(
-        document.querySelectorAll("#" + escapeId("group-" + String(grp_id))),
+        document.querySelectorAll("#" + escapeId("group-" + String(grpId))),
         ".group-rename",
       ),
       "display",
@@ -708,13 +704,13 @@ function displayRenameForm(doDisplay: boolean, grp_id: number) {
     );
     hide(
       find(
-        document.querySelectorAll("#" + escapeId("group-" + String(grp_id))),
+        document.querySelectorAll("#" + escapeId("group-" + String(grpId))),
         ".Group-name-container .icon-pencil",
       ),
     );
     css(
       find(
-        document.querySelectorAll("#" + escapeId("group-" + String(grp_id))),
+        document.querySelectorAll("#" + escapeId("group-" + String(grpId))),
         ".Group-name-container p",
       ),
       "opacity",
@@ -723,20 +719,20 @@ function displayRenameForm(doDisplay: boolean, grp_id: number) {
   } else {
     hide(
       find(
-        document.querySelectorAll("#" + escapeId("group-" + String(grp_id))),
+        document.querySelectorAll("#" + escapeId("group-" + String(grpId))),
         ".group-rename",
       ),
     );
     removeAttr(
       find(
-        document.querySelectorAll("#" + escapeId("group-" + String(grp_id))),
+        document.querySelectorAll("#" + escapeId("group-" + String(grpId))),
         ".Group-name-container .icon-pencil",
       ),
       "style",
     );
     css(
       find(
-        document.querySelectorAll("#" + escapeId("group-" + String(grp_id))),
+        document.querySelectorAll("#" + escapeId("group-" + String(grpId))),
         ".Group-name-container p",
       ),
       "opacity",
@@ -787,7 +783,7 @@ const setDefaultGroup = async function (
       url: "api/v1/groups/" + String(id),
       type: "PATCH",
       headers: {
-        "X-CSRF-Token": pwg_token,
+        "X-CSRF-Token": pwgToken,
       },
       json: {
         isDefault: is_default,
@@ -836,7 +832,7 @@ function setupDefaultActions(id: number, is_default: boolean) {
         document.querySelectorAll("#" + escapeId("group-" + String(id))),
         "#GroupDefault",
       ),
-      str_unset_default,
+      strUnsetDefault,
     );
     attr(
       find(
@@ -844,7 +840,7 @@ function setupDefaultActions(id: number, is_default: boolean) {
         ".is-default-token",
       ),
       "title",
-      str_unset_default,
+      strUnsetDefault,
     );
     // `.unbind("click")` removes every click handler this element has,
     // regardless of which closure added it -- dom.ts's own `off(target,
@@ -888,7 +884,7 @@ function setupDefaultActions(id: number, is_default: boolean) {
         document.querySelectorAll("#" + escapeId("group-" + String(id))),
         "#GroupDefault",
       ),
-      str_set_default,
+      strSetDefault,
     );
     attr(
       find(
@@ -896,7 +892,7 @@ function setupDefaultActions(id: number, is_default: boolean) {
         ".is-default-token",
       ),
       "title",
-      str_set_default,
+      strSetDefault,
     );
     addClass(
       find(
@@ -945,14 +941,14 @@ async function duplicateAction(id: number): Promise<void> {
     "style",
     "pointer-events: none; text-align: center;",
   );
-  let copy_name =
+  let copyName =
     (htmlOf(
       document.querySelectorAll(
         "#" + escapeId("group-" + String(id)) + " #group_name",
       ),
-    ) ?? "") + str_copy;
+    ) ?? "") + strCopy;
 
-  const name_exist = function (name: string) {
+  const nameExist = function (name: string) {
     let exist = false;
     document.querySelectorAll(".Group-name-container p").forEach((el) => {
       if (htmlOf(el) === name) exist = true;
@@ -961,13 +957,13 @@ async function duplicateAction(id: number): Promise<void> {
   };
 
   let i = 1;
-  while (name_exist(copy_name)) {
-    copy_name =
+  while (nameExist(copyName)) {
+    copyName =
       (htmlOf(
         document.querySelectorAll(
           "#" + escapeId("group-" + String(id)) + " #group_name",
         ),
-      ) ?? "") + str_other_copy.replace("%s", String(i++));
+      ) ?? "") + strOtherCopy.replace("%s", String(i++));
   }
 
   try {
@@ -976,10 +972,10 @@ async function duplicateAction(id: number): Promise<void> {
       url: "api/v1/groups/" + String(id) + "/actions/duplicate",
       type: "POST",
       headers: {
-        "X-CSRF-Token": pwg_token,
+        "X-CSRF-Token": pwgToken,
       },
       json: {
-        name: copy_name,
+        name: copyName,
       },
       dataType: "json",
     })) as operations["groupDuplicate"]["responses"][201]["content"]["application/json"];
@@ -1146,29 +1142,29 @@ on(document.querySelectorAll(".ConfirmMergeButton"), "click", function () {
       document.querySelectorAll(".ConfirmMergeButton"),
       "icon-ok",
     );
-    const merge_group: number[] = [];
-    const name_merge: string[] = [];
-    // Always overwritten inside the loop below before use (`dest_grp`
+    const mergeGroup: number[] = [];
+    const nameMerge: string[] = [];
+    // Always overwritten inside the loop below before use (`destGrp`
     // always matches exactly one selected group's data-id) -- typed as a
     // string, not the original `[]` placeholder, which never matched the
     // value actually assigned or read.
-    let name_dest = "";
+    let nameDest = "";
     // Single-value <select>, never multi. `valId()` returns null only when
     // nothing is selected, which can't happen here -- the merge button is
     // only reachable once 2+ groups are already selected, and each one adds
     // a real <option> to this same <select> (see toogleSelection() above).
-    const dest_grp = valId(document.querySelectorAll("#MergeOptionsChoices"));
-    if (dest_grp === null) {
+    const destGrp = valId(document.querySelectorAll("#MergeOptionsChoices"));
+    if (destGrp === null) {
       return;
     }
 
     document.querySelectorAll(".DeleteGroupList div").forEach((el) => {
       const elId = Number(attrOf(el, "data-id"));
-      if (dest_grp !== elId) {
-        merge_group.push(elId);
-        name_merge.push(htmlOf(find(el, "p"))!);
+      if (destGrp !== elId) {
+        mergeGroup.push(elId);
+        nameMerge.push(htmlOf(find(el, "p"))!);
       } else {
-        name_dest = htmlOf(find(el, "p"))!;
+        nameDest = htmlOf(find(el, "p"))!;
       }
     });
 
@@ -1177,17 +1173,17 @@ on(document.querySelectorAll(".ConfirmMergeButton"), "click", function () {
         url: "api/v1/groups/actions/merge",
         type: "POST",
         headers: {
-          "X-CSRF-Token": pwg_token,
+          "X-CSRF-Token": pwgToken,
         },
         json: {
-          destinationGroupId: dest_grp,
-          mergeGroupIds: merge_group,
+          destinationGroupId: destGrp,
+          mergeGroupIds: mergeGroup,
         },
         dataType: "json",
       });
       loadState.reverse();
       updateSelectionPanel("Selection");
-      merge_group.forEach(function (id: number) {
+      mergeGroup.forEach(function (id: number) {
         const el = document.querySelectorAll(
           "#" + escapeId("group-" + String(id)),
         );
@@ -1197,23 +1193,23 @@ on(document.querySelectorAll(".ConfirmMergeButton"), "click", function () {
           });
         });
       });
-      toogleSelection(dest_grp, false);
+      toogleSelection(destGrp, false);
       html(document.querySelectorAll(".DeleteGroupList"), "");
       html(document.querySelectorAll("#MergeOptionsChoices"), "");
 
       alert({
         ...{
-          title: str_merged_into
-            .replace("%s1", name_merge.toString())
-            .replace("%s2", name_dest),
+          title: strMergedInto
+            .replace("%s1", nameMerge.toString())
+            .replace("%s2", nameDest),
           content: "",
         },
-        ...jConfirm_alert_options,
+        ...jConfirmAlertOptions,
       });
 
       html(
         document.querySelectorAll(
-          "#" + escapeId("group-" + String(dest_grp)) + " .group_number_users",
+          "#" + escapeId("group-" + String(destGrp)) + " .group_number_users",
         ),
         "<i class='icon-spin6 animate-spin'> </i>",
       );
@@ -1223,20 +1219,18 @@ on(document.querySelectorAll(".ConfirmMergeButton"), "click", function () {
           url: "api/v1/users",
           type: "GET",
           data: {
-            groupIds: [dest_grp],
+            groupIds: [destGrp],
           },
           dataType: "json",
         })) as GroupUserListResponse;
         const number = response.users.length;
         html(
           document.querySelectorAll(
-            "#" +
-              escapeId("group-" + String(dest_grp)) +
-              " .group_number_users",
+            "#" + escapeId("group-" + String(destGrp)) + " .group_number_users",
           ),
           String(number) +
             " " +
-            (number > 1 ? str_members_default : str_member_default),
+            (number > 1 ? strMembersDefault : strMemberDefault),
         );
         updateBadge();
       } catch {
@@ -1293,7 +1287,7 @@ on(document.querySelectorAll(".ConfirmDeleteButton"), "click", function () {
             url: "api/v1/groups/" + String(id),
             type: "DELETE",
             headers: {
-              "X-CSRF-Token": pwg_token,
+              "X-CSRF-Token": pwgToken,
             },
             dataType: "json",
           });
@@ -1316,10 +1310,10 @@ on(document.querySelectorAll(".ConfirmDeleteButton"), "click", function () {
       updateSelectionPanel("NoSelection");
       alert({
         ...{
-          title: str_groups_deleted.replace("%s", names.toString()),
+          title: strGroupsDeleted.replace("%s", names.toString()),
           content: "",
         },
-        ...jConfirm_alert_options,
+        ...jConfirmAlertOptions,
       });
       updateBadge();
     } catch (err) {
@@ -1423,24 +1417,24 @@ ready(function () {
 });
 
 // Display the user manager for a specific group
-async function openUserManager(grp_id: number): Promise<void> {
+async function openUserManager(grpId: number): Promise<void> {
   const loadState = new TemporaryState();
   loadState.removeClass(
     document.querySelectorAll(
-      "#" + escapeId("group-" + String(grp_id)) + " #UserListTrigger",
+      "#" + escapeId("group-" + String(grpId)) + " #UserListTrigger",
     ),
     "icon-user-1",
   );
   loadState.changeAttribute(
     document.querySelectorAll(
-      "#" + escapeId("group-" + String(grp_id)) + " #UserListTrigger",
+      "#" + escapeId("group-" + String(grpId)) + " #UserListTrigger",
     ),
     "style",
     "pointer-events: none",
   );
   loadState.changeHTML(
     document.querySelectorAll(
-      "#" + escapeId("group-" + String(grp_id)) + " #UserListTrigger",
+      "#" + escapeId("group-" + String(grpId)) + " #UserListTrigger",
     ),
     "<i class='icon-spin6 animate-spin'> </i>",
   );
@@ -1450,7 +1444,7 @@ async function openUserManager(grp_id: number): Promise<void> {
       url: "api/v1/users",
       type: "GET",
       data: {
-        groupIds: [grp_id],
+        groupIds: [grpId],
       },
       dataType: "json",
     })) as GroupUserListResponse;
@@ -1460,11 +1454,11 @@ async function openUserManager(grp_id: number): Promise<void> {
       document.querySelectorAll(".group-name-block p"),
       (htmlOf(
         document.querySelectorAll(
-          "#" + escapeId("group-" + String(grp_id)) + " #group_name",
+          "#" + escapeId("group-" + String(grpId)) + " #group_name",
         ),
       ) ?? "") +
         " / " +
-        str_user_list,
+        strUserList,
     );
     html(document.querySelectorAll(".UsersInGroupList"), "");
 
@@ -1487,7 +1481,7 @@ async function openUserManager(grp_id: number): Promise<void> {
       usersInGroup[i] !== undefined
     ) {
       usersInGroupList.appendChild(
-        getUserDisplay(usersInGroup[i]!.username, usersInGroup[i]!.id, grp_id),
+        getUserDisplay(usersInGroup[i]!.username, usersInGroup[i]!.id, grpId),
       );
       i++;
     }
@@ -1498,18 +1492,18 @@ async function openUserManager(grp_id: number): Promise<void> {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real runtime guard: NodeListOf.item() is typed non-nullable but really returns null for an out-of-range index (the list can be empty here).
         ?.remove();
     }
-    updateMembernumber(usersInGroup.length, grp_id);
+    updateMembernumber(usersInGroup.length, grpId);
     //Attribute the group id to the div
     attr(
       document.querySelectorAll("#UserList"),
       "data-group_id",
-      String(grp_id),
+      String(grpId),
     );
 
     attr(
       document.querySelectorAll(".LinkUserManager a"),
       "href",
-      "admin.php?page=user_list&group=" + String(grp_id),
+      "admin.php?page=user_list&group=" + String(grpId),
     );
   } catch (err) {
     loadState.reverse();
@@ -1521,7 +1515,7 @@ async function openUserManager(grp_id: number): Promise<void> {
 function getUserDisplay(
   username: string,
   user_id: number,
-  grp_id: number,
+  grpId: number,
 ): Element {
   const userBlock = parseHtml(
     '<div class="UsernameBlock" data-id=' +
@@ -1534,7 +1528,7 @@ function getUserDisplay(
       '<div class="Tooltip">' +
       '<span class="icon-cancel"></span>' +
       '<p class="TooltipText">' +
-      str_user_dissociate +
+      strUserDissociate +
       "</p>" +
       "</div>" +
       "</div>",
@@ -1557,17 +1551,17 @@ function getUserDisplay(
       removeClass(find(userBlock, ".icon-cancel"), "icon-cancel");
       try {
         await ajax({
-          url: "api/v1/groups/" + String(grp_id) + "/actions/remove-user",
+          url: "api/v1/groups/" + String(grpId) + "/actions/remove-user",
           type: "POST",
           headers: {
-            "X-CSRF-Token": pwg_token,
+            "X-CSRF-Token": pwgToken,
           },
           json: {
             userIds: [user_id],
           },
           dataType: "json",
         });
-        const str = str_user_dissociated.replace("%s", username);
+        const str = strUserDissociated.replace("%s", username);
         fadeOut(associateUserInfo);
         html(find(dissociateUserInfo, "p"), str);
         fadeIn(dissociateUserInfo);
@@ -1592,7 +1586,7 @@ function getUserDisplay(
           parseInt(
             htmlOf(document.querySelectorAll(".UserNumberBadge")) ?? "0",
           ) - 1,
-          grp_id,
+          grpId,
         );
       } catch {
         // No error handling before conversion either.
@@ -1603,14 +1597,12 @@ function getUserDisplay(
 }
 
 //Update member number function
-function updateMembernumber(number: number, grp_id: number) {
+function updateMembernumber(number: number, grpId: number) {
   html(
     document.querySelectorAll(
-      '.GroupContainer[data-id="' + String(grp_id) + '"] .group_number_users',
+      '.GroupContainer[data-id="' + String(grpId) + '"] .group_number_users',
     ),
-    String(number) +
-      " " +
-      (number > 1 ? str_members_default : str_member_default),
+    String(number) + " " + (number > 1 ? strMembersDefault : strMemberDefault),
   );
   html(document.querySelectorAll(".UserNumberBadge"), String(number));
   html(
@@ -1631,7 +1623,7 @@ on(document.querySelectorAll(".CloseUserList"), "click", function () {
 // Adding Group Action
 on(document.querySelectorAll(".AddUserBlock button"), "click", function () {
   void (async () => {
-    const grp_id = Number(
+    const grpId = Number(
       attrOf(document.querySelectorAll("#UserList"), "data-group_id"),
     );
     // This instance is created without `multiple: true` (see
@@ -1666,10 +1658,10 @@ on(document.querySelectorAll(".AddUserBlock button"), "click", function () {
       );
       try {
         await ajax({
-          url: "api/v1/groups/" + String(grp_id) + "/actions/add-user",
+          url: "api/v1/groups/" + String(grpId) + "/actions/add-user",
           type: "POST",
           headers: {
-            "X-CSRF-Token": pwg_token,
+            "X-CSRF-Token": pwgToken,
           },
           json: {
             userIds: [numericId],
@@ -1693,7 +1685,7 @@ on(document.querySelectorAll(".AddUserBlock button"), "click", function () {
             ({ username } = u);
           }
         });
-        const userBlock = getUserDisplay(username, numericId, grp_id);
+        const userBlock = getUserDisplay(username, numericId, grpId);
         document.querySelector(".UsersInGroupList")?.prepend(userBlock);
 
         fadeOut(dissociateUserInfo);
@@ -1709,7 +1701,7 @@ on(document.querySelectorAll(".AddUserBlock button"), "click", function () {
         css(restUsernameBlocks, "border", "none");
         associateUserInfo.remove();
         userBlock.after(associateUserInfo);
-        html(find(associateUserInfo, "p"), str_user_associated);
+        html(find(associateUserInfo, "p"), strUserAssociated);
         fadeIn(associateUserInfo);
 
         updateUserSearch();
@@ -1729,7 +1721,7 @@ on(document.querySelectorAll(".AddUserBlock button"), "click", function () {
           parseInt(
             htmlOf(document.querySelectorAll(".UserNumberBadge")) ?? "0",
           ) + 1,
-          grp_id,
+          grpId,
         );
       } catch (err) {
         loadState.reverse();
@@ -1743,7 +1735,7 @@ on(document.querySelectorAll(".input-user-name"), "input", function () {
   const searchString = String(
     val(document.querySelectorAll(".input-user-name")),
   ).toLowerCase();
-  const grp_id = dataId(document.querySelector(".UserListPopIn")!, "group_id");
+  const grpId = dataId(document.querySelector(".UserListPopIn")!, "group_id");
   const container = document.querySelector(".UsersInGroupListContainer")!;
   const usersInGroupList =
     document.querySelector<HTMLElement>(".UsersInGroupList")!;
@@ -1759,7 +1751,7 @@ on(document.querySelectorAll(".input-user-name"), "input", function () {
           existing.remove();
         }
       } else if (isSearched) {
-        usersInGroupList.prepend(getUserDisplay(u.username, u.id, grp_id));
+        usersInGroupList.prepend(getUserDisplay(u.username, u.id, grpId));
       }
     });
   } else {
@@ -1771,7 +1763,7 @@ on(document.querySelectorAll(".input-user-name"), "input", function () {
       usersInGroup[i] !== undefined
     ) {
       usersInGroupList.appendChild(
-        getUserDisplay(usersInGroup[i]!.username, usersInGroup[i]!.id, grp_id),
+        getUserDisplay(usersInGroup[i]!.username, usersInGroup[i]!.id, grpId),
       );
       i++;
     }

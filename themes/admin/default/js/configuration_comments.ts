@@ -31,19 +31,19 @@ import { toggle } from "../../../default/js/vendor/dom";
     });
   }
 
-  function check_activate_comments() {
+  function checkActivateComments() {
     toggle(
       document.querySelectorAll("#comments_param_container"),
       isChecked("input[name=activate_comments]"),
     );
   }
 
-  check_activate_comments();
+  checkActivateComments();
   document
     .querySelectorAll("input[name=activate_comments]")
     .forEach((input) => {
       input.addEventListener("change", () => {
-        check_activate_comments();
+        checkActivateComments();
       });
     });
 })();

@@ -1,5 +1,5 @@
 import type { operations } from "../../../../openapi/client/schema";
-import { jConfirm_confirm_options } from "./common";
+import { jConfirmConfirmOptions } from "./common";
 
 import {
   pwg_getPageData,
@@ -96,22 +96,20 @@ type AlbumJqTreeNode = JqTreeNode<AlbumNodeData>;
 // such, docs/PLAN.md P48) to keep that contract unchanged.
 const albumData = pwg_getPageData<AlbumTreeNode[]>("album_data");
 export { albumData as data };
-const pwg_token = pwg_getPageData<string>("csrf_token");
-const str_are_you_sure = pwg_getPageString(
+const pwgToken = pwg_getPageData<string>("csrf_token");
+const strAreYouSure = pwg_getPageString(
   "The status of the album '%s' and its sub-albums will change to private. Are you sure?",
 );
-const str_yes_change_parent = pwg_getPageString("Yes change parent anyway");
-const str_no_change_parent = pwg_getPageString(
-  "No, don't move this album here",
-);
-const str_root = pwg_getPageString("Root");
+const strYesChangeParent = pwg_getPageString("Yes change parent anyway");
+const strNoChangeParent = pwg_getPageString("No, don't move this album here");
+const strRoot = pwg_getPageString("Root");
 const openCat = pwg_getPageData<string>("open_cat");
-let nb_albums = pwg_getPageData<number>("nb_albums");
-const light_album_manager = pwg_getPageData<number>("light_album_manager");
+let nbAlbums = pwg_getPageData<number>("nb_albums");
+const lightAlbumManager = pwg_getPageData<number>("light_album_manager");
 
-const x_nb_subcats = pwg_getPageString("%d sub-albums");
-const x_nb_images = pwg_getPageString("%d photos");
-const x_nb_sub_photos = pwg_getPageString("%d pictures in sub-albums");
+const xNbSubcats = pwg_getPageString("%d sub-albums");
+const xNbImages = pwg_getPageString("%d photos");
+const xNbSubPhotos = pwg_getPageString("%d pictures in sub-albums");
 
 // Not `str_albums_found`/`str_result_limit`/`str_album_found` too --
 // AlbumsView.php's own exposedStrings() carries all 3, but the real
@@ -123,9 +121,9 @@ const x_nb_sub_photos = pwg_getPageString("%d pictures in sub-albums");
 // or `.latte` -- and was removed outright rather than exported to
 // nothing (docs/PLAN.md P48, common.ts's own batch already established
 // this same precedent for `array_delete`).
-const str_albs_drag_drop = pwg_getPageString("Drag and drop to reorder albums");
+const strAlbsDragDrop = pwg_getPageString("Drag and drop to reorder albums");
 
-const delay_autoOpen = pwg_getPageData<number>("delay_auto_open");
+const delayAutoOpen = pwg_getPageData<number>("delay_auto_open");
 
 // Assigned once, at the top of `ready()` below, before the tree is
 // initialized -- every other module-level function reads the live
@@ -146,34 +144,34 @@ function getAlbumTree(): JqTreeInstance<AlbumNodeData> {
 // pure static strings, no dependency on createAlbumNode's own
 // per-call `node`/`li` params) rather than just suppressing the type
 // error.
-const toggler_close = "<span class='icon-left-open'></span>";
-const toggler_open = "<span class='icon-down-open'></span>";
+const togglerClose = "<span class='icon-left-open'></span>";
+const togglerOpen = "<span class='icon-down-open'></span>";
 
-const delete_album_with_name = pwg_getPageString('Delete album "%s".');
-const delete_album_with_subs = pwg_getPageString(
+const deleteAlbumWithName = pwg_getPageString('Delete album "%s".');
+const deleteAlbumWithSubs = pwg_getPageString(
   'Delete album "%s" and its %d sub-albums.',
 );
-const has_images_associated_outside = pwg_getPageString(
+const hasImagesAssociatedOutside = pwg_getPageString(
   "delete album and all %d photos, even the %d associated to other albums",
 );
-const has_images_becomming_orphans = pwg_getPageString(
+const hasImagesBecommingOrphans = pwg_getPageString(
   "delete album and the %d orphan photos",
 );
-const rename_item = pwg_getPageString('Rename "%s"');
+const renameItem = pwg_getPageString('Rename "%s"');
 
-const str_add_album = pwg_getPageString("Add Album");
-const str_edit_album = pwg_getPageString("Edit album");
-const str_add_photo = pwg_getPageString("Add Photos");
-const str_visit_gallery = pwg_getPageString("Visit Gallery");
-const str_sort_order = pwg_getPageString("Automatic sort order");
-const str_delete_album = pwg_getPageString("Delete album");
-const str_root_order = pwg_getPageString("Apply to root albums");
-const str_sub_album_order = pwg_getPageString("Apply to direct sub-albums");
-const str_album_name_empty = pwg_getPageString("Album name must not be empty");
+const strAddAlbum = pwg_getPageString("Add Album");
+const strEditAlbum = pwg_getPageString("Edit album");
+const strAddPhoto = pwg_getPageString("Add Photos");
+const strVisitGallery = pwg_getPageString("Visit Gallery");
+const strSortOrder = pwg_getPageString("Automatic sort order");
+const strDeleteAlbum = pwg_getPageString("Delete album");
+const strRootOrder = pwg_getPageString("Apply to root albums");
+const strSubAlbumOrder = pwg_getPageString("Apply to direct sub-albums");
+const strAlbumNameEmpty = pwg_getPageString("Album name must not be empty");
 
-const add_album_root_title = pwg_getPageString("Create a new album at root");
-const add_sub_album_of = pwg_getPageString('Create a sub-album of "%s"');
-const tiptip_locked_album = pwg_getPageString("Locked album");
+const addAlbumRootTitle = pwg_getPageString("Create a new album at root");
+const addSubAlbumOf = pwg_getPageString('Create a sub-album of "%s"');
+const tiptipLockedAlbum = pwg_getPageString("Locked album");
 
 // jQuery's default easing (`effects/Tween.js`) and speed-name table, both
 // re-exported by dom.ts -- reused here rather than duplicated, since
@@ -261,7 +259,7 @@ ready(() => {
     openCat === "-1"
       ? []
       : findAlbumById(albumData, openCat)!.uppercats.split(",");
-  const new_data = albumData.map((a: AlbumTreeNode) => {
+  const newData = albumData.map((a: AlbumTreeNode) => {
     const al: AlbumTreeNode = {
       ...a,
       children: openUppercats.includes(a.id) ? (a.children ?? []) : [],
@@ -277,7 +275,7 @@ ready(() => {
     .querySelector("h1")
     ?.insertAdjacentHTML(
       "beforeend",
-      `<span class='badge-number'>` + String(nb_albums) + `</span>`,
+      `<span class='badge-number'>` + String(nbAlbums) + `</span>`,
     );
 
   treeEl = document.querySelector(".tree")!;
@@ -289,29 +287,29 @@ ready(() => {
   // permanently disables node selection -- see that module's own header
   // comment for the full narrowing rationale.
   tree<AlbumNodeData>(treeEl, {
-    data: new_data,
+    data: newData,
     dragAndDrop: true,
-    openFolderDelay: delay_autoOpen,
+    openFolderDelay: delayAutoOpen,
     onCreateLi: createAlbumNode,
   });
 
   delegate(treeEl, "click", ".move-cat-toogler", function (this: Element) {
-    const node_id = attrOf(this, "data-id");
-    const node = getAlbumTree().getNodeById(node_id);
+    const nodeId = attrOf(this, "data-id");
+    const node = getAlbumTree().getNodeById(nodeId);
 
     if (node) {
       if (node.load_on_demand && node.haveChildren) {
         loadOnDemand(node);
       }
 
-      const { open_nodes } = getAlbumTree().getState();
-      if (!open_nodes.includes(node.id!)) {
-        html(this, toggler_open);
+      const { open_nodes: openNodes } = getAlbumTree().getState();
+      if (!openNodes.includes(node.id!)) {
+        html(this, togglerOpen);
         getAlbumTree().openNode(node);
         // reset event here:
         rebindMoveCatActions();
       } else {
-        html(this, toggler_close);
+        html(this, togglerClose);
         getAlbumTree().closeNode(node);
       }
     }
@@ -324,7 +322,7 @@ ready(() => {
       document.querySelectorAll(
         '.move-cat-toogler[data-id="' + String(node.id) + '"]',
       ),
-      toggler_open,
+      togglerOpen,
     );
   });
 
@@ -335,7 +333,7 @@ ready(() => {
       document.querySelectorAll(
         '.move-cat-toogler[data-id="' + String(node.id) + '"]',
       ),
-      toggler_close,
+      togglerClose,
     );
   });
 
@@ -359,10 +357,10 @@ ready(() => {
 
       if (parentIsPrivate) {
         confirm({
-          title: str_are_you_sure.replace(/%s/g, moveInfo.movedNode.name),
+          title: strAreYouSure.replace(/%s/g, moveInfo.movedNode.name),
           buttons: {
             confirm: {
-              text: str_yes_change_parent,
+              text: strYesChangeParent,
               btnClass: "btn-red",
               action: function () {
                 makePrivateHierarchy(moveInfo.movedNode);
@@ -370,10 +368,10 @@ ready(() => {
               },
             },
             cancel: {
-              text: str_no_change_parent,
+              text: strNoChangeParent,
             },
           },
-          ...jConfirm_confirm_options,
+          ...jConfirmConfirmOptions,
         });
       } else {
         applyMove(moveInfo);
@@ -384,8 +382,8 @@ ready(() => {
   });
 
   delegate(treeEl, "click", ".move-cat-order", function (this: Element) {
-    const node_id = attrOf(this, "data-id");
-    const node = getAlbumTree().getNodeById(node_id);
+    const nodeId = attrOf(this, "data-id");
+    const node = getAlbumTree().getNodeById(nodeId);
     if (node) {
       fadeIn(document.querySelectorAll(".cat-move-order-popin"));
       html(
@@ -394,12 +392,12 @@ ready(() => {
       );
       setVal(
         document.querySelectorAll(".cat-move-order-popin input[name=id]"),
-        node_id!,
+        nodeId!,
       );
       attr(
         document.querySelectorAll("input[name=simpleAutoOrder]"),
         "value",
-        str_sub_album_order,
+        strSubAlbumOrder,
       );
     }
   });
@@ -408,7 +406,7 @@ ready(() => {
     fadeIn(document.querySelectorAll(".cat-move-order-popin"));
     html(
       document.querySelectorAll(".cat-move-order-popin .album-name"),
-      str_root,
+      strRoot,
     );
     setVal(
       document.querySelectorAll(".cat-move-order-popin input[name=id]"),
@@ -417,7 +415,7 @@ ready(() => {
     attr(
       document.querySelectorAll("input[name=simpleAutoOrder]"),
       "value",
-      str_root_order,
+      strRootOrder,
     );
   });
 
@@ -488,11 +486,11 @@ ready(() => {
                 document.querySelectorAll(".RenameAlbumLabelUsername input"),
               ),
             },
-            headers: { "X-CSRF-Token": pwg_token },
+            headers: { "X-CSRF-Token": pwgToken },
             dataType: "json",
           });
 
-          const node_id = attrOf(
+          const nodeId = attrOf(
             find(
               document.querySelectorAll(
                 "#" + escapeId("cat-" + String(catToEdit)),
@@ -501,7 +499,7 @@ ready(() => {
             ),
             "data-id",
           );
-          const node = getAlbumTree().getNodeById(node_id)!;
+          const node = getAlbumTree().getNodeById(nodeId)!;
           node.name = String(
             val(document.querySelectorAll(".RenameAlbumLabelUsername input")),
           );
@@ -576,19 +574,19 @@ ready(() => {
               parentId: newAlbumParent,
               position: newAlbumPosition,
             },
-            headers: { "X-CSRF-Token": pwg_token },
+            headers: { "X-CSRF-Token": pwgToken },
             dataType: "json",
           })) as operations["categoryCreate"]["responses"][201]["content"]["application/json"];
 
-          const parent_node = getAlbumTree().getNodeById(newAlbumParent);
+          const parentNode = getAlbumTree().getNodeById(newAlbumParent);
           if (
-            parent_node &&
-            parent_node.load_on_demand &&
-            parent_node.haveChildren
+            parentNode &&
+            parentNode.load_on_demand &&
+            parentNode.haveChildren
           ) {
-            loadOnDemand(parent_node);
+            loadOnDemand(parentNode);
           }
-          if (parent_node) openNodeOnDemand(parent_node);
+          if (parentNode) openNodeOnDemand(parentNode);
 
           if (newAlbumPosition === "last") {
             getAlbumTree().appendNode(
@@ -599,7 +597,7 @@ ready(() => {
                 // by the time this AJAX success handler runs.
                 name: newAlbumName!,
               },
-              parent_node ?? undefined,
+              parentNode ?? undefined,
             );
           } else {
             getAlbumTree().prependNode(
@@ -610,29 +608,29 @@ ready(() => {
                 // by the time this AJAX success handler runs.
                 name: newAlbumName!,
               },
-              parent_node ?? undefined,
+              parentNode ?? undefined,
             );
           }
 
-          if (parent_node) {
-            setSubcatsBadge(parent_node);
+          if (parentNode) {
+            setSubcatsBadge(parentNode);
 
             delegate(
               document.querySelectorAll(
-                "#" + escapeId("cat-" + String(parent_node.id)),
+                "#" + escapeId("cat-" + String(parentNode.id)),
               ),
               "click",
               ".move-cat-toogler",
               function (this: Element) {
-                const node_id = parent_node.id;
-                const node = getAlbumTree().getNodeById(node_id);
+                const nodeId = parentNode.id;
+                const node = getAlbumTree().getNodeById(nodeId);
                 if (node) {
-                  const { open_nodes } = getAlbumTree().getState();
-                  if (!open_nodes.includes(node_id!)) {
-                    html(this, toggler_open);
+                  const { open_nodes: openNodes } = getAlbumTree().getState();
+                  if (!openNodes.includes(nodeId!)) {
+                    html(this, togglerOpen);
                     getAlbumTree().openNode(node);
                   } else {
-                    html(this, toggler_close);
+                    html(this, togglerClose);
                     getAlbumTree().closeNode(node);
                   }
                 }
@@ -642,7 +640,7 @@ ready(() => {
 
           rebindMoveCatActions();
 
-          updateTitleBadge(nb_albums + 1);
+          updateTitleBadge(nbAlbums + 1);
 
           goToNode(
             getAlbumTree().getNodeById(response.id)!,
@@ -665,10 +663,7 @@ ready(() => {
           );
         } catch (e) {
           console.error(e instanceof AjaxError ? e.responseText : e);
-          text(
-            document.querySelectorAll(".AddAlbumErrors"),
-            str_album_name_empty,
-          );
+          text(document.querySelectorAll(".AddAlbumErrors"), strAlbumNameEmpty);
           show(document.querySelectorAll(".AddAlbumErrors"));
           removeClass(
             document.querySelectorAll(".AddAlbumSubmit"),
@@ -692,12 +687,12 @@ ready(() => {
   on(
     document.querySelectorAll(".user-list-checkbox"),
     "change",
-    checkbox_change,
+    checkboxChange,
   );
   off(document.querySelectorAll(".user-list-checkbox"), "click");
-  on(document.querySelectorAll(".user-list-checkbox"), "click", checkbox_click);
+  on(document.querySelectorAll(".user-list-checkbox"), "click", checkboxClick);
 
-  if (!light_album_manager) {
+  if (!lightAlbumManager) {
     tipTip(document.querySelectorAll(".tiptip"), {
       delay: 0,
       fadeIn: 200,
@@ -731,51 +726,51 @@ function createAlbumNode(node: AlbumJqTreeNode, liEl: HTMLLIElement) {
     node.visible = "false";
     title +=
       '<span class="tiptip icon-cone" title="' +
-      tiptip_locked_album +
+      tiptipLockedAlbum +
       '" style="font-size: 16px"></span>';
   }
   title +=
     '<p class="move-cat-title" title="' +
     node.name +
     '">%name%</p> <span class="icon-pencil"></span> </span>';
-  const toggler_cont =
+  const togglerCont =
     "<div class='move-cat-toogler' data-id=%id%>%content%</div>";
   const actions =
     '<div class="move-cat-action-cont">' +
     "<div class='move-cat-action'>" +
     '<a class="move-cat-add icon-add-album tiptip" title="' +
-    str_add_album +
+    strAddAlbum +
     '" href="#" data-aid="' +
     String(node.id) +
     '"></a>' +
     '<a class="move-cat-edit icon-pencil tiptip" title="' +
-    str_edit_album +
+    strEditAlbum +
     '" href="admin.php?page=album-' +
     String(node.id) +
     '"></a>' +
     '<a class="move-cat-upload icon-plus-circled tiptip" title="' +
-    str_add_photo +
+    strAddPhoto +
     '" href="admin.php?page=photos_add&album=' +
     String(node.id) +
     '"></a>' +
     '<a class="move-cat-see icon-eye tiptip" title="' +
-    str_visit_gallery +
+    strVisitGallery +
     '" href="index.php?/category/' +
     String(node.id) +
     '"></a>' +
     '<a data-id="' +
     String(node.id) +
     '" class="move-cat-order icon-sort-name-up tiptip" title="' +
-    str_sort_order +
+    strSortOrder +
     '"></a>' +
     '<a data-id="' +
     String(node.id) +
     '" class="move-cat-delete icon-trash tiptip" title="' +
-    str_delete_album +
+    strDeleteAlbum +
     '" ></a>' +
     "</div>" +
     "</div>";
-  // action_order = '<a data-id="'+node.id+'" class="move-cat-order icon-sort-name-up tiptip" title="'+ str_sort_order +'"></a>';
+  // action_order = '<a data-id="'+node.id+'" class="move-cat-order icon-sort-name-up tiptip" title="'+ strSortOrder +'"></a>';
 
   const cont = find(liEl, ".jqtree-element")[0]!;
   addClass(cont, "move-cat-container");
@@ -793,15 +788,15 @@ function createAlbumNode(node: AlbumJqTreeNode, liEl: HTMLLIElement) {
 
   let toggler: string;
   if (node.haveChildren || node.children.length !== 0) {
-    const { open_nodes } = getAlbumTree().getState();
-    if (open_nodes.includes(node.id!)) {
-      toggler = toggler_open;
+    const { open_nodes: openNodes } = getAlbumTree().getState();
+    if (openNodes.includes(node.id!)) {
+      toggler = togglerOpen;
     } else {
-      toggler = toggler_close;
+      toggler = togglerClose;
     }
     append(
       cont,
-      toggler_cont
+      togglerCont
         .replace(/%content%/g, toggler)
         .replace(/%id%/g, String(node.id)),
     );
@@ -810,15 +805,15 @@ function createAlbumNode(node: AlbumJqTreeNode, liEl: HTMLLIElement) {
 
     append(
       cont,
-      toggler_cont
-        .replace(/%content%/g, toggler_close)
+      togglerCont
+        .replace(/%content%/g, togglerClose)
         .replace(/%id%/g, String(node.id)),
     );
     addClass(cont, "disabledToggle");
   }
 
   append(cont, icon.replace(/%icon%/g, "icon-grip-vertical-solid"));
-  attr(find(cont, ".icon-grip-vertical-solid"), "title", str_albs_drag_drop);
+  attr(find(cont, ".icon-grip-vertical-solid"), "title", strAlbsDragDrop);
 
   if (node.haveChildren || node.children.length !== 0) {
     append(cont, icon.replace(/%icon%/g, "icon-sitemap"));
@@ -855,13 +850,13 @@ function createAlbumNode(node: AlbumJqTreeNode, liEl: HTMLLIElement) {
       "</i>" +
       "<div class='badge-dropdown'>" +
       "<span class='icon-blue icon-sitemap nb-subcats'>" +
-      x_nb_subcats.replace("%d", String(node.nb_subcats)) +
+      xNbSubcats.replace("%d", String(node.nb_subcats)) +
       "</span>" +
       "<span class='icon-purple icon-picture nb-images'>" +
-      x_nb_images.replace("%d", String(node.nb_images)) +
+      xNbImages.replace("%d", String(node.nb_images)) +
       "</span>" +
       "<span class='icon-green icon-imagefolder-01 nb-sub-photos'>" +
-      x_nb_sub_photos.replace("%d", String(node.nb_sub_photos)) +
+      xNbSubPhotos.replace("%d", String(node.nb_sub_photos)) +
       "</span>" +
       "</div>" +
       "</div>",
@@ -888,7 +883,7 @@ function createAlbumNode(node: AlbumJqTreeNode, liEl: HTMLLIElement) {
 Checkboxes
 ----------------*/
 
-function checkbox_change(this: Element) {
+function checkboxChange(this: Element) {
   if (attrOf(this, "data-selected") === "1") {
     hide(find(this, "i"));
   } else {
@@ -896,7 +891,7 @@ function checkbox_change(this: Element) {
   }
 }
 
-function checkbox_click(this: Element) {
+function checkboxClick(this: Element) {
   if (attrOf(this, "data-selected") === "1") {
     attr(this, "data-selected", "0");
     hide(find(this, "i"));
@@ -913,7 +908,7 @@ function openAddAlbumPopIn(parentAlbumId: number) {
   if (parentAlbumId !== 0) {
     html(
       document.querySelectorAll("#AddAlbum .AddIconTitle span"),
-      add_sub_album_of.replace(
+      addSubAlbumOf.replace(
         "%s",
         getAlbumTree().getNodeById(parentAlbumId)!.name,
       ),
@@ -921,7 +916,7 @@ function openAddAlbumPopIn(parentAlbumId: number) {
   } else {
     html(
       document.querySelectorAll("#AddAlbum .AddIconTitle span"),
-      add_album_root_title,
+      addAlbumRootTitle,
     );
   }
   fadeIn(document.querySelectorAll("#AddAlbum"));
@@ -964,7 +959,7 @@ function openRenameAlbumPopIn(replacedAlbumName: string | undefined) {
   fadeIn(document.querySelectorAll("#RenameAlbum"));
   html(
     document.querySelectorAll(".RenameAlbumTitle span"),
-    rename_item.replace("%s", safeName),
+    renameItem.replace("%s", safeName),
   );
   setVal(
     document.querySelectorAll(".RenameAlbumLabelUsername .user-property-input"),
@@ -1013,7 +1008,7 @@ async function triggerDeleteAlbum(cat_id: number): Promise<void> {
           document.querySelectorAll(
             "#IMAGES_ASSOCIATED_OUTSIDE .innerText",
           )[0]!,
-          has_images_associated_outside
+          hasImagesAssociatedOutside
             .replace("%d", String(response.nbImagesRecursive))
             .replace("%d", String(response.nbImagesAssociatedOutside)),
         );
@@ -1027,7 +1022,7 @@ async function triggerDeleteAlbum(cat_id: number): Promise<void> {
         );
         append(
           document.querySelectorAll("#IMAGES_BECOMING_ORPHAN .innerText")[0]!,
-          has_images_becomming_orphans.replace(
+          hasImagesBecommingOrphans.replace(
             "%d",
             String(response.nbImagesBecomingOrphan),
           ),
@@ -1047,12 +1042,12 @@ function openDeleteAlbumPopIn(cat_to_delete: number) {
   if (node.children.length === 0) {
     html(
       document.querySelectorAll(".DeleteIconTitle span"),
-      delete_album_with_name.replace("%s", node.name),
+      deleteAlbumWithName.replace("%s", node.name),
     );
   } else {
     html(
       document.querySelectorAll(".DeleteIconTitle span"),
-      delete_album_with_subs
+      deleteAlbumWithSubs
         .replace("%s", node.name)
         .replace("%d", String(getAllSubAlbumsFromNode(node))),
     );
@@ -1074,7 +1069,7 @@ function openDeleteAlbumPopIn(cat_to_delete: number) {
               ),
             ),
           },
-          headers: { "X-CSRF-Token": pwg_token },
+          headers: { "X-CSRF-Token": pwgToken },
         });
 
         // Non-null: same "always a real parent, never bare null in
@@ -1085,7 +1080,7 @@ function openDeleteAlbumPopIn(cat_to_delete: number) {
 
         rebindMoveCatActions();
 
-        updateTitleBadge(nb_albums - 1);
+        updateTitleBadge(nbAlbums - 1);
         setSubcatsBadge(parentOfDeletedNode);
         closeDeleteAlbumPopIn();
       } catch (e) {
@@ -1100,16 +1095,16 @@ function closeDeleteAlbumPopIn() {
 }
 
 function getAllSubAlbumsFromNode(node: AlbumJqTreeNode): number {
-  let nb_sub_cats = 0;
+  let nbSubCats = 0;
   if (node.children.length !== 0) {
     node.children.forEach((child) => {
-      nb_sub_cats++;
-      nb_sub_cats += getAllSubAlbumsFromNode(child);
+      nbSubCats++;
+      nbSubCats += getAllSubAlbumsFromNode(child);
     });
   } else {
     return 0;
   }
-  return nb_sub_cats;
+  return nbSubCats;
 }
 
 function setSubcatsBadge(node: AlbumJqTreeNode) {
@@ -1128,7 +1123,7 @@ function setSubcatsBadge(node: AlbumJqTreeNode) {
         ),
         ".nb-subcats",
       ),
-      x_nb_subcats.replace("%d", String(node.children.length)),
+      xNbSubcats.replace("%d", String(node.children.length)),
     );
   } else {
     hide(
@@ -1141,9 +1136,9 @@ function setSubcatsBadge(node: AlbumJqTreeNode) {
   }
 }
 
-function updateTitleBadge(new_nb_albums: number) {
-  nb_albums = new_nb_albums;
-  text(document.querySelectorAll(".badge-number"), String(new_nb_albums));
+function updateTitleBadge(newNbAlbums: number) {
+  nbAlbums = newNbAlbums;
+  text(document.querySelectorAll(".badge-number"), String(newNbAlbums));
 }
 
 function goToNode(node: AlbumJqTreeNode, firstNode: AlbumJqTreeNode) {
@@ -1230,17 +1225,17 @@ function applyMove(moveInfo: JqTreeMoveInfo<AlbumNodeData>) {
   const id = moveInfo.movedNode.id!;
   let moveParent: string | number | null = null;
   let moveRank: number | null = null;
-  const previous_parent = moveInfo.previousParent!;
+  const previousParent = moveInfo.previousParent!;
   const target = moveInfo.targetNode;
   if (moveInfo.position === "after") {
     // Non-null: same "always a real parent" invariant as elsewhere in
     // this file (a move target is never the tree's own invisible root).
-    if (String(getId(previous_parent)) !== String(getId(target.parent!))) {
+    if (String(getId(previousParent)) !== String(getId(target.parent!))) {
       moveParent = getId(target.parent!);
     }
     moveRank = getRank(target, id) + 1;
   } else if (moveInfo.position === "inside") {
-    if (String(getId(previous_parent)) !== String(getId(target))) {
+    if (String(getId(previousParent)) !== String(getId(target))) {
       moveParent = getId(target);
       const currentNode = getAlbumTree().getNodeById(moveParent);
       if (
@@ -1253,7 +1248,7 @@ function applyMove(moveInfo: JqTreeMoveInfo<AlbumNodeData>) {
     }
     moveRank = 1;
   } else if (moveInfo.position === "before") {
-    if (String(getId(previous_parent)) !== String(getId(target.parent!))) {
+    if (String(getId(previousParent)) !== String(getId(target.parent!))) {
       moveParent = getId(target.parent!);
     }
     moveRank = 1;
@@ -1263,7 +1258,7 @@ function applyMove(moveInfo: JqTreeMoveInfo<AlbumNodeData>) {
       moveInfo.doMove();
       clearTimeout(waitingTimeout);
       removeClass(document.querySelectorAll(".waiting-message"), "visible");
-      setSubcatsBadge(previous_parent);
+      setSubcatsBadge(previousParent);
       // Was an unconditional `setSubcatsBadge($(".tree").tree
       // ("getNodeById", moveParent))` -- `moveParent` stays `null` for
       // a same-parent rank-only reorder (see the 3 branches above), and
@@ -1272,7 +1267,7 @@ function applyMove(moveInfo: JqTreeMoveInfo<AlbumNodeData>) {
       // album was drag-reordered among its own siblings without
       // changing parent -- silently aborting the rest of this
       // `.then()` (the click-handler rebinds below never ran). Guarded:
-      // when the parent didn't change, `previous_parent`'s own
+      // when the parent didn't change, `previousParent`'s own
       // already-refreshed badge above covers it.
       if (moveParent !== null) {
         setSubcatsBadge(getAlbumTree().getNodeById(moveParent)!);
@@ -1320,7 +1315,7 @@ async function changeParent(
         categoryIds: [Number(node)],
         parentId: Number(parent),
       },
-      headers: { "X-CSRF-Token": pwg_token },
+      headers: { "X-CSRF-Token": pwgToken },
       dataType: "json",
     })) as operations["categoryMove"]["responses"][200]["content"]["application/json"];
   } catch (e) {
@@ -1349,7 +1344,7 @@ async function changeRank(
         categoryIds: [Number(node)],
         rank: Number(rank),
       },
-      headers: { "X-CSRF-Token": pwg_token },
+      headers: { "X-CSRF-Token": pwgToken },
       dataType: "json",
     });
   } catch (e) {
@@ -1415,14 +1410,14 @@ function loadOnDemand(node: AlbumJqTreeNode) {
 }
 
 function openNodeOnDemand(node: AlbumJqTreeNode) {
-  const { open_nodes } = getAlbumTree().getState();
-  // Was `open_nodes.includes(node)` -- comparing the whole node object
+  const { open_nodes: openNodes } = getAlbumTree().getState();
+  // Was `openNodes.includes(node)` -- comparing the whole node object
   // against a list of plain ids, which real strict typing rejects
   // outright (`(string | number)[]` vs an object). Always evaluated to
   // `false`, so the "already open" guard below never actually skipped
   // anything; harmless in practice (jqtree's own `openNode()` no-ops on
   // an already-open node), but not the real intended check.
-  if (!open_nodes.includes(node.id!)) {
+  if (!openNodes.includes(node.id!)) {
     getAlbumTree().openNode(node);
     rebindMoveCatActions();
   }

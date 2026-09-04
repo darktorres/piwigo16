@@ -1,8 +1,8 @@
 // Genuinely bidirectional with batchManagerGlobal.ts (docs/PLAN.md P48
 // -- was window-global latching pre-P48, see git history). This file
-// declares `lang`/`all_elements`/`str_add_alb_associate`/
-// `str_select_alb_associate`, imported by batchManagerGlobal.ts; that
-// file declares `derivatives`/`progress_start`/`progress`/
+// declares `lang`/`allElements`/`strAddAlbAssociate`/
+// `strSelectAlbAssociate`, imported by batchManagerGlobal.ts; that
+// file declares `derivatives`/`progressStart`/`progress`/
 // `getDerivativeUrls`, imported here (only used inside the deferred
 // `#applyAction` click handler below -- safe regardless of evaluation
 // order. batchManagerGlobal.ts's `lang.Cancel` read used to be the one
@@ -19,7 +19,7 @@
 // page the way a pure-declaration file like addAlbum.ts can.
 import {
   derivatives,
-  progress_start,
+  progressStart,
   progress,
   getDerivativeUrls,
 } from "./batchManagerGlobal";
@@ -82,7 +82,7 @@ ready(function () {
     rootUrl: pwg_getPageData<string>("root_url"),
   });
 
-  const associated_categories = pwg_getPageData<
+  const associatedCategories = pwg_getPageData<
     Record<string | number, unknown>
   >("associated_categories");
 
@@ -100,7 +100,7 @@ ready(function () {
       ) {
         if (this.name === "dissociate") {
           const filtered = categories.filter((cat) =>
-            Boolean(associated_categories[cat.id]),
+            Boolean(associatedCategories[cat.id]),
           );
 
           if (filtered.length > 0) {
@@ -116,25 +116,25 @@ ready(function () {
   );
 });
 
-const nb_thumbs_set = pwg_getPageData<number>("nb_thumbs_set");
-const applyOnDetails_pattern = pwg_getPageString("on the %d selected photos");
-export const all_elements =
+const nbThumbsSet = pwg_getPageData<number>("nb_thumbs_set");
+const applyOnDetailsPattern = pwg_getPageString("on the %d selected photos");
+export const allElements =
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions -- real runtime guard: pwg_getPageData<T>() always returns T per its own signature even when the key is genuinely absent from the page-data payload (an unsafe cast, not a real guarantee).
   pwg_getPageData<(string | number)[]>("all_elements") || [];
 
-const selectedMessage_pattern = pwg_getPageString("%d of %d photos selected");
-const selectedMessage_none = pwg_getPageString(
+const selectedMessagePattern = pwg_getPageString("%d of %d photos selected");
+const selectedMessageNone = pwg_getPageString(
   "No photo selected, %d photos in current set",
 );
-const selectedMessage_all = pwg_getPageString("All %d photos are selected");
-export const str_add_alb_associate = pwg_getPageString("Add Album");
-export const str_select_alb_associate = pwg_getPageString("Select an album");
+const selectedMessageAll = pwg_getPageString("All %d photos are selected");
+export const strAddAlbAssociate = pwg_getPageString("Add Album");
+export const strSelectAlbAssociate = pwg_getPageString("Select an album");
 
 ready(function () {
   function checkPermitAction(): void {
     let nbSelected: number;
     if (is(document.querySelectorAll("input[name=setSelected]"), ":checked")) {
-      nbSelected = nb_thumbs_set;
+      nbSelected = nbThumbsSet;
     } else {
       nbSelected = document.querySelectorAll(
         ".thumbnails input[type=checkbox]:checked",
@@ -151,24 +151,24 @@ ready(function () {
 
     text(
       document.querySelectorAll("#applyOnDetails"),
-      sprintf(applyOnDetails_pattern, nbSelected),
+      sprintf(applyOnDetailsPattern, nbSelected),
     );
 
     // display the number of currently selected photos in the "Selection" fieldset
     if (nbSelected === 0) {
       text(
         document.querySelectorAll("#selectedMessage"),
-        sprintf(selectedMessage_none, nb_thumbs_set),
+        sprintf(selectedMessageNone, nbThumbsSet),
       );
-    } else if (nbSelected === nb_thumbs_set) {
+    } else if (nbSelected === nbThumbsSet) {
       text(
         document.querySelectorAll("#selectedMessage"),
-        sprintf(selectedMessage_all, nb_thumbs_set),
+        sprintf(selectedMessageAll, nbThumbsSet),
       );
     } else {
       text(
         document.querySelectorAll("#selectedMessage"),
-        sprintf(selectedMessage_pattern, nbSelected, nb_thumbs_set),
+        sprintf(selectedMessagePattern, nbSelected, nbThumbsSet),
       );
     }
   }
@@ -350,7 +350,7 @@ ready(function () {
     function (this: HTMLInputElement) {
       setVal(
         document.querySelectorAll("input[name=whole_set]"),
-        this.checked ? all_elements.join(",") : "",
+        this.checked ? allElements.join(",") : "",
       );
     },
   );
@@ -418,7 +418,7 @@ ready(function () {
     if (
       is(document.querySelectorAll('input[name="setSelected"]'), ":checked")
     ) {
-      derivatives.elements = all_elements;
+      derivatives.elements = allElements;
     } else {
       document
         .querySelectorAll<HTMLInputElement>(
@@ -437,7 +437,7 @@ ready(function () {
     );
     show(document.querySelectorAll("#regenerationMsg"));
 
-    progress_start();
+    progressStart();
     progress();
     void getDerivativeUrls(queue);
     e.preventDefault();

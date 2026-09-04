@@ -18,15 +18,15 @@ ready(function () {
   );
 });
 
-const title_msg = pwg_getPageString(
+const titleMsg = pwg_getPageString(
   "Are you sure you want to delete this site?",
 );
-const confirm_msg = pwg_getPageString("Yes, I am sure");
-const cancel_msg = pwg_getPageString("No, I have changed my mind");
+const confirmMsg = pwg_getPageString("Yes, I am sure");
+const cancelMsg = pwg_getPageString("No, I have changed my mind");
 document.querySelectorAll(".delete-site-button").forEach((button) => {
   pwg_jconfirm_follow_href(button, {
-    alert_title: title_msg,
-    alert_confirm: confirm_msg,
-    alert_cancel: cancel_msg,
+    alert_title: titleMsg,
+    alert_confirm: confirmMsg,
+    alert_cancel: cancelMsg,
   });
 });

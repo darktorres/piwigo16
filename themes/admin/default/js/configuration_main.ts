@@ -55,7 +55,7 @@ import { tipTip } from "../../../default/js/vendor/tiptip";
 })();
 
 (function () {
-  const max_fields = Math.ceil(
+  const maxFields = Math.ceil(
     pwg_getPageData<number>("order_by_options_count") / 2,
   );
 
@@ -66,7 +66,7 @@ import { tipTip } from "../../../default/js/vendor/tiptip";
 
     toggle(
       document.querySelectorAll("#order_filters .addFilter"),
-      selects.length <= max_fields,
+      selects.length <= maxFields,
     );
     // jQuery's `.filter(":first")` here -- a jQuery-only pseudo-selector,
     // not real CSS -- is just "the first of the set already queried";

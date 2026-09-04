@@ -3,7 +3,7 @@ import type { operations } from "../../../../openapi/client/schema";
 // AlbumSelector` (docs/PLAN.md P48 -- was a bare ambient-global read,
 // see that file's own leading comment for the full real-consumer list).
 import { AlbumSelector } from "./album_selector";
-import { jConfirm_confirm_options } from "./common";
+import { jConfirmConfirmOptions } from "./common";
 
 import {
   pwg_getPageData,
@@ -38,49 +38,47 @@ import {
 } from "../../../default/js/vendor/jconfirm";
 import { tipTip } from "../../../default/js/vendor/tiptip";
 
-// `add_related_category` is declared here too, independently of the
+// `addRelatedCategory` is declared here too, independently of the
 // same-named functions in mcs.js/batchManagerUnit.js/
 // batchManagerFilter.ts(no)/photos_add_direct.js/picture_modify.ts
 // (docs/PLAN.md P46-B's own finding) -- safe since these pages never
 // co-load, and this file's own `export {}` module isolation makes the
 // safety even more robust than before.
-const album_id = pwg_getPageData<number>("cat_id");
-let parent_album = pwg_getPageData<number | string>("parent_cat_id");
-let default_parent_album = pwg_getPageData<number | string>("parent_cat_id");
-const album_name = pwg_getPageData<string>("cat_name");
-const nb_sub_albums = pwg_getPageData<number>("nb_subcats");
-const pwg_token = pwg_getPageData<string>("csrf_token");
-const u_delete = pwg_getPageData<string>("u_delete");
-let is_visible: string = pwg_getPageData<boolean>("is_visible")
+const albumId = pwg_getPageData<number>("cat_id");
+let parentAlbum = pwg_getPageData<number | string>("parent_cat_id");
+let defaultParentAlbum = pwg_getPageData<number | string>("parent_cat_id");
+const albumName = pwg_getPageData<string>("cat_name");
+const nbSubAlbums = pwg_getPageData<number>("nb_subcats");
+const pwgToken = pwg_getPageData<string>("csrf_token");
+const uDelete = pwg_getPageData<string>("u_delete");
+let albumIsVisible: string = pwg_getPageData<boolean>("is_visible")
   ? "true"
   : "false";
-const related_categories_ids = [
+const relatedCategoriesIds = [
   String(pwg_getPageData<number>("cat_id")),
   String(pwg_getPageData<number | string>("parent_cat_id")),
 ];
 
-const str_cancel = pwg_getPageString("No, I have changed my mind");
-const str_delete_album = pwg_getPageString("Delete album");
-const str_delete_album_and_his_x_subalbums = pwg_getPageString(
+const strCancel = pwg_getPageString("No, I have changed my mind");
+const strDeleteAlbum = pwg_getPageString("Delete album");
+const strDeleteAlbumAndHisXSubalbums = pwg_getPageString(
   'Delete album "%s" and its %d sub-albums.',
 );
-const str_just_now = pwg_getPageString("Just now");
-const str_dont_delete_photos = pwg_getPageString(
-  "delete only album, not photos",
-);
-const str_delete_orphans = pwg_getPageString(
+const strJustNow = pwg_getPageString("Just now");
+const strDontDeletePhotos = pwg_getPageString("delete only album, not photos");
+const strDeleteOrphans = pwg_getPageString(
   "delete album and the %d orphan photos",
 );
-const str_delete_all_photos = pwg_getPageString(
+const strDeleteAllPhotos = pwg_getPageString(
   "delete album and all %d photos, even the %d associated to other albums",
 );
-const str_album_comment_allow = pwg_getPageString(
+const strAlbumCommentAllow = pwg_getPageString(
   "Comments allowed for sub-albums",
 );
-const str_album_comment_disallow = pwg_getPageString(
+const strAlbumCommentDisallow = pwg_getPageString(
   "Comments disallowed for sub-albums",
 );
-const str_modal_ab = pwg_getPageString("New parent album");
+const strModalAb = pwg_getPageString("New parent album");
 
 ready(function () {
   // Modal description
@@ -88,34 +86,34 @@ ready(function () {
   // anywhere) -- shared, harmlessly, between the allow-comments/
   // disallow-comments handlers below (each assigns before reading, so
   // sharing this declaration is behaviorally identical to the original
-  // accidental `window.temp_txt`). Declared here, scoped to this ready
+  // accidental `window.tempTxt`). Declared here, scoped to this ready
   // callback, since strict TS refuses a bare undeclared assignment.
-  let temp_txt: string;
+  let tempTxt: string;
 
   activateCommentDropdown();
   checkAlbumLock();
   const ab = new AlbumSelector({
-    selectedCategoriesIds: related_categories_ids,
-    selectAlbum: add_related_category,
+    selectedCategoriesIds: relatedCategoriesIds,
+    selectAlbum: addRelatedCategory,
     showRootButton: true,
     adminMode: true,
-    currentAlbumId: album_id,
-    modalTitle: str_modal_ab,
+    currentAlbumId: albumId,
+    modalTitle: strModalAb,
   });
 
   on(document.querySelectorAll(".unlock-album"), "click", function () {
     void (async () => {
       try {
         await ajax({
-          url: "api/v1/categories/" + String(album_id),
+          url: "api/v1/categories/" + String(albumId),
           type: "PATCH",
           dataType: "json",
           json: {
             visible: true,
           },
-          headers: { "X-CSRF-Token": pwg_token },
+          headers: { "X-CSRF-Token": pwgToken },
         });
-        is_visible = "true";
+        albumIsVisible = "true";
         const catLocked =
           document.querySelector<HTMLInputElement>("#cat-locked");
         if (catLocked?.checked === true) {
@@ -127,7 +125,7 @@ ready(function () {
           hide(document.querySelectorAll(".info-message"));
         }, 5000);
       } catch (err) {
-        save_button_set_loading(false);
+        saveButtonSetLoading(false);
 
         show(document.querySelectorAll(".info-error"));
         setTimeout(function () {
@@ -145,7 +143,7 @@ ready(function () {
   });
 
   on(document.querySelectorAll("#cat-properties-save"), "click", () => {
-    save_button_set_loading(true);
+    saveButtonSetLoading(true);
     hide(document.querySelectorAll(".info-error,.info-message"));
 
     // These 2 requests are independent (different endpoints, different
@@ -155,7 +153,7 @@ ready(function () {
     void (async () => {
       try {
         await ajax({
-          url: "api/v1/categories/" + String(album_id),
+          url: "api/v1/categories/" + String(albumId),
           type: "PATCH",
           dataType: "json",
           json: {
@@ -167,26 +165,27 @@ ready(function () {
               document.querySelector<HTMLInputElement>("#cat-commentable")!
                 .checked,
           },
-          headers: { "X-CSRF-Token": pwg_token },
+          headers: { "X-CSRF-Token": pwgToken },
         });
-        save_button_set_loading(false);
+        saveButtonSetLoading(false);
 
         show(document.querySelectorAll(".info-message"));
         html(
           document.querySelectorAll(
             ".cat-modification .cat-modify-info-subcontent",
           ),
-          str_just_now,
+          strJustNow,
         );
         html(
           document.querySelectorAll(
             ".cat-modification .cat-modify-info-content",
           ),
-          str_just_now,
+          strJustNow,
         );
 
-        is_visible = document.querySelector<HTMLInputElement>("#cat-locked")!
-          .checked
+        albumIsVisible = document.querySelector<HTMLInputElement>(
+          "#cat-locked",
+        )!.checked
           ? "false"
           : "true";
         checkAlbumLock();
@@ -195,7 +194,7 @@ ready(function () {
           hide(document.querySelectorAll(".info-message"));
         }, 5000);
       } catch (err) {
-        save_button_set_loading(false);
+        saveButtonSetLoading(false);
 
         show(document.querySelectorAll(".info-error"));
         setTimeout(function () {
@@ -205,7 +204,7 @@ ready(function () {
       }
     })();
 
-    if (parent_album !== default_parent_album) {
+    if (parentAlbum !== defaultParentAlbum) {
       void (async () => {
         try {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
@@ -214,16 +213,16 @@ ready(function () {
             type: "POST",
             dataType: "json",
             json: {
-              categoryIds: [album_id],
-              parentId: parent_album,
+              categoryIds: [albumId],
+              parentId: parentAlbum,
             },
-            headers: { "X-CSRF-Token": pwg_token },
+            headers: { "X-CSRF-Token": pwgToken },
           })) as operations["categoryMove"]["responses"][200]["content"]["application/json"];
           html(
             document.querySelectorAll(".cat-modify-ariane"),
             data.newArianeString,
           );
-          default_parent_album = parent_album;
+          defaultParentAlbum = parentAlbum;
         } catch (e) {
           show(document.querySelectorAll(".info-error"));
           setTimeout(function () {
@@ -235,7 +234,7 @@ ready(function () {
     }
   });
 
-  function save_button_set_loading(state = true) {
+  function saveButtonSetLoading(state = true) {
     const icon = document.querySelector("#cat-properties-save i");
     if (icon !== null) {
       if (state) {
@@ -257,13 +256,13 @@ ready(function () {
 
   on(document.querySelectorAll(".deleteAlbum"), "click", function () {
     confirm({
-      title: str_delete_album,
+      title: strDeleteAlbum,
       // eslint-disable-next-line @typescript-eslint/promise-function-async -- must return ajax()'s own AjaxThenable (jconfirm.ts's `isThenable()` checks for its real `.always()`); `async` would re-wrap it through `Promise.resolve()` and lose that method.
       content: function (this: JConfirmInstance) {
         // eslint-disable-next-line @typescript-eslint/no-this-alias -- the classic callback-closure idiom: `this` (the jquery-confirm modal instance) needs to stay reachable inside the nested `success`/`error` callbacks below, which have their own `this`.
         const self = this;
         return ajax({
-          url: "api/v1/categories/" + String(album_id) + "/orphan-impact",
+          url: "api/v1/categories/" + String(albumId) + "/orphan-impact",
           type: "GET",
           dataType: "json",
           success: function (
@@ -271,32 +270,29 @@ ready(function () {
           ) {
             let message =
               "<p>" +
-              str_delete_album_and_his_x_subalbums
-                .replace("%s", "<strong>" + album_name + "</strong>")
-                .replace(
-                  "%d",
-                  "<strong>" + String(nb_sub_albums) + "</strong>",
-                ) +
+              strDeleteAlbumAndHisXSubalbums
+                .replace("%s", "<strong>" + albumName + "</strong>")
+                .replace("%d", "<strong>" + String(nbSubAlbums) + "</strong>") +
               "</p>";
 
             message += `<div class="cat-delete-modes">`;
             message += `<div  ${data.nbImagesRecursive ? "" : "style='display:none'"}>
                 <input type="radio" name="deletion-mode" value="no_delete" id="no_delete" checked>
-                <label for="no_delete">${str_dont_delete_photos}</label>
+                <label for="no_delete">${strDontDeletePhotos}</label>
               </div>`;
 
             if (data.nbImagesRecursive) {
               let t = 0;
               message += `<div>
                 <input type="radio" name="deletion-mode" value="force_delete" id="force_delete">
-                <label for="force_delete">${str_delete_all_photos.replaceAll("%d", (_: string) => String([data.nbImagesRecursive, data.nbImagesAssociatedOutside][t++]))}</label>
+                <label for="force_delete">${strDeleteAllPhotos.replaceAll("%d", (_: string) => String([data.nbImagesRecursive, data.nbImagesAssociatedOutside][t++]))}</label>
               </div>`;
             }
 
             if (data.nbImagesBecomingOrphan)
               message += `<div>
                 <input type="radio" name="deletion-mode" value="delete_orphans" id="delete_orphans">
-                <label for="delete_orphans">${str_delete_orphans.replace("%d", String(data.nbImagesBecomingOrphan))}</label>
+                <label for="delete_orphans">${strDeleteOrphans.replace("%d", String(data.nbImagesBecomingOrphan))}</label>
               </div>`;
             message += `</div>`;
 
@@ -310,7 +306,7 @@ ready(function () {
       },
       buttons: {
         deleteAlbum: {
-          text: str_delete_album,
+          text: strDeleteAlbum,
           btnClass: "btn-red",
           action: function (this: JConfirmInstance) {
             this.showLoading();
@@ -318,8 +314,8 @@ ready(function () {
               'input[name="deletion-mode"]:checked',
             );
             const deletionMode = String(checked !== null ? val([checked]) : "");
-            delete_album(deletionMode)
-              .then(() => (window.location.href = u_delete))
+            deleteAlbum(deletionMode)
+              .then(() => (window.location.href = uDelete))
               .catch((err: unknown) => {
                 this.close();
                 console.error(err);
@@ -328,24 +324,24 @@ ready(function () {
           },
         },
         cancel: {
-          text: str_cancel,
+          text: strCancel,
         },
       },
-      ...jConfirm_confirm_options,
+      ...jConfirmConfirmOptions,
     });
   });
 
-  async function delete_album(photo_deletion_mode: string): Promise<void> {
+  async function deleteAlbum(photo_deletion_mode: string): Promise<void> {
     // ajax() already resolves/rejects a real promise -- the old
     // manual `new Promise((res, rej) => ...)` wrapper here was purely
     // replicating that, not adding anything.
     await ajax({
-      url: "api/v1/categories/" + String(album_id),
+      url: "api/v1/categories/" + String(albumId),
       type: "DELETE",
       json: {
         photoDeletionMode: photo_deletion_mode,
       },
-      headers: { "X-CSRF-Token": pwg_token },
+      headers: { "X-CSRF-Token": pwgToken },
     });
   }
 
@@ -366,11 +362,11 @@ ready(function () {
           const data = (await ajax({
             url:
               "api/v1/categories/" +
-              String(album_id) +
+              String(albumId) +
               "/actions/refresh-representative",
             type: "POST",
             contentType: "application/json",
-            headers: { "X-CSRF-Token": pwg_token },
+            headers: { "X-CSRF-Token": pwgToken },
             dataType: "json",
           })) as operations["categoryRefreshRepresentative"]["responses"][200]["content"]["application/json"];
 
@@ -419,10 +415,10 @@ ready(function () {
       try {
         // 204 No Content -- categoryDeleteRepresentative's real response has no body.
         await ajax({
-          url: "api/v1/categories/" + String(album_id) + "/representative",
+          url: "api/v1/categories/" + String(albumId) + "/representative",
           type: "DELETE",
           contentType: "application/json",
-          headers: { "X-CSRF-Token": pwg_token },
+          headers: { "X-CSRF-Token": pwgToken },
           dataType: "json",
         });
 
@@ -471,42 +467,39 @@ ready(function () {
   );
 
   on(document.querySelectorAll(".allow-comments"), "click", function () {
-    save_button_set_loading(true);
+    saveButtonSetLoading(true);
 
     void (async () => {
       try {
         await ajax({
-          url: "api/v1/categories/" + String(album_id),
+          url: "api/v1/categories/" + String(albumId),
           type: "PATCH",
           dataType: "json",
           json: {
             commentable: true,
             applyCommentableToSubalbums: true,
           },
-          headers: { "X-CSRF-Token": pwg_token },
+          headers: { "X-CSRF-Token": pwgToken },
         });
 
-        save_button_set_loading(false);
+        saveButtonSetLoading(false);
         const commentable =
           document.querySelector<HTMLInputElement>("#cat-commentable");
         if (commentable !== null && !commentable.checked) {
           trigger([commentable], "click");
         }
 
-        temp_txt = textOf(document.querySelectorAll(".info-message"));
-        text(
-          document.querySelectorAll(".info-message"),
-          str_album_comment_allow,
-        );
+        tempTxt = textOf(document.querySelectorAll(".info-message"));
+        text(document.querySelectorAll(".info-message"), strAlbumCommentAllow);
         show(document.querySelectorAll(".info-message"));
 
         setTimeout(function () {
           hide(document.querySelectorAll(".info-message"));
-          text(document.querySelectorAll(".info-message"), temp_txt);
+          text(document.querySelectorAll(".info-message"), tempTxt);
         }, 5000);
       } catch (e) {
         console.error(e instanceof AjaxError ? e.responseText : e);
-        save_button_set_loading(false);
+        saveButtonSetLoading(false);
         show(document.querySelectorAll(".info-error"));
         setTimeout(function () {
           hide(document.querySelectorAll(".info-error"));
@@ -515,42 +508,42 @@ ready(function () {
     })();
   });
   on(document.querySelectorAll(".disallow-comments"), "click", function () {
-    save_button_set_loading(true);
+    saveButtonSetLoading(true);
 
     void (async () => {
       try {
         await ajax({
-          url: "api/v1/categories/" + String(album_id),
+          url: "api/v1/categories/" + String(albumId),
           type: "PATCH",
           dataType: "json",
           json: {
             commentable: false,
             applyCommentableToSubalbums: true,
           },
-          headers: { "X-CSRF-Token": pwg_token },
+          headers: { "X-CSRF-Token": pwgToken },
         });
 
-        save_button_set_loading(false);
+        saveButtonSetLoading(false);
         const commentable =
           document.querySelector<HTMLInputElement>("#cat-commentable");
         if (commentable?.checked === true) {
           trigger([commentable], "click");
         }
 
-        temp_txt = textOf(document.querySelectorAll(".info-message"));
+        tempTxt = textOf(document.querySelectorAll(".info-message"));
         text(
           document.querySelectorAll(".info-message"),
-          str_album_comment_disallow,
+          strAlbumCommentDisallow,
         );
         show(document.querySelectorAll(".info-message"));
 
         setTimeout(function () {
           hide(document.querySelectorAll(".info-message"));
-          text(document.querySelectorAll(".info-message"), temp_txt);
+          text(document.querySelectorAll(".info-message"), tempTxt);
         }, 5000);
       } catch (e) {
         console.error(e instanceof AjaxError ? e.responseText : e);
-        save_button_set_loading(false);
+        saveButtonSetLoading(false);
         show(document.querySelectorAll(".info-error"));
         setTimeout(function () {
           hide(document.querySelectorAll(".info-error"));
@@ -590,7 +583,7 @@ ready(function () {
 });
 
 function checkAlbumLock() {
-  if (is_visible === "true") {
+  if (albumIsVisible === "true") {
     hide(document.querySelectorAll(".warnings"));
   } else {
     document.querySelectorAll<HTMLElement>(".warnings").forEach((el) => {
@@ -601,13 +594,13 @@ function checkAlbumLock() {
 
 // Parent album popin functions
 
-function add_related_category({
+function addRelatedCategory({
   album,
   levelSeparator,
   newSelectedAlbum,
   getSelectedAlbum,
 }: AlbumSelectorCallbackArgs) {
-  if (parent_album !== album.id) {
+  if (parentAlbum !== album.id) {
     // Linked, matching what the server renders into this same element on
     // page load (`getCatDisplayNameCache($uppercats, 'admin.php?page=album-')`
     // via `categoriesParentNav`). `album.root` is the "Root" label the
@@ -629,7 +622,7 @@ function add_related_category({
     );
 
     newSelectedAlbum();
-    parent_album = getSelectedAlbum()[0]!;
+    parentAlbum = getSelectedAlbum()[0]!;
   }
 }
 
@@ -654,15 +647,15 @@ function activateCommentDropdown() {
 
   on(document, "mouseup", function (e: Event) {
     e.stopPropagation();
-    let option_is_clicked = false;
+    let optionIsClicked = false;
     document.querySelectorAll(".comment-option span").forEach((el) => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real mouseup event's own target inside the document is always a Node (or null), never a bare EventTarget with no Node interface.
       if (el.contains(e.target as Node)) {
-        option_is_clicked = true;
+        optionIsClicked = true;
       }
     });
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real false positive from closure mutation: option_is_clicked is set inside the forEach callback above, which the rule doesn't track (same class as dom.ts's stopped).
-    if (!option_is_clicked) {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real false positive from closure mutation: optionIsClicked is set inside the forEach callback above, which the rule doesn't track (same class as dom.ts's stopped).
+    if (!optionIsClicked) {
       hide(
         find(
           document.querySelectorAll(".toggle-comment-option"),

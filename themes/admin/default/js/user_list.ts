@@ -1,5 +1,5 @@
 import type { components, operations } from "../../../../openapi/client/schema";
-import { getRandomInt, sprintf, jConfirm_confirm_options } from "./common";
+import { getRandomInt, sprintf, jConfirmConfirmOptions } from "./common";
 
 import {
   pwg_getPageData,
@@ -43,10 +43,10 @@ import {
 } from "../../../default/js/vendor/dom";
 import { tipTip } from "../../../default/js/vendor/tiptip";
 
-// The real `GET /api/v1/users` per-row shape (P47) -- `current_users`/
-// `guest_user` are both populated straight from that endpoint's own
-// response (`current_users = data.users` / `guest_user = data.users[0]`,
-// below), and every `fill_user_edit_*` helper reads real User schema
+// The real `GET /api/v1/users` per-row shape (P47) -- `currentUsers`/
+// `guestUser` are both populated straight from that endpoint's own
+// response (`currentUsers = data.users` / `guestUser = data.users[0]`,
+// below), and every `fillUserEdit*` helper reads real User schema
 // fields (status/level/email/groups/enabledHigh/nbImagePage/theme/
 // language/expand/showNbComments/showNbHits/registration*/lastVisit*).
 type UserRow = components["schemas"]["User"];
@@ -55,10 +55,10 @@ type UserListResponse =
 
 // `selectAllPage`/`selectInvert`'s own real pushed shape -- only `id`/
 // `username` are ever read off a `selection` entry. `username` is
-// genuinely optional: `select_whole_set()` (below) pushes id-only
+// genuinely optional: `selectWholeSet()` (below) pushes id-only
 // entries for a whole-database selection (fetching every username
 // upfront would be wasteful), lazily backfilled for just the first 50
-// via `get_first_selection_usernames()` -- callers already defensively
+// via `getFirstSelectionUsernames()` -- callers already defensively
 // check `typeof ... !== "undefined"` before reading it.
 interface SelectionEntry {
   id: number;
@@ -79,57 +79,55 @@ function siblingsOf(el: Element): Element[] {
   return Array.from(parent.children).filter((child) => child !== el);
 }
 
-const color_icons = [
+const colorIcons = [
   "icon-red",
   "icon-blue",
   "icon-yellow",
   "icon-purple",
   "icon-green",
 ];
-const status_arr = ["webmaster", "admin", "normal", "generic", "guest"];
-const level_arr = ["0", "1", "2", "4", "8"];
-const king_template = '<p class="icon-king" id="the_king"></p>';
-let current_users: UserRow[] = [];
-let guest_id = 0;
-let guest_user: UserRow;
-let connected_user = 0;
-let groups_arr: [number, string][] = [];
-let nb_days = "";
-let nb_photos = "";
-let last_user_index = -1;
-let last_user_id = -1;
-let pwg_token = "";
+const statusArr = ["webmaster", "admin", "normal", "generic", "guest"];
+const levelArr = ["0", "1", "2", "4", "8"];
+const kingTemplate = '<p class="icon-king" id="the_king"></p>';
+let currentUsers: UserRow[] = [];
+let guestId = 0;
+let guestUser: UserRow;
+let connectedUser = 0;
+let groupsArr: [number, string][] = [];
+let nbDays = "";
+let nbPhotos = "";
+let lastUserIndex = -1;
+let lastUserId = -1;
+let pwgToken = "";
 let selection: SelectionEntry[] = [];
-let first_update = true;
-let total_users = 0;
-let filter_by = "id DESC";
-const plugins_set_functions: Record<string, (...args: unknown[]) => unknown> =
-  {};
-const plugins_get_functions: Record<string, (...args: unknown[]) => unknown> =
-  {};
-const plugins_load: string[] = [];
-const plugins_users_infos_table: { content_id: string; users_table: string }[] =
+let firstUpdate = true;
+let totalUsers = 0;
+let filterBy = "id DESC";
+const pluginsSetFunctions: Record<string, (...args: unknown[]) => unknown> = {};
+const pluginsGetFunctions: Record<string, (...args: unknown[]) => unknown> = {};
+const pluginsLoad: string[] = [];
+const pluginsUsersInfosTable: { content_id: string; users_table: string }[] =
   [];
-let owner_username = "";
-let owner_id = pwg_getPageData<number>("owner");
-let per_page = 5;
-// Assigned much further down, once groups_arr has its real value (the
+let ownerUsername = "";
+let ownerId = pwg_getPageData<number>("owner");
+let perPage = 5;
+// Assigned much further down, once groupsArr has its real value (the
 // "Startup" sequence's own real dependency order) -- declared here so
 // the functions that read it, defined earlier in this file, don't
 // forward-reference it (they only ever run after Startup completes).
 let groupOptions: GroupOption[] = [];
 // Same reasoning as groupOptions above: assigned in the "Startup"
-// sequence near the bottom of the file (register_dates_str.split(",")),
+// sequence near the bottom of the file (registerDates.split(",")),
 // but read by functions defined much earlier that only ever run once
 // Startup has completed.
-let register_dates: string[] = [];
+let registerDates: string[] = [];
 
-const title_msg = pwg_getPageString(
+const titleMsg = pwg_getPageString(
   'Are you sure you want to delete the user "%s"?',
 );
-const confirm_msg = pwg_getPageString("Yes, I am sure");
-const cancel_msg = pwg_getPageString("No, I have changed my mind");
-const str_and_others_tags = pwg_getPageString("and %s others");
+const confirmMsg = pwg_getPageString("Yes, I am sure");
+const cancelMsg = pwg_getPageString("No, I have changed my mind");
+const strAndOthersTags = pwg_getPageString("and %s others");
 const missingUsername = pwg_getPageString("Please, enter a login");
 const missingPassword = pwg_getPageString(
   "Password is missing. Please enter the password.",
@@ -180,15 +178,15 @@ const errorMailSentMsg = pwg_getPageString(
   "An activation link valid for %s was created but could not be sent. You can now copy the link below and send it to the user.",
 );
 
-const registered_str = pwg_getPageString("Registered");
-const last_visit_str = pwg_getPageString("Last visit");
-const dates_infos = pwg_getPageString("between %s and %s");
-const user_added_str = pwg_getPageString("User %s added");
-const filtered_users = pwg_getPageString("<b>%d</b> filtered users");
-const filtered_user = pwg_getPageString("<b>%d</b> filtered user");
-const history_base_url = pwg_getPageData<string>("u_history");
+const registeredStr = pwg_getPageString("Registered");
+const lastVisitStr = pwg_getPageString("Last visit");
+const datesInfos = pwg_getPageString("between %s and %s");
+const userAddedStr = pwg_getPageString("User %s added");
+const filteredUsers = pwg_getPageString("<b>%d</b> filtered users");
+const filteredUser = pwg_getPageString("<b>%d</b> filtered user");
+const historyBaseUrl = pwg_getPageData<string>("u_history");
 
-const status_to_str: Record<string, string> = {
+const statusToStr: Record<string, string> = {
   webmaster: pwg_getPageString("user_status_webmaster"),
   admin: pwg_getPageString("user_status_admin"),
   normal: pwg_getPageString("user_status_normal"),
@@ -196,10 +194,10 @@ const status_to_str: Record<string, string> = {
   guest: pwg_getPageString("user_status_guest"),
 };
 
-const view_selector = pwg_getPageData<string>("view_selector");
+const viewSelector = pwg_getPageData<string>("view_selector");
 const pagination = String(pwg_getPageData<number>("pagination"));
-const connected_user_status = pwg_getPageData<string>("connected_user_status");
-const has_group = pwg_getPageData<string | null>("filter_group");
+const connectedUserStatus = pwg_getPageData<string>("connected_user_status");
+const hasGroup = pwg_getPageData<string | null>("filter_group");
 
 /*----------------
 Escape of pop-in
@@ -209,8 +207,8 @@ Escape of pop-in
 on(document, "keydown", function (e: Event) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
   if ((e as KeyboardEvent).key === "Escape") {
-    hide_modals();
-    close_user_list();
+    hideModals();
+    closeUserList();
   }
 });
 
@@ -252,24 +250,24 @@ const groupAddUserSelectize = getSelectizeInstance<
 /*-----------------
 OnClick functions
 -----------------*/
-function open_user_list() {
-  hide_temporary_messages();
+function openUserList() {
+  hideTemporaryMessages();
   fadeIn(document.querySelectorAll("#UserList"));
 }
 
-function close_user_list() {
-  hide_temporary_messages();
+function closeUserList() {
+  hideTemporaryMessages();
   setVal(document.querySelectorAll("#result_send_mail_copy_input"), "");
   fadeOut(document.querySelectorAll("#UserList"));
 }
 
-function open_guest_user_list() {
-  hide_temporary_messages();
+function openGuestUserList() {
+  hideTemporaryMessages();
   fadeIn(document.querySelectorAll("#GuestUserList"));
 }
 
-function close_guest_user_list() {
-  hide_temporary_messages();
+function closeGuestUserList() {
+  hideTemporaryMessages();
   fadeOut(document.querySelectorAll("#GuestUserList"));
 }
 
@@ -301,14 +299,14 @@ ready(function () {
     document.querySelectorAll(".button-edit-password-icon"),
     "click",
     function () {
-      reset_password_modals();
+      resetPasswordModals();
       fadeIn(document.querySelectorAll(".user-property-password-change"));
     },
   );
 
   on(document.querySelectorAll(".edit-password-cancel"), "click", function () {
     fadeOut(document.querySelectorAll(".user-property-password-change"));
-    reset_input_password();
+    resetInputPassword();
   });
 
   on(
@@ -334,7 +332,7 @@ ready(function () {
     document.querySelectorAll("#edit_user_password, #edit_user_conf_password"),
     "keyup",
     function () {
-      hide_error_edit_user();
+      hideErrorEditUser();
     },
   );
 
@@ -351,9 +349,9 @@ ready(function () {
   on(
     document.querySelectorAll("#UserList .close-update-button"),
     "click",
-    close_user_list,
+    closeUserList,
   );
-  on(document.querySelectorAll(".CloseUserList"), "click", close_user_list);
+  on(document.querySelectorAll(".CloseUserList"), "click", closeUserList);
 
   setChecked(document.querySelectorAll("#toggleSelectionMode"), false);
   on(document.querySelectorAll("#toggleSelectionMode"), "click", function () {
@@ -366,17 +364,17 @@ ready(function () {
   on(
     document.querySelectorAll(".edit-guest-user-button"),
     "click",
-    open_guest_user_list,
+    openGuestUserList,
   );
   on(
     document.querySelectorAll(".CloseGuestUserList"),
     "click",
-    close_guest_user_list,
+    closeGuestUserList,
   );
   on(
     document.querySelectorAll("#GuestUserList .close-update-button"),
     "click",
-    close_guest_user_list,
+    closeGuestUserList,
   );
   /* Action */
   hide(document.querySelectorAll("[id^=action_]"));
@@ -408,16 +406,16 @@ ready(function () {
     }
   });
   on(document.querySelectorAll(".EditUserGenPassword"), "click", function () {
-    const password = gen_password();
+    const password = genPassword();
     setVal(document.querySelectorAll("#edit_user_password"), password);
     setVal(document.querySelectorAll("#edit_user_conf_password"), password);
-    hide_error_edit_user();
+    hideErrorEditUser();
   });
   on(
     document.querySelectorAll(".AddUserGenPassword span"),
     "click",
     function () {
-      const password = gen_password();
+      const password = genPassword();
       setVal(document.querySelectorAll("#add_user_pass"), password);
       setVal(document.querySelectorAll("#add_user_confpass"), password);
     },
@@ -425,48 +423,48 @@ ready(function () {
   on(
     document.querySelectorAll(".AddUserSubmit"),
     "click",
-    () => void add_user(),
+    () => void addUser(),
   );
-  on(document.querySelectorAll(".AddUserCancel"), "click", add_user_close);
-  on(document.querySelectorAll(".CloseAddUser"), "click", add_user_close);
+  on(document.querySelectorAll(".AddUserCancel"), "click", addUserClose);
+  on(document.querySelectorAll(".CloseAddUser"), "click", addUserClose);
 
   //open add user pop in
-  on(document.querySelectorAll(".add-user-button"), "click", add_user_open);
+  on(document.querySelectorAll(".add-user-button"), "click", addUserOpen);
 
   /* Select */
 
   on(document.querySelectorAll("#selectSet"), "click", function (e: Event) {
-    void select_whole_set();
+    void selectWholeSet();
     e.preventDefault();
     return false;
   });
 
   on(document.querySelectorAll("#selectAllPage"), "click", function (e: Event) {
-    const selection_ids = selection.map((x) => x.id);
-    for (const user of current_users) {
-      if (!selection_ids.includes(user.id)) {
+    const selectionIds = selection.map((x) => x.id);
+    for (const user of currentUsers) {
+      if (!selectionIds.includes(user.id)) {
         selection.push({
           id: user.id,
           username: user.username,
         });
       }
     }
-    update_selection_content();
+    updateSelectionContent();
     e.preventDefault();
     return false;
   });
 
   on(document.querySelectorAll("#selectNone"), "click", function (e: Event) {
     selection = [];
-    update_selection_content();
+    updateSelectionContent();
     e.preventDefault();
     return false;
   });
 
   on(document.querySelectorAll("#selectInvert"), "click", function (e: Event) {
-    const selection_ids = selection.map((x) => x.id);
-    for (const user of current_users) {
-      if (selection_ids.includes(user.id)) {
+    const selectionIds = selection.map((x) => x.id);
+    for (const user of currentUsers) {
+      if (selectionIds.includes(user.id)) {
         selection.splice(
           selection.findIndex((x) => x.id === user.id),
           1,
@@ -478,7 +476,7 @@ ready(function () {
         });
       }
     }
-    update_selection_content();
+    updateSelectionContent();
     e.preventDefault();
     return false;
   });
@@ -493,22 +491,22 @@ ready(function () {
   on(
     document.querySelectorAll(".advanced-filter-btn"),
     "click",
-    advanced_filter_button_click,
+    advancedFilterButtonClick,
   );
   on(
     document.querySelectorAll(".advanced-filter span.icon-cancel"),
     "click",
-    advanced_filter_hide,
+    advancedFilterHide,
   );
   on(
     document.querySelectorAll(".advanced-filter-select"),
     "change",
-    () => void update_user_list(),
+    () => void updateUserList(),
   );
   on(
     document.querySelectorAll("#user_search"),
     "input",
-    () => void update_user_list(),
+    () => void updateUserList(),
   );
 
   /*View manager*/
@@ -531,7 +529,7 @@ ready(function () {
     if (hasClass(document.querySelectorAll(".addAlbum"), "input-mode")) {
       hide(document.querySelectorAll(".addAlbum p"));
     }
-    set_view_selector("compact");
+    setViewSelector("compact");
   });
 
   on(document.querySelectorAll("#displayLine"), "change", function () {
@@ -540,7 +538,7 @@ ready(function () {
     if (hasClass(document.querySelectorAll(".addAlbum"), "input-mode")) {
       hide(document.querySelectorAll(".addAlbum p"));
     }
-    set_view_selector("line");
+    setViewSelector("line");
   });
 
   on(document.querySelectorAll("#displayTile"), "change", function () {
@@ -549,7 +547,7 @@ ready(function () {
     if (hasClass(document.querySelectorAll(".addAlbum"), "input-mode")) {
       show(document.querySelectorAll(".addAlbum p"));
     }
-    set_view_selector("tile");
+    setViewSelector("tile");
   });
 
   /* Pagination */
@@ -635,10 +633,10 @@ ready(function () {
 
   //$("#pagination-per-page-"+pagination).trigger('click');
 
-  if (has_group !== null && has_group !== "") {
-    advanced_filter_button_click();
-    setVal(document.querySelectorAll("select[name='filter_group']"), has_group);
-    void update_user_list();
+  if (hasGroup !== null && hasGroup !== "") {
+    advancedFilterButtonClick();
+    setVal(document.querySelectorAll("select[name='filter_group']"), hasGroup);
+    void updateUserList();
   }
 
   on(document.querySelectorAll(".search-cancel"), "click", function () {
@@ -654,49 +652,47 @@ ready(function () {
     }
   });
   // Filter by id (registered) and username
-  const icon_user = document.querySelectorAll("#icon-usr-list-user");
-  const icon_registered = document.querySelectorAll(
-    "#icon-usr-list-registered",
-  );
+  const iconUser = document.querySelectorAll("#icon-usr-list-user");
+  const iconRegistered = document.querySelectorAll("#icon-usr-list-registered");
   on(document.querySelectorAll("#usr-list-registered"), "click", function () {
-    css(icon_user, "display", "none");
-    css(icon_registered, "display", "block");
-    attr(icon_user, "class", "icon-down");
-    switch (filter_by) {
+    css(iconUser, "display", "none");
+    css(iconRegistered, "display", "block");
+    attr(iconUser, "class", "icon-down");
+    switch (filterBy) {
       case "id DESC":
-        attr(icon_registered, "class", "icon-down");
-        filter_by = "id ASC";
+        attr(iconRegistered, "class", "icon-down");
+        filterBy = "id ASC";
         break;
       case "id ASC":
-        attr(icon_registered, "class", "icon-up");
-        filter_by = "id DESC";
+        attr(iconRegistered, "class", "icon-up");
+        filterBy = "id DESC";
         break;
       default:
-        attr(icon_registered, "class", "icon-up");
-        filter_by = "id DESC";
+        attr(iconRegistered, "class", "icon-up");
+        filterBy = "id DESC";
         break;
     }
-    void update_user_list();
+    void updateUserList();
   });
   on(document.querySelectorAll("#usr-list-user"), "click", function () {
-    css(icon_registered, "display", "none");
-    css(icon_user, "display", "block");
-    attr(icon_registered, "class", "icon-up");
-    switch (filter_by) {
+    css(iconRegistered, "display", "none");
+    css(iconUser, "display", "block");
+    attr(iconRegistered, "class", "icon-up");
+    switch (filterBy) {
       case "username DESC":
-        attr(icon_user, "class", "icon-down");
-        filter_by = "username ASC";
+        attr(iconUser, "class", "icon-down");
+        filterBy = "username ASC";
         break;
       case "username ASC":
-        attr(icon_user, "class", "icon-up");
-        filter_by = "username DESC";
+        attr(iconUser, "class", "icon-up");
+        filterBy = "username DESC";
         break;
       default:
-        attr(icon_user, "class", "icon-down");
-        filter_by = "username ASC";
+        attr(iconUser, "class", "icon-down");
+        filterBy = "username ASC";
         break;
     }
-    void update_user_list();
+    void updateUserList();
   });
 
   /* tabsheet pop in user */
@@ -765,7 +761,7 @@ ready(function () {
   );
 });
 
-function set_view_selector(view_type: string) {
+function setViewSelector(view_type: string) {
   void ajax({
     url: "api/v1/session/preferences/user-manager-view",
     type: "PUT",
@@ -799,10 +795,10 @@ function setDisplayCompact() {
   addClass(wrapper, "compactView");
   addClass(document.querySelectorAll(".user-header-col"), "hide");
 
-  if (per_page < 10) {
-    per_page = 10;
-    update_pagination_menu();
-    void update_user_list();
+  if (perPage < 10) {
+    perPage = 10;
+    updatePaginationMenu();
+    void updateUserList();
 
     removeClass(
       document.querySelectorAll("#pagination-per-page-5"),
@@ -827,7 +823,7 @@ function setDisplayCompact() {
 Checkboxes
 ----------------*/
 
-function checkbox_change(this: Element) {
+function checkboxChange(this: Element) {
   if (attrOf(this, "data-selected") === "1") {
     hide(find(this, "i"));
   } else {
@@ -835,7 +831,7 @@ function checkbox_change(this: Element) {
   }
 }
 
-function checkbox_click(this: Element) {
+function checkboxClick(this: Element) {
   if (attrOf(this, "data-selected") === "1") {
     attr(this, "data-selected", "0");
     hide(find(this, "i"));
@@ -846,26 +842,26 @@ function checkbox_click(this: Element) {
 }
 
 off(document.querySelectorAll(".user-list-checkbox"), "change");
-on(document.querySelectorAll(".user-list-checkbox"), "change", checkbox_change);
+on(document.querySelectorAll(".user-list-checkbox"), "change", checkboxChange);
 off(document.querySelectorAll(".user-list-checkbox"), "click");
-on(document.querySelectorAll(".user-list-checkbox"), "click", checkbox_click);
+on(document.querySelectorAll(".user-list-checkbox"), "click", checkboxClick);
 
 /* ---------------
 User edit sliders
 ----------------*/
-const nb_image_page_values = [
+const nbImagePageValues = [
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
   23, 24, 25, 26, 27, 28, 29, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 200, 300,
   500, 999,
 ];
-const recent_period_values = [
+const recentPeriodValues = [
   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 25,
   30, 40, 50, 60, 80, 99,
 ];
-const recent_period_init = 0;
-//const recent_period_init = getSliderKeyFromValue($('.period-select-bar input[name=recent_period]').val(), recent_period_values);
-const nb_image_page_init = 0;
-//const nb_image_page_init = getSliderKeyFromValue($('.photos-select-bar input[name=nb_image_page]').val(), nb_image_page_values);
+const recentPeriodInit = 0;
+//const recentPeriodInit = getSliderKeyFromValue($('.period-select-bar input[name=recent_period]').val(), recentPeriodValues);
+const nbImagePageInit = 0;
+//const nbImagePageInit = getSliderKeyFromValue($('.photos-select-bar input[name=nb_image_page]').val(), nbImagePageValues);
 
 /**
  * find the key from a value in the startStopValues array
@@ -886,12 +882,12 @@ function getSliderKeyFromValue(value: number, values: number[]): number {
 }
 
 function getNbImagePageInfoFromIdx(idx: number) {
-  return sprintf(nb_photos, nb_image_page_values[idx]!);
+  return sprintf(nbPhotos, nbImagePageValues[idx]!);
 }
 
 function getRecentPeriodInfoFromIdx(idx: number) {
-  return sprintf(nb_days, recent_period_values[idx]!);
-  //return recent_period_values[idx].toString();
+  return sprintf(nbDays, recentPeriodValues[idx]!);
+  //return recentPeriodValues[idx].toString();
 }
 
 /* Photos bar slider */
@@ -902,8 +898,8 @@ slider(
   {
     range: "min",
     min: 0,
-    max: nb_image_page_values.length - 1,
-    value: nb_image_page_init,
+    max: nbImagePageValues.length - 1,
+    value: nbImagePageInit,
     change: function (_event: Event, ui: SliderUIParams) {
       html(
         document.querySelectorAll(
@@ -925,7 +921,7 @@ slider(
         document.querySelectorAll(
           "#UserList .photos-select-bar input[name=nb_image_page]",
         ),
-        String(nb_image_page_values[ui.value!]!),
+        String(nbImagePageValues[ui.value!]!),
       );
       trigger(
         document.querySelectorAll(
@@ -944,8 +940,8 @@ slider(
   {
     range: "min",
     min: 0,
-    max: nb_image_page_values.length - 1,
-    value: nb_image_page_init,
+    max: nbImagePageValues.length - 1,
+    value: nbImagePageInit,
     change: function (_event: Event, ui: SliderUIParams) {
       html(
         document.querySelectorAll(
@@ -967,7 +963,7 @@ slider(
         document.querySelectorAll(
           "#GuestUserList .photos-select-bar input[name=nb_image_page]",
         ),
-        String(nb_image_page_values[ui.value!]!),
+        String(nbImagePageValues[ui.value!]!),
       );
       trigger(
         document.querySelectorAll(
@@ -992,8 +988,8 @@ slider(
   {
     range: "min",
     min: 0,
-    max: nb_image_page_values.length - 1,
-    value: nb_image_page_init,
+    max: nbImagePageValues.length - 1,
+    value: nbImagePageInit,
     change: function (_event: Event, ui: SliderUIParams) {
       html(
         document.querySelectorAll(
@@ -1015,7 +1011,7 @@ slider(
         document.querySelectorAll(
           "#permitActionUserList .photos-select-bar input[name=nb_image_page]",
         ),
-        String(nb_image_page_values[ui.value!]!),
+        String(nbImagePageValues[ui.value!]!),
       );
       trigger(
         document.querySelectorAll(
@@ -1035,8 +1031,8 @@ slider(
   {
     range: "min",
     min: 0,
-    max: recent_period_values.length - 1,
-    value: recent_period_init,
+    max: recentPeriodValues.length - 1,
+    value: recentPeriodInit,
     change: function (_event: Event, ui: SliderUIParams) {
       html(
         document.querySelectorAll(
@@ -1058,7 +1054,7 @@ slider(
         document.querySelectorAll(
           "#UserList .period-select-bar input[name=recent_period]",
         ),
-        String(recent_period_values[ui.value!]!),
+        String(recentPeriodValues[ui.value!]!),
       );
       trigger(
         document.querySelectorAll(
@@ -1077,8 +1073,8 @@ slider(
   {
     range: "min",
     min: 0,
-    max: recent_period_values.length - 1,
-    value: recent_period_init,
+    max: recentPeriodValues.length - 1,
+    value: recentPeriodInit,
     change: function (_event: Event, ui: SliderUIParams) {
       html(
         document.querySelectorAll(
@@ -1100,7 +1096,7 @@ slider(
         document.querySelectorAll(
           "#GuestUserList .period-select-bar input[name=recent_period]",
         ),
-        String(recent_period_values[ui.value!]!),
+        String(recentPeriodValues[ui.value!]!),
       );
       trigger(
         document.querySelectorAll(
@@ -1119,8 +1115,8 @@ slider(
   {
     range: "min",
     min: 0,
-    max: recent_period_values.length - 1,
-    value: recent_period_init,
+    max: recentPeriodValues.length - 1,
+    value: recentPeriodInit,
     change: function (_event: Event, ui: SliderUIParams) {
       html(
         document.querySelectorAll(
@@ -1142,7 +1138,7 @@ slider(
         document.querySelectorAll(
           "#permitActionUserList .period-select-bar input[name=recent_period]",
         ),
-        String(recent_period_values[ui.value!]!),
+        String(recentPeriodValues[ui.value!]!),
       );
       trigger(
         document.querySelectorAll(
@@ -1161,37 +1157,37 @@ slider(
   "value",
   0,
 );
-const period_info = getRecentPeriodInfoFromIdx(0);
+const periodInfo = getRecentPeriodInfoFromIdx(0);
 html(
   document.querySelectorAll(
     "#permitActionUserList .period-select-bar .recent_period_infos",
   ),
-  period_info,
+  periodInfo,
 );
 
 /* -----------
 Pagination
 ------------*/
 
-let actual_page = 1;
-let max_page = 1;
-let nb_filtered_users = 0;
-const page_ellipsis = "<span>...</span>";
-const page_item = '<a data-page="%d">%d</a>';
+let actualPage = 1;
+let maxPage = 1;
+let nbFilteredUsers = 0;
+const pageEllipsis = "<span>...</span>";
+const pageItem = '<a data-page="%d">%d</a>';
 
-function move_to_page(page: number) {
-  if (page < 1 || page > max_page) return;
-  actual_page = page;
-  update_pagination_menu();
-  void update_user_list();
+function moveToPage(page: number) {
+  if (page < 1 || page > maxPage) return;
+  actualPage = page;
+  updatePaginationMenu();
+  void updateUserList();
 }
 
 on(document.querySelectorAll(".pagination-arrow.rigth"), "click", () => {
-  move_to_page(actual_page + 1);
+  moveToPage(actualPage + 1);
 });
 
 on(document.querySelectorAll(".pagination-arrow.left"), "click", () => {
-  move_to_page(actual_page - 1);
+  moveToPage(actualPage - 1);
 });
 
 on(
@@ -1207,10 +1203,10 @@ on(
       },
     });
 
-    per_page = parseInt(htmlOf(this) ?? "0");
-    actual_page = 1;
-    update_pagination_menu();
-    void update_user_list();
+    perPage = parseInt(htmlOf(this) ?? "0");
+    actualPage = 1;
+    updatePaginationMenu();
+    void updateUserList();
 
     const parent = this.parentElement;
     if (parent !== null) {
@@ -1221,25 +1217,25 @@ on(
   },
 );
 
-function append_pagination_item(page: number | null = null) {
+function appendPaginationItem(page: number | null = null) {
   const container = document.querySelector(".pagination-item-container");
   if (container === null) return;
   if (page != null) {
-    const new_tag = parseHtml(page_item.replace(/%d/g, String(page)))[0]!;
-    container.appendChild(new_tag);
-    if (actual_page === page) {
-      addClass(new_tag, "actual");
+    const newTag = parseHtml(pageItem.replace(/%d/g, String(page)))[0]!;
+    container.appendChild(newTag);
+    if (actualPage === page) {
+      addClass(newTag, "actual");
     }
-    on(new_tag, "click", () => {
+    on(newTag, "click", () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      move_to_page(data(new_tag, "page") as number);
+      moveToPage(data(newTag, "page") as number);
     });
   } else {
-    container.appendChild(parseHtml(page_ellipsis)[0]!);
+    container.appendChild(parseHtml(pageEllipsis)[0]!);
   }
 }
 
-function update_pagination_items() {
+function updatePaginationItems() {
   document.querySelectorAll(".pagination-item-container a").forEach((el) => {
     el.remove();
   });
@@ -1247,25 +1243,25 @@ function update_pagination_items() {
     el.remove();
   });
 
-  append_pagination_item(1);
+  appendPaginationItem(1);
 
-  if (actual_page > 2) {
-    append_pagination_item();
+  if (actualPage > 2) {
+    appendPaginationItem();
   }
-  if (actual_page !== 1 && actual_page !== max_page) {
-    append_pagination_item(actual_page);
+  if (actualPage !== 1 && actualPage !== maxPage) {
+    appendPaginationItem(actualPage);
   }
-  if (actual_page < max_page - 1) {
-    append_pagination_item();
+  if (actualPage < maxPage - 1) {
+    appendPaginationItem();
   }
-  append_pagination_item(max_page);
+  appendPaginationItem(maxPage);
 }
 
-function update_pagination_menu() {
-  max_page = Math.ceil(nb_filtered_users / per_page);
+function updatePaginationMenu() {
+  maxPage = Math.ceil(nbFilteredUsers / perPage);
   updateArrows();
-  update_pagination_items();
-  if (max_page <= 1) {
+  updatePaginationItems();
+  if (maxPage <= 1) {
     hide(document.querySelectorAll(".pagination-container"));
   } else {
     show(document.querySelectorAll(".pagination-container"));
@@ -1273,7 +1269,7 @@ function update_pagination_menu() {
 }
 
 function updateArrows() {
-  if (actual_page === 1) {
+  if (actualPage === 1) {
     addClass(
       document.querySelectorAll(".pagination-arrow.left"),
       "unavailable",
@@ -1284,7 +1280,7 @@ function updateArrows() {
       "unavailable",
     );
   }
-  if (actual_page === max_page) {
+  if (actualPage === maxPage) {
     addClass(
       document.querySelectorAll(".pagination-arrow.rigth"),
       "unavailable",
@@ -1301,28 +1297,28 @@ function updateArrows() {
 Advanced filter
 ------------------*/
 
-function advanced_filter_button_click() {
+function advancedFilterButtonClick() {
   if (
     !hasClass(
       document.querySelectorAll(".advanced-filter"),
       "advanced-filter-open",
     )
   ) {
-    advanced_filter_show();
+    advancedFilterShow();
   } else {
-    advanced_filter_hide();
+    advancedFilterHide();
   }
-  // update_user_list();
+  // updateUserList();
 }
 
-function advanced_filter_show() {
+function advancedFilterShow() {
   addClass(
     document.querySelectorAll(".advanced-filter-btn, .advanced-filter"),
     "advanced-filter-open",
   );
 }
 
-function advanced_filter_hide() {
+function advancedFilterHide() {
   removeClass(
     document.querySelectorAll(".advanced-filter-btn, .advanced-filter"),
     "advanced-filter-open",
@@ -1332,9 +1328,9 @@ function advanced_filter_hide() {
 let months: string[] = [];
 
 function getDateStr(date: string) {
-  const date_arr = date.split("-");
-  const curr_month = months[parseInt(date_arr[1]!) - 1] ?? "";
-  return curr_month + " " + date_arr[0]!;
+  const dateArr = date.split("-");
+  const currMonth = months[parseInt(dateArr[1]!) - 1] ?? "";
+  return currMonth + " " + dateArr[0]!;
 }
 
 function setupRegisterDates(registerDatesList: string[]) {
@@ -1351,7 +1347,7 @@ function setupRegisterDates(registerDatesList: string[]) {
         html(
           document.querySelectorAll(".advanced-filter .dates-infos"),
           sprintf(
-            dates_infos,
+            datesInfos,
             getDateStr(registerDatesList[ui.values![0]!]!),
             getDateStr(registerDatesList[ui.values![1]!]!),
           ),
@@ -1361,7 +1357,7 @@ function setupRegisterDates(registerDatesList: string[]) {
         html(
           document.querySelectorAll(".advanced-filter .dates-infos"),
           sprintf(
-            dates_infos,
+            datesInfos,
             getDateStr(registerDatesList[ui.values![0]!]!),
             getDateStr(registerDatesList[ui.values![1]!]!),
           ),
@@ -1371,12 +1367,12 @@ function setupRegisterDates(registerDatesList: string[]) {
         html(
           document.querySelectorAll(".advanced-filter .dates-infos"),
           sprintf(
-            dates_infos,
+            datesInfos,
             getDateStr(registerDatesList[ui.values![0]!]!),
             getDateStr(registerDatesList[ui.values![1]!]!),
           ),
         );
-        void update_user_list();
+        void updateUserList();
       },
     },
   );
@@ -1384,7 +1380,7 @@ function setupRegisterDates(registerDatesList: string[]) {
   html(
     document.querySelectorAll(".advanced-filter .dates-infos"),
     sprintf(
-      dates_infos,
+      datesInfos,
       getDateStr(registerDatesList[0]!),
       getDateStr(registerDatesList[registerDatesList.length - 1]!),
     ),
@@ -1394,7 +1390,7 @@ function setupRegisterDates(registerDatesList: string[]) {
 Add User
 ------------------*/
 
-function gen_password() {
+function genPassword() {
   const characterSet =
     "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
 
@@ -1412,7 +1408,7 @@ function gen_password() {
   return password;
 }
 
-function add_user_close() {
+function addUserClose() {
   fadeOut(document.querySelectorAll("#AddUser"), () => {
     css(
       document.querySelectorAll("#AddUser .AddUserErrors"),
@@ -1422,7 +1418,7 @@ function add_user_close() {
   });
 }
 
-function add_user_open() {
+function addUserOpen() {
   hide(document.querySelectorAll("#AddUserSuccessContainer"));
   show(document.querySelectorAll("#AddUserFieldContainer"));
   // `:input` is jQuery/Sizzle's own pseudo-selector (matches input,
@@ -1435,7 +1431,7 @@ function add_user_open() {
     "",
   );
   hide(document.querySelectorAll("#add_user_password"));
-  fill_new_user();
+  fillNewUser();
   fadeIn(document.querySelectorAll("#AddUser"));
   document.querySelector<HTMLElement>(".AddUserLabelUsername input")?.focus();
   const statusSelect = document.querySelectorAll(
@@ -1457,26 +1453,26 @@ function add_user_open() {
 Selection mode
 ------------------*/
 
-function create_user_selected_item(user: SelectionEntry): Element {
+function createUserSelectedItem(user: SelectionEntry): Element {
   const template = document.querySelector(".user-selected-item")!;
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
-  const new_elem = template.cloneNode(true) as Element;
-  attr(new_elem, "data-id", user.id.toString());
+  const newElem = template.cloneNode(true) as Element;
+  attr(newElem, "data-id", user.id.toString());
   // Non-null: only ever called after the caller's own `typeof ...
   // !== "undefined"` guard confirms `username` is really set.
-  html(find(new_elem, "p"), user.username!);
-  on(find(new_elem, "a"), "click", () => {
+  html(find(newElem, "p"), user.username!);
+  on(find(newElem, "a"), "click", () => {
     selection.splice(
       selection.findIndex((i) => i.id === user.id),
       1,
     );
-    update_selection_content();
+    updateSelectionContent();
   });
-  return new_elem;
+  return newElem;
 }
 
-function generate_user_selected_items() {
-  let items_created = 0;
+function generateUserSelectedItems() {
+  let itemsCreated = 0;
   const others = selection.length - 5;
   document
     .querySelectorAll(".user-selected-list .user-selected-item")
@@ -1484,16 +1480,16 @@ function generate_user_selected_items() {
       el.remove();
     });
   const list = document.querySelector(".user-selected-list");
-  for (let i = 0; i < selection.length && items_created < 5; i++) {
+  for (let i = 0; i < selection.length && itemsCreated < 5; i++) {
     if (typeof selection[i]!.username !== "undefined") {
-      list?.appendChild(create_user_selected_item(selection[i]!));
-      items_created += 1;
+      list?.appendChild(createUserSelectedItem(selection[i]!));
+      itemsCreated += 1;
     }
   }
   if (others >= 1) {
     html(
       document.querySelectorAll(".selection-other-users"),
-      str_and_others_tags.replace("%s", String(others)),
+      strAndOthersTags.replace("%s", String(others)),
     );
     show(document.querySelectorAll(".selection-other-users"));
   } else {
@@ -1502,23 +1498,23 @@ function generate_user_selected_items() {
   return;
 }
 
-function fill_user_selected_list() {
-  let elems_with_username = 0;
-  for (let i = 0; i < selection.length && elems_with_username < 5; i++) {
+function fillUserSelectedList() {
+  let elemsWithUsername = 0;
+  for (let i = 0; i < selection.length && elemsWithUsername < 5; i++) {
     if (typeof selection[i]!.username !== "undefined") {
-      elems_with_username += 1;
+      elemsWithUsername += 1;
     }
   }
-  if (elems_with_username < 5 && elems_with_username !== selection.length) {
-    void get_first_selection_usernames(generate_user_selected_items);
+  if (elemsWithUsername < 5 && elemsWithUsername !== selection.length) {
+    void getFirstSelectionUsernames(generateUserSelectedItems);
   } else {
-    generate_user_selected_items();
+    generateUserSelectedItems();
   }
 }
 
-function update_selection_content() {
+function updateSelectionContent() {
   const number = selection.length;
-  fill_user_selected_list();
+  fillUserSelectedList();
   if (number === 0) {
     show(document.querySelectorAll("#forbidAction"));
     hide(document.querySelectorAll(".selection-mode-ul"));
@@ -1528,19 +1524,19 @@ function update_selection_content() {
     show(document.querySelectorAll("#permitActionUserList"));
     show(document.querySelectorAll(".selection-mode-ul"));
   }
-  set_selected_to_selection();
+  setSelectedToSelection();
   hide(document.querySelectorAll("#applyActionBlock .infos"));
 }
 
-function set_selected_to_selection() {
+function setSelectedToSelection() {
   if (!is(document.querySelectorAll("#toggleSelectionMode"), ":checked")) {
     return;
   }
   document
     .querySelectorAll(".user-container-wrapper .user-container")
     .forEach((container, index) => {
-      const selection_ids = selection.map((x) => x.id);
-      if (selection_ids.includes(current_users[index]!.id)) {
+      const selectionIds = selection.map((x) => x.id);
+      if (selectionIds.includes(currentUsers[index]!.id)) {
         addClass(container, "container-selected");
         attr(find(container, ".user-list-checkbox"), "data-selected", "1");
         show(find(container, ".user-list-checkbox i"));
@@ -1574,15 +1570,15 @@ function selectionMode(isSelection: boolean) {
   if (isSelection) {
     //resets the selection
     //selection = [];
-    set_selected_to_selection();
+    setSelectedToSelection();
     show(document.querySelectorAll(".in-selection-mode"));
     hide(document.querySelectorAll(".not-in-selection-mode"));
 
-    if (view_selector === "tile") {
+    if (viewSelector === "tile") {
       show(document.querySelectorAll(".user-container-email"));
     }
 
-    if (view_selector === "compact") {
+    if (viewSelector === "compact") {
       css(document.querySelectorAll(".user-container-email"), {
         display: "none",
       });
@@ -1597,7 +1593,7 @@ function selectionMode(isSelection: boolean) {
     hide(document.querySelectorAll(".in-selection-mode"));
     show(document.querySelectorAll(".not-in-selection-mode"));
 
-    if (view_selector === "tile" || view_selector === "line") {
+    if (viewSelector === "tile" || viewSelector === "line") {
       css(document.querySelectorAll(".user-container-email"), {
         display: "flex",
       });
@@ -1611,14 +1607,14 @@ function selectionMode(isSelection: boolean) {
 General functions
 ------------------*/
 
-function hide_temporary_messages() {
+function hideTemporaryMessages() {
   hide(document.querySelectorAll(".update-user-success"));
   hide(document.querySelectorAll("#AddUserSuccess"));
   hide(document.querySelectorAll(".error-msg"));
 }
 
-function get_group_name_from_id(id: number) {
-  for (const [groupId, groupName] of groups_arr) {
+function getGroupNameFromId(id: number) {
+  for (const [groupId, groupName] of groupsArr) {
     if (groupId === id) {
       return groupName;
     }
@@ -1626,16 +1622,16 @@ function get_group_name_from_id(id: number) {
   return "group_id error";
 }
 
-function get_container_index_from_uid(uid: number) {
-  for (let i = 0; i < current_users.length; i++) {
-    if (current_users[i]!.id === uid) {
+function getContainerIndexFromUid(uid: number) {
+  for (let i = 0; i < currentUsers.length; i++) {
+    if (currentUsers[i]!.id === uid) {
       return i;
     }
   }
   return -1;
 }
 
-function hide_error_edit_user() {
+function hideErrorEditUser() {
   animate(
     document.querySelectorAll("#UserList .EditUserErrors"),
     { opacity: 0 },
@@ -1643,7 +1639,7 @@ function hide_error_edit_user() {
   );
 }
 
-function show_error_edit_user() {
+function showErrorEditUser() {
   animate(
     document.querySelectorAll("#UserList .EditUserErrors"),
     { opacity: 1 },
@@ -1651,7 +1647,7 @@ function show_error_edit_user() {
   );
 }
 
-function reset_input_password() {
+function resetInputPassword() {
   setVal(
     document.querySelectorAll("#edit_user_password, #edit_user_conf_password"),
     "",
@@ -1671,13 +1667,13 @@ function editTabsBind() {
   });
 }
 
-function check_tabs(title_tab_name_id: string) {
-  if (plugins_load.length > 2) {
+function checkTabs(title_tab_name_id: string) {
+  if (pluginsLoad.length > 2) {
     css(document.querySelectorAll(".edit-user-tab-title"), {
       gap: "0px",
       justifyContent: "space-between",
     });
-    const countMoresPlugins = plugins_load.length - 2;
+    const countMoresPlugins = pluginsLoad.length - 2;
     if (!document.getElementById("mores_plugins_expand")) {
       append(
         document.querySelectorAll(".edit-user-tab-title"),
@@ -1762,7 +1758,7 @@ function check_tabs(title_tab_name_id: string) {
  * @param {() => {} | null} get_data_function - API call get function with ajax (must be null if users_table is used)
  * @returns {void} Displays the new tab in the user's modal
  */
-function plugin_add_tab_in_user_modal(
+function pluginAddTabInUserModal(
   tab_name: string,
   content_id: string,
   users_table: string | null = null,
@@ -1806,17 +1802,17 @@ function plugin_add_tab_in_user_modal(
   if (set_data_function && typeof set_data_function !== "function") {
     throw new TypeError("set_data_function must be a function.");
   } else if (set_data_function && typeof set_data_function === "function") {
-    plugins_set_functions[name + "_set_function"] = set_data_function;
+    pluginsSetFunctions[name + "_set_function"] = set_data_function;
   }
 
   if (get_data_function && typeof get_data_function !== "function") {
     throw new TypeError("get_data_function must be a function.");
   } else if (get_data_function && typeof get_data_function === "function") {
-    plugins_get_functions[name + "_get_function"] = get_data_function;
+    pluginsGetFunctions[name + "_get_function"] = get_data_function;
   }
 
   if (users_table !== null && users_table !== "") {
-    plugins_users_infos_table.push({ content_id, users_table });
+    pluginsUsersInfosTable.push({ content_id, users_table });
   }
 
   // DOM modification
@@ -1849,10 +1845,10 @@ function plugin_add_tab_in_user_modal(
 
   addClass(document.querySelectorAll(".edit-user-tabsheet"), "tab-with-plugin");
 
-  plugins_load.push("name_tab_" + name);
-  check_tabs("name_tab_" + name);
+  pluginsLoad.push("name_tab_" + name);
+  checkTabs("name_tab_" + name);
 
-  if (plugins_load.length <= 2) {
+  if (pluginsLoad.length <= 2) {
     const nameTab = document.getElementById("name_tab_" + name);
     if (nameTab !== null) {
       tipTip(nameTab, {
@@ -1865,7 +1861,7 @@ function plugin_add_tab_in_user_modal(
   }
 }
 
-function reset_password_modals() {
+function resetPasswordModals() {
   hide(document.querySelectorAll(".user-property-password-change"));
   hide(document.querySelectorAll(".user-property-password-change-inputs"));
   hide(document.querySelectorAll("#edit_password_success_change"));
@@ -1874,12 +1870,12 @@ function reset_password_modals() {
   show(document.querySelectorAll(".user-property-password-choice"));
 }
 
-function reset_username_modals() {
+function resetUsernameModals() {
   hide(document.querySelectorAll(".edit-username-success"));
   show(document.querySelectorAll(".user-property-username-change-input"));
 }
 
-function reset_main_user_modals() {
+function resetMainUserModals() {
   setVal(document.querySelectorAll("#main_user_rewrite"), "");
   removeClass(
     document.querySelectorAll("#main_user_rewrite_icon"),
@@ -1891,22 +1887,22 @@ function reset_main_user_modals() {
   show(document.querySelectorAll(".main-user-proceed"));
 }
 
-function hide_modals() {
+function hideModals() {
   hide(document.querySelectorAll(".user-property-username-change"));
   hide(document.querySelectorAll(".user-property-password-change"));
   hide(document.querySelectorAll(".user-property-main-user-change"));
-  reset_password_modals();
-  reset_username_modals();
-  reset_main_user_modals();
+  resetPasswordModals();
+  resetUsernameModals();
+  resetMainUserModals();
 }
 
-function display_long_string(username: string) {
+function displayLongString(username: string) {
   const formatedUsername =
     username.length > 20 ? username.slice(0, 17) + "..." : username;
   return formatedUsername;
 }
 
-function generate_random_string() {
+function generateRandomString() {
   const string =
     "abcdefghijkmlnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let result = "";
@@ -1920,15 +1916,15 @@ function generate_random_string() {
 /* ---------------
 Who is the king functions (main user)
 ----------------*/
-function open_main_user_modal(user_to_edit: UserRow) {
+function openMainUserModal(userToEdit: UserRow) {
   const modal = document.querySelectorAll(".user-property-main-user-change");
-  reset_main_user_modals();
+  resetMainUserModals();
   html(
     document.querySelectorAll(".main-user-proceed-desc"),
     sprintf(
       mainUserContinue,
-      `<b>${display_long_string(user_to_edit.username)}</b>`,
-      `<b>${display_long_string(owner_username)}</b>`,
+      `<b>${displayLongString(userToEdit.username)}</b>`,
+      `<b>${displayLongString(ownerUsername)}</b>`,
     ),
   );
   fadeIn(modal);
@@ -1937,18 +1933,14 @@ function open_main_user_modal(user_to_edit: UserRow) {
   const proceedBtn = document.querySelectorAll(".main-user-btn-proceed");
   off(proceedBtn, "click");
   on(proceedBtn, "click", function () {
-    const gen_string = generate_random_string();
+    const genString = generateRandomString();
     html(
       document.querySelectorAll(".main-user-rewrite-desc"),
-      sprintf(mainUserRewrite, `<b>${gen_string}</b>`) + " :",
+      sprintf(mainUserRewrite, `<b>${genString}</b>`) + " :",
     );
     hide(document.querySelectorAll(".main-user-proceed"));
     fadeIn(document.querySelectorAll(".main-user-rewrite"));
-    event_check_string_main_user(
-      user_to_edit.username,
-      user_to_edit.id,
-      gen_string,
-    );
+    eventCheckStringMainUser(userToEdit.username, userToEdit.id, genString);
   });
 
   const cancelBtn = document.querySelectorAll(
@@ -1960,8 +1952,8 @@ function open_main_user_modal(user_to_edit: UserRow) {
   });
 }
 
-function set_main_user_success() {
-  const indexKey = current_users.findIndex((u) => u.id === owner_id);
+function setMainUserSuccess() {
+  const indexKey = currentUsers.findIndex((u) => u.id === ownerId);
   const [new_main] = find(
     document.querySelectorAll(
       '.user-container[key="' + String(indexKey) + '"]',
@@ -1970,7 +1962,7 @@ function set_main_user_success() {
   );
   let king = document.querySelector("#the_king");
   if (king === null) {
-    king = parseHtml(king_template)[0]!;
+    king = parseHtml(kingTemplate)[0]!;
     attr(king, "title", mainUserStr);
     tipTip(king);
   }
@@ -1980,7 +1972,7 @@ function set_main_user_success() {
   fadeIn(document.querySelectorAll(".main-user-success"));
 }
 
-function event_check_string_main_user(
+function eventCheckStringMainUser(
   new_main_username: string,
   new_main_id: number,
   stringToCheck: string,
@@ -1998,91 +1990,91 @@ function event_check_string_main_user(
         document.querySelectorAll(".main-user-validate-desc"),
         sprintf(
           mainUserValidate,
-          `<b>${display_long_string(owner_username)}</b>`,
-          `<b>${display_long_string(new_main_username)}</b>`,
+          `<b>${displayLongString(ownerUsername)}</b>`,
+          `<b>${displayLongString(new_main_username)}</b>`,
         ),
       );
       html(
         document.querySelectorAll(".main-user-success-desc"),
-        sprintf(mainUserSuccess, display_long_string(new_main_username)),
+        sprintf(mainUserSuccess, displayLongString(new_main_username)),
       );
       hide(document.querySelectorAll(".main-user-rewrite"));
       fadeIn(document.querySelectorAll(".main-user-validate"));
-      event_validate_main_user(new_main_username, new_main_id);
+      eventValidateMainUser(new_main_username, new_main_id);
     }
   });
 }
 
-function event_validate_main_user(new_main_username: string, user_id: number) {
+function eventValidateMainUser(new_main_username: string, user_id: number) {
   const validateBtn = document.querySelectorAll(".main-user-btn-validate");
   off(validateBtn, "click");
   on(validateBtn, "click", function () {
-    void set_main_user(user_id, new_main_username);
+    void setMainUser(user_id, new_main_username);
   });
 }
 
 /*-----------------------
 Generate User Containers
 -----------------------*/
-function user_container_click(this: Element) {
+function userContainerClick(this: Element) {
   if (!isSelectionMode()) {
     return;
   }
-  const container_checkbox = find(this, ".user-list-checkbox")[0]!;
-  // Non-null: `key` is always a real, in-bounds index into current_users
+  const containerCheckbox = find(this, ".user-list-checkbox")[0]!;
+  // Non-null: `key` is always a real, in-bounds index into currentUsers
   // for a real .UsernameBlock container.
-  const curr_user = current_users[parseInt(attrOf(this, "key")!)]!;
-  if (attrOf(container_checkbox, "data-selected") === "1") {
-    attr(container_checkbox, "data-selected", "0");
-    hide(find(container_checkbox, "i"));
+  const currUser = currentUsers[parseInt(attrOf(this, "key")!)]!;
+  if (attrOf(containerCheckbox, "data-selected") === "1") {
+    attr(containerCheckbox, "data-selected", "0");
+    hide(find(containerCheckbox, "i"));
     removeClass(this, "container-selected");
-    selection = selection.filter((elem) => elem.id !== curr_user.id);
+    selection = selection.filter((elem) => elem.id !== currUser.id);
   } else {
-    attr(container_checkbox, "data-selected", "1");
-    show(find(container_checkbox, "i"));
+    attr(containerCheckbox, "data-selected", "1");
+    show(find(containerCheckbox, "i"));
     addClass(this, "container-selected");
-    selection.push({ id: curr_user.id, username: curr_user.username });
+    selection.push({ id: currUser.id, username: currUser.username });
   }
-  update_selection_content();
+  updateSelectionContent();
 }
 
-function generate_groups(container: Element, groups: number[]) {
+function generateGroups(container: Element, groups: number[]) {
   const groupsContainer = find(container, ".user-container-groups")[0]!;
   html(groupsContainer, "");
   if (groups.length >= 1) {
     const template = document.querySelector("#template .group-primary")!;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
-    const primary_grp = template.cloneNode(true) as Element;
-    html(primary_grp, get_group_name_from_id(groups[0]!));
-    addClass(primary_grp, color_icons[groups[0]! % 5]!);
-    groupsContainer.appendChild(primary_grp);
+    const primaryGrp = template.cloneNode(true) as Element;
+    html(primaryGrp, getGroupNameFromId(groups[0]!));
+    addClass(primaryGrp, colorIcons[groups[0]! % 5]!);
+    groupsContainer.appendChild(primaryGrp);
   }
   if (groups.length >= 2) {
     const template = document.querySelector("#template .group-primary")!;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
-    const primary_grp = template.cloneNode(true) as Element;
-    html(primary_grp, get_group_name_from_id(groups[1]!));
-    addClass(primary_grp, color_icons[groups[1]! % 5]!);
-    groupsContainer.appendChild(primary_grp);
+    const primaryGrp = template.cloneNode(true) as Element;
+    html(primaryGrp, getGroupNameFromId(groups[1]!));
+    addClass(primaryGrp, colorIcons[groups[1]! % 5]!);
+    groupsContainer.appendChild(primaryGrp);
   }
   if (groups.length >= 3) {
     const template = document.querySelector("#template .group-bonus")!;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
-    const bonus_grp = template.cloneNode(true) as Element;
-    html(bonus_grp, "...");
-    addClass(bonus_grp, color_icons[groups[2]! % 5]!);
-    addClass(bonus_grp, "tiptip");
-    let groups_in_title = "";
+    const bonusGrp = template.cloneNode(true) as Element;
+    html(bonusGrp, "...");
+    addClass(bonusGrp, colorIcons[groups[2]! % 5]!);
+    addClass(bonusGrp, "tiptip");
+    let groupsInTitle = "";
     for (let i = 2; i < groups.length; i++) {
-      groups_in_title += get_group_name_from_id(groups[i]!) + ", ";
+      groupsInTitle += getGroupNameFromId(groups[i]!) + ", ";
     }
-    groups_in_title = groups_in_title.substring(0, groups_in_title.length - 2);
-    attr(bonus_grp, "title", groups_in_title);
-    groupsContainer.appendChild(bonus_grp);
+    groupsInTitle = groupsInTitle.substring(0, groupsInTitle.length - 2);
+    attr(bonusGrp, "title", groupsInTitle);
+    groupsContainer.appendChild(bonusGrp);
   }
 }
 
-function get_initials(username: string): string {
+function getInitials(username: string): string {
   const words = username.toUpperCase().split(" ");
   let res = words[0]![0]!;
 
@@ -2093,22 +2085,22 @@ function get_initials(username: string): string {
   return res;
 }
 
-function fill_container_user_info(container: Element, user_index: number) {
-  const user = current_users[user_index]!;
-  const registration_dates = (user.registrationDate ?? "").split(" ");
+function fillContainerUserInfo(container: Element, user_index: number) {
+  const user = currentUsers[user_index]!;
+  const registrationDates = (user.registrationDate ?? "").split(" ");
   attr(container, "key", String(user_index));
   html(find(container, ".user-container-username span"), user.username);
-  if (user.id === owner_id && document.getElementById("the_king") === null) {
-    const kingToDisplay = parseHtml(king_template)[0]!;
+  if (user.id === ownerId && document.getElementById("the_king") === null) {
+    const kingToDisplay = parseHtml(kingTemplate)[0]!;
     attr(kingToDisplay, "title", mainUserStr);
     tipTip(kingToDisplay);
     find(container, ".user-container-username")[0]?.appendChild(kingToDisplay);
   }
-  const initial_to_fill = get_initials(user.username);
+  const initialToFill = getInitials(user.username);
   const initialSpan = find(container, ".user-container-initials span")[0]!;
-  html(initialSpan, initial_to_fill);
-  addClass(initialSpan, color_icons[user.id % 5]!);
-  if (initial_to_fill.length > 1) {
+  html(initialSpan, initialToFill);
+  addClass(initialSpan, colorIcons[user.id % 5]!);
+  if (initialToFill.length > 1) {
     addClass(initialSpan, "small");
   } else {
     removeClass(initialSpan, "small");
@@ -2118,17 +2110,17 @@ function fill_container_user_info(container: Element, user_index: number) {
     // Non-null: every real, listed user has a real status; `null` is
     // only a schema allowance for an edge case this admin listing
     // doesn't actually surface.
-    status_to_str[user.status!]!,
+    statusToStr[user.status!]!,
   );
   html(find(container, ".user-container-email span"), user.email ?? "");
-  generate_groups(container, user.groups);
+  generateGroups(container, user.groups);
   html(
     find(container, ".user-container-registration-date"),
-    registration_dates[0] ?? "",
+    registrationDates[0] ?? "",
   );
   html(
     find(container, ".user-container-registration-time"),
-    registration_dates[1] ?? "",
+    registrationDates[1] ?? "",
   );
   html(
     find(container, ".user-container-registration-date-since"),
@@ -2136,7 +2128,7 @@ function fill_container_user_info(container: Element, user_index: number) {
   );
 }
 
-function generate_user_list() {
+function generateUserList() {
   document
     .querySelectorAll("#user-table-content .user-container")
     .forEach((el) => {
@@ -2146,23 +2138,19 @@ function generate_user_list() {
     "#user-table-content .user-container-wrapper",
   )!;
   const template = document.querySelector("#template .user-container")!;
-  for (let i = 0; i < current_users.length; i++) {
+  for (let i = 0; i < currentUsers.length; i++) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
-    const new_container = template.cloneNode(true) as Element;
-    fill_container_user_info(new_container, i);
-    wrapper.appendChild(new_container);
+    const newContainer = template.cloneNode(true) as Element;
+    fillContainerUserInfo(newContainer, i);
+    wrapper.appendChild(newContainer);
   }
   const checkboxes = document.querySelectorAll(
     ".user-container .user-list-checkbox",
   );
   off(checkboxes, "change");
-  on(checkboxes, "change", checkbox_change);
+  on(checkboxes, "change", checkboxChange);
   off(checkboxes, "click");
-  on(
-    document.querySelectorAll(".user-container"),
-    "click",
-    user_container_click,
-  );
+  on(document.querySelectorAll(".user-container"), "click", userContainerClick);
 }
 
 function copyToClipboard(toCopy: string) {
@@ -2172,22 +2160,22 @@ function copyToClipboard(toCopy: string) {
 Fill the pop-in values
 ---------------------*/
 
-function get_status_index(status: string | null) {
-  for (let i = 0; i < status_arr.length; i++) {
-    if (status_arr[i] === status) {
+function getStatusIndex(status: string | null) {
+  for (let i = 0; i < statusArr.length; i++) {
+    if (statusArr[i] === status) {
       return i;
     }
   }
   return 0;
 }
 
-function get_level_index(level: number | null) {
-  // level_arr holds string literals; /api/v1/users returns a real
+function getLevelIndex(level: number | null) {
+  // levelArr holds string literals; /api/v1/users returns a real
   // JSON number for `level`, so this needs a loose match rather than
-  // the strict one status_arr's own still-string `status` comparison
+  // the strict one statusArr's own still-string `status` comparison
   // above can keep using.
-  for (let i = 0; i < level_arr.length; i++) {
-    const levelStr = level_arr[i]!;
+  for (let i = 0; i < levelArr.length; i++) {
+    const levelStr = levelArr[i]!;
     if (levelStr === String(level)) {
       return i;
     }
@@ -2195,68 +2183,68 @@ function get_level_index(level: number | null) {
   return 0;
 }
 
-function set_selected_groups(groups: number[]) {
+function setSelectedGroups(groups: number[]) {
   for (const groupOption of groupOptions) {
     groupOption.isSelected = groups.includes(groupOption.value);
   }
 }
 
-function fill_user_edit_summary(
-  user_to_edit: UserRow,
-  pop_in: Element,
+function fillUserEditSummary(
+  userToEdit: UserRow,
+  popIn: Element,
   isGuest: boolean,
 ) {
   // console.log(isGuest);
   if (isGuest) {
-    const initialSpan = find(pop_in, ".user-property-initials span");
-    removeClass(initialSpan, color_icons.join(" "));
-    addClass(initialSpan, color_icons[user_to_edit.id % 5]!);
+    const initialSpan = find(popIn, ".user-property-initials span");
+    removeClass(initialSpan, colorIcons.join(" "));
+    addClass(initialSpan, colorIcons[userToEdit.id % 5]!);
   } else {
-    const initial_to_fill = get_initials(user_to_edit.username);
-    const initialSpan = find(pop_in, ".user-property-initials span");
-    html(initialSpan, initial_to_fill);
-    removeClass(initialSpan, color_icons.join(" "));
-    addClass(initialSpan, color_icons[user_to_edit.id % 5]!);
-    if (initial_to_fill.length > 1) {
+    const initialToFill = getInitials(userToEdit.username);
+    const initialSpan = find(popIn, ".user-property-initials span");
+    html(initialSpan, initialToFill);
+    removeClass(initialSpan, colorIcons.join(" "));
+    addClass(initialSpan, colorIcons[userToEdit.id % 5]!);
+    if (initialToFill.length > 1) {
       addClass(initialSpan, "small");
     } else {
       removeClass(initialSpan, "small");
     }
   }
-  const usernameSpan = find(pop_in, ".user-property-username span:first-child");
-  html(usernameSpan, user_to_edit.username);
-  tipTip(usernameSpan, { content: user_to_edit.username });
+  const usernameSpan = find(popIn, ".user-property-username span:first-child");
+  html(usernameSpan, userToEdit.username);
+  tipTip(usernameSpan, { content: userToEdit.username });
 
-  if (user_to_edit.id === connected_user || user_to_edit.id === 1) {
-    show(find(pop_in, ".user-property-username .edit-username-specifier"));
+  if (userToEdit.id === connectedUser || userToEdit.id === 1) {
+    show(find(popIn, ".user-property-username .edit-username-specifier"));
   } else {
-    hide(find(pop_in, ".user-property-username .edit-username-specifier"));
+    hide(find(popIn, ".user-property-username .edit-username-specifier"));
   }
   setVal(
-    find(pop_in, ".user-property-username-change input"),
-    user_to_edit.username,
+    find(popIn, ".user-property-username-change input"),
+    userToEdit.username,
   );
-  setVal(find(pop_in, ".user-property-password-change input"), "");
+  setVal(find(popIn, ".user-property-password-change input"), "");
   attr(
-    find(pop_in, ".user-property-permissions a"),
+    find(popIn, ".user-property-permissions a"),
     "href",
-    `admin.php?page=user_perm&user_id=${user_to_edit.id}`,
+    `admin.php?page=user_perm&user_id=${userToEdit.id}`,
   );
   html(
-    find(pop_in, ".user-property-register"),
-    user_to_edit.registrationDateString,
+    find(popIn, ".user-property-register"),
+    userToEdit.registrationDateString,
   );
-  tipTip(find(pop_in, ".user-property-register"), {
-    content: `${registered_str}<br />${user_to_edit.registrationDateSince}`,
+  tipTip(find(popIn, ".user-property-register"), {
+    content: `${registeredStr}<br />${userToEdit.registrationDateSince}`,
   });
-  html(find(pop_in, ".user-property-last-visit"), user_to_edit.lastVisitString);
-  tipTip(find(pop_in, ".user-property-last-visit"), {
-    content: `${last_visit_str}<br />${user_to_edit.lastVisitSince}`,
+  html(find(popIn, ".user-property-last-visit"), userToEdit.lastVisitString);
+  tipTip(find(popIn, ".user-property-last-visit"), {
+    content: `${lastVisitStr}<br />${userToEdit.lastVisitSince}`,
   });
   attr(
-    find(pop_in, ".user-property-history a"),
+    find(popIn, ".user-property-history a"),
     "href",
-    history_base_url + String(user_to_edit.id),
+    historyBaseUrl + String(userToEdit.id),
   );
 
   // Hide the copy password button and change modal copy password
@@ -2285,30 +2273,30 @@ function fill_user_edit_summary(
   }
 }
 
-function fill_user_edit_properties(user_to_edit: UserRow, pop_in: Element) {
-  const status_index = get_status_index(user_to_edit.status);
-  const level_index = get_level_index(user_to_edit.level);
-  const current_group_selectize =
-    user_to_edit.id === guest_id ? groupGuestSelectize : groupSelectize;
+function fillUserEditProperties(userToEdit: UserRow, popIn: Element) {
+  const statusIndex = getStatusIndex(userToEdit.status);
+  const levelIndex = getLevelIndex(userToEdit.level);
+  const currentGroupSelectize =
+    userToEdit.id === guestId ? groupGuestSelectize : groupSelectize;
 
-  setVal(find(pop_in, ".user-property-email input"), user_to_edit.email ?? "");
+  setVal(find(popIn, ".user-property-email input"), userToEdit.email ?? "");
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified by the selector: only <option> elements can match "select option".
-  const statusOption = find(pop_in, ".user-property-status select option")[
-    status_index
+  const statusOption = find(popIn, ".user-property-status select option")[
+    statusIndex
   ] as HTMLOptionElement | undefined;
   if (statusOption !== undefined) statusOption.selected = true;
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified by the selector: only <option> elements can match "select option".
-  const levelOption = find(pop_in, ".user-property-level select option")[
-    level_index
+  const levelOption = find(popIn, ".user-property-level select option")[
+    levelIndex
   ] as HTMLOptionElement | undefined;
   if (levelOption !== undefined) levelOption.selected = true;
   setVal(
-    find(pop_in, ".photos-select-bar input"),
-    String(user_to_edit.recentPeriod ?? ""),
+    find(popIn, ".photos-select-bar input"),
+    String(userToEdit.recentPeriod ?? ""),
   );
-  set_selected_groups(user_to_edit.groups);
-  current_group_selectize.clear();
-  current_group_selectize.load(function (
+  setSelectedGroups(userToEdit.groups);
+  currentGroupSelectize.clear();
+  currentGroupSelectize.load(function (
     callback: (data: GroupOption[]) => void,
   ) {
     callback(groupOptions);
@@ -2316,102 +2304,100 @@ function fill_user_edit_properties(user_to_edit: UserRow, pop_in: Element) {
   groupOptions
     .filter((group) => group.isSelected)
     .forEach((group) => {
-      current_group_selectize.addItem(group.value);
+      currentGroupSelectize.addItem(group.value);
     });
   attr(
-    find(pop_in, '.user-list-checkbox[name="hd_enabled"]'),
+    find(popIn, '.user-list-checkbox[name="hd_enabled"]'),
     "data-selected",
-    user_to_edit.enabledHigh ? "1" : "0",
+    userToEdit.enabledHigh ? "1" : "0",
   );
 }
 
-function fill_user_edit_preferences(user_to_edit: UserRow, pop_in: Element) {
-  const slider_key_photos = getSliderKeyFromValue(
-    parseInt(String(user_to_edit.nbImagePage)),
-    nb_image_page_values,
+function fillUserEditPreferences(userToEdit: UserRow, popIn: Element) {
+  const sliderKeyPhotos = getSliderKeyFromValue(
+    parseInt(String(userToEdit.nbImagePage)),
+    nbImagePageValues,
   );
-  const slider_key_period = getSliderKeyFromValue(
-    parseInt(String(user_to_edit.recentPeriod)),
-    recent_period_values,
+  const sliderKeyPeriod = getSliderKeyFromValue(
+    parseInt(String(userToEdit.recentPeriod)),
+    recentPeriodValues,
   );
 
   slider(
-    find(pop_in, ".photos-select-bar .slider-bar-container"),
+    find(popIn, ".photos-select-bar .slider-bar-container"),
     "option",
     "value",
-    slider_key_photos,
+    sliderKeyPhotos,
   );
-  find(pop_in, ".user-property-theme select option").forEach((option) => {
-    if (val(option) === user_to_edit.theme) {
+  find(popIn, ".user-property-theme select option").forEach((option) => {
+    if (val(option) === userToEdit.theme) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified by the selector: only <option> elements can match "select option".
       (option as HTMLOptionElement).selected = true;
     }
   });
-  find(pop_in, ".user-property-lang select option").forEach((option) => {
-    if (val(option) === user_to_edit.language) {
+  find(popIn, ".user-property-lang select option").forEach((option) => {
+    if (val(option) === userToEdit.language) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified by the selector: only <option> elements can match "select option".
       (option as HTMLOptionElement).selected = true;
     }
   });
   slider(
-    find(pop_in, ".period-select-bar .slider-bar-container"),
+    find(popIn, ".period-select-bar .slider-bar-container"),
     "option",
     "value",
-    slider_key_period,
+    sliderKeyPeriod,
   );
   attr(
-    find(pop_in, '.user-list-checkbox[name="expand_all_albums"]'),
+    find(popIn, '.user-list-checkbox[name="expand_all_albums"]'),
     "data-selected",
-    user_to_edit.expand ? "1" : "0",
+    userToEdit.expand ? "1" : "0",
   );
   attr(
-    find(pop_in, '.user-list-checkbox[name="show_nb_comments"]'),
+    find(popIn, '.user-list-checkbox[name="show_nb_comments"]'),
     "data-selected",
-    user_to_edit.showNbComments ? "1" : "0",
+    userToEdit.showNbComments ? "1" : "0",
   );
   attr(
-    find(pop_in, '.user-list-checkbox[name="show_nb_hits"]'),
+    find(popIn, '.user-list-checkbox[name="show_nb_hits"]'),
     "data-selected",
-    user_to_edit.showNbHits ? "1" : "0",
+    userToEdit.showNbHits ? "1" : "0",
   );
 }
 
-function fill_user_edit_update(user_to_edit: UserRow, pop_in: Element) {
-  const updateBtn = find(pop_in, ".update-user-button");
+function fillUserEditUpdate(userToEdit: UserRow, popIn: Element) {
+  const updateBtn = find(popIn, ".update-user-button");
   off(updateBtn, "click");
   on(
     updateBtn,
     "click",
     () =>
-      void (user_to_edit.id === guest_id
-        ? update_guest_info()
-        : update_user_info()),
+      void (userToEdit.id === guestId ? updateGuestInfo() : updateUserInfo()),
   );
-  const usernameValidate = find(pop_in, ".edit-username-validate");
+  const usernameValidate = find(popIn, ".edit-username-validate");
   off(usernameValidate, "click");
-  on(usernameValidate, "click", () => void update_user_username());
-  const editModalPassword = find(pop_in, "#edit_modal_password");
+  on(usernameValidate, "click", () => void updateUserUsername());
+  const editModalPassword = find(popIn, "#edit_modal_password");
   off(editModalPassword, "click");
   on(editModalPassword, "click", function () {
     hide(document.querySelectorAll(".user-property-password-choice"));
     fadeIn(document.querySelectorAll(".user-property-password-change-inputs"));
   });
-  if (user_to_edit.email !== null && user_to_edit.email !== "") {
-    const sendPasswordLink = find(pop_in, "#send_password_link");
+  if (userToEdit.email !== null && userToEdit.email !== "") {
+    const sendPasswordLink = find(popIn, "#send_password_link");
     removeClass(sendPasswordLink, "unavailable tiptip");
     attr(sendPasswordLink, "title", "");
     off(sendPasswordLink, "click");
     on(sendPasswordLink, "click", function () {
-      void send_link_password(
-        user_to_edit.email,
-        user_to_edit.username,
-        user_to_edit.id,
+      void sendLinkPassword(
+        userToEdit.email,
+        userToEdit.username,
+        userToEdit.id,
         true,
       );
     });
     off(sendPasswordLink, "mouseenter mouseleave focus blur");
   } else {
-    const sendPasswordLink = find(pop_in, "#send_password_link");
+    const sendPasswordLink = find(popIn, "#send_password_link");
     addClass(sendPasswordLink, "unavailable tiptip");
     off(sendPasswordLink, "click");
     attr(sendPasswordLink, "title", cannotSendMail);
@@ -2422,17 +2408,17 @@ function fill_user_edit_update(user_to_edit: UserRow, pop_in: Element) {
       edgeOffset: 3,
     });
   }
-  const copyPasswordLink = find(pop_in, "#copy_password_link");
+  const copyPasswordLink = find(popIn, "#copy_password_link");
   off(copyPasswordLink, "click");
   on(copyPasswordLink, "click", function () {
     const inputValue = val(
       document.querySelectorAll("#result_send_mail_copy_input"),
     );
     if (inputValue === "") {
-      void send_link_password(
-        user_to_edit.email,
-        user_to_edit.username,
-        user_to_edit.id,
+      void sendLinkPassword(
+        userToEdit.email,
+        userToEdit.username,
+        userToEdit.id,
         false,
       );
     } else {
@@ -2448,7 +2434,7 @@ function fill_user_edit_update(user_to_edit: UserRow, pop_in: Element) {
     );
     off(closeBtn, "click");
     on(closeBtn, "click", function () {
-      reset_password_modals();
+      resetPasswordModals();
     });
     const copyResultBtn = document.querySelectorAll(
       "#result_send_mail_copy_btn",
@@ -2471,7 +2457,7 @@ function fill_user_edit_update(user_to_edit: UserRow, pop_in: Element) {
       .querySelector<HTMLElement>("#result_send_mail_copy_input")
       ?.focus();
   });
-  const passwordValidate = find(pop_in, ".edit-password-validate");
+  const passwordValidate = find(popIn, ".edit-password-validate");
   off(passwordValidate, "click");
   on(passwordValidate, "click", function () {
     const errDiv = document.querySelectorAll("#UserList .EditUserErrors");
@@ -2482,167 +2468,167 @@ function fill_user_edit_update(user_to_edit: UserRow, pop_in: Element) {
 
     if (inputPassword === "" || inputConfirmPassword === "") {
       html(errDiv, missingField);
-      show_error_edit_user();
+      showErrorEditUser();
     } else if (inputPassword !== inputConfirmPassword) {
       html(errDiv, noMatchPassword);
-      show_error_edit_user();
+      showErrorEditUser();
     } else {
-      void update_user_password();
+      void updateUserPassword();
     }
   });
-  const deleteBtn = find(pop_in, ".delete-user-button");
+  const deleteBtn = find(popIn, ".delete-user-button");
   off(deleteBtn, "click");
   on(deleteBtn, "click", function () {
     confirm({
-      title: title_msg.replace("%s", user_to_edit.username),
+      title: titleMsg.replace("%s", userToEdit.username),
       content: "",
       buttons: {
         confirm: {
-          text: confirm_msg,
+          text: confirmMsg,
           btnClass: "btn-red",
           action: function () {
-            void delete_user(user_to_edit.id);
+            void deleteUser(userToEdit.id);
           },
         },
         cancel: {
-          text: cancel_msg,
+          text: cancelMsg,
         },
       },
-      ...jConfirm_confirm_options,
+      ...jConfirmConfirmOptions,
     });
   });
 }
 
-function fill_user_edit_permissions(user_to_edit: UserRow, pop_in: Element) {
-  if (user_to_edit.id !== connected_user) {
+function fillUserEditPermissions(userToEdit: UserRow, popIn: Element) {
+  if (userToEdit.id !== connectedUser) {
     // I'm not the connected user
-    if (!is_owner(connected_user)) {
+    if (!isOwner(connectedUser)) {
       // I'm not the owner, you need to test my permissions
-      if (is_owner(user_to_edit.id)) {
+      if (isOwner(userToEdit.id)) {
         // I want to edit the owner but I'm not the owner (No matter my status)
-        hide(find(pop_in, ".delete-user-button"));
-        hide(find(pop_in, ".user-property-password.edit-password"));
+        hide(find(popIn, ".delete-user-button"));
+        hide(find(popIn, ".user-property-password.edit-password"));
         attr(
-          find(pop_in, ".user-property-email .user-property-input"),
+          find(popIn, ".user-property-email .user-property-input"),
           "disabled",
           "disabled",
         );
         addClass(
-          find(pop_in, ".user-property-status .user-property-select"),
+          find(popIn, ".user-property-status .user-property-select"),
           "notClickable",
         );
-        hide(find(pop_in, ".user-property-username .edit-username"));
+        hide(find(popIn, ".user-property-username .edit-username"));
       } else {
-        show(find(pop_in, ".delete-user-button"));
-        show(find(pop_in, ".user-property-password.edit-password"));
+        show(find(popIn, ".delete-user-button"));
+        show(find(popIn, ".user-property-password.edit-password"));
         removeAttr(
-          find(pop_in, ".user-property-email .user-property-input"),
+          find(popIn, ".user-property-email .user-property-input"),
           "disabled",
         );
         removeClass(
-          find(pop_in, ".user-property-status .user-property-select"),
+          find(popIn, ".user-property-status .user-property-select"),
           "notClickable",
         );
-        show(find(pop_in, ".user-property-username .edit-username"));
+        show(find(popIn, ".user-property-username .edit-username"));
       }
 
       if (
-        user_to_edit.status === connected_user_status &&
-        connected_user_status === "webmaster" &&
-        !is_owner(user_to_edit.id)
+        userToEdit.status === connectedUserStatus &&
+        connectedUserStatus === "webmaster" &&
+        !isOwner(userToEdit.id)
       ) {
         // I have the same status than the user I want to edit and I'm a webmaster, I can do whatever I want
-        show(find(pop_in, ".delete-user-button"));
-        show(find(pop_in, ".user-property-password.edit-password"));
+        show(find(popIn, ".delete-user-button"));
+        show(find(popIn, ".user-property-password.edit-password"));
         removeAttr(
-          find(pop_in, ".user-property-email .user-property-input"),
+          find(popIn, ".user-property-email .user-property-input"),
           "disabled",
         );
         removeClass(
-          find(pop_in, ".user-property-status .user-property-select"),
+          find(popIn, ".user-property-status .user-property-select"),
           "notClickable",
         );
-        show(find(pop_in, ".user-property-username .edit-username"));
+        show(find(popIn, ".user-property-username .edit-username"));
       } else if (
-        user_to_edit.status === connected_user_status &&
-        connected_user_status === "admin"
+        userToEdit.status === connectedUserStatus &&
+        connectedUserStatus === "admin"
       ) {
         // I have the same status than the user I want to edit and I'm an admin, I can do whatever I want but edit the status
-        hide(find(pop_in, ".delete-user-button"));
-        show(find(pop_in, ".user-property-password.edit-password"));
+        hide(find(popIn, ".delete-user-button"));
+        show(find(popIn, ".user-property-password.edit-password"));
         removeAttr(
-          find(pop_in, ".user-property-email .user-property-input"),
+          find(popIn, ".user-property-email .user-property-input"),
           "disabled",
         );
         removeClass(
-          find(pop_in, ".user-property-username .edit-username"),
+          find(popIn, ".user-property-username .edit-username"),
           "notClickable",
         );
         addClass(
-          find(pop_in, ".user-property-status .user-property-select"),
+          find(popIn, ".user-property-status .user-property-select"),
           "notClickable",
         );
       } else if (
-        user_to_edit.status === "webmaster" &&
-        connected_user_status === "admin"
+        userToEdit.status === "webmaster" &&
+        connectedUserStatus === "admin"
       ) {
         // I'm admin and I want to edit webmaster
-        hide(find(pop_in, ".delete-user-button"));
-        hide(find(pop_in, ".user-property-password.edit-password"));
+        hide(find(popIn, ".delete-user-button"));
+        hide(find(popIn, ".user-property-password.edit-password"));
         attr(
-          find(pop_in, ".user-property-email .user-property-input"),
+          find(popIn, ".user-property-email .user-property-input"),
           "disabled",
           "disabled",
         );
         addClass(
-          find(pop_in, ".user-property-status .user-property-select"),
+          find(popIn, ".user-property-status .user-property-select"),
           "notClickable",
         );
-        hide(find(pop_in, ".user-property-username .edit-username"));
+        hide(find(popIn, ".user-property-username .edit-username"));
       } else if (
-        user_to_edit.status === "admin" &&
-        connected_user_status === "webmaster"
+        userToEdit.status === "admin" &&
+        connectedUserStatus === "webmaster"
       ) {
         // I'm webmaster and I want to edit admin
-        show(find(pop_in, ".delete-user-button"));
-        show(find(pop_in, ".user-property-password.edit-password"));
+        show(find(popIn, ".delete-user-button"));
+        show(find(popIn, ".user-property-password.edit-password"));
         removeAttr(
-          find(pop_in, ".user-property-email .user-property-input"),
+          find(popIn, ".user-property-email .user-property-input"),
           "disabled",
         );
         removeClass(
-          find(pop_in, ".user-property-status .user-property-select"),
+          find(popIn, ".user-property-status .user-property-select"),
           "notClickable",
         );
-        show(find(pop_in, ".user-property-username .edit-username"));
+        show(find(popIn, ".user-property-username .edit-username"));
       }
     } else {
       // I'm the owner, I can do whatever I want. No need to test, I am GOD here
-      show(find(pop_in, ".delete-user-button"));
-      show(find(pop_in, ".user-property-password.edit-password"));
+      show(find(popIn, ".delete-user-button"));
+      show(find(popIn, ".user-property-password.edit-password"));
       removeAttr(
-        find(pop_in, ".user-property-email .user-property-input"),
+        find(popIn, ".user-property-email .user-property-input"),
         "disabled",
       );
       removeClass(
-        find(pop_in, ".user-property-status .user-property-select"),
+        find(popIn, ".user-property-status .user-property-select"),
         "notClickable",
       );
-      show(find(pop_in, ".user-property-username .edit-username"));
+      show(find(popIn, ".user-property-username .edit-username"));
     }
   } else {
     // I'm the connected user, I can do whatever I want on my profile but kill myself (Suicide is not allowed) and edit my status
-    hide(find(pop_in, ".delete-user-button"));
-    show(find(pop_in, ".user-property-password.edit-password"));
+    hide(find(popIn, ".delete-user-button"));
+    show(find(popIn, ".user-property-password.edit-password"));
     removeAttr(
-      find(pop_in, ".user-property-email .user-property-input"),
+      find(popIn, ".user-property-email .user-property-input"),
       "disabled",
     );
     addClass(
-      find(pop_in, ".user-property-status .user-property-select"),
+      find(popIn, ".user-property-status .user-property-select"),
       "notClickable",
     );
-    show(find(pop_in, ".user-property-username .edit-username"));
+    show(find(popIn, ".user-property-username .edit-username"));
   }
 
   removeClass(
@@ -2656,31 +2642,31 @@ function fill_user_edit_permissions(user_to_edit: UserRow, pop_in: Element) {
   });
 }
 
-function is_owner(user_id: number) {
-  return user_id === owner_id;
+function isOwner(user_id: number) {
+  return user_id === ownerId;
 }
 
-function fill_user_edit(user_to_edit: UserRow) {
-  const pop_in = document.querySelector("#UserList")!;
-  fill_user_edit_summary(user_to_edit, pop_in, false);
-  fill_user_edit_properties(user_to_edit, pop_in);
-  fill_user_edit_preferences(user_to_edit, pop_in);
-  fill_user_edit_update(user_to_edit, pop_in);
-  fill_user_edit_permissions(user_to_edit, pop_in);
-  fill_who_is_the_king(user_to_edit, pop_in);
+function fillUserEdit(userToEdit: UserRow) {
+  const popIn = document.querySelector("#UserList")!;
+  fillUserEditSummary(userToEdit, popIn, false);
+  fillUserEditProperties(userToEdit, popIn);
+  fillUserEditPreferences(userToEdit, popIn);
+  fillUserEditUpdate(userToEdit, popIn);
+  fillUserEditPermissions(userToEdit, popIn);
+  fillWhoIsTheKing(userToEdit, popIn);
 
   // show/hide password button depending on permissions
 
   // plugins get function
-  if (Object.keys(plugins_get_functions).length > 0) {
-    Object.entries(plugins_get_functions).forEach((f) => {
+  if (Object.keys(pluginsGetFunctions).length > 0) {
+    Object.entries(pluginsGetFunctions).forEach((f) => {
       f[1]();
     });
   }
-  const keyUserToEdit = Object.keys(user_to_edit);
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- plugin_add_tab_in_user_modal's own extension point needs dynamic-by-name field access into a real UserRow; the string keys it's called with come from each plugin's own registration, not user input.
-  const userToEditRecord = user_to_edit as unknown as Record<string, unknown>;
-  plugins_users_infos_table.forEach((i) => {
+  const keyUserToEdit = Object.keys(userToEdit);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- pluginAddTabInUserModal's own extension point needs dynamic-by-name field access into a real UserRow; the string keys it's called with come from each plugin's own registration, not user input.
+  const userToEditRecord = userToEdit as unknown as Record<string, unknown>;
+  pluginsUsersInfosTable.forEach((i) => {
     setVal(document.querySelectorAll("#" + i.content_id), "");
     if (keyUserToEdit.includes(i.users_table)) {
       setVal(
@@ -2693,22 +2679,22 @@ function fill_user_edit(user_to_edit: UserRow) {
   });
 }
 
-function fill_guest_edit() {
-  const user_to_edit = guest_user;
-  const pop_in = document.querySelector(".GuestUserListPopInContainer")!;
-  fill_user_edit_summary(user_to_edit, pop_in, true);
-  fill_user_edit_properties(user_to_edit, pop_in);
-  fill_user_edit_preferences(user_to_edit, pop_in);
-  fill_user_edit_update(user_to_edit, pop_in);
+function fillGuestEdit() {
+  const userToEdit = guestUser;
+  const popIn = document.querySelector(".GuestUserListPopInContainer")!;
+  fillUserEditSummary(userToEdit, popIn, true);
+  fillUserEditProperties(userToEdit, popIn);
+  fillUserEditPreferences(userToEdit, popIn);
+  fillUserEditUpdate(userToEdit, popIn);
 }
 
-function fill_new_user() {
+function fillNewUser() {
   // When you want to add an user: privacy level and groups
   // by default are the same as Guest, not status
   const addUserPopIn = document.querySelector("#AddUser")!;
-  const status_index = get_status_index("normal");
-  const level_index = get_level_index(guest_user.level);
-  set_selected_groups(guest_user.groups);
+  const statusIndex = getStatusIndex("normal");
+  const levelIndex = getLevelIndex(guestUser.level);
+  setSelectedGroups(guestUser.groups);
   groupAddUserSelectize.clear();
   groupAddUserSelectize.load(function (
     callback: (data: GroupOption[]) => void,
@@ -2724,73 +2710,70 @@ function fill_new_user() {
   const statusOption = find(
     addUserPopIn,
     ".user-property-status select option",
-  )[status_index] as HTMLOptionElement | undefined;
+  )[statusIndex] as HTMLOptionElement | undefined;
   if (statusOption !== undefined) statusOption.selected = true;
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified by the selector: only <option> elements can match "select option".
   const levelOption = find(addUserPopIn, ".user-property-level select option")[
-    level_index
+    levelIndex
   ] as HTMLOptionElement | undefined;
   if (levelOption !== undefined) levelOption.selected = true;
   attr(
     find(addUserPopIn, '.user-list-checkbox[name="hd_enabled"]'),
     "data-selected",
-    guest_user.enabledHigh ? "1" : "0",
+    guestUser.enabledHigh ? "1" : "0",
   );
 }
 
-function fill_who_is_the_king(user_to_edit: UserRow, pop_in: Element) {
-  const who_is_the_king = find(pop_in, "#who_is_the_king")[0]!;
+function fillWhoIsTheKing(userToEdit: UserRow, popIn: Element) {
+  const whoIsTheKing = find(popIn, "#who_is_the_king")[0]!;
   // By default I'm an admin and I only see who is the Main User
   removeClass(
-    who_is_the_king,
+    whoIsTheKing,
     "princes-of-this-piwigo king-of-this-piwigo can-change",
   );
-  addClass(who_is_the_king, "royal-court-of-this-piwigo cannot-change");
-  attr(who_is_the_king, "title", mainAskWebmaster);
-  tipTip(who_is_the_king);
-  off(who_is_the_king, "click");
+  addClass(whoIsTheKing, "royal-court-of-this-piwigo cannot-change");
+  attr(whoIsTheKing, "title", mainAskWebmaster);
+  tipTip(whoIsTheKing);
+  off(whoIsTheKing, "click");
   // I'm an webmaster
-  if (connected_user_status === "webmaster") {
+  if (connectedUserStatus === "webmaster") {
     // check user to edit status
-    switch (user_to_edit.status) {
+    switch (userToEdit.status) {
       // user to edit is an webmaster
       case "webmaster":
         removeClass(
-          who_is_the_king,
+          whoIsTheKing,
           "royal-court-of-this-piwigo king-of-this-piwigo cannot-change",
         );
-        addClass(who_is_the_king, "princes-of-this-piwigo can-change");
-        attr(who_is_the_king, "title", mainUserSet);
-        tipTip(who_is_the_king);
-        if (!is_owner(user_to_edit.id)) {
-          off(who_is_the_king, "click");
-          on(who_is_the_king, "click", function () {
-            open_main_user_modal(user_to_edit);
+        addClass(whoIsTheKing, "princes-of-this-piwigo can-change");
+        attr(whoIsTheKing, "title", mainUserSet);
+        tipTip(whoIsTheKing);
+        if (!isOwner(userToEdit.id)) {
+          off(whoIsTheKing, "click");
+          on(whoIsTheKing, "click", function () {
+            openMainUserModal(userToEdit);
           });
         }
         break;
       // if user to edit is not an webmaster he cannot be set as a main user
       default:
-        removeClass(
-          who_is_the_king,
-          "princes-of-this-piwigo king-of-this-piwigo",
-        );
-        addClass(who_is_the_king, "royal-court-of-this-piwigo");
-        attr(who_is_the_king, "title", mainUserUpgradeWebmaster);
-        tipTip(who_is_the_king);
+        removeClass(whoIsTheKing, "princes-of-this-piwigo king-of-this-piwigo");
+        addClass(whoIsTheKing, "royal-court-of-this-piwigo");
+        attr(whoIsTheKing, "title", mainUserUpgradeWebmaster);
+        tipTip(whoIsTheKing);
         break;
     }
   }
 
   // Main User also the King
-  if (is_owner(user_to_edit.id)) {
+  if (isOwner(userToEdit.id)) {
     removeClass(
-      who_is_the_king,
+      whoIsTheKing,
       "princes-of-this-piwigo royal-court-of-this-piwigo can-change",
     );
-    addClass(who_is_the_king, "king-of-this-piwigo cannot-change");
-    attr(who_is_the_king, "title", mainUserStr);
-    tipTip(who_is_the_king);
+    addClass(whoIsTheKing, "king-of-this-piwigo cannot-change");
+    attr(whoIsTheKing, "title", mainUserStr);
+    tipTip(whoIsTheKing);
   }
 }
 
@@ -2798,100 +2781,98 @@ function fill_who_is_the_king(user_to_edit: UserRow, pop_in: Element) {
 Fill data for setInfo
 -------------------*/
 
-function fill_ajax_data_from_properties(
-  ajax_data: Record<string, unknown>,
-  pop_in: Element,
+function fillAjaxDataFromProperties(
+  ajaxData: Record<string, unknown>,
+  popIn: Element,
 ) {
-  const groups_selected = find(
-    pop_in,
+  const groupsSelected = find(
+    popIn,
     ".user-property-group .selectize-input .item",
   ).map((el) => parseInt(attrOf(el, "data-value")!));
-  // console.log(groups_selected);
-  ajax_data["email"] = val(find(pop_in, ".user-property-email input"));
+  // console.log(groupsSelected);
+  ajaxData["email"] = val(find(popIn, ".user-property-email input"));
   if (
-    connected_user_status === "admin" &&
-    val(find(pop_in, ".user-property-status select")) !== "webmaster" &&
-    val(find(pop_in, ".user-property-status select")) !== "admin"
+    connectedUserStatus === "admin" &&
+    val(find(popIn, ".user-property-status select")) !== "webmaster" &&
+    val(find(popIn, ".user-property-status select")) !== "admin"
   ) {
-    ajax_data["status"] = val(find(pop_in, ".user-property-status select"));
-  } else if (connected_user_status === "webmaster") {
-    ajax_data["status"] = val(find(pop_in, ".user-property-status select"));
+    ajaxData["status"] = val(find(popIn, ".user-property-status select"));
+  } else if (connectedUserStatus === "webmaster") {
+    ajaxData["status"] = val(find(popIn, ".user-property-status select"));
   }
-  // console.log(ajax_data['status']);
-  ajax_data["level"] = Number(val(find(pop_in, ".user-property-level select")));
-  ajax_data["groupIds"] = groups_selected.length === 0 ? [-1] : groups_selected;
-  ajax_data["enabledHigh"] =
+  // console.log(ajaxData['status']);
+  ajaxData["level"] = Number(val(find(popIn, ".user-property-level select")));
+  ajaxData["groupIds"] = groupsSelected.length === 0 ? [-1] : groupsSelected;
+  ajaxData["enabledHigh"] =
     attrOf(
-      find(pop_in, '.user-list-checkbox[name="hd_enabled"]'),
+      find(popIn, '.user-list-checkbox[name="hd_enabled"]'),
       "data-selected",
     ) === "1"
       ? true
       : false;
-  return ajax_data;
+  return ajaxData;
 }
 
-function fill_ajax_data_from_preferences(
-  ajax_data: Record<string, unknown>,
-  pop_in: Element,
+function fillAjaxDataFromPreferences(
+  ajaxData: Record<string, unknown>,
+  popIn: Element,
 ) {
-  ajax_data["theme"] = val(find(pop_in, ".user-property-theme select"));
-  ajax_data["language"] = val(find(pop_in, ".user-property-lang select"));
-  ajax_data["nbImagePage"] =
-    nb_image_page_values[
+  ajaxData["theme"] = val(find(popIn, ".user-property-theme select"));
+  ajaxData["language"] = val(find(popIn, ".user-property-lang select"));
+  ajaxData["nbImagePage"] =
+    nbImagePageValues[
       slider(
-        find(pop_in, ".photos-select-bar .slider-bar-container"),
+        find(popIn, ".photos-select-bar .slider-bar-container"),
         "option",
         "value",
       )!
     ];
-  ajax_data["recentPeriod"] =
-    recent_period_values[
+  ajaxData["recentPeriod"] =
+    recentPeriodValues[
       slider(
-        find(pop_in, ".period-select-bar .slider-bar-container"),
+        find(popIn, ".period-select-bar .slider-bar-container"),
         "option",
         "value",
       )!
     ];
-  ajax_data["expand"] =
+  ajaxData["expand"] =
     attrOf(
-      find(pop_in, '.user-list-checkbox[name="expand_all_albums"]'),
+      find(popIn, '.user-list-checkbox[name="expand_all_albums"]'),
       "data-selected",
     ) === "1"
       ? true
       : false;
-  ajax_data["showNbComments"] =
+  ajaxData["showNbComments"] =
     attrOf(
-      find(pop_in, '.user-list-checkbox[name="show_nb_comments"]'),
+      find(popIn, '.user-list-checkbox[name="show_nb_comments"]'),
       "data-selected",
     ) === "1"
       ? true
       : false;
-  ajax_data["showNbHits"] =
+  ajaxData["showNbHits"] =
     attrOf(
-      find(pop_in, '.user-list-checkbox[name="show_nb_hits"]'),
+      find(popIn, '.user-list-checkbox[name="show_nb_hits"]'),
       "data-selected",
     ) === "1"
       ? true
       : false;
-  return ajax_data;
+  return ajaxData;
 }
 
-function fill_ajax_data_from_container(
-  ajax_data: Record<string, unknown>,
-  pop_in: Element,
+function fillAjaxDataFromContainer(
+  ajaxData: Record<string, unknown>,
+  popIn: Element,
 ) {
-  const withProperties = fill_ajax_data_from_properties(ajax_data, pop_in);
-  return fill_ajax_data_from_preferences(withProperties, pop_in);
+  const withProperties = fillAjaxDataFromProperties(ajaxData, popIn);
+  return fillAjaxDataFromPreferences(withProperties, popIn);
 }
 
 /*----------------
 Ajax Requests
 ----------------*/
 
-async function get_first_selection_usernames(
-  callback: () => void,
-): Promise<void> {
-  const first_ids = selection.slice(0, 50).map((x) => x.id);
+async function getFirstSelectionUsernames(callback: () => void): Promise<void> {
+  const firstIds = selection.slice(0, 50).map((x) => x.id);
   try {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const response = (await ajax({
@@ -2899,8 +2880,8 @@ async function get_first_selection_usernames(
       type: "GET",
       data: {
         order: "id",
-        userIds: first_ids,
-        exclude: [guest_id],
+        userIds: firstIds,
+        exclude: [guestId],
       },
       dataType: "json",
     })) as UserListResponse;
@@ -2918,7 +2899,7 @@ async function get_first_selection_usernames(
   }
 }
 
-async function select_whole_set(): Promise<void> {
+async function selectWholeSet(): Promise<void> {
   const filterLevel = val(
     document.querySelectorAll(".advanced-filter-select[name=filter_level]"),
   );
@@ -2936,9 +2917,9 @@ async function select_whole_set(): Promise<void> {
       type: "GET",
       data: {
         order: "id",
-        page: actual_page - 1,
+        page: actualPage - 1,
         perPage: 0,
-        exclude: [guest_id],
+        exclude: [guestId],
         status:
           filterStatus !== undefined && filterStatus !== ""
             ? [filterStatus]
@@ -2948,7 +2929,7 @@ async function select_whole_set(): Promise<void> {
         minLevel: filterLevel,
         maxLevel: filterLevel,
         minRegister:
-          register_dates[
+          registerDates[
             slider(
               document.querySelectorAll(
                 ".dates-select-bar .slider-bar-container",
@@ -2958,7 +2939,7 @@ async function select_whole_set(): Promise<void> {
             )![0]!
           ],
         maxRegister:
-          register_dates[
+          registerDates[
             slider(
               document.querySelectorAll(
                 ".dates-select-bar .slider-bar-container",
@@ -2974,19 +2955,19 @@ async function select_whole_set(): Promise<void> {
       return { id: x.id };
     });
     hide(document.querySelectorAll("#checkActions .loading"));
-    update_selection_content();
+    updateSelectionContent();
   } catch {
     hide(document.querySelectorAll("#checkActions .loading"));
   }
 }
 
-async function update_user_username(): Promise<void> {
-  const pop_in_container = document.querySelector("#UserList")!;
-  const ajax_data: Record<string, unknown> = {};
+async function updateUserUsername(): Promise<void> {
+  const popInContainer = document.querySelector("#UserList")!;
+  const ajaxData: Record<string, unknown> = {};
   const newUsername = String(
-    val(find(pop_in_container, ".user-property-input-username")),
+    val(find(popInContainer, ".user-property-input-username")),
   );
-  ajax_data["username"] = newUsername;
+  ajaxData["username"] = newUsername;
   if (newUsername.replace(/\s/g, "").length === 0) {
     const failEl = document.querySelectorAll(".update-user-fail");
     html(failEl, fieldNotEmpty);
@@ -2998,19 +2979,19 @@ async function update_user_username(): Promise<void> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const response = (await ajax({
-      url: "api/v1/users/" + String(last_user_id),
+      url: "api/v1/users/" + String(lastUserId),
       type: "PATCH",
-      headers: { "X-CSRF-Token": pwg_token },
-      json: ajax_data,
+      headers: { "X-CSRF-Token": pwgToken },
+      json: ajaxData,
       dataType: "json",
     })) as operations["userUpdate"]["responses"][200]["content"]["application/json"];
-    if (last_user_index !== -1) {
+    if (lastUserIndex !== -1) {
       // "username" may be missing from a defensive-fallback response
       // (the row couldn't be re-fetched right after the update) --
       // the value we just successfully submitted is still correct.
       const updatedUsername =
         "username" in response ? response.username : newUsername;
-      current_users[last_user_index]!.username = updatedUsername;
+      currentUsers[lastUserIndex]!.username = updatedUsername;
       html(
         document.querySelectorAll(
           "#UserList .user-property-username .edit-username-title",
@@ -3019,13 +3000,13 @@ async function update_user_username(): Promise<void> {
       );
       html(
         document.querySelectorAll("#UserList .user-property-initials span"),
-        get_initials(updatedUsername),
+        getInitials(updatedUsername),
       );
-      fill_container_user_info(
+      fillContainerUserInfo(
         document.querySelectorAll("#user-table-content .user-container")[
-          last_user_index
+          lastUserIndex
         ]!,
-        last_user_index,
+        lastUserIndex,
       );
     }
     hide(document.querySelectorAll(".user-property-username-change-input"));
@@ -3045,19 +3026,19 @@ async function update_user_username(): Promise<void> {
   }
 }
 
-async function update_user_password(): Promise<void> {
-  const pop_in_container = document.querySelector("#UserList")!;
-  const ajax_data: Record<string, unknown> = {};
+async function updateUserPassword(): Promise<void> {
+  const popInContainer = document.querySelector("#UserList")!;
+  const ajaxData: Record<string, unknown> = {};
   const newPassword = String(
-    val(find(pop_in_container, ".user-property-input-password")),
+    val(find(popInContainer, ".user-property-input-password")),
   );
-  ajax_data["password"] = newPassword;
+  ajaxData["password"] = newPassword;
   try {
     await ajax({
-      url: "api/v1/users/" + String(last_user_id),
+      url: "api/v1/users/" + String(lastUserId),
       type: "PATCH",
-      headers: { "X-CSRF-Token": pwg_token },
-      json: ajax_data,
+      headers: { "X-CSRF-Token": pwgToken },
+      json: ajaxData,
       dataType: "json",
     });
     hide(document.querySelectorAll(".user-property-password-change-inputs"));
@@ -3083,7 +3064,7 @@ async function update_user_password(): Promise<void> {
         show(
           document.querySelectorAll(".user-property-password-change-inputs"),
         );
-        reset_input_password();
+        resetInputPassword();
       },
     );
   } catch {
@@ -3092,19 +3073,19 @@ async function update_user_password(): Promise<void> {
   }
 }
 
-async function update_user_info(): Promise<void> {
+async function updateUserInfo(): Promise<void> {
   //Show spinner
   const btnIcon = document.querySelectorAll(".update-user-button i");
   removeClass(btnIcon, "icon-floppy");
   addClass(btnIcon, "icon-spin6 animate-spin");
   addClass(document.querySelectorAll(".update-user-button"), "unclickable");
-  const pop_in_container = document.querySelector(".UserListPopInContainer")!;
-  let ajax_data: Record<string, unknown> = {};
-  if (plugins_users_infos_table.length > 0) {
-    const keyCurrentUsers = Object.keys(current_users[last_user_index]!);
-    plugins_users_infos_table.forEach((i) => {
+  const popInContainer = document.querySelector(".UserListPopInContainer")!;
+  let ajaxData: Record<string, unknown> = {};
+  if (pluginsUsersInfosTable.length > 0) {
+    const keyCurrentUsers = Object.keys(currentUsers[lastUserIndex]!);
+    pluginsUsersInfosTable.forEach((i) => {
       if (keyCurrentUsers.includes(i.users_table)) {
-        ajax_data[i.users_table] = val(
+        ajaxData[i.users_table] = val(
           document.querySelectorAll("#" + i.content_id),
         );
       } else {
@@ -3113,28 +3094,28 @@ async function update_user_info(): Promise<void> {
     });
   }
 
-  ajax_data = fill_ajax_data_from_container(ajax_data, pop_in_container);
+  ajaxData = fillAjaxDataFromContainer(ajaxData, popInContainer);
   fadeOut(document.querySelectorAll("#UserList .update-user-fail"));
   fadeOut(document.querySelectorAll("#UserList .update-user-success"));
   try {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const result_user = (await ajax({
-      url: "api/v1/users/" + String(last_user_id),
+    const resultUser = (await ajax({
+      url: "api/v1/users/" + String(lastUserId),
       type: "PATCH",
-      headers: { "X-CSRF-Token": pwg_token },
-      json: ajax_data,
+      headers: { "X-CSRF-Token": pwgToken },
+      json: ajaxData,
       dataType: "json",
     })) as operations["userUpdate"]["responses"][200]["content"]["application/json"];
-    if (last_user_index !== -1) {
-      current_users[last_user_index] = {
-        ...current_users[last_user_index]!,
-        ...result_user,
+    if (lastUserIndex !== -1) {
+      currentUsers[lastUserIndex] = {
+        ...currentUsers[lastUserIndex]!,
+        ...resultUser,
       };
-      fill_container_user_info(
+      fillContainerUserInfo(
         document.querySelectorAll("#user-table-content .user-container")[
-          last_user_index
+          lastUserIndex
         ]!,
-        last_user_index,
+        lastUserIndex,
       );
     }
     const successEl = document.querySelectorAll(
@@ -3153,18 +3134,18 @@ async function update_user_info(): Promise<void> {
     );
 
     // update plugins
-    if (Object.keys(plugins_get_functions).length > 0) {
-      Object.entries(plugins_set_functions).forEach((f) => {
+    if (Object.keys(pluginsGetFunctions).length > 0) {
+      Object.entries(pluginsSetFunctions).forEach((f) => {
         f[1]();
       });
     }
 
-    // update who is the king -- `result_user` may be a defensive
+    // update who is the king -- `resultUser` may be a defensive
     // fallback (`{id}` only, missing `.status`); the merged
-    // `current_users` entry (old data overlaid with whatever the
+    // `currentUsers` entry (old data overlaid with whatever the
     // response did carry) is always a real, complete UserRow.
-    fill_who_is_the_king(
-      last_user_index !== -1 ? current_users[last_user_index]! : guest_user,
+    fillWhoIsTheKing(
+      lastUserIndex !== -1 ? currentUsers[lastUserIndex]! : guestUser,
       document.querySelector("#UserList")!,
     );
   } catch (e) {
@@ -3187,27 +3168,27 @@ async function update_user_info(): Promise<void> {
   }
 }
 
-async function get_guest_info(): Promise<void> {
+async function getGuestInfo(): Promise<void> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const response = (await ajax({
       url: "api/v1/users",
       type: "GET",
       data: {
-        userIds: [guest_id],
+        userIds: [guestId],
       },
       dataType: "json",
     })) as UserListResponse;
     if (response.users.length) {
-      guest_user = response.users[0]!;
-      fill_guest_edit();
+      guestUser = response.users[0]!;
+      fillGuestEdit();
     }
   } catch {
     // No error handling before conversion either.
   }
 }
 
-async function get_user_info(
+async function getUserInfo(
   uid: number,
   callback: (() => void) | null = null,
 ): Promise<void> {
@@ -3222,8 +3203,8 @@ async function get_user_info(
       dataType: "json",
     })) as UserListResponse;
     if (response.users.length) {
-      const result_user = response.users[0]!;
-      fill_user_edit(result_user);
+      const resultUser = response.users[0]!;
+      fillUserEdit(resultUser);
       callback?.();
     }
   } catch {
@@ -3231,26 +3212,26 @@ async function get_user_info(
   }
 }
 
-async function update_guest_info(): Promise<void> {
+async function updateGuestInfo(): Promise<void> {
   //Show spinner
   const btnIcon = document.querySelectorAll(".update-user-button i");
   removeClass(btnIcon, "icon-floppy");
   addClass(btnIcon, "icon-spin6 animate-spin");
   addClass(document.querySelectorAll(".update-user-button"), "unclickable");
 
-  const pop_in_container = document.querySelector(
+  const popInContainer = document.querySelector(
     ".GuestUserListPopInContainer",
   )!;
-  let ajax_data: Record<string, unknown> = {};
-  ajax_data = fill_ajax_data_from_container(ajax_data, pop_in_container);
-  ajax_data["email"] = undefined;
-  ajax_data["status"] = undefined;
+  let ajaxData: Record<string, unknown> = {};
+  ajaxData = fillAjaxDataFromContainer(ajaxData, popInContainer);
+  ajaxData["email"] = undefined;
+  ajaxData["status"] = undefined;
   try {
     await ajax({
-      url: "api/v1/users/" + String(guest_id),
+      url: "api/v1/users/" + String(guestId),
       type: "PATCH",
-      headers: { "X-CSRF-Token": pwg_token },
-      json: ajax_data,
+      headers: { "X-CSRF-Token": pwgToken },
+      json: ajaxData,
       dataType: "json",
     });
     const successEl = document.querySelectorAll(
@@ -3276,18 +3257,18 @@ async function update_guest_info(): Promise<void> {
   }
 }
 
-async function update_user_list(): Promise<void> {
-  const update_data: Record<string, unknown> = {
-    order: filter_by, // We want the most recent user first
-    page: actual_page - 1,
-    perPage: per_page,
-    exclude: [guest_id],
+async function updateUserList(): Promise<void> {
+  const updateData: Record<string, unknown> = {
+    order: filterBy, // We want the most recent user first
+    page: actualPage - 1,
+    perPage: perPage,
+    exclude: [guestId],
   };
   const userSearchVal = val(document.querySelectorAll("#user_search"));
   if (userSearchVal !== undefined && userSearchVal !== "") {
     const matches = /^id:(\d+)$/.exec(userSearchVal);
     if (matches) {
-      update_data["userIds"] = [matches[1]];
+      updateData["userIds"] = [matches[1]];
     }
     // Free-text fuzzy search (username/email/group-name) has no
     // GET /api/v1/users equivalent -- UserListController's own
@@ -3309,22 +3290,22 @@ async function update_user_list(): Promise<void> {
     const filterLevel = val(
       document.querySelectorAll(".advanced-filter-select[name=filter_level]"),
     );
-    update_data["status"] =
+    updateData["status"] =
       filterStatus !== undefined && filterStatus !== "" ? [filterStatus] : [];
-    update_data["groupIds"] =
+    updateData["groupIds"] =
       filterGroup !== undefined && filterGroup !== "" ? [filterGroup] : [];
-    update_data["minLevel"] = filterLevel;
-    update_data["maxLevel"] = filterLevel;
-    update_data["minRegister"] =
-      register_dates[
+    updateData["minLevel"] = filterLevel;
+    updateData["maxLevel"] = filterLevel;
+    updateData["minRegister"] =
+      registerDates[
         slider(
           document.querySelectorAll(".dates-select-bar .slider-bar-container"),
           "option",
           "values",
         )![0]!
       ];
-    update_data["maxRegister"] =
-      register_dates[
+    updateData["maxRegister"] =
+      registerDates[
         slider(
           document.querySelectorAll(".dates-select-bar .slider-bar-container"),
           "option",
@@ -3338,44 +3319,44 @@ async function update_user_list(): Promise<void> {
     const response = (await ajax({
       url: "api/v1/users",
       type: "GET",
-      data: update_data,
+      data: updateData,
       dataType: "json",
     })) as UserListResponse;
-    total_users = response.totalCount;
-    if (first_update) {
+    totalUsers = response.totalCount;
+    if (firstUpdate) {
       document
         .querySelector("h1")
         ?.insertAdjacentHTML(
           "beforeend",
-          `<span class='badge-number'>${total_users}</span>`,
+          `<span class='badge-number'>${totalUsers}</span>`,
         );
-      first_update = false;
+      firstUpdate = false;
     }
-    nb_filtered_users = response.totalCount;
-    update_pagination_menu();
-    current_users = response.users;
-    generate_user_list();
+    nbFilteredUsers = response.totalCount;
+    updatePaginationMenu();
+    currentUsers = response.users;
+    generateUserList();
     on(
       document.querySelectorAll(".user-col.user-first-col.user-container-edit"),
       "click",
       function (this: Element) {
-        const uid_index = Number(
+        const uidIndex = Number(
           attrOf(this.closest(".user-container")!, "key"),
         );
-        last_user_id = current_users[uid_index]!.id;
-        last_user_index = uid_index;
-        fill_user_edit(current_users[uid_index]!);
+        lastUserId = currentUsers[uidIndex]!.id;
+        lastUserIndex = uidIndex;
+        fillUserEdit(currentUsers[uidIndex]!);
         fadeIn(document.querySelectorAll("#UserList"));
         document.querySelector("#tab_properties")?.scrollIntoView({
           behavior: "instant",
         });
       },
     );
-    set_selected_to_selection();
+    setSelectedToSelection();
 
     hide(document.querySelectorAll(".user-update-spinner"));
 
-    let nb_filters = 0;
+    let nbFilters = 0;
     if (
       val(
         document.querySelectorAll(
@@ -3383,19 +3364,19 @@ async function update_user_list(): Promise<void> {
         ),
       ) !== ""
     )
-      nb_filters += 1;
+      nbFilters += 1;
     if (
       val(
         document.querySelectorAll(".advanced-filter-select[name=filter_group]"),
       ) !== ""
     )
-      nb_filters += 1;
+      nbFilters += 1;
     if (
       val(
         document.querySelectorAll(".advanced-filter-select[name=filter_level]"),
       ) !== ""
     )
-      nb_filters += 1;
+      nbFilters += 1;
     if (
       slider(
         document.querySelectorAll(".dates-select-bar .slider-bar-container"),
@@ -3403,49 +3384,49 @@ async function update_user_list(): Promise<void> {
         "values",
       )![0] !== 0
     )
-      nb_filters += 1;
+      nbFilters += 1;
     if (
       slider(
         document.querySelectorAll(".dates-select-bar .slider-bar-container"),
         "option",
         "values",
       )![1] !==
-      register_dates.length - 1
+      registerDates.length - 1
     )
-      nb_filters += 1;
+      nbFilters += 1;
 
-    show_filter_infos(nb_filters);
+    showFilterInfos(nbFilters);
   } catch {
     hide(document.querySelectorAll(".user-update-spinner"));
   }
 }
 
-async function add_user(): Promise<void> {
-  const ajax_data: Record<string, unknown> = {};
-  const groups_selected = Array.from(
+async function addUser(): Promise<void> {
+  const ajaxData: Record<string, unknown> = {};
+  const groupsSelected = Array.from(
     document.querySelectorAll(
       ".AddUserInputContainer .user-property-group .selectize-input .item",
     ),
   ).map((el) => parseInt(attrOf(el, "data-value")!));
-  ajax_data["username"] = val(
+  ajaxData["username"] = val(
     document.querySelectorAll(".AddUserLabelUsername .user-property-input"),
   );
-  ajax_data["email"] = val(
+  ajaxData["email"] = val(
     document.querySelectorAll(".AddUserLabelEmail .user-property-input"),
   );
-  ajax_data["status"] = val(
+  ajaxData["status"] = val(
     document.querySelectorAll(
       ".AddUserInputContainer .user-property-status select",
     ),
   );
-  ajax_data["level"] = Number(
+  ajaxData["level"] = Number(
     val(
       document.querySelectorAll(
         ".AddUserInputContainer .user-property-level select",
       ),
     ),
   );
-  ajax_data["enabledHigh"] =
+  ajaxData["enabledHigh"] =
     attrOf(
       document.querySelectorAll(
         '.AddUserInputContainer .user-list-checkbox[name="hd_enabled"]',
@@ -3454,17 +3435,17 @@ async function add_user(): Promise<void> {
     ) === "1"
       ? true
       : false;
-  ajax_data["groupIds"] = groups_selected;
+  ajaxData["groupIds"] = groupsSelected;
 
   // for debug
-  // console.log(ajax_data);
+  // console.log(ajaxData);
 
   const payload: Record<string, unknown> = {
-    username: ajax_data["username"],
-    email: ajax_data["email"],
+    username: ajaxData["username"],
+    email: ajaxData["email"],
   };
 
-  if ("generic" === ajax_data["status"]) {
+  if ("generic" === ajaxData["status"]) {
     payload["password"] = val(document.querySelectorAll("#add_user_pass"));
     payload["passwordConfirm"] = val(
       document.querySelectorAll("#add_user_confpass"),
@@ -3497,7 +3478,7 @@ async function add_user(): Promise<void> {
     // is the first time this validation actually prevents the request.
     return;
   }
-  if ("generic" === ajax_data["status"]) {
+  if ("generic" === ajaxData["status"]) {
     const pass = val(document.querySelectorAll("#add_user_pass"));
     const confPass = val(document.querySelectorAll("#add_user_confpass"));
     if ("" === pass) {
@@ -3543,17 +3524,17 @@ async function add_user(): Promise<void> {
     const response = (await ajax({
       url: "api/v1/users",
       type: "POST",
-      headers: { "X-CSRF-Token": pwg_token },
+      headers: { "X-CSRF-Token": pwgToken },
       json: payload,
       dataType: "json",
     })) as operations["userCreate"]["responses"][201]["content"]["application/json"];
-    const new_user_id = response.id;
-    const default_group = "groups" in response ? response.groups : [];
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax_data["groupIds"] was set to groups_selected (a real number[]) earlier in this same function, the only writer before this read.
-    ajax_data["groupIds"] = (ajax_data["groupIds"] as number[]).concat(
-      default_group,
+    const newUserId = response.id;
+    const defaultGroup = "groups" in response ? response.groups : [];
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajaxData["groupIds"] was set to groupsSelected (a real number[]) earlier in this same function, the only writer before this read.
+    ajaxData["groupIds"] = (ajaxData["groupIds"] as number[]).concat(
+      defaultGroup,
     );
-    void add_infos_to_new_user(new_user_id, ajax_data);
+    void addInfosToNewUser(newUserId, ajaxData);
   } catch (e) {
     const message =
       (e instanceof AjaxError
@@ -3569,27 +3550,27 @@ async function add_user(): Promise<void> {
   }
 }
 
-async function add_infos_to_new_user(
+async function addInfosToNewUser(
   user_id: number,
-  ajax_data: Record<string, unknown>,
+  ajaxData: Record<string, unknown>,
 ): Promise<void> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const response = (await ajax({
       url: "api/v1/users/" + String(user_id),
       type: "PATCH",
-      headers: { "X-CSRF-Token": pwg_token },
+      headers: { "X-CSRF-Token": pwgToken },
       json: {
-        status: ajax_data["status"],
-        level: ajax_data["level"],
-        groupIds: ajax_data["groupIds"],
-        enabledHigh: ajax_data["enabledHigh"],
+        status: ajaxData["status"],
+        level: ajaxData["level"],
+        groupIds: ajaxData["groupIds"],
+        enabledHigh: ajaxData["enabledHigh"],
       },
       dataType: "json",
     })) as operations["userUpdate"]["responses"][200]["content"]["application/json"];
-    const new_user_id = response.id;
-    void update_user_list();
-    // add_user_close();
+    const newUserId = response.id;
+    void updateUserList();
+    // addUserClose();
     removeClass(
       document.querySelectorAll("#AddUserUpdated"),
       "icon-red icon-cancel",
@@ -3600,30 +3581,30 @@ async function add_infos_to_new_user(
     );
     html(
       document.querySelectorAll("#AddUserUpdatedText"),
-      user_added_str.replace("%s", String(ajax_data["username"])),
+      userAddedStr.replace("%s", String(ajaxData["username"])),
     );
     const status = ["webmaster", "admin", "normal"];
-    if (status.includes(String(ajax_data["status"]))) {
-      void send_new_user_password(new_user_id, String(ajax_data["email"]));
+    if (status.includes(String(ajaxData["status"]))) {
+      void sendNewUserPassword(newUserId, String(ajaxData["email"]));
     } else {
-      add_user_close();
+      addUserClose();
     }
     setVal(document.querySelectorAll("#AddUser .user-property-input"), "");
     const editNow = document.querySelectorAll("#AddUserSuccess .edit-now");
     off(editNow, "click");
     on(editNow, "click", () => {
-      last_user_id = new_user_id;
-      last_user_index = get_container_index_from_uid(new_user_id);
-      if (last_user_index !== -1) {
-        fill_user_edit(current_users[last_user_index]!);
-        open_user_list();
+      lastUserId = newUserId;
+      lastUserIndex = getContainerIndexFromUid(newUserId);
+      if (lastUserIndex !== -1) {
+        fillUserEdit(currentUsers[lastUserIndex]!);
+        openUserList();
       } else {
-        void get_user_info(new_user_id, open_user_list);
+        void getUserInfo(newUserId, openUserList);
       }
     });
     html(
       document.querySelectorAll("#AddUserSuccess label span:first-child"),
-      user_added_str.replace("%s", String(ajax_data["username"])),
+      userAddedStr.replace("%s", String(ajaxData["username"])),
     );
     css(document.querySelectorAll("#AddUserSuccess"), "display", "flex");
     html(
@@ -3647,11 +3628,11 @@ async function add_infos_to_new_user(
   }
 }
 
-async function send_new_user_password(
+async function sendNewUserPassword(
   user_id: number,
   mail: string,
 ): Promise<void> {
-  const send_by_mail = mail === "" ? false : true;
+  const sendByMail = mail === "" ? false : true;
   try {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const response = (await ajax({
@@ -3659,15 +3640,15 @@ async function send_new_user_password(
         "api/v1/users/" + String(user_id) + "/actions/generate-password-link",
       dataType: "json",
       type: "POST",
-      headers: { "X-CSRF-Token": pwg_token },
+      headers: { "X-CSRF-Token": pwgToken },
       json: {
-        sendByMail: send_by_mail,
+        sendByMail: sendByMail,
       },
     })) as operations["userGeneratePasswordLink"]["responses"][200]["content"]["application/json"];
-    const password_container = document.querySelectorAll(
+    const passwordContainer = document.querySelectorAll(
       "#AddUserPasswordInputContainer",
     );
-    show(password_container);
+    show(passwordContainer);
     hide(document.querySelectorAll("#AddUserFieldContainer"));
     fadeIn(document.querySelectorAll("#AddUserSuccessContainer"));
     setVal(
@@ -3677,13 +3658,13 @@ async function send_new_user_password(
     trigger(document.querySelectorAll("#AddUserPasswordLink"), "focus");
     html(
       document.querySelectorAll("#AddUserTextField"),
-      send_by_mail
+      sendByMail
         ? sprintf(validLinkMail, response.timeValidation, `<b>${mail}</b>`)
         : sprintf(validLinkWithoutMail, response.timeValidation),
     );
 
     if (
-      send_by_mail &&
+      sendByMail &&
       (response.sendByMail === false || response.sendByMail === null)
     ) {
       removeClass(
@@ -3700,11 +3681,11 @@ async function send_new_user_password(
         sprintf(errorMailSentMsg, response.timeValidation),
       );
     } else if (
-      send_by_mail &&
+      sendByMail &&
       response.sendByMail !== false &&
       response.sendByMail !== null
     ) {
-      hide(password_container);
+      hide(passwordContainer);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
@@ -3730,7 +3711,7 @@ async function send_new_user_password(
     const addUserButton = document.querySelectorAll("#AddUserButton");
     off(addUserButton, "click");
     on(addUserButton, "click", function () {
-      add_user_close();
+      addUserClose();
     });
   } catch (e) {
     const message =
@@ -3750,15 +3731,15 @@ async function send_new_user_password(
   }
 }
 
-async function delete_user(uid: number): Promise<void> {
+async function deleteUser(uid: number): Promise<void> {
   try {
     await ajax({
       url: "api/v1/users/" + String(uid),
       type: "DELETE",
-      headers: { "X-CSRF-Token": pwg_token },
+      headers: { "X-CSRF-Token": pwgToken },
     });
-    close_user_list();
-    void update_user_list();
+    closeUserList();
+    void updateUserList();
     html(
       document.querySelectorAll(".badge-number"),
       String(
@@ -3770,32 +3751,32 @@ async function delete_user(uid: number): Promise<void> {
   }
 }
 
-function show_filter_infos(nb_filters: number) {
+function showFilterInfos(nbFilters: number) {
   if (
     (val(document.querySelectorAll("#user_search")) ?? "").length !== 0 ||
-    nb_filters !== 0
+    nbFilters !== 0
   ) {
-    if (String(total_users) !== "1") {
+    if (String(totalUsers) !== "1") {
       html(
         document.querySelectorAll(".filtered-users"),
-        filtered_users.replace(/%d/g, String(total_users)),
+        filteredUsers.replace(/%d/g, String(totalUsers)),
       );
     } else {
       html(
         document.querySelectorAll(".filtered-users"),
-        filtered_user.replace(/%d/g, String(total_users)),
+        filteredUser.replace(/%d/g, String(totalUsers)),
       );
     }
   } else {
     html(document.querySelectorAll(".filtered-users"), "");
   }
 
-  if (nb_filters !== 0) {
+  if (nbFilters !== 0) {
     css(document.querySelectorAll(".advanced-filter-btn"), {
       width: "80px",
     });
     const counter = document.querySelectorAll(".filter-counter");
-    html(counter, String(nb_filters));
+    html(counter, String(nbFilters));
     css(counter, "display", "flex");
   } else {
     css(document.querySelectorAll(".advanced-filter-btn"), {
@@ -3807,11 +3788,11 @@ function show_filter_infos(nb_filters: number) {
   }
 }
 
-async function send_link_password(
+async function sendLinkPassword(
   email: string | null,
   username: string,
   user_id: number,
-  send_by_mail: boolean,
+  sendByMail: boolean,
 ): Promise<void> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
@@ -3820,16 +3801,16 @@ async function send_link_password(
         "api/v1/users/" + String(user_id) + "/actions/generate-password-link",
       dataType: "json",
       type: "POST",
-      headers: { "X-CSRF-Token": pwg_token },
+      headers: { "X-CSRF-Token": pwgToken },
       json: {
-        sendByMail: send_by_mail,
+        sendByMail: sendByMail,
       },
     })) as operations["userGeneratePasswordLink"]["responses"][200]["content"]["application/json"];
     setVal(
       document.querySelectorAll("#result_send_mail_copy_input"),
       response.generatedLink,
     );
-    if (send_by_mail) {
+    if (sendByMail) {
       if (response.sendByMail !== false && response.sendByMail !== null) {
         removeClass(
           document.querySelectorAll("#result_send_mail"),
@@ -3847,7 +3828,7 @@ async function send_link_password(
           document.querySelectorAll("#icon_password_msg_result_mail"),
           "icon-ok",
         );
-        const curr_mail = (
+        const currMail = (
           val(
             document.querySelectorAll(
               ".user-property-email .user-property-input",
@@ -3864,7 +3845,7 @@ async function send_link_password(
           : (email ?? "");
         html(
           document.querySelectorAll("#password_msg_result_mail"),
-          sprintf(mailSentAt, username, curr_mail),
+          sprintf(mailSentAt, username, currMail),
         );
       } else {
         removeClass(
@@ -3893,7 +3874,7 @@ async function send_link_password(
       const closeBtn = document.querySelectorAll("#close_password_mail_close");
       off(closeBtn, "click");
       on(closeBtn, "click", function () {
-        reset_password_modals();
+        resetPasswordModals();
       });
     } else {
       removeClass(
@@ -3922,8 +3903,8 @@ async function send_link_password(
       }
     }
   } catch (err) {
-    console.error("Error send_link_password :", err);
-    if (!send_by_mail) {
+    console.error("Error sendLinkPassword :", err);
+    if (!sendByMail) {
       removeClass(
         document.querySelectorAll("#result_send_mail_copy"),
         "update-password-success icon-green",
@@ -3967,13 +3948,13 @@ async function send_link_password(
       const closeBtn = document.querySelectorAll("#close_password_mail_close");
       off(closeBtn, "click");
       on(closeBtn, "click", function () {
-        reset_password_modals();
+        resetPasswordModals();
       });
     }
   }
 }
 
-async function set_main_user(
+async function setMainUser(
   user_id: number,
   new_username: string,
 ): Promise<void> {
@@ -3983,7 +3964,7 @@ async function set_main_user(
       dataType: "json",
       type: "POST",
       contentType: "application/json",
-      headers: { "X-CSRF-Token": pwg_token },
+      headers: { "X-CSRF-Token": pwgToken },
     });
     const king = document.querySelectorAll("#who_is_the_king");
     off(king, "click");
@@ -3995,15 +3976,15 @@ async function set_main_user(
     attr(king, "title", mainUserStr);
     tipTip(king);
 
-    owner_id = user_id;
-    owner_username = new_username;
-    set_main_user_success();
+    ownerId = user_id;
+    ownerUsername = new_username;
+    setMainUserSuccess();
   } catch (err) {
     console.error(err);
   }
 }
 
-per_page = parseInt(pagination);
+perPage = parseInt(pagination);
 
 months = [
   pwg_getPageString("Jan"),
@@ -4021,37 +4002,34 @@ months = [
 ];
 
 /* Template variables */
-connected_user = pwg_getPageData<number>("connected_user");
-owner_username = pwg_getPageData<string>("owner_username");
+connectedUser = pwg_getPageData<number>("connected_user");
+ownerUsername = pwg_getPageData<string>("owner_username");
 const parsedGroupsArrName: unknown = JSON.parse(
   pwg_getPageData<string>("groups_arr_name"),
 );
-const groups_arr_name = Array.isArray(parsedGroupsArrName)
+const groupsArrName = Array.isArray(parsedGroupsArrName)
   ? parsedGroupsArrName.filter((n): n is string => typeof n === "string")
   : [];
-const groups_arr_id: number[] = pwg_getPageData<string>("groups_arr_id")
+const groupsArrId: number[] = pwg_getPageData<string>("groups_arr_id")
   ? pwg_getPageData<string>("groups_arr_id").split(",").map(Number)
   : [];
-groups_arr = groups_arr_id.map((elem, index) => [
-  elem,
-  groups_arr_name[index]!,
-]);
-guest_id = pwg_getPageData<number>("guest_id");
-nb_days = pwg_getPageString("%d days");
+groupsArr = groupsArrId.map((elem, index) => [elem, groupsArrName[index]!]);
+guestId = pwg_getPageData<number>("guest_id");
+nbDays = pwg_getPageString("%d days");
 //per page is too long for the popin
-nb_photos = pwg_getPageString("%d photos");
-pwg_token = pwg_getPageData<string>("csrf_token");
-register_dates = pwg_getPageData<string>("register_dates").split(",");
-groupOptions = groups_arr.map(function (x) {
+nbPhotos = pwg_getPageString("%d photos");
+pwgToken = pwg_getPageData<string>("csrf_token");
+registerDates = pwg_getPageData<string>("register_dates").split(",");
+groupOptions = groupsArr.map(function (x) {
   return { value: x[0], label: x[1], isSelected: false };
 });
 
 /* Startup */
-setupRegisterDates(register_dates);
+setupRegisterDates(registerDates);
 selectionMode(false);
-void get_guest_info();
-void update_user_list();
-update_selection_content();
+void getGuestInfo();
+void updateUserList();
+updateSelectionContent();
 
 tipTip(document.querySelectorAll(".icon-help-circled"), {
   maxWidth: "700px",
@@ -4060,7 +4038,7 @@ tipTip(document.querySelectorAll(".icon-help-circled"), {
 
 ready(function () {
   // Only webmaster can set admin or webmaster to others users
-  if (connected_user_status !== "webmaster") {
+  if (connectedUserStatus !== "webmaster") {
     const disabledOptions = document.querySelectorAll(
       'select[name="status"] option[value="webmaster"], select[name="status"] option[value="admin"]',
     );
@@ -4157,7 +4135,7 @@ ready(function () {
           break;
         case "recent_period":
           actionData["recent_period"] =
-            recent_period_values[
+            recentPeriodValues[
               slider(
                 document.querySelectorAll(
                   "#permitActionUserList .period-select-bar .slider-bar-container",
@@ -4234,7 +4212,7 @@ ready(function () {
             ajax({
               url: "api/v1/users/" + String(id),
               method: "DELETE",
-              headers: { "X-CSRF-Token": pwg_token },
+              headers: { "X-CSRF-Token": pwgToken },
             }),
           ),
         );
@@ -4250,7 +4228,7 @@ ready(function () {
             (action === "group_associate" ? "add-user" : "remove-user"),
           method: "POST",
           json: { userIds: userIds },
-          headers: { "X-CSRF-Token": pwg_token },
+          headers: { "X-CSRF-Token": pwgToken },
         });
       } else {
         const field = fieldByAction[action]!;
@@ -4263,7 +4241,7 @@ ready(function () {
               url: "api/v1/users/" + String(id),
               method: "PATCH",
               json: { [field]: value },
-              headers: { "X-CSRF-Token": pwg_token },
+              headers: { "X-CSRF-Token": pwgToken },
             }),
           ),
         );
@@ -4278,10 +4256,10 @@ ready(function () {
           "display",
           "inline-block",
         );
-        void update_user_list();
+        void updateUserList();
         if (action === "delete") {
           selection = [];
-          update_selection_content();
+          updateSelectionContent();
         }
       } catch {
         hide(document.querySelectorAll("#applyActionLoading"));
@@ -4294,10 +4272,10 @@ ready(function () {
 
 // Explicit `window.` exposure -- required at runtime, not decorative
 // (see plugins_installed_config.ts's own leading comment for the full
-// explanation): `plugin_add_tab_in_user_modal`'s own JSDoc documents it
+// explanation): `pluginAddTabInUserModal`'s own JSDoc documents it
 // as a real public extension point third-party plugins call from their
 // own, separately-loaded `<script>` tags -- this file's own top-level
 // declarations are module-private otherwise (`export {}` above), so
 // without this, no external plugin could actually reach it, unlike
 // before this file became a real ES module.
-window.plugin_add_tab_in_user_modal = plugin_add_tab_in_user_modal;
+window.plugin_add_tab_in_user_modal = pluginAddTabInUserModal;

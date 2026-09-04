@@ -77,7 +77,7 @@ interface SearchFields {
  * `!isset()` role, and the distinction is load-bearing (`filetypes: []`
  * means "filter active, nothing matched"; absent means "filter never
  * chosen"). mcs.ts reads it exactly that way, one
- * `if (global_params.fields.x)` per filter.
+ * `if (globalParams.fields.x)` per filter.
  */
 interface GlobalSearchParams {
   /**
@@ -87,41 +87,39 @@ interface GlobalSearchParams {
   fields: SearchFields;
 }
 
-const global_params_json = pwg_getPageData<string | false>(
-  "global_params_json",
-);
-let global_params: GlobalSearchParams;
-if (typeof global_params_json !== "undefined") {
+const globalParamsJson = pwg_getPageData<string | false>("global_params_json");
+let globalParams: GlobalSearchParams;
+if (typeof globalParamsJson !== "undefined") {
   // String(...) makes explicit the same coercion JSON.parse() already
   // did implicitly pre-P47 whenever this value was `false` (JSON.parse
   // itself calls ToString on a non-string argument) -- same behavior,
   // just satisfies the stricter real parameter type now that this
   // value's real `string | false` shape is known.
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- GlobalSearchParams is the same genuinely heterogeneous, deliberately-not-deep-validated search-filter query object this file's own eslint.config.ts any-relaxation entry already documents.
-  global_params = JSON.parse(String(global_params_json)) as GlobalSearchParams;
+  globalParams = JSON.parse(String(globalParamsJson)) as GlobalSearchParams;
 }
 
-const fullname_of_cat_json = pwg_getPageData<string | false | null>(
+const fullnameOfCatJson = pwg_getPageData<string | false | null>(
   "fullname_of_cat_json",
 );
 // `SearchFilterRenderer::render()` builds this as
 // `$fullnameOf[$row->id->value] = strip_tags($catDisplayName)` -- an
 // album-id-keyed map of plain-text full names, encoded only when the
 // `cat` filter is part of the search.
-let fullname_of_cat: Record<string, string>;
-if (typeof fullname_of_cat_json !== "undefined") {
-  // Same String(...) coercion note as global_params_json above.
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- same genuinely heterogeneous search-filter query object as global_params_json above.
-  fullname_of_cat = JSON.parse(String(fullname_of_cat_json)) as Record<
+let fullnameOfCat: Record<string, string>;
+if (typeof fullnameOfCatJson !== "undefined") {
+  // Same String(...) coercion note as globalParamsJson above.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- same genuinely heterogeneous search-filter query object as globalParamsJson above.
+  fullnameOfCat = JSON.parse(String(fullnameOfCatJson)) as Record<
     string,
     string
   >;
 }
 
-const search_id_from_page = pwg_getPageData<string | undefined>("search_id");
-let search_id: string | undefined;
-if (typeof search_id_from_page !== "undefined") {
-  search_id = search_id_from_page;
+const searchIdFromPage = pwg_getPageData<string | undefined>("search_id");
+let searchId: string | undefined;
+if (typeof searchIdFromPage !== "undefined") {
+  searchId = searchIdFromPage;
 }
 
 // No real consumer reads this (confirmed via grep against mcs.js, the
@@ -131,36 +129,36 @@ if (typeof search_id_from_page !== "undefined") {
 // doesn't extend to removing genuinely-dead-but-harmless reads.
 pwg_getPageData<string>("user_rank");
 
-const str_word_widget_label = pwg_getPageString("Search for words");
-const str_tags_widget_label = pwg_getPageString("Tag");
-const str_album_widget_label = pwg_getPageString("Album");
-const str_author_widget_label = pwg_getPageString("Author");
-const str_added_by_widget_label = pwg_getPageString("Added by");
-const str_filetypes_widget_label = pwg_getPageString("File type");
+const strWordWidgetLabel = pwg_getPageString("Search for words");
+const strTagsWidgetLabel = pwg_getPageString("Tag");
+const strAlbumWidgetLabel = pwg_getPageString("Album");
+const strAuthorWidgetLabel = pwg_getPageString("Author");
+const strAddedByWidgetLabel = pwg_getPageString("Added by");
+const strFiletypesWidgetLabel = pwg_getPageString("File type");
 
-const str_rating_widget_label = pwg_getPageString("Rating");
-const str_no_rating = pwg_getPageString("no rate");
-const str_between_rating = pwg_getPageString("between %d and %d");
-const str_filesize_widget_label = pwg_getPageString("Filesize");
-const str_width_widget_label = pwg_getPageString("Width");
-const str_height_widget_label = pwg_getPageString("Height");
-const str_ratio_widget_label = pwg_getPageString("Ratio");
-const str_ratios_label: Record<string, string> = {};
-str_ratios_label["Portrait"] = pwg_getPageString("Portrait");
-str_ratios_label["square"] = pwg_getPageString("square");
-str_ratios_label["Landscape"] = pwg_getPageString("Landscape");
-str_ratios_label["Panorama"] = pwg_getPageString("Panorama");
-const str_expert_widget_label = pwg_getPageString("Expert mode");
+const strRatingWidgetLabel = pwg_getPageString("Rating");
+const strNoRating = pwg_getPageString("no rate");
+const strBetweenRating = pwg_getPageString("between %d and %d");
+const strFilesizeWidgetLabel = pwg_getPageString("Filesize");
+const strWidthWidgetLabel = pwg_getPageString("Width");
+const strHeightWidgetLabel = pwg_getPageString("Height");
+const strRatioWidgetLabel = pwg_getPageString("Ratio");
+const strRatiosLabel: Record<string, string> = {};
+strRatiosLabel["Portrait"] = pwg_getPageString("Portrait");
+strRatiosLabel["square"] = pwg_getPageString("square");
+strRatiosLabel["Landscape"] = pwg_getPageString("Landscape");
+strRatiosLabel["Panorama"] = pwg_getPageString("Panorama");
+const strExpertWidgetLabel = pwg_getPageString("Expert mode");
 
-const str_empty_search_top_alt = pwg_getPageString(
+const strEmptySearchTopAlt = pwg_getPageString(
   "Fill in the filters to start a search",
 );
-const str_empty_search_bot_alt = pwg_getPageString(
+const strEmptySearchBotAlt = pwg_getPageString(
   'Pre-established filters are proposed, but you can add or remove them using the "Choose filters" button.',
 );
-const str_search_in_ab = pwg_getPageString("Search in albums");
+const strSearchInAb = pwg_getPageString("Search in albums");
 
-const prefix_icon = "gallery-icon-";
+const prefixIcon = "gallery-icon-";
 
 // <!-- sliders config -->
 const sliders: {
@@ -222,43 +220,43 @@ if (width) {
   };
 }
 
-const show_filter_ratings_value = pwg_getPageData<boolean | undefined>(
+const showFilterRatingsValue = pwg_getPageData<boolean | undefined>(
   "show_filter_ratings",
 );
-const show_filter_ratings =
-  typeof show_filter_ratings_value === "undefined"
+const showFilterRatings =
+  typeof showFilterRatingsValue === "undefined"
     ? false
-    : show_filter_ratings_value;
+    : showFilterRatingsValue;
 
 // Real exports now (docs/PLAN.md P48) -- mcs.ts is the one real
-// consumer of most of these, history.ts of `global_params`/
-// `fullname_of_cat` too (both previously bare-global reads, no more
+// consumer of most of these, history.ts of `globalParams`/
+// `fullnameOfCat` too (both previously bare-global reads, no more
 // `window.` latching). `user_rank`/`filesize`/`height`/`width` stay
 // module-private -- zero real bare-identifier readers anywhere despite
 // being declared here (confirmed via grep, not assumed).
 export {
-  global_params,
-  fullname_of_cat,
-  search_id,
-  str_word_widget_label,
-  str_tags_widget_label,
-  str_album_widget_label,
-  str_author_widget_label,
-  str_added_by_widget_label,
-  str_filetypes_widget_label,
-  str_rating_widget_label,
-  str_no_rating,
-  str_between_rating,
-  str_filesize_widget_label,
-  str_width_widget_label,
-  str_height_widget_label,
-  str_ratio_widget_label,
-  str_ratios_label,
-  str_expert_widget_label,
-  str_empty_search_top_alt,
-  str_empty_search_bot_alt,
-  str_search_in_ab,
-  prefix_icon,
+  globalParams,
+  fullnameOfCat,
+  searchId,
+  strWordWidgetLabel,
+  strTagsWidgetLabel,
+  strAlbumWidgetLabel,
+  strAuthorWidgetLabel,
+  strAddedByWidgetLabel,
+  strFiletypesWidgetLabel,
+  strRatingWidgetLabel,
+  strNoRating,
+  strBetweenRating,
+  strFilesizeWidgetLabel,
+  strWidthWidgetLabel,
+  strHeightWidgetLabel,
+  strRatioWidgetLabel,
+  strRatiosLabel,
+  strExpertWidgetLabel,
+  strEmptySearchTopAlt,
+  strEmptySearchBotAlt,
+  strSearchInAb,
+  prefixIcon,
   sliders,
-  show_filter_ratings,
+  showFilterRatings,
 };

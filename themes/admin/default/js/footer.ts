@@ -30,7 +30,7 @@ import { tipTip } from "../../../default/js/vendor/tiptip";
 // (both its exposures below are confirmed category-2 `onclick`
 // targets, not real cross-file symbols) -- not attempted here.
 //
-// hide_user_whats_new/show_user_whats_new are called from
+// hideUserWhatsNew/showUserWhatsNew are called from
 // layout.latte's own `onclick="show_user_whats_new()"` / `onClick=
 // "hide_user_whats_new()"` attributes -- the `javascript:`/`onclick=`
 // pattern (docs/PLAN.md P46-C's own finding) needs the same `window.X
@@ -55,7 +55,7 @@ on(
   },
 );
 
-async function hide_user_whats_new(): Promise<void> {
+async function hideUserWhatsNew(): Promise<void> {
   hide(document.querySelectorAll("#whats_new"));
 
   try {
@@ -75,13 +75,13 @@ async function hide_user_whats_new(): Promise<void> {
   }
 }
 
-function show_user_whats_new() {
+function showUserWhatsNew() {
   show(document.querySelectorAll("#whats_new"));
 }
 
 if (pwg_getPageData<boolean>("show_whats_new")) {
-  show_user_whats_new();
+  showUserWhatsNew();
 }
 
-window.hide_user_whats_new = hide_user_whats_new;
-window.show_user_whats_new = show_user_whats_new;
+window.hide_user_whats_new = hideUserWhatsNew;
+window.show_user_whats_new = showUserWhatsNew;

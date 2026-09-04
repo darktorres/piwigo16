@@ -1,4 +1,4 @@
-import { jConfirm_alert_options, jConfirm_warning_options } from "./common";
+import { jConfirmAlertOptions, jConfirmWarningOptions } from "./common";
 
 import {
   pwg_getPageData,
@@ -35,25 +35,23 @@ import {
 } from "../../../default/js/vendor/dom";
 import type { operations } from "../../../../openapi/client/schema";
 
-const str_yes_delete_confirmation = pwg_getPageString("Yes, delete");
-const str_no_delete_confirmation = pwg_getPageString(
-  "No, I have changed my mind",
-);
-const str_delete = pwg_getPageString(
+const strYesDeleteConfirmation = pwg_getPageString("Yes, delete");
+const strNoDeleteConfirmation = pwg_getPageString("No, I have changed my mind");
+const strDelete = pwg_getPageString(
   "Are you sure you want to delete comment #%s?",
 );
-const str_deletes = pwg_getPageString(
+const strDeletes = pwg_getPageString(
   'Are you sure you want to delete "%d" comments?',
 );
-const pwg_token = pwg_getPageData<string>("csrf_token");
-const str_an_error_has = pwg_getPageString("An error has occured");
-const str_comment_validated = pwg_getPageString(
+const pwgToken = pwg_getPageData<string>("csrf_token");
+const strAnErrorHas = pwg_getPageString("An error has occured");
+const strCommentValidated = pwg_getPageString(
   "The comment has been validated.",
 );
-const str_comments_validated = pwg_getPageString(
+const strCommentsValidated = pwg_getPageString(
   "The comments have been validated.",
 );
-const str_and_others = pwg_getPageString("and %s others");
+const strAndOthers = pwg_getPageString("and %s others");
 
 const advancedFilters = document.getElementById("advancedFilters");
 const switchMode = document.querySelector<HTMLInputElement>(
@@ -276,9 +274,9 @@ async function getComments(params: CommentsFilterParams): Promise<void> {
   } catch (e) {
     console.error(e instanceof AjaxError ? e.responseText : e);
     alert({
-      title: str_an_error_has,
+      title: strAnErrorHas,
       content: "",
-      ...jConfirm_warning_options,
+      ...jConfirmWarningOptions,
     });
   }
 }
@@ -308,9 +306,9 @@ function displayComments(comments: CommentListResponse["comments"]) {
     // (`.length` on null) under the old `any` typing. Treated as empty,
     // matching every other nullable-string display field in this file.
     const rawContent = comment.contentRaw ?? "";
-    const raw_lenght = rawContent.length;
+    const rawLenght = rawContent.length;
     const preview =
-      raw_lenght > 50 ? rawContent.substring(0, 50) + "..." : rawContent;
+      rawLenght > 50 ? rawContent.substring(0, 50) + "..." : rawContent;
     text(find(clone, ".comment-msg"), '"' + preview + '"');
     text(find(clone, ".comment-author-name"), comment.author);
     text(find(clone, ".comment-datetime"), comment.date);
@@ -677,23 +675,23 @@ async function validateComment(id: number[]): Promise<void> {
         commentIds: id,
       },
       headers: {
-        "X-CSRF-Token": pwg_token,
+        "X-CSRF-Token": pwgToken,
       },
       dataType: "json",
     });
 
     alert({
-      title: idLenght > 1 ? str_comments_validated : str_comment_validated,
+      title: idLenght > 1 ? strCommentsValidated : strCommentValidated,
       content: "",
-      ...jConfirm_alert_options,
+      ...jConfirmAlertOptions,
     });
     void getComments(commentsParams);
   } catch (e) {
     console.error(e instanceof AjaxError ? e.responseText : e);
     alert({
-      title: str_an_error_has,
+      title: strAnErrorHas,
       content: "",
-      ...jConfirm_warning_options,
+      ...jConfirmWarningOptions,
     });
   }
 }
@@ -704,15 +702,15 @@ function deleteComment(id: number[]) {
   confirm({
     title:
       idLenght > 1
-        ? str_deletes.replace("%d", String(idLenght))
-        : str_delete.replace("%s", String(id)),
+        ? strDeletes.replace("%d", String(idLenght))
+        : strDelete.replace("%s", String(id)),
     titleClass: "jconfirmDeleteConfirm",
     content: "",
     boxWidth: "30%",
     type: "red",
     buttons: {
       confirm: {
-        text: str_yes_delete_confirmation,
+        text: strYesDeleteConfirmation,
         btnClass: "btn-red",
         action: async function () {
           try {
@@ -723,7 +721,7 @@ function deleteComment(id: number[]) {
                 commentIds: id,
               },
               headers: {
-                "X-CSRF-Token": pwg_token,
+                "X-CSRF-Token": pwgToken,
               },
               dataType: "json",
             });
@@ -735,7 +733,7 @@ function deleteComment(id: number[]) {
         },
       },
       cancel: {
-        text: str_no_delete_confirmation,
+        text: strNoDeleteConfirmation,
       },
     },
   });
@@ -800,7 +798,7 @@ function commentsUpdateSelection() {
       if (commentsSelectedOthers !== null) {
         text(
           [commentsSelectedOthers],
-          str_and_others.replace(/%s/g, String(commentsSelected.length - 5)),
+          strAndOthers.replace(/%s/g, String(commentsSelected.length - 5)),
         );
       }
       return;

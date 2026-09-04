@@ -1,7 +1,7 @@
 import type { operations } from "../../../../openapi/client/schema";
 import {
-  jConfirm_alert_options,
-  jConfirm_confirm_options,
+  jConfirmAlertOptions,
+  jConfirmConfirmOptions,
   TemporaryState,
 } from "./common";
 
@@ -68,45 +68,43 @@ type TagDuplicateResponse =
 type TagMergeResponse =
   operations["tagMerge"]["responses"][200]["content"]["application/json"];
 
-const pwg_token = pwg_getPageData<string>("csrf_token");
+const pwgToken = pwg_getPageData<string>("csrf_token");
 const parsedOrphanTagNames: unknown = JSON.parse(
   pwg_getPageData<string>("orphan_tag_names_array"),
 );
-const orphan_tag_names = Array.isArray(parsedOrphanTagNames)
+const orphanTagNames = Array.isArray(parsedOrphanTagNames)
   ? parsedOrphanTagNames.filter((n): n is string => typeof n === "string")
   : [];
-const str_delete = pwg_getPageString('Delete tag "%s"?');
-const str_delete_tags = pwg_getPageString("Delete tags {%s}?");
-const str_yes_delete_confirmation = pwg_getPageString("Yes, delete");
-const str_no_delete_confirmation = pwg_getPageString(
-  "No, I have changed my mind",
-);
-const str_yes_rename_confirmation = pwg_getPageString("Yes, rename");
-const str_tag_deleted = pwg_getPageString('Tag "%s" succesfully deleted');
-const str_tags_deleted = pwg_getPageString("Tags {%s} succesfully deleted");
-const str_already_exist = pwg_getPageString('Tag "%s" already exists');
-const str_tag_created = pwg_getPageString('Tag "%s" created');
-const str_tag_rename = pwg_getPageString('Rename "%s"');
-const str_delete_orphan_tags = pwg_getPageString("Delete orphan tags ?");
-const str_orphan_tags = pwg_getPageString("You have %s1 orphan : %s2");
-const str_delete_them = pwg_getPageString("Delete them");
-const str_keep_them = pwg_getPageString("Keep them");
-const str_copy = pwg_getPageString(" (copy)");
-const str_other_copy = pwg_getPageString(" (copy %s)");
-const str_merged_into = pwg_getPageString(
+const strDelete = pwg_getPageString('Delete tag "%s"?');
+const strDeleteTags = pwg_getPageString("Delete tags {%s}?");
+const strYesDeleteConfirmation = pwg_getPageString("Yes, delete");
+const strNoDeleteConfirmation = pwg_getPageString("No, I have changed my mind");
+const strYesRenameConfirmation = pwg_getPageString("Yes, rename");
+const strTagDeleted = pwg_getPageString('Tag "%s" succesfully deleted');
+const strTagsDeleted = pwg_getPageString("Tags {%s} succesfully deleted");
+const strAlreadyExist = pwg_getPageString('Tag "%s" already exists');
+const strTagCreated = pwg_getPageString('Tag "%s" created');
+const strTagRename = pwg_getPageString('Rename "%s"');
+const strDeleteOrphanTags = pwg_getPageString("Delete orphan tags ?");
+const strOrphanTags = pwg_getPageString("You have %s1 orphan : %s2");
+const strDeleteThem = pwg_getPageString("Delete them");
+const strKeepThem = pwg_getPageString("Keep them");
+const strCopy = pwg_getPageString(" (copy)");
+const strOtherCopy = pwg_getPageString(" (copy %s)");
+const strMergedInto = pwg_getPageString(
   'Tag(s) {%s1} succesfully merged into "%s2"',
 );
-const str_and_others_tags = pwg_getPageString("and %s others");
-const str_number_photos = pwg_getPageString("%d photos");
-const str_no_photos = pwg_getPageString("no photo");
-const str_select_all_tag = pwg_getPageString("Select all %d tags");
-const str_clear_selection = pwg_getPageString("Clear Selection");
-const str_selection_done = pwg_getPageString(
+const strAndOthersTags = pwg_getPageString("and %s others");
+const strNumberPhotos = pwg_getPageString("%d photos");
+const strNoPhotos = pwg_getPageString("no photo");
+const strSelectAllTag = pwg_getPageString("Select all %d tags");
+const strClearSelection = pwg_getPageString("Clear Selection");
+const strSelectionDone = pwg_getPageString(
   "The %d tags on this page are selected",
 );
-const str_tag_selected = pwg_getPageString("<b>%d</b> tag selected");
-const str_tags_found = pwg_getPageString("<b>%d</b> tags found");
-const str_tag_found = pwg_getPageString("<b>%d</b> tag found");
+const strTagSelected = pwg_getPageString("<b>%d</b> tag selected");
+const strTagsFound = pwg_getPageString("<b>%d</b> tags found");
+const strTagFound = pwg_getPageString("<b>%d</b> tag found");
 
 //Get the data
 // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
@@ -125,25 +123,25 @@ on(document.querySelectorAll(".info-warning p a"), "click", () => {
     document.querySelector(".info-warning p a")!,
     "url",
   ) as string;
-  const tags = orphan_tag_names;
-  const str_orphans = str_orphan_tags
+  const tags = orphanTagNames;
+  const strOrphans = strOrphanTags
     .replace("%s1", String(tags.length))
     .replace("%s2", tags.join(", "));
   confirm({
-    content: str_orphans,
-    title: str_delete_orphan_tags,
+    content: strOrphans,
+    title: strDeleteOrphanTags,
     boxWidth: "30%",
     type: "red",
     buttons: {
       delete: {
-        text: str_delete_them,
+        text: strDeleteThem,
         btnClass: "btn-red",
         action: function () {
           window.location.href = url.replace(/amp;/g, "");
         },
       },
       keep: {
-        text: str_keep_them,
+        text: strKeepThem,
         action: function () {
           hide(document.querySelectorAll(".info-warning"));
         },
@@ -160,9 +158,9 @@ function createTagBox(
   count: number | undefined,
   rawNameArg: string | null = null,
 ): Element {
-  const raw_name = rawNameArg ?? name;
-  const u_edit = "admin.php?page=batch_manager&filter=tag-" + String(id);
-  const u_view = "index.php?/tags/" + String(id) + "-" + url_name;
+  const rawName = rawNameArg ?? name;
+  const uEdit = "admin.php?page=batch_manager&filter=tag-" + String(id);
+  const uView = "index.php?/tags/" + String(id) + "-" + url_name;
   // Non-null: the template block always exists in the page markup.
   // `name` is a plain string straight off the JSON API response, never
   // percent-encoded -- the legacy `unescape(name)` this replaced was a
@@ -172,10 +170,10 @@ function createTagBox(
   // on the common case of a bare "%" (e.g. "50% off").
   let markup = htmlOf(document.querySelectorAll(".tag-template"))!
     .replace(/%name%/g, name)
-    .replace("%U_VIEW%", u_view)
-    .replace("%U_EDIT%", u_edit)
-    .replace("%raw_name%", raw_name);
-  if (name === raw_name) {
+    .replace("%U_VIEW%", uView)
+    .replace("%U_EDIT%", uEdit)
+    .replace("%raw_name%", rawName);
+  if (name === rawName) {
     markup = markup.replace("icon-globe", "");
   }
   const newTag = parseHtml(
@@ -197,10 +195,10 @@ function createTagBox(
     );
     html(
       find(newTag, ".tag-dropdown-header i"),
-      str_number_photos.replace("%d", String(count)),
+      strNumberPhotos.replace("%d", String(count)),
     );
   } else {
-    html(find(newTag, ".tag-dropdown-header i"), str_no_photos);
+    html(find(newTag, ".tag-dropdown-header i"), strNoPhotos);
   }
   return newTag;
 }
@@ -213,20 +211,20 @@ function recycleTagBox(
   count: number | undefined,
   rawNameArg: string | null = null,
 ): void {
-  const raw_name = rawNameArg ?? name;
+  const rawName = rawNameArg ?? name;
   attr(tagBox, "data-id", String(id));
   html(find(tagBox, ".tag-name, .tag-dropdown-header b"), name);
   setVal(find(tagBox, ".tag-name-editable"), name);
   attr(tagBox, "data-selected", "0");
   find(tagBox, ".tag-name").forEach((el) => {
-    setData(el, "rawname", raw_name);
+    setData(el, "rawname", rawName);
   });
 
   //Dropdown
-  const u_edit = "admin.php?page=batch_manager&filter=tag-" + String(id);
-  const u_view = "index.php?/tags/" + String(id) + "-" + url_name;
-  attr(find(tagBox, ".dropdown-option.view"), "href", u_view);
-  attr(find(tagBox, ".dropdown-option.manage"), "href", u_edit);
+  const uEdit = "admin.php?page=batch_manager&filter=tag-" + String(id);
+  const uView = "index.php?/tags/" + String(id) + "-" + url_name;
+  attr(find(tagBox, ".dropdown-option.view"), "href", uView);
+  attr(find(tagBox, ".dropdown-option.manage"), "href", uEdit);
 
   if (count !== undefined && count > 0) {
     css(
@@ -236,10 +234,10 @@ function recycleTagBox(
     );
     html(
       find(tagBox, ".tag-dropdown-header i"),
-      str_number_photos.replace("%d", String(count)),
+      strNumberPhotos.replace("%d", String(count)),
     );
   } else {
-    html(find(tagBox, ".tag-dropdown-header i"), str_no_photos);
+    html(find(tagBox, ".tag-dropdown-header i"), strNoPhotos);
   }
 }
 
@@ -293,7 +291,7 @@ document.querySelectorAll(".tag-box").forEach((tagBox) => {
 on(document.querySelectorAll(".TagSubmit"), "click", function () {
   hide(document.querySelectorAll(".TagSubmit"));
   show(document.querySelectorAll(".TagLoading"));
-  // Non-null: set_up_popin() always sets this id before the form is
+  // Non-null: setUpPopin() always sets this id before the form is
   // submittable.
   const $tagboxid = Number(
     attrOf(
@@ -318,7 +316,7 @@ on(document.querySelectorAll(".TagSubmit"), "click", function () {
     .then(() => {
       show(document.querySelectorAll(".TagSubmit"));
       hide(document.querySelectorAll(".TagLoading"));
-      rename_tag_close();
+      renameTagClose();
       cleanCheckmark();
       const changedBox = document.querySelector(
         '[data-id="' + String($tagboxid) + '"]',
@@ -382,7 +380,7 @@ on(document.querySelectorAll("#add-tag"), "submit", function (e: Event) {
     addTag(String(val(document.querySelectorAll("#add-tag-input"))))
       .then(function () {
         showMessage(
-          str_tag_created.replace(
+          strTagCreated.replace(
             "%s",
             String(val(document.querySelectorAll("#add-tag-input"))),
           ),
@@ -430,13 +428,13 @@ async function addTag(name: string): Promise<void> {
         name: name,
       },
       headers: {
-        "X-CSRF-Token": pwg_token,
+        "X-CSRF-Token": pwgToken,
       },
       dataType: "json",
     })) as TagCreateResponse;
   } catch (err) {
     if (err instanceof AjaxError && err.status === 422) {
-      throw new Error(str_already_exist.replace("%s", name), { cause: err });
+      throw new Error(strAlreadyExist.replace("%s", name), { cause: err });
     }
     throw new Error(err instanceof AjaxError ? err.statusText : String(err), {
       cause: err,
@@ -469,15 +467,15 @@ function setupTagbox(tagBox: Element): void {
 
   on(document, "mouseup", function (e: Event) {
     e.stopPropagation();
-    let option_is_clicked = false;
+    let optionIsClicked = false;
     find(tagBox, ".dropdown-option").forEach((option) => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real mouseup event's own target inside the document is always a Node (or null), never a bare EventTarget with no Node interface.
       if (option.contains(e.target as Node | null)) {
-        option_is_clicked = true;
+        optionIsClicked = true;
       }
     });
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real false positive from closure mutation: option_is_clicked is set inside the forEach callback above, which the rule doesn't track (same class as dom.ts's stopped).
-    if (!option_is_clicked) {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real false positive from closure mutation: optionIsClicked is set inside the forEach callback above, which the rule doesn't track (same class as dom.ts's stopped).
+    if (!optionIsClicked) {
       hide(find(tagBox, ".tag-dropdown-block"));
     }
   });
@@ -504,27 +502,27 @@ function setupTagbox(tagBox: Element): void {
     // itself rendered from this same `dataTags` array.
     const tagRawName = dataTags[tagIndex]!.raw_name;
     const tagName = dataTags[tagIndex]!.name;
-    set_up_popin(id, tagRawName, tagName);
-    rename_tag_open();
+    setUpPopin(id, tagRawName, tagName);
+    renameTagOpen();
   });
 
   //Delete Tag
   on(find(tagBox, ".dropdown-option.delete"), "click", function () {
     confirm({
-      title: str_delete.replace("%s", htmlOf(find(tagBox, ".tag-name"))!),
+      title: strDelete.replace("%s", htmlOf(find(tagBox, ".tag-name"))!),
       buttons: {
         confirm: {
-          text: str_yes_delete_confirmation,
+          text: strYesDeleteConfirmation,
           btnClass: "btn-red",
           action: function () {
             removeTag(dataId(tagBox, "id"), htmlOf(find(tagBox, ".tag-name"))!);
           },
         },
         cancel: {
-          text: str_no_delete_confirmation,
+          text: strNoDeleteConfirmation,
         },
       },
-      ...jConfirm_confirm_options,
+      ...jConfirmConfirmOptions,
     });
   });
 
@@ -535,12 +533,12 @@ function setupTagbox(tagBox: Element): void {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       data(find(tagBox, ".tag-name")[0]!, "rawname") as string,
     ).then((newTag) => {
-      showMessage(str_tag_created.replace("%s", newTag.name));
+      showMessage(strTagCreated.replace("%s", newTag.name));
     });
   });
 }
 
-function set_up_popin(id: number, tagRawName: string, tagName: string): void {
+function setUpPopin(id: number, tagRawName: string, tagName: string): void {
   attr(
     find(
       document.querySelectorAll(".RenameTagPopInContainer"),
@@ -552,16 +550,16 @@ function set_up_popin(id: number, tagRawName: string, tagName: string): void {
 
   html(
     document.querySelectorAll(".AddIconTitle span"),
-    str_tag_rename.replace("%s", tagName),
+    strTagRename.replace("%s", tagName),
   );
   on(
     document.querySelectorAll(".ClosePopIn, .TagCancel"),
     "click",
     function () {
-      rename_tag_close();
+      renameTagClose();
     },
   );
-  html(document.querySelectorAll(".TagSubmit"), str_yes_rename_confirmation);
+  html(document.querySelectorAll(".TagSubmit"), strYesRenameConfirmation);
   setVal(
     find(
       document.querySelectorAll(".RenameTagPopInContainer"),
@@ -571,25 +569,25 @@ function set_up_popin(id: number, tagRawName: string, tagName: string): void {
   );
 }
 
-function rename_tag_close(): void {
+function renameTagClose(): void {
   fadeOut(document.querySelectorAll("#RenameTag"));
 }
 
-function rename_tag_open(): void {
+function renameTagOpen(): void {
   fadeIn(document.querySelectorAll("#RenameTag"));
   document.querySelector<HTMLElement>(".tag-property-input")?.focus();
 }
 
 function removeTag(id: number, name: string): void {
   alert({
-    title: str_tag_deleted.replace("%s", name),
+    title: strTagDeleted.replace("%s", name),
     // eslint-disable-next-line @typescript-eslint/promise-function-async -- must return ajax()'s own AjaxThenable (jconfirm.ts's `isThenable()` checks for its real `.always()`); `async` would re-wrap it through `Promise.resolve()` and lose that method.
     content: function () {
       return ajax({
         url: "api/v1/tags/" + String(id),
         type: "DELETE",
         headers: {
-          "X-CSRF-Token": pwg_token,
+          "X-CSRF-Token": pwgToken,
         },
         dataType: "json",
         success: function (_data: TagDeleteResponse) {
@@ -598,7 +596,7 @@ function removeTag(id: number, name: string): void {
             ?.remove();
           //Update data
           dataTags = dataTags.filter((tag) => tag.id !== id);
-          showMessage(str_tag_deleted.replace("%s", name));
+          showMessage(strTagDeleted.replace("%s", name));
           updateBadge();
           updateSearchInfo();
           updatePaginationMenu();
@@ -608,7 +606,7 @@ function removeTag(id: number, name: string): void {
         },
       });
     },
-    ...jConfirm_alert_options,
+    ...jConfirmAlertOptions,
   });
 }
 
@@ -626,13 +624,13 @@ async function renameTag(
         name: new_name,
       },
       headers: {
-        "X-CSRF-Token": pwg_token,
+        "X-CSRF-Token": pwgToken,
       },
       dataType: "json",
     })) as TagRenameResponse;
   } catch (err) {
     if (err instanceof AjaxError && err.status === 422) {
-      throw new Error(str_already_exist.replace("%s", new_name), {
+      throw new Error(strAlreadyExist.replace("%s", new_name), {
         cause: err,
       });
     }
@@ -665,8 +663,8 @@ async function renameTag(
     "data-rawname",
     response.nameRaw,
   );
-  const u_view = "index.php?/tags/" + String(id) + "-" + response.urlName;
-  attr(document.querySelectorAll(".dropdown-option.view"), "href", u_view);
+  const uView = "index.php?/tags/" + String(id) + "-" + response.urlName;
+  attr(document.querySelectorAll(".dropdown-option.view"), "href", uView);
 
   //Update the local tag list
   const index = dataTags.findIndex((tag) => tag.id === id);
@@ -683,9 +681,9 @@ async function duplicateTag(
   id: number,
   name: string,
 ): Promise<TagDuplicateResponse> {
-  let copy_name = name + str_copy;
+  let copyName = name + strCopy;
 
-  const name_exist = function (candidateName: string): boolean {
+  const nameExist = function (candidateName: string): boolean {
     let exist = false;
     document.querySelectorAll(".tag-box .tag-name").forEach((el) => {
       if (htmlOf(el) === candidateName) exist = true;
@@ -694,8 +692,8 @@ async function duplicateTag(
   };
 
   let i = 1;
-  while (name_exist(copy_name)) {
-    copy_name = name + str_other_copy.replace("%s", String(i++));
+  while (nameExist(copyName)) {
+    copyName = name + strOtherCopy.replace("%s", String(i++));
   }
 
   let response: TagDuplicateResponse;
@@ -705,10 +703,10 @@ async function duplicateTag(
       url: "api/v1/tags/" + String(id) + "/actions/duplicate",
       type: "POST",
       json: {
-        name: copy_name,
+        name: copyName,
       },
       headers: {
-        "X-CSRF-Token": pwg_token,
+        "X-CSRF-Token": pwgToken,
       },
       dataType: "json",
     })) as TagDuplicateResponse;
@@ -799,7 +797,7 @@ function addSelectedItem(id: number): void {
       ).length;
       html(
         document.querySelectorAll(".selection-other-tags"),
-        str_and_others_tags.replace(
+        strAndOthersTags.replace(
           "%s",
           String(selected.length - numberDisplayed),
         ),
@@ -885,10 +883,7 @@ function removeSelectedItem(id: number): void {
     ).length;
     html(
       document.querySelectorAll(".selection-other-tags"),
-      str_and_others_tags.replace(
-        "%s",
-        String(selected.length - numberDisplayed),
-      ),
+      strAndOthersTags.replace("%s", String(selected.length - numberDisplayed)),
     );
     if (selected.length - numberDisplayed <= 0) {
       hide(document.querySelectorAll(".selection-other-tags"));
@@ -962,11 +957,11 @@ on(document.querySelectorAll("#selectAll"), "click", function () {
   updateSelectionContent();
   if (selected.length < dataTags.length) {
     showSelectMessage(
-      str_selection_done.replace(
+      strSelectionDone.replace(
         "%d",
         String(document.querySelectorAll(".tag-box").length),
       ),
-      str_select_all_tag.replace("%d", String(dataTags.length)),
+      strSelectAllTag.replace("%d", String(dataTags.length)),
       function () {
         html(document.querySelectorAll(".tag-select-message a"), "");
         html(
@@ -977,8 +972,8 @@ on(document.querySelectorAll("#selectAll"), "click", function () {
           void selectAll(dataTags).then(() => {
             updateSelectionContent();
             showSelectMessage(
-              str_tag_selected.replace(/%d/g, String(selected.length)),
-              str_clear_selection,
+              strTagSelected.replace(/%d/g, String(selected.length)),
+              strClearSelection,
               function () {
                 selectNone();
                 slideUp(document.querySelectorAll(".tag-select-message"));
@@ -1076,20 +1071,20 @@ on(document.querySelectorAll("#DeleteSelectionMode"), "click", function () {
   });
 
   confirm({
-    title: str_delete_tags.replace("%s", tagListToString(names)),
+    title: strDeleteTags.replace("%s", tagListToString(names)),
     buttons: {
       confirm: {
-        text: str_yes_delete_confirmation,
+        text: strYesDeleteConfirmation,
         btnClass: "btn-red",
         action: function () {
           removeSelectedTags();
         },
       },
       cancel: {
-        text: str_no_delete_confirmation,
+        text: strNoDeleteConfirmation,
       },
     },
-    ...jConfirm_confirm_options,
+    ...jConfirmConfirmOptions,
   });
 });
 
@@ -1100,7 +1095,7 @@ function removeSelectedTags(): void {
   });
 
   alert({
-    title: str_tags_deleted.replace("%s", tagListToString(names)),
+    title: strTagsDeleted.replace("%s", tagListToString(names)),
     content: async function () {
       // No bulk-delete endpoint (a REST single-resource DELETE per tag,
       // per P27's own design) -- fire one DELETE per selected tag.
@@ -1110,7 +1105,7 @@ function removeSelectedTags(): void {
             url: "api/v1/tags/" + String(id),
             type: "DELETE",
             headers: {
-              "X-CSRF-Token": pwg_token,
+              "X-CSRF-Token": pwgToken,
             },
             dataType: "json",
           });
@@ -1131,7 +1126,7 @@ function removeSelectedTags(): void {
       updateBadge();
       updateSearchInfo();
     },
-    ...jConfirm_alert_options,
+    ...jConfirmAlertOptions,
   });
 }
 
@@ -1141,23 +1136,23 @@ on(document.querySelectorAll(".ConfirmMergeButton"), "click", () => {
   // nothing is selected, which can't happen here -- the merge button is
   // only reachable once 2+ tags are already selected, and each one adds a
   // real <option> to this same <select> (see updateMergeItems() above).
-  const dest_id = valId(document.querySelectorAll("#MergeOptionsChoices"));
-  if (dest_id === null) {
+  const destId = valId(document.querySelectorAll("#MergeOptionsChoices"));
+  if (destId === null) {
     return;
   }
-  mergeGroups(dest_id, selected);
+  mergeGroups(destId, selected);
 });
 
 function mergeGroups(destination_id: number, merge_ids: number[]): void {
-  const destination_name = htmlOf(
+  const destinationName = htmlOf(
     document.querySelectorAll(
       '.tag-box[data-id="' + String(destination_id) + '"] .tag-name',
     ),
   )!;
-  const merge_name: string[] = [];
+  const mergeName: string[] = [];
 
   merge_ids.forEach((id) => {
-    merge_name.push(
+    mergeName.push(
       htmlOf(
         document.querySelectorAll(
           '.tag-box[data-id="' + String(id) + '"] .tag-name',
@@ -1166,12 +1161,12 @@ function mergeGroups(destination_id: number, merge_ids: number[]): void {
     );
   });
 
-  const str_message = str_merged_into
-    .replace("%s1", tagListToString(merge_name))
-    .replace("%s2", destination_name);
+  const strMessage = strMergedInto
+    .replace("%s1", tagListToString(mergeName))
+    .replace("%s2", destinationName);
 
   alert({
-    title: str_message,
+    title: strMessage,
     // eslint-disable-next-line @typescript-eslint/promise-function-async -- must return ajax()'s own AjaxThenable (jconfirm.ts's `isThenable()` checks for its real `.always()`); `async` would re-wrap it through `Promise.resolve()` and lose that method.
     content: function () {
       return ajax({
@@ -1179,7 +1174,7 @@ function mergeGroups(destination_id: number, merge_ids: number[]): void {
         type: "POST",
         contentType: "application/json",
         headers: {
-          "X-CSRF-Token": pwg_token,
+          "X-CSRF-Token": pwgToken,
         },
         data: JSON.stringify({
           destinationTagId: destination_id,
@@ -1208,7 +1203,7 @@ function mergeGroups(destination_id: number, merge_ids: number[]): void {
             );
             html(
               document.querySelectorAll(".tag-dropdown-header i"),
-              str_number_photos.replace(
+              strNumberPhotos.replace(
                 "%d",
                 String(response.imagesInMergedTag.length),
               ),
@@ -1228,7 +1223,7 @@ function mergeGroups(destination_id: number, merge_ids: number[]): void {
         },
       });
     },
-    ...jConfirm_alert_options,
+    ...jConfirmAlertOptions,
   });
 }
 
@@ -1237,7 +1232,7 @@ function tagListToString(list: string[]): string {
     return (
       list.slice(0, 5).join(", ") +
       " " +
-      str_and_others_tags.replace("%s", String(list.length - 5))
+      strAndOthersTags.replace("%s", String(list.length - 5))
     );
   } else {
     return list.join(", ");
@@ -1309,7 +1304,7 @@ function showMessage(message: string): void {
 /*-------
  Pagination
 -------*/
-let per_page = dataId(document.querySelector(".tag-container")!, "per_page");
+let perPage = dataId(document.querySelector(".tag-container")!, "per_page");
 const pageItem = '<a data-page="%d">%d</a>';
 const pageEllipsis = "<span>...</span>";
 let promisePending = false;
@@ -1420,7 +1415,7 @@ function updateArrows(): void {
 
 function getNumberPages(): number {
   const dataVisible = dataTags.filter(isDataSearched).length;
-  return Math.floor((dataVisible - 1) / per_page) + 1;
+  return Math.floor((dataVisible - 1) / perPage) + 1;
 }
 
 function movePage(toRigth = true): void {
@@ -1538,7 +1533,7 @@ async function updatePage(): Promise<void> {
 function tagToDisplay(): TagRow[] {
   return dataTags
     .filter(isDataSearched)
-    .slice((actualPage - 1) * per_page, actualPage * per_page);
+    .slice((actualPage - 1) * perPage, actualPage * perPage);
 }
 
 on(document.querySelectorAll(".pagination-arrow.rigth"), "click", () => {
@@ -1561,14 +1556,14 @@ on(
   document.querySelectorAll(".pagination-per-page a"),
   "click",
   function (this: Element) {
-    per_page = parseInt(htmlOf(this) ?? "");
+    perPage = parseInt(htmlOf(this) ?? "");
     updatePaginationMenu();
     removeClass(
       document.querySelectorAll(".pagination-per-page .selected"),
       "selected",
     );
     addClass(this, "selected");
-    setCookie("pwg_tags_per_page", per_page);
+    setCookie("pwg_tags_per_page", perPage);
   },
 );
 
@@ -1578,12 +1573,12 @@ function updateSearchInfo(): void {
     if (number > 1) {
       html(
         document.querySelectorAll(".search-info"),
-        str_tags_found.replace("%d", String(number)),
+        strTagsFound.replace("%d", String(number)),
       );
     } else {
       html(
         document.querySelectorAll(".search-info"),
-        str_tag_found.replace("%d", String(number)),
+        strTagFound.replace("%d", String(number)),
       );
     }
   } else {

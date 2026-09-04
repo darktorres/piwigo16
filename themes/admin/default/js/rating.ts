@@ -82,7 +82,7 @@ ready(function () {
   });
 });
 
-const pwg_token = pwg_getPageData<string>("csrf_token");
+const pwgToken = pwg_getPageData<string>("csrf_token");
 
 delegate(
   document,
@@ -127,7 +127,7 @@ async function del(
         "/actions/delete-ratings",
       method: "POST",
       json: data,
-      headers: { "X-CSRF-Token": pwg_token },
+      headers: { "X-CSRF-Token": pwgToken },
     })) as operations["userDeleteRatings"]["responses"][200]["content"]["application/json"];
 
     if (result.deletedCount) remove(trSet);

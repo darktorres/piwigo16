@@ -3,7 +3,7 @@ import "./common";
 import { pwg_getPageData } from "../../../default/js/page-data";
 import { hide, show } from "../../../default/js/vendor/dom";
 
-const filters_names = pwg_getPageData<string[]>("filters_names");
+const filtersNames = pwg_getPageData<string[]>("filters_names");
 
 /**
  * jQuery quietly skips a selector that matches nothing, and several of the
@@ -14,17 +14,17 @@ function present(...elements: (HTMLElement | null)[]): HTMLElement[] {
   return elements.filter((element): element is HTMLElement => element !== null);
 }
 
-for (const filter_name of filters_names) {
+for (const filterName of filtersNames) {
   const toggle = document.querySelector<HTMLInputElement>(
-    "#" + filter_name + "Filters",
+    "#" + filterName + "Filters",
   );
   const select = document.querySelector<HTMLSelectElement>(
-    "#f" + filter_name + "Select",
+    "#f" + filterName + "Select",
   );
-  const arrow = document.getElementById(filter_name + "Arrow");
-  const adminIcon = document.getElementById(filter_name + "AdminIcon");
+  const arrow = document.getElementById(filterName + "Arrow");
+  const adminIcon = document.getElementById(filterName + "AdminIcon");
   const defaultInput = document.querySelector<HTMLInputElement>(
-    "#default_" + filter_name,
+    "#default_" + filterName,
   );
   const defaultContainer = defaultInput?.parentElement ?? null;
 

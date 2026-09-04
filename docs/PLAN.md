@@ -4772,26 +4772,116 @@ interactive behavior — all passed. Full JS gate green (236 tests);
 golden-html (91) and visual-regression (82) both zero-diff, as expected
 for a phase that changes no rendered HTML or runtime behavior.
 
-**P51-G (scoped, not started)** — rename snake_case identifiers to
-camelCase. The largest single sub-phase by site count: **628 `const`/
-`let` declarations across 41 files** (a fresh rough recount today found
-603 via a simple single-line regex, consistent with the original,
-more careful count once multi-line declarations are included). Heavily
-concentrated: `user_list.ts` 112, `mcs.ts` 51, `albums.ts` 43, `tags.ts`
-42, `history.ts`/`group_list.ts`/`album_selector.ts` ~30 each,
-`profile.ts` 29, `search_filters.ts` 27, 29 more files smaller. Batch by
-file, largest first. Where a variable's value is later sent as a
-request-body/query field whose real name is still snake_case in the
-OpenAPI contract (`image_id`, `category_id`, `author_id`, `download_url`,
-`element_url`, `page_url`), keep that specific field key as-is at the
-point it's built into the request object (`{ image_id: imageId }`) while
-the local binding itself goes camelCase -- watch for read sites in other
-files that already destructure one of these variables' old snake_case
-name from a shared object shape, and rename the binding there too, not
-the source key. While in `check_integrity.ts`: also rename its top-level
-`function DeselectAll(...)` to `deselectAll` -- the one PascalCase plain
-function in the codebase, which otherwise reserves that casing for
-classes/constructors.
+**P51-G (Done)** — rename snake_case identifiers to camelCase. Closed
+with a broader final scope than originally estimated, on two axes the
+inherited plan's own site-count regex missed entirely:
+
+1. **Function declarations were originally out of scope** (the
+   inherited text counted only `const`/`let`). A file like
+   `user_list.ts` alone had 77 genuinely snake_case function names --
+   more than most files had `const`/`let` sites -- so a phase titled
+   "rename snake_case identifiers" that left every `function` untouched
+   would have shipped half-finished. Folded in before execution
+   started: **698 `const`/`let` + 134 function-declaration sites across
+   47 files** (up from the inherited 41-file/628-site `const`/`let`-only
+   estimate).
+2. **Class private (`#`) members were invisible to that same regex**
+   (`function NAME(` never matches method-shorthand syntax) --
+   discovered live in `album_selector.ts`, which grew from its planned
+   30 sites to ~55+ once its own ~25 private field/method names
+   (`#in_admin_mode`, `#open_album_selector`, `#prefill_results`, etc.)
+   were included under the identical treatment (zero external-contract
+   risk, arguably lower-risk than a top-level rename since `#private`
+   is syntactically unreachable outside its own class).
+
+An earlier automated-script attempt at this same phase was fully
+discarded (nothing committed) after it accumulated real bugs faster
+than it found real sites -- each one a genuinely different failure
+mode, always caught by `tsc` before shipping, but the iteration count
+itself was the signal to stop trusting a shared substitution script.
+Re-executed by hand instead, file by file (largest first), using `Edit`
+calls checked against real surrounding context: `replace_all` only once
+a name was confirmed to have zero real exceptions anywhere in the file
+(exact-string grep for the name inside `"..."`/`'...'` first), otherwise
+individual context-anchored edits. Two deliberate naming conventions
+were excluded from the count and left untouched throughout: `pwg_`-
+prefixed hybrid names (`pwg_getPageData`, `pwg_checkEmailFormat`, etc.
+-- already camelCase past the prefix, mirroring the PHP backend's own
+`pwg_*` convention) and genuine PHP-builtin-function mirrors
+(`common.ts`'s own `str_repeat`, kept under its original name for
+cross-reference clarity, same precedent as the already-removed
+`array_delete`). Six files (`common.ts`, `page-data.ts`, `scripts.ts`,
+`menubar-quicksearch.ts`, `menubar-links.ts`, `themes/default/js/
+rating.ts`) were verified, not assumed, to have zero real snake_case
+candidates once those two exclusions applied -- except `common.ts`,
+which turned out to have 5 real sites of a related but distinct
+anti-pattern (mixedCase-with-a-trailing-snake-segment, e.g.
+`jConfirm_alert_options`), fixed the same way and propagated to its 11
+real cross-file importers.
+
+Real corruption classes hit and fixed during execution, none shipped
+(all caught before a file was marked done):
+
+- **Wire-format-key/DOM-id substring corruption** -- a renamed
+  identifier's exact text was a literal substring of an unrelated real
+  string: `.recent_period_infos` (user_list.ts, from a `period_info`
+  rename), `#date_min_activity`/`#date_max_activity` (user_activity.ts),
+  `.apiName`/`` `apiCollapse_${id}` ``/`"api_customDate"`
+  (profile.ts), `new_nb_albums` → wrongly `new_nbAlbums` (albums.ts) --
+  this last one is what prompted adding a second, broader post-edit
+  grep signature (`underscore-then-later-uppercase`) on top of the
+  original narrower one, applied retroactively to every already-"done"
+  file at that point. Two more, caught before ever touching the file
+  now that the pattern was known: `toggle_mode` vs.
+  `#toggle_mode_light`/`#toggle_mode_dark` (`standard_pages.ts`) and
+  `who_option` vs. `.who_option` (`album_notification.ts`).
+- **Object-literal shorthand silently changing a produced wire key** --
+  `{ max_file_size }` (photos_add_direct.ts) after renaming the
+  variable stopped matching the real multipart field name; caught by a
+  real `tsc` TS2561 error, fixed by making the key explicit.
+- **A rename accidentally making a name match its own wire key**,
+  caught by my own `replace_all` corrupting the very
+  `pwg_getPageData<T>("filters_names")` key it was meant to leave alone
+  (`configuration_search.ts`) -- fixed immediately, and folded into the
+  standing rule for the rest of the campaign: any name with a
+  self-matching wire-key string gets a targeted edit for that one
+  occurrence, never `replace_all` for the whole name.
+- **`window.X = X` onclick-target exposures** -- the LHS property name
+  is a real string baked into template `onclick=`/`onClick=`
+  attributes and must never rename; only the RHS local function does.
+  Hit in `user_list.ts` (`plugin_add_tab_in_user_modal`) and `footer.ts`
+  (`hide_user_whats_new`/`show_user_whats_new`, cross-checked against
+  `layout.latte`'s own literal `onclick="hide_user_whats_new()"` calls
+  and `build/ambient-globals.d.ts`'s matching `Window` interface
+  members, both correctly left as-is).
+- **Cross-file export propagation**, traced tree-wide via `grep -rl`,
+  not assumed from the file list already in scope: `album_selector.ts`
+  → 6 real consumers (`cat_search.ts`, `batchManagerGlobal.ts`,
+  `picture_modify.ts`, `batchManagerFilter.ts`, `photos_add_direct.ts`,
+  `mcs.ts`), including 3 renamed public methods
+  (`remove_selected_album`/`get_selected_albums`/`select_album`) and a
+  matching update to `build/ambient-globals.d.ts`'s
+  `AlbumSelectorInstance` interface; `common.ts`'s `jConfirm_*` exports
+  → 11 real importers; `search_filters.ts` ↔ `mcs.ts` and
+  `batchManagerGlobal.ts` ↔ `batch_manager_global.ts`, both genuinely
+  bidirectional.
+- **A rename making a local binding match its own source property**,
+  discovered only by re-running the full `lint:js` gate at the very end
+  (not caught by `tsc`, which doesn't flag this): `history.ts`'s
+  `search_details` → `searchDetails` now matched `line.searchDetails`
+  exactly, and `user_activity.ts`'s `end_page` → `endPage` now matched
+  `merged.endPage` -- both newly eligible for
+  `@typescript-eslint/prefer-destructuring` only because of the rename
+  itself (a real, valid suggestion, not pre-existing debt), fixed by
+  converting both to real destructuring.
+
+`check_integrity.ts`'s top-level `function DeselectAll(...)` renamed to
+`deselectAll` as planned (the one PascalCase plain function in the
+codebase; no real cross-file callers).
+
+**One single commit for the whole phase**, as decided going in. Full
+verification green: `typecheck`/`lint:js`/`format`/`knip` clean across
+the whole tree, full JS gate (`vitest run`) 236/236 passing.
 
 **P51-H (scoped, not started)** — dead code, unsafe casts, animation
 engine, and global coordination, bundled into one sub-phase (independent,

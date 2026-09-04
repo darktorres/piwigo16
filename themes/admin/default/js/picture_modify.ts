@@ -27,15 +27,15 @@ import {
 } from "../../../default/js/vendor/dom";
 
 //
-// `add_related_category`/`remove_related_category` are declared here
+// `addRelatedCategory`/`removeRelatedCategory` are declared here
 // too, independently of the same-named functions in mcs.js/
 // batchManagerUnit.js/cat_modify.js/photos_add_direct.js (docs/PLAN.md
 // P46-B's own finding) -- safe since none of these pages ever co-load.
-const related_categories_ids = pwg_getPageData<string[]>(
+const relatedCategoriesIds = pwg_getPageData<string[]>(
   "related_categories_ids",
 );
-const str_assoc_album_ab = pwg_getPageString("Associate to album");
-const str_orphan = pwg_getPageString("This photo is an orphan");
+const strAssocAlbumAb = pwg_getPageString("Associate to album");
+const strOrphan = pwg_getPageString("This photo is an orphan");
 
 (function () {
   // <!-- CATEGORIES -->
@@ -75,31 +75,31 @@ const str_orphan = pwg_getPageString("This photo is an orphan");
   // <!-- THUMBNAILS -->
   colorbox(document.querySelectorAll("a.preview-box"), { photo: true });
 
-  const str_are_you_sure = pwg_getPageString("Are you sure?");
-  const str_yes = pwg_getPageString("Yes, delete");
-  const str_no = pwg_getPageString("No, I have changed my mind");
-  const url_delete = pwg_getPageData<string>("u_delete");
+  const strAreYouSure = pwg_getPageString("Are you sure?");
+  const strYes = pwg_getPageString("Yes, delete");
+  const strNo = pwg_getPageString("No, I have changed my mind");
+  const urlDelete = pwg_getPageData<string>("u_delete");
 
   on(
     document.querySelectorAll("#action-delete-picture"),
     "click",
     function (): void {
       confirm({
-        title: str_are_you_sure,
+        title: strAreYouSure,
         titleClass: "groupDeleteConfirm",
         content: "",
         boxWidth: "30%",
         type: "red",
         buttons: {
           confirm: {
-            text: str_yes,
+            text: strYes,
             btnClass: "btn-red",
             action: function () {
-              window.location.href = url_delete.replaceAll("amp;", "");
+              window.location.href = urlDelete.replaceAll("amp;", "");
             },
           },
           cancel: {
-            text: str_no,
+            text: strNo,
           },
         },
       });
@@ -109,11 +109,11 @@ const str_orphan = pwg_getPageString("This photo is an orphan");
 
 ready(function () {
   const ab = new AlbumSelector({
-    selectedCategoriesIds: related_categories_ids,
-    selectAlbum: add_related_category,
-    removeSelectedAlbum: remove_related_category,
+    selectedCategoriesIds: relatedCategoriesIds,
+    selectAlbum: addRelatedCategory,
+    removeSelectedAlbum: removeRelatedCategory,
     adminMode: true,
-    modalTitle: str_assoc_album_ab,
+    modalTitle: strAssocAlbumAb,
   });
 
   on(
@@ -131,7 +131,7 @@ ready(function () {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real click inside the document always targets an Element (or null), never a bare EventTarget with no Element interface.
       const target = e.target as Element;
       if (target.classList.contains("remove-item")) {
-        ab.remove_selected_album(attrOf(target, "id")!);
+        ab.removeSelectedAlbum(attrOf(target, "id")!);
       }
     },
   );
@@ -143,29 +143,29 @@ ready(function () {
     "#pictureModify input, #pictureModify select, #pictureModify textarea, #pictureModify button";
 
   // Unsaved settings message before leave this page
-  let form_unsaved = false;
-  let user_interacted = false;
+  let formUnsaved = false;
+  let userInteracted = false;
   on(document.querySelectorAll(inputSelector), "focus", function (): void {
-    user_interacted = true;
+    userInteracted = true;
   });
   on(document.querySelectorAll(inputSelector), "change", function (): void {
-    if (user_interacted) {
-      form_unsaved = true;
+    if (userInteracted) {
+      formUnsaved = true;
     }
   });
   on(window, "beforeunload", function (): string | undefined {
-    if (form_unsaved) {
+    if (formUnsaved) {
       return "Somes changes are not registered";
     }
 
     return undefined;
   });
   on(document.querySelectorAll("#pictureModify"), "submit", function (): void {
-    form_unsaved = false;
+    formUnsaved = false;
   });
 });
 
-function remove_related_category({
+function removeRelatedCategory({
   id_album,
   getSelectedAlbum,
 }: AlbumSelectorRemoveCallbackArgs) {
@@ -185,10 +185,10 @@ function remove_related_category({
   if (el?.parentElement) {
     el.parentElement.remove();
   }
-  check_related_categories(getSelectedAlbum());
+  checkRelatedCategories(getSelectedAlbum());
 }
 
-function add_related_category({
+function addRelatedCategory({
   album,
   levelSeparator,
   addSelectedAlbum,
@@ -218,10 +218,10 @@ function add_related_category({
     addSelectedAlbum();
   }
 
-  check_related_categories(getSelectedAlbum());
+  checkRelatedCategories(getSelectedAlbum());
 }
 
-function check_related_categories(selected_cat: (string | number)[]) {
+function checkRelatedCategories(selected_cat: (string | number)[]) {
   html(
     document.querySelectorAll(".linked-albums-badge"),
     String(selected_cat.length),
@@ -230,7 +230,7 @@ function check_related_categories(selected_cat: (string | number)[]) {
   if (selected_cat.length === 0) {
     addClass(document.querySelectorAll(".linked-albums-badge"), "badge-red");
     addClass(document.querySelectorAll(".add-item"), "highlight");
-    html(document.querySelectorAll(".orphan-photo"), str_orphan);
+    html(document.querySelectorAll(".orphan-photo"), strOrphan);
     show(document.querySelectorAll(".orphan-photo"));
   } else {
     removeClass(

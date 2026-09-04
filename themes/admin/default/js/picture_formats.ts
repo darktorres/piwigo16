@@ -1,4 +1,4 @@
-import { jConfirm_confirm_options } from "./common";
+import { jConfirmConfirmOptions } from "./common";
 
 import {
   pwg_getPageData,
@@ -16,10 +16,10 @@ import {
   show,
 } from "../../../default/js/vendor/dom";
 
-const pwg_token = pwg_getPageData<string>("csrf_token");
-const str_confirm_delete_format = pwg_getPageString("Delete %s format ?");
-const str_confirm_msg = pwg_getPageString("Yes, I am sure");
-const str_cancel_msg = pwg_getPageString("No, I have changed my mind");
+const pwgToken = pwg_getPageData<string>("csrf_token");
+const strConfirmDeleteFormat = pwg_getPageString("Delete %s format ?");
+const strConfirmMsg = pwg_getPageString("Yes, I am sure");
+const strCancelMsg = pwg_getPageString("No, I have changed my mind");
 
 function fitExtensions() {
   document.querySelectorAll(".format-card-ext span").forEach((node) => {
@@ -34,24 +34,24 @@ document.querySelectorAll(".format-card").forEach((card) => {
   const button = card.querySelectorAll(".format-delete");
   on(button, "click", () => {
     confirm({
-      title: str_confirm_delete_format.replace(
+      title: strConfirmDeleteFormat.replace(
         "%s",
         htmlOf(card.querySelectorAll(".format-card-ext span")) ?? "",
       ),
       content: "",
       buttons: {
         confirm: {
-          text: str_confirm_msg,
+          text: strConfirmMsg,
           btnClass: "btn-red",
           action: function () {
             void deleteFormat(card);
           },
         },
         cancel: {
-          text: str_cancel_msg,
+          text: strCancelMsg,
         },
       },
-      ...jConfirm_confirm_options,
+      ...jConfirmConfirmOptions,
     });
   });
 });
@@ -74,7 +74,7 @@ async function deleteFormat(card: Element): Promise<void> {
         // both just coerce the same attribute.
         formatIds: [Number(data(card, "id"))],
       },
-      headers: { "X-CSRF-Token": pwg_token },
+      headers: { "X-CSRF-Token": pwgToken },
     });
 
     fadeOut(card, "slow", () => {

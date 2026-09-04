@@ -2,11 +2,11 @@ import { pwg_getPageData } from "../../../default/js/page-data";
 import { height, setVal, width } from "../../../default/js/vendor/dom";
 import { jcrop, type JcropApi } from "../../../default/js/vendor/jcrop";
 
-function from_coi(f: number, total: number) {
+function fromCoi(f: number, total: number) {
   return f * total;
 }
 
-function to_coi(v: number, total: number) {
+function toCoi(v: number, total: number) {
   return v / total;
 }
 
@@ -34,10 +34,10 @@ function jOnChange(sel: JcropSelection) {
   }
 
   // setVal takes a string; jQuery coerced the number itself.
-  setVal(document.querySelectorAll("#l"), String(to_coi(sel.x, width(img))));
-  setVal(document.querySelectorAll("#t"), String(to_coi(sel.y, height(img))));
-  setVal(document.querySelectorAll("#r"), String(to_coi(sel.x2, width(img))));
-  setVal(document.querySelectorAll("#b"), String(to_coi(sel.y2, height(img))));
+  setVal(document.querySelectorAll("#l"), String(toCoi(sel.x, width(img))));
+  setVal(document.querySelectorAll("#t"), String(toCoi(sel.y, height(img))));
+  setVal(document.querySelectorAll("#r"), String(toCoi(sel.x2, width(img))));
+  setVal(document.querySelectorAll("#b"), String(toCoi(sel.y2, height(img))));
 }
 function jOnRelease() {
   setVal(document.querySelectorAll("#l,#t,#r,#b"), "");
@@ -63,10 +63,10 @@ jcrop(
         }
 
         this.animateTo([
-          from_coi(coi.l, width(img)),
-          from_coi(coi.t, height(img)),
-          from_coi(coi.r, width(img)),
-          from_coi(coi.b, height(img)),
+          fromCoi(coi.l, width(img)),
+          fromCoi(coi.t, height(img)),
+          fromCoi(coi.r, width(img)),
+          fromCoi(coi.b, height(img)),
         ]);
       }
     : undefined,

@@ -1,35 +1,35 @@
 // Consumer of themes/admin/default/js/plugins_installed_config.ts's own
 // real exports now (docs/PLAN.md P48 -- was ambient window-global
-// latching). jConfirm_alert_options/jConfirm_confirm_options now import
+// latching). jConfirmAlertOptions/jConfirmConfirmOptions now import
 // from common.ts too (its own P48 batch landed).
 import {
-  jConfirm_alert_options,
-  jConfirm_confirm_options,
-  jConfirm_confirm_with_content_options,
+  jConfirmAlertOptions,
+  jConfirmConfirmOptions,
+  jConfirmConfirmWithContentOptions,
 } from "./common";
 import {
-  activate_msg,
-  cancel_msg,
-  confirm_msg,
-  delete_plugin_msg,
-  deleted_plugin_msg,
-  incompatible_msg,
+  activateMsg,
+  cancelMsg,
+  confirmMsg,
+  deletePluginMsg,
+  deletedPluginMsg,
+  incompatibleMsg,
   isWebmaster,
-  nb_plugin,
-  not_webmaster,
-  nothing_found,
-  plugin_action_error,
-  plugin_added_str,
-  plugin_deactivated_str,
-  plugin_filter,
-  plugin_found,
-  plugin_restored_str,
-  pwg_token,
-  restore_plugin_msg,
-  show_details,
-  str_restore_def,
-  uninstall_plugin_msg,
-  x_plugins_found,
+  nbPlugin,
+  notWebmaster,
+  nothingFound,
+  pluginActionError,
+  pluginAddedStr,
+  pluginDeactivatedStr,
+  pluginFilter,
+  pluginFound,
+  pluginRestoredStr,
+  pwgToken,
+  restorePluginMsg,
+  showDetails,
+  strRestoreDef,
+  uninstallPluginMsg,
+  xPluginsFound,
 } from "./plugins_installed_config";
 import {
   ajax,
@@ -111,7 +111,7 @@ async function activatePlugin(id: string): Promise<void> {
       type: "POST",
       dataType: "json",
       json: { action: "activate" },
-      headers: { "X-CSRF-Token": pwg_token },
+      headers: { "X-CSRF-Token": pwgToken },
       url: "api/v1/plugins/" + id + "/actions/perform",
     });
 
@@ -121,7 +121,7 @@ async function activatePlugin(id: string): Promise<void> {
         document.querySelectorAll("#" + id + " .AddPluginSuccess"),
         "label span:first-child",
       ),
-      plugin_added_str,
+      pluginAddedStr,
     );
     css(
       document.querySelectorAll("#" + id + " .AddPluginSuccess"),
@@ -129,8 +129,8 @@ async function activatePlugin(id: string): Promise<void> {
       "flex",
     );
 
-    nb_plugin.active += 1;
-    nb_plugin.inactive -= 1;
+    nbPlugin.active += 1;
+    nbPlugin.inactive -= 1;
     actualizeFilter();
 
     setDisabled(document.querySelectorAll("#" + id + " .switch"), false);
@@ -143,7 +143,7 @@ async function activatePlugin(id: string): Promise<void> {
         document.querySelectorAll("#" + id + " .PluginActionError"),
         "label span:first-child",
       ),
-      plugin_action_error,
+      pluginActionError,
     );
     css(
       document.querySelectorAll("#" + id + " .PluginActionError"),
@@ -186,7 +186,7 @@ function applyActivation(row: Element): void {
  * short of confirming has to put it back.
  *
  * That revert hangs off `onClose`, not the cancel button's own action:
- * jConfirm_confirm_with_content_options sets `backgroundDismiss: true`, and
+ * jConfirmConfirmWithContentOptions sets `backgroundDismiss: true`, and
  * dismissing by backdrop click or Esc never runs the cancel action -- the
  * switch would have been left reading "active" for a plugin that was never
  * activated. `onClose` fires for every dismissal path, so the `confirmed`
@@ -196,11 +196,11 @@ function confirmIncompatibleActivation(toggleEl: Element, row: Element): void {
   let confirmed = false;
 
   confirm({
-    title: incompatible_msg,
-    content: activate_msg,
+    title: incompatibleMsg,
+    content: activateMsg,
     buttons: {
       confirm: {
-        text: confirm_msg,
+        text: confirmMsg,
         btnClass: "btn-red",
         action: function () {
           confirmed = true;
@@ -209,7 +209,7 @@ function confirmIncompatibleActivation(toggleEl: Element, row: Element): void {
         },
       },
       cancel: {
-        text: cancel_msg,
+        text: cancelMsg,
       },
     },
     onClose: function () {
@@ -217,7 +217,7 @@ function confirmIncompatibleActivation(toggleEl: Element, row: Element): void {
         setChecked(toggleEl, false);
       }
     },
-    ...jConfirm_confirm_with_content_options,
+    ...jConfirmConfirmWithContentOptions,
   });
 }
 
@@ -230,7 +230,7 @@ async function disactivatePlugin(id: string): Promise<void> {
       type: "POST",
       dataType: "json",
       json: { action: "deactivate" },
-      headers: { "X-CSRF-Token": pwg_token },
+      headers: { "X-CSRF-Token": pwgToken },
       url: "api/v1/plugins/" + id + "/actions/perform",
     });
 
@@ -240,7 +240,7 @@ async function disactivatePlugin(id: string): Promise<void> {
         document.querySelectorAll("#" + id + " .DeactivatePluginSuccess"),
         "label span:first-child",
       ),
-      plugin_deactivated_str,
+      pluginDeactivatedStr,
     );
     css(
       document.querySelectorAll("#" + id + " .DeactivatePluginSuccess"),
@@ -248,8 +248,8 @@ async function disactivatePlugin(id: string): Promise<void> {
       "flex",
     );
 
-    nb_plugin.inactive += 1;
-    nb_plugin.active -= 1;
+    nbPlugin.inactive += 1;
+    nbPlugin.active -= 1;
     actualizeFilter();
 
     setDisabled(document.querySelectorAll("#" + id + " .switch"), false);
@@ -265,7 +265,7 @@ async function disactivatePlugin(id: string): Promise<void> {
         document.querySelectorAll("#" + id + " .PluginActionError"),
         "label span:first-child",
       ),
-      plugin_action_error,
+      pluginActionError,
     );
     css(
       document.querySelectorAll("#" + id + " .PluginActionError"),
@@ -280,21 +280,21 @@ async function disactivatePlugin(id: string): Promise<void> {
 
 function deletePlugin(id: string, name: string): void {
   alert({
-    title: deleted_plugin_msg.replace("%s", name),
+    title: deletedPluginMsg.replace("%s", name),
     // eslint-disable-next-line @typescript-eslint/promise-function-async -- must return ajax()'s own AjaxThenable (jconfirm.ts's `isThenable()` checks for its real `.always()`); `async` would re-wrap it through `Promise.resolve()` and lose that method.
     content: function () {
       return ajax({
         type: "POST",
         dataType: "json",
         contentType: "application/json",
-        headers: { "X-CSRF-Token": pwg_token },
+        headers: { "X-CSRF-Token": pwgToken },
         url: "api/v1/plugins/" + id + "/actions/perform",
         data: JSON.stringify({ action: "delete" }),
         // 204 No Content -- pluginPerformAction's real response has no body.
         success: function (_data: unknown) {
           document.getElementById(id)?.remove();
-          nb_plugin.inactive -= 1;
-          nb_plugin.all -= 1;
+          nbPlugin.inactive -= 1;
+          nbPlugin.all -= 1;
           actualizeFilter();
         },
         error: function (e: AjaxResponse) {
@@ -309,7 +309,7 @@ function deletePlugin(id: string, name: string): void {
               document.querySelectorAll("#" + id + " .PluginActionError"),
               "label span:first-child",
             ),
-            plugin_action_error,
+            pluginActionError,
           );
           css(
             document.querySelectorAll("#" + id + " .PluginActionError"),
@@ -324,7 +324,7 @@ function deletePlugin(id: string, name: string): void {
         },
       });
     },
-    ...jConfirm_alert_options,
+    ...jConfirmAlertOptions,
   });
 }
 
@@ -335,7 +335,7 @@ async function restorePlugin(id: string): Promise<void> {
       type: "POST",
       dataType: "json",
       json: { action: "restore" },
-      headers: { "X-CSRF-Token": pwg_token },
+      headers: { "X-CSRF-Token": pwgToken },
       url: "api/v1/plugins/" + id + "/actions/perform",
     });
 
@@ -345,7 +345,7 @@ async function restorePlugin(id: string): Promise<void> {
         document.querySelectorAll("#" + id + " .RestorePluginSuccess"),
         "label span:first-child",
       ),
-      plugin_restored_str,
+      pluginRestoredStr,
     );
     css(
       document.querySelectorAll("#" + id + " .RestorePluginSuccess"),
@@ -365,7 +365,7 @@ async function restorePlugin(id: string): Promise<void> {
         document.querySelectorAll("#" + id + " .PluginActionError"),
         "label span:first-child",
       ),
-      plugin_action_error,
+      pluginActionError,
     );
     css(
       document.querySelectorAll("#" + id + " .PluginActionError"),
@@ -385,13 +385,13 @@ async function uninstallPlugin(id: string): Promise<void> {
       type: "POST",
       dataType: "json",
       json: { action: "uninstall" },
-      headers: { "X-CSRF-Token": pwg_token },
+      headers: { "X-CSRF-Token": pwgToken },
       url: "api/v1/plugins/" + id + "/actions/perform",
     });
 
     document.getElementById(id)?.remove();
-    nb_plugin.other -= 1;
-    nb_plugin.all -= 1;
+    nbPlugin.other -= 1;
+    nbPlugin.all -= 1;
     actualizeFilter();
   } catch (e) {
     stop(document.querySelectorAll("#" + id + " .pluginNotif"), false, true);
@@ -400,7 +400,7 @@ async function uninstallPlugin(id: string): Promise<void> {
         document.querySelectorAll("#" + id + " .PluginActionError"),
         "label span:first-child",
       ),
-      plugin_action_error,
+      pluginActionError,
     );
     css(
       document.querySelectorAll("#" + id + " .PluginActionError"),
@@ -435,23 +435,23 @@ ready(function () {
 
   on(document.querySelectorAll("#displayClassic"), "change", function () {
     setDisplayClassic();
-    set_view_selector("classic");
+    setViewSelector("classic");
   });
 
   on(document.querySelectorAll("#displayCompact"), "change", function () {
     setDisplayCompact();
-    set_view_selector("compact");
+    setViewSelector("compact");
   });
 
   on(document.querySelectorAll("#displayLine"), "change", function () {
     setDisplayLine();
-    set_view_selector("line");
+    setViewSelector("line");
   });
 
   /* Plugin Filters */
 
   // Set filter on Active on load
-  if (nb_plugin.active > 0) {
+  if (nbPlugin.active > 0) {
     document.querySelectorAll(".pluginMiniBox").forEach((el) => {
       if (!hasClass(el, "plugin-active")) {
         hide(el);
@@ -578,7 +578,7 @@ ready(function () {
             document.querySelectorAll("#" + id + " .PluginActionError"),
             "label span:first-child",
           ),
-          not_webmaster,
+          notWebmaster,
         );
         css(
           document.querySelectorAll("#" + id + " .PluginActionError"),
@@ -609,23 +609,23 @@ ready(function () {
     "click",
     function (this: Element) {
       const pluginContent = this.closest(".pluginContent")!;
-      const plugin_name = textOf(find(pluginContent, ".pluginName")).trim();
-      const plugin_id = pluginContent.parentElement!.id;
+      const pluginName = textOf(find(pluginContent, ".pluginName")).trim();
+      const pluginId = pluginContent.parentElement!.id;
       confirm({
-        title: delete_plugin_msg.replace("%s", plugin_name),
+        title: deletePluginMsg.replace("%s", pluginName),
         buttons: {
           confirm: {
-            text: confirm_msg,
+            text: confirmMsg,
             btnClass: "btn-red",
             action: function () {
-              deletePlugin(plugin_id, plugin_name);
+              deletePlugin(pluginId, pluginName);
             },
           },
           cancel: {
-            text: cancel_msg,
+            text: cancelMsg,
           },
         },
-        ...jConfirm_confirm_options,
+        ...jConfirmConfirmOptions,
       });
     },
   );
@@ -641,24 +641,24 @@ ready(function () {
     "click",
     function (this: Element) {
       const pluginContent = this.closest(".pluginContent")!;
-      const plugin_name = textOf(find(pluginContent, ".pluginName")).trim();
-      const plugin_id = pluginContent.parentElement!.id;
+      const pluginName = textOf(find(pluginContent, ".pluginName")).trim();
+      const pluginId = pluginContent.parentElement!.id;
       confirm({
-        title: restore_plugin_msg.replace("%s", plugin_name),
-        content: str_restore_def,
+        title: restorePluginMsg.replace("%s", pluginName),
+        content: strRestoreDef,
         buttons: {
           confirm: {
-            text: confirm_msg,
+            text: confirmMsg,
             btnClass: "btn-red",
             action: function () {
-              void restorePlugin(plugin_id);
+              void restorePlugin(pluginId);
             },
           },
           cancel: {
-            text: cancel_msg,
+            text: cancelMsg,
           },
         },
-        ...jConfirm_confirm_options,
+        ...jConfirmConfirmOptions,
       });
     },
   );
@@ -674,29 +674,29 @@ ready(function () {
     "click",
     function (this: Element) {
       const pluginContent = this.closest(".pluginContent")!;
-      const plugin_name = textOf(find(pluginContent, ".pluginName")).trim();
-      const plugin_id = pluginContent.parentElement!.id;
+      const pluginName = textOf(find(pluginContent, ".pluginName")).trim();
+      const pluginId = pluginContent.parentElement!.id;
       confirm({
-        title: uninstall_plugin_msg.replace("%s", plugin_name),
+        title: uninstallPluginMsg.replace("%s", pluginName),
         buttons: {
           confirm: {
-            text: confirm_msg,
+            text: confirmMsg,
             btnClass: "btn-red",
             action: function () {
-              void uninstallPlugin(plugin_id);
+              void uninstallPlugin(pluginId);
             },
           },
           cancel: {
-            text: cancel_msg,
+            text: cancelMsg,
           },
         },
-        ...jConfirm_confirm_options,
+        ...jConfirmConfirmOptions,
       });
     },
   );
 });
 
-function set_view_selector(view_type: string): void {
+function setViewSelector(view_type: string): void {
   void (async () => {
     try {
       await ajax({
@@ -716,39 +716,39 @@ function set_view_selector(view_type: string): void {
 function actualizeFilter(): void {
   html(
     find(document.querySelectorAll("label[for='seeAll']"), ".filter-badge"),
-    String(nb_plugin.all),
+    String(nbPlugin.all),
   );
   html(
     find(document.querySelectorAll("label[for='seeActive']"), ".filter-badge"),
-    String(nb_plugin.active),
+    String(nbPlugin.active),
   );
   html(
     find(
       document.querySelectorAll("label[for='seeInactive']"),
       ".filter-badge",
     ),
-    String(nb_plugin.inactive),
+    String(nbPlugin.inactive),
   );
   html(
     find(document.querySelectorAll("label[for='seeOther']"), ".filter-badge"),
-    String(nb_plugin.other),
+    String(nbPlugin.other),
   );
   show(document.querySelectorAll(".filterLabel"));
 
   document.querySelectorAll(".pluginMiniBox").forEach(() => {
-    if (nb_plugin.active === 0) {
+    if (nbPlugin.active === 0) {
       hide(document.querySelectorAll("label[for='seeActive']"));
       if (is(document.querySelectorAll("#seeActive"), ":checked")) {
         document.getElementById("seeAll")?.click();
       }
     }
-    if (nb_plugin.inactive === 0) {
+    if (nbPlugin.inactive === 0) {
       hide(document.querySelectorAll("label[for='seeInactive']"));
       if (is(document.querySelectorAll("#seeInactive"), ":checked")) {
         document.getElementById("seeAll")?.click();
       }
     }
-    if (nb_plugin.other === 0) {
+    if (nbPlugin.other === 0) {
       hide(document.querySelectorAll("label[for='seeOther']"));
       if (is(document.querySelectorAll("#seeOther"), ":checked")) {
         document.getElementById("seeAll")?.click();
@@ -762,35 +762,35 @@ function actualizeFilter(): void {
 ready(function () {
   html(
     find(document.querySelectorAll("label[for='seeActive']"), ".filter-badge"),
-    String(nb_plugin.active),
+    String(nbPlugin.active),
   );
   html(
     find(
       document.querySelectorAll("label[for='seeInactive']"),
       ".filter-badge",
     ),
-    String(nb_plugin.inactive),
+    String(nbPlugin.inactive),
   );
   html(
     find(document.querySelectorAll("label[for='seeOther']"), ".filter-badge"),
-    String(nb_plugin.other),
+    String(nbPlugin.other),
   );
   show(document.querySelectorAll(".filterLabel"));
 
   document.querySelectorAll(".pluginBox").forEach((box) => {
-    if (nb_plugin.active === 0) {
+    if (nbPlugin.active === 0) {
       hide(document.querySelectorAll("label[for='seeActive']"));
       if (is(document.querySelectorAll("#seeActive"), ":checked")) {
         document.getElementById("seeAll")?.click();
       }
     }
-    if (nb_plugin.inactive === 0) {
+    if (nbPlugin.inactive === 0) {
       hide(document.querySelectorAll("label[for='seeInactive']"));
       if (is(document.querySelectorAll("#seeInactive"), ":checked")) {
         document.getElementById("seeAll")?.click();
       }
     }
-    if (nb_plugin.other === 0) {
+    if (nbPlugin.other === 0) {
       hide(document.querySelectorAll("label[for='seeOther']"));
       if (is(document.querySelectorAll("#seeOther"), ":checked")) {
         document.getElementById("seeAll")?.click();
@@ -828,15 +828,15 @@ ready(function () {
       })) as string[];
 
       for (const pluginId of data) {
-        if (show_details)
+        if (showDetails)
           prepend(
             document.querySelectorAll("#" + pluginId + " .pluginName"),
-            '<a class="warning" title="' + incompatible_msg + '"></a>',
+            '<a class="warning" title="' + incompatibleMsg + '"></a>',
           );
         else
           prepend(
             document.querySelectorAll("#" + pluginId + " .pluginName"),
-            '<span class="warning" title="' + incompatible_msg + '"></span>',
+            '<span class="warning" title="' + incompatibleMsg + '"></span>',
           );
         // The `incompatible` class is what the activation guard in the
         // switch handler above keys off -- this marker is the whole
@@ -915,10 +915,10 @@ ready(function () {
           }
           searchNumber++;
 
-          nb_plugin.all = searchNumber;
-          nb_plugin.active = searchActive;
-          nb_plugin.inactive = searchInactive;
-          nb_plugin.other = searchOther;
+          nbPlugin.all = searchNumber;
+          nbPlugin.active = searchActive;
+          nbPlugin.inactive = searchInactive;
+          nbPlugin.other = searchOther;
         } else {
           const name = textOf(find(box, ".pluginName")).toLowerCase();
           show(document.querySelectorAll(".nbPluginsSearch"));
@@ -962,17 +962,17 @@ ready(function () {
               searchOther++;
             }
 
-            nb_plugin.all = searchNumber;
-            nb_plugin.active = searchActive;
-            nb_plugin.inactive = searchInactive;
-            nb_plugin.other = searchOther;
+            nbPlugin.all = searchNumber;
+            nbPlugin.active = searchActive;
+            nbPlugin.inactive = searchInactive;
+            nbPlugin.other = searchOther;
           } else {
             hide(box);
 
-            nb_plugin.all = searchNumber;
-            nb_plugin.active = searchActive;
-            nb_plugin.inactive = searchInactive;
-            nb_plugin.other = searchOther;
+            nbPlugin.all = searchNumber;
+            nbPlugin.active = searchActive;
+            nbPlugin.inactive = searchInactive;
+            nbPlugin.other = searchOther;
           }
         }
       });
@@ -980,22 +980,22 @@ ready(function () {
       actualizeFilter();
 
       if (searchNumber === 0) {
-        html(document.querySelectorAll(".nbPluginsSearch"), nothing_found);
+        html(document.querySelectorAll(".nbPluginsSearch"), nothingFound);
       } else if (searchNumber === 1) {
         html(
           document.querySelectorAll(".nbPluginsSearch"),
-          plugin_found.replace("%s", String(searchNumber)),
+          pluginFound.replace("%s", String(searchNumber)),
         );
       } else {
         html(
           document.querySelectorAll(".nbPluginsSearch"),
-          x_plugins_found.replace("%s", String(searchNumber)),
+          xPluginsFound.replace("%s", String(searchNumber)),
         );
       }
     },
   );
 
-  if (plugin_filter === "deactivated") {
+  if (pluginFilter === "deactivated") {
     // `.trigger("click")` on a real <label> -- same real-native-method
     // reasoning as the #seeActive call above, though a label's own
     // `.click()` additionally activates the checkbox/radio it's `for`,

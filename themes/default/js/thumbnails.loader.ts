@@ -2,21 +2,21 @@ import { pwg_getPageData } from "./page-data";
 import { AjaxQueue } from "./vendor/ajaxQueue";
 import { attr, data, hide, ready, show } from "./vendor/dom";
 
-let max_requests = pwg_getPageData<number | undefined>("max_requests");
-if (typeof max_requests === "undefined") max_requests = 3;
+let maxRequests = pwg_getPageData<number | undefined>("max_requests");
+if (typeof maxRequests === "undefined") maxRequests = 3;
 
-const thumbnails_queue = new AjaxQueue({
-  maxRequests: max_requests,
+const thumbnailsQueue = new AjaxQueue({
+  maxRequests,
   preventDoubleRequests: false,
 });
 
-function add_thumbnail_to_queue(img: Element, loop: number) {
+function addThumbnailToQueue(img: Element, loop: number) {
   const src = data(img, "src");
   if (typeof src !== "string") {
     return;
   }
 
-  thumbnails_queue.add({
+  thumbnailsQueue.add({
     type: "GET",
     url: src,
     data: { ajaxload: "true" },
@@ -29,9 +29,9 @@ function add_thumbnail_to_queue(img: Element, loop: number) {
       hide(document.querySelectorAll(".loader"));
     },
     error: function () {
-      if (loop < 3) add_thumbnail_to_queue(img, loop + 1); // Retry 3 times
-      const error_icon = pwg_getPageData<string>("error_icon");
-      if (typeof error_icon !== "undefined") attr(img, "src", error_icon);
+      if (loop < 3) addThumbnailToQueue(img, loop + 1); // Retry 3 times
+      const errorIcon = pwg_getPageData<string>("error_icon");
+      if (typeof errorIcon !== "undefined") attr(img, "src", errorIcon);
       hide(document.querySelectorAll(".loader"));
     },
   });
@@ -39,7 +39,7 @@ function add_thumbnail_to_queue(img: Element, loop: number) {
 
 function pwg_ajax_thumbnails_loader() {
   document.querySelectorAll("img[data-src]").forEach(function (img) {
-    add_thumbnail_to_queue(img, 0);
+    addThumbnailToQueue(img, 0);
   });
 }
 

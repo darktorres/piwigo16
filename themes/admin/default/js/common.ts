@@ -383,20 +383,20 @@ export class TemporaryState {
 // values (confirmed via a full grep, not assumed), so `themes/default/js/
 // vendor/jconfirm.ts`'s own port of `$.confirm`/`$.alert` (P49-B group 5)
 // hardcodes them instead of taking them as options at all.
-export const jConfirm_alert_options = {
+export const jConfirmAlertOptions = {
   icon: "icon-ok",
   titleClass: "jconfirmAlert",
   closeIcon: true,
   boxWidth: "20%",
 };
 
-export const jConfirm_confirm_options = {
+export const jConfirmConfirmOptions = {
   titleClass: "jconfirmDeleteConfirm",
   boxWidth: "40%",
   type: "red",
 };
 
-export const jConfirm_warning_options = {
+export const jConfirmWarningOptions = {
   icon: "icon-attention",
   titleClass: "jconfirmWarning jconfirmAlert",
   type: "orange",
@@ -404,7 +404,7 @@ export const jConfirm_warning_options = {
   boxWidth: "20%",
 };
 
-export const jConfirm_confirm_with_content_options = {
+export const jConfirmConfirmWithContentOptions = {
   boxWidth: "40%",
   type: "red",
 };
@@ -423,11 +423,11 @@ export function pwg_jconfirm_follow_href(
     alert_content?: string;
   } = {},
 ): void {
-  const button_href = attrOf(el, "href");
+  const buttonHref = attrOf(el, "href");
   const options =
     alert_content === ""
-      ? jConfirm_confirm_options
-      : jConfirm_confirm_with_content_options;
+      ? jConfirmConfirmOptions
+      : jConfirmConfirmWithContentOptions;
   on(el, "click", (e) => {
     e.preventDefault();
     confirm({
@@ -438,7 +438,7 @@ export function pwg_jconfirm_follow_href(
           text: alert_confirm,
           btnClass: "btn-red",
           action: function () {
-            window.location.href = button_href!;
+            window.location.href = buttonHref!;
           },
         },
         cancel: {
@@ -450,10 +450,10 @@ export function pwg_jconfirm_follow_href(
   });
 }
 
-// getRandomInt/sprintf/jConfirm_alert_options/jConfirm_confirm_options/
-// jConfirm_warning_options/TemporaryState are real exports now
+// getRandomInt/sprintf/jConfirmAlertOptions/jConfirmConfirmOptions/
+// jConfirmWarningOptions/TemporaryState are real exports now
 // (docs/PLAN.md P48) -- every real consumer imports them directly, no
 // more `window.` latching. array_delete had zero real callers anywhere
-// and was deleted outright. str_repeat/jConfirm_confirm_with_content_options
+// and was deleted outright. str_repeat/jConfirmConfirmWithContentOptions
 // stay module-private -- each has exactly one real caller, both inside
 // this same file (sprintf() and pwg_jconfirm_follow_href() above).

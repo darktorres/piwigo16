@@ -11,19 +11,19 @@ import {
   toggle,
 } from "../../../default/js/vendor/dom";
 
-const title_msg = pwg_getPageString(
+const titleMsg = pwg_getPageString(
   "Are you sure you want to restore to default settings?",
 );
-const confirm_msg = pwg_getPageString("Yes, I am sure");
-const cancel_msg = pwg_getPageString("No, I have changed my mind");
+const confirmMsg = pwg_getPageString("Yes, I am sure");
+const cancelMsg = pwg_getPageString("No, I have changed my mind");
 
 document
   .querySelectorAll(".restore-settings-button")
   .forEach(function (button) {
     pwg_jconfirm_follow_href(button, {
-      alert_title: title_msg,
-      alert_confirm: confirm_msg,
-      alert_cancel: cancel_msg,
+      alert_title: titleMsg,
+      alert_confirm: confirmMsg,
+      alert_cancel: cancelMsg,
     });
   });
 

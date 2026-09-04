@@ -8,7 +8,7 @@ import { off, on } from "./dom";
  *
  * Every real call site across this app -- confirmed by grepping every
  * `$.confirm`/`$.alert`/`jQuery.confirm`/`jQuery.alert` call and
- * `themes/admin/default/js/common.ts`'s own 4 `jConfirm_*_options`
+ * `themes/admin/default/js/common.ts`'s own 4 `jConfirm*Options`
  * presets -- sets `draggable: false`, `theme: "modern"`,
  * `animation: "zoom"`, `useBootstrap: false`, `animateFromElement: false`,
  * `typeAnimated: false`, `backgroundDismiss: true` and never deviates,

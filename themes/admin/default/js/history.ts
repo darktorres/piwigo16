@@ -56,13 +56,13 @@ let month: number | string = dateObj.getUTCMonth() + 1; //months from 1-12
 let day: number | string = dateObj.getUTCDate();
 const year = dateObj.getUTCFullYear();
 
-const filter_user_name = pwg_getPageData<string>("user_name");
+const filterUserName = pwg_getPageData<string>("user_name");
 
 if (month < 10) month = "0" + String(month);
 if (day < 10) day = "0" + String(day);
 
 const today = String(year) + "-" + String(month) + "-" + String(day);
-const current_param: HistoryFilterParams = {
+const currentParam: HistoryFilterParams = {
   start: "",
   end: today,
   types: {
@@ -78,35 +78,33 @@ const current_param: HistoryFilterParams = {
   pageNumber: 0, // fetch lines from line 0 to line 100
 };
 
-const str_dwld = pwg_getPageString("Downloaded");
-const str_most_visited = pwg_getPageString("Most visited");
-const str_best_rated = pwg_getPageString("Best rated");
-const str_list = pwg_getPageString("Random photo");
-const str_favorites = pwg_getPageString("Your favorites");
-const str_recent_cats = pwg_getPageString("Recent albums");
-const str_recent_pics = pwg_getPageString("Recent photos");
-const str_memories = pwg_getPageString("Memories");
-const str_no_longer_exist_photo = pwg_getPageString(
-  "This photo no longer exists",
-);
-const str_tags = pwg_getPageString("Tags");
-const unit_MB = pwg_getPageString("%s MB");
-const str_guest = pwg_getPageString("guest");
-const str_contact_form = pwg_getPageString("Contact Form");
-const str_edit_img = pwg_getPageString("Edit photo");
+const strDwld = pwg_getPageString("Downloaded");
+const strMostVisited = pwg_getPageString("Most visited");
+const strBestRated = pwg_getPageString("Best rated");
+const strList = pwg_getPageString("Random photo");
+const strFavorites = pwg_getPageString("Your favorites");
+const strRecentCats = pwg_getPageString("Recent albums");
+const strRecentPics = pwg_getPageString("Recent photos");
+const strMemories = pwg_getPageString("Memories");
+const strNoLongerExistPhoto = pwg_getPageString("This photo no longer exists");
+const strTags = pwg_getPageString("Tags");
+const unitMB = pwg_getPageString("%s MB");
+const strGuest = pwg_getPageString("guest");
+const strContactForm = pwg_getPageString("Contact Form");
+const strEditImg = pwg_getPageString("Edit photo");
 
-const str_search_details: Record<string, string> = {
+const strSearchDetails: Record<string, string> = {
   allwords: pwg_getPageString("Search for words"),
   datePosted: pwg_getPageString("Post date"),
-  tags: str_tags,
+  tags: strTags,
   cat: pwg_getPageString("Album"),
   author: pwg_getPageString("Author"),
   addedBy: pwg_getPageString("Added by"),
   filetypes: pwg_getPageString("File type"),
 };
-const str_and_more = pwg_getPageString("and %d more");
+const strAndMore = pwg_getPageString("and %d more");
 
-const guest_id = pwg_getPageData<number>("guest_id");
+const guestId = pwg_getPageData<number>("guest_id");
 
 /** `$("<div>").html(markup).text().trim()` -- strips tags down to plain text. */
 function stripHtml(markup: string): string {
@@ -119,13 +117,13 @@ ready(() => {
   activateLineOptions();
   checkFilters();
 
-  if (current_param.ip !== "") {
-    addIpFilter(current_param.ip);
+  if (currentParam.ip !== "") {
+    addIpFilter(currentParam.ip);
   }
-  if (current_param.image_id !== "") {
-    addImageFilter(current_param.image_id);
+  if (currentParam.image_id !== "") {
+    addImageFilter(currentParam.image_id);
   }
-  // `current_param.user_id` is now plain `number` (P51-D) -- it used to
+  // `currentParam.user_id` is now plain `number` (P51-D) -- it used to
   // be `string | number`, and every write site but this file's own
   // ready() check set it to the *string* "-1" (or a string user id),
   // while PHP's own `int $userId`/`exposedPageData()` send a real JSON
@@ -135,8 +133,8 @@ ready(() => {
   // on every page load. Narrowing every write site to a real number
   // (rather than continuing to paper over it with `Number(...)` here)
   // closes the bug class for good, not just this one comparison.
-  if (current_param.user_id !== -1) {
-    addUserFilter(filter_user_name);
+  if (currentParam.user_id !== -1) {
+    addUserFilter(filterUserName);
   }
 
   on(document.querySelectorAll(".elem-type-select"), "change", function () {
@@ -146,17 +144,17 @@ ready(() => {
     );
 
     if (selectedType === "visited") {
-      current_param.types = {
+      currentParam.types = {
         0: "none",
         1: "picture",
       };
     } else if (selectedType === "downloaded") {
-      current_param.types = {
+      currentParam.types = {
         0: "high",
         1: "other",
       };
     } else {
-      current_param.types = {
+      currentParam.types = {
         0: "none",
         1: "picture",
         2: "high",
@@ -164,7 +162,7 @@ ready(() => {
       };
     }
 
-    void fillHistoryResult(current_param);
+    void fillHistoryResult(currentParam);
   });
 
   // `vendor/datepicker.ts`'s own native port dispatches a real native
@@ -177,10 +175,10 @@ ready(() => {
       document.querySelectorAll('.date-start input[name="start"]'),
       "value",
     );
-    if (current_param.start !== value) {
-      current_param.start = value ?? "";
-      current_param.pageNumber = 0;
-      void fillHistoryResult(current_param);
+    if (currentParam.start !== value) {
+      currentParam.start = value ?? "";
+      currentParam.pageNumber = 0;
+      void fillHistoryResult(currentParam);
     }
   });
 
@@ -189,57 +187,57 @@ ready(() => {
       document.querySelectorAll('.date-end input[name="end"]'),
       "value",
     );
-    if (current_param.end !== newValue) {
-      current_param.end = newValue ?? "";
-      current_param.pageNumber = 0;
+    if (currentParam.end !== newValue) {
+      currentParam.end = newValue ?? "";
+      currentParam.pageNumber = 0;
       // The datepicker first fills the end-date with '1899-12-31',
       // which triggers an unnecessary ajax request
       // when you come to the history search page from a photo.
       if (newValue !== "1899-12-31") {
-        void fillHistoryResult(current_param);
+        void fillHistoryResult(currentParam);
       }
     }
   });
 
   on(document.querySelectorAll("#start_unset"), "click", function () {
     // Genuine pre-existing bug found only by strict typechecking:
-    // `!current_param.start == ""` compares a boolean to a string,
+    // `!currentParam.start == ""` compares a boolean to a string,
     // always false -- this guard never actually ran, so the "unset
     // start date" button silently did nothing. Real intent (matching
     // `.date-start`'s own change handler above): only act when a
     // start filter is actually set.
-    if (current_param.start !== "") {
-      current_param.pageNumber = 0;
-      current_param.start = "";
-      void fillHistoryResult(current_param);
+    if (currentParam.start !== "") {
+      currentParam.pageNumber = 0;
+      currentParam.start = "";
+      void fillHistoryResult(currentParam);
     }
   });
 
   on(document.querySelectorAll("#end_unset"), "click", function () {
     // Same class of bug as #start_unset above, plus a copy-paste typo:
-    // compared `current_param.start` (always false either way) instead
-    // of `current_param.end`, the field this handler actually resets
+    // compared `currentParam.start` (always false either way) instead
+    // of `currentParam.end`, the field this handler actually resets
     // -- `today` is `.end`'s own "unset" sentinel, matching how
     // `#start_unset` above uses `""` for `.start`.
-    if (current_param.end !== today) {
-      current_param.end = today;
-      current_param.pageNumber = 0;
-      void fillHistoryResult(current_param);
+    if (currentParam.end !== today) {
+      currentParam.end = today;
+      currentParam.pageNumber = 0;
+      void fillHistoryResult(currentParam);
     }
   });
 
   on(document.querySelectorAll(".pagination-arrow.rigth"), "click", () => {
-    current_param.pageNumber += 1;
-    void fillHistoryResult(current_param);
+    currentParam.pageNumber += 1;
+    void fillHistoryResult(currentParam);
   });
 
   on(document.querySelectorAll(".pagination-arrow.left"), "click", () => {
-    current_param.pageNumber -= 1;
-    void fillHistoryResult(current_param);
+    currentParam.pageNumber -= 1;
+    void fillHistoryResult(currentParam);
   });
 
   on(document.querySelectorAll(".refresh-results"), "click", function () {
-    void fillHistoryResult(current_param);
+    void fillHistoryResult(currentParam);
   });
 });
 
@@ -270,18 +268,18 @@ function activateLineOptions() {
 
   on(document, "mouseup", function (e: Event) {
     e.stopPropagation();
-    let option_is_clicked = false;
+    let optionIsClicked = false;
     document.querySelectorAll(".img-option span").forEach((span) => {
       if (
         span !== e.target &&
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real mouseup event's own target inside the document is always a Node (or null), never a bare EventTarget with no Node interface.
         span.contains(e.target as Node | null)
       ) {
-        option_is_clicked = true;
+        optionIsClicked = true;
       }
     });
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real false positive from closure mutation: option_is_clicked is set inside the forEach callback above, which the rule doesn't track (same class as dom.ts's stopped).
-    if (!option_is_clicked) {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- real false positive from closure mutation: optionIsClicked is set inside the forEach callback above, which the rule doesn't track (same class as dom.ts's stopped).
+    if (!optionIsClicked) {
       hide(find(document.querySelectorAll(".search-line"), ".img-option"));
     }
   });
@@ -296,7 +294,7 @@ function fillSummaryResult(summary: HistorySummary) {
   );
   html(
     find(document.querySelectorAll(".summary-weight"), ".summary-data"),
-    unit_MB.replace("%s", String(summary.filesizeMb)),
+    unitMB.replace("%s", String(summary.filesizeMb)),
   );
   html(
     find(document.querySelectorAll(".summary-users"), ".summary-data"),
@@ -317,10 +315,10 @@ function fillSummaryResult(summary: HistorySummary) {
       // Same string-vs-number sentinel mismatch as the ready() handler
       // above -- normalize via Number() rather than a strict string
       // compare.
-      if (current_param.user_id === -1) {
-        current_param.user_id = guest_id;
-        addGuestFilter(str_guest);
-        void fillHistoryResult(current_param);
+      if (currentParam.user_id === -1) {
+        currentParam.user_id = guestId;
+        addGuestFilter(strGuest);
+        void fillHistoryResult(currentParam);
       }
     });
     // `.hover(fn)` with a single argument binds the same handler to both
@@ -334,10 +332,10 @@ function fillSummaryResult(summary: HistorySummary) {
     hide(document.querySelectorAll(".summary-guests"));
   }
 
-  const user_dot_title = summary.members
+  const userDotTitle = summary.members
     .map((member) => member.username)
     .join(", ");
-  attr(document.querySelectorAll(".user-dot"), "title", user_dot_title);
+  attr(document.querySelectorAll(".user-dot"), "title", userDotTitle);
   addClass(document.querySelectorAll(".user-dot"), "tiptip");
 
   let tmp = 0;
@@ -346,22 +344,22 @@ function fillSummaryResult(summary: HistorySummary) {
   summary.members.forEach((member) => {
     if (tmp < 5) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
-      const new_user_item = document
+      const newUserItem = document
         .getElementById("-2")!
         .cloneNode(true) as Element;
 
-      removeClass(new_user_item, "hide");
-      html(find(new_user_item, ".user-item-name"), member.username ?? "");
-      setData(new_user_item, "user-id", member.userId);
+      removeClass(newUserItem, "hide");
+      html(find(newUserItem, ".user-item-name"), member.username ?? "");
+      setData(newUserItem, "user-id", member.userId);
 
-      on(new_user_item, "click", function (this: Element) {
-        if (current_param.user_id !== member.userId) {
-          current_param.user_id = dataId(this, "user-id");
+      on(newUserItem, "click", function (this: Element) {
+        if (currentParam.user_id !== member.userId) {
+          currentParam.user_id = dataId(this, "user-id");
           addUserFilter(member.username);
-          void fillHistoryResult(current_param);
+          void fillHistoryResult(currentParam);
         }
       });
-      document.querySelector(".user-list")?.appendChild(new_user_item);
+      document.querySelector(".user-list")?.appendChild(newUserItem);
       tmp++;
     } else {
       show(document.querySelectorAll(".user-dot"));
@@ -389,12 +387,12 @@ async function fillHistoryResult(
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const raw_data = (await ajax({
+    const rawData = (await ajax({
       url: "api/v1/history/search",
       data: ajaxParam,
     })) as HistorySearchResponse;
 
-    const { lines, maxPage, summary } = raw_data;
+    const { lines, maxPage, summary } = rawData;
 
     //clear lines before refill
 
@@ -473,12 +471,12 @@ function lineConstructor(line: HistoryLine, id: number) {
   );
 
   attr(find(newLine, ".user-name"), "id", String(line.userId));
-  if (current_param.user_id === -1) {
+  if (currentParam.user_id === -1) {
     on(find(newLine, ".user-name"), "click", function (this: Element) {
-      current_param.user_id = Number(attrOf(this, "id"));
-      current_param.pageNumber = 0;
+      currentParam.user_id = Number(attrOf(this, "id"));
+      currentParam.pageNumber = 0;
       addUserFilter(htmlOf(this) ?? "");
-      void fillHistoryResult(current_param);
+      void fillHistoryResult(currentParam);
     });
   }
 
@@ -488,25 +486,25 @@ function lineConstructor(line: HistoryLine, id: number) {
   );
   setData(find(newLine, ".user-ip")[0]!, "ip", line.ip);
   setupGeoIpHover(find(newLine, ".user-ip")[0]!);
-  if (current_param.ip === "") {
+  if (currentParam.ip === "") {
     on(find(newLine, ".user-ip"), "click", function (this: Element) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      current_param.ip = (data(this, "ip") as string | undefined) ?? "";
-      current_param.pageNumber = 0;
+      currentParam.ip = (data(this, "ip") as string | undefined) ?? "";
+      currentParam.pageNumber = 0;
       addIpFilter(htmlOf(this) ?? "");
-      void fillHistoryResult(current_param);
+      void fillHistoryResult(currentParam);
     });
   }
 
   setData(find(newLine, ".add-img-as-filter")[0]!, "img-id", line.imageId);
-  if (current_param.image_id === "") {
+  if (currentParam.image_id === "") {
     on(find(newLine, ".add-img-as-filter"), "click", function (this: Element) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       const imgId = data(this, "img-id") as string | number | null;
-      current_param.image_id = imgId;
-      current_param.pageNumber = 0;
+      currentParam.image_id = imgId;
+      currentParam.pageNumber = 0;
       addImageFilter(imgId);
-      void fillHistoryResult(current_param);
+      void fillHistoryResult(currentParam);
     });
   }
 
@@ -516,7 +514,7 @@ function lineConstructor(line: HistoryLine, id: number) {
     const editImg = find(newLine, ".edit-img");
     attr(editImg, "href", "#");
     addClass(editImg, "notClickable tiptip");
-    attr(editImg, "title", str_no_longer_exist_photo);
+    attr(editImg, "title", strNoLongerExistPhoto);
     on(editImg, "click", (e: Event) => {
       e.preventDefault();
     });
@@ -571,42 +569,42 @@ function lineConstructor(line: HistoryLine, id: number) {
         html(find(newLine, ".type-id"), "#" + String(line.tagIds[0]));
       }
 
-      let detail_str = "";
+      let detailStr = "";
       line.tagNames.forEach((tag) => {
-        detail_str += tag + ", ";
+        detailStr += tag + ", ";
       });
-      detail_str = detail_str.slice(0, -2);
+      detailStr = detailStr.slice(0, -2);
       const detailItem1 = find(newLine, ".detail-item-1");
-      html(detailItem1, detail_str);
-      attr(detailItem1, "title", detail_str);
+      html(detailItem1, detailStr);
+      attr(detailItem1, "title", detailStr);
       removeClass(detailItem1, "hide");
       addClass(detailItem1, "icon-tags");
       break;
     }
 
     case "most_visited":
-      html(find(newLine, ".type-name"), str_most_visited);
+      html(find(newLine, ".type-name"), strMostVisited);
       {
         const detailItem1 = find(newLine, ".detail-item-1");
-        html(detailItem1, str_most_visited);
+        html(detailItem1, strMostVisited);
         addClass(detailItem1, "icon-fire");
       }
       hide(find(newLine, ".type-id"));
       break;
     case "best_rated":
-      html(find(newLine, ".type-name"), str_best_rated);
+      html(find(newLine, ".type-name"), strBestRated);
       {
         const detailItem1 = find(newLine, ".detail-item-1");
-        html(detailItem1, str_best_rated);
+        html(detailItem1, strBestRated);
         addClass(detailItem1, "icon-star");
       }
       hide(find(newLine, ".type-id"));
       break;
     case "list":
-      html(find(newLine, ".type-name"), str_list);
+      html(find(newLine, ".type-name"), strList);
       {
         const detailItem1 = find(newLine, ".detail-item-1");
-        html(detailItem1, str_list);
+        html(detailItem1, strList);
         addClass(detailItem1, "icon-dice-solid");
       }
       hide(find(newLine, ".type-id"));
@@ -614,14 +612,14 @@ function lineConstructor(line: HistoryLine, id: number) {
     case "search": {
       // for debug
       // console.log('search n° : ', line.searchId, ' ', line.searchDetails);
-      const search_details = line.searchDetails;
+      const { searchDetails } = line;
       // Genuinely heterogeneous per-filter-type search-criteria data
       // (same nature as search_filters.ts's own global_params/
       // fullname_of_cat, deferred to P48) -- each key's real value
       // shape (string[], a nested object, or an opaque `filetypes`
       // blob) varies by which filter was active on the saved search
       // this line's `searchId` refers to.
-      const search_icons: Record<string, any> = {
+      const searchIcons: Record<string, any> = {
         allwords: "gallery-icon-search",
         tags: "gallery-icon-tag",
         datePosted: "gallery-icon-calendar-plus",
@@ -636,102 +634,102 @@ function lineConstructor(line: HistoryLine, id: number) {
         hide(find(newLine, ".type-id"));
       }
 
-      if (search_details === null) {
+      if (searchDetails === null) {
         hide(find(newLine, ".detail-item-1"));
         break;
       }
-      const active_search_details: Record<string, any> = {};
-      Object.entries(search_details).forEach(([key, value]) => {
+      const activeSearchDetails: Record<string, any> = {};
+      Object.entries(searchDetails).forEach(([key, value]) => {
         if (value !== null) {
-          active_search_details[key] = value;
+          activeSearchDetails[key] = value;
         }
       });
-      let count_item = 1;
-      const active_more: any[] = [];
-      const active_items = Object.keys(active_search_details);
-      if (active_items.length > 0) {
-        const hasAllwords = Boolean(active_search_details["allwords"]);
+      let countItem = 1;
+      const activeMore: any[] = [];
+      const activeItems = Object.keys(activeSearchDetails);
+      if (activeItems.length > 0) {
+        const hasAllwords = Boolean(activeSearchDetails["allwords"]);
         if (hasAllwords) {
-          const item = find(newLine, ".detail-item-" + String(count_item));
-          html(item, active_search_details["allwords"].join(" "));
-          addClass(item, String(search_icons["allwords"]) + " tiptip");
+          const item = find(newLine, ".detail-item-" + String(countItem));
+          html(item, activeSearchDetails["allwords"].join(" "));
+          addClass(item, String(searchIcons["allwords"]) + " tiptip");
           attr(
             item,
             "title",
             "<b>" +
-              str_search_details["allwords"]! +
+              strSearchDetails["allwords"]! +
               " :</b> " +
-              String(active_search_details["allwords"].join(" ")),
+              String(activeSearchDetails["allwords"].join(" ")),
           );
-          count_item++;
-          active_more.push("allwords");
+          countItem++;
+          activeMore.push("allwords");
         }
-        const hasCat = Boolean(active_search_details["cat"]);
+        const hasCat = Boolean(activeSearchDetails["cat"]);
         if (hasCat) {
-          const array_cat = Object.values(active_search_details["cat"]);
-          const cat = array_cat.join(" + ");
+          const arrayCat = Object.values(activeSearchDetails["cat"]);
+          const cat = arrayCat.join(" + ");
           const text = stripHtml(cat);
-          const item = find(newLine, ".detail-item-" + String(count_item));
+          const item = find(newLine, ".detail-item-" + String(countItem));
           html(item, cat);
-          addClass(item, String(search_icons["cat"]) + " tiptip");
+          addClass(item, String(searchIcons["cat"]) + " tiptip");
           attr(
             item,
             "title",
-            "<b>" + str_search_details["cat"]! + " :</b> " + text,
+            "<b>" + strSearchDetails["cat"]! + " :</b> " + text,
           );
           removeClass(item, "hide");
-          count_item++;
-          active_more.push("cat");
+          countItem++;
+          activeMore.push("cat");
         }
-        if (count_item <= 2 && Boolean(active_search_details["tags"])) {
-          const array_tags = Object.values(active_search_details["tags"]);
-          const item = find(newLine, ".detail-item-" + String(count_item));
-          html(item, array_tags.join(" + "));
-          addClass(item, String(search_icons["tags"]) + " tiptip");
+        if (countItem <= 2 && Boolean(activeSearchDetails["tags"])) {
+          const arrayTags = Object.values(activeSearchDetails["tags"]);
+          const item = find(newLine, ".detail-item-" + String(countItem));
+          html(item, arrayTags.join(" + "));
+          addClass(item, String(searchIcons["tags"]) + " tiptip");
           attr(
             item,
             "title",
             "<b>" +
-              str_search_details["tags"]! +
+              strSearchDetails["tags"]! +
               " :</b> " +
-              array_tags.join(" + "),
+              arrayTags.join(" + "),
           );
           removeClass(item, "hide");
-          count_item++;
-          active_more.push("tags");
+          countItem++;
+          activeMore.push("tags");
         }
-        if (count_item <= 2) {
-          const badge_to_add =
-            active_items.length === 1 ? 1 : count_item === 1 ? 2 : 1;
-          let badge_added = 0;
-          active_items.some((key) => {
+        if (countItem <= 2) {
+          const badgeToAdd =
+            activeItems.length === 1 ? 1 : countItem === 1 ? 2 : 1;
+          let badgeAdded = 0;
+          activeItems.some((key) => {
             if (key !== "allwords" && key !== "cat" && key !== "tags") {
               // Genuinely heterogeneous per-key value shape, same as
-              // active_search_details/search_icons above.
-              let array_key: any;
-              if (Array.isArray(active_search_details[key])) {
-                array_key = active_search_details[key];
-              } else if (typeof active_search_details[key] === "object") {
-                array_key = Object.values(active_search_details[key]);
+              // activeSearchDetails/searchIcons above.
+              let arrayKey: any;
+              if (Array.isArray(activeSearchDetails[key])) {
+                arrayKey = activeSearchDetails[key];
+              } else if (typeof activeSearchDetails[key] === "object") {
+                arrayKey = Object.values(activeSearchDetails[key]);
               } else {
-                array_key = [active_search_details[key]];
+                arrayKey = [activeSearchDetails[key]];
               }
-              const item = find(newLine, ".detail-item-" + String(count_item));
-              html(item, array_key.join(" + "));
-              addClass(item, String(search_icons[key]) + " tiptip");
+              const item = find(newLine, ".detail-item-" + String(countItem));
+              html(item, arrayKey.join(" + "));
+              addClass(item, String(searchIcons[key]) + " tiptip");
               attr(
                 item,
                 "title",
                 "<b>" +
-                  str_search_details[key]! +
+                  strSearchDetails[key]! +
                   " :</b> " +
-                  String(array_key.join(" + ")),
+                  String(arrayKey.join(" + ")),
               );
               removeClass(item, "hide");
-              count_item++;
-              badge_added++;
-              active_more.push(key);
-              if (badge_added === badge_to_add) {
+              countItem++;
+              badgeAdded++;
+              activeMore.push(key);
+              if (badgeAdded === badgeToAdd) {
                 return true;
               }
             }
@@ -741,60 +739,60 @@ function lineConstructor(line: HistoryLine, id: number) {
       } else {
         hide(find(newLine, ".detail-item-1"));
       }
-      if (active_items.length >= 3) {
-        let count_more = 0;
-        const search_details_str = Object.entries(active_search_details)
-          .filter(([key]) => !active_more.includes(key))
+      if (activeItems.length >= 3) {
+        let countMore = 0;
+        const searchDetailsStr = Object.entries(activeSearchDetails)
+          .filter(([key]) => !activeMore.includes(key))
           .map(([key, value]: [string, any]) => {
-            let value_str;
+            let valueStr;
             if (Array.isArray(value)) {
-              value_str = value.join(" + ");
+              valueStr = value.join(" + ");
             } else if (typeof value === "object") {
-              value_str = Object.entries(value)
+              valueStr = Object.entries(value)
                 .map(([, v]: [string, any]) => v)
                 .join(" + ");
             } else {
-              value_str = value;
+              valueStr = value;
             }
 
             if (key === "cat") {
-              value_str = stripHtml(value_str);
+              valueStr = stripHtml(valueStr);
             }
-            count_more++;
-            return `<b>${str_search_details[key]!}</b> : ${value_str}`;
+            countMore++;
+            return `<b>${strSearchDetails[key]!}</b> : ${valueStr}`;
           })
           .join(" <br />");
         const item3 = find(newLine, ".detail-item-3");
-        html(item3, sprintf(str_and_more, count_more));
+        html(item3, sprintf(strAndMore, countMore));
         addClass(item3, "icon-info-circled-1 tiptip");
-        attr(item3, "title", search_details_str);
+        attr(item3, "title", searchDetailsStr);
         removeClass(item3, "hide");
       }
       break;
     }
     case "favorites":
-      html(find(newLine, ".type-name"), str_favorites);
+      html(find(newLine, ".type-name"), strFavorites);
       {
         const detailItem1 = find(newLine, ".detail-item-1");
-        html(detailItem1, str_favorites);
+        html(detailItem1, strFavorites);
         addClass(detailItem1, "icon-heart");
       }
       hide(find(newLine, ".type-id"));
       break;
     case "recent_cats":
-      html(find(newLine, ".type-name"), str_recent_cats);
+      html(find(newLine, ".type-name"), strRecentCats);
       {
         const detailItem1 = find(newLine, ".detail-item-1");
-        html(detailItem1, str_recent_cats);
+        html(detailItem1, strRecentCats);
         addClass(detailItem1, "icon-clock");
       }
       hide(find(newLine, ".type-id"));
       break;
     case "recent_pics":
-      html(find(newLine, ".type-name"), str_recent_pics);
+      html(find(newLine, ".type-name"), strRecentPics);
       {
         const detailItem1 = find(newLine, ".detail-item-1");
-        html(detailItem1, str_recent_pics);
+        html(detailItem1, strRecentPics);
         addClass(detailItem1, "icon-clock");
       }
       hide(find(newLine, ".type-id"));
@@ -815,10 +813,10 @@ function lineConstructor(line: HistoryLine, id: number) {
       break;
     }
     case "memories-1-year-ago":
-      html(find(newLine, ".type-name"), str_memories);
+      html(find(newLine, ".type-name"), strMemories);
       {
         const detailItem1 = find(newLine, ".detail-item-1");
-        html(detailItem1, str_memories);
+        html(detailItem1, strMemories);
         addClass(detailItem1, "icon-clock");
       }
       break;
@@ -827,8 +825,8 @@ function lineConstructor(line: HistoryLine, id: number) {
         find(newLine, ".type-icon i"),
         "line-icon icon-mail-1 icon-yellow",
       );
-      html(find(newLine, ".type-name"), str_contact_form);
-      html(find(newLine, ".detail-item-1"), str_contact_form);
+      html(find(newLine, ".type-name"), strContactForm);
+      html(find(newLine, ".detail-item-1"), strContactForm);
       hide(find(newLine, ".type-id"));
       break;
     default:
@@ -858,7 +856,7 @@ function lineConstructor(line: HistoryLine, id: number) {
       attr(typeIcon, "href", line.imageEditUrl);
     }
     removeClass(typeIcon, "no-img");
-    attr(find(newLine, ".type-icon img"), "title", str_edit_img);
+    attr(find(newLine, ".type-icon img"), "title", strEditImg);
     addClass(find(newLine, ".type-icon img"), "tiptip");
     show(find(newLine, ".type-id"));
   } else {
@@ -879,7 +877,7 @@ function lineConstructor(line: HistoryLine, id: number) {
   removeClass(find(newLine, ".detail-item-1"), "hide");
   if (line.imageType === "high") {
     const detailItem1 = find(newLine, ".detail-item-1");
-    html(detailItem1, str_dwld);
+    html(detailItem1, strDwld);
     addClass(detailItem1, "icon-blue");
     removeClass(detailItem1, "detail-item-1");
     removeClass(detailItem1, "hide");
@@ -907,9 +905,9 @@ function addUserFilter(username: string | null) {
   on(find(newFilter, ".remove-filter"), "click", function (this: Element) {
     this.parentElement?.remove();
 
-    current_param.user_id = -1;
-    current_param.pageNumber = 0;
-    void fillHistoryResult(current_param);
+    currentParam.user_id = -1;
+    currentParam.pageNumber = 0;
+    void fillHistoryResult(currentParam);
     checkFilters();
     show(document.querySelectorAll(".summary-guests"));
   });
@@ -932,9 +930,9 @@ function addGuestFilter(username: string) {
   on(find(newFilter, ".remove-filter"), "click", function (this: Element) {
     this.parentElement?.remove();
 
-    current_param.user_id = -1;
-    current_param.pageNumber = 0;
-    void fillHistoryResult(current_param);
+    currentParam.user_id = -1;
+    currentParam.pageNumber = 0;
+    void fillHistoryResult(currentParam);
     checkFilters();
   });
 
@@ -956,9 +954,9 @@ function addIpFilter(ip: string) {
   on(find(newFilter, ".remove-filter"), "click", function (this: Element) {
     this.parentElement?.remove();
 
-    current_param.ip = "";
-    current_param.pageNumber = 0;
-    void fillHistoryResult(current_param);
+    currentParam.ip = "";
+    currentParam.pageNumber = 0;
+    void fillHistoryResult(currentParam);
     checkFilters();
   });
 
@@ -979,9 +977,9 @@ function addImageFilter(img_id: string | number | null) {
   on(find(newFilter, ".remove-filter"), "click", function (this: Element) {
     this.parentElement?.remove();
 
-    current_param.image_id = "";
-    current_param.pageNumber = 0;
-    void fillHistoryResult(current_param);
+    currentParam.image_id = "";
+    currentParam.pageNumber = 0;
+    void fillHistoryResult(currentParam);
     checkFilters();
   });
 
@@ -1016,13 +1014,13 @@ function updateArrows(actualPage: number, maxPage: number) {
 }
 
 function updatePagination(maxPage: number) {
-  updateArrows(current_param.pageNumber, maxPage);
+  updateArrows(currentParam.pageNumber, maxPage);
 
   empty(document.querySelectorAll(".pagination-item-container"));
   append(
     document.querySelectorAll(".pagination-item-container"),
     "<a class='actual'>" +
-      String(current_param.pageNumber + 1) +
+      String(currentParam.pageNumber + 1) +
       "/" +
       String(maxPage) +
       "</a>",

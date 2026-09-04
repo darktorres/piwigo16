@@ -65,13 +65,13 @@ interface ImageUpdateBody {
   [key: string]: unknown;
 }
 
-// `add_related_category` is declared here too, independently of the
+// `addRelatedCategory` is declared here too, independently of the
 // same-named functions in mcs.js/cat_modify.ts/photos_add_direct.js/
 // picture_modify.ts (docs/PLAN.md P46-B's own finding) -- safe since
 // these pages never co-load.
 const activePlugins = pwg_getPageData<string[]>("active_plugins");
 
-const all_related_categories_ids = pwg_getPageData<RelatedCategoryIds>(
+const allRelatedCategoriesIds = pwg_getPageData<RelatedCategoryIds>(
   "all_related_categories_ids",
 );
 
@@ -92,7 +92,7 @@ const categoriesCache = new CategoriesCache({
   rootUrl: pwg_getPageData<string>("root_url"),
 });
 
-const associated_categories = pwg_getPageData<Record<string, unknown>>(
+const associatedCategories = pwg_getPageData<Record<string, unknown>>(
   "associated_categories",
 );
 
@@ -106,7 +106,7 @@ categoriesCache.selectize(
     ) {
       if (this.name === "dissociate") {
         const filtered = categories.filter((cat) =>
-          Boolean(associated_categories[cat.id]),
+          Boolean(associatedCategories[cat.id]),
         );
 
         if (filtered.length > 0) {
@@ -132,26 +132,26 @@ ready(function () {
 
 colorbox(document.querySelectorAll("a.preview-box"), { photo: true });
 
-const str_are_you_sure = pwg_getPageString("Are you sure?");
-const str_yes = pwg_getPageString("Yes, delete");
-const str_no = pwg_getPageString("No, I have changed my mind");
-const str_orphan = pwg_getPageString("This photo is an orphan");
-const str_meta_warning = pwg_getPageString(
+const strAreYouSure = pwg_getPageString("Are you sure?");
+const strYes = pwg_getPageString("Yes, delete");
+const strNo = pwg_getPageString("No, I have changed my mind");
+const strOrphan = pwg_getPageString("This photo is an orphan");
+const strMetaWarning = pwg_getPageString(
   "Warning ! Unsaved changes will be lost",
 );
-const str_meta_yes = pwg_getPageString("I want to continue");
-const str_title_ab = pwg_getPageString("Associate to album");
+const strMetaYes = pwg_getPageString("I want to continue");
+const strTitleAb = pwg_getPageString("Associate to album");
 
-let b_current_picture_id: number | undefined;
+let bCurrentPictureId: number | undefined;
 // Check Skeleton extension for more details about extensibility
 const pluginValues: PluginValueEntry[] = [];
 
 ready(function () {
   // Detect unsaved changes on any inputs
-  let user_interacted = false;
+  let userInteracted = false;
 
   on(document.querySelectorAll("input, textarea, select"), "focus", () => {
-    user_interacted = true;
+    userInteracted = true;
   });
 
   on(
@@ -172,7 +172,7 @@ ready(function () {
         return;
       }
       const pictureId = dataId(fieldset, "image_id");
-      if (user_interacted) {
+      if (userInteracted) {
         showUnsavedLocalBadge(pictureId);
       }
     },
@@ -187,7 +187,7 @@ ready(function () {
     "change",
     function (this: Element) {
       const pictureId = dataId(this.closest("fieldset")!, "image_id");
-      if (user_interacted) {
+      if (userInteracted) {
         showUnsavedLocalBadge(pictureId);
       }
     },
@@ -199,7 +199,7 @@ ready(function () {
   // plain, non-selectized <select> on the page.
   on(document.querySelectorAll("select"), "change", function (this: Element) {
     const pictureId = dataId(this.closest("fieldset")!, "image_id");
-    if (user_interacted) {
+    if (userInteracted) {
       showUnsavedLocalBadge(pictureId);
     }
   });
@@ -210,7 +210,7 @@ ready(function () {
     ),
     "click",
     function (this: Element) {
-      user_interacted = true;
+      userInteracted = true;
       const fieldset = this.closest("fieldset")!;
       const pictureId = dataId(fieldset, "image_id");
       showUnsavedLocalBadge(pictureId);
@@ -225,14 +225,14 @@ ready(function () {
       const fieldset = this.closest("fieldset")!;
       const pictureId = dataId(fieldset, "image_id");
       confirm({
-        title: str_meta_warning,
+        title: strMetaWarning,
         titleClass: "metadataSyncConfirm",
         content: "",
         boxWidth: "30%",
         type: "red",
         buttons: {
           confirm: {
-            text: str_meta_yes,
+            text: strMetaYes,
             btnClass: "btn-red",
             action: async function () {
               disableLocalButton(pictureId);
@@ -260,7 +260,7 @@ ready(function () {
             },
           },
           cancel: {
-            text: str_no,
+            text: strNo,
           },
         },
       });
@@ -274,23 +274,23 @@ ready(function () {
       const fieldset = this.closest("fieldset")!;
       const pictureId = dataId(fieldset, "image_id");
       confirm({
-        title: str_are_you_sure,
+        title: strAreYouSure,
         titleClass: "groupDeleteConfirm",
         content: "",
         boxWidth: "30%",
         type: "red",
         buttons: {
           confirm: {
-            text: str_yes,
+            text: strYes,
             btnClass: "btn-red",
             action: async function () {
-              const image_ids = [pictureId];
+              const imageIds = [pictureId];
               try {
                 await ajax({
                   type: "POST",
                   url: "api/v1/images/actions/delete",
                   json: {
-                    imageIds: image_ids.map(Number),
+                    imageIds: imageIds.map(Number),
                   },
                   headers: {
                     "X-CSRF-Token": String(
@@ -324,7 +324,7 @@ ready(function () {
             },
           },
           cancel: {
-            text: str_no,
+            text: strNo,
           },
         },
       });
@@ -349,17 +349,17 @@ ready(function () {
   //Categories
   const ab = new AlbumSelector({
     selectedCategoriesIds: [],
-    selectAlbum: add_related_category,
+    selectAlbum: addRelatedCategory,
     adminMode: true,
-    modalTitle: str_title_ab,
+    modalTitle: strTitleAb,
   });
   on(
     document.querySelectorAll(".linked-albums.add-item"),
     "click",
     function (this: Element) {
       const fieldset = this.closest("fieldset")!;
-      b_current_picture_id = dataId(fieldset, "image_id");
-      ab.hardUpdate(all_related_categories_ids[b_current_picture_id] ?? []);
+      bCurrentPictureId = dataId(fieldset, "image_id");
+      ab.hardUpdate(allRelatedCategoriesIds[bCurrentPictureId] ?? []);
       ab.open();
     },
   );
@@ -370,14 +370,14 @@ ready(function () {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real click inside the document always targets an Element (or null), never a bare EventTarget with no Element interface.
       const eventTarget = e.target as Element;
       if (eventTarget.classList.contains("remove-item")) {
-        const cat_id = attrOf(eventTarget, "id")!;
+        const catId = attrOf(eventTarget, "id")!;
         const fieldset = eventTarget.closest("fieldset")!;
-        const picture_id = dataId(fieldset, "image_id");
+        const pictureId = dataId(fieldset, "image_id");
 
-        remove_selected_category(cat_id, picture_id);
-        check_related_categories(
-          picture_id,
-          all_related_categories_ids[picture_id] ?? [],
+        removeSelectedCategory(catId, pictureId);
+        checkRelatedCategories(
+          pictureId,
+          allRelatedCategoriesIds[pictureId] ?? [],
         );
       }
     },
@@ -388,26 +388,25 @@ ready(function () {
 // Stale comment corrected (P51-D): this has a real caller (the
 // ".related-categories-container" click handler above, on a real
 // ".remove-item" click) -- not dead code. Its own former
-// `.find(c => c.id == pictureId)?.cat_ids` logic never matched
-// all_related_categories_ids's real shape anyway (a plain
+// `.find(c => c.id == pictureId)?.catIds` logic never matched
+// allRelatedCategoriesIds's real shape anyway (a plain
 // picture-id-keyed object of category-id arrays, not an array of
-// `{id, cat_ids}` objects -- see RelatedCategoryIds above); already
+// `{id, catIds}` objects -- see RelatedCategoryIds above); already
 // fixed to the real access pattern used by every other function in
 // this file.
-function remove_selected_category(cat_id: string | number, picture_id: number) {
-  const cat_to_remove_index =
-    all_related_categories_ids[picture_id]!.indexOf(cat_id);
-  if (cat_to_remove_index > -1) {
-    all_related_categories_ids[picture_id]!.splice(cat_to_remove_index, 1);
-    showUnsavedLocalBadge(picture_id);
+function removeSelectedCategory(catId: string | number, pictureId: number) {
+  const catToRemoveIndex = allRelatedCategoriesIds[pictureId]!.indexOf(catId);
+  if (catToRemoveIndex > -1) {
+    allRelatedCategoriesIds[pictureId]!.splice(catToRemoveIndex, 1);
+    showUnsavedLocalBadge(pictureId);
   }
 
   document
-    .querySelector("#" + escapeId(picture_id) + " #" + escapeId(cat_id))
+    .querySelector("#" + escapeId(pictureId) + " #" + escapeId(catId))
     ?.parentElement?.remove();
 }
 
-function add_related_category({
+function addRelatedCategory({
   album,
   levelSeparator,
   getSelectedAlbum,
@@ -416,33 +415,31 @@ function add_related_category({
   if (!getSelectedAlbum().includes(album.id)) {
     append(
       document.querySelectorAll(
-        "#" +
-          escapeId(b_current_picture_id!) +
-          " .related-categories-container",
+        "#" + escapeId(bCurrentPictureId!) + " .related-categories-container",
       ),
       `<div class="breadcrumb-item album-listed">
         <span class="link-path">${albumBreadcrumbHtml(album.breadcrumb, levelSeparator)}</span><span id="${album.id}" class="icon-cancel-circled remove-item"></span>
       </div>`,
     );
 
-    showUnsavedLocalBadge(b_current_picture_id!);
+    showUnsavedLocalBadge(bCurrentPictureId!);
     addSelectedAlbum();
     // Genuine pre-existing bug found via strict typing: this assigned
-    // to a `.cat_ids` property that doesn't exist on the real value
-    // (a plain array, not `{cat_ids: [...]}` -- see RelatedCategoryIds
+    // to a `.catIds` property that doesn't exist on the real value
+    // (a plain array, not `{catIds: [...]}` -- see RelatedCategoryIds
     // above), silently attaching a stray property to the array object
     // while leaving its actual elements (what every other reader here
-    // -- remove_selected_category, the "reopen picker" hardUpdate call,
+    // -- removeSelectedCategory, the "reopen picker" hardUpdate call,
     // and saveChanges's own `.join(";")` -- indexes/mutates/reads
     // directly) untouched. Newly-added albums were therefore never
     // actually reflected in the tracked state: lost on save, and absent
     // when the picker was reopened. Fixed to a real replacement.
-    all_related_categories_ids[b_current_picture_id!] = getSelectedAlbum();
+    allRelatedCategoriesIds[bCurrentPictureId!] = getSelectedAlbum();
   }
-  check_related_categories(b_current_picture_id!, getSelectedAlbum());
+  checkRelatedCategories(bCurrentPictureId!, getSelectedAlbum());
 }
 
-function check_related_categories(
+function checkRelatedCategories(
   pictureId: number,
   selectedAlbum: (string | number)[],
 ) {
@@ -466,7 +463,7 @@ function check_related_categories(
     const orphan = document.querySelectorAll(
       "#" + escapeId(pictureId) + " .orphan-photo",
     );
-    html(orphan, str_orphan);
+    html(orphan, strOrphan);
     show(orphan);
   } else {
     removeClass(
@@ -527,7 +524,7 @@ function hideUnsavedLocalBadge(pictureId: number) {
   updateUnsavedGlobalBadge();
 }
 // on(window, 'beforeunload', function() {
-//   if (user_interacted) {
+//   if (userInteracted) {
 //     return "You have unsaved changes, are you sure you want to leave this page?";
 //   }
 // });
@@ -682,9 +679,9 @@ async function saveChanges(pictureId: number) {
         "#" + escapeId("picture-" + String(pictureId)) + " #author",
       ),
     );
-    const date_creation = val(
+    const dateCreation = val(
       document.querySelectorAll(
-        "#" + escapeId("picture-" + String(pictureId)) + " #date_creation",
+        "#" + escapeId("picture-" + String(pictureId)) + " #dateCreation",
       ),
     );
     const comment = val(
@@ -699,7 +696,7 @@ async function saveChanges(pictureId: number) {
       "#" + escapeId("picture-" + String(pictureId)) + " #level",
     )?.value;
     // Get Categories
-    const categories = all_related_categories_ids[pictureId]!;
+    const categories = allRelatedCategoriesIds[pictureId]!;
     const categoriesStr = categories.join(";");
     // Get Tags
     const tags: (string | number)[] = [];
@@ -711,10 +708,10 @@ async function saveChanges(pictureId: number) {
         tags.push(option.value);
       });
     const tagsStr = tags.join(",");
-    const ajax_data: ImageUpdateBody = {
+    const ajaxData: ImageUpdateBody = {
       name: name,
       author: author,
-      dateCreation: date_creation,
+      dateCreation: dateCreation,
       comment: comment,
       categories: categoriesStr,
       tagIds: tagsStr,
@@ -724,23 +721,23 @@ async function saveChanges(pictureId: number) {
     };
 
     for (const key_index of pluginValues.keys()) {
-      const pluginValues_selector = pluginValues[key_index]!.selector;
-      const pluginValues_value = val(
+      const pluginValuesSelector = pluginValues[key_index]!.selector;
+      const pluginValuesValue = val(
         document.querySelectorAll(
           "#" +
             escapeId("picture-" + String(pictureId)) +
             " " +
-            pluginValues_selector,
+            pluginValuesSelector,
         ),
       );
-      ajax_data[pluginValues[key_index]!.api_key] = pluginValues_value;
+      ajaxData[pluginValues[key_index]!.api_key] = pluginValuesValue;
     }
 
     try {
       await ajax({
         url: "api/v1/images/" + String(pictureId),
         method: "PATCH",
-        json: ajax_data,
+        json: ajaxData,
         headers: {
           "X-CSRF-Token": String(
             val(document.querySelectorAll("input[name=pwg_token]")),
@@ -827,7 +824,7 @@ async function updateBlock(pictureId: number): Promise<void> {
     );
     setVal(
       document.querySelectorAll(
-        "#" + escapeId("picture-" + String(pictureId)) + " #date_creation",
+        "#" + escapeId("picture-" + String(pictureId)) + " #dateCreation",
       ),
       response.dateCreation ?? "",
     ); //TODO

@@ -22,20 +22,20 @@ miniPreviewImages.forEach((image) => {
         input.value = image.id;
       });
 
-    const preview_light_path =
+    const previewLightPath =
       "themes/standard_pages/skins/light-" + image.id + ".jpg";
-    const preview_dark_path =
+    const previewDarkPath =
       "themes/standard_pages/skins/dark-" + image.id + ".jpg";
 
     document
       .querySelectorAll(".std_pgs_selected_preview img#preview-light")
       .forEach((preview) => {
-        preview.setAttribute("src", preview_light_path);
+        preview.setAttribute("src", previewLightPath);
       });
     document
       .querySelectorAll(".std_pgs_selected_preview img#preview-dark")
       .forEach((preview) => {
-        preview.setAttribute("src", preview_dark_path);
+        preview.setAttribute("src", previewDarkPath);
       });
   });
 });

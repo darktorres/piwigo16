@@ -21,7 +21,7 @@ ready(() => {
   document
     .getElementById("checkAutomaticCorrectionsLink")
     ?.addEventListener("click", (event) => {
-      DeselectAll(document.querySelector<HTMLFormElement>("#c13y")!);
+      deselectAll(document.querySelector<HTMLFormElement>("#c13y")!);
       const ids = pwg_getPageData<string[] | null>("c13y_do_check_ids") ?? [];
       ids.forEach(function (id: string) {
         document.querySelector<HTMLInputElement>(
@@ -43,7 +43,7 @@ function setAllC13yCheckboxes(checked: boolean): void {
     .forEach((box) => (box.checked = checked));
 }
 
-function DeselectAll(formulaire: HTMLFormElement) {
+function deselectAll(formulaire: HTMLFormElement) {
   for (const elt of formulaire.elements) {
     if (elt instanceof HTMLInputElement && elt.type === "checkbox") {
       elt.checked = false;

@@ -1,9 +1,9 @@
 import {
-  str_gb,
-  str_mb,
-  storage_details,
-  translate_files,
-  translate_type,
+  strGb,
+  strMb,
+  storageDetails,
+  translateFiles,
+  translateType,
 } from "./intro";
 import {
   css,
@@ -31,32 +31,32 @@ function setHtml(selector: string, value: string): void {
 }
 
 ready(function () {
-  Object.entries(storage_details).forEach(([type, rawInfos]) => {
+  Object.entries(storageDetails).forEach(([type, rawInfos]) => {
     // `Object.entries()` infers `StorageDetails`'s index-signature value
     // type directly, so `rawInfos` needs no cast. It used to: intro.ts
     // imported `pwg_getPageData` through a `?dup` specifier, which
-    // resolved to `any`, so `storage_details` was `any` and the generic
+    // resolved to `any`, so `storageDetails` was `any` and the generic
     // overload had nothing to infer from -- a cast two files away from
     // the actual cause.
     const infos = rawInfos;
     // Determine if we use MB or GB and show it correctly
     const size = infos.total.filesize;
-    const str_size_type_string = size > 1048576 ? str_gb : str_mb;
-    const size_nb =
+    const strSizeTypeString = size > 1048576 ? strGb : strMb;
+    const sizeNb =
       size > 1048576 ? (size / 1048576).toFixed(2) : (size / 1024).toFixed(0);
-    const str_size = str_size_type_string.replace("%s", size_nb);
+    const strSize = strSizeTypeString.replace("%s", sizeNb);
 
     // Display head of Tooltip
     setHtml(
       "#storage-title-" + type,
-      "<b>" + (translate_type[type] ?? "") + "</b>",
+      "<b>" + (translateType[type] ?? "") + "</b>",
     );
-    setHtml("#storage-size-" + type, "<b>" + str_size + "</b>");
+    setHtml("#storage-size-" + type, "<b>" + strSize + "</b>");
     setHtml(
       "#storage-files-" + type,
       "<p>" +
         (infos.total.nb_files
-          ? translate_files.replace("%d", String(infos.total.nb_files))
+          ? translateFiles.replace("%d", String(infos.total.nb_files))
           : "~") +
         "</p>",
     );
@@ -67,22 +67,22 @@ ready(function () {
       Object.entries(infos.details).forEach(
         ([ext, data]: [string, { filesize: number; nb_files: number }]) => {
           // Determinate if we use MB or GB and show it correctly (duplicate code from total size for scaling code)
-          const detail_size = data.filesize;
-          let detail_str_size_type_string;
-          let detail_size_nb: number | string;
-          if (detail_size > 1048576) {
-            detail_str_size_type_string = str_gb;
-            detail_size_nb = (detail_size / 1048576).toFixed(2);
+          const detailSize = data.filesize;
+          let detailStrSizeTypeString;
+          let detailSizeNb: number | string;
+          if (detailSize > 1048576) {
+            detailStrSizeTypeString = strGb;
+            detailSizeNb = (detailSize / 1048576).toFixed(2);
           } else {
-            detail_str_size_type_string = str_mb;
-            detail_size_nb =
-              Number((detail_size / 1024).toFixed(0)) < 1
-                ? (detail_size / 1024).toFixed(2)
-                : (detail_size / 1024).toFixed(0);
+            detailStrSizeTypeString = strMb;
+            detailSizeNb =
+              Number((detailSize / 1024).toFixed(0)) < 1
+                ? (detailSize / 1024).toFixed(2)
+                : (detailSize / 1024).toFixed(0);
           }
-          const detail_str_size = detail_str_size_type_string.replace(
+          const detailStrSize = detailStrSizeTypeString.replace(
             "%s",
-            detail_size_nb,
+            detailSizeNb,
           );
           const markup =
             '<span class="tooltip-details-cont">' +
@@ -90,10 +90,10 @@ ready(function () {
             ext +
             "</b></span>" +
             '<span class="tooltip-details-size"><b>' +
-            detail_str_size +
+            detailStrSize +
             "</b></span>" +
             '<span class="tooltip-details-files">' +
-            translate_files.replace("%d", String(data.nb_files)) +
+            translateFiles.replace("%d", String(data.nb_files)) +
             "</span>" +
             "</span>";
           document
@@ -109,14 +109,14 @@ ready(function () {
           const swatch = document.querySelector(
             '.storage-chart span[data-type="storage-' + type + '"]',
           );
-          const ext_bg_color =
+          const extBgColor =
             swatch === null ? "" : cssValue(swatch, "background-color");
           css(
             document.querySelectorAll(
               "#storage-" + type + " .tooltip-details-ext b",
             ),
             "color",
-            ext_bg_color,
+            extBgColor,
           );
         },
       );
@@ -214,29 +214,29 @@ function resizeStorageTooltips(resize = false) {
 
       let left = position(segment).left + width(segment) / 2 - tooltipWidth / 2;
       // Move tooltip if he create horizontal scrollbar
-      const storage_width =
+      const storageWidth =
         chartTitle === null ? Number.NaN : innerWidth(chartTitle);
-      if (left + tooltipWidth > storage_width) {
-        const diff = left + tooltipWidth - storage_width;
+      if (left + tooltipWidth > storageWidth) {
+        const diff = left + tooltipWidth - storageWidth;
         left = left - diff;
         css(arrows, "left", "calc(50% + " + String(diff) + "px)");
       }
       css(tooltips, "left", String(left) + "px");
       // Move tooltip if he create vertical scrollbar
       const chart = document.querySelector<HTMLElement>(".storage-chart")!;
-      const str_chart_pos = offset(chart).top;
-      const str_chart_height = innerHeight(chart);
-      const tooltip_height =
+      const strChartPos = offset(chart).top;
+      const strChartHeight = innerHeight(chart);
+      const tooltipHeight =
         (firstTooltip === undefined ? Number.NaN : innerHeight(firstTooltip)) +
-        str_chart_height;
-      const windows_height = windowHeight();
+        strChartHeight;
+      const windowsHeight = windowHeight();
 
       if (resize) {
-        if (str_chart_pos + tooltip_height > windows_height) {
+        if (strChartPos + tooltipHeight > windowsHeight) {
           css(
             tooltips,
             "bottom",
-            "calc(100% + " + String(str_chart_height) + "px)",
+            "calc(100% + " + String(strChartHeight) + "px)",
           );
           arrows.forEach((arrow) => {
             arrow.classList.add("bottom");
@@ -248,11 +248,11 @@ function resizeStorageTooltips(resize = false) {
           });
         }
       } else {
-        if (str_chart_pos + tooltip_height > windows_height) {
+        if (strChartPos + tooltipHeight > windowsHeight) {
           css(
             tooltips,
             "bottom",
-            "calc(100% + " + String(str_chart_height) + "px)",
+            "calc(100% + " + String(strChartHeight) + "px)",
           );
           arrows.forEach((arrow) => {
             arrow.classList.add("bottom");
@@ -286,15 +286,15 @@ function resizeActivityTooltips() {
         return;
       }
 
-      const max_width = (main === null ? Number.NaN : innerWidth(main)) - 20;
+      const maxWidth = (main === null ? Number.NaN : innerWidth(main)) - 20;
       const left =
         position(container).left +
         innerWidth(container) / 2 +
         innerWidth(tooltip) / 2;
-      if (left > max_width) {
+      if (left > maxWidth) {
         const arrows =
           container.querySelectorAll<HTMLElement>(".tooltip-arrow");
-        const diff = max_width - left;
+        const diff = maxWidth - left;
 
         css(tooltip, "left", "calc(50% + " + String(diff) + "px)");
         css(arrows, "left", "calc(50% - " + String(diff) + "px)");

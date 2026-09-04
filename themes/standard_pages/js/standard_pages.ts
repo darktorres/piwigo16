@@ -18,17 +18,17 @@ function setHtmlAll(targets: ArrayLike<Element>, value: string): void {
 
 const modeCookie = getCookie("mode");
 if ("" !== modeCookie) {
-  toggle_mode(modeCookie);
+  toggleMode(modeCookie);
 } else {
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  toggle_mode(prefersDark ? "dark" : "light");
+  toggleMode(prefersDark ? "dark" : "light");
 }
 
 window
   .matchMedia("(prefers-color-scheme: dark)")
   .addEventListener("change", (event) => {
     const newMode = event.matches ? "dark" : "light";
-    toggle_mode(newMode);
+    toggleMode(newMode);
   });
 
 ready(function () {
@@ -97,7 +97,7 @@ ready(function () {
     });
 });
 
-function toggle_mode(mode: string) {
+function toggleMode(mode: string) {
   setCookie("mode", mode, 30);
   const logo = document.querySelector<HTMLImageElement>("#piwigo-logo");
   const lightToggle = document.getElementById("toggle_mode_light");
@@ -204,13 +204,13 @@ document.querySelectorAll("#other-languages a").forEach((link) => {
 document
   .getElementById("toggle_mode_light")
   ?.addEventListener("click", function () {
-    toggle_mode("dark");
+    toggleMode("dark");
   });
 
 document
   .getElementById("toggle_mode_dark")
   ?.addEventListener("click", function () {
-    toggle_mode("light");
+    toggleMode("light");
   });
 
 const otherLanguages = document.getElementById("other-languages");

@@ -83,7 +83,7 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
     on(popup.querySelectorAll("form"), "submit", function (event: Event): void {
       event.preventDefault();
 
-      const parent_id = val(albumParent);
+      const parentId = val(albumParent);
       const nameInput = popup.querySelector<HTMLInputElement>(
         "[name=category_name]",
       )!;
@@ -118,7 +118,7 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
             url: "api/v1/categories",
             type: "POST",
             json: {
-              parentId: Number(parent_id),
+              parentId: Number(parentId),
               name: name,
             },
             headers: {
@@ -148,14 +148,14 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
             AlbumOptionData
           >(albumParent)!;
 
-          // Was `parent_id != 0` -- a loose comparison TS accepted when
+          // Was `parentId != 0` -- a loose comparison TS accepted when
           // .val() was jQuery's own loosely-typed return value. Our val()
           // is concretely `string | undefined`, over which TS correctly
           // refuses `!= number` as unrelated types; Number() makes the
           // exact same coercion explicit instead (Number(undefined) is
           // NaN, so the "no value selected" case still takes this branch).
-          if (Number(parent_id) !== 0) {
-            const parent = parentSelectize.options[String(parent_id)]!;
+          if (Number(parentId) !== 0) {
+            const parent = parentSelectize.options[String(parentId)]!;
             newAlbum.fullname = parent.fullname + " / " + newAlbum.fullname;
             newAlbum.global_rank = String(parent.global_rank) + ".1";
             newAlbum.pos = (parent.pos ?? 0) + 1;

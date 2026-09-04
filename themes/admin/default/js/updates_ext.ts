@@ -1,5 +1,5 @@
 import type { operations } from "../../../../openapi/client/schema";
-import { jConfirm_confirm_options } from "./common";
+import { jConfirmConfirmOptions } from "./common";
 
 import {
   pwg_getPageData,
@@ -29,7 +29,7 @@ import {
 // from updates_ext.latte's own onClick= attributes -- window.X = X
 // exposure at the bottom of this file (the javascript:/onclick=
 // pattern, docs/PLAN.md P46-C's own finding).
-const pwg_token = pwg_getPageData<string>("csrf_token");
+const pwgToken = pwg_getPageData<string>("csrf_token");
 const extType = pwg_getPageData<string>("ext_type");
 const errorHead = pwg_getPageString("ERROR");
 const successHead = pwg_getPageString("Update Complete");
@@ -40,10 +40,10 @@ let todo = 0;
 const queuedManager = new AjaxQueue({
   maxRequests: 1,
   beforeSend: function () {
-    autoupdate_bar_toggle(1);
+    autoupdateBarToggle(1);
   },
   complete: function () {
-    autoupdate_bar_toggle(-1);
+    autoupdateBarToggle(-1);
   },
 });
 
@@ -72,7 +72,7 @@ async function resetIgnored(): Promise<void> {
       type: "POST",
       url: "api/v1/extensions/updates/ignore",
       json: { reset: true, type: extType },
-      headers: { "X-CSRF-Token": pwg_token },
+      headers: { "X-CSRF-Token": pwgToken },
       dataType: "json",
     });
 
@@ -125,7 +125,7 @@ function updateExtension(type: string, id: string, revision: string) {
     type: "POST",
     dataType: "json",
     contentType: "application/json",
-    headers: { "X-CSRF-Token": pwg_token },
+    headers: { "X-CSRF-Token": pwgToken },
     url: "api/v1/extensions/" + type + "/" + id + "/actions/update",
     data: JSON.stringify({ revision: revision }),
     success: function (
@@ -207,7 +207,7 @@ function ignoreExtension(type: string, id: string) {
     type: "POST",
     url: "api/v1/extensions/updates/ignore",
     contentType: "application/json",
-    headers: { "X-CSRF-Token": pwg_token },
+    headers: { "X-CSRF-Token": pwgToken },
     dataType: "json",
     data: JSON.stringify({ type: type, id: id }),
     // 204 No Content -- extensionsIgnoreUpdate's real response has no body.
@@ -224,7 +224,7 @@ function ignoreExtension(type: string, id: string) {
   });
 }
 
-function autoupdate_bar_toggle(i: number) {
+function autoupdateBarToggle(i: number) {
   todo = todo + i;
   if ((i === 1 && todo === 1) || (i === -1 && todo === 0))
     toggle(document.querySelectorAll(".autoupdate_bar"));
@@ -232,27 +232,27 @@ function autoupdate_bar_toggle(i: number) {
 
 checkFieldsets();
 
-const confirm_msg = pwg_getPageString("Yes, I am sure");
-const cancel_msg = pwg_getPageString("No, I have changed my mind");
+const confirmMsg = pwg_getPageString("Yes, I am sure");
+const cancelMsg = pwg_getPageString("No, I have changed my mind");
 on(document.querySelectorAll("#update_all"), "click", function (): void {
-  const title_msg = pwg_getPageString(
+  const titleMsg = pwg_getPageString(
     "Are you sure you want to update all extensions?",
   );
   confirm({
-    title: title_msg,
+    title: titleMsg,
     buttons: {
       confirm: {
-        text: confirm_msg,
+        text: confirmMsg,
         btnClass: "btn-red",
         action: function () {
           updateAll();
         },
       },
       cancel: {
-        text: cancel_msg,
+        text: cancelMsg,
       },
     },
-    ...jConfirm_confirm_options,
+    ...jConfirmConfirmOptions,
   });
 });
 

@@ -105,17 +105,17 @@ const sliders = {
 const filterCategorySelected = pwg_getPageData<number | null>(
   "filter_category_selected",
 );
-const selected_filter_cat_ids =
+const selectedFilterCatIds =
   filterCategorySelected !== null && filterCategorySelected !== 0
     ? [String(filterCategorySelected)]
     : [];
 
-const str_select_album = pwg_getPageString("Select at least one album");
-const str_select_tag = pwg_getPageString("Select at least one tag");
+const strSelectAlbum = pwg_getPageString("Select at least one album");
+const strSelectTag = pwg_getPageString("Select at least one tag");
 let errorFilters = "";
 
 /* ********** Filters*/
-function filter_enable(filter: string) {
+function filterEnable(filter: string) {
   /* show the filter*/
   show(document.querySelectorAll("#" + filter));
 
@@ -139,7 +139,7 @@ function filter_enable(filter: string) {
   removeClass(document.querySelectorAll(".addFilter-button"), "highlight");
 }
 
-function filter_disable(filter: string) {
+function filterDisable(filter: string) {
   /* hide the filter line */
   hide(document.querySelectorAll("#" + filter));
 
@@ -166,14 +166,14 @@ function filter_disable(filter: string) {
   }
 }
 // Album Selector
-function select_album_filter({
+function selectAlbumFilter({
   album,
   newSelectedAlbum,
   getSelectedAlbum,
 }: AlbumSelectorCallbackArgs) {
   html(document.querySelectorAll("#selectedAlbumNameFilter"), album.name!);
   newSelectedAlbum();
-  hide_filters_error(str_select_album);
+  hideFiltersError(strSelectAlbum);
   setVal(
     document.querySelectorAll("#filterCategoryValue"),
     String(Number(getSelectedAlbum()[0]!)),
@@ -183,13 +183,13 @@ function select_album_filter({
 }
 
 // Tags and Albums validation
-function show_filters_error(message: string) {
+function showFiltersError(message: string) {
   errorFilters = message;
   html(document.querySelectorAll("#errorFilter"), `<p>${message}</p>`);
   fadeIn(document.querySelectorAll("#errorFilter"));
 }
 
-function hide_filters_error(message: string) {
+function hideFiltersError(message: string) {
   if (message === errorFilters) {
     hide(document.querySelectorAll("#errorFilter"));
   }
@@ -206,9 +206,9 @@ ready(function () {
     slideToggle(document.querySelectorAll(".addFilter-dropdown"));
   });
 
-  const ab_filter = new AlbumSelector({
-    selectedCategoriesIds: selected_filter_cat_ids,
-    selectAlbum: select_album_filter,
+  const abFilter = new AlbumSelector({
+    selectedCategoriesIds: selectedFilterCatIds,
+    selectAlbum: selectAlbumFilter,
     adminMode: true,
   });
 
@@ -216,7 +216,7 @@ ready(function () {
     document.querySelectorAll("#selectAlbumFilter, #selectedAlbumEditFilter"),
     "click",
     function () {
-      ab_filter.open();
+      abFilter.open();
     },
   );
 
@@ -231,7 +231,7 @@ ready(function () {
       // every real .removeFilter is inside exactly one <li> with a real id.
       const li = this.parentElement!;
       const filter = li.id;
-      filter_disable(filter);
+      filterDisable(filter);
 
       return false;
     },
@@ -242,7 +242,7 @@ ready(function () {
     "click",
     function (this: Element): void {
       const filter = attrOf(this, "data-value")!;
-      filter_enable(filter);
+      filterEnable(filter);
     },
   );
 
@@ -252,7 +252,7 @@ ready(function () {
     function (event: Event): boolean {
       event.preventDefault();
       document.querySelectorAll("#filterList li").forEach((el) => {
-        filter_disable(el.id);
+        filterDisable(el.id);
       });
       return false;
     },
@@ -292,7 +292,7 @@ ready(function () {
     function (this: Element): void {
       const tagValue = val([this]);
       if (tagValue !== undefined && tagValue !== "") {
-        hide_filters_error(str_select_tag);
+        hideFiltersError(strSelectTag);
       }
     },
   );
@@ -309,29 +309,29 @@ ready(function () {
         const tagsValue = val(tags);
         if (tagsValue === undefined || tagsValue === "") {
           e.preventDefault();
-          show_filters_error(str_select_tag);
+          showFiltersError(strSelectTag);
           const removeFilterTags = document.querySelectorAll(
             "#filter_tags .removeFilter",
           );
           off(removeFilterTags, "click.apply");
           on(removeFilterTags, "click.apply", function () {
-            hide_filters_error(str_select_tag);
+            hideFiltersError(strSelectTag);
           });
         }
       }
 
       const filterCategory = document.getElementById("filter_category");
       if (filterCategory !== null && isVisible(filterCategory)) {
-        const albums = ab_filter.get_selected_albums();
+        const albums = abFilter.getSelectedAlbums();
         if (albums.length === 0) {
           e.preventDefault();
-          show_filters_error(str_select_album);
+          showFiltersError(strSelectAlbum);
           const removeFilterCategory = document.querySelectorAll(
             "#filter_category .removeFilter",
           );
           off(removeFilterCategory, "click.apply");
           on(removeFilterCategory, "click.apply", function () {
-            hide_filters_error(str_select_album);
+            hideFiltersError(strSelectAlbum);
           });
         }
       }

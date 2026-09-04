@@ -114,37 +114,35 @@ const preferencesDefaultValues = {
   opt_comment: defaultUserValues.show_nb_comments,
   opt_hits: defaultUserValues.show_nb_hits,
 };
-const selected_date = pwg_getPageData<string>("selected_date");
-const can_manage_api = pwg_getPageData<boolean>("api_can_manage");
+const selectedDate = pwg_getPageData<string>("selected_date");
+const canManageApi = pwg_getPageData<boolean>("api_can_manage");
 
-const str_copy_key_id = pwg_getPageString("ID copied.");
-const str_copy_key_secret = pwg_getPageString(
+const strCopyKeyId = pwg_getPageString("ID copied.");
+const strCopyKeySecret = pwg_getPageString(
   "Secret copied. Keep it in a safe place.",
 );
-const str_cant_copy = pwg_getPageString(
+const strCantCopy = pwg_getPageString(
   "Impossible to copy automatically. Please copy manually.",
 );
-const str_api_added = pwg_getPageString(
+const strApiAdded = pwg_getPageString(
   "The api key has been successfully created.",
 );
-const str_show_expired = pwg_getPageString("Show expired keys");
-const str_hide_expired = pwg_getPageString("Hide expired keys");
-const str_handle_error = pwg_getPageString("An error has occured");
-const str_infos_saved = pwg_getPageString("Your changes have been applied.");
-const str_revoke_key = pwg_getPageString(
+const strShowExpired = pwg_getPageString("Show expired keys");
+const strHideExpired = pwg_getPageString("Hide expired keys");
+const strHandleError = pwg_getPageString("An error has occured");
+const strInfosSaved = pwg_getPageString("Your changes have been applied.");
+const strRevokeKey = pwg_getPageString(
   'Do you really want to revoke the "%s" API key?',
 );
-const str_api_revoked = pwg_getPageString(
+const strApiRevoked = pwg_getPageString(
   "API Key has been successfully revoked.",
 );
-const str_api_edited = pwg_getPageString(
-  "API Key has been successfully edited.",
-);
-const no_time_elapsed = pwg_getPageString("right now");
+const strApiEdited = pwg_getPageString("API Key has been successfully edited.");
+const noTimeElapsed = pwg_getPageString("right now");
 
-let PWG_TOKEN: string;
+let pwgToken: string;
 ready(function () {
-  PWG_TOKEN = val(document.querySelectorAll("#pwg_token")) ?? "";
+  pwgToken = val(document.querySelectorAll("#pwg_token")) ?? "";
 
   on(
     document.querySelectorAll(".profile-section .display-section"),
@@ -340,7 +338,7 @@ ready(function () {
   });
 
   // API KEY BELOW
-  if (!can_manage_api) {
+  if (!canManageApi) {
     hide(document.querySelectorAll(".can-manage"));
     show(document.querySelectorAll("#cant_manage_api"));
     return;
@@ -373,14 +371,14 @@ ready(function () {
     document.querySelectorAll("#show_expired_list"),
     "click",
     function (this: Element) {
-      const api_list_expired = document.getElementById("api_key_list_expired")!;
+      const apiListExpired = document.getElementById("api_key_list_expired")!;
       const isOpen = data(this, "show") === true;
       if (!isOpen) {
-        api_list_expired.style.maxHeight = "max-content";
-        text(this, str_hide_expired);
+        apiListExpired.style.maxHeight = "max-content";
+        text(this, strHideExpired);
       } else {
-        api_list_expired.style.maxHeight = "0";
-        text(this, str_show_expired);
+        apiListExpired.style.maxHeight = "0";
+        text(this, strShowExpired);
       }
 
       setData(this, "show", !isOpen);
@@ -414,12 +412,12 @@ ready(function () {
     document.querySelectorAll('select[name="api_expiration"]'),
     "change",
     function (this: Element) {
-      const custom_date = document.getElementById("api_custom_date")!;
+      const customDate = document.getElementById("api_custom_date")!;
       const value = val(this);
       if ("custom" === value) {
-        custom_date.style.display = "flex";
+        customDate.style.display = "flex";
       } else {
-        custom_date.style.display = "none";
+        customDate.style.display = "none";
       }
       hide(document.querySelectorAll("#error_api_key_date"));
     },
@@ -518,22 +516,22 @@ async function setInfos(
       contentType: "application/json",
       dataType: "json",
       data: body !== null ? JSON.stringify(body) : undefined,
-      headers: { "X-CSRF-Token": PWG_TOKEN },
+      headers: { "X-CSRF-Token": pwgToken },
     });
 
     user = { ...user, ...params };
     if (typeof callback === "function") {
       callback(response);
     } else {
-      pwgToaster({ text: str_infos_saved, icon: "success" });
+      pwgToaster({ text: strInfosSaved, icon: "success" });
     }
   } catch (e) {
     pwgToaster({
       text:
         (e instanceof AjaxError
-          ? // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- safe regardless of the real shape: a malformed/non-object responseJSON just makes `.detail` read undefined, falling back to str_handle_error below.
+          ? // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- safe regardless of the real shape: a malformed/non-object responseJSON just makes `.detail` read undefined, falling back to strHandleError below.
             (e.responseJSON as { detail?: string } | undefined)?.detail
-          : undefined) ?? str_handle_error,
+          : undefined) ?? strHandleError,
       icon: "error",
     });
     if (typeof errCallback === "function" && e instanceof AjaxError) {
@@ -562,15 +560,15 @@ async function getAllApiKeys(reset = false): Promise<void> {
         (e instanceof AjaxError
           ? // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- safe regardless of the real shape: a malformed/non-object responseJSON just makes `.detail` read undefined, falling back below.
             (e.responseJSON as { detail?: string } | undefined)?.detail
-          : undefined) ?? str_handle_error + "getAllApiKeys",
+          : undefined) ?? strHandleError + "getAllApiKeys",
       icon: "error",
     });
   }
 }
 
 function AddApiLine(lines: ApiKeyEntry[], reset: boolean) {
-  const api_list = document.getElementById("api_key_list")!;
-  const api_list_expired = document.getElementById("api_key_list_expired")!;
+  const apiList = document.getElementById("api_key_list")!;
+  const apiListExpired = document.getElementById("api_key_list_expired")!;
 
   remove(
     document.querySelectorAll(
@@ -585,54 +583,54 @@ function AddApiLine(lines: ApiKeyEntry[], reset: boolean) {
 
   lines.forEach((line) => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
-    const api_line = document
+    const apiLine = document
       .getElementById("api_line")!
       .cloneNode(true) as Element;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see comment above.
-    const api_collapse = document
+    const apiCollapse = document
       .getElementById("api_collapse")!
       .cloneNode(true) as Element;
-    const tmp_id = line.authKey.slice(24, 34);
+    const tmpId = line.authKey.slice(24, 34);
 
-    removeClass(api_line, "template-api");
-    addClass(api_line, "api-tab");
-    attr(api_line, "id", `api_${tmp_id}`);
-    setData(find(api_line, ".icon-collapse")[0]!, "api", tmp_id);
-    text(find(api_line, ".api_name"), line.apikeyName);
-    attr(find(api_line, ".api_name"), "title", line.apikeyName);
-    text(find(api_line, ".api_creation"), line.createdOn);
-    text(find(api_line, ".api_last_use"), line.lastUsedOn ?? no_time_elapsed);
+    removeClass(apiLine, "template-api");
+    addClass(apiLine, "api-tab");
+    attr(apiLine, "id", `api_${tmpId}`);
+    setData(find(apiLine, ".icon-collapse")[0]!, "api", tmpId);
+    text(find(apiLine, ".api_name"), line.apikeyName);
+    attr(find(apiLine, ".api_name"), "title", line.apikeyName);
+    text(find(apiLine, ".api_creation"), line.createdOn);
+    text(find(apiLine, ".api_last_use"), line.lastUsedOn ?? noTimeElapsed);
     attr(
-      find(api_line, ".api_last_use"),
+      find(apiLine, ".api_last_use"),
       "title",
-      line.lastUsedOn ?? no_time_elapsed,
+      line.lastUsedOn ?? noTimeElapsed,
     );
-    text(find(api_line, ".api_expiration"), line.expiration);
-    attr(find(api_line, ".api-icon-action"), "data-api", `api_${tmp_id}`);
-    attr(find(api_line, ".api-icon-action"), "data-pkid", line.authKey);
+    text(find(apiLine, ".api_expiration"), line.expiration);
+    attr(find(apiLine, ".api-icon-action"), "data-api", `api_${tmpId}`);
+    attr(find(apiLine, ".api-icon-action"), "data-pkid", line.authKey);
 
-    attr(api_collapse, "id", `api_collapse_${tmp_id}`);
-    removeClass(api_collapse, "template-api");
-    text(find(api_collapse, ".api_key"), line.authKey);
-    attr(find(api_collapse, ".icon-clone"), "data-copy", line.authKey);
+    attr(apiCollapse, "id", `api_collapse_${tmpId}`);
+    removeClass(apiCollapse, "template-api");
+    text(find(apiCollapse, ".api_key"), line.authKey);
+    attr(find(apiCollapse, ".icon-clone"), "data-copy", line.authKey);
     attr(
-      find(api_collapse, ".icon-clone"),
+      find(apiCollapse, ".icon-clone"),
       "data-success",
-      `api_copy_success_${tmp_id}`,
+      `api_copy_success_${tmpId}`,
     );
-    attr(find(api_collapse, ".api-copy"), "id", `api_copy_success_${tmp_id}`);
+    attr(find(apiCollapse, ".api-copy"), "id", `api_copy_success_${tmpId}`);
 
     if (line.revokedOn === null && !line.isExpired) {
-      api_list.appendChild(api_line);
-      api_line.after(api_collapse);
+      apiList.appendChild(apiLine);
+      apiLine.after(apiCollapse);
     } else {
       show(document.querySelectorAll("#show_expired_list"));
-      api_list_expired.appendChild(api_line);
-      api_line.after(api_collapse);
-      remove(find(api_line, ".api-icon-action"));
+      apiListExpired.appendChild(apiLine);
+      apiLine.after(apiCollapse);
+      remove(find(apiLine, ".api-icon-action"));
       if (line.isExpired) {
         html(
-          find(api_line, ".api_expiration"),
+          find(apiLine, ".api_expiration"),
           `<i class="gallery-icon-skull api-skull"></i> <span>${line.expiredOn}</span>`,
         );
       } else {
@@ -640,7 +638,7 @@ function AddApiLine(lines: ApiKeyEntry[], reset: boolean) {
         // `else` of `!line.revokedOn && !line.isExpired`, so
         // `line.revokedOn` must be truthy here.
         html(
-          find(api_line, ".api_expiration"),
+          find(apiLine, ".api_expiration"),
           `<i class="gallery-icon-skull api-skull"></i> <span>${line.revokedOn!}</span>`,
         );
       }
@@ -659,20 +657,20 @@ function apiLineEvent() {
   on(iconCollapse, "click", function (this: Element) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
     const apiId = data(this, "api") as string;
-    const api_collapse = document.getElementById(`api_collapse_${apiId}`)!;
-    const api_line = document.getElementById(`api_${apiId}`)!;
+    const apiCollapse = document.getElementById(`api_collapse_${apiId}`)!;
+    const apiLine = document.getElementById(`api_${apiId}`)!;
 
-    if (isVisible(api_collapse)) {
-      removeClass(api_collapse, "open");
-      removeClass(api_line, "open");
-      addClass(find(api_line, ".icon-collapse"), "close");
-      api_collapse.style.display = "none";
-      addClass(find(api_collapse, ".api-copy"), "api-hide");
+    if (isVisible(apiCollapse)) {
+      removeClass(apiCollapse, "open");
+      removeClass(apiLine, "open");
+      addClass(find(apiLine, ".icon-collapse"), "close");
+      apiCollapse.style.display = "none";
+      addClass(find(apiCollapse, ".api-copy"), "api-hide");
     } else {
-      addClass(api_collapse, "open");
-      addClass(api_line, "open");
-      removeClass(find(api_line, ".icon-collapse"), "close");
-      api_collapse.style.display = "grid";
+      addClass(apiCollapse, "open");
+      addClass(apiLine, "open");
+      removeClass(find(apiLine, ".icon-collapse"), "close");
+      apiCollapse.style.display = "grid";
     }
 
     resetSection("apikey-display", false, true);
@@ -684,10 +682,10 @@ function apiLineEvent() {
   off(cloneButtons, "click");
   on(cloneButtons, "click", function (this: Element) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-    const data_to_copy = data(this, "copy") as string;
+    const dataToCopy = data(this, "copy") as string;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see comment above.
     const selector = data(this, "success") as string;
-    copyToClipboard(data_to_copy, str_copy_key_id, `#${selector}`);
+    copyToClipboard(dataToCopy, strCopyKeyId, `#${selector}`);
   });
 
   const editButtons = document.querySelectorAll(".api-tab-line .edit-mode");
@@ -738,7 +736,7 @@ function closeApiModal() {
     setVal(document.querySelectorAll("#api_key_name"), "");
     setVal(
       document.querySelectorAll('select[name="api_expiration"]'),
-      selected_date,
+      selectedDate,
     );
     trigger(
       document.querySelectorAll('select[name="api_expiration"]'),
@@ -768,7 +766,7 @@ function successApiModal(secret: string, id: string) {
   const apiSecretCopy = document.querySelectorAll("#api_secret_copy");
   off(apiSecretCopy, "click");
   on(apiSecretCopy, "click", function () {
-    copyToClipboard(secret, str_copy_key_secret, "#api_key_copy_success");
+    copyToClipboard(secret, strCopyKeySecret, "#api_key_copy_success");
 
     const doneButton =
       document.querySelector<HTMLButtonElement>("#done_apikey")!;
@@ -779,7 +777,7 @@ function successApiModal(secret: string, id: string) {
   const apiIdCopy = document.querySelectorAll("#api_id_copy");
   off(apiIdCopy, "click");
   on(apiIdCopy, "click", function () {
-    copyToClipboard(id, str_copy_key_id, "#api_id_copy_success");
+    copyToClipboard(id, strCopyKeyId, "#api_id_copy_success");
   });
 }
 
@@ -818,7 +816,7 @@ function saveApiEditEvents(pkid: string) {
       "pwg.users.api_key.edit",
       // 204 No Content -- sessionApiKeyUpdate's real response has no body.
       (_res: unknown) => {
-        pwgToaster({ text: str_api_edited, icon: "success" });
+        pwgToaster({ text: strApiEdited, icon: "success" });
         void getAllApiKeys(true);
         closeApiEditModal();
       },
@@ -836,8 +834,8 @@ function openApiRevokeModal(selector: string) {
   const apiName = textOf(find(target, ".api_name"));
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
   const pkid = data(find(target, ".api-icon-action")[0]!, "pkid") as string;
-  const text_ = sprintf(str_revoke_key, apiName);
-  text(document.querySelectorAll("#api_modal_revoke_title"), text_);
+  const titleText = sprintf(strRevokeKey, apiName);
+  text(document.querySelectorAll("#api_modal_revoke_title"), titleText);
 
   fadeIn(document.querySelectorAll("#api_modal_revoke"));
   saveApiRevokeEvents(pkid);
@@ -859,7 +857,7 @@ function saveApiRevokeEvents(pkid: string) {
       "pwg.users.api_key.revoke",
       // 204 No Content -- sessionApiKeyRevoke's real response has no body.
       (_res: unknown) => {
-        pwgToaster({ text: str_api_revoked, icon: "success" });
+        pwgToaster({ text: strApiRevoked, icon: "success" });
         void getAllApiKeys(true);
         closeApiRevokeModal();
       },
@@ -890,19 +888,19 @@ function copyToClipboard(
     }
     return true;
   } else {
-    pwgToaster({ text: str_cant_copy, icon: "error" });
+    pwgToaster({ text: strCantCopy, icon: "error" });
     return false;
   }
 }
 
 function saveApiKeyEvent() {
   const handler = () => {
-    const api_name = val(document.querySelectorAll("#api_key_name")) ?? "";
-    let api_duration: string | number | undefined = val(
+    const apiName = val(document.querySelectorAll("#api_key_name")) ?? "";
+    let apiDuration: string | number | undefined = val(
       document.querySelectorAll('select[name="api_expiration"]'),
     );
 
-    if (api_name === "") {
+    if (apiName === "") {
       show(document.querySelectorAll("#error_api_key_name"));
       return;
     }
@@ -911,7 +909,7 @@ function saveApiKeyEvent() {
       document.querySelectorAll("#api_expiration_date"),
     );
     if (
-      "custom" === api_duration &&
+      "custom" === apiDuration &&
       (expirationDate === undefined || expirationDate === "")
     ) {
       show(document.querySelectorAll("#error_api_key_date"));
@@ -920,35 +918,33 @@ function saveApiKeyEvent() {
 
     unbindApiKeyEvents();
 
-    if ("custom" === api_duration) {
+    if ("custom" === apiDuration) {
       const today = new Date();
-      const custom_date = new Date(
+      const customDate = new Date(
         String(val(document.querySelectorAll("#api_expiration_date"))),
       );
-      const one_day = 1000 * 60 * 60 * 24;
-      const days = Math.ceil(
-        (custom_date.getTime() - today.getTime()) / one_day,
-      );
-      api_duration = days;
+      const oneDay = 1000 * 60 * 60 * 24;
+      const days = Math.ceil((customDate.getTime() - today.getTime()) / oneDay);
+      apiDuration = days;
     } else {
       // Genuine pre-existing bug found only by ESLint's stricter static
       // analysis: `Number(x) ?? 1` can never fall back to 1 -- `Number()`
       // returns `NaN` for invalid input, never `null`/`undefined`, so `??`
       // never triggers. `||` is the operator that actually treats `NaN`
       // (like `0`) as falsy, matching the real intended fallback.
-      api_duration = Number(api_duration) || 1;
+      apiDuration = Number(apiDuration) || 1;
     }
 
     void setInfos(
       {
-        key_name: api_name,
-        duration: api_duration,
+        key_name: apiName,
+        duration: apiDuration,
       },
       "pwg.users.api_key.create",
       (
         res: operations["sessionApiKeyCreate"]["responses"][201]["content"]["application/json"],
       ) => {
-        pwgToaster({ text: str_api_added, icon: "success" });
+        pwgToaster({ text: strApiAdded, icon: "success" });
         void getAllApiKeys(true);
         successApiModal(res.apikeySecret, res.authKey);
       },

@@ -191,14 +191,14 @@ declare module "piecon" {
 interface AlbumSelectorInstance {
   open(): void;
   close(): void;
-  remove_selected_album(id: string | number): void;
+  removeSelectedAlbum(id: string | number): void;
   // Mixed at runtime: most real callers only ever push stringified ids
-  // (`select_album()`'s own `id.toString()`), but the internal
+  // (`selectAlbum()`'s own `id.toString()`), but the internal
   // ajax-driven pick/create flows push a raw numeric `cat.id` --
-  // matching `remove_selected_album`/`select_album`'s own already-
+  // matching `removeSelectedAlbum`/`selectAlbum`'s own already-
   // established `string | number` id type above.
-  get_selected_albums(): (string | number)[];
-  select_album(id: string | number): void;
+  getSelectedAlbums(): (string | number)[];
+  selectAlbum(id: string | number): void;
   resetAll(): void;
   hardUpdate(cats: (string | number)[]): void;
 }

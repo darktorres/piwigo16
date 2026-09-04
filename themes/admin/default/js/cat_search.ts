@@ -1,20 +1,20 @@
-// Real consumer of album_selector.ts's own top-level `str_albums_found`/
-// `str_result_limit`/`str_album_found` (docs/PLAN.md P48 -- was a bare
+// Real consumer of album_selector.ts's own top-level `strAlbumsFound`/
+// `strResultLimit`/`strAlbumFound` (docs/PLAN.md P48 -- was a bare
 // ambient-global read, coincidentally type-checking with no real
 // runtime source at all: this page (albums.php/cat_list.php) never
 // embedded album_selector.ts's script before this batch, a real
 // pre-existing gap, fixed here by AlbumsView.php gaining a real
-// registration for this file's own new dependency). `str_album_found`
+// registration for this file's own new dependency). `strAlbumFound`
 // specifically is a real, genuinely coincidental duplicate of
-// albums.ts's own identically-worded `const str_album_found` --
+// albums.ts's own identically-worded `const strAlbumFound` --
 // imported from album_selector.ts here purely because that's where the
 // bare read already (coincidentally) resolved before this batch, not
 // because it's the semantically "correct" owner; see album_selector.ts's
 // own leading comment.
 import {
-  str_albums_found,
-  str_result_limit,
-  str_album_found,
+  strAlbumsFound,
+  strResultLimit,
+  strAlbumFound,
 } from "./album_selector";
 // Real consumer of albums.ts's own top-level `data` (docs/PLAN.md P48,
 // albums.ts's own batch -- was a `window.data` read before that).
@@ -99,16 +99,16 @@ function updateSearch() {
       if (nbResult >= RESULT_LIMIT) {
         setHtml(
           ".search-album-num-result",
-          str_result_limit.replace("%d", String(nbResult)),
+          strResultLimit.replace("%d", String(nbResult)),
         );
       } else {
         setHtml(
           ".search-album-num-result",
-          str_albums_found.replace("%d", String(nbResult)),
+          strAlbumsFound.replace("%d", String(nbResult)),
         );
       }
     } else {
-      setHtml(".search-album-num-result", str_album_found);
+      setHtml(".search-album-num-result", strAlbumFound);
     }
 
     if (nbResult !== 0) {
@@ -199,7 +199,7 @@ function addAlbumResult(
     show(document.querySelectorAll(".limit-album-reached"), 1000);
     setHtml(
       ".limit-album-reached",
-      str_result_limit.replace("%d", String(nbResult)),
+      strResultLimit.replace("%d", String(nbResult)),
     );
   }
 }

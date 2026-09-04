@@ -17,29 +17,27 @@ import {
 } from "../../../default/js/vendor/dom";
 import type { operations } from "../../../../openapi/client/schema";
 
-const piwigo_need_update_msg =
+const piwigoNeedUpdateMsg =
   '<a href="admin.php?page=updates">' +
   pwg_getPageString("A new version of Piwigo is available.") +
   ' <i class="icon-right"></i></a>';
-const ext_need_update_msg =
+const extNeedUpdateMsg =
   '<a href="admin.php?page=updates&amp;tab=ext">' +
   pwg_getPageString("Some upgrades are available for extensions.") +
   ' <i class="icon-right"></i></a>';
-const str_gb_used = pwg_getPageString("%s GB used");
-const str_mb_used = pwg_getPageString("%s MB used");
-export const str_gb = pwg_getPageString("%sGB").replace(" ", "&nbsp;");
-export const str_mb = pwg_getPageString("%sMB").replace(" ", "&nbsp;");
-const storage_total = pwg_getPageData<number>("storage_total");
-export const storage_details =
+const strGbUsed = pwg_getPageString("%s GB used");
+const strMbUsed = pwg_getPageString("%s MB used");
+export const strGb = pwg_getPageString("%sGB").replace(" ", "&nbsp;");
+export const strMb = pwg_getPageString("%sMB").replace(" ", "&nbsp;");
+const storageTotal = pwg_getPageData<number>("storage_total");
+export const storageDetails =
   pwg_getPageData<StorageDetails>("storage_chart_data");
-export const translate_files = pwg_getPageString("%d files");
-const newsletter_base_url = pwg_getPageData<string | null>(
-  "subscribe_base_url",
-);
+export const translateFiles = pwg_getPageString("%d files");
+const newsletterBaseUrl = pwg_getPageData<string | null>("subscribe_base_url");
 
-export const translate_type: Record<string, string> = {};
-Object.keys(storage_details).forEach(function (type) {
-  translate_type[type] = pwg_getPageString(type);
+export const translateType: Record<string, string> = {};
+Object.keys(storageDetails).forEach(function (type) {
+  translateType[type] = pwg_getPageString(type);
 });
 
 ready(function () {
@@ -60,25 +58,25 @@ ready(function () {
           timeout: 5000,
         })) as operations["extensionsCheckUpdates"]["responses"][200]["content"]["application/json"];
 
-        const piwigo_update = data.piwigoNeedUpdate;
-        const ext_update = data.extNeedUpdate;
+        const piwigoUpdate = data.piwigoNeedUpdate;
+        const extUpdate = data.extNeedUpdate;
         if (
-          (piwigo_update === true || ext_update === true) &&
+          (piwigoUpdate === true || extUpdate === true) &&
           !is(document.querySelectorAll(".warnings"), "div")
         )
           prepend(
             document.querySelectorAll(".eiw"),
             '<div class="warnings"><i class="eiw-icon icon-attention"></i><ul></ul></div>',
           );
-        if (piwigo_update === true)
+        if (piwigoUpdate === true)
           append(
             document.querySelectorAll(".warnings ul"),
-            "<li>" + piwigo_need_update_msg + "</li>",
+            "<li>" + piwigoNeedUpdateMsg + "</li>",
           );
-        if (ext_update === true)
+        if (extUpdate === true)
           append(
             document.querySelectorAll(".warnings ul"),
-            "<li>" + ext_need_update_msg + "</li>",
+            "<li>" + extNeedUpdateMsg + "</li>",
           );
       } catch (e) {
         console.error(e instanceof AjaxError ? e.responseText : e);
@@ -86,9 +84,9 @@ ready(function () {
     })();
   }
 
-  if (newsletter_base_url !== null && newsletter_base_url !== "") {
-    const newsletter_email = pwg_getPageData<string | null>("email") ?? "";
-    const old_newsletters_url =
+  if (newsletterBaseUrl !== null && newsletterBaseUrl !== "") {
+    const newsletterEmail = pwg_getPageData<string | null>("email") ?? "";
+    const oldNewslettersUrl =
       pwg_getPageData<string | null>("old_newsletters_url") ?? "";
     prepend(
       document.querySelectorAll(".eiw"),
@@ -101,10 +99,10 @@ ready(function () {
         <div class="promote-newsletter-content">
           <span class="promote-newsletter-title">${pwg_getPageString("Subscribe to our newsletter and stay updated!")}</span>
           <div class="promote-content subscribe-newsletter">
-            <input type="text" id="newsletterSubscribeInput" value="${newsletter_email}" class="left-side">
-            <a href="${newsletter_base_url}${newsletter_email}" id="newsletterSubscribeLink" class="right-side go-to-porg icon-thumbs-up newsletter-hide">${pwg_getPageString("Sign up to the newsletter")}</a>
+            <input type="text" id="newsletterSubscribeInput" value="${newsletterEmail}" class="left-side">
+            <a href="${newsletterBaseUrl}${newsletterEmail}" id="newsletterSubscribeLink" class="right-side go-to-porg icon-thumbs-up newsletter-hide">${pwg_getPageString("Sign up to the newsletter")}</a>
           </div>
-          <a href="${old_newsletters_url}" class="promote-link">${pwg_getPageString("See previous newsletters")}</a>
+          <a href="${oldNewslettersUrl}" class="promote-link">${pwg_getPageString("See previous newsletters")}</a>
         </div>
 
       </div>
@@ -120,7 +118,7 @@ ready(function () {
       attr(
         document.querySelectorAll("#newsletterSubscribeLink"),
         "href",
-        (newsletter_base_url ?? "") +
+        (newsletterBaseUrl ?? "") +
           String(val(document.querySelectorAll("#newsletterSubscribeInput"))),
       );
     },
@@ -149,13 +147,13 @@ ready(function () {
       }
     },
   );
-  const size_info = storage_total > 1000000 ? str_gb_used : str_mb_used;
-  const size_nb =
-    storage_total > 1000000
-      ? (storage_total / 1000000).toFixed(2)
-      : (storage_total / 1000).toFixed(0);
+  const sizeInfo = storageTotal > 1000000 ? strGbUsed : strMbUsed;
+  const sizeNb =
+    storageTotal > 1000000
+      ? (storageTotal / 1000000).toFixed(2)
+      : (storageTotal / 1000).toFixed(0);
   html(
     document.querySelectorAll(".chart-title-infos"),
-    size_info.replace("%s", size_nb),
+    sizeInfo.replace("%s", sizeNb),
   );
 });

@@ -1,51 +1,18 @@
 // Ambient declarations for genuinely first-party shared global state:
-// `Window._pwgRatingAutoQueue` and the rest of `interface Window`
-// below, plus a few standalone-library/shared-shape types. Nothing
-// here augments a third-party package's own ambient types.
-// `Window.SwitchBox`/`SwitchBoxQueue`'s own former copy of this same
-// queue-based deferred-init pattern retired in favor of a plain
-// registerSwitchBox() export (P51-H) -- see switchbox.ts's own header.
-
-// Duplicates rating.ts's own local types: rating.ts is a non-module
-// script, so these can't be `import`ed without turning it into one
-// (which would break its other ambient declarations) -- kept
-// structurally identical by construction, since rating.ts is the only
-// real writer of either shape.
-interface PwgRatingResult {
-  score: number;
-  count: number;
-  average?: number;
-}
-interface PwgRatingOptions {
-  rootUrl: string;
-  image_id: string | number;
-  onSuccess?: (result: PwgRatingResult) => void;
-  updateRateElement?: HTMLElement;
-  updateRateText?: string;
-  ratingSummaryElement?: HTMLElement;
-  ratingSummaryText?: string;
-}
-interface RatingAutoQueue {
-  push(opts: PwgRatingOptions): void;
-  // Only present during the "queue array" phase -- see
-  // `SwitchBoxQueue`'s own copy of this comment above.
-  length?: number;
-  [index: number]: PwgRatingOptions | undefined;
-}
+// `interface Window` below, plus a few standalone-library/shared-shape
+// types. Nothing here augments a third-party package's own ambient
+// types. `Window.SwitchBox`/`SwitchBoxQueue` and
+// `Window._pwgRatingAutoQueue`/`RatingAutoQueue`/`PwgRatingResult`/
+// `PwgRatingOptions` -- 2 formerly-real copies of this same
+// queue-based deferred-init pattern -- both retired (P51-H): the
+// former outright (both real pushers, index.ts/picture.ts, always
+// imported switchbox.ts before their own first push, so its own
+// queue-drain branch could never see anything actually queued), the
+// latter onto a real shared module (`ratingAutoQueue.ts`, still real
+// coordination since picture.ts/rating.ts share no `import` edge with
+// each other).
 
 interface Window {
-  // `picture.ts` pushes a rating-options object onto this (queue array)
-  // if `rating.ts` hasn't loaded yet; `rating.ts`'s own IIFE drains the
-  // queue then replaces it with a live `{push: fn}` handler for any
-  // later pusher. `window.` prefix is load-bearing, not decorative: a bare (or
-  // `var`-declared) reference to this same identifier only resolves as
-  // a real global outside any wrapping scope -- once an entry is
-  // wrapped in its own IIFE (see vite.config.ts's banner/footer
-  // comment), a bare `var` there is scoped to the wrapper, not a real
-  // global at all. `window.` property access is the one form that's
-  // safe regardless of wrapping.
-  _pwgRatingAutoQueue?: RatingAutoQueue;
-
   // Explicit `window.` exposure of these names is required: Vite/Rollup
   // bundles each entry as its own isolated module graph, and a
   // top-level declaration with no call site *inside its own file* looks

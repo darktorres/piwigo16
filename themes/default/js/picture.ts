@@ -2,15 +2,18 @@
 // (docs/PLAN.md P48 -- was a bare ambient-global read, see that file's
 // own leading comment for the full real-consumer list). This file
 // itself becomes a real module as a result (previously non-module).
-// `window._pwgRatingAutoQueue` below is a separate, still-real
-// queue-based deferred-init pattern (P47's RatingAutoQueue design) --
-// `window.SwitchBox`'s own former copy of that pattern retired in
-// favor of a plain registerSwitchBox() import (P51-H): both of this
-// file's and index.ts's own pushes already ran after `import
-// "./switchbox"` resolved, so the queue-drain branch could never see
-// anything actually queued.
+// `pushRatingAutoQueue()` below is a separate, still-real queue-based
+// deferred-init pattern (P47's RatingAutoQueue design, moved off the
+// ambient `window._pwgRatingAutoQueue` global onto a real shared
+// module at P51-H) -- `window.SwitchBox`'s own former copy of that
+// pattern retired outright instead (P51-H): both of this file's and
+// index.ts's own pushes already ran after `import "./switchbox"`
+// resolved, so its queue-drain branch could never see anything
+// actually queued, unlike this one (picture.ts and rating.ts share no
+// `import` edge with each other at all).
 import { phpWGOpenWindow } from "./scripts";
 import { registerSwitchBox } from "./switchbox";
+import { pushRatingAutoQueue } from "./ratingAutoQueue";
 
 import { pwg_getPageData, pwg_getPageString } from "./page-data";
 import { ajax, AjaxError } from "./vendor/ajax";
@@ -115,20 +118,7 @@ if (caddieLink) {
   });
 }
 
-// `window.` prefix, not a bare reference: 2 real bugs found in sequence
-// via VR against a real browser. First, a bare (undeclared) read of
-// `_pwgRatingAutoQueue` threw ReferenceError whenever picture.ts was the
-// first script on the page to touch it. Adding `var` "fixed" that but
-// broke it a second way once every P46 entry got wrapped in its own
-// `(function(){...})()` (see vite.config.ts's own banner/footer
-// comment): a `var` *inside* that wrapper is scoped to the wrapper, no
-// longer a real global at all, invisible to rating.ts's own separate
-// wrapper. `window.` property access is safe from both problems at
-// once -- reading a missing property never throws (unlike a bare
-// undeclared identifier), and `window` itself is the one true global
-// every wrapped entry can still reach directly.
-window._pwgRatingAutoQueue = window._pwgRatingAutoQueue ?? [];
-window._pwgRatingAutoQueue.push({
+pushRatingAutoQueue({
   rootUrl: pwg_getPageData<string>("root_url"),
   image_id: pwg_getPageData<string | number>("image_id"),
   onSuccess: function (rating: { score: number; count: number }) {

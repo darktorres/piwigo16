@@ -4,7 +4,7 @@
 // list). This file is its own Vite entry, registered on 2 real pages
 // (batch_manager_unit.php, batch_manager_global.php), each of which
 // also reaches album_selector.ts through its other real consumer
-// (batchManagerUnit.ts / batchManagerGlobal.ts).
+// (batchManagerUnit.ts / batch_manager_global.ts).
 //
 // That used to mean two independent `AlbumSelector` class copies
 // coexisted on either page, since every consumer was handed a private

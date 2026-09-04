@@ -3,7 +3,7 @@
 // (`node_modules/jquery-ui/datepicker.js`, jQuery UI 1.10.4;
 // `node_modules/jquery-timepicker-addon/src/jquery-ui-timepicker-addon.js`,
 // `github:trentrichardson/jQuery-Timepicker-Addon#v1.4.4`), across all 4
-// real call sites (`batchManagerGlobal.ts`/`batchManagerUnit.ts`/
+// real call sites (`batch_manager_global.ts`/`batchManagerUnit.ts`/
 // `picture_modify.ts`'s own `{showTimepicker:true, cancelButton:...}`
 // creation-date pickers, `history.ts`'s own plain (no time, no cancel
 // button) start/end search-range pickers) plus `datepicker.ts`'s own

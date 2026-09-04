@@ -8,7 +8,7 @@
 // real pre-existing gap: cat_search.ts's own bare reads never had a
 // real runtime source before, since albums.php never embedded this
 // file's script), and picture_modify.ts/photos_add_direct.ts/
-// cat_modify.ts/batchManagerUnit.ts/batchManagerGlobal.ts/
+// cat_modify.ts/batchManagerUnit.ts/batch_manager_global.ts/
 // batchManagerFilter.ts/mcs.ts (all `new AlbumSelector(...)`).
 //
 // Every consumer imports this file directly, and Rollup emits it once
@@ -19,7 +19,7 @@
 // something. While each consumer was handed a private duplicate, the 2
 // pages carrying 2 consumer files (batch_manager_unit.php:
 // batchManagerUnit.ts + batchManagerFilter.ts; batch_manager_global.php:
-// batchManagerGlobal.ts + batchManagerFilter.ts) loaded 2 independent
+// batch_manager_global.ts + batchManagerFilter.ts) loaded 2 independent
 // copies of this class, so `activeAlbumSelector`'s single-active-popup
 // coordination (below) did not span both widgets on those pages -- each
 // copy tracked its own module state. That was documented as an accepted

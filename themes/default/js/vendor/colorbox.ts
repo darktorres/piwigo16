@@ -1,7 +1,7 @@
 // Native port of Colorbox (P49-B), real source read from the vendored
 // `jquery.colorbox` package (`node_modules/jquery.colorbox/
 // jquery.colorbox.js`, `github:jackmoore/colorbox#1.5.14`). 8 real call
-// sites across 7 admin `.ts` files (`batchManagerGlobal.ts`,
+// sites across 7 admin `.ts` files (`batch_manager_global.ts`,
 // `picture_modify.ts`, `batchManagerUnit.ts`, `themes_installed.ts`,
 // `configuration_main.ts`, `admin_help.ts`, `photos_add_applications.ts`,
 // plus `addAlbum.ts`'s own `pwgAddAlbum()`), every one of them driving

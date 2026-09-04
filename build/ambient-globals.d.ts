@@ -29,7 +29,7 @@ interface Window {
   popuphelp: (url: string) => void;
   pwg_tryFocus: (id: string) => void;
 
-  // batchManagerGlobal.ts's own 4 functions, called from
+  // batch_manager_global.ts's own 4 functions, called from
   // batch_manager_global.latte's own `href="javascript:
   // selectGenerateDerivAll()"`-style pseudo-protocol links.
   selectGenerateDerivAll: () => void;
@@ -40,7 +40,7 @@ interface Window {
   // footer.ts's own 2 functions, called from layout.latte's own
   // `onclick="show_user_whats_new()"` / `onClick=
   // "hide_user_whats_new()"` attributes -- same `javascript:`/`onclick=`
-  // exposure pattern as batchManagerGlobal.ts's own copy above.
+  // exposure pattern as batch_manager_global.ts's own copy above.
   hide_user_whats_new: () => Promise<void>;
   show_user_whats_new: () => void;
 
@@ -142,7 +142,7 @@ interface AlbumSelectorOptions {
 // selectAlbum.call(null, { ...args, newSelectedAlbum, addSelectedAlbum,
 // getSelectedAlbum })`). Shared across every real `selectAlbum:`
 // consumer (`batchManagerFilter.ts`, `cat_modify.ts`,
-// `batchManagerGlobal.ts`, `mcs.ts`, `batchManagerUnit.ts`,
+// `batch_manager_global.ts`, `mcs.ts`, `batchManagerUnit.ts`,
 // `picture_modify.ts`, `photos_add_direct.ts`) -- grows if a future
 // consumer needs more of `album`'s own real shape than `id`/`name`.
 interface AlbumSelectorCallbackArgs {

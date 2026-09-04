@@ -1,5 +1,13 @@
 import type { components, operations } from "../../../../openapi/client/schema";
-import { jConfirmAlertOptions, TemporaryState } from "./common";
+// common.ts's own side effects (font-checkbox init, search-cancel
+// bindings) -- group_list.latte's own generic
+// `.search-cancel`/`.search-input` pair needs the shared wiring; this
+// page used to get it incidentally, as a side effect of importing from
+// what was then the same file (common.ts); the P51-I split made that
+// dependency explicit instead of leaving it accidental.
+import "./common";
+import { jConfirmAlertOptions } from "./jconfirmPresets";
+import { TemporaryState } from "./TemporaryState";
 import { UsersCache } from "./LocalStorageCache";
 // Type-only -- erased at compile time, so it never reaches Rollup's
 // module graph at all.

@@ -28,9 +28,9 @@
 // `activeAlbumSelector`, which is what the coordination was written to
 // assume in the first place.
 //
-// `sprintf` comes from common.ts by plain import; common.ts is itself
+// `sprintf` comes from sprintf.ts by plain import; sprintf.ts is itself
 // another shared chunk.
-import { sprintf } from "./common";
+import { sprintf } from "./sprintf";
 import {
   pwg_getPageData,
   pwg_getPageString,

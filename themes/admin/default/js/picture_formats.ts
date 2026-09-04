@@ -1,4 +1,4 @@
-import { jConfirmConfirmOptions } from "./common";
+import { jConfirmConfirmOptions } from "./jconfirmPresets";
 
 import {
   pwg_getPageData,

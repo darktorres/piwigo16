@@ -3,7 +3,7 @@ import type { operations } from "../../../../openapi/client/schema";
 // AlbumSelector` (docs/PLAN.md P48 -- was a bare ambient-global read,
 // see that file's own leading comment for the full real-consumer list).
 import { AlbumSelector } from "./album_selector";
-import { jConfirmConfirmOptions } from "./common";
+import { jConfirmConfirmOptions } from "./jconfirmPresets";
 
 import {
   pwg_getPageData,

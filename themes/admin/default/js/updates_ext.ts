@@ -1,5 +1,5 @@
 import type { operations } from "../../../../openapi/client/schema";
-import { jConfirmConfirmOptions } from "./common";
+import { jConfirmConfirmOptions } from "./jconfirmPresets";
 
 import {
   pwg_getPageData,

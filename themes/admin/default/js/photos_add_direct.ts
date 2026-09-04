@@ -9,7 +9,8 @@ import type { operations, components } from "../../../../openapi/client/schema";
 // AlbumSelector` (docs/PLAN.md P48 -- was a bare ambient-global read,
 // see that file's own leading comment for the full real-consumer list).
 import { AlbumSelector } from "./album_selector";
-import { sprintf, jConfirmWarningOptions } from "./common";
+import { sprintf } from "./sprintf";
+import { jConfirmWarningOptions } from "./jconfirmPresets";
 
 import {
   pwg_getPageData,

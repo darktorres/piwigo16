@@ -1,5 +1,6 @@
 import type { components, operations } from "../../../../openapi/client/schema";
-import { getRandomInt, sprintf, jConfirmConfirmOptions } from "./common";
+import { getRandomInt, sprintf } from "./sprintf";
+import { jConfirmConfirmOptions } from "./jconfirmPresets";
 
 import {
   pwg_getPageData,

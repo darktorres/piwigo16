@@ -1,9 +1,16 @@
 import type { operations } from "../../../../openapi/client/schema";
+// common.ts's own side effects (font-checkbox init, search-cancel
+// bindings) -- tags.latte's own generic `.search-cancel`/`.search-input`
+// pair needs the shared wiring; this page used to get it incidentally,
+// as a side effect of importing from what was then the same file
+// (common.ts); the P51-I split made that dependency explicit instead
+// of leaving it accidental.
+import "./common";
 import {
   jConfirmAlertOptions,
   jConfirmConfirmOptions,
-  TemporaryState,
-} from "./common";
+} from "./jconfirmPresets";
+import { TemporaryState } from "./TemporaryState";
 
 import {
   pwg_getPageData,

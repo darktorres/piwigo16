@@ -1,4 +1,4 @@
-import { scaleThemeScreenshot } from "./common";
+import { scaleThemeScreenshot } from "./themeScreenshotScaling";
 
 import { pwg_getPageData } from "../../../default/js/page-data";
 

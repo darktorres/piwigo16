@@ -80,31 +80,26 @@ export default defineConfig(
   {
     // P47 (real type-design pass, following P46's own "same code, same
     // behavior" mechanical conversion) narrowed themes/**/*.ts's `any`
-    // usage from 782+ sites down to 6 files with a real, deliberately-
+    // usage from 782+ sites down to 5 files with a real, deliberately-
     // irreducible remainder each documents inline: `search_filters.ts`/
     // `mcs.ts` (a genuinely heterogeneous, deferred-to-P48 nested
     // search-filter query object -- `global_params`/`fullname_of_cat`
     // and mcs.ts's own consumers of them), `history.ts` (the same
     // family, read from a saved search's own `searchDetails`),
-    // `common.ts` (a `Array.prototype` polyfill guard and `sprintf`'s
-    // own genuinely-polymorphic format-spec argument), `datepicker.ts`
-    // (jQuery UI's own datepicker internals this file's `pwgDatepicker`
-    // plugin patches, no real upstream type source), and `profile.ts`
-    // (`setInfos`'s callback, whose real shape differs per dispatched
-    // endpoint). `build/ambient-globals.d.ts` keeps the same relaxation
-    // too, though for different entries now: every vendor-library type
-    // it used to need this for (jquery-confirm/cluetip/Jcrop/DataTables/
-    // jgrowl/ajaxmanager/sort/autogrow-textarea/plupload/Chart.js/
-    // moment) is gone, each ported to a native module in turn (P49-B/
-    // P49-C). What remains is `global_params`/`fullname_of_cat` (the
-    // same search-filter query object as `search_filters.ts`'s own
-    // entry above, declared ambiently here for `Window`) and
-    // `AlbumSelectorCallbackArgs.addSelectedAlbum`'s own real variadic
-    // passthrough.
+    // `sprintf.ts` (`sprintf`'s own genuinely-polymorphic format-spec
+    // argument -- split out of `common.ts` at P51-I, which otherwise
+    // has zero remaining `any` since P51-H already deleted its own
+    // `Array.prototype` polyfill guard), and `profile.ts` (`setInfos`'s
+    // callback, whose real shape differs per dispatched endpoint).
+    // `build/ambient-globals.d.ts` keeps the same relaxation too, for
+    // its own real remaining `AlbumSelectorCallbackArgs.addSelectedAlbum`
+    // variadic passthrough (P51-H deleted its own former
+    // `global_params`/`fullname_of_cat` entries, confirmed-dead once
+    // `mcs.ts` started importing the real, typed exports directly).
     files: [
       "themes/default/js/mcs.ts",
       "themes/admin/default/js/history.ts",
-      "themes/admin/default/js/common.ts",
+      "themes/admin/default/js/sprintf.ts",
       "themes/standard_pages/js/profile.ts",
       "build/ambient-globals.d.ts",
     ],

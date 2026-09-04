@@ -1,12 +1,20 @@
 // Consumer of themes/admin/default/js/plugins_installed_config.ts's own
 // real exports now (docs/PLAN.md P48 -- was ambient window-global
 // latching). jConfirmAlertOptions/jConfirmConfirmOptions now import
-// from common.ts too (its own P48 batch landed).
+// from jconfirmPresets.ts too (its own P51-I split of what used to be
+// common.ts).
+// common.ts's own side effects (font-checkbox init, search-cancel
+// bindings) -- plugins_installed.latte's own generic
+// `.search-cancel`/`.search-input` pair needs the shared wiring; this
+// page used to get it incidentally, as a side effect of importing from
+// what was then the same file (common.ts); the P51-I split made that
+// dependency explicit instead of leaving it accidental.
+import "./common";
 import {
   jConfirmAlertOptions,
   jConfirmConfirmOptions,
   jConfirmConfirmWithContentOptions,
-} from "./common";
+} from "./jconfirmPresets";
 import {
   activateMsg,
   cancelMsg,

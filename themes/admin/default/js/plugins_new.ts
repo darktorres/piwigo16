@@ -1,4 +1,14 @@
-import { pwg_jconfirm_follow_href } from "./common";
+// common.ts's own side effects (font-checkbox init, search-cancel
+// bindings) -- plugins_new.latte's own `#search` input carries the
+// generic `.search-input` class too, and its own `.search-cancel`
+// click handler below only clears the filter state, not the input's
+// own visible value or the cancel button's show/hide toggling -- both
+// need the shared wiring. This page used to get it incidentally, as a
+// side effect of importing pwg_jconfirm_follow_href from what was then
+// the same file (common.ts); the P51-I split made that dependency
+// explicit instead of leaving it accidental.
+import "./common";
+import { pwg_jconfirm_follow_href } from "./jconfirmPresets";
 
 import { pwg_getPageString } from "../../../default/js/page-data";
 import { ajax, AjaxError } from "../../../default/js/vendor/ajax";

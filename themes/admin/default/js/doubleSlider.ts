@@ -1,4 +1,4 @@
-import { sprintf } from "./common";
+import { sprintf } from "./sprintf";
 import {
   data,
   find,

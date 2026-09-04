@@ -1,5 +1,5 @@
 import type { operations } from "../../../../openapi/client/schema";
-import { sprintf } from "./common";
+import { sprintf } from "./sprintf";
 
 import {
   pwg_getPageData,

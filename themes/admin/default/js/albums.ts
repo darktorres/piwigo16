@@ -1,5 +1,12 @@
 import type { operations } from "../../../../openapi/client/schema";
-import { jConfirmConfirmOptions } from "./common";
+// common.ts's own side effects (font-checkbox init, search-cancel
+// bindings) -- albums.latte's own `.font-checkbox` multi-view-selector
+// radios need fontCheckbox() to run. This page used to get that
+// incidentally, as a side effect of importing jConfirmConfirmOptions
+// from what was then the same file (common.ts); the P51-I split made
+// that dependency explicit instead of leaving it accidental.
+import "./common";
+import { jConfirmConfirmOptions } from "./jconfirmPresets";
 
 import {
   pwg_getPageData,

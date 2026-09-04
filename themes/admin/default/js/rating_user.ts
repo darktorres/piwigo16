@@ -6,7 +6,7 @@ import type { operations } from "../../../../openapi/client/schema";
 // (`popuphelp`/`pwg_tryFocus`'s own `window.X` assignments, the
 // `[data-confirm]` click guard).
 import "../../../default/js/scripts";
-import { jConfirmConfirmOptions } from "./common";
+import { jConfirmConfirmOptions } from "./jconfirmPresets";
 
 import {
   pwg_getPageData,

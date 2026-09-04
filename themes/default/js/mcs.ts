@@ -4,7 +4,7 @@ import type { operations } from "../../../openapi/client/schema";
 // read, see that file's own leading comment for the full real-consumer
 // list).
 import { AlbumSelector } from "../../admin/default/js/album_selector";
-import { sprintf } from "../../admin/default/js/common";
+import { sprintf } from "../../admin/default/js/sprintf";
 // This file has exactly one real registrant page (SearchFiltersView),
 // but doubleSlider.ts itself has 2 real file-level consumers (this
 // file and batchManagerFilter.ts, each its own separate Vite entry),

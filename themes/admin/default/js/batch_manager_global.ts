@@ -23,7 +23,15 @@ import {
   progress,
   getDerivativeUrls,
 } from "./batchManagerGlobal";
-import { sprintf } from "./common";
+// common.ts's own side effects (font-checkbox init, search-cancel
+// bindings) -- batch_manager_filter.inc.latte's own `.font-checkbox`
+// filter checkboxes (included by batch_manager_global.latte) need
+// fontCheckbox() to run. This page used to get that incidentally, as a
+// side effect of importing sprintf from what was then the same file
+// (common.ts); the P51-I split made that dependency explicit instead
+// of leaving it accidental.
+import "./common";
+import { sprintf } from "./sprintf";
 import { CategoriesCache, TagsCache } from "./LocalStorageCache";
 import {
   pwg_getPageData,

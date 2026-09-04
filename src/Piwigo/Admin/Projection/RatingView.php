@@ -63,11 +63,14 @@ final readonly class RatingView implements View, HasPageAssets, ExposesPageData
         return [
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
             AssetContribution::css('themes/admin/default/css/pages/rating.css', id: 'rating'),
-            // 'rating' imports scripts.ts directly now (docs/PLAN.md
+            // 'rating_photo' imports scripts.ts directly now (docs/PLAN.md
             // P48) -- the separate
             // `core.scripts` registration this page used to carry is
-            // dropped.
-            AssetContribution::script('rating', 'themes/admin/default/js/rating.ts', loadMode: LoadMode::Footer),
+            // dropped. Renamed from rating.ts (docs/PLAN.md P51-I item 3)
+            // to disambiguate from rating_user.ts -- both delete ratings
+            // (of one photo vs. by one user), but only this name says
+            // which axis.
+            AssetContribution::script('rating_photo', 'themes/admin/default/js/rating_photo.ts', loadMode: LoadMode::Footer),
         ];
     }
 

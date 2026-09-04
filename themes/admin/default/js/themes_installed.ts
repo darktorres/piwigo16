@@ -1,15 +1,12 @@
-import { pwg_jconfirm_follow_href } from "./common";
+import { pwg_jconfirm_follow_href, scaleThemeScreenshot } from "./common";
 
 import { pwg_getPageString } from "../../../default/js/page-data";
 import { colorbox } from "../../../default/js/vendor/colorbox";
 import {
   attrOf,
-  css,
   fadeOut,
   fadeToggle,
   hasClass,
-  innerHeight,
-  innerWidth,
   on,
   ready,
 } from "../../../default/js/vendor/dom";
@@ -59,26 +56,6 @@ window.addEventListener("load", function () {
       fadeToggle(box.querySelectorAll(".showInfo-dropdown"));
     });
 
-    const screenImage = box.querySelectorAll<HTMLElement>(".preview-box img");
-    const [first] = screenImage;
-    const previewBox = box.querySelector<HTMLElement>(".preview-box");
-    if (first === undefined || previewBox === null) {
-      return;
-    }
-
-    const imageW = innerWidth(first);
-    const imageH = innerHeight(first);
-    const size = innerWidth(previewBox);
-
-    if (imageW > imageH) {
-      css(screenImage, "height", String(size) + "px");
-      css(screenImage, "width", String((imageW * size) / imageH) + "px");
-    } else {
-      css(screenImage, "width", String(size) + "px");
-      // "heigth" (sic) -- same genuine pre-existing typo already
-      // preserved in themes_new.ts's own copy of this scaling logic;
-      // jQuery.css() silently no-ops on an unrecognized property.
-      css(screenImage, "heigth", String((imageH * size) / imageW) + "px");
-    }
+    scaleThemeScreenshot(box);
   });
 });

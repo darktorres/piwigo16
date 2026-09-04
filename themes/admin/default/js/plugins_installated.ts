@@ -855,15 +855,20 @@ ready(function () {
   })();
 
   /*Add the filter research*/
-  document.onkeydown = function (e) {
-    if (e.key === ":") {
+  on(document, "keydown", function (e: Event) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+    const event = e as KeyboardEvent;
+    if (event.key === ":") {
       document
         .querySelector<HTMLElement>(".pluginFilter input.search-input")
         ?.focus();
-      return false;
+      // A DOM0 handler property's own `return false` suppresses only the
+      // default action, not propagation -- this real listener form has
+      // no return-value control at all, so the same suppression needs
+      // preventDefault().
+      e.preventDefault();
     }
-    return undefined;
-  };
+  });
 
   on(
     document.querySelectorAll(".pluginFilter input"),

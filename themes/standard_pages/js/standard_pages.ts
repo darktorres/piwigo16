@@ -113,6 +113,7 @@ function toggleMode(mode: string) {
     root?.classList.add("dark");
     root?.classList.remove("light");
     if (logo) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own "#piwigo-logo" always renders both logoDark/logoLight data attributes.
       logo.src = logo.dataset["logoDark"]!;
     }
   } else {
@@ -126,6 +127,7 @@ function toggleMode(mode: string) {
     root?.classList.add("light");
     root?.classList.remove("dark");
     if (logo) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see toggleMode's dark-mode branch above.
       logo.src = logo.dataset["logoLight"]!;
     }
   }
@@ -173,6 +175,7 @@ document.querySelectorAll("#other-languages a").forEach((link) => {
     if (!(target instanceof Element)) {
       return;
     }
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real "#other-languages a" link always renders a real href.
     const clickedUrl = new URL(target.getAttribute("href")!);
     const selectedLang = clickedUrl.searchParams.get("lang");
 

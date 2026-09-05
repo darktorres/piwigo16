@@ -71,6 +71,14 @@ interface MergedActivityLine {
   counter: number;
 }
 
+type ActivityListResponse =
+  operations["activityList"]["responses"][200]["content"]["application/json"];
+type ActivityRow = ActivityListResponse["activities"][number];
+
+// `objectId`'s own real shape, filtered from a URL query param -- 3
+// repeats (sonarjs/use-type-alias).
+type ActivityObjectId = string | number | null | undefined;
+
 const nbUsers = pwg_getPageData<number>("nb_users");
 
 const additionalFiltType = pwg_getPageData<string | false>(
@@ -193,13 +201,123 @@ void getUserActivity(
  * fetch boundary, so `currentKey` intentionally isn't reset between
  * iterations of the while loop below.
  */
+interface ActivityQueryParams {
+  offset: number;
+  dateMin?: string | undefined;
+  dateMax?: string | undefined;
+  userId?: number;
+  action?: string;
+  object?: string;
+  objectId?: string | number;
+}
+
+/** Part of `fetchAndMergeActivityLines()`'s own extraction, below. */
+function buildActivityQueryParams(
+  offset: number,
+  uid: number | undefined,
+  action: string | undefined,
+  object: string | undefined,
+  date: (string | undefined)[],
+  id: ActivityObjectId,
+): ActivityQueryParams {
+  const params: ActivityQueryParams = {
+    offset: offset,
+    dateMin: date[0],
+    dateMax: date[1],
+  };
+  if (uid !== undefined) params.userId = uid;
+  if (action !== undefined) params.action = action;
+  if (object !== undefined) params.object = object;
+  if (id !== undefined && id !== null) params.objectId = id;
+  return params;
+}
+
+/**
+ * Part of `fetchAndMergeActivityLines()`'s own extraction, below --
+ * appends one `/api/v1/activity` row onto `lines`, merging it into the
+ * last line when it shares the same session/object/action key (the
+ * client-side equivalent of GetListHandler's own merge step). Returns
+ * the merge key to carry into the next row.
+ */
+function mergeActivityRow(
+  lines: MergedActivityLine[],
+  row: ActivityRow,
+  currentKey: string,
+): string {
+  const lineKey = row.sessionIdx + "~" + row.object + "~" + row.action + "~";
+
+  if (lineKey === currentKey) {
+    const last = lines[lines.length - 1]!;
+    last.counter++;
+    last.object_id.push(row.objectId);
+    return currentKey;
+  }
+
+  const details: MergedActivityDetails = row.details ? { ...row.details } : {};
+  let detailsType: "method" | "script" | null = null;
+  if ("method" in details) detailsType = "method";
+  if ("script" in details) detailsType = "script";
+  details.agent = row.userAgent;
+
+  lines.push({
+    id: lines.length,
+    object: row.object,
+    object_id: [row.objectId],
+    action: row.action,
+    ip_address: row.ipAddress,
+    date: row.dateFormatted,
+    hour: row.occuredOn.split(" ")[1]!,
+    user_id: row.performedBy,
+    username: row.performedByUsername ?? "user#" + String(row.performedBy),
+    detailsType: detailsType,
+    details: details,
+    counter: 1,
+  });
+
+  return lineKey;
+}
+
+/**
+ * Part of `fetchAndMergeActivityLines()`'s own extraction, below --
+ * resolves display usernames for every merged "user"-object line's own
+ * `object_id` list (GetListHandler's own equivalent step).
+ */
+async function resolveUserActivityUsernames(
+  lines: MergedActivityLine[],
+): Promise<void> {
+  const userLines = lines.filter((l) => l.object === "user");
+  if (userLines.length === 0) {
+    return;
+  }
+  const allUserIds = [...new Set(userLines.flatMap((l) => l.object_id))];
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+  const userInfo = (await ajax({
+    url: "api/v1/users",
+    type: "GET",
+    dataType: "json",
+    data: { userIds: allUserIds, perPage: 0 },
+  })) as UserListResponse;
+  const usernameOfId: Record<string, string> = {};
+  userInfo.users.forEach((u) => {
+    usernameOfId[u.id] = u.username;
+  });
+
+  userLines.forEach((l) => {
+    const usernames = l.object_id.map(
+      (uid2) => usernameOfId[uid2] ?? "user#" + String(uid2),
+    );
+    l.details.users = usernames;
+    l.details.users_string = [...new Set(usernames)].join(", ");
+  });
+}
+
 async function fetchAndMergeActivityLines(
   startOffset: number,
   uid: number | undefined,
   action: string | undefined,
   object: string | undefined,
   date: (string | undefined)[],
-  id: string | number | null | undefined,
+  id: ActivityObjectId,
 ) {
   let offset = startOffset;
   let hasMore = true;
@@ -207,23 +325,14 @@ async function fetchAndMergeActivityLines(
   let currentKey = "";
 
   while (lines.length < ACTIVITY_DISPLAY_PAGE_SIZE && hasMore) {
-    const params: {
-      offset: number;
-      dateMin?: string | undefined;
-      dateMax?: string | undefined;
-      userId?: number;
-      action?: string;
-      object?: string;
-      objectId?: string | number;
-    } = {
-      offset: offset,
-      dateMin: date[0],
-      dateMax: date[1],
-    };
-    if (uid !== undefined) params.userId = uid;
-    if (action !== undefined) params.action = action;
-    if (object !== undefined) params.object = object;
-    if (id !== undefined && id !== null) params.objectId = id;
+    const params = buildActivityQueryParams(
+      offset,
+      uid,
+      action,
+      object,
+      date,
+      id,
+    );
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
     const response = (await ajax({
@@ -231,7 +340,7 @@ async function fetchAndMergeActivityLines(
       type: "GET",
       dataType: "json",
       data: params,
-    })) as operations["activityList"]["responses"][200]["content"]["application/json"];
+    })) as ActivityListResponse;
 
     ({ hasMore } = response);
 
@@ -243,68 +352,11 @@ async function fetchAndMergeActivityLines(
         break;
       }
 
-      const lineKey =
-        row.sessionIdx + "~" + row.object + "~" + row.action + "~";
-
-      if (lineKey === currentKey) {
-        const last = lines[lines.length - 1]!;
-        last.counter++;
-        last.object_id.push(row.objectId);
-      } else {
-        const details: MergedActivityDetails = row.details
-          ? { ...row.details }
-          : {};
-        let detailsType: "method" | "script" | null = null;
-        if ("method" in details) detailsType = "method";
-        if ("script" in details) detailsType = "script";
-        details.agent = row.userAgent;
-
-        lines.push({
-          id: lines.length,
-          object: row.object,
-          object_id: [row.objectId],
-          action: row.action,
-          ip_address: row.ipAddress,
-          date: row.dateFormatted,
-          hour: row.occuredOn.split(" ")[1]!,
-          user_id: row.performedBy,
-          username:
-            row.performedByUsername ?? "user#" + String(row.performedBy),
-          detailsType: detailsType,
-          details: details,
-          counter: 1,
-        });
-
-        currentKey = lineKey;
-      }
+      currentKey = mergeActivityRow(lines, row, currentKey);
     }
   }
 
-  // Resolve display usernames for every merged "user"-object line's own
-  // object_id list -- GetListHandler's own equivalent step.
-  const userLines = lines.filter((l) => l.object === "user");
-  if (userLines.length > 0) {
-    const allUserIds = [...new Set(userLines.flatMap((l) => l.object_id))];
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const userInfo = (await ajax({
-      url: "api/v1/users",
-      type: "GET",
-      dataType: "json",
-      data: { userIds: allUserIds, perPage: 0 },
-    })) as UserListResponse;
-    const usernameOfId: Record<string, string> = {};
-    userInfo.users.forEach((u) => {
-      usernameOfId[u.id] = u.username;
-    });
-
-    userLines.forEach((l) => {
-      const usernames = l.object_id.map(
-        (uid2) => usernameOfId[uid2] ?? "user#" + String(uid2),
-      );
-      l.details.users = usernames;
-      l.details.users_string = [...new Set(usernames)].join(", ");
-    });
-  }
+  await resolveUserActivityUsernames(lines);
 
   return { lines: lines, endPage: !hasMore, nextOffset: offset };
 }
@@ -315,7 +367,7 @@ async function getUserActivity(
   action: string | undefined,
   object: string | undefined,
   date: (string | undefined)[],
-  id: string | number | null | undefined,
+  id: ActivityObjectId,
 ) {
   // Genuine pre-existing bug found only by strict typechecking:
   // jQuery's `.contents()` takes no selector argument at all, so the
@@ -385,6 +437,249 @@ async function getUserActivity(
   }
 }
 
+interface ActionObjectMessages {
+  singular: string;
+  plural: string;
+  sectionIconClass: string;
+}
+
+// Message-lookup counterpart of `lineConstructor()`'s own former nested
+// `switch(line.action) { switch(line.object) {...} } }` x2 (once per
+// singular/plural branch) -- every real i18n string constant above,
+// keyed by the same `action`/`object` values those switches matched
+// on. `move` genuinely has no "user" case (neither branch's own switch
+// ever did), so it's the one action missing that key here too.
+const ACTION_OBJECT_MESSAGES: Record<
+  string,
+  Record<string, ActionObjectMessages>
+> = {
+  edit: {
+    user: {
+      singular: actionInfosUserEdited,
+      plural: actionInfosUsersEdited,
+      sectionIconClass: "icon-user-1",
+    },
+    album: {
+      singular: actionInfosAlbumEdited,
+      plural: actionInfosAlbumsEdited,
+      sectionIconClass: "icon-folder-open",
+    },
+    group: {
+      singular: actionInfosGroupEdited,
+      plural: actionInfosGroupsEdited,
+      sectionIconClass: "icon-users-1",
+    },
+    photo: {
+      singular: actionInfosPhotoEdited,
+      plural: actionInfosPhotosEdited,
+      sectionIconClass: "icon-picture",
+    },
+    tag: {
+      singular: actionInfosTagEdited,
+      plural: actionInfosTagsEdited,
+      sectionIconClass: "icon-tags",
+    },
+  },
+  add: {
+    user: {
+      singular: actionInfosUserAdded,
+      plural: actionInfosUsersAdded,
+      sectionIconClass: "icon-user-1",
+    },
+    album: {
+      singular: actionInfosAlbumAdded,
+      plural: actionInfosAlbumsAdded,
+      sectionIconClass: "icon-folder-open",
+    },
+    group: {
+      singular: actionInfosGroupAdded,
+      plural: actionInfosGroupsAdded,
+      sectionIconClass: "icon-users-1",
+    },
+    photo: {
+      singular: actionInfosPhotoAdded,
+      plural: actionInfosPhotosAdded,
+      sectionIconClass: "icon-picture",
+    },
+    tag: {
+      singular: actionInfosTagAdded,
+      plural: actionInfosTagsAdded,
+      sectionIconClass: "icon-tags",
+    },
+  },
+  delete: {
+    user: {
+      singular: actionInfosUserDeleted,
+      plural: actionInfosUsersDeleted,
+      sectionIconClass: "icon-user-1",
+    },
+    album: {
+      singular: actionInfosAlbumDeleted,
+      plural: actionInfosAlbumsDeleted,
+      sectionIconClass: "icon-folder-open",
+    },
+    group: {
+      singular: actionInfosGroupDeleted,
+      plural: actionInfosGroupsDeleted,
+      sectionIconClass: "icon-users-1",
+    },
+    photo: {
+      singular: actionInfosPhotoDeleted,
+      plural: actionInfosPhotosDeleted,
+      sectionIconClass: "icon-picture",
+    },
+    tag: {
+      singular: actionInfosTagDeleted,
+      plural: actionInfosTagsDeleted,
+      sectionIconClass: "icon-tags",
+    },
+  },
+  move: {
+    album: {
+      singular: actionInfosAlbumMoved,
+      plural: actionInfosAlbumsMoved,
+      sectionIconClass: "icon-folder-open",
+    },
+    group: {
+      singular: actionInfosGroupMoved,
+      plural: actionInfosGroupsMoved,
+      sectionIconClass: "icon-users-1",
+    },
+    photo: {
+      singular: actionInfosPhotoMoved,
+      plural: actionInfosPhotosMoved,
+      sectionIconClass: "icon-picture",
+    },
+    tag: {
+      singular: actionInfosTagMoved,
+      plural: actionInfosTagsMoved,
+      sectionIconClass: "icon-tags",
+    },
+  },
+};
+
+interface ActionTypeStyle {
+  typeClass: string;
+  iconClass: string;
+  nameStr: string;
+}
+
+const ACTION_TYPE_STYLES: Record<string, ActionTypeStyle> = {
+  edit: {
+    typeClass: "icon-blue",
+    iconClass: "icon-pencil",
+    nameStr: actionTypeEdit,
+  },
+  add: {
+    typeClass: "icon-green",
+    iconClass: "icon-plus",
+    nameStr: actionTypeAdd,
+  },
+  delete: {
+    typeClass: "icon-red",
+    iconClass: "icon-trash-1",
+    nameStr: actionTypeDelete,
+  },
+  move: {
+    typeClass: "icon-yellow",
+    iconClass: "icon-move",
+    nameStr: actionTypeMove,
+  },
+};
+
+/**
+ * Part of `lineConstructor()`'s own extraction, below -- the shared
+ * rendering for the 4 object-carrying actions (edit/add/delete/move),
+ * looked up in `ACTION_TYPE_STYLES`/`ACTION_OBJECT_MESSAGES` above
+ * instead of a real per-action, per-object switch/case pair.
+ */
+function renderObjectAction(
+  newLine: Element,
+  line: MergedActivityLine,
+  action: string,
+): string {
+  const style = ACTION_TYPE_STYLES[action]!;
+  addClass(find(newLine, ".action-type"), style.typeClass);
+  addClass(find(newLine, ".user-pic"), colorIcons[(line.user_id ?? 0) % 5]!);
+  addClass(find(newLine, ".action-icon"), style.iconClass);
+  html(find(newLine, ".action-name"), style.nameStr);
+
+  const messages = ACTION_OBJECT_MESSAGES[action]?.[line.object];
+  if (!messages) {
+    return String(line.counter) + " " + line.object + " " + line.action;
+  }
+  addClass(find(newLine, ".action-section"), messages.sectionIconClass);
+  const template = line.counter > 1 ? messages.plural : messages.singular;
+  return template.replace("%d", String(line.counter));
+}
+
+/** Part of `lineConstructor()`'s own extraction, below. */
+function renderLoginAction(newLine: Element, line: MergedActivityLine): string {
+  addClass(find(newLine, ".action-type"), "icon-purple");
+  addClass(find(newLine, ".user-pic"), colorIcons[(line.user_id ?? 0) % 5]!);
+  addClass(find(newLine, ".action-icon"), "icon-key");
+  addClass(find(newLine, ".action-section"), "icon-user-1");
+  html(find(newLine, ".action-name"), actionTypeLogin);
+  const template =
+    line.counter > 1 ? actionInfosUsersLoggedIn : actionInfosUserLoggedIn;
+  return template.replace("%d", String(line.counter));
+}
+
+/** Part of `lineConstructor()`'s own extraction, below. */
+function renderLogoutAction(
+  newLine: Element,
+  line: MergedActivityLine,
+): string {
+  addClass(find(newLine, ".action-type"), "icon-purple");
+  if (line.user_id !== 2) {
+    addClass(find(newLine, ".user-pic"), colorIcons[(line.user_id ?? 0) % 5]!);
+  } else {
+    addClass(
+      find(newLine, ".user-pic"),
+      colorIcons[(line.object_id[0] ?? 0) % 5]!,
+    );
+  }
+  addClass(find(newLine, ".action-icon"), "icon-logout");
+  addClass(find(newLine, ".action-section"), "icon-user-1");
+  html(find(newLine, ".action-name"), actionTypeLogout);
+  const template =
+    line.counter > 1 ? actionInfosUsersLoggedOut : actionInfosUserLoggedOut;
+  return template.replace("%d", String(line.counter));
+}
+
+/** Part of `lineConstructor()`'s own extraction, below. */
+function renderDefaultAction(
+  newLine: Element,
+  line: MergedActivityLine,
+): string {
+  addClass(find(newLine, ".action-type"), "icon-purple");
+  addClass(find(newLine, ".user-pic"), colorIcons[(line.user_id ?? 0) % 5]!);
+  addClass(find(newLine, ".action-section"), "icon-user-1");
+  html(find(newLine, ".action-name"), line.action);
+  return "x" + String(line.counter);
+}
+
+/**
+ * Part of `lineConstructor()`'s own extraction, below -- applies the
+ * action-type/icon/name/section classes for `line`'s own action and
+ * returns the "N thing(s) verbed" message to show in `.action-infos-test`.
+ */
+function computeLineAction(newLine: Element, line: MergedActivityLine): string {
+  switch (line.action) {
+    case "edit":
+    case "add":
+    case "delete":
+    case "move":
+      return renderObjectAction(newLine, line, line.action);
+    case "login":
+      return renderLoginAction(newLine, line);
+    case "logout":
+      return renderLogoutAction(newLine, line);
+    default:
+      return renderDefaultAction(newLine, line);
+  }
+}
+
 function lineConstructor(line: MergedActivityLine) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
   const newLine = document.getElementById("-1")!.cloneNode(true) as Element;
@@ -395,569 +690,7 @@ function lineConstructor(line: MergedActivityLine) {
 
   attr(newLine, "id", String(line.id));
 
-  let finalAlbumInfos: string;
-
-  // Determines which string needs to be placed in the line constructed
-
-  if (line.counter > 1) {
-    // pluriel
-    switch (line.action) {
-      case "edit":
-        addClass(find(newLine, ".action-type"), "icon-blue");
-        addClass(
-          find(newLine, ".user-pic"),
-          colorIcons[(line.user_id ?? 0) % 5]!,
-        );
-        addClass(find(newLine, ".action-icon"), "icon-pencil");
-
-        html(find(newLine, ".action-name"), actionTypeEdit);
-        switch (line.object) {
-          case "user":
-            finalAlbumInfos = actionInfosUsersEdited.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-user-1");
-
-            break;
-          case "album":
-            finalAlbumInfos = actionInfosAlbumsEdited.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-folder-open");
-
-            break;
-          case "group":
-            finalAlbumInfos = actionInfosGroupsEdited.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-users-1");
-
-            break;
-          case "photo":
-            finalAlbumInfos = actionInfosPhotosEdited.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-picture");
-
-            break;
-          case "tag":
-            finalAlbumInfos = actionInfosTagsEdited.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-tags");
-
-            break;
-          default:
-            finalAlbumInfos =
-              String(line.counter) + " " + line.object + " " + line.action;
-            break;
-        }
-
-        break;
-
-      case "add":
-        addClass(find(newLine, ".action-type"), "icon-green");
-        addClass(
-          find(newLine, ".user-pic"),
-          colorIcons[(line.user_id ?? 0) % 5]!,
-        );
-        addClass(find(newLine, ".action-icon"), "icon-plus");
-
-        html(find(newLine, ".action-name"), actionTypeAdd);
-        switch (line.object) {
-          case "user":
-            finalAlbumInfos = actionInfosUsersAdded.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-user-1");
-
-            break;
-          case "album":
-            finalAlbumInfos = actionInfosAlbumsAdded.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-folder-open");
-
-            break;
-          case "group":
-            finalAlbumInfos = actionInfosGroupsAdded.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-users-1");
-
-            break;
-          case "photo":
-            finalAlbumInfos = actionInfosPhotosAdded.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-picture");
-
-            break;
-          case "tag":
-            finalAlbumInfos = actionInfosTagsAdded.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-tags");
-
-            break;
-          default:
-            finalAlbumInfos =
-              String(line.counter) + " " + line.object + " " + line.action;
-            break;
-        }
-
-        break;
-
-      case "delete":
-        addClass(find(newLine, ".action-type"), "icon-red");
-        addClass(
-          find(newLine, ".user-pic"),
-          colorIcons[(line.user_id ?? 0) % 5]!,
-        );
-        addClass(find(newLine, ".action-icon"), "icon-trash-1");
-
-        html(find(newLine, ".action-name"), actionTypeDelete);
-        switch (line.object) {
-          case "user":
-            finalAlbumInfos = actionInfosUsersDeleted.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-user-1");
-
-            break;
-          case "album":
-            finalAlbumInfos = actionInfosAlbumsDeleted.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-folder-open");
-
-            break;
-          case "group":
-            finalAlbumInfos = actionInfosGroupsDeleted.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-users-1");
-
-            break;
-          case "photo":
-            finalAlbumInfos = actionInfosPhotosDeleted.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-picture");
-
-            break;
-          case "tag":
-            finalAlbumInfos = actionInfosTagsDeleted.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-tags");
-
-            break;
-          default:
-            finalAlbumInfos =
-              String(line.counter) + " " + line.object + " " + line.action;
-            break;
-        }
-
-        break;
-
-      case "move":
-        addClass(find(newLine, ".action-type"), "icon-yellow");
-        addClass(
-          find(newLine, ".user-pic"),
-          colorIcons[(line.user_id ?? 0) % 5]!,
-        );
-        addClass(find(newLine, ".action-icon"), "icon-move");
-
-        html(find(newLine, ".action-name"), actionTypeMove);
-        switch (line.object) {
-          case "album":
-            finalAlbumInfos = actionInfosAlbumsMoved.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-folder-open");
-
-            break;
-          case "group":
-            finalAlbumInfos = actionInfosGroupsMoved.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-users-1");
-
-            break;
-          case "photo":
-            finalAlbumInfos = actionInfosPhotosMoved.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-picture");
-
-            break;
-          case "tag":
-            finalAlbumInfos = actionInfosTagsMoved.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-tags");
-
-            break;
-          default:
-            finalAlbumInfos =
-              String(line.counter) + " " + line.object + " " + line.action;
-            break;
-        }
-
-        break;
-
-      case "login":
-        addClass(find(newLine, ".action-type"), "icon-purple");
-        addClass(
-          find(newLine, ".user-pic"),
-          colorIcons[(line.user_id ?? 0) % 5]!,
-        );
-        addClass(find(newLine, ".action-icon"), "icon-key");
-        addClass(find(newLine, ".action-section"), "icon-user-1");
-
-        html(find(newLine, ".action-name"), actionTypeLogin);
-
-        finalAlbumInfos = actionInfosUsersLoggedIn.replace(
-          "%d",
-          String(line.counter),
-        );
-
-        break;
-
-      case "logout":
-        addClass(find(newLine, ".action-type"), "icon-purple");
-        if (line.user_id !== 2) {
-          addClass(
-            find(newLine, ".user-pic"),
-            colorIcons[(line.user_id ?? 0) % 5]!,
-          );
-        } else {
-          addClass(
-            find(newLine, ".user-pic"),
-            colorIcons[(line.object_id[0] ?? 0) % 5]!,
-          );
-        }
-        addClass(find(newLine, ".action-icon"), "icon-logout");
-        addClass(find(newLine, ".action-section"), "icon-user-1");
-
-        html(find(newLine, ".action-name"), actionTypeLogout);
-
-        finalAlbumInfos = actionInfosUsersLoggedOut.replace(
-          "%d",
-          String(line.counter),
-        );
-
-        break;
-
-      default:
-        addClass(find(newLine, ".action-type"), "icon-purple");
-        addClass(
-          find(newLine, ".user-pic"),
-          colorIcons[(line.user_id ?? 0) % 5]!,
-        );
-        addClass(find(newLine, ".action-section"), "icon-user-1");
-        html(find(newLine, ".action-name"), line.action);
-        finalAlbumInfos = "x" + String(line.counter);
-        break;
-    }
-  } else {
-    // singulier
-    switch (line.action) {
-      case "edit":
-        addClass(find(newLine, ".action-type"), "icon-blue");
-        addClass(
-          find(newLine, ".user-pic"),
-          colorIcons[(line.user_id ?? 0) % 5]!,
-        );
-        addClass(find(newLine, ".action-icon"), "icon-pencil");
-
-        html(find(newLine, ".action-name"), actionTypeEdit);
-        switch (line.object) {
-          case "user":
-            finalAlbumInfos = actionInfosUserEdited.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-user-1");
-
-            break;
-          case "album":
-            finalAlbumInfos = actionInfosAlbumEdited.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-folder-open");
-
-            break;
-          case "group":
-            finalAlbumInfos = actionInfosGroupEdited.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-users-1");
-
-            break;
-          case "photo":
-            finalAlbumInfos = actionInfosPhotoEdited.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-picture");
-
-            break;
-          case "tag":
-            finalAlbumInfos = actionInfosTagEdited.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-tags");
-
-            break;
-          default:
-            finalAlbumInfos =
-              String(line.counter) + " " + line.object + " " + line.action;
-            break;
-        }
-
-        break;
-      case "add":
-        addClass(find(newLine, ".action-type"), "icon-green");
-        addClass(
-          find(newLine, ".user-pic"),
-          colorIcons[(line.user_id ?? 0) % 5]!,
-        );
-        addClass(find(newLine, ".action-icon"), "icon-plus");
-
-        html(find(newLine, ".action-name"), actionTypeAdd);
-        switch (line.object) {
-          case "user":
-            finalAlbumInfos = actionInfosUserAdded.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-user-1");
-
-            break;
-          case "album":
-            finalAlbumInfos = actionInfosAlbumAdded.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-folder-open");
-
-            break;
-          case "group":
-            finalAlbumInfos = actionInfosGroupAdded.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-users-1");
-
-            break;
-          case "photo":
-            finalAlbumInfos = actionInfosPhotoAdded.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-picture");
-
-            break;
-          case "tag":
-            finalAlbumInfos = actionInfosTagAdded.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-tags");
-
-            break;
-          default:
-            finalAlbumInfos =
-              String(line.counter) + " " + line.object + " " + line.action;
-
-            break;
-        }
-
-        break;
-      case "delete":
-        addClass(find(newLine, ".action-type"), "icon-red");
-        addClass(
-          find(newLine, ".user-pic"),
-          colorIcons[(line.user_id ?? 0) % 5]!,
-        );
-        addClass(find(newLine, ".action-icon"), "icon-trash-1");
-
-        html(find(newLine, ".action-name"), actionTypeDelete);
-        switch (line.object) {
-          case "user":
-            finalAlbumInfos = actionInfosUserDeleted.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-user-1");
-
-            break;
-          case "album":
-            finalAlbumInfos = actionInfosAlbumDeleted.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-folder-open");
-
-            break;
-          case "group":
-            finalAlbumInfos = actionInfosGroupDeleted.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-users-1");
-
-            break;
-          case "photo":
-            finalAlbumInfos = actionInfosPhotoDeleted.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-picture");
-
-            break;
-          case "tag":
-            finalAlbumInfos = actionInfosTagDeleted.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-tags");
-
-            break;
-          default:
-            finalAlbumInfos =
-              String(line.counter) + " " + line.object + " " + line.action;
-            break;
-        }
-
-        break;
-      case "move":
-        addClass(find(newLine, ".action-type"), "icon-yellow");
-        addClass(
-          find(newLine, ".user-pic"),
-          colorIcons[(line.user_id ?? 0) % 5]!,
-        );
-        addClass(find(newLine, ".action-icon"), "icon-move");
-
-        html(find(newLine, ".action-name"), actionTypeMove);
-        switch (line.object) {
-          case "album":
-            finalAlbumInfos = actionInfosAlbumMoved.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-folder-open");
-
-            break;
-          case "group":
-            finalAlbumInfos = actionInfosGroupMoved.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-users-1");
-
-            break;
-          case "photo":
-            finalAlbumInfos = actionInfosPhotoMoved.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-picture");
-
-            break;
-          case "tag":
-            finalAlbumInfos = actionInfosTagMoved.replace(
-              "%d",
-              String(line.counter),
-            );
-            addClass(find(newLine, ".action-section"), "icon-tags");
-
-            break;
-          default:
-            finalAlbumInfos =
-              String(line.counter) + " " + line.object + " " + line.action;
-            break;
-        }
-
-        break;
-      case "login":
-        addClass(find(newLine, ".action-type"), "icon-purple");
-        addClass(
-          find(newLine, ".user-pic"),
-          colorIcons[(line.user_id ?? 0) % 5]!,
-        );
-        addClass(find(newLine, ".action-icon"), "icon-key");
-        addClass(find(newLine, ".action-section"), "icon-user-1");
-
-        html(find(newLine, ".action-name"), actionTypeLogin);
-
-        finalAlbumInfos = actionInfosUserLoggedIn.replace(
-          "%d",
-          String(line.counter),
-        );
-
-        break;
-      case "logout":
-        addClass(find(newLine, ".action-type"), "icon-purple");
-        if (line.user_id !== 2) {
-          addClass(
-            find(newLine, ".user-pic"),
-            colorIcons[(line.user_id ?? 0) % 5]!,
-          );
-        } else {
-          addClass(
-            find(newLine, ".user-pic"),
-            colorIcons[(line.object_id[0] ?? 0) % 5]!,
-          );
-        }
-        addClass(find(newLine, ".action-icon"), "icon-logout");
-        addClass(find(newLine, ".action-section"), "icon-user-1");
-
-        html(find(newLine, ".action-name"), actionTypeLogout);
-
-        finalAlbumInfos = actionInfosUserLoggedOut.replace(
-          "%d",
-          String(line.counter),
-        );
-
-        break;
-
-      default:
-        addClass(find(newLine, ".action-type"), "icon-purple");
-        addClass(
-          find(newLine, ".user-pic"),
-          colorIcons[(line.user_id ?? 0) % 5]!,
-        );
-        addClass(find(newLine, ".action-section"), "icon-user-1");
-        html(find(newLine, ".action-name"), line.action);
-        finalAlbumInfos = "x" + String(line.counter);
-        break;
-    }
-  }
+  const finalAlbumInfos = computeLineAction(newLine, line);
 
   html(find(newLine, ".action-infos-test"), finalAlbumInfos);
 

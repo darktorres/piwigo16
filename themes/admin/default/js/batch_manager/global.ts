@@ -62,6 +62,7 @@ import {
 import {
   ajax,
   AjaxError,
+  type AjaxOptions,
   type AjaxResponse,
 } from "../../../../default/js/vendor/utils/ajax";
 import { AjaxQueue } from "../../../../default/js/vendor/utils/ajaxQueue";
@@ -915,6 +916,51 @@ on(window, "keypress", function (e: Event) {
 // codebase relies on a shared global named `elements` (confirmed).
 let elements: (string | number)[] | undefined;
 
+/**
+ * Part of the `#applyAction` click handler's own extraction, below --
+ * every selected element id, or `allElements` when "select all" is
+ * checked. Shared by both the metadata-sync and delete batch flows.
+ */
+function resolveSelectedElements(): (string | number)[] {
+  if (is(document.querySelector("input[name=setSelected]")!, ":checked")) {
+    return allElements;
+  }
+  const selected: (string | number)[] = [];
+  document
+    .querySelectorAll<HTMLInputElement>('input[name="selection[]"]:checked')
+    .forEach((el) => {
+      selected.push(el.value);
+    });
+  return selected;
+}
+
+/**
+ * Part of the `#applyAction` click handler's own extraction, below --
+ * the shared "iterate in blocks of up to half the total (max 1000),
+ * queue one request per block" loop both the metadata-sync and delete
+ * batch flows use. `buildRequest(ids)` is called synchronously once
+ * per block (not deferred), so its own closures over `ids` capture
+ * that block's real array by value, the same guarantee the former
+ * per-iteration IIFE gave.
+ */
+function runBatchedImageRequests<T>(
+  allSelected: (string | number)[],
+  buildRequest: (ids: (string | number)[]) => AjaxOptions<T>,
+): void {
+  const queuedManager = new AjaxQueue({ maxRequests: 1 });
+  const blockSize = Math.min(Number((allSelected.length / 2).toFixed()), 1000);
+  let imageIds: (string | number)[] = [];
+
+  for (let i = 0; i < allSelected.length; i++) {
+    imageIds.push(allSelected[i]!);
+    if (i % blockSize !== blockSize - 1 && i !== allSelected.length - 1) {
+      continue;
+    }
+    queuedManager.add(buildRequest(imageIds));
+    imageIds = [];
+  }
+}
+
 /* sync metadatas or delete photos by blocks, with progress bar */
 // `#applyAction` is a real `<button type="submit">`, and this handler
 // leans on jQuery's own return-value sugar (`return false` ==
@@ -938,102 +984,59 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
       document.querySelectorAll("#regenerationText"),
       lang.syncProgressMessage,
     );
-    elements = [];
-
-    if (is(document.querySelector("input[name=setSelected]")!, ":checked")) {
-      elements = allElements;
-    } else {
-      document
-        .querySelectorAll<HTMLInputElement>('input[name="selection[]"]:checked')
-        .forEach((el) => {
-          elements!.push(el.value);
-        });
-    }
-
-    const queuedManager = new AjaxQueue({ maxRequests: 1 });
-
-    // Local alias for the definitely-assigned value, kept for
-    // readability. The non-null assertion this used to need is gone:
-    // it was only necessary while `allElements` arrived typed as `any`
-    // through a direct import, which defeated control-flow narrowing of
-    // the outer `let elements`. With the real `(string | number)[]`
-    // type restored, both assignment branches narrow it properly.
-    const syncElements = elements;
+    const syncElements = resolveSelectedElements();
+    elements = syncElements;
 
     progressBarMax = syncElements.length;
     let todo = 0;
-    const syncBlockSize = Math.min(
-      Number((syncElements.length / 2).toFixed()),
-      1000,
-    );
-    let imageIds = [];
 
     hide(document.querySelectorAll("#applyActionBlock"));
     hide(document.querySelectorAll(".permitActionListButton"));
     hide(document.querySelectorAll("#confirmDel"));
     show(document.querySelectorAll("#regenerationMsg"));
     progressStart();
-    for (let i = 0; i < syncElements.length; i++) {
-      imageIds.push(syncElements[i]);
-      if (
-        i % syncBlockSize !== syncBlockSize - 1 &&
-        i !== syncElements.length - 1
-      ) {
-        continue;
-      }
 
-      // eslint-disable-next-line sonarjs/todo-tag -- false positive: `todo` here is a real variable name (a running counter), not a TODO action marker.
-      // `todo`/`progressBarMax` are a running counter and a fixed total
-      // shared across every batch's own async callback, not a
-      // per-iteration snapshot -- each callback must see the live value
-      // as later batches complete, which is exactly what a real closure
-      // over the outer scope gives here. Only `ids` needed the IIFE's
-      // own per-iteration capture, already applied above.
-      (function (ids) {
-        const thisBatchSize = ids.length;
-        queuedManager.add({
-          url: "api/v1/images/actions/sync-metadata",
-          type: "POST",
-          contentType: "application/json",
-          headers: {
-            "X-CSRF-Token": val(
-              document.querySelectorAll("input[name=pwg_token]"),
-            )!,
-          },
-          data: JSON.stringify({
-            imageIds: ids,
-          }),
-          dataType: "json",
-          // eslint-disable-next-line @typescript-eslint/no-loop-func -- see comment above the IIFE.
-          success: function (
-            responseData: operations["imageSyncMetadata"]["responses"][200]["content"]["application/json"],
-          ) {
-            todo += thisBatchSize;
-            if (responseData.nbSynchronized !== thisBatchSize) {
-              console.warn(
-                `Metadata sync: only ${String(responseData.nbSynchronized)} of ${String(thisBatchSize)} images in this batch were synchronized.`,
-              );
-            }
-            html(
-              document.querySelectorAll("#regenerationStatus .badge-number"),
-              todo.toString() + "/" + progressBarMax.toString(),
+    runBatchedImageRequests<
+      operations["imageSyncMetadata"]["responses"][200]["content"]["application/json"]
+    >(syncElements, (ids) => {
+      const thisBatchSize = ids.length;
+      return {
+        url: "api/v1/images/actions/sync-metadata",
+        type: "POST",
+        contentType: "application/json",
+        headers: {
+          "X-CSRF-Token": val(
+            document.querySelectorAll("input[name=pwg_token]"),
+          )!,
+        },
+        data: JSON.stringify({
+          imageIds: ids,
+        }),
+        dataType: "json",
+        success: function (responseData) {
+          todo += thisBatchSize;
+          if (responseData.nbSynchronized !== thisBatchSize) {
+            console.warn(
+              `Metadata sync: only ${String(responseData.nbSynchronized)} of ${String(thisBatchSize)} images in this batch were synchronized.`,
             );
-            progressBar(todo, progressBarMax, false);
-          },
-          // eslint-disable-next-line @typescript-eslint/no-loop-func -- see comment above the IIFE.
-          error: function (xhr: AjaxResponse) {
-            todo += thisBatchSize;
-            console.error("Metadata sync batch failed:", xhr.responseText);
-            html(
-              document.querySelectorAll("#regenerationStatus .badge-number"),
-              todo.toString() + "/" + progressBarMax.toString(),
-            );
-            progressBar(todo, progressBarMax, false);
-          },
-        });
-      })(imageIds);
-      imageIds = [];
-    }
+          }
+          html(
+            document.querySelectorAll("#regenerationStatus .badge-number"),
+            todo.toString() + "/" + progressBarMax.toString(),
+          );
+          progressBar(todo, progressBarMax, false);
+        },
+        error: function (xhr: AjaxResponse) {
+          todo += thisBatchSize;
+          console.error("Metadata sync batch failed:", xhr.responseText);
+          html(
+            document.querySelectorAll("#regenerationStatus .badge-number"),
+            todo.toString() + "/" + progressBarMax.toString(),
+          );
+          progressBar(todo, progressBarMax, false);
+        },
+      };
+    });
   }
 
   if (val(document.querySelectorAll('[name="selectAction"]')) === "delete") {
@@ -1058,33 +1061,12 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
   }
 
   hide(document.querySelectorAll(".bulkAction"));
-  const maxRequests = 1;
 
-  const queuedManager = new AjaxQueue({ maxRequests: maxRequests });
-
-  elements = [];
-
-  if (is(document.querySelector("input[name=setSelected]")!, ":checked")) {
-    elements = allElements;
-  } else {
-    document
-      .querySelectorAll<HTMLInputElement>('input[name="selection[]"]:checked')
-      .forEach((el) => {
-        elements!.push(el.value);
-      });
-  }
-
-  // Local alias, same as syncElements above -- and likewise no longer
-  // needs a non-null assertion now that `allElements` has a real type.
-  const deleteElements = elements;
+  const deleteElements = resolveSelectedElements();
+  elements = deleteElements;
 
   progressBarMax = deleteElements.length;
   let todo = 0;
-  const deleteBlockSize = Math.min(
-    Number((deleteElements.length / 2).toFixed()),
-    1000,
-  );
-  let imageIds = [];
 
   hide(document.querySelectorAll("#applyActionBlock"));
   hide(document.querySelectorAll(".permitActionListButton"));
@@ -1095,68 +1077,48 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
   );
   show(document.querySelectorAll("#regenerationMsg"));
   progressStart();
-  for (let i = 0; i < deleteElements.length; i++) {
-    imageIds.push(deleteElements[i]);
-    if (
-      i % deleteBlockSize !== deleteBlockSize - 1 &&
-      i !== deleteElements.length - 1
-    ) {
-      continue;
-    }
 
-    // eslint-disable-next-line sonarjs/todo-tag -- false positive: `todo` here is a real variable name (a running counter), not a TODO action marker.
-    // `todo`/`progressBarMax` are a running counter and a fixed total
-    // shared across every batch's own async callback, not a
-    // per-iteration snapshot -- each callback must see the live value
-    // as later batches complete, which is exactly what a real closure
-    // over the outer scope gives here. Only `ids` needed the IIFE's
-    // own per-iteration capture, already applied above.
-    (function (ids) {
-      const thisBatchSize = ids.length;
-      queuedManager.add({
-        type: "POST",
-        url: "api/v1/images/actions/delete",
-        contentType: "application/json",
-        headers: {
-          "X-CSRF-Token": val(
-            document.querySelectorAll("input[name=pwg_token]"),
-          )!,
-        },
-        data: JSON.stringify({
-          imageIds: ids.map(Number),
-        }),
-        dataType: "json",
-        // eslint-disable-next-line @typescript-eslint/no-loop-func -- see comment above the IIFE.
-        success: function (
-          responseData: operations["imageDelete"]["responses"][200]["content"]["application/json"],
-        ) {
-          todo += thisBatchSize;
-          if (responseData.deletedCount !== thisBatchSize) {
-            console.warn(
-              `Image delete: only ${String(responseData.deletedCount)} of ${String(thisBatchSize)} images in this batch were deleted.`,
-            );
-          }
-          html(
-            document.querySelectorAll("#regenerationStatus .badge-number"),
-            todo.toString() + "/" + progressBarMax.toString(),
+  runBatchedImageRequests<
+    operations["imageDelete"]["responses"][200]["content"]["application/json"]
+  >(deleteElements, (ids) => {
+    const thisBatchSize = ids.length;
+    return {
+      type: "POST",
+      url: "api/v1/images/actions/delete",
+      contentType: "application/json",
+      headers: {
+        "X-CSRF-Token": val(
+          document.querySelectorAll("input[name=pwg_token]"),
+        )!,
+      },
+      data: JSON.stringify({
+        imageIds: ids.map(Number),
+      }),
+      dataType: "json",
+      success: function (responseData) {
+        todo += thisBatchSize;
+        if (responseData.deletedCount !== thisBatchSize) {
+          console.warn(
+            `Image delete: only ${String(responseData.deletedCount)} of ${String(thisBatchSize)} images in this batch were deleted.`,
           );
-          progressBar(todo, progressBarMax, false);
-        },
-        // eslint-disable-next-line @typescript-eslint/no-loop-func -- see comment above the IIFE.
-        error: function (xhr: AjaxResponse) {
-          todo += thisBatchSize;
-          console.error("Image delete batch failed:", xhr.responseText);
-          html(
-            document.querySelectorAll("#regenerationStatus .badge-number"),
-            todo.toString() + "/" + progressBarMax.toString(),
-          );
-          progressBar(todo, progressBarMax, false);
-        },
-      });
-    })(imageIds);
-
-    imageIds = [];
-  }
+        }
+        html(
+          document.querySelectorAll("#regenerationStatus .badge-number"),
+          todo.toString() + "/" + progressBarMax.toString(),
+        );
+        progressBar(todo, progressBarMax, false);
+      },
+      error: function (xhr: AjaxResponse) {
+        todo += thisBatchSize;
+        console.error("Image delete batch failed:", xhr.responseText);
+        html(
+          document.querySelectorAll("#regenerationStatus .badge-number"),
+          todo.toString() + "/" + progressBarMax.toString(),
+        );
+        progressBar(todo, progressBarMax, false);
+      },
+    };
+  });
 
   /* tell PHP how many photos were deleted */
   append(

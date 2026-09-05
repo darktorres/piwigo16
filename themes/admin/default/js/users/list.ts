@@ -2708,30 +2708,26 @@ function fillWhoIsTheKing(userToEdit: UserRow, popIn: Element) {
   // I'm an webmaster
   if (connectedUserStatus === "webmaster") {
     // check user to edit status
-    switch (userToEdit.status) {
-      // user to edit is an webmaster
-      case "webmaster":
-        removeClass(
-          whoIsTheKing,
-          "royal-court-of-this-piwigo king-of-this-piwigo cannot-change",
-        );
-        addClass(whoIsTheKing, "princes-of-this-piwigo can-change");
-        attr(whoIsTheKing, "title", mainUserSet);
-        tipTip(whoIsTheKing);
-        if (!isOwner(userToEdit.id)) {
-          off(whoIsTheKing, "click");
-          on(whoIsTheKing, "click", function () {
-            openMainUserModal(userToEdit);
-          });
-        }
-        break;
-      // if user to edit is not an webmaster he cannot be set as a main user
-      default:
-        removeClass(whoIsTheKing, "princes-of-this-piwigo king-of-this-piwigo");
-        addClass(whoIsTheKing, "royal-court-of-this-piwigo");
-        attr(whoIsTheKing, "title", mainUserUpgradeWebmaster);
-        tipTip(whoIsTheKing);
-        break;
+    if (userToEdit.status === "webmaster") {
+      removeClass(
+        whoIsTheKing,
+        "royal-court-of-this-piwigo king-of-this-piwigo cannot-change",
+      );
+      addClass(whoIsTheKing, "princes-of-this-piwigo can-change");
+      attr(whoIsTheKing, "title", mainUserSet);
+      tipTip(whoIsTheKing);
+      if (!isOwner(userToEdit.id)) {
+        off(whoIsTheKing, "click");
+        on(whoIsTheKing, "click", function () {
+          openMainUserModal(userToEdit);
+        });
+      }
+    } else {
+      // user to edit is not a webmaster, so he cannot be set as a main user
+      removeClass(whoIsTheKing, "princes-of-this-piwigo king-of-this-piwigo");
+      addClass(whoIsTheKing, "royal-court-of-this-piwigo");
+      attr(whoIsTheKing, "title", mainUserUpgradeWebmaster);
+      tipTip(whoIsTheKing);
     }
   }
 

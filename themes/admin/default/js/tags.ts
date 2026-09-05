@@ -1276,19 +1276,16 @@ on(
   },
 );
 
-// Genuinely dead code -- zero real callers found (confirmed via grep)
-// -- typed rather than left broken, same policy as prior files this
-// campaign.
+// Real callers: 4 real `.filter(isDataSearched)` call sites in this
+// file -- a prior version of this comment claimed this was dead code
+// (the same stale claim corrected in albums.ts's own getId()); wrong
+// here too, corrected.
 function isDataSearched(tagObj: TagRow): boolean {
   const name = tagObj.raw_name.toLowerCase();
   const stringSearch = String(
     val(document.querySelectorAll("#search-tag .search-input")),
   );
-  if (name.includes(stringSearch.toLowerCase())) {
-    return true;
-  } else {
-    return false;
-  }
+  return name.includes(stringSearch.toLowerCase());
 }
 
 /*-------

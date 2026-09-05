@@ -11,10 +11,7 @@ import {
 } from "../../../../default/js/pageData";
 import { ajax, AjaxError } from "../../../../default/js/vendor/utils/ajax";
 import { confirm } from "../../../../default/js/vendor/widgets/jconfirm";
-import {
-  getSelectizeInstance,
-  selectize as createSelectize,
-} from "../../../../default/js/vendor/widgets/selectize";
+import { selectize as createSelectize } from "../../../../default/js/vendor/widgets/selectize";
 import {
   slider,
   type SliderUIParams,
@@ -223,28 +220,27 @@ on(document, "keydown", function (e: Event) {
 Group Selectize
 ----------------*/
 
+// user_list.latte has exactly 3 real `[data-selectize=groups]`
+// elements (confirmed against the template, not assumed), always in
+// this same document order -- capturing each createSelectize() call's
+// own non-nullable return value directly, instead of discarding it
+// here and re-fetching by (possibly-absent, per noUncheckedIndexedAccess)
+// index via getSelectizeInstance()! afterward, removes the redundant
+// assertions outright rather than just re-justifying them.
 const groupSelectizeTargets = document.querySelectorAll<HTMLSelectElement>(
   "[data-selectize=groups]",
 );
-groupSelectizeTargets.forEach((el) => {
+const groupSelectizeInstances = Array.from(groupSelectizeTargets, (el) =>
   createSelectize<string | number, GroupOption>(el, {
     valueField: "value",
     labelField: "label",
     searchField: ["label"],
     plugins: ["remove_button"],
-  });
-});
-
-const groupSelectize = getSelectizeInstance<string | number, GroupOption>(
-  groupSelectizeTargets[0]!,
-)!;
-const groupGuestSelectize = getSelectizeInstance<string | number, GroupOption>(
-  groupSelectizeTargets[1]!,
-)!;
-const groupAddUserSelectize = getSelectizeInstance<
-  string | number,
-  GroupOption
->(groupSelectizeTargets[2]!)!;
+  }),
+);
+const groupSelectize = valueAt(groupSelectizeInstances, 0);
+const groupGuestSelectize = valueAt(groupSelectizeInstances, 1);
+const groupAddUserSelectize = valueAt(groupSelectizeInstances, 2);
 
 /*-----------------
 OnClick functions
@@ -717,8 +713,7 @@ ready(function () {
   );
   off(guestEditTabsheet, "click");
   on(guestEditTabsheet, "click", function (this: Element) {
-    const tabName = attrOf(this, "id")!.split("_");
-    const tabId = tabName[1]! + "_" + tabName[2]! + "_" + tabName[3]!;
+    const tabId = tabsheetTargetId(this);
     document.querySelector("#" + tabId)?.scrollIntoView({
       behavior: "smooth",
     });
@@ -849,6 +844,68 @@ const recentPeriodInit = 0;
 const nbImagePageInit = 0;
 
 /**
+ * A general "this index is safe, I've checked" escape hatch for
+ * `noUncheckedIndexedAccess` -- the proof lives at each call site, not
+ * here. E.g.: every real `nbImagePageValues`/`recentPeriodValues`
+ * slider below sets `min: 0`/`max: values.length - 1`, so a `sliderValue()`/
+ * `getSliderKeyFromValue()`-derived index is always in range;
+ * `parseHtml(markup)` is only ever called here with a non-empty real
+ * template string, so index 0 always exists.
+ */
+function valueAt<T>(values: T[], idx: number): T {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see this function's own leading comment.
+  return values[idx]!;
+}
+
+/**
+ * Every real slider below is single-handle (a bare `value:` init
+ * option, never `values:`), so jQuery UI's own change/slide/stop
+ * callbacks always populate `ui.value` -- it's left `undefined` only
+ * for a multi-handle, `values:`-configured slider, which nothing here
+ * uses.
+ */
+function sliderValue(ui: SliderUIParams): number {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see this function's own leading comment.
+  return ui.value!;
+}
+
+/**
+ * The multi-handle counterpart of `sliderValue()` above: every real
+ * multi-handle slider below sets a `values:` init option (never a bare
+ * `value:`), so jQuery UI's own change/slide/stop callbacks always
+ * populate `ui.values`.
+ */
+function sliderValues(ui: SliderUIParams): number[] {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see this function's own leading comment.
+  return ui.values!;
+}
+
+/**
+ * `.dates-select-bar .slider-bar-container` is a real, always-present
+ * multi-handle slider (a `values:` init, per `setupRegisterDates()`
+ * above), so `slider(el, "option", "values")` always returns a real
+ * 2-element array here.
+ */
+function sliderOptionValues(elements: Element | ArrayLike<Element>): number[] {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see this function's own leading comment.
+  return slider(elements, "option", "values")!;
+}
+
+/**
+ * `.guest-edit-user-tabsheet`/`.edit-user-tabsheet` elements always
+ * carry a real, template-rendered `id="name_..."` (confirmed against
+ * user_list.latte, e.g. `name_tab_properties`/`name_guest_tab_properties`)
+ * -- `attrOf()` only returns null/undefined for an element with no
+ * `id` at all, which never happens for these specific classes. Drops
+ * the leading `name` segment and rejoins the rest, matching the real
+ * target pane's own id (`tab_properties`/`guest_tab_properties`).
+ */
+function tabsheetTargetId(el: Element): string {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see this function's own leading comment.
+  return attrOf(el, "id")!.split("_").slice(1).join("_");
+}
+
+/**
  * find the key from a value in the startStopValues array
  */
 // Was `for (const key in values)`, returning the for-in string key
@@ -858,8 +915,8 @@ const nbImagePageInit = 0;
 // *string* on every non-fallback path) to jQuery UI's own slider
 // `value` option, which expects one.
 function getSliderKeyFromValue(value: number, values: number[]): number {
-  for (let key = 0; key < values.length; key++) {
-    if (values[key]! >= value) {
+  for (const [key, v] of values.entries()) {
+    if (v >= value) {
       return key;
     }
   }
@@ -867,11 +924,11 @@ function getSliderKeyFromValue(value: number, values: number[]): number {
 }
 
 function getNbImagePageInfoFromIdx(idx: number) {
-  return sprintf(nbPhotos, nbImagePageValues[idx]!);
+  return sprintf(nbPhotos, valueAt(nbImagePageValues, idx));
 }
 
 function getRecentPeriodInfoFromIdx(idx: number) {
-  return sprintf(nbDays, recentPeriodValues[idx]!);
+  return sprintf(nbDays, valueAt(recentPeriodValues, idx));
 }
 
 /* Photos bar slider */
@@ -889,7 +946,7 @@ slider(
         document.querySelectorAll(
           "#UserList .photos-select-bar .nb-img-page-infos",
         ),
-        getNbImagePageInfoFromIdx(ui.value!),
+        getNbImagePageInfoFromIdx(sliderValue(ui)),
       );
     },
     slide: function (_event: Event, ui: SliderUIParams) {
@@ -897,7 +954,7 @@ slider(
         document.querySelectorAll(
           "#UserList .photos-select-bar .nb-img-page-infos",
         ),
-        getNbImagePageInfoFromIdx(ui.value!),
+        getNbImagePageInfoFromIdx(sliderValue(ui)),
       );
     },
     stop: function (_event: Event, ui: SliderUIParams) {
@@ -905,7 +962,7 @@ slider(
         document.querySelectorAll(
           "#UserList .photos-select-bar input[name=nb_image_page]",
         ),
-        String(nbImagePageValues[ui.value!]!),
+        String(valueAt(nbImagePageValues, sliderValue(ui))),
       );
       trigger(
         document.querySelectorAll(
@@ -931,7 +988,7 @@ slider(
         document.querySelectorAll(
           "#GuestUserList .photos-select-bar .nb-img-page-infos",
         ),
-        getNbImagePageInfoFromIdx(ui.value!),
+        getNbImagePageInfoFromIdx(sliderValue(ui)),
       );
     },
     slide: function (_event: Event, ui: SliderUIParams) {
@@ -939,7 +996,7 @@ slider(
         document.querySelectorAll(
           "#GuestUserList .photos-select-bar .nb-img-page-infos",
         ),
-        getNbImagePageInfoFromIdx(ui.value!),
+        getNbImagePageInfoFromIdx(sliderValue(ui)),
       );
     },
     stop: function (_event: Event, ui: SliderUIParams) {
@@ -947,7 +1004,7 @@ slider(
         document.querySelectorAll(
           "#GuestUserList .photos-select-bar input[name=nb_image_page]",
         ),
-        String(nbImagePageValues[ui.value!]!),
+        String(valueAt(nbImagePageValues, sliderValue(ui))),
       );
       trigger(
         document.querySelectorAll(
@@ -979,7 +1036,7 @@ slider(
         document.querySelectorAll(
           "#permitActionUserList .photos-select-bar .nb-img-page-infos",
         ),
-        getNbImagePageInfoFromIdx(ui.value!),
+        getNbImagePageInfoFromIdx(sliderValue(ui)),
       );
     },
     slide: function (_event: Event, ui: SliderUIParams) {
@@ -987,7 +1044,7 @@ slider(
         document.querySelectorAll(
           "#permitActionUserList .photos-select-bar .nb-img-page-infos",
         ),
-        getNbImagePageInfoFromIdx(ui.value!),
+        getNbImagePageInfoFromIdx(sliderValue(ui)),
       );
     },
     stop: function (_event: Event, ui: SliderUIParams) {
@@ -995,7 +1052,7 @@ slider(
         document.querySelectorAll(
           "#permitActionUserList .photos-select-bar input[name=nb_image_page]",
         ),
-        String(nbImagePageValues[ui.value!]!),
+        String(valueAt(nbImagePageValues, sliderValue(ui))),
       );
       trigger(
         document.querySelectorAll(
@@ -1022,7 +1079,7 @@ slider(
         document.querySelectorAll(
           "#UserList .period-select-bar .recent_period_infos",
         ),
-        getRecentPeriodInfoFromIdx(ui.value!),
+        getRecentPeriodInfoFromIdx(sliderValue(ui)),
       );
     },
     slide: function (_event: Event, ui: SliderUIParams) {
@@ -1030,7 +1087,7 @@ slider(
         document.querySelectorAll(
           "#UserList .period-select-bar .recent_period_infos",
         ),
-        getRecentPeriodInfoFromIdx(ui.value!),
+        getRecentPeriodInfoFromIdx(sliderValue(ui)),
       );
     },
     stop: function (_event: Event, ui: SliderUIParams) {
@@ -1038,7 +1095,7 @@ slider(
         document.querySelectorAll(
           "#UserList .period-select-bar input[name=recent_period]",
         ),
-        String(recentPeriodValues[ui.value!]!),
+        String(valueAt(recentPeriodValues, sliderValue(ui))),
       );
       trigger(
         document.querySelectorAll(
@@ -1064,7 +1121,7 @@ slider(
         document.querySelectorAll(
           "#GuestUserList .period-select-bar .recent_period_infos",
         ),
-        getRecentPeriodInfoFromIdx(ui.value!),
+        getRecentPeriodInfoFromIdx(sliderValue(ui)),
       );
     },
     slide: function (_event: Event, ui: SliderUIParams) {
@@ -1072,7 +1129,7 @@ slider(
         document.querySelectorAll(
           "#GuestUserList .period-select-bar .recent_period_infos",
         ),
-        getRecentPeriodInfoFromIdx(ui.value!),
+        getRecentPeriodInfoFromIdx(sliderValue(ui)),
       );
     },
     stop: function (_event: Event, ui: SliderUIParams) {
@@ -1080,7 +1137,7 @@ slider(
         document.querySelectorAll(
           "#GuestUserList .period-select-bar input[name=recent_period]",
         ),
-        String(recentPeriodValues[ui.value!]!),
+        String(valueAt(recentPeriodValues, sliderValue(ui))),
       );
       trigger(
         document.querySelectorAll(
@@ -1106,7 +1163,7 @@ slider(
         document.querySelectorAll(
           "#permitActionUserList .period-select-bar .recent_period_infos",
         ),
-        getRecentPeriodInfoFromIdx(ui.value!),
+        getRecentPeriodInfoFromIdx(sliderValue(ui)),
       );
     },
     slide: function (_event: Event, ui: SliderUIParams) {
@@ -1114,7 +1171,7 @@ slider(
         document.querySelectorAll(
           "#permitActionUserList .period-select-bar .recent_period_infos",
         ),
-        getRecentPeriodInfoFromIdx(ui.value!),
+        getRecentPeriodInfoFromIdx(sliderValue(ui)),
       );
     },
     stop: function (_event: Event, ui: SliderUIParams) {
@@ -1122,7 +1179,7 @@ slider(
         document.querySelectorAll(
           "#permitActionUserList .period-select-bar input[name=recent_period]",
         ),
-        String(recentPeriodValues[ui.value!]!),
+        String(valueAt(recentPeriodValues, sliderValue(ui))),
       );
       trigger(
         document.querySelectorAll(
@@ -1205,7 +1262,7 @@ function appendPaginationItem(page: number | null = null) {
   const container = document.querySelector(".pagination-item-container");
   if (container === null) return;
   if (page != null) {
-    const newTag = parseHtml(pageItem.replace(/%d/g, String(page)))[0]!;
+    const newTag = valueAt(parseHtml(pageItem.replace(/%d/g, String(page))), 0);
     container.appendChild(newTag);
     if (actualPage === page) {
       addClass(newTag, "actual");
@@ -1215,7 +1272,7 @@ function appendPaginationItem(page: number | null = null) {
       moveToPage(data(newTag, "page") as number);
     });
   } else {
-    container.appendChild(parseHtml(pageEllipsis)[0]!);
+    container.appendChild(valueAt(parseHtml(pageEllipsis), 0));
   }
 }
 
@@ -1313,8 +1370,8 @@ let months: string[] = [];
 
 function getDateStr(date: string) {
   const dateArr = date.split("-");
-  const currMonth = months[parseInt(dateArr[1]!) - 1] ?? "";
-  return currMonth + " " + dateArr[0]!;
+  const currMonth = months[parseInt(valueAt(dateArr, 1)) - 1] ?? "";
+  return currMonth + " " + valueAt(dateArr, 0);
 }
 
 function setupRegisterDates(registerDatesList: string[]) {
@@ -1332,8 +1389,12 @@ function setupRegisterDates(registerDatesList: string[]) {
           document.querySelectorAll(".advanced-filter .dates-infos"),
           sprintf(
             datesInfos,
-            getDateStr(registerDatesList[ui.values![0]!]!),
-            getDateStr(registerDatesList[ui.values![1]!]!),
+            getDateStr(
+              valueAt(registerDatesList, valueAt(sliderValues(ui), 0)),
+            ),
+            getDateStr(
+              valueAt(registerDatesList, valueAt(sliderValues(ui), 1)),
+            ),
           ),
         );
       },
@@ -1342,8 +1403,12 @@ function setupRegisterDates(registerDatesList: string[]) {
           document.querySelectorAll(".advanced-filter .dates-infos"),
           sprintf(
             datesInfos,
-            getDateStr(registerDatesList[ui.values![0]!]!),
-            getDateStr(registerDatesList[ui.values![1]!]!),
+            getDateStr(
+              valueAt(registerDatesList, valueAt(sliderValues(ui), 0)),
+            ),
+            getDateStr(
+              valueAt(registerDatesList, valueAt(sliderValues(ui), 1)),
+            ),
           ),
         );
       },
@@ -1352,8 +1417,12 @@ function setupRegisterDates(registerDatesList: string[]) {
           document.querySelectorAll(".advanced-filter .dates-infos"),
           sprintf(
             datesInfos,
-            getDateStr(registerDatesList[ui.values![0]!]!),
-            getDateStr(registerDatesList[ui.values![1]!]!),
+            getDateStr(
+              valueAt(registerDatesList, valueAt(sliderValues(ui), 0)),
+            ),
+            getDateStr(
+              valueAt(registerDatesList, valueAt(sliderValues(ui), 1)),
+            ),
           ),
         );
         void updateUserList();
@@ -1365,8 +1434,8 @@ function setupRegisterDates(registerDatesList: string[]) {
     document.querySelectorAll(".advanced-filter .dates-infos"),
     sprintf(
       datesInfos,
-      getDateStr(registerDatesList[0]!),
-      getDateStr(registerDatesList[registerDatesList.length - 1]!),
+      getDateStr(valueAt(registerDatesList, 0)),
+      getDateStr(valueAt(registerDatesList, registerDatesList.length - 1)),
     ),
   );
 }
@@ -1436,12 +1505,12 @@ Selection mode
 ------------------*/
 
 function createUserSelectedItem(user: SelectionEntry): Element {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user_list.latte renders exactly one static `.user-selected-item` template row, always present, used only as a clone source.
   const template = document.querySelector(".user-selected-item")!;
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
   const newElem = template.cloneNode(true) as Element;
   attr(newElem, "data-id", user.id.toString());
-  // Non-null: only ever called after the caller's own `typeof ...
-  // !== "undefined"` guard confirms `username` is really set.
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- only ever called after the caller's own `typeof ... !== "undefined"` guard confirms `username` is really set.
   html(find(newElem, "p"), user.username!);
   on(find(newElem, "a"), "click", () => {
     selection.splice(
@@ -1462,9 +1531,12 @@ function generateUserSelectedItems() {
       el.remove();
     });
   const list = document.querySelector(".user-selected-list");
-  for (let i = 0; i < selection.length && itemsCreated < 5; i++) {
-    if (typeof selection[i]!.username !== "undefined") {
-      list?.appendChild(createUserSelectedItem(selection[i]!));
+  for (const item of selection) {
+    if (itemsCreated >= 5) {
+      break;
+    }
+    if (typeof item.username !== "undefined") {
+      list?.appendChild(createUserSelectedItem(item));
       itemsCreated += 1;
     }
   }
@@ -1481,8 +1553,11 @@ function generateUserSelectedItems() {
 
 function fillUserSelectedList() {
   let elemsWithUsername = 0;
-  for (let i = 0; i < selection.length && elemsWithUsername < 5; i++) {
-    if (typeof selection[i]!.username !== "undefined") {
+  for (const item of selection) {
+    if (elemsWithUsername >= 5) {
+      break;
+    }
+    if (typeof item.username !== "undefined") {
       elemsWithUsername += 1;
     }
   }
@@ -1517,6 +1592,7 @@ function setSelectedToSelection() {
     .querySelectorAll(".user-container-wrapper .user-container")
     .forEach((container, index) => {
       const selectionIds = selection.map((x) => x.id);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- `.user-container` rows are rendered 1:1 from `currentUsers`, in the same order, so `index` is always a real, in-bounds index into it.
       if (selectionIds.includes(currentUsers[index]!.id)) {
         addClass(container, "container-selected");
         attr(find(container, ".user-list-checkbox"), "data-selected", "1");
@@ -1604,12 +1680,7 @@ function getGroupNameFromId(id: number) {
 }
 
 function getContainerIndexFromUid(uid: number) {
-  for (let i = 0; i < currentUsers.length; i++) {
-    if (currentUsers[i]!.id === uid) {
-      return i;
-    }
-  }
-  return -1;
+  return currentUsers.findIndex((u) => u.id === uid);
 }
 
 function hideErrorEditUser() {
@@ -1639,8 +1710,7 @@ function editTabsBind() {
   const tabsheets = document.querySelectorAll(".edit-user-tabsheet");
   off(tabsheets, "click");
   on(tabsheets, "click", function (this: Element) {
-    const tabName = attrOf(this, "id")!.split("_");
-    const tabId = tabName[1]! + "_" + tabName[2]!;
+    const tabId = tabsheetTargetId(this);
 
     document.querySelector("#" + tabId)?.scrollIntoView({
       behavior: "smooth",
@@ -1667,7 +1737,9 @@ function checkTabs(title_tab_name_id: string) {
       "+" + String(countMoresPlugins),
     );
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- #dropdown_mores_plugins was just appended above (first call) or already exists from a prior call to this same function (every later call) -- either way it's real by this point.
     const dropdown = document.querySelector("#dropdown_mores_plugins")!;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real caller passes the id of a real, currently-rendered tabsheet title element.
     const tabsheetTitle = document.querySelector("#" + title_tab_name_id)!;
     css(document.querySelectorAll(".edit-user-tab-title"), "margin-top", "3px");
     css(
@@ -1686,12 +1758,9 @@ function checkTabs(title_tab_name_id: string) {
       if (dropdownChildren[0] !== undefined) {
         css(dropdownChildren[0], "border-radius", "10px 10px 0 0");
       }
-      if (dropdownChildren[dropdownChildren.length - 1] !== undefined) {
-        css(
-          dropdownChildren[dropdownChildren.length - 1]!,
-          "border-radius",
-          "0 0 10px 10px",
-        );
+      const lastChild = dropdownChildren[dropdownChildren.length - 1];
+      if (lastChild !== undefined) {
+        css(lastChild, "border-radius", "0 0 10px 10px");
       }
     }
 
@@ -1847,6 +1916,7 @@ function pluginAddTabInUserModal(
   );
 
   // DOM modification
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- validateAndRegisterPluginTab() above already called validateContentId(), which throws if this element doesn't exist.
   const content = document.getElementById(content_id)!;
 
   append(
@@ -1994,7 +2064,7 @@ function setMainUserSuccess() {
   );
   let king = document.querySelector("#the_king");
   if (king === null) {
-    king = parseHtml(kingTemplate)[0]!;
+    king = valueAt(parseHtml(kingTemplate), 0);
     attr(king, "title", mainUserStr);
     tipTip(king);
   }
@@ -2052,9 +2122,8 @@ function userContainerClick(this: Element) {
   if (!isSelectionMode()) {
     return;
   }
-  const containerCheckbox = find(this, ".user-list-checkbox")[0]!;
-  // Non-null: `key` is always a real, in-bounds index into currentUsers
-  // for a real .UsernameBlock container.
+  const containerCheckbox = valueAt(find(this, ".user-list-checkbox"), 0);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real .UsernameBlock container carries a real `key` attribute, and `key` is always a real, in-bounds index into currentUsers.
   const currUser = currentUsers[parseInt(attrOf(this, "key")!)]!;
   if (attrOf(containerCheckbox, "data-selected") === "1") {
     attr(containerCheckbox, "data-selected", "0");
@@ -2071,34 +2140,38 @@ function userContainerClick(this: Element) {
 }
 
 function generateGroups(container: Element, groups: number[]) {
-  const groupsContainer = find(container, ".user-container-groups")[0]!;
+  const groupsContainer = valueAt(find(container, ".user-container-groups"), 0);
   html(groupsContainer, "");
-  if (groups.length >= 1) {
+  const [g0, g1, g2, ...restGroups] = groups;
+  if (g0 !== undefined) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user_list.latte renders a real hidden #template with these group sub-templates, always present.
     const template = document.querySelector("#template .group-primary")!;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
     const primaryGrp = template.cloneNode(true) as Element;
-    html(primaryGrp, getGroupNameFromId(groups[0]!));
-    addClass(primaryGrp, colorIcons[groups[0]! % 5]!);
+    html(primaryGrp, getGroupNameFromId(g0));
+    addClass(primaryGrp, valueAt(colorIcons, g0 % 5));
     groupsContainer.appendChild(primaryGrp);
   }
-  if (groups.length >= 2) {
+  if (g1 !== undefined) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user_list.latte renders a real hidden #template with these group sub-templates, always present.
     const template = document.querySelector("#template .group-primary")!;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
     const primaryGrp = template.cloneNode(true) as Element;
-    html(primaryGrp, getGroupNameFromId(groups[1]!));
-    addClass(primaryGrp, colorIcons[groups[1]! % 5]!);
+    html(primaryGrp, getGroupNameFromId(g1));
+    addClass(primaryGrp, valueAt(colorIcons, g1 % 5));
     groupsContainer.appendChild(primaryGrp);
   }
-  if (groups.length >= 3) {
+  if (g2 !== undefined) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user_list.latte renders a real hidden #template with these group sub-templates, always present.
     const template = document.querySelector("#template .group-bonus")!;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
     const bonusGrp = template.cloneNode(true) as Element;
     html(bonusGrp, "...");
-    addClass(bonusGrp, colorIcons[groups[2]! % 5]!);
+    addClass(bonusGrp, valueAt(colorIcons, g2 % 5));
     addClass(bonusGrp, "tiptip");
     let groupsInTitle = "";
-    for (let i = 2; i < groups.length; i++) {
-      groupsInTitle += getGroupNameFromId(groups[i]!) + ", ";
+    for (const g of restGroups) {
+      groupsInTitle += getGroupNameFromId(g) + ", ";
     }
     groupsInTitle = groupsInTitle.substring(0, groupsInTitle.length - 2);
     attr(bonusGrp, "title", groupsInTitle);
@@ -2108,30 +2181,33 @@ function generateGroups(container: Element, groups: number[]) {
 
 function getInitials(username: string): string {
   const words = username.toUpperCase().split(" ");
-  let res = words[0]![0]!;
-
-  const [, secondWord] = words;
+  const [firstWord, secondWord] = words;
+  let res = (firstWord ?? "").charAt(0);
   if (secondWord !== undefined && secondWord.length > 0) {
-    res += secondWord[0]!;
+    res += secondWord.charAt(0);
   }
   return res;
 }
 
 function fillContainerUserInfo(container: Element, user_index: number) {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real caller passes an index it just derived from currentUsers itself (a loop bound, or a container's own "key" attribute set from this same index).
   const user = currentUsers[user_index]!;
   const registrationDates = (user.registrationDate ?? "").split(" ");
   attr(container, "key", String(user_index));
   html(find(container, ".user-container-username span"), user.username);
   if (user.id === ownerId && document.getElementById("the_king") === null) {
-    const kingToDisplay = parseHtml(kingTemplate)[0]!;
+    const kingToDisplay = valueAt(parseHtml(kingTemplate), 0);
     attr(kingToDisplay, "title", mainUserStr);
     tipTip(kingToDisplay);
     find(container, ".user-container-username")[0]?.appendChild(kingToDisplay);
   }
   const initialToFill = getInitials(user.username);
-  const initialSpan = find(container, ".user-container-initials span")[0]!;
+  const initialSpan = valueAt(
+    find(container, ".user-container-initials span"),
+    0,
+  );
   html(initialSpan, initialToFill);
-  addClass(initialSpan, colorIcons[user.id % 5]!);
+  addClass(initialSpan, valueAt(colorIcons, user.id % 5));
   if (initialToFill.length > 1) {
     addClass(initialSpan, "small");
   } else {
@@ -2139,9 +2215,7 @@ function fillContainerUserInfo(container: Element, user_index: number) {
   }
   html(
     find(container, ".user-container-status span"),
-    // Non-null: every real, listed user has a real status; `null` is
-    // only a schema allowance for an edge case this admin listing
-    // doesn't actually surface.
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real, listed user has a real status; `null` is only a schema allowance for an edge case this admin listing doesn't actually surface.
     statusToStr[user.status!]!,
   );
   html(find(container, ".user-container-email span"), user.email ?? "");
@@ -2166,9 +2240,11 @@ function generateUserList() {
     .forEach((el) => {
       el.remove();
     });
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user_list.latte renders this wrapper unconditionally.
   const wrapper = document.querySelector(
     "#user-table-content .user-container-wrapper",
   )!;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user_list.latte renders a real hidden #template with this user-container sub-template, always present.
   const template = document.querySelector("#template .user-container")!;
   for (let i = 0; i < currentUsers.length; i++) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
@@ -2207,8 +2283,7 @@ function getLevelIndex(level: number | null) {
   // JSON number for `level`, so this needs a loose match rather than
   // the strict one statusArr's own still-string `status` comparison
   // above can keep using.
-  for (let i = 0; i < levelArr.length; i++) {
-    const levelStr = levelArr[i]!;
+  for (const [i, levelStr] of levelArr.entries()) {
     if (levelStr === String(level)) {
       return i;
     }
@@ -2230,13 +2305,13 @@ function fillUserEditSummary(
   if (isGuest) {
     const initialSpan = find(popIn, ".user-property-initials span");
     removeClass(initialSpan, colorIcons.join(" "));
-    addClass(initialSpan, colorIcons[userToEdit.id % 5]!);
+    addClass(initialSpan, valueAt(colorIcons, userToEdit.id % 5));
   } else {
     const initialToFill = getInitials(userToEdit.username);
     const initialSpan = find(popIn, ".user-property-initials span");
     html(initialSpan, initialToFill);
     removeClass(initialSpan, colorIcons.join(" "));
-    addClass(initialSpan, colorIcons[userToEdit.id % 5]!);
+    addClass(initialSpan, valueAt(colorIcons, userToEdit.id % 5));
     if (initialToFill.length > 1) {
       addClass(initialSpan, "small");
     } else {
@@ -2666,6 +2741,7 @@ function isOwner(user_id: number) {
 }
 
 function fillUserEdit(userToEdit: UserRow) {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user_list.latte renders #UserList unconditionally.
   const popIn = document.querySelector("#UserList")!;
   fillUserEditSummary(userToEdit, popIn, false);
   fillUserEditProperties(userToEdit, popIn);
@@ -2700,6 +2776,7 @@ function fillUserEdit(userToEdit: UserRow) {
 
 function fillGuestEdit() {
   const userToEdit = guestUser;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user_list.latte renders .GuestUserListPopInContainer unconditionally.
   const popIn = document.querySelector(".GuestUserListPopInContainer")!;
   fillUserEditSummary(userToEdit, popIn, true);
   fillUserEditProperties(userToEdit, popIn);
@@ -2710,6 +2787,7 @@ function fillGuestEdit() {
 function fillNewUser() {
   // When you want to add an user: privacy level and groups
   // by default are the same as Guest, not status
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user_list.latte renders #AddUser unconditionally.
   const addUserPopIn = document.querySelector("#AddUser")!;
   const statusIndex = getStatusIndex("normal");
   const levelIndex = getLevelIndex(guestUser.level);
@@ -2744,7 +2822,7 @@ function fillNewUser() {
 }
 
 function fillWhoIsTheKing(userToEdit: UserRow, popIn: Element) {
-  const whoIsTheKing = find(popIn, "#who_is_the_king")[0]!;
+  const whoIsTheKing = valueAt(find(popIn, "#who_is_the_king"), 0);
   // By default I'm an admin and I only see who is the Main User
   removeClass(
     whoIsTheKing,
@@ -2803,6 +2881,7 @@ function fillAjaxDataFromProperties(
   const groupsSelected = find(
     popIn,
     ".user-property-group .selectize-input .item",
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real selectize-rendered item carries its own real `data-value`.
   ).map((el) => parseInt(attrOf(el, "data-value")!));
   ajaxData["email"] = val(find(popIn, ".user-property-email input"));
   if (
@@ -2833,6 +2912,7 @@ function fillAjaxDataFromPreferences(
   ajaxData["language"] = val(find(popIn, ".user-property-lang select"));
   ajaxData["nbImagePage"] =
     nbImagePageValues[
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- real, always-present slider container; slider(..., "option", "value") only returns undefined for an empty/non-slider element set.
       slider(
         find(popIn, ".photos-select-bar .slider-bar-container"),
         "option",
@@ -2841,6 +2921,7 @@ function fillAjaxDataFromPreferences(
     ];
   ajaxData["recentPeriod"] =
     recentPeriodValues[
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- real, always-present slider container; slider(..., "option", "value") only returns undefined for an empty/non-slider element set.
       slider(
         find(popIn, ".period-select-bar .slider-bar-container"),
         "option",
@@ -2901,6 +2982,7 @@ async function getFirstSelectionUsernames(callback: () => void): Promise<void> {
     for (const resultUser of result) {
       const index = selection.findIndex((x) => x.id === resultUser.id);
       if (index !== -1) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- guarded by the `index !== -1` check above.
         selection[index]!.username = resultUser.username;
       }
     }
@@ -2942,23 +3024,25 @@ async function selectWholeSet(): Promise<void> {
         maxLevel: filterLevel,
         minRegister:
           registerDates[
-            slider(
-              document.querySelectorAll(
-                ".dates-select-bar .slider-bar-container",
+            valueAt(
+              sliderOptionValues(
+                document.querySelectorAll(
+                  ".dates-select-bar .slider-bar-container",
+                ),
               ),
-              "option",
-              "values",
-            )![0]!
+              0,
+            )
           ],
         maxRegister:
           registerDates[
-            slider(
-              document.querySelectorAll(
-                ".dates-select-bar .slider-bar-container",
+            valueAt(
+              sliderOptionValues(
+                document.querySelectorAll(
+                  ".dates-select-bar .slider-bar-container",
+                ),
               ),
-              "option",
-              "values",
-            )![1]!
+              1,
+            )
           ],
       },
       dataType: "json",
@@ -2974,6 +3058,7 @@ async function selectWholeSet(): Promise<void> {
 }
 
 async function updateUserUsername(): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user_list.latte renders #UserList unconditionally.
   const popInContainer = document.querySelector("#UserList")!;
   const ajaxData: Record<string, unknown> = {};
   const newUsername = String(
@@ -3003,6 +3088,7 @@ async function updateUserUsername(): Promise<void> {
       // the value we just successfully submitted is still correct.
       const updatedUsername =
         "username" in response ? response.username : newUsername;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- always reached inside an `if (lastUserIndex !== -1)`/ternary guard, so lastUserIndex is a real, in-bounds currentUsers index here.
       currentUsers[lastUserIndex]!.username = updatedUsername;
       html(
         document.querySelectorAll(
@@ -3015,6 +3101,7 @@ async function updateUserUsername(): Promise<void> {
         getInitials(updatedUsername),
       );
       fillContainerUserInfo(
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- `.user-container` rows are rendered 1:1 from currentUsers, so lastUserIndex (already guarded above) is in-bounds here too.
         document.querySelectorAll("#user-table-content .user-container")[
           lastUserIndex
         ]!,
@@ -3039,6 +3126,7 @@ async function updateUserUsername(): Promise<void> {
 }
 
 async function updateUserPassword(): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user_list.latte renders #UserList unconditionally.
   const popInContainer = document.querySelector("#UserList")!;
   const ajaxData: Record<string, unknown> = {};
   const newPassword = String(
@@ -3091,9 +3179,11 @@ async function updateUserInfo(): Promise<void> {
   removeClass(btnIcon, "icon-floppy");
   addClass(btnIcon, "icon-spin6 animate-spin");
   addClass(document.querySelectorAll(".update-user-button"), "unclickable");
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- .UserListPopInContainer is rendered unconditionally (shared by #UserList and #GuestUserList).
   const popInContainer = document.querySelector(".UserListPopInContainer")!;
   let ajaxData: Record<string, unknown> = {};
   if (pluginsUsersInfosTable.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- always reached inside an `if (lastUserIndex !== -1)`/ternary guard, so lastUserIndex is a real, in-bounds currentUsers index here.
     const keyCurrentUsers = Object.keys(currentUsers[lastUserIndex]!);
     pluginsUsersInfosTable.forEach((i) => {
       if (keyCurrentUsers.includes(i.users_table)) {
@@ -3120,10 +3210,12 @@ async function updateUserInfo(): Promise<void> {
     })) as operations["userUpdate"]["responses"][200]["content"]["application/json"];
     if (lastUserIndex !== -1) {
       currentUsers[lastUserIndex] = {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- always reached inside an `if (lastUserIndex !== -1)`/ternary guard, so lastUserIndex is a real, in-bounds currentUsers index here.
         ...currentUsers[lastUserIndex]!,
         ...resultUser,
       };
       fillContainerUserInfo(
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- `.user-container` rows are rendered 1:1 from currentUsers, so lastUserIndex (already guarded above) is in-bounds here too.
         document.querySelectorAll("#user-table-content .user-container")[
           lastUserIndex
         ]!,
@@ -3157,7 +3249,9 @@ async function updateUserInfo(): Promise<void> {
     // `currentUsers` entry (old data overlaid with whatever the
     // response did carry) is always a real, complete UserRow.
     fillWhoIsTheKing(
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- guarded by the same `lastUserIndex !== -1` check.
       lastUserIndex !== -1 ? currentUsers[lastUserIndex]! : guestUser,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user_list.latte renders #UserList unconditionally.
       document.querySelector("#UserList")!,
     );
   } catch (e) {
@@ -3192,7 +3286,7 @@ async function getGuestInfo(): Promise<void> {
       dataType: "json",
     })) as UserListResponse;
     if (response.users.length) {
-      guestUser = response.users[0]!;
+      guestUser = valueAt(response.users, 0);
       fillGuestEdit();
     }
   } catch {
@@ -3215,7 +3309,7 @@ async function getUserInfo(
       dataType: "json",
     })) as UserListResponse;
     if (response.users.length) {
-      const resultUser = response.users[0]!;
+      const resultUser = valueAt(response.users, 0);
       fillUserEdit(resultUser);
       callback?.();
     }
@@ -3231,6 +3325,7 @@ async function updateGuestInfo(): Promise<void> {
   addClass(btnIcon, "icon-spin6 animate-spin");
   addClass(document.querySelectorAll(".update-user-button"), "unclickable");
 
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user_list.latte renders .GuestUserListPopInContainer unconditionally.
   const popInContainer = document.querySelector(
     ".GuestUserListPopInContainer",
   )!;
@@ -3313,19 +3408,21 @@ function applyAdvancedFilterData(updateData: Record<string, unknown>): void {
   updateData["maxLevel"] = filterLevel;
   updateData["minRegister"] =
     registerDates[
-      slider(
-        document.querySelectorAll(".dates-select-bar .slider-bar-container"),
-        "option",
-        "values",
-      )![0]!
+      valueAt(
+        sliderOptionValues(
+          document.querySelectorAll(".dates-select-bar .slider-bar-container"),
+        ),
+        0,
+      )
     ];
   updateData["maxRegister"] =
     registerDates[
-      slider(
-        document.querySelectorAll(".dates-select-bar .slider-bar-container"),
-        "option",
-        "values",
-      )![1]!
+      valueAt(
+        sliderOptionValues(
+          document.querySelectorAll(".dates-select-bar .slider-bar-container"),
+        ),
+        1,
+      )
     ];
 }
 
@@ -3377,9 +3474,12 @@ function bindUserEditClickHandler(): void {
     document.querySelectorAll(".user-col.user-first-col.user-container-edit"),
     "click",
     function (this: Element) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this is always a .user-first-col nested inside a real .user-container.
       const uidIndex = Number(attrOf(this.closest(".user-container")!, "key"));
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- .user-container's own `key` attribute is always a real, in-bounds currentUsers index (set by fillContainerUserInfo()).
       lastUserId = currentUsers[uidIndex]!.id;
       lastUserIndex = uidIndex;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see the comment above.
       fillUserEdit(currentUsers[uidIndex]!);
       fadeIn(document.querySelectorAll("#UserList"));
       document.querySelector("#tab_properties")?.scrollIntoView({
@@ -3414,20 +3514,16 @@ function countActiveFilters(): number {
     nbFilters += 1;
   }
   if (
-    slider(
+    sliderOptionValues(
       document.querySelectorAll(".dates-select-bar .slider-bar-container"),
-      "option",
-      "values",
-    )![0] !== 0
+    )[0] !== 0
   ) {
     nbFilters += 1;
   }
   if (
-    slider(
+    sliderOptionValues(
       document.querySelectorAll(".dates-select-bar .slider-bar-container"),
-      "option",
-      "values",
-    )![1] !==
+    )[1] !==
     registerDates.length - 1
   ) {
     nbFilters += 1;
@@ -3441,6 +3537,7 @@ async function addUser(): Promise<void> {
     document.querySelectorAll(
       ".AddUserInputContainer .user-property-group .selectize-input .item",
     ),
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real selectize-rendered item carries its own real `data-value`.
   ).map((el) => parseInt(attrOf(el, "data-value")!));
   ajaxData["username"] = val(
     document.querySelectorAll(".AddUserLabelUsername .user-property-input"),
@@ -3627,6 +3724,7 @@ async function addInfosToNewUser(
       lastUserId = newUserId;
       lastUserIndex = getContainerIndexFromUid(newUserId);
       if (lastUserIndex !== -1) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- guarded by the enclosing `lastUserIndex !== -1` check.
         fillUserEdit(currentUsers[lastUserIndex]!);
         openUserList();
       } else {
@@ -4040,6 +4138,7 @@ const groupsArrName = Array.isArray(parsedGroupsArrName)
 const groupsArrId: number[] = pwg_getPageData<string>("groups_arr_id")
   ? pwg_getPageData<string>("groups_arr_id").split(",").map(Number)
   : [];
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- groups_arr_id/groups_arr_name are server-rendered as parallel comma-separated lists, always the same length.
 groupsArr = groupsArrId.map((elem, index) => [elem, groupsArrName[index]!]);
 guestId = pwg_getPageData<number>("guest_id");
 nbDays = pwg_getPageString("%d days");
@@ -4148,6 +4247,7 @@ function collectBulkActionData(
     case "recent_period":
       actionData["recent_period"] =
         recentPeriodValues[
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- real, always-present slider container; slider(..., "option", "value") only returns undefined for an empty/non-slider element set.
           slider(
             document.querySelectorAll(
               "#permitActionUserList .period-select-bar .slider-bar-container",
@@ -4247,6 +4347,7 @@ async function buildBulkActionRequest(
     show_nb_hits: "showNbHits",
   };
   const numericFields = ["level", "nbImagePage", "recentPeriod"];
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real caller passes an action the #applyAction dropdown's own option values already enumerate, all of which are real fieldByAction keys.
   const field = fieldByAction[action]!;
   const value = numericFields.includes(field)
     ? Number(actionData[action])
@@ -4275,6 +4376,7 @@ async function runBulkUserAction(e: Event): Promise<void> {
   show(document.querySelectorAll("#applyActionLoading"));
   fadeOut(document.querySelectorAll("#applyActionBlock .infos"));
 
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- a native <select> always has a real selected value.
   const request = buildBulkActionRequest(action!, actionData, userIds);
 
   try {

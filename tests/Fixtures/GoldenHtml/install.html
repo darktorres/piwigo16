@@ -20,6 +20,7 @@
     <link rel="modulepreload" href="dist/assets/pageData-{{ASSET_HASH}}.js">
     <link rel="modulepreload" href="dist/assets/dom-{{ASSET_HASH}}.js">
     <link rel="modulepreload" href="dist/assets/ajax-{{ASSET_HASH}}.js">
+    <link rel="modulepreload" href="dist/assets/email-{{ASSET_HASH}}.js">
     <link rel="modulepreload" href="dist/assets/cluetip-{{ASSET_HASH}}.js">
 
     <title>Piwigo 17.0.0 - Installation</title>
@@ -290,11 +291,7 @@
                       for="dbdriver"
                     >Database type</label></td>
                 <td>
-                  <select
-                      name="dbdriver"
-                      id="dbdriver"
-                      onchange="document.getElementById('dbport').placeholder = (this.value === 'pgsql') ? '5432' : '3306';"
-                    >
+                  <select name="dbdriver" id="dbdriver">
                     <option
                         value="mysqli"
                         

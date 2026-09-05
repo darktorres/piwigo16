@@ -4,6 +4,7 @@ import { looksLikeEmail } from "../../../default/js/vendor/utils/email";
 import { cluetip } from "../../../default/js/vendor/widgets/cluetip";
 import {
   addClass,
+  attr,
   on,
   ready,
   removeClass,
@@ -189,6 +190,14 @@ ready(function () {
 
   on(q("#dbhost, #dbuser, #dbpasswd, #dbname"), "blur", scheduleDbCheck);
   on(q("#dbdriver, #dbport"), "change", scheduleDbCheck);
+
+  // Formerly install.latte's own inline onchange= on #dbdriver (P51-AA).
+  // The initial placeholder is already server-rendered from $fDbDriver;
+  // this only keeps it live when the user switches driver type.
+  on(q("#dbdriver"), "change", function () {
+    const driver = fieldValue("dbdriver");
+    attr(q("#dbport"), "placeholder", driver === "pgsql" ? "5432" : "3306");
+  });
 
   // Mirrors analyzeForm()'s own preg_match('/[\'"]/', $webmaster) --
   // the "empty login" branch isn't mirrored, the field's own required

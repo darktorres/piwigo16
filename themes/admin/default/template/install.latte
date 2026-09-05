@@ -91,11 +91,7 @@
                       for="dbdriver"
                     >{='Database type'|translate}</label></td>
                   <td>
-                    <select
-                      name="dbdriver"
-                      id="dbdriver"
-                      onchange="document.getElementById('dbport').placeholder = (this.value === 'pgsql') ? '5432' : '3306';"
-                    >
+                    <select name="dbdriver" id="dbdriver">
                       <option
                         value="mysqli"
                         {if $fDbDriver !== 'pgsql'}

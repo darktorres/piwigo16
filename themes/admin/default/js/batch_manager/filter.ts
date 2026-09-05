@@ -36,6 +36,7 @@ import {
   slideToggle,
   slideUp,
   val,
+  valueAt,
 } from "../../../../default/js/vendor/utils/dom";
 
 // `sliders` here is a genuinely independent, unrelated top-level
@@ -139,6 +140,11 @@ function filterEnable(filter: string) {
   removeClass(document.querySelectorAll(".addFilter-button"), "highlight");
 }
 
+function sliderEl(dataSlider: string): Element {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own "[data-slider=X]" elements are always real (batch_manager_filter.inc.latte's fixed markup).
+  return document.querySelector("[data-slider=" + dataSlider + "]")!;
+}
+
 function filterDisable(filter: string) {
   /* hide the filter line */
   hide(document.querySelectorAll("#" + filter));
@@ -171,12 +177,13 @@ function selectAlbumFilter({
   newSelectedAlbum,
   getSelectedAlbum,
 }: AlbumSelectorCallbackArgs) {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this AlbumSelector is never constructed with showRootButton, so the root sentinel (no real name) can never reach this callback.
   html(document.querySelectorAll("#selectedAlbumNameFilter"), album.name!);
   newSelectedAlbum();
   hideFiltersError(strSelectAlbum);
   setVal(
     document.querySelectorAll("#filterCategoryValue"),
-    String(Number(getSelectedAlbum()[0]!)),
+    String(Number(valueAt(getSelectedAlbum(), 0))),
   );
   hide(document.querySelectorAll("#selectAlbumFilter"));
   fadeIn(document.querySelectorAll("#selectedAlbumFilterArea"));
@@ -229,6 +236,7 @@ ready(function () {
       event.preventDefault();
       // jQuery's `.parent("li")` -- the immediate parent, filtered by tag;
       // every real .removeFilter is inside exactly one <li> with a real id.
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see the comment above.
       const li = this.parentElement!;
       const filter = li.id;
       filterDisable(filter);
@@ -241,6 +249,7 @@ ready(function () {
     document.querySelectorAll("#addFilter a"),
     "click",
     function (this: Element): void {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real "#addFilter a" option always carries a real data-value attribute.
       const filter = attrOf(this, "data-value")!;
       filterEnable(filter);
     },
@@ -258,22 +267,10 @@ ready(function () {
     },
   );
 
-  pwgDoubleSlider(
-    document.querySelector("[data-slider=widths]")!,
-    sliders.widths,
-  );
-  pwgDoubleSlider(
-    document.querySelector("[data-slider=heights]")!,
-    sliders.heights,
-  );
-  pwgDoubleSlider(
-    document.querySelector("[data-slider=ratios]")!,
-    sliders.ratios,
-  );
-  pwgDoubleSlider(
-    document.querySelector("[data-slider=filesizes]")!,
-    sliders.filesizes,
-  );
+  pwgDoubleSlider(sliderEl("widths"), sliders.widths);
+  pwgDoubleSlider(sliderEl("heights"), sliders.heights);
+  pwgDoubleSlider(sliderEl("ratios"), sliders.ratios);
+  pwgDoubleSlider(sliderEl("filesizes"), sliders.filesizes);
 
   on(document, "mouseup", function (e: Event): void {
     e.stopPropagation();

@@ -83,8 +83,7 @@ const oTable = dataTable(rateTableEl, {
 function uidFromCell(cell: HTMLElement): RatingUserCellData {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real cell passed here is always inside a real table row.
   const tr = cell.closest("tr")!;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-  return data(tr, "usr") as RatingUserCellData;
+  return data<RatingUserCellData>(tr, "usr");
 }
 
 // -----DELETE-----

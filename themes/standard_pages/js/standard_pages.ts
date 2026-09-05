@@ -206,8 +206,7 @@ if (otherLanguages !== null) {
     "click",
     "[data-lang-code]",
     function (this: Element) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      setCookie("lang", readData(this, "langCode") as string, 30);
+      setCookie("lang", readData<string>(this, "langCode"), 30);
     },
   );
 }

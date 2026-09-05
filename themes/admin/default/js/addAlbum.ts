@@ -49,18 +49,23 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
   // LocalStorageCache.ts's own _selectize() stashes the owning Cache
   // instance via `setData(el, "cache", this)` (P49-B group 6) -- the
   // same native data() store this file already uses elsewhere.
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified above.
-  const cache = (target === null ? undefined : data(target, "cache")) as {
-    selectize(
-      target: Element | ArrayLike<Element>,
-      options?: Record<string, unknown>,
-    ): void;
-  };
+  const cache =
+    target === null
+      ? undefined
+      : data<{
+          selectize(
+            target: Element | ArrayLike<Element>,
+            options?: Record<string, unknown>,
+          ): void;
+        }>(target, "cache");
 
   if (target && !getSelectizeInstance(target)) {
     throw new Error("pwgAddAlbum: target must use selectize");
   }
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions -- real runtime guard: the `as {...}` cast above forces this to look non-nullable to TS, but the ternary it casts really can produce undefined (target === null, or no cache ever stashed via setData).
+  // P51-Q's own data<T>() retype made this a real, TS-visible guard --
+  // it used to need its own no-unnecessary-condition/strict-boolean-
+  // expressions disable, back when the untyped `data()` result was
+  // force-cast to look non-nullable here.
   if (target === null || !cache) {
     throw new Error("pwgAddAlbum: missing categories cache");
   }
@@ -70,11 +75,12 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
   // narrowed explicitly here so the closures below (which lose plain
   // CFA narrowing across a function boundary) can use it directly.
   const targetEl = target;
+  const cacheEl = cache;
 
   function init() {
     setData(popup, "init", true);
 
-    cache.selectize(albumParent, {
+    cacheEl.selectize(albumParent, {
       default: 0,
       filter: function (this: unknown, categories: AlbumOptionData[]) {
         categories.push({

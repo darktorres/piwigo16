@@ -1255,8 +1255,7 @@ function appendPaginationItem(page: number | null = null) {
       addClass(newTag, "actual");
     }
     on(newTag, "click", () => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      moveToPage(data(newTag, "page") as number);
+      moveToPage(data<number>(newTag, "page"));
     });
   } else {
     container.appendChild(valueAt(parseHtml(pageEllipsis), 0));

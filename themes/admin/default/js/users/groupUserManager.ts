@@ -42,6 +42,7 @@ import {
   ready,
   removeClass,
   val,
+  valueAt,
 } from "../../../../default/js/vendor/utils/dom";
 import type { operations } from "../../../../../openapi/client/schema";
 
@@ -97,19 +98,25 @@ let usersInGroup: GroupMemberDisplay[] = [];
 // Max offset of the user container (322 = 6 lines)
 const maxOffsetUserCont = 322;
 
-const dissociateUserInfo = parseHtml(
-  "<div class='ValidationUserDissociated'>" +
-    "<p class='icon-ok'></p>" +
-    "</div>",
-)[0]!;
+const dissociateUserInfo = valueAt(
+  parseHtml(
+    "<div class='ValidationUserDissociated'>" +
+      "<p class='icon-ok'></p>" +
+      "</div>",
+  ),
+  0,
+);
 document.querySelector(".group-name-block")?.appendChild(dissociateUserInfo);
 hide(dissociateUserInfo);
 
-const associateUserInfo = parseHtml(
-  "<div class='ValidationUserAssociated'>" +
-    "<p class='icon-ok'></p>" +
-    "</div>",
-)[0]!;
+const associateUserInfo = valueAt(
+  parseHtml(
+    "<div class='ValidationUserAssociated'>" +
+      "<p class='icon-ok'></p>" +
+      "</div>",
+  ),
+  0,
+);
 
 // Setup the user research bar
 // Declared here, at module scope (not inside the ready callback below), because getUserDisplay()/the .input-user-name handler further down -- both textually outside this IIFE -- call it too. The real function body still closes over idSearch/selectize/usersCache exactly as before: JS closures capture their enclosing lexical scope by reference regardless of where the containing variable itself is declared.
@@ -117,6 +124,7 @@ let updateUserSearch: () => void;
 
 ready(function () {
   selectize = createSelectize<string | number, UserSelectOption>(
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the popup's own ".AddUserBlock select" is always real once this ready() callback fires.
     document.querySelector<HTMLSelectElement>(".AddUserBlock select")!,
     {},
   );
@@ -148,7 +156,7 @@ ready(function () {
     // seeds this storage slot before any handler that reads it can run
     // (the P46-preserved "temporary fix for #1283" behavior, see the
     // module-load call at the bottom of this file).
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- self-write/self-read cache: usersCache's own constructor just seeded this slot synchronously (see comment above).
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- self-write/self-read cache: usersCache's own constructor just seeded this slot synchronously (see comment above).
     const cached = JSON.parse(usersCache.storage.getItem(usersCache.key)!) as {
       data: UserEntity[];
     };
@@ -229,17 +237,16 @@ export async function openUserManager(grpId: number): Promise<void> {
         return -1;
       } else return 1;
     });
-    let i = 0;
     const usersInGroupList =
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the popup's own ".UsersInGroupList" is always real once the popin is open.
       document.querySelector<HTMLElement>(".UsersInGroupList")!;
-    while (
-      outerHeight(usersInGroupList) <= maxOffsetUserCont &&
-      usersInGroup[i] !== undefined
-    ) {
+    for (const user of usersInGroup) {
+      if (outerHeight(usersInGroupList) > maxOffsetUserCont) {
+        break;
+      }
       usersInGroupList.appendChild(
-        getUserDisplay(usersInGroup[i]!.username, usersInGroup[i]!.id, grpId),
+        getUserDisplay(user.username, user.id, grpId),
       );
-      i++;
     }
     while (usersInGroupList.offsetHeight > maxOffsetUserCont) {
       document
@@ -273,24 +280,28 @@ function getUserDisplay(
   user_id: number,
   grpId: number,
 ): Element {
-  const userBlock = parseHtml(
-    '<div class="UsernameBlock" data-id=' +
-      String(user_id) +
-      ">" +
-      '<span class="icon-user-1"></span>' +
-      "<p>" +
-      username +
-      "</p>" +
-      '<div class="Tooltip">' +
-      '<span class="icon-cancel"></span>' +
-      '<p class="TooltipText">' +
-      strUserDissociate +
-      "</p>" +
-      "</div>" +
-      "</div>",
-  )[0]!;
+  const userBlock = valueAt(
+    parseHtml(
+      '<div class="UsernameBlock" data-id=' +
+        String(user_id) +
+        ">" +
+        '<span class="icon-user-1"></span>' +
+        "<p>" +
+        username +
+        "</p>" +
+        '<div class="Tooltip">' +
+        '<span class="icon-cancel"></span>' +
+        '<p class="TooltipText">' +
+        strUserDissociate +
+        "</p>" +
+        "</div>" +
+        "</div>",
+    ),
+    0,
+  );
 
   const usersInGroupList =
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the popup's own ".UsersInGroupList" is always real once the popin is open.
     document.querySelector<HTMLElement>(".UsersInGroupList")!;
   while (usersInGroupList.offsetHeight > maxOffsetUserCont) {
     const blocks = document.querySelectorAll(".UsernameBlock");
@@ -430,8 +441,9 @@ on(document.querySelectorAll(".AddUserBlock button"), "click", function () {
         let username = "undefined";
         // Non-null: same "always-seeded by now" invariant as
         // updateUserSearch()'s own identical read, above.
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- self-write/self-read cache, same reasoning as updateUserSearch()'s own identical read above.
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- JSON.parse()'s own return type is always `any`; self-write/self-read cache, same reasoning as updateUserSearch()'s own identical read above.
         const cached = JSON.parse(
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- self-write/self-read cache, same reasoning as updateUserSearch()'s own identical read above.
           usersCache.storage.getItem(usersCache.key)!,
         ) as {
           data: UserEntity[];
@@ -465,6 +477,7 @@ on(document.querySelectorAll(".AddUserBlock button"), "click", function () {
         usersInGroup.push({ username: username, id: numericId });
 
         const usersInGroupList =
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the popup's own ".UsersInGroupList" is always real once the popin is open.
           document.querySelector<HTMLElement>(".UsersInGroupList")!;
         while (usersInGroupList.offsetHeight > maxOffsetUserCont) {
           const blocks = document.querySelectorAll(".UsernameBlock");
@@ -491,9 +504,12 @@ on(document.querySelectorAll(".input-user-name"), "input", function () {
   const searchString = String(
     val(document.querySelectorAll(".input-user-name")),
   ).toLowerCase();
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the popup's own ".UserListPopIn" is always real once this input handler fires.
   const grpId = dataId(document.querySelector(".UserListPopIn")!, "group_id");
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the popup's own ".UsersInGroupListContainer" is always real once this input handler fires.
   const container = document.querySelector(".UsersInGroupListContainer")!;
   const usersInGroupList =
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the popup's own ".UsersInGroupList" is always real once this input handler fires.
     document.querySelector<HTMLElement>(".UsersInGroupList")!;
   if (searchString !== "") {
     css(container, "min-height", cssValue(container, "height"));
@@ -513,15 +529,13 @@ on(document.querySelectorAll(".input-user-name"), "input", function () {
   } else {
     css(container, "min-height", "");
     html(document.querySelectorAll(".UsersInGroupList"), "");
-    let i = 0;
-    while (
-      outerHeight(usersInGroupList) <= maxOffsetUserCont &&
-      usersInGroup[i] !== undefined
-    ) {
+    for (const user of usersInGroup) {
+      if (outerHeight(usersInGroupList) > maxOffsetUserCont) {
+        break;
+      }
       usersInGroupList.appendChild(
-        getUserDisplay(usersInGroup[i]!.username, usersInGroup[i]!.id, grpId),
+        getUserDisplay(user.username, user.id, grpId),
       );
-      i++;
     }
   }
   html(

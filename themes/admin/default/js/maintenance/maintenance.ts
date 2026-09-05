@@ -2,7 +2,7 @@ import type { operations } from "../../../../../openapi/client/schema";
 
 import { pwg_getPageString } from "../../../../default/js/pageData";
 import { ajax, AjaxError } from "../../../../default/js/vendor/utils/ajax";
-import { ready } from "../../../../default/js/vendor/utils/dom";
+import { ready, valueAt } from "../../../../default/js/vendor/utils/dom";
 
 const noTimeElapsed = pwg_getPageString("right now");
 const unitMb = pwg_getPageString("%s MB");
@@ -16,16 +16,18 @@ function displayResponse(
   mDivs: HTMLElement[],
   mValues: Record<string, string>,
 ) {
-  for (let index = 0; index < domElem.length; index++) {
+  for (const [index, elements] of domElem.entries()) {
     // jQuery's `.html()` writes to every element of the set, not just the
     // first, so each of these three selectors keeps writing to all matches.
-    domElem[index]!.forEach((node) => {
-      node.innerHTML = unitMb.replace("%s", values[index]!);
+    elements.forEach((node) => {
+      node.innerHTML = unitMb.replace("%s", valueAt(values, index));
     });
   }
 
   for (const mDiv of mDivs) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real mDiv here (collectMultipleSizeCheckboxes()'s own ".delete-size-check" children) always has a real name attribute.
     const mDivName = mDiv.getAttribute("name")!;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the API's own response always includes a msizes entry for every real cache-size checkbox name.
     mDiv.title = unitMb.replace("%s", mValues[mDivName]!);
   }
 

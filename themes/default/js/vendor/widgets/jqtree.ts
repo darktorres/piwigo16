@@ -40,6 +40,7 @@ import {
   slideDown,
   slideUp,
   trigger,
+  valueAt,
   width,
   windowHeight,
   windowWidth,
@@ -712,8 +713,10 @@ class JqTreeController<T extends Record<string, unknown>> {
   }
 
   #addDropHint(node: TreeNode, position: JqTreePosition): { remove(): void } {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- a node passed here is always a real, already-rendered TreeNode with its own element set.
     const li = node.element!;
     if (JqTreeController.#mustShowBorderDropHint(node, position)) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every rendered <li> always has its own real ":scope > .jqtree-element" child (this widget's own onCreateLi markup).
       const div = li.querySelector<HTMLElement>(":scope > .jqtree-element")!;
       const elWidth = width(li) || 0;
       const w = Math.max(elWidth + this.#getScrollLeft() - 4, 0);
@@ -736,7 +739,8 @@ class JqTreeController<T extends Record<string, unknown>> {
     } else if (position === "before") {
       li.before(ghost);
     } else if (node.isFolder() && node.is_open) {
-      node.children[0]!.element!.before(ghost);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- an open folder node is always one this widget already rendered with real children/element (mustShowBorderDropHint's own "inside" check above already excluded the closed-folder case).
+      valueAt(node.children, 0).element!.before(ghost);
     } else {
       li.after(ghost);
       ghost.classList.add("jqtree-inside");
@@ -763,6 +767,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     if (event.touches.length > 1) {
       return;
     }
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- a real "touch*" event with touches.length <= 1 (checked above) always carries at least one changed touch.
     const touch = event.changedTouches[0]!;
     this.#handleMouseDown(JqTreeController.#positionInfoFromTouch(touch, event));
   };
@@ -779,6 +784,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     if (event.touches.length > 1) {
       return;
     }
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- a real "touch*" event with touches.length <= 1 (checked above) always carries at least one changed touch.
     const touch = event.changedTouches[0]!;
     this.#handleMouseMove(event, JqTreeController.#positionInfoFromTouch(touch, event));
   };
@@ -794,6 +800,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     if (event.touches.length > 1) {
       return;
     }
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- a real "touch*" event with touches.length <= 1 (checked above) always carries at least one changed touch.
     const touch = event.changedTouches[0]!;
     this.#handleMouseUp(JqTreeController.#positionInfoFromTouch(touch, event));
   };
@@ -964,7 +971,8 @@ class JqTreeController<T extends Record<string, unknown>> {
         this.currentItem as unknown as JqTreeNode<T>,
         positionInfo.originalEvent instanceof MouseEvent
           ? positionInfo.originalEvent
-          : (positionInfo.originalEvent).changedTouches[0]!,
+          : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- a real "touch*"-originated positionInfo always carries at least one changed touch.
+            (positionInfo.originalEvent).changedTouches[0]!,
       );
     }
     this.#checkScrolling();
@@ -995,7 +1003,8 @@ class JqTreeController<T extends Record<string, unknown>> {
         currentItem as unknown as JqTreeNode<T>,
         positionInfo.originalEvent instanceof MouseEvent
           ? positionInfo.originalEvent
-          : (positionInfo.originalEvent).changedTouches[0]!,
+          : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- a real "touch*"-originated positionInfo always carries at least one changed touch.
+            (positionInfo.originalEvent).changedTouches[0]!,
       );
     }
     return false;
@@ -1041,7 +1050,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     let high = this.hitAreas.length;
     while (low < high) {
       const mid = (low + high) >> 1;
-      const area = this.hitAreas[mid]!;
+      const area = valueAt(this.hitAreas, mid);
       if (y < area.top) {
         high = mid;
       } else if (y > area.bottom) {
@@ -1408,6 +1417,7 @@ function generateHitAreas(
   iterateVisibleNodes(root, currentNode, {
     handleFirstNode(node) {
       if (node !== currentNode) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- iterateVisibleNodes() only ever visits already-rendered nodes, which always have a real element.
         addPosition(node, "before", getTop(node.element!));
       }
     },
@@ -1460,8 +1470,7 @@ function generateHitAreas(
     const positionCount = Math.min(group.length, 4);
     const areaHeight = Math.round((bottom - top) / positionCount);
     let areaTop = top;
-    for (let i = 0; i < positionCount; i++) {
-      const position = group[i]!;
+    for (const position of group.slice(0, positionCount)) {
       hitAreas.push({
         top: areaTop,
         bottom: areaTop + areaHeight,

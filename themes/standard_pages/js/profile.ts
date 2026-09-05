@@ -149,8 +149,7 @@ ready(function () {
     document.querySelectorAll(".profile-section .display-section"),
     "click",
     function (this: Element) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      const display = data(this, "display") as string;
+      const display = data<string>(this, "display");
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real .display-section's own data-display always names a real section id rendered on this page.
       const element = document.getElementById(display)!;
       const arrow = find(this, ".display-btn");
@@ -669,8 +668,7 @@ function apiLineEvent() {
   const iconCollapse = document.querySelectorAll(".icon-collapse");
   off(iconCollapse, "click");
   on(iconCollapse, "click", function (this: Element) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-    const apiId = data(this, "api") as string;
+    const apiId = data<string>(this, "api");
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- apiId always comes from a real, currently-rendered row's own data-api attribute.
     const apiCollapse = document.getElementById(`api_collapse_${apiId}`)!;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see the identical justification above.
@@ -697,10 +695,8 @@ function apiLineEvent() {
   );
   off(cloneButtons, "click");
   on(cloneButtons, "click", function (this: Element) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-    const dataToCopy = data(this, "copy") as string;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see comment above.
-    const selector = data(this, "success") as string;
+    const dataToCopy = data<string>(this, "copy");
+    const selector = data<string>(this, "success");
     copyToClipboard(dataToCopy, strCopyKeyId, `#${selector}`);
   });
 
@@ -708,8 +704,7 @@ function apiLineEvent() {
   off(editButtons, "click");
   on(editButtons, "click", function (this: Element) {
     const parent = this.parentElement;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-    const selector = parent !== null ? (data(parent, "api") as string) : "";
+    const selector = parent !== null ? data<string>(parent, "api") : "";
     openApiEditModal(`#${selector}`);
   });
 
@@ -717,8 +712,7 @@ function apiLineEvent() {
   off(deleteButtons, "click");
   on(deleteButtons, "click", function (this: Element) {
     const parent = this.parentElement;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-    const selector = parent !== null ? (data(parent, "api") as string) : "";
+    const selector = parent !== null ? data<string>(parent, "api") : "";
     openApiRevokeModal(`#${selector}`);
   });
 }
@@ -806,11 +800,10 @@ function openApiEditModal(selector: string) {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real caller passes a real, currently-rendered row's own selector.
   const target = document.querySelector(selector)!;
   const value = textOf(find(target, ".api_name"));
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-  const pkid = data(
+  const pkid = data<string>(
     valueAt(find(target, ".api-icon-action"), 0),
     "pkid",
-  ) as string;
+  );
   setVal(document.querySelectorAll("#api_key_edit"), value);
   fadeIn(document.querySelectorAll("#api_modal_edit"));
   document.getElementById("api_key_edit")?.focus();
@@ -857,11 +850,10 @@ function openApiRevokeModal(selector: string) {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real caller passes a real, currently-rendered row's own selector.
   const target = document.querySelector(selector)!;
   const apiName = textOf(find(target, ".api_name"));
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-  const pkid = data(
+  const pkid = data<string>(
     valueAt(find(target, ".api-icon-action"), 0),
     "pkid",
-  ) as string;
+  );
   const titleText = sprintf(strRevokeKey, apiName);
   text(document.querySelectorAll("#api_modal_revoke_title"), titleText);
 

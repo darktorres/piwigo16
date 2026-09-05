@@ -101,8 +101,9 @@ function oppositeLockCorner(ord: Ord): Corner {
       return "nw";
     case "sw":
       return "ne";
+    default:
+      throw new Error("unreachable: exhaustive switch over Ord");
   }
-  throw new Error("unreachable: exhaustive switch over Ord");
 }
 
 /**
@@ -389,8 +390,9 @@ function initJcrop(origImg: HTMLImageElement, options: JcropOptions): JcropApi {
         return [c.x2, c.y2];
       case "sw":
         return [c.x, c.y2];
+      default:
+        throw new Error("unreachable: exhaustive switch over Corner");
     }
-    throw new Error("unreachable: exhaustive switch over Corner");
   }
 
   // Real source's own `x1 > boundx` branch computes `delta` from

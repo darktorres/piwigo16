@@ -13,6 +13,7 @@ import {
   attr,
   attrOf,
   cloneElement,
+  copyToClipboard as writeToClipboard,
   data,
   fadeIn,
   fadeOut,
@@ -891,9 +892,7 @@ function copyToClipboard(
   message: string,
   selector: string | null = null,
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
-  if (window.isSecureContext && navigator.clipboard) {
-    void navigator.clipboard.writeText(copy);
+  if (writeToClipboard(copy)) {
     if (selector !== null && selector !== "") {
       removeClass(document.querySelectorAll(selector), "api-hide");
     } else {

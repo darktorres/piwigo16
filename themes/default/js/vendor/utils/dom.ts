@@ -1986,3 +1986,19 @@ export function valueAt<T>(values: ArrayLike<T>, idx: number): T {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see this function's own leading comment.
   return values[idx]!;
 }
+
+/**
+ * Writes `text` to the clipboard, guarded against the browsers/origins
+ * where `navigator.clipboard` is genuinely absent (P51-Y). Returns
+ * whether the write was attempted, not whether it landed --
+ * `navigator.clipboard.writeText()` itself is fire-and-forget here, same
+ * as both call sites this absorbs did before the extraction.
+ */
+export function copyToClipboard(value: string): boolean {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
+  if (window.isSecureContext && navigator.clipboard) {
+    void navigator.clipboard.writeText(value);
+    return true;
+  }
+  return false;
+}

@@ -23,6 +23,7 @@ import {
   attr,
   attrOf,
   cloneElement,
+  copyToClipboard,
   css,
   data,
   delay,
@@ -2243,9 +2244,6 @@ function generateUserList() {
   on(document.querySelectorAll(".user-container"), "click", userContainerClick);
 }
 
-function copyToClipboard(toCopy: string) {
-  void navigator.clipboard.writeText(toCopy);
-}
 /*---------------------
 Fill the pop-in values
 ---------------------*/
@@ -2513,10 +2511,7 @@ function fillUserEditUpdate(userToEdit: UserRow, popIn: Element) {
         false,
       );
     } else {
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
-      if (window.isSecureContext && navigator.clipboard) {
-        copyToClipboard(String(inputValue));
-      }
+      copyToClipboard(String(inputValue));
     }
     hide(document.querySelectorAll(".user-property-password-choice"));
     fadeIn(document.querySelectorAll("#edit_password_result_mail_copy"));
@@ -2532,15 +2527,15 @@ function fillUserEditUpdate(userToEdit: UserRow, popIn: Element) {
     );
     off(copyResultBtn, "click");
     on(copyResultBtn, "click", function () {
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
-      if (window.isSecureContext && navigator.clipboard) {
-        const success = document.querySelectorAll("#result_send_mail_copy");
-        fadeOut(success, 100);
+      const success = document.querySelectorAll("#result_send_mail_copy");
+      if (
         copyToClipboard(
           String(
             val(document.querySelectorAll("#result_send_mail_copy_input")),
           ),
-        );
+        )
+      ) {
+        fadeOut(success, 100);
         fadeIn(success, 100);
       }
     });
@@ -3125,16 +3120,14 @@ async function updateUserPassword(): Promise<void> {
     hide(document.querySelectorAll(".user-property-password-change-inputs"));
     fadeIn(document.querySelectorAll("#edit_password_success_change"));
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
-    if (window.isSecureContext && navigator.clipboard) {
-      on(document.querySelectorAll("#copy_password"), "click", function () {
-        copyToClipboard(newPassword);
+    on(document.querySelectorAll("#copy_password"), "click", function () {
+      if (copyToClipboard(newPassword)) {
         html(
           document.querySelectorAll("#password_msg_success"),
           passwordCopied,
         );
-      });
-    }
+      }
+    });
 
     on(
       document.querySelectorAll("#close_password_success"),
@@ -3799,14 +3792,12 @@ async function sendNewUserPassword(
       hide(passwordContainer);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
-    if (window.isSecureContext && navigator.clipboard) {
-      const copyBtn = document.querySelectorAll("#AddUserCopyPassword");
-      off(copyBtn, "click");
-      on(copyBtn, "click", function () {
-        const successMsg = document.querySelectorAll("#AddUserUpdatedText");
-        fadeOut(successMsg);
-        copyToClipboard(response.generatedLink);
+    const copyBtn = document.querySelectorAll("#AddUserCopyPassword");
+    off(copyBtn, "click");
+    on(copyBtn, "click", function () {
+      const successMsg = document.querySelectorAll("#AddUserUpdatedText");
+      fadeOut(successMsg);
+      if (copyToClipboard(response.generatedLink)) {
         removeClass(
           document.querySelectorAll("#AddUserUpdated"),
           "icon-red icon-cancel",
@@ -3817,8 +3808,8 @@ async function sendNewUserPassword(
         );
         html(successMsg, copyLinkStr);
         fadeIn(successMsg);
-      });
-    }
+      }
+    });
     const addUserButton = document.querySelectorAll("#AddUserButton");
     off(addUserButton, "click");
     on(addUserButton, "click", function () {
@@ -3994,10 +3985,7 @@ function applyCopyLinkResultUi(generatedLink: string): void {
   );
   addClass(document.querySelectorAll("#result_send_mail_copy_icon"), "icon-ok");
   html(document.querySelectorAll("#result_send_mail_copy_msg"), copyLinkStr);
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
-  if (window.isSecureContext && navigator.clipboard) {
-    copyToClipboard(generatedLink);
-  }
+  copyToClipboard(generatedLink);
 }
 
 /** Part of `sendLinkPassword()`'s own extraction, below. */

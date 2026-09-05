@@ -84,7 +84,7 @@ export interface ColorboxOptions {
 }
 
 const ELEMENT_CLASS = "cboxElement";
-const PHOTO_REGEX = /\.(gif|png|jp(e|g|eg)|bmp|ico|webp|jxr|svg)((#|\?).*)?$/i;
+const PHOTO_REGEX = /\.(gif|png|jp(e|g|eg)|bmp|ico|webp|jxr|svg)([#?].*)?$/i;
 const OPACITY = 0.9;
 const INITIAL_WIDTH = 600;
 const INITIAL_HEIGHT = 450;

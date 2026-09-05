@@ -40,12 +40,17 @@ type HistorySearchResponse =
 type HistoryLine = HistorySearchResponse["lines"][number];
 type HistorySummary = HistorySearchResponse["summary"];
 
+// An image id, possibly absent -- real callers read it off a `data-*`
+// attribute (below), which is `null` when the attribute itself is
+// missing (sonarjs/use-type-alias: 3 real repeats of the same union).
+type HistoryImageId = string | number | null;
+
 interface HistoryFilterParams {
   start: string;
   end: string;
   types: Record<number, string>;
   user_id: number;
-  image_id: string | number | null;
+  image_id: HistoryImageId;
   filename: string;
   ip: string;
   pageNumber: number;
@@ -497,7 +502,7 @@ function lineConstructor(line: HistoryLine, id: number) {
   if (currentParam.image_id === "") {
     on(find(newLine, ".add-img-as-filter"), "click", function (this: Element) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      const imgId = data(this, "img-id") as string | number | null;
+      const imgId = data(this, "img-id") as HistoryImageId;
       currentParam.image_id = imgId;
       currentParam.pageNumber = 0;
       addImageFilter(imgId);
@@ -955,7 +960,7 @@ function addIpFilter(ip: string) {
   checkFilters();
 }
 
-function addImageFilter(img_id: string | number | null) {
+function addImageFilter(img_id: HistoryImageId) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
   const newFilter = document
     .getElementById("default-filter")!

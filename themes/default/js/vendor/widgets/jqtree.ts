@@ -100,6 +100,11 @@ interface JqTreeState {
   open_nodes: (string | number)[];
 }
 
+// getNodeById()'s own real id parameter -- nullable/optional since real
+// callers look a possibly-absent id up (sonarjs/use-type-alias: 3 real
+// repeats, the interface plus both of its own implementations below).
+type JqTreeNodeId = string | number | null | undefined;
+
 export interface JqTreeMoveInfo<T extends Record<string, unknown>> {
   movedNode: JqTreeNode<T>;
   targetNode: JqTreeNode<T>;
@@ -129,7 +134,7 @@ export interface JqTreeOptions<T extends Record<string, unknown>> {
 }
 
 export interface JqTreeInstance<T extends Record<string, unknown>> {
-  getNodeById(id: string | number | null | undefined): JqTreeNode<T> | null;
+  getNodeById(id: JqTreeNodeId): JqTreeNode<T> | null;
   getState(): JqTreeState;
   openNode(
     node: JqTreeNode<T>,
@@ -293,7 +298,7 @@ class TreeNode {
     return level;
   }
 
-  getNodeById(nodeId: string | number | null | undefined): TreeNode | null {
+  getNodeById(nodeId: JqTreeNodeId): TreeNode | null {
     if (nodeId == null) {
       return null;
     }
@@ -551,7 +556,7 @@ class JqTreeController<T extends Record<string, unknown>> {
 
   // ── Public instance API ──────────────────────────────────────────────
 
-  getNodeById(id: string | number | null | undefined): TreeNode | null {
+  getNodeById(id: JqTreeNodeId): TreeNode | null {
     return this.root.getNodeById(id);
   }
 

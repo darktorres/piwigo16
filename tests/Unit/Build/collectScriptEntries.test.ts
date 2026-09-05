@@ -10,7 +10,7 @@ describe("collectScriptEntries()", () => {
     const entries = collectScriptEntries();
 
     expect(entries.length).toBeGreaterThan(0);
-    expect(entries.length).toBe(new Set(entries).size);
+    expect(entries).toHaveLength(new Set(entries).size);
     for (const entry of entries) {
       expect(entry.endsWith(".ts")).toBe(true);
       expect(existsSync(join(REPO_ROOT, entry))).toBe(true);

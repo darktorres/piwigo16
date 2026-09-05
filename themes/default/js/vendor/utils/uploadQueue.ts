@@ -148,7 +148,7 @@ function generateFileId(): string {
  */
 function parseSize(sizeStr: string): number {
   const cleaned = sizeStr.toLowerCase().replace(/[^0-9mkg]/g, "");
-  const match = /^([0-9]+)([mgk]?)$/.exec(cleaned);
+  const match = /^(\d+)([mgk]?)$/.exec(cleaned);
   if (match === null) {
     return 0;
   }

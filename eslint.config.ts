@@ -280,9 +280,27 @@ export default defineConfig(
     // own union type also allows -- narrowed with an explicit cast.
     files: ["**/*.ts"],
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- see comment above; eslint-plugin-sonarjs's own `configs` index signature is untyped, and `recommended` is confirmed to be the flat object shape, not its own type's array alternative.
-    ...(sonarjs.configs!["recommended"] as {
-      plugins: Record<string, ESLint.Plugin>;
-      rules: Linter.RulesRecord;
-    }),
+    ...(() => {
+      const recommended = sonarjs.configs!["recommended"] as {
+        plugins: Record<string, ESLint.Plugin>;
+        rules: Linter.RulesRecord;
+      };
+
+      return {
+        plugins: recommended.plugins,
+        rules: {
+          ...recommended.rules,
+          // Pure duplicate of the already-configured
+          // `@typescript-eslint/no-unused-vars` above, minus its own
+          // `argsIgnorePattern`/`varsIgnorePattern`/
+          // `caughtErrorsIgnorePattern` (this codebase's established
+          // `^_`-means-intentionally-unused convention) -- sonarjs's own
+          // rule takes no options at all (confirmed against its schema),
+          // so it would re-flag every deliberately-`_`-prefixed name the
+          // real rule already accepts.
+          "sonarjs/no-unused-vars": "off",
+        },
+      };
+    })(),
   },
 );

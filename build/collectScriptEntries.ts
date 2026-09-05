@@ -71,5 +71,5 @@ export function collectScriptEntries(): string[] {
     }
   }
 
-  return [...paths].sort();
+  return [...paths].sort((a, b) => a.localeCompare(b));
 }

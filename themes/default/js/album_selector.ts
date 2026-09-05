@@ -194,7 +194,7 @@ export class AlbumSelector {
   /**
    * Selector for AlbumSelector
    */
-  static selectors = {
+  static readonly selectors = {
     addLinkedAlbum: q("#addLinkedAlbum"),
     closeAlbumPopIn: q("#closeAlbumPopIn"),
     searchInput: q("#search-input-ab"),

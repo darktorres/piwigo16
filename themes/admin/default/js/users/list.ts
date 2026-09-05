@@ -1483,7 +1483,6 @@ function generateUserSelectedItems() {
   } else {
     hide(document.querySelectorAll(".selection-other-users"));
   }
-  return;
 }
 
 function fillUserSelectedList() {
@@ -4045,14 +4044,12 @@ ready(function () {
       switch (action) {
         case "delete":
           if (
-            !(
-              attrOf(
-                document.querySelectorAll(
-                  "#permitActionUserList .user-list-checkbox[name=confirm_deletion]",
-                ),
-                "data-selected",
-              ) === "1"
-            )
+            attrOf(
+              document.querySelectorAll(
+                "#permitActionUserList .user-list-checkbox[name=confirm_deletion]",
+              ),
+              "data-selected",
+            ) !== "1"
           ) {
             alert(missingConfirm);
             e.preventDefault();

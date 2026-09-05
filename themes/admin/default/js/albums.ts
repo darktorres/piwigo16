@@ -52,6 +52,17 @@ import {
 } from "../../../default/js/vendor/utils/dom";
 import { tipTip } from "../../../default/js/vendor/widgets/tiptip";
 
+// A category's own `rank` column value -- shared by both node shapes
+// below (sonarjs/use-type-alias).
+type AlbumRank = string | number | null;
+
+// A category id, possibly absent -- getId()'s own real `string | number`
+// return type (below), nullable at `moveNode()`'s/`applyMove()`'s own 2
+// real "no parent yet decided" call sites. Deliberately a separate alias
+// from `AlbumRank` above, not reused for it: both happen to share the
+// same primitive union shape, but represent different concepts.
+type AlbumCategoryId = string | number | null;
+
 // `vendor/widgets/jqtree.ts`'s own real per-row shape (P49-B group 6B), traced to
 // AlbumsPageRenderer.php's own `assocToOrderedTree()` -- the raw JSON
 // tree fed into `tree(el, {data: ...})` and returned by `pwg_getPageData
@@ -61,7 +72,7 @@ import { tipTip } from "../../../default/js/vendor/widgets/tiptip";
 // the raw PHP payload.
 interface AlbumTreeNode extends Record<string, unknown> {
   id: string;
-  rank: string | number | null;
+  rank: AlbumRank;
   name: string;
   status: string;
   visible: string;
@@ -82,7 +93,7 @@ interface AlbumTreeNode extends Record<string, unknown> {
 // data becomes a real property on the resulting live node, simultaneously
 // with the base shape.
 interface AlbumNodeData extends Record<string, unknown> {
-  rank: string | number | null;
+  rank: AlbumRank;
   status: string;
   visible: string;
   uppercats: string;
@@ -1223,7 +1234,7 @@ function applyMove(moveInfo: JqTreeMoveInfo<AlbumNodeData>) {
     addClass(document.querySelectorAll(".waiting-message"), "visible");
   }, 500);
   const id = moveInfo.movedNode.id!;
-  let moveParent: string | number | null = null;
+  let moveParent: AlbumCategoryId = null;
   let moveRank: number | null = null;
   const previousParent = moveInfo.previousParent!;
   const target = moveInfo.targetNode;
@@ -1287,7 +1298,7 @@ function applyMove(moveInfo: JqTreeMoveInfo<AlbumNodeData>) {
 async function moveNode(
   node: string | number,
   rank: number | null,
-  parent: string | number | null,
+  parent: AlbumCategoryId,
 ): Promise<void> {
   try {
     if (parent != null) {

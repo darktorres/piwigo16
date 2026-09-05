@@ -156,6 +156,7 @@ ready(function () {
       if (hasClass(element, "open")) {
         // close
         element.style.maxHeight = String(element.scrollHeight) + "px";
+        // eslint-disable-next-line sonarjs/void-use -- intentional: reading offsetHeight forces a synchronous layout reflow, which is the real effect wanted here (so the max-height transition below animates from a real starting point); `void` discards the read value, not the reflow.
         void element.offsetHeight;
         element.style.maxHeight = "1px";
         removeClass(element, "open");

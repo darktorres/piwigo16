@@ -35,7 +35,9 @@ export function coerceDataAttribute(raw: string): unknown {
   if (raw === "null") return null;
   if (String(Number(raw)) === raw) return Number(raw);
 
-  if (/^(?:\{[\w\W]*\}|\[[\w\W]*\])$/.test(raw)) {
+  // `s` (dotAll) makes `.` match a newline too, same as `[\w\W]` did --
+  // `raw` can be a multi-line JSON attribute value.
+  if (/^(?:\{.*\}|\[.*\])$/s.test(raw)) {
     try {
       return JSON.parse(raw) as unknown;
     } catch {
@@ -299,10 +301,19 @@ const SHOW_PROPS = [
   "paddingLeft",
 ];
 
+/**
+ * jQuery's own effect-method overload shape (`.fadeOut(complete)`,
+ * `.fadeOut(duration)`, `.fadeOut(duration, complete)`) -- a bare
+ * duration or the completion callback in that position, disambiguated
+ * by `normalizeEffectArgs()` below (sonarjs/use-type-alias: 11 real
+ * repeats of this exact union across every effect method in this file).
+ */
+type EffectDuration = number | string | (() => void);
+
 /** `$(el).show()`. */
 export function show(
   target: Element | ArrayLike<Element>,
-  speed?: number | string | (() => void),
+  speed?: EffectDuration,
   complete?: () => void
 ): void {
   if (speed === undefined) {
@@ -317,7 +328,7 @@ export function show(
 /** `$(el).hide()` / `.hide(duration)`. */
 export function hide(
   target: Element | ArrayLike<Element>,
-  speed?: number | string | (() => void),
+  speed?: EffectDuration,
   complete?: () => void
 ): void {
   if (speed === undefined) {
@@ -339,7 +350,7 @@ export function hide(
  */
 export function toggle(
   target: Element | ArrayLike<Element>,
-  speedOrForce?: boolean | number | string | (() => void),
+  speedOrForce?: boolean | EffectDuration,
   complete?: () => void
 ): void {
   if (typeof speedOrForce === "boolean") {
@@ -392,7 +403,9 @@ export function parseEventSpec(spec: string): EventSpec {
 
   return {
     type,
-    namespaces: namespaces.filter((n) => n !== "").sort(),
+    namespaces: namespaces
+      .filter((n) => n !== "")
+      .sort((a, b) => a.localeCompare(b)),
   };
 }
 
@@ -691,7 +704,7 @@ export function resolveDuration(duration?: number | string): number {
  * at least 10 call sites pass the callback first. Normalise before use.
  */
 function normalizeEffectArgs(
-  duration?: number | string | (() => void),
+  duration?: EffectDuration,
   complete?: () => void
 ): { ms: number; done: (() => void) | undefined } {
   if (typeof duration === "function") {
@@ -930,7 +943,7 @@ class Tween implements Stoppable {
 export function animate(
   target: Element | ArrayLike<Element>,
   props: Record<string, number | string>,
-  duration?: number | string | (() => void),
+  duration?: EffectDuration,
   complete?: () => void
 ): void {
   const { ms, done: onComplete } = normalizeEffectArgs(duration, complete);
@@ -1024,7 +1037,7 @@ function runEffect(
   target: Element | ArrayLike<Element>,
   propNames: string[],
   mode: EffectMode,
-  duration?: number | string | (() => void),
+  duration?: EffectDuration,
   complete?: () => void
 ): void {
   const { ms, done: onComplete } = normalizeEffectArgs(duration, complete);
@@ -1106,7 +1119,7 @@ function runEffect(
 /** `$(el).fadeIn(duration, complete)`. */
 export function fadeIn(
   target: Element | ArrayLike<Element>,
-  duration?: number | string | (() => void),
+  duration?: EffectDuration,
   complete?: () => void
 ): void {
   runEffect(target, ["opacity"], "show", duration, complete);
@@ -1115,7 +1128,7 @@ export function fadeIn(
 /** `$(el).fadeOut(duration, complete)`. */
 export function fadeOut(
   target: Element | ArrayLike<Element>,
-  duration?: number | string | (() => void),
+  duration?: EffectDuration,
   complete?: () => void
 ): void {
   runEffect(target, ["opacity"], "hide", duration, complete);
@@ -1124,7 +1137,7 @@ export function fadeOut(
 /** `$(el).fadeToggle(duration, complete)`. */
 export function fadeToggle(
   target: Element | ArrayLike<Element>,
-  duration?: number | string | (() => void),
+  duration?: EffectDuration,
   complete?: () => void
 ): void {
   runEffect(target, ["opacity"], "toggle", duration, complete);
@@ -1152,7 +1165,7 @@ export function fadeTo(
 /** `$(el).slideDown(duration, complete)`. */
 export function slideDown(
   target: Element | ArrayLike<Element>,
-  duration?: number | string | (() => void),
+  duration?: EffectDuration,
   complete?: () => void
 ): void {
   runEffect(target, SLIDE_PROPS, "show", duration, complete);
@@ -1161,7 +1174,7 @@ export function slideDown(
 /** `$(el).slideUp(duration, complete)`. */
 export function slideUp(
   target: Element | ArrayLike<Element>,
-  duration?: number | string | (() => void),
+  duration?: EffectDuration,
   complete?: () => void
 ): void {
   runEffect(target, SLIDE_PROPS, "hide", duration, complete);
@@ -1170,7 +1183,7 @@ export function slideUp(
 /** `$(el).slideToggle(duration, complete)`. */
 export function slideToggle(
   target: Element | ArrayLike<Element>,
-  duration?: number | string | (() => void),
+  duration?: EffectDuration,
   complete?: () => void
 ): void {
   runEffect(target, SLIDE_PROPS, "toggle", duration, complete);

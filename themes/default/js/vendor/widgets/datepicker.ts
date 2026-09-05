@@ -602,6 +602,106 @@ function adjustMonth(offset: number): void {
   renderCalendar();
 }
 
+/** Part of `renderCalendar()`'s own extraction, below. */
+function isUnselectableDate(inst: Instance, cellDate: Date): boolean {
+  return (
+    (inst.minDate !== null &&
+      cellDate.getTime() < stripTime(inst.minDate).getTime()) ||
+    (inst.maxDate !== null &&
+      cellDate.getTime() > stripTime(inst.maxDate).getTime())
+  );
+}
+
+/** Part of `renderCalendar()`'s own extraction, below. */
+function buildCalendarCellClasses(
+  dow: number,
+  firstDay: number,
+  otherMonth: boolean,
+  unselectable: boolean,
+  isToday: boolean,
+): string[] {
+  const classes: string[] = [];
+  if ((dow + firstDay + 6) % 7 >= 5) {
+    classes.push("ui-datepicker-week-end");
+  }
+  if (otherMonth) {
+    classes.push("ui-datepicker-other-month");
+  }
+  if (unselectable) {
+    classes.push("ui-datepicker-unselectable", "ui-state-disabled");
+  }
+  if (isToday) {
+    classes.push("ui-datepicker-today");
+  }
+  return classes;
+}
+
+/** Part of `renderCalendar()`'s own extraction, below. */
+function fillCalendarCellContent(
+  td: HTMLTableCellElement,
+  inst: Instance,
+  cellDate: Date,
+  otherMonth: boolean,
+  unselectable: boolean,
+  isToday: boolean,
+): void {
+  if (otherMonth) {
+    td.innerHTML = "&#xa0;";
+    return;
+  }
+  if (unselectable) {
+    const span = document.createElement("span");
+    span.className = "ui-state-default";
+    span.textContent = String(cellDate.getDate());
+    td.append(span);
+    return;
+  }
+  const a = document.createElement("a");
+  a.href = "#";
+  const aClasses = ["ui-state-default"];
+  if (isToday) {
+    aClasses.push("ui-state-highlight");
+  }
+  if (sameDay(inst.selected, cellDate)) {
+    aClasses.push("ui-state-active");
+  }
+  a.className = aClasses.join(" ");
+  a.textContent = String(cellDate.getDate());
+  const dateForClick = new Date(cellDate);
+  a.addEventListener("click", (e) => {
+    e.preventDefault();
+    selectDate(dateForClick, inst.showTimepicker);
+  });
+  td.append(a);
+}
+
+/**
+ * Part of `renderCalendar()`'s own extraction, below -- one `<td>`
+ * calendar cell for `cellDate`, fully classed and populated.
+ */
+function renderCalendarCell(
+  cellDate: Date,
+  inst: Instance,
+  dow: number,
+  firstDay: number,
+  today: Date,
+): HTMLTableCellElement {
+  const otherMonth = cellDate.getMonth() !== inst.drawMonth;
+  const unselectable = isUnselectableDate(inst, cellDate);
+  const isToday = cellDate.getTime() === today.getTime();
+
+  const td = document.createElement("td");
+  td.className = buildCalendarCellClasses(
+    dow,
+    firstDay,
+    otherMonth,
+    unselectable,
+    isToday,
+  ).join(" ");
+  fillCalendarCellContent(td, inst, cellDate, otherMonth, unselectable, isToday);
+  return td;
+}
+
 function renderCalendar(): void {
   if (active === undefined) {
     return;
@@ -627,54 +727,7 @@ function renderCalendar(): void {
     const tr = document.createElement("tr");
     for (let dow = 0; dow < 7; dow++) {
       const cellDate = new Date(printDate);
-      const otherMonth = cellDate.getMonth() !== inst.drawMonth;
-      const unselectable =
-        (inst.minDate !== null && cellDate.getTime() < stripTime(inst.minDate).getTime()) ||
-        (inst.maxDate !== null && cellDate.getTime() > stripTime(inst.maxDate).getTime());
-
-      const td = document.createElement("td");
-      const classes = [];
-      if ((dow + firstDay + 6) % 7 >= 5) {
-        classes.push("ui-datepicker-week-end");
-      }
-      if (otherMonth) {
-        classes.push("ui-datepicker-other-month");
-      }
-      if (unselectable) {
-        classes.push("ui-datepicker-unselectable", "ui-state-disabled");
-      }
-      if (cellDate.getTime() === today.getTime()) {
-        classes.push("ui-datepicker-today");
-      }
-      td.className = classes.join(" ");
-
-      if (otherMonth) {
-        td.innerHTML = "&#xa0;";
-      } else if (unselectable) {
-        const span = document.createElement("span");
-        span.className = "ui-state-default";
-        span.textContent = String(cellDate.getDate());
-        td.append(span);
-      } else {
-        const a = document.createElement("a");
-        a.href = "#";
-        const aClasses = ["ui-state-default"];
-        if (cellDate.getTime() === today.getTime()) {
-          aClasses.push("ui-state-highlight");
-        }
-        if (sameDay(inst.selected, cellDate)) {
-          aClasses.push("ui-state-active");
-        }
-        a.className = aClasses.join(" ");
-        a.textContent = String(cellDate.getDate());
-        const dateForClick = new Date(cellDate);
-        a.addEventListener("click", (e) => {
-          e.preventDefault();
-          selectDate(dateForClick, inst.showTimepicker);
-        });
-        td.append(a);
-      }
-      tr.append(td);
+      tr.append(renderCalendarCell(cellDate, inst, dow, firstDay, today));
       printDate.setDate(printDate.getDate() + 1);
     }
     calendarBodyEl.append(tr);

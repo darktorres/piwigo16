@@ -67,6 +67,7 @@ import {
   toggle,
   trigger,
   val,
+  valueAt,
 } from "../../../../default/js/vendor/utils/dom";
 import { tipTip } from "../../../../default/js/vendor/widgets/tiptip";
 
@@ -523,7 +524,8 @@ ready(function () {
       function (this: Element) {
         addClass(document.querySelectorAll(".pluginMiniBox"), "usable");
 
-        const toggleEl = find(this, "#toggleSelectionMode")[0]!;
+        const toggleEl = valueAt(find(this, "#toggleSelectionMode"), 0);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this .switch's own row is always two real parentElement levels up (plugins_installed.latte's fixed markup nesting).
         const row = this.parentElement!.parentElement!;
 
         if (is(toggleEl, ":checked")) {
@@ -575,6 +577,7 @@ ready(function () {
         event.preventDefault();
         event.stopPropagation();
 
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this switch input's own row is always three real parentElement levels up (plugins_installed.latte's fixed markup nesting).
         const { id } = this.parentElement!.parentElement!.parentElement!;
         stop(
           document.querySelectorAll("#" + id + " .pluginNotif"),
@@ -616,8 +619,10 @@ ready(function () {
     ),
     "click",
     function (this: Element) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this dropdown option always renders inside a real ".pluginContent" ancestor.
       const pluginContent = this.closest(".pluginContent")!;
       const pluginName = textOf(find(pluginContent, ".pluginName")).trim();
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- ".pluginContent" always has a real parentElement carrying the plugin's own id (plugins_installed.latte's fixed markup nesting).
       const pluginId = pluginContent.parentElement!.id;
       confirm({
         title: deletePluginMsg.replace("%s", pluginName),
@@ -648,8 +653,10 @@ ready(function () {
     ),
     "click",
     function (this: Element) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this dropdown option always renders inside a real ".pluginContent" ancestor.
       const pluginContent = this.closest(".pluginContent")!;
       const pluginName = textOf(find(pluginContent, ".pluginName")).trim();
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- ".pluginContent" always has a real parentElement carrying the plugin's own id (plugins_installed.latte's fixed markup nesting).
       const pluginId = pluginContent.parentElement!.id;
       confirm({
         title: restorePluginMsg.replace("%s", pluginName),
@@ -681,8 +688,10 @@ ready(function () {
     ),
     "click",
     function (this: Element) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this dropdown option always renders inside a real ".pluginContent" ancestor.
       const pluginContent = this.closest(".pluginContent")!;
       const pluginName = textOf(find(pluginContent, ".pluginName")).trim();
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- ".pluginContent" always has a real parentElement carrying the plugin's own id (plugins_installed.latte's fixed markup nesting).
       const pluginId = pluginContent.parentElement!.id;
       confirm({
         title: uninstallPluginMsg.replace("%s", pluginName),

@@ -392,11 +392,10 @@ async function fillHistoryResult(
   empty(document.querySelectorAll(".tab"));
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const rawData = (await ajax({
+    const rawData = await ajax<HistorySearchResponse>({
       url: "api/v1/history/search",
       data: ajaxParam,
-    })) as HistorySearchResponse;
+    });
 
     const { lines, maxPage, summary } = rawData;
 
@@ -1192,13 +1191,12 @@ function setupGeoIpHover(ipEl: Element): void {
 
       void (async () => {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-          const geoData = (await ajax({
+          const geoData = await ajax<GeoIpLookupResponse>({
             url: "api/v1/geoip",
             type: "GET",
             dataType: "json",
             data: { ip: textOf(ipEl) },
-          })) as GeoIpLookupResponse;
+          });
 
           if (!geoData.available || geoData.fullName === undefined) return;
 

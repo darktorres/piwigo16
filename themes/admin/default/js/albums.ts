@@ -592,8 +592,9 @@ ready(() => {
 
       void (async () => {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-          const response = (await ajax({
+          const response = await ajax<
+            operations["categoryCreate"]["responses"][201]["content"]["application/json"]
+          >({
             url: "api/v1/categories",
             type: "POST",
             json: {
@@ -603,7 +604,7 @@ ready(() => {
             },
             headers: { "X-CSRF-Token": pwgToken },
             dataType: "json",
-          })) as operations["categoryCreate"]["responses"][201]["content"]["application/json"];
+          });
 
           const parentNode = getAlbumTree().getNodeById(newAlbumParent);
           if (
@@ -1014,12 +1015,13 @@ function closeRenameAlbumPopIn() {
 
 async function triggerDeleteAlbum(cat_id: number): Promise<void> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const response = (await ajax({
+    const response = await ajax<
+      operations["categoryOrphanImpact"]["responses"][200]["content"]["application/json"]
+    >({
       url: "api/v1/categories/" + String(cat_id) + "/orphan-impact",
       type: "GET",
       dataType: "json",
-    })) as operations["categoryOrphanImpact"]["responses"][200]["content"]["application/json"];
+    });
 
     if (response.nbImagesRecursive === 0) {
       hide(document.querySelectorAll(".deleteAlbumOptions"));
@@ -1336,8 +1338,9 @@ async function changeParent(
 ): Promise<void> {
   let response: operations["categoryMove"]["responses"][200]["content"]["application/json"];
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    response = (await ajax({
+    response = await ajax<
+      operations["categoryMove"]["responses"][200]["content"]["application/json"]
+    >({
       url: "api/v1/categories/actions/move",
       type: "POST",
       json: {
@@ -1346,7 +1349,7 @@ async function changeParent(
       },
       headers: { "X-CSRF-Token": pwgToken },
       dataType: "json",
-    })) as operations["categoryMove"]["responses"][200]["content"]["application/json"];
+    });
   } catch (e) {
     throw new Error((e instanceof AjaxError && e.statusText) || "move failed", {
       cause: e,

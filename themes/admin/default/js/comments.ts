@@ -250,8 +250,7 @@ ready(function () {
 
 async function getComments(params: CommentsFilterParams): Promise<void> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const response = (await ajax({
+    const response = await ajax<CommentListResponse>({
       url: "api/v1/comments",
       type: "GET",
       dataType: "json",
@@ -265,7 +264,7 @@ async function getComments(params: CommentsFilterParams): Promise<void> {
         maxDate: params.f_max_date,
         imageId: params.image_id,
       },
-    })) as CommentListResponse;
+    });
 
     commentsState = { ...response };
     commentsDisplaySummary(response.summary);

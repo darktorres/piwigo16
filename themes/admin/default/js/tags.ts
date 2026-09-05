@@ -433,8 +433,7 @@ on(document.querySelectorAll("#add-tag .icon-validate"), "click", function () {
 async function addTag(name: string): Promise<void> {
   let response: TagCreateResponse;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    response = (await ajax({
+    response = await ajax<TagCreateResponse>({
       url: "api/v1/tags",
       type: "POST",
       json: {
@@ -444,7 +443,7 @@ async function addTag(name: string): Promise<void> {
         "X-CSRF-Token": pwgToken,
       },
       dataType: "json",
-    })) as TagCreateResponse;
+    });
   } catch (err) {
     if (err instanceof AjaxError && err.status === 422) {
       throw new Error(strAlreadyExist.replace("%s", name), { cause: err });
@@ -631,8 +630,7 @@ async function renameTag(
 ): Promise<TagRenameResponse> {
   let response: TagRenameResponse;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    response = (await ajax({
+    response = await ajax<TagRenameResponse>({
       url: "api/v1/tags/" + String(id),
       type: "PATCH",
       json: {
@@ -642,7 +640,7 @@ async function renameTag(
         "X-CSRF-Token": pwgToken,
       },
       dataType: "json",
-    })) as TagRenameResponse;
+    });
   } catch (err) {
     if (err instanceof AjaxError && err.status === 422) {
       throw new Error(strAlreadyExist.replace("%s", new_name), {
@@ -714,8 +712,7 @@ async function duplicateTag(
 
   let response: TagDuplicateResponse;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    response = (await ajax({
+    response = await ajax<TagDuplicateResponse>({
       url: "api/v1/tags/" + String(id) + "/actions/duplicate",
       type: "POST",
       json: {
@@ -725,7 +722,7 @@ async function duplicateTag(
         "X-CSRF-Token": pwgToken,
       },
       dataType: "json",
-    })) as TagDuplicateResponse;
+    });
   } catch (err) {
     throw new Error(err instanceof AjaxError ? err.statusText : String(err), {
       cause: err,

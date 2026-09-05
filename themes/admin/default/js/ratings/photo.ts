@@ -119,8 +119,9 @@ async function del(
   };
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const result = (await ajax({
+    const result = await ajax<
+      operations["userDeleteRatings"]["responses"][200]["content"]["application/json"]
+    >({
       url:
         pwg_getPageData<string>("root_url") +
         "api/v1/users/" +
@@ -129,7 +130,7 @@ async function del(
       method: "POST",
       json: data,
       headers: { "X-CSRF-Token": pwgToken },
-    })) as operations["userDeleteRatings"]["responses"][200]["content"]["application/json"];
+    });
 
     if (result.deletedCount) remove(trSet);
     else alert(result.deletedCount);

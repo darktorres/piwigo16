@@ -236,8 +236,9 @@ async function getDerivativeUrls(queue: AjaxQueue): Promise<void> {
 
   let responseData: operations["imageMissingDerivatives"]["responses"][200]["content"]["application/json"];
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    responseData = (await ajax({
+    responseData = await ajax<
+      operations["imageMissingDerivatives"]["responses"][200]["content"]["application/json"]
+    >({
       type: "POST",
       url: "api/v1/images/actions/missing-derivatives",
       json: params,
@@ -248,7 +249,7 @@ async function getDerivativeUrls(queue: AjaxQueue): Promise<void> {
         )!,
       },
       dataType: "json",
-    })) as operations["imageMissingDerivatives"]["responses"][200]["content"]["application/json"];
+    });
   } catch (e) {
     console.error(e instanceof AjaxError ? e.responseText : e);
     return;
@@ -1207,8 +1208,9 @@ on(
 
 async function addMd5sumBlock(blockSize?: number): Promise<void> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const responseData = (await ajax({
+    const responseData = await ajax<
+      operations["imageSetMd5sum"]["responses"][200]["content"]["application/json"]
+    >({
       url: "api/v1/images/actions/set-md5sum",
       type: "POST",
       json: {
@@ -1221,7 +1223,7 @@ async function addMd5sumBlock(blockSize?: number): Promise<void> {
         )!,
       },
       dataType: "json",
-    })) as operations["imageSetMd5sum"]["responses"][200]["content"]["application/json"];
+    });
 
     html(
       document.querySelectorAll("#md5sum_to_add"),
@@ -1284,8 +1286,9 @@ on(
 
 async function deleteOrphansBlock(blockSize?: number): Promise<void> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const responseData = (await ajax({
+    const responseData = await ajax<
+      operations["imageDeleteOrphans"]["responses"][200]["content"]["application/json"]
+    >({
       url: "api/v1/images/actions/delete-orphans",
       type: "POST",
       json: {
@@ -1298,7 +1301,7 @@ async function deleteOrphansBlock(blockSize?: number): Promise<void> {
         )!,
       },
       dataType: "json",
-    })) as operations["imageDeleteOrphans"]["responses"][200]["content"]["application/json"];
+    });
 
     html(
       document.querySelectorAll("#orphans_to_delete"),

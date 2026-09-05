@@ -820,12 +820,13 @@ function pluginSaveLoop(pictureId: number) {
 // UPDATE BLOCKS
 async function updateBlock(pictureId: number): Promise<void> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const response = (await ajax({
+    const response = await ajax<
+      operations["imageGet"]["responses"][200]["content"]["application/json"]
+    >({
       url: "api/v1/images/" + String(pictureId),
       type: "GET",
       dataType: "json",
-    })) as operations["imageGet"]["responses"][200]["content"]["application/json"];
+    });
 
     setVal(
       document.querySelectorAll(

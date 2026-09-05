@@ -125,8 +125,9 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
         hide(document.querySelectorAll(".albumCreationButton"));
 
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-          const response = (await ajax({
+          const response = await ajax<
+            operations["categoryCreate"]["responses"][201]["content"]["application/json"]
+          >({
             url: "api/v1/categories",
             type: "POST",
             json: {
@@ -139,7 +140,7 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
               ),
             },
             dataType: "json",
-          })) as operations["categoryCreate"]["responses"][201]["content"]["application/json"];
+          });
 
           hide(document.querySelectorAll("#albumCreationLoading"));
           show(document.querySelectorAll(".albumCreationButton"));

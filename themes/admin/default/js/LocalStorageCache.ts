@@ -403,12 +403,13 @@ class CategoriesCache extends AbstractSelectizer<ProcessedCategory> {
     options.loader = function (callback) {
       void (async () => {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-          const response = (await ajax({
+          const response = await ajax<
+            operations["categoryList"]["responses"][200]["content"]["application/json"]
+          >({
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real caller of this cache always passes rootUrl.
             url: options.rootUrl! + "api/v1/categories",
             dataType: "json",
-          })) as operations["categoryList"]["responses"][200]["content"]["application/json"];
+          });
 
           const cats: ProcessedCategory[] = response.categories.map(
             function (c, i) {
@@ -454,12 +455,13 @@ class TagsCache extends AbstractSelectizer<ProcessedTag> {
     options.loader = function (callback) {
       void (async () => {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-          const response = (await ajax({
+          const response = await ajax<
+            operations["tagList"]["responses"][200]["content"]["application/json"]
+          >({
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real caller of this cache always passes rootUrl.
             url: options.rootUrl! + "api/v1/tags",
             dataType: "json",
-          })) as operations["tagList"]["responses"][200]["content"]["application/json"];
+          });
 
           const tags: ProcessedTag[] = response.tags.map(function (t) {
             const {
@@ -507,12 +509,13 @@ class GroupsCache extends AbstractSelectizer<ProcessedGroup> {
     options.loader = function (callback) {
       void (async () => {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-          const response = (await ajax({
+          const response = await ajax<
+            operations["groupList"]["responses"][200]["content"]["application/json"]
+          >({
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real caller of this cache always passes rootUrl.
             url: options.rootUrl! + "api/v1/groups",
             dataType: "json",
-          })) as operations["groupList"]["responses"][200]["content"]["application/json"];
+          });
 
           const groups: ProcessedGroup[] = response.groups.map(function (g) {
             const { lastmodified: _lastmodified, ...rest } = g;
@@ -559,15 +562,16 @@ class UsersCache extends AbstractSelectizer<UserEntity> {
       // recursive loader
       void (async function load(page: number) {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-          const response = (await ajax({
+          const response = await ajax<
+            operations["userList"]["responses"][200]["content"]["application/json"]
+          >({
             url:
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real caller of this cache always passes rootUrl.
               options.rootUrl! +
               "api/v1/users?perPage=9999&page=" +
               String(page),
             dataType: "json",
-          })) as operations["userList"]["responses"][200]["content"]["application/json"];
+          });
 
           users = users.concat(response.users);
 

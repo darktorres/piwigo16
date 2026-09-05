@@ -187,12 +187,14 @@ function serializeRequestBody(requestData: unknown): string {
 
 /**
  * A thenable that also answers to jQuery's `.done()`/`.fail()`, which 10 call
- * sites use on the return value.
+ * sites use on the return value. `T` is the same response shape `AjaxOptions<T>`
+ * asserts (P51-P) -- threaded all the way through so a real call site's own
+ * `await ajax<Foo>({...})` needs no external `as Foo` cast at all.
  */
-export interface AjaxThenable extends Promise<unknown> {
-  done(handler: (data: unknown) => void): AjaxThenable;
-  fail(handler: (xhr: AjaxError) => void): AjaxThenable;
-  always(handler: () => void): AjaxThenable;
+export interface AjaxThenable<T = unknown> extends Promise<T> {
+  done(handler: (data: T) => void): AjaxThenable<T>;
+  fail(handler: (xhr: AjaxError) => void): AjaxThenable<T>;
+  always(handler: () => void): AjaxThenable<T>;
   /**
    * `jqXHR.abort()`. The installer keeps a handle to its in-flight
    * database check and cancels it when the form changes again, so this is
@@ -202,7 +204,7 @@ export interface AjaxThenable extends Promise<unknown> {
 }
 
 // eslint-disable-next-line @typescript-eslint/promise-function-async -- must return this exact `promise` object (now carrying done()/fail()/always()/abort()), not a value; wrapping in `async` would re-resolve it through `Promise.resolve()` and strip those extra properties, breaking jconfirm.ts's own `isThenable()` check and 10 real `.done()`/`.fail()` call sites.
-function decorate(promise: Promise<unknown>, abort: () => void): AjaxThenable {
+function decorate<T>(promise: Promise<T>, abort: () => void): AjaxThenable<T> {
   // jQuery's jqXHR is not a native promise, so a failing request never
   // produced an unhandled-rejection event. This one would, on every request
   // whose failure is handled by the `error` callback rather than by a
@@ -213,7 +215,7 @@ function decorate(promise: Promise<unknown>, abort: () => void): AjaxThenable {
   void promise.catch(() => undefined);
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- AjaxThenable's own extra done()/fail()/always()/abort() methods are assigned onto this same promise object immediately below, a real boundary between "plain Promise" and "decorated with those methods".
-  const thenable = promise as AjaxThenable;
+  const thenable = promise as AjaxThenable<T>;
 
   // eslint-disable-next-line @typescript-eslint/promise-function-async -- returns `thenable` itself for chaining, not a value to await; `async` would re-wrap it through `Promise.resolve()` and drop the very done()/fail()/always()/abort() methods this method exists to expose.
   thenable.done = (handler) => {
@@ -262,7 +264,7 @@ async function performAjaxRequest<T>(
   controller: AbortController,
   dataType: string | undefined,
   options: AjaxOptions<T>
-): Promise<unknown> {
+): Promise<T> {
   const response = await fetch(url, {
     method,
     ...(body !== undefined ? { body } : {}),
@@ -337,12 +339,16 @@ async function performAjaxRequest<T>(
 
   const statusText = noContent ? "nocontent" : "success";
   // The cast is the whole of what `T` means: the caller asserted this
-  // shape, and neither jQuery nor this checks it.
+  // shape, and neither jQuery nor this checks it. Both `success`'s own
+  // `data` argument and this function's own return value share the one
+  // real cast (P51-P) -- there was never a second, independent unsafe
+  // spot here, just two readers of the same asserted value.
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see comment above.
   options.success?.(data as T, statusText, xhr);
   options.complete?.(xhr, statusText);
 
-  return data;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see the comment above options.success's own identical cast.
+  return data as T;
 }
 
 /**
@@ -383,7 +389,7 @@ function buildRequestUrlAndBody<T>(
 
 /** `$.ajax(options)`. */
 // eslint-disable-next-line @typescript-eslint/promise-function-async -- returns `decorate(pending, ...)` directly, the same real AjaxThenable object carrying done()/fail()/always()/abort(); `async` would re-wrap it through `Promise.resolve()` and lose them.
-export function ajax<T = unknown>(options: AjaxOptions<T>): AjaxThenable {
+export function ajax<T = unknown>(options: AjaxOptions<T>): AjaxThenable<T> {
   const method = (options.method ?? options.type ?? "GET").toUpperCase();
   const dataType = options.dataType?.toLowerCase();
   const isBodyless = method === "GET" || method === "HEAD";
@@ -420,7 +426,7 @@ async function runWithBeforeSend<T>(
   controller: AbortController,
   dataType: string | undefined,
   options: AjaxOptions<T>
-): Promise<unknown> {
+): Promise<T> {
   const preflight: AjaxResponse = {
     status: 0,
     statusText: "",

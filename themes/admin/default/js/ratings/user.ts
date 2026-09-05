@@ -122,8 +122,9 @@ ready(function () {
               const ids = uidFromCell(cell);
               void (async () => {
                 try {
-                  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-                  const result = (await ajax({
+                  const result = await ajax<
+                    operations["userDeleteRatings"]["responses"][200]["content"]["application/json"]
+                  >({
                     url:
                       pwg_getPageData<string>("root_url") +
                       "api/v1/users/" +
@@ -132,7 +133,7 @@ ready(function () {
                     method: "POST",
                     json: { anonymousId: ids.aid || null },
                     headers: { "X-CSRF-Token": pwgToken },
-                  })) as operations["userDeleteRatings"]["responses"][200]["content"]["application/json"];
+                  });
 
                   if (result.deletedCount) oTable.row(tr).remove().draw();
                   else alert(result.deletedCount);
@@ -196,8 +197,7 @@ ready(function () {
 
       void (async () => {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-          const geoData = (await ajax({
+          const geoData = await ajax<GeoIpLookupResponse>({
             url: "api/v1/geoip",
             // `aid` is an anonymous rater's IP with its last octet
             // deliberately stripped for privacy (RateService::$anonymousId/
@@ -209,7 +209,7 @@ ready(function () {
             type: "GET",
             dataType: "json",
             data: { ip: udata.aid + ".1" },
-          })) as GeoIpLookupResponse;
+          });
 
           if (!geoData.available || geoData.fullName === undefined) return;
           let content = geoData.fullName;

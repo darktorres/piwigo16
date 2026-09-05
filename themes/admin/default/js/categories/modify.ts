@@ -211,8 +211,9 @@ ready(function () {
     if (parentAlbum !== defaultParentAlbum) {
       void (async () => {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-          const data = (await ajax({
+          const data = await ajax<
+            operations["categoryMove"]["responses"][200]["content"]["application/json"]
+          >({
             url: "api/v1/categories/actions/move",
             type: "POST",
             dataType: "json",
@@ -221,7 +222,7 @@ ready(function () {
               parentId: parentAlbum,
             },
             headers: { "X-CSRF-Token": pwgToken },
-          })) as operations["categoryMove"]["responses"][200]["content"]["application/json"];
+          });
           html(
             document.querySelectorAll(".cat-modify-ariane"),
             data.newArianeString,
@@ -367,8 +368,9 @@ ready(function () {
 
       void (async () => {
         try {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-          const data = (await ajax({
+          const data = await ajax<
+            operations["categoryRefreshRepresentative"]["responses"][200]["content"]["application/json"]
+          >({
             url:
               "api/v1/categories/" +
               String(albumId) +
@@ -377,7 +379,7 @@ ready(function () {
             contentType: "application/json",
             headers: { "X-CSRF-Token": pwgToken },
             dataType: "json",
-          })) as operations["categoryRefreshRepresentative"]["responses"][200]["content"]["application/json"];
+          });
 
           show(document.querySelectorAll("#deleteRepresentative"));
 

@@ -114,8 +114,7 @@ function updateRating(e: Event): void {
 
   void (async () => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-      const result = (await ajax({
+      const result = await ajax<PwgRatingResult>({
         url:
           gRatingOptions.rootUrl +
           "api/v1/images/" +
@@ -123,7 +122,7 @@ function updateRating(e: Event): void {
           "/rating",
         method: "PUT",
         json: { rate: rateButton.initialRateValue },
-      })) as PwgRatingResult;
+      });
 
       gUserRating = rateButton.initialRateValue;
       for (const button of gRatingButtons) button.disabled = false;

@@ -291,13 +291,12 @@ async function resolveUserActivityUsernames(
     return;
   }
   const allUserIds = [...new Set(userLines.flatMap((l) => l.object_id))];
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-  const userInfo = (await ajax({
+  const userInfo = await ajax<UserListResponse>({
     url: "api/v1/users",
     type: "GET",
     dataType: "json",
     data: { userIds: allUserIds, perPage: 0 },
-  })) as UserListResponse;
+  });
   const usernameOfId: Record<string, string> = {};
   userInfo.users.forEach((u) => {
     usernameOfId[u.id] = u.username;
@@ -335,13 +334,12 @@ async function fetchAndMergeActivityLines(
       id,
     );
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const response = (await ajax({
+    const response = await ajax<ActivityListResponse>({
       url: "api/v1/activity",
       type: "GET",
       dataType: "json",
       data: params,
-    })) as ActivityListResponse;
+    });
 
     ({ hasMore } = response);
 

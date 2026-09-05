@@ -915,8 +915,7 @@ ready(function () {
       // `echo json_encode($incompatible_plugins);` -- a plain array of
       // plugin id strings, no OpenAPI coverage (legacy admin.php endpoint,
       // not api/v1).
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-      const data = (await ajax({
+      const data = await ajax<string[]>({
         method: "GET",
         url: "admin.php",
         // `page=plugins_installed` is upstream Piwigo's slug. This fork
@@ -931,7 +930,7 @@ ready(function () {
           incompatible_plugins: true,
         },
         dataType: "json",
-      })) as string[];
+      });
 
       for (const pluginId of data) {
         if (showDetails)

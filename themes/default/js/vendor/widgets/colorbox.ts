@@ -656,11 +656,10 @@ function load(): void {
   } else if (href) {
     void (async () => {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-        const html = (await ajax({
+        const html = await ajax<string>({
           url: href,
           dataType: "html",
-        })) as string;
+        });
 
         if (myRequest !== requestSeq) {
           return;

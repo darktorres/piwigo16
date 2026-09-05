@@ -57,12 +57,11 @@ async function refreshCacheSize(button: Element): Promise<void> {
   });
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const data = (await ajax({
+    const data = await ajax<CacheSizeResponse>({
       url: "api/v1/cache-size",
       type: "GET",
       dataType: "json",
-    })) as CacheSizeResponse;
+    });
 
     const domElemToRefresh = [
       document.querySelectorAll<HTMLElement>(".cache-size-value"),

@@ -50,13 +50,14 @@ ready(function () {
   if (pwg_getPageData<boolean>("check_for_updates")) {
     void (async () => {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-        const data = (await ajax({
+        const data = await ajax<
+          operations["extensionsCheckUpdates"]["responses"][200]["content"]["application/json"]
+        >({
           type: "GET",
           url: "api/v1/extensions/updates",
           dataType: "json",
           timeout: 5000,
-        })) as operations["extensionsCheckUpdates"]["responses"][200]["content"]["application/json"];
+        });
 
         const piwigoUpdate = data.piwigoNeedUpdate;
         const extUpdate = data.extNeedUpdate;

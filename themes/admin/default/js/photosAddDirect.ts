@@ -244,14 +244,13 @@ async function searchAndAssignFormats(
   fileNames: Record<string, string>,
 ): Promise<void> {
   //ajax qui renvois les id des images dans la gallerie.
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-  const searchResponse = (await ajax({
+  const searchResponse = await ajax<ImageFormatSearchResponse>({
     url: "api/v1/images/formats/actions/search",
     type: "POST",
     json: {
       filenames: fileNames,
     },
-  })) as ImageFormatSearchResponse;
+  });
   const imagesSearch: ImageFormatSearchResponse["results"] =
     searchResponse.results;
 
@@ -709,8 +708,9 @@ ready(function () {
         if (!formatMode && uploadCategory) {
           void (async () => {
             try {
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-              const data = (await ajax({
+              const data = await ajax<
+                operations["uploadCompleteBatch"]["responses"][200]["content"]["application/json"]
+              >({
                 url: "api/v1/uploads/actions/complete-batch",
                 type: "POST",
                 json: {
@@ -718,7 +718,7 @@ ready(function () {
                 },
                 headers: { "X-CSRF-Token": pwgToken },
                 dataType: "json",
-              })) as operations["uploadCompleteBatch"]["responses"][200]["content"]["application/json"];
+              });
 
               // A real, fresh nb_photos/label straight from the server --
               // read here instead of a value captured mid-upload, since
@@ -966,12 +966,11 @@ function uploadNextTusFile(
         operations["imageGet"]["responses"][200]["content"]["application/json"]
       > = {};
       try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-        imageInfo = (await ajax({
+        imageInfo = await ajax<typeof imageInfo>({
           url: "api/v1/images/" + String(result.imageId),
           type: "GET",
           dataType: "json",
-        })) as typeof imageInfo;
+        });
       } catch (_e) {
         // Enrichment fetch failed -- the photo itself was uploaded
         // successfully, so still report it as such, just with a
@@ -1063,14 +1062,15 @@ async function addFirstAlbum(
   };
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const res = (await ajax({
+    const res = await ajax<
+      operations["categoryCreate"]["responses"][201]["content"]["application/json"]
+    >({
       url: "api/v1/categories",
       method: "POST",
       json: params,
       headers: { "X-CSRF-Token": pwgToken },
       dataType: "json",
-    })) as operations["categoryCreate"]["responses"][201]["content"]["application/json"];
+    });
 
     add_cat(res.id);
     hideFirstAlbum(params.name);

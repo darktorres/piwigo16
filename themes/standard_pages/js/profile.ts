@@ -555,12 +555,13 @@ async function setInfos(
 
 async function getAllApiKeys(reset = false): Promise<void> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const res = (await ajax({
+    const res = await ajax<
+      operations["sessionApiKeyList"]["responses"][200]["content"]["application/json"]
+    >({
       url: "api/v1/session/api-keys",
       type: "GET",
       dataType: "json",
-    })) as operations["sessionApiKeyList"]["responses"][200]["content"]["application/json"];
+    });
 
     if (res.apiKeys.length === 0) {
       // No keys

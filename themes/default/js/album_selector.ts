@@ -898,13 +898,12 @@ export class AlbumSelector {
     };
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-      const data = (await ajax({
+      const data = await ajax<CategoryListOrAvailableResponse>({
         url: this.#methodPwg,
         type: "GET",
         dataType: "json",
         data: apiParams,
-      })) as CategoryListOrAvailableResponse;
+      });
 
       this.#rememberLevelSeparator(data);
       hide(q(".linkedAlbumPopInContainer .searching"));
@@ -926,13 +925,12 @@ export class AlbumSelector {
     };
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-      const data = (await ajax({
+      const data = await ajax<CategoryListOrAvailableResponse>({
         url: this.#methodPwg,
         type: "GET",
         dataType: "json",
         data: apiParams,
-      })) as CategoryListOrAvailableResponse;
+      });
 
       this.#rememberLevelSeparator(data);
       const cats = data.categories.filter((c) => c.id !== Number(catId));
@@ -961,13 +959,12 @@ export class AlbumSelector {
 
     show(AlbumSelector.selectors.iconSearchingSpin);
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-      const data = (await ajax({
+      const data = await ajax<CategoryListOrAvailableResponse>({
         url: this.#methodPwg,
         type: "GET",
         dataType: "json",
         data: apiParams,
-      })) as CategoryListOrAvailableResponse;
+      });
 
       this.#rememberLevelSeparator(data);
       hide(AlbumSelector.selectors.iconSearchingSpin);
@@ -1012,8 +1009,9 @@ export class AlbumSelector {
     }
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-      const data = (await ajax({
+      const data = await ajax<
+        operations["categoryCreate"]["responses"][201]["content"]["application/json"]
+      >({
         url: "api/v1/categories",
         type: "POST",
         json: apiParams,
@@ -1021,7 +1019,7 @@ export class AlbumSelector {
           "X-CSRF-Token": pwgToken,
         },
         dataType: "json",
-      })) as operations["categoryCreate"]["responses"][201]["content"]["application/json"];
+      });
 
       void this.#getAlbumById(data.id);
     } catch {
@@ -1031,15 +1029,16 @@ export class AlbumSelector {
 
   async #getAlbumById(catId: string | number) {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-      const data = (await ajax({
+      const data = await ajax<
+        operations["categoryList"]["responses"][200]["content"]["application/json"]
+      >({
         url: "api/v1/categories",
         type: "GET",
         dataType: "json",
         data: {
           parentId: catId,
         },
-      })) as operations["categoryList"]["responses"][200]["content"]["application/json"];
+      });
 
       this.#selectNewAlbumAndClose(valueAt(data.categories, 0));
     } catch {

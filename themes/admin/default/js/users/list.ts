@@ -2954,8 +2954,7 @@ Ajax Requests
 async function getFirstSelectionUsernames(callback: () => void): Promise<void> {
   const firstIds = selection.slice(0, 50).map((x) => x.id);
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const response = (await ajax({
+    const response = await ajax<UserListResponse>({
       url: "api/v1/users",
       type: "GET",
       data: {
@@ -2964,7 +2963,7 @@ async function getFirstSelectionUsernames(callback: () => void): Promise<void> {
         exclude: [guestId],
       },
       dataType: "json",
-    })) as UserListResponse;
+    });
     const result = response.users;
     for (const resultUser of result) {
       const index = selection.findIndex((x) => x.id === resultUser.id);
@@ -2992,8 +2991,7 @@ async function selectWholeSet(): Promise<void> {
   );
   show(document.querySelectorAll("#checkActions .loading"));
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const response = (await ajax({
+    const response = await ajax<UserListResponse>({
       url: "api/v1/users",
       type: "GET",
       data: {
@@ -3033,7 +3031,7 @@ async function selectWholeSet(): Promise<void> {
           ],
       },
       dataType: "json",
-    })) as UserListResponse;
+    });
     selection = response.users.map((x) => {
       return { id: x.id };
     });
@@ -3061,14 +3059,15 @@ async function updateUserUsername(): Promise<void> {
     return;
   }
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const response = (await ajax({
+    const response = await ajax<
+      operations["userUpdate"]["responses"][200]["content"]["application/json"]
+    >({
       url: "api/v1/users/" + String(lastUserId),
       type: "PATCH",
       headers: { "X-CSRF-Token": pwgToken },
       json: ajaxData,
       dataType: "json",
-    })) as operations["userUpdate"]["responses"][200]["content"]["application/json"];
+    });
     if (lastUserIndex !== -1) {
       // "username" may be missing from a defensive-fallback response
       // (the row couldn't be re-fetched right after the update) --
@@ -3187,14 +3186,15 @@ async function updateUserInfo(): Promise<void> {
   fadeOut(document.querySelectorAll("#UserList .update-user-fail"));
   fadeOut(document.querySelectorAll("#UserList .update-user-success"));
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const resultUser = (await ajax({
+    const resultUser = await ajax<
+      operations["userUpdate"]["responses"][200]["content"]["application/json"]
+    >({
       url: "api/v1/users/" + String(lastUserId),
       type: "PATCH",
       headers: { "X-CSRF-Token": pwgToken },
       json: ajaxData,
       dataType: "json",
-    })) as operations["userUpdate"]["responses"][200]["content"]["application/json"];
+    });
     if (lastUserIndex !== -1) {
       currentUsers[lastUserIndex] = {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- always reached inside an `if (lastUserIndex !== -1)`/ternary guard, so lastUserIndex is a real, in-bounds currentUsers index here.
@@ -3263,15 +3263,14 @@ async function updateUserInfo(): Promise<void> {
 
 async function getGuestInfo(): Promise<void> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const response = (await ajax({
+    const response = await ajax<UserListResponse>({
       url: "api/v1/users",
       type: "GET",
       data: {
         userIds: [guestId],
       },
       dataType: "json",
-    })) as UserListResponse;
+    });
     if (response.users.length) {
       guestUser = valueAt(response.users, 0);
       fillGuestEdit();
@@ -3286,15 +3285,14 @@ async function getUserInfo(
   callback: (() => void) | null = null,
 ): Promise<void> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const response = (await ajax({
+    const response = await ajax<UserListResponse>({
       url: "api/v1/users",
       type: "GET",
       data: {
         userIds: [uid],
       },
       dataType: "json",
-    })) as UserListResponse;
+    });
     if (response.users.length) {
       const resultUser = valueAt(response.users, 0);
       fillUserEdit(resultUser);
@@ -3424,13 +3422,12 @@ async function updateUserList(): Promise<void> {
   applyAdvancedFilterData(updateData);
   show(document.querySelectorAll(".user-update-spinner"));
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const response = (await ajax({
+    const response = await ajax<UserListResponse>({
       url: "api/v1/users",
       type: "GET",
       data: updateData,
       dataType: "json",
-    })) as UserListResponse;
+    });
     totalUsers = response.totalCount;
     if (firstUpdate) {
       document
@@ -3635,14 +3632,15 @@ async function addUser(): Promise<void> {
   }
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const response = (await ajax({
+    const response = await ajax<
+      operations["userCreate"]["responses"][201]["content"]["application/json"]
+    >({
       url: "api/v1/users",
       type: "POST",
       headers: { "X-CSRF-Token": pwgToken },
       json: payload,
       dataType: "json",
-    })) as operations["userCreate"]["responses"][201]["content"]["application/json"];
+    });
     const newUserId = response.id;
     const defaultGroup = "groups" in response ? response.groups : [];
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajaxData["groupIds"] was set to groupsSelected (a real number[]) earlier in this same function, the only writer before this read.
@@ -3670,8 +3668,9 @@ async function addInfosToNewUser(
   ajaxData: Record<string, unknown>,
 ): Promise<void> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const response = (await ajax({
+    const response = await ajax<
+      operations["userUpdate"]["responses"][200]["content"]["application/json"]
+    >({
       url: "api/v1/users/" + String(user_id),
       type: "PATCH",
       headers: { "X-CSRF-Token": pwgToken },
@@ -3682,7 +3681,7 @@ async function addInfosToNewUser(
         enabledHigh: ajaxData["enabledHigh"],
       },
       dataType: "json",
-    })) as operations["userUpdate"]["responses"][200]["content"]["application/json"];
+    });
     const newUserId = response.id;
     void updateUserList();
     // addUserClose();
@@ -3750,8 +3749,9 @@ async function sendNewUserPassword(
 ): Promise<void> {
   const sendByMail = mail === "" ? false : true;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const response = (await ajax({
+    const response = await ajax<
+      operations["userGeneratePasswordLink"]["responses"][200]["content"]["application/json"]
+    >({
       url:
         "api/v1/users/" + String(user_id) + "/actions/generate-password-link",
       dataType: "json",
@@ -3760,7 +3760,7 @@ async function sendNewUserPassword(
       json: {
         sendByMail: sendByMail,
       },
-    })) as operations["userGeneratePasswordLink"]["responses"][200]["content"]["application/json"];
+    });
     const passwordContainer = document.querySelectorAll(
       "#AddUserPasswordInputContainer",
     );
@@ -4040,8 +4040,7 @@ async function sendLinkPassword(
   sendByMail: boolean,
 ): Promise<void> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const response = (await ajax({
+    const response = await ajax<SendLinkPasswordResponse>({
       url:
         "api/v1/users/" + String(user_id) + "/actions/generate-password-link",
       dataType: "json",
@@ -4050,7 +4049,7 @@ async function sendLinkPassword(
       json: {
         sendByMail: sendByMail,
       },
-    })) as SendLinkPasswordResponse;
+    });
     setVal(
       document.querySelectorAll("#result_send_mail_copy_input"),
       response.generatedLink,

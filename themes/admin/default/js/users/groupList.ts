@@ -211,8 +211,9 @@ ready(function () {
 
         if (name.replace(/\s/g, "").length !== 0) {
           try {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-            const group = (await ajax({
+            const group = await ajax<
+              operations["groupCreate"]["responses"][201]["content"]["application/json"]
+            >({
               url: "api/v1/groups",
               type: "POST",
               headers: {
@@ -222,7 +223,7 @@ ready(function () {
                 name: name,
               },
               dataType: "json",
-            })) as operations["groupCreate"]["responses"][201]["content"]["application/json"];
+            });
             loadState.reverse();
             setVal(
               document.querySelectorAll(".addGroupFormLabelAndInput input"),
@@ -607,8 +608,9 @@ async function renameGroup(id: number, newName: string): Promise<void> {
 
   if (newName.replace(/\s/g, "").length !== 0) {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-      const response = (await ajax({
+      const response = await ajax<
+        operations["groupUpdate"]["responses"][200]["content"]["application/json"]
+      >({
         url: "api/v1/groups/" + String(id),
         type: "PATCH",
         headers: {
@@ -618,7 +620,7 @@ async function renameGroup(id: number, newName: string): Promise<void> {
           name: newName,
         },
         dataType: "json",
-      })) as operations["groupUpdate"]["responses"][200]["content"]["application/json"];
+      });
       loadState.reverse();
       const confirmedName = response.name;
       //Display message
@@ -961,8 +963,9 @@ async function duplicateAction(id: number): Promise<void> {
   }
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const response = (await ajax({
+    const response = await ajax<
+      operations["groupDuplicate"]["responses"][201]["content"]["application/json"]
+    >({
       url: "api/v1/groups/" + String(id) + "/actions/duplicate",
       type: "POST",
       headers: {
@@ -972,7 +975,7 @@ async function duplicateAction(id: number): Promise<void> {
         name: copyName,
       },
       dataType: "json",
-    })) as operations["groupDuplicate"]["responses"][201]["content"]["application/json"];
+    });
     loadState.reverse();
     hide(
       document.querySelectorAll(
@@ -1234,15 +1237,14 @@ on(document.querySelectorAll(".ConfirmMergeButton"), "click", function () {
         "<i class='icon-spin6 animate-spin'> </i>",
       );
       try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-        const response = (await ajax({
+        const response = await ajax<GroupUserListResponse>({
           url: "api/v1/users",
           type: "GET",
           data: {
             groupIds: [destGrp],
           },
           dataType: "json",
-        })) as GroupUserListResponse;
+        });
         const number = response.users.length;
         html(
           document.querySelectorAll(

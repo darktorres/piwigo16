@@ -203,15 +203,14 @@ export async function openUserManager(grpId: number): Promise<void> {
     "<i class='icon-spin6 animate-spin'> </i>",
   );
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-    const response = (await ajax({
+    const response = await ajax<GroupUserListResponse>({
       url: "api/v1/users",
       type: "GET",
       data: {
         groupIds: [grpId],
       },
       dataType: "json",
-    })) as GroupUserListResponse;
+    });
     loadState.reverse();
     //Set the popin name
     html(

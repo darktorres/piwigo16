@@ -1,3 +1,5 @@
+import { valueAt } from "./vendor/utils/dom";
+
 // str_repeat stays module-private (P48) -- sprintf() below is its only
 // real caller anywhere in this codebase; array_delete (the same
 // original comment's other established shared-global) had zero real
@@ -33,7 +35,7 @@ export function getRandomInt(min: number, max: number): number {
   let value: number;
   do {
     crypto.getRandomValues(buf);
-    value = buf[0]!;
+    value = valueAt(buf, 0);
   } while (value >= rejectionLimit);
 
   return lo + (value % range);
@@ -126,16 +128,18 @@ function formatSprintfSpecifier(
   if (a == null || a === undefined) {
     throw new Error("Too few arguments.");
   }
-  if (/[^s]/.test(m[7]!) && typeof a !== "number") {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the regex's own 7th capture group ([b-fosuxX]) is never optional; it always matches when m itself matches.
+  const spec = m[7]!;
+  if (/[^s]/.test(spec) && typeof a !== "number") {
     throw new Error("Expecting number but found " + typeof a);
   }
 
   a = convertSprintfValue(
     a,
-    m[7]!,
+    spec,
     m[6] !== undefined ? Number(m[6]) : undefined,
   );
-  a = applySprintfSignPrefix(a, m[7]!, m[2] !== undefined);
+  a = applySprintfSignPrefix(a, spec, m[2] !== undefined);
   const c = resolveSprintfPaddingChar(m[3]);
   const x = Number(m[5]) - String(a).length - s.length;
   const p = m[5] !== undefined ? str_repeat(c, x) : "";

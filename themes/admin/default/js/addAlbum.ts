@@ -37,7 +37,9 @@ interface PwgAddAlbumOptions {
 export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
   const options = rawOptions ?? {};
 
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own "#addAlbumForm" popup is always real.
   const popup = document.querySelector("#addAlbumForm")!;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- "#addAlbumForm" always renders its own real category_parent select.
   const albumParent = popup.querySelector<HTMLSelectElement>(
     '[name="category_parent"]',
   )!;
@@ -59,9 +61,15 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
     throw new Error("pwgAddAlbum: target must use selectize");
   }
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions -- real runtime guard: the `as {...}` cast above forces this to look non-nullable to TS, but the ternary it casts really can produce undefined (target === null, or no cache ever stashed via setData).
-  if (!cache) {
+  if (target === null || !cache) {
     throw new Error("pwgAddAlbum: missing categories cache");
   }
+  // Real invariant, not TS-provable from the checks above alone: `cache`
+  // is only ever non-undefined when `target` is non-null (its own
+  // ternary above), so this point is unreachable with a null target --
+  // narrowed explicitly here so the closures below (which lose plain
+  // CFA narrowing across a function boundary) can use it directly.
+  const targetEl = target;
 
   function init() {
     setData(popup, "init", true);
@@ -87,6 +95,7 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
       event.preventDefault();
 
       const parentId = val(albumParent);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- "#addAlbumForm" always renders its own real category_name input.
       const nameInput = popup.querySelector<HTMLInputElement>(
         "[name=category_name]",
       )!;
@@ -146,6 +155,7 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
             pos: 0,
           };
 
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- init()'s own cache.selectize(albumParent, ...) call above always initializes it.
           const parentSelectize = getSelectizeInstance<
             string | number,
             AlbumOptionData
@@ -158,16 +168,18 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
           // exact same coercion explicit instead (Number(undefined) is
           // NaN, so the "no value selected" case still takes this branch).
           if (Number(parentId) !== 0) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- parentId is always a value the user actually selected from parentSelectize's own options.
             const parent = parentSelectize.options[String(parentId)]!;
             newAlbum.fullname = parent.fullname + " / " + newAlbum.fullname;
             newAlbum.global_rank = String(parent.global_rank) + ".1";
             newAlbum.pos = (parent.pos ?? 0) + 1;
           }
 
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- target must use selectize was already verified above (targetEl's own guard).
           const targetSelectize = getSelectizeInstance<
             string | number,
             AlbumOptionData
-          >(target!)!;
+          >(targetEl)!;
           targetSelectize.addOption(newAlbum);
           targetSelectize.setValue(newAlbum.id);
 
@@ -203,12 +215,13 @@ export function pwgAddAlbum(trigger: Element, rawOptions?: PwgAddAlbumOptions) {
         "visibility",
         "hidden",
       );
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- "#addAlbumForm" always renders its own real category_name input.
       const nameInput = popup.querySelector<HTMLInputElement>(
         "[name=category_name]",
       )!;
       setVal(nameInput, "");
       nameInput.focus();
-      const targetValue = val(target ?? []);
+      const targetValue = val(targetEl);
       getSelectizeInstance(albumParent)?.setValue(
         targetValue === undefined || targetValue === "" ? 0 : targetValue,
       );

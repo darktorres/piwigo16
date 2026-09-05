@@ -1,5 +1,5 @@
 import { sprintf } from "./sprintf";
-import { data, find, html, off, on, setVal } from "./vendor/utils/dom";
+import { data, find, html, off, on, setVal, valueAt } from "./vendor/utils/dom";
 import {
   slider,
   type SliderOptions,
@@ -35,19 +35,15 @@ export function pwgDoubleSlider(
   options: PwgDoubleSliderOptions,
 ): void {
   function onChange(_event: Event, ui: SliderUIParams): void {
-    const minIdx = ui.values![0]!;
-    const maxIdx = ui.values![1]!;
-    setVal(
-      find(container, "[data-input=min]"),
-      String(options.values[minIdx]!),
-    );
-    setVal(
-      find(container, "[data-input=max]"),
-      String(options.values[maxIdx]!),
-    );
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this dual-handle (range: true) slider's own change/slide callbacks always carry both values.
+    const values = ui.values!;
+    const minValue = valueAt(options.values, valueAt(values, 0));
+    const maxValue = valueAt(options.values, valueAt(values, 1));
+    setVal(find(container, "[data-input=min]"), String(minValue));
+    setVal(find(container, "[data-input=max]"), String(maxValue));
     html(
       find(container, ".slider-info"),
-      sprintf(options.text, options.values[minIdx]!, options.values[maxIdx]!),
+      sprintf(options.text, minValue, maxValue),
     );
   }
 
@@ -75,7 +71,7 @@ export function pwgDoubleSlider(
     values[1] = findClosest(options.values, options.selected.max);
   }
 
-  const sliderEl = find(container, ".slider-slider")[0]!;
+  const sliderEl = valueAt(find(container, ".slider-slider"), 0);
   const sliderOptions: SliderOptions = {
     range: true,
     min: 0,
@@ -84,9 +80,10 @@ export function pwgDoubleSlider(
     slide: onChange,
     change: onChange,
   };
-  if (options.stop) {
+  const { stop } = options;
+  if (stop) {
     sliderOptions.stop = () => {
-      options.stop!();
+      stop();
     };
   }
   slider(sliderEl, sliderOptions);

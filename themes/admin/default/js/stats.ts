@@ -94,21 +94,15 @@ interface StatData {
 const dataElement = document.getElementById("data")!;
 // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- deliberate placeholder, immediately filled in below by real readData() calls before any other code can observe it.
 const data = {} as StatData;
-// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- readData() reads this server-rendered #data element's own JSON-object attribute, never adversarial input.
-data.hours = readData(dataElement, "hours") as StatDataPoint;
-// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- readData() reads this server-rendered #data element's own JSON-object attribute, never adversarial input.
-data.days = readData(dataElement, "days") as StatDataPoint;
-// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- readData() reads this server-rendered #data element's own JSON-object attribute, never adversarial input.
-data.months = readData(dataElement, "months") as StatDataPoint;
-// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- readData() reads this server-rendered #data element's own JSON-object attribute, never adversarial input.
-data.years = readData(dataElement, "years") as StatDataPoint;
-// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- readData() reads this server-rendered #data element's own JSON-object attribute, never adversarial input.
-data["compare-years"] = readData(dataElement, "compare-years") as StatDataPoint;
-// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- readData() reads this server-rendered #data element's own JSON-object attribute, never adversarial input.
-data["month-stats"] = readData(dataElement, "month-stats") as {
+data.hours = readData<StatDataPoint>(dataElement, "hours");
+data.days = readData<StatDataPoint>(dataElement, "days");
+data.months = readData<StatDataPoint>(dataElement, "months");
+data.years = readData<StatDataPoint>(dataElement, "years");
+data["compare-years"] = readData<StatDataPoint>(dataElement, "compare-years");
+data["month-stats"] = readData<{
   month: StatDataPoint[];
   avg: number;
-};
+}>(dataElement, "month-stats");
 
 const dataUnit: Record<DataType, LineChartUnit> = {
   hours: "day",
@@ -259,8 +253,7 @@ function selectedDataType(): DataType {
     ".stat-data-selector input:checked + label",
   )!;
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- readData() reads this label's own data-value attribute, this same app's own template writes it, never adversarial input.
-  return readData(label, "value") as DataType;
+  return readData<DataType>(label, "value");
 }
 
 function checkbox(id: string): HTMLInputElement | null {
@@ -270,8 +263,7 @@ function checkbox(id: string): HTMLInputElement | null {
 //Event listener
 document.querySelectorAll(".stat-data-selector label").forEach((label) => {
   label.addEventListener("click", function () {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- readData() reads this label's own data-value attribute, this same app's own template writes it, never adversarial input.
-    const dataType = readData(label, "value") as DataType;
+    const dataType = readData<DataType>(label, "value");
     changeData(dataType);
   });
 });

@@ -25,10 +25,6 @@ import {
   toggle,
 } from "../../../../default/js/vendor/utils/dom";
 
-// ignoreAll/resetIgnored/updateExtension/ignoreExtension are called
-// from updates_ext.latte's own onClick= attributes -- window.X = X
-// exposure at the bottom of this file (the javascript:/onclick=
-// pattern, docs/PLAN.md P46-C's own finding).
 const pwgToken = pwg_getPageData<string>("csrf_token");
 const extType = pwg_getPageData<string>("ext_type");
 const errorHead = pwg_getPageString("ERROR");
@@ -118,6 +114,52 @@ function checkFieldsets() {
       restoreMsg + " (" + String(ignored) + ")",
     );
   }
+}
+
+// `updateExtension`/`ignoreExtension`'s own per-row type/id/revision
+// used to reach here as bare, unquoted arguments spliced straight into
+// updates_ext.latte's own `onClick=` attribute
+// (`updateExtension({$type}, ...)`) -- since `$type` is a genuinely
+// non-numeric word ("plugins"/"themes"/"languages"), that emitted
+// invalid JS (`updateExtension(plugins, ...)`, a `ReferenceError`) for
+// every real pending update; a real, confirmed bug found and fixed by
+// this same P51-N conversion, not merely a style change (P51-N).
+//
+// Delegated on `document` (`.closest()`), not bound directly on each
+// `.updateExtension`/`.ignoreExtension` element: the original inline
+// `onClick=` attribute worked no matter when its element appeared in
+// the DOM (a plain HTML-parsed attribute, not a separate binding
+// step) -- every OTHER real `window.X` site P51-N touches has a fixed,
+// server-rendered-once element to bind directly, but these rows are
+// legitimately expected to come and go (`updateExtension()`'s own
+// success handler removes its row; the pluginBox set is, in principle,
+// per-request data), so a direct `on()` bind at module-load time would
+// silently stop matching a row added afterward.
+function handleUpdateExtensionClick(e: Event): void {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real click always targets an Element (or a Text node inside one; closest() walks up from either the same way).
+  const target = (e.target as Element).closest<HTMLElement>(".updateExtension");
+  if (target === null) {
+    return;
+  }
+  e.preventDefault();
+  updateExtension(
+    attrOf(target, "data-ext-type") ?? "",
+    attrOf(target, "data-ext-id") ?? "",
+    attrOf(target, "data-ext-revision") ?? "",
+  );
+}
+
+function handleIgnoreExtensionClick(e: Event): void {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real click always targets an Element (or a Text node inside one; closest() walks up from either the same way).
+  const target = (e.target as Element).closest<HTMLElement>(".ignoreExtension");
+  if (target === null) {
+    return;
+  }
+  e.preventDefault();
+  ignoreExtension(
+    attrOf(target, "data-ext-type") ?? "",
+    attrOf(target, "data-ext-id") ?? "",
+  );
 }
 
 function updateExtension(type: string, id: string, revision: string) {
@@ -256,7 +298,9 @@ on(document.querySelectorAll("#update_all"), "click", function (): void {
   });
 });
 
-window.ignoreAll = ignoreAll;
-window.resetIgnored = resetIgnored;
-window.updateExtension = updateExtension;
-window.ignoreExtension = ignoreExtension;
+on(document.querySelectorAll("#ignore_all"), "click", ignoreAll);
+on(document.querySelectorAll("#reset_ignore"), "click", (): void => {
+  void resetIgnored();
+});
+on(document, "click", handleUpdateExtensionClick);
+on(document, "click", handleIgnoreExtensionClick);

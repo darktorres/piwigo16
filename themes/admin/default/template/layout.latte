@@ -264,7 +264,6 @@
             n:if="isset($DISPLAY_BELL) and $DISPLAY_BELL"
             id="whats_new_notification"
             class="icon-blue tiptip"
-            onclick="show_user_whats_new()"
             title="{='What\'s new in version %s'|translate:$WHATS_NEW_MAJOR_VERSION}"
           >
             <i class="icon-bell"></i>
@@ -288,10 +287,7 @@
       id="whats_new"
     >
       <div id="whats_new_popin">
-        <a
-          class="icon-cancel close_whats_new"
-          onClick="hide_user_whats_new()"
-        ></a>
+        <a class="icon-cancel close_whats_new"></a>
         <h3>{='What\'s new in version %s'|translate:$WHATS_NEW_MAJOR_VERSION}</h3>
         <div>
           <div class="whats_new_block_container">
@@ -318,14 +314,12 @@
           </div>
         </div>
         <div class="whats_new_buttons">
-          <button onClick="hide_user_whats_new()"><i
+          <button class="js-hide-whats-new"><i
               class="icon-thumbs-up"
             ></i> {='Ok, got it!'|translate}</button>
-          <a
-            class="buttonLike"
-            href="{$RELEASE_NOTE_URL}"
-            target="_blank"
-          ><i class="icon-book"></i> {='Read the release note'|translate}</a>
+          <a class="buttonLike" href="{$RELEASE_NOTE_URL}" target="_blank"><i
+              class="icon-book"
+            ></i> {='Read the release note'|translate}</a>
         </div>
       </div>
     </div>

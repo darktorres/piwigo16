@@ -152,7 +152,7 @@
       >{='Confirm merge'|translate}</button>
       <a
         id="CancelMerge"
-        onclick="updateSelectionPanel('Selection')"
+        data-selection-panel-state="Selection"
       >{='Cancel'|translate}</a>
     </div>
 
@@ -163,7 +163,7 @@
       >{='Yes, delete'|translate}</button>
       <a
         id="CancelDelete"
-        onclick="updateSelectionPanel('Selection')"
+        data-selection-panel-state="Selection"
       >{='No, I have changed my mind'|translate}</a>
     </div>
   </div>
@@ -198,10 +198,7 @@
               <i class='icon-plus'></i> {='Add'|translate}
             </button>
             <br />
-            <a
-              id="addGroupClose"
-              onclick="hideAddGroupForm()"
-            >{='Cancel'|translate}</a>
+            <a id="addGroupClose">{='Cancel'|translate}</a>
           </div>
           <input type="hidden" name="pwg_token" value="{$pwgToken}">
         </fieldset>

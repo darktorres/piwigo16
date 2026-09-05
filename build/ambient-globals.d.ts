@@ -29,41 +29,6 @@ interface Window {
   popuphelp: (url: string) => void;
   pwg_tryFocus: (id: string) => void;
 
-  // batch_manager/global.ts's own 4 functions, called from
-  // batch_manager_global.latte's own `href="javascript:
-  // selectGenerateDerivAll()"`-style pseudo-protocol links.
-  selectGenerateDerivAll: () => void;
-  selectGenerateDerivNone: () => void;
-  selectDelDerivAll: () => void;
-  selectDelDerivNone: () => void;
-
-  // footer.ts's own 2 functions, called from layout.latte's own
-  // `onclick="show_user_whats_new()"` / `onClick=
-  // "hide_user_whats_new()"` attributes -- same `javascript:`/`onclick=`
-  // exposure pattern as batch_manager/global.ts's own copy above.
-  hide_user_whats_new: () => Promise<void>;
-  show_user_whats_new: () => void;
-
-  // updates/ext.ts's own 4 functions, called from
-  // updates_ext.latte's own `onClick="ignoreAll()"` /
-  // `onClick="resetIgnored()"` / `onClick="updateExtension(...)"` /
-  // `onClick="ignoreExtension(...)"` attributes -- same `javascript:`/
-  // `onclick=` exposure pattern as footer.ts's own copy above.
-  ignoreAll: () => void;
-  resetIgnored: () => Promise<void>;
-  updateExtension: (type: string, id: string, revision: string) => void;
-  ignoreExtension: (type: string, id: string) => void;
-
-  // users/groupList.ts's own 2 functions -- `hideAddGroupForm` is called
-  // from group_list.latte's own `onclick="hideAddGroupForm()"`
-  // attribute; `updateSelectionPanel` is called from a
-  // dynamically-set `onclick`/`OnClick` HTML attribute string this
-  // same file builds at runtime (`buttonAvailable()`'s own
-  // `button.attr("OnClick", onClick)`) -- the same exposure
-  // requirement either way.
-  hideAddGroupForm: () => void;
-  updateSelectionPanel: (changedState?: string) => void;
-
   // users/list.ts's own public plugin extension point -- JSDoc-documented
   // for third-party plugins to call from their own separately-loaded
   // `<script>` tags.

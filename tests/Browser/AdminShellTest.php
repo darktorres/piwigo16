@@ -277,9 +277,12 @@ it('purges stale whats_new_* preferences and shows the whats-new popin for a use
  *
  * Both halves run through the converted show()/hide(): the script calls
  * show_user_whats_new() on load when the `show_whats_new` page-data flag
- * is set, and the close control calls hide_user_whats_new() from an
- * onclick attribute. Neither state is visible to a golden fixture -- the
- * markup is identical either way, only the inline display differs.
+ * is set, and the close control calls hide_user_whats_new() from a real
+ * click listener (P51-N converted this off an inline `onClick=`
+ * attribute/`window.X = X` exposure onto `on(document.querySelectorAll(
+ * ".close_whats_new, .js-hide-whats-new"), "click", ...)`). Neither
+ * state is visible to a golden fixture -- the markup is identical
+ * either way, only the inline display differs.
  *
  * The assertion that discriminates is the one on LOAD. hide() and a bare
  * `style.display = ""` coincide on close, because `#whats_new` is hidden

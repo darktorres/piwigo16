@@ -108,3 +108,144 @@ it('renames a group via the checkmark button, then deletes it via the selection 
     $page->assertNoJavaScriptErrors();
     H::assertNoServerErrors($page, 'group_list rename/delete flow');
 });
+
+/**
+ * P51-N converted 3 more real sites in this same file off inline
+ * `onclick=`/`window.X = X` exposure: `#addGroupClose` (was
+ * `onclick="hideAddGroupForm()"`), and `#CancelMerge`/`#CancelDelete`
+ * (both were `onclick="updateSelectionPanel('Selection')"`, now read a
+ * `data-selection-panel-state` attribute via one shared
+ * `handleSelectionPanelButtonClick()` listener also bound on
+ * `#DeleteSelectionMode`/`#MergeSelectionMode`, whose own dynamically
+ * assigned states the rename/delete test above already covers via
+ * `#DeleteSelectionMode` -> `ConfirmDeletion`). None of these 3 cancel
+ * paths had any real click coverage before this test.
+ */
+it('cancels the add-group form and the merge/delete confirmation panels back to Selection state', function (): void {
+    $page = H::asAdmin($this);
+
+    $group1 = H::createGroup($page, [
+        'name' => 'Group List Cancel A ' . uniqid(),
+    ]);
+    $group2 = H::createGroup($page, [
+        'name' => 'Group List Cancel B ' . uniqid(),
+    ]);
+    $groupId1 = $group1['id'] ?? null;
+    $groupId2 = $group2['id'] ?? null;
+    if (! is_numeric($groupId1) || ! is_numeric($groupId2)) {
+        throw new RuntimeException('createGroup did not return numeric ids: ' . var_export([$group1, $group2], true));
+    }
+    $groupId1 = (int) $groupId1;
+    $groupId2 = (int) $groupId2;
+
+    $page = H::navigateOk($page, '/admin.php?page=group_list');
+    $page->assertPresent('#group-' . $groupId1);
+    $page->assertPresent('#group-' . $groupId2);
+
+    $timeoutMs = 10000;
+
+    // #addGroupClose.
+    $page->click('.addGroupBlock');
+    $page->script(<<<JS
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + {$timeoutMs};
+            const check = () => {
+                if (getComputedStyle(document.querySelector('#addGroupForm form')).display !== 'none') return resolve(true);
+                if (Date.now() > deadline) return reject(new Error('add-group form never showed'));
+                setTimeout(check, 100);
+            };
+            check();
+        })
+        JS);
+
+    $page->click('#addGroupClose');
+    $page->script(<<<JS
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + {$timeoutMs};
+            const check = () => {
+                if (getComputedStyle(document.querySelector('#addGroupForm form')).display === 'none') return resolve(true);
+                if (Date.now() > deadline) return reject(new Error('add-group form never hid after addGroupClose'));
+                setTimeout(check, 100);
+            };
+            check();
+        })
+        JS);
+
+    // Select both groups, exercising #CancelMerge then #CancelDelete.
+    $page->click('.selection-mode-group-manager label.switch');
+    $page->click('#group-' . $groupId1 . ' .Group-checkbox label');
+    $page->click('#group-' . $groupId2 . ' .Group-checkbox label');
+
+    $page->script(<<<JS
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + {$timeoutMs};
+            const check = () => {
+                if (document.querySelectorAll('.DeleteGroupList div').length === 2) return resolve(true);
+                if (Date.now() > deadline) return reject(new Error('selection panel never showed both groups'));
+                setTimeout(check, 100);
+            };
+            check();
+        })
+        JS);
+
+    $page->click('#MergeSelectionMode');
+    $page->script(<<<JS
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + {$timeoutMs};
+            const check = () => {
+                if (getComputedStyle(document.querySelector('#MergeOptionsBlock')).display !== 'none') return resolve(true);
+                if (Date.now() > deadline) return reject(new Error('MergeOptionsBlock never showed'));
+                setTimeout(check, 100);
+            };
+            check();
+        })
+        JS);
+
+    $page->click('#CancelMerge');
+    $page->script(<<<JS
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + {$timeoutMs};
+            const check = () => {
+                if (
+                    getComputedStyle(document.querySelector('#MergeOptionsBlock')).display === 'none'
+                    && getComputedStyle(document.querySelector('#DeleteSelectionMode')).display !== 'none'
+                ) return resolve(true);
+                if (Date.now() > deadline) return reject(new Error('CancelMerge never restored Selection state'));
+                setTimeout(check, 100);
+            };
+            check();
+        })
+        JS);
+
+    $page->click('#DeleteSelectionMode');
+    $page->script(<<<JS
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + {$timeoutMs};
+            const check = () => {
+                if (getComputedStyle(document.querySelector('#ConfirmGroupAction')).display !== 'none') return resolve(true);
+                if (Date.now() > deadline) return reject(new Error('ConfirmGroupAction never showed'));
+                setTimeout(check, 100);
+            };
+            check();
+        })
+        JS);
+
+    $page->click('#CancelDelete');
+    $page->script(<<<JS
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + {$timeoutMs};
+            const check = () => {
+                if (
+                    getComputedStyle(document.querySelector('#ConfirmGroupAction')).display === 'none'
+                    && getComputedStyle(document.querySelector('#DeleteSelectionMode')).display !== 'none'
+                ) return resolve(true);
+                if (Date.now() > deadline) return reject(new Error('CancelDelete never restored Selection state'));
+                setTimeout(check, 100);
+            };
+            check();
+        })
+        JS);
+
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'group_list cancel flows');
+});

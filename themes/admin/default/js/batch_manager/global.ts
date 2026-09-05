@@ -866,17 +866,38 @@ function selectDelDerivNone() {
   trigger(els, "change");
 }
 
-// Explicit `window.` exposure -- required for a different reason than
-// this file's other `window.X = X` lines: not read by another *script*
-// at all, but called from `batch_manager_global.latte`'s own
-// `href="javascript:selectGenerateDerivAll()"`-style pseudo-protocol
-// links, which look these up as real `window` properties when clicked
-// -- wrapping this whole file in its own IIFE (vite.config.ts's
-// banner/footer) would otherwise make them invisible to that lookup.
-window.selectGenerateDerivAll = selectGenerateDerivAll;
-window.selectGenerateDerivNone = selectGenerateDerivNone;
-window.selectDelDerivAll = selectDelDerivAll;
-window.selectDelDerivNone = selectDelDerivNone;
+on(
+  document.querySelectorAll(".js-select-generate-deriv-all"),
+  "click",
+  function (e: Event): void {
+    e.preventDefault();
+    selectGenerateDerivAll();
+  },
+);
+on(
+  document.querySelectorAll(".js-select-generate-deriv-none"),
+  "click",
+  function (e: Event): void {
+    e.preventDefault();
+    selectGenerateDerivNone();
+  },
+);
+on(
+  document.querySelectorAll(".js-select-del-deriv-all"),
+  "click",
+  function (e: Event): void {
+    e.preventDefault();
+    selectDelDerivAll();
+  },
+);
+on(
+  document.querySelectorAll(".js-select-del-deriv-none"),
+  "click",
+  function (e: Event): void {
+    e.preventDefault();
+    selectDelDerivNone();
+  },
+);
 
 // Trigger action click on pressing enter and if the value of applyAction is not equal to -1
 on(window, "keypress", function (e: Event) {

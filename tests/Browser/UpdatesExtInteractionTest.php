@@ -22,15 +22,19 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * for a populated fieldset/pluginBox (verified against the template
  * source) directly into `#theAdminPage` after load, re-shows the real
  * (already correctly-bound) `#update_all`/`#ignore_all`, and drives the
- * already-initialized module's window-exposed entry points
- * (`ignoreAll`/`ignoreExtension`/`resetIgnored`) and its real
- * `#update_all` click listener against that synthetic content -- with a
- * real, valid CSRF token, so `ignoreExtension()`/`resetIgnored()`'s full
- * ajax round trip (including their success-callback DOM updates and
- * `checkFieldsets()`) is exercised for real, not just their DOM-filter
- * logic. `updateExtension()`'s own round trip is not: its endpoint
- * actually validates the extension against PEM/the filesystem scan, so
- * a synthetic id 404s -- only its `updateAll()`-driven click-filtering is
+ * already-initialized module's real click listeners (`#ignore_all`,
+ * `#reset_ignore`, and the document-delegated `.updateExtension`/
+ * `.ignoreExtension` listeners -- P51-N converted all 4 off
+ * `window.X = X`/inline `onClick=` exposure, delegated on `document`
+ * rather than bound directly since these rows are injected after this
+ * module's own load-time `on()` calls already ran) against that
+ * synthetic content -- with a real, valid CSRF token, so
+ * `ignoreExtension()`/`resetIgnored()`'s full ajax round trip (including
+ * their success-callback DOM updates and `checkFieldsets()`) is
+ * exercised for real, not just their DOM-filter logic.
+ * `updateExtension()`'s own round trip is not: its endpoint actually
+ * validates the extension against PEM/the filesystem scan, so a
+ * synthetic id 404s -- only its `updateAll()`-driven click-filtering is
  * covered here.
  *
  * `jquery-confirm` (P49-B group 5) stays jQuery; only the DOM work
@@ -49,8 +53,8 @@ function updatesExtPluginBoxHtml(string $type, string $id, bool $ignored): strin
           <div class="pluginContent">
             <div class="pluginName">Test Extension {$id}</div>
             <div class="pluginActions">
-              <a href="#" onClick="updateExtension('{$type}', '{$id}', '1');" class="updateExtension pluginActionLevel1"><i class="icon-ok-circled"></i> Install</a>
-              <a href="#" onClick="ignoreExtension('{$type}', '{$id}'); return false;" class="ignoreExtension pluginActionLevel2"><i class="icon-block"></i>Ignore this update</a>
+              <a href="#" data-ext-type="{$type}" data-ext-id="{$id}" data-ext-revision="1" class="updateExtension pluginActionLevel1"><i class="icon-ok-circled"></i> Install</a>
+              <a href="#" data-ext-type="{$type}" data-ext-id="{$id}" class="ignoreExtension pluginActionLevel2"><i class="icon-block"></i>Ignore this update</a>
             </div>
           </div>
         </div>
@@ -324,7 +328,24 @@ it('shows a real, dismissible jGrowl error toast when updateExtension() 404s', f
     $page = H::asAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=updates&tab=ext');
 
-    $page->script("updateExtension('bogus-type', 'x', '1')");
+    // updateExtension() is no longer a bare `window.X` global (P51-N) --
+    // drive it the same way a real click does, through the document-
+    // delegated `.updateExtension` listener. Pinned via an inline style
+    // (test-only, no production markup shape implied) -- appended as
+    // body's own last child, this page's real "all up to date" content
+    // is short enough that an unstyled append would land underneath the
+    // fixed `#pwgHead` bar, confirmed live via `elementFromPoint()`.
+    H::rawWebpage($page)->script(<<<'JS'
+        (() => {
+            const root = document.getElementById('theAdminPage');
+            root.insertAdjacentHTML(
+                'beforeend',
+                '<a href="#" style="position:fixed;top:200px;left:10px;z-index:99999;" data-ext-type="bogus-type" data-ext-id="x" data-ext-revision="1" class="updateExtension">Install</a>',
+            );
+        })();
+        JS);
+
+    $page->click('.updateExtension');
 
     $decoded = H::scriptJson($page, <<<'JS'
         new Promise((resolve, reject) => {

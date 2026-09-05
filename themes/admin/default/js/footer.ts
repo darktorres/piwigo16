@@ -26,16 +26,7 @@ import { tipTip } from "../../../default/js/vendor/widgets/tiptip";
 // Manually threading a footer import through every admin View's own
 // `pageAssets()` instead would mean re-deriving that centralized
 // ordering guarantee per-page, a real regression risk for a file with
-// zero real exports to gain from module conversion in the first place
-// (both its exposures below are confirmed category-2 `onclick`
-// targets, not real cross-file symbols) -- not attempted here.
-//
-// hideUserWhatsNew/showUserWhatsNew are called from
-// layout.latte's own `onclick="show_user_whats_new()"` / `onClick=
-// "hide_user_whats_new()"` attributes -- the `javascript:`/`onclick=`
-// pattern (docs/PLAN.md P46-C's own finding) needs the same `window.X
-// = X` exposure as a cross-file bare read, once this file's own
-// top-level declarations become IIFE-private at build time.
+// zero real exports to gain from module conversion in the first place.
 tipTip(document.querySelectorAll(".tiptip"), {
   delay: 0,
   fadeIn: 200,
@@ -83,5 +74,15 @@ if (pwg_getPageData<boolean>("show_whats_new")) {
   showUserWhatsNew();
 }
 
-window.hide_user_whats_new = hideUserWhatsNew;
-window.show_user_whats_new = showUserWhatsNew;
+on(
+  document.querySelectorAll("#whats_new_notification"),
+  "click",
+  showUserWhatsNew,
+);
+on(
+  document.querySelectorAll(".close_whats_new, .js-hide-whats-new"),
+  "click",
+  (): void => {
+    void hideUserWhatsNew();
+  },
+);

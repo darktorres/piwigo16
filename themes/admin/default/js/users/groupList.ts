@@ -176,6 +176,8 @@ function hideAddGroupForm() {
   isToggle = true;
 }
 
+on(document.querySelectorAll("#addGroupClose"), "click", hideAddGroupForm);
+
 /*-------
  Add Group Submit
  -------*/
@@ -1014,6 +1016,30 @@ ready(function () {
  -------*/
 let state = "NoSelection";
 
+// `#DeleteSelectionMode`/`#MergeSelectionMode` get their own
+// `data-selection-panel-state` attribute written/cleared by
+// `buttonAvailable()`/`buttonUnavailable()` below; `#CancelMerge`/
+// `#CancelDelete` carry a static one straight from the template. All 4
+// share this one permanently-bound listener rather than an inline
+// `onclick=` attribute (P51-N).
+function handleSelectionPanelButtonClick(e: Event): void {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real click on a bound-to element always targets/currentTargets an Element.
+  const target = e.currentTarget as Element;
+  const nextState = attrOf(target, "data-selection-panel-state");
+  if (nextState === null || nextState === undefined) {
+    return;
+  }
+  updateSelectionPanel(nextState);
+}
+
+on(
+  document.querySelectorAll(
+    "#CancelMerge, #CancelDelete, #DeleteSelectionMode, #MergeSelectionMode",
+  ),
+  "click",
+  handleSelectionPanelButtonClick,
+);
+
 function updateSelectionPanel(changedState = "") {
   const numSelect = document.querySelectorAll(".DeleteGroupList div").length;
 
@@ -1044,7 +1070,7 @@ function updateStatePanel(newState = "Selection") {
       buttonUnavailable(document.querySelectorAll("#MergeSelectionMode"));
       buttonAvailable(
         document.querySelectorAll("#DeleteSelectionMode"),
-        "updateSelectionPanel('ConfirmDeletion')",
+        "ConfirmDeletion",
       );
       hide(document.querySelectorAll("#MergeOptionsBlock"));
       hide(document.querySelectorAll("#ConfirmGroupAction"));
@@ -1060,11 +1086,11 @@ function updateStatePanel(newState = "Selection") {
       show(document.querySelectorAll("#MergeSelectionMode"));
       buttonAvailable(
         document.querySelectorAll("#MergeSelectionMode"),
-        "updateSelectionPanel('OptionMerge')",
+        "OptionMerge",
       );
       buttonAvailable(
         document.querySelectorAll("#DeleteSelectionMode"),
-        "updateSelectionPanel('ConfirmDeletion')",
+        "ConfirmDeletion",
       );
       hide(document.querySelectorAll("#MergeOptionsBlock"));
       hide(document.querySelectorAll("#ConfirmGroupAction"));
@@ -1093,15 +1119,15 @@ function updateStatePanel(newState = "Selection") {
 
 function buttonAvailable(
   button: Element | ArrayLike<Element>,
-  onClick: string,
+  nextState: string,
 ) {
   removeClass(button, "unavailable");
-  attr(button, "onclick", onClick);
+  attr(button, "data-selection-panel-state", nextState);
 }
 
 function buttonUnavailable(button: Element | ArrayLike<Element>) {
   addClass(button, "unavailable");
-  removeAttr(button, "onclick");
+  removeAttr(button, "data-selection-panel-state");
 }
 
 function fadeOutAndRemoveGroupBox(id: number): void {
@@ -1304,15 +1330,3 @@ on(document.querySelectorAll(".ConfirmDeleteButton"), "click", function () {
     }
   })();
 });
-
-// Explicit `window.` exposure -- required at runtime, not decorative
-// (see plugins/installedConfig.ts's own leading comment for the full
-// explanation). `hideAddGroupForm` is called from group_list.latte's
-// own `onclick="hideAddGroupForm()"` attribute; `updateSelectionPanel`
-// is called from a dynamically-set `onclick` HTML attribute
-// (buttonAvailable()'s own `attr(button, "onclick", onClick)`, a string
-// like `"updateSelectionPanel('Selection')"`) -- the exact same
-// javascript:/onclick= exposure requirement, just set via JS instead
-// of a static Latte attribute.
-window.hideAddGroupForm = hideAddGroupForm;
-window.updateSelectionPanel = updateSelectionPanel;

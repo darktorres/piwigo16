@@ -104,9 +104,7 @@
             <a href="{$U_DISPLAY}&amp;display=20">20</a>
             <a href="{$U_DISPLAY}&amp;display=50">50</a>
             <a href="{$U_DISPLAY}&amp;display=100">100</a>
-            <a
-              href="{$U_DISPLAY}&amp;display=all"
-            >{='all'|translate}</a>
+            <a href="{$U_DISPLAY}&amp;display=all">{='all'|translate}</a>
           </div>
 
           {include 'navigation_bar.latte', navbar: $navbar}
@@ -336,10 +334,12 @@
           <div id="action_generate_derivatives" class="bulkAction">
             <div class="deleteDerivButtons">
               <a
-                href="javascript:selectGenerateDerivAll()"
+                href="#"
+                class="js-select-generate-deriv-all"
               >{='All'|translate}</a>
               <a
-                href="javascript:selectGenerateDerivNone()"
+                href="#"
+                class="js-select-generate-deriv-none"
               >{='None'|translate}</a>
             </div>
             <br>
@@ -356,8 +356,11 @@
           <!-- delete derivatives -->
           <div id="action_delete_derivatives" class="bulkAction">
             <div class="deleteDerivButtons">
-              <a href="javascript:selectDelDerivAll()">{='All'|translate}</a>
-              <a href="javascript:selectDelDerivNone()">{='None'|translate}</a>
+              <a href="#" class="js-select-del-deriv-all">{='All'|translate}</a>
+              <a
+                href="#"
+                class="js-select-del-deriv-none"
+              >{='None'|translate}</a>
             </div>
             <br>
             <label

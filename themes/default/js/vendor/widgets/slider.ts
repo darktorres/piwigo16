@@ -1,4 +1,4 @@
-import { addClass, css, off, on, removeClass } from "../utils/dom";
+import { addClass, css, off, on, removeClass, valueAt } from "../utils/dom";
 
 /**
  * Port of jQuery UI 1.10.4's `ui.slider` widget (real source read from
@@ -91,7 +91,8 @@ function refreshValue(_el: HTMLElement, state: SliderState): void {
     let lastPercent = 0;
     state.handles.forEach((handle, i) => {
       const percent =
-        ((state.values[i]! - state.min) / (state.max - state.min)) * 100;
+        ((valueAt(state.values, i) - state.min) / (state.max - state.min)) *
+        100;
       css(handle, "left", `${percent}%`);
       if (i === 0 && state.rangeEl !== null) {
         css(state.rangeEl, "left", `${percent}%`);
@@ -105,12 +106,12 @@ function refreshValue(_el: HTMLElement, state: SliderState): void {
     return;
   }
 
-  const value = state.values[0]!;
+  const value = valueAt(state.values, 0);
   const percent =
     state.max !== state.min
       ? ((value - state.min) / (state.max - state.min)) * 100
       : 0;
-  css(state.handles[0]!, "left", `${percent}%`);
+  css(valueAt(state.handles, 0), "left", `${percent}%`);
 
   if (state.rangeEl !== null) {
     if (state.range === "min") {
@@ -123,10 +124,13 @@ function refreshValue(_el: HTMLElement, state: SliderState): void {
 
 function currentUi(state: SliderState, index: number): SliderUIParams {
   if (state.isRange) {
-    return { value: state.values[index]!, values: state.values.slice() };
+    return {
+      value: valueAt(state.values, index),
+      values: state.values.slice(),
+    };
   }
 
-  return { value: state.values[0]! };
+  return { value: valueAt(state.values, 0) };
 }
 
 function fireChange(
@@ -149,7 +153,7 @@ function slideTo(
 
   if (state.isRange) {
     const otherIndex = index === 0 ? 1 : 0;
-    const otherVal = state.values[otherIndex]!;
+    const otherVal = valueAt(state.values, otherIndex);
     if (
       (index === 0 && newVal > otherVal) ||
       (index === 1 && newVal < otherVal)
@@ -232,7 +236,7 @@ function bindMouse(el: HTMLElement): void {
 
     const normValue = normValueFromMouse(el, state, event);
     const index = closestHandleIndex(state, normValue);
-    const handle = state.handles[index]!;
+    const handle = valueAt(state.handles, index);
     addClass(handle, "ui-state-active");
     handle.focus();
 
@@ -274,7 +278,7 @@ function bindKeyboard(el: HTMLElement, handle: HTMLAnchorElement, index: number)
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
     const event = e as KeyboardEvent;
-    const curVal = state.values[index]!;
+    const curVal = valueAt(state.values, index);
     let newVal: number;
 
     switch (event.key) {
@@ -462,6 +466,7 @@ export function slider(
   if (optionsOrMethod === "values") {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- the jQuery-UI-style ("values", index, value) call convention always pairs this branch with a real numeric index; TS can't correlate two separate parameters like this.
     const index = keyOrIndex as number;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the ("values", index, value) overload above always requires a real numeric value; only the shared implementation signature types it optional.
     state.values[index] = trimAlign(state, value!);
     refreshValue(el, state);
     fireChange(state, index);

@@ -88,6 +88,123 @@ function isThenable(value: unknown): value is Thenable {
 // close prematurely unlock scrolling.
 let openCount = 0;
 
+/** Part of `buildModal()`'s own extraction, below -- the title/icon/type chrome. */
+function applyModalChrome(
+  box: HTMLElement,
+  titleContainer: HTMLElement,
+  titleEl: HTMLElement,
+  iconEl: HTMLElement,
+  options: JConfirmOptions,
+): void {
+  box.classList.add(
+    "jconfirm-animation-zoom",
+    `jconfirm-type-${options.type ?? "default"}`,
+  );
+  box.style.width = options.boxWidth ?? "50%";
+  if (options.titleClass !== undefined && options.titleClass !== "") {
+    titleContainer.classList.add(...options.titleClass.split(/\s+/));
+  }
+
+  titleEl.textContent = options.title ?? "";
+  if (options.icon !== undefined && options.icon !== "") {
+    iconEl.innerHTML = `<i class="${options.icon}"></i>`;
+  }
+}
+
+/**
+ * Part of `buildModal()`'s own extraction, below -- `close()` and its
+ * own `onEscape` keyup handler are a real circular pair (`close()` has
+ * to `off()` the very listener that can call it), so they're built
+ * together by one factory rather than split further.
+ */
+function createModalLifecycle(
+  el: HTMLElement,
+  bg: HTMLElement,
+  box: HTMLElement,
+  onClose: (() => void) | undefined,
+): { close: () => void; onEscape: (e: Event) => void } {
+  let closed = false;
+  function close(): void {
+    if (closed) {
+      return;
+    }
+    closed = true;
+    off(document, "keyup", onEscape);
+    onClose?.();
+    bg.classList.add("jconfirm-bg-h");
+    box.classList.add("jconfirm-animation-scale");
+    setTimeout(() => {
+      el.remove();
+      openCount -= 1;
+      if (openCount === 0) {
+        document.body.classList.remove("jconfirm-no-scroll-modal");
+      }
+    }, 160);
+  }
+  function onEscape(e: Event): void {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown"/"keyup" always dispatches a real KeyboardEvent; this handler's own listener registration is typed generically via the native EventListener interface.
+    if ((e as KeyboardEvent).key === "Escape") {
+      close();
+    }
+  }
+  return { close, onEscape };
+}
+
+/** Part of `buildModal()`'s own extraction, below -- returns whether any button was actually rendered. */
+function renderModalButtons(
+  buttonsEl: HTMLElement,
+  buttonSpecs: Record<string, JConfirmButtonOptions>,
+  instance: JConfirmInstance,
+  close: () => void,
+): boolean {
+  for (const [key, spec] of Object.entries(buttonSpecs)) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `btn ${spec.btnClass ?? "btn-default"}`;
+    btn.innerHTML = spec.text ?? key;
+    on(btn, "click", (e) => {
+      e.preventDefault();
+      const result = spec.action?.call(instance);
+      if (result === undefined || result) {
+        close();
+      }
+    });
+    buttonsEl.appendChild(btn);
+  }
+  return Object.keys(buttonSpecs).length > 0;
+}
+
+/**
+ * Part of `buildModal()`'s own extraction, below -- a falsy `content`
+ * (unset, or an empty string -- `pwg_jconfirm_follow_href`'s own
+ * default when the caller passes no `alert_content`) becomes a literal
+ * `&nbsp;` placeholder in the original (`if(!this.content) this.content
+ * = e`), not a collapsed-empty pane -- faithfully matched, not
+ * "cleaned up".
+ */
+function resolveModalContent(
+  instance: JConfirmInstance,
+  content: JConfirmOptions["content"],
+): void {
+  if (typeof content === "function") {
+    const result = content.call(instance);
+    if (isThenable(result)) {
+      instance.showLoading();
+      result.always(() => {
+        instance.hideLoading();
+      });
+    } else {
+      instance.setContent(
+        typeof result === "string" && result ? result : "&nbsp;",
+      );
+    }
+    return;
+  }
+  instance.setContent(
+    content !== undefined && content !== "" ? content : "&nbsp;",
+  );
+}
+
 function buildModal(options: JConfirmOptions): void {
   const el = document.createElement("div");
   el.className = "jconfirm jconfirm-modern";
@@ -122,42 +239,10 @@ function buildModal(options: JConfirmOptions): void {
   // `close()` adds `jconfirm-animation-scale` (the real, always-default
   // `closeAnimation`, distinct from the always-`zoom` open one) to
   // transition back out before the element is actually removed.
-  box.classList.add("jconfirm-animation-zoom", `jconfirm-type-${options.type ?? "default"}`);
-  box.style.width = options.boxWidth ?? "50%";
-  if (options.titleClass !== undefined && options.titleClass !== "") {
-    titleContainer.classList.add(...options.titleClass.split(/\s+/));
-  }
-
-  titleEl.textContent = options.title ?? "";
-  if (options.icon !== undefined && options.icon !== "") {
-    iconEl.innerHTML = `<i class="${options.icon}"></i>`;
-  }
+  applyModalChrome(box, titleContainer, titleEl, iconEl, options);
 
   let boxClicked = false;
-  let closed = false;
-  const onEscape = (e: Event): void => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown"/"keyup" always dispatches a real KeyboardEvent; this handler's own listener registration is typed generically via the native EventListener interface.
-    if ((e as KeyboardEvent).key === "Escape") {
-      close();
-    }
-  };
-  function close(): void {
-    if (closed) {
-      return;
-    }
-    closed = true;
-    off(document, "keyup", onEscape);
-    options.onClose?.();
-    bg.classList.add("jconfirm-bg-h");
-    box.classList.add("jconfirm-animation-scale");
-    setTimeout(() => {
-      el.remove();
-      openCount -= 1;
-      if (openCount === 0) {
-        document.body.classList.remove("jconfirm-no-scroll-modal");
-      }
-    }, 160);
-  }
+  const { close, onEscape } = createModalLifecycle(el, bg, box, options.onClose);
   const instance: JConfirmInstance = {
     setContent(html: string): void {
       contentEl.innerHTML = html;
@@ -173,22 +258,7 @@ function buildModal(options: JConfirmOptions): void {
 
   const buttonSpecs: Record<string, JConfirmButtonOptions> =
     options.buttons === false ? {} : (options.buttons ?? { ok: {} });
-
-  for (const [key, spec] of Object.entries(buttonSpecs)) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = `btn ${spec.btnClass ?? "btn-default"}`;
-    btn.innerHTML = spec.text ?? key;
-    on(btn, "click", (e) => {
-      e.preventDefault();
-      const result = spec.action?.call(instance);
-      if (result === undefined || result) {
-        close();
-      }
-    });
-    buttonsEl.appendChild(btn);
-  }
-  const hasButtons = Object.keys(buttonSpecs).length > 0;
+  const hasButtons = renderModalButtons(buttonsEl, buttonSpecs, instance, close);
   if (!hasButtons) {
     buttonsEl.style.display = "none";
   }
@@ -226,26 +296,7 @@ function buildModal(options: JConfirmOptions): void {
     el.classList.add("jconfirm-open");
   });
 
-  // A falsy `content` (unset, or an empty string -- `pwg_jconfirm_follow_href`'s
-  // own default when the caller passes no `alert_content`) becomes a
-  // literal `&nbsp;` placeholder in the original (`if(!this.content) this.content
-  // = e`), not a collapsed-empty pane -- faithfully matched, not "cleaned up".
-  const {content} = options;
-  if (typeof content === "function") {
-    const result = content.call(instance);
-    if (isThenable(result)) {
-      instance.showLoading();
-      result.always(() => {
-        instance.hideLoading();
-      });
-    } else {
-      instance.setContent(typeof result === "string" && result ? result : "&nbsp;");
-    }
-  } else {
-    instance.setContent(
-      content !== undefined && content !== "" ? content : "&nbsp;",
-    );
-  }
+  resolveModalContent(instance, options.content);
 }
 
 export function confirm(options: JConfirmOptions): void {

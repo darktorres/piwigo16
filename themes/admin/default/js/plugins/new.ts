@@ -79,6 +79,7 @@ const sortPlugins = function (a: Element, b: Element) {
 ready(function () {
   // <-- Set the advanced filters -->
 
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own "#showBetaTestPlugin" checkbox is always real.
   const betaTestPlugins = document
     .getElementById("showBetaTestPlugin")!
     .hasAttribute("checked");
@@ -226,6 +227,7 @@ ready(function () {
 
   // initialize the Selectize control
   const selectizeAuthor = createSelectize<string, FilterOption>(
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own "#author-filter" select is always real.
     document.querySelector<HTMLSelectElement>("#author-filter")!,
     {
       // Neither #author-filter nor #tag-filter is a `<select multiple>`
@@ -242,6 +244,7 @@ ready(function () {
 
   // initialize the Selectize control
   const selectizeTag = createSelectize<string, FilterOption>(
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own "#tag-filter" select is always real.
     document.querySelector<HTMLSelectElement>("#tag-filter")!,
     {
       onChange: function (value) {
@@ -260,8 +263,10 @@ ready(function () {
     max: 5,
     step: 0.5,
     slide: function (_event: Event, ui: SliderUIParams) {
-      updateRatingFilterLabel(ui.value!);
-      applyFilter("rating", ui.value!);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- a real slide event always carries the slider's own current value.
+      const value = ui.value!;
+      updateRatingFilterLabel(value);
+      applyFilter("rating", value);
     },
   });
 
@@ -271,8 +276,10 @@ ready(function () {
     min: 0,
     max: 6,
     slide: function (_event: Event, ui: SliderUIParams) {
-      const [month] = valueToMonth(ui.value!);
-      updateRevisionFilterLabel(ui.value!);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- a real slide event always carries the slider's own current value.
+      const value = ui.value!;
+      const [month] = valueToMonth(value);
+      updateRevisionFilterLabel(value);
       applyFilter("revision", month);
     },
   });
@@ -306,8 +313,10 @@ ready(function () {
     min: minCertification,
     max: 3,
     slide: function (_event: Event, ui: SliderUIParams) {
-      updateCertificationFilterLabel(ui.value!);
-      applyFilter("certification", ui.value!);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- a real slide event always carries the slider's own current value.
+      const value = ui.value!;
+      updateCertificationFilterLabel(value);
+      applyFilter("certification", value);
     },
   });
 
@@ -375,6 +384,7 @@ ready(function () {
     );
     if (certifNode === null) return;
     certifNode.setAttribute("data-certification", String(value));
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- value is always one of strsCertification's own declared -1..3 keys (the certification slider's own min/max bound it).
     certifNode.setAttribute("title", strsCertification[String(value)]!);
     tipTip(certifNode, {
       delay: 0,
@@ -395,10 +405,12 @@ ready(function () {
     search: val(document.querySelectorAll("#search")) ?? "",
     author: "",
     tag: "",
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- both sliders are already initialized above with a real numeric "value" option; this getter form always echoes it back.
     rating: slider(
       document.querySelectorAll(".notation-filter-slider"),
       "value",
     )!,
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- both sliders are already initialized above with a real numeric "value" option; this getter form always echoes it back.
     certification: slider(
       document.querySelectorAll(".certification-filter-slider"),
       "value",
@@ -409,6 +421,7 @@ ready(function () {
     // copy-paste bug (both sliders start at 0 so it's not currently
     // observable), flagged rather than silently changed.
     revision: valueToMonth(
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- both sliders are already initialized above with a real numeric "value" option; this getter form always echoes it back.
       slider(
         document.querySelectorAll(".certification-filter-slider"),
         "value",
@@ -429,6 +442,7 @@ ready(function () {
         (ratingEl !== null ? (data(ratingEl, "rating") as number) : 0) || 0;
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       const pluginCertification = data(
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every rendered .pluginBox always has its own real ".certification" child (plugins_new.latte).
         pluginBox.querySelector(".certification")!,
         "certification",
       ) as number;

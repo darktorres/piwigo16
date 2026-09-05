@@ -50,8 +50,8 @@ function makeNiceRatingForm(options: PwgRatingOptions) {
     }
   }
 
-  for (let i = 0; i < gRatingButtons.length; i++) {
-    const rateButton = gRatingButtons[i]!;
+  const buttonCount = gRatingButtons.length;
+  for (const [i, rateButton] of Array.from(gRatingButtons).entries()) {
     rateButton.initialRateValue = rateButton.value; // save it as a property
     try {
       rateButton.type = "button";
@@ -63,11 +63,15 @@ function makeNiceRatingForm(options: PwgRatingOptions) {
     rateButton.style.marginLeft = rateButton.style.marginRight = "0";
 
     if (
-      i !== gRatingButtons.length - 1 &&
+      i !== buttonCount - 1 &&
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- guarded by the != last-button check: a non-last rateButton always has a real nextSibling here (the whitespace text node between <input>s).
       rateButton.nextSibling!.nodeType === 3 /*TEXT_NODE*/
     )
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every rateButton is always a real child of #rateForm's own DOM, and the sibling check above just confirmed nextSibling is real.
       rateButton.parentNode!.removeChild(rateButton.nextSibling!);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- guarded by the i > 0 check: a non-first rateButton always has a real previousSibling here (the whitespace text node between <input>s).
     if (i > 0 && rateButton.previousSibling!.nodeType === 3 /*TEXT_NODE*/)
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every rateButton is always a real child of #rateForm's own DOM, and the sibling check above just confirmed previousSibling is real.
       rateButton.parentNode!.removeChild(rateButton.previousSibling!);
 
     pwgAddEventListener(rateButton, "click", updateRating);
@@ -126,8 +130,10 @@ function updateRating(e: Event): void {
       if (gRatingOptions.onSuccess) gRatingOptions.onSuccess(result);
       if (gRatingOptions.updateRateElement)
         gRatingOptions.updateRateElement.innerHTML =
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- updateRateElement/updateRateText are always set together by this option's own real caller.
           gRatingOptions.updateRateText!;
       if (gRatingOptions.ratingSummaryElement) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- ratingSummaryElement/ratingSummaryText are always set together by this option's own real caller.
         let t = gRatingOptions.ratingSummaryText!;
         const args = [result.score, result.count, result.average];
         let idx = 0;
@@ -142,6 +148,7 @@ function updateRating(e: Event): void {
           : String(e2),
       );
       document.location.href =
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every rateButton is always a real <input> inside #rateForm.
         rateButton.form!.action + "&rate=" + rateButton.initialRateValue;
     }
   })();

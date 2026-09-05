@@ -661,9 +661,6 @@ ready(function () {
         filterBy = "id ASC";
         break;
       case "id ASC":
-        attr(iconRegistered, "class", "icon-up");
-        filterBy = "id DESC";
-        break;
       default:
         attr(iconRegistered, "class", "icon-up");
         filterBy = "id DESC";
@@ -677,16 +674,13 @@ ready(function () {
     attr(iconRegistered, "class", "icon-up");
     switch (filterBy) {
       case "username DESC":
+      default:
         attr(iconUser, "class", "icon-down");
         filterBy = "username ASC";
         break;
       case "username ASC":
         attr(iconUser, "class", "icon-up");
         filterBy = "username DESC";
-        break;
-      default:
-        attr(iconUser, "class", "icon-down");
-        filterBy = "username ASC";
         break;
     }
     void updateUserList();
@@ -2523,11 +2517,13 @@ function fillUserEditPermissions(userToEdit: UserRow, popIn: Element) {
       }
 
       if (
-        userToEdit.status === connectedUserStatus &&
-        connectedUserStatus === "webmaster" &&
-        !isOwner(userToEdit.id)
+        (userToEdit.status === connectedUserStatus &&
+          connectedUserStatus === "webmaster" &&
+          !isOwner(userToEdit.id)) ||
+        (userToEdit.status === "admin" && connectedUserStatus === "webmaster")
       ) {
-        // I have the same status than the user I want to edit and I'm a webmaster, I can do whatever I want
+        // I'm a webmaster editing an equal-or-lower-ranked user (same
+        // status as me, or an admin) -- I can do whatever I want.
         show(find(popIn, ".delete-user-button"));
         show(find(popIn, ".user-property-password.edit-password"));
         removeAttr(
@@ -2575,22 +2571,6 @@ function fillUserEditPermissions(userToEdit: UserRow, popIn: Element) {
           "notClickable",
         );
         hide(find(popIn, ".user-property-username .edit-username"));
-      } else if (
-        userToEdit.status === "admin" &&
-        connectedUserStatus === "webmaster"
-      ) {
-        // I'm webmaster and I want to edit admin
-        show(find(popIn, ".delete-user-button"));
-        show(find(popIn, ".user-property-password.edit-password"));
-        removeAttr(
-          find(popIn, ".user-property-email .user-property-input"),
-          "disabled",
-        );
-        removeClass(
-          find(popIn, ".user-property-status .user-property-select"),
-          "notClickable",
-        );
-        show(find(popIn, ".user-property-username .edit-username"));
       }
     } else {
       // I'm the owner, I can do whatever I want. No need to test, I am GOD here
@@ -2781,12 +2761,11 @@ function fillAjaxDataFromProperties(
   ).map((el) => parseInt(attrOf(el, "data-value")!));
   ajaxData["email"] = val(find(popIn, ".user-property-email input"));
   if (
-    connectedUserStatus === "admin" &&
-    val(find(popIn, ".user-property-status select")) !== "webmaster" &&
-    val(find(popIn, ".user-property-status select")) !== "admin"
+    connectedUserStatus === "webmaster" ||
+    (connectedUserStatus === "admin" &&
+      val(find(popIn, ".user-property-status select")) !== "webmaster" &&
+      val(find(popIn, ".user-property-status select")) !== "admin")
   ) {
-    ajaxData["status"] = val(find(popIn, ".user-property-status select"));
-  } else if (connectedUserStatus === "webmaster") {
     ajaxData["status"] = val(find(popIn, ".user-property-status select"));
   }
   ajaxData["level"] = Number(val(find(popIn, ".user-property-level select")));

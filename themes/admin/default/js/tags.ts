@@ -115,24 +115,22 @@ const strTagsFound = pwg_getPageString("<b>%d</b> tags found");
 const strTagFound = pwg_getPageString("<b>%d</b> tag found");
 
 //Get the data
-// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-let dataTags = data(
+let dataTags = data<TagRow[]>(
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- tags.latte renders .tag-container unconditionally.
   document.querySelector(".tag-container")!,
   "tags",
-) as TagRow[];
+);
 
 //Initiate Select
 setChecked(document.querySelectorAll("#select-100"), true);
 
 //Orphan tags
 on(document.querySelectorAll(".info-warning p a"), "click", () => {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-  const url = data(
+  const url = data<string>(
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this handler is only ever bound to a real, already-clicked .info-warning p a element.
     document.querySelector(".info-warning p a")!,
     "url",
-  ) as string;
+  );
   const tags = orphanTagNames;
   const strOrphans = strOrphanTags
     .replace("%s1", String(tags.length))
@@ -544,8 +542,7 @@ function setupTagbox(tagBox: Element): void {
   on(find(tagBox, ".dropdown-option.duplicate"), "click", function () {
     void duplicateTag(
       dataId(tagBox, "id"),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      data(valueAt(find(tagBox, ".tag-name"), 0), "rawname") as string,
+      data<string>(valueAt(find(tagBox, ".tag-name"), 0), "rawname"),
     ).then((newTag) => {
       showMessage(strTagCreated.replace("%s", newTag.name));
     });

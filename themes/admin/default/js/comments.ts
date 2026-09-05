@@ -35,6 +35,7 @@ import {
   trigger,
   val,
   valId,
+  valueAt,
 } from "../../../default/js/vendor/utils/dom";
 import type { operations } from "../../../../openapi/client/schema";
 
@@ -194,6 +195,7 @@ ready(function () {
     document.querySelectorAll(".tab-filters input"),
     "change",
     function (this: Element) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real ".tab-filters input" always carries a real data-status attribute.
       commentsParams.status = this.getAttribute("data-status")!;
       commentsParams.page = 0;
       void getComments(commentsParams);
@@ -426,13 +428,13 @@ function commentsDiplayPagination(paging: CommentListResponse["paging"]) {
   if (paging.totalPages === 0) {
     const pageNumbers = paging.totalPages + 1;
     const page = commentsPaginItems.replace(/%d/g, String(pageNumbers));
-    const pageEl = parseHtml(page)[0]!;
+    const pageEl = valueAt(parseHtml(page), 0);
     addClass(pageEl, "actual");
     container.appendChild(pageEl);
   } else if (paging.totalPages <= 2) {
     Array.from(Array(paging.totalPages + 1)).forEach((_, i) => {
       const page = commentsPaginItems.replace(/%d/g, String(i + 1));
-      container.appendChild(parseHtml(page)[0]!);
+      container.appendChild(valueAt(parseHtml(page), 0));
     });
     addClass(
       document.querySelectorAll(

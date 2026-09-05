@@ -7667,6 +7667,23 @@ and 413 real `pwg_getPageString()` call sites in `.ts` were nearly left
 out of scope entirely): `.claude/plans/abundant-bubbling-sutherland.md`
 (session-local plan file, not committed). Not started.
 
+**P54 addendum — pt_PT double-UTF-8-encoding regression, found and
+fixed.** One of this phase's own prep commits ("repair 3 critical PO
+catalog corruptions") correctly found 4 genuinely-broken lines (7 raw
+ISO-8859-1 bytes under `pt_PT/common.po`'s declared UTF-8 charset) but
+ran `iconv -f ISO-8859-1 -t UTF-8` over the *whole file* rather than
+those 4 lines, double-encoding every one of its ~200 other,
+already-valid UTF-8 accented characters into mojibake (e.g.
+"Português" → "PortuguÃªs"). Surfaced by a full `composer
+test:golden-html` run (`install`/`admin-languages-installed` both
+diffed on it, the latter also showing `pt_BR`/`pt_PT`'s sort order
+swapped since the corrupted name sorted differently) — confirmed a
+repo-wide scan found no other `.po` file affected. Fixed surgically:
+restored the file to its pre-corruption state and reapplied only the
+original 4 lines' real fix, verified via `msgfmt --check-format` and a
+byte-for-byte diff against the corrupted version showing exactly the
+mojibake-reversal lines and nothing else.
+
 #### New-feature track — lands last
 
 **P55 — Picture pipeline.** `<picture>` AVIF/WebP variants plus ThumbHash

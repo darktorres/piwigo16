@@ -59,7 +59,11 @@ import {
   pwg_getPageData,
   pwg_getPageString,
 } from "../../../../default/js/pageData";
-import { ajax, AjaxError } from "../../../../default/js/vendor/utils/ajax";
+import {
+  ajax,
+  AjaxError,
+  type AjaxResponse,
+} from "../../../../default/js/vendor/utils/ajax";
 import { AjaxQueue } from "../../../../default/js/vendor/utils/ajaxQueue";
 import { colorbox } from "../../../../default/js/vendor/widgets/colorbox";
 import { pwgDatepicker } from "../../../../default/js/vendor/widgets/datepicker";
@@ -978,6 +982,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
         continue;
       }
 
+      // eslint-disable-next-line sonarjs/todo-tag -- false positive: `todo` here is a real variable name (a running counter), not a TODO action marker.
       // `todo`/`progressBarMax` are a running counter and a fixed total
       // shared across every batch's own async callback, not a
       // per-iteration snapshot -- each callback must see the live value
@@ -1005,7 +1010,9 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
           ) {
             todo += thisBatchSize;
             if (responseData.nbSynchronized !== thisBatchSize) {
-              /*TODO: user feedback only data.nbSynchronized images out of thisBatchSize were sync*/
+              console.warn(
+                `Metadata sync: only ${String(responseData.nbSynchronized)} of ${String(thisBatchSize)} images in this batch were synchronized.`,
+              );
             }
             html(
               document.querySelectorAll("#regenerationStatus .badge-number"),
@@ -1014,9 +1021,9 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
             progressBar(todo, progressBarMax, false);
           },
           // eslint-disable-next-line @typescript-eslint/no-loop-func -- see comment above the IIFE.
-          error: function (_data: unknown) {
+          error: function (xhr: AjaxResponse) {
             todo += thisBatchSize;
-            /*TODO: user feedback*/
+            console.error("Metadata sync batch failed:", xhr.responseText);
             html(
               document.querySelectorAll("#regenerationStatus .badge-number"),
               todo.toString() + "/" + progressBarMax.toString(),
@@ -1097,6 +1104,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
       continue;
     }
 
+    // eslint-disable-next-line sonarjs/todo-tag -- false positive: `todo` here is a real variable name (a running counter), not a TODO action marker.
     // `todo`/`progressBarMax` are a running counter and a fixed total
     // shared across every batch's own async callback, not a
     // per-iteration snapshot -- each callback must see the live value
@@ -1124,9 +1132,10 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
         ) {
           todo += thisBatchSize;
           if (responseData.deletedCount !== thisBatchSize) {
-            /*TODO: user feedback only data.deletedCount images out of thisBatchSize were deleted*/
+            console.warn(
+              `Image delete: only ${String(responseData.deletedCount)} of ${String(thisBatchSize)} images in this batch were deleted.`,
+            );
           }
-          /*TODO: user feedback if isError*/
           html(
             document.querySelectorAll("#regenerationStatus .badge-number"),
             todo.toString() + "/" + progressBarMax.toString(),
@@ -1134,9 +1143,9 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
           progressBar(todo, progressBarMax, false);
         },
         // eslint-disable-next-line @typescript-eslint/no-loop-func -- see comment above the IIFE.
-        error: function (_data: unknown) {
+        error: function (xhr: AjaxResponse) {
           todo += thisBatchSize;
-          /*TODO: user feedback*/
+          console.error("Image delete batch failed:", xhr.responseText);
           html(
             document.querySelectorAll("#regenerationStatus .badge-number"),
             todo.toString() + "/" + progressBarMax.toString(),

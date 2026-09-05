@@ -824,10 +824,10 @@ async function updateBlock(pictureId: number): Promise<void> {
     );
     setVal(
       document.querySelectorAll(
-        "#" + escapeId("picture-" + String(pictureId)) + " #dateCreation",
+        "#" + escapeId("picture-" + String(pictureId)) + " #date_creation",
       ),
       response.dateCreation ?? "",
-    ); //TODO
+    );
     setVal(
       document.querySelectorAll(
         "#" + escapeId("picture-" + String(pictureId)) + " #description",

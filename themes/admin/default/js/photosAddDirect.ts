@@ -834,6 +834,7 @@ ready(function () {
 
         show(document.querySelectorAll(".infos"));
 
+        // eslint-disable-next-line sonarjs/todo-tag -- genuine deferred architectural work, not a bug: would need new pwg.caddie.empty/pwg.caddie.add REST endpoints that don't exist in the current API (checked: no "caddie" route in openapi/client/schema.d.ts), out of scope for a lint-cleanup pass.
         // TODO: use a new method pwg.caddie.empty +
         // pwg.caddie.add(uploadedPhotos) instead of relying on huge GET parameter
         // (and remove useless code from admin/photos_add_direct.php)

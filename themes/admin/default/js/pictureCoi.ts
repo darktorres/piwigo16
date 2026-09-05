@@ -48,6 +48,7 @@ const coi = pwg_getPageData<
 >("coi");
 
 jcrop(
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own "#jcrop" image is always real.
   document.querySelector<HTMLImageElement>("#jcrop")!,
   {
     boxWidth: 500,

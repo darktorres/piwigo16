@@ -71,6 +71,7 @@ export class AjaxQueue {
 
   #dequeue(): void {
     while (this.#inProgress < this.#opts.maxRequests && this.#pending.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the while condition above already confirmed #pending is non-empty.
       this.#pending.shift()!();
     }
   }

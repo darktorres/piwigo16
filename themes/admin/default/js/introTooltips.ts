@@ -220,6 +220,7 @@ function resizeStorageTooltips(resize = false) {
       }
       css(tooltips, "left", String(left) + "px");
       // Move tooltip if he create vertical scrollbar
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own ".storage-chart" element is always real.
       const chart = document.querySelector<HTMLElement>(".storage-chart")!;
       const strChartPos = offset(chart).top;
       const strChartHeight = innerHeight(chart);

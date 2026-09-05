@@ -23,6 +23,7 @@ document.querySelectorAll(".delete-theme-button").forEach(function (button) {
     'Are you sure you want to delete the theme "%s"?',
   );
   pwg_jconfirm_follow_href(button, {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real ".delete-theme-button" always has a ".themeBox" ancestor with a real ".themeName" title.
     alert_title: title.replace("%s", themeName!),
     alert_confirm: confirmMsg,
     alert_cancel: cancelMsg,

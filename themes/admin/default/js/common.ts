@@ -92,6 +92,7 @@ function fontCheckbox(): void {
     function (this: Element): void {
       // Non-null: every real .font-checkbox radio in the template has a
       // `name` attribute.
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see the comment above.
       const name = attrOf(this, "name")!;
       document
         .querySelectorAll(`.font-checkbox input[type=radio][name="${name}"]`)

@@ -43,6 +43,7 @@ on(
     // always `clear()`s before applying the given value regardless, so a
     // `null`/empty value is functionally just `clear()`.
     getSelectizeInstance(
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own "select[name=cat]" is always real.
       document.querySelector<HTMLSelectElement>("select[name=cat]")!,
     )?.clear();
     event.preventDefault();

@@ -123,6 +123,7 @@ on(
     const selected: string[] = [];
     document.querySelectorAll(".delete-size-check").forEach((el) => {
       if (attrOf(el, "data-selected") === "1") {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real ".delete-size-check" always renders a real name attribute.
         selected.push(attrOf(el, "name")!);
       }
     });

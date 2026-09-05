@@ -252,6 +252,7 @@ ready(function () {
   // file needs one.
   const language = document.querySelector<HTMLSelectElement>("#language");
   language?.addEventListener("change", function () {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- "#language" is always inside a real <form> on this page.
     const form = language.form!;
     form.action = "install.php?language=" + encodeURIComponent(language.value);
     form.submit();

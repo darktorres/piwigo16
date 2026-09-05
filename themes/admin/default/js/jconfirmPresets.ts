@@ -62,6 +62,7 @@ export function pwg_jconfirm_follow_href(
           text: alert_confirm,
           btnClass: "btn-red",
           action: function () {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- pwg_jconfirm_follow_href()'s own name/contract: every real caller passes a real <a href> element.
             window.location.href = buttonHref!;
           },
         },

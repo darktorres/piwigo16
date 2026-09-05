@@ -65,6 +65,7 @@ document
     document.querySelectorAll("a[id^='sizeEditOpen-']"),
     "click",
     function (this: HTMLElement, event: Event): void {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real "a[id^='sizeEditOpen-']" id always has a real suffix after the dash.
       const sizeName = this.id.split("-")[1]!;
       toggle(document.querySelectorAll("#sizeEdit-" + sizeName));
       hide(this);

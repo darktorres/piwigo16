@@ -13,9 +13,7 @@ import { toggle } from "../../../../default/js/vendor/utils/dom";
     return document.querySelector(selector)?.matches(":checked") ?? false;
   }
 
-  for (const selector in targets) {
-    const target = targets[selector]!;
-
+  for (const [selector, target] of Object.entries(targets)) {
     toggle(document.querySelectorAll(target), isChecked(selector));
 
     // The IIFE the original wrapped this in existed to capture `target`

@@ -242,6 +242,7 @@ const callback = (mutationList: MutationRecord[]) => {
 };
 
 const observer = new MutationObserver(callback);
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own "#theAdminPage" element is always real.
 observer.observe(targetNode!, config);
 
 function ignoreExtension(type: string, id: string) {

@@ -36,5 +36,6 @@ export function pwg_getPageData<T = unknown>(key: string): T {
 }
 
 export function pwg_getPageString(key: string): string {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real caller passes a key the server always exports a translated string for.
   return pwg_getPageDataPayload().strings[key]!;
 }

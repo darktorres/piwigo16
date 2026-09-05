@@ -24,9 +24,7 @@ import { tipTip } from "../../../../default/js/vendor/widgets/tiptip";
     'input[name="email_admin_on_new_user"]': "#email_admin_on_new_user_filter",
   };
 
-  for (const selector in targets) {
-    const target = targets[selector]!;
-
+  for (const [selector, target] of Object.entries(targets)) {
     toggle(
       document.querySelectorAll(target),
       is(document.querySelectorAll(selector), ":checked"),

@@ -131,6 +131,7 @@ ready(function () {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real click inside the document always targets an Element (or null), never a bare EventTarget with no Element interface.
       const target = e.target as Element;
       if (target.classList.contains("remove-item")) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real ".remove-item" here always renders a real id (the related album's own id).
         ab.removeSelectedAlbum(attrOf(target, "id")!);
       }
     },

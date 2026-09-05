@@ -30,6 +30,7 @@ import {
   parseHtml,
   ready,
   show,
+  valueAt,
 } from "../../../../default/js/vendor/utils/dom";
 
 // Narrower local shape than albums.ts's own real `AlbumTreeNode` --
@@ -169,7 +170,7 @@ function addAlbumResult(
     // `.find()` is every matching descendant, not the first.
     newCatNode.querySelectorAll(".search-album-icon").forEach((icon) => {
       icon.classList.add(haveChildren ? "icon-sitemap" : "icon-folder-open");
-      icon.classList.add(colors[id % 5]!);
+      icon.classList.add(valueAt(colors, id % 5));
     });
     newCatNode.querySelectorAll(".search-album-name").forEach((label) => {
       label.innerHTML = name;

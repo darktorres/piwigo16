@@ -247,11 +247,10 @@ abstract class AbstractSelectizer<
         });
 
         // load items
-        if (
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-          (value = data(el, "value") as
-            (string | number)[] | { id: string | number }[] | undefined)
-        ) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
+        value = data(el, "value") as
+          (string | number)[] | { id: string | number }[] | undefined;
+        if (value) {
           options.value = value;
         }
         if (options.value !== undefined) {

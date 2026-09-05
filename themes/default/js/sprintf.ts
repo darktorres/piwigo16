@@ -58,16 +58,23 @@ export function sprintf(...args: (string | number)[]): string {
   const o: string[] = [],
     s = "";
   while (f) {
-    if ((m = /^[^\x25]+/.exec(f))) {
+    m = /^[^\x25]+/.exec(f);
+    if (m) {
       o.push(m[0]);
-    } else if ((m = /^\x25{2}/.exec(f))) {
+      f = f.substring(m[0].length);
+      continue;
+    }
+    m = /^\x25{2}/.exec(f);
+    if (m) {
       o.push("%");
-    } else if (
-      (m =
-        /^\x25(?:(\d+)\$)?(\+)?(0|'[^$])?(-)?(\d+)?(?:\.(\d+))?([b-fosuxX])/.exec(
-          f,
-        ))
-    ) {
+      f = f.substring(m[0].length);
+      continue;
+    }
+    m =
+      /^\x25(?:(\d+)\$)?(\+)?(0|'[^$])?(-)?(\d+)?(?:\.(\d+))?([b-fosuxX])/.exec(
+        f,
+      );
+    if (m) {
       if (
         (a = args[m[1] !== undefined ? Number(m[1]) : i++]) == null ||
         a === undefined
@@ -104,10 +111,10 @@ export function sprintf(...args: (string | number)[]): string {
           a = a.toString(8);
           break;
         case "s":
-          a =
-            (a = String(a)) && m[6] !== undefined
-              ? a.substring(0, Number(m[6]))
-              : a;
+          a = String(a);
+          if (m[6] !== undefined) {
+            a = a.substring(0, Number(m[6]));
+          }
           break;
         case "u":
           a = Math.abs(a);

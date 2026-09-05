@@ -125,6 +125,20 @@ export function dataId(el: Element, key: string): number {
   return value;
 }
 
+/**
+ * `el.cloneNode(true)`, typed to the receiver's own concrete type (P51-U).
+ *
+ * `lib.dom.d.ts`'s `Node.cloneNode(deep?: boolean): Node` isn't narrowed
+ * per-subtype, so every concrete-typed call site otherwise needs its own
+ * `as X` cast -- cloning a real `T` always produces a real `T` (a DOM
+ * guarantee), so this absorbs that one repeated justified cast, same
+ * reason `dataId()`/`valId()` exist.
+ */
+export function cloneElement<T extends Node>(el: T): T {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning a T always produces a T (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype. This is the one absorbed cast site -- see this function's own leading comment.
+  return el.cloneNode(true) as T;
+}
+
 // ── Visibility: show / hide ──────────────────────────────────────────────
 //
 // From node_modules/jquery/src/css.js's `showHide()` and

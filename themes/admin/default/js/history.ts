@@ -12,6 +12,7 @@ import {
   append,
   attr,
   attrOf,
+  cloneElement,
   css,
   data,
   dataId,
@@ -349,10 +350,8 @@ function fillSummaryResult(summary: HistorySummary) {
   // summary.members is already ordered most-active-first
   summary.members.forEach((member) => {
     if (tmp < 5) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype. history.latte renders the hidden #-2 template unconditionally.
-      const newUserItem = document
-        .getElementById("-2")!
-        .cloneNode(true) as Element;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- history.latte renders the hidden #-2 template unconditionally.
+      const newUserItem = cloneElement(document.getElementById("-2")!);
 
       removeClass(newUserItem, "hide");
       html(find(newUserItem, ".user-item-name"), member.username ?? "");
@@ -964,8 +963,8 @@ function applyDownloadIndicator(newLine: Element, line: HistoryLine): void {
 }
 
 function lineConstructor(line: HistoryLine, id: number) {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype. history.latte renders the hidden #-1 template line unconditionally.
-  const newLine = document.getElementById("-1")!.cloneNode(true) as Element;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- history.latte renders the hidden #-1 template line unconditionally.
+  const newLine = cloneElement(document.getElementById("-1")!);
 
   removeClass(newLine, "hide");
   attr(newLine, "id", String(id));
@@ -1003,10 +1002,8 @@ function displayLine(line: Element) {
 }
 
 function addUserFilter(username: string | null) {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype. history.latte renders the hidden #default-filter template unconditionally.
-  const newFilter = document
-    .getElementById("default-filter")!
-    .cloneNode(true) as Element;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- history.latte renders the hidden #default-filter template unconditionally.
+  const newFilter = cloneElement(document.getElementById("default-filter")!);
   removeClass(newFilter, "hide");
 
   html(find(newFilter, ".filter-title"), username ?? "");
@@ -1028,10 +1025,8 @@ function addUserFilter(username: string | null) {
 }
 
 function addGuestFilter(username: string) {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype. history.latte renders the hidden #default-filter template unconditionally.
-  const newFilter = document
-    .getElementById("default-filter")!
-    .cloneNode(true) as Element;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- history.latte renders the hidden #default-filter template unconditionally.
+  const newFilter = cloneElement(document.getElementById("default-filter")!);
   removeClass(newFilter, "hide");
 
   html(find(newFilter, ".filter-title"), username);
@@ -1051,10 +1046,8 @@ function addGuestFilter(username: string) {
 }
 
 function addIpFilter(ip: string) {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype. history.latte renders the hidden #default-filter template unconditionally.
-  const newFilter = document
-    .getElementById("default-filter")!
-    .cloneNode(true) as Element;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- history.latte renders the hidden #default-filter template unconditionally.
+  const newFilter = cloneElement(document.getElementById("default-filter")!);
   removeClass(newFilter, "hide");
 
   html(find(newFilter, ".filter-title"), ip);
@@ -1075,10 +1068,8 @@ function addIpFilter(ip: string) {
 }
 
 function addImageFilter(img_id: HistoryImageId) {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype. history.latte renders the hidden #default-filter template unconditionally.
-  const newFilter = document
-    .getElementById("default-filter")!
-    .cloneNode(true) as Element;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- history.latte renders the hidden #default-filter template unconditionally.
+  const newFilter = cloneElement(document.getElementById("default-filter")!);
   removeClass(newFilter, "hide");
 
   html(find(newFilter, ".filter-title"), "Image #" + String(img_id));

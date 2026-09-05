@@ -12,6 +12,7 @@ import {
   addClass,
   attr,
   attrOf,
+  cloneElement,
   data,
   fadeIn,
   fadeOut,
@@ -597,14 +598,10 @@ function AddApiLine(lines: ApiKeyEntry[], reset: boolean) {
   );
 
   lines.forEach((line) => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype. profile.latte renders the hidden #api_line template unconditionally.
-    const apiLine = document
-      .getElementById("api_line")!
-      .cloneNode(true) as Element;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- see comment above. profile.latte renders the hidden #api_collapse template unconditionally.
-    const apiCollapse = document
-      .getElementById("api_collapse")!
-      .cloneNode(true) as Element;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- profile.latte renders the hidden #api_line template unconditionally.
+    const apiLine = cloneElement(document.getElementById("api_line")!);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see comment above. profile.latte renders the hidden #api_collapse template unconditionally.
+    const apiCollapse = cloneElement(document.getElementById("api_collapse")!);
     const tmpId = line.authKey.slice(24, 34);
 
     removeClass(apiLine, "template-api");

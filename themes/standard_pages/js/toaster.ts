@@ -1,4 +1,4 @@
-import { fadeOut } from "../../default/js/vendor/utils/dom";
+import { cloneElement, fadeOut } from "../../default/js/vendor/utils/dom";
 
 export interface PwgToasterInfo {
   text: string;
@@ -36,8 +36,7 @@ export function pwgToaster(info: PwgToasterInfo) {
   // getElementById still returns the original. Preserved rather than tidied
   // -- this is a translation, and no CSS targets the id (the template is
   // hidden through .toast.template-pwg-toaster).
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning #toast_template, itself a real HTMLElement, always produces an HTMLElement (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
-  const template = source.cloneNode(true) as HTMLElement;
+  const template = cloneElement(source);
 
   const text = template.querySelector(".toast_text");
   if (text !== null) {

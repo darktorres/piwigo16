@@ -42,7 +42,7 @@
 //   touch-capability-detection shim -- a deliberate simplification,
 //   not a literal translation, since every real target browser here
 //   already dispatches pointer events for both input kinds.
-import { height, offset, width } from "../utils/dom";
+import { cloneElement, height, offset, width } from "../utils/dom";
 
 interface JcropSelection {
   x: number;
@@ -152,8 +152,7 @@ function initJcrop(origImg: HTMLImageElement, options: JcropOptions): JcropApi {
   origImg.style.width = px(rawWidth);
   origImg.style.height = px(rawHeight);
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an HTMLImageElement always produces an HTMLImageElement (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
-  const img = origImg.cloneNode(true) as HTMLImageElement;
+  const img = cloneElement(origImg);
   img.removeAttribute("id");
   Object.assign(img.style, {
     border: "none",

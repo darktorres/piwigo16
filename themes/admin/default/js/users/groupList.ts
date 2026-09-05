@@ -26,6 +26,7 @@ import {
   animate,
   attr,
   attrOf,
+  cloneElement,
   css,
   data,
   dataId,
@@ -270,8 +271,7 @@ function createGroup(group: Group): Element {
   //Setup the group
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own "#group-template" element is always real.
   const template = document.getElementById("group-template")!;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning #group-template, itself a real HTMLElement, always produces an HTMLElement (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
-  const newgroup = template.cloneNode(true) as HTMLElement;
+  const newgroup = cloneElement(template);
   newgroup.id = "group-" + String(group.id);
   attr(newgroup, "data-id", String(group.id));
   html(find(newgroup, "#group_name"), group.name);

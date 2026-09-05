@@ -5,6 +5,7 @@ import { colorbox } from "../../../../default/js/vendor/widgets/colorbox";
 import {
   addClass,
   attr,
+  cloneElement,
   css,
   delegate,
   is,
@@ -128,8 +129,7 @@ import { tipTip } from "../../../../default/js/vendor/widgets/tiptip";
       if (previous?.matches("span.filter") !== true) {
         return;
       }
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
-      const clone = previous.cloneNode(true) as Element;
+      const clone = cloneElement(previous);
       this.parentElement?.insertBefore(clone, this);
 
       const clonedSelect = clone.querySelector("select");

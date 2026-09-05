@@ -22,6 +22,7 @@ import {
   append,
   attr,
   attrOf,
+  cloneElement,
   css,
   data,
   delay,
@@ -1493,8 +1494,7 @@ Selection mode
 function createUserSelectedItem(user: SelectionEntry): Element {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user_list.latte renders exactly one static `.user-selected-item` template row, always present, used only as a clone source.
   const template = document.querySelector(".user-selected-item")!;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
-  const newElem = template.cloneNode(true) as Element;
+  const newElem = cloneElement(template);
   attr(newElem, "data-id", user.id.toString());
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- only ever called after the caller's own `typeof ... !== "undefined"` guard confirms `username` is really set.
   html(find(newElem, "p"), user.username!);
@@ -2132,8 +2132,7 @@ function generateGroups(container: Element, groups: number[]) {
   if (g0 !== undefined) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user_list.latte renders a real hidden #template with these group sub-templates, always present.
     const template = document.querySelector("#template .group-primary")!;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
-    const primaryGrp = template.cloneNode(true) as Element;
+    const primaryGrp = cloneElement(template);
     html(primaryGrp, getGroupNameFromId(g0));
     addClass(primaryGrp, valueAt(colorIcons, g0 % 5));
     groupsContainer.appendChild(primaryGrp);
@@ -2141,8 +2140,7 @@ function generateGroups(container: Element, groups: number[]) {
   if (g1 !== undefined) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user_list.latte renders a real hidden #template with these group sub-templates, always present.
     const template = document.querySelector("#template .group-primary")!;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
-    const primaryGrp = template.cloneNode(true) as Element;
+    const primaryGrp = cloneElement(template);
     html(primaryGrp, getGroupNameFromId(g1));
     addClass(primaryGrp, valueAt(colorIcons, g1 % 5));
     groupsContainer.appendChild(primaryGrp);
@@ -2150,8 +2148,7 @@ function generateGroups(container: Element, groups: number[]) {
   if (g2 !== undefined) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user_list.latte renders a real hidden #template with these group sub-templates, always present.
     const template = document.querySelector("#template .group-bonus")!;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
-    const bonusGrp = template.cloneNode(true) as Element;
+    const bonusGrp = cloneElement(template);
     html(bonusGrp, "...");
     addClass(bonusGrp, valueAt(colorIcons, g2 % 5));
     addClass(bonusGrp, "tiptip");
@@ -2233,8 +2230,7 @@ function generateUserList() {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user_list.latte renders a real hidden #template with this user-container sub-template, always present.
   const template = document.querySelector("#template .user-container")!;
   for (let i = 0; i < currentUsers.length; i++) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
-    const newContainer = template.cloneNode(true) as Element;
+    const newContainer = cloneElement(template);
     fillContainerUserInfo(newContainer, i);
     wrapper.appendChild(newContainer);
   }

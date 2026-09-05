@@ -13,6 +13,7 @@ import {
   addClass,
   append,
   attr,
+  cloneElement,
   dataId,
   empty,
   escapeId,
@@ -296,8 +297,7 @@ function displayComments(comments: CommentListResponse["comments"]) {
   if (commentsList !== null) empty(commentsList);
   comments.forEach((comment: CommentEntry) => {
     if (template === null || commentsList === null) return;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
-    const clone = template.cloneNode(true) as Element;
+    const clone = cloneElement(template);
     removeClass(clone, "comment-template");
     addClass(clone, "comment");
 

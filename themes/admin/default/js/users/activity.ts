@@ -18,6 +18,7 @@ import {
   addClass,
   append,
   attr,
+  cloneElement,
   cssValue,
   data,
   find,
@@ -695,8 +696,8 @@ function computeLineAction(newLine: Element, line: MergedActivityLine): string {
 }
 
 function lineConstructor(line: MergedActivityLine) {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype. user_activity.latte renders the hidden #-1 template line unconditionally.
-  const newLine = document.getElementById("-1")!.cloneNode(true) as Element;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user_activity.latte renders the hidden #-1 template line unconditionally.
+  const newLine = cloneElement(document.getElementById("-1")!);
 
   show(document.querySelectorAll(".tab-title"));
   hide(document.querySelectorAll(".activity-noresult"));

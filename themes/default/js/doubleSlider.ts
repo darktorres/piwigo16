@@ -91,10 +91,8 @@ export function pwgDoubleSlider(
   const choices = find(container, ".slider-choice");
   off(choices, "click");
   on(choices, "click", function (this: Element): void {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-    const min = data(this, "min") as number;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-    const max = data(this, "max") as number;
+    const min = data<number>(this, "min");
+    const max = data<number>(this, "max");
     slider(sliderEl, "values", 0, options.values.indexOf(min));
     slider(sliderEl, "values", 1, options.values.indexOf(max));
   });

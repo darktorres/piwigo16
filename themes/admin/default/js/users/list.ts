@@ -3819,6 +3819,135 @@ function showFilterInfos(nbFilters: number) {
   }
 }
 
+type SendLinkPasswordResponse =
+  operations["userGeneratePasswordLink"]["responses"][200]["content"]["application/json"];
+
+/** Part of `sendLinkPassword()`'s own extraction, below. */
+function bindClosePasswordMailButton(): void {
+  const closeBtn = document.querySelectorAll("#close_password_mail_close");
+  off(closeBtn, "click");
+  on(closeBtn, "click", function () {
+    resetPasswordModals();
+  });
+}
+
+/** Part of `sendLinkPassword()`'s own extraction, below. */
+function applyMailSendSuccessUi(username: string, email: string | null): void {
+  removeClass(
+    document.querySelectorAll("#result_send_mail"),
+    "update-password-fail icon-red",
+  );
+  addClass(
+    document.querySelectorAll("#result_send_mail"),
+    "update-password-success icon-green",
+  );
+  removeClass(
+    document.querySelectorAll("#icon_password_msg_result_mail"),
+    "icon-cancel",
+  );
+  addClass(
+    document.querySelectorAll("#icon_password_msg_result_mail"),
+    "icon-ok",
+  );
+  const emailInputVal = val(
+    document.querySelectorAll(".user-property-email .user-property-input"),
+  );
+  const currMail = (emailInputVal ?? "").length
+    ? String(emailInputVal)
+    : (email ?? "");
+  html(
+    document.querySelectorAll("#password_msg_result_mail"),
+    sprintf(mailSentAt, username, currMail),
+  );
+}
+
+/** Part of `sendLinkPassword()`'s own extraction, below. */
+function applyMailSendFailureUi(): void {
+  removeClass(
+    document.querySelectorAll("#result_send_mail"),
+    "update-password-success icon-green",
+  );
+  addClass(
+    document.querySelectorAll("#result_send_mail"),
+    "update-password-fail icon-red",
+  );
+  removeClass(
+    document.querySelectorAll("#icon_password_msg_result_mail"),
+    "icon-ok",
+  );
+  addClass(
+    document.querySelectorAll("#icon_password_msg_result_mail"),
+    "icon-cancel",
+  );
+  html(document.querySelectorAll("#password_msg_result_mail"), errorMailSent);
+}
+
+/** Part of `sendLinkPassword()`'s own extraction, below. */
+function applyMailSendResultUi(
+  response: SendLinkPasswordResponse,
+  username: string,
+  email: string | null,
+): void {
+  if (response.sendByMail !== false && response.sendByMail !== null) {
+    applyMailSendSuccessUi(username, email);
+  } else {
+    applyMailSendFailureUi();
+  }
+  hide(document.querySelectorAll(".user-property-password-choice"));
+  fadeIn(document.querySelectorAll("#edit_password_result_mail"));
+  bindClosePasswordMailButton();
+}
+
+/** Part of `sendLinkPassword()`'s own extraction, below. */
+function applyCopyLinkResultUi(generatedLink: string): void {
+  removeClass(
+    document.querySelectorAll("#result_send_mail_copy"),
+    "update-password-fail icon-red",
+  );
+  addClass(
+    document.querySelectorAll("#result_send_mail_copy"),
+    "update-password-success icon-green",
+  );
+  removeClass(
+    document.querySelectorAll("#result_send_mail_copy_icon"),
+    "icon-cancel",
+  );
+  addClass(document.querySelectorAll("#result_send_mail_copy_icon"), "icon-ok");
+  html(document.querySelectorAll("#result_send_mail_copy_msg"), copyLinkStr);
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
+  if (window.isSecureContext && navigator.clipboard) {
+    copyToClipboard(generatedLink);
+  }
+}
+
+/** Part of `sendLinkPassword()`'s own extraction, below. */
+function applySendLinkPasswordErrorUi(sendByMail: boolean): void {
+  if (!sendByMail) {
+    removeClass(
+      document.querySelectorAll("#result_send_mail_copy"),
+      "update-password-success icon-green",
+    );
+    addClass(
+      document.querySelectorAll("#result_send_mail_copy"),
+      "update-password-fail icon-red",
+    );
+    removeClass(
+      document.querySelectorAll("#result_send_mail_copy_icon"),
+      "icon-ok",
+    );
+    addClass(
+      document.querySelectorAll("#result_send_mail_copy_icon"),
+      "icon-cancel",
+    );
+    html(document.querySelectorAll("#result_send_mail_copy_msg"), errorStr);
+    return;
+  }
+  applyMailSendFailureUi();
+  hide(document.querySelectorAll(".user-property-password-choice"));
+  fadeIn(document.querySelectorAll("#edit_password_result_mail"));
+  bindClosePasswordMailButton();
+}
+
 async function sendLinkPassword(
   email: string | null,
   username: string,
@@ -3836,152 +3965,19 @@ async function sendLinkPassword(
       json: {
         sendByMail: sendByMail,
       },
-    })) as operations["userGeneratePasswordLink"]["responses"][200]["content"]["application/json"];
+    })) as SendLinkPasswordResponse;
     setVal(
       document.querySelectorAll("#result_send_mail_copy_input"),
       response.generatedLink,
     );
     if (sendByMail) {
-      if (response.sendByMail !== false && response.sendByMail !== null) {
-        removeClass(
-          document.querySelectorAll("#result_send_mail"),
-          "update-password-fail icon-red",
-        );
-        addClass(
-          document.querySelectorAll("#result_send_mail"),
-          "update-password-success icon-green",
-        );
-        removeClass(
-          document.querySelectorAll("#icon_password_msg_result_mail"),
-          "icon-cancel",
-        );
-        addClass(
-          document.querySelectorAll("#icon_password_msg_result_mail"),
-          "icon-ok",
-        );
-        const currMail = (
-          val(
-            document.querySelectorAll(
-              ".user-property-email .user-property-input",
-            ),
-          ) ?? ""
-        ).length
-          ? String(
-              val(
-                document.querySelectorAll(
-                  ".user-property-email .user-property-input",
-                ),
-              ),
-            )
-          : (email ?? "");
-        html(
-          document.querySelectorAll("#password_msg_result_mail"),
-          sprintf(mailSentAt, username, currMail),
-        );
-      } else {
-        removeClass(
-          document.querySelectorAll("#result_send_mail"),
-          "update-password-success icon-green",
-        );
-        addClass(
-          document.querySelectorAll("#result_send_mail"),
-          "update-password-fail icon-red",
-        );
-        removeClass(
-          document.querySelectorAll("#icon_password_msg_result_mail"),
-          "icon-ok",
-        );
-        addClass(
-          document.querySelectorAll("#icon_password_msg_result_mail"),
-          "icon-cancel",
-        );
-        html(
-          document.querySelectorAll("#password_msg_result_mail"),
-          errorMailSent,
-        );
-      }
-      hide(document.querySelectorAll(".user-property-password-choice"));
-      fadeIn(document.querySelectorAll("#edit_password_result_mail"));
-      const closeBtn = document.querySelectorAll("#close_password_mail_close");
-      off(closeBtn, "click");
-      on(closeBtn, "click", function () {
-        resetPasswordModals();
-      });
+      applyMailSendResultUi(response, username, email);
     } else {
-      removeClass(
-        document.querySelectorAll("#result_send_mail_copy"),
-        "update-password-fail icon-red",
-      );
-      addClass(
-        document.querySelectorAll("#result_send_mail_copy"),
-        "update-password-success icon-green",
-      );
-      removeClass(
-        document.querySelectorAll("#result_send_mail_copy_icon"),
-        "icon-cancel",
-      );
-      addClass(
-        document.querySelectorAll("#result_send_mail_copy_icon"),
-        "icon-ok",
-      );
-      html(
-        document.querySelectorAll("#result_send_mail_copy_msg"),
-        copyLinkStr,
-      );
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions -- real feature-detection guard: lib.dom types navigator.clipboard as always-present, but it's genuinely absent on a non-secure origin or an older browser.
-      if (window.isSecureContext && navigator.clipboard) {
-        copyToClipboard(response.generatedLink);
-      }
+      applyCopyLinkResultUi(response.generatedLink);
     }
   } catch (err) {
     console.error("Error sendLinkPassword :", err);
-    if (!sendByMail) {
-      removeClass(
-        document.querySelectorAll("#result_send_mail_copy"),
-        "update-password-success icon-green",
-      );
-      addClass(
-        document.querySelectorAll("#result_send_mail_copy"),
-        "update-password-fail icon-red",
-      );
-      removeClass(
-        document.querySelectorAll("#result_send_mail_copy_icon"),
-        "icon-ok",
-      );
-      addClass(
-        document.querySelectorAll("#result_send_mail_copy_icon"),
-        "icon-cancel",
-      );
-      html(document.querySelectorAll("#result_send_mail_copy_msg"), errorStr);
-    } else {
-      removeClass(
-        document.querySelectorAll("#result_send_mail"),
-        "update-password-success icon-green",
-      );
-      addClass(
-        document.querySelectorAll("#result_send_mail"),
-        "update-password-fail icon-red",
-      );
-      removeClass(
-        document.querySelectorAll("#icon_password_msg_result_mail"),
-        "icon-ok",
-      );
-      addClass(
-        document.querySelectorAll("#icon_password_msg_result_mail"),
-        "icon-cancel",
-      );
-      html(
-        document.querySelectorAll("#password_msg_result_mail"),
-        errorMailSent,
-      );
-      hide(document.querySelectorAll(".user-property-password-choice"));
-      fadeIn(document.querySelectorAll("#edit_password_result_mail"));
-      const closeBtn = document.querySelectorAll("#close_password_mail_close");
-      off(closeBtn, "click");
-      on(closeBtn, "click", function () {
-        resetPasswordModals();
-      });
-    }
+    applySendLinkPasswordErrorUi(sendByMail);
   }
 }
 

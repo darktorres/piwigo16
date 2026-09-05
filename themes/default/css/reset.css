@@ -1,0 +1,40 @@
+/**
+ * P52-B: the `reset` layer -- minimal, theme-independent (docs/PLAN.md's
+ * P52 architecture text: "reset (new, minimal: box-sizing, margin
+ * removal)"). Shared by all 3 independent chains (`default`,
+ * `admin/default`, `standard_pages`) rather than duplicated 3 times --
+ * its content has zero chain-specific variation, matching the existing
+ * cross-chain CSS precedent (`themes/default/js/plugins/selectize.*.css`/
+ * `themes/default/vendor/fontello/css/gallery-icon.css`, both already
+ * loaded from admin/standard_pages pages).
+ *
+ * Every existing `theme.css`/`css/pages`/`css/components` file stays
+ * completely unlayered until its own later sub-phase (P52-C/D/E/F)
+ * wraps it -- unlayered CSS beats every layered rule unconditionally
+ * for normal-priority declarations, so nothing here can override an
+ * existing explicit declaration. It only takes effect on properties no
+ * unlayered rule sets at all (a real, accepted, VR-caught risk -- see
+ * this phase's own docs/PLAN.md entry).
+ */
+@layer reset {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  body,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  figure,
+  blockquote,
+  dl,
+  dd {
+    margin: 0;
+  }
+}

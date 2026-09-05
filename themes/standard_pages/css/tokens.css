@@ -1,0 +1,150 @@
+/**
+ * P52-B: the `tokens` layer for the `standard_pages` chain. See
+ * `themes/default/css/tokens.css` for the full design rationale
+ * (shared verbatim across all 3 chains' tokens.css files).
+ *
+ * This chain's own literal audit is sparse (10 distinct normalized
+ * literals at 2+ occurrences, vs. `admin/default`'s 141) -- it already
+ * gets most of its real color identity from its own 11-skin system
+ * (`skins/*.css`, out of scope here, converts in a later phase) rather
+ * than `theme.css` literals. `--color-accent` matches this chain's own
+ * `skins/default.css:2`'s real `accent-color: #ff7700;` -- the same
+ * brand hue as the other 2 chains.
+ *
+ * `standard_pages` already ships a real, separate, live dark-mode
+ * mechanism today (`standard_pages.ts`'s cookie/`prefers-color-scheme`
+ * driven `.light`/`.dark` class toggle, 46 `.dark`-scoped rules per
+ * skin file) -- confirmed not to conflict with this file's `:root {
+ * color-scheme: light; }` (different selectors entirely: the existing
+ * rules scope to `.light input[type="date"]`/`.dark input[type="date"]`
+ * for native date-picker chrome only, and stay unlayered so they always
+ * win regardless). The two mechanisms coexist unmodified until some
+ * later phase (P52-F or P56) deliberately unifies them.
+ */
+
+@property --z-dropdown {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 1000;
+}
+@property --z-sticky {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 1020;
+}
+@property --z-overlay {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 1040;
+}
+@property --z-modal {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 1050;
+}
+@property --z-toast {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 1060;
+}
+@property --z-tooltip {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 1070;
+}
+
+@property --space-1 {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0.25rem;
+}
+@property --space-2 {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0.5rem;
+}
+@property --space-3 {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0.75rem;
+}
+@property --space-4 {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 1rem;
+}
+@property --space-5 {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 1.5rem;
+}
+@property --space-6 {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 2rem;
+}
+@property --space-7 {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 3rem;
+}
+@property --space-8 {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 4rem;
+}
+
+@property --radius-sm {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0.1875rem;
+}
+@property --radius-md {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0.3125rem;
+}
+@property --radius-lg {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0.625rem;
+}
+
+@layer tokens {
+  :root {
+    color-scheme: light;
+
+    /* Primitives */
+    --color-black: light-dark(oklch(0% 0 0), oklch(0% 0 0));
+    --color-white: light-dark(oklch(100% 0 0), oklch(100% 0 0));
+
+    /* Brand accent -- shared hue across every chain, matches this
+       chain's own skins/default.css accent-color today */
+    --color-accent: light-dark(oklch(71.87% 0.1917 49.38), oklch(71.87% 0.1917 49.38));
+    --color-accent-light: light-dark(oklch(79.75% 0.1505 64.26), oklch(79.75% 0.1505 64.26));
+
+    /* Status -- toaster.css's own error-toast pair (#be4949 background,
+       #ffc8c8 text) */
+    --color-danger: light-dark(oklch(56.32% 0.1512 23.28), oklch(56.32% 0.1512 23.28));
+    --color-danger-text: light-dark(oklch(88.13% 0.0629 18.42), oklch(88.13% 0.0629 18.42));
+
+    /* Scale values */
+    --z-dropdown: 1000;
+    --z-sticky: 1020;
+    --z-overlay: 1040;
+    --z-modal: 1050;
+    --z-toast: 1060;
+    --z-tooltip: 1070;
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.5rem;
+    --space-6: 2rem;
+    --space-7: 3rem;
+    --space-8: 4rem;
+    --radius-sm: 0.1875rem;
+    --radius-md: 0.3125rem;
+    --radius-lg: 0.625rem;
+  }
+}

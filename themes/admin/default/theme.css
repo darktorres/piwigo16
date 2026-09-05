@@ -1,3 +1,10 @@
+/* P52-B: cascade-layer order, declared once here since this file
+   always loads first for the admin layout (Template::setTheme()'s
+   parent-before-child walk) -- `roma`/`clear` need no equivalent
+   declaration of their own, since this always loads before either
+   skin's own theme.css. */
+@layer reset, tokens, base, theme-chain, theme-skin, components, pages, utilities;
+
 /* content.css */
 [class*="icon-"]:before { text-decoration:none !important; }
 

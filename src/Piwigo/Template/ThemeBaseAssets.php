@@ -83,6 +83,14 @@ final readonly class ThemeBaseAssets
     public static function forAdminLayout(array $themes): array
     {
         $assets = [
+            // P52-B: reset/tokens/base layers, loaded before everything
+            // else so the rendered HTML matches the @layer declaration
+            // order in theme.css (not functionally required for layer
+            // priority, which comes from that declaration alone, but
+            // keeps the <head> legible).
+            AssetContribution::css('themes/default/css/reset.css', order: -30),
+            AssetContribution::css('themes/admin/default/css/tokens.css', order: -29),
+            AssetContribution::css('themes/default/css/base.css', order: -28),
             AssetContribution::css('themes/admin/default/fontello/css/fontello.css', order: -10),
             AssetContribution::css('themes/admin/default/css/utilities.css', order: -5),
         ];
@@ -137,7 +145,13 @@ final readonly class ThemeBaseAssets
      */
     public static function forDefaultLayout(array $themes): array
     {
-        $assets = self::themeChainCss($themes);
+        $assets = [
+            // P52-B: see forAdminLayout()'s own comment.
+            AssetContribution::css('themes/default/css/reset.css', order: -30),
+            AssetContribution::css('themes/default/css/tokens.css', order: -29),
+            AssetContribution::css('themes/default/css/base.css', order: -28),
+        ];
+        array_push($assets, ...self::themeChainCss($themes));
         $assets[] = AssetContribution::css('themes/default/css/utilities.css', order: -5);
 
         return $assets;
@@ -149,7 +163,13 @@ final readonly class ThemeBaseAssets
      */
     public static function forStandardPagesLayout(array $themes): array
     {
-        $assets = self::themeChainCss($themes);
+        $assets = [
+            // P52-B: see forAdminLayout()'s own comment.
+            AssetContribution::css('themes/default/css/reset.css', order: -30),
+            AssetContribution::css('themes/standard_pages/css/tokens.css', order: -29),
+            AssetContribution::css('themes/default/css/base.css', order: -28),
+        ];
+        array_push($assets, ...self::themeChainCss($themes));
         $assets[] = AssetContribution::css('themes/standard_pages/css/utilities.css', order: -5);
 
         return $assets;

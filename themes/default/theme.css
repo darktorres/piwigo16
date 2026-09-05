@@ -1,3 +1,9 @@
+/* P52-B: cascade-layer order, declared once here since this file
+   always loads first (Template::setTheme()'s parent-before-child
+   walk). @layer statements (no block) are spec-exempted from the
+   normal "@import must come first" rule, so this can precede the
+   @import below -- verified against MDN, not assumed. */
+@layer reset, tokens, base, theme-chain, theme-skin, components, pages, utilities;
 @import "iconset.css";
 /**
  * Menubar

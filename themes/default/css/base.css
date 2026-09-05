@@ -1,0 +1,26 @@
+/**
+ * P52-B: the `base` layer -- bare-element defaults, theme-independent
+ * (docs/PLAN.md's P52 architecture text: "base (bare-element defaults,
+ * plus the text-wrap: balance heading rule)"). Shared by all 3 chains,
+ * same reasoning as reset.css alongside it.
+ *
+ * Deliberately font-agnostic: `default`, `admin/default`, and
+ * `standard_pages` use genuinely different brand fonts (Arial/
+ * Helvetica, "Open Sans", `Open_Sans` respectively), so a shared file
+ * cannot pick one `font-family` for all 3 -- that stays chain-specific,
+ * for a later phase's own tokens.css/theme.css.
+ */
+@layer base {
+  body {
+    line-height: 1.5;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    text-wrap: balance;
+  }
+}

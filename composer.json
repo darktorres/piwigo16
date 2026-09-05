@@ -253,6 +253,11 @@
       "bash tools/reimport-fixture.sh",
       "@php vendor/bin/pest --testsuite Browser --group=visual-regression"
     ],
+    "test:visual:update": [
+      "bun run build",
+      "bash tools/reimport-fixture.sh",
+      "@php vendor/bin/pest --testsuite Browser --group=visual-regression --update-snapshots"
+    ],
     "unused": "@php vendor/bin/composer-unused --configuration=composer-unused.php"
   }
 }

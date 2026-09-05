@@ -1,3 +1,8 @@
+/* P52-B: cascade-layer order, declared once here since this file
+   always loads first (Template::setTheme()'s parent-before-child
+   walk). */
+@layer reset, tokens, base, theme-chain, theme-skin, components, pages, utilities;
+
 @font-face {
   font-family: Open_Sans;
   src: url(fonts/OpenSans-VariableFont_wdth\,wght.ttf);

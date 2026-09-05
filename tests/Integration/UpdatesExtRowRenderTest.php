@@ -67,20 +67,24 @@ final class UpdatesExtRowRenderTest extends IntegrationTestCase
     }
 
     /**
-     * The revision reaches JavaScript as a quoted string, which is what the
+     * The revision reaches JavaScript as a real string, which is what the
      * update API accepts: ExtensionUpdateInput reads the posted revision
      * through `is_string(...) ? ... : ''`, so a bare number would arrive as
-     * an empty revision. Latte's own JS-context escaping supplies the
-     * quotes, so this asserts the escaped attribute as rendered.
+     * an empty revision. P51-N moved this from an inline
+     * `onclick="updateExtension(...)"` call (Latte's own JS-context
+     * escaping used to supply the quotes there) to a `data-ext-*` attribute
+     * trio `updates/ext.ts`'s own click handler reads via `attrOf()` --
+     * always a string by construction, so this now asserts the attributes
+     * themselves render correctly instead of an inline call string that no
+     * longer exists.
      */
     public function testTheRevisionReachesTheUpdateCallAsAQuotedString(): void
     {
         $html = $this->render($this->row());
 
-        self::assertStringContainsString(
-            'updateExtension(&quot;plugins&quot;, &quot;MyPlugin&quot;, &quot;91&quot;)',
-            $html,
-        );
+        self::assertStringContainsString('data-ext-type="plugins"', $html);
+        self::assertStringContainsString('data-ext-id="MyPlugin"', $html);
+        self::assertStringContainsString('data-ext-revision="91"', $html);
     }
 
     /**

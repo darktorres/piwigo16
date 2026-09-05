@@ -60,6 +60,7 @@ import {
   show,
   trigger,
   val,
+  valueAt,
 } from "./vendor/utils/dom";
 
 // Real shapes for the 2 real GET endpoints this file's own #methodPwg
@@ -453,7 +454,9 @@ export class AlbumSelector {
       on(items, `click${instanceAb}`, (e) => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real "click" event's own currentTarget is always the registered Element, never a bare EventTarget with no Element interface.
         const curr = e.currentTarget as Element;
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real ".prefill-results-item" always renders with a real id attribute.
         const catId = attrOf(curr, "id")!;
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- that same id was rendered from this.#cats's own real keys.
         const cat = this.#cats[catId]!;
         this.#switchAlbumView(cat);
       });
@@ -463,7 +466,9 @@ export class AlbumSelector {
       on(available, `click${instanceAb}`, (e) => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real "click" event's own currentTarget is always the registered Element, never a bare EventTarget with no Element interface.
         const curr = e.currentTarget as Element;
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real ".prefill-results-item.available" always renders with a real id attribute.
         const catId = attrOf(curr, "id")!;
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- that same id was rendered from this.#cats's own real keys.
         const cat = this.#cats[catId]!;
 
         this.#currentSelectedId = cat.id;
@@ -481,6 +486,7 @@ export class AlbumSelector {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real "click" event's own currentTarget is always the registered HTMLElement, never a bare EventTarget with no Element interface.
       const curr = e.currentTarget as HTMLElement;
       const catId = curr.id;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this id was rendered from this.#cats's own real keys.
       const cat = this.#cats[catId]!;
 
       if (hasClass(curr, "open")) {
@@ -519,7 +525,9 @@ export class AlbumSelector {
     on(rows, `click${instanceAb}`, (e) => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real "click" event's own currentTarget is always the registered Element, never a bare EventTarget with no Element interface.
       const curr = e.currentTarget as Element;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real ".search-result-item" always renders with a real id attribute.
       const catId = attrOf(curr, "id")!;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- that same id was rendered from this.#searchCat's own real keys.
       const cat = this.#searchCat[catId]!;
 
       const formatedCatId = this.#inAdminMode ? cat.id : String(cat.id);
@@ -819,6 +827,7 @@ export class AlbumSelector {
     empty(AlbumSelector.selectors.searchResult);
 
     cats.forEach((cat) => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the real API response always populates fullname in admin mode.
       const catName = this.#inAdminMode ? cat.fullname! : cat.name;
 
       append(
@@ -900,6 +909,7 @@ export class AlbumSelector {
       this.#rememberLevelSeparator(data);
       hide(q(".linkedAlbumPopInContainer .searching"));
       const cats = data.categories;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- CategoryListOrAvailableResponse's own real API contract always includes limit for this endpoint shape.
       const limit = data.limit!;
       this.#prefillResults("root", cats, limit);
     } catch (e) {
@@ -926,6 +936,7 @@ export class AlbumSelector {
 
       this.#rememberLevelSeparator(data);
       const cats = data.categories.filter((c) => c.id !== Number(catId));
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- CategoryListOrAvailableResponse's own real API contract always includes limit for this endpoint shape.
       const limit = data.limit!;
       this.#prefillResults(catId, cats, limit);
     } catch (e) {
@@ -1030,7 +1041,7 @@ export class AlbumSelector {
         },
       })) as operations["categoryList"]["responses"][200]["content"]["application/json"];
 
-      this.#selectNewAlbumAndClose(data.categories[0]!);
+      this.#selectNewAlbumAndClose(valueAt(data.categories, 0));
     } catch {
       AlbumSelector.#showNewAlbumError(strAnErrorHasOccured);
     }

@@ -259,6 +259,7 @@ function ensureHolder(maxWidth: string | number): {
     document.body.appendChild(holder);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- holder/contentEl/arrowEl are always set together on the first real call, and never reset to null afterward.
   return { holder, content: contentEl!, arrow: arrowEl! };
 }
 

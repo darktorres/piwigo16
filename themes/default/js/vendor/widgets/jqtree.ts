@@ -924,14 +924,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     return true;
   }
 
-  #mouseDrag(positionInfo: PositionInfo): boolean {
-    if (!this.currentItem || !this.dragElement || positionInfo.pageX === undefined || positionInfo.pageY === undefined) {
-      return false;
-    }
-    this.dragElement.move(positionInfo.pageX, positionInfo.pageY);
-    this.positionInfo = positionInfo;
-    const area = this.#findHoveredArea(positionInfo.pageX, positionInfo.pageY);
-    const canMoveTo = this.#canMoveToArea(area);
+  #applyHoveredArea(area: HitArea | null, canMoveTo: boolean): void {
     if (canMoveTo && area) {
       if (!area.node.isFolder()) {
         this.#stopOpenFolderTimer();
@@ -950,6 +943,17 @@ class JqTreeController<T extends Record<string, unknown>> {
       this.#removeDropHint();
       this.#stopOpenFolderTimer();
     }
+  }
+
+  #mouseDrag(positionInfo: PositionInfo): boolean {
+    if (!this.currentItem || !this.dragElement || positionInfo.pageX === undefined || positionInfo.pageY === undefined) {
+      return false;
+    }
+    this.dragElement.move(positionInfo.pageX, positionInfo.pageY);
+    this.positionInfo = positionInfo;
+    const area = this.#findHoveredArea(positionInfo.pageX, positionInfo.pageY);
+    const canMoveTo = this.#canMoveToArea(area);
+    this.#applyHoveredArea(area, canMoveTo);
     if (!area && this.options.onDragMove) {
       this.options.onDragMove(
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.
@@ -1308,37 +1312,67 @@ function isElementVisible(el: HTMLElement): boolean {
   return Boolean(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
 }
 
+interface VisibleNodeHandlers {
+  handleFirstNode(node: TreeNode): void;
+  handleOpenFolder(node: TreeNode, el: HTMLLIElement): boolean;
+  handleClosedFolder(node: TreeNode, nextNode: TreeNode | null, el: HTMLLIElement): void;
+  handleNode(node: TreeNode, nextNode: TreeNode | null, el: HTMLLIElement): void;
+  handleAfterOpenFolder(node: TreeNode, nextNode: TreeNode | null): void;
+}
+
+/**
+ * The `node.element` branch of `iterateVisibleNodes()`'s own recursive
+ * `iterateNode()` below, extracted to keep that closure's own cognitive
+ * complexity under the sonarjs limit -- a pure, faithful extraction (same
+ * exact control flow), not a behavior change.
+ *
+ * @returns `"skip"` when the node's own element isn't visible (the
+ *   original `return;` out of `iterateNode()` entirely, so children are
+ *   never visited either); otherwise whether `mustIterateInside` (computed
+ *   by the caller, before this runs) should be forced to `false` (the one
+ *   real case: an open folder whose own `handleOpenFolder()` returns
+ *   `false`), or left as the caller's own value.
+ */
+function handleNodeElement(
+  node: TreeNode,
+  nextNode: TreeNode | null,
+  el: HTMLLIElement,
+  isFirstNode: boolean,
+  handlers: VisibleNodeHandlers,
+): "skip" | { forceMustIterateInsideFalse: boolean } {
+  if (!isElementVisible(el)) {
+    return "skip";
+  }
+  if (isFirstNode) {
+    handlers.handleFirstNode(node);
+  }
+  if (!node.hasChildren()) {
+    handlers.handleNode(node, nextNode, el);
+    return { forceMustIterateInsideFalse: false };
+  }
+  if (node.is_open) {
+    return { forceMustIterateInsideFalse: !handlers.handleOpenFolder(node, el) };
+  }
+  handlers.handleClosedFolder(node, nextNode, el);
+  return { forceMustIterateInsideFalse: false };
+}
+
 function iterateVisibleNodes(
   root: TreeNode,
   _currentNode: TreeNode,
-  handlers: {
-    handleFirstNode(node: TreeNode): void;
-    handleOpenFolder(node: TreeNode, el: HTMLLIElement): boolean;
-    handleClosedFolder(node: TreeNode, nextNode: TreeNode | null, el: HTMLLIElement): void;
-    handleNode(node: TreeNode, nextNode: TreeNode | null, el: HTMLLIElement): void;
-    handleAfterOpenFolder(node: TreeNode, nextNode: TreeNode | null): void;
-  },
+  handlers: VisibleNodeHandlers,
 ): void {
   let isFirstNode = true;
   const iterateNode = (node: TreeNode, nextNode: TreeNode | null): void => {
     let mustIterateInside = (node.is_open || !node.element) && node.hasChildren();
     if (node.element) {
-      const el = node.element;
-      if (!isElementVisible(el)) {
+      const result = handleNodeElement(node, nextNode, node.element, isFirstNode, handlers);
+      if (result === "skip") {
         return;
       }
-      if (isFirstNode) {
-        handlers.handleFirstNode(node);
-        isFirstNode = false;
-      }
-      if (!node.hasChildren()) {
-        handlers.handleNode(node, nextNode, el);
-      } else if (node.is_open) {
-        if (!handlers.handleOpenFolder(node, el)) {
-          mustIterateInside = false;
-        }
-      } else {
-        handlers.handleClosedFolder(node, nextNode, el);
+      isFirstNode = false;
+      if (result.forceMustIterateInsideFalse) {
+        mustIterateInside = false;
       }
     }
     if (mustIterateInside) {

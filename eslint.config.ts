@@ -130,14 +130,19 @@ export default defineConfig(
     // with the rest of this config once .ts files exist to lint (P46-B).
     files: ["**/*.ts"],
     rules: {
-      // Tracked rather than silenced (14.x: "warn", not "off"). The `!`
-      // assertion is this codebase's normal way of stating an invariant
-      // the type system cannot see (a template always renders the
-      // element, an id is always in range), usually with a comment.
-      // Banning it outright would replace real assertions with `as`
-      // casts, which are strictly worse: they also silence genuine type
-      // errors.
-      "@typescript-eslint/no-non-null-assertion": "warn",
+      // Was "warn" (14.x's own starting point) until P51-O closed every
+      // real site under themes/** -- each was either a genuine
+      // restructuring (no assertion left at all) or a documented
+      // `eslint-disable-next-line` stating the invariant the type system
+      // can't see (a template always renders the element, an id is
+      // always in range). The rule now enforces that going forward,
+      // catching a *new* unexplained `!` the same way `no-unsafe-type-
+      // assertion` already catches an unexplained `as`. The 8 files still
+      // at "warn" below (tests/Unit/Vendor/*.test.ts +
+      // tests/Unit/Latte/latte-prettier-plugin.test.ts) are the explicitly
+      // out-of-scope remainder P51-O's own plan called out -- a real
+      // follow-on, not overlooked.
+      "@typescript-eslint/no-non-null-assertion": "error",
 
       "@typescript-eslint/restrict-plus-operands": "error",
 
@@ -261,6 +266,27 @@ export default defineConfig(
           ],
         },
       ],
+    },
+  },
+  {
+    // P51-O's own explicitly out-of-scope remainder (its own plan text:
+    // "the remaining 42 in tests/Unit/Vendor/*.test.ts plus 1 in
+    // tests/Unit/Latte/latte-prettier-plugin.test.ts... explicitly
+    // optional follow-on") -- kept at the pre-P51-O "warn" level rather
+    // than forcing a real fix into this phase's own scope. A real future
+    // pass should close these the same way and delete this override.
+    files: [
+      "tests/Unit/Vendor/dom-events.test.ts",
+      "tests/Unit/Vendor/dom-geometry.test.ts",
+      "tests/Unit/Vendor/dom-effects.test.ts",
+      "tests/Unit/Vendor/dom-visibility.test.ts",
+      "tests/Unit/Vendor/dom-data.test.ts",
+      "tests/Unit/Vendor/dom-sets.test.ts",
+      "tests/Unit/Vendor/dom-animation.test.ts",
+      "tests/Unit/Latte/latte-prettier-plugin.test.ts",
+    ],
+    rules: {
+      "@typescript-eslint/no-non-null-assertion": "warn",
     },
   },
   {

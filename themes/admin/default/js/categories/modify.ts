@@ -30,6 +30,7 @@ import {
   toggle,
   trigger,
   val,
+  valueAt,
 } from "../../../../default/js/vendor/utils/dom";
 import { ajax, AjaxError } from "../../../../default/js/vendor/utils/ajax";
 import {
@@ -160,8 +161,10 @@ ready(function () {
             name: val(document.querySelectorAll("#cat-name")),
             comment: val(document.querySelectorAll("#cat-comment")),
             visible:
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own "#cat-locked" checkbox is always real.
               !document.querySelector<HTMLInputElement>("#cat-locked")!.checked,
             commentable:
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own "#cat-commentable" checkbox is always real.
               document.querySelector<HTMLInputElement>("#cat-commentable")!
                 .checked,
           },
@@ -183,6 +186,7 @@ ready(function () {
           strJustNow,
         );
 
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own "#cat-locked" checkbox is always real.
         albumIsVisible = document.querySelector<HTMLInputElement>(
           "#cat-locked",
         )!.checked
@@ -627,7 +631,7 @@ function addRelatedCategory({
     );
 
     newSelectedAlbum();
-    parentAlbum = getSelectedAlbum()[0]!;
+    parentAlbum = valueAt(getSelectedAlbum(), 0);
   }
 }
 

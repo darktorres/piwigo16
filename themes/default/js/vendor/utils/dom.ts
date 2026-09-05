@@ -695,6 +695,7 @@ export function resolveDuration(duration?: number | string): number {
     return duration;
   }
   const speed = typeof duration === "string" ? FX_SPEEDS[duration] : undefined;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- FX_SPEEDS's own object literal always declares a real "_default" entry.
   return speed ?? FX_SPEEDS["_default"]!;
 }
 
@@ -1948,4 +1949,15 @@ export function ready(callback: () => void): void {
   document.addEventListener("DOMContentLoaded", () => {
     callback();
   });
+}
+
+/**
+ * A general "this index is safe, I've checked" escape hatch for
+ * `noUncheckedIndexedAccess` -- the proof lives at each call site, not
+ * here (a slider whose own `min`/`max` bound the index, a fixed-count
+ * template split, a parallel-array correlation, etc).
+ */
+export function valueAt<T>(values: readonly T[], idx: number): T {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see this function's own leading comment.
+  return values[idx]!;
 }

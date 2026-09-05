@@ -44,6 +44,7 @@ import {
   show,
   trigger,
   val,
+  valueAt,
 } from "../../../../default/js/vendor/utils/dom";
 import { tipTip } from "../../../../default/js/vendor/widgets/tiptip";
 
@@ -842,20 +843,6 @@ const recentPeriodValues = [
 ];
 const recentPeriodInit = 0;
 const nbImagePageInit = 0;
-
-/**
- * A general "this index is safe, I've checked" escape hatch for
- * `noUncheckedIndexedAccess` -- the proof lives at each call site, not
- * here. E.g.: every real `nbImagePageValues`/`recentPeriodValues`
- * slider below sets `min: 0`/`max: values.length - 1`, so a `sliderValue()`/
- * `getSliderKeyFromValue()`-derived index is always in range;
- * `parseHtml(markup)` is only ever called here with a non-empty real
- * template string, so index 0 always exists.
- */
-function valueAt<T>(values: T[], idx: number): T {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see this function's own leading comment.
-  return values[idx]!;
-}
 
 /**
  * Every real slider below is single-handle (a bare `value:` init

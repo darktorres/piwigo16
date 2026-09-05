@@ -9,7 +9,7 @@ import { sprintf } from "./sprintf";
 // but doubleSlider.ts itself has 2 real file-level consumers (this
 // file and batch_manager/filter.ts, each its own separate Vite entry),
 // so Rollup emits it as a shared chunk.
-import { pwgDoubleSlider } from "./doubleSlider";
+import { pwgDoubleSlider, type PwgDoubleSliderOptions } from "./doubleSlider";
 // Real consumer of searchFilters.ts's own exports (docs/PLAN.md P48,
 // searchFilters.ts's own batch -- was bare-global reads before that).
 // This file is searchFilters.ts's only real consumer
@@ -98,6 +98,7 @@ import {
   toggle,
   trigger,
   val,
+  valueAt,
   windowWidth,
 } from "./vendor/utils/dom";
 
@@ -235,7 +236,9 @@ function setupTagFilter(emptyFiltersList: any[]): void {
     );
 
     const tagSearchEl =
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- search_filters.inc.latte renders #tag-search unconditionally.
       document.querySelector<HTMLSelectElement>("#tag-search")!;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- selectize() is always applied to #tag-search before this runs (search_filters init), so a real instance is always registered.
     const tagSearchSelectize = getSelectizeInstance(tagSearchEl)!;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- #tag-search is a real <select multiple> (search_filters.inc.latte), so getValue() always returns an array here.
     const tagSearchStr = (tagSearchSelectize.getValue() as (string | number)[])
@@ -410,13 +413,16 @@ function setupDatePostedFilter(emptyFiltersList: any[]): void {
       document.querySelectorAll(".custom_posted_date .accordion-toggle"),
       "click",
       function (this: Element) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- .accordion-toggle is always rendered nested inside a real .date_posted-option parent.
         const clickedOption = this.parentElement!;
         clickedOption.classList.toggle("show-child");
         if ("year" === data(this, "type")) {
           toggle(
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- .date_posted-option is always rendered nested inside a real .custom_posted_date parent.
             find(clickedOption.parentElement!, ".date_posted-option.month"),
           );
         } else if ("month" === data(this, "type")) {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- .date_posted-option is always rendered nested inside a real .custom_posted_date parent.
           toggle(find(clickedOption.parentElement!, ".date_posted-option.day"));
         }
       },
@@ -604,14 +610,17 @@ function setupDateCreatedFilter(emptyFiltersList: any[]): void {
       document.querySelectorAll(".custom_created_date .accordion-toggle"),
       "click",
       function (this: Element) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- .accordion-toggle is always rendered nested inside a real .date_created-option parent.
         const clickedOption = this.parentElement!;
         clickedOption.classList.toggle("show-child");
         if ("year" === data(this, "type")) {
           toggle(
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- .date_created-option is always rendered nested inside a real .custom_created_date parent.
             find(clickedOption.parentElement!, ".date_created-option.month"),
           );
         } else if ("month" === data(this, "type")) {
           toggle(
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- .date_created-option is always rendered nested inside a real .custom_created_date parent.
             find(clickedOption.parentElement!, ".date_created-option.day"),
           );
         }
@@ -769,6 +778,7 @@ function setupAuthorFilter(emptyFiltersList: any[]): void {
         true,
       );
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- selectize() is always applied to this element (search_filters init), so a real instance is always registered.
       const authorsSelectize = getSelectizeInstance(el)!;
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- #authors is a real <select multiple> (search_filters.inc.latte), so getValue() always returns an array here.
       const authorIds = authorsSelectize.getValue() as (string | number)[];
@@ -988,11 +998,11 @@ function setupRatingsFilter(emptyFiltersList: any[]): void {
       } else {
         const strBetween = strBetweenRating.split("%d");
         ratingsSearchStr +=
-          strBetween[0]! +
+          valueAt(strBetween, 0) +
           String(Number(rating) - 1) +
-          strBetween[1]! +
+          valueAt(strBetween, 1) +
           rating +
-          strBetween[2]!;
+          valueAt(strBetween, 2);
         if (ratingsFilter.length - 1 !== i) {
           ratingsSearchStr += ", ";
         }
@@ -1035,6 +1045,35 @@ function setupRatingsFilter(emptyFiltersList: any[]): void {
   }
 }
 
+/**
+ * `sliders.filesizes`/`.heights`/`.widths` (searchFilters.ts) are set
+ * exactly when the correlated `filesize`/`height`/`width` page-data key
+ * is non-null -- every real caller below is only reached inside the
+ * matching `globalParams.fields.<x>_min/max != null` guard.
+ */
+function requiredSlider(
+  config: PwgDoubleSliderOptions | undefined,
+): PwgDoubleSliderOptions {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see this function's own leading comment.
+  return config!;
+}
+
+/** search_filters.inc.latte renders every `[data-slider=X]` element unconditionally. */
+function sliderEl(dataSlider: "filesizes" | "heights" | "widths"): Element {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see this function's own leading comment.
+  return document.querySelector("[data-slider=" + dataSlider + "]")!;
+}
+
+/**
+ * Every `.filter-manager-controller-container input`'s own `data-wid`
+ * always names a real, matching `.filter.filter-<wid>` element -- both
+ * are rendered from the same server-side filter list.
+ */
+function widFilterEl(wid: string): Element {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see this function's own leading comment.
+  return document.querySelector(".filter.filter-" + wid)!;
+}
+
 function setupFilesizeFilter(emptyFiltersList: any[]): void {
   // Real `pwgDoubleSlider({ stop })` callback (`themes/admin/default/js/
   // doubleSlider.ts`) -- the direct native replacement for the
@@ -1042,18 +1081,20 @@ function setupFilesizeFilter(emptyFiltersList: any[]): void {
   // (jQuery UI slider's own custom event, invisible to a native
   // addEventListener, P49-B group 4).
   function onFilesizeSlideStop(): void {
-    const slider = document.querySelector("[data-slider=filesizes]")!;
+    const slider = sliderEl("filesizes");
     const min = val(find(slider, "[data-input=min]"));
     const max = val(find(slider, "[data-input=max]"));
 
     const minInputs = document.querySelectorAll(
       "input[name=filter_filesize_min_text]",
     );
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- [data-input=min] is a real, always-populated input inside this slider widget.
     setVal(minInputs, min!);
     trigger(minInputs, "change");
     const maxInputs = document.querySelectorAll(
       "input[name=filter_filesize_max_text]",
     );
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- [data-input=max] is a real, always-populated input inside this slider widget.
     setVal(maxInputs, max!);
     trigger(maxInputs, "change");
   }
@@ -1071,14 +1112,14 @@ function setupFilesizeFilter(emptyFiltersList: any[]): void {
     html(
       document.querySelectorAll(".filter.filter-filesize .slider-info"),
       sprintf(
-        sliders.filesizes!.text,
-        sliders.filesizes!.selected.min,
-        sliders.filesizes!.selected.max,
+        requiredSlider(sliders.filesizes).text,
+        requiredSlider(sliders.filesizes).selected.min,
+        requiredSlider(sliders.filesizes).selected.max,
       ),
     );
 
-    pwgDoubleSlider(document.querySelector("[data-slider=filesizes]")!, {
-      ...sliders.filesizes!,
+    pwgDoubleSlider(sliderEl("filesizes"), {
+      ...requiredSlider(sliders.filesizes),
       stop: onFilesizeSlideStop,
     });
 
@@ -1093,9 +1134,9 @@ function setupFilesizeFilter(emptyFiltersList: any[]): void {
       html(
         document.querySelectorAll(".filter.filter-filesize .search-words"),
         sprintf(
-          sliders.filesizes!.text,
-          sliders.filesizes!.selected.min,
-          sliders.filesizes!.selected.max,
+          requiredSlider(sliders.filesizes).text,
+          requiredSlider(sliders.filesizes).selected.min,
+          requiredSlider(sliders.filesizes).selected.max,
         ),
       );
     } else {
@@ -1117,8 +1158,8 @@ function setupFilesizeFilter(emptyFiltersList: any[]): void {
         // re-init below -- this "clear" handler's own re-init has to
         // pass `stop` again to match, or it would silently go dark
         // after the first clear.
-        pwgDoubleSlider(document.querySelector("[data-slider=filesizes]")!, {
-          ...sliders.filesizes!,
+        pwgDoubleSlider(sliderEl("filesizes"), {
+          ...requiredSlider(sliders.filesizes),
           stop: onFilesizeSlideStop,
         });
         if (
@@ -1161,16 +1202,13 @@ function setupHeightFilter(emptyFiltersList: any[]): void {
     html(
       document.querySelectorAll(".filter.filter-height .slider-info"),
       sprintf(
-        sliders.heights!.text,
-        sliders.heights!.selected.min,
-        sliders.heights!.selected.max,
+        requiredSlider(sliders.heights).text,
+        requiredSlider(sliders.heights).selected.min,
+        requiredSlider(sliders.heights).selected.max,
       ),
     );
 
-    pwgDoubleSlider(
-      document.querySelector("[data-slider=heights]")!,
-      sliders.heights!,
-    );
+    pwgDoubleSlider(sliderEl("heights"), requiredSlider(sliders.heights));
 
     if (
       Number(globalParams.fields.height_min) > 0 &&
@@ -1180,9 +1218,9 @@ function setupHeightFilter(emptyFiltersList: any[]): void {
       html(
         document.querySelectorAll(".filter.filter-height .search-words"),
         sprintf(
-          sliders.heights!.text,
-          sliders.heights!.selected.min,
-          sliders.heights!.selected.max,
+          requiredSlider(sliders.heights).text,
+          requiredSlider(sliders.heights).selected.min,
+          requiredSlider(sliders.heights).selected.max,
         ),
       );
     } else {
@@ -1198,10 +1236,7 @@ function setupHeightFilter(emptyFiltersList: any[]): void {
       function () {
         updateFilters("height", "add");
         trigger(document.querySelectorAll(".filter-height"), "click");
-        pwgDoubleSlider(
-          document.querySelector("[data-slider=heights]")!,
-          sliders.heights!,
-        );
+        pwgDoubleSlider(sliderEl("heights"), requiredSlider(sliders.heights));
         if (
           hasClass(document.querySelectorAll(".filter-height"), "filter-filled")
         ) {
@@ -1239,16 +1274,13 @@ function setupWidthFilter(emptyFiltersList: any[]): void {
     html(
       document.querySelectorAll(".filter.filter-width .slider-info"),
       sprintf(
-        sliders.widths!.text,
-        sliders.widths!.selected.min,
-        sliders.widths!.selected.max,
+        requiredSlider(sliders.widths).text,
+        requiredSlider(sliders.widths).selected.min,
+        requiredSlider(sliders.widths).selected.max,
       ),
     );
 
-    pwgDoubleSlider(
-      document.querySelector("[data-slider=widths]")!,
-      sliders.widths!,
-    );
+    pwgDoubleSlider(sliderEl("widths"), requiredSlider(sliders.widths));
 
     if (
       Number(globalParams.fields.width_min) > 0 &&
@@ -1258,9 +1290,9 @@ function setupWidthFilter(emptyFiltersList: any[]): void {
       html(
         document.querySelectorAll(".filter.filter-width .search-words"),
         sprintf(
-          sliders.widths!.text,
-          sliders.widths!.selected.min,
-          sliders.widths!.selected.max,
+          requiredSlider(sliders.widths).text,
+          requiredSlider(sliders.widths).selected.min,
+          requiredSlider(sliders.widths).selected.max,
         ),
       );
     } else {
@@ -1276,10 +1308,7 @@ function setupWidthFilter(emptyFiltersList: any[]): void {
       function () {
         updateFilters("width", "add");
         trigger(document.querySelectorAll(".filter-width"), "click");
-        pwgDoubleSlider(
-          document.querySelector("[data-slider=widths]")!,
-          sliders.widths!,
-        );
+        pwgDoubleSlider(sliderEl("widths"), requiredSlider(sliders.widths));
         if (
           hasClass(document.querySelectorAll(".filter-width"), "filter-filled")
         ) {
@@ -1455,11 +1484,11 @@ function wireFilterManagerPopin(): void {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
           const wid = data(el, "wid") as string;
           if (is(el, ":checked")) {
-            if (!isVisible(document.querySelector(".filter.filter-" + wid)!)) {
+            if (!isVisible(widFilterEl(wid))) {
               setChecked(el, false);
             }
           } else {
-            if (isVisible(document.querySelector(".filter.filter-" + wid)!)) {
+            if (isVisible(widFilterEl(wid))) {
               setChecked(el, true);
             }
           }
@@ -1477,11 +1506,11 @@ function wireFilterManagerPopin(): void {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
           const wid = data(el, "wid") as string;
           if (is(el, ":checked")) {
-            if (!isVisible(document.querySelector(".filter.filter-" + wid)!)) {
+            if (!isVisible(widFilterEl(wid))) {
               updateFilters(wid, "add");
             }
           } else {
-            if (isVisible(document.querySelector(".filter.filter-" + wid)!)) {
+            if (isVisible(widFilterEl(wid))) {
               updateFilters(wid, "del");
             }
           }
@@ -1641,10 +1670,15 @@ function wireTagFilterInteractions(): void {
             "show-filter-dropdown",
           );
           {
+            const tagSearchEl =
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- search_filters.inc.latte renders #tag-search unconditionally.
+              document.querySelector<HTMLSelectElement>("#tag-search")!;
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- selectize() is always applied to #tag-search before this runs (search_filters init), so a real instance is always registered.
+            const tagSearchSelectize = getSelectizeInstance(tagSearchEl)!;
             // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- #tag-search is a real <select multiple> (search_filters.inc.latte), so getValue() always returns an array here.
-            const tagValue = getSelectizeInstance(
-              document.querySelector<HTMLSelectElement>("#tag-search")!,
-            )!.getValue() as (string | number)[];
+            const tagValue = tagSearchSelectize.getValue() as (
+              string | number
+            )[];
             psParams["tags"] = tagValue.length > 0 ? tagValue : "";
           }
           psParams["tags_mode"] = val(
@@ -1940,10 +1974,15 @@ function wireAuthorFilterInteractions(): void {
             );
 
             {
+              const authorsEl =
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- search_filters.inc.latte renders #authors unconditionally.
+                document.querySelector<HTMLSelectElement>("#authors")!;
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- selectize() is always applied to #authors before this runs (search_filters init), so a real instance is always registered.
+              const authorsSelectize = getSelectizeInstance(authorsEl)!;
               // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- #authors is a real <select multiple> (search_filters.inc.latte), so getValue() always returns an array here.
-              const authorValue = getSelectizeInstance(
-                document.querySelector<HTMLSelectElement>("#authors")!,
-              )!.getValue() as (string | number)[];
+              const authorValue = authorsSelectize.getValue() as (
+                string | number
+              )[];
               psParams["authors"] = authorValue.length > 0 ? authorValue : "";
             }
           }

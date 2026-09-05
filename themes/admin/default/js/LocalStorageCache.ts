@@ -260,9 +260,9 @@ abstract class AbstractSelectizer<
     instance: SelectizeInstance<string | number, SelectizeEntity>,
     el: HTMLSelectElement,
   ): void {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-    const value = data(el, "value") as
-      (string | number)[] | { id: string | number }[] | undefined;
+    const value = data<
+      (string | number)[] | { id: string | number }[] | undefined
+    >(el, "value");
     if (!value) {
       return;
     }
@@ -283,8 +283,7 @@ abstract class AbstractSelectizer<
     filtered: SelectizeEntity[],
     options: EntitySelectizeCallOptions,
   ): void {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-    const rawDefault = data(el, "default") as string | number | undefined;
+    const rawDefault = data<string | number | undefined>(el, "default");
     if (rawDefault !== undefined && rawDefault !== "") {
       options.default = rawDefault;
     }

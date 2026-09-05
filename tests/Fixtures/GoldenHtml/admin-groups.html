@@ -266,7 +266,7 @@
       >Confirm merge</button>
       <a
         id="CancelMerge"
-        onclick="updateSelectionPanel('Selection')"
+        data-selection-panel-state="Selection"
       >Cancel</a>
     </div>
 
@@ -277,7 +277,7 @@
       >Yes, delete</button>
       <a
         id="CancelDelete"
-        onclick="updateSelectionPanel('Selection')"
+        data-selection-panel-state="Selection"
       >No, I have changed my mind</a>
     </div>
   </div>
@@ -312,10 +312,7 @@
               <i class='icon-plus'></i> Add
             </button>
             <br />
-            <a
-              id="addGroupClose"
-              onclick="hideAddGroupForm()"
-            >Cancel</a>
+            <a id="addGroupClose">Cancel</a>
           </div>
           <input type="hidden" name="pwg_token" value="{{TOKEN}}">
         </fieldset>

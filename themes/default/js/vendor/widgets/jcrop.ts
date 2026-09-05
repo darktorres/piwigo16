@@ -711,7 +711,7 @@ function initJcrop(origImg: HTMLImageElement, options: JcropOptions): JcropApi {
       const c = getFixed();
       const start: [number, number, number, number] = [c.x, c.y, c.x2, c.y2];
       let percent = 0;
-      const deltas = [
+      const deltas: [number, number, number, number] = [
         target[0] - start[0],
         target[1] - start[1],
         target[2] - start[2],
@@ -723,10 +723,10 @@ function initJcrop(origImg: HTMLImageElement, options: JcropOptions): JcropApi {
 
       const step = (): void => {
         percent += (100 - percent) / SWING_SPEED;
-        current[0] = Math.round(start[0] + (percent / 100) * deltas[0]!);
-        current[1] = Math.round(start[1] + (percent / 100) * deltas[1]!);
-        current[2] = Math.round(start[2] + (percent / 100) * deltas[2]!);
-        current[3] = Math.round(start[3] + (percent / 100) * deltas[3]!);
+        current[0] = Math.round(start[0] + (percent / 100) * deltas[0]);
+        current[1] = Math.round(start[1] + (percent / 100) * deltas[1]);
+        current[2] = Math.round(start[2] + (percent / 100) * deltas[2]);
+        current[3] = Math.round(start[3] + (percent / 100) * deltas[3]);
 
         if (percent >= 99.8) percent = 100;
 

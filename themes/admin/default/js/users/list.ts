@@ -3269,6 +3269,66 @@ async function updateGuestInfo(): Promise<void> {
   }
 }
 
+/** Part of `updateUserList()`'s own extraction, below. */
+function applyUserSearchFilter(updateData: Record<string, unknown>): void {
+  const userSearchVal = val(document.querySelectorAll("#user_search"));
+  if (userSearchVal === undefined || userSearchVal === "") {
+    return;
+  }
+  const matches = /^id:(\d+)$/.exec(userSearchVal);
+  if (matches) {
+    updateData["userIds"] = [matches[1]];
+  }
+  // Free-text fuzzy search (username/email/group-name) has no
+  // GET /api/v1/users equivalent -- UserListController's own
+  // docblock already documents this as a deliberately deferred
+  // filter, not a gap introduced by this conversion.
+}
+
+/** Part of `updateUserList()`'s own extraction, below. */
+function applyAdvancedFilterData(updateData: Record<string, unknown>): void {
+  if (
+    !hasClass(
+      document.querySelectorAll(".advanced-filter"),
+      "advanced-filter-open",
+    )
+  ) {
+    return;
+  }
+
+  const filterStatus = val(
+    document.querySelectorAll(".advanced-filter-select[name=filter_status]"),
+  );
+  const filterGroup = val(
+    document.querySelectorAll(".advanced-filter-select[name=filter_group]"),
+  );
+  const filterLevel = val(
+    document.querySelectorAll(".advanced-filter-select[name=filter_level]"),
+  );
+  updateData["status"] =
+    filterStatus !== undefined && filterStatus !== "" ? [filterStatus] : [];
+  updateData["groupIds"] =
+    filterGroup !== undefined && filterGroup !== "" ? [filterGroup] : [];
+  updateData["minLevel"] = filterLevel;
+  updateData["maxLevel"] = filterLevel;
+  updateData["minRegister"] =
+    registerDates[
+      slider(
+        document.querySelectorAll(".dates-select-bar .slider-bar-container"),
+        "option",
+        "values",
+      )![0]!
+    ];
+  updateData["maxRegister"] =
+    registerDates[
+      slider(
+        document.querySelectorAll(".dates-select-bar .slider-bar-container"),
+        "option",
+        "values",
+      )![1]!
+    ];
+}
+
 async function updateUserList(): Promise<void> {
   const updateData: Record<string, unknown> = {
     order: filterBy, // We want the most recent user first
@@ -3276,55 +3336,8 @@ async function updateUserList(): Promise<void> {
     perPage: perPage,
     exclude: [guestId],
   };
-  const userSearchVal = val(document.querySelectorAll("#user_search"));
-  if (userSearchVal !== undefined && userSearchVal !== "") {
-    const matches = /^id:(\d+)$/.exec(userSearchVal);
-    if (matches) {
-      updateData["userIds"] = [matches[1]];
-    }
-    // Free-text fuzzy search (username/email/group-name) has no
-    // GET /api/v1/users equivalent -- UserListController's own
-    // docblock already documents this as a deliberately deferred
-    // filter, not a gap introduced by this conversion.
-  }
-  if (
-    hasClass(
-      document.querySelectorAll(".advanced-filter"),
-      "advanced-filter-open",
-    )
-  ) {
-    const filterStatus = val(
-      document.querySelectorAll(".advanced-filter-select[name=filter_status]"),
-    );
-    const filterGroup = val(
-      document.querySelectorAll(".advanced-filter-select[name=filter_group]"),
-    );
-    const filterLevel = val(
-      document.querySelectorAll(".advanced-filter-select[name=filter_level]"),
-    );
-    updateData["status"] =
-      filterStatus !== undefined && filterStatus !== "" ? [filterStatus] : [];
-    updateData["groupIds"] =
-      filterGroup !== undefined && filterGroup !== "" ? [filterGroup] : [];
-    updateData["minLevel"] = filterLevel;
-    updateData["maxLevel"] = filterLevel;
-    updateData["minRegister"] =
-      registerDates[
-        slider(
-          document.querySelectorAll(".dates-select-bar .slider-bar-container"),
-          "option",
-          "values",
-        )![0]!
-      ];
-    updateData["maxRegister"] =
-      registerDates[
-        slider(
-          document.querySelectorAll(".dates-select-bar .slider-bar-container"),
-          "option",
-          "values",
-        )![1]!
-      ];
-  }
+  applyUserSearchFilter(updateData);
+  applyAdvancedFilterData(updateData);
   show(document.querySelectorAll(".user-update-spinner"));
   try {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
@@ -3348,69 +3361,78 @@ async function updateUserList(): Promise<void> {
     updatePaginationMenu();
     currentUsers = response.users;
     generateUserList();
-    on(
-      document.querySelectorAll(".user-col.user-first-col.user-container-edit"),
-      "click",
-      function (this: Element) {
-        const uidIndex = Number(
-          attrOf(this.closest(".user-container")!, "key"),
-        );
-        lastUserId = currentUsers[uidIndex]!.id;
-        lastUserIndex = uidIndex;
-        fillUserEdit(currentUsers[uidIndex]!);
-        fadeIn(document.querySelectorAll("#UserList"));
-        document.querySelector("#tab_properties")?.scrollIntoView({
-          behavior: "instant",
-        });
-      },
-    );
+    bindUserEditClickHandler();
     setSelectedToSelection();
 
     hide(document.querySelectorAll(".user-update-spinner"));
-
-    let nbFilters = 0;
-    if (
-      val(
-        document.querySelectorAll(
-          ".advanced-filter-select[name=filter_status]",
-        ),
-      ) !== ""
-    )
-      nbFilters += 1;
-    if (
-      val(
-        document.querySelectorAll(".advanced-filter-select[name=filter_group]"),
-      ) !== ""
-    )
-      nbFilters += 1;
-    if (
-      val(
-        document.querySelectorAll(".advanced-filter-select[name=filter_level]"),
-      ) !== ""
-    )
-      nbFilters += 1;
-    if (
-      slider(
-        document.querySelectorAll(".dates-select-bar .slider-bar-container"),
-        "option",
-        "values",
-      )![0] !== 0
-    )
-      nbFilters += 1;
-    if (
-      slider(
-        document.querySelectorAll(".dates-select-bar .slider-bar-container"),
-        "option",
-        "values",
-      )![1] !==
-      registerDates.length - 1
-    )
-      nbFilters += 1;
-
-    showFilterInfos(nbFilters);
+    showFilterInfos(countActiveFilters());
   } catch {
     hide(document.querySelectorAll(".user-update-spinner"));
   }
+}
+
+/** Part of `updateUserList()`'s own extraction, below. */
+function bindUserEditClickHandler(): void {
+  on(
+    document.querySelectorAll(".user-col.user-first-col.user-container-edit"),
+    "click",
+    function (this: Element) {
+      const uidIndex = Number(attrOf(this.closest(".user-container")!, "key"));
+      lastUserId = currentUsers[uidIndex]!.id;
+      lastUserIndex = uidIndex;
+      fillUserEdit(currentUsers[uidIndex]!);
+      fadeIn(document.querySelectorAll("#UserList"));
+      document.querySelector("#tab_properties")?.scrollIntoView({
+        behavior: "instant",
+      });
+    },
+  );
+}
+
+/** Part of `updateUserList()`'s own extraction, below. */
+function countActiveFilters(): number {
+  let nbFilters = 0;
+  if (
+    val(
+      document.querySelectorAll(".advanced-filter-select[name=filter_status]"),
+    ) !== ""
+  ) {
+    nbFilters += 1;
+  }
+  if (
+    val(
+      document.querySelectorAll(".advanced-filter-select[name=filter_group]"),
+    ) !== ""
+  ) {
+    nbFilters += 1;
+  }
+  if (
+    val(
+      document.querySelectorAll(".advanced-filter-select[name=filter_level]"),
+    ) !== ""
+  ) {
+    nbFilters += 1;
+  }
+  if (
+    slider(
+      document.querySelectorAll(".dates-select-bar .slider-bar-container"),
+      "option",
+      "values",
+    )![0] !== 0
+  ) {
+    nbFilters += 1;
+  }
+  if (
+    slider(
+      document.querySelectorAll(".dates-select-bar .slider-bar-container"),
+      "option",
+      "values",
+    )![1] !==
+    registerDates.length - 1
+  ) {
+    nbFilters += 1;
+  }
+  return nbFilters;
 }
 
 async function addUser(): Promise<void> {

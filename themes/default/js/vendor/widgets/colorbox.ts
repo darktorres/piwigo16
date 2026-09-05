@@ -68,6 +68,7 @@ import {
   outerWidth,
   stop,
   swing,
+  valueAt,
   width,
   windowHeight,
   windowWidth,
@@ -356,7 +357,7 @@ function computeRelated(
 function relatedAt(state: ActiveState, delta: number): Element {
   const max = state.related.length;
   const idx = ((state.index + delta) % max + max) % max;
-  return state.related[idx]!;
+  return valueAt(state.related, idx);
 }
 
 function runPurge(): void {
@@ -499,6 +500,7 @@ function computeTargetBox(w: number, h: number): BoxRect {
 function positionBox(speed: number, onDone?: () => void): void {
   window.removeEventListener("resize", onWindowResize);
 
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- positionBox() only ever runs while a colorbox is actively open.
   const target = computeTargetBox(current!.w, current!.h);
   const unchanged =
     boxRect?.width === target.width &&
@@ -603,6 +605,7 @@ function load(): void {
 
   runPurge();
 
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- load() only ever runs while a colorbox is actively open.
   const state = current!;
   const {opts} = state;
   const href = getHref(state.el, opts);
@@ -679,6 +682,7 @@ function prep(node: Node): void {
   if (!isOpen) {
     return;
   }
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- isOpen is only ever true while current is set.
   const state = current!;
 
   loadedEl?.remove();

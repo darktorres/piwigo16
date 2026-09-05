@@ -9,6 +9,7 @@ use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\FormatId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Config\CurrentConfig;
@@ -733,12 +734,12 @@ final readonly class ImageService
         $this->repo->massInsertImages($inserts);
     }
 
-    public function updateFormatFilesize(int $formatId, ?int $filesize): void
+    public function updateFormatFilesize(FormatId $formatId, ?int $filesize): void
     {
         $this->repo->updateFormatFilesize($formatId, $filesize);
     }
 
-    public function insertFormat(ImageId $imageId, string $ext, ?int $filesize): int
+    public function insertFormat(ImageId $imageId, string $ext, ?int $filesize): FormatId
     {
         return $this->repo->insertFormat($imageId, $ext, $filesize);
     }
@@ -950,7 +951,7 @@ final readonly class ImageService
         return $image->toArray();
     }
 
-    public function findByIdOrFilePattern(int $imageId, ?string $imageFile): ImageLookupRow|false
+    public function findByIdOrFilePattern(?ImageId $imageId, ?string $imageFile): ImageLookupRow|false
     {
         return $this->repo->findByIdOrFilePattern($imageId, $imageFile);
     }
@@ -1020,7 +1021,7 @@ final readonly class ImageService
         return $this->repo->findIdsByFilenames($filenames);
     }
 
-    public function getFormatIdByImageAndExt(ImageId $imageId, string $ext): ?int
+    public function getFormatIdByImageAndExt(ImageId $imageId, string $ext): ?FormatId
     {
         return $this->repo->findFormatIdByImageAndExt($imageId, $ext);
     }

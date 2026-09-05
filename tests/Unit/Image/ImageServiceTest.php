@@ -2401,11 +2401,11 @@ test('updateFormatFilesize() delegates straight through to the repository', func
 
         $service->updateFormatFilesize($formatId, 12345);
 
-        $filesize = $conn->fetchOne('SELECT filesize FROM image_format WHERE format_id = ' . $formatId);
+        $filesize = $conn->fetchOne('SELECT filesize FROM image_format WHERE format_id = ' . $formatId->value);
         expect(is_numeric($filesize) ? $filesize : null)
             ->toBe(12345);
     } finally {
-        $conn->executeStatement('DELETE FROM image_format WHERE format_id = ?', [$formatId]);
+        $conn->executeStatement('DELETE FROM image_format WHERE format_id = ?', [$formatId->value]);
         $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
     }
 });

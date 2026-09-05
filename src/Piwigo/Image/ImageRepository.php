@@ -193,10 +193,10 @@ final class ImageRepository extends EntityRepository
         );
     }
 
-    public function findFormatById(int $formatId): ?ImageFormat
+    public function findFormatById(FormatId $formatId): ?ImageFormat
     {
         $entity = $this->getEntityManager()
-            ->find(ImageFormatEntity::class, FormatId::from($formatId));
+            ->find(ImageFormatEntity::class, $formatId);
 
         return $entity === null ? null : ImageFormat::fromEntity($entity);
     }
@@ -205,10 +205,10 @@ final class ImageRepository extends EntityRepository
      * Updates an existing format row's filesize -- Admin\Upload\
      * UploadService::addFormat()'s own re-add-same-format branch.
      */
-    public function updateFormatFilesize(int $formatId, ?int $filesize): void
+    public function updateFormatFilesize(FormatId $formatId, ?int $filesize): void
     {
         $entity = $this->getEntityManager()
-            ->find(ImageFormatEntity::class, FormatId::from($formatId));
+            ->find(ImageFormatEntity::class, $formatId);
         if ($entity === null) {
             return;
         }
@@ -222,7 +222,7 @@ final class ImageRepository extends EntityRepository
      * Inserts a brand-new format row -- Admin\Upload\UploadService::
      * addFormat()'s own "no existing row for this (image, ext)" branch.
      */
-    public function insertFormat(ImageId $imageId, string $ext, ?int $filesize): int
+    public function insertFormat(ImageId $imageId, string $ext, ?int $filesize): FormatId
     {
         $em = $this->getEntityManager();
         $entity = new ImageFormatEntity($imageId, $ext, $filesize);
@@ -231,7 +231,7 @@ final class ImageRepository extends EntityRepository
 
         assert($entity->formatId instanceof FormatId);
 
-        return $entity->formatId->value;
+        return $entity->formatId;
     }
 
     /**
@@ -1637,10 +1637,9 @@ final class ImageRepository extends EntityRepository
             ->clear();
     }
 
-    public function updateDimensions(int $imageId, int $width, int $height): void
+    public function updateDimensions(ImageId $imageId, int $width, int $height): void
     {
-        $imageIdVo = ImageId::tryFrom($imageId);
-        $entity = $imageIdVo instanceof ImageId ? $this->find($imageIdVo) : null;
+        $entity = $this->find($imageId);
         if ($entity === null) {
             return;
         }
@@ -2308,10 +2307,12 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * id/file/level for $imageId (when positive) or the first image whose
-     * file matches $imageFile (a `LIKE` pattern) -- Controller\
-     * PictureController's own "resolve the requested picture, by id or by
-     * filename" lookup. $imageFile is guest-reachable, untrusted input
+     * id/file/level for $imageId (when given, P51-T -- the caller's own
+     * real "no id, use the filename instead" state, not a magic-0
+     * sentinel anymore) or the first image whose file matches $imageFile
+     * (a `LIKE` pattern) -- Controller\PictureController's own "resolve
+     * the requested picture, by id or by filename" lookup. $imageFile is
+     * guest-reachable, untrusted input
      * (Section\SectionInitializer::parseUrl() captures it from a raw
      * picture.php URL path segment), always bound as a parameter here,
      * never spliced into the query. `LikePattern::escape()` neutralizes
@@ -2322,15 +2323,15 @@ final class ImageRepository extends EntityRepository
      * $imageFile itself, letting one desynchronize the pattern from the
      * value it was meant to protect.
      */
-    public function findByIdOrFilePattern(int $imageId, ?string $imageFile): ImageLookupRow|false
+    public function findByIdOrFilePattern(?ImageId $imageId, ?string $imageFile): ImageLookupRow|false
     {
         $qb = $this->createQueryBuilder('i')
             ->select('i.id', 'i.file', 'i.level')
             ->setMaxResults(1);
 
-        if ($imageId > 0) {
+        if ($imageId instanceof ImageId) {
             $qb->where('i.id = :imageId')
-                ->setParameter('imageId', $imageId, ParameterType::INTEGER);
+                ->setParameter('imageId', $imageId);
         } else {
             assert($imageFile !== null && $imageFile !== '');
             $qb->where('i.file LIKE :imageFile')
@@ -2740,7 +2741,7 @@ final class ImageRepository extends EntityRepository
      * row could in principle match; setMaxResults(1) is paired with
      * getOneOrNullResult() to avoid a throw in that case.
      */
-    public function findFormatIdByImageAndExt(ImageId $imageId, string $ext): ?int
+    public function findFormatIdByImageAndExt(ImageId $imageId, string $ext): ?FormatId
     {
         $row = $this->getEntityManager()
             ->createQueryBuilder()
@@ -2754,7 +2755,7 @@ final class ImageRepository extends EntityRepository
             ->getQuery()
             ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
-        return is_array($row) && $row['formatId'] instanceof FormatId ? $row['formatId']->value : null;
+        return is_array($row) && $row['formatId'] instanceof FormatId ? $row['formatId'] : null;
     }
 
     /**

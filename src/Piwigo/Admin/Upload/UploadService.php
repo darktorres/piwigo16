@@ -21,6 +21,7 @@ use Piwigo\Admin\Upload\Event\UploadedFileAdded;
 use Piwigo\Admin\Upload\Event\UploadFile;
 use Piwigo\Admin\Upload\Projection\ImageDimensionsInfo;
 use Piwigo\Cache\PermissionCacheInvalidator;
+use Piwigo\Common\ValueObject\FormatId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigRepository;
@@ -872,7 +873,7 @@ final readonly class UploadService
         $filesize = (int) $file_infos->filesize;
 
         $existing_format_id = $this->imageService->getFormatIdByImageAndExt(ImageId::from($format_of), $format_ext);
-        if ($existing_format_id !== null) {
+        if ($existing_format_id instanceof FormatId) {
             $this->imageService->updateFormatFilesize($existing_format_id, $filesize);
             $format_id = $existing_format_id;
             $add_status = 'update';
@@ -885,7 +886,7 @@ final readonly class UploadService
             ->record('photo', $format_of, 'edit', [
                 'action' => 'add format',
                 'format_ext' => $format_ext,
-                'format_id' => $format_id,
+                'format_id' => $format_id->value,
             ]);
 
         return $add_status;

@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use LogicException;
 use Override;
 use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\FormatId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
@@ -221,7 +222,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     {
         $formatId = $this->insertFormat(1, 'webp', 12345);
 
-        $format = $this->repo->findFormatById($formatId);
+        $format = $this->repo->findFormatById(FormatId::from($formatId));
 
         self::assertNotNull($format);
         self::assertSame($formatId, $format->formatId);
@@ -232,7 +233,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function testFindFormatByIdReturnsNullForAMissingFormat(): void
     {
-        self::assertNull($this->repo->findFormatById(999_999));
+        self::assertNull($this->repo->findFormatById(FormatId::from(999_999)));
     }
 
     public function testFindFormatsForImageReturnsEveryFormatForThatImage(): void
@@ -446,7 +447,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     public function testUpdateDimensionsSetsWidthAndHeightForAnExistingImage(): void
     {
         try {
-            $this->repo->updateDimensions(1, 999, 888);
+            $this->repo->updateDimensions(ImageId::from(1), 999, 888);
 
             $row = $this->conn->createQueryBuilder()
                 ->select('width', 'height')
@@ -465,7 +466,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function testUpdateDimensionsIsANoopForANonexistentImage(): void
     {
-        $this->repo->updateDimensions(999_999, 111, 222);
+        $this->repo->updateDimensions(ImageId::from(999_999), 111, 222);
 
         $row = $this->conn->createQueryBuilder()
             ->select('width', 'height')
@@ -522,7 +523,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     {
         $formatId = $this->insertFormat(1, 'webp', 100);
 
-        $this->repo->updateFormatFilesize($formatId, 999);
+        $this->repo->updateFormatFilesize(FormatId::from($formatId), 999);
 
         $filesize = $this->conn->createQueryBuilder()
             ->select('filesize')
@@ -538,7 +539,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     {
         $formatId = $this->insertFormat(1, 'webp', 100);
 
-        $this->repo->updateFormatFilesize(999_999, 555);
+        $this->repo->updateFormatFilesize(FormatId::from(999_999), 555);
 
         $filesize = $this->conn->createQueryBuilder()
             ->select('filesize')
@@ -943,7 +944,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function testFindByIdOrFilePatternMatchesById(): void
     {
-        $row = $this->repo->findByIdOrFilePattern(1, null);
+        $row = $this->repo->findByIdOrFilePattern(ImageId::from(1), null);
 
         self::assertInstanceOf(ImageLookupRow::class, $row);
         self::assertSame('fixture-photo-1.jpg', $row->file);
@@ -951,7 +952,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function testFindByIdOrFilePatternMatchesByFilePattern(): void
     {
-        $row = $this->repo->findByIdOrFilePattern(0, 'fixture-photo-2');
+        $row = $this->repo->findByIdOrFilePattern(null, 'fixture-photo-2');
 
         self::assertInstanceOf(ImageLookupRow::class, $row);
         self::assertSame(2, $row->id->value);
@@ -959,7 +960,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function testFindByIdOrFilePatternReturnsFalseForNoMatch(): void
     {
-        self::assertFalse($this->repo->findByIdOrFilePattern(999_999, null));
+        self::assertFalse($this->repo->findByIdOrFilePattern(ImageId::from(999_999), null));
     }
 
     /**
@@ -971,7 +972,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
      */
     public function testFindByIdOrFilePatternEscapesLikeWildcardsInTheFileValue(): void
     {
-        self::assertFalse($this->repo->findByIdOrFilePattern(0, 'fixture_photo-2'));
+        self::assertFalse($this->repo->findByIdOrFilePattern(null, 'fixture_photo-2'));
     }
 
     /**
@@ -984,7 +985,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
      */
     public function testFindByIdOrFilePatternTreatsSqlSyntaxAsALiteralValue(): void
     {
-        self::assertFalse($this->repo->findByIdOrFilePattern(0, "fixture-photo-1' OR '1'='1"));
+        self::assertFalse($this->repo->findByIdOrFilePattern(null, "fixture-photo-1' OR '1'='1"));
     }
 
     public function testFindIdsByMd5sumReturnsTheMatchingImage(): void

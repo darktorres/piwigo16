@@ -247,7 +247,7 @@ final readonly class PictureController implements ControllerInterface
                 assert($image_file !== null && $image_file !== '');
                 $file_pattern = $image_file;
             }
-            $row = $this->imageService->findByIdOrFilePattern($image_id, $file_pattern);
+            $row = $this->imageService->findByIdOrFilePattern($image_id > 0 ? ImageId::from($image_id) : null, $file_pattern);
             if ($row === false) {// element does not exist
                 $this->htmlService
                     ->pageNotFound(

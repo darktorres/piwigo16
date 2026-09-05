@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Image;
 
 use Exception;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentThemeConfProvider;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -284,9 +285,21 @@ final class SrcImage
             if (($size = getimagesize($this->getPath())) !== false) {
                 $this->size = new Dimensions($size[0], $size[1]);
                 if (Kernel::isBooted()) {
+                    // $this->id is SrcImageInfo's own "malformed/missing
+                    // input degrades to 0" field (see that class's own
+                    // docblock) -- a real DTO-wide convention this class
+                    // never validates against, unlike ImageRepository's
+                    // own real UserId/ImageId-typed methods (P51-T). The
+                    // tryFrom()-at-the-boundary call stays here rather
+                    // than retyping SrcImage/SrcImageInfo themselves:
+                    // ImageId::tryFrom(0) returning null and skipping the
+                    // update below reproduces updateDimensions()'s own
+                    // former internal "no such id -> silent no-op" branch
+                    // exactly, just moved to this real caller boundary.
+                    $imageIdVo = ImageId::tryFrom($this->id);
                     $imageRepository = Kernel::container()->get(ImageRepository::class);
-                    if ($imageRepository instanceof ImageRepository) {
-                        $imageRepository->updateDimensions($this->id, $size[0], $size[1]);
+                    if ($imageRepository instanceof ImageRepository && $imageIdVo instanceof ImageId) {
+                        $imageRepository->updateDimensions($imageIdVo, $size[0], $size[1]);
                     }
                 }
             }

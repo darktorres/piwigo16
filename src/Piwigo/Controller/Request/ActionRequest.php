@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Request;
 
+use Piwigo\Common\ValueObject\FormatId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Validation\InputValidator;
@@ -38,7 +39,7 @@ final readonly class ActionRequest
         public ?ImageId $id,
         public ?string $part,
         public bool $formatRequested,
-        public ?int $formatId,
+        public ?FormatId $formatId,
         public ?string $pwgToken,
         public bool $downloadPresent,
     ) {}
@@ -63,7 +64,7 @@ final readonly class ActionRequest
         if ($format_requested) {
             $inputValidator
                 ->validate('format', $get, false, ValidationPattern::ID);
-            $format_id = is_numeric($get['format']) ? (int) $get['format'] : null;
+            $format_id = FormatId::tryFrom($get['format']);
         }
 
         $pwg_token_raw = $get['pwg_token'] ?? null;

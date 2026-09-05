@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\ValueObject\FormatId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Controller\Request\ActionRequest;
 use Piwigo\Validation\InputValidator;
@@ -81,7 +82,7 @@ test('fromArray reports formatRequested and formatId when enabled and present', 
     expect($request->formatRequested)
         ->toBeTrue()
         ->and($request->formatId)
-        ->toBe(7);
+        ->toEqual(FormatId::from(7));
 });
 
 test('fromArray reports formatRequested false when formats are disabled even if format is present', function (): void {

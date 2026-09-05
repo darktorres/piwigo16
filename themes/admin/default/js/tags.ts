@@ -842,6 +842,27 @@ function createSelectionItem(id: number, name: string): void {
   );
 }
 
+/**
+ * After removing a displayed selection item, the selection-mode tag list
+ * shows one fewer item than `maxItemDisplayed` -- backfill with the
+ * first still-selected tag not already shown.
+ */
+function backfillSelectionItem(): void {
+  for (const currentId of selected) {
+    const alreadyShown =
+      document.querySelectorAll(
+        '.selection-mode-tag .tag-list div[data-id="' +
+          String(currentId) +
+          '"]',
+      ).length !== 0;
+    if (!alreadyShown) {
+      const indexOfTag = dataTags.findIndex((tag) => tag.id === currentId);
+      createSelectionItem(currentId, dataTags[indexOfTag]!.name);
+      return;
+    }
+  }
+}
+
 function removeSelectedItem(id: number): void {
   if (selected.includes(id)) {
     selected = selected.filter((tag) => tag !== id);
@@ -865,25 +886,7 @@ function removeSelectedItem(id: number): void {
         });
 
       if (selected.length >= maxItemDisplayed) {
-        let i = 0;
-        let isNotCreate = true;
-        while (i < selected.length && isNotCreate) {
-          const currentId = selected[i]!;
-          if (
-            document.querySelectorAll(
-              '.selection-mode-tag .tag-list div[data-id="' +
-                String(currentId) +
-                '"]',
-            ).length === 0
-          ) {
-            isNotCreate = false;
-            const indexOfTag = dataTags.findIndex(
-              (tag) => tag.id === currentId,
-            );
-            createSelectionItem(currentId, dataTags[indexOfTag]!.name);
-          }
-          i++;
-        }
+        backfillSelectionItem();
       }
     }
 

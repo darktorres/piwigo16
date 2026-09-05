@@ -193,42 +193,44 @@ function bindItem(
   });
 }
 
-function reorder(
+// Single-axis (menubar.ts's own real vertical list): no literal
+// "hovering over a box" requirement -- a few px of real margin
+// between consecutive `<li>`s (confirmed live: dropping exactly on
+// that gap silently matched nothing) would otherwise make some
+// pointer positions match no sibling at all. Insert before the
+// first sibling whose own midpoint the pointer has not yet reached;
+// past every sibling means append at the end.
+function reorderSingleAxis(
   container: HTMLElement,
-  item: HTMLElement,
   placeholder: HTMLElement,
+  candidates: HTMLElement[],
   pointerX: number,
   pointerY: number,
-  axis: "x" | "y" | undefined,
+  axis: "x" | "y",
 ): void {
-  const candidates = siblings(container, item, placeholder);
-
-  // Single-axis (menubar.ts's own real vertical list): no literal
-  // "hovering over a box" requirement -- a few px of real margin
-  // between consecutive `<li>`s (confirmed live: dropping exactly on
-  // that gap silently matched nothing) would otherwise make some
-  // pointer positions match no sibling at all. Insert before the
-  // first sibling whose own midpoint the pointer has not yet reached;
-  // past every sibling means append at the end.
-  if (axis !== undefined) {
-    for (const sibling of candidates) {
-      const rect = sibling.getBoundingClientRect();
-      const past =
-        axis === "y"
-          ? pointerY < rect.top + rect.height / 2
-          : pointerX < rect.left + rect.width / 2;
-      if (past) {
-        sibling.before(placeholder);
-        return;
-      }
+  for (const sibling of candidates) {
+    const rect = sibling.getBoundingClientRect();
+    const past =
+      axis === "y"
+        ? pointerY < rect.top + rect.height / 2
+        : pointerX < rect.left + rect.width / 2;
+    if (past) {
+      sibling.before(placeholder);
+      return;
     }
-    container.append(placeholder);
-    return;
   }
+  container.append(placeholder);
+}
 
-  // Free/grid mode (elementSetRanks.ts's own real thumbnail grid):
-  // still requires literally hovering over a candidate cell, since a
-  // 2D grid can't collapse to a single "past/not past" ordering.
+// Free/grid mode (elementSetRanks.ts's own real thumbnail grid):
+// still requires literally hovering over a candidate cell, since a
+// 2D grid can't collapse to a single "past/not past" ordering.
+function reorderGrid(
+  placeholder: HTMLElement,
+  candidates: HTMLElement[],
+  pointerX: number,
+  pointerY: number,
+): void {
   for (const sibling of candidates) {
     const rect = sibling.getBoundingClientRect();
     const midX = rect.left + rect.width / 2;
@@ -250,6 +252,24 @@ function reorder(
     }
     return;
   }
+}
+
+function reorder(
+  container: HTMLElement,
+  item: HTMLElement,
+  placeholder: HTMLElement,
+  pointerX: number,
+  pointerY: number,
+  axis: "x" | "y" | undefined,
+): void {
+  const candidates = siblings(container, item, placeholder);
+
+  if (axis !== undefined) {
+    reorderSingleAxis(container, placeholder, candidates, pointerX, pointerY, axis);
+    return;
+  }
+
+  reorderGrid(placeholder, candidates, pointerX, pointerY);
 }
 
 export function sortable(

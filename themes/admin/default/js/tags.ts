@@ -50,6 +50,7 @@ import {
   trigger,
   val,
   valId,
+  valueAt,
 } from "../../../default/js/vendor/utils/dom";
 
 // Real per-row shape (P47), traced to TagsPageRenderer.php's own
@@ -116,6 +117,7 @@ const strTagFound = pwg_getPageString("<b>%d</b> tag found");
 //Get the data
 // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
 let dataTags = data(
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- tags.latte renders .tag-container unconditionally.
   document.querySelector(".tag-container")!,
   "tags",
 ) as TagRow[];
@@ -127,6 +129,7 @@ setChecked(document.querySelectorAll("#select-100"), true);
 on(document.querySelectorAll(".info-warning p a"), "click", () => {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
   const url = data(
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this handler is only ever bound to a real, already-clicked .info-warning p a element.
     document.querySelector(".info-warning p a")!,
     "url",
   ) as string;
@@ -168,13 +171,13 @@ function createTagBox(
   const rawName = rawNameArg ?? name;
   const uEdit = "admin.php?page=batch_manager&filter=tag-" + String(id);
   const uView = "index.php?/tags/" + String(id) + "-" + url_name;
-  // Non-null: the template block always exists in the page markup.
   // `name` is a plain string straight off the JSON API response, never
   // percent-encoded -- the legacy `unescape(name)` this replaced was a
   // no-op for almost every real tag name and a real corruption risk for
   // one shaped like a percent-hex escape (e.g. a tag named "tag %41");
   // `decodeURIComponent` isn't a safe substitute either, since it throws
   // on the common case of a bare "%" (e.g. "50% off").
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the .tag-template block always exists in the page markup.
   let markup = htmlOf(document.querySelectorAll(".tag-template"))!
     .replace(/%name%/g, name)
     .replace("%U_VIEW%", uView)
@@ -183,13 +186,16 @@ function createTagBox(
   if (name === rawName) {
     markup = markup.replace("icon-globe", "");
   }
-  const newTag = parseHtml(
-    '<div class="tag-box test" data-id=' +
-      String(id) +
-      ' data-selected="0">' +
-      markup +
-      "</div>",
-  )[0]!;
+  const newTag = valueAt(
+    parseHtml(
+      '<div class="tag-box test" data-id=' +
+        String(id) +
+        ' data-selected="0">' +
+        markup +
+        "</div>",
+    ),
+    0,
+  );
   if (is(document.querySelectorAll("#toggleSelectionMode"), ":checked")) {
     addClass(newTag, "selection");
     show(find(newTag, ".in-selection-mode"));
@@ -505,9 +511,9 @@ function setupTagbox(tagBox: Element): void {
   on(find(tagBox, ".dropdown-option.edit"), "click", function () {
     const id = dataId(tagBox, "id");
     const tagIndex = dataTags.findIndex((tag) => tag.id === id);
-    // Non-null: `id` always comes from a real tag box, which was
-    // itself rendered from this same `dataTags` array.
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- id always comes from a real tag box, which was itself rendered from this same dataTags array.
     const tagRawName = dataTags[tagIndex]!.raw_name;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see the identical justification above.
     const tagName = dataTags[tagIndex]!.name;
     setUpPopin(id, tagRawName, tagName);
     renameTagOpen();
@@ -516,12 +522,14 @@ function setupTagbox(tagBox: Element): void {
   //Delete Tag
   on(find(tagBox, ".dropdown-option.delete"), "click", function () {
     confirm({
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real tagBox has a real .tag-name element.
       title: strDelete.replace("%s", htmlOf(find(tagBox, ".tag-name"))!),
       buttons: {
         confirm: {
           text: strYesDeleteConfirmation,
           btnClass: "btn-red",
           action: function () {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real tagBox has a real .tag-name element.
             removeTag(dataId(tagBox, "id"), htmlOf(find(tagBox, ".tag-name"))!);
           },
         },
@@ -538,7 +546,7 @@ function setupTagbox(tagBox: Element): void {
     void duplicateTag(
       dataId(tagBox, "id"),
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      data(find(tagBox, ".tag-name")[0]!, "rawname") as string,
+      data(valueAt(find(tagBox, ".tag-name"), 0), "rawname") as string,
     ).then((newTag) => {
       showMessage(strTagCreated.replace("%s", newTag.name));
     });
@@ -675,10 +683,11 @@ async function renameTag(
 
   //Update the local tag list
   const index = dataTags.findIndex((tag) => tag.id === id);
-  // Non-null: `id` always identifies a real, currently-rendered
-  // tag box, which was itself rendered from this same array.
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- id always identifies a real, currently-rendered tag box, which was itself rendered from this same array.
   dataTags[index]!.name = response.name;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see the identical justification above.
   dataTags[index]!.raw_name = response.nameRaw;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see the identical justification above.
   dataTags[index]!.url_name = response.urlName;
 
   return response;
@@ -814,6 +823,7 @@ function addSelectedItem(id: number): void {
     } else {
       hide(document.querySelectorAll(".selection-other-tags"));
       if (dataTags.findIndex((tag) => tag.id === id) > -1) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the findIndex() check above already confirms find() succeeds here.
         createSelectionItem(id, dataTags.find((tag) => tag.id === id)!.name);
       }
     }
@@ -821,13 +831,16 @@ function addSelectedItem(id: number): void {
 }
 
 function createSelectionItem(id: number, name: string): void {
-  const newItemStructure = parseHtml(
-    '<div data-id="' +
-      String(id) +
-      '"><a class="icon-cancel"></a><p>' +
-      name +
-      "</p> </div>",
-  )[0]!;
+  const newItemStructure = valueAt(
+    parseHtml(
+      '<div data-id="' +
+        String(id) +
+        '"><a class="icon-cancel"></a><p>' +
+        name +
+        "</p> </div>",
+    ),
+    0,
+  );
   document
     .querySelector(".selection-mode-tag .tag-list")
     ?.prepend(newItemStructure);
@@ -857,6 +870,7 @@ function backfillSelectionItem(): void {
       ).length !== 0;
     if (!alreadyShown) {
       const indexOfTag = dataTags.findIndex((tag) => tag.id === currentId);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- currentId always comes from the `selected` array, always a real tag id present in dataTags.
       createSelectionItem(currentId, dataTags[indexOfTag]!.name);
       return;
     }
@@ -911,13 +925,17 @@ function updateMergeItems(): void {
   const select = document.querySelector("#MergeOptionsChoices");
   selected.forEach((id) => {
     select?.appendChild(
-      parseHtml(
-        '<option value="' +
-          String(id) +
-          '">' +
-          dataTags.find((tag) => tag.id === id)!.name +
-          "</option>",
-      )[0]!,
+      valueAt(
+        parseHtml(
+          '<option value="' +
+            String(id) +
+            '">' +
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- id always comes from the `selected` array, always a real tag id present in dataTags.
+            dataTags.find((tag) => tag.id === id)!.name +
+            "</option>",
+        ),
+        0,
+      ),
     );
   });
 }
@@ -1081,6 +1099,7 @@ function selectInvert(tags: TagRow[]): void {
 on(document.querySelectorAll("#DeleteSelectionMode"), "click", function () {
   const names: string[] = [];
   selected.forEach(function (id) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- id always comes from the `selected` array, always a real tag id present in dataTags.
     names.push(dataTags.find((tag) => tag.id === id)!.name);
   });
 
@@ -1105,6 +1124,7 @@ on(document.querySelectorAll("#DeleteSelectionMode"), "click", function () {
 function removeSelectedTags(): void {
   const names: string[] = [];
   selected.forEach(function (id) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- id always comes from the `selected` array, always a real tag id present in dataTags.
     names.push(dataTags.find((tag) => tag.id === id)!.name);
   });
 
@@ -1158,6 +1178,7 @@ on(document.querySelectorAll(".ConfirmMergeButton"), "click", () => {
 });
 
 function mergeGroups(destination_id: number, merge_ids: number[]): void {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- destination_id always comes from #MergeOptionsChoices, whose own options are only ever real tag ids (updateMergeItems()).
   const destinationName = htmlOf(
     document.querySelectorAll(
       '.tag-box[data-id="' + String(destination_id) + '"] .tag-name',
@@ -1167,6 +1188,7 @@ function mergeGroups(destination_id: number, merge_ids: number[]): void {
 
   merge_ids.forEach((id) => {
     mergeName.push(
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- id always comes from the `selected` array, always a real tag box.
       htmlOf(
         document.querySelectorAll(
           '.tag-box[data-id="' + String(id) + '"] .tag-name',
@@ -1228,6 +1250,7 @@ function mergeGroups(destination_id: number, merge_ids: number[]): void {
             const index = dataTags.findIndex(
               (tag) => tag.id === response.destinationTagId,
             );
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- response.destinationTagId always identifies a real, currently-rendered tag, which was itself rendered from this same array.
             dataTags[index]!.counter = response.imagesInMergedTag.length;
           }
           attr(document.querySelectorAll(".tag-box"), "data-selected", "0");
@@ -1316,6 +1339,7 @@ function showMessage(message: string): void {
 /*-------
  Pagination
 -------*/
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- tags.latte renders .tag-container unconditionally.
 let perPage = dataId(document.querySelector(".tag-container")!, "per_page");
 const pageItem = '<a data-page="%d">%d</a>';
 const pageEllipsis = "<span>...</span>";
@@ -1385,7 +1409,7 @@ function appendPaginationItem(page: number | null = null): void {
     return;
   }
   if (page != null) {
-    const newTag = parseHtml(pageItem.replace(/%d/g, String(page)))[0]!;
+    const newTag = valueAt(parseHtml(pageItem.replace(/%d/g, String(page))), 0);
     container.appendChild(newTag);
     if (actualPage === page) {
       addClass(newTag, "actual");
@@ -1395,7 +1419,7 @@ function appendPaginationItem(page: number | null = null): void {
       updatePaginationMenu();
     });
   } else {
-    container.appendChild(parseHtml(pageEllipsis)[0]!);
+    container.appendChild(valueAt(parseHtml(pageEllipsis), 0));
   }
 }
 
@@ -1477,10 +1501,9 @@ function recycleOrCreateTagBoxes(
 ): void {
   const boxToRecycle = Math.min(dataToDisplay.length, tagBoxes.length);
 
-  for (let i = 0; i < boxToRecycle; i++) {
-    const tag = dataToDisplay[i]!;
+  for (const [i, tag] of dataToDisplay.slice(0, boxToRecycle).entries()) {
     recycleTagBox(
-      tagBoxes[i]!,
+      valueAt(tagBoxes, i),
       tag.id,
       tag.name,
       tag.url_name,
@@ -1490,12 +1513,11 @@ function recycleOrCreateTagBoxes(
   }
 
   if (dataToDisplay.length < tagBoxes.length) {
-    for (let j = boxToRecycle; j < tagBoxes.length; j++) {
-      tagBoxes[j]!.remove();
-    }
+    tagBoxes.slice(boxToRecycle).forEach((el) => {
+      el.remove();
+    });
   } else if (dataToDisplay.length > tagBoxes.length) {
-    for (let j = boxToRecycle; j < dataToDisplay.length; j++) {
-      const tag = dataToDisplay[j]!;
+    dataToDisplay.slice(boxToRecycle).forEach((tag) => {
       const newTag = createTagBox(
         tag.id,
         tag.name,
@@ -1506,7 +1528,7 @@ function recycleOrCreateTagBoxes(
       css(newTag, "opacity", 0);
       document.querySelector(".tag-container")?.appendChild(newTag);
       setupTagbox(newTag);
-    }
+    });
   }
 
   //Select selected tags

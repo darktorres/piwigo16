@@ -21,9 +21,11 @@ ready(() => {
   document
     .getElementById("checkAutomaticCorrectionsLink")
     ?.addEventListener("click", (event) => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own "#c13y" form is always real.
       deselectAll(document.querySelector<HTMLFormElement>("#c13y")!);
       const ids = pwg_getPageData<string[] | null>("c13y_do_check_ids") ?? [];
       ids.forEach(function (id: string) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every id here comes from the page's own real c13y_do_check_ids page data, always a real checkbox.
         document.querySelector<HTMLInputElement>(
           "#c13y_selection-" + id,
         )!.checked = true;

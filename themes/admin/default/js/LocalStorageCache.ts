@@ -14,6 +14,7 @@ import { data, setData } from "../../../default/js/vendor/utils/dom";
 import {
   getSelectizeInstance,
   selectize as createSelectize,
+  type SelectizeInstance,
   type SelectizeRenderers,
 } from "../../../default/js/vendor/widgets/selectize";
 import type { operations } from "../../../../openapi/client/schema";
@@ -245,72 +246,86 @@ abstract class AbstractSelectizer<
           }
         });
 
-        // load items
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-        const value = data(el, "value") as
-          (string | number)[] | { id: string | number }[] | undefined;
-        if (value) {
-          options.value = value;
-        }
-        if (options.value !== undefined) {
-          options.value.forEach(
-            (cat: string | number | { id: string | number }) => {
-              if (typeof cat === "string" || typeof cat === "number") {
-                instance.addItem(cat);
-              } else {
-                instance.addItem(cat.id);
-              }
-            },
-          );
-        }
-
-        // set default
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-        const rawDefault = data(el, "default") as string | number | undefined;
-        if (rawDefault !== undefined && rawDefault !== "") {
-          options.default = rawDefault;
-        }
-        if (options.default === "first") {
-          options.default = filtered[0] ? filtered[0].id : undefined;
-        }
-
-        if (options.default !== undefined) {
-          // Captured into its own const: `options.default` is a mutable
-          // property TS can't narrow across the closures below.
-          const capturedDefault = options.default;
-          // add default item
-          if (instance.getValue() === "") {
-            instance.addItem(capturedDefault);
-          }
-
-          // if multiple: prevent item deletion
-          if (el.multiple) {
-            instance
-              .getItem(capturedDefault)
-              ?.querySelector<HTMLElement>(".remove")
-              ?.style.setProperty("display", "none");
-
-            instance.on("item_remove", (id) => {
-              if (String(id) === String(capturedDefault)) {
-                instance.addItem(id);
-                instance
-                  .getItem(id)
-                  ?.querySelector<HTMLElement>(".remove")
-                  ?.style.setProperty("display", "none");
-              }
-            });
-          }
-          // if single: restore default on blur
-          else {
-            instance.on("dropdown_close", () => {
-              if (instance.getValue() === "") {
-                instance.addItem(capturedDefault);
-              }
-            });
-          }
-        }
+        AbstractSelectizer._applySelectedValues(instance, el);
+        AbstractSelectizer._applyDefaultValue(instance, el, filtered, options);
       });
     });
+  }
+
+  /** The "load items" step of `_selectize()` above -- preselects whatever `data-value` names. */
+  private static _applySelectedValues(
+    instance: SelectizeInstance<string | number, SelectizeEntity>,
+    el: HTMLSelectElement,
+  ): void {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
+    const value = data(el, "value") as
+      (string | number)[] | { id: string | number }[] | undefined;
+    if (!value) {
+      return;
+    }
+
+    value.forEach((cat: string | number | { id: string | number }) => {
+      if (typeof cat === "string" || typeof cat === "number") {
+        instance.addItem(cat);
+      } else {
+        instance.addItem(cat.id);
+      }
+    });
+  }
+
+  /** The "set default" step of `_selectize()` above. */
+  private static _applyDefaultValue(
+    instance: SelectizeInstance<string | number, SelectizeEntity>,
+    el: HTMLSelectElement,
+    filtered: SelectizeEntity[],
+    options: EntitySelectizeCallOptions,
+  ): void {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
+    const rawDefault = data(el, "default") as string | number | undefined;
+    if (rawDefault !== undefined && rawDefault !== "") {
+      options.default = rawDefault;
+    }
+    if (options.default === "first") {
+      options.default = filtered[0] ? filtered[0].id : undefined;
+    }
+
+    if (options.default === undefined) {
+      return;
+    }
+
+    // Captured into its own const: `options.default` is a mutable
+    // property TS can't narrow across the closures below.
+    const capturedDefault = options.default;
+    // add default item
+    if (instance.getValue() === "") {
+      instance.addItem(capturedDefault);
+    }
+
+    // if multiple: prevent item deletion
+    if (el.multiple) {
+      instance
+        .getItem(capturedDefault)
+        ?.querySelector<HTMLElement>(".remove")
+        ?.style.setProperty("display", "none");
+
+      instance.on("item_remove", (id) => {
+        if (String(id) === String(capturedDefault)) {
+          instance.addItem(id);
+          instance
+            .getItem(id)
+            ?.querySelector<HTMLElement>(".remove")
+            ?.style.setProperty("display", "none");
+        }
+      });
+    }
+    // if single: restore default on blur
+    else {
+      instance.on("dropdown_close", () => {
+        if (instance.getValue() === "") {
+          instance.addItem(capturedDefault);
+        }
+      });
+    }
   }
 
   /**

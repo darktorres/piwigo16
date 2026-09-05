@@ -173,8 +173,7 @@ ready(function () {
 
   document.querySelectorAll(".buttonInstall").forEach((el) => {
     const box = el.closest(".pluginBox");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-    const pluginName = box !== null ? (data(box, "name") as string) : "";
+    const pluginName = box !== null ? data<string>(box, "name") : "";
     pwg_jconfirm_follow_href(el, {
       alert_title: strInstallTitle.replace("%s", pluginName),
       alert_confirm: strConfirmMsg,
@@ -189,8 +188,7 @@ ready(function () {
   });
 
   document.querySelectorAll(".pluginRating").forEach((node) => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-    const rating = data(node, "rating") as number;
+    const rating = data<number>(node, "rating");
     const starContainer = node.querySelector(".rating-star-container");
     if (starContainer !== null) {
       displayStars(starContainer, rating);
@@ -208,16 +206,14 @@ ready(function () {
 
   // read all plugin boxes to get author and tags
   document.querySelectorAll(".pluginBox").forEach((el) => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-    const author = data(el, "author") as string;
+    const author = data<string>(el, "author");
     author.split(", ").forEach((name: string) => {
       if (!authorNames.find((opt) => opt.value === name)) {
         authorNames.push({ value: name, text: name });
       }
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-    const tags = data(el, "tags") as string;
+    const tags = data<string>(el, "tags");
     tags.split(", ").forEach((tag: string) => {
       if (!tagsNames.find((opt) => opt.value === tag)) {
         tagsNames.push({ value: tag, text: tag });
@@ -438,23 +434,17 @@ ready(function () {
     sort((pluginBox: Element) => {
       const ratingEl = pluginBox.querySelector(".pluginRating");
       const pluginRating =
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-        (ratingEl !== null ? (data(ratingEl, "rating") as number) : 0) || 0;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      const pluginCertification = data(
+        (ratingEl !== null ? data<number>(ratingEl, "rating") : 0) || 0;
+      const pluginCertification = data<number>(
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every rendered .pluginBox always has its own real ".certification" child (plugins_new.latte).
         pluginBox.querySelector(".certification")!,
         "certification",
-      ) as number;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      const pluginAuthors = (data(pluginBox, "author") as string).split(", ");
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      const pluginName = (data(pluginBox, "name") as string).toUpperCase();
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      const pluginTags = (data(pluginBox, "tags") as string).split(", ");
+      );
+      const pluginAuthors = data<string>(pluginBox, "author").split(", ");
+      const pluginName = data<string>(pluginBox, "name").toUpperCase();
+      const pluginTags = data<string>(pluginBox, "tags").split(", ");
       const pluginRevisionOld = monthDiff(
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-        new Date((data(pluginBox, "revision") as number) * 1000),
+        new Date(data<number>(pluginBox, "revision") * 1000),
         new Date(),
       ); // number of months between the last revision date and now
 

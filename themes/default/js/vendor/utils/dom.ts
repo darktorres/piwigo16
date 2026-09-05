@@ -56,22 +56,33 @@ export function coerceDataAttribute(raw: string): unknown {
  * set the data so it isn't changed later", `src/data.js`), so a later
  * attribute change is invisible; and the value it hands back is coerced, not
  * a string. Call sites read numbers and booleans straight out of this.
+ *
+ * `T` is the caller's own assertion about the shape behind a key (P51-Q),
+ * the same defaulted-generic escape hatch `pwg_getPageData<T>()` and
+ * `ajax<T>()` already use -- nothing here validates it, exactly as before;
+ * this just moves the one real cast from ~43 call sites into a single
+ * place. The `= unknown` default leaves every other untyped call site
+ * (the vast majority) unchanged.
  */
-export function data(el: Element, key: string): unknown {
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- the single use is the point: see the comment above.
+export function data<T = unknown>(el: Element, key: string): T {
   const store = dataStore.get(el);
   if (store?.has(key) === true) {
-    return store.get(key);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see this function's own leading comment.
+    return store.get(key) as T;
   }
 
   const raw = el.getAttribute(attributeNameFor(key));
   if (raw === null) {
-    return undefined;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see this function's own leading comment.
+    return undefined as T;
   }
 
   const value = coerceDataAttribute(raw);
   setData(el, key, value);
 
-  return value;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see this function's own leading comment.
+  return value as T;
 }
 
 /**

@@ -2533,109 +2533,108 @@ function fillUserEditUpdate(userToEdit: UserRow, popIn: Element) {
   });
 }
 
+/** Part of `fillUserEditPermissions()`'s own extraction, below. */
+function applyFullEditPermissions(popIn: Element): void {
+  show(find(popIn, ".delete-user-button"));
+  show(find(popIn, ".user-property-password.edit-password"));
+  removeAttr(
+    find(popIn, ".user-property-email .user-property-input"),
+    "disabled",
+  );
+  removeClass(
+    find(popIn, ".user-property-status .user-property-select"),
+    "notClickable",
+  );
+  show(find(popIn, ".user-property-username .edit-username"));
+}
+
+/** Part of `fillUserEditPermissions()`'s own extraction, below. */
+function applyNoEditPermissions(popIn: Element): void {
+  hide(find(popIn, ".delete-user-button"));
+  hide(find(popIn, ".user-property-password.edit-password"));
+  attr(
+    find(popIn, ".user-property-email .user-property-input"),
+    "disabled",
+    "disabled",
+  );
+  addClass(
+    find(popIn, ".user-property-status .user-property-select"),
+    "notClickable",
+  );
+  hide(find(popIn, ".user-property-username .edit-username"));
+}
+
+/**
+ * Part of `fillUserEditPermissions()`'s own extraction, below --
+ * the "I'm not the owner, you need to test my permissions" branch.
+ */
+function applyPermissionsWhenNotOwner(
+  userToEdit: UserRow,
+  popIn: Element,
+): void {
+  if (isOwner(userToEdit.id)) {
+    // I want to edit the owner but I'm not the owner (No matter my status)
+    applyNoEditPermissions(popIn);
+  } else {
+    applyFullEditPermissions(popIn);
+  }
+
+  if (
+    (userToEdit.status === connectedUserStatus &&
+      connectedUserStatus === "webmaster" &&
+      !isOwner(userToEdit.id)) ||
+    (userToEdit.status === "admin" && connectedUserStatus === "webmaster")
+  ) {
+    // I'm a webmaster editing an equal-or-lower-ranked user (same
+    // status as me, or an admin) -- I can do whatever I want.
+    applyFullEditPermissions(popIn);
+  } else if (
+    userToEdit.status === connectedUserStatus &&
+    connectedUserStatus === "admin"
+  ) {
+    // I have the same status than the user I want to edit and I'm an admin, I can do whatever I want but edit the status
+    hide(find(popIn, ".delete-user-button"));
+    show(find(popIn, ".user-property-password.edit-password"));
+    removeAttr(
+      find(popIn, ".user-property-email .user-property-input"),
+      "disabled",
+    );
+    removeClass(
+      find(popIn, ".user-property-username .edit-username"),
+      "notClickable",
+    );
+    addClass(
+      find(popIn, ".user-property-status .user-property-select"),
+      "notClickable",
+    );
+  } else if (
+    userToEdit.status === "webmaster" &&
+    connectedUserStatus === "admin"
+  ) {
+    // I'm admin and I want to edit webmaster
+    applyNoEditPermissions(popIn);
+  }
+}
+
+/**
+ * Part of `fillUserEditPermissions()`'s own extraction, below --
+ * "I'm not the connected user" (editing someone else's profile).
+ */
+function applyPermissionsForOtherUser(
+  userToEdit: UserRow,
+  popIn: Element,
+): void {
+  if (isOwner(connectedUser)) {
+    // I'm the owner, I can do whatever I want. No need to test, I am GOD here
+    applyFullEditPermissions(popIn);
+  } else {
+    applyPermissionsWhenNotOwner(userToEdit, popIn);
+  }
+}
+
 function fillUserEditPermissions(userToEdit: UserRow, popIn: Element) {
   if (userToEdit.id !== connectedUser) {
-    // I'm not the connected user
-    if (!isOwner(connectedUser)) {
-      // I'm not the owner, you need to test my permissions
-      if (isOwner(userToEdit.id)) {
-        // I want to edit the owner but I'm not the owner (No matter my status)
-        hide(find(popIn, ".delete-user-button"));
-        hide(find(popIn, ".user-property-password.edit-password"));
-        attr(
-          find(popIn, ".user-property-email .user-property-input"),
-          "disabled",
-          "disabled",
-        );
-        addClass(
-          find(popIn, ".user-property-status .user-property-select"),
-          "notClickable",
-        );
-        hide(find(popIn, ".user-property-username .edit-username"));
-      } else {
-        show(find(popIn, ".delete-user-button"));
-        show(find(popIn, ".user-property-password.edit-password"));
-        removeAttr(
-          find(popIn, ".user-property-email .user-property-input"),
-          "disabled",
-        );
-        removeClass(
-          find(popIn, ".user-property-status .user-property-select"),
-          "notClickable",
-        );
-        show(find(popIn, ".user-property-username .edit-username"));
-      }
-
-      if (
-        (userToEdit.status === connectedUserStatus &&
-          connectedUserStatus === "webmaster" &&
-          !isOwner(userToEdit.id)) ||
-        (userToEdit.status === "admin" && connectedUserStatus === "webmaster")
-      ) {
-        // I'm a webmaster editing an equal-or-lower-ranked user (same
-        // status as me, or an admin) -- I can do whatever I want.
-        show(find(popIn, ".delete-user-button"));
-        show(find(popIn, ".user-property-password.edit-password"));
-        removeAttr(
-          find(popIn, ".user-property-email .user-property-input"),
-          "disabled",
-        );
-        removeClass(
-          find(popIn, ".user-property-status .user-property-select"),
-          "notClickable",
-        );
-        show(find(popIn, ".user-property-username .edit-username"));
-      } else if (
-        userToEdit.status === connectedUserStatus &&
-        connectedUserStatus === "admin"
-      ) {
-        // I have the same status than the user I want to edit and I'm an admin, I can do whatever I want but edit the status
-        hide(find(popIn, ".delete-user-button"));
-        show(find(popIn, ".user-property-password.edit-password"));
-        removeAttr(
-          find(popIn, ".user-property-email .user-property-input"),
-          "disabled",
-        );
-        removeClass(
-          find(popIn, ".user-property-username .edit-username"),
-          "notClickable",
-        );
-        addClass(
-          find(popIn, ".user-property-status .user-property-select"),
-          "notClickable",
-        );
-      } else if (
-        userToEdit.status === "webmaster" &&
-        connectedUserStatus === "admin"
-      ) {
-        // I'm admin and I want to edit webmaster
-        hide(find(popIn, ".delete-user-button"));
-        hide(find(popIn, ".user-property-password.edit-password"));
-        attr(
-          find(popIn, ".user-property-email .user-property-input"),
-          "disabled",
-          "disabled",
-        );
-        addClass(
-          find(popIn, ".user-property-status .user-property-select"),
-          "notClickable",
-        );
-        hide(find(popIn, ".user-property-username .edit-username"));
-      }
-    } else {
-      // I'm the owner, I can do whatever I want. No need to test, I am GOD here
-      show(find(popIn, ".delete-user-button"));
-      show(find(popIn, ".user-property-password.edit-password"));
-      removeAttr(
-        find(popIn, ".user-property-email .user-property-input"),
-        "disabled",
-      );
-      removeClass(
-        find(popIn, ".user-property-status .user-property-select"),
-        "notClickable",
-      );
-      show(find(popIn, ".user-property-username .edit-username"));
-    }
+    applyPermissionsForOtherUser(userToEdit, popIn);
   } else {
     // I'm the connected user, I can do whatever I want on my profile but kill myself (Suicide is not allowed) and edit my status
     hide(find(popIn, ".delete-user-button"));

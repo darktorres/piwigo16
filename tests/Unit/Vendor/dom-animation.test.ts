@@ -7,13 +7,14 @@ import {
   stop,
   swing,
 } from "../../../themes/default/js/vendor/utils/dom";
+import { byId } from "./dom-test-helpers";
 
 let el: HTMLElement;
 
 beforeEach(() => {
   vi.useFakeTimers();
   document.body.innerHTML = `<div id="t" style="opacity:1"></div>`;
-  el = document.getElementById("t")!;
+  el = byId("t");
 });
 
 afterEach(() => {

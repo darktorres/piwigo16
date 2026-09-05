@@ -8,6 +8,7 @@ import {
   removeData,
   setData,
 } from "../../../themes/default/js/vendor/utils/dom";
+import { byId } from "./dom-test-helpers";
 
 beforeEach(() => {
   document.body.innerHTML = "";
@@ -15,7 +16,7 @@ beforeEach(() => {
 
 function el(attrs = ""): HTMLElement {
   document.body.innerHTML = `<div id="t" ${attrs}></div>`;
-  return document.getElementById("t")!;
+  return byId("t");
 }
 
 describe("coerceDataAttribute", () => {
@@ -95,8 +96,8 @@ describe("data()", () => {
 
   it("keeps each element's store separate", () => {
     document.body.innerHTML = `<div id="a"></div><div id="b"></div>`;
-    const a = document.getElementById("a")!;
-    const b = document.getElementById("b")!;
+    const a = byId("a");
+    const b = byId("b");
     setData(a, "k", "A");
     setData(b, "k", "B");
     expect(data(a, "k")).toBe("A");

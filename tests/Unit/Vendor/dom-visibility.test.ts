@@ -8,6 +8,7 @@ import {
   show,
   toggle,
 } from "../../../themes/default/js/vendor/utils/dom";
+import { byId } from "./dom-test-helpers";
 
 beforeEach(() => {
   document.head.innerHTML = "";
@@ -104,20 +105,12 @@ describe("show()/hide() over a set", () => {
     document.body.innerHTML = `<span id="a" style="display:inline">a</span><div id="b" style="display:flex">b</div>`;
     const nodes = document.querySelectorAll("#a, #b");
     hide(nodes);
-    expect((document.getElementById("a")!).style.display).toBe(
-      "none"
-    );
-    expect((document.getElementById("b")!).style.display).toBe(
-      "none"
-    );
+    expect(byId("a").style.display).toBe("none");
+    expect(byId("b").style.display).toBe("none");
 
     show(nodes);
-    expect((document.getElementById("a")!).style.display).toBe(
-      "inline"
-    );
-    expect((document.getElementById("b")!).style.display).toBe(
-      "flex"
-    );
+    expect(byId("a").style.display).toBe("inline");
+    expect(byId("b").style.display).toBe("flex");
   });
 });
 

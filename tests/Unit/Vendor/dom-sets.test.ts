@@ -27,6 +27,7 @@ import {
   val,
   valId,
 } from "../../../themes/default/js/vendor/utils/dom";
+import { qs } from "./dom-test-helpers";
 
 // The one rule under test throughout: a setter writes to every element of
 // the set, a getter reads the first, and both are silent on an empty set.
@@ -480,7 +481,7 @@ describe("children", () => {
   it("returns only direct children, not every descendant", () => {
     document.body.innerHTML =
       '<div class="t"><a>direct</a><span><a>nested</a></span></div>';
-    const el = document.querySelector<HTMLElement>(".t")!;
+    const el = qs(".t");
 
     const result = children(el, "a");
 
@@ -490,7 +491,7 @@ describe("children", () => {
 
   it("returns every direct child when no selector is given", () => {
     document.body.innerHTML = '<div class="t"><a></a><span></span></div>';
-    const el = document.querySelector<HTMLElement>(".t")!;
+    const el = qs(".t");
 
     expect(children(el)).toHaveLength(2);
   });

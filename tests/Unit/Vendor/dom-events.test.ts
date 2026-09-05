@@ -7,13 +7,15 @@ import {
   on,
   parseEventSpec,
   trigger,
+  valueAt,
 } from "../../../themes/default/js/vendor/utils/dom";
+import { byId } from "./dom-test-helpers";
 
 let el: HTMLElement;
 
 beforeEach(() => {
   document.body.innerHTML = `<div id="t"></div>`;
-  el = document.getElementById("t")!;
+  el = byId("t");
 });
 
 describe("parseEventSpec", () => {
@@ -177,7 +179,7 @@ describe("whitespace-separated specs", () => {
 
   beforeEach(() => {
     document.body.innerHTML = '<div id="multi"></div>';
-    multi = document.getElementById("multi")!;
+    multi = byId("multi");
   });
 
   it("binds one handler to several types", () => {
@@ -252,14 +254,14 @@ describe("delegated handlers", () => {
       '<a class="pick" href="#"><span id="inner">x</span></a>' +
       '<b id="other"></b>' +
       "</div>";
-    root = document.getElementById("root")!;
+    root = byId("root");
   });
 
   it("runs for an event originating inside a match", () => {
     const handler = vi.fn();
     delegate(root, "click", ".pick", handler);
 
-    (document.getElementById("inner")!).click();
+    byId("inner").click();
 
     expect(handler).toHaveBeenCalledTimes(1);
   });
@@ -270,7 +272,7 @@ describe("delegated handlers", () => {
       seen = this.className;
     });
 
-    (document.getElementById("inner")!).click();
+    byId("inner").click();
 
     // `this` is the anchor the selector matched -- the whole point of
     // delegation, and what a bare addEventListener cannot give.
@@ -281,7 +283,7 @@ describe("delegated handlers", () => {
     const handler = vi.fn();
     delegate(root, "click", ".pick", handler);
 
-    (document.getElementById("other")!).click();
+    byId("other").click();
 
     expect(handler).not.toHaveBeenCalled();
   });
@@ -292,7 +294,7 @@ describe("delegated handlers", () => {
     // itself matches still does not fire for it.
     delegate(root, "click", "#root", handler);
 
-    (document.getElementById("inner")!).click();
+    byId("inner").click();
 
     expect(handler).not.toHaveBeenCalled();
   });
@@ -303,7 +305,7 @@ describe("delegated handlers", () => {
       '<i id="leaf"></i></div></div></div>';
     const seen: string[] = [];
     delegate(
-      document.getElementById("root")!,
+      byId("root"),
       "click",
       ".m",
       function (this: Element) {
@@ -311,7 +313,7 @@ describe("delegated handlers", () => {
       }
     );
 
-    (document.getElementById("leaf")!).click();
+    byId("leaf").click();
 
     expect(seen).toEqual(["mid", "outer"]);
   });
@@ -322,7 +324,7 @@ describe("delegated handlers", () => {
       '<i id="leaf"></i></div></div></div>';
     const seen: string[] = [];
     delegate(
-      document.getElementById("root")!,
+      byId("root"),
       "click",
       ".m",
       function (this: Element, event) {
@@ -331,7 +333,7 @@ describe("delegated handlers", () => {
       }
     );
 
-    (document.getElementById("leaf")!).click();
+    byId("leaf").click();
 
     expect(seen).toEqual(["mid"]);
   });
@@ -348,7 +350,7 @@ describe("delegated handlers", () => {
       );
     });
 
-    (document.getElementById("inner")!).click();
+    byId("inner").click();
 
     expect(ownProperty).toBe(false);
   });
@@ -403,10 +405,10 @@ describe("binding to a whole set", () => {
 
   it("treats a single element as a set of one", () => {
     const handler = vi.fn();
-    const [first] = Array.from(set);
-    on(first!, "click", handler);
+    const first = valueAt(Array.from(set), 0);
+    on(first, "click", handler);
 
-    first!.click();
+    first.click();
 
     expect(handler).toHaveBeenCalledTimes(1);
   });

@@ -132,7 +132,7 @@ describe("Latte Prettier plugin (tools/latte-prettier/)", () => {
         await format(readFileSync(file, "utf8"));
       } catch (e) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- prettier.format() and this file's own plugin/parser only ever throw real Error instances, standard JS practice.
-        failures.push(`${file}: ${(e as Error).message.split("\n")[0]!}`);
+        failures.push(`${file}: ${(e as Error).message.split("\n")[0] ?? ""}`);
       }
     }
     expect(

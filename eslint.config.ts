@@ -137,11 +137,18 @@ export default defineConfig(
       // can't see (a template always renders the element, an id is
       // always in range). The rule now enforces that going forward,
       // catching a *new* unexplained `!` the same way `no-unsafe-type-
-      // assertion` already catches an unexplained `as`. The 8 files still
-      // at "warn" below (tests/Unit/Vendor/*.test.ts +
-      // tests/Unit/Latte/latte-prettier-plugin.test.ts) are the explicitly
-      // out-of-scope remainder P51-O's own plan called out -- a real
-      // follow-on, not overlooked.
+      // assertion` already catches an unexplained `as`. P51-O's own
+      // explicitly out-of-scope remainder (42 sites across
+      // tests/Unit/Vendor/*.test.ts + 1 in
+      // tests/Unit/Latte/latte-prettier-plugin.test.ts, kept at "warn" via
+      // a scoped override) is now closed too -- a shared `byId()`/`qs()`
+      // pair in tests/Unit/Vendor/dom-test-helpers.ts replaced every
+      // fixture-element query, `valueAt()` (the same helper P51-O itself
+      // introduced) replaced a destructured-array-element read, and the
+      // one remaining site (a `.split("\n")[0]` index that's always safe
+      // because `split()` never returns an empty array) took a `?? ""`
+      // fallback instead of another disable comment. No file needs its own
+      // override any more.
       "@typescript-eslint/no-non-null-assertion": "error",
 
       "@typescript-eslint/restrict-plus-operands": "error",
@@ -266,27 +273,6 @@ export default defineConfig(
           ],
         },
       ],
-    },
-  },
-  {
-    // P51-O's own explicitly out-of-scope remainder (its own plan text:
-    // "the remaining 42 in tests/Unit/Vendor/*.test.ts plus 1 in
-    // tests/Unit/Latte/latte-prettier-plugin.test.ts... explicitly
-    // optional follow-on") -- kept at the pre-P51-O "warn" level rather
-    // than forcing a real fix into this phase's own scope. A real future
-    // pass should close these the same way and delete this override.
-    files: [
-      "tests/Unit/Vendor/dom-events.test.ts",
-      "tests/Unit/Vendor/dom-geometry.test.ts",
-      "tests/Unit/Vendor/dom-effects.test.ts",
-      "tests/Unit/Vendor/dom-visibility.test.ts",
-      "tests/Unit/Vendor/dom-data.test.ts",
-      "tests/Unit/Vendor/dom-sets.test.ts",
-      "tests/Unit/Vendor/dom-animation.test.ts",
-      "tests/Unit/Latte/latte-prettier-plugin.test.ts",
-    ],
-    rules: {
-      "@typescript-eslint/no-non-null-assertion": "warn",
     },
   },
   {

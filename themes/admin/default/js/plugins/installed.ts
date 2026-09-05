@@ -765,6 +765,95 @@ function actualizeFilter(): void {
   });
 }
 
+/**
+ * Part of the plugin-search `input` handler's own extraction, below --
+ * whether `box` should be visible under the currently-checked
+ * seeAll/seeActive/seeInactive/seeOther radio, independent of the
+ * text-search match itself.
+ */
+function shouldShowBoxForFilter(box: Element): boolean {
+  if (is(document.querySelectorAll("#seeAll"), ":checked")) {
+    return true;
+  }
+  if (
+    is(document.querySelectorAll("#seeActive"), ":checked") &&
+    hasClass(box, "plugin-active")
+  ) {
+    return true;
+  }
+  if (
+    is(document.querySelectorAll("#seeInactive"), ":checked") &&
+    hasClass(box, "plugin-inactive")
+  ) {
+    return true;
+  }
+  return (
+    is(document.querySelectorAll("#seeOther"), ":checked") &&
+    (hasClass(box, "plugin-merged") || hasClass(box, "plugin-missing"))
+  );
+}
+
+interface PluginSearchCounts {
+  active: number;
+  inactive: number;
+  other: number;
+}
+
+/** Part of the plugin-search `input` handler's own extraction, below. */
+function tallyBoxCategory(box: Element, counts: PluginSearchCounts): void {
+  if (hasClass(box, "plugin-active")) {
+    counts.active++;
+  }
+  if (hasClass(box, "plugin-inactive")) {
+    counts.inactive++;
+  }
+  if (hasClass(box, "plugin-merged") || hasClass(box, "plugin-missing")) {
+    counts.other++;
+  }
+}
+
+/**
+ * Part of the plugin-search `input` handler's own extraction, below --
+ * shows/hides every `.pluginBox` against the current search text and
+ * the checked see-filter radio, updates `nbPlugin`'s live counts, and
+ * returns how many boxes matched (0 = every box, when `text` is empty).
+ */
+function updatePluginBoxesForSearch(text: string): number {
+  let searchNumber = 0;
+  const counts: PluginSearchCounts = { active: 0, inactive: 0, other: 0 };
+
+  document.querySelectorAll(".pluginBox").forEach((box) => {
+    if (text === "") {
+      hide(document.querySelectorAll(".nbPluginsSearch"));
+      if (shouldShowBoxForFilter(box)) {
+        show(box);
+      }
+      tallyBoxCategory(box, counts);
+      searchNumber++;
+    } else {
+      const name = textOf(find(box, ".pluginName")).toLowerCase();
+      show(document.querySelectorAll(".nbPluginsSearch"));
+      const description = textOf(find(box, ".pluginDesc")).toLowerCase();
+      if (name.search(text) !== -1 || description.search(text) !== -1) {
+        searchNumber++;
+        if (shouldShowBoxForFilter(box)) {
+          show(box);
+        }
+        tallyBoxCategory(box, counts);
+      } else {
+        hide(box);
+      }
+    }
+
+    nbPlugin.all = searchNumber;
+    nbPlugin.active = counts.active;
+    nbPlugin.inactive = counts.inactive;
+    nbPlugin.other = counts.other;
+  });
+
+  return searchNumber;
+}
+
 /* group action */
 
 ready(function () {
@@ -883,112 +972,7 @@ ready(function () {
     "input",
     function (this: Element) {
       const text = String(val(this)).toLowerCase();
-      let searchNumber = 0;
-
-      let searchActive = 0;
-      let searchInactive = 0;
-      let searchOther = 0;
-
-      document.querySelectorAll(".pluginBox").forEach((box) => {
-        if (text === "") {
-          hide(document.querySelectorAll(".nbPluginsSearch"));
-          if (is(document.querySelectorAll("#seeAll"), ":checked")) {
-            show(box);
-          }
-          if (
-            is(document.querySelectorAll("#seeActive"), ":checked") &&
-            hasClass(box, "plugin-active")
-          ) {
-            show(box);
-          }
-          if (
-            is(document.querySelectorAll("#seeInactive"), ":checked") &&
-            hasClass(box, "plugin-inactive")
-          ) {
-            show(box);
-          }
-          if (
-            is(document.querySelectorAll("#seeOther"), ":checked") &&
-            (hasClass(box, "plugin-merged") || hasClass(box, "plugin-missing"))
-          ) {
-            show(box);
-          }
-
-          if (hasClass(box, "plugin-active")) {
-            searchActive++;
-          }
-          if (hasClass(box, "plugin-inactive")) {
-            searchInactive++;
-          }
-          if (
-            hasClass(box, "plugin-merged") ||
-            hasClass(box, "plugin-missing")
-          ) {
-            searchOther++;
-          }
-          searchNumber++;
-
-          nbPlugin.all = searchNumber;
-          nbPlugin.active = searchActive;
-          nbPlugin.inactive = searchInactive;
-          nbPlugin.other = searchOther;
-        } else {
-          const name = textOf(find(box, ".pluginName")).toLowerCase();
-          show(document.querySelectorAll(".nbPluginsSearch"));
-          const description = textOf(find(box, ".pluginDesc")).toLowerCase();
-          if (name.search(text) !== -1 || description.search(text) !== -1) {
-            searchNumber++;
-
-            if (is(document.querySelectorAll("#seeAll"), ":checked")) {
-              show(box);
-            }
-            if (
-              is(document.querySelectorAll("#seeActive"), ":checked") &&
-              hasClass(box, "plugin-active")
-            ) {
-              show(box);
-            }
-            if (
-              is(document.querySelectorAll("#seeInactive"), ":checked") &&
-              hasClass(box, "plugin-inactive")
-            ) {
-              show(box);
-            }
-            if (
-              is(document.querySelectorAll("#seeOther"), ":checked") &&
-              (hasClass(box, "plugin-merged") ||
-                hasClass(box, "plugin-missing"))
-            ) {
-              show(box);
-            }
-
-            if (hasClass(box, "plugin-active")) {
-              searchActive++;
-            }
-            if (hasClass(box, "plugin-inactive")) {
-              searchInactive++;
-            }
-            if (
-              hasClass(box, "plugin-merged") ||
-              hasClass(box, "plugin-missing")
-            ) {
-              searchOther++;
-            }
-
-            nbPlugin.all = searchNumber;
-            nbPlugin.active = searchActive;
-            nbPlugin.inactive = searchInactive;
-            nbPlugin.other = searchOther;
-          } else {
-            hide(box);
-
-            nbPlugin.all = searchNumber;
-            nbPlugin.active = searchActive;
-            nbPlugin.inactive = searchInactive;
-            nbPlugin.other = searchOther;
-          }
-        }
-      });
+      const searchNumber = updatePluginBoxesForSearch(text);
 
       actualizeFilter();
 

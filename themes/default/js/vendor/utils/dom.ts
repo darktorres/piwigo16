@@ -1842,6 +1842,36 @@ export function escapeId(id: string | number): string {
   return CSS.escape(String(id));
 }
 
+/**
+ * Escapes a string for safe insertion into HTML markup (P51-Z). Absorbs
+ * `selectize.ts`'s and `jqtree.ts`'s own independent reimplementations --
+ * this adopts `jqtree.ts`'s superset (also escapes `'`/`/`, not just
+ * `&`/`<`/`>`/`"`), behaviorally identical for every existing caller
+ * since neither of those two extra characters occurred in any real value
+ * either function was ever called with.
+ */
+export function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;")
+    .replace(/\//g, "&#x2F;");
+}
+
+/**
+ * Escapes a string for safe interpolation into a `RegExp` source (P51-Z).
+ * Absorbs `selectize.ts`'s own helper and `uploadQueue.ts`'s independent
+ * inline reimplementation of the same idiom -- this adopts
+ * `uploadQueue.ts`'s superset character class (also escapes `/`),
+ * behaviorally identical for every existing caller since none of them
+ * ever passed a value containing a literal `/`.
+ */
+export function escapeRegExp(input: string): string {
+  return input.replace(/[/^$.*+?|()[\]{}\\]/g, "\\$&");
+}
+
 /** `.is(selector)` -- true when *any* element matches. CSS selectors only. */
 export function is(
   target: Element | ArrayLike<Element>,

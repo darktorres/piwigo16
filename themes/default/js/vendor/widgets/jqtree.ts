@@ -33,6 +33,7 @@
 // `do_move()` callback, plus the scroll-during-drag behavior.
 import {
   css,
+  escapeHtml,
   offset,
   off,
   on,
@@ -154,16 +155,6 @@ export interface JqTreeInstance<T extends Record<string, unknown>> {
   ): JqTreeNode<T>;
   removeNode(node: JqTreeNode<T>): void;
   loadData(data: JqTreeNodeData<T>[], parentNode: JqTreeNode<T>): void;
-}
-
-function htmlEscape(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#x27;")
-    .replace(/\//g, "&#x2F;");
 }
 
 // ── Node model (real source: lib/node.js) ────────────────────────────────
@@ -918,7 +909,7 @@ class JqTreeController<T extends Record<string, unknown>> {
     const target = positionInfo.target as Element;
     const targetOffset = offset(target);
     const node = this.currentItem;
-    const nodeName = this.options.autoEscape ? htmlEscape(node.name) : node.name;
+    const nodeName = this.options.autoEscape ? escapeHtml(node.name) : node.name;
     this.dragElement = createDragElement(
       nodeName,
       positionInfo.pageX - targetOffset.left,

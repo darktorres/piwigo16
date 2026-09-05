@@ -1,4 +1,4 @@
-import { delegate } from "./dom";
+import { delegate, escapeRegExp } from "./dom";
 
 // Native port of plupload 2.1.2's HTML5-runtime `plupload.Uploader` +
 // `jquery.plupload.queue.js`'s own file-list widget (P49-C), real source
@@ -201,7 +201,7 @@ function buildExtensionRegex(mimeTypes: { extensions: string }[]): RegExp {
       if (/^\s*\*\s*$/.test(ext)) {
         parts.push("\\.*");
       } else {
-        parts.push("\\." + ext.replace(/[/^$.*+?|()[\]{}\\]/g, "\\$&"));
+        parts.push("\\." + escapeRegExp(ext));
       }
     }
   }

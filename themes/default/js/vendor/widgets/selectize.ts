@@ -1,4 +1,4 @@
-import { on, valueAt } from "../utils/dom";
+import { escapeHtml, escapeRegExp, on, valueAt } from "../utils/dom";
 
 /**
  * Port of selectize.js v0.11.2's own `$.fn.selectize()` (real source read
@@ -67,18 +67,6 @@ export interface SelectizeInstance<
   refreshOptions(triggerDropdown?: boolean): void;
   clear(silent?: boolean): void;
   load(fn: (this: SelectizeInstance<T, U>, callback: (data: U[]) => void) => void): void;
-}
-
-function escapeHtml(input: string): string {
-  return input
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-function escapeRegExp(input: string): string {
-  return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 // Every real field value in this app's own real data (category/tag/group/

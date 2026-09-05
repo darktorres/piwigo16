@@ -165,6 +165,7 @@ function bindItem(
       reorder(
         container,
         item,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- reaching here (past the started guard above) always means beginDrag() already set placeholder.
         placeholder!,
         moveEvent.clientX,
         moveEvent.clientY,
@@ -179,6 +180,7 @@ function bindItem(
         return;
       }
       item.releasePointerCapture(upEvent.pointerId);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the started guard above always means beginDrag() already set placeholder.
       placeholder!.replaceWith(item);
       if (originalStyle === null) {
         item.removeAttribute("style");

@@ -34,6 +34,8 @@
 // title=...>`) needs nothing beyond the same numeric comparison a
 // `sType: "numeric"` column gets once its text is extracted.
 
+import { valueAt } from "../utils/dom";
+
 interface DataTableColumnDef {
   targetClass: string;
   sortable?: boolean;
@@ -265,7 +267,7 @@ export function dataTable(
 
     if (sortState !== null) {
       const { colIndex, direction } = sortState;
-      const col = columns[colIndex]!;
+      const col = valueAt(columns, colIndex);
       const sign = direction === "asc" ? 1 : -1;
       visible.sort((a, b) => sign * compare(col.type, cellText(a, colIndex), cellText(b, colIndex)));
     }
@@ -308,6 +310,7 @@ export function dataTable(
         const next = stateIndex === 0 ? col.sortDirections[1] : undefined;
         sortState = next === undefined ? null : { colIndex: index, direction: next };
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- sortDirections is always constructed with at least one real entry (its own default is a 2-entry array).
         sortState = { colIndex: index, direction: col.sortDirections[0]! };
       }
       currentPage = 1;

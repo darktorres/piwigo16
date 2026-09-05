@@ -101,10 +101,12 @@ class LocalStorageCache<T extends SelectizeEntity = SelectizeEntity> {
   ready: boolean;
 
   constructor(options: LocalStorageCacheOptions<T>) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real concrete subclass constructor below sets options.key before calling super(options).
     this.key = options.key! + "_" + options.serverId!;
     this.serverKey = options.serverKey;
     this.lifetime =
       options.lifetime !== undefined ? options.lifetime * 1000 : 3600 * 1000;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real concrete subclass constructor below sets options.loader before calling super(options).
     this.loader = options.loader!;
 
     this.storage = window.localStorage;
@@ -220,6 +222,7 @@ abstract class AbstractSelectizer<
       elements.forEach((el) => {
         let filtered: SelectizeEntity[];
         const options = { ...globalOptions };
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every el here was already selectize()-initialized by the calling subclass's own .selectize() before _selectize() runs.
         const instance = getSelectizeInstance<string | number, SelectizeEntity>(
           el,
         )!;
@@ -402,7 +405,8 @@ class CategoriesCache extends AbstractSelectizer<ProcessedCategory> {
         try {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
           const response = (await ajax({
-            url: options.rootUrl! + "api/v1/categories",
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real caller of this cache always passes rootUrl.
+          url: options.rootUrl! + "api/v1/categories",
             dataType: "json",
           })) as operations["categoryList"]["responses"][200]["content"]["application/json"];
 
@@ -452,7 +456,8 @@ class TagsCache extends AbstractSelectizer<ProcessedTag> {
         try {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
           const response = (await ajax({
-            url: options.rootUrl! + "api/v1/tags",
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real caller of this cache always passes rootUrl.
+          url: options.rootUrl! + "api/v1/tags",
             dataType: "json",
           })) as operations["tagList"]["responses"][200]["content"]["application/json"];
 
@@ -504,7 +509,8 @@ class GroupsCache extends AbstractSelectizer<ProcessedGroup> {
         try {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
           const response = (await ajax({
-            url: options.rootUrl! + "api/v1/groups",
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real caller of this cache always passes rootUrl.
+          url: options.rootUrl! + "api/v1/groups",
             dataType: "json",
           })) as operations["groupList"]["responses"][200]["content"]["application/json"];
 
@@ -556,6 +562,7 @@ class UsersCache extends AbstractSelectizer<UserEntity> {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
           const response = (await ajax({
             url:
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real caller of this cache always passes rootUrl.
               options.rootUrl! +
               "api/v1/users?perPage=9999&page=" +
               String(page),

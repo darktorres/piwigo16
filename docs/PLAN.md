@@ -7706,6 +7706,34 @@ Lighthouse perf, a11y and best-practices thresholds and real per-entry
 "a11y gate" becomes a real automated check. Needs P35–P56's real bundles,
 templates and features to measure against.
 
+**P57 addendum — colliding entry-chunk basenames, found and fixed.**
+Found while updating dependencies (unrelated task): 4 pairs of real
+`vite.config.ts` entries share a basename across different
+subdirectories under P51-I's post-reorganization file layout
+(`categories/list.ts`/`users/list.ts`, `configuration/comments.ts`/the
+top-level `comments.ts`, `languages/new.ts`/`plugins/new.ts`,
+`categories/search.ts`/`configuration/search.ts`). Two stacked bugs
+from the same root cause: (1) `vite.config.ts`'s `entryFileNames` used
+Rollup's default `[name]` token, so each pair emitted as e.g.
+`list-fR1n7d0Q.js`/`list-BcFNDY23.js` -- distinct files, but
+indistinguishable by any glob pattern tolerant of the hash changing on
+every build; (2) `tools/size-budget.mjs`'s own JSON "name" key was the
+same non-unique `chunk.name`, silently writing two budget objects with
+an identical key per pair, so `--verify`'s `Map`-based lookup silently
+discarded one of each pair -- reporting phantom staleness even right
+after a fresh `--update`, and (once diagnosed) confirmed to have
+corrupted the actual byte-count measurement too (one entry's budget
+silently summed both real files' sizes once its glob matched both).
+Fixed at the root: `vite.config.ts` now disambiguates only the entries
+that actually collide (their path relative to the nearest `js/`
+directory), and `size-budget.mjs` keys budgets on the full relative
+source path with a defensive duplicate-name check, teaching its own
+glob-builder to match the same disambiguation `vite.config.ts` applies.
+7 pages' golden-html baselines regenerated for the resulting `<script
+src>` rename (the only observable effect — confirmed via a full
+`composer test:golden-html`/`test:visual`/`test:browser`/`test`/
+`test:integration`/`test:install` run).
+
 **P58 — Codebase-wide non-DI audit.** Found while reviewing `Template`
 during P43-G, then extended codebase-wide: a full sweep of every
 `Kernel::container()` call site outside `config/container.php` (225

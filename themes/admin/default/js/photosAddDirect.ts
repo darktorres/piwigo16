@@ -165,6 +165,173 @@ const relatedCategoriesIds = pwg_getPageData<number[]>(
   "related_categories_ids",
 );
 
+/** Part of the plupload `FilesAdded` handler's own extraction, below. */
+function appendFormatViewLink(id: string, formatOf: string): void {
+  append(
+    document.querySelectorAll("#" + escapeId(id) + " > .plupload_file_name"),
+    `
+              <a target="_blank" href="admin.php?page=photo-${formatOf.trim()}-properties">
+                <span class="icon-eye">
+                </span>
+              </a>`,
+  );
+}
+
+/**
+ * Part of the plupload `FilesAdded` handler's own extraction, below --
+ * appends the "this format already exists, remove it" warning/link
+ * pair and binds the real removal click.
+ */
+function appendFormatUpdateWarning(
+  up: UploadQueue,
+  id: string,
+  formatOf: string,
+): void {
+  document
+    .querySelectorAll("#" + escapeId(id) + " > .plupload_file_name")
+    .forEach((el) => {
+      el.insertAdjacentHTML(
+        "afterend",
+        `
+                <a target="_blank" href="admin.php?page=photo-${formatOf.trim()}-formats">
+                  <span class="icon-attention update-warning">
+                    ${formatUpdateWarning}
+                  </span>
+                </a>
+                <a class="remove-format" id="remove_${id}">
+                  <span class = "icon-cancel-circled">
+                  </span>
+                  ${formatRemove}
+                </a>`,
+      );
+    });
+  formatsUpdated.push(id);
+  on(
+    document.querySelectorAll("#remove_" + escapeId(id)),
+    "click",
+    function () {
+      up.removeFile(id);
+    },
+  );
+}
+
+/**
+ * Part of the plupload `FilesAdded` handler's own extraction, below --
+ * re-renders the view/update-warning links for every previously
+ * tracked format (`formats`/`formatsUpdated`, both module-level and
+ * cumulative across calls), which is exactly what this handler already
+ * did unconditionally on every real invocation.
+ */
+function refreshExistingFormatLinks(up: UploadQueue): void {
+  formats.forEach((forms) => {
+    appendFormatViewLink(forms[0], forms[1]);
+    if (formatsUpdated.includes(forms[0])) {
+      appendFormatUpdateWarning(up, forms[0], forms[1]);
+    }
+  });
+}
+
+/**
+ * Part of the plupload `FilesAdded` handler's own extraction, below --
+ * the "no fixed original image" path: looks up each newly-added file's
+ * own matching gallery image by filename, and warns about any filename
+ * that matched none or more than one.
+ */
+async function searchAndAssignFormats(
+  up: UploadQueue,
+  files: UploadQueueFile[],
+  fileNames: Record<string, string>,
+): Promise<void> {
+  //ajax qui renvois les id des images dans la gallerie.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
+  const searchResponse = (await ajax({
+    url: "api/v1/images/formats/actions/search",
+    type: "POST",
+    json: {
+      filenames: fileNames,
+    },
+  })) as ImageFormatSearchResponse;
+  const imagesSearch: ImageFormatSearchResponse["results"] =
+    searchResponse.results;
+
+  const notFound: string[] = [];
+  const multiple: string[] = [];
+
+  files.forEach((f) => {
+    const search = imagesSearch[f.id]!;
+    if (search.status === "found") {
+      f.format_of = String(search.imageId);
+      formats.push([f.id, f.format_of]);
+      appendFormatViewLink(f.id, f.format_of);
+      if (search.formatExists) {
+        appendFormatUpdateWarning(up, f.id, f.format_of);
+      }
+    } else {
+      if (search.status === "multiple") multiple.push(f.name);
+      else notFound.push(f.name);
+      up.removeFile(f.id);
+    }
+  });
+
+  // If a file is not found or found more than one time
+  if (notFound.length || multiple.length) {
+    const [multStr, notFoundStr] = [multiple, notFound].map((names) => {
+      //Get names
+      let tab = names.map((f) => f.slice(0, f.indexOf(".")));
+      // Remove duplicates
+      tab = tab.filter((f, i) => i === tab.indexOf(f));
+
+      // Add "and X more" if necessary
+      if (tab.length > 5) {
+        tab[5] = strAndXOthers.replace("%d", String(tab.length - 5));
+        tab = tab.splice(0, 6);
+      }
+      return tab;
+    });
+
+    alert({
+      title: strFormatWarning,
+      content:
+        (notFound.length
+          ? `<p>${strFormatWarningNotFound.replace("%s", notFoundStr!.join(", "))}</p>`
+          : "") +
+        (multiple.length
+          ? `<p>${strFormatWarningMultiple.replace("%s", multStr!.join(", "))}</p>`
+          : ""),
+      ...jConfirmWarningOptions,
+    });
+  }
+}
+
+/**
+ * Part of the plupload `FilesAdded` handler's own extraction, below --
+ * the "fixed original image" path: every newly-added file is a new
+ * format of the one configured `originalImageId`.
+ */
+function assignOriginalFormat(
+  up: UploadQueue,
+  files: UploadQueueFile[],
+  exts: Record<string, string>,
+): void {
+  let formatsExts: string[];
+  if (imageFormatsExtensions) {
+    const parsedExts: unknown = JSON.parse(imageFormatsExtensions);
+    formatsExts = Array.isArray(parsedExts)
+      ? parsedExts.filter((n): n is string => typeof n === "string")
+      : [];
+  } else {
+    formatsExts = [];
+  }
+  files.forEach((f) => {
+    f.format_of = String(originalImageId);
+    formats.push([f.id, f.format_of]);
+    appendFormatViewLink(f.id, f.format_of);
+    if (formatsExts.includes(exts[f.id]!)) {
+      appendFormatUpdateWarning(up, f.id, String(originalImageId));
+    }
+  });
+}
+
 /*--------------
 On DOM load
 --------------*/
@@ -398,251 +565,22 @@ ready(function () {
           exts[file.id] = file.name.slice(file.name.lastIndexOf(".") + 1);
         });
 
-        if (formatMode) {
-          formats.forEach((forms) => {
-            append(
-              document.querySelectorAll(
-                "#" + escapeId(forms[0]) + " > .plupload_file_name",
-              ),
-              `
-            <a target="_blank" href="admin.php?page=photo-${forms[1].trim()}-properties">
-              <span class="icon-eye">
-              </span>
-            </a>`,
-            );
-            if (formatsUpdated.includes(forms[0])) {
-              document
-                .querySelectorAll(
-                  "#" + escapeId(forms[0]) + " > .plupload_file_name",
-                )
-                .forEach((el) => {
-                  el.insertAdjacentHTML(
-                    "afterend",
-                    `
-              <a target="_blank" href="admin.php?page=photo-${forms[1].trim()}-formats">
-                <span class="icon-attention update-warning">
-                  ${formatUpdateWarning}
-                </span>
-              </a>
-              <a class="remove-format" id="remove_${forms[0]}">
-                <span class = "icon-cancel-circled">
-                </span>
-                ${formatRemove}
-              </a>`,
-                  );
-                });
-              on(
-                document.querySelectorAll("#remove_" + escapeId(forms[0])),
-                "click",
-                function () {
-                  up.removeFile(forms[0]);
-                },
-              );
-            }
-          });
+        if (!formatMode) {
+          return;
+        }
 
-          // If no original image is specified
-          if (!haveFormatsOriginal) {
-            //ajax qui renvois les id des images dans la gallerie.
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ajax()'s own real return type is always Promise<unknown> regardless of its T (see vendor/utils/ajax.ts's own AjaxThenable/decorate comment); the cast is the whole of what T means for an awaited call.
-            const searchResponse = (await ajax({
-              url: "api/v1/images/formats/actions/search",
-              type: "POST",
-              json: {
-                filenames: fileNames,
-              },
-            })) as ImageFormatSearchResponse;
-            const imagesSearch: ImageFormatSearchResponse["results"] =
-              searchResponse.results;
+        refreshExistingFormatLinks(up);
 
-            const notFound: string[] = [];
-            const multiple: string[] = [];
-
-            files.forEach((f) => {
-              const search = imagesSearch[f.id]!;
-              if (search.status === "found") {
-                f.format_of = String(search.imageId);
-                formats.push([f.id, f.format_of]);
-                append(
-                  document.querySelectorAll(
-                    "#" + escapeId(f.id) + " > .plupload_file_name",
-                  ),
-                  `
-                <a target="_blank" href="admin.php?page=photo-${f.format_of.trim()}-properties">
-                  <span class="icon-eye">
-                  </span>
-                </a>`,
-                );
-                if (search.formatExists) {
-                  document
-                    .querySelectorAll(
-                      "#" + escapeId(f.id) + " > .plupload_file_name",
-                    )
-                    .forEach((el) => {
-                      el.insertAdjacentHTML(
-                        "afterend",
-                        `
-                  <a target="_blank" href="admin.php?page=photo-${f.format_of!.trim()}-formats">
-                    <span class="icon-attention update-warning">
-                      ${formatUpdateWarning}
-                    </span>
-                  </a>
-                  <a class="remove-format" id="remove_${f.id}">
-                    <span class = "icon-cancel-circled">
-                    </span>
-                    ${formatRemove}
-                  </a>`,
-                      );
-                    });
-                  formatsUpdated.push(f.id);
-                  on(
-                    document.querySelectorAll("#remove_" + escapeId(f.id)),
-                    "click",
-                    function () {
-                      up.removeFile(f.id);
-                    },
-                  );
-                }
-              } else {
-                if (search.status === "multiple") multiple.push(f.name);
-                else notFound.push(f.name);
-                up.removeFile(f.id);
-              }
-            });
-
-            // If a file is not found or found more than one time
-            if (notFound.length || multiple.length) {
-              const [multStr, notFoundStr] = [multiple, notFound].map(
-                (names) => {
-                  //Get names
-                  let tab = names.map((f) => f.slice(0, f.indexOf(".")));
-                  // Remove duplicates
-                  tab = tab.filter((f, i) => i === tab.indexOf(f));
-
-                  // Add "and X more" if necessary
-                  if (tab.length > 5) {
-                    tab[5] = strAndXOthers.replace(
-                      "%d",
-                      String(tab.length - 5),
-                    );
-                    tab = tab.splice(0, 6);
-                  }
-                  return tab;
-                },
-              );
-
-              alert({
-                title: strFormatWarning,
-                content:
-                  (notFound.length
-                    ? `<p>${strFormatWarningNotFound.replace("%s", notFoundStr!.join(", "))}</p>`
-                    : "") +
-                  (multiple.length
-                    ? `<p>${strFormatWarningMultiple.replace("%s", multStr!.join(", "))}</p>`
-                    : ""),
-                ...jConfirmWarningOptions,
-              });
-            }
-          } else {
-            let $forms_exts: string[];
-            if (imageFormatsExtensions) {
-              const parsedExts: unknown = JSON.parse(imageFormatsExtensions);
-              $forms_exts = Array.isArray(parsedExts)
-                ? parsedExts.filter((n): n is string => typeof n === "string")
-                : [];
-            } else {
-              $forms_exts = [];
-            }
-            files.forEach((f) => {
-              f.format_of = String(originalImageId);
-              formats.push([f.id, f.format_of]);
-              append(
-                document.querySelectorAll(
-                  "#" + escapeId(f.id) + " > .plupload_file_name",
-                ),
-                `
-              <a target="_blank" href="admin.php?page=photo-${f.format_of.trim()}-properties">
-                <span class="icon-eye">
-                </span>
-              </a>`,
-              );
-              if ($forms_exts.includes(exts[f.id]!)) {
-                document
-                  .querySelectorAll(
-                    "#" + escapeId(f.id) + " > .plupload_file_name",
-                  )
-                  .forEach((el) => {
-                    el.insertAdjacentHTML(
-                      "afterend",
-                      `
-                <a target="_blank" href="admin.php?page=photo-${String(originalImageId).trim()}-formats">
-                  <span class="icon-attention update-warning">
-                    ${formatUpdateWarning}
-                  </span>
-                </a>
-                <a class="remove-format" id="remove_${f.id}">
-                  <span class = "icon-cancel-circled">
-                  </span>
-                  ${formatRemove}
-                </a>`,
-                    );
-                  });
-                formatsUpdated.push(f.id);
-                on(
-                  document.querySelectorAll("#remove_" + escapeId(f.id)),
-                  "click",
-                  function () {
-                    up.removeFile(f.id);
-                  },
-                );
-              }
-            });
-          }
+        // If no original image is specified
+        if (!haveFormatsOriginal) {
+          await searchAndAssignFormats(up, files, fileNames);
+        } else {
+          assignOriginalFormat(up, files, exts);
         }
       },
 
       FilesRemoved: function (up: UploadQueue, _file: UploadQueueFile) {
-        formats.forEach((forms) => {
-          append(
-            document.querySelectorAll(
-              "#" + escapeId(forms[0]) + " > .plupload_file_name",
-            ),
-            `
-          <a target="_blank" href="admin.php?page=photo-${forms[1].trim()}-properties">
-            <span class="icon-eye">
-            </span>
-          </a>`,
-          );
-          if (formatsUpdated.includes(forms[0])) {
-            document
-              .querySelectorAll(
-                "#" + escapeId(forms[0]) + " > .plupload_file_name",
-              )
-              .forEach((el) => {
-                el.insertAdjacentHTML(
-                  "afterend",
-                  `
-            <a target="_blank" href="admin.php?page=photo-${forms[1].trim()}-formats">
-              <span class="icon-attention update-warning">
-                ${formatUpdateWarning}
-              </span>
-            </a>
-            <a class="remove-format" id="remove_${forms[0]}">
-              <span class = "icon-cancel-circled">
-              </span>
-              ${formatRemove}
-            </a>`,
-                );
-              });
-            on(
-              document.querySelectorAll("#remove_" + escapeId(forms[0])),
-              "click",
-              function () {
-                up.removeFile(forms[0]);
-              },
-            );
-          }
-        });
+        refreshExistingFormatLinks(up);
       },
 
       UploadProgress: function (up: UploadQueue, _file: UploadQueueFile) {

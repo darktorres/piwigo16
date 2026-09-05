@@ -6850,12 +6850,80 @@ left alone (a symlink-dedup guard, unrelated to gating).
 shrink as each file converts in P52-B through P52-J, not blanket-deleted
 here.
 
-**P52-B (scoped, not started)** — tokens + reset + base
-(theme-independent). New `css/tokens.css` per chain (default,
-admin/default, standard_pages), color-literal audit and consolidation
-(start with the `#3c3c3c` casing collapse), new minimal `reset` layer,
-`base` layer extraction including the `text-wrap: balance` rule. No
-selector/ID work yet.
+**P52-B (Done)** — tokens + reset + base (theme-independent). 5 new
+files: `themes/default/css/reset.css`/`base.css` (shared by all 3
+layouts — identical content, no chain-specific variation, following
+the existing cross-chain CSS precedent `themes/default/js/plugins/
+selectize.*.css`/`themes/default/vendor/fontello/css/gallery-icon.css`
+already set), plus one `css/tokens.css` per independent chain
+(`default`/`admin/default`/`standard_pages`). Each entry `theme.css`
+gets one new first line declaring the full layer order (`@layer reset,
+tokens, base, theme-chain, theme-skin, components, pages, utilities;`
+— verified against MDN that `@layer` statements are exempted from
+CSS's "`@import` must come first" rule, so this safely precedes
+`default/theme.css`'s own `@import "iconset.css";`); `roma`/`clear`
+need no equivalent since `admin/default/theme.css` always loads first.
+`src/Piwigo/Template/ThemeBaseAssets.php`'s 3 methods register the new
+files (`order: -30/-29/-28`, before every existing entry).
+
+No selector/ID work, exactly as scoped: every existing `theme.css`/
+`css/pages`/`css/components` file stays completely unlayered and
+untouched. Since unlayered CSS beats every layered rule unconditionally
+for normal-priority declarations, nothing in the new layers can
+override anything already explicit — the only real risk is a property
+no unlayered rule sets at all (e.g. `box-sizing`, list/heading margins),
+where the new `reset`/`base` layers become the next-highest-priority
+source above the UA stylesheet. Verified via a full `composer
+test:visual` run (82/82 across all 3 layouts) rather than assumed safe.
+
+Color tokens: `@property` registrations for the shared 6-entry z-index
+scale (`--z-dropdown`/`--z-sticky`/`--z-overlay`/`--z-modal`/
+`--z-toast`/`--z-tooltip`, fixed conventional values — mapping the 87
+real declaration sites onto them is per-file selector work for
+P52-C/D/E/F, not this phase) and an 8-step spacing + 3-step radius
+scale are kept **outside** any `@layer` block (`@property`-nested-
+inside-`@layer` isn't confirmed spec-valid anywhere checked — MDN's own
+page is silent on it) — only the actual `:root` value assignments are
+layered. Color tokens are semantic/role-based, seeded from a real
+per-chain frequency audit (case- and alpha-normalized before counting,
+so e.g. `#ff7700bb` buckets with `#ff7700`) and converted to `oklch()`
+via the real sRGB→OKLab→OKLCH math, not approximated — `default`/
+`admin/default`/`standard_pages` get 9/13/6 color tokens respectively
+(the core, highest-confidence roles only; the long tail of lower-frequency
+near-duplicate grays/tints each chain's audit also surfaced is
+deliberately left as literals for that chain's own full sweep, not
+force-classified here without real per-site selector context).
+`light-dark()` pairs are identical (light === dark) for every token
+for now, and `color-scheme: light` pins resolution to the light
+branch — zero-visible-change plumbing, ready for a later phase
+(P52-F/P56) to redefine the dark value as a pure value flip.
+
+Two "real human call" color decisions resolved along the way, both
+confirmed via direct RGB delta measurement, not eyeballed: (1) the
+orange family — `#ffa646`/`#ffa744` differ by only 1-2 RGB units and
+are used interchangeably (badges/hover/gradient-end) — collapsed into
+one `--color-accent-light`, confirmed with the user; `#ff7700` (used
+for the brand logo SVGs and primary CTAs, clearly distinct) is
+`--color-accent`. (2) `admin/default`'s `#f0f0f0`/`#f3f3f3` (2-unit RGB
+difference) folded the same way into one `--color-surface-muted`.
+`standard_pages` already ships a real, separate, live dark-mode
+mechanism today (`standard_pages.ts`'s cookie/`prefers-color-scheme`
+`.light`/`.dark` class toggle, 46 rules per skin) — confirmed no
+conflict with this phase's `:root { color-scheme: light; }` (different
+selectors entirely, and the existing rules stay unlayered).
+
+Verification: `lint:css` clean (0 errors after one `--fix` pass for a
+`custom-property-empty-line-before` violation); `phpstan`/`ecs` clean
+on `ThemeBaseAssets.php`; `composer test:golden-html` — 89 of 91
+fixtures gained exactly the 3 expected new `<link>` tags (reset + base
++ that chain's own tokens.css), reviewed in full before accepting (not
+sampled); the 1 apparent outlier (`install`) was a pre-existing,
+unrelated flaky test (an intermittent pt_PT language-name double-
+encoding bug in `ExtensionScanner::scanLanguage()`, confirmed via an
+isolated rerun passing clean, reported to the `-2` worktree session
+per this campaign's flaky-triage convention, unrelated to this phase);
+`composer test:visual` full run, 82/82, confirming the reset/base
+layers introduce zero visible change on any of the 3 layouts today.
 
 **P52-C (scoped, not started)** — `admin/default` (largest file, 8,601
 lines + `print.css`, 825 raw-count / ~489 selector-context IDs). Full

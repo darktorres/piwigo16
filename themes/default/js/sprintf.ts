@@ -39,22 +39,118 @@ export function getRandomInt(min: number, max: number): number {
   return lo + (value % range);
 }
 
+/**
+ * Part of `sprintf()`'s own extraction, below -- the per-specifier
+ * value conversion (`%b`/`%c`/`%d`/`%e`/`%f`/`%o`/`%s`/`%u`/`%x`/`%X`).
+ * Genuinely polymorphic (see `sprintf()`'s own leading comment on `a`).
+ */
+function convertSprintfValue(
+  a: any,
+  spec: string,
+  precision: number | undefined,
+): any {
+  switch (spec) {
+    case "b":
+      return a.toString(2);
+    case "c":
+      return String.fromCharCode(a);
+    case "d":
+      return parseInt(a);
+    case "e":
+      return precision !== undefined
+        ? a.toExponential(precision)
+        : a.toExponential();
+    case "f":
+      return precision !== undefined
+        ? parseFloat(a).toFixed(precision)
+        : parseFloat(a);
+    case "o":
+      return a.toString(8);
+    case "s": {
+      const str = String(a);
+      return precision !== undefined ? str.substring(0, precision) : str;
+    }
+    case "u":
+      return Math.abs(a);
+    case "x":
+      return a.toString(16);
+    case "X":
+      return a.toString(16).toUpperCase();
+    default:
+      return a;
+  }
+}
+
+/** Part of `sprintf()`'s own extraction, below -- the `%+d`-style sign prefix. */
+function applySprintfSignPrefix(
+  value: any,
+  spec: string,
+  hasPlusFlag: boolean,
+): any {
+  if (/[def]/.test(spec) && hasPlusFlag && value >= 0) {
+    return "+" + String(value);
+  }
+  return value;
+}
+
+/** Part of `sprintf()`'s own extraction, below -- the padding character a `0`/`'`-flag selects. */
+function resolveSprintfPaddingChar(flag: string | undefined): string {
+  if (flag === undefined) {
+    return " ";
+  }
+  if (flag === "0") {
+    return "0";
+  }
+  return flag.charAt(1);
+}
+
+/**
+ * Part of `sprintf()`'s own extraction, below -- formats one matched
+ * `%...` conversion specifier into its final substituted text, and
+ * returns the next positional-argument index to consume from (`i`
+ * only actually advances for a non-positional `%s`-style specifier;
+ * an explicit `%N$` one reads `args[N]` directly, same as before).
+ */
+function formatSprintfSpecifier(
+  m: RegExpExecArray,
+  args: (string | number)[],
+  i: number,
+  s: string,
+): { text: string; nextI: number } {
+  let nextI = i;
+  // Genuinely polymorphic per format specifier (%b/%d/%x reinterpret as
+  // number, %s coerces to string, %c reinterprets as a char code) --
+  // irreducible without a much larger rewrite of this well-known
+  // sprintf implementation, not this phase's job.
+  let a: any = m[1] !== undefined ? args[Number(m[1])] : args[nextI++];
+  if (a == null || a === undefined) {
+    throw new Error("Too few arguments.");
+  }
+  if (/[^s]/.test(m[7]!) && typeof a !== "number") {
+    throw new Error("Expecting number but found " + typeof a);
+  }
+
+  a = convertSprintfValue(
+    a,
+    m[7]!,
+    m[6] !== undefined ? Number(m[6]) : undefined,
+  );
+  a = applySprintfSignPrefix(a, m[7]!, m[2] !== undefined);
+  const c = resolveSprintfPaddingChar(m[3]);
+  const x = Number(m[5]) - String(a).length - s.length;
+  const p = m[5] !== undefined ? str_repeat(c, x) : "";
+  const text = s + (m[4] !== undefined ? String(a) + p : p + String(a));
+  return { text, nextI };
+}
+
 export function sprintf(...args: (string | number)[]): string {
   let i = 0,
-    // Genuinely polymorphic per format specifier (%b/%d/%x reinterpret
-    // as number, %s coerces to string, %c reinterprets as a char code)
-    // -- irreducible without a much larger rewrite of this well-known
-    // sprintf implementation, not this phase's job.
-    a: any,
     // The first argument is always the format-pattern string, never one
     // of the `%s`/`%d`-substituted values `args`'s own looser type
     // covers -- every real call site passes a literal string here.
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- verified above.
     f = args[i++] as string,
-    m: RegExpExecArray | null,
-    p: string,
-    c: string,
-    x: number;
+    m: RegExpExecArray | null;
   const o: string[] = [],
     s = "";
   while (f) {
@@ -75,72 +171,9 @@ export function sprintf(...args: (string | number)[]): string {
         f,
       );
     if (m) {
-      if (
-        (a = args[m[1] !== undefined ? Number(m[1]) : i++]) == null ||
-        a === undefined
-      ) {
-        throw new Error("Too few arguments.");
-      }
-      if (/[^s]/.test(m[7]!) && typeof a !== "number") {
-        throw new Error("Expecting number but found " + typeof a);
-      }
-
-      switch (m[7]!) {
-        case "b":
-          a = a.toString(2);
-          break;
-        case "c":
-          a = String.fromCharCode(a);
-          break;
-        case "d":
-          a = parseInt(a);
-          break;
-        case "e":
-          a =
-            m[6] !== undefined
-              ? a.toExponential(Number(m[6]))
-              : a.toExponential();
-          break;
-        case "f":
-          a =
-            m[6] !== undefined
-              ? parseFloat(a).toFixed(Number(m[6]))
-              : parseFloat(a);
-          break;
-        case "o":
-          a = a.toString(8);
-          break;
-        case "s":
-          a = String(a);
-          if (m[6] !== undefined) {
-            a = a.substring(0, Number(m[6]));
-          }
-          break;
-        case "u":
-          a = Math.abs(a);
-          break;
-        case "x":
-          a = a.toString(16);
-          break;
-        case "X":
-          a = a.toString(16).toUpperCase();
-          break;
-      }
-
-      a =
-        /[def]/.test(m[7]!) && m[2] !== undefined && a >= 0
-          ? "+" + String(a)
-          : a;
-      if (m[3] === undefined) {
-        c = " ";
-      } else if (m[3] === "0") {
-        c = "0";
-      } else {
-        c = m[3].charAt(1);
-      }
-      x = Number(m[5]) - String(a).length - s.length;
-      p = m[5] !== undefined ? str_repeat(c, x) : "";
-      o.push(s + (m[4] !== undefined ? String(a) + p : p + String(a)));
+      const { text, nextI } = formatSprintfSpecifier(m, args, i, s);
+      i = nextI;
+      o.push(text);
     } else {
       throw new Error("Huh ?!");
     }

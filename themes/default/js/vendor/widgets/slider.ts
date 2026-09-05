@@ -427,6 +427,7 @@ export function slider(
   index: number,
   value: number
 ): void;
+// eslint-disable-next-line sonarjs/function-return-type -- false positive: this is the shared implementation signature backing the 3 real overloads above, whose own declared return types already differ by design (TS overloading requires the implementation's return type to be their union).
 export function slider(
   elements: Element | ArrayLike<Element>,
   optionsOrMethod: SliderOptions | "option" | "value" | "values",

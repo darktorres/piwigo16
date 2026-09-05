@@ -972,7 +972,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
     hide(document.querySelectorAll(".permitActionListButton"));
     hide(document.querySelectorAll("#confirmDel"));
     show(document.querySelectorAll("#regenerationMsg"));
-    progressBarStart();
+    progressStart();
     for (let i = 0; i < syncElements.length; i++) {
       imageIds.push(syncElements[i]);
       if (
@@ -1094,7 +1094,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
     lang.deleteProgressMessage,
   );
   show(document.querySelectorAll("#regenerationMsg"));
-  progressBarStart();
+  progressStart();
   for (let i = 0; i < deleteElements.length; i++) {
     imageIds.push(deleteElements[i]);
     if (
@@ -1169,15 +1169,6 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
   e.preventDefault();
   e.stopPropagation();
 });
-
-function progressBarStart() {
-  show(document.querySelectorAll("#uploadingActions"));
-  css(
-    document.querySelectorAll("#uploadingActions .progress-bar"),
-    "width",
-    "0%",
-  );
-}
 
 function progressBar(current: number, max: number, _success: boolean) {
   const percent = parseInt(String((current / max) * 100));

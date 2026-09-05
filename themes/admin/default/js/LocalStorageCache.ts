@@ -218,7 +218,6 @@ abstract class AbstractSelectizer<
     this.get((cacheData) => {
       elements.forEach((el) => {
         let filtered: SelectizeEntity[];
-        let value: (string | number)[] | { id: string | number }[] | undefined;
         const options = { ...globalOptions };
         const instance = getSelectizeInstance<string | number, SelectizeEntity>(
           el,
@@ -248,7 +247,7 @@ abstract class AbstractSelectizer<
 
         // load items
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-        value = data(el, "value") as
+        const value = data(el, "value") as
           (string | number)[] | { id: string | number }[] | undefined;
         if (value) {
           options.value = value;
@@ -312,6 +311,36 @@ abstract class AbstractSelectizer<
         }
       });
     });
+  }
+
+  /**
+   * Shared body of every real subclass's own `selectize()` (sonarjs/
+   * no-identical-functions: TagsCache/GroupsCache's own copies were
+   * byte-identical, and CategoriesCache/UsersCache differed only in
+   * which field name they used throughout) -- `labelField` doubles as
+   * `searchField`/the render field; `sortField` defaults to it too,
+   * except CategoriesCache's own real "pos" sort field.
+   */
+  protected _selectizeWithField(
+    targets: Element | ArrayLike<Element>,
+    rawOptions: EntitySelectizeCallOptions | undefined,
+    labelField: string,
+    sortField: string = labelField,
+  ): void {
+    const options = rawOptions ?? {};
+
+    toElements(targets).forEach((el) => {
+      createSelectize(el, {
+        valueField: "id",
+        labelField,
+        sortField,
+        searchField: [labelField],
+        plugins: ["remove_button"],
+        render: AbstractSelectizer.getRender(labelField, options.lang),
+      });
+    });
+
+    this._selectize(targets, options);
   }
 
   // redefine Selectize templates without escape
@@ -387,20 +416,7 @@ class CategoriesCache extends AbstractSelectizer<ProcessedCategory> {
     targets: Element | ArrayLike<Element>,
     rawOptions?: EntitySelectizeCallOptions,
   ): void {
-    const options = rawOptions ?? {};
-
-    toElements(targets).forEach((el) => {
-      createSelectize(el, {
-        valueField: "id",
-        labelField: "fullname",
-        sortField: "pos",
-        searchField: ["fullname"],
-        plugins: ["remove_button"],
-        render: AbstractSelectizer.getRender("fullname", options.lang),
-      });
-    });
-
-    this._selectize(targets, options);
+    this._selectizeWithField(targets, rawOptions, "fullname", "pos");
   }
 }
 
@@ -452,20 +468,7 @@ class TagsCache extends AbstractSelectizer<ProcessedTag> {
     targets: Element | ArrayLike<Element>,
     rawOptions?: EntitySelectizeCallOptions,
   ): void {
-    const options = rawOptions ?? {};
-
-    toElements(targets).forEach((el) => {
-      createSelectize(el, {
-        valueField: "id",
-        labelField: "name",
-        sortField: "name",
-        searchField: ["name"],
-        plugins: ["remove_button"],
-        render: AbstractSelectizer.getRender("name", options.lang),
-      });
-    });
-
-    this._selectize(targets, options);
+    this._selectizeWithField(targets, rawOptions, "name");
   }
 }
 
@@ -513,20 +516,7 @@ class GroupsCache extends AbstractSelectizer<ProcessedGroup> {
     targets: Element | ArrayLike<Element>,
     rawOptions?: EntitySelectizeCallOptions,
   ): void {
-    const options = rawOptions ?? {};
-
-    toElements(targets).forEach((el) => {
-      createSelectize(el, {
-        valueField: "id",
-        labelField: "name",
-        sortField: "name",
-        searchField: ["name"],
-        plugins: ["remove_button"],
-        render: AbstractSelectizer.getRender("name", options.lang),
-      });
-    });
-
-    this._selectize(targets, options);
+    this._selectizeWithField(targets, rawOptions, "name");
   }
 }
 
@@ -581,20 +571,7 @@ class UsersCache extends AbstractSelectizer<UserEntity> {
     targets: Element | ArrayLike<Element>,
     rawOptions?: EntitySelectizeCallOptions,
   ): void {
-    const options = rawOptions ?? {};
-
-    toElements(targets).forEach((el) => {
-      createSelectize(el, {
-        valueField: "id",
-        labelField: "username",
-        sortField: "username",
-        searchField: ["username"],
-        plugins: ["remove_button"],
-        render: AbstractSelectizer.getRender("username", options.lang),
-      });
-    });
-
-    this._selectize(targets, options);
+    this._selectizeWithField(targets, rawOptions, "username");
   }
 }
 

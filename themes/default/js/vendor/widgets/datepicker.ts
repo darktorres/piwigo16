@@ -316,7 +316,6 @@ interface Instance {
 }
 
 const instancesByKey = new Map<string, Instance>();
-const instanceByInput = new WeakMap<HTMLInputElement, Instance>();
 
 let active: Instance | undefined;
 
@@ -912,7 +911,6 @@ function registerInstance(input: HTMLInputElement, options: PwgDatepickerOptions
   if (key !== "") {
     instancesByKey.set(key, inst);
   }
-  instanceByInput.set(input, inst);
 
   return inst;
 }

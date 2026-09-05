@@ -99,8 +99,6 @@ interface ClueTipContent {
   originalTitleAttr: string;
 }
 
-const contentByElement = new WeakMap<Element, ClueTipContent>();
-
 let tipEl: HTMLDivElement | undefined;
 let titleEl: HTMLHeadingElement;
 let innerEl: HTMLDivElement;
@@ -261,7 +259,6 @@ export function cluetip(elements: Element | ArrayLike<Element>, options: ClueTip
     const parts = rawTitle.split(SPLIT_TITLE);
     const title = parts.shift() ?? "";
     const content: ClueTipContent = { title, bodyParts: parts, originalTitleAttr: rawTitle };
-    contentByElement.set(el, content);
 
     hover(
       el,

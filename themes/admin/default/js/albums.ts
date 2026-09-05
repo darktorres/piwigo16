@@ -1199,17 +1199,19 @@ function showNodeChildrens(node: AlbumJqTreeNode) {
   }
 }
 
-// Genuinely dead code -- zero real callers found (confirmed via grep)
-// -- typed rather than left broken, same policy as isNumeric() above.
+// Real callers: applyMove() below, 6 real call sites -- a prior version
+// of this comment claimed this was dead code; stale, corrected.
 function getId(parent: AlbumJqTreeNode): string | number {
+  let id: string | number;
   if (parent.getLevel() === 0) {
-    return 0;
+    id = 0;
   } else {
     // Non-null: every real album node carries a real id (only jqtree's
     // own invisible tree root, excluded by the `getLevel() == 0` branch
     // above, ever lacks one).
-    return parent.id!;
+    id = parent.id!;
   }
+  return id;
 }
 
 function getRank(node: AlbumJqTreeNode, ignoreId: string | number): number {

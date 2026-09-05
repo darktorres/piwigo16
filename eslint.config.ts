@@ -279,8 +279,8 @@ export default defineConfig(
     // `{name, plugins, rules, settings}` object, never the array branch its
     // own union type also allows -- narrowed with an explicit cast.
     files: ["**/*.ts"],
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- see comment above; eslint-plugin-sonarjs's own `configs` index signature is untyped, and `recommended` is confirmed to be the flat object shape, not its own type's array alternative.
     ...(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- see comment above; eslint-plugin-sonarjs's own `configs` index signature is untyped, and `recommended` is confirmed to be the flat object shape, not its own type's array alternative.
       const recommended = sonarjs.configs!["recommended"] as {
         plugins: Record<string, ESLint.Plugin>;
         rules: Linter.RulesRecord;

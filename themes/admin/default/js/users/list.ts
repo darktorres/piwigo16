@@ -1739,6 +1739,93 @@ function checkTabs(title_tab_name_id: string) {
  * @param {() => {} | null} get_data_function - API call get function with ajax (must be null if users_table is used)
  * @returns {void} Displays the new tab in the user's modal
  */
+/** Part of `validateAndRegisterPluginTab()`'s own extraction, below. */
+function validateContentId(content_id: string): void {
+  if (typeof content_id !== "string") {
+    throw new TypeError("content_id must be a string.");
+  }
+  if (!document.getElementById(content_id)) {
+    throw new TypeError('HTML element "' + content_id + '" not found.');
+  }
+  if (document.querySelector(".edit-user-slides #" + content_id)) {
+    throw new TypeError("An element with this content_id already exists.");
+  }
+}
+
+/** Part of `validateAndRegisterPluginTab()`'s own extraction, below. */
+function validateUsersTableExclusivity(
+  users_table: string | null,
+  set_data_function: ((...args: unknown[]) => unknown) | null,
+  get_data_function: ((...args: unknown[]) => unknown) | null,
+): void {
+  if (users_table === null || users_table === "") {
+    return;
+  }
+  if (typeof users_table !== "string") {
+    throw new TypeError("users_table must be a string.");
+  }
+  if (set_data_function || get_data_function) {
+    throw new TypeError(
+      "users_table must be null if set_data_function or get_data_function is used.",
+    );
+  }
+}
+
+/** Part of `validateAndRegisterPluginTab()`'s own extraction, below. */
+function registerPluginDataFunctions(
+  name: string,
+  set_data_function: ((...args: unknown[]) => unknown) | null,
+  get_data_function: ((...args: unknown[]) => unknown) | null,
+): void {
+  if (set_data_function) {
+    if (typeof set_data_function !== "function") {
+      throw new TypeError("set_data_function must be a function.");
+    }
+    pluginsSetFunctions[name + "_set_function"] = set_data_function;
+  }
+
+  if (get_data_function) {
+    if (typeof get_data_function !== "function") {
+      throw new TypeError("get_data_function must be a function.");
+    }
+    pluginsGetFunctions[name + "_get_function"] = get_data_function;
+  }
+}
+
+/**
+ * `pluginAddTabInUserModal()`'s own upfront validation, extracted to
+ * keep that function's cognitive complexity under the sonarjs limit --
+ * a pure extraction (same checks, same order, same thrown messages),
+ * plus the 2 real registration side effects (`pluginsSetFunctions`/
+ * `pluginsGetFunctions`/`pluginsUsersInfosTable`) that only happen once
+ * validation passes, exactly as before. Split further into 3 helpers
+ * above since the combined body was itself still over the sonarjs
+ * cognitive-complexity budget.
+ */
+function validateAndRegisterPluginTab(
+  name: string,
+  content_id: string,
+  users_table: string | null,
+  set_data_function: ((...args: unknown[]) => unknown) | null,
+  get_data_function: ((...args: unknown[]) => unknown) | null,
+): void {
+  if (document.getElementById("name_tab_" + name)) {
+    throw new TypeError("An element with this tab_name already exists.");
+  }
+
+  validateContentId(content_id);
+  validateUsersTableExclusivity(
+    users_table,
+    set_data_function,
+    get_data_function,
+  );
+  registerPluginDataFunctions(name, set_data_function, get_data_function);
+
+  if (users_table !== null && users_table !== "") {
+    pluginsUsersInfosTable.push({ content_id, users_table });
+  }
+}
+
 function pluginAddTabInUserModal(
   tab_name: string,
   content_id: string,
@@ -1746,55 +1833,18 @@ function pluginAddTabInUserModal(
   set_data_function: ((...args: unknown[]) => unknown) | null = null,
   get_data_function: ((...args: unknown[]) => unknown) | null = null,
 ) {
-  // verification
   if (typeof tab_name !== "string") {
     throw new TypeError("tab_name must be a string.");
   }
   const name = tab_name.replace(/ /g, "").toLowerCase();
-  if (document.getElementById("name_tab_" + name)) {
-    throw new TypeError("An element with this tab_name already exists.");
-  }
 
-  if (typeof content_id !== "string") {
-    throw new TypeError("content_id must be a string.");
-  } else if (!document.getElementById(content_id)) {
-    throw new TypeError('HTML element "' + content_id + '" not found.');
-  } else if (document.querySelector(".edit-user-slides #" + content_id)) {
-    throw new TypeError("An element with this content_id already exists.");
-  }
-
-  if (
-    users_table !== null &&
-    users_table !== "" &&
-    typeof users_table !== "string"
-  ) {
-    throw new TypeError("users_table must be a string.");
-  }
-  if (
-    users_table !== null &&
-    users_table !== "" &&
-    (set_data_function || get_data_function)
-  ) {
-    throw new TypeError(
-      "users_table must be null if set_data_function or get_data_function is used.",
-    );
-  }
-
-  if (set_data_function && typeof set_data_function !== "function") {
-    throw new TypeError("set_data_function must be a function.");
-  } else if (set_data_function && typeof set_data_function === "function") {
-    pluginsSetFunctions[name + "_set_function"] = set_data_function;
-  }
-
-  if (get_data_function && typeof get_data_function !== "function") {
-    throw new TypeError("get_data_function must be a function.");
-  } else if (get_data_function && typeof get_data_function === "function") {
-    pluginsGetFunctions[name + "_get_function"] = get_data_function;
-  }
-
-  if (users_table !== null && users_table !== "") {
-    pluginsUsersInfosTable.push({ content_id, users_table });
-  }
+  validateAndRegisterPluginTab(
+    name,
+    content_id,
+    users_table,
+    set_data_function,
+    get_data_function,
+  );
 
   // DOM modification
   const content = document.getElementById(content_id)!;

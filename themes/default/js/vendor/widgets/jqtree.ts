@@ -924,25 +924,25 @@ class JqTreeController<T extends Record<string, unknown>> {
     return true;
   }
 
-  #applyHoveredArea(area: HitArea | null, canMoveTo: boolean): void {
-    if (canMoveTo && area) {
-      if (!area.node.isFolder()) {
-        this.#stopOpenFolderTimer();
-      }
-      if (this.hoveredArea !== area) {
-        this.hoveredArea = area;
-        if (JqTreeController.#mustOpenFolderTimer(area)) {
-          this.#startOpenFolderTimer(area.node);
-        } else {
-          this.#stopOpenFolderTimer();
-        }
-        this.#updateDropHint();
-      }
-    } else {
-      this.hoveredArea = null;
-      this.#removeDropHint();
+  #applyMoveableHoveredArea(area: HitArea): void {
+    if (!area.node.isFolder()) {
       this.#stopOpenFolderTimer();
     }
+    if (this.hoveredArea !== area) {
+      this.hoveredArea = area;
+      if (JqTreeController.#mustOpenFolderTimer(area)) {
+        this.#startOpenFolderTimer(area.node);
+      } else {
+        this.#stopOpenFolderTimer();
+      }
+      this.#updateDropHint();
+    }
+  }
+
+  #clearHoveredArea(): void {
+    this.hoveredArea = null;
+    this.#removeDropHint();
+    this.#stopOpenFolderTimer();
   }
 
   #mouseDrag(positionInfo: PositionInfo): boolean {
@@ -953,7 +953,11 @@ class JqTreeController<T extends Record<string, unknown>> {
     this.positionInfo = positionInfo;
     const area = this.#findHoveredArea(positionInfo.pageX, positionInfo.pageY);
     const canMoveTo = this.#canMoveToArea(area);
-    this.#applyHoveredArea(area, canMoveTo);
+    if (canMoveTo && area) {
+      this.#applyMoveableHoveredArea(area);
+    } else {
+      this.#clearHoveredArea();
+    }
     if (!area && this.options.onDragMove) {
       this.options.onDragMove(
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see JqTreeNode's own leading comment.

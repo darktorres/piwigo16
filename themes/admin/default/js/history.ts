@@ -430,411 +430,482 @@ async function fillHistoryResult(
   }
 }
 
-function lineConstructor(line: HistoryLine, id: number) {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
-  const newLine = document.getElementById("-1")!.cloneNode(true) as Element;
+const HISTORY_LINE_SECTIONS = [
+  "categories",
+  "tags",
+  "best_rated",
+  "memories-1-year-ago",
+  "list",
+  "search",
+  "most_visited",
+  "recent_pics",
+  "recent_cats",
+  "favorites",
+];
 
-  const sections = [
-    "categories",
-    "tags",
-    "best_rated",
-    "memories-1-year-ago",
-    "list",
-    "search",
-    "most_visited",
-    "recent_pics",
-    "recent_cats",
-    "favorites",
-  ];
+const HISTORY_LINE_ICONS = [
+  "line-icon icon-folder-open icon-yellow",
+  "line-icon icon-tags icon-blue",
+  "line-icon icon-star icon-green",
+  "line-icon icon-clock icon-yellow",
+  "line-icon icon-dice-solid icon-purple",
+  "line-icon icon-search icon-purple",
+  "line-icon icon-fire icon-red",
+  "line-icon icon-clock icon-yellow",
+  "line-icon icon-clock icon-yellow",
+  "line-icon icon-heart icon-red",
+];
 
-  const icons = [
-    "line-icon icon-folder-open icon-yellow",
-    "line-icon icon-tags icon-blue",
-    "line-icon icon-star icon-green",
-    "line-icon icon-clock icon-yellow",
-    "line-icon icon-dice-solid icon-purple",
-    "line-icon icon-search icon-purple",
-    "line-icon icon-fire icon-red",
-    "line-icon icon-clock icon-yellow",
-    "line-icon icon-clock icon-yellow",
-    "line-icon icon-heart icon-red",
-  ];
-
-  removeClass(newLine, "hide");
-
-  attr(newLine, "id", String(id));
-
-  html(find(newLine, ".date-day"), line.dateFormatted ?? "");
-  html(find(newLine, ".date-hour"), line.time);
-
-  html(
-    find(newLine, ".user-name"),
-    (line.username ?? "") + '<i class="add-filter icon-plus-circled"></i>',
-  );
-
+/** Part of `lineConstructor()`'s own extraction, below. */
+function bindUserNameFilterClick(newLine: Element, line: HistoryLine): void {
   attr(find(newLine, ".user-name"), "id", String(line.userId));
-  if (currentParam.user_id === -1) {
-    on(find(newLine, ".user-name"), "click", function (this: Element) {
-      currentParam.user_id = Number(attrOf(this, "id"));
-      currentParam.pageNumber = 0;
-      addUserFilter(htmlOf(this) ?? "");
-      void fillHistoryResult(currentParam);
-    });
+  if (currentParam.user_id !== -1) {
+    return;
   }
+  on(find(newLine, ".user-name"), "click", function (this: Element) {
+    currentParam.user_id = Number(attrOf(this, "id"));
+    currentParam.pageNumber = 0;
+    addUserFilter(htmlOf(this) ?? "");
+    void fillHistoryResult(currentParam);
+  });
+}
 
-  html(
-    find(newLine, ".user-ip"),
-    line.ip + '<i class="add-filter icon-plus-circled"></i>',
-  );
+/** Part of `lineConstructor()`'s own extraction, below. */
+function bindUserIpFilterClick(newLine: Element, line: HistoryLine): void {
   setData(find(newLine, ".user-ip")[0]!, "ip", line.ip);
   setupGeoIpHover(find(newLine, ".user-ip")[0]!);
-  if (currentParam.ip === "") {
-    on(find(newLine, ".user-ip"), "click", function (this: Element) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      currentParam.ip = (data(this, "ip") as string | undefined) ?? "";
-      currentParam.pageNumber = 0;
-      addIpFilter(htmlOf(this) ?? "");
-      void fillHistoryResult(currentParam);
-    });
+  if (currentParam.ip !== "") {
+    return;
   }
+  on(find(newLine, ".user-ip"), "click", function (this: Element) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
+    currentParam.ip = (data(this, "ip") as string | undefined) ?? "";
+    currentParam.pageNumber = 0;
+    addIpFilter(htmlOf(this) ?? "");
+    void fillHistoryResult(currentParam);
+  });
+}
 
+/** Part of `lineConstructor()`'s own extraction, below. */
+function bindImageAsFilterClick(newLine: Element, line: HistoryLine): void {
   setData(find(newLine, ".add-img-as-filter")[0]!, "img-id", line.imageId);
-  if (currentParam.image_id === "") {
-    on(find(newLine, ".add-img-as-filter"), "click", function (this: Element) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      const imgId = data(this, "img-id") as HistoryImageId;
-      currentParam.image_id = imgId;
-      currentParam.pageNumber = 0;
-      addImageFilter(imgId);
-      void fillHistoryResult(currentParam);
-    });
+  if (currentParam.image_id !== "") {
+    return;
   }
+  on(find(newLine, ".add-img-as-filter"), "click", function (this: Element) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
+    const imgId = data(this, "img-id") as HistoryImageId;
+    currentParam.image_id = imgId;
+    currentParam.pageNumber = 0;
+    addImageFilter(imgId);
+    void fillHistoryResult(currentParam);
+  });
+}
 
+/** Part of `lineConstructor()`'s own extraction, below. */
+function applyEditImgLink(newLine: Element, line: HistoryLine): void {
   if (line.imageEditUrl !== null && line.imageEditUrl !== "") {
     attr(find(newLine, ".edit-img"), "href", line.imageEditUrl);
+    return;
+  }
+  const editImg = find(newLine, ".edit-img");
+  attr(editImg, "href", "#");
+  addClass(editImg, "notClickable tiptip");
+  attr(editImg, "title", strNoLongerExistPhoto);
+  on(editImg, "click", (e: Event) => {
+    e.preventDefault();
+  });
+}
+
+/**
+ * Part of `lineConstructor()`'s own extraction, below -- the shared
+ * "static label + detail-item-1 icon" rendering every non-tags,
+ * non-search, non-categories section uses. `hideTypeId` defaults to
+ * true (every real caller except "memories-1-year-ago", which never
+ * hid `.type-id` in the original either).
+ */
+function renderStaticSectionLine(
+  newLine: Element,
+  label: string,
+  detailIconClass: string,
+  hideTypeId = true,
+): void {
+  html(find(newLine, ".type-name"), label);
+  const detailItem1 = find(newLine, ".detail-item-1");
+  html(detailItem1, label);
+  addClass(detailItem1, detailIconClass);
+  if (hideTypeId) {
+    hide(find(newLine, ".type-id"));
+  }
+}
+
+/** Part of `lineConstructor()`'s own extraction, below. */
+function renderTagsSectionLine(newLine: Element, line: HistoryLine): void {
+  if (line.tagNames.length > 1 && line.tagNames.length <= 2) {
+    html(
+      find(newLine, ".type-name"),
+      line.tagNames[0]! + ", " + line.tagNames[1]! + ", ...",
+    );
+    html(
+      find(newLine, ".type-id"),
+      "#" + String(line.tagIds[0]) + ", " + String(line.tagIds[1]) + ", ...",
+    );
+  } else if (line.tagNames.length > 2) {
+    html(
+      find(newLine, ".type-name"),
+      line.tagNames[0]! +
+        ", " +
+        line.tagNames[1]! +
+        ", " +
+        line.tagNames[2]! +
+        ", ...",
+    );
+    html(
+      find(newLine, ".type-id"),
+      "#" +
+        String(line.tagIds[0]) +
+        ", " +
+        String(line.tagIds[1]) +
+        ", " +
+        String(line.tagIds[2]) +
+        ", ...",
+    );
   } else {
-    const editImg = find(newLine, ".edit-img");
-    attr(editImg, "href", "#");
-    addClass(editImg, "notClickable tiptip");
-    attr(editImg, "title", strNoLongerExistPhoto);
-    on(editImg, "click", (e: Event) => {
-      e.preventDefault();
-    });
+    html(find(newLine, ".type-name"), line.tagNames[0] ?? "");
+    html(find(newLine, ".type-id"), "#" + String(line.tagIds[0]));
   }
 
-  // Genuine pre-existing bug found via strict typing: this read
-  // `line.SECTION` (uppercase) -- a property that has never existed on
-  // any real history line (confirmed via grep, no PHP source ever
-  // writes it; the real field is `section`, read correctly two other
-  // places in this same function, below). Every line therefore always
-  // fell through to `default`, showing a generic "unrecognized" entry
-  // with no type-specific label/detail text, even though its section
-  // icon (via the separate `sections.indexOf(line.section)` lookup
-  // further down) rendered correctly. Fixed to the real field.
-  switch (line.section) {
-    case "tags": {
-      if (line.tagNames.length > 1 && line.tagNames.length <= 2) {
-        html(
-          find(newLine, ".type-name"),
-          line.tagNames[0]! + ", " + line.tagNames[1]! + ", ...",
-        );
-        html(
-          find(newLine, ".type-id"),
-          "#" +
-            String(line.tagIds[0]) +
-            ", " +
-            String(line.tagIds[1]) +
-            ", ...",
-        );
-      } else if (line.tagNames.length > 2) {
-        html(
-          find(newLine, ".type-name"),
-          line.tagNames[0]! +
-            ", " +
-            line.tagNames[1]! +
-            ", " +
-            line.tagNames[2]! +
-            ", ...",
-        );
-        html(
-          find(newLine, ".type-id"),
-          "#" +
-            String(line.tagIds[0]) +
-            ", " +
-            String(line.tagIds[1]) +
-            ", " +
-            String(line.tagIds[2]) +
-            ", ...",
-        );
-      } else {
-        html(find(newLine, ".type-name"), line.tagNames[0] ?? "");
-        html(find(newLine, ".type-id"), "#" + String(line.tagIds[0]));
-      }
+  const detailStr = line.tagNames.join(", ");
+  const detailItem1 = find(newLine, ".detail-item-1");
+  html(detailItem1, detailStr);
+  attr(detailItem1, "title", detailStr);
+  removeClass(detailItem1, "hide");
+  addClass(detailItem1, "icon-tags");
+}
 
-      const detailStr = line.tagNames.join(", ");
-      const detailItem1 = find(newLine, ".detail-item-1");
-      html(detailItem1, detailStr);
-      attr(detailItem1, "title", detailStr);
-      removeClass(detailItem1, "hide");
-      addClass(detailItem1, "icon-tags");
+// Genuinely heterogeneous per-filter-type search-criteria data (same
+// nature as searchFilters.ts's own global_params/fullname_of_cat,
+// deferred to P48) -- each key's real value shape (string[], a nested
+// object, or an opaque `filetypes` blob) varies by which filter was
+// active on the saved search a given line's `searchId` refers to.
+const SEARCH_DETAIL_ICONS: Record<string, any> = {
+  allwords: "gallery-icon-search",
+  tags: "gallery-icon-tag",
+  datePosted: "gallery-icon-calendar-plus",
+  cat: "gallery-icon-album",
+  author: "gallery-icon-user-edit",
+  addedBy: "gallery-icon-user",
+  filetypes: "gallery-icon-file-image",
+};
+
+/** Part of `renderSearchSectionLine()`'s own extraction, below. */
+function renderSearchBadge(
+  newLine: Element,
+  countItem: number,
+  key: string,
+  valueStr: string,
+): void {
+  const item = find(newLine, ".detail-item-" + String(countItem));
+  html(item, valueStr);
+  addClass(item, String(SEARCH_DETAIL_ICONS[key]) + " tiptip");
+  attr(item, "title", "<b>" + strSearchDetails[key]! + " :</b> " + valueStr);
+  removeClass(item, "hide");
+}
+
+/**
+ * Part of `renderSearchSectionLine()`'s own extraction, below -- the
+ * first up-to-2 detail badges (allwords, cat, tags, then the first
+ * other active filter), in that priority order.
+ */
+function renderAllwordsAndCatBadges(
+  newLine: Element,
+  activeSearchDetails: Record<string, any>,
+  activeMore: any[],
+): number {
+  let countItem = 1;
+
+  const hasAllwords = Boolean(activeSearchDetails["allwords"]);
+  if (hasAllwords) {
+    renderSearchBadge(
+      newLine,
+      countItem,
+      "allwords",
+      String(activeSearchDetails["allwords"].join(" ")),
+    );
+    countItem++;
+    activeMore.push("allwords");
+  }
+
+  const hasCat = Boolean(activeSearchDetails["cat"]);
+  if (hasCat) {
+    const cat = Object.values(activeSearchDetails["cat"]).join(" + ");
+    renderSearchBadge(newLine, countItem, "cat", cat);
+    attr(
+      find(newLine, ".detail-item-" + String(countItem)),
+      "title",
+      "<b>" + strSearchDetails["cat"]! + " :</b> " + stripHtml(cat),
+    );
+    countItem++;
+    activeMore.push("cat");
+  }
+
+  return countItem;
+}
+
+/**
+ * Part of `renderPrimarySearchBadges()`'s own extraction, below -- the
+ * first non-allwords/cat/tags active filter, once there's still a
+ * badge slot free.
+ */
+function renderFirstOtherSearchBadge(
+  newLine: Element,
+  activeSearchDetails: Record<string, any>,
+  activeItems: string[],
+  activeMore: any[],
+  countItem: number,
+): void {
+  const badgeToAdd = activeItems.length !== 1 && countItem === 1 ? 2 : 1;
+  let badgeAdded = 0;
+  let nextCountItem = countItem;
+  for (const key of activeItems) {
+    if (key === "allwords" || key === "cat" || key === "tags") {
+      continue;
+    }
+    // Genuinely heterogeneous per-key value shape, same as
+    // activeSearchDetails/SEARCH_DETAIL_ICONS above.
+    let arrayKey: any;
+    if (Array.isArray(activeSearchDetails[key])) {
+      arrayKey = activeSearchDetails[key];
+    } else if (typeof activeSearchDetails[key] === "object") {
+      arrayKey = Object.values(activeSearchDetails[key]);
+    } else {
+      arrayKey = [activeSearchDetails[key]];
+    }
+    renderSearchBadge(
+      newLine,
+      nextCountItem,
+      key,
+      String(arrayKey.join(" + ")),
+    );
+    nextCountItem++;
+    badgeAdded++;
+    activeMore.push(key);
+    if (badgeAdded === badgeToAdd) {
       break;
     }
+  }
+}
 
-    case "most_visited":
-      html(find(newLine, ".type-name"), strMostVisited);
-      {
-        const detailItem1 = find(newLine, ".detail-item-1");
-        html(detailItem1, strMostVisited);
-        addClass(detailItem1, "icon-fire");
+function renderPrimarySearchBadges(
+  newLine: Element,
+  activeSearchDetails: Record<string, any>,
+  activeItems: string[],
+  activeMore: any[],
+): void {
+  let countItem = renderAllwordsAndCatBadges(
+    newLine,
+    activeSearchDetails,
+    activeMore,
+  );
+
+  if (countItem <= 2 && Boolean(activeSearchDetails["tags"])) {
+    const tagsStr = Object.values(activeSearchDetails["tags"]).join(" + ");
+    renderSearchBadge(newLine, countItem, "tags", tagsStr);
+    countItem++;
+    activeMore.push("tags");
+  }
+
+  if (countItem > 2) {
+    return;
+  }
+  renderFirstOtherSearchBadge(
+    newLine,
+    activeSearchDetails,
+    activeItems,
+    activeMore,
+    countItem,
+  );
+}
+
+/**
+ * Part of `renderSearchSectionLine()`'s own extraction, below -- the
+ * "+N more" overflow badge for every active filter not already shown
+ * by `renderPrimarySearchBadges()`.
+ */
+function renderSearchOverflowBadge(
+  newLine: Element,
+  activeSearchDetails: Record<string, any>,
+  activeItems: string[],
+  activeMore: any[],
+): void {
+  if (activeItems.length < 3) {
+    return;
+  }
+  let countMore = 0;
+  const searchDetailsStr = Object.entries(activeSearchDetails)
+    .filter(([key]) => !activeMore.includes(key))
+    .map(([key, value]: [string, any]) => {
+      let valueStr;
+      if (Array.isArray(value)) {
+        valueStr = value.join(" + ");
+      } else if (typeof value === "object") {
+        valueStr = Object.entries(value)
+          .map(([, v]: [string, any]) => v)
+          .join(" + ");
+      } else {
+        valueStr = value;
       }
-      hide(find(newLine, ".type-id"));
+
+      if (key === "cat") {
+        valueStr = stripHtml(valueStr);
+      }
+      countMore++;
+      return `<b>${strSearchDetails[key]!}</b> : ${valueStr}`;
+    })
+    .join(" <br />");
+  const item3 = find(newLine, ".detail-item-3");
+  html(item3, sprintf(strAndMore, countMore));
+  addClass(item3, "icon-info-circled-1 tiptip");
+  attr(item3, "title", searchDetailsStr);
+  removeClass(item3, "hide");
+}
+
+/** Part of `lineConstructor()`'s own extraction, below. */
+function renderSearchSectionLine(newLine: Element, line: HistoryLine): void {
+  const { searchDetails } = line;
+  html(find(newLine, ".type-name"), line.section ?? "");
+  html(find(newLine, ".type-id"), "#" + String(line.searchId));
+  if (line.searchId === null) {
+    hide(find(newLine, ".type-id"));
+  }
+
+  if (searchDetails === null) {
+    hide(find(newLine, ".detail-item-1"));
+    return;
+  }
+  const activeSearchDetails: Record<string, any> = {};
+  Object.entries(searchDetails).forEach(([key, value]) => {
+    if (value !== null) {
+      activeSearchDetails[key] = value;
+    }
+  });
+  const activeMore: any[] = [];
+  const activeItems = Object.keys(activeSearchDetails);
+  if (activeItems.length > 0) {
+    renderPrimarySearchBadges(
+      newLine,
+      activeSearchDetails,
+      activeItems,
+      activeMore,
+    );
+  } else {
+    hide(find(newLine, ".detail-item-1"));
+  }
+  renderSearchOverflowBadge(
+    newLine,
+    activeSearchDetails,
+    activeItems,
+    activeMore,
+  );
+}
+
+/** Part of `lineConstructor()`'s own extraction, below. */
+function renderCategoriesSectionLine(
+  newLine: Element,
+  line: HistoryLine,
+): void {
+  html(find(newLine, ".type-name"), line.categoryName ?? "");
+  const detailItem1 = find(newLine, ".detail-item-1");
+  html(detailItem1, line.categoryName ?? "");
+  addClass(detailItem1, "icon-folder-open tiptip");
+  if (line.categoryPath === null) {
+    removeAttr(detailItem1, "title");
+  } else {
+    attr(detailItem1, "title", line.categoryPath);
+  }
+  if (line.imageThumbnailUrl === null) {
+    hide(find(newLine, ".type-id"));
+  }
+}
+
+/** Part of `lineConstructor()`'s own extraction, below. */
+function renderContactSectionLine(newLine: Element): void {
+  addClass(find(newLine, ".type-icon i"), "line-icon icon-mail-1 icon-yellow");
+  html(find(newLine, ".type-name"), strContactForm);
+  html(find(newLine, ".detail-item-1"), strContactForm);
+  hide(find(newLine, ".type-id"));
+}
+
+/** Part of `lineConstructor()`'s own extraction, below. */
+function renderUnknownSectionLine(newLine: Element, line: HistoryLine): void {
+  addClass(
+    find(newLine, ".type-icon i"),
+    "line-icon icon-help-puzzle icon-grey",
+  );
+  html(find(newLine, ".type-name"), line.section ?? "");
+  hide(find(newLine, ".type-id"));
+}
+
+/**
+ * Part of `lineConstructor()`'s own extraction, below -- the type-name/
+ * detail-item-1/type-id rendering that varies per history-line section.
+ *
+ * Genuine pre-existing bug found via strict typing: this read
+ * `line.SECTION` (uppercase) -- a property that has never existed on
+ * any real history line (confirmed via grep, no PHP source ever writes
+ * it; the real field is `section`, read correctly two other places in
+ * this same function, below). Every line therefore always fell through
+ * to `default`, showing a generic "unrecognized" entry with no
+ * type-specific label/detail text, even though its section icon (via
+ * the separate `sections.indexOf(line.section)` lookup further down)
+ * rendered correctly. Fixed to the real field.
+ */
+function renderSectionLine(newLine: Element, line: HistoryLine): void {
+  switch (line.section) {
+    case "tags":
+      renderTagsSectionLine(newLine, line);
+      break;
+    case "most_visited":
+      renderStaticSectionLine(newLine, strMostVisited, "icon-fire");
       break;
     case "best_rated":
-      html(find(newLine, ".type-name"), strBestRated);
-      {
-        const detailItem1 = find(newLine, ".detail-item-1");
-        html(detailItem1, strBestRated);
-        addClass(detailItem1, "icon-star");
-      }
-      hide(find(newLine, ".type-id"));
+      renderStaticSectionLine(newLine, strBestRated, "icon-star");
       break;
     case "list":
-      html(find(newLine, ".type-name"), strList);
-      {
-        const detailItem1 = find(newLine, ".detail-item-1");
-        html(detailItem1, strList);
-        addClass(detailItem1, "icon-dice-solid");
-      }
-      hide(find(newLine, ".type-id"));
+      renderStaticSectionLine(newLine, strList, "icon-dice-solid");
       break;
-    case "search": {
-      const { searchDetails } = line;
-      // Genuinely heterogeneous per-filter-type search-criteria data
-      // (same nature as searchFilters.ts's own global_params/
-      // fullname_of_cat, deferred to P48) -- each key's real value
-      // shape (string[], a nested object, or an opaque `filetypes`
-      // blob) varies by which filter was active on the saved search
-      // this line's `searchId` refers to.
-      const searchIcons: Record<string, any> = {
-        allwords: "gallery-icon-search",
-        tags: "gallery-icon-tag",
-        datePosted: "gallery-icon-calendar-plus",
-        cat: "gallery-icon-album",
-        author: "gallery-icon-user-edit",
-        addedBy: "gallery-icon-user",
-        filetypes: "gallery-icon-file-image",
-      };
-      html(find(newLine, ".type-name"), line.section);
-      html(find(newLine, ".type-id"), "#" + String(line.searchId));
-      if (line.searchId === null) {
-        hide(find(newLine, ".type-id"));
-      }
-
-      if (searchDetails === null) {
-        hide(find(newLine, ".detail-item-1"));
-        break;
-      }
-      const activeSearchDetails: Record<string, any> = {};
-      Object.entries(searchDetails).forEach(([key, value]) => {
-        if (value !== null) {
-          activeSearchDetails[key] = value;
-        }
-      });
-      let countItem = 1;
-      const activeMore: any[] = [];
-      const activeItems = Object.keys(activeSearchDetails);
-      if (activeItems.length > 0) {
-        const hasAllwords = Boolean(activeSearchDetails["allwords"]);
-        if (hasAllwords) {
-          const item = find(newLine, ".detail-item-" + String(countItem));
-          html(item, activeSearchDetails["allwords"].join(" "));
-          addClass(item, String(searchIcons["allwords"]) + " tiptip");
-          attr(
-            item,
-            "title",
-            "<b>" +
-              strSearchDetails["allwords"]! +
-              " :</b> " +
-              String(activeSearchDetails["allwords"].join(" ")),
-          );
-          countItem++;
-          activeMore.push("allwords");
-        }
-        const hasCat = Boolean(activeSearchDetails["cat"]);
-        if (hasCat) {
-          const arrayCat = Object.values(activeSearchDetails["cat"]);
-          const cat = arrayCat.join(" + ");
-          const text = stripHtml(cat);
-          const item = find(newLine, ".detail-item-" + String(countItem));
-          html(item, cat);
-          addClass(item, String(searchIcons["cat"]) + " tiptip");
-          attr(
-            item,
-            "title",
-            "<b>" + strSearchDetails["cat"]! + " :</b> " + text,
-          );
-          removeClass(item, "hide");
-          countItem++;
-          activeMore.push("cat");
-        }
-        if (countItem <= 2 && Boolean(activeSearchDetails["tags"])) {
-          const arrayTags = Object.values(activeSearchDetails["tags"]);
-          const item = find(newLine, ".detail-item-" + String(countItem));
-          html(item, arrayTags.join(" + "));
-          addClass(item, String(searchIcons["tags"]) + " tiptip");
-          attr(
-            item,
-            "title",
-            "<b>" +
-              strSearchDetails["tags"]! +
-              " :</b> " +
-              arrayTags.join(" + "),
-          );
-          removeClass(item, "hide");
-          countItem++;
-          activeMore.push("tags");
-        }
-        if (countItem <= 2) {
-          const badgeToAdd =
-            activeItems.length !== 1 && countItem === 1 ? 2 : 1;
-          let badgeAdded = 0;
-          activeItems.some((key) => {
-            if (key !== "allwords" && key !== "cat" && key !== "tags") {
-              // Genuinely heterogeneous per-key value shape, same as
-              // activeSearchDetails/searchIcons above.
-              let arrayKey: any;
-              if (Array.isArray(activeSearchDetails[key])) {
-                arrayKey = activeSearchDetails[key];
-              } else if (typeof activeSearchDetails[key] === "object") {
-                arrayKey = Object.values(activeSearchDetails[key]);
-              } else {
-                arrayKey = [activeSearchDetails[key]];
-              }
-              const item = find(newLine, ".detail-item-" + String(countItem));
-              html(item, arrayKey.join(" + "));
-              addClass(item, String(searchIcons[key]) + " tiptip");
-              attr(
-                item,
-                "title",
-                "<b>" +
-                  strSearchDetails[key]! +
-                  " :</b> " +
-                  String(arrayKey.join(" + ")),
-              );
-              removeClass(item, "hide");
-              countItem++;
-              badgeAdded++;
-              activeMore.push(key);
-              if (badgeAdded === badgeToAdd) {
-                return true;
-              }
-            }
-            return false;
-          });
-        }
-      } else {
-        hide(find(newLine, ".detail-item-1"));
-      }
-      if (activeItems.length >= 3) {
-        let countMore = 0;
-        const searchDetailsStr = Object.entries(activeSearchDetails)
-          .filter(([key]) => !activeMore.includes(key))
-          .map(([key, value]: [string, any]) => {
-            let valueStr;
-            if (Array.isArray(value)) {
-              valueStr = value.join(" + ");
-            } else if (typeof value === "object") {
-              valueStr = Object.entries(value)
-                .map(([, v]: [string, any]) => v)
-                .join(" + ");
-            } else {
-              valueStr = value;
-            }
-
-            if (key === "cat") {
-              valueStr = stripHtml(valueStr);
-            }
-            countMore++;
-            return `<b>${strSearchDetails[key]!}</b> : ${valueStr}`;
-          })
-          .join(" <br />");
-        const item3 = find(newLine, ".detail-item-3");
-        html(item3, sprintf(strAndMore, countMore));
-        addClass(item3, "icon-info-circled-1 tiptip");
-        attr(item3, "title", searchDetailsStr);
-        removeClass(item3, "hide");
-      }
+    case "search":
+      renderSearchSectionLine(newLine, line);
       break;
-    }
     case "favorites":
-      html(find(newLine, ".type-name"), strFavorites);
-      {
-        const detailItem1 = find(newLine, ".detail-item-1");
-        html(detailItem1, strFavorites);
-        addClass(detailItem1, "icon-heart");
-      }
-      hide(find(newLine, ".type-id"));
+      renderStaticSectionLine(newLine, strFavorites, "icon-heart");
       break;
     case "recent_cats":
-      html(find(newLine, ".type-name"), strRecentCats);
-      {
-        const detailItem1 = find(newLine, ".detail-item-1");
-        html(detailItem1, strRecentCats);
-        addClass(detailItem1, "icon-clock");
-      }
-      hide(find(newLine, ".type-id"));
+      renderStaticSectionLine(newLine, strRecentCats, "icon-clock");
       break;
     case "recent_pics":
-      html(find(newLine, ".type-name"), strRecentPics);
-      {
-        const detailItem1 = find(newLine, ".detail-item-1");
-        html(detailItem1, strRecentPics);
-        addClass(detailItem1, "icon-clock");
-      }
-      hide(find(newLine, ".type-id"));
+      renderStaticSectionLine(newLine, strRecentPics, "icon-clock");
       break;
-    case "categories": {
-      html(find(newLine, ".type-name"), line.categoryName ?? "");
-      const detailItem1 = find(newLine, ".detail-item-1");
-      html(detailItem1, line.categoryName ?? "");
-      addClass(detailItem1, "icon-folder-open tiptip");
-      if (line.categoryPath === null) {
-        removeAttr(detailItem1, "title");
-      } else {
-        attr(detailItem1, "title", line.categoryPath);
-      }
-      if (line.imageThumbnailUrl === null) {
-        hide(find(newLine, ".type-id"));
-      }
+    case "categories":
+      renderCategoriesSectionLine(newLine, line);
       break;
-    }
     case "memories-1-year-ago":
-      html(find(newLine, ".type-name"), strMemories);
-      {
-        const detailItem1 = find(newLine, ".detail-item-1");
-        html(detailItem1, strMemories);
-        addClass(detailItem1, "icon-clock");
-      }
+      renderStaticSectionLine(newLine, strMemories, "icon-clock", false);
       break;
     case "contact":
-      addClass(
-        find(newLine, ".type-icon i"),
-        "line-icon icon-mail-1 icon-yellow",
-      );
-      html(find(newLine, ".type-name"), strContactForm);
-      html(find(newLine, ".detail-item-1"), strContactForm);
-      hide(find(newLine, ".type-id"));
+      renderContactSectionLine(newLine);
       break;
     default:
-      addClass(
-        find(newLine, ".type-icon i"),
-        "line-icon icon-help-puzzle icon-grey",
-      );
-      html(find(newLine, ".type-name"), line.section ?? "");
-      hide(find(newLine, ".type-id"));
+      renderUnknownSectionLine(newLine, line);
       break;
   }
+}
 
+/** Part of `lineConstructor()`'s own extraction, below. */
+function renderThumbnailOrSectionIcon(
+  newLine: Element,
+  line: HistoryLine,
+): void {
   if (line.imageThumbnailUrl !== null) {
     const img = document.createElement("img");
     attr(img, "src", line.imageThumbnailUrl);
@@ -855,32 +926,68 @@ function lineConstructor(line: HistoryLine, id: number) {
     attr(find(newLine, ".type-icon img"), "title", strEditImg);
     addClass(find(newLine, ".type-icon img"), "tiptip");
     show(find(newLine, ".type-id"));
-  } else {
-    removeClass(
-      find(newLine, ".type-icon .icon-file-image"),
-      "icon-file-image",
-    );
-    hide(find(newLine, ".toggle-img-option"));
-
-    if (sections.includes(line.section ?? "")) {
-      const lineIconClass = icons[sections.indexOf(line.section ?? "")]!;
-      addClass(find(newLine, ".type-icon i"), lineIconClass);
-    } else {
-      console.warn("Unhandled section : " + String(line.section));
-    }
+    return;
   }
 
+  removeClass(find(newLine, ".type-icon .icon-file-image"), "icon-file-image");
+  hide(find(newLine, ".toggle-img-option"));
+
+  if (HISTORY_LINE_SECTIONS.includes(line.section ?? "")) {
+    const lineIconClass =
+      HISTORY_LINE_ICONS[HISTORY_LINE_SECTIONS.indexOf(line.section ?? "")]!;
+    addClass(find(newLine, ".type-icon i"), lineIconClass);
+  } else {
+    console.warn("Unhandled section : " + String(line.section));
+  }
+}
+
+/** Part of `lineConstructor()`'s own extraction, below. */
+function applyDownloadIndicator(newLine: Element, line: HistoryLine): void {
   removeClass(find(newLine, ".detail-item-1"), "hide");
-  if (line.imageType === "high") {
-    const detailItem1 = find(newLine, ".detail-item-1");
-    html(detailItem1, strDwld);
-    addClass(detailItem1, "icon-blue");
-    removeClass(detailItem1, "detail-item-1");
-    removeClass(detailItem1, "hide");
-    addClass(find(newLine, ".date-dwld-icon"), "icon-blue icon-floppy");
-  } else {
+  if (line.imageType !== "high") {
     remove(find(newLine, ".date-dwld-icon"));
+    return;
   }
+  const detailItem1 = find(newLine, ".detail-item-1");
+  html(detailItem1, strDwld);
+  addClass(detailItem1, "icon-blue");
+  removeClass(detailItem1, "detail-item-1");
+  removeClass(detailItem1, "hide");
+  addClass(find(newLine, ".date-dwld-icon"), "icon-blue icon-floppy");
+}
+
+function lineConstructor(line: HistoryLine, id: number) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
+  const newLine = document.getElementById("-1")!.cloneNode(true) as Element;
+
+  removeClass(newLine, "hide");
+  attr(newLine, "id", String(id));
+
+  html(find(newLine, ".date-day"), line.dateFormatted ?? "");
+  html(find(newLine, ".date-hour"), line.time);
+
+  html(
+    find(newLine, ".user-name"),
+    (line.username ?? "") + '<i class="add-filter icon-plus-circled"></i>',
+  );
+  bindUserNameFilterClick(newLine, line);
+
+  html(
+    find(newLine, ".user-ip"),
+    line.ip + '<i class="add-filter icon-plus-circled"></i>',
+  );
+  bindUserIpFilterClick(newLine, line);
+
+  bindImageAsFilterClick(newLine, line);
+
+  applyEditImgLink(newLine, line);
+
+  renderSectionLine(newLine, line);
+
+  renderThumbnailOrSectionIcon(newLine, line);
+
+  applyDownloadIndicator(newLine, line);
+
   displayLine(newLine);
 }
 

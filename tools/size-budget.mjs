@@ -57,23 +57,87 @@ function closure(key, seen = new Set()) {
 }
 
 /**
+ * A stable, unique budget key for an entry -- the manifest key (the real
+ * source path) with the `themes/<chain>/js/` (or `build/`) prefix and the
+ * `.ts` extension stripped, e.g. `themes/admin/default/js/categories/
+ * list.ts` -> `categories/list`.
+ *
+ * `chunk.name` (Rollup's own per-entry name, the source file's basename)
+ * looks like the obvious choice but is NOT unique across entries: several
+ * pairs of entries share a basename across different subdirectories
+ * (`categories/list.ts` and `users/list.ts` both name `"list"`;
+ * `configuration/comments.ts` collides with the top-level `comments.ts`;
+ * `languages/new.ts`/`plugins/new.ts`; `categories/search.ts`/
+ * `configuration/search.ts`) -- confirmed live via the manifest itself,
+ * not assumed. Keying budgets on `chunk.name` silently collapsed those
+ * pairs onto one JSON object apiece, so `--verify` reported one of each
+ * pair as a phantom "no longer matches any entry" / "new entry" mismatch
+ * even right after a fresh `--update`. The full relative path has no such
+ * collision (two different files can never share one path) and stays
+ * short and readable for the common case of an entry with no colliding
+ * sibling. Used unconditionally for the *budget's own* JSON key, unlike
+ * `globFor()` below, since this key never has to match a real filename.
+ */
+function nameFor(key) {
+  const jsDir = key.lastIndexOf("/js/");
+  const rel = jsDir === -1 ? key : key.slice(jsDir + "/js/".length);
+  return rel.endsWith(".ts") ? rel.slice(0, -".ts".length) : rel;
+}
+
+/**
+ * Same collision this file's own basename-keyed logic hits, but for the
+ * *real build output*: `vite.config.ts`'s `entryFileNames` only
+ * disambiguates an entry chunk's own filename (folding its `nameFor()`
+ * path onto one `-`-joined segment, mirroring `nameFor()` above) when its
+ * plain basename collides with another real entry's -- every other entry
+ * chunk, and every shared/imported chunk (`dom`, `ajax`, `common`, ...),
+ * keeps Rollup's own plain `[name]-[hash].js`. `globFor()` below has to
+ * know which case it is looking at to build a glob that actually matches
+ * the real file.
+ */
+const collidingEntryBasenames = (() => {
+  const seen = new Set();
+  const dupes = new Set();
+  for (const chunk of Object.values(manifest)) {
+    if (!chunk.isEntry) continue;
+    (seen.has(chunk.name) ? dupes : seen).add(chunk.name);
+  }
+  return dupes;
+})();
+
+/**
  * A glob, not the hashed filename: the hash changes on every build.
  *
- * Built from the chunk's own `name` rather than by stripping a hash off the
- * filename -- a hash may itself contain `-`, so a regex over the filename
- * turns `page-data-HASH.js` into `page-*.js`, which is both wrong and broad
- * enough to swallow unrelated chunks.
+ * For a shared/imported chunk, or an entry whose basename never collided
+ * with another real entry's, `manifest[key].name` is exactly what
+ * `vite.config.ts` named the real file with (Rollup's own default
+ * `[name]-[hash].js`) -- used as-is, same as before this file's own
+ * P52-A-era fix. For a *colliding* entry, `vite.config.ts` disambiguates
+ * the real filename to `nameFor(key)` with `/` flattened to `-`
+ * (`disambiguatedName()` there, kept in sync with `nameFor()` here by
+ * construction: both derive the same "relative to the nearest `js/`
+ * directory" path) -- a glob built from the plain, still-colliding
+ * `manifest[key].name` here instead would match both
+ * `categories-list-*.js` and `users-list-*.js` via `list-*.js`, exactly
+ * the original bug. Not built by stripping a hash off the real filename
+ * instead of using either name source: a hash may itself contain `-`, so
+ * a regex over the filename turns `page-data-HASH.js` into `page-*.js`,
+ * which is both wrong and broad enough to swallow unrelated chunks.
  */
 function globFor(key) {
-  const { name, file } = manifest[key];
-  const dir = file.slice(0, file.lastIndexOf("/") + 1);
+  const chunk = manifest[key];
+  const name =
+    chunk.isEntry && collidingEntryBasenames.has(chunk.name)
+      ? nameFor(key).replaceAll("/", "-")
+      : chunk.name;
+  const dir = chunk.file.slice(0, chunk.file.lastIndexOf("/") + 1);
 
   // Not every emit is hashed: `vitals.js` is written unhashed to the dist
   // root, and `vitals-*.js` matches nothing at all -- which size-limit
   // reports as "can't find files" rather than as a zero, so it fails loudly
   // rather than silently budgeting nothing.
-  return file.endsWith(`/${name}.js`) || file === `${name}.js`
-    ? file
+  return chunk.file.endsWith(`/${name}.js`) || chunk.file === `${name}.js`
+    ? chunk.file
     : `${dir}${name}-*.js`;
 }
 
@@ -85,12 +149,28 @@ function globFor(key) {
  */
 const entries = Object.entries(manifest)
   .filter(([, chunk]) => chunk.isEntry)
-  .map(([key, chunk]) => ({
-    name: chunk.name,
+  .map(([key]) => ({
+    name: nameFor(key),
     chunks: [...closure(key)],
     paths: [...closure(key)].map((k) => `dist/${globFor(k)}`).sort(),
   }))
   .sort((a, b) => a.name.localeCompare(b.name));
+
+// nameFor() is meant to be collision-proof (it's the real source path,
+// and two different files can't share one), but the whole reason this
+// check exists is that the previous scheme *looked* collision-proof too
+// -- fail loudly instead of silently overwriting one budget with another
+// if that assumption is ever wrong again.
+{
+  const seen = new Set();
+  for (const entry of entries) {
+    if (seen.has(entry.name)) {
+      console.error(`Duplicate size-budget entry name: "${entry.name}"`);
+      process.exit(1);
+    }
+    seen.add(entry.name);
+  }
+}
 
 function brotliBytes(chunks) {
   return chunks.reduce((total, key) => {

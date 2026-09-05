@@ -6,6 +6,55 @@ import { collectScriptEntries } from "./build/collectScriptEntries";
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const r = (p: string) => resolve(__dirname, p);
 
+/**
+ * Rollup's own default entry-chunk `[name]` token (a bare basename) is NOT
+ * unique across this app's real entries -- several pairs of `.ts` files
+ * share a basename across different subdirectories (`categories/list.ts`/
+ * `users/list.ts`, `configuration/comments.ts`/the top-level
+ * `comments.ts`, `languages/new.ts`/`plugins/new.ts`,
+ * `categories/search.ts`/`configuration/search.ts`), confirmed live via
+ * the manifest itself, not assumed. Two entries then emit as e.g.
+ * `list-fR1n7d0Q.js`/`list-BcFNDY23.js` -- distinct files, but
+ * indistinguishable by any glob pattern that has to tolerate the hash
+ * changing on every build (`tools/size-budget.mjs`'s own `dist/assets/
+ * list-*.js`-style budgets silently matched both, corrupting the byte
+ * counts of both real pages' size budgets).
+ *
+ * Fixed at the root by disambiguating only the entries that actually
+ * collide (computed once, from the same source-path list `input` uses,
+ * before any chunking happens) rather than every entry uniformly --
+ * every other entry keeps its plain existing basename, so this carries
+ * zero rename churn (and zero golden-html/asset-URL diff) for the ~90%
+ * of entries that were never ambiguous to begin with.
+ */
+const entryBasename = (path: string) =>
+  path.slice(path.lastIndexOf("/") + 1).replace(/\.ts$/, "");
+const collidingBasenames = (() => {
+  const seen = new Set<string>();
+  const dupes = new Set<string>();
+  for (const path of collectScriptEntries()) {
+    const base = entryBasename(path);
+    (seen.has(base) ? dupes : seen).add(base);
+  }
+  return dupes;
+})();
+
+/**
+ * The disambiguated name for a colliding entry: its source path relative
+ * to its nearest `js/` directory, with `/` flattened to `-` and the `.ts`
+ * extension stripped (e.g. `themes/admin/default/js/categories/list.ts`
+ * -> `categories-list`).
+ */
+function disambiguatedName(facadeModuleId: string): string {
+  const jsDir = facadeModuleId.lastIndexOf("/js/");
+  const rel =
+    jsDir === -1 ? facadeModuleId : facadeModuleId.slice(jsDir + "/js/".length);
+  return (rel.endsWith(".ts") ? rel.slice(0, -".ts".length) : rel).replaceAll(
+    "/",
+    "-",
+  );
+}
+
 export default defineConfig({
   root: ".",
   plugins: [],
@@ -97,9 +146,17 @@ export default defineConfig({
         // ScriptLoader/CssLoader combiner (docs/PLAN.md's P36 section).
         // `vitals` is resolved through ViteManifest from a fixed,
         // non-hashed filename rather than the default `[name]-[hash].js`;
-        // every other entry keeps the default.
-        entryFileNames: (chunk) =>
-          chunk.name === "vitals" ? "vitals.js" : "assets/[name]-[hash].js",
+        // an entry whose own basename collides with another real entry's
+        // (see collidingBasenames's own docblock above) disambiguates via
+        // disambiguatedName(); every other entry keeps Rollup's own
+        // default `[name]-[hash].js`.
+        entryFileNames: (chunk) => {
+          if (chunk.name === "vitals") return "vitals.js";
+          if (!collidingBasenames.has(chunk.name)) {
+            return "assets/[name]-[hash].js";
+          }
+          return `assets/${disambiguatedName(chunk.facadeModuleId ?? chunk.name)}-[hash].js`;
+        },
         // No `banner`/`footer` IIFE wrapper any more. It existed to fix a
         // real, concretely-diagnosed bug (P46-B): entries used to load as
         // separate non-module `<script>` tags sharing ONE global scope, so

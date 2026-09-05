@@ -55,8 +55,11 @@ if (derivativeSwitchBox) {
     }
     e.preventDefault();
     changeImgSrc(
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real "[data-derivative-url]" link always renders all 3 data attributes together (the same template row).
       link.dataset["derivativeUrl"]!,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see above.
       link.dataset["derivativeTypeSave"]!,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see above.
       link.dataset["derivativeTypeMap"]!,
     );
   });
@@ -68,6 +71,7 @@ if (originalLink) {
   originalLink.addEventListener("click", function (e) {
     e.preventDefault();
     phpWGOpenWindow(
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own "#originalLink" always renders a real data-original-url.
       originalLink.dataset["originalUrl"]!,
       "xxx",
       "scrollbars=yes,toolbar=no,status=no,resizable=yes",

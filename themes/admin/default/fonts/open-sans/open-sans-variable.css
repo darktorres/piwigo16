@@ -1,0 +1,21 @@
+/**
+ * P52-C: variable-font consolidation. Replaces the 10 static-weight
+ * @font-face declarations the previous open-sans.css shipped
+ * (300/400/600/700/800 x normal/italic) with the single variable-font
+ * file standard_pages already ships (themes/standard_pages/theme.css's
+ * own identical @font-face, referenced here rather than duplicated --
+ * same cross-chain CSS precedent P52-B's shared reset.css/base.css
+ * established). font-weight: 300 800 lets the browser interpolate any
+ * weight in that range from the one file, instead of only the 5
+ * discrete weights the static kit shipped. No italic face: neither
+ * this file nor standard_pages's own variable font has one, and no
+ * admin CSS rule sets font-style: italic on Open Sans text -- any
+ * <em>/<i> falls back to the browser's own synthetic italic either
+ * way, so nothing regresses.
+ */
+@font-face {
+  font-family: "Open Sans";
+  src: url("../../../../standard_pages/fonts/OpenSans-VariableFont_wdth\,wght.ttf");
+  font-weight: 300 800;
+  font-display: swap;
+}

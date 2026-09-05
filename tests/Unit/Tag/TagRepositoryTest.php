@@ -961,12 +961,12 @@ test('findImageIdsForTags() only applies the PermissionCriteria when usePermissi
 });
 
 test('existsById() is true for a real tag', function (): void {
-    expect(tagTestRepo()->existsById(1))
+    expect(tagTestRepo()->existsById(TagId::from(1)))
         ->toBeTrue();
 });
 
 test('existsById() is false for an unknown id', function (): void {
-    expect(tagTestRepo()->existsById(999999))
+    expect(tagTestRepo()->existsById(TagId::from(999999)))
         ->toBeFalse();
 });
 
@@ -1027,7 +1027,7 @@ test('findOtherNames() excludes the given id', function (): void {
     // test above) another file can have a real, non-disposable-shaped
     // tag alive at the same instant under --parallel.
     $names = tagTestRepo()
-        ->findOtherNames(1);
+        ->findOtherNames(TagId::from(1));
 
     expect($names)
         ->not->toContain('nature')

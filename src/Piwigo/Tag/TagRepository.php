@@ -1007,12 +1007,12 @@ final class TagRepository extends EntityRepository
     /**
      * Single-table, static WHERE, no join DQL can't express.
      */
-    public function existsById(int $id): bool
+    public function existsById(TagId $id): bool
     {
         $value = $this->createQueryBuilder('t')
             ->select('COUNT(t.id)')
             ->where('t.id = :id')
-            ->setParameter('id', $id, ParameterType::INTEGER)
+            ->setParameter('id', $id)
             ->getQuery()
             ->getSingleScalarResult();
 
@@ -1066,7 +1066,7 @@ final class TagRepository extends EntityRepository
      *
      * @return list<string>
      */
-    public function findOtherNames(int $excludeId): array
+    public function findOtherNames(TagId $excludeId): array
     {
         $names = $this->createQueryBuilder('t')
             ->select('t.name')

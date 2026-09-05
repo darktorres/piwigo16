@@ -55,15 +55,16 @@ final readonly class TagRenameController implements ControllerInterface
         $routeArgs = $request->getAttribute('route_args');
         $rawId = is_array($routeArgs) ? ($routeArgs['id'] ?? null) : null;
         $tagId = is_string($rawId) ? (int) $rawId : 0;
+        $tagIdVo = TagId::tryFrom($tagId);
 
-        if (! $this->tagService->existsById($tagId)) {
+        if (! $tagIdVo instanceof TagId || ! $this->tagService->existsById($tagIdVo)) {
             return ResponseFactory::problem('Not Found', 404, 'This tag does not exist.');
         }
 
         $input = TagRenameInput::fromArray(JsonBody::decode($request));
         $tagName = strip_tags($input->name);
 
-        $existingNames = $this->tagService->getOtherNames($tagId);
+        $existingNames = $this->tagService->getOtherNames($tagIdVo);
         if (in_array($tagName, $existingNames, true)) {
             return ResponseFactory::problem('Unprocessable Entity', 422, 'This name is already taken.');
         }
@@ -72,11 +73,11 @@ final readonly class TagRenameController implements ControllerInterface
 
         if ($tagName !== '') {
             $urlNameEvent = $this->eventDispatcher->dispatch(new RenderTagUrl($tagName));
-            $this->tagService->renameTag(TagId::from($tagId), $tagName, $urlNameEvent->tagName);
+            $this->tagService->renameTag($tagIdVo, $tagName, $urlNameEvent->tagName);
         }
         $this->entityManager->clear();
 
-        $renamedTag = $this->tagService->getById(TagId::from($tagId));
+        $renamedTag = $this->tagService->getById($tagIdVo);
         assert($renamedTag instanceof Tag);
 
         $rawName = $renamedTag->name;

@@ -828,7 +828,7 @@ final readonly class TagService
         return $this->repo->findById($id);
     }
 
-    public function existsById(int $id): bool
+    public function existsById(TagId $id): bool
     {
         return $this->repo->existsById($id);
     }
@@ -849,7 +849,7 @@ final readonly class TagService
     /**
      * @return list<string>
      */
-    public function getOtherNames(int $excludeId): array
+    public function getOtherNames(TagId $excludeId): array
     {
         return $this->repo->findOtherNames($excludeId);
     }

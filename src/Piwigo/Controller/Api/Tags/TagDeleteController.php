@@ -52,12 +52,13 @@ final readonly class TagDeleteController implements ControllerInterface
         $routeArgs = $request->getAttribute('route_args');
         $rawId = is_array($routeArgs) ? ($routeArgs['id'] ?? null) : null;
         $tagId = is_string($rawId) ? (int) $rawId : 0;
+        $tagIdVo = TagId::tryFrom($tagId);
 
-        if (! $this->tagService->existsById($tagId)) {
+        if (! $tagIdVo instanceof TagId || ! $this->tagService->existsById($tagIdVo)) {
             return ResponseFactory::problem('Not Found', 404, 'This tag does not exist.');
         }
 
-        $this->tagService->deleteTags([TagId::from($tagId)], $this->entityManager, $this->imageService);
+        $this->tagService->deleteTags([$tagIdVo], $this->entityManager, $this->imageService);
 
         return ResponseFactory::json([
             'id' => $tagId,

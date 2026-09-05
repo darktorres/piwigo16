@@ -516,12 +516,12 @@ final class TagRepositoryTest extends IntegrationTestCase
 
     public function testExistsByIdIsTrueForARealTag(): void
     {
-        self::assertTrue($this->repo->existsById(1));
+        self::assertTrue($this->repo->existsById(TagId::from(1)));
     }
 
     public function testExistsByIdIsFalseForAnUnknownId(): void
     {
-        self::assertFalse($this->repo->existsById(999_999));
+        self::assertFalse($this->repo->existsById(TagId::from(999_999)));
     }
 
     public function testFindTagsForImageReturnsEveryTagLinkedToThatImage(): void
@@ -574,7 +574,7 @@ final class TagRepositoryTest extends IntegrationTestCase
 
     public function testFindOtherNamesExcludesTheGivenId(): void
     {
-        $names = $this->repo->findOtherNames(1);
+        $names = $this->repo->findOtherNames(TagId::from(1));
         sort($names);
 
         self::assertSame(['family', 'travel'], $names);

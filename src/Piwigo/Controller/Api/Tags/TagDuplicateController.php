@@ -53,8 +53,9 @@ final readonly class TagDuplicateController implements ControllerInterface
         $routeArgs = $request->getAttribute('route_args');
         $rawId = is_array($routeArgs) ? ($routeArgs['id'] ?? null) : null;
         $sourceTagId = is_string($rawId) ? (int) $rawId : 0;
+        $sourceTagIdVo = TagId::tryFrom($sourceTagId);
 
-        if (! $this->tagService->existsById($sourceTagId)) {
+        if (! $sourceTagIdVo instanceof TagId || ! $this->tagService->existsById($sourceTagIdVo)) {
             return ResponseFactory::problem('Not Found', 404, 'This tag does not exist.');
         }
 
@@ -76,7 +77,7 @@ final readonly class TagDuplicateController implements ControllerInterface
             'source_tag' => $sourceTagId,
         ]);
 
-        $sourceImageIds = $this->tagService->getImageIdsForTagIds([TagId::from($sourceTagId)]);
+        $sourceImageIds = $this->tagService->getImageIdsForTagIds([$sourceTagIdVo]);
 
         $inserts = [];
         foreach ($sourceImageIds as $imageId) {

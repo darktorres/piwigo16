@@ -148,6 +148,92 @@ function scheduleClose(): void {
   }, DELAYED_CLOSE_MS);
 }
 
+/**
+ * Part of `activate()`'s own extraction, below -- the horizontal
+ * position, and the one `pY` value its own vertical-position sibling
+ * function needs (both computed from the same `posX < 0` check).
+ */
+function computeTipHorizontalPosition(
+  tip: HTMLElement,
+  linkLeft: number,
+  linkWidth: number,
+  mouseX: number,
+  mouseY: number,
+  winWidth: number,
+  tipWidth: number,
+  positionBy: "auto" | "bottomTop",
+): { posX: number; pY: number } {
+  let posX =
+    (linkWidth > linkLeft && linkLeft > tipWidth) ||
+    linkLeft + linkWidth + tipWidth + LEFT_OFFSET > winWidth
+      ? linkLeft - tipWidth - LEFT_OFFSET
+      : linkWidth + linkLeft + LEFT_OFFSET;
+
+  if (linkWidth + tipWidth > winWidth) {
+    if (mouseX + 20 + tipWidth > winWidth) {
+      const marginLeft = parseFloat(cssValue(tip, "margin-left")) || 0;
+      const innerMarginRight =
+        parseFloat(cssValue(innerEl, "margin-right")) || 0;
+      posX =
+        mouseX - tipWidth - LEFT_OFFSET >= 0
+          ? mouseX - tipWidth - LEFT_OFFSET - marginLeft + innerMarginRight
+          : mouseX - tipWidth / 2;
+    } else {
+      posX = mouseX + LEFT_OFFSET;
+    }
+  }
+
+  const pY = posX < 0 ? mouseY + TOP_OFFSET : mouseY;
+  if (posX < 0 || positionBy === "bottomTop") {
+    posX =
+      mouseX + tipWidth / 2 > winWidth
+        ? winWidth / 2 - tipWidth / 2
+        : Math.max(mouseX - tipWidth / 2, 0);
+  }
+
+  return { posX, pY };
+}
+
+/** Part of `activate()`'s own extraction, below -- the vertical position and the tip's own arrow direction. */
+function computeTipVerticalPositionAndDirection(
+  link: HTMLElement,
+  positionBy: "auto" | "bottomTop",
+  insufficientX: boolean,
+  linkTop: number,
+  tipHeight: number,
+  baseline: number,
+  mouseY: number,
+  sTop: number,
+  wHeight: number,
+  pY: number,
+  posX: number,
+  linkLeft: number,
+): { direction: "top" | "bottom" | "left" | "right"; tipY: number } {
+  let direction: "top" | "bottom" | "left" | "right" | "" = "";
+  let tipY: number;
+  if (positionBy === "bottomTop" || insufficientX) {
+    direction =
+      linkTop + tipHeight + TOP_OFFSET > baseline &&
+      mouseY - sTop > tipHeight + TOP_OFFSET
+        ? "top"
+        : "bottom";
+    tipY =
+      direction === "top"
+        ? mouseY - tipHeight - TOP_OFFSET
+        : mouseY + TOP_OFFSET;
+  } else if (linkTop + tipHeight + TOP_OFFSET > baseline) {
+    tipY = tipHeight >= wHeight ? sTop : baseline - tipHeight - TOP_OFFSET;
+  } else if (cssValue(link, "display") === "block") {
+    tipY = pY - TOP_OFFSET;
+  } else {
+    tipY = linkTop - DROP_SHADOW_STEPS;
+  }
+  if (direction === "") {
+    direction = posX < linkLeft ? "left" : "right";
+  }
+  return { direction, tipY };
+}
+
 function activate(
   link: HTMLElement,
   content: ClueTipContent,
@@ -177,29 +263,16 @@ function activate(
 
   const tipWidth = width + DROP_SHADOW_STEPS;
 
-  let posX =
-    (linkWidth > linkLeft && linkLeft > tipWidth) ||
-    linkLeft + linkWidth + tipWidth + LEFT_OFFSET > winWidth
-      ? linkLeft - tipWidth - LEFT_OFFSET
-      : linkWidth + linkLeft + LEFT_OFFSET;
-
-  if (linkWidth + tipWidth > winWidth) {
-    if (mouseX + 20 + tipWidth > winWidth) {
-      const marginLeft = parseFloat(cssValue(tip, "margin-left")) || 0;
-      const innerMarginRight = parseFloat(cssValue(innerEl, "margin-right")) || 0;
-      posX =
-        mouseX - tipWidth - LEFT_OFFSET >= 0
-          ? mouseX - tipWidth - LEFT_OFFSET - marginLeft + innerMarginRight
-          : mouseX - tipWidth / 2;
-    } else {
-      posX = mouseX + LEFT_OFFSET;
-    }
-  }
-
-  const pY = posX < 0 ? mouseY + TOP_OFFSET : mouseY;
-  if (posX < 0 || positionBy === "bottomTop") {
-    posX = mouseX + tipWidth / 2 > winWidth ? winWidth / 2 - tipWidth / 2 : Math.max(mouseX - tipWidth / 2, 0);
-  }
+  const { posX, pY } = computeTipHorizontalPosition(
+    tip,
+    linkLeft,
+    linkWidth,
+    mouseX,
+    mouseY,
+    winWidth,
+    tipWidth,
+    positionBy,
+  );
 
   tip.style.left = `${posX}px`;
   tip.style.zIndex = String(Z_INDEX);
@@ -219,22 +292,20 @@ function activate(
   const tipHeight = outerHeight(tip);
   const insufficientX = posX < mouseX && Math.max(posX, 0) + tipWidth > mouseX;
 
-  let direction: "top" | "bottom" | "left" | "right" | "" = "";
-  let tipY: number;
-  if (positionBy === "bottomTop" || insufficientX) {
-    direction =
-      linkTop + tipHeight + TOP_OFFSET > baseline && mouseY - sTop > tipHeight + TOP_OFFSET ? "top" : "bottom";
-    tipY = direction === "top" ? mouseY - tipHeight - TOP_OFFSET : mouseY + TOP_OFFSET;
-  } else if (linkTop + tipHeight + TOP_OFFSET > baseline) {
-    tipY = tipHeight >= wHeight ? sTop : baseline - tipHeight - TOP_OFFSET;
-  } else if (cssValue(link, "display") === "block") {
-    tipY = pY - TOP_OFFSET;
-  } else {
-    tipY = linkTop - DROP_SHADOW_STEPS;
-  }
-  if (direction === "") {
-    direction = posX < linkLeft ? "left" : "right";
-  }
+  const { direction, tipY } = computeTipVerticalPositionAndDirection(
+    link,
+    positionBy,
+    insufficientX,
+    linkTop,
+    tipHeight,
+    baseline,
+    mouseY,
+    sTop,
+    wHeight,
+    pY,
+    posX,
+    linkLeft,
+  );
 
   tip.style.top = `${tipY}px`;
   tip.className = `${STANDARD_CLASSES} clue-${direction}-default cluetip-default`;

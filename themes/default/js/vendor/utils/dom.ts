@@ -1957,7 +1957,7 @@ export function ready(callback: () => void): void {
  * here (a slider whose own `min`/`max` bound the index, a fixed-count
  * template split, a parallel-array correlation, etc).
  */
-export function valueAt<T>(values: readonly T[], idx: number): T {
+export function valueAt<T>(values: ArrayLike<T>, idx: number): T {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see this function's own leading comment.
   return values[idx]!;
 }

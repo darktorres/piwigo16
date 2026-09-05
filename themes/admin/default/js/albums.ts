@@ -48,6 +48,7 @@ import {
   swing,
   text,
   val,
+  valueAt,
   windowHeight,
 } from "../../../default/js/vendor/utils/dom";
 import { tipTip } from "../../../default/js/vendor/widgets/tiptip";
@@ -150,6 +151,7 @@ const delayAutoOpen = pwg_getPageData<number>("delay_auto_open");
 // repeated `jQuery(".tree").tree(...)` re-selection at each call site.
 let treeEl: HTMLElement;
 function getAlbumTree(): JqTreeInstance<AlbumNodeData> {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- treeEl is initialized via tree() at the top of ready() before any real caller reaches this.
   return getTreeInstance<AlbumNodeData>(treeEl)!;
 }
 
@@ -231,6 +233,7 @@ function rebindMoveCatActions(): void {
       e.preventDefault();
       const aid = dataId(this, "aid");
       openAddAlbumPopIn(aid);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- albums.latte renders .AddAlbumSubmit unconditionally.
       setData(document.querySelector(".AddAlbumSubmit")!, "a-parent", aid);
     },
   );
@@ -251,6 +254,7 @@ function rebindMoveCatActions(): void {
         attrOf(find(this, ".move-cat-title"), "title") ?? undefined,
       );
       setData(
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- albums.latte renders .RenameAlbumSubmit unconditionally.
         document.querySelector(".RenameAlbumSubmit")!,
         "cat_id",
         Number(attrOf(this, "data-id")),
@@ -276,7 +280,8 @@ ready(() => {
   const openUppercats =
     openCat === "-1"
       ? []
-      : findAlbumById(albumData, openCat)!.uppercats.split(",");
+      : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- openCat, when not "-1", is always a real album id server-rendered into albumData.
+        findAlbumById(albumData, openCat)!.uppercats.split(",");
   const newData = albumData.map((a: AlbumTreeNode) => {
     const al: AlbumTreeNode = {
       ...a,
@@ -296,6 +301,7 @@ ready(() => {
       `<span class='badge-number'>` + String(nbAlbums) + `</span>`,
     );
 
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- albums.latte renders .tree unconditionally.
   treeEl = document.querySelector(".tree")!;
 
   // Real init options only (P49-B group 6B): `autoOpen`/`onCanSelectNode`
@@ -321,6 +327,7 @@ ready(() => {
       }
 
       const { open_nodes: openNodes } = getAlbumTree().getState();
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real album tree node has a real, non-empty id.
       if (!openNodes.includes(node.id!)) {
         html(this, togglerOpen);
         getAlbumTree().openNode(node);
@@ -364,10 +371,7 @@ ready(() => {
     if (moveInfo.movedNode.status !== "private") {
       let parentIsPrivate = false;
       if (moveInfo.position === "after") {
-        // Non-null: a same-level "after" move always has a real parent
-        // in this tree (there is no top-level move target with a null
-        // parent in practice) -- same unguarded assumption the
-        // pre-P47 `any`-typed code already made.
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- a same-level "after" move always has a real parent in this tree (there is no top-level move target with a null parent in practice) -- same unguarded assumption the pre-P47 `any`-typed code already made.
         parentIsPrivate = moveInfo.targetNode.parent!.status === "private";
       } else if (moveInfo.position === "inside") {
         parentIsPrivate = moveInfo.targetNode.status === "private";
@@ -410,6 +414,7 @@ ready(() => {
       );
       setVal(
         document.querySelectorAll(".cat-move-order-popin input[name=id]"),
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- getAlbumTree().getNodeById(nodeId) above only succeeded because nodeId is a real string.
         nodeId!,
       );
       attr(
@@ -446,9 +451,7 @@ ready(() => {
   });
 
   if (openCat !== "-1") {
-    // Non-null: `openCat`, when not the "-1" sentinel, is always a real
-    // album id present in this tree (same unguarded assumption the
-    // pre-P47 `any`-typed code already made).
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- openCat, when not the "-1" sentinel, is always a real album id present in this tree (same unguarded assumption the pre-P47 `any`-typed code already made).
     const nodeToGo = getAlbumTree().getNodeById(openCat)!;
 
     goToNode(nodeToGo, nodeToGo);
@@ -456,6 +459,7 @@ ready(() => {
       getAlbumTree().openNode(nodeToGo, false);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the tree row for openCat is real (proven by the successful getNodeById() lookup above).
     const target = document.querySelector<HTMLElement>(
       "#" + escapeId("cat-" + openCat),
     )!;
@@ -476,6 +480,7 @@ ready(() => {
         attrOf(find(this, ".move-cat-title"), "title") ?? undefined,
       );
       setData(
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- albums.latte renders .RenameAlbumSubmit unconditionally.
         document.querySelector(".RenameAlbumSubmit")!,
         "cat_id",
         Number(attrOf(this, "data-id")),
@@ -517,6 +522,7 @@ ready(() => {
             ),
             "data-id",
           );
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- nodeId is the real data-id read off catToEdit's own tree row, always a real tree node.
           const node = getAlbumTree().getNodeById(nodeId)!;
           node.name = String(
             val(document.querySelectorAll(".RenameAlbumLabelUsername input")),
@@ -541,6 +547,7 @@ ready(() => {
   hide(document.querySelectorAll(".DeleteAlbumErrors"));
   on(document.querySelectorAll(".add-album-button"), "click", function () {
     openAddAlbumPopIn(0);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- albums.latte renders .AddAlbumSubmit unconditionally.
     setData(document.querySelector(".AddAlbumSubmit")!, "a-parent", 0);
   });
   delegate(
@@ -551,6 +558,7 @@ ready(() => {
       e.preventDefault();
       const aid = dataId(this, "aid");
       openAddAlbumPopIn(aid);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- albums.latte renders .AddAlbumSubmit unconditionally.
       setData(document.querySelector(".AddAlbumSubmit")!, "a-parent", aid);
     },
   );
@@ -574,6 +582,7 @@ ready(() => {
         document.querySelectorAll(".AddAlbumLabelUsername input"),
       );
       const newAlbumParent = dataId(
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- albums.latte renders .AddAlbumSubmit unconditionally.
         document.querySelector(".AddAlbumSubmit")!,
         "a-parent",
       );
@@ -611,8 +620,7 @@ ready(() => {
               {
                 id: response.id,
                 isEmptyFolder: true,
-                // Non-null: a required admin form field, always populated
-                // by the time this AJAX success handler runs.
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- a required admin form field, always populated by the time this AJAX success handler runs.
                 name: newAlbumName!,
               },
               parentNode ?? undefined,
@@ -622,8 +630,7 @@ ready(() => {
               {
                 id: response.id,
                 isEmptyFolder: true,
-                // Non-null: a required admin form field, always populated
-                // by the time this AJAX success handler runs.
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- a required admin form field, always populated by the time this AJAX success handler runs.
                 name: newAlbumName!,
               },
               parentNode ?? undefined,
@@ -644,6 +651,7 @@ ready(() => {
                 const node = getAlbumTree().getNodeById(nodeId);
                 if (node) {
                   const { open_nodes: openNodes } = getAlbumTree().getState();
+                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- getAlbumTree().getNodeById(nodeId) above only succeeded because nodeId is a real string.
                   if (!openNodes.includes(nodeId!)) {
                     html(this, togglerOpen);
                     getAlbumTree().openNode(node);
@@ -661,11 +669,14 @@ ready(() => {
           updateTitleBadge(nbAlbums + 1);
 
           goToNode(
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- response.id is the id of the album just created (appendNode/prependNode above), always a real tree node.
             getAlbumTree().getNodeById(response.id)!,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- same as above.
             getAlbumTree().getNodeById(response.id)!,
           );
           animateScrollTop(
             offset(
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the tree row for the just-created album (response.id) is real (proven by the successful getNodeById() lookup above).
               document.querySelector(
                 "#" + escapeId("cat-" + String(response.id)),
               )!,
@@ -724,11 +735,7 @@ function createAlbumNode(node: AlbumJqTreeNode, liEl: HTMLLIElement) {
   const icon = "<span class='%icon%'></span>";
   let title =
     '<span data-id="' + String(node.id) + '" class="move-cat-title-container ';
-  // Non-null: every real album node's `.parent` is either a real
-  // parent album, or jqtree's own invisible tree root (never a bare
-  // `null` for a node actually handed to `onCreateLi`) -- same
-  // assumption `getId()` further down already makes explicitly via
-  // `parent.getLevel()`.
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real album node's `.parent` is either a real parent album, or jqtree's own invisible tree root (never a bare `null` for a node actually handed to `onCreateLi`) -- same assumption `getId()` further down already makes explicitly via `parent.getLevel()`.
   if (node.status === "private" || node.parent!.status === "private") {
     node.status = "private";
     title += "icon-lock";
@@ -740,6 +747,7 @@ function createAlbumNode(node: AlbumJqTreeNode, liEl: HTMLLIElement) {
   // lock-icon inheritance from a private/hidden parent never actually
   // worked, and the reassignment never actually persisted the
   // propagated flag onto the node.
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see the identical .parent! justification above.
   if (node.visible === "false" || node.parent!.visible === "false") {
     node.visible = "false";
     title +=
@@ -790,7 +798,7 @@ function createAlbumNode(node: AlbumJqTreeNode, liEl: HTMLLIElement) {
     "</div>";
   // action_order = '<a data-id="'+node.id+'" class="move-cat-order icon-sort-name-up tiptip" title="'+ strSortOrder +'"></a>';
 
-  const cont = find(liEl, ".jqtree-element")[0]!;
+  const cont = valueAt(find(liEl, ".jqtree-element"), 0);
   addClass(cont, "move-cat-container");
   attr(cont, "id", "cat-" + String(node.id));
   html(cont, "");
@@ -807,6 +815,7 @@ function createAlbumNode(node: AlbumJqTreeNode, liEl: HTMLLIElement) {
   let toggler: string;
   if (node.haveChildren || node.children.length !== 0) {
     const { open_nodes: openNodes } = getAlbumTree().getState();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real album tree node has a real, non-empty id.
     if (openNodes.includes(node.id!)) {
       toggler = togglerOpen;
     } else {
@@ -928,6 +937,7 @@ function openAddAlbumPopIn(parentAlbumId: number) {
       document.querySelectorAll("#AddAlbum .AddIconTitle span"),
       addSubAlbumOf.replace(
         "%s",
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real caller passes either 0 or a real dataId()-read album id, always a real tree node.
         getAlbumTree().getNodeById(parentAlbumId)!.name,
       ),
     );
@@ -1023,9 +1033,10 @@ async function triggerDeleteAlbum(cat_id: number): Promise<void> {
           "",
         );
         append(
-          document.querySelectorAll(
-            "#IMAGES_ASSOCIATED_OUTSIDE .innerText",
-          )[0]!,
+          valueAt(
+            document.querySelectorAll("#IMAGES_ASSOCIATED_OUTSIDE .innerText"),
+            0,
+          ),
           hasImagesAssociatedOutside
             .replace("%d", String(response.nbImagesRecursive))
             .replace("%d", String(response.nbImagesAssociatedOutside)),
@@ -1039,7 +1050,10 @@ async function triggerDeleteAlbum(cat_id: number): Promise<void> {
           "",
         );
         append(
-          document.querySelectorAll("#IMAGES_BECOMING_ORPHAN .innerText")[0]!,
+          valueAt(
+            document.querySelectorAll("#IMAGES_BECOMING_ORPHAN .innerText"),
+            0,
+          ),
           hasImagesBecommingOrphans.replace(
             "%d",
             String(response.nbImagesBecomingOrphan),
@@ -1056,6 +1070,7 @@ async function triggerDeleteAlbum(cat_id: number): Promise<void> {
 
 function openDeleteAlbumPopIn(cat_to_delete: number) {
   fadeIn(document.querySelectorAll("#DeleteAlbum"));
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real caller passes a real dataId()-read album id, always a real tree node.
   const node = getAlbumTree().getNodeById(cat_to_delete)!;
   if (node.children.length === 0) {
     html(
@@ -1090,9 +1105,7 @@ function openDeleteAlbumPopIn(cat_to_delete: number) {
           headers: { "X-CSRF-Token": pwgToken },
         });
 
-        // Non-null: same "always a real parent, never bare null in
-        // practice" invariant as createAlbumNode()'s own copy of this
-        // comment above.
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- same "always a real parent, never bare null in practice" invariant as createAlbumNode()'s own copy of this comment above.
         const parentOfDeletedNode = node.parent!;
         getAlbumTree().removeNode(node);
 
@@ -1206,9 +1219,7 @@ function getId(parent: AlbumJqTreeNode): string | number {
   if (parent.getLevel() === 0) {
     id = 0;
   } else {
-    // Non-null: every real album node carries a real id (only jqtree's
-    // own invisible tree root, excluded by the `getLevel() == 0` branch
-    // above, ever lacks one).
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real album node carries a real id (only jqtree's own invisible tree root, excluded by the `getLevel() == 0` branch above, ever lacks one).
     id = parent.id!;
   }
   return id;
@@ -1235,15 +1246,17 @@ function applyMove(moveInfo: JqTreeMoveInfo<AlbumNodeData>) {
   const waitingTimeout = setTimeout(() => {
     addClass(document.querySelectorAll(".waiting-message"), "visible");
   }, 500);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real moved node carries a real id.
   const id = moveInfo.movedNode.id!;
   let moveParent: AlbumCategoryId = null;
   let moveRank: number | null = null;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- a real drag-and-drop move always has a real previousParent.
   const previousParent = moveInfo.previousParent!;
   const target = moveInfo.targetNode;
   if (moveInfo.position === "after") {
-    // Non-null: same "always a real parent" invariant as elsewhere in
-    // this file (a move target is never the tree's own invisible root).
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- same "always a real parent" invariant as elsewhere in this file (a move target is never the tree's own invisible root).
     if (String(getId(previousParent)) !== String(getId(target.parent!))) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see the identical target.parent! justification above.
       moveParent = getId(target.parent!);
     }
     moveRank = getRank(target, id) + 1;
@@ -1261,7 +1274,9 @@ function applyMove(moveInfo: JqTreeMoveInfo<AlbumNodeData>) {
     }
     moveRank = 1;
   } else if (moveInfo.position === "before") {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- same "always a real parent" invariant as elsewhere in this file (a move target is never the tree's own invisible root).
     if (String(getId(previousParent)) !== String(getId(target.parent!))) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see the identical target.parent! justification above.
       moveParent = getId(target.parent!);
     }
     moveRank = 1;
@@ -1283,6 +1298,7 @@ function applyMove(moveInfo: JqTreeMoveInfo<AlbumNodeData>) {
       // when the parent didn't change, `previousParent`'s own
       // already-refreshed badge above covers it.
       if (moveParent !== null) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- moveParent, when not null, is a real id derived from getId() above, always a real tree node.
         setSubcatsBadge(getAlbumTree().getNodeById(moveParent)!);
       }
 
@@ -1339,6 +1355,7 @@ async function changeParent(
 
   void changeRank(node, rank);
   response.updatedCategories.forEach((cat) => {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the server's own updatedCategories response always references real tree nodes.
     const catNode = getAlbumTree().getNodeById(cat.categoryId)!;
     catNode.nb_sub_photos = cat.nbSubPhotos;
     getAlbumTree().updateNode(catNode, catNode.name);
@@ -1376,9 +1393,9 @@ function makePrivateHierarchy(node: AlbumJqTreeNode) {
 }
 
 function getPathNode(node: AlbumJqTreeNode): string {
-  // Non-null: same "always a real parent" invariant as elsewhere in
-  // this file.
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- same "always a real parent" invariant as elsewhere in this file.
   if (node.parent!.getLevel() !== 0) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see the identical node.parent! justification above.
     return getPathNode(node.parent!) + " / " + node.name;
   } else {
     return node.name;
@@ -1408,6 +1425,7 @@ function findAlbumById(
 }
 
 function loadOnDemand(node: AlbumJqTreeNode) {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real caller checks node.haveChildren is truthy before calling loadOnDemand().
   const children = node.haveChildren!;
   const formatedChild = children.map((a: AlbumTreeNode) => {
     const al: AlbumTreeNode = { ...a, children: [] };
@@ -1430,6 +1448,7 @@ function openNodeOnDemand(node: AlbumJqTreeNode) {
   // `false`, so the "already open" guard below never actually skipped
   // anything; harmless in practice (jqtree's own `openNode()` no-ops on
   // an already-open node), but not the real intended check.
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real album tree node has a real, non-empty id.
   if (!openNodes.includes(node.id!)) {
     getAlbumTree().openNode(node);
     rebindMoveCatActions();

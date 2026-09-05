@@ -42,8 +42,9 @@ ready(function () {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real sortable menu item id always has a "menu_" suffix.
       const men = item.split("menu_")[1]!;
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real menu item has a matching "pos_X" input.
-      document.querySelector<HTMLInputElement>('[name="pos_' + men + '"]')!.value =
-        String(i + 1);
+      document.querySelector<HTMLInputElement>(
+        '[name="pos_' + men + '"]',
+      )!.value = String(i + 1);
     }
   });
 });

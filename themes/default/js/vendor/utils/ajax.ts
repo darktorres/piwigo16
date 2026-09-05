@@ -248,13 +248,113 @@ function decorate(promise: Promise<unknown>, abort: () => void): AjaxThenable {
   return thenable;
 }
 
-/** `$.ajax(options)`. */
-// eslint-disable-next-line @typescript-eslint/promise-function-async -- returns `decorate(pending, ...)` directly, the same real AjaxThenable object carrying done()/fail()/always()/abort(); `async` would re-wrap it through `Promise.resolve()` and lose them.
-export function ajax<T = unknown>(options: AjaxOptions<T>): AjaxThenable {
-  const method = (options.method ?? options.type ?? "GET").toUpperCase();
-  const dataType = options.dataType?.toLowerCase();
-  const isBodyless = method === "GET" || method === "HEAD";
+/**
+ * `run()`'s own extraction from `ajax()` below (sonarjs/cognitive-complexity:
+ * `ajax()` itself, plus what used to be a nested `run` closure, together
+ * exceeded the limit) -- performs the real fetch, response-content-type
+ * sniffing, JSON parsing, and success/error dispatch.
+ */
+async function performAjaxRequest<T>(
+  url: string,
+  method: string,
+  body: BodyInit | undefined,
+  headers: Record<string, string>,
+  controller: AbortController,
+  dataType: string | undefined,
+  options: AjaxOptions<T>
+): Promise<unknown> {
+  const response = await fetch(url, {
+    method,
+    ...(body !== undefined ? { body } : {}),
+    headers,
+    signal: controller.signal,
+    credentials: "same-origin",
+  });
 
+  const responseText = await response.text();
+  const xhr: AjaxResponse = {
+    status: response.status,
+    statusText: response.statusText,
+    responseText,
+    getResponseHeader: (name) => response.headers.get(name),
+  };
+
+  // jQuery skips conversion entirely for 204/HEAD ("nocontent") and 304
+  // ("notmodified"), so `success` runs with an undefined body rather than
+  // failing to parse an empty one. Several call sites depend on this: the
+  // plugin action endpoints really do answer 204.
+  const noContent =
+    response.status === 204 || response.status === 304 || method === "HEAD";
+
+  let data: unknown;
+  // jQuery's default dataType is "intelligent guess": with none given it
+  // maps the response Content-Type through `ajaxSettings.contents`
+  // (`json: /json/`) and converts accordingly. Roughly a seventh of the
+  // call sites omit `dataType` and rely on this -- without it their
+  // `success` receives raw text and the first property access throws,
+  // which is how the history page's spinner ended up never hiding.
+  const sniffed =
+    dataType ??
+    ((response.headers.get("Content-Type") ?? "").includes("json")
+      ? "json"
+      : undefined);
+
+  if (!noContent && sniffed === "json" && responseText !== "") {
+    try {
+      data = JSON.parse(responseText);
+      xhr.responseJSON = data;
+    } catch {
+      const failure = new AjaxError(
+        xhr.status,
+        xhr.statusText,
+        responseText,
+        response.headers,
+        "Invalid JSON"
+      );
+      options.error?.(failure, "parsererror", "Invalid JSON");
+      options.complete?.(failure, "parsererror");
+
+      throw failure;
+    }
+  } else if (!noContent) {
+    data = responseText;
+  }
+
+  if (!response.ok) {
+    const failure = new AjaxError(
+      xhr.status,
+      xhr.statusText,
+      responseText,
+      response.headers,
+      response.statusText
+    );
+    failure.responseJSON = xhr.responseJSON;
+    options.error?.(failure, "error", response.statusText);
+    options.complete?.(failure, "error");
+
+    throw failure;
+  }
+
+  const statusText = noContent ? "nocontent" : "success";
+  // The cast is the whole of what `T` means: the caller asserted this
+  // shape, and neither jQuery nor this checks it.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see comment above.
+  options.success?.(data as T, statusText, xhr);
+  options.complete?.(xhr, statusText);
+
+  return data;
+}
+
+/**
+ * The URL/body-building half of `ajax()` below (sonarjs/
+ * cognitive-complexity) -- jQuery's own `contentType`/`data`/`json`
+ * precedence rules, and GET/HEAD's own "append to the URL instead of a
+ * real body" branch.
+ */
+function buildRequestUrlAndBody<T>(
+  options: AjaxOptions<T>,
+  isBodyless: boolean
+): { url: string; body: BodyInit | undefined; contentType: string | false } {
   let {url} = options;
   let body: BodyInit | undefined;
 
@@ -278,6 +378,18 @@ export function ajax<T = unknown>(options: AjaxOptions<T>): AjaxThenable {
     }
   }
 
+  return { url, body, contentType };
+}
+
+/** `$.ajax(options)`. */
+// eslint-disable-next-line @typescript-eslint/promise-function-async -- returns `decorate(pending, ...)` directly, the same real AjaxThenable object carrying done()/fail()/always()/abort(); `async` would re-wrap it through `Promise.resolve()` and lose them.
+export function ajax<T = unknown>(options: AjaxOptions<T>): AjaxThenable {
+  const method = (options.method ?? options.type ?? "GET").toUpperCase();
+  const dataType = options.dataType?.toLowerCase();
+  const isBodyless = method === "GET" || method === "HEAD";
+
+  const { url, body, contentType } = buildRequestUrlAndBody(options, isBodyless);
+
   const headers: Record<string, string> = {
     ...options.headers,
   };
@@ -292,102 +404,30 @@ export function ajax<T = unknown>(options: AjaxOptions<T>): AjaxThenable {
     }, options.timeout);
   }
 
-  const run = async (): Promise<unknown> => {
-    const response = await fetch(url, {
-      method,
-      ...(body !== undefined ? { body } : {}),
-      headers,
-      signal: controller.signal,
-      credentials: "same-origin",
-    });
-
-    const responseText = await response.text();
-    const xhr: AjaxResponse = {
-      status: response.status,
-      statusText: response.statusText,
-      responseText,
-      getResponseHeader: (name) => response.headers.get(name),
-    };
-
-    // jQuery skips conversion entirely for 204/HEAD ("nocontent") and 304
-    // ("notmodified"), so `success` runs with an undefined body rather than
-    // failing to parse an empty one. Several call sites depend on this: the
-    // plugin action endpoints really do answer 204.
-    const noContent =
-      response.status === 204 || response.status === 304 || method === "HEAD";
-
-    let data: unknown;
-    // jQuery's default dataType is "intelligent guess": with none given it
-    // maps the response Content-Type through `ajaxSettings.contents`
-    // (`json: /json/`) and converts accordingly. Roughly a seventh of the
-    // call sites omit `dataType` and rely on this -- without it their
-    // `success` receives raw text and the first property access throws,
-    // which is how the history page's spinner ended up never hiding.
-    const sniffed =
-      dataType ??
-      ((response.headers.get("Content-Type") ?? "").includes("json")
-        ? "json"
-        : undefined);
-
-    if (!noContent && sniffed === "json" && responseText !== "") {
-      try {
-        data = JSON.parse(responseText);
-        xhr.responseJSON = data;
-      } catch {
-        const failure = new AjaxError(
-          xhr.status,
-          xhr.statusText,
-          responseText,
-          response.headers,
-          "Invalid JSON"
-        );
-        options.error?.(failure, "parsererror", "Invalid JSON");
-        options.complete?.(failure, "parsererror");
-
-        throw failure;
-      }
-    } else if (!noContent) {
-      data = responseText;
-    }
-
-    if (!response.ok) {
-      const failure = new AjaxError(
-        xhr.status,
-        xhr.statusText,
-        responseText,
-        response.headers,
-        response.statusText
-      );
-      failure.responseJSON = xhr.responseJSON;
-      options.error?.(failure, "error", response.statusText);
-      options.complete?.(failure, "error");
-
-      throw failure;
-    }
-
-    const statusText = noContent ? "nocontent" : "success";
-    // The cast is the whole of what `T` means: the caller asserted this
-    // shape, and neither jQuery nor this checks it.
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see comment above.
-    options.success?.(data as T, statusText, xhr);
-    options.complete?.(xhr, statusText);
-
-    return data;
-  };
-
-  const pending = (async () => {
-    const preflight: AjaxResponse = {
-      status: 0,
-      statusText: "",
-      responseText: "",
-      getResponseHeader: () => null,
-    };
-    options.beforeSend?.(preflight);
-
-    return run();
-  })();
+  const pending = runWithBeforeSend(url, method, body, headers, controller, dataType, options);
 
   return decorate(pending, () => {
     controller.abort();
   });
+}
+
+/** `ajax()`'s own `beforeSend` preflight, then the real request. */
+async function runWithBeforeSend<T>(
+  url: string,
+  method: string,
+  body: BodyInit | undefined,
+  headers: Record<string, string>,
+  controller: AbortController,
+  dataType: string | undefined,
+  options: AjaxOptions<T>
+): Promise<unknown> {
+  const preflight: AjaxResponse = {
+    status: 0,
+    statusText: "",
+    responseText: "",
+    getResponseHeader: () => null,
+  };
+  options.beforeSend?.(preflight);
+
+  return performAjaxRequest(url, method, body, headers, controller, dataType, options);
 }

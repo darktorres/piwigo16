@@ -1227,6 +1227,33 @@ function computedStyles(el: Element): CSSStyleDeclaration | null {
  * `augmentWidthOrHeight()`: the correction that turns the measurement we
  * have into the one that was asked for. Returns 0 when they already agree.
  */
+function sideContribution(
+  styles: CSSStyleDeclaration,
+  side: string,
+  extra: BoxExtra,
+  isBorderBox: boolean
+): number {
+  let contribution = extra === "margin" ? styleNumber(styles, `margin-${side}`) : 0;
+
+  if (isBorderBox) {
+    // A border box already includes padding, so drop it for content.
+    if (extra === "content") {
+      contribution -= styleNumber(styles, `padding-${side}`);
+    }
+    // Anything but margin excludes the border.
+    if (extra !== "margin") {
+      contribution -= styleNumber(styles, `border-${side}-width`);
+    }
+  } else {
+    contribution += styleNumber(styles, `padding-${side}`);
+    if (extra !== "padding") {
+      contribution += styleNumber(styles, `border-${side}-width`);
+    }
+  }
+
+  return contribution;
+}
+
 function augmentBox(
   styles: CSSStyleDeclaration,
   name: "width" | "height",
@@ -1239,25 +1266,7 @@ function augmentBox(
 
   let total = 0;
   for (const side of BOX_SIDES[name]) {
-    if (extra === "margin") {
-      total += styleNumber(styles, `margin-${side}`);
-    }
-
-    if (isBorderBox) {
-      // A border box already includes padding, so drop it for content.
-      if (extra === "content") {
-        total -= styleNumber(styles, `padding-${side}`);
-      }
-      // Anything but margin excludes the border.
-      if (extra !== "margin") {
-        total -= styleNumber(styles, `border-${side}-width`);
-      }
-    } else {
-      total += styleNumber(styles, `padding-${side}`);
-      if (extra !== "padding") {
-        total += styleNumber(styles, `border-${side}-width`);
-      }
-    }
+    total += sideContribution(styles, side, extra, isBorderBox);
   }
 
   return total;

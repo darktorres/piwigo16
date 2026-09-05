@@ -757,8 +757,8 @@ LI.menuLi {
   cursor: not-allowed;
 }
 
-.cat-modify-footer-see-out.disabled:focus,
-.savebar-see-out.disabled:focus{
+.cat-modify-footer-see-out.disabled:focus-visible,
+.savebar-see-out.disabled:focus-visible{
   border: none;
 
 }
@@ -2156,7 +2156,15 @@ a.admin-main:hover {color:#fff;}
   margin-left:0;
 }
 
-#menubar ul.scroll { overflow-y:auto; max-height:500px; scrollbar-color: #666 #3c3c3c;}
+/* P52-C: max-height replaces 3 discrete @media steps (400px at
+   <=920px, 300px at <=830px, 200px at <=700px, on top of the 500px
+   this had) with one continuously fluid value -- a genuine behavior
+   change (smooth scaling instead of 3 hard jumps), not a pure syntax
+   conversion, called out as such. Endpoints match the original range
+   (500px max, 200px min); the curve in between is a reasonable fit,
+   not a preserved exact match to the old 300px/920px and 400px/830px
+   midpoints. */
+#menubar ul.scroll { overflow-y:auto; max-height: clamp(200px, 55vh - 100px, 500px); scrollbar-color: #666 #3c3c3c;}
 #menubar dl { width: 205px; min-height:35px; border:0; margin: 0; padding: 0; display: block; border:0; border-left:none; }
 #menubar dd { margin: 0; padding: 10px 0; }
 #menubar dt {
@@ -2182,22 +2190,7 @@ a.admin-main:hover {color:#fff;}
   margin-top: 2px;
 }
 
-@media all and (max-height: 920px) {
-  #menubar ul.scroll {
-    max-height: 400px;
-  }
-}
-
-@media all and (max-height: 830px) {
-  #menubar ul.scroll {
-    max-height: 300px;
-  }
-}
-
 @media all and (max-height: 700px) {
-  #menubar ul.scroll {
-    max-height: 200px;
-  }
   #theAdminPage #footer {
     display: none;
   }
@@ -2561,6 +2554,8 @@ div.jGrowl div.jGrowl-notification{
   display: flex;
   flex-wrap: wrap;
   padding: 0 2em;
+  container-type: inline-size;
+  container-name: available-plugins;
 }
 
 .advanced-filter-new-plugin .advanced-filter-container {
@@ -2601,7 +2596,7 @@ div.jGrowl div.jGrowl-notification{
   overflow: hidden;
 }
 
-@media (max-width: 1700px) {
+@container available-plugins (max-width: 1700px) {
   .pluginBigBox {
     max-width: 100%;
     min-width: 100%;
@@ -4727,6 +4722,8 @@ a#showPermissions:hover {text-decoration: none;}
   margin-left: 23px;
   margin-right: 23px;
   max-width: 50%;
+  container-type: inline-size;
+  container-name: picture-content;
 }
 
 #picture-content p {
@@ -4796,6 +4793,17 @@ a#showPermissions:hover {text-decoration: none;}
 #picture-infos {
   display: grid;
   grid-template-columns: 50% 50%;
+}
+
+/* P52-C: #picture-content is 50% of its own page width (see above),
+   so its own real box can get narrow well before the viewport does --
+   a genuine @container case, not covered by any prior @media rule.
+   New responsive behavior, not a pure conversion: #picture-infos's
+   fixed 2-column grid never had a narrow-width fallback before. */
+@container picture-content (max-width: 400px) {
+  #picture-infos {
+    grid-template-columns: 100%;
+  }
 }
 
 
@@ -5115,8 +5123,7 @@ a#showPermissions:hover {text-decoration: none;}
   font-size: 14px;
 }
 
-.comment-select-checkbox,
-.comment-select-checkbox:focus {
+.comment-select-checkbox {
   display: none;
   appearance: none;
   outline: none;
@@ -7960,7 +7967,9 @@ color:#FF7B00;
   background: #f5d8b0;
   position: relative;
 
-  box-shadow: 0px 5px 10px 5px rgba(0,0,0,0.1)
+  box-shadow: 0px 5px 10px 5px rgba(0,0,0,0.1);
+  container-type: inline-size;
+  container-name: promote;
 }
 
 .promote-newsletter{
@@ -7974,7 +7983,9 @@ color:#FF7B00;
   background: #f5d8b0;
   position: relative;
 
-  box-shadow: 0px 5px 10px 5px rgba(0,0,0,0.1)
+  box-shadow: 0px 5px 10px 5px rgba(0,0,0,0.1);
+  container-type: inline-size;
+  container-name: promote;
 }
 
 .promote-newsletter-content{
@@ -8270,19 +8281,19 @@ color:#FF7B00;
   margin-top: 25px;
 }
 
-@media (max-width: 1450px) {
+@container promote (max-width: 1450px) {
   .promote-text span {
     font-size: 30px;
   }
 }
 
-@media (max-width: 1170px) {
+@container promote (max-width: 1170px) {
   .promote-text span {
     font-size: 25px;
   }
 }
 
-@media (max-width: 1050px) {
+@container promote (max-width: 1050px) {
   .promote-text span {
     font-size: 20px;
   }
@@ -8292,7 +8303,7 @@ color:#FF7B00;
   }
 }
 
-@media (max-width: 393px) {
+@container promote (max-width: 393px) {
   .promote-content{
     display: flex;
     flex-direction: column;

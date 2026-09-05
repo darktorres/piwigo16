@@ -1556,6 +1556,23 @@ never previously exercised by a full unfiltered run. Fixed the same way
 `H::loginAsAdmin()` in both `VisualRegressionTest.php` and
 `GoldenHtmlSnapshotTest.php`.
 
+**P35 addendum — bump `ES2022` to `ESNext`.** `tsconfig.json`'s
+`target`/`lib` and `vite.config.ts`'s `build.target` both bumped
+`"es2022"`/`ES2022` → `"esnext"`/`ESNext` (direct user request, not
+tied to any other phase). `vite.config.ts`'s own comment on the earlier
+private-class-fields incident (P46-C, this section above) updated in
+place rather than duplicated — `"esnext"` disables esbuild's
+downleveling entirely, sidestepping the whole class of "esbuild's own
+per-browser-version compat table gets a feature wrong" bug that
+incident was, not just the one instance already found. Confirmed, not
+assumed: `bun run build` produces byte-identical output hashes to the
+prior `"es2022"` target for every entry (this codebase's own source
+doesn't yet use any syntax the two targets would downlevel
+differently). Also updated P52's own "Decisions locked" cross-reference
+to `tsconfig.json`'s target, which would otherwise have gone stale the
+moment this landed. Verified: `typecheck`/`lint:js`/`vitest run`/
+`knip` all clean.
+
 **P36 — Asset-pipeline foundation.** Done. The template-declared vs.
 view-declared fork is **decided: view-declared**, resolved now rather
 than left for P40/P41 to re-litigate.
@@ -6549,9 +6566,11 @@ the aggregate job exit code.
 
 **Decisions locked.** Browser floor: Chrome/Edge 123+, Firefox 128+,
 Safari 17.5+ in `.browserslistrc` (independent of `tsconfig.json`'s
-ES2022 JS target — this repo previously conflated the two and hit a
-real bug from it, per `vite.config.ts`'s own comment, exactly why
-they're kept independent here too). This is the real binding floor once
+own JS `target`/`lib` — bumped to `ESNext` alongside `vite.config.ts`'s
+`build.target` shortly after this design landed; this repo previously
+conflated the two frameworks and hit a real bug from it, per
+`vite.config.ts`'s own comment, exactly why they're kept independent
+here too). This is the real binding floor once
 `light-dark()` (Chrome123/FF120/Safari17.5), `@property` (FF128),
 relative color syntax (FF128), and the Popover API (FF125/Safari17) are
 included — all higher-water-mark than `@layer`/`@container`/nesting/

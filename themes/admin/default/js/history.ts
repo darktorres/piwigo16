@@ -32,6 +32,7 @@ import {
   textOf,
   toggle,
   trigger,
+  valueAt,
 } from "../../../default/js/vendor/utils/dom";
 import { tipTip } from "../../../default/js/vendor/widgets/tiptip";
 
@@ -348,7 +349,7 @@ function fillSummaryResult(summary: HistorySummary) {
   // summary.members is already ordered most-active-first
   summary.members.forEach((member) => {
     if (tmp < 5) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype. history.latte renders the hidden #-2 template unconditionally.
       const newUserItem = document
         .getElementById("-2")!
         .cloneNode(true) as Element;
@@ -472,8 +473,8 @@ function bindUserNameFilterClick(newLine: Element, line: HistoryLine): void {
 
 /** Part of `lineConstructor()`'s own extraction, below. */
 function bindUserIpFilterClick(newLine: Element, line: HistoryLine): void {
-  setData(find(newLine, ".user-ip")[0]!, "ip", line.ip);
-  setupGeoIpHover(find(newLine, ".user-ip")[0]!);
+  setData(valueAt(find(newLine, ".user-ip"), 0), "ip", line.ip);
+  setupGeoIpHover(valueAt(find(newLine, ".user-ip"), 0));
   if (currentParam.ip !== "") {
     return;
   }
@@ -488,7 +489,11 @@ function bindUserIpFilterClick(newLine: Element, line: HistoryLine): void {
 
 /** Part of `lineConstructor()`'s own extraction, below. */
 function bindImageAsFilterClick(newLine: Element, line: HistoryLine): void {
-  setData(find(newLine, ".add-img-as-filter")[0]!, "img-id", line.imageId);
+  setData(
+    valueAt(find(newLine, ".add-img-as-filter"), 0),
+    "img-id",
+    line.imageId,
+  );
   if (currentParam.image_id !== "") {
     return;
   }
@@ -544,7 +549,7 @@ function renderTagsSectionLine(newLine: Element, line: HistoryLine): void {
   if (line.tagNames.length > 1 && line.tagNames.length <= 2) {
     html(
       find(newLine, ".type-name"),
-      line.tagNames[0]! + ", " + line.tagNames[1]! + ", ...",
+      valueAt(line.tagNames, 0) + ", " + valueAt(line.tagNames, 1) + ", ...",
     );
     html(
       find(newLine, ".type-id"),
@@ -553,11 +558,11 @@ function renderTagsSectionLine(newLine: Element, line: HistoryLine): void {
   } else if (line.tagNames.length > 2) {
     html(
       find(newLine, ".type-name"),
-      line.tagNames[0]! +
+      valueAt(line.tagNames, 0) +
         ", " +
-        line.tagNames[1]! +
+        valueAt(line.tagNames, 1) +
         ", " +
-        line.tagNames[2]! +
+        valueAt(line.tagNames, 2) +
         ", ...",
     );
     html(
@@ -608,6 +613,7 @@ function renderSearchBadge(
   const item = find(newLine, ".detail-item-" + String(countItem));
   html(item, valueStr);
   addClass(item, String(SEARCH_DETAIL_ICONS[key]) + " tiptip");
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- renderSearchBadge() is only ever called with one of strSearchDetails's own real, statically-declared keys.
   attr(item, "title", "<b>" + strSearchDetails[key]! + " :</b> " + valueStr);
   removeClass(item, "hide");
 }
@@ -643,6 +649,7 @@ function renderAllwordsAndCatBadges(
     attr(
       find(newLine, ".detail-item-" + String(countItem)),
       "title",
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- "cat" is a real, statically-declared strSearchDetails key.
       "<b>" + strSearchDetails["cat"]! + " :</b> " + stripHtml(cat),
     );
     countItem++;
@@ -760,6 +767,7 @@ function renderSearchOverflowBadge(
         valueStr = stripHtml(valueStr);
       }
       countMore++;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this loop only ever iterates strSearchDetails's own real, statically-declared keys.
       return `<b>${strSearchDetails[key]!}</b> : ${valueStr}`;
     })
     .join(" <br />");
@@ -933,8 +941,10 @@ function renderThumbnailOrSectionIcon(
   hide(find(newLine, ".toggle-img-option"));
 
   if (HISTORY_LINE_SECTIONS.includes(line.section ?? "")) {
-    const lineIconClass =
-      HISTORY_LINE_ICONS[HISTORY_LINE_SECTIONS.indexOf(line.section ?? "")]!;
+    const lineIconClass = valueAt(
+      HISTORY_LINE_ICONS,
+      HISTORY_LINE_SECTIONS.indexOf(line.section ?? ""),
+    );
     addClass(find(newLine, ".type-icon i"), lineIconClass);
   } else {
     console.warn("Unhandled section : " + String(line.section));
@@ -957,7 +967,7 @@ function applyDownloadIndicator(newLine: Element, line: HistoryLine): void {
 }
 
 function lineConstructor(line: HistoryLine, id: number) {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype. history.latte renders the hidden #-1 template line unconditionally.
   const newLine = document.getElementById("-1")!.cloneNode(true) as Element;
 
   removeClass(newLine, "hide");
@@ -996,7 +1006,7 @@ function displayLine(line: Element) {
 }
 
 function addUserFilter(username: string | null) {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype. history.latte renders the hidden #default-filter template unconditionally.
   const newFilter = document
     .getElementById("default-filter")!
     .cloneNode(true) as Element;
@@ -1021,7 +1031,7 @@ function addUserFilter(username: string | null) {
 }
 
 function addGuestFilter(username: string) {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype. history.latte renders the hidden #default-filter template unconditionally.
   const newFilter = document
     .getElementById("default-filter")!
     .cloneNode(true) as Element;
@@ -1044,7 +1054,7 @@ function addGuestFilter(username: string) {
 }
 
 function addIpFilter(ip: string) {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype. history.latte renders the hidden #default-filter template unconditionally.
   const newFilter = document
     .getElementById("default-filter")!
     .cloneNode(true) as Element;
@@ -1068,7 +1078,7 @@ function addIpFilter(ip: string) {
 }
 
 function addImageFilter(img_id: HistoryImageId) {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype. history.latte renders the hidden #default-filter template unconditionally.
   const newFilter = document
     .getElementById("default-filter")!
     .cloneNode(true) as Element;
@@ -1132,7 +1142,9 @@ function updatePagination(maxPage: number) {
 
 function checkFilters() {
   if (
-    document.querySelectorAll(".filter-container")[0]!.childElementCount - 1 >
+    valueAt(document.querySelectorAll(".filter-container"), 0)
+      .childElementCount -
+      1 >
     0
   ) {
     //Check if there are filters

@@ -48,6 +48,7 @@ import {
   slideToggle,
   trigger,
   val,
+  valueAt,
 } from "../../../default/js/vendor/utils/dom";
 
 type ImageFormatSearchResponse =
@@ -258,6 +259,7 @@ async function searchAndAssignFormats(
   const multiple: string[] = [];
 
   files.forEach((f) => {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the API's own response always includes a result for every filename this same request sent.
     const search = imagesSearch[f.id]!;
     if (search.status === "found") {
       f.format_of = String(search.imageId);
@@ -275,7 +277,7 @@ async function searchAndAssignFormats(
 
   // If a file is not found or found more than one time
   if (notFound.length || multiple.length) {
-    const [multStr, notFoundStr] = [multiple, notFound].map((names) => {
+    const dedupeAndTruncate = (names: string[]): string[] => {
       //Get names
       let tab = names.map((f) => f.slice(0, f.indexOf(".")));
       // Remove duplicates
@@ -287,16 +289,18 @@ async function searchAndAssignFormats(
         tab = tab.splice(0, 6);
       }
       return tab;
-    });
+    };
+    const multStr = dedupeAndTruncate(multiple);
+    const notFoundStr = dedupeAndTruncate(notFound);
 
     alert({
       title: strFormatWarning,
       content:
         (notFound.length
-          ? `<p>${strFormatWarningNotFound.replace("%s", notFoundStr!.join(", "))}</p>`
+          ? `<p>${strFormatWarningNotFound.replace("%s", notFoundStr.join(", "))}</p>`
           : "") +
         (multiple.length
-          ? `<p>${strFormatWarningMultiple.replace("%s", multStr!.join(", "))}</p>`
+          ? `<p>${strFormatWarningMultiple.replace("%s", multStr.join(", "))}</p>`
           : ""),
       ...jConfirmWarningOptions,
     });
@@ -326,6 +330,7 @@ function assignOriginalFormat(
     f.format_of = String(originalImageId);
     formats.push([f.id, f.format_of]);
     appendFormatViewLink(f.id, f.format_of);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- exts is always built directly from these same files by the caller before this function runs.
     if (formatsExts.includes(exts[f.id]!)) {
       appendFormatUpdateWarning(up, f.id, String(originalImageId));
     }
@@ -467,6 +472,7 @@ ready(function () {
   // why each is real but dead here -- `chunkSize` in particular still
   // drives the real tus chunk size directly, in uploadNextTusFile()
   // below, just no longer duplicated into this config too).
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own "#uploader" element is always real.
   uploadQueue(uploaderPhotos!, {
     browse_button: "addFiles",
 
@@ -885,7 +891,7 @@ function uploadNextTusFile(
     return;
   }
 
-  const file = files[index]!;
+  const file = valueAt(files, index);
   file.status = UPLOADING;
 
   // Reuses BeforeUpload's own multipart_params-building logic verbatim

@@ -158,7 +158,9 @@ function parseSize(sizeStr: string): number {
     g: 1024 ** 3,
   };
   const n = Number(match[1]);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this regex's own 2nd capture group ([mgk]?) always participates in a successful match (possibly as an empty string), never undefined.
   const mul = match[2]!;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- `mul in multipliers` just confirmed this key is real; TS's `in` narrowing doesn't reach indexed access under noUncheckedIndexedAccess.
   return mul in multipliers ? n * multipliers[mul]! : n;
 }
 
@@ -622,7 +624,9 @@ function uploadQueueBeginRename<T>(span: HTMLElement, uploader: UploadQueue<T>):
   }
 
   const match = /^(.+)(\.[^.]+)$/.exec(file.name);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this regex's own 2 capture groups are both required (no `?`); they always participate in a successful match.
   const baseName = match ? match[1]! : file.name;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see baseName's own comment above.
   const ext = match ? match[2]! : "";
 
   span.style.display = "none";

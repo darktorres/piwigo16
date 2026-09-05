@@ -45,8 +45,8 @@ export function phpWGOpenWindow(
       String(width) +
       ",height=" +
       String(height),
-  )!;
-  if (!imgWasComplete) {
+  );
+  if (newWin && !imgWasComplete) {
     img.onload = function () {
       newWin.resizeTo(img.width + 50, img.height + 100);
     };
@@ -96,18 +96,21 @@ function pwg_checkPasswordMatch(
   pass2Id: string,
   errorId: string,
 ): void {
-  const pass1 = document.querySelector<HTMLInputElement>("#" + pass1Id);
-  const pass2 = document.querySelector<HTMLInputElement>("#" + pass2Id);
-  const error = document.getElementById(errorId);
-  if (!pass1 || !pass2 || !error) {
+  const pass1El = document.querySelector<HTMLInputElement>("#" + pass1Id);
+  const pass2El = document.querySelector<HTMLInputElement>("#" + pass2Id);
+  const errorEl = document.getElementById(errorId);
+  if (!pass1El || !pass2El || !errorEl) {
     return;
   }
+  const pass1 = pass1El;
+  const pass2 = pass2El;
+  const error = errorEl;
 
   function check() {
-    if (pass2!.value !== "" && pass1!.value !== pass2!.value) {
-      error!.textContent = pwg_getPageString("The passwords do not match");
+    if (pass2.value !== "" && pass1.value !== pass2.value) {
+      error.textContent = pwg_getPageString("The passwords do not match");
     } else {
-      error!.textContent = "";
+      error.textContent = "";
     }
   }
 
@@ -118,19 +121,21 @@ function pwg_checkPasswordMatch(
 }
 
 function pwg_checkEmailFormat(fieldId: string, errorId: string): void {
-  const field = document.querySelector<HTMLInputElement>("#" + fieldId);
-  const error = document.getElementById(errorId);
-  if (!field || !error) {
+  const fieldEl = document.querySelector<HTMLInputElement>("#" + fieldId);
+  const errorEl = document.getElementById(errorId);
+  if (!fieldEl || !errorEl) {
     return;
   }
+  const field = fieldEl;
+  const error = errorEl;
 
   function check() {
-    if (field!.value !== "" && !looksLikeEmail(field!.value)) {
-      error!.textContent = pwg_getPageString(
+    if (field.value !== "" && !looksLikeEmail(field.value)) {
+      error.textContent = pwg_getPageString(
         "mail address must be like xxx@yyy.eee (example : jack@altern.org)",
       );
     } else {
-      error!.textContent = "";
+      error.textContent = "";
     }
   }
 

@@ -32,6 +32,7 @@ import {
   show,
   slideToggle,
   val,
+  valueAt,
 } from "../../../../default/js/vendor/utils/dom";
 
 type UserListResponse =
@@ -247,7 +248,7 @@ function mergeActivityRow(
   const lineKey = row.sessionIdx + "~" + row.object + "~" + row.action + "~";
 
   if (lineKey === currentKey) {
-    const last = lines[lines.length - 1]!;
+    const last = valueAt(lines, lines.length - 1);
     last.counter++;
     last.object_id.push(row.objectId);
     return currentKey;
@@ -266,7 +267,7 @@ function mergeActivityRow(
     action: row.action,
     ip_address: row.ipAddress,
     date: row.dateFormatted,
-    hour: row.occuredOn.split(" ")[1]!,
+    hour: valueAt(row.occuredOn.split(" "), 1),
     user_id: row.performedBy,
     username: row.performedByUsername ?? "user#" + String(row.performedBy),
     detailsType: detailsType,
@@ -397,7 +398,7 @@ async function getUserActivity(
 
   try {
     const merged = await fetchAndMergeActivityLines(
-      pageOffsets[page - 1]!,
+      valueAt(pageOffsets, page - 1),
       uid,
       action,
       object,
@@ -408,7 +409,9 @@ async function getUserActivity(
     uidFilter = uid;
     actionFilter = action;
     objectFilter = object;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real caller passes a real [dateMinFilter, dateMaxFilter] pair, both always real strings.
     dateMinFilter = date[0]!;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see the identical justification above.
     dateMaxFilter = date[1]!;
 
     hide(document.querySelectorAll(".loading"));
@@ -598,9 +601,13 @@ function renderObjectAction(
   line: MergedActivityLine,
   action: string,
 ): string {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- renderObjectAction() is only ever called for the 4 real object-carrying actions (edit/add/delete/move), all real ACTION_TYPE_STYLES keys.
   const style = ACTION_TYPE_STYLES[action]!;
   addClass(find(newLine, ".action-type"), style.typeClass);
-  addClass(find(newLine, ".user-pic"), colorIcons[(line.user_id ?? 0) % 5]!);
+  addClass(
+    find(newLine, ".user-pic"),
+    valueAt(colorIcons, (line.user_id ?? 0) % 5),
+  );
   addClass(find(newLine, ".action-icon"), style.iconClass);
   html(find(newLine, ".action-name"), style.nameStr);
 
@@ -616,7 +623,10 @@ function renderObjectAction(
 /** Part of `lineConstructor()`'s own extraction, below. */
 function renderLoginAction(newLine: Element, line: MergedActivityLine): string {
   addClass(find(newLine, ".action-type"), "icon-purple");
-  addClass(find(newLine, ".user-pic"), colorIcons[(line.user_id ?? 0) % 5]!);
+  addClass(
+    find(newLine, ".user-pic"),
+    valueAt(colorIcons, (line.user_id ?? 0) % 5),
+  );
   addClass(find(newLine, ".action-icon"), "icon-key");
   addClass(find(newLine, ".action-section"), "icon-user-1");
   html(find(newLine, ".action-name"), actionTypeLogin);
@@ -632,11 +642,14 @@ function renderLogoutAction(
 ): string {
   addClass(find(newLine, ".action-type"), "icon-purple");
   if (line.user_id !== 2) {
-    addClass(find(newLine, ".user-pic"), colorIcons[(line.user_id ?? 0) % 5]!);
+    addClass(
+      find(newLine, ".user-pic"),
+      valueAt(colorIcons, (line.user_id ?? 0) % 5),
+    );
   } else {
     addClass(
       find(newLine, ".user-pic"),
-      colorIcons[(line.object_id[0] ?? 0) % 5]!,
+      valueAt(colorIcons, (line.object_id[0] ?? 0) % 5),
     );
   }
   addClass(find(newLine, ".action-icon"), "icon-logout");
@@ -653,7 +666,10 @@ function renderDefaultAction(
   line: MergedActivityLine,
 ): string {
   addClass(find(newLine, ".action-type"), "icon-purple");
-  addClass(find(newLine, ".user-pic"), colorIcons[(line.user_id ?? 0) % 5]!);
+  addClass(
+    find(newLine, ".user-pic"),
+    valueAt(colorIcons, (line.user_id ?? 0) % 5),
+  );
   addClass(find(newLine, ".action-section"), "icon-user-1");
   html(find(newLine, ".action-name"), line.action);
   return "x" + String(line.counter);
@@ -681,7 +697,7 @@ function computeLineAction(newLine: Element, line: MergedActivityLine): string {
 }
 
 function lineConstructor(line: MergedActivityLine) {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype. user_activity.latte renders the hidden #-1 template line unconditionally.
   const newLine = document.getElementById("-1")!.cloneNode(true) as Element;
 
   show(document.querySelectorAll(".tab-title"));
@@ -769,11 +785,10 @@ function emptyLine() {
 
 function getInitials(username: string) {
   const words = username.toUpperCase().split(" ");
-  let res = words[0]![0]!;
-
-  const [, secondWord] = words;
+  const [firstWord, secondWord] = words;
+  let res = (firstWord ?? "").charAt(0);
   if (secondWord !== undefined && secondWord.length > 0) {
-    res += secondWord[0]!;
+    res += secondWord.charAt(0);
   }
   return res;
 }
@@ -857,7 +872,7 @@ function appendPaginationItem(page: number | null = null) {
   if (container === null) return;
 
   if (page != null) {
-    const newTag = parseHtml(pageItem.replace(/%d/g, String(page)))[0]!;
+    const newTag = valueAt(parseHtml(pageItem.replace(/%d/g, String(page))), 0);
     container.appendChild(newTag);
     if (actualPage === page) {
       addClass(newTag, "actual");
@@ -867,7 +882,7 @@ function appendPaginationItem(page: number | null = null) {
       moveToPage(data(newTag, "page") as number);
     });
   } else {
-    container.appendChild(parseHtml(pageEllipsis)[0]!);
+    container.appendChild(valueAt(parseHtml(pageEllipsis), 0));
   }
 }
 
@@ -985,10 +1000,12 @@ ready(function () {
       pageReset();
       const minVal = val(document.querySelectorAll("#date_min_activity"));
       if (minVal === "") {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user_activity.latte renders #date_max_activity unconditionally.
         document
           .getElementById("date_max_activity")!
           .setAttribute("min", dateMin);
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user_activity.latte renders #date_max_activity unconditionally.
         document
           .getElementById("date_max_activity")!
           .setAttribute("min", String(minVal));
@@ -1011,10 +1028,12 @@ ready(function () {
       pageReset();
       const maxVal = val(document.querySelectorAll("#date_max_activity"));
       if (maxVal === "") {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user_activity.latte renders #date_min_activity unconditionally.
         document
           .getElementById("date_min_activity")!
           .setAttribute("max", dateMax);
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- user_activity.latte renders #date_min_activity unconditionally.
         document
           .getElementById("date_min_activity")!
           .setAttribute("max", String(maxVal));

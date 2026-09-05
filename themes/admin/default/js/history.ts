@@ -478,8 +478,7 @@ function bindUserIpFilterClick(newLine: Element, line: HistoryLine): void {
     return;
   }
   on(find(newLine, ".user-ip"), "click", function (this: Element) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-    currentParam.ip = (data(this, "ip") as string | undefined) ?? "";
+    currentParam.ip = data<string | undefined>(this, "ip") ?? "";
     currentParam.pageNumber = 0;
     addIpFilter(htmlOf(this) ?? "");
     void fillHistoryResult(currentParam);
@@ -497,8 +496,7 @@ function bindImageAsFilterClick(newLine: Element, line: HistoryLine): void {
     return;
   }
   on(find(newLine, ".add-img-as-filter"), "click", function (this: Element) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-    const imgId = data(this, "img-id") as HistoryImageId;
+    const imgId = data<HistoryImageId>(this, "img-id");
     currentParam.image_id = imgId;
     currentParam.pageNumber = 0;
     addImageFilter(imgId);

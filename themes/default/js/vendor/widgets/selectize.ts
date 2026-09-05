@@ -1,4 +1,4 @@
-import { on } from "../utils/dom";
+import { on, valueAt } from "../utils/dom";
 
 /**
  * Port of selectize.js v0.11.2's own `$.fn.selectize()` (real source read
@@ -308,6 +308,7 @@ export function selectize<
 
   function sortedMatches(tokens: string[]): string[] {
     const matches = order.filter((value) => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- order and options are always kept in sync -- every key in order is a real options entry.
       const data = options[value]!;
       // Was `items.includes(value as unknown as T)` -- `value` (from
       // `order`) is always a string, but `items` can genuinely hold a
@@ -322,7 +323,9 @@ export function selectize<
 
     if (sortField !== undefined && sortField !== "") {
       matches.sort((a, b) => {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- order and options are always kept in sync -- every key in order (which matches was filtered from) is a real options entry.
         const av = options[a]![sortField];
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see av's own comment above.
         const bv = options[b]![sortField];
         if (typeof av === "number" && typeof bv === "number") return av - bv;
         return fieldToString(av).localeCompare(fieldToString(bv));
@@ -360,6 +363,7 @@ export function selectize<
 
     dropdownContent.innerHTML = "";
     matches.forEach((value) => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- order and options are always kept in sync -- every key in order (which matches was filtered/sorted from) is a real options entry.
       const data = options[value]!;
       const html = renderers.option(data, escapeHtml);
       const wrapper = document.createElement("div");
@@ -493,9 +497,10 @@ export function selectize<
       next = idx + direction;
     }
     const clamped = Math.max(0, Math.min(rows.length - 1, next));
-    highlighted = rows[clamped]!.getAttribute("data-value");
+    const row = valueAt(rows, clamped);
+    highlighted = row.getAttribute("data-value");
     updateHighlightClass();
-    rows[clamped]!.scrollIntoView({ block: "nearest" });
+    row.scrollIntoView({ block: "nearest" });
   }
 
   on(input, "click", () => { textInput.focus(); });
@@ -545,7 +550,7 @@ export function selectize<
         return;
       case "Backspace":
         if (textInput.value === "" && items.length > 0) {
-          instance.removeItem(items[items.length - 1]!);
+          instance.removeItem(valueAt(items, items.length - 1));
           e.preventDefault();
         }
         return;
@@ -561,6 +566,7 @@ export function selectize<
       createFromInput();
       return;
     }
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real "[data-selectable]" row was rendered by renderOptions()/renderers.create(), which always sets a real data-value.
     const value = target.getAttribute("data-value")!;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- DOM-string-to-T boundary, see selectize()'s own header comment.
     instance.addItem(value as T);

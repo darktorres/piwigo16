@@ -36,6 +36,7 @@ import {
   toggle,
   trigger,
   val,
+  valueAt,
 } from "../../../../default/js/vendor/utils/dom";
 // common.ts's own side effects (font-checkbox init, search-cancel
 // bindings) -- batch_manager_filter.inc.latte's own `.font-checkbox`
@@ -130,7 +131,7 @@ ready(function () {
           );
 
           if (filtered.length > 0) {
-            options.default = filtered[0]!.id;
+            options.default = valueAt(filtered, 0).id;
           }
 
           return filtered;
@@ -214,6 +215,7 @@ function progress(success?: boolean) {
 }
 
 async function getDerivativeUrls(queue: AjaxQueue): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- getDerivativeUrls() is only ever called after derivatives.elements is set to a real array.
   const ids = derivatives.elements!.splice(0, 500).map(Number);
   const params: { maxUrls: number; ids: number[]; types: string[] } = {
     maxUrls: 100000,
@@ -240,6 +242,7 @@ async function getDerivativeUrls(queue: AjaxQueue): Promise<void> {
       url: "api/v1/images/actions/missing-derivatives",
       json: params,
       headers: {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own hidden pwg_token input is always real and populated.
         "X-CSRF-Token": val(
           document.querySelectorAll("input[name=pwg_token]"),
         )!,
@@ -280,6 +283,7 @@ async function getDerivativeUrls(queue: AjaxQueue): Promise<void> {
       },
     });
   }
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- getDerivativeUrls() is only ever called after derivatives.elements is set to a real array.
   if (derivatives.elements!.length)
     setTimeout(
       () => {
@@ -584,6 +588,7 @@ ready(function () {
           ".thumbnails input[type=checkbox]:checked",
         )
         .forEach((el) => {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- derivatives.elements was just set to a real array above.
           derivatives.elements!.push(el.value);
         });
     }
@@ -663,7 +668,7 @@ ready(function () {
           }
 
           for (let i = first; i <= last; i++) {
-            const input = inputs[i]!;
+            const input = valueAt(inputs, i);
             input.checked = lastClickedStatus;
             trigger([input], "change");
             const li = input.closest("li");
@@ -943,6 +948,7 @@ let elements: (string | number)[] | undefined;
  * checked. Shared by both the metadata-sync and delete batch flows.
  */
 function resolveSelectedElements(): (string | number)[] {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own #setSelected hidden checkbox is always real.
   if (is(document.querySelector("input[name=setSelected]")!, ":checked")) {
     return allElements;
   }
@@ -972,8 +978,8 @@ function runBatchedImageRequests<T>(
   const blockSize = Math.min(Number((allSelected.length / 2).toFixed()), 1000);
   let imageIds: (string | number)[] = [];
 
-  for (let i = 0; i < allSelected.length; i++) {
-    imageIds.push(allSelected[i]!);
+  for (const [i, id] of allSelected.entries()) {
+    imageIds.push(id);
     if (i % blockSize !== blockSize - 1 && i !== allSelected.length - 1) {
       continue;
     }
@@ -1026,6 +1032,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
         type: "POST",
         contentType: "application/json",
         headers: {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own hidden pwg_token input is always real and populated.
           "X-CSRF-Token": val(
             document.querySelectorAll("input[name=pwg_token]"),
           )!,
@@ -1063,6 +1070,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
   if (val(document.querySelectorAll('[name="selectAction"]')) === "delete") {
     if (
       !is(
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own #confirmDel confirm_deletion checkbox is always real once action=delete is selected.
         document.querySelector("#confirmDel input[name=confirm_deletion]")!,
         ":checked",
       )
@@ -1108,6 +1116,7 @@ on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
       url: "api/v1/images/actions/delete",
       contentType: "application/json",
       headers: {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own hidden pwg_token input is always real and populated.
         "X-CSRF-Token": val(
           document.querySelectorAll("input[name=pwg_token]"),
         )!,
@@ -1183,12 +1192,10 @@ on(
     hide([this]);
     show(document.querySelectorAll("#add_md5sum"));
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own #md5sum_to_add element is always real.
+    const origin = document.querySelector("#md5sum_to_add")!;
     const addBlockSize = Math.min(
-      Number(
-        (
-          Number(data(document.querySelector("#md5sum_to_add")!, "origin")) / 2
-        ).toFixed(),
-      ),
+      Number((Number(data(origin, "origin")) / 2).toFixed()),
       1000,
     );
     void addMd5sumBlock(addBlockSize);
@@ -1208,6 +1215,7 @@ async function addMd5sumBlock(blockSize?: number): Promise<void> {
         blockSize: blockSize,
       },
       headers: {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own hidden pwg_token input is always real and populated.
         "X-CSRF-Token": val(
           document.querySelectorAll("input[name=pwg_token]"),
         )!,
@@ -1220,6 +1228,7 @@ async function addMd5sumBlock(blockSize?: number): Promise<void> {
       String(responseData.remainingCount),
     );
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own #md5sum_to_add element is always real.
     const origin = document.querySelector("#md5sum_to_add")!;
     const percentRemaining = Number(
       (
@@ -1259,14 +1268,10 @@ on(
     hide([this]);
     show(document.querySelectorAll("#orphans_deletion"));
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own #orphans_to_delete element is always real.
+    const origin = document.querySelector("#orphans_to_delete")!;
     const deleteBlockSize = Math.min(
-      Number(
-        (
-          Number(
-            data(document.querySelector("#orphans_to_delete")!, "origin"),
-          ) / 2
-        ).toFixed(),
-      ),
+      Number((Number(data(origin, "origin")) / 2).toFixed()),
       1000,
     );
 
@@ -1287,6 +1292,7 @@ async function deleteOrphansBlock(blockSize?: number): Promise<void> {
         blockSize: blockSize,
       },
       headers: {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own hidden pwg_token input is always real and populated.
         "X-CSRF-Token": val(
           document.querySelectorAll("input[name=pwg_token]"),
         )!,
@@ -1299,6 +1305,7 @@ async function deleteOrphansBlock(blockSize?: number): Promise<void> {
       String(responseData.nbOrphans),
     );
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own #orphans_to_delete element is always real.
     const origin = document.querySelector("#orphans_to_delete")!;
     const percentRemaining = Number(
       (

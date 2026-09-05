@@ -51,6 +51,7 @@ import {
   trigger,
   val,
   valId,
+  valueAt,
 } from "../../../../default/js/vendor/utils/dom";
 
 type Group = components["schemas"]["Group"];
@@ -266,6 +267,7 @@ ready(function () {
 
 function createGroup(group: Group): Element {
   //Setup the group
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own "#group-template" element is always real.
   const template = document.getElementById("group-template")!;
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning #group-template, itself a real HTMLElement, always produces an HTMLElement (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
   const newgroup = template.cloneNode(true) as HTMLElement;
@@ -307,7 +309,7 @@ function createGroup(group: Group): Element {
     "icon-green",
   ];
   const colorId = group.id % 5;
-  addClass(find(newgroup, ".icon-users-1"), colors[colorId]!);
+  addClass(find(newgroup, ".icon-users-1"), valueAt(colors, colorId));
 
   //Place group in first Place
   html(find(newgroup, ".groupMessage"), strGroupCreated);
@@ -455,28 +457,34 @@ function toogleSelection(group_id: number, toggleOn: boolean) {
     addClass(find(groupBox, ".group_number_users"), "OrangeFont");
 
     //Display item selection on selection panel
-    const item = parseHtml(
-      "<div data-id=" +
-        String(group_id) +
-        ">" +
-        "<a class='icon-cancel'></a>" +
-        "<p>" +
-        (htmlOf(find(groupBox, "#group_name")) ?? "") +
-        "</p> </div>",
-    )[0]!;
+    const item = valueAt(
+      parseHtml(
+        "<div data-id=" +
+          String(group_id) +
+          ">" +
+          "<a class='icon-cancel'></a>" +
+          "<p>" +
+          (htmlOf(find(groupBox, "#group_name")) ?? "") +
+          "</p> </div>",
+      ),
+      0,
+    );
     document.querySelector(".DeleteGroupList")?.appendChild(item);
     on(find(item, "a"), "click", function () {
       setChecked(find(groupBox, ".Group-checkbox input"), false);
       toogleSelection(group_id, false);
     });
     updateSelectionPanel();
-    const option = parseHtml(
-      '<option value="' +
-        String(group_id) +
-        '">' +
-        (htmlOf(find(groupBox, "#group_name")) ?? "") +
-        "</option>",
-    )[0]!;
+    const option = valueAt(
+      parseHtml(
+        '<option value="' +
+          String(group_id) +
+          '">' +
+          (htmlOf(find(groupBox, "#group_name")) ?? "") +
+          "</option>",
+      ),
+      0,
+    );
     document.querySelector("#MergeOptionsChoices")?.appendChild(option);
   } else {
     setChecked(find(groupBox, ".Group-checkbox input"), false);
@@ -502,6 +510,7 @@ function deleteGroup(id: number) {
   confirm({
     title: strDelete.replace(
       "%s",
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- a real group's own "#group_name" element is always real.
       htmlOf(
         document.querySelectorAll(
           "#" + escapeId("group-" + String(id)) + " #group_name",
@@ -517,6 +526,7 @@ function deleteGroup(id: number) {
         text: strYesDeleteConfirmation,
         btnClass: "btn-red",
         action: function () {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- a real group's own ".Group-name-container p" element is always real.
           const groupName = htmlOf(
             document.querySelectorAll(
               "#" +
@@ -1179,8 +1189,10 @@ on(document.querySelectorAll(".ConfirmMergeButton"), "click", function () {
       const elId = Number(attrOf(el, "data-id"));
       if (destGrp !== elId) {
         mergeGroup.push(elId);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real ".DeleteGroupList div" was rendered with a real "p" child (toogleSelection()'s own item markup above).
         nameMerge.push(htmlOf(find(el, "p"))!);
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real ".DeleteGroupList div" was rendered with a real "p" child (toogleSelection()'s own item markup above).
         nameDest = htmlOf(find(el, "p"))!;
       }
     });
@@ -1262,6 +1274,7 @@ on(document.querySelectorAll(".ConfirmDeleteButton"), "click", function () {
     document.querySelectorAll(".DeleteGroupList div").forEach((el) => {
       const id = Number(attrOf(el, "data-id"));
       names.push(
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- a real group's own "#group_name" element is always real.
         htmlOf(
           document.querySelectorAll(
             "#" + escapeId("group-" + String(id)) + " #group_name",

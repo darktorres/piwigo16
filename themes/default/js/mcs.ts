@@ -1481,8 +1481,7 @@ function wireFilterManagerPopin(): void {
       document
         .querySelectorAll(".filter-manager-controller-container input")
         .forEach((el) => {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-          const wid = data(el, "wid") as string;
+          const wid = data<string>(el, "wid");
           if (is(el, ":checked")) {
             if (!isVisible(widFilterEl(wid))) {
               setChecked(el, false);
@@ -1503,8 +1502,7 @@ function wireFilterManagerPopin(): void {
       document
         .querySelectorAll(".filter-manager-controller-container input")
         .forEach((el) => {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-          const wid = data(el, "wid") as string;
+          const wid = data<string>(el, "wid");
           if (is(el, ":checked")) {
             if (!isVisible(widFilterEl(wid))) {
               updateFilters(wid, "add");

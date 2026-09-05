@@ -90,6 +90,7 @@ interface StatData {
 // raw strings and every `Object.keys()` below would walk the characters of
 // one. `readData()` (vendor/utils/dom.ts) reproduces that same coercion natively
 // (P49-C).
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own "#data" element is always real.
 const dataElement = document.getElementById("data")!;
 // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- deliberate placeholder, immediately filled in below by real readData() calls before any other code can observe it.
 const data = {} as StatData;
@@ -121,6 +122,7 @@ let compareMode = false;
 /*-------
 Creating graph
 -------*/
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own "#stat-graph" canvas is always real.
 const canvas = document.querySelector<HTMLCanvasElement>("#stat-graph")!;
 const chart = new LineChart(canvas, locale);
 
@@ -172,9 +174,9 @@ function changeData(dataType: DataType): void {
 
 //Make Data readable by the chart
 function getValues(statDataPoint: StatDataPoint): LineChartPoint[] {
-  return Object.keys(statDataPoint).map((key) => ({
+  return Object.entries(statDataPoint).map(([key, value]) => ({
     x: new Date(key).getTime(),
-    y: statDataPoint[key]!,
+    y: value,
   }));
 }
 
@@ -189,19 +191,22 @@ function getComparedYearDataset(): LineChartSeries[] {
   // throughout this campaign (e.g. phpWGOpenWindow's img/newWin).
   const values: Record<string, (number | undefined)[]> = {};
 
-  Object.keys(data["compare-years"]).forEach(function (key) {
+  Object.entries(data["compare-years"]).forEach(function ([key, value]) {
     const date = new Date(key);
     const year = String(date.getFullYear());
     values[year] ??= [];
-    values[year][date.getMonth()] = data["compare-years"][key]!;
+    values[year][date.getMonth()] = value;
   });
 
-  return Object.keys(values).map((year) => ({
+  return Object.entries(values).map(([year, monthValues]) => ({
     label: year,
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- a real Array.prototype.length modulo always stays in bounds.
     color: COMPARE_COLORS[parseInt(year) % COMPARE_COLORS.length]!,
-    points: values[year]!.map((y, month): LineChartPoint | null =>
-      y === undefined ? null : { x: month, y },
-    ).filter((p): p is LineChartPoint => p !== null),
+    points: monthValues
+      .map((y, month): LineChartPoint | null =>
+        y === undefined ? null : { x: month, y },
+      )
+      .filter((p): p is LineChartPoint => p !== null),
   }));
 }
 
@@ -212,15 +217,17 @@ function getMonthStatsDataset(): LineChartSeries[] {
 
   data["month-stats"].month.forEach((values: StatDataPoint) => {
     const daysData: (number | undefined)[] = [];
-    Object.keys(values).forEach(function (key) {
+    Object.entries(values).forEach(function ([key, value]) {
       lastDate = new Date(key);
-      daysData[lastDate.getUTCDate() - 1] = values[key]!;
+      daysData[lastDate.getUTCDate() - 1] = value;
     });
     datasets.push({
       label:
         lastDate === undefined
           ? ""
-          : `${strMonths[lastDate.getMonth()]!} ${String(lastDate.getFullYear())}`,
+          : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- strMonths has one real entry per calendar month (Date's own getMonth() range).
+            `${strMonths[lastDate.getMonth()]!} ${String(lastDate.getFullYear())}`,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- a real Array.prototype.length modulo always stays in bounds.
       color: COMPARE_COLORS[colorIndice % COMPARE_COLORS.length]!,
       points: daysData
         .map((y, day): LineChartPoint | null =>
@@ -233,6 +240,7 @@ function getMonthStatsDataset(): LineChartSeries[] {
 
   datasets.push({
     label: strAvg,
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- COMPARE_COLORS's own literal always declares 5 entries (indices 0-4).
     color: COMPARE_COLORS[4]!,
     points: Array.from({ length: 31 }, (_, day) => ({
       x: day,
@@ -246,6 +254,7 @@ function getMonthStatsDataset(): LineChartSeries[] {
 // The label carries `data-value`; reading it through the helper keeps
 // jQuery's coercion, which leaves a plain word a string.
 function selectedDataType(): DataType {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- exactly one ".stat-data-selector" radio is always checked (a real default is rendered server-side).
   const label = document.querySelector(
     ".stat-data-selector input:checked + label",
   )!;

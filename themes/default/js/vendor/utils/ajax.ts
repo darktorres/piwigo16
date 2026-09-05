@@ -174,6 +174,17 @@ export function param(data: Record<string, unknown>): string {
   return parts.join("&");
 }
 
+/** `ajax()`'s own non-`json`/non-empty request body, serialized per its real shape. */
+function serializeRequestBody(requestData: unknown): string {
+  if (isPlainObject(requestData)) {
+    return param(requestData);
+  }
+  if (typeof requestData === "string") {
+    return requestData;
+  }
+  return JSON.stringify(requestData);
+}
+
 /**
  * A thenable that also answers to jQuery's `.done()`/`.fail()`, which 10 call
  * sites use on the return value.
@@ -258,11 +269,7 @@ export function ajax<T = unknown>(options: AjaxOptions<T>): AjaxThenable {
     options.json !== undefined ? JSON.stringify(options.json) : options.data;
 
   if (requestData !== undefined && requestData !== null) {
-    const serialized = isPlainObject(requestData)
-      ? param(requestData)
-      : typeof requestData === "string"
-        ? requestData
-        : JSON.stringify(requestData);
+    const serialized = serializeRequestBody(requestData);
 
     if (isBodyless) {
       url += (url.includes("?") ? "&" : "?") + serialized;

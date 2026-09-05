@@ -385,9 +385,11 @@ function onWindowResize(): void {
 /** Convert '%' and 'px' values to integers, `$.colorbox`'s own `setSize()`. */
 function setSize(size: number | string, dimension: "x" | "y"): number {
   const str = String(size);
-  const base = str.includes("%")
-    ? (dimension === "x" ? windowWidth() : windowHeight()) / 100
-    : 1;
+  let base = 1;
+  if (str.includes("%")) {
+    const windowDimension = dimension === "x" ? windowWidth() : windowHeight();
+    base = windowDimension / 100;
+  }
   return Math.round(base * parseInt(str, 10));
 }
 

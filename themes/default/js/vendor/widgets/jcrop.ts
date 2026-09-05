@@ -254,8 +254,14 @@ function initJcrop(origImg: HTMLImageElement, options: JcropOptions): JcropApi {
     imgHolder.appendChild(el);
     return el;
   }
+  function dragbarBorderClass(ord: string): string {
+    if (ord === "n") return "hline";
+    if (ord === "s") return "hline bottom";
+    if (ord === "e") return "vline right";
+    return "vline";
+  }
   for (const ord of DRAGBAR_ORDS) {
-    insertBorder(ord === "n" ? "hline" : ord === "s" ? "hline bottom" : ord === "e" ? "vline right" : "vline");
+    insertBorder(dragbarBorderClass(ord));
   }
 
   function dragDiv(ord: Ord | "move", zIndex: number): HTMLElement {

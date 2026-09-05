@@ -486,7 +486,12 @@ export function selectize<
     );
     if (rows.length === 0) return;
     const idx = rows.findIndex((r) => r.getAttribute("data-value") === highlighted);
-    const next = idx === -1 ? (direction === 1 ? 0 : rows.length - 1) : idx + direction;
+    let next: number;
+    if (idx === -1) {
+      next = direction === 1 ? 0 : rows.length - 1;
+    } else {
+      next = idx + direction;
+    }
     const clamped = Math.max(0, Math.min(rows.length - 1, next));
     highlighted = rows[clamped]!.getAttribute("data-value");
     updateHighlightClass();

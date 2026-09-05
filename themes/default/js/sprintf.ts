@@ -124,7 +124,13 @@ export function sprintf(...args: (string | number)[]): string {
         /[def]/.test(m[7]!) && m[2] !== undefined && a >= 0
           ? "+" + String(a)
           : a;
-      c = m[3] !== undefined ? (m[3] === "0" ? "0" : m[3].charAt(1)) : " ";
+      if (m[3] === undefined) {
+        c = " ";
+      } else if (m[3] === "0") {
+        c = "0";
+      } else {
+        c = m[3].charAt(1);
+      }
       x = Number(m[5]) - String(a).length - s.length;
       p = m[5] !== undefined ? str_repeat(c, x) : "";
       o.push(s + (m[4] !== undefined ? String(a) + p : p + String(a)));

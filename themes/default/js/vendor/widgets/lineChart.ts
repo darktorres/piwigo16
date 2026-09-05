@@ -99,15 +99,26 @@ const LEGEND_SWATCH = 12;
  * line-for-line, since the goal is "looks like a normal axis", not a byte
  * match with `Chart.Ticks.generators.linear`.
  */
+function roundedNiceFraction(fraction: number): number {
+  if (fraction < 1.5) return 1;
+  if (fraction < 3) return 2;
+  if (fraction < 7) return 5;
+  return 10;
+}
+
+function ceiledNiceFraction(fraction: number): number {
+  if (fraction <= 1) return 1;
+  if (fraction <= 2) return 2;
+  if (fraction <= 5) return 5;
+  return 10;
+}
+
 function niceNum(range: number, round: boolean): number {
   const exponent = Math.floor(Math.log10(range));
   const fraction = range / Math.pow(10, exponent);
-  let niceFraction: number;
-  if (round) {
-    niceFraction = fraction < 1.5 ? 1 : fraction < 3 ? 2 : fraction < 7 ? 5 : 10;
-  } else {
-    niceFraction = fraction <= 1 ? 1 : fraction <= 2 ? 2 : fraction <= 5 ? 5 : 10;
-  }
+  const niceFraction = round
+    ? roundedNiceFraction(fraction)
+    : ceiledNiceFraction(fraction);
   return niceFraction * Math.pow(10, exponent);
 }
 

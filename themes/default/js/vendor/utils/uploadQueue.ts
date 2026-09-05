@@ -362,12 +362,13 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
     this.total.uploaded = uploaded;
     this.total.failed = failed;
     this.total.queued = queued;
-    this.total.percent =
-      size > 0
-        ? Math.ceil((loaded / size) * 100)
-        : this.files.length > 0
-          ? Math.ceil((uploaded / this.files.length) * 100)
-          : 0;
+    if (size > 0) {
+      this.total.percent = Math.ceil((loaded / size) * 100);
+    } else if (this.files.length > 0) {
+      this.total.percent = Math.ceil((uploaded / this.files.length) * 100);
+    } else {
+      this.total.percent = 0;
+    }
   }
 
   #renderShell(): void {
@@ -568,19 +569,19 @@ export class UploadQueue<TFileUploadedInfo = unknown> {
     }
   }
 
+  static #statusClassName(status: number): string {
+    if (status === DONE) return "plupload_done";
+    if (status === FAILED) return "plupload_failed";
+    if (status === UPLOADING) return "plupload_uploading";
+    return "plupload_delete";
+  }
+
   static #markFileStatus(file: UploadQueueFile): void {
     const li = document.getElementById(file.id);
     if (li === null) {
       return;
     }
-    li.className =
-      file.status === DONE
-        ? "plupload_done"
-        : file.status === FAILED
-          ? "plupload_failed"
-          : file.status === UPLOADING
-            ? "plupload_uploading"
-            : "plupload_delete";
+    li.className = UploadQueue.#statusClassName(file.status);
 
     const action = li.querySelector<HTMLAnchorElement>(".plupload_file_action a");
     if (action !== null) {

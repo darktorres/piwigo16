@@ -696,7 +696,7 @@ function lineConstructor(line: HistoryLine, id: number) {
         }
         if (countItem <= 2) {
           const badgeToAdd =
-            activeItems.length === 1 ? 1 : countItem === 1 ? 2 : 1;
+            activeItems.length !== 1 && countItem === 1 ? 2 : 1;
           let badgeAdded = 0;
           activeItems.some((key) => {
             if (key !== "allwords" && key !== "cat" && key !== "tags") {

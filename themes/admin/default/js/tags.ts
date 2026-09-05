@@ -764,26 +764,28 @@ const maxItemDisplayed = 5;
 
 setChecked(document.querySelectorAll("#toggleSelectionMode"), false);
 on(document.querySelectorAll("#toggleSelectionMode"), "click", function () {
-  selectionMode(
-    is(document.querySelectorAll("#toggleSelectionMode"), ":checked"),
-  );
+  if (is(document.querySelectorAll("#toggleSelectionMode"), ":checked")) {
+    enterSelectionMode();
+  } else {
+    exitSelectionMode();
+  }
   hide(document.querySelectorAll(".tag-info"));
 });
 
-function selectionMode(isSelection: boolean): void {
-  if (isSelection) {
-    addClass(document.querySelectorAll(".in-selection-mode"), "show");
-    addClass(document.querySelectorAll(".not-in-selection-mode"), "hide");
-    addClass(document.querySelectorAll(".tag-container"), "selection");
-    removeClass(document.querySelectorAll(".tag-box"), "edit-name");
-  } else {
-    removeClass(document.querySelectorAll(".in-selection-mode"), "show");
-    removeClass(document.querySelectorAll(".not-in-selection-mode"), "hide");
-    removeClass(document.querySelectorAll(".tag-container"), "selection");
-    attr(document.querySelectorAll(".tag-box"), "data-selected", "0");
-    slideUp(document.querySelectorAll(".tag-select-message"));
-    clearSelection();
-  }
+function enterSelectionMode(): void {
+  addClass(document.querySelectorAll(".in-selection-mode"), "show");
+  addClass(document.querySelectorAll(".not-in-selection-mode"), "hide");
+  addClass(document.querySelectorAll(".tag-container"), "selection");
+  removeClass(document.querySelectorAll(".tag-box"), "edit-name");
+}
+
+function exitSelectionMode(): void {
+  removeClass(document.querySelectorAll(".in-selection-mode"), "show");
+  removeClass(document.querySelectorAll(".not-in-selection-mode"), "hide");
+  removeClass(document.querySelectorAll(".tag-container"), "selection");
+  attr(document.querySelectorAll(".tag-box"), "data-selected", "0");
+  slideUp(document.querySelectorAll(".tag-select-message"));
+  clearSelection();
 }
 
 function clearSelection(): void {

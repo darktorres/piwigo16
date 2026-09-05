@@ -372,20 +372,20 @@ function fillSummaryResult(summary: HistorySummary) {
   });
 }
 
-function showResults(doShow: boolean) {
-  if (doShow) {
-    show(document.querySelectorAll(".search-summary"));
-    show(document.querySelectorAll(".container"));
-  } else {
-    hide(document.querySelectorAll(".search-summary"));
-    hide(document.querySelectorAll(".container"));
-  }
+function showResults() {
+  show(document.querySelectorAll(".search-summary"));
+  show(document.querySelectorAll(".container"));
+}
+
+function hideResults() {
+  hide(document.querySelectorAll(".search-summary"));
+  hide(document.querySelectorAll(".container"));
 }
 
 async function fillHistoryResult(
   ajaxParam: HistoryFilterParams,
 ): Promise<void> {
-  showResults(false);
+  hideResults();
   removeClass(document.querySelectorAll(".loading"), "hide");
   hide(document.querySelectorAll(".noResults"));
   empty(document.querySelectorAll(".tab"));
@@ -409,10 +409,10 @@ async function fillHistoryResult(
       });
 
       fillSummaryResult(summary);
-      showResults(true);
+      showResults();
       hide(document.querySelectorAll(".noResults"));
     } else {
-      showResults(false);
+      hideResults();
       show(document.querySelectorAll(".noResults"));
     }
 

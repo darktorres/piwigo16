@@ -377,7 +377,7 @@ function setupGroupBox(groupBox: Element) {
     find(groupBox, ".Group-name .icon-pencil, #GroupEdit"),
     "click",
     function () {
-      displayRenameForm(true, id);
+      showRenameForm(id);
       setTimeout(() => {
         hide(find(groupBox, "#GroupOptions"));
       }, 10);
@@ -402,7 +402,7 @@ function setupGroupBox(groupBox: Element) {
   });
 
   on(find(groupBox, ".group-rename .icon-cancel"), "click", function () {
-    displayRenameForm(false, id);
+    hideRenameForm(id);
     setVal(
       find(groupBox, ".group_name-editable"),
       htmlOf(find(groupBox, ".Group-name-container p")) ?? "",
@@ -634,7 +634,7 @@ async function renameGroup(id: number, newName: string): Promise<void> {
       );
 
       //Hide editable field
-      displayRenameForm(false, id);
+      hideRenameForm(id);
     } catch {
       loadState.reverse();
       //Display error message
@@ -674,54 +674,53 @@ async function renameGroup(id: number, newName: string): Promise<void> {
   }
 }
 
-// Hide or display rename form
-function displayRenameForm(doDisplay: boolean, grpId: number) {
-  if (doDisplay) {
-    css(
-      find(
-        document.querySelectorAll("#" + escapeId("group-" + String(grpId))),
-        ".group-rename",
-      ),
-      "display",
-      "flex",
-    );
-    hide(
-      find(
-        document.querySelectorAll("#" + escapeId("group-" + String(grpId))),
-        ".Group-name-container .icon-pencil",
-      ),
-    );
-    css(
-      find(
-        document.querySelectorAll("#" + escapeId("group-" + String(grpId))),
-        ".Group-name-container p",
-      ),
-      "opacity",
-      0,
-    );
-  } else {
-    hide(
-      find(
-        document.querySelectorAll("#" + escapeId("group-" + String(grpId))),
-        ".group-rename",
-      ),
-    );
-    removeAttr(
-      find(
-        document.querySelectorAll("#" + escapeId("group-" + String(grpId))),
-        ".Group-name-container .icon-pencil",
-      ),
-      "style",
-    );
-    css(
-      find(
-        document.querySelectorAll("#" + escapeId("group-" + String(grpId))),
-        ".Group-name-container p",
-      ),
-      "opacity",
-      1,
-    );
-  }
+function showRenameForm(grpId: number) {
+  css(
+    find(
+      document.querySelectorAll("#" + escapeId("group-" + String(grpId))),
+      ".group-rename",
+    ),
+    "display",
+    "flex",
+  );
+  hide(
+    find(
+      document.querySelectorAll("#" + escapeId("group-" + String(grpId))),
+      ".Group-name-container .icon-pencil",
+    ),
+  );
+  css(
+    find(
+      document.querySelectorAll("#" + escapeId("group-" + String(grpId))),
+      ".Group-name-container p",
+    ),
+    "opacity",
+    0,
+  );
+}
+
+function hideRenameForm(grpId: number) {
+  hide(
+    find(
+      document.querySelectorAll("#" + escapeId("group-" + String(grpId))),
+      ".group-rename",
+    ),
+  );
+  removeAttr(
+    find(
+      document.querySelectorAll("#" + escapeId("group-" + String(grpId))),
+      ".Group-name-container .icon-pencil",
+    ),
+    "style",
+  );
+  css(
+    find(
+      document.querySelectorAll("#" + escapeId("group-" + String(grpId))),
+      ".Group-name-container p",
+    ),
+    "opacity",
+    1,
+  );
 }
 
 const setDefaultGroup = async function (

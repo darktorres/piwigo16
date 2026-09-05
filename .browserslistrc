@@ -1,7 +1,14 @@
-# Floor: evergreen browsers with full ES2022 support (matches
-# tsconfig.json's compilerOptions.target/lib) -- see docs/PLAN.md P35.
-# No IE, no legacy Edge (EdgeHTML) -- both predate ES2022 entirely.
-Chrome >= 94
-Edge >= 94
-Firefox >= 93
-Safari >= 15
+# Floor: bumped for P52 (CSS architecture modernization, docs/PLAN.md)
+# -- light-dark() (Chrome123/FF120/Safari17.5), @property (FF128),
+# relative color syntax (FF128), and the Popover API (FF125/Safari17)
+# all need a higher floor than P35's original ES2022-only baseline
+# (Chrome/Edge 94, Firefox 93, Safari 15) required. Independent of
+# tsconfig.json's compilerOptions.target/lib (vite.config.ts's own
+# build.target is a separate, hardcoded "es2022" esbuild target string
+# -- conflating the two once already produced a real dead-on-arrival
+# bug, see that file's own comment) -- this file has no real tooling
+# consumer today, the floor is documentary, not CI-enforced.
+Chrome >= 123
+Edge >= 123
+Firefox >= 128
+Safari >= 17.5

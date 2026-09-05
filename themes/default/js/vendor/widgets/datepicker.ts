@@ -100,6 +100,7 @@ import {
   type DatepickerLocale,
   type TimepickerLocale,
 } from "../utils/datepickerLocales";
+import { valueAt } from "../utils/dom";
 
 export interface PwgDatepickerOptions {
   showTimepicker?: boolean;
@@ -205,11 +206,11 @@ function formatLongDate(date: Date, locale: DatepickerLocale): string {
   // itself never appends it, confirmed against the real source
   // (`node_modules/jquery-ui/datepicker.js`'s only other reference).
   return (
-    locale.dayNames[date.getDay()]! +
+    valueAt(locale.dayNames, date.getDay()) +
     " " +
     String(date.getDate()) +
     " " +
-    locale.monthNames[date.getMonth()]! +
+    valueAt(locale.monthNames, date.getMonth()) +
     " " +
     String(date.getFullYear())
   );
@@ -218,9 +219,9 @@ function formatLongDate(date: Date, locale: DatepickerLocale): string {
 function longestNameIndex(names: readonly string[]): number {
   let maxLength = 0;
   let maxIndex = 0;
-  for (let i = 0; i < names.length; i++) {
-    if (names[i]!.length > maxLength) {
-      maxLength = names[i]!.length;
+  for (const [i, name] of names.entries()) {
+    if (name.length > maxLength) {
+      maxLength = name.length;
       maxIndex = i;
     }
   }
@@ -534,7 +535,7 @@ function applyLocale(inst: Instance): void {
   for (let m = 0; m < 12; m++) {
     const opt = document.createElement("option");
     opt.value = String(m);
-    opt.textContent = dp.monthNamesShort[m]!;
+    opt.textContent = valueAt(dp.monthNamesShort, m);
     monthSelectEl.append(opt);
   }
   monthSelectEl.value = monthValue;
@@ -548,10 +549,10 @@ function applyLocale(inst: Instance): void {
 
   for (let dow = 0; dow < 7; dow++) {
     const actualDow = (dow + dp.firstDay) % 7;
-    headerThs[dow]!.className =
+    valueAt(headerThs, dow).className =
       (dow + dp.firstDay + 6) % 7 >= 5 ? "ui-datepicker-week-end" : "";
-    headerSpans[dow]!.title = dp.dayNames[actualDow]!;
-    headerSpans[dow]!.textContent = dp.dayNamesMin[actualDow]!;
+    valueAt(headerSpans, dow).title = valueAt(dp.dayNames, actualDow);
+    valueAt(headerSpans, dow).textContent = valueAt(dp.dayNamesMin, actualDow);
   }
 
   timeLabelDtEl.textContent = tp.timeText;
@@ -804,11 +805,14 @@ function showPopup(inst: Instance): void {
       step: 1,
       value: inst.hour,
       slide: (_e, ui) => {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this slider only exists while a real datepicker instance is open and active.
         active!.hour = ui.value ?? active!.hour;
         renderTimeLabel();
       },
       stop: () => {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see the identical justification above.
         if (active!.selected !== null) {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see the identical justification above.
           writeValue(active!);
         }
       },
@@ -819,11 +823,14 @@ function showPopup(inst: Instance): void {
       step: 1,
       value: inst.minute,
       slide: (_e, ui) => {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this slider only exists while a real datepicker instance is open and active.
         active!.minute = ui.value ?? active!.minute;
         renderTimeLabel();
       },
       stop: () => {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see the identical justification above.
         if (active!.selected !== null) {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see the identical justification above.
           writeValue(active!);
         }
       },
@@ -889,8 +896,7 @@ function registerInstance(input: HTMLInputElement, options: PwgDatepickerOptions
 
   const inst: Instance = {
     input,
-    // Every real call site's `data-datepicker` value matches a real
-    // hidden `<input>` -- see this module's own leading comment.
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real call site's `data-datepicker` value matches a real hidden <input> -- see this module's own leading comment.
     altField: altField!,
     showTimepicker: options.showTimepicker ?? false,
     cancelButtonLabel: options.cancelButton ?? false,
@@ -1001,6 +1007,6 @@ export function pwgDatepicker(
   const created = inputs.map((input) => registerInstance(input, options));
 
   inputs.forEach((input, i) => {
-    linkRange(input, created[i]!);
+    linkRange(input, valueAt(created, i));
   });
 }

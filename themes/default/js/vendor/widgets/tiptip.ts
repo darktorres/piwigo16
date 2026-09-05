@@ -30,11 +30,15 @@ import {
  * page's lifetime. Faithfully preserved: this is exactly how the jQuery
  * version already behaved, not something this port introduces.
  */
+// 3 repeats (sonarjs/use-type-alias): TipTipOptions's own field, plus
+// the position-computation helpers below.
+type TipTipPosition = "top" | "bottom" | "left" | "right";
+
 export interface TipTipOptions {
   keepAlive?: boolean;
   maxWidth?: string | number;
   edgeOffset?: number;
-  defaultPosition?: "top" | "bottom" | "left" | "right";
+  defaultPosition?: TipTipPosition;
   delay?: number;
   fadeIn?: number | string;
   fadeOut?: number | string;
@@ -43,6 +47,180 @@ export interface TipTipOptions {
 
 function toArray(target: Element | ArrayLike<Element>): Element[] {
   return target instanceof Element ? [target] : Array.from(target);
+}
+
+interface TipTipPositionState {
+  tClass: string;
+  margLeft: number;
+  margTop: number;
+  arrowTop: number;
+  arrowLeft: number;
+}
+
+/** Part of `computeTipTipPosition()`'s own extraction, below. */
+function resolveInitialTipClass(
+  defaultPosition: TipTipPosition,
+): string {
+  if (defaultPosition === "bottom") {
+    return "_bottom";
+  }
+  if (defaultPosition === "top") {
+    return "_top";
+  }
+  if (defaultPosition === "left") {
+    return "_left";
+  }
+  return "_right";
+}
+
+/**
+ * Part of `computeTipTipPosition()`'s own extraction, below -- flips
+ * the tip to the opposite horizontal side when it would otherwise run
+ * off the left/right edge of the window.
+ */
+function applyHorizontalOverflow(
+  state: TipTipPositionState,
+  left: number,
+  top: number,
+  tipW: number,
+  tipH: number,
+  orgWidth: number,
+  wCompare: number,
+  hCompare: number,
+  edgeOffset: number,
+): TipTipPositionState {
+  const rightCompare = wCompare + left < Math.trunc(window.scrollX);
+  const leftCompare = tipW + left > Math.trunc(windowWidth());
+
+  if (
+    (rightCompare && wCompare < 0) ||
+    (state.tClass === "_right" && !leftCompare) ||
+    (state.tClass === "_left" && left < tipW + edgeOffset + 5)
+  ) {
+    return {
+      tClass: "_right",
+      arrowTop: Math.round(tipH - 13) / 2,
+      arrowLeft: -12,
+      margLeft: Math.round(left + orgWidth + edgeOffset),
+      margTop: Math.round(top + hCompare),
+    };
+  }
+  if (
+    (leftCompare && wCompare < 0) ||
+    (state.tClass === "_left" && !rightCompare)
+  ) {
+    return {
+      tClass: "_left",
+      arrowTop: Math.round(tipH - 13) / 2,
+      arrowLeft: Math.round(tipW),
+      margLeft: Math.round(left - (tipW + edgeOffset + 5)),
+      margTop: Math.round(top + hCompare),
+    };
+  }
+  return state;
+}
+
+/**
+ * Part of `computeTipTipPosition()`'s own extraction, below -- flips
+ * (or corner-combines) the tip to the top/bottom when it would
+ * otherwise run off the top/bottom edge of the window.
+ */
+function applyVerticalOverflow(
+  state: TipTipPositionState,
+  top: number,
+  orgHeight: number,
+  tipH: number,
+  edgeOffset: number,
+): TipTipPositionState {
+  const topCompare =
+    top + orgHeight + edgeOffset + tipH + 8 >
+    Math.trunc(windowHeight() + window.scrollY);
+  const bottomCompare = top + orgHeight - (edgeOffset + tipH + 8) < 0;
+
+  if (topCompare || (state.tClass === "_top" && !bottomCompare)) {
+    return {
+      ...state,
+      tClass:
+        state.tClass === "_top" || state.tClass === "_bottom"
+          ? "_top"
+          : `${state.tClass}_top`,
+      arrowTop: tipH,
+      margTop: Math.round(top - (tipH + 5 + edgeOffset)),
+    };
+  }
+  if (bottomCompare || state.tClass === "_bottom") {
+    return {
+      ...state,
+      tClass:
+        state.tClass === "_top" || state.tClass === "_bottom"
+          ? "_bottom"
+          : `${state.tClass}_bottom`,
+      arrowTop: -12,
+      margTop: Math.round(top + orgHeight + edgeOffset),
+    };
+  }
+  return state;
+}
+
+/** Part of `computeTipTipPosition()`'s own extraction, below -- the final corner-class margin nudge. */
+function applyCornerAdjustment(
+  state: TipTipPositionState,
+): TipTipPositionState {
+  let { margTop, margLeft } = state;
+  if (state.tClass === "_right_top" || state.tClass === "_left_top") {
+    margTop += 5;
+  } else if (state.tClass === "_right_bottom" || state.tClass === "_left_bottom") {
+    margTop -= 5;
+  }
+  if (state.tClass === "_left_top" || state.tClass === "_left_bottom") {
+    margLeft += 5;
+  }
+  return { ...state, margTop, margLeft };
+}
+
+/**
+ * Part of `tipTip()`'s own `activate()` extraction, below -- the pure
+ * "which side, and how far offset" positioning math, independent of
+ * the actual DOM writes `activate()` itself still does.
+ */
+function computeTipTipPosition(
+  el: HTMLElement,
+  tiptipHolder: HTMLElement,
+  defaultPosition: TipTipPosition,
+  edgeOffset: number,
+): TipTipPositionState {
+  const top = Math.trunc(offset(el).top);
+  const left = Math.trunc(offset(el).left);
+  const orgWidth = Math.trunc(outerWidth(el));
+  const orgHeight = Math.trunc(outerHeight(el));
+  const tipW = outerWidth(tiptipHolder);
+  const tipH = outerHeight(tiptipHolder);
+  const wCompare = Math.round((orgWidth - tipW) / 2);
+  const hCompare = Math.round((orgHeight - tipH) / 2);
+
+  let state: TipTipPositionState = {
+    tClass: resolveInitialTipClass(defaultPosition),
+    margLeft: Math.round(left + wCompare),
+    margTop: Math.round(top + orgHeight + edgeOffset),
+    arrowTop: 0,
+    arrowLeft: Math.round(tipW - 12) / 2,
+  };
+
+  state = applyHorizontalOverflow(
+    state,
+    left,
+    top,
+    tipW,
+    tipH,
+    orgWidth,
+    wCompare,
+    hCompare,
+    edgeOffset,
+  );
+  state = applyVerticalOverflow(state, top, orgHeight, tipH, edgeOffset);
+  state = applyCornerAdjustment(state);
+
+  return state;
 }
 
 let holder: HTMLElement | null = null;
@@ -138,77 +316,22 @@ export function tipTip(
       css(tiptipHolder, "margin", "0");
       removeAttr(tiptipArrow, "style");
 
-      const top = Math.trunc(offset(el).top);
-      const left = Math.trunc(offset(el).left);
-      const orgWidth = Math.trunc(outerWidth(el));
-      const orgHeight = Math.trunc(outerHeight(el));
-      const tipW = outerWidth(tiptipHolder);
-      const tipH = outerHeight(tiptipHolder);
-      const wCompare = Math.round((orgWidth - tipW) / 2);
-      const hCompare = Math.round((orgHeight - tipH) / 2);
-      let margLeft = Math.round(left + wCompare);
-      let margTop = Math.round(top + orgHeight + opts.edgeOffset);
-      let tClass: string;
-      let arrowTop = 0;
-      let arrowLeft = Math.round(tipW - 12) / 2;
+      const { tClass, margLeft, margTop, arrowTop, arrowLeft } =
+        computeTipTipPosition(
+          el,
+          tiptipHolder,
+          opts.defaultPosition,
+          opts.edgeOffset,
+        );
 
-      if (opts.defaultPosition === "bottom") {
-        tClass = "_bottom";
-      } else if (opts.defaultPosition === "top") {
-        tClass = "_top";
-      } else if (opts.defaultPosition === "left") {
-        tClass = "_left";
-      } else {
-        tClass = "_right";
-      }
-
-      const rightCompare = wCompare + left < Math.trunc(window.scrollX);
-      const leftCompare = tipW + left > Math.trunc(windowWidth());
-
-      if (
-        (rightCompare && wCompare < 0) ||
-        (tClass === "_right" && !leftCompare) ||
-        (tClass === "_left" && left < tipW + opts.edgeOffset + 5)
-      ) {
-        tClass = "_right";
-        arrowTop = Math.round(tipH - 13) / 2;
-        arrowLeft = -12;
-        margLeft = Math.round(left + orgWidth + opts.edgeOffset);
-        margTop = Math.round(top + hCompare);
-      } else if ((leftCompare && wCompare < 0) || (tClass === "_left" && !rightCompare)) {
-        tClass = "_left";
-        arrowTop = Math.round(tipH - 13) / 2;
-        arrowLeft = Math.round(tipW);
-        margLeft = Math.round(left - (tipW + opts.edgeOffset + 5));
-        margTop = Math.round(top + hCompare);
-      }
-
-      const topCompare =
-        top + orgHeight + opts.edgeOffset + tipH + 8 >
-        Math.trunc(windowHeight() + window.scrollY);
-      const bottomCompare = top + orgHeight - (opts.edgeOffset + tipH + 8) < 0;
-
-      if (topCompare || (tClass === "_top" && !bottomCompare)) {
-        tClass = tClass === "_top" || tClass === "_bottom" ? "_top" : `${tClass}_top`;
-        arrowTop = tipH;
-        margTop = Math.round(top - (tipH + 5 + opts.edgeOffset));
-      } else if (bottomCompare || tClass === "_bottom") {
-        tClass = tClass === "_top" || tClass === "_bottom" ? "_bottom" : `${tClass}_bottom`;
-        arrowTop = -12;
-        margTop = Math.round(top + orgHeight + opts.edgeOffset);
-      }
-
-      if (tClass === "_right_top" || tClass === "_left_top") {
-        margTop += 5;
-      } else if (tClass === "_right_bottom" || tClass === "_left_bottom") {
-        margTop -= 5;
-      }
-      if (tClass === "_left_top" || tClass === "_left_bottom") {
-        margLeft += 5;
-      }
-
-      css(tiptipArrow, { "margin-left": `${arrowLeft}px`, "margin-top": `${arrowTop}px` });
-      css(tiptipHolder, { "margin-left": `${margLeft}px`, "margin-top": `${margTop}px` });
+      css(tiptipArrow, {
+        "margin-left": `${arrowLeft}px`,
+        "margin-top": `${arrowTop}px`,
+      });
+      css(tiptipHolder, {
+        "margin-left": `${margLeft}px`,
+        "margin-top": `${margTop}px`,
+      });
       addClass(tiptipHolder, `tip${tClass}`);
 
       if (timeout !== false) {

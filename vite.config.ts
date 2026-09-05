@@ -48,32 +48,38 @@ export default defineConfig({
     emptyOutDir: true,
     manifest: true,
     // docs/PLAN.md P35's own stated intent for .browserslistrc's floor
-    // (Chrome/Edge ≥94, Firefox ≥93, Safari ≥15): "the evergreen floor
-    // that actually supports tsconfig.json's existing ES2022
-    // target/lib" -- originally mirrored here as those same specific
-    // browser-version strings (esbuild targets and browserslist queries
-    // aren't interchangeable), on the assumption the two framings were
-    // equivalent. They aren't, for at least one real feature: esbuild's
-    // own per-browser-version compat table treats real ES2022 private
+    // (originally Chrome/Edge ≥94, Firefox ≥93, Safari ≥15, bumped by
+    // P52-A to Chrome/Edge ≥123, Firefox ≥128, Safari ≥17.5): "the
+    // evergreen floor that actually supports tsconfig.json's existing
+    // target/lib" -- originally mirrored here as specific per-browser
+    // version strings (esbuild targets and browserslist queries aren't
+    // interchangeable), on the assumption the two framings were
+    // equivalent. They weren't, for at least one real feature: esbuild's
+    // own per-browser-version compat table treated real ES2022 private
     // class fields (`#foo`) as unsupported by every one of those 4
-    // specific version strings, and downlevels them into a
+    // specific version strings, and downleveled them into a
     // `Object.defineProperty`-based helper -- extracted by Rollup into
     // its own chunk, imported via a real ES `import` statement no
     // `<script>` tag in this codebase ever loads (P46-B's own "every
     // entry loads as a separate non-module script tag" design), a real
     // dead-on-arrival ReferenceError. Found via `album_selector.ts`
-    // (P46-C), the first converted entry to use `#foo` syntax --
-    // confirmed the exact same syntax was already being served raw,
-    // untranspiled, straight to the browser pre-conversion (this file
-    // was never bundled before), so requiring genuine ES2022 support
-    // isn't a new compatibility requirement, just P35's own original
-    // intent enforced accurately. `target: "es2022"` (the bare language
-    // target, not per-browser version strings) is what actually
-    // delivers that intent -- confirmed to produce byte-identical
-    // output for every other already-converted entry (none use
-    // private fields), so this isn't a broader compatibility change,
-    // just a correction of a gap in esbuild's own compat table.
-    target: "es2022",
+    // (P46-C), the first converted entry to use `#foo` syntax.
+    // `target: "es2022"` (the bare language target, not per-browser
+    // version strings) fixed that specific gap. Bumped further to
+    // `"esnext"` alongside tsconfig.json's own target/lib bump: rather
+    // than trusting esbuild's own per-feature compat table (the exact
+    // thing that got the private-fields case wrong above) to correctly
+    // decide what's safe to leave undownleveled at whatever specific
+    // target string is named here, "esnext" disables downleveling
+    // entirely -- the real evergreen floor this repo already requires
+    // (no IE, no legacy Edge, ES2022+ throughout) means every real
+    // target browser already runs whatever syntax the source actually
+    // contains natively, so there is nothing left for esbuild to get
+    // wrong. Confirmed to produce byte-identical output to the prior
+    // `"es2022"` target across every entry (this codebase's own source
+    // doesn't yet use any newer syntax `"es2022"` would have downleveled
+    // differently from `"esnext"`) via `bun run build`.
+    target: "esnext",
     rollupOptions: {
       // Derived from real PHP AssetContribution::script() registrations
       // (build/collectScriptEntries.ts, P51-B docs/PLAN.md) rather than

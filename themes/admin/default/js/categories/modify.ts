@@ -282,10 +282,15 @@ ready(function () {
               </div>`;
 
             if (data.nbImagesRecursive) {
-              let t = 0;
+              // Two sequential `%d` placeholders -- `.replace()` only ever
+              // touches the first remaining occurrence, so chaining it
+              // twice fills them in order without a callback/counter.
+              const forceDeleteLabel = strDeleteAllPhotos
+                .replace("%d", String(data.nbImagesRecursive))
+                .replace("%d", String(data.nbImagesAssociatedOutside));
               message += `<div>
                 <input type="radio" name="deletion-mode" value="force_delete" id="force_delete">
-                <label for="force_delete">${strDeleteAllPhotos.replaceAll("%d", (_: string) => String([data.nbImagesRecursive, data.nbImagesAssociatedOutside][t++]))}</label>
+                <label for="force_delete">${forceDeleteLabel}</label>
               </div>`;
             }
 

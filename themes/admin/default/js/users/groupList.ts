@@ -1104,6 +1104,15 @@ function buttonUnavailable(button: Element | ArrayLike<Element>) {
   removeAttr(button, "onclick");
 }
 
+function fadeOutAndRemoveGroupBox(id: number): void {
+  const el = document.querySelectorAll("#" + escapeId("group-" + String(id)));
+  fadeOut(el, () => {
+    el.forEach((one) => {
+      one.remove();
+    });
+  });
+}
+
 /*-------
  Merge function on button's pannel
  -------*/
@@ -1165,16 +1174,7 @@ on(document.querySelectorAll(".ConfirmMergeButton"), "click", function () {
       });
       loadState.reverse();
       updateSelectionPanel("Selection");
-      mergeGroup.forEach(function (id: number) {
-        const el = document.querySelectorAll(
-          "#" + escapeId("group-" + String(id)),
-        );
-        fadeOut(el, () => {
-          el.forEach((one) => {
-            one.remove();
-          });
-        });
-      });
+      mergeGroup.forEach(fadeOutAndRemoveGroupBox);
       toogleSelection(destGrp, false);
       html(document.querySelectorAll(".DeleteGroupList"), "");
       html(document.querySelectorAll("#MergeOptionsChoices"), "");

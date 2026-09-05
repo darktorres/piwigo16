@@ -673,14 +673,14 @@ ready(function () {
     css(iconUser, "display", "block");
     attr(iconRegistered, "class", "icon-up");
     switch (filterBy) {
+      case "username ASC":
+        attr(iconUser, "class", "icon-up");
+        filterBy = "username DESC";
+        break;
       case "username DESC":
       default:
         attr(iconUser, "class", "icon-down");
         filterBy = "username ASC";
-        break;
-      case "username ASC":
-        attr(iconUser, "class", "icon-up");
-        filterBy = "username DESC";
         break;
     }
     void updateUserList();

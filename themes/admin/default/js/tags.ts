@@ -961,6 +961,18 @@ on(document.querySelectorAll("#CancelMerge"), "click", function () {
   updateSelectionContent();
 });
 
+function onAllTagsSelected(): void {
+  updateSelectionContent();
+  showSelectMessage(
+    strTagSelected.replace(/%d/g, String(selected.length)),
+    strClearSelection,
+    function () {
+      selectNone();
+      slideUp(document.querySelectorAll(".tag-select-message"));
+    },
+  );
+}
+
 on(document.querySelectorAll("#selectAll"), "click", function () {
   void selectAll(tagToDisplay());
   updateSelectionContent();
@@ -978,17 +990,7 @@ on(document.querySelectorAll("#selectAll"), "click", function () {
           "<i class='icon-spin6 animate-spin'> </i>",
         );
         setTimeout(() => {
-          void selectAll(dataTags).then(() => {
-            updateSelectionContent();
-            showSelectMessage(
-              strTagSelected.replace(/%d/g, String(selected.length)),
-              strClearSelection,
-              function () {
-                selectNone();
-                slideUp(document.querySelectorAll(".tag-select-message"));
-              },
-            );
-          });
+          void selectAll(dataTags).then(onAllTagsSelected);
         }, 5);
       },
     );
@@ -1191,15 +1193,16 @@ function mergeGroups(destination_id: number, merge_ids: number[]): void {
         }),
         dataType: "json",
         success: function (response: TagMergeResponse) {
-          response.deletedTagIds.forEach((id) => {
-            if (response.destinationTagId !== id) {
-              document
-                .querySelector('.tag-box[data-id="' + String(id) + '"]')
-                ?.remove();
-              // Update data
-              dataTags = dataTags.filter((tag) => id !== tag.id);
-            }
-          });
+          const removedIds = response.deletedTagIds.filter(
+            (id) => response.destinationTagId !== id,
+          );
+          for (const id of removedIds) {
+            document
+              .querySelector('.tag-box[data-id="' + String(id) + '"]')
+              ?.remove();
+          }
+          // Update data
+          dataTags = dataTags.filter((tag) => !removedIds.includes(tag.id));
           if (response.imagesInMergedTag.length > 0) {
             const tagBox = document.querySelectorAll(
               '.tag-box[data-id="' + String(response.destinationTagId) + '"]',
@@ -1465,75 +1468,74 @@ async function fadeOpacity(
   });
 }
 
-async function updatePage(): Promise<void> {
-  return new Promise<void>((resolve, _reject) => {
-    const dataToDisplay = tagToDisplay();
-    const tagBoxes = Array.from(document.querySelectorAll(".tag-box"));
-    cleanCheckmark();
-    fadeIn(document.querySelectorAll(".pageLoad"));
-    void fadeOpacity(tagBoxes, 0, 500).then(() => {
-      const displayTags = new Promise<void>((res, _rej) => {
-        const boxToRecycle = Math.min(dataToDisplay.length, tagBoxes.length);
+function recycleOrCreateTagBoxes(
+  dataToDisplay: TagRow[],
+  tagBoxes: Element[],
+): void {
+  const boxToRecycle = Math.min(dataToDisplay.length, tagBoxes.length);
 
-        for (let i = 0; i < boxToRecycle; i++) {
-          const tag = dataToDisplay[i]!;
-          recycleTagBox(
-            tagBoxes[i]!,
-            tag.id,
-            tag.name,
-            tag.url_name,
-            tag.counter,
-            tag.raw_name,
-          );
-        }
+  for (let i = 0; i < boxToRecycle; i++) {
+    const tag = dataToDisplay[i]!;
+    recycleTagBox(
+      tagBoxes[i]!,
+      tag.id,
+      tag.name,
+      tag.url_name,
+      tag.counter,
+      tag.raw_name,
+    );
+  }
 
-        if (dataToDisplay.length < tagBoxes.length) {
-          for (let j = boxToRecycle; j < tagBoxes.length; j++) {
-            tagBoxes[j]!.remove();
-          }
-        } else if (dataToDisplay.length > tagBoxes.length) {
-          for (let j = boxToRecycle; j < dataToDisplay.length; j++) {
-            const tag = dataToDisplay[j]!;
-            const newTag = createTagBox(
-              tag.id,
-              tag.name,
-              tag.url_name,
-              tag.counter,
-              tag.raw_name,
-            );
-            css(newTag, "opacity", 0);
-            document.querySelector(".tag-container")?.appendChild(newTag);
-            setupTagbox(newTag);
-          }
-        }
+  if (dataToDisplay.length < tagBoxes.length) {
+    for (let j = boxToRecycle; j < tagBoxes.length; j++) {
+      tagBoxes[j]!.remove();
+    }
+  } else if (dataToDisplay.length > tagBoxes.length) {
+    for (let j = boxToRecycle; j < dataToDisplay.length; j++) {
+      const tag = dataToDisplay[j]!;
+      const newTag = createTagBox(
+        tag.id,
+        tag.name,
+        tag.url_name,
+        tag.counter,
+        tag.raw_name,
+      );
+      css(newTag, "opacity", 0);
+      document.querySelector(".tag-container")?.appendChild(newTag);
+      setupTagbox(newTag);
+    }
+  }
 
-        //Select selected tags
-        selected.forEach((id) => {
-          attr(
-            document.querySelectorAll('.tag-box[data-id="' + String(id) + '"]'),
-            "data-selected",
-            "1",
-          );
-        });
-
-        res();
-      });
-
-      void displayTags.then(() => {
-        fadeOut(document.querySelectorAll(".pageLoad"));
-        animate(document.querySelectorAll(".tag-box"), { opacity: 1 }, 500);
-        if (getNumberPages() > 1) {
-          animate(
-            document.querySelectorAll(".tag-pagination"),
-            { opacity: 1 },
-            500,
-          );
-        }
-        updateSearchInfo();
-        resolve();
-      });
-    });
+  //Select selected tags
+  selected.forEach((id) => {
+    attr(
+      document.querySelectorAll('.tag-box[data-id="' + String(id) + '"]'),
+      "data-selected",
+      "1",
+    );
   });
+}
+
+// Was a manual `new Promise((resolve) => {...})` wrapping purely
+// synchronous work (real async boundary is only `fadeOpacity()` below)
+// -- flattened to plain async/await, which also resolves this
+// function's own real nesting depth (sonarjs/no-nested-functions).
+async function updatePage(): Promise<void> {
+  const dataToDisplay = tagToDisplay();
+  const tagBoxes = Array.from(document.querySelectorAll(".tag-box"));
+  cleanCheckmark();
+  fadeIn(document.querySelectorAll(".pageLoad"));
+
+  await fadeOpacity(tagBoxes, 0, 500);
+
+  recycleOrCreateTagBoxes(dataToDisplay, tagBoxes);
+
+  fadeOut(document.querySelectorAll(".pageLoad"));
+  animate(document.querySelectorAll(".tag-box"), { opacity: 1 }, 500);
+  if (getNumberPages() > 1) {
+    animate(document.querySelectorAll(".tag-pagination"), { opacity: 1 }, 500);
+  }
+  updateSearchInfo();
 }
 
 function tagToDisplay(): TagRow[] {

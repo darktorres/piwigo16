@@ -32,6 +32,7 @@ import {
   show,
   text,
   val,
+  valueAt,
 } from "../../../../default/js/vendor/utils/dom";
 import { ajax, AjaxError } from "../../../../default/js/vendor/utils/ajax";
 import { colorbox } from "../../../../default/js/vendor/widgets/colorbox";
@@ -110,7 +111,7 @@ categoriesCache.selectize(
         );
 
         if (filtered.length > 0) {
-          options.default = filtered[0]!.id;
+          options.default = valueAt(filtered, 0).id;
         }
 
         return filtered;
@@ -186,6 +187,7 @@ ready(function () {
     document.querySelectorAll("input[data-datepicker]"),
     "change",
     function (this: Element) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this handler is scoped to per-photo classes that only ever render inside a real fieldset.
       const pictureId = dataId(this.closest("fieldset")!, "image_id");
       if (userInteracted) {
         showUnsavedLocalBadge(pictureId);
@@ -198,6 +200,7 @@ ready(function () {
   // 6), so a native listener sees it just like it always did for every
   // plain, non-selectized <select> on the page.
   on(document.querySelectorAll("select"), "change", function (this: Element) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this handler is scoped to per-photo classes that only ever render inside a real fieldset.
     const pictureId = dataId(this.closest("fieldset")!, "image_id");
     if (userInteracted) {
       showUnsavedLocalBadge(pictureId);
@@ -211,6 +214,7 @@ ready(function () {
     "click",
     function (this: Element) {
       userInteracted = true;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this handler is scoped to per-photo classes that only ever render inside a real fieldset.
       const fieldset = this.closest("fieldset")!;
       const pictureId = dataId(fieldset, "image_id");
       showUnsavedLocalBadge(pictureId);
@@ -222,6 +226,7 @@ ready(function () {
     document.querySelectorAll(".action-sync-metadata"),
     "click",
     function (this: Element) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this handler is scoped to per-photo classes that only ever render inside a real fieldset.
       const fieldset = this.closest("fieldset")!;
       const pictureId = dataId(fieldset, "image_id");
       confirm({
@@ -271,6 +276,7 @@ ready(function () {
     document.querySelectorAll(".action-delete-picture"),
     "click",
     function (this: Element) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this handler is scoped to per-photo classes that only ever render inside a real fieldset.
       const fieldset = this.closest("fieldset")!;
       const pictureId = dataId(fieldset, "image_id");
       confirm({
@@ -337,6 +343,7 @@ ready(function () {
     "click",
     // eslint-disable-next-line @typescript-eslint/no-misused-promises -- fire-and-forget async click handler, same as the original .js: dom.ts's on() doesn't await a handler's return value either way.
     async function (this: Element) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this handler is scoped to per-photo classes that only ever render inside a real fieldset.
       const fieldset = this.closest("fieldset")!;
       const pictureId = dataId(fieldset, "image_id");
       await saveChanges(pictureId);
@@ -357,6 +364,7 @@ ready(function () {
     document.querySelectorAll(".linked-albums.add-item"),
     "click",
     function (this: Element) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this handler is scoped to per-photo classes that only ever render inside a real fieldset.
       const fieldset = this.closest("fieldset")!;
       bCurrentPictureId = dataId(fieldset, "image_id");
       ab.hardUpdate(allRelatedCategoriesIds[bCurrentPictureId] ?? []);
@@ -370,7 +378,9 @@ ready(function () {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real click inside the document always targets an Element (or null), never a bare EventTarget with no Element interface.
       const eventTarget = e.target as Element;
       if (eventTarget.classList.contains("remove-item")) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real .remove-item element carries a real id (the category id).
         const catId = attrOf(eventTarget, "id")!;
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this handler is scoped to per-photo classes that only ever render inside a real fieldset.
         const fieldset = eventTarget.closest("fieldset")!;
         const pictureId = dataId(fieldset, "image_id");
 
@@ -395,8 +405,10 @@ ready(function () {
 // fixed to the real access pattern used by every other function in
 // this file.
 function removeSelectedCategory(catId: string | number, pictureId: number) {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- allRelatedCategoriesIds always has a real entry for a real, currently-rendered picture.
   const catToRemoveIndex = allRelatedCategoriesIds[pictureId]!.indexOf(catId);
   if (catToRemoveIndex > -1) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see the identical justification above.
     allRelatedCategoriesIds[pictureId]!.splice(catToRemoveIndex, 1);
     showUnsavedLocalBadge(pictureId);
   }
@@ -415,6 +427,7 @@ function addRelatedCategory({
   if (!getSelectedAlbum().includes(album.id)) {
     append(
       document.querySelectorAll(
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- addRelatedCategory() only ever fires as AlbumSelector's own selectAlbum callback, only reachable after the .linked-albums.add-item click handler already set bCurrentPictureId.
         "#" + escapeId(bCurrentPictureId!) + " .related-categories-container",
       ),
       `<div class="breadcrumb-item album-listed">
@@ -422,6 +435,7 @@ function addRelatedCategory({
       </div>`,
     );
 
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see the identical justification above.
     showUnsavedLocalBadge(bCurrentPictureId!);
     addSelectedAlbum();
     // Genuine pre-existing bug found via strict typing: this assigned
@@ -434,8 +448,10 @@ function addRelatedCategory({
     // directly) untouched. Newly-added albums were therefore never
     // actually reflected in the tracked state: lost on save, and absent
     // when the picker was reopened. Fixed to a real replacement.
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see the identical justification above.
     allRelatedCategoriesIds[bCurrentPictureId!] = getSelectedAlbum();
   }
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see the identical justification above.
   checkRelatedCategories(bCurrentPictureId!, getSelectedAlbum());
 }
 
@@ -696,6 +712,7 @@ async function saveChanges(pictureId: number) {
       "#" + escapeId("picture-" + String(pictureId)) + " #level",
     )?.value;
     // Get Categories
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- allRelatedCategoriesIds always has a real entry for a real, currently-rendered picture.
     const categories = allRelatedCategoriesIds[pictureId]!;
     const categoriesStr = categories.join(";");
     // Get Tags
@@ -720,17 +737,17 @@ async function saveChanges(pictureId: number) {
       multipleValueMode: "replace",
     };
 
-    for (const key_index of pluginValues.keys()) {
-      const pluginValuesSelector = pluginValues[key_index]!.selector;
+    // eslint-disable-next-line sonarjs/no-empty-collection -- pluginValues is permanently empty in this rewrite (no live plugin pushes to it yet, see its own declaration comment above) -- a real extensibility placeholder for the Skeleton-extension save method, not dead code to remove.
+    for (const pluginValue of pluginValues) {
       const pluginValuesValue = val(
         document.querySelectorAll(
           "#" +
             escapeId("picture-" + String(pictureId)) +
             " " +
-            pluginValuesSelector,
+            pluginValue.selector,
         ),
       );
-      ajaxData[pluginValues[key_index]!.api_key] = pluginValuesValue;
+      ajaxData[pluginValue.api_key] = pluginValuesValue;
     }
 
     try {

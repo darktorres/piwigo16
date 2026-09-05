@@ -56,6 +56,7 @@ interface RatingUserCellData {
 // option shape below is this file's own real, unmodified original
 // options object, just re-typed against the vendor module's own
 // (deliberately narrower) `DataTableColumnDef` shape.
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the page's own "#rateTable" element is always real.
 const rateTableEl = document.querySelector<HTMLTableElement>("#rateTable")!;
 const oTable = dataTable(rateTableEl, {
   pageLength: 100,
@@ -80,6 +81,7 @@ const oTable = dataTable(rateTableEl, {
 });
 
 function uidFromCell(cell: HTMLElement): RatingUserCellData {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real cell passed here is always inside a real table row.
   const tr = cell.closest("tr")!;
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
   return data(tr, "usr") as RatingUserCellData;
@@ -111,8 +113,9 @@ ready(function () {
             text: confirmMsg,
             btnClass: "btn-red",
             action: function () {
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real click inside the document always targets an Element (or null), never a bare EventTarget with no Element interface.
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- a real click inside the document always targets an Element (or null), never a bare EventTarget with no Element interface; the ".del" link's own real parent cell always exists.
               const cell = (event.target as Element).parentElement!;
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real cell here is always inside a real table row.
               const trElement = cell.closest("tr")!;
               fadeTo(trElement, 1000, 0.4);
               const tr = trElement;

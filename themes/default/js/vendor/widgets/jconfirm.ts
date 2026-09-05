@@ -222,14 +222,23 @@ function buildModal(options: JConfirmOptions): void {
     '<div class="jconfirm-clear"></div>' +
     "</div></div></div></div></div></div></div>";
 
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every one of these classes is in the innerHTML markup just assigned above; all 9 are always real.
   const box = el.querySelector<HTMLElement>(".jconfirm-box")!;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see box's own comment above.
   const bg = el.querySelector<HTMLElement>(".jconfirm-bg")!;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see box's own comment above.
   const scrollPane = el.querySelector<HTMLElement>(".jconfirm-scrollpane")!;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see box's own comment above.
   const titleEl = el.querySelector<HTMLElement>(".jconfirm-title")!;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see box's own comment above.
   const titleContainer = el.querySelector<HTMLElement>(".jconfirm-title-c")!;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see box's own comment above.
   const iconEl = el.querySelector<HTMLElement>(".jconfirm-icon-c")!;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see box's own comment above.
   const contentEl = el.querySelector<HTMLElement>(".jconfirm-content")!;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see box's own comment above.
   const buttonsEl = el.querySelector<HTMLElement>(".jconfirm-buttons")!;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see box's own comment above.
   const closeIconEl = el.querySelector<HTMLElement>(".jconfirm-closeIcon")!;
 
   // The real CSS ties the open/close animation to *removing*/*adding*

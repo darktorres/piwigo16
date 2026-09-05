@@ -876,8 +876,7 @@ function appendPaginationItem(page: number | null = null) {
       addClass(newTag, "actual");
     }
     on(newTag, "click", () => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-      moveToPage(data(newTag, "page") as number);
+      moveToPage(data<number>(newTag, "page"));
     });
   } else {
     container.appendChild(valueAt(parseHtml(pageEllipsis), 0));
@@ -954,7 +953,7 @@ ready(function () {
         const item = document.querySelector(
           ".action-selecter .selectize-input .item",
         );
-        const value = item !== null ? data(item, "value") : undefined;
+        const value = item !== null ? data<string>(item, "value") : undefined;
         if (value === "none") {
           if (additionalFiltType !== false) {
             void getUserActivity(
@@ -976,8 +975,12 @@ ready(function () {
             );
           }
         } else {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-          const [object, action] = (value as string).split("/");
+          // Was `(value as string).split("/")` -- a non-null assertion by
+          // another name, since `value` is genuinely `string | undefined`
+          // here (only the `"none"` literal was excluded above, not
+          // `undefined`). `value ?? ""` is a real, safe fallback for the
+          // `item === null` case rather than crashing on `.split()`.
+          const [object, action] = (value ?? "").split("/");
           void getUserActivity(
             1,
             uidFilter,

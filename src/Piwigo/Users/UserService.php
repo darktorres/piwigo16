@@ -22,6 +22,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\GroupId;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Common\ValueObject\SortEntry;
@@ -840,7 +841,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * "add_to_favorites" action. $ignoreDuplicate: see
      * UserRepository::addFavorite()'s own docblock.
      */
-    public function addFavorite(UserId $userId, int $imageId, bool $ignoreDuplicate = false): void
+    public function addFavorite(UserId $userId, ImageId $imageId, bool $ignoreDuplicate = false): void
     {
         $this->repo->addFavorite($userId, $imageId, $ignoreDuplicate);
     }
@@ -876,7 +877,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * Whether $imageId is already among $userId's favorites --
      * Controller\PictureController's own favorite-icon toggle state.
      */
-    public function isFavorite(UserId $userId, int $imageId): bool
+    public function isFavorite(UserId $userId, ImageId $imageId): bool
     {
         return $this->repo->isFavorite($userId, $imageId);
     }
@@ -1567,7 +1568,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         return $this->repo->countAllUsers();
     }
 
-    public function getRegistrationDateById(int $userId): ?string
+    public function getRegistrationDateById(UserId $userId): ?string
     {
         return $this->repo->findRegistrationDateById($userId);
     }
@@ -1601,7 +1602,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     /**
      * @return array<string, int>
      */
-    public function getUserCountsByStatus(int $excludeUserId): array
+    public function getUserCountsByStatus(UserId $excludeUserId): array
     {
         return $this->repo->findUserCountsByStatus($excludeUserId);
     }
@@ -1609,7 +1610,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     /**
      * @return array<int, int>
      */
-    public function getUserCountsByLevel(int $excludeUserId): array
+    public function getUserCountsByLevel(UserId $excludeUserId): array
     {
         return $this->repo->findUserCountsByLevel($excludeUserId);
     }

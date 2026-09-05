@@ -39,9 +39,9 @@ final readonly class FavoriteAddController implements ControllerInterface
 
         $routeArgs = $request->getAttribute('route_args');
         $rawId = is_array($routeArgs) ? ($routeArgs['imageId'] ?? null) : null;
-        $imageId = is_string($rawId) ? (int) $rawId : 0;
+        $imageId = ImageId::from(is_string($rawId) ? (int) $rawId : 0);
 
-        if (! $this->imageService->existsById(ImageId::from($imageId))) {
+        if (! $this->imageService->existsById($imageId)) {
             return ResponseFactory::problem('Not Found', 404, 'image_id not found.');
         }
 

@@ -9,6 +9,7 @@ use InvalidArgumentException;
 use LogicException;
 use Override;
 use Piwigo\Common\ValueObject\Email;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\SortEntry;
 use Piwigo\Common\ValueObject\SqlDateTime;
@@ -514,7 +515,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         // order (confirmed a real gap: MySQL and PostgreSQL return GROUP
         // BY row order differently with no ORDER BY, and this assertion
         // used to depend on that order incidentally).
-        $counts = $this->repo->findUserCountsByStatus(2);
+        $counts = $this->repo->findUserCountsByStatus(UserId::from(2));
         ksort($counts);
         self::assertSame([
             'normal' => 2,
@@ -529,7 +530,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertSame([
             8 => 1,
             0 => 2,
-        ], $this->repo->findUserCountsByLevel(2));
+        ], $this->repo->findUserCountsByLevel(UserId::from(2)));
     }
 
     public function testFindUserIdsExcludingStatusOmitsMatchingRows(): void
@@ -542,22 +543,22 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     public function testIsFavoriteReflectsRealFavoritesRows(): void
     {
-        self::assertTrue($this->repo->isFavorite(UserId::from(1), 1));
-        self::assertFalse($this->repo->isFavorite(UserId::from(1), 2));
-        self::assertFalse($this->repo->isFavorite(UserId::from(3), 1));
+        self::assertTrue($this->repo->isFavorite(UserId::from(1), ImageId::from(1)));
+        self::assertFalse($this->repo->isFavorite(UserId::from(1), ImageId::from(2)));
+        self::assertFalse($this->repo->isFavorite(UserId::from(3), ImageId::from(1)));
     }
 
     public function testAddFavoriteInsertsARowThatIsFavoriteThenReports(): void
     {
         // User 3 / image 2: a combination distinct from the fixture's own
         // user-1 favorites, so this doesn't collide with other tests.
-        self::assertFalse($this->repo->isFavorite(UserId::from(3), 2));
+        self::assertFalse($this->repo->isFavorite(UserId::from(3), ImageId::from(2)));
 
-        $this->repo->addFavorite(UserId::from(3), 2);
+        $this->repo->addFavorite(UserId::from(3), ImageId::from(2));
 
-        self::assertTrue($this->repo->isFavorite(UserId::from(3), 2));
+        self::assertTrue($this->repo->isFavorite(UserId::from(3), ImageId::from(2)));
 
-        $this->repo->addFavorite(UserId::from(3), 2, ignoreDuplicate: true);
+        $this->repo->addFavorite(UserId::from(3), ImageId::from(2), ignoreDuplicate: true);
 
         $count = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
@@ -576,7 +577,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         // NULL registration_date) -- fetchAllAssociative() returns [],
         // reaching the `$rows === []` guard rather than the `is_string()`
         // check below it.
-        self::assertNull($this->repo->findRegistrationDateById(999999));
+        self::assertNull($this->repo->findRegistrationDateById(UserId::from(999999)));
     }
 
     public function testFindStatusByIdsWithNoIdsReturnsEmpty(): void

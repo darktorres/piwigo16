@@ -74,7 +74,9 @@ final class UserListPageRenderer
         // conf's guest_id/webmaster_id are always scalar (raw DB fetch value
         // or int config default -- same normalization already used by
         // functions.inc.php's get_webmaster_mail_address() and build_user()).
-        $guest_id = $currentConfig->guestId;
+        // guest_id converts to a real UserId once here (P51-R), reused by
+        // both count-by call sites below rather than re-parsing twice.
+        $guest_id = UserId::from($currentConfig->guestId);
         $webmaster_id = $currentConfig->webmasterId;
 
         $owner_username = $userService->getUsernameById(UserId::from($webmaster_id))->value ?? '';
@@ -176,7 +178,7 @@ final class UserListPageRenderer
                 $groups_arr_name,
                 JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR,
             ),
-            guestId: $guest_id,
+            guestId: $guest_id->value,
             viewSelector: $view_selector,
             pagination: $pagination,
             colorscheme: $template->themeConf('colorscheme'),

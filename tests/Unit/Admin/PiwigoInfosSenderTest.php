@@ -217,7 +217,7 @@ test('send returns immediately without touching the DB or network when telemetry
         new CurrentUser(new CurrentConfig()),
         new CurrentConfig(),
     );
-    $installationStats = new InstallationStats($rateService, $historyService, $imageService, $categoryService, $tagService, $userService, $groupService);
+    $installationStats = new InstallationStats($rateService, $historyService, $imageService, $categoryService, $tagService, $userService, $groupService, new CurrentConfig());
     // Never actually read either -- same "send() returns before touching
     // anything past the guard" reasoning as $configService above.
     $urlService = UrlServiceTestFactory::build();

@@ -6,6 +6,8 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Projection\GeneralStatistics;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Group\GroupService;
 use Piwigo\History\HistoryService;
 use Piwigo\Image\ImageService;
@@ -30,6 +32,7 @@ final readonly class InstallationStats
         private TagService $tagService,
         private UserService $userService,
         private GroupService $groupService,
+        private CurrentConfig $currentConfig,
     ) {}
 
     public function getGeneralStatistics(): GeneralStatistics
@@ -80,7 +83,7 @@ final readonly class InstallationStats
         // to have an installation prior to this "origin of times"
         $piwigo_origins = '2001-09-01 00:00:00';
 
-        $candidate = $this->userService->getRegistrationDateById(2);
+        $candidate = $this->userService->getRegistrationDateById(UserId::from($this->currentConfig->guestId));
 
         if (in_array($candidate, [null, '0', ''], true) or strtotime($candidate) < strtotime($piwigo_origins)) {
             $candidate = $this->userService->getMinRegistrationDateAfter($piwigo_origins);

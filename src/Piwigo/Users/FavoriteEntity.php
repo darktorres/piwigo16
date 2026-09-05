@@ -18,11 +18,13 @@ use Piwigo\Common\ValueObject\UserId;
  * `userId` uses the existing `user_id` custom Doctrine Type; `imageId`
  * uses `image_id`, same as {@see \Piwigo\Tag\ImageTagEntity::$imageId}.
  * `UserRepository`'s own favorites methods never hydrate a full entity
- * (`getArrayResult()`/`getResult()`) and every WHERE-clause bind against
- * `imageId` already passes an explicit raw `ParameterType::INTEGER`/
- * `ArrayParameterType::INTEGER`, bypassing this Type's own conversion --
- * so those method signatures stay plain `int`/`list<int>`, unaffected by
- * this Type.
+ * (`getArrayResult()`/`getResult()`), but `addFavorite()`/`isFavorite()`
+ * do take real `UserId`/`ImageId` parameters (P51-R) and bind them
+ * directly (`setParameter('imageId', $imageId)`, no explicit
+ * `ParameterType`), letting this Type's own conversion do the work --
+ * the plain-`int`/`list<int>` methods elsewhere in that file
+ * (`deleteFavoritesForImages()`/`findFavoriteImageIds()`) are a
+ * separate, still-untyped surface this Type doesn't reach yet.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'favorites')]

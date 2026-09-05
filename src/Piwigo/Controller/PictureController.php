@@ -422,7 +422,7 @@ final readonly class PictureController implements ControllerInterface
             switch ($pictureRequest->action) {
                 case 'add_to_favorites':
 
-                    $this->userService->addFavorite($user->id, $image_id);
+                    $this->userService->addFavorite($user->id, ImageId::from($image_id));
 
                     $this->redirectService->redirect($url_self);
 
@@ -1000,7 +1000,7 @@ final readonly class PictureController implements ControllerInterface
         if (! $this->accessControl->isAGuest() and $this->currentConfig->pictureFavoriteIcon) {
             // verify if the picture is already in the favorite of the
             // user
-            $is_favorite = $this->userService->isFavorite($user->id, $image_id);
+            $is_favorite = $this->userService->isFavorite($user->id, ImageId::from($image_id));
 
             $favorite = [
                 'IS_FAVORITE' => $is_favorite,

@@ -16,6 +16,7 @@ use Piwigo\Auth\UserAuthKeyEntity;
 use Piwigo\Category\UserAccessEntity;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\Email;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\SortEntry;
 use Piwigo\Common\ValueObject\SqlDateTime;
@@ -928,13 +929,13 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * Single-row write via BatchWriter -- its own `ignore`-flag INSERT
      * IGNORE support has no ORM persist() equivalent.
      */
-    public function addFavorite(UserId $userId, int $imageId, bool $ignoreDuplicate = false): void
+    public function addFavorite(UserId $userId, ImageId $imageId, bool $ignoreDuplicate = false): void
     {
         new BatchWriter($this->em->getConnection())
             ->singleInsert(
                 'favorites',
                 [
-                    'image_id' => $imageId,
+                    'image_id' => $imageId->value,
                     'user_id' => $userId->value,
                 ],
                 [
@@ -953,7 +954,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * `getSingleScalarResult()` is safe here (never
      * NonUniqueResultException territory).
      */
-    public function isFavorite(UserId $userId, int $imageId): bool
+    public function isFavorite(UserId $userId, ImageId $imageId): bool
     {
         $value = $this->em
             ->createQueryBuilder()
@@ -961,7 +962,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
             ->from(FavoriteEntity::class, 'f')
             ->where('f.imageId = :imageId')
             ->andWhere('f.userId = :userId')
-            ->setParameter('imageId', $imageId, ParameterType::INTEGER)
+            ->setParameter('imageId', $imageId)
             ->setParameter('userId', $userId)
             ->getQuery()
             ->getSingleScalarResult();
@@ -1448,13 +1449,13 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      *
      * @return array<string, int> keyed by status
      */
-    public function findUserCountsByStatus(int $excludeUserId): array
+    public function findUserCountsByStatus(UserId $excludeUserId): array
     {
         $rows = $this->em->getRepository(UserInfoEntity::class)->createQueryBuilder('ui')
             ->select('ui.status', 'COUNT(IDENTITY(ui.user)) AS nbUsersOf')
             ->where('ui.user != :excludeUserId')
             ->groupBy('ui.status')
-            ->setParameter('excludeUserId', $excludeUserId, ParameterType::INTEGER)
+            ->setParameter('excludeUserId', $excludeUserId)
             ->getQuery()
             ->getResult();
 
@@ -1475,13 +1476,13 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      *
      * @return array<int, int> keyed by level
      */
-    public function findUserCountsByLevel(int $excludeUserId): array
+    public function findUserCountsByLevel(UserId $excludeUserId): array
     {
         $rows = $this->em->getRepository(UserInfoEntity::class)->createQueryBuilder('ui')
             ->select('ui.level', 'COUNT(IDENTITY(ui.user)) AS nbUsersOf')
             ->where('ui.user != :excludeUserId')
             ->groupBy('ui.level')
-            ->setParameter('excludeUserId', $excludeUserId, ParameterType::INTEGER)
+            ->setParameter('excludeUserId', $excludeUserId)
             ->getQuery()
             ->getResult();
 
@@ -1904,21 +1905,13 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * non-default) user, id 2, registered" candidate.
      *
      * A `user_infos` lookup by its own primary key is exactly
-     * `$this->find()`'s contract; `$userId`
-     * stays a plain int in this method's own signature (its one real
-     * caller passes the literal id 2), so an invalid/non-positive value is
-     * turned into "no such row" via UserId::tryFrom() rather than letting
-     * UserId::from()'s own exception change this method's "not found ->
-     * null" behavior.
+     * `$this->find()`'s contract, which already answers "not found" with
+     * null on its own -- no separate validation needed here now that the
+     * caller boundary (P51-R) guarantees a real UserId.
      */
-    public function findRegistrationDateById(int $userId): ?string
+    public function findRegistrationDateById(UserId $userId): ?string
     {
-        $id = UserId::tryFrom($userId);
-        if (! $id instanceof UserId) {
-            return null;
-        }
-
-        return $this->find($id)?->registrationDate?->value;
+        return $this->find($userId)?->registrationDate?->value;
     }
 
     /**

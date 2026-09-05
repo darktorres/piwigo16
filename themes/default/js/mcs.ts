@@ -142,67 +142,9 @@ function shouldIgnoreFilterClick(
   return extraClasses.some((cls) => el?.classList.contains(cls) === true);
 }
 
-ready(function () {
-  let ab: AlbumSelectorInstance;
-  // Genuinely heterogeneous -- pushed values are `psParams[key]`
-  // (`psParams: Record<string, any>`, this campaign's own
-  // "Record<string, any> only where genuinely heterogeneous"
-  // allowance), whose real shape varies per filter (string, array, or
-  // number depending on which filter pushed it).
-  const emptyFiltersList: any[] = [];
-  // Confirmed via grep: never pushed to anywhere in this file, so
-  // `filtersToRemove.length > 0` (below) is always false and
-  // `performSearch(psParams, true)` there never actually runs -- a
-  // real, pre-existing dead branch, not something this typing pass
-  // fixes (deciding what should populate it is a design question, not
-  // a type gap). Typed to its most plausible intended shape (filter
-  // name strings, matching `updateFilters()`'s own `filterName` param)
-  // rather than left as `any[]`.
-  const filtersToRemove: string[] = [];
+let ab: AlbumSelectorInstance;
 
-  addClass(
-    document.querySelectorAll(".linkedAlbumPopInContainer .ClosePopIn"),
-    prefixIcon + "cancel",
-  );
-  addClass(
-    document.querySelectorAll(".linkedAlbumPopInContainer .searching"),
-    prefixIcon + "spin6",
-  );
-  hide(document.querySelectorAll(".linkedAlbumPopInContainer .searching"));
-  css(document.querySelectorAll(".AddIconContainer"), "display", "none");
-  on(
-    document.querySelectorAll(".filter-validate"),
-    "click",
-    function (this: Element) {
-      css(find(this, ".loading"), "display", "block");
-      hide(find(this, ".validate-text"));
-    },
-  );
-
-  // If we open another filter, hide all other dropdowns expect the one just opened
-  on(
-    document.querySelectorAll("div.filter"),
-    "click",
-    function (this: Element) {
-      removeClass(siblingsOf(this), "show-filter-dropdown");
-      css(children(siblingsOf(this), "div.filter-form"), "display", "none");
-    },
-  );
-
-  // If we open the choose filters modal hide all filter forms if any open
-  on(document.querySelectorAll("div.filter-manager"), "click", function () {
-    css(
-      children(document.querySelectorAll("div.filter"), "div.filter-form"),
-      "display",
-      "none",
-    );
-  });
-
-  // Declare params sent to pwg.images.filteredSearch.update
-  // PS for performSearch()
-  psParams = {};
-  psParams["searchId"] = searchId;
-
+function setupWordFilter(emptyFiltersList: any[]): void {
   // Setup word filter
   const allwordsRule = globalParams.fields.allwords;
   if (allwordsRule) {
@@ -266,10 +208,9 @@ ready(function () {
 
     emptyFiltersList.push(psParams["allwords"]);
   }
+}
 
-  //Hide filter spinner
-  hide(document.querySelectorAll(".filter-spinner"));
-
+function setupTagFilter(emptyFiltersList: any[]): void {
   // Setup tag filter
   const tagsRule = globalParams.fields.tags;
   document.querySelectorAll<HTMLSelectElement>("#tag-search").forEach((el) => {
@@ -336,7 +277,9 @@ ready(function () {
 
     emptyFiltersList.push(psParams["tags"]);
   }
+}
 
+function setupDatePostedFilter(emptyFiltersList: any[]): void {
   // Setup Date post filter
   const datePostedRule = globalParams.fields.date_posted;
   if (datePostedRule) {
@@ -542,7 +485,9 @@ ready(function () {
     emptyFiltersList.push(psParams["date_posted_preset"]);
     emptyFiltersList.push(psParams["date_posted_custom"]);
   }
+}
 
+function setupDateCreatedFilter(emptyFiltersList: any[]): void {
   // Setup Date creation filter
 
   const dateCreatedRule = globalParams.fields.date_created;
@@ -731,7 +676,9 @@ ready(function () {
     emptyFiltersList.push(psParams["date_created_preset"]);
     emptyFiltersList.push(psParams["date_created_custom"]);
   }
+}
 
+function setupAlbumFilter(emptyFiltersList: any[]): void {
   // Setup album filter
   const catRule = globalParams.fields.cat;
   if (catRule) {
@@ -804,7 +751,9 @@ ready(function () {
 
     emptyFiltersList.push(psParams["categories"]);
   }
+}
 
+function setupAuthorFilter(emptyFiltersList: any[]): void {
   // Setup author filter
   const authorRule = globalParams.fields.author;
   document.querySelectorAll<HTMLSelectElement>("#authors").forEach((el) => {
@@ -857,7 +806,9 @@ ready(function () {
       emptyFiltersList.push(psParams["authors"]);
     }
   });
+}
 
+function setupAddedByFilter(emptyFiltersList: any[]): void {
   // Setup added_by filter
   const addedByIds = globalParams.fields.added_by;
   if (addedByIds) {
@@ -908,7 +859,9 @@ ready(function () {
 
     emptyFiltersList.push(psParams["added_by"]);
   }
+}
 
+function setupFiletypesFilter(emptyFiltersList: any[]): void {
   // Setup filetypes filter
   const filetypesFilter = globalParams.fields.filetypes;
   if (filetypesFilter) {
@@ -958,7 +911,9 @@ ready(function () {
 
     emptyFiltersList.push(psParams["filetypes"]);
   }
+}
 
+function setupRatiosFilter(emptyFiltersList: any[]): void {
   // Setup Ratio filter
   const ratiosFilter = globalParams.fields.ratios;
   if (ratiosFilter) {
@@ -1006,7 +961,9 @@ ready(function () {
 
     emptyFiltersList.push(psParams["ratios"]);
   }
+}
 
+function setupRatingsFilter(emptyFiltersList: any[]): void {
   // Setup rating filter
   const ratingsFilter = globalParams.fields.ratings;
   if (ratingsFilter && showFilterRatings) {
@@ -1076,7 +1033,9 @@ ready(function () {
 
     emptyFiltersList.push(psParams["ratings"]);
   }
+}
 
+function setupFilesizeFilter(emptyFiltersList: any[]): void {
   // Real `pwgDoubleSlider({ stop })` callback (`themes/admin/default/js/
   // doubleSlider.ts`) -- the direct native replacement for the
   // `jQuery(...).on("slidestop", ...)` listener this used to be
@@ -1186,7 +1145,9 @@ ready(function () {
     emptyFiltersList.push(psParams["filesize_min"]);
     emptyFiltersList.push(psParams["filesize_max"]);
   }
+}
 
+function setupHeightFilter(emptyFiltersList: any[]): void {
   // Setup Height filter
   if (
     globalParams.fields.height_min != null &&
@@ -1262,7 +1223,9 @@ ready(function () {
     emptyFiltersList.push(psParams["height_min"]);
     emptyFiltersList.push(psParams["height_max"]);
   }
+}
 
+function setupWidthFilter(emptyFiltersList: any[]): void {
   // Setup Width filter
   if (
     globalParams.fields.width_min != null &&
@@ -1338,7 +1301,9 @@ ready(function () {
     emptyFiltersList.push(psParams["width_min"]);
     emptyFiltersList.push(psParams["width_max"]);
   }
+}
 
+function setupExpertFilter(emptyFiltersList: any[]): void {
   // Setup Expert filter
   const expertRule = globalParams.fields.expert;
   if (expertRule) {
@@ -1376,7 +1341,12 @@ ready(function () {
 
     emptyFiltersList.push(psParams["expert"]);
   }
+}
 
+function finalizeFilterSetup(
+  emptyFiltersList: any[],
+  filtersToRemove: string[],
+): void {
   if (filtersToRemove.length > 0) {
     void performSearch(psParams, true);
   }
@@ -1419,7 +1389,9 @@ ready(function () {
       void performSearch(psParams, true);
     });
   }
+}
 
+function wireFilterManagerPopin(): void {
   /**
    * Filter Manager
    */
@@ -1518,7 +1490,9 @@ ready(function () {
       void performSearch(psParams, true);
     },
   );
+}
 
+function wireTagsAlbumsFoundPopins(): void {
   /**
    * Tags & Albums found
    */
@@ -1574,7 +1548,9 @@ ready(function () {
   on(document.querySelectorAll(".albums-found-close"), "click", function () {
     hide(document.querySelectorAll(".albums-found-popin"));
   });
+}
 
+function wireWordFilterInteractions(): void {
   /**
    * Filter Word
    */
@@ -1640,7 +1616,9 @@ ready(function () {
       }
     },
   );
+}
 
+function wireTagFilterInteractions(): void {
   /**
    * Filter Tag
    */
@@ -1703,7 +1681,9 @@ ready(function () {
       }
     },
   );
+}
 
+function wireDatePostedFilterInteractions(): void {
   /**
    * Filter Date posted
    */
@@ -1787,7 +1767,9 @@ ready(function () {
       }
     },
   );
+}
 
+function wireDateCreatedFilterInteractions(): void {
   /**
    * Filter Date created
    */
@@ -1871,7 +1853,9 @@ ready(function () {
       }
     },
   );
+}
 
+function wireAlbumFilterInteractions(): void {
   /**
    * Filter Album
    */
@@ -1927,7 +1911,9 @@ ready(function () {
       }
     },
   );
+}
 
+function wireAuthorFilterInteractions(): void {
   /**
    * Author Widget
    */
@@ -1990,7 +1976,9 @@ ready(function () {
       }
     },
   );
+}
 
+function wireAddedByFilterInteractions(): void {
   /**
    * Added by Widget
    */
@@ -2057,7 +2045,9 @@ ready(function () {
       }
     },
   );
+}
 
+function wireFiletypesFilterInteractions(): void {
   /**
    * File type Widget
    */
@@ -2126,7 +2116,9 @@ ready(function () {
       }
     },
   );
+}
 
+function wireRatiosFilterInteractions(): void {
   /**
    * Ratios widget
    */
@@ -2187,7 +2179,9 @@ ready(function () {
       }
     },
   );
+}
 
+function wireRatingsFilterInteractions(): void {
   /**
    * Rating widget
    */
@@ -2252,7 +2246,9 @@ ready(function () {
       }
     },
   );
+}
 
+function wireFilesizeFilterInteractions(): void {
   /**
    * Filesize widget
    */
@@ -2325,7 +2321,9 @@ ready(function () {
       }
     },
   );
+}
 
+function wireHeightFilterInteractions(): void {
   /**
    * Height widget
    */
@@ -2387,7 +2385,9 @@ ready(function () {
       }
     },
   );
+}
 
+function wireWidthFilterInteractions(): void {
   /**
    * Width widget
    */
@@ -2449,7 +2449,9 @@ ready(function () {
       }
     },
   );
+}
 
+function wireExpertFilterInteractions(): void {
   /**
    * Expert widget
    */
@@ -2503,6 +2505,105 @@ ready(function () {
       }
     },
   );
+}
+
+ready(function () {
+  // Genuinely heterogeneous -- pushed values are `psParams[key]`
+  // (`psParams: Record<string, any>`, this campaign's own
+  // "Record<string, any> only where genuinely heterogeneous"
+  // allowance), whose real shape varies per filter (string, array, or
+  // number depending on which filter pushed it).
+  const emptyFiltersList: any[] = [];
+  // Confirmed via grep: never pushed to anywhere in this file, so
+  // `filtersToRemove.length > 0` (below) is always false and
+  // `performSearch(psParams, true)` there never actually runs -- a
+  // real, pre-existing dead branch, not something this typing pass
+  // fixes (deciding what should populate it is a design question, not
+  // a type gap). Typed to its most plausible intended shape (filter
+  // name strings, matching `updateFilters()`'s own `filterName` param)
+  // rather than left as `any[]`.
+  const filtersToRemove: string[] = [];
+
+  addClass(
+    document.querySelectorAll(".linkedAlbumPopInContainer .ClosePopIn"),
+    prefixIcon + "cancel",
+  );
+  addClass(
+    document.querySelectorAll(".linkedAlbumPopInContainer .searching"),
+    prefixIcon + "spin6",
+  );
+  hide(document.querySelectorAll(".linkedAlbumPopInContainer .searching"));
+  css(document.querySelectorAll(".AddIconContainer"), "display", "none");
+  on(
+    document.querySelectorAll(".filter-validate"),
+    "click",
+    function (this: Element) {
+      css(find(this, ".loading"), "display", "block");
+      hide(find(this, ".validate-text"));
+    },
+  );
+
+  // If we open another filter, hide all other dropdowns expect the one just opened
+  on(
+    document.querySelectorAll("div.filter"),
+    "click",
+    function (this: Element) {
+      removeClass(siblingsOf(this), "show-filter-dropdown");
+      css(children(siblingsOf(this), "div.filter-form"), "display", "none");
+    },
+  );
+
+  // If we open the choose filters modal hide all filter forms if any open
+  on(document.querySelectorAll("div.filter-manager"), "click", function () {
+    css(
+      children(document.querySelectorAll("div.filter"), "div.filter-form"),
+      "display",
+      "none",
+    );
+  });
+
+  // Declare params sent to pwg.images.filteredSearch.update
+  // PS for performSearch()
+  psParams = {};
+  psParams["searchId"] = searchId;
+
+  setupWordFilter(emptyFiltersList);
+
+  //Hide filter spinner
+  hide(document.querySelectorAll(".filter-spinner"));
+
+  setupTagFilter(emptyFiltersList);
+  setupDatePostedFilter(emptyFiltersList);
+  setupDateCreatedFilter(emptyFiltersList);
+  setupAlbumFilter(emptyFiltersList);
+  setupAuthorFilter(emptyFiltersList);
+  setupAddedByFilter(emptyFiltersList);
+  setupFiletypesFilter(emptyFiltersList);
+  setupRatiosFilter(emptyFiltersList);
+  setupRatingsFilter(emptyFiltersList);
+  setupFilesizeFilter(emptyFiltersList);
+  setupHeightFilter(emptyFiltersList);
+  setupWidthFilter(emptyFiltersList);
+  setupExpertFilter(emptyFiltersList);
+
+  finalizeFilterSetup(emptyFiltersList, filtersToRemove);
+  wireFilterManagerPopin();
+  wireTagsAlbumsFoundPopins();
+
+  wireWordFilterInteractions();
+  wireTagFilterInteractions();
+  wireDatePostedFilterInteractions();
+  wireDateCreatedFilterInteractions();
+  wireAlbumFilterInteractions();
+  wireAuthorFilterInteractions();
+  wireAddedByFilterInteractions();
+  wireFiletypesFilterInteractions();
+  wireRatiosFilterInteractions();
+  wireRatingsFilterInteractions();
+  wireFilesizeFilterInteractions();
+  wireHeightFilterInteractions();
+  wireWidthFilterInteractions();
+  wireExpertFilterInteractions();
 });
 
 async function performSearch(
@@ -2613,98 +2714,58 @@ function displayRelatedCategory(
   );
 }
 
-function updateFilters(filterName: string, mode: "add" | "del") {
-  switch (filterName) {
-    case "word":
-      if (mode === "add") {
-        psParams["allwords"] = "";
-        psParams["allwords_mode"] = "AND";
-        psParams["allwords_fields"] = [];
-      } else {
-        delete psParams["allwords"];
-        delete psParams["allwords_mode"];
-        delete psParams["allwords_fields"];
-      }
-      break;
+type FilterResetField = [key: string, addValue: unknown];
 
-    case "tag":
-      if (mode === "add") {
-        psParams["tags"] = "";
-        psParams["tags_mode"] = "AND";
-      } else {
-        delete psParams["tags"];
-        delete psParams["tags_mode"];
-      }
-      break;
+// Each real filter resets 1-3 `psParams` fields to their own "empty"
+// value on "add" (a filter freshly checked in the filter-manager
+// popin), or drops them entirely on "del" (the filter's own X button)
+// -- same field lists as `updateFilters()`'s own former switch, kept
+// as data instead of 9 near-identical if/else-per-case branches.
+const FILTER_RESET_FIELDS: Record<string, FilterResetField[]> = {
+  word: [
+    ["allwords", ""],
+    ["allwords_mode", "AND"],
+    ["allwords_fields", []],
+  ],
+  tag: [
+    ["tags", ""],
+    ["tags_mode", "AND"],
+  ],
+  album: [
+    ["categories", ""],
+    ["categories_withsubs", false],
+  ],
+  date_posted: [
+    ["date_posted_preset", ""],
+    ["date_posted_custom", []],
+  ],
+  date_created: [
+    ["date_created_preset", ""],
+    ["date_created_custom", []],
+  ],
+  filesize: [
+    ["filesize_min", ""],
+    ["filesize_max", ""],
+  ],
+  height: [
+    ["height_min", ""],
+    ["height_max", ""],
+  ],
+  width: [
+    ["width_min", ""],
+    ["width_max", ""],
+  ],
+};
 
-    case "album":
-      if (mode === "add") {
-        psParams["categories"] = "";
-        psParams["categories_withsubs"] = false;
-      } else {
-        delete psParams["categories"];
-        delete psParams["categories_withsubs"];
-      }
-      break;
-
-    case "date_posted":
-      if (mode === "add") {
-        psParams["date_posted_preset"] = "";
-        psParams["date_posted_custom"] = [];
-      } else {
-        delete psParams["date_posted_preset"];
-        delete psParams["date_posted_custom"];
-      }
-      break;
-
-    case "date_created":
-      if (mode === "add") {
-        psParams["date_created_preset"] = "";
-        psParams["date_created_custom"] = [];
-      } else {
-        delete psParams["date_created_preset"];
-        delete psParams["date_created_custom"];
-      }
-      break;
-
-    case "filesize":
-      if (mode === "add") {
-        psParams["filesize_min"] = "";
-        psParams["filesize_max"] = "";
-      } else {
-        delete psParams["filesize_min"];
-        delete psParams["filesize_max"];
-      }
-      break;
-
-    case "height":
-      if (mode === "add") {
-        psParams["height_min"] = "";
-        psParams["height_max"] = "";
-      } else {
-        delete psParams["height_min"];
-        delete psParams["height_max"];
-      }
-      break;
-
-    case "width":
-      if (mode === "add") {
-        psParams["width_min"] = "";
-        psParams["width_max"] = "";
-      } else {
-        delete psParams["width_min"];
-        delete psParams["width_max"];
-      }
-      break;
-
-    default:
-      if (mode === "add") {
-        psParams[filterName] = "";
-      } else {
-        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- a search-parameter bag keyed by the filter name chosen at runtime, serialised straight to the API; a Map would have to be converted back on every request.
-        delete psParams[filterName];
-      }
-      break;
+function updateFilters(filterName: string, mode: "add" | "del"): void {
+  const fields = FILTER_RESET_FIELDS[filterName] ?? [[filterName, ""]];
+  for (const [key, addValue] of fields) {
+    if (mode === "add") {
+      psParams[key] = addValue;
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- a search-parameter bag keyed by the filter name chosen at runtime, serialised straight to the API; a Map would have to be converted back on every request.
+      delete psParams[key];
+    }
   }
 }
 

@@ -4063,6 +4063,239 @@ tipTip(document.querySelectorAll(".icon-help-circled"), {
   fadeIn: "1000",
 });
 
+/**
+ * Part of `runBulkUserAction()`'s own extraction, below -- reads the
+ * bulk-action panel's own per-action fields into a plain data bag.
+ * Returns `null` (having already alerted/preventDefault()'d) for the 2
+ * cases that abort the whole action: an unconfirmed delete, or an
+ * unrecognized `action` value (a real defensive case here, since
+ * plugins can add their own `<option>`s to this same `<select>`).
+ */
+function collectBulkActionData(
+  action: string | undefined,
+  e: Event,
+): Record<string, unknown> | null {
+  const actionData: Record<string, unknown> = {};
+  switch (action) {
+    case "delete":
+      if (
+        attrOf(
+          document.querySelectorAll(
+            "#permitActionUserList .user-list-checkbox[name=confirm_deletion]",
+          ),
+          "data-selected",
+        ) !== "1"
+      ) {
+        alert(missingConfirm);
+        e.preventDefault();
+        return null;
+      }
+      break;
+    case "group_associate":
+      actionData["group_id"] = val(
+        document.querySelectorAll(
+          "#permitActionUserList select[name=associate]",
+        ),
+      );
+      break;
+    case "group_dissociate":
+      actionData["group_id"] = val(
+        document.querySelectorAll(
+          "#permitActionUserList select[name=dissociate]",
+        ),
+      );
+      break;
+    case "status":
+      actionData["status"] = val(
+        document.querySelectorAll("#permitActionUserList select[name=status]"),
+      );
+      break;
+    case "enabled_high":
+      actionData["enabled_high"] =
+        attrOf(
+          document.querySelectorAll(
+            "#permitActionUserList .user-list-checkbox[name=enabled_high_yes]",
+          ),
+          "data-selected",
+        ) === "1"
+          ? true
+          : false;
+      break;
+    case "level":
+      actionData["level"] = val(
+        document.querySelectorAll("#permitActionUserList select[name=level]"),
+      );
+      break;
+    case "nb_image_page":
+      actionData["nb_image_page"] = val(
+        document.querySelectorAll(
+          "#permitActionUserList input[name=nb_image_page]",
+        ),
+      );
+      break;
+    case "theme":
+      actionData["theme"] = val(
+        document.querySelectorAll("#permitActionUserList select[name=theme]"),
+      );
+      break;
+    case "language":
+      actionData["language"] = val(
+        document.querySelectorAll(
+          "#permitActionUserList select[name=language]",
+        ),
+      );
+      break;
+    case "recent_period":
+      actionData["recent_period"] =
+        recentPeriodValues[
+          slider(
+            document.querySelectorAll(
+              "#permitActionUserList .period-select-bar .slider-bar-container",
+            ),
+            "option",
+            "value",
+          )!
+        ];
+      break;
+    case "expand":
+      actionData["expand"] =
+        attrOf(
+          document.querySelectorAll(
+            "#permitActionUserList .user-list-checkbox[name=expand_yes]",
+          ),
+          "data-selected",
+        ) === "1"
+          ? true
+          : false;
+      break;
+    case "show_nb_comments":
+      actionData["show_nb_comments"] =
+        attrOf(
+          document.querySelectorAll(
+            "#permitActionUserList .user-list-checkbox[name=show_nb_comments_yes]",
+          ),
+          "data-selected",
+        ) === "1"
+          ? true
+          : false;
+      break;
+    case "show_nb_hits":
+      actionData["show_nb_hits"] =
+        attrOf(
+          document.querySelectorAll(
+            "#permitActionUserList .user-list-checkbox[name=show_nb_hits_yes]",
+          ),
+          "data-selected",
+        ) === "1"
+          ? true
+          : false;
+      break;
+    default:
+      alert("Unexpected action");
+      e.preventDefault();
+      return null;
+  }
+  return actionData;
+}
+
+/**
+ * Part of `runBulkUserAction()`'s own extraction, below -- translates
+ * the `actionData` bag `collectBulkActionData()` built into the real
+ * `/api/v1` request(s): one bulk group action, or one PATCH/DELETE per
+ * selected user (there is no bulk-multi-id endpoint for Users).
+ */
+async function buildBulkActionRequest(
+  action: string,
+  actionData: Record<string, unknown>,
+  userIds: number[],
+): Promise<unknown> {
+  if (action === "delete") {
+    return Promise.all(
+      userIds.map(async (id) =>
+        ajax({
+          url: "api/v1/users/" + String(id),
+          method: "DELETE",
+          headers: { "X-CSRF-Token": pwgToken },
+        }),
+      ),
+    );
+  }
+
+  if (action === "group_associate" || action === "group_dissociate") {
+    return ajax({
+      url:
+        "api/v1/groups/" +
+        String(actionData["group_id"]) +
+        "/actions/" +
+        (action === "group_associate" ? "add-user" : "remove-user"),
+      method: "POST",
+      json: { userIds: userIds },
+      headers: { "X-CSRF-Token": pwgToken },
+    });
+  }
+
+  const fieldByAction: Record<string, string> = {
+    status: "status",
+    enabled_high: "enabledHigh",
+    level: "level",
+    nb_image_page: "nbImagePage",
+    theme: "theme",
+    language: "language",
+    recent_period: "recentPeriod",
+    expand: "expand",
+    show_nb_comments: "showNbComments",
+    show_nb_hits: "showNbHits",
+  };
+  const numericFields = ["level", "nbImagePage", "recentPeriod"];
+  const field = fieldByAction[action]!;
+  const value = numericFields.includes(field)
+    ? Number(actionData[action])
+    : actionData[action];
+  return Promise.all(
+    userIds.map(async (id) =>
+      ajax({
+        url: "api/v1/users/" + String(id),
+        method: "PATCH",
+        json: { [field]: value },
+        headers: { "X-CSRF-Token": pwgToken },
+      }),
+    ),
+  );
+}
+
+/** Part of `runBulkUserAction()`'s own extraction, below. */
+async function runBulkUserAction(e: Event): Promise<void> {
+  const action = val(document.querySelectorAll("select[name=selectAction]"));
+  const actionData = collectBulkActionData(action, e);
+  if (actionData === null) {
+    return;
+  }
+
+  const userIds = selection.map((x) => x.id);
+  show(document.querySelectorAll("#applyActionLoading"));
+  fadeOut(document.querySelectorAll("#applyActionBlock .infos"));
+
+  const request = buildBulkActionRequest(action!, actionData, userIds);
+
+  try {
+    await request;
+    hide(document.querySelectorAll("#applyActionLoading"));
+    fadeIn(document.querySelectorAll("#applyActionBlock .infos"));
+    css(
+      document.querySelectorAll("#applyActionBlock .infos"),
+      "display",
+      "inline-block",
+    );
+    void updateUserList();
+    if (action === "delete") {
+      selection = [];
+      updateSelectionContent();
+    }
+  } catch {
+    hide(document.querySelectorAll("#applyActionLoading"));
+  }
+}
+
 ready(function () {
   // Only webmaster can set admin or webmaster to others users
   if (connectedUserStatus !== "webmaster") {
@@ -4078,218 +4311,7 @@ ready(function () {
   // which is not possible if this JS part is in a JS file
   // see #1571 on Github
   on(document.querySelectorAll("#applyAction"), "click", function (e: Event) {
-    void (async () => {
-      const action = val(
-        document.querySelectorAll("select[name=selectAction]"),
-      );
-      const actionData: Record<string, unknown> = {};
-      switch (action) {
-        case "delete":
-          if (
-            attrOf(
-              document.querySelectorAll(
-                "#permitActionUserList .user-list-checkbox[name=confirm_deletion]",
-              ),
-              "data-selected",
-            ) !== "1"
-          ) {
-            alert(missingConfirm);
-            e.preventDefault();
-            return;
-          }
-          break;
-        case "group_associate":
-          actionData["group_id"] = val(
-            document.querySelectorAll(
-              "#permitActionUserList select[name=associate]",
-            ),
-          );
-          break;
-        case "group_dissociate":
-          actionData["group_id"] = val(
-            document.querySelectorAll(
-              "#permitActionUserList select[name=dissociate]",
-            ),
-          );
-          break;
-        case "status":
-          actionData["status"] = val(
-            document.querySelectorAll(
-              "#permitActionUserList select[name=status]",
-            ),
-          );
-          break;
-        case "enabled_high":
-          actionData["enabled_high"] =
-            attrOf(
-              document.querySelectorAll(
-                "#permitActionUserList .user-list-checkbox[name=enabled_high_yes]",
-              ),
-              "data-selected",
-            ) === "1"
-              ? true
-              : false;
-          break;
-        case "level":
-          actionData["level"] = val(
-            document.querySelectorAll(
-              "#permitActionUserList select[name=level]",
-            ),
-          );
-          break;
-        case "nb_image_page":
-          actionData["nb_image_page"] = val(
-            document.querySelectorAll(
-              "#permitActionUserList input[name=nb_image_page]",
-            ),
-          );
-          break;
-        case "theme":
-          actionData["theme"] = val(
-            document.querySelectorAll(
-              "#permitActionUserList select[name=theme]",
-            ),
-          );
-          break;
-        case "language":
-          actionData["language"] = val(
-            document.querySelectorAll(
-              "#permitActionUserList select[name=language]",
-            ),
-          );
-          break;
-        case "recent_period":
-          actionData["recent_period"] =
-            recentPeriodValues[
-              slider(
-                document.querySelectorAll(
-                  "#permitActionUserList .period-select-bar .slider-bar-container",
-                ),
-                "option",
-                "value",
-              )!
-            ];
-          break;
-        case "expand":
-          actionData["expand"] =
-            attrOf(
-              document.querySelectorAll(
-                "#permitActionUserList .user-list-checkbox[name=expand_yes]",
-              ),
-              "data-selected",
-            ) === "1"
-              ? true
-              : false;
-          break;
-        case "show_nb_comments":
-          actionData["show_nb_comments"] =
-            attrOf(
-              document.querySelectorAll(
-                "#permitActionUserList .user-list-checkbox[name=show_nb_comments_yes]",
-              ),
-              "data-selected",
-            ) === "1"
-              ? true
-              : false;
-          break;
-        case "show_nb_hits":
-          actionData["show_nb_hits"] =
-            attrOf(
-              document.querySelectorAll(
-                "#permitActionUserList .user-list-checkbox[name=show_nb_hits_yes]",
-              ),
-              "data-selected",
-            ) === "1"
-              ? true
-              : false;
-          break;
-        default:
-          alert("Unexpected action");
-          e.preventDefault();
-          return;
-      }
-
-      // Translate the `actionData` bag above into the real /api/v1 request(s)
-      // -- one bulk group action, or one PATCH/DELETE per selected user
-      // (there is no bulk-multi-id endpoint for Users).
-      const userIds = selection.map((x) => x.id);
-      const fieldByAction: Record<string, string> = {
-        status: "status",
-        enabled_high: "enabledHigh",
-        level: "level",
-        nb_image_page: "nbImagePage",
-        theme: "theme",
-        language: "language",
-        recent_period: "recentPeriod",
-        expand: "expand",
-        show_nb_comments: "showNbComments",
-        show_nb_hits: "showNbHits",
-      };
-      const numericFields = ["level", "nbImagePage", "recentPeriod"];
-
-      let request: Promise<unknown>;
-      show(document.querySelectorAll("#applyActionLoading"));
-      fadeOut(document.querySelectorAll("#applyActionBlock .infos"));
-
-      if (action === "delete") {
-        request = Promise.all(
-          userIds.map(async (id) =>
-            ajax({
-              url: "api/v1/users/" + String(id),
-              method: "DELETE",
-              headers: { "X-CSRF-Token": pwgToken },
-            }),
-          ),
-        );
-      } else if (
-        action === "group_associate" ||
-        action === "group_dissociate"
-      ) {
-        request = ajax({
-          url:
-            "api/v1/groups/" +
-            String(actionData["group_id"]) +
-            "/actions/" +
-            (action === "group_associate" ? "add-user" : "remove-user"),
-          method: "POST",
-          json: { userIds: userIds },
-          headers: { "X-CSRF-Token": pwgToken },
-        });
-      } else {
-        const field = fieldByAction[action]!;
-        const value = numericFields.includes(field)
-          ? Number(actionData[action])
-          : actionData[action];
-        request = Promise.all(
-          userIds.map(async (id) =>
-            ajax({
-              url: "api/v1/users/" + String(id),
-              method: "PATCH",
-              json: { [field]: value },
-              headers: { "X-CSRF-Token": pwgToken },
-            }),
-          ),
-        );
-      }
-
-      try {
-        await request;
-        hide(document.querySelectorAll("#applyActionLoading"));
-        fadeIn(document.querySelectorAll("#applyActionBlock .infos"));
-        css(
-          document.querySelectorAll("#applyActionBlock .infos"),
-          "display",
-          "inline-block",
-        );
-        void updateUserList();
-        if (action === "delete") {
-          selection = [];
-          updateSelectionContent();
-        }
-      } catch {
-        hide(document.querySelectorAll("#applyActionLoading"));
-      }
-    })();
+    void runBulkUserAction(e);
     e.preventDefault();
     return false;
   });

@@ -34,6 +34,7 @@ import {
   textOf,
   trigger,
   val,
+  valueAt,
 } from "../../default/js/vendor/utils/dom";
 
 interface DefaultUserValues {
@@ -150,6 +151,7 @@ ready(function () {
     function (this: Element) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
       const display = data(this, "display") as string;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real .display-section's own data-display always names a real section id rendered on this page.
       const element = document.getElementById(display)!;
       const arrow = find(this, ".display-btn");
 
@@ -295,9 +297,12 @@ ready(function () {
     // same element/convention the empty-field check above already
     // shows/hides.
     (function () {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- profile.latte renders #password_new unconditionally in this branch.
       const newPassword = document.getElementById("password_new")!;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- profile.latte renders #password_conf unconditionally in this branch.
       const confirmPassword = document.getElementById("password_conf")!;
       const errorMessage = find(
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- #password_conf is always rendered nested inside a real .column-flex ancestor.
         confirmPassword.closest(".column-flex")!,
         ".error-message",
       );
@@ -332,6 +337,7 @@ ready(function () {
       ).forEach((element) => {
         const inputName = attrOf(element, "name");
         const inputValue = val(element);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real input/textarea/select in a profile form section carries a real name attribute.
         values[inputName!] = inputValue;
       });
       void setInfos({ ...values });
@@ -372,6 +378,7 @@ ready(function () {
     document.querySelectorAll("#show_expired_list"),
     "click",
     function (this: Element) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- profile.latte renders #api_key_list_expired unconditionally.
       const apiListExpired = document.getElementById("api_key_list_expired")!;
       const isOpen = data(this, "show") === true;
       if (!isOpen) {
@@ -391,11 +398,14 @@ ready(function () {
   on(window, "keydown", function (e: Event) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
     const { key } = e as KeyboardEvent;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- profile.latte renders #api_modal unconditionally.
     const haveApiModal = isVisible(document.getElementById("api_modal")!);
     const haveApiEditModal = isVisible(
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- profile.latte renders #api_modal_edit unconditionally.
       document.getElementById("api_modal_edit")!,
     );
     const haveApiRevokeModal = isVisible(
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- profile.latte renders #api_modal_revoke unconditionally.
       document.getElementById("api_modal_revoke")!,
     );
     if (haveApiModal && key === "Escape") {
@@ -413,6 +423,7 @@ ready(function () {
     document.querySelectorAll('select[name="api_expiration"]'),
     "change",
     function (this: Element) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- profile.latte renders #api_custom_date unconditionally.
       const customDate = document.getElementById("api_custom_date")!;
       const value = val(this);
       if ("custom" === value) {
@@ -508,6 +519,7 @@ async function setInfos(
   callback: ((data: any) => void) | null = null,
   errCallback: ((e: AjaxResponse) => void) | null = null,
 ): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- method is typed as keyof typeof API_KEY_ENDPOINTS, always a real key.
   const { url, httpMethod, body } = API_KEY_ENDPOINTS[method]!(params);
 
   try {
@@ -568,7 +580,9 @@ async function getAllApiKeys(reset = false): Promise<void> {
 }
 
 function AddApiLine(lines: ApiKeyEntry[], reset: boolean) {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- profile.latte renders #api_key_list unconditionally.
   const apiList = document.getElementById("api_key_list")!;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- profile.latte renders #api_key_list_expired unconditionally.
   const apiListExpired = document.getElementById("api_key_list_expired")!;
 
   remove(
@@ -583,11 +597,11 @@ function AddApiLine(lines: ApiKeyEntry[], reset: boolean) {
   );
 
   lines.forEach((line) => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- cloning an Element always produces an Element (real DOM guarantee); cloneNode()'s own lib.dom signature just isn't narrowed per-subtype. profile.latte renders the hidden #api_line template unconditionally.
     const apiLine = document
       .getElementById("api_line")!
       .cloneNode(true) as Element;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see comment above.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-non-null-assertion -- see comment above. profile.latte renders the hidden #api_collapse template unconditionally.
     const apiCollapse = document
       .getElementById("api_collapse")!
       .cloneNode(true) as Element;
@@ -596,7 +610,7 @@ function AddApiLine(lines: ApiKeyEntry[], reset: boolean) {
     removeClass(apiLine, "template-api");
     addClass(apiLine, "api-tab");
     attr(apiLine, "id", `api_${tmpId}`);
-    setData(find(apiLine, ".icon-collapse")[0]!, "api", tmpId);
+    setData(valueAt(find(apiLine, ".icon-collapse"), 0), "api", tmpId);
     text(find(apiLine, ".api_name"), line.apikeyName);
     attr(find(apiLine, ".api_name"), "title", line.apikeyName);
     text(find(apiLine, ".api_creation"), line.createdOn);
@@ -635,11 +649,9 @@ function AddApiLine(lines: ApiKeyEntry[], reset: boolean) {
           `<i class="gallery-icon-skull api-skull"></i> <span>${line.expiredOn}</span>`,
         );
       } else {
-        // Non-null: this branch is `!line.isExpired` inside the outer
-        // `else` of `!line.revokedOn && !line.isExpired`, so
-        // `line.revokedOn` must be truthy here.
         html(
           find(apiLine, ".api_expiration"),
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- this branch is `!line.isExpired` inside the outer `else` of `!line.revokedOn && !line.isExpired`, so `line.revokedOn` must be truthy here.
           `<i class="gallery-icon-skull api-skull"></i> <span>${line.revokedOn!}</span>`,
         );
       }
@@ -658,7 +670,9 @@ function apiLineEvent() {
   on(iconCollapse, "click", function (this: Element) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
     const apiId = data(this, "api") as string;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- apiId always comes from a real, currently-rendered row's own data-api attribute.
     const apiCollapse = document.getElementById(`api_collapse_${apiId}`)!;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see the identical justification above.
     const apiLine = document.getElementById(`api_${apiId}`)!;
 
     if (isVisible(apiCollapse)) {
@@ -709,6 +723,7 @@ function apiLineEvent() {
 }
 
 function resetSection(selector: string, scroll = true, maxContent = false) {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real caller passes a real section id.
   const element = document.getElementById(selector)!;
   const scrollH = maxContent
     ? "max-content"
@@ -717,6 +732,7 @@ function resetSection(selector: string, scroll = true, maxContent = false) {
 
   if ("account-display" !== selector && scroll) {
     setTimeout(() => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- selector is always a real, non-empty section id, so split("-")[0] is always defined; the resulting section id is always a real element.
       const el = document.getElementById(`${selector.split("-")[0]!}-section`)!;
       el.scrollIntoView({
         behavior: "smooth",
@@ -748,6 +764,7 @@ function closeApiModal() {
     setVal(document.querySelectorAll("#api_secret_key"), "");
     hide(document.querySelectorAll("#retrieves_keyapi"));
     show(document.querySelectorAll("#generate_keyapi"));
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- profile.latte renders #done_apikey unconditionally.
     document.querySelector<HTMLButtonElement>("#done_apikey")!.disabled = true;
     addClass(
       document.querySelectorAll("#api_key_copy_success, #api_id_copy_success"),
@@ -770,6 +787,7 @@ function successApiModal(secret: string, id: string) {
     copyToClipboard(secret, strCopyKeySecret, "#api_key_copy_success");
 
     const doneButton =
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- profile.latte renders #done_apikey unconditionally.
       document.querySelector<HTMLButtonElement>("#done_apikey")!;
     doneButton.disabled = false;
     on(doneButton, "click", closeApiModal);
@@ -784,10 +802,14 @@ function successApiModal(secret: string, id: string) {
 
 //api edit modal
 function openApiEditModal(selector: string) {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real caller passes a real, currently-rendered row's own selector.
   const target = document.querySelector(selector)!;
   const value = textOf(find(target, ".api_name"));
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-  const pkid = data(find(target, ".api-icon-action")[0]!, "pkid") as string;
+  const pkid = data(
+    valueAt(find(target, ".api-icon-action"), 0),
+    "pkid",
+  ) as string;
   setVal(document.querySelectorAll("#api_key_edit"), value);
   fadeIn(document.querySelectorAll("#api_modal_edit"));
   document.getElementById("api_key_edit")?.focus();
@@ -831,10 +853,14 @@ function unbindApiEditEvents() {
 
 // api revoke modal
 function openApiRevokeModal(selector: string) {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real caller passes a real, currently-rendered row's own selector.
   const target = document.querySelector(selector)!;
   const apiName = textOf(find(target, ".api_name"));
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- data() reads a data-* attribute this same app's own setData()/template writes, never adversarial input.
-  const pkid = data(find(target, ".api-icon-action")[0]!, "pkid") as string;
+  const pkid = data(
+    valueAt(find(target, ".api-icon-action"), 0),
+    "pkid",
+  ) as string;
   const titleText = sprintf(strRevokeKey, apiName);
   text(document.querySelectorAll("#api_modal_revoke_title"), titleText);
 
@@ -962,6 +988,7 @@ function saveApiKeyEvent() {
 }
 
 function unbindApiKeyEvents() {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- profile.latte renders #api_modal unconditionally.
   const modal = document.getElementById("api_modal")!;
   off([modal, ...Array.from(modal.querySelectorAll("*"))], ".apikey");
   off(window, ".apikey");

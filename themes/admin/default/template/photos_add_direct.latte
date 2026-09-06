@@ -5,7 +5,7 @@
   {include 'include/add_album.inc.latte'}
 {/if}
 
-<div id="photosAddContent">
+<div id="photosAddContent" class="photos-add-content">
   {if count($setupErrors) > 0}
     <div class="errors">
       <ul>
@@ -116,17 +116,17 @@
           id="selectedAlbum"
         >
           <span
-            class="icon-sitemap"
+            class="icon-sitemap selected-album-name"
             id="selectedAlbumName"
           >{if isset($addToAlbum)}{$addToAlbum}{elseif isset($selectedCategoryName)}{$selectedCategoryName}{/if}</span>
-          <a class="icon-pencil" id="selectedAlbumEdit"></a>
+          <a class="icon-pencil selected-album-edit" id="selectedAlbumEdit"></a>
         </div>
         <div
           class="selectAlbumSelector{if $can_upload} u-hidden{/if}"
           id="addPhotosAS"
         >
           <p
-            class="head-button-1 icon-folder-open"
+            class="head-button-1 icon-folder-open album-selector-trigger"
             id="btnPhotosAS"
           >{='Select or create an album'|translate}</p>
         </div>
@@ -176,7 +176,7 @@
           id="uploadOptionsContent"
         >
           <label class="switch">
-            <input type="checkbox" id="toggleUpdateMode">
+            <input type="checkbox" id="toggleUpdateMode" class="toggle-update-mode">
             <span class="slider round"></span>
           </label>
           <div class="update-mode-hint">
@@ -188,7 +188,7 @@
       <div class="selectFilesButtonBlock">
         <button
           id="addFiles"
-          class="buttonLike icon-plus-circled"
+          class="buttonLike icon-plus-circled add-files-button"
           {if !$can_upload}
           disabled
           {/if}
@@ -200,7 +200,7 @@
             n:if="isset($originalResizeMaxheight)"
             class="uploadInfo"
           >{='The picture dimensions will be reduced to %dx%d pixels.'|translate:$originalResizeMaxwidth,$originalResizeMaxheight}</p>
-          <p id="uploadWarningsSummary">
+          <p id="uploadWarningsSummary" class="upload-warnings-summary">
             {if !$displayFormats}
               {='Allowed file types: %s.'|translate:$uploadFileTypes}
             {else}
@@ -226,25 +226,25 @@
       </div>
     </fieldset>
 
-    <div id="uploadingActions" class="u-hidden">
+    <div id="uploadingActions" class="u-hidden uploading-actions">
       <div class="big-progressbar">
         <div class="progressbar"></div>
       </div>
       <button
         id="cancelUpload"
-        class="buttonLike icon-cancel-circled"
+        class="buttonLike icon-cancel-circled cancel-upload-button"
       >{='Cancel'|translate}</button>
     </div>
 
     <button
       id="startUpload"
-      class="buttonLike icon-upload"
+      class="buttonLike icon-upload start-upload-button"
       disabled
     >{='Start Upload'|translate}</button>
   </form>
 
   <fieldset class="Addedphotos u-hidden">
-    <div id="uploadedPhotos"></div>
+    <div id="uploadedPhotos" class="uploaded-photos"></div>
   </fieldset>
 </div> <!-- photosAddContent -->
 <div class="bg-modal" id="addFirstAlbum">

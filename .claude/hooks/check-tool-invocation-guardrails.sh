@@ -38,6 +38,11 @@
 #     slower. Scoped to this worktree (via the candidate process's own
 #     cwd) -- a sibling worktree's own concurrent run is that other
 #     session's business.
+#   - a `--filter` (or other test-scoping flag) on `composer test:visual`,
+#     `composer test:visual:update`, or `composer test:golden-html`: user
+#     correction ("visual tests are always supposed to run in full to
+#     keep determinism") -- even accepting one already-diagnosed,
+#     known-good diff must go through a full, unfiltered run.
 #
 # SOFT WARNINGS (allowed through, with context injected back for the
 # model to weigh -- these have legitimate exceptions the memory itself
@@ -163,6 +168,12 @@ while IFS= read -r seg; do
 
     if printf '%s' "$trimmed" | grep -qE '^(\./)?(vendor/bin/(psalm|phpstan|pest|ecs)|composer[[:space:]]+(test|analyse)(:[A-Za-z-]+)?)([[:space:]]|$)'; then
         check_concurrent_heavy_tool
+    fi
+
+    if printf '%s' "$trimmed" | grep -qE '^composer[[:space:]]+test:(visual|visual:update|golden-html)([[:space:]]|$)'; then
+        if printf '%s' "$trimmed" | grep -qE -- '--(filter|group|exclude-group|testsuite)(=|[[:space:]])'; then
+            block "a test-scoping flag (--filter/--group/--exclude-group/--testsuite) on a VR/golden-html composer script (test:visual, test:visual:update, test:golden-html). These must always run in full for determinism -- user correction this session, even to accept one already-diagnosed, known-good diff. Run the plain composer script with no scoping flags."
+        fi
     fi
 
     if printf '%s' "$trimmed" | grep -qE '^(\./)?vendor/bin/phpstan[[:space:]]+analyse[^|;&]*--level='; then

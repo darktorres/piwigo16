@@ -868,5 +868,10 @@
     "declaration-no-important": {
       "count": 6
     }
+  },
+  "themes/admin/default/css/components/jcrop.css": {
+    "declaration-no-important": {
+      "count": 2
+    }
   }
 }

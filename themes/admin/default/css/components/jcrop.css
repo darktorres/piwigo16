@@ -1,0 +1,184 @@
+/**
+ * First-party port of Jcrop's vendor stylesheet (`jquery.Jcrop.css`
+ * v0.9.12, fetched from
+ * https://cdn.jsdelivr.net/gh/tapmodo/Jcrop@v0.9.12/css/jquery.Jcrop.css).
+ * Scoped to exactly the classes `themes/default/js/vendor/widgets/jcrop.ts`
+ * actually emits for its one real consumer (`pictureCoi.ts`'s
+ * center-of-interest cropper on `picture_coi.latte`'s `#jcrop` image) --
+ * see that file's own header for what real surface survived porting.
+ *
+ * Dropped entirely (dead weight -- no element the real port ever
+ * creates carries these classes):
+ *   - `.jcrop-light` / `.jcrop-dark` theme-variant extensions (plus
+ *     their `-moz-border-radius` / `-webkit-border-radius` IE9-era
+ *     prefixes -- unprefixed `border-radius` alone has covered every
+ *     real target since long before this project's floor anyway).
+ *   - `.solid-line` (an alternate "no marching ants" macro).
+ *   - `img.jcrop-preview` (split out of the original's own
+ *     `.jcrop-holder img, img.jcrop-preview` comma-selector -- only
+ *     the `.jcrop-holder img` half is ever real; nothing here ever
+ *     gets the `jcrop-preview` class).
+ *
+ * The marching-ants selection border (`.jcrop-vline`/`.jcrop-hline`)
+ * tiles the real vendor `Jcrop.gif` sprite (an 8x8 animated GIF),
+ * vendored unmodified at `../../images/jcrop/Jcrop.gif` -- same
+ * `images/<component>/` convention `css/pages/rating_user.css`'s own
+ * `images/datatables/*.png` already establishes for this theme.
+ */
+
+.jcrop-holder {
+  /* Pinned regardless of page direction -- Jcrop's own coordinate math
+     is always physical-pixel-based, never RTL-aware, so this is not a
+     text-direction bug to "fix" with logical properties. */
+  direction: ltr;
+  text-align: left;
+}
+
+.jcrop-holder img {
+  max-width: none;
+}
+
+/* Selection border (marching ants -- tiles the real vendored
+   Jcrop.gif, see header note) */
+.jcrop-vline,
+.jcrop-hline {
+  background: var(--color-white) url("../../images/jcrop/Jcrop.gif");
+  font-size: 0;
+  position: absolute;
+}
+
+.jcrop-vline {
+  height: 100%;
+  width: 1px !important;
+}
+
+.jcrop-vline.right {
+  right: 0;
+}
+
+.jcrop-hline {
+  height: 1px !important;
+  width: 100%;
+}
+
+.jcrop-hline.bottom {
+  bottom: 0;
+}
+
+/* Invisible click/drag targets */
+.jcrop-tracker {
+  height: 100%;
+  width: 100%;
+  /* No unprefixed equivalent exists on any target browser -- WebKit/
+     Blink-only, non-standard. */
+  -webkit-tap-highlight-color: transparent;
+  /* Safari-only (long-press callout suppression); no unprefixed form. */
+  -webkit-touch-callout: none;
+  /* Unprefixed `user-select` has been supported since Safari 15.4 --
+     well under this project's Safari >= 17.5 floor -- so the
+     `-webkit-user-select` the vendor CSS also had here is dropped. */
+  user-select: none;
+}
+
+/* Selection handles */
+.jcrop-handle {
+  /* Neither #333 nor #eee below matches an existing tokens.css
+     role: this is fixed overlay chrome drawn on top of an arbitrary
+     user photo, not app text/surface/border -- kept literal rather
+     than forcing a mismatched semantic token. #eee is close in
+     *value* to --color-border (from #dddddd) but a different role
+     (photo-overlay handle trim vs. app panel border); flagged for a
+     human call if this project later wants a "widget chrome" tier. */
+  background-color: #333;
+  border: 1px solid #eee;
+  width: 7px;
+  height: 7px;
+  font-size: 1px;
+}
+
+.jcrop-handle.ord-n {
+  left: 50%;
+  margin-left: -4px;
+  margin-top: -4px;
+  top: 0;
+}
+
+.jcrop-handle.ord-s {
+  bottom: 0;
+  left: 50%;
+  margin-bottom: -4px;
+  margin-left: -4px;
+}
+
+.jcrop-handle.ord-e {
+  margin-right: -4px;
+  margin-top: -4px;
+  right: 0;
+  top: 50%;
+}
+
+.jcrop-handle.ord-w {
+  left: 0;
+  margin-left: -4px;
+  margin-top: -4px;
+  top: 50%;
+}
+
+.jcrop-handle.ord-nw {
+  left: 0;
+  margin-left: -4px;
+  margin-top: -4px;
+  top: 0;
+}
+
+.jcrop-handle.ord-ne {
+  margin-right: -4px;
+  margin-top: -4px;
+  right: 0;
+  top: 0;
+}
+
+.jcrop-handle.ord-se {
+  bottom: 0;
+  margin-bottom: -4px;
+  margin-right: -4px;
+  right: 0;
+}
+
+.jcrop-handle.ord-sw {
+  bottom: 0;
+  left: 0;
+  margin-bottom: -4px;
+  margin-left: -4px;
+}
+
+/* Dragbars (edge-resize hit strips, sit beneath their same-edge handle) */
+.jcrop-dragbar.ord-n,
+.jcrop-dragbar.ord-s {
+  height: 7px;
+  width: 100%;
+}
+
+.jcrop-dragbar.ord-e,
+.jcrop-dragbar.ord-w {
+  height: 100%;
+  width: 7px;
+}
+
+.jcrop-dragbar.ord-n {
+  margin-top: -4px;
+}
+
+.jcrop-dragbar.ord-s {
+  bottom: 0;
+  margin-bottom: -4px;
+}
+
+.jcrop-dragbar.ord-e {
+  margin-right: -4px;
+  right: 0;
+}
+
+.jcrop-dragbar.ord-w {
+  margin-left: -4px;
+}

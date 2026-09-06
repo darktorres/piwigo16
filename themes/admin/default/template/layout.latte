@@ -187,14 +187,14 @@
     id="{$BODY_ID}"
     class="{foreach $BODY_CLASSES as $class}{$class} {/foreach}"
   >
-    <div id="the_page">
+    <div id="the_page" class="the-page">
       <div n:if="isset($header_msgs)" class="header_msgs">
         {foreach $header_msgs as $elt}
           {$elt}
         {/foreach}
       </div>
 
-      <div id="pwgHead">
+      <div id="pwgHead" class="pwg-head">
         <a
           href="{$U_RETURN}"
           class="visit-gallery tiptip"
@@ -202,7 +202,7 @@
         ><i class="icon-left-open"></i>{='Visit'|translate}</a>
         <div class="pwgHead-gallery-title">{$GALLERY_TITLE}</div>
 
-        <div id="headActions">
+        <div id="headActions" class="head-actions">
           <span class="admin-head-username"><i
               class="icon-user"
             ></i>{$USERNAME}</span>
@@ -242,7 +242,7 @@
         {/foreach}
       </div>
 
-      <div id="pwgMain">
+      <div id="pwgMain" class="pwg-main">
         {block content}{/block}
       </div>{* <!-- pwgMain --> *}
 
@@ -252,11 +252,11 @@
         {/foreach}
       {/if}
 
-      <div n:if="$debug->queriesList !== null" id="debug">
+      <div n:if="$debug->queriesList !== null" id="debug" class="debug-panel">
         {$debug->queriesList}
       </div>
 
-      <div id="footer">
+      <div id="footer" class="admin-footer">
         <div>
           <a
             class="externalLink tiptip piwigo-logo"
@@ -266,13 +266,13 @@
           <span
             n:if="isset($DISPLAY_BELL) and $DISPLAY_BELL"
             id="whats_new_notification"
-            class="icon-blue tiptip"
+            class="icon-blue tiptip whats_new_bell"
             title="{='What\'s new in version %s'|translate:$WHATS_NEW_MAJOR_VERSION}"
           >
             <i class="icon-bell"></i>
           </span>
         </div>
-        <div id="pageInfos">
+        <div id="pageInfos" class="footer-info">
           {if $debug->time !== null}
             {='Page generated in'|translate} {$debug->time} ({$debug->nbQueries} {='SQL queries in'|translate} {$debug->sqlTime}) -
           {/if}
@@ -288,8 +288,9 @@
     <div
       n:if="(isset($SHOW_WHATS_NEW) and $SHOW_WHATS_NEW) or (isset($DISPLAY_BELL) and $DISPLAY_BELL)"
       id="whats_new"
+      class="whats_new_wrapper"
     >
-      <div id="whats_new_popin">
+      <div id="whats_new_popin" class="whats_new_dialog">
         <a class="icon-cancel close_whats_new"></a>
         <h3>{='What\'s new in version %s'|translate:$WHATS_NEW_MAJOR_VERSION}</h3>
         <div>

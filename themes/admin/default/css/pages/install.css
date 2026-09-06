@@ -2,7 +2,7 @@ body {
   font-size: 12px;
 }
 
-#content {
+.content {
   width: 800px;
   margin: auto;
   text-align: center;

@@ -123,14 +123,6 @@ TABLE.table2 TR.throw { text-align: center; }
 	text-align: right;
 }
 
-TABLE#dailyStats {
-	width: 60%;
-}
-
-TABLE#detailedStats {
-	width: 99%;
-}
-
 /* Plugins, languages tables */
 TABLE.plugins,
 TABLE.languages {
@@ -794,7 +786,6 @@ LI.menuLi {
 #categoryPermissions,
 #element_set_ranks,
 #update,
-#pendingComments,
 #action{
   padding-bottom:62px!important;
 }
@@ -882,18 +873,6 @@ LI.menuLi {
   border-width: 5px;
   border-style: solid;
   border-color: transparent transparent #ff7700 transparent;
-}
-
-#catOptionsSmall.dropdown::after {
-  content: " ";
-  position: absolute;
-  bottom: 15%;
-  left: 103%;
-  margin-left: -5px;
-  border-width: 5px;
-  border-style: solid;
-  border-color: transparent transparent #ffa33e transparent;
-  transform: rotate(90deg);
 }
 
 .dropdown-content {
@@ -1851,15 +1830,6 @@ img.ui-datepicker-trigger {
 }
 
 /* Add photos, direct mode */
-#uploadBoxes P {
-  margin:0;
-  margin-bottom:2px;
-  padding:0;
-}
-
-#batchLink {
-  text-align:center;
-}
 
 .category_selection {
   min-height:65px;
@@ -1927,14 +1897,6 @@ img.ui-datepicker-trigger {
 .rotate-element{
   display: inline-block;
   transform: rotate(90deg);
-}
-
-#uploadFormSettings input[type="text"] {
-  text-align:right;
-}
-
-#uploadFormSettings TH {
-  width:50%;
 }
 
 .plupload_file_name span:not(.icon-eye){
@@ -2011,7 +1973,6 @@ html, body {height:100; min-height: 100%; margin:0; padding:0;}
 a.admin-main {color:#aaa; display:block; font-size: 13px; font-weight:bold; text-decoration:none;}
 a.admin-main:hover {color:#fff;}
 
-#piwigoInfos {float:left; margin-left:140px;}
 #pageInfos {display: none;}
 
 /* TipTip CSS - Version 1.2 */
@@ -2249,13 +2210,8 @@ margin-top:4px; padding-bottom:3px; padding-top:3px; top:1px;
   padding:0;
   margin: 0 0 0 205px;
   z-index:99;
-}
-
-#content {
   border: none;
   min-height: 467px;
-  margin-left:205px;
-  margin-top: 0;
 }
 
 #thePopuphelpPage {
@@ -2326,8 +2282,6 @@ h1 .bc-albums {
 }
 h2 { letter-spacing:1px; font-weight:bold; display: none;}
 h2:lang(en) { text-transform:capitalize; }
-
-#pluginsMenuSeparator {width:80%; margin:5px auto;}
 
 #helpContent P {text-align:left; margin-left:10px;}
 #helpContent LI, #ftpPage LI {margin-top:10px;}
@@ -3946,7 +3900,6 @@ LEGEND SPAN {
 #batchManagerGlobal a.removeFilter:hover::before {color: #ffa646;}
 #batchManagerGlobal a.removeFilter:hover {color:red;}
 #batchManagerGlobal .removeFilter span {display:none}
-#batchManagerGlobal #applyFilterBlock {width: 200px;}
 #batchManagerGlobal .useFilterCheckbox {display:none;}
 
 #batchManagerGlobal blockquote {margin:10px 0 0px 0;}
@@ -4070,19 +4023,12 @@ LEGEND SPAN {
 #uploadForm .plupload_scroll .plupload_filelist {height:250px; overflow-y: hidden;}
 #uploadForm li.plupload_droptext {line-height:230px;font-size:2em;}
 
-#uploadBoxes .file {margin-bottom:5px;text-align:left;}
-#uploadBoxes {margin-top:20px;}
-#addUploadBox {margin-bottom:2em;}
 
 p.uploadInfo {text-align:left;}
 p#uploadWarningsSummary {text-align:left;}
 p#uploadWarningsSummary .showInfo {margin-left:3px;}
-p#uploadWarnings {display:none;text-align:left;margin-bottom:1em;font-size:90%;color:#999;}
-p#uploadModeInfos {text-align:left;margin-top:1em;font-size:90%;color:#999;}
 
 #photosAddContent p.showFieldset {text-align:left; display: none!important;}
-a#showPermissions {padding: 5px 10px; font-size: 11px; font-weight: bold; margin-left: 35px;}
-a#showPermissions:hover {text-decoration: none;}
 
 #uploadForm .plupload_buttons, #uploadForm .plupload_progress { display:none !important; }
 #uploadForm #startUpload { margin:5px 0 15px 25px; padding:8px 10px; font-size:1.1em; }
@@ -4541,22 +4487,19 @@ a#showPermissions:hover {text-decoration: none;}
   color: rgba(29, 29, 29, 0.226);
 }
 
-#RenameTag {
-  display:none;
-}
-
 .AddIconContainer {
   margin-top: 5px;
 }
 
 .RenameTagPopIn {
+  display:none;
   position: fixed;
   z-index: 100;
   left: 0;
   top: 0;
-  width: 100%; 
+  width: 100%;
   height: 100%;
-  overflow: auto; 
+  overflow: auto;
   background-color: rgba(0,0,0,0.7);
 }
 
@@ -4889,11 +4832,6 @@ a#showPermissions:hover {text-decoration: none;}
 #addAlbumForm input[name="category_name"] {
   width: 565px; padding: 8px 8px; 
 }
-#formCreateAlbum input[name="virtual_name"] {
-  width:300px;
-  border-radius: 3px;
-}
-
 .move-cat-container:hover {
   background-color: #ffd7ad;
 }
@@ -5309,25 +5247,7 @@ a#showPermissions:hover {text-decoration: none;}
   margin-left: 25px;
 }
 
-/* Category Ordering */
-FORM#categoryOrdering p.albumTitle {margin:0; margin-left: 5px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; margin-bottom: 4px;}
-FORM#categoryOrdering p.albumTitle a {font-size: 14px; font-weight: 600;}
-FORM#categoryOrdering p.albumTitle i {display: none;}
-FORM#categoryOrdering p.albumActions {visibility:hidden; margin:0; height: 40px;}
-FORM#categoryOrdering .categoryLi:hover p.albumActions {visibility:visible;}
-FORM#categoryOrdering p.albumActions {display:flex;justify-content:center;align-items:center;}
-FORM#categoryOrdering p.albumActions a {
-	margin-right:0; 
-	font-weight: bold; 
-	height: 95%; 
-	padding: 0 15px;
-	padding-top: 22px;
-}
-
 .actionTitle span {text-transform: capitalize;}
-
-FORM#categoryOrdering p.albumActions a:hover {text-decoration: none;}
-FORM#categoryOrdering p.albumActions .userSeparator {margin:0 5px;}
 
 /* Move Album */
 .cat-move-header {
@@ -5601,11 +5521,8 @@ ul.jqtree-tree .jqtree-element {
 .albumBlock .albumLineBlock {display: block; padding-left: 7px; max-width: 45%; height: 50px;}
 .showCreateAlbum {text-align:left; margin:0 1em 25px 20px; line-height:22px;}
 .showCreateAlbum .userSeparator {margin:0 5px;}
-#addAlbumOpen, #autoOrderOpen {padding: 7px 15px; font-weight: bold; font-size: 11px;}
 .afterUploadActions {text-align: center; margin-bottom: 30px !important; margin-top: 45px !important;}
 .afterUploadActions a {justify-content: center; margin: 35px; font-weight: bold; font-size: 14px; padding: 10px 12px;}
-#autoOrder p, #createAlbum p {text-align:left; margin:0 0 1em 0;}
-#autoOrder p.actionButtons, #createAlbum p.actionButtons {margin-bottom:0;}
 
 #ftpPage p {text-align:left;margin:1em;}
 #ftpPage fieldset p {margin:0;}
@@ -5679,10 +5596,6 @@ input[type="text"].dError {border-color:#ff7070; background-color:#FFe5e5;}
   -webkit-animation: flexShrink 500ms ease forwards;
   -o-animation: flexShrink 500ms ease forwards;
   animation: flexShrink 500ms ease forwards;
-}
-
-.groups .list_user #text{
-  width:100%;
 }
 
 .groups .GroupContainer {
@@ -6055,7 +5968,7 @@ input:checked + .slider.small:before, input:checked + .slider.small::after {
 }
 
 #selection-mode-block button,
-#commentsSelection button {
+.comments-selections button {
   display:block;
   margin:20px auto;
   font-size: 12px;
@@ -6066,7 +5979,7 @@ input:checked + .slider.small:before, input:checked + .slider.small::after {
 }
 
 #selection-mode-block button:hover,
-#commentsSelection button:hover {
+.comments-selections button:hover {
   cursor: pointer;
 }
 
@@ -6221,13 +6134,6 @@ input:checked + .slider.small:before, input:checked + .slider.small::after {
   left:50%;
   top: 37px;
 }
-#catOptionsSmall{
-  display:none;
-  position:absolute;
-  right: 80%;
-  bottom: 0%;
-}
-
 .is-default-token {
   display: block;
   z-index: 1;
@@ -6787,12 +6693,6 @@ a.group_users {
   left: 15px;
 }
 
-#userList .openUserDetails {visibility:hidden;}
-#userList tr:hover .openUserDetails {visibility:visible;}
-#userList .icon-cancel-circled {visibility:visible;}
-#userList_length {float:none;}
-#userList_filter {margin-top:-20px;}
-
 .dataTables_info, .dataTables_length {
   padding-left:1em;
 }
@@ -7035,9 +6935,7 @@ fieldset#environment legend i[class*="icon-"] {
 
 #cboxLoadedContent input[type="submit"] {margin-bottom: 20px; float: none;}
 
-#permissions, #uploadForm fieldset {border: 0;}
-#permissions {display: none!important;}
-#permissions {margin-top: 35px; margin-bottom: 20px;}
+#uploadForm fieldset {border: 0;}
 #uploadForm fieldset:last-child {margin-bottom: 20px;}
 
 .originalPicture .info-framed {max-width: 400px;}
@@ -7053,14 +6951,13 @@ fieldset#environment legend i[class*="icon-"] {
 	padding: 8px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16); font-size: 15px; margin-bottom: 8px; transition: all 125ms ease-out;
 }
 .icon-plus.cboxElement:hover {box-shadow: 0 2px 4px rgba(0, 0, 0, 0.16);}
-#albumSelection {margin-right: 20px;}
 .selectize-control.single .selectize-input {border-radius: 0; font-weight: bold;font-size: 12px;}
 .buttonLike {padding: 8px 10px; margin-left: 5px;}
 .changeUsername .buttonLike {padding: 1px 10px;}
 .changePassword .buttonLike {padding: 1px 10px;}
 .selectFilesButtonBlock {display: flex; margin-top: 10px;}
 .selectFilesinfo {margin-left: 15px; font-size: 90%; color: #999; display: flex; flex-direction: column; justify-content: center;}
-#uploader {margin-top: 25px; font-weight: bold !important;}
+.photosUploader {margin-top: 25px; font-weight: bold !important;}
 .plupload_filelist_header {display: none;}
 .plupload_filelist {scrollbar-width: thin!important;}
 .plupload_wrapper, .plupload_file_size {font-weight: bold;}
@@ -7286,13 +7183,7 @@ li.plupload_delete a:hover {background: url("images/cancelhover.svg")!important;
 .selectionEmptyBlock {text-align: center; font-weight: 600; padding: 90px 0;}
 #duplicates_options {display: flex; flex-direction: column;}
 #batchManagerGlobal .thumbnails .wrap2 .icon-zoom-square::before {font-size: 15px; margin-top: 2.9px; margin-right: 7px;}
-#progressBar_pbImage {
-	width: 300px !important; border-radius: 15px; height: 8px !important; margin-top: 5px !important; background-size: cover; 
- 	background-repeat: no-repeat; background-color: #f5f5f5; 
- }
 #regenerationMsg {width: 360px;}
-#progressBar {display: flex;}
-#progressBar_pbText {margin-left: 15px;}
 #filter_search .icon-help-circled::before {margin-right: 5px; color: #777;}
 .dimensionSlidersBlocks {display: flex; flex-direction: column; margin-bottom: 8px;}
 .dimensionSlidersTitleButtons, .dimensionSlidersRatioButtons {display: flex; justify-content: space-between;}
@@ -8028,7 +7919,7 @@ color:#FF7B00;
   object-fit: contain;
 }
 
-#newsletterSubscribeInput{
+.newsletter-subscribe-input{
   font-weight: 700;
   background-color: #FFFFFF;
   color: #000000;

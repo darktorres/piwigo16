@@ -88,9 +88,26 @@ final class LayoutState
         $this->headerNotes[] = $note;
     }
 
+    /**
+     * Also appends $id onto $bodyClasses (P52-C follow-up) so the
+     * `admin/default` layout -- which only ever renders `$BODY_ID` as
+     * an id, never as a class -- can pick up the same handful of
+     * PHP-driven ids (`theAdminPage`/`thePopuphelpPage`) real CSS
+     * already needs a class selector for, without every caller having
+     * to set both explicitly. Append, never overwrite:
+     * `Section\SectionPopulator::populate()` is the only other real
+     * production writer of `$bodyClasses` (a full overwrite, for
+     * gallery-specific classes), and in both real requests where it
+     * coexists with a `setBodyId()` call in the same controller
+     * (`GalleryController`/`PictureController`), `populate()` always
+     * runs first -- confirmed by reading both call orders directly,
+     * not assumed -- so appending here can never be silently
+     * clobbered by a later overwrite.
+     */
     public function setBodyId(string $id): void
     {
         $this->bodyId = $id;
+        $this->bodyClasses[] = $id;
     }
 
     public function setPageBanner(string $banner): void

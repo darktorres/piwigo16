@@ -95,7 +95,7 @@ const colorIcons = [
 ];
 const statusArr = ["webmaster", "admin", "normal", "generic", "guest"];
 const levelArr = ["0", "1", "2", "4", "8"];
-const kingTemplate = '<p class="icon-king" id="the_king"></p>';
+const kingTemplate = '<p class="icon-king king-badge" id="the_king"></p>';
 let currentUsers: UserRow[] = [];
 let guestId = 0;
 let guestUser: UserRow;

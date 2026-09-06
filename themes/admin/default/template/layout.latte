@@ -183,7 +183,10 @@
     {/if}
   </head>
 
-  <body id="{$BODY_ID}">
+  <body
+    id="{$BODY_ID}"
+    class="{foreach $BODY_CLASSES as $class}{$class} {/foreach}"
+  >
     <div id="the_page">
       <div n:if="isset($header_msgs)" class="header_msgs">
         {foreach $header_msgs as $elt}

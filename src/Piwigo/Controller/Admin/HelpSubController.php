@@ -8,7 +8,6 @@ use Override;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\HelpPageRenderer;
 use Piwigo\Auth\AccessControl;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Projection\AdminPageResult;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -40,13 +39,12 @@ final readonly class HelpSubController implements AdminSubControllerInterface
         private CurrentUser $currentUser,
         private CurrentTemplate $currentTemplate,
         private Renderer $renderer,
-        private CurrentConfig $currentConfig,
     ) {}
 
     #[Override]
     public function handle(ServerRequestInterface $request): AdminPageResult
     {
         return new HelpPageRenderer()
-            ->render($this->lang, $this->accessControl, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->renderer, $this->currentConfig);
+            ->render($this->lang, $this->accessControl, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->renderer);
     }
 }

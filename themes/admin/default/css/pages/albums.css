@@ -50,11 +50,8 @@
   margin-right: 7px;
 }
 
-#AddAlbum, #DeleteAlbum, #RenameAlbum {
-  display: none;
-}
-
 .AddAlbumPopIn, .DeleteAlbumPopIn, .RenameAlbumPopIn {
+  display: none;
   position: fixed;
   z-index: 100;
   left: 0;

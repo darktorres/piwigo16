@@ -1,0 +1,93 @@
+/**
+ * First-party port of jGrowl's own vendor stylesheet
+ * (`jquery.jgrowl.min.css` @1.3.0,
+ * https://cdn.jsdelivr.net/npm/jgrowl@1.3.0/jquery.jgrowl.min.css).
+ * Scoped to exactly the classes `themes/default/js/vendor/widgets/jgrowl.ts`
+ * actually creates for its one real consumer (`updates/ext.ts`'s
+ * success/error toasts) -- see that file's own header for the full
+ * real-vs-simplified rationale (only the `theme`/`header`/`life`/
+ * `sticky` options are ever real; `position` is always the vendor's
+ * own "top-right" default, never overridden).
+ *
+ * Dropped entirely (dead weight):
+ *   - every `.ie6`/CSS-expression rule and the `-ms-filter`/
+ *     `filter:alpha(...)`/`zoom:1` IE hacks -- no target browser reads
+ *     any of them; the real `opacity: .85` in the same rule already
+ *     covers every engine in this project's floor.
+ *   - `.top-left`/`.bottom-left`/`.bottom-right`/`.center` position
+ *     variants and `.center`'s own margin rule -- `jgrowl.ts` hardcodes
+ *     `"top-right"`, confirmed the only position class ever created.
+ *
+ * No `.success`/`.error`/`.default` theme colors here -- the real
+ * vendor CSS never defined any (`div.jGrowl-notification` ships bare,
+ * a uniform translucent black box); `theme.css`'s own real ~70-line
+ * block (`.jGrowl-popup-icon`, `.success`/`.error` colors, the
+ * `div.jGrowl div.jGrowl-notification`/`div.jGrowl-closer` structural
+ * overrides that fully replace this file's own width/padding/opacity/
+ * `visibility:hidden`-on-the-closer) continues to apply on top via
+ * ordinary cascade -- same selector shapes as this file's own (audited
+ * before writing it), so specificity parity with those overrides is
+ * unchanged from the real, currently-live CDN behavior.
+ */
+
+div.jGrowl {
+  z-index: 9999;
+  color: #fff;
+  font-size: 12px;
+  position: absolute;
+}
+
+body > div.jGrowl {
+  position: fixed;
+}
+
+div.jGrowl.top-right {
+  right: 0;
+  top: 0;
+}
+
+div.jGrowl div.jGrowl-closer,
+div.jGrowl div.jGrowl-notification {
+  background-color: #000;
+  opacity: 0.85;
+  width: 235px;
+  padding: 10px;
+  font-family: Tahoma, Arial, Helvetica, sans-serif;
+  font-size: 1em;
+  text-align: left;
+  display: none;
+  border-radius: 5px;
+  margin: 10px;
+}
+
+div.jGrowl div.jGrowl-notification {
+  min-height: 40px;
+}
+
+div.jGrowl div.jGrowl-notification div.jGrowl-header {
+  font-weight: 700;
+  font-size: 0.85em;
+}
+
+div.jGrowl div.jGrowl-notification div.jGrowl-close {
+  z-index: 99;
+  float: right;
+  font-weight: 700;
+  font-size: 1em;
+  cursor: pointer;
+}
+
+div.jGrowl div.jGrowl-closer {
+  padding-top: 4px;
+  padding-bottom: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: 700;
+  text-align: center;
+}
+
+@media print {
+  div.jGrowl {
+    display: none;
+  }
+}

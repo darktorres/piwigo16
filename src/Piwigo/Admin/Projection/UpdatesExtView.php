@@ -44,7 +44,7 @@ final readonly class UpdatesExtView implements View, HasPageAssets, ExposesPageD
     public function pageAssets(): array
     {
         return [
-            AssetContribution::css('https://cdn.jsdelivr.net/npm/jgrowl@1.3.0/jquery.jgrowl.min.css'),
+            AssetContribution::css('themes/admin/default/css/components/jgrowl.css'),
             AssetContribution::css('themes/admin/default/css/pages/updates_ext.css', id: 'updates_ext'),
             AssetContribution::css('themes/admin/default/css/components/jconfirm.css'),
             // No `dependsOn: ['jquery.ui']` (P49-C) -- jgrowl/jquery-confirm

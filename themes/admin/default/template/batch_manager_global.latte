@@ -18,7 +18,7 @@
         ></span>{='Selection'|translate}</legend>
 
       {if $thumbnails !== []}
-        <p id="checkActions">
+        <p id="checkActions" class="checkActionsBar">
           {if $nbThumbsSet > $nbThumbsPage}
             <a href="#" id="selectAll">{='The whole page'|translate}</a>
             <a href="#" id="selectSet">{='The whole set'|translate}</a>
@@ -28,7 +28,7 @@
           <a href="#" id="selectNone">{='None'|translate}</a>
           <a href="#" id="selectInvert">{='Invert'|translate}</a>
 
-          <span id="selectedMessage"></span>
+          <span id="selectedMessage" class="selectionCountMessage"></span>
 
           <input
             type="checkbox"
@@ -116,21 +116,17 @@
       {/if}
     </fieldset>
 
-    <fieldset id="action">
+    <fieldset id="action" class="photoActionFieldset">
       <legend><span
           class='icon-cog icon-red'
         ></span>{='Action'|translate}</legend>
       <div
         id="forbidAction"
-        {if count($selection) !== 0}
-        class="u-hidden"
-        {/if}
+        class="photoForbidAction{if count($selection) !== 0} u-hidden{/if}"
       >{='No photos selected, no actions possible.'|translate}</div>
       <div
         id="permitAction"
-        {if count($selection) === 0}
-        class="u-hidden"
-        {/if}
+        class="permitActionPanel{if count($selection) === 0} u-hidden{/if}"
       >
         <div class="permitActionListButton">
           <div>
@@ -183,7 +179,7 @@
               >{='Generate multiple size images'|translate}</option>
             </select>
           </div>
-          <p id="confirmDel" class="u-invisible">
+          <p id="confirmDel" class="u-invisible confirmDeleteBlock">
             <label class="font-checkbox">
               <span class="icon-check"></span>
               <input
@@ -196,7 +192,7 @@
               class="errors u-invisible"
             >{="You need to confirm deletion"|translate}</span>
           </p>
-          <p id="applyActionBlock" class="actionButtons u-hidden">
+          <p id="applyActionBlock" class="actionButtons u-hidden photoApplyActionBlock">
             <button
               id="applyAction"
               name="submit"
@@ -206,23 +202,23 @@
               <i class="icon-cog-alt"></i> {='Apply action'|translate}
             </button>
 
-            <span id="applyOnDetails"></span>
+            <span id="applyOnDetails" class="photoApplyOnDetails"></span>
           </p>
         </div>
         <div class="permitActionItem">
           <!-- delete -->
-          <div id="action_delete" class="bulkAction"></div>
+          <div id="action_delete" class="bulkAction actionDelete"></div>
 
           <!-- associate -->
-          <div id="action_associate" class="bulkAction">
-            <div class="head-button-2 icon-plus-circled" id="associate_as">
+          <div id="action_associate" class="bulkAction actionAssociate">
+            <div class="head-button-2 icon-plus-circled associate-as-trigger" id="associate_as">
               <p>{="Select an album"|translate}</p>
             </div>
             <div class="selected-associate-action"></div>
           </div>
 
           <!-- move -->
-          <div id="action_move" class="bulkAction">
+          <div id="action_move" class="bulkAction actionMovePanel">
             <select
               data-selectize="categories"
               data-default=""
@@ -238,7 +234,7 @@
           </div>
 
           <!-- dissociate -->
-          <div id="action_dissociate" class="bulkAction">
+          <div id="action_dissociate" class="bulkAction actionDissociate">
             <select
               data-selectize="categories"
               placeholder="{='Type in a search term'|translate}"
@@ -247,7 +243,7 @@
           </div>
 
           <!-- add_tags -->
-          <div id="action_add_tags" class="bulkAction">
+          <div id="action_add_tags" class="bulkAction actionAddTags">
             <select
               data-selectize="tags"
               data-create="true"
@@ -258,7 +254,7 @@
           </div>
 
           <!-- del_tags -->
-          <div id="action_del_tags" class="bulkAction">
+          <div id="action_del_tags" class="bulkAction actionDelTags">
             <select
               n:if="$associatedTags !== []"
               data-selectize="tags"
@@ -274,7 +270,7 @@
           </div>
 
           <!-- author -->
-          <div id="action_author" class="bulkAction">
+          <div id="action_author" class="bulkAction actionAuthor">
             <label class="font-checkbox"><span class="icon-check"></span><input
                 type="checkbox"
                 name="remove_author"
@@ -288,7 +284,7 @@
           </div>
 
           <!-- title -->
-          <div id="action_title" class="bulkAction">
+          <div id="action_title" class="bulkAction actionTitlePanel">
             <label class="font-checkbox"><span class="icon-check"></span><input
                 type="checkbox"
                 name="remove_title"
@@ -302,12 +298,12 @@
           </div>
 
           <!-- date_creation -->
-          <div id="action_date_creation" class="bulkAction">
+          <div id="action_date_creation" class="bulkAction actionDateCreation">
             <label class="font-checkbox"><span class="icon-check"></span><input
                 type="checkbox"
                 name="remove_date_creation"
               > {='remove creation date'|translate}</label><br>
-            <div id="set_date_creation">
+            <div id="set_date_creation" class="setDateCreationField">
               <input type="hidden" name="date_creation" value="{$dateCreation}">
               <label>
                 <i class="icon-calendar"></i>
@@ -317,7 +313,7 @@
           </div>
 
           <!-- level -->
-          <div id="action_level" class="bulkAction">
+          <div id="action_level" class="bulkAction actionLevel">
             <select name="level" size="1">
               <option
                 n:foreach="$levelOptions as $optKey => $optLabel"
@@ -331,7 +327,7 @@
           <div id="action_metadata" class="bulkAction"></div>
 
           <!-- generate derivatives -->
-          <div id="action_generate_derivatives" class="bulkAction">
+          <div id="action_generate_derivatives" class="bulkAction actionGenerateDerivatives">
             <div class="deleteDerivButtons">
               <a
                 href="#"
@@ -354,7 +350,7 @@
           </div>
 
           <!-- delete derivatives -->
-          <div id="action_delete_derivatives" class="bulkAction">
+          <div id="action_delete_derivatives" class="bulkAction actionDeleteDerivatives">
             <div class="deleteDerivButtons">
               <a href="#" class="js-select-del-deriv-all">{='All'|translate}</a>
               <a
@@ -374,8 +370,8 @@
           </div>
         </div>
       </div> <!-- #permitAction -->
-      <div id="regenerationMsg" class="bulkAction u-hidden">
-        <div id="regenerationStatus">
+      <div id="regenerationMsg" class="bulkAction u-hidden regenerationMessage">
+        <div id="regenerationStatus" class="regenerationStatusPanel">
           <span
             id="regenerationText"
           >{='Generate multiple size images'|translate}</span>

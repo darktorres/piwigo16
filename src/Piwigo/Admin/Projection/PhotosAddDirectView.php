@@ -121,7 +121,8 @@ final readonly class PhotosAddDirectView implements View, HasPageAssets, Exposes
             // LocalStorageCache.ts's 4 real exported classes, and that
             // file has zero top-level side effects of its own to
             // preserve either.
-            AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
+            AssetContribution::css('themes/admin/default/css/components/selectize.css', id: 'jquery.selectize'),
+            AssetContribution::css('themes/admin/default/css/components/selectize-' . $this->colorscheme . '.css', id: 'jquery.selectize.scheme'),
             AssetContribution::script('add_photo', 'themes/admin/default/js/photosAddDirect.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/photos_add_direct.css', id: 'photos_add_direct'),
             ...new AlbumSelectorView()

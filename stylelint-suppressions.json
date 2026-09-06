@@ -873,5 +873,10 @@
     "declaration-no-important": {
       "count": 2
     }
+  },
+  "themes/admin/default/css/components/selectize.css": {
+    "declaration-no-important": {
+      "count": 14
+    }
   }
 }

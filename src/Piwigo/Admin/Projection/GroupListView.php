@@ -49,7 +49,8 @@ final readonly class GroupListView implements View, HasPageAssets, ExposesPageDa
         return [
             ...new ColorboxView()
                 ->pageAssets(),
-            AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css'),
+            AssetContribution::css('themes/admin/default/css/components/selectize.css'),
+            AssetContribution::css('themes/admin/default/css/components/selectize-' . $this->colorscheme . '.css'),
             AssetContribution::script('group_list', 'themes/admin/default/js/users/groupList.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/components/jconfirm.css'),
             // order 10 is required, see issue 1080

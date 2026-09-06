@@ -61,7 +61,8 @@ final readonly class RatingView implements View, HasPageAssets, ExposesPageData
     public function pageAssets(): array
     {
         return [
-            AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
+            AssetContribution::css('themes/admin/default/css/components/selectize.css', id: 'jquery.selectize'),
+            AssetContribution::css('themes/admin/default/css/components/selectize-' . $this->colorscheme . '.css', id: 'jquery.selectize.scheme'),
             AssetContribution::css('themes/admin/default/css/pages/rating.css', id: 'rating'),
             // 'rating_photo' imports scripts.ts directly now (docs/PLAN.md
             // P48) -- the separate

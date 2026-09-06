@@ -1,0 +1,107 @@
+/**
+ * Dark-scheme half of the selectize port (see `selectize.css`'s own
+ * header) -- every rule below is real and differs from
+ * `selectize-clear.css`'s own version of the same selector, verbatim
+ * from the real `selectize.dark.css` @0.11.2 source (not derived).
+ * Loaded alongside `selectize.css` for `default`/`roma`, both of which
+ * declare `"colorscheme": "dark"` in their own `theme.json`.
+ *
+ * Two rules here have no `selectize-clear.css` counterpart at all --
+ * real, confirmed asymmetries in the original theme files, not an
+ * omission on this port's part:
+ *   - `.selectize-input.focus`'s own background-color (clear's
+ *     `.focus` rule only ever touched `box-shadow`).
+ *   - the `.selectize-control.multi .selectize-input [data-value]`
+ *     chip's `opacity: 0.9` (clear's version has no opacity at all).
+ */
+
+.selectize-dropdown,
+.selectize-input,
+.selectize-input input {
+  color: #fefefe;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 18px;
+  /* No unprefixed equivalent exists; still a real, effective font-
+     rendering hint on every WebKit/Blink target in this project's
+     floor. */
+  -webkit-font-smoothing: inherit;
+}
+
+.selectize-input {
+  background: #333;
+  cursor: text;
+  display: inline-block;
+  border: 1px solid #555;
+  padding: 8px;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  box-shadow: inset 0 0 3px 1px rgb(0 0 0 / 0.5);
+  border-radius: 3px;
+}
+
+.selectize-input.full {
+  background-color: #333;
+}
+
+/* Real vendor source had this as 2 separate declarations at different
+   points in the file (box-shadow, then background-color) -- losslessly
+   merged, same computed result. */
+.selectize-input.focus {
+  box-shadow: inset 0 0 3px 1px rgb(0 0 0 / 0.5);
+  background-color: #363636;
+}
+
+.selectize-input.dropdown-active {
+  border-radius: 3px 3px 0 0;
+}
+
+.selectize-input.dropdown-active::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  background: #555;
+  height: 1px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.selectize-dropdown {
+  border: 1px solid #555;
+  background: #333;
+}
+
+.selectize-dropdown .active {
+  background-color: #4f5e6b;
+  color: #fefefe;
+}
+
+.selectize-dropdown .active.create {
+  color: #fefefe;
+}
+
+.selectize-dropdown .create {
+  color: rgb(254 254 254 / 0.5);
+}
+
+.selectize-control.multi .selectize-input [data-value] {
+  opacity: 0.9;
+  text-shadow: 0 1px 0 rgb(0 51 83 / 0.3);
+  border-radius: 3px;
+  background-color: #1b9dec;
+  background-image: linear-gradient(to bottom, #1da7ee, #178ee9);
+  background-repeat: repeat-x;
+  box-shadow:
+    0 1px 0 rgb(0 0 0 / 0.2),
+    inset 0 1px rgb(255 255 255 / 0.03);
+}
+
+.selectize-control.single .selectize-input {
+  background-color: #343434;
+  background-image: linear-gradient(to bottom, #363636, #303030);
+  background-repeat: repeat-x;
+}

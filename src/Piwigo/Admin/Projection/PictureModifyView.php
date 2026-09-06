@@ -92,7 +92,8 @@ final readonly class PictureModifyView implements View, HasPageAssets, ExposesPa
             AssetContribution::css('themes/admin/default/css/components/jquery-ui.css', id: 'jquery.ui'),
             ...new ColorboxView()
                 ->pageAssets(),
-            AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
+            AssetContribution::css('themes/admin/default/css/components/selectize.css', id: 'jquery.selectize'),
+            AssetContribution::css('themes/admin/default/css/components/selectize-' . $this->colorscheme . '.css', id: 'jquery.selectize.scheme'),
             AssetContribution::css('themes/admin/default/css/pages/picture_modify.css', id: 'picture_modify'),
             AssetContribution::css('themes/admin/default/css/components/jconfirm.css'),
             AssetContribution::script('picture_modify', 'themes/admin/default/js/pictureModify.ts', loadMode: LoadMode::Footer),

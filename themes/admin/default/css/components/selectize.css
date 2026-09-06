@@ -1,0 +1,171 @@
+/**
+ * First-party port of selectize.js's own theme stylesheets
+ * (`selectize.default.css`/`selectize.dark.css` @0.11.2,
+ * https://cdn.jsdelivr.net/npm/selectize.js@0.11.2/dist/css/selectize.default.css
+ * and .../selectize.dark.css -- already locally vendored, unmodified,
+ * at `themes/default/js/plugins/selectize.{clear,dark}.css` before this
+ * port). Scoped to exactly the classes `themes/default/js/vendor/widgets/selectize.ts`
+ * actually creates -- see that file's own header for the full real-vs-
+ * dead rationale this port leans on directly (no `dropdown_header`/
+ * `optgroup_columns`/`drag_drop` plugin, no optgroups, no RTL, no
+ * `.disabled` state, no `.input-active`/chip-`.active` state -- none of
+ * these are ever reachable, confirmed via a direct read of every real
+ * class the port's own DOM-construction code assigns).
+ *
+ * This file holds every rule byte-identical between the two real
+ * sources; `selectize-dark.css`/`selectize-clear.css` hold every rule
+ * that differs (however slightly) between them, verbatim from each
+ * real source -- not reconstructed via custom properties, to avoid any
+ * risk of silently merging or dropping a real, confirmed asymmetry
+ * (documented per-rule in each of those files' own headers). Callers
+ * load this file plus whichever scheme file matches
+ * `$this->colorscheme` (fixed per admin skin at render time --
+ * `default`/`roma` both declare `"dark"`, `clear` declares `"clear"`,
+ * in each skin's own `theme.json` -- not a live, user-toggleable
+ * light/dark switch, so a single `light-dark()`-driven file isn't the
+ * right tool here: that CSS function exists for a runtime `color-scheme`
+ * switch, not a value fixed once per skin at the server).
+ */
+
+.selectize-control {
+  position: relative;
+}
+
+.selectize-input > * {
+  vertical-align: baseline;
+  display: inline-block;
+}
+
+.selectize-control.multi .selectize-input > div {
+  cursor: pointer;
+  margin: 0 3px 3px 0;
+  padding: 2px 6px;
+  background: #1da7ee;
+  color: #fff;
+  border: 1px solid #0073bb;
+}
+
+.selectize-input > input {
+  display: inline-block !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  max-width: 100% !important;
+  margin: 0 1px !important;
+  text-indent: 0 !important;
+  border: 0 none !important;
+  background: none !important;
+  line-height: inherit !important;
+  /* Real vendor source only ever had `-webkit-user-select`; unprefixed
+     `user-select` has covered every target engine (including Firefox)
+     since long before this project's floor, so it replaces the
+     prefixed form rather than sitting alongside it. */
+  user-select: auto !important;
+  box-shadow: none !important;
+}
+
+.selectize-input > input::-ms-clear {
+  display: none;
+}
+
+.selectize-input > input:focus {
+  outline: none !important;
+}
+
+.selectize-input::after {
+  content: " ";
+  display: block;
+  clear: left;
+}
+
+.selectize-dropdown {
+  position: absolute;
+  z-index: 10;
+  margin: -1px 0 0;
+  border-top: 0 none;
+  box-sizing: border-box;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+  border-radius: 0 0 3px 3px;
+}
+
+.selectize-dropdown [data-selectable] {
+  cursor: pointer;
+  overflow: hidden;
+  padding: 5px 8px;
+}
+
+.selectize-dropdown [data-selectable] .highlight {
+  background: rgb(125 168 208 / 0.2);
+  border-radius: 1px;
+}
+
+.selectize-dropdown-content {
+  overflow: hidden auto;
+  max-height: 200px;
+}
+
+.selectize-control.single .selectize-input,
+.selectize-control.single .selectize-input input {
+  cursor: pointer;
+}
+
+.selectize-control.single .selectize-input::after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  margin-top: -3px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 5px 5px 0;
+  border-color: #808080 transparent transparent;
+}
+
+.selectize-control.single .selectize-input.dropdown-active::after {
+  margin-top: -4px;
+  border-width: 0 5px 5px;
+  border-color: transparent transparent #808080;
+}
+
+/* Real vendor source had this as 2 separate declarations (a shorthand,
+   then a later override narrowing just left/right) -- losslessly
+   merged into one 3-value shorthand (top 5px, right/left 5px,
+   bottom 2px), same computed result. */
+.selectize-control.multi .selectize-input.has-items {
+  padding: 5px 5px 2px;
+}
+
+/* `remove_button` plugin (the only selectize plugin any real call site
+   enables) -- `.remove`'s own `border-left` color (#0073bb) matches the
+   chip background border above in both real theme sources, kept as
+   one shared literal rather than 2 identical scheme-file copies. */
+.selectize-control.plugin-remove_button [data-value] {
+  position: relative;
+  padding-right: 24px !important;
+}
+
+.selectize-control.plugin-remove_button [data-value] .remove {
+  z-index: 1;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 17px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 12px;
+  color: inherit;
+  text-decoration: none;
+  vertical-align: middle;
+  display: inline-block;
+  padding: 2px 0 0;
+  border-left: 1px solid #0073bb;
+  box-sizing: border-box;
+  border-radius: 0 2px 2px 0;
+}
+
+.selectize-control.plugin-remove_button [data-value] .remove:hover {
+  background: rgb(0 0 0 / 0.05);
+}

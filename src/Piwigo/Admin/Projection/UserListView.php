@@ -84,7 +84,8 @@ final readonly class UserListView implements View, HasPageAssets, ExposesPageDat
     public function pageAssets(): array
     {
         return [
-            AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
+            AssetContribution::css('themes/admin/default/css/components/selectize.css', id: 'jquery.selectize'),
+            AssetContribution::css('themes/admin/default/css/components/selectize-' . $this->colorscheme . '.css', id: 'jquery.selectize.scheme'),
             // jQuery UI's own JS is gone (its slider widget, the only
             // real reason this page ever loaded it, ported off jQuery
             // in P49-B group 4) -- the CSS theme stays, since the

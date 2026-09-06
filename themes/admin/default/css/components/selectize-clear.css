@@ -1,0 +1,107 @@
+/**
+ * Clear-scheme half of the selectize port (see `selectize.css`'s own
+ * header) -- every rule below is real and differs from
+ * `selectize-dark.css`'s own version of the same selector, verbatim
+ * from the real `selectize.default.css` @0.11.2 source (not derived).
+ * Loaded alongside `selectize.css` for the `clear` admin skin, the
+ * only one declaring `"colorscheme": "clear"` in its own `theme.json`.
+ *
+ * One rule here has no `selectize-dark.css` counterpart at all -- a
+ * real, confirmed asymmetry in the original theme files: the
+ * single-mode input/dropdown border color, never restated in the real
+ * dark source.
+ */
+
+.selectize-dropdown,
+.selectize-input,
+.selectize-input input {
+  color: #303030;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 18px;
+  /* No unprefixed equivalent exists; still a real, effective font-
+     rendering hint on every WebKit/Blink target in this project's
+     floor. */
+  -webkit-font-smoothing: inherit;
+}
+
+.selectize-input {
+  background: #fff;
+  cursor: text;
+  display: inline-block;
+  border: 1px solid #d0d0d0;
+  padding: 8px;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.1);
+  border-radius: 3px;
+}
+
+.selectize-input.full {
+  background-color: #fff;
+}
+
+.selectize-input.focus {
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.15);
+}
+
+.selectize-input.dropdown-active {
+  border-radius: 3px 3px 0 0;
+}
+
+.selectize-input.dropdown-active::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  background: #f0f0f0;
+  height: 1px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.selectize-dropdown {
+  border: 1px solid #d0d0d0;
+  background: #fff;
+}
+
+.selectize-dropdown .active {
+  background-color: #f5fafd;
+  color: #495c68;
+}
+
+.selectize-dropdown .active.create {
+  color: #495c68;
+}
+
+.selectize-dropdown .create {
+  color: rgb(48 48 48 / 0.5);
+}
+
+.selectize-control.multi .selectize-input [data-value] {
+  text-shadow: 0 1px 0 rgb(0 51 83 / 0.3);
+  border-radius: 3px;
+  background-color: #1b9dec;
+  background-image: linear-gradient(to bottom, #1da7ee, #178ee9);
+  background-repeat: repeat-x;
+  box-shadow:
+    0 1px 0 rgb(0 0 0 / 0.2),
+    inset 0 1px rgb(255 255 255 / 0.03);
+}
+
+.selectize-control.single .selectize-input {
+  box-shadow:
+    0 1px 0 rgb(0 0 0 / 0.05),
+    inset 0 1px 0 rgb(255 255 255 / 0.8);
+  background-color: #f9f9f9;
+  background-image: linear-gradient(to bottom, #fefefe, #f2f2f2);
+  background-repeat: repeat-x;
+}
+
+.selectize-control.single .selectize-input,
+.selectize-dropdown.single {
+  border-color: #b8b8b8;
+}

@@ -52,7 +52,8 @@ final readonly class AlbumNotificationView implements View, HasPageAssets
     public function pageAssets(): array
     {
         return [
-            AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
+            AssetContribution::css('themes/admin/default/css/components/selectize.css', id: 'jquery.selectize'),
+            AssetContribution::css('themes/admin/default/css/components/selectize-' . $this->colorscheme . '.css', id: 'jquery.selectize.scheme'),
             AssetContribution::script('album_notification', 'themes/admin/default/js/albumNotification.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/album_notification.css', id: 'album_notification'),
         ];

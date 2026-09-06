@@ -112,7 +112,8 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
             AssetContribution::css('themes/admin/default/css/components/jconfirm.css'),
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
-            AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
+            AssetContribution::css('themes/admin/default/css/components/selectize.css', id: 'jquery.selectize'),
+            AssetContribution::css('themes/admin/default/css/components/selectize-' . $this->colorscheme . '.css', id: 'jquery.selectize.scheme'),
             AssetContribution::script('batchManagerUnit', 'themes/admin/default/js/batch_manager/unit.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/pages/batch_manager_unit.css', id: 'batch_manager_unit'),
             ...new AlbumSelectorView()
@@ -128,7 +129,8 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
             // contribution has to resolve first -- see
             // BatchManagerGlobalView's own identical comment, confirmed
             // there via a real golden-html diff.
-            AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
+            AssetContribution::css('themes/admin/default/css/components/selectize.css', id: 'jquery.selectize'),
+            AssetContribution::css('themes/admin/default/css/components/selectize-' . $this->colorscheme . '.css', id: 'jquery.selectize.scheme'),
             AssetContribution::css('themes/admin/default/css/components/jquery-ui.css', id: 'jquery.ui'),
             AssetContribution::script('batchManagerFilter', 'themes/admin/default/js/batch_manager/filter.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/components/batch_manager_filter.css', id: 'batch_manager_filter'),

@@ -47,6 +47,7 @@
   <div class="tag-selection-content">
     <p
       id="nothing-selected"
+      class="nothing-selected-message"
     >{='No tags selected, no actions possible.'|translate}</p>
 
     <div class="selection-mode-tag">
@@ -79,13 +80,13 @@
 </div>
 
 <div class='tag-header'>
-  <div id='search-tag'>
+  <div id='search-tag' class='search-tag-container'>
     <div class='search-info'></div>
     <span class='icon-search search-icon'></span>
     <span class="icon-cancel search-cancel"></span>
     <input class='search-input' type='text' placeholder='{='Search'|translate}'>
   </div>
-  <form id='add-tag' class='not-in-selection-mode'>
+  <form id='add-tag' class='not-in-selection-mode add-tag-form'>
     <span class='icon-cancel-circled'></span>
     <label
       class='add-tag-label icon-plus-circled {if $total === 0} head-button-1 {else} head-button-2 {/if}'

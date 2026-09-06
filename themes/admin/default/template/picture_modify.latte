@@ -1,9 +1,9 @@
 {templateType Piwigo\Admin\Projection\PictureModifyView}
 
-<form action="{$fAction}" method="post" id="pictureModify">
+<form action="{$fAction}" method="post" id="pictureModify" class="picture-modify-form">
   <div
     id='picture-preview'
-    n:attr="class: $introVars->isSvg ? 'svg-container' : null"
+    n:attr="class: ['picture-preview-panel', $introVars->isSvg ? 'svg-container' : null]"
   >
     <div class='picture-preview-actions'>
       <a
@@ -53,8 +53,8 @@
       >
     {/if}
   </div>
-  <div id='picture-content'>
-    <div id='picture-infos'>
+  <div id='picture-content' class='picture-content-panel'>
+    <div id='picture-infos' class='picture-infos-grid'>
       <div class='info-framed'>
         <div class='info-framed-icon'>
           <i class='icon-picture'></i>

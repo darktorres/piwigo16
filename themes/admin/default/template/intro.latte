@@ -88,7 +88,7 @@
       {foreach $activityChartData as $WEEK_NUMBER => $WEEK_ACTIVITY}
         <div
           id="week-{$WEEK_NUMBER}-legend"
-          class="row-legend"
+          class="row-legend week-{$WEEK_NUMBER}-legend-row"
         ><div>{='Week %d'|translate:$activityWeekNumber[$WEEK_NUMBER]}</div></div>
         <span
           n:foreach="$WEEK_ACTIVITY as $DAY_NUMBER => $SIZE"

@@ -14,10 +14,18 @@
 #     auto-backgrounds anything over ~120s, so a guessed external timeout
 #     is dead weight at best and SIGKILLs a legitimately-long run at worst
 #     (recurred 4+ times).
-#   - a bare `vendor/bin/pest` invocation: this project's composer test:*
-#     scripts run tools/reimport-fixture.sh first (fixture-dependent
-#     suites need it to be self-contained/reproducible) -- a raw pest call
-#     skips that and can pass/fail against stale DB/cache/asset state.
+#   - a raw pest invocation, however it's spelled: bare `vendor/bin/pest`,
+#     `./vendor/bin/pest`, `php vendor/bin/pest`, `php8.x vendor/bin/pest`
+#     (with or without `-d` flags before the script path), or a bare
+#     `pest` on PATH. This project's composer test:* scripts run
+#     `bun run build` and/or `tools/reimport-fixture.sh` first
+#     (fixture-dependent suites need the DB reimport to be self-contained/
+#     reproducible; Browser-suite scripts also rebuild the JS bundle
+#     first) -- a raw pest call skips both, so a pass/fail result can
+#     reflect a stale JS build or stale DB/cache/asset state rather than
+#     current code. Originally only matched bare `vendor/bin/pest`; the
+#     `php vendor/bin/pest` form slipped through repeatedly in one whole
+#     P51-N session before this was widened to close the gap.
 #   - a comma-joined `--exclude-group`/`--group` value: Pest's flag
 #     doesn't reliably split commas across mixed tagging styles (a PHPUnit
 #     attribute vs. a Pest fluent ->group() call) -- repeat the flag once
@@ -143,8 +151,8 @@ while IFS= read -r seg; do
         block "a 'timeout N' wrapper on a command segment. The harness already auto-backgrounds anything over ~120s; a guessed external timeout never fires under normal conditions (dead weight) and SIGKILLs a legitimately long-running command instead of letting it finish when it would fire. If this command is known to run long, rely on the harness's own auto-backgrounding (or pass run_in_background explicitly at the tool-call level) instead of a shell timeout wrapper."
     fi
 
-    if printf '%s' "$trimmed" | grep -qE '^(\./)?vendor/bin/pest([[:space:]]|$)'; then
-        block "a raw vendor/bin/pest invocation. This project's composer test:*/test scripts run tools/reimport-fixture.sh first, which fixture-dependent suites need to be self-contained and reproducible (clears cache pools, combined CSS/JS bundles, regenerates fixture photos) -- calling pest directly skips all of that, so a pass/fail result may reflect stale DB/cache/asset state rather than current code. Check composer.json's scripts block for the matching test:* entry instead."
+    if printf '%s' "$trimmed" | grep -qE '^(\./)?(php[0-9.]*[[:space:]]+(-d[[:space:]]+[^[:space:]]+[[:space:]]+)*)?vendor/bin/pest([[:space:]]|$)|^(\./)?pest([[:space:]]|$)'; then
+        block "a raw pest invocation (vendor/bin/pest, ./vendor/bin/pest, php vendor/bin/pest, or a bare pest -- however it's spelled). This project's composer test:*/test scripts run tools/reimport-fixture.sh first (clears cache pools, combined CSS/JS bundles, regenerates fixture photos) and the Browser-suite scripts also run 'bun run build' first -- calling pest directly skips both, so a pass/fail result may reflect a stale JS build or stale DB/cache/asset state rather than current code. Use the matching composer script instead: test, test:browser, test:integration, test:coverage, test:coverage:web, test:coverage:integration, test:fixture-regen, test:golden-html, test:install, test:mutate, test:profile, or test:profile:browser (see composer.json's scripts block). Composer forwards trailing args after '--' straight to pest, e.g. 'composer test:browser -- --filter=Foo'."
     fi
 
     if printf '%s' "$trimmed" | grep -qE '^(\./)?vendor/bin/pest([[:space:]]|$)|^composer[[:space:]]+test(:[A-Za-z-]+)?([[:space:]]|$)'; then

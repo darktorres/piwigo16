@@ -11,7 +11,7 @@ body {
   border: none;
 }
 
-#theHeader {
+.theHeader {
   display: block;
   background: url("../../images/piwigo-orange.svg") no-repeat scroll center 20px transparent;
   height: 100px;
@@ -116,23 +116,23 @@ select:focus {
   display: none;
 }
 
-#db-check-status {
+.db-check-status {
   font-style: italic;
 }
 
-#db-check-status.db-check-pending {
+.db-check-status.db-check-pending {
   color: #666;
 }
 
-#db-check-status.db-check-success {
+.db-check-status.db-check-success {
   color: #2a7a2a;
 }
 
-#db-check-status.db-check-error {
+.db-check-status.db-check-error {
   color: #c0392b;
 }
 
-#db-check-status.db-check-warning {
+.db-check-status.db-check-warning {
   color: #b36b00;
 }
 

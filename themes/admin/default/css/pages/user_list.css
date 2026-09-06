@@ -9,7 +9,7 @@
     flex-grow:0 !important;
 }
 
-#template {
+.user-row-template {
     display:none;
 }
 
@@ -33,7 +33,7 @@
   padding: 5px;
 }
 
-#user-table #selection-mode-block {
+.user-list-panel .user-selection-panel {
   display: block;
   position: relative;
   width: 250px;
@@ -42,7 +42,7 @@
   min-height: 100%;
 }
 
-#forbidAction {
+.user-forbid-action {
   padding:5px;
 }
 /* user header */
@@ -56,7 +56,7 @@
 }
 
 
-#AddUserSuccess {
+.AddUserSuccessBanner {
   display:none;
   position: absolute;
   top:-135px;
@@ -64,12 +64,12 @@
   font-weight:bold;
 }
 
-#AddUserSuccess label {
+.AddUserSuccessBanner label {
   padding: 10px;
   cursor: default;
 }
 
-#AddUserSuccess .edit-now {
+.AddUserSuccessBanner .edit-now {
   color: #3a3a3a;
   cursor: pointer;
   margin-left:10px;
@@ -81,7 +81,7 @@
 
 /* filters bar */
 
-#user_search {
+.user-search-input {
     width: 200px;
 }
 
@@ -111,7 +111,7 @@
 }
 
 /* User Table */
-#user-table {
+.user-list-panel {
     margin-left:30px;
     margin-top: 30px;
     display:flex;
@@ -121,7 +121,7 @@
     position: relative;
 }
 
-#user-table-content {
+.user-table-body {
     max-width:100%;
     flex-grow:1;
     display:flex;
@@ -347,11 +347,11 @@
 }
 
 /* User Edit Pop-in */
-#UserList {
+.EditUserPopIn {
     font-size:1em;
 }
 
-#guest-msg {
+.guest-user-message {
   max-width: 835px;
 }
 
@@ -575,7 +575,7 @@
     margin-bottom:5px;
 }
 
-#AddUser .user-property-label {
+.AddUserPopIn .user-property-label {
   margin-top: 0;
 }
 
@@ -649,10 +649,10 @@
   margin-left: 418px;
 }
 
-#AddUser .user-property-select-container {
+.AddUserPopIn .user-property-select-container {
   position: relative;
 }
-#AddUser .user-property-select-container::before {
+.AddUserPopIn .user-property-select-container::before {
   margin-left: 0;
   right: 10px;
 }
@@ -677,13 +677,13 @@
     cursor:pointer;
 }
 
-#AddUser .user-list-checkbox {
+.AddUserPopIn .user-list-checkbox {
   margin-top: 5px;
   margin-bottom: 5px;
   align-self: start;
 }
 
-#AddUser .select-checkbox {
+.AddUserPopIn .select-checkbox {
   position: relative;
 }
 
@@ -811,7 +811,7 @@
 }
 
 .user-property-password-choice .head-button-2,
-#AddUserSuccessContainer .head-button-2 {
+.AddUserSuccessPanel .head-button-2 {
   display: block;
   text-align: center;
   margin-right: 0;
@@ -863,11 +863,11 @@
   background-color: #f70;
 }
 
-#result_send_mail_copy {
+.password-mail-copy-status {
   margin-bottom: 0;
 }
 
-#edit_password_result_mail_copy {
+.password-copy-result-panel {
   padding-top: 0;
 }
 
@@ -879,14 +879,14 @@
   margin-bottom: 20px;
 }
 
-#result_send_mail {
+.password-mail-sent-status {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 10px;
 }
 
-#edit_password_result_mail {
+.password-email-result {
   padding-top: 20px;
 }
 
@@ -911,7 +911,7 @@
 .edit-password-success-ok .icon-button,
 .edit-username-success-ok .icon-button,
 .user-property-main-user-close .icon-button, 
-#AddUserSuccessContainer .icon-button {
+.AddUserSuccessPanel .icon-button {
   padding: 10px 20px;
   font-size: 1.1em;
   font-weight: bold;
@@ -920,14 +920,14 @@
   color: #777;
 }
 
-#AddUserSuccessContainer .icon-button {
+.AddUserSuccessPanel .icon-button {
   align-self: center;
 }
 
 .edit-password-success-ok .icon-button:hover,
 .edit-username-success-ok .icon-button:hover,
 .user-property-main-user-close .icon-button:hover,
-#AddUserSuccessContainer .icon-button:hover {
+.AddUserSuccessPanel .icon-button:hover {
   background-color: #ddd;
   color: #3A3A3A;
 }
@@ -935,7 +935,7 @@
 .edit-password-success-ok .icon-button::before,
 .edit-username-success-ok .icon-button::before,
 .user-property-main-user-close .icon-button::before,
-#AddUserSuccessContainer .icon-button::before {
+.AddUserSuccessPanel .icon-button::before {
   margin-left: 0;
 }
 
@@ -1309,7 +1309,7 @@
 
 /* Guest Pop in */
 
-#GuestUserList {
+.GuestUserPopIn {
   display:none;
 }
 
@@ -1349,7 +1349,7 @@
 }
 /* Add User Pop In */
 
-#AddUser {
+.AddUserPopIn {
   display:none;
 }
 
@@ -1382,11 +1382,11 @@
     align-items: center;
 }
 
-#AddUserFieldContainer {
+.AddUserFields {
   width: 100%;
 }
 
-#AddUserSuccessContainer {
+.AddUserSuccessPanel {
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -1478,18 +1478,18 @@
 
 /* Selectize Inputs (groups) */
 
-#UserList .user-property-group .selectize-input,
-#GuestUserList .user-property-group .selectize-input,
-#AddUser .user-property-group .selectize-input {
+.EditUserPopIn .user-property-group .selectize-input,
+.GuestUserPopIn .user-property-group .selectize-input,
+.AddUserPopIn .user-property-group .selectize-input {
   overflow-y: scroll;
 }
 
-#UserList .item,
-#UserList .item.active,
-#GuestUserList .item,
-#GuestUserList .item.active,
-#AddUser .item,
-#AddUser .item.active {
+.EditUserPopIn .item,
+.EditUserPopIn .item.active,
+.GuestUserPopIn .item,
+.GuestUserPopIn .item.active,
+.AddUserPopIn .item,
+.AddUserPopIn .item.active {
   background-image:none;
   background-color: #ffa646;
   border-color: transparent;
@@ -1497,9 +1497,9 @@
   border-radius: 20px;
 }
 
-#UserList .item .remove,
-#GuestUserList .item .remove,
-#AddUser .item .remove {
+.EditUserPopIn .item .remove,
+.GuestUserPopIn .item .remove,
+.AddUserPopIn .item .remove {
   background-color: transparent;
   border-top-right-radius: 20px;
   border-bottom-right-radius: 20px;
@@ -1507,14 +1507,14 @@
   border-left: 1px solid transparent;
 
 }
-#UserList .item .remove:hover,
-#GuestUserList .item .remove:hover,
-#AddUser .item .remove:hover {
+.EditUserPopIn .item .remove:hover,
+.GuestUserPopIn .item .remove:hover,
+.AddUserPopIn .item .remove:hover {
   background-color: #f70;
 }
 
 /* selection panel */
-#permitActionUserList .user-list-checkbox i {
+.user-permit-action .user-list-checkbox i {
   margin-left: 0;
 }
 
@@ -1572,7 +1572,7 @@ Advanced filter
   justify-content: center;
 }
 
-#search-user {
+.user-search-panel {
   position: absolute;
   z-index: 2;
   right: 404px;
@@ -1614,8 +1614,8 @@ Advanced filter
   margin-top: 12px;
 }
 
-#UserList .slider-bar-wrapper,
-#GuestUserList .slider-bar-wrapper {
+.EditUserPopIn .slider-bar-wrapper,
+.GuestUserPopIn .slider-bar-wrapper {
   margin-bottom: 0;
   padding-right: 14px;
 }
@@ -1656,7 +1656,7 @@ Advanced filter
   overflow: hidden scroll;
 }
 
-#permitActionUserList #applyActionBlock {
+.user-permit-action .user-apply-action-block {
   margin: 30px 0 0;
   display:flex;
   flex-direction:column;
@@ -1671,7 +1671,7 @@ Advanced filter
   margin-right: 10px;
 }
 
-#user-table #action {
+.user-list-panel .user-action-fieldset {
   padding: 0;
 }
 
@@ -2029,7 +2029,7 @@ Advanced filter
 }
 
 @media (max-width: 1550px) {
-  #user_search {
+  .user-search-input {
     width: 120px;
   }
   .advanced-filter-btn {
@@ -2041,7 +2041,7 @@ Advanced filter
 }
 
 @media (max-width: 1465px) {
-  #user_search {
+  .user-search-input {
     width: 70px;
   }
   .advanced-filter-btn {
@@ -2091,12 +2091,12 @@ Advanced filter
   font-weight: bold;
 }
 
-#permitActionUserList {
+.user-permit-action {
   display: block;
 }
 
-/* Beats this file's own #permitActionUserList #applyActionBlock{display:flex} (higher specificity). */
-#permitActionUserList #applyActionBlock.u-hidden {
+/* Beats this file's own .user-permit-action .user-apply-action-block{display:flex} (higher specificity). */
+.user-permit-action .user-apply-action-block.u-hidden {
   display: none;
 }
 
@@ -2105,7 +2105,7 @@ Advanced filter
   display: none;
 }
 
-#tab_properties [name="hd_enabled"] {
+.user-tab-properties [name="hd_enabled"] {
   margin-bottom: 35px;
 }
 
@@ -2123,7 +2123,7 @@ Advanced filter
   margin-bottom: 10px;
 }
 
-#add_user_password .user-property-input-icon {
+.AddUserPasswordBlock .user-property-input-icon {
   margin-bottom: 5px;
 }
 
@@ -2135,7 +2135,7 @@ Advanced filter
   display: none;
 }
 
-/* Beats this file's own #AddUserSuccessContainer{display:flex} (higher specificity). */
-#AddUserSuccessContainer.u-hidden {
+/* Beats this file's own .AddUserSuccessPanel{display:flex} (higher specificity). */
+.AddUserSuccessPanel.u-hidden {
   display: none;
 }

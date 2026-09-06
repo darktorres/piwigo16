@@ -60,7 +60,7 @@
   margin-top: 15px;
 }
 
-#linkedAlbumSearch .search-icon {
+.linked-album-search .search-icon {
   position: absolute;
   transform: translate(7px, 8px);
   font-size: 18px;
@@ -84,7 +84,7 @@
   margin-top: 10px;
 }
 
-.linkedAlbumPopInContainer #searchResult {
+.linkedAlbumPopInContainer .linked-album-search-result {
   width: 100%;
   overflow-y: auto;
   max-height: 400px;
@@ -181,14 +181,10 @@
 
 /* Album selector View */
 .album-create {
-  display: flex;
+  display: none;
   width: 100%;
   height: 100%;
   flex-direction: column;
-}
-
-#linkedAlbumCreate {
-  display: none;
 }
 
 .album-selector,
@@ -286,7 +282,7 @@
   visibility: hidden;
 }
 
-#linkedAddAlbumErrors {
+.linked-album-error-message {
   margin: 0;
   text-align: start;
   padding: 10px;

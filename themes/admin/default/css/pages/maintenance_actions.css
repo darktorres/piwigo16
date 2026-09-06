@@ -13,7 +13,7 @@
   padding-top: 2px;
 }
 
-#label-delete-size-checkbox {
+.label-delete-size-checkbox {
   font-weight: bold;
   white-space: nowrap;
 }

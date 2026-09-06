@@ -431,11 +431,11 @@
   margin-right: 10px;
 } */
 
-#start_unset, #end_unset {
+.start-unset-link, .end-unset-link {
   text-decoration: none;
 }
 
-#start_unset:hover, #end_unset:hover {
+.start-unset-link:hover, .end-unset-link:hover {
   color: #ffa500;
 }
 

@@ -43,11 +43,11 @@
 
 /* Beats theme.css's .big-progressbar{max-width:90%} (equal specificity, cascade-order risk);
    also scopes past #uploadForm .big-progressbar{...} (a different, non-overlapping property set). */
-#uploadingActions .big-progressbar {
+.uploading-actions .big-progressbar {
   max-width: 98%;
   margin-bottom: 10px;
 }
 
-#uploadingActions .progressbar {
+.uploading-actions .progressbar {
   width: 0%;
 }

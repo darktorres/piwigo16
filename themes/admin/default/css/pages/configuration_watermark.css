@@ -1,5 +1,5 @@
-/* Beats theme.css's #addWatermark{display:none} (higher ID specificity). */
-#addWatermark.u-inline {
+/* Beats theme.css's .watermark-add-panel{display:none} (higher ID specificity). */
+.watermark-add-panel.u-inline {
   display: inline;
 }
 

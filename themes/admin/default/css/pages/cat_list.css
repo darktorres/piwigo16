@@ -2,7 +2,7 @@
  *  Switch btn between views
  */
 
-#tabsheet, .selectedAlbum {
+.tabsheet-wrapper, .selectedAlbum {
   margin: 0 0 10px !important;
 }
 

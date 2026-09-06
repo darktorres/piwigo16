@@ -47,12 +47,12 @@ final readonly class HistoryView implements View, HasPageAssets, ExposesPageData
             // import with no other real code of its own. Now that
             // `vendor/widgets/datepicker.ts` (P49-B, native port) is imported
             // directly by `history.ts` below, that indirection has no
-            // remaining purpose. `jquery-ui.css`/
-            // `jquery-ui-timepicker-addon.min.css` still theme the
-            // native port's own reused class names.
+            // remaining purpose. `jquery-ui.css` (P52-K, now first-
+            // party, merged with the former timepicker-addon
+            // stylesheet) still themes the native port's own reused
+            // class names.
             AssetContribution::script('history', 'themes/admin/default/js/history.ts', loadMode: LoadMode::Footer),
-            AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui'),
-            AssetContribution::css('https://cdn.jsdelivr.net/gh/trentrichardson/jQuery-Timepicker-Addon@v1.4.4/dist/jquery-ui-timepicker-addon.min.css'),
+            AssetContribution::css('themes/admin/default/css/components/jquery-ui.css', id: 'jquery.ui'),
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::css('themes/default/vendor/fontello/css/gallery-icon.css', order: -10),

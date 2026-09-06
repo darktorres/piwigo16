@@ -90,7 +90,7 @@ final readonly class UserListView implements View, HasPageAssets, ExposesPageDat
             // in P49-B group 4) -- the CSS theme stays, since the
             // native port renders the identical `ui-slider`/
             // `ui-slider-handle`/... class structure it styles.
-            AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui'),
+            AssetContribution::css('themes/admin/default/css/components/jquery-ui.css', id: 'jquery.ui'),
             AssetContribution::css('themes/admin/default/css/components/jconfirm.css'),
             // order: 10 is required, see issue 1080.
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),

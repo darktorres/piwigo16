@@ -1,0 +1,412 @@
+/**
+ * First-party port of jQuery UI's base stylesheet (`jquery-ui.css`
+ * @1.10.4, https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css)
+ * plus jQuery-Timepicker-Addon's own stylesheet (`jquery-ui-timepicker-addon.min.css`
+ * @1.4.4, https://cdn.jsdelivr.net/gh/trentrichardson/jQuery-Timepicker-Addon@v1.4.4/dist/jquery-ui-timepicker-addon.min.css),
+ * merged into one file since every real consumer of either already
+ * loads both. Scoped to exactly the classes 3 real first-party ports
+ * emit: `themes/default/js/vendor/widgets/datepicker.ts` (+ its own
+ * native timepicker-addon port), `themes/default/js/vendor/widgets/slider.ts`
+ * (including its `doubleSlider.ts` wrapper), and `cluetip.ts` (see its
+ * own dead-weight note below).
+ *
+ * Dropped entirely (dead weight -- confirmed via a real grep of every
+ * `.ts` file that could plausibly create these classes; jQuery UI's
+ * own dialog/menu/progressbar/spinner/button/accordion/tabs widgets
+ * and RTL support are never reached by any real port here):
+ *   - `.ui-button*`, `.ui-dialog*`, `.ui-menu*`, `.ui-progressbar*`,
+ *     `.ui-spinner*`, `.ui-tabs*`, `.ui-accordion*`,
+ *     `.ui-widget-overlay` (no dialog is ever opened -- also removes
+ *     the unused `ui-bg_flat_0_aaaaaa_40x100.png`/`animated-overlay.gif`
+ *     assets vendored defensively alongside jcrop's own commit, plus
+ *     `ui-bg_glass_75_dadada_1x400.png`, only ever referenced by the
+ *     `ui-state-hover`/`ui-state-focus` rules dropped below).
+ *   - `.ui-datepicker-multi*`/`.ui-datepicker-row-break` (only ever
+ *     one calendar month is rendered) and every `.ui-datepicker-rtl`/
+ *     `.ui-timepicker-rtl` rule (`datepicker.ts`'s own `isRTL` is
+ *     never set `true` by any real call site).
+ *   - `.ui-datepicker-prev-hover`/`.ui-datepicker-next-hover` -- the
+ *     original toggled these via JS `mouseenter`/`mouseleave`;
+ *     `datepicker.ts` never replicates that (confirmed: no
+ *     `mouseenter`/`mouseleave` listener anywhere in the file), so
+ *     prev/next lose their hover nudge. A real, disclosed, minor
+ *     interaction simplification, not a regression to silently carry.
+ *   - `.ui-state-hover`/`.ui-state-focus` (and every icon-color rule
+ *     keyed off them) -- same reason, never toggled by either port.
+ *   - `select.ui-datepicker-year` -- the year field is a real
+ *     `<input type="number">` (`yearInputEl`), not a `<select>`; only
+ *     the month is (`monthSelectEl`, real, kept).
+ *   - `.ui-tpicker-grid-label` and `.ui-timepicker-div td` -- no
+ *     grid-mode time picker or `<table>` is ever built inside the
+ *     timepicker div (a plain `dl`/`dt`/`dd` list only).
+ *   - `cluetip.ts`'s own `ui-widget`/`ui-widget-content`/`ui-cluetip`
+ *     classes (`STANDARD_CLASSES`) are confirmed dead on every one of
+ *     its 3 real pages (`intro.ts`, `install.ts`, `languages/new.ts`)
+ *     -- none of `IntroView`/`InstallView`/`LanguagesNewView` loads
+ *     this stylesheet at all, and `.ui-cluetip` was never a real
+ *     jQuery UI class to begin with. `theme.css`'s own first-party
+ *     `.cluetip-outer`/`.cluetip-title`/`.cluetip-inner` rules are the
+ *     entire real styling surface for cluetip; nothing here needs
+ *     porting on cluetip's account. (`.ui-widget`/`.ui-widget-content`
+ *     below exist purely for `datepicker.ts`/`slider.ts`'s own real
+ *     use, not because of cluetip.)
+ *
+ * `.ui-widget`'s own `font-family: Verdana,Arial,sans-serif` /
+ * `font-size: 1.1em` are dropped outright rather than ported: both
+ * popups are appended straight to `document.body` (real source:
+ * `datepicker.ts`'s own `buildPopup()`), so they already inherit this
+ * theme's real `"Open Sans", ...` stack (`theme.css:1006`) --
+ * reasserting the vendor's own legacy fallback stack would only fight
+ * that inherited font for no benefit.
+ *
+ * Step 0 (real, pre-existing first-party overrides across all 3 admin
+ * skins, audited before writing this file): a large `#ui-datepicker-div`-
+ * scoped block in every one of `default`/`roma`/`clear`'s own
+ * `theme.css` (plus `.ui-datepicker-trigger`/`.user_form_popin` in
+ * `default`/`roma`/`clear`) turned out to be 100% dead -- confirmed via
+ * a repo-wide grep, that id and those 2 classes are never assigned by
+ * any real element anywhere in this codebase, only by this same
+ * pre-port legacy CSS. Left in place for a dedicated follow-up cleanup
+ * commit (out of scope for a CSS *port*), not silently deleted here.
+ * The skins' remaining `.ui-slider*`/`.ui-state-*`/`.ui-widget-content`/
+ * `.ui-datepicker th`/`.ui-timepicker-div` overrides (`.slider-bar-wrapper`
+ * in `user_list.latte`/`plugins_new.latte`, `.batch-manager-root`,
+ * `#batchManagerGlobal`, `#filterList`) are all real and continue to
+ * apply on top of this file via ordinary cascade -- nothing below
+ * raises specificity or reorders to fight them.
+ *
+ * `.ui-corner-all`'s real `4px` radius is kept literal, not mapped to
+ * `--radius-sm` (`0.1875rem` = 3px, the wrong value a prior scoping
+ * pass proposed) or `--radius-md` (5px) -- neither matches, and this
+ * is one specific legacy vendor-widget rounding, not a reusable design
+ * value. The various `#aaaaaa`/`#d3d3d3`/`#e6e6e6`/`#cccccc`/`#222222`/
+ * `#555555`/`#212121`/`#fcefa1`/`#fbf9ee`/`#363636` widget-chrome
+ * grays and pale highlight-yellow are kept literal too, same reasoning
+ * as the `jcrop` port's own `#333`/`#eee` handle colors: fixed
+ * third-party widget chrome, not this app's own text/surface/border
+ * roles. `#cd0a0a` (the `ui-state-error` red `pwg-datepicker-cancel`'s
+ * cancel button relies on, real and load-bearing -- no other CSS rule
+ * styles that class) is a near-exact hue match for `--color-danger`
+ * (28.75° vs. 28.04°, computed via real sRGB->OKLab->OKLCH math) at a
+ * darker lightness, reused directly rather than minted as a new
+ * sibling token; its pale `#fef1ec` background is approximated with
+ * `color-mix()` off the same token rather than a literal fifth red.
+ */
+
+.ui-helper-clearfix::before,
+.ui-helper-clearfix::after {
+  content: "";
+  display: table;
+  border-collapse: collapse;
+}
+
+.ui-helper-clearfix::after {
+  clear: both;
+}
+
+.ui-icon {
+  display: block;
+  overflow: hidden;
+  background-repeat: no-repeat;
+  text-indent: -99999px;
+  width: 16px;
+  height: 16px;
+}
+
+.ui-corner-all {
+  border-radius: 4px;
+}
+
+.ui-widget-content {
+  border: 1px solid #aaa;
+  background: #fff url("../../images/jquery-ui/ui-bg_flat_75_ffffff_40x100.png")
+    50% 50% repeat-x;
+  color: #222;
+}
+
+.ui-widget-content a {
+  color: #222;
+}
+
+.ui-widget-header {
+  border: 1px solid #aaa;
+  background: #ccc
+    url("../../images/jquery-ui/ui-bg_highlight-soft_75_cccccc_1x100.png") 50%
+    50% repeat-x;
+  color: #222;
+  font-weight: bold;
+}
+
+.ui-widget-header a {
+  color: #222;
+}
+
+.ui-state-default,
+.ui-widget-content .ui-state-default,
+.ui-widget-header .ui-state-default {
+  border: 1px solid #d3d3d3;
+  background: #e6e6e6
+    url("../../images/jquery-ui/ui-bg_glass_75_e6e6e6_1x400.png") 50% 50%
+    repeat-x;
+  font-weight: normal;
+  color: #555;
+}
+
+.ui-state-default a,
+.ui-state-default a:link,
+.ui-state-default a:visited {
+  color: #555;
+  text-decoration: none;
+}
+
+.ui-state-active,
+.ui-widget-content .ui-state-active,
+.ui-widget-header .ui-state-active {
+  border: 1px solid #aaa;
+  background: #fff url("../../images/jquery-ui/ui-bg_glass_65_ffffff_1x400.png")
+    50% 50% repeat-x;
+  font-weight: normal;
+  color: #212121;
+}
+
+.ui-state-active a,
+.ui-state-active a:link,
+.ui-state-active a:visited {
+  color: #212121;
+  text-decoration: none;
+}
+
+.ui-state-highlight,
+.ui-widget-content .ui-state-highlight,
+.ui-widget-header .ui-state-highlight {
+  border: 1px solid #fcefa1;
+  background: #fbf9ee
+    url("../../images/jquery-ui/ui-bg_glass_55_fbf9ee_1x400.png") 50% 50%
+    repeat-x;
+  color: #363636;
+}
+
+.ui-state-error,
+.ui-widget-content .ui-state-error,
+.ui-widget-header .ui-state-error {
+  border: 1px solid var(--color-danger);
+  background: color-mix(in oklch, var(--color-danger) 8%, var(--color-white))
+    url("../../images/jquery-ui/ui-bg_glass_95_fef1ec_1x400.png") 50% 50%
+    repeat-x;
+  color: var(--color-danger);
+}
+
+.ui-priority-primary,
+.ui-widget-content .ui-priority-primary,
+.ui-widget-header .ui-priority-primary {
+  font-weight: bold;
+}
+
+.ui-priority-secondary,
+.ui-widget-content .ui-priority-secondary,
+.ui-widget-header .ui-priority-secondary {
+  opacity: 0.7;
+  font-weight: normal;
+}
+
+.ui-state-disabled,
+.ui-widget-content .ui-state-disabled,
+.ui-widget-header .ui-state-disabled {
+  opacity: 0.35;
+  background-image: none;
+}
+
+.ui-icon,
+.ui-widget-content .ui-icon,
+.ui-widget-header .ui-icon {
+  background-image: url("../../images/jquery-ui/ui-icons_222222_256x240.png");
+}
+
+.ui-state-default .ui-icon {
+  background-image: url("../../images/jquery-ui/ui-icons_888888_256x240.png");
+}
+
+.ui-state-active .ui-icon {
+  background-image: url("../../images/jquery-ui/ui-icons_454545_256x240.png");
+}
+
+.ui-state-highlight .ui-icon {
+  background-image: url("../../images/jquery-ui/ui-icons_2e83ff_256x240.png");
+}
+
+.ui-state-error .ui-icon {
+  background-image: url("../../images/jquery-ui/ui-icons_cd0a0a_256x240.png");
+}
+
+.ui-icon-circle-triangle-e {
+  background-position: -48px -192px;
+}
+
+.ui-icon-circle-triangle-w {
+  background-position: -80px -192px;
+}
+
+/* Datepicker */
+
+.ui-datepicker {
+  width: 17em;
+  padding: 0.2em 0.2em 0;
+  display: none;
+}
+
+.ui-datepicker .ui-datepicker-header {
+  position: relative;
+  padding: 0.2em 0;
+}
+
+.ui-datepicker .ui-datepicker-prev,
+.ui-datepicker .ui-datepicker-next {
+  position: absolute;
+  top: 2px;
+  width: 1.8em;
+  height: 1.8em;
+}
+
+.ui-datepicker .ui-datepicker-prev {
+  left: 2px;
+}
+
+.ui-datepicker .ui-datepicker-next {
+  right: 2px;
+}
+
+.ui-datepicker .ui-datepicker-prev span,
+.ui-datepicker .ui-datepicker-next span {
+  display: block;
+  position: absolute;
+  left: 50%;
+  margin-left: -8px;
+  top: 50%;
+  margin-top: -8px;
+}
+
+.ui-datepicker .ui-datepicker-title {
+  margin: 0 2.3em;
+  line-height: 1.8em;
+  text-align: center;
+}
+
+.ui-datepicker .ui-datepicker-title select {
+  font-size: 1em;
+  margin: 1px 0;
+}
+
+.ui-datepicker select.ui-datepicker-month {
+  width: 49%;
+}
+
+.ui-datepicker table {
+  width: 100%;
+  font-size: 0.9em;
+  border-collapse: collapse;
+  margin: 0 0 0.4em;
+}
+
+.ui-datepicker th {
+  padding: 0.7em 0.3em;
+  text-align: center;
+  font-weight: bold;
+  border: 0;
+}
+
+.ui-datepicker td {
+  border: 0;
+  padding: 1px;
+}
+
+.ui-datepicker td span,
+.ui-datepicker td a {
+  display: block;
+  padding: 0.2em;
+  text-align: right;
+  text-decoration: none;
+}
+
+.ui-datepicker .ui-datepicker-buttonpane {
+  background-image: none;
+  margin: 0.7em 0 0;
+  padding: 0 0.2em;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.ui-datepicker .ui-datepicker-buttonpane button {
+  float: right;
+  margin: 0.5em 0.2em 0.4em;
+  cursor: pointer;
+  padding: 0.2em 0.6em 0.3em;
+  width: auto;
+  overflow: visible;
+}
+
+.ui-datepicker .ui-datepicker-buttonpane button.ui-datepicker-current {
+  float: left;
+}
+
+/* Timepicker addon */
+
+.ui-timepicker-div .ui-widget-header {
+  margin-bottom: 8px;
+}
+
+.ui-timepicker-div dl {
+  text-align: left;
+}
+
+.ui-timepicker-div dl dt {
+  float: left;
+  clear: left;
+  padding: 0 0 0 5px;
+}
+
+.ui-timepicker-div dl dd {
+  margin: 0 10px 10px 40%;
+}
+
+/* Slider */
+
+.ui-slider {
+  position: relative;
+  text-align: left;
+}
+
+.ui-slider .ui-slider-handle {
+  position: absolute;
+  z-index: 2;
+  width: 1.2em;
+  height: 1.2em;
+  cursor: default;
+}
+
+.ui-slider .ui-slider-range {
+  position: absolute;
+  z-index: 1;
+  font-size: 0.7em;
+  display: block;
+  border: 0;
+  background-position: 0 0;
+}
+
+.ui-slider-horizontal {
+  height: 0.8em;
+}
+
+.ui-slider-horizontal .ui-slider-handle {
+  top: -0.3em;
+  margin-left: -0.6em;
+}
+
+.ui-slider-horizontal .ui-slider-range {
+  top: 0;
+  height: 100%;
+}
+
+.ui-slider-horizontal .ui-slider-range-min {
+  left: 0;
+}

@@ -103,8 +103,9 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
             // is gone too -- autogrow is a native port now (P49-B group
             // 1). datepicker.ts is fully native now too (P49-B), so no
             // more `jquery.ui.timepicker-addon` script dependency --
-            // `jquery-ui.css`/`jquery-ui-timepicker-addon.min.css` below
-            // stay for the native port's own reused class names.
+            // `jquery-ui.css` below (P52-K, now first-party, merged
+            // with the former timepicker-addon stylesheet) stays for
+            // the native port's own reused class names.
             AssetContribution::script('batch_manager_unit_page', 'themes/admin/default/js/pages/batch_manager_unit.ts', loadMode: LoadMode::Footer),
             ...new ColorboxView()
                 ->pageAssets(),
@@ -128,8 +129,7 @@ final readonly class BatchManagerUnitView implements View, HasPageAssets, Expose
             // BatchManagerGlobalView's own identical comment, confirmed
             // there via a real golden-html diff.
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
-            AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui'),
-            AssetContribution::css('https://cdn.jsdelivr.net/gh/trentrichardson/jQuery-Timepicker-Addon@v1.4.4/dist/jquery-ui-timepicker-addon.min.css'),
+            AssetContribution::css('themes/admin/default/css/components/jquery-ui.css', id: 'jquery.ui'),
             AssetContribution::script('batchManagerFilter', 'themes/admin/default/js/batch_manager/filter.ts', loadMode: LoadMode::Footer),
             AssetContribution::css('themes/admin/default/css/components/batch_manager_filter.css', id: 'batch_manager_filter'),
             // quick_search.latte's own contribution, reached via

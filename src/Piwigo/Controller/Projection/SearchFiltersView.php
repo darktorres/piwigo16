@@ -91,7 +91,7 @@ final readonly class SearchFiltersView implements View, HasPageAssets, ExposesPa
             // real: the native slider port renders the identical
             // `ui-slider`/`ui-slider-handle`/... class structure it
             // styles.
-            AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui', order: -999),
+            AssetContribution::css('themes/admin/default/css/components/jquery-ui.css', id: 'jquery.ui', order: -999),
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::css('themes/default/css/search.css', order: -100),

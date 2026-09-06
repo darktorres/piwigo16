@@ -84,11 +84,12 @@ final readonly class PictureModifyView implements View, HasPageAssets, ExposesPa
             // dependency is gone too -- autogrow is a native port now
             // (P49-B group 1). datepicker.ts is fully native now too
             // (P49-B), so no more `jquery.ui.timepicker-addon` script
-            // dependency -- `jquery-ui.css`/`jquery-ui-timepicker-addon.
-            // min.css` stay for the native port's own reused class names.
+            // dependency -- `jquery-ui.css` below (P52-K, now first-
+            // party, merged with the former timepicker-addon
+            // stylesheet) stays for the native port's own reused class
+            // names.
             AssetContribution::script('picture_modify_page', 'themes/admin/default/js/pages/picture_modify.ts', loadMode: LoadMode::Footer),
-            AssetContribution::css('https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/css/jquery-ui.css', id: 'jquery.ui'),
-            AssetContribution::css('https://cdn.jsdelivr.net/gh/trentrichardson/jQuery-Timepicker-Addon@v1.4.4/dist/jquery-ui-timepicker-addon.min.css'),
+            AssetContribution::css('themes/admin/default/css/components/jquery-ui.css', id: 'jquery.ui'),
             ...new ColorboxView()
                 ->pageAssets(),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),

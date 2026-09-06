@@ -5,7 +5,7 @@
    too (PageAssets::add()'s dedup makes that a harmless no-op). *}
 {include 'include/add_album.inc.latte', load_mode: 'async'}
 
-<div id="batchManagerGlobal">
+<div id="batchManagerGlobal" class="batch-manager-root">
   <form action="{$F_ACTION}" method="post">
     <input type="hidden" name="start" value="{$START}">
     <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">

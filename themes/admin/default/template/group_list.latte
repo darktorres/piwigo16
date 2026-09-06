@@ -4,7 +4,7 @@
 {define groupContent}
   <div
     id="group-{$grp_id}"
-    class="GroupContainer"
+    n:attr="class: ['GroupContainer', ($grp_is_template ?? false) ? 'GroupTemplatePlaceholder' : null]"
     data-id="{$grp_id}"
     {if $grp_is_default}
     data-default="1"
@@ -39,7 +39,7 @@
       <div
         class="icon-ellipsis-vert group-dropdown-options not-in-selection-mode"
       >
-        <div id="GroupOptions" class="dropdown">
+        <div id="GroupOptions" class="dropdown GroupOptionsDropdown">
           <div
             class="icon-docs dropdown-option"
             id="GroupDuplicate"
@@ -77,7 +77,7 @@
         </div>
       </div>
 
-      <div id="EditGroupName">
+      <div id="EditGroupName" class="EditGroupNamePanel">
         <input
           class="input-edit-group-name"
           type="text"
@@ -138,7 +138,7 @@
       >{='Delete'|translate}</button>
     </div>
 
-    <div id="MergeOptionsBlock">
+    <div id="MergeOptionsBlock" class="MergeOptionsPanel">
       <p>{='Choose which group to merge these groups into'|translate}</p>
       <p
         class="ItalicTextInfo"
@@ -156,7 +156,7 @@
       >{='Cancel'|translate}</a>
     </div>
 
-    <div id="ConfirmGroupAction">
+    <div id="ConfirmGroupAction" class="ConfirmGroupActionPanel">
       <p>{='You are about to delete %s groups, are you sure?'|translate:'<span class="number-Selected">0</span>'|rawHtml}</p>
       <button
         class="icon-ok ConfirmDeleteButton"
@@ -171,11 +171,11 @@
 
 <div class="group-manager">
   <div class="groups">
-    <div id="addGroupForm" class="GroupContainer">
+    <div id="addGroupForm" class="GroupContainer AddGroupFormContainer">
       <div class="groupError icon-cancel"></div>
       <div class="addGroupBlock">
         <div class="icon-plus-circled icon-blue icon-blue-full"></div>
-        <p id="addGroup">{='Add group'|translate}</p>
+        <p id="addGroup" class="addGroupTitle">{='Add group'|translate}</p>
       </div>
       <form>
         <fieldset>
@@ -187,6 +187,7 @@
             <input
               type="text"
               id="addGroupNameInput"
+              class="addGroupNameField"
               name="groupname"
               maxlength="50"
               size="20"
@@ -206,7 +207,7 @@
     </div>
 
     {* Template Group (for js application) *}
-    {include groupContent, grp_id: "template", grp_name: "Template", grp_members: 0, grp_is_default: false}
+    {include groupContent, grp_id: "template", grp_name: "Template", grp_members: 0, grp_is_default: false, grp_is_template: true}
 
     {var $color_tab = ["icon-red", "icon-blue", "icon-yellow", "icon-purple", "icon-green"]}
 

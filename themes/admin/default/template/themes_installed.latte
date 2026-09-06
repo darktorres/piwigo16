@@ -1,6 +1,6 @@
 {templateType Piwigo\Admin\Projection\ThemesInstalledView}
 
-<div id="themesContent">
+<div id="themesContent" class="themesContent">
   {var $field_name = 'null'} {* <!-- 'counter' for fieldset management --> *}
   {foreach $tplThemes as $theme}
     {if $field_name !== $theme->state}

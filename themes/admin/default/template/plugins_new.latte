@@ -38,7 +38,7 @@
         class="advanced-filter-btn icon-filter"
       > <span>{='Filters'|translate}</span></div>
 
-      <div id="search-plugin">
+      <div id="search-plugin" class="search-plugin">
         <span class="icon-search search-icon"></span>
         <span class="icon-cancel search-cancel"></span>
         <input
@@ -133,7 +133,7 @@
 </div>
 
 {if $plugins !== []}
-  <div id="availablePlugins">
+  <div id="availablePlugins" class="availablePlugins">
     {var $color_tab = ["icon-red", "icon-blue", "icon-yellow", "icon-purple", "icon-green"]}
 
     <div

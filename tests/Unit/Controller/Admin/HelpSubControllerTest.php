@@ -123,7 +123,6 @@ test('handle() delegates to HelpPageRenderer::render() and defaults to the add_p
             CurrentUserTestFactory::get(),
             CurrentTemplateTestFactory::get(),
             new Renderer(CurrentTemplateTestFactory::get()),
-            $currentConfig,
         );
 
         $result = $subController->handle(new ServerRequest('GET', '/admin.php'));

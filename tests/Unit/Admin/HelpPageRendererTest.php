@@ -122,7 +122,7 @@ test('render() shows the English documentation message for an en_ user and defau
         ));
 
         $result = new HelpPageRenderer()
-            ->render(LangTestFactory::get(), helpPageTestAccessControl(), UrlServiceTestFactory::build(), $coreTabs, $eventDispatcher, $pageState, $currentUser, CurrentTemplateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()), $currentConfig);
+            ->render(LangTestFactory::get(), helpPageTestAccessControl(), UrlServiceTestFactory::build(), $coreTabs, $eventDispatcher, $pageState, $currentUser, CurrentTemplateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get()));
 
         $adminContent = $result->content;
 

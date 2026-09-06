@@ -7,8 +7,8 @@
   <p>{='Selection mode'|translate}</p>
 </div>
 
-<div id="user-table">
-  <div id="user-table-content">
+<div id="user-table" class="user-list-panel">
+  <div id="user-table-content" class="user-table-body">
     <div class="user-manager-header">
       <div class="UserViewSelector">
         <input
@@ -62,7 +62,7 @@
               <p>{='Edit guest user'|translate}</p>
             </label>
           </div>
-          <div id="AddUserSuccess">
+          <div id="AddUserSuccess" class="AddUserSuccessBanner">
             <label class="icon-ok">
               <span>{='New user added'|translate}</span><span
                 class="icon-pencil edit-now"
@@ -91,7 +91,7 @@
       <span>{='Filters'|translate}</span>
       <span class="filter-counter"></span>
     </div>
-    <div id='search-user'>
+    <div id='search-user' class='user-search-panel'>
       <div class='search-info'></div>
       {*This input (#user_search2) is used to bait the chrome autocomplete tool. It is hidden in navigator and is not meant to be seen.*}
       <input
@@ -107,7 +107,7 @@
       <input
         autocomplete="one-time-code"
         id="user_search"
-        class='search-input'
+        class='search-input user-search-input'
         type='text'
         placeholder='{='Search'|translate}'
         {if isset($searchInput)}
@@ -222,9 +222,9 @@
       <div class="user-header-col user-header-initials no-flex-grow"></div>
       <!-- username -->
       <div class="user-header-col user-header-username">
-        <span id="usr-list-user">{='Username'|translate} <span
+        <span id="usr-list-user" class="sortable-username-header">{='Username'|translate} <span
             id="icon-usr-list-user"
-            class="icon-up u-hidden"
+            class="icon-up u-hidden username-sort-icon"
           ></span></span>
       </div>
       <!-- status -->
@@ -241,9 +241,9 @@
       </div> *}
       <!-- registration date -->
       <div class="user-header-col user-header-registration">
-        <span id="usr-list-registered">{='Registered'|translate} <span
+        <span id="usr-list-registered" class="sortable-registration-header">{='Registered'|translate} <span
             id="icon-usr-list-registered"
-            class="icon-up"
+            class="icon-up registration-sort-icon"
           ></span></span>
       </div>
       <!-- groups -->
@@ -275,20 +275,21 @@
       </div>
     </div>
   </div>
-  <div id="selection-mode-block" class="in-selection-mode tag-selection">
+  <div id="selection-mode-block" class="in-selection-mode tag-selection user-selection-panel">
     <div class="user-selection-content">
       <div class="selection-mode-ul">
         <p>{='Your selection'|translate}</p>
         <div class="user-selected-list"></div>
         <div class="selection-other-users"></div>
       </div>
-      <fieldset id="action">
+      <fieldset id="action" class="user-action-fieldset">
         <legend>{='Action'|translate}</legend>
 
         <div
           id="forbidAction"
+          class="user-forbid-action"
         >{='No users selected, no actions possible.'|translate}</div>
-        <div id="permitActionUserList">
+        <div id="permitActionUserList" class="user-permit-action">
           <div class="user-action-select-container">
             <select class="user-action-select" name="selectAction">
               <option value="-1">{='Choose an action'|translate}</option>
@@ -518,14 +519,14 @@
             </span>
           </div>
 
-          <p id="applyActionBlock" class="actionButtons u-hidden">
+          <p id="applyActionBlock" class="actionButtons u-hidden user-apply-action-block">
             <input
               id="applyAction"
               class="submit"
               type="submit"
               value="{='Apply action'|translate}"
               name="submit"
-            > <span id="applyOnDetails"></span>
+            > <span id="applyOnDetails" class="user-apply-on-details"></span>
             <span id="applyActionLoading" class="u-hidden"><img
                 src="themes/default/images/ajax-loader-small.gif"
               ></span>
@@ -541,7 +542,7 @@
 </div>
 
 <!-- User container template -->
-<div id="template">
+<div id="template" class="user-row-template">
   <div class="user-container">
     <!-- edit-v1 -->
     <div
@@ -602,7 +603,7 @@
   </div>
 </div>
 
-<div id="UserList" class="UserListPopIn">
+<div id="UserList" class="UserListPopIn EditUserPopIn">
   <div class="UserListPopInContainer">
     <a class="icon-cancel CloseUserList"></a>
     <div class="summary-properties-update-container">
@@ -686,7 +687,7 @@
           </div>
           <div class="edit-user-slides">
             <!-- Pop in tabs 1 Properties -->
-            <div class="properties-container" id="tab_properties">
+            <div class="properties-container user-tab-properties" id="tab_properties">
               <div class="user-property-email">
                 <p class="user-property-label">{='Email Adress'|translate}</p>
                 <input
@@ -967,10 +968,10 @@
       </div>
 
       <div
-        class="edit-password-success u-hidden"
+        class="edit-password-success u-hidden password-email-result"
         id="edit_password_result_mail"
       >
-        <div class="update-password-success icon-green" id="result_send_mail">
+        <div class="update-password-success icon-green password-mail-sent-status" id="result_send_mail">
           <span class="icon-ok" id="icon_password_msg_result_mail"></span>
           <span id="password_msg_result_mail">text</span>
         </div>
@@ -981,7 +982,7 @@
       </div>
 
       <div
-        class="edit-password-success u-hidden"
+        class="edit-password-success u-hidden password-copy-result-panel"
         id="edit_password_result_mail_copy"
       >
         <div class="edit-password-success-reset-link">
@@ -992,7 +993,7 @@
           <span class="icon-docs" id="result_send_mail_copy_btn"></span>
         </div>
         <div
-          class="update-password-success icon-green"
+          class="update-password-success icon-green password-mail-copy-status"
           id="result_send_mail_copy"
         >
           <span class="icon-ok" id="result_send_mail_copy_icon"></span>
@@ -1071,10 +1072,10 @@
   </div>
 </div>
 
-<div id="GuestUserList" class="UserListPopIn">
+<div id="GuestUserList" class="UserListPopIn GuestUserPopIn">
   <div class="GuestUserListPopInContainer">
     <a class="icon-cancel CloseUserList CloseGuestUserList"></a>
-    <div id="guest-msg" class="messages">
+    <div id="guest-msg" class="messages guest-user-message">
       <span class="eiw-icon icon-info-circled-1"></span>
       <span>{='Users not logged in will have these settings applied, these settings are used by default for new users'|translate}</span>
     </div>
@@ -1295,7 +1296,7 @@
   </div>
 </div>
 
-<div id="AddUser" class="UserListPopIn">
+<div id="AddUser" class="UserListPopIn AddUserPopIn">
   <div class="AddUserPopInContainer">
     <a class="icon-cancel CloseUserList CloseAddUser"></a>
     <div class="AddUserScrollableContent">
@@ -1306,7 +1307,7 @@
         <span>{='Add a new user'|translate}</span>
       </div>
 
-      <div id="AddUserFieldContainer">
+      <div id="AddUserFieldContainer" class="AddUserFields">
         <div class="AddUserInputContainer">
           <label
             class="user-property-label AddUserLabelUsername"
@@ -1355,7 +1356,7 @@
           </div>
         </div>
 
-        <div id="add_user_password" class="u-hidden">
+        <div id="add_user_password" class="u-hidden AddUserPasswordBlock">
           <div class="AddUserGenPassword">
             <label
               for="add_user_pass"
@@ -1446,7 +1447,7 @@
         </div>
       </div>
 
-      <div id="AddUserSuccessContainer" class="u-hidden">
+      <div id="AddUserSuccessContainer" class="u-hidden AddUserSuccessPanel">
         <p
           class="icon-green border-green icon-ok AddUserResult"
           id="AddUserUpdated"

@@ -43,6 +43,11 @@
 #     correction ("visual tests are always supposed to run in full to
 #     keep determinism") -- even accepting one already-diagnosed,
 #     known-good diff must go through a full, unfiltered run.
+#   - piping a test-running command (composer test*/analyse or
+#     vendor/bin/pest/phpstan/psalm/ecs) straight into `head`/`tail`:
+#     user instruction ("tests should always be redirected to files") --
+#     redirect to a file (`> /tmp/foo.log 2>&1`) and read it back
+#     instead, so nothing from a long run is silently lost off-screen.
 #
 # SOFT WARNINGS (allowed through, with context injected back for the
 # model to weigh -- these have legitimate exceptions the memory itself
@@ -147,6 +152,71 @@ segments() {
         }
     '
 }
+
+# Same quote/heredoc-aware splitting as segments(), but stopping only at
+# `;`/`&&`/`||` -- a single `|` is deliberately NOT a boundary here, since
+# this is the one check that needs to see a whole pipeline (test command
+# on one end, `head`/`tail` on the other) intact rather than torn apart.
+pipeline_segments() {
+    printf '%s\n' "$cmd" | awk '
+        BEGIN { SQ = sprintf("%c", 39) }
+        heredoc != "" {
+            if ($0 == heredoc) heredoc = ""
+            next
+        }
+        {
+            line = $0
+            tagre = "<<-?[ \t]*[\"" SQ "]?[A-Za-z_][A-Za-z0-9_]*[\"" SQ "]?"
+            if (match(line, tagre)) {
+                tag = substr(line, RSTART, RLENGTH)
+                sub("^<<-?[ \t]*", "", tag)
+                gsub("[\"" SQ "]", "", tag)
+                heredoc = tag
+                line = substr(line, 1, RSTART - 1)
+            }
+            n = length(line); out = ""; q = ""
+            for (i = 1; i <= n; i++) {
+                c = substr(line, i, 1)
+                if (q != "") { out = out c; if (c == q) q = ""; continue }
+                if (c == "\"" || c == SQ) { q = c; out = out c; continue }
+                if (c == ";") { print out; out = ""; continue }
+                if (c == "|" && substr(line, i + 1, 1) == "|") {
+                    i++; print out; out = ""; continue
+                }
+                if (c == "&" && substr(line, i + 1, 1) == "&") {
+                    i++; print out; out = ""; continue
+                }
+                out = out c
+            }
+            print out
+        }
+    '
+}
+
+while IFS= read -r pline; do
+    [ -z "$pline" ] && continue
+    ptrimmed=$(printf '%s' "$pline" | sed -E 's/^[[:space:]]+//')
+
+    # Split into pipeline stages on a bare `|` (already `||`-free courtesy of
+    # pipeline_segments()). Only the FIRST stage's own leading word is
+    # checked against the test-command pattern -- matching anywhere in the
+    # pipeline text would also catch the tool name as a plain grep argument
+    # (e.g. `grep -n "composer test:browser" docs/PLAN.md | tail -3`), a
+    # confirmed false positive the same way the header comment above
+    # already documents for the `|`-anchored checks.
+    IFS='|' read -ra pstages <<< "$ptrimmed"
+    [ "${#pstages[@]}" -lt 2 ] && continue
+
+    first_stage=$(printf '%s' "${pstages[0]}" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')
+    if printf '%s' "$first_stage" | grep -qE '^(\./)?(vendor/bin/(pest|phpstan|psalm|ecs)|composer[[:space:]]+(test|analyse)(:[A-Za-z-]+)?)([[:space:]]|$)'; then
+        for ((si = 1; si < ${#pstages[@]}; si++)); do
+            later_stage=$(printf '%s' "${pstages[$si]}" | sed -E 's/^[[:space:]]+//')
+            if printf '%s' "$later_stage" | grep -qE '^(head|tail)([[:space:]]|$)'; then
+                block "piping a test-running command (composer test*/analyse, or a raw vendor/bin/pest/phpstan/psalm/ecs) straight into head/tail. Tests should always be redirected to a file instead ('> /tmp/foo.log 2>&1'), then read back with the Read tool or a separate grep/tail on the file -- piping the live stream into head/tail can silently cut off the real pass/fail summary or later output, and leaves nothing to recheck beyond what was originally captured."
+            fi
+        done
+    fi
+done < <(pipeline_segments)
 
 while IFS= read -r seg; do
     [ -z "$seg" ] && continue

@@ -1,7 +1,7 @@
 {templateType Piwigo\Admin\Projection\AddAlbumView}
 
 <div class="add-album-popin-wrap">
-  <div id="addAlbumForm">
+  <div id="addAlbumForm" class="addAlbumFormWrap">
     <form>
       <div class="popinField addAlbumFormParent">
         <span class="popinFieldLabel">{='Parent album'|translate}</span>
@@ -13,6 +13,7 @@
         <input name="category_name" type="text" maxlength="255">
         <span
           id="categoryNameError"
+          class="categoryNameErrorMessage"
         >{='The name of an album must not be empty'|translate}</span>
       </div>
 
@@ -22,7 +23,7 @@
           value="{='Create'|translate}"
           class="albumCreationButton"
         >
-        <span id="albumCreationLoading"><span
+        <span id="albumCreationLoading" class="albumCreationIndicator"><span
             class="icon-spin6 animate-spin"
           ></span></span>
       </div>

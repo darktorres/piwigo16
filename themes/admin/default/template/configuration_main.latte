@@ -1,7 +1,7 @@
 {templateType Piwigo\Controller\Admin\Projection\ConfigurationMainView}
 
 <form method="post" action="{$fAction}" class="properties">
-  <div id="configContent">
+  <div id="configContent" class="config-content">
     <fieldset class="mainConf">
       <legend><span
           class="icon-cog icon-purple"
@@ -32,7 +32,7 @@
           >{$main->confPageBanner}</textarea>
         </li>
 
-        <li id="order_filters">
+        <li id="order_filters" class="order-filters">
           <label>{='Default photos order'|translate}</label>
 
           <span n:foreach="$main->orderBy as $order" class="filter">

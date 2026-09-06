@@ -5,7 +5,7 @@
   class="properties"
   enctype="multipart/form-data"
 >
-  <div id="configContent">
+  <div id="configContent" class="config-content">
     <fieldset id="watermarkConf" class="no-border">
       <legend></legend>
       <ul>
@@ -27,12 +27,12 @@
               class="addWatermarkOpen"
             >{='add a new watermark'|translate}</a>
             <br>
-            <img id="wImg">
+            <img id="wImg" class="watermark-preview">
           </span>
 
           <span
             id="addWatermark"
-            class="{if $ferrors?->watermarkImage !== null}u-inline{/if}"
+            class="watermark-add-panel{if $ferrors?->watermarkImage !== null} u-inline{/if}"
           >
             {='add a new watermark'|translate} {='... or '|translate}<a
               href="#"
@@ -104,7 +104,7 @@
         <li>
           <label>{='Position'|translate}</label>
           <br>
-          <div id="watermarkPositionBox">
+          <div id="watermarkPositionBox" class="watermark-position-box">
             <label
               class="right font-checkbox"
             >{='top right corner'|translate} <span
@@ -172,7 +172,7 @@
               {/if}
             > {='custom'|translate}</label>
 
-          <div id="positionCustomDetails">
+          <div id="positionCustomDetails" class="custom-position-details">
             <label>{='X Position'|translate}
               <input
                 size="3"

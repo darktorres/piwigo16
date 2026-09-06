@@ -1,6 +1,6 @@
 {templateType Piwigo\Controller\Admin\Projection\ConfigurationCommentsView}
 <form method="post" action="{$fAction}" class="properties">
-  <div id="configContent">
+  <div id="configContent" class="config-content">
     <fieldset id="commentsConf" class="no-border">
       <ul>
         <li>
@@ -145,7 +145,7 @@
           </label>
         </li>
 
-        <li id="notifyAdmin">
+        <li id="notifyAdmin" class="notify-admin-options">
           <strong>{='Notify administrators when a comment is'|translate}</strong>
 
           <label

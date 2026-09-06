@@ -196,9 +196,21 @@ it('moves an existing selection by dragging inside it, then resizes it via a cor
     expect($coords['l'])->toBe(0.25);
     expect($coords['t'])->toBe(0.2);
     // SE corner: (120,80) drawn, +(30,10) moved to (150,90), +(20,20)
-    // resized to (170,110) -- 170/200 and 110/150.
-    expect($coords['r'])->toBe(0.85);
-    expect($coords['b'])->toBe(0.7333333333333333);
+    // dragged out to (170,110) -- but the drag itself starts from the SE
+    // *handle's own rendered center*, not the mathematical (150,90)
+    // corner: under this project's global `box-sizing: border-box`
+    // reset (`themes/default/css/reset.css`), a `width: 7px` handle
+    // with `right: 0; margin-right: -4px` (unchanged from the real
+    // vendor CSS) renders with its true center 0.5px past the corner on
+    // both axes -- confirmed empirically via the handle's own
+    // `getBoundingClientRect()`. That extra 0.5px carries through the
+    // drag and `jcrop.ts`'s own `Math.round()` (`rebound()`) rounds
+    // *up* on the exact tie, landing on (171,111) -- 171/200 and
+    // 111/150 -- instead of the naively-expected (170,110). Not a
+    // regression: any real mouse drag centered on the visible handle
+    // lands here too, this only matters for a pixel-exact scripted test.
+    expect($coords['r'])->toBe(0.855);
+    expect($coords['b'])->toBe(0.74);
 
     $page->assertNoJavaScriptErrors();
     H::assertNoServerErrors($page, 'jcrop move then resize');

@@ -1,0 +1,177 @@
+/**
+ * First-party port of plupload's own queue-widget stylesheet
+ * (`jquery.plupload.queue.css` @2.1.2,
+ * https://cdn.jsdelivr.net/gh/moxiecode/plupload@v2.1.2/js/jquery.plupload.queue/css/jquery.plupload.queue.css).
+ * Scoped to exactly the classes `themes/default/js/vendor/utils/uploadQueue.ts`
+ * (the native port `photosAddDirect.ts` -- the only real consumer --
+ * actually builds; see that file's own extensive header for the full
+ * real-vs-dead rationale this port leans on directly) creates.
+ *
+ * Dropped entirely (dead weight -- confirmed via `uploadQueue.ts`'s own
+ * header docblock plus a direct read of its real `render()`/`buildDom()`
+ * DOM-construction code):
+ *   - `.plupload_button`/`.plupload_disabled`/`.plupload_add` -- the
+ *     browse button is a real, pre-existing first-party element
+ *     (`document.getElementById(settings.browse_button)`), proxied via
+ *     a plain `.click()` on a hidden `<input type="file">`; no element
+ *     ever gets plupload's own button classes.
+ *   - `.plupload_header`/`.plupload_header_content`/`.plupload_header_title`/
+ *     `.plupload_header_text`, `.plupload_filelist_header`,
+ *     `.plupload_progress`/`.plupload_progress_container`/
+ *     `.plupload_progress_bar`/`.plupload_upload_status` -- none of
+ *     this markup is ever built; `startTusUploads()` replaces
+ *     plupload's own upload/progress state machine entirely (real
+ *     source: `uploadQueue.ts`'s own header).
+ *   - `.plupload_container input` -- the real file `<input>` is a
+ *     sibling of `.plupload_container`, not a descendant.
+ *   - `.plupload_wrapper * { box-sizing: content-box; }` -- like the
+ *     `colorbox` port's own identical drop, nothing in `uploadQueue.ts`
+ *     does box-sizing-sensitive pixel math (no `outerWidth()`/
+ *     `getBoundingClientRect()` call anywhere in it), so reverting to
+ *     content-box here would only fight this project's own global
+ *     border-box reset for no benefit.
+ *   - the `.plupload_scroll ... .plupload_filelist_header ...` half of
+ *     its own comma-selector (the footer half is real and kept).
+ *
+ * `.plupload_wrapper`'s own `font: normal 11px Verdana,sans-serif` is
+ * dropped for the same reason as the `jquery-ui` port's own identical
+ * drop -- letting this theme's real inherited `"Open Sans", ...` stack
+ * apply instead of re-asserting a stale fallback.
+ *
+ * Step 0 (real, pre-existing first-party overrides across all 3 admin
+ * skins, audited before writing this file): all 3 already carry an
+ * extensive, `!important`-heavy re-skin of this exact real surface --
+ * `default`/`roma`/`clear`'s own `theme.css` each restyle
+ * `.plupload_filelist`/`.plupload_filelist_footer`/`li.plupload_delete a`
+ * colors, and `default` unconditionally hides `.plupload_filelist_footer`
+ * (`roma`/`clear` do not -- a real, pre-existing per-skin difference,
+ * not something this port changes). All of it continues to apply on
+ * top of this file via ordinary cascade; nothing below raises
+ * specificity or reorders to fight it. Two real, per-skin-vendored SVG
+ * icons already fully replace the vendor's own `delete.gif` for the
+ * one interactive state that matters (`li.plupload_delete a`, via
+ * `!important`) in `default`/`roma`/`clear` alike -- `delete.gif`
+ * itself stays vendored here only as the literal fallback this file's
+ * own unoverridden base rule still points at, faithful to the real,
+ * currently-live CDN behavior.
+ */
+
+.plupload_wrapper {
+  width: 100%;
+}
+
+.plupload_container {
+  padding: 8px;
+  background: url("../../images/plupload/transp50.png");
+}
+
+.plupload_filelist {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plupload_scroll .plupload_filelist {
+  height: 185px;
+  background: #f5f5f5;
+  overflow-y: scroll;
+}
+
+.plupload_filelist li {
+  padding: 10px 8px;
+  background: #f5f5f5 url("../../images/plupload/backgrounds.gif") repeat-x 0
+    -156px;
+  border-bottom: 1px solid #ddd;
+}
+
+.plupload_filelist_footer {
+  background: #dfdfdf;
+  padding: 8px;
+  color: #42454a;
+}
+
+.plupload_file_name {
+  float: left;
+  overflow: hidden;
+}
+
+.plupload_file_status {
+  color: #777;
+}
+
+.plupload_file_status span {
+  color: #42454a;
+}
+
+.plupload_file_size,
+.plupload_file_status {
+  float: right;
+  width: 80px;
+}
+
+.plupload_file_size,
+.plupload_file_status,
+.plupload_file_action {
+  text-align: right;
+}
+
+.plupload_filelist .plupload_file_name {
+  width: 205px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.plupload_file_action {
+  float: right;
+  width: 16px;
+  height: 16px;
+  margin-left: 15px;
+}
+
+.plupload_file_action * {
+  display: none;
+  width: 16px;
+  height: 16px;
+}
+
+li.plupload_uploading {
+  background: #ecf3dc url("../../images/plupload/backgrounds.gif") repeat-x 0
+    -238px;
+}
+
+li.plupload_done {
+  color: #aaa;
+}
+
+li.plupload_delete a {
+  background: url("../../images/plupload/delete.gif");
+}
+
+li.plupload_failed a {
+  background: url("../../images/plupload/error.gif");
+  cursor: default;
+}
+
+li.plupload_done a {
+  background: url("../../images/plupload/done.gif");
+  cursor: default;
+}
+
+.plupload_scroll .plupload_filelist_footer .plupload_file_action {
+  margin-right: 17px;
+}
+
+.plupload_clearer {
+  clear: both;
+  display: block;
+  font-size: 0;
+  line-height: 0;
+}
+
+li.plupload_droptext {
+  background: transparent;
+  text-align: center;
+  vertical-align: middle;
+  border: 0;
+  line-height: 165px;
+}

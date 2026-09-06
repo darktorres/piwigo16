@@ -92,7 +92,7 @@ final readonly class PhotosAddDirectView implements View, HasPageAssets, Exposes
     {
         $assets = [
             AssetContribution::css('themes/admin/default/css/components/jconfirm.css'),
-            AssetContribution::css('https://cdn.jsdelivr.net/gh/moxiecode/plupload@v2.1.2/js/jquery.plupload.queue/css/jquery.plupload.queue.css'),
+            AssetContribution::css('themes/admin/default/css/components/plupload.css'),
             ...new ColorboxView()
                 ->pageAssets(),
         ];

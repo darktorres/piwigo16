@@ -40,7 +40,7 @@ final readonly class LanguagesInstalledView implements View, HasPageAssets, Expo
     public function pageAssets(): array
     {
         return [
-            AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
+            AssetContribution::css('themes/admin/default/css/components/jconfirm.css'),
             AssetContribution::script('languages_installed', 'themes/admin/default/js/languages/installed.ts', loadMode: LoadMode::Footer),
         ];
     }

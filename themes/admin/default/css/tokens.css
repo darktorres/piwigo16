@@ -144,12 +144,23 @@
     --color-surface-subtle: light-dark(oklch(98.51% 0 0), oklch(98.51% 0 0));
     --color-surface-muted: light-dark(oklch(96.42% 0 0), oklch(96.42% 0 0));
 
-    /* Status -- #00aa00 (10) success, #ff2222 (7) danger. The
-       lower-frequency #e74c3c/#c0392b flat-design-red cluster is a
-       materially different shade, not folded in here -- left for the
-       later sweep to judge with real selector context. */
+    /* Status -- #00aa00 (10) success, #ff2222 (7) danger. */
     --color-success: light-dark(oklch(63.94% 0.2176 142.5), oklch(63.94% 0.2176 142.5));
     --color-danger: light-dark(oklch(63.82% 0.2473 28.04), oklch(63.82% 0.2473 28.04));
+
+    /* P52-K: the #e74c3c/#c0392b flat-design-red cluster is a real,
+       materially different shade from --color-danger (chroma differs
+       ~21%: 0.194 vs 0.247) -- given its own sibling token rather than
+       folded in, per the note above this once judged with real
+       selector context (jconfirm's "red" dialog type). --color-warning
+       and --color-info are genuine semantic gaps (no existing
+       orange/blue status role); --color-backdrop is a full-viewport
+       modal-scrim color, distinct in role from any existing
+       text/surface token. */
+    --color-danger-flat: light-dark(oklch(63.07% 0.1940 29.44), oklch(63.07% 0.1940 29.44));
+    --color-warning: light-dark(oklch(83.58% 0.1690 91.77), oklch(83.58% 0.1690 91.77));
+    --color-info: light-dark(oklch(65.20% 0.1901 253.21), oklch(65.20% 0.1901 253.21));
+    --color-backdrop: light-dark(oklch(59.25% 0.0309 248.35), oklch(59.25% 0.0309 248.35));
 
     /* Scale values */
     --z-dropdown: 1000;

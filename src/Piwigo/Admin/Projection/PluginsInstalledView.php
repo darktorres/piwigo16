@@ -50,7 +50,7 @@ final readonly class PluginsInstalledView implements View, HasPageAssets, Expose
     public function pageAssets(): array
     {
         return [
-            AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
+            AssetContribution::css('themes/admin/default/css/components/jconfirm.css'),
             // Real per-page bundle entry (docs/PLAN.md's P48) -- folds
             // plugins/installedConfig.ts/plugins/installed.ts's code
             // in via real imports instead of the 2 separate script

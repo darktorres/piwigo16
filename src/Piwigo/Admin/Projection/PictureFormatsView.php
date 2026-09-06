@@ -46,7 +46,7 @@ final readonly class PictureFormatsView implements View, HasPageAssets, ExposesP
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::css('themes/admin/default/css/pages/picture_formats.css', id: 'picture_formats'),
             AssetContribution::script('picture_formats', 'themes/admin/default/js/pictureFormats.ts', loadMode: LoadMode::Footer),
-            AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
+            AssetContribution::css('themes/admin/default/css/components/jconfirm.css'),
         ];
     }
 

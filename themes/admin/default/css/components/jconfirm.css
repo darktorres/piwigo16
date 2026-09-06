@@ -1,0 +1,400 @@
+/**
+ * First-party port of jquery-confirm v3.3.4's dist CSS
+ * (https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css),
+ * scoped to exactly what `themes/default/js/vendor/widgets/jconfirm.ts`
+ * (the real TS port of `$.confirm`/`$.alert`) renders: a single fixed
+ * "modern" theme, "zoom" open / "scale" close animation, and only the
+ * `default`/`red`/`orange` `type` values and `btn-default`/`btn-red`
+ * button classes any real call site in this app ever sets. Every other
+ * theme (`white`/`light`/`black`/`dark`/`supervan`/`material`/
+ * `bootstrap`), RTL support, drag-to-reposition, the shake/glow hilight
+ * effects, and the unused `blue`/`green`/`purple`/`dark` type/button
+ * colors are dropped -- none of them are ever reachable through the
+ * port. New tokens this file introduces (declared in tokens.css):
+ * `--color-danger-flat`, `--color-warning`, `--color-info`,
+ * `--color-backdrop`.
+ */
+
+@keyframes jconfirm-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes type-red {
+  1%, 100% {
+    border-color: var(--color-danger-flat);
+  }
+  50% {
+    border-color: color-mix(in oklch, var(--color-danger-flat) 80%, var(--color-white));
+  }
+}
+
+@keyframes type-orange {
+  1%, 100% {
+    border-color: var(--color-warning);
+  }
+  50% {
+    border-color: color-mix(in oklch, var(--color-warning) 80%, var(--color-white));
+  }
+}
+
+/* Real, load-bearing: `jconfirm.ts` reference-counts this class onto
+   `document.body` for as long as any dialog is open. */
+body[class*="jconfirm-no-scroll-"] {
+  overflow: hidden !important;
+}
+
+.jconfirm {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  font-family: inherit;
+  overflow: hidden;
+  perspective: 400px;
+}
+
+.jconfirm .jconfirm-bg {
+  position: fixed;
+  inset: 0;
+  transition: opacity 0.4s;
+}
+
+.jconfirm .jconfirm-bg.jconfirm-bg-h {
+  opacity: 0 !important;
+}
+
+/* display:table/table-row/table-cell -> flex: see
+   float_table_conversions in the scoping report. Vertical centering
+   moves to `align-items: center` on the scrollpane; `.jconfirm-row`
+   only needs to span the full width, and `.jconfirm-cell` needs no
+   rule at all any more. */
+.jconfirm .jconfirm-scrollpane {
+  perspective: 500px;
+  perspective-origin: center;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.jconfirm .jconfirm-row {
+  width: 100%;
+}
+
+.jconfirm .jconfirm-holder {
+  max-height: 100%;
+  padding: var(--space-7) 0;
+}
+
+.jconfirm .jconfirm-box-container {
+  transition: transform;
+}
+
+.jconfirm .jconfirm-box {
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  position: relative;
+  outline: 0;
+  padding: var(--space-4) var(--space-4) 0;
+  overflow: hidden;
+  margin-left: auto;
+  margin-right: auto;
+  opacity: 1;
+  transition-property: all;
+}
+
+.jconfirm .jconfirm-box.jconfirm-type-red {
+  border-top: solid 7px var(--color-danger-flat);
+  animation-name: type-red;
+}
+
+.jconfirm .jconfirm-box.jconfirm-type-orange {
+  border-top: solid 7px var(--color-warning);
+  animation-name: type-orange;
+}
+
+.jconfirm .jconfirm-box.jconfirm-type-red .jconfirm-title-c .jconfirm-icon-c {
+  color: var(--color-danger-flat) !important;
+}
+
+.jconfirm .jconfirm-box.jconfirm-type-orange .jconfirm-title-c .jconfirm-icon-c {
+  color: var(--color-warning) !important;
+}
+
+.jconfirm .jconfirm-box.loading {
+  height: 120px;
+}
+
+.jconfirm .jconfirm-box.loading::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  z-index: 1;
+}
+
+.jconfirm .jconfirm-box.loading::after {
+  /* height/width/margin-* are paired centering math (half of
+     height/width) -- kept as exact literals rather than tokenized so
+     the spinner stays centered on itself. */
+  opacity: 0.6;
+  content: "";
+  height: 30px;
+  width: 30px;
+  border: solid 3px transparent;
+  position: absolute;
+  left: 50%;
+  margin-left: -15px;
+  border-radius: 50%;
+  animation: jconfirm-spin 1s infinite linear;
+  border-bottom-color: var(--color-info);
+  top: 50%;
+  margin-top: -15px;
+  z-index: 2;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-closeIcon {
+  height: 20px;
+  width: 20px;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+  opacity: 0.6;
+  text-align: center;
+  font-size: 27px !important;
+  line-height: 14px !important;
+  display: none;
+  z-index: 1;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-closeIcon:empty {
+  display: none;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-closeIcon:hover {
+  opacity: 1;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-title-c {
+  display: block;
+  font-size: 22px;
+  line-height: 20px;
+  user-select: none;
+  cursor: default;
+  padding-bottom: var(--space-4);
+}
+
+.jconfirm .jconfirm-box div.jconfirm-title-c .jconfirm-icon-c {
+  font-size: inherit;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-title-c .jconfirm-icon-c i {
+  vertical-align: middle;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-title-c .jconfirm-icon-c:empty {
+  display: none;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-title-c .jconfirm-title {
+  user-select: none;
+  font-size: inherit;
+  font-family: inherit;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-title-c .jconfirm-title:empty {
+  display: none;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-content-pane {
+  margin-bottom: var(--space-4);
+  height: auto;
+  transition: height 0.4s ease-in;
+  display: inline-block;
+  width: 100%;
+  position: relative;
+  overflow: hidden auto;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-content-pane::-webkit-scrollbar {
+  width: 3px;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-content-pane::-webkit-scrollbar-track {
+  background: rgb(from var(--color-black) r g b / 0.1);
+}
+
+.jconfirm .jconfirm-box div.jconfirm-content-pane::-webkit-scrollbar-thumb {
+  background: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.jconfirm .jconfirm-box div.jconfirm-content-pane .jconfirm-content {
+  overflow: auto;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-content-pane .jconfirm-content img {
+  max-width: 100%;
+  height: auto;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-content-pane .jconfirm-content:empty {
+  display: none;
+}
+
+.jconfirm .jconfirm-box .jconfirm-buttons {
+  padding-bottom: var(--space-3);
+}
+
+.jconfirm .jconfirm-box .jconfirm-buttons > button {
+  margin-bottom: var(--space-1);
+  margin-left: 2px;
+  margin-right: 2px;
+}
+
+.jconfirm .jconfirm-box .jconfirm-buttons button {
+  display: inline-block;
+  /* 6px has no equally-close token (midway between --space-1/--space-2)
+     and sets this button's exact hit-target height -- kept literal. */
+  padding: 6px var(--space-3);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.4286;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  touch-action: manipulation;
+  cursor: pointer;
+  user-select: none;
+  border-radius: var(--radius-md);
+  min-height: 1em;
+  transition: opacity 0.1s ease, background-color 0.1s ease, color 0.1s ease,
+    box-shadow 0.1s ease, background 0.1s ease;
+  -webkit-tap-highlight-color: transparent;
+  border: 0;
+  background-image: none;
+}
+
+.jconfirm .jconfirm-box .jconfirm-buttons button.btn-red {
+  background-color: var(--color-danger-flat);
+  color: var(--color-white);
+  text-shadow: none;
+  transition: background 0.2s;
+}
+
+.jconfirm .jconfirm-box .jconfirm-buttons button.btn-red:hover {
+  background-color: color-mix(in oklch, var(--color-danger-flat) 86%, var(--color-black));
+  color: var(--color-white);
+}
+
+.jconfirm .jconfirm-box .jconfirm-buttons button.btn-default {
+  background-color: var(--color-surface-muted);
+  color: var(--color-black);
+  text-shadow: none;
+  transition: background 0.2s;
+}
+
+.jconfirm .jconfirm-box .jconfirm-buttons button.btn-default:hover {
+  background-color: color-mix(in oklch, var(--color-surface-muted) 85%, var(--color-black));
+  color: var(--color-black);
+}
+
+.jconfirm .jconfirm-clear {
+  clear: both;
+}
+
+/* --- "modern" theme (the only theme jconfirm.ts ever applies) --- */
+
+.jconfirm.jconfirm-modern .jconfirm-bg {
+  background-color: var(--color-backdrop);
+  opacity: 0.6;
+}
+
+.jconfirm.jconfirm-modern .jconfirm-box {
+  background-color: var(--color-white);
+  box-shadow:
+    0 7px 8px -4px rgb(from var(--color-black) r g b / 0.2),
+    0 13px 19px 2px rgb(from var(--color-black) r g b / 0.14),
+    0 5px 24px 4px rgb(from var(--color-black) r g b / 0.12);
+  padding: var(--space-6) var(--space-6) var(--space-4);
+}
+
+.jconfirm.jconfirm-modern .jconfirm-box div.jconfirm-closeIcon {
+  color: var(--color-text-primary);
+  top: var(--space-4);
+  right: var(--space-4);
+}
+
+.jconfirm.jconfirm-modern .jconfirm-box div.jconfirm-title-c {
+  color: var(--color-text-primary);
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: var(--space-2);
+}
+
+.jconfirm.jconfirm-modern .jconfirm-box div.jconfirm-title-c .jconfirm-icon-c {
+  transition: transform 0.5s;
+  transform: scale(0);
+  display: block;
+  margin-right: 0;
+  margin-left: 0;
+  margin-bottom: var(--space-2);
+  font-size: 69px;
+  color: var(--color-text-muted);
+}
+
+.jconfirm.jconfirm-modern .jconfirm-box div.jconfirm-content {
+  text-align: center;
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-5);
+}
+
+.jconfirm.jconfirm-modern .jconfirm-box .jconfirm-buttons {
+  text-align: center;
+}
+
+.jconfirm.jconfirm-modern .jconfirm-box .jconfirm-buttons button {
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: background 0.1s;
+  /* 10px/20px each sit exactly between two space tokens -- kept
+     literal to preserve this button's exact hit-target size. */
+  padding: 10px 20px;
+}
+
+.jconfirm.jconfirm-modern .jconfirm-box .jconfirm-buttons button + button {
+  margin-left: var(--space-1);
+}
+
+.jconfirm.jconfirm-modern.jconfirm-open .jconfirm-box .jconfirm-title-c .jconfirm-icon-c {
+  transform: scale(1);
+}
+
+/* --- open/close animation states (only "zoom"/"scale" are ever
+   toggled by jconfirm.ts -- every other animation name the original
+   library supports is dropped) --- */
+
+.jconfirm .jconfirm-box.jconfirm-animation-zoom,
+.jconfirm .jconfirm-box.jconfirm-animation-scale {
+  opacity: 0;
+}
+
+.jconfirm .jconfirm-box.jconfirm-animation-zoom {
+  transform: scale(1.2);
+}
+
+.jconfirm .jconfirm-box.jconfirm-animation-scale {
+  transform: scale(0.5);
+}

@@ -93,7 +93,7 @@ final readonly class PictureModifyView implements View, HasPageAssets, ExposesPa
                 ->pageAssets(),
             AssetContribution::css('themes/default/js/plugins/selectize.' . $this->colorscheme . '.css', id: 'jquery.selectize'),
             AssetContribution::css('themes/admin/default/css/pages/picture_modify.css', id: 'picture_modify'),
-            AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
+            AssetContribution::css('themes/admin/default/css/components/jconfirm.css'),
             AssetContribution::script('picture_modify', 'themes/admin/default/js/pictureModify.ts', loadMode: LoadMode::Footer),
             // order 10 is required, see issue 1080
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),

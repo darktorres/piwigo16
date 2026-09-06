@@ -63,7 +63,7 @@ final readonly class RatingUserView implements View, HasPageAssets, ExposesPageD
     {
         return [
             AssetContribution::css('themes/admin/default/css/pages/rating_user.css', id: 'rating_user'),
-            AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
+            AssetContribution::css('themes/admin/default/css/components/jconfirm.css'),
             // 'rating_user' folds scripts.ts's own code in via a real
             // direct import now (docs/PLAN.md P48) -- the separate
             // `core.scripts` registration this page used to carry is

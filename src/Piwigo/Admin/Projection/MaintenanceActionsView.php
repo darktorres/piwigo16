@@ -72,7 +72,7 @@ final readonly class MaintenanceActionsView implements View, HasPageAssets, Expo
     public function pageAssets(): array
     {
         return [
-            AssetContribution::css('https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css'),
+            AssetContribution::css('themes/admin/default/css/components/jconfirm.css'),
             // order: 10 is required, see issue 1080.
             AssetContribution::css('themes/admin/default/fontello/css/animation.css', order: 10),
             AssetContribution::css('themes/admin/default/css/pages/maintenance_actions.css', id: 'maintenance_actions'),

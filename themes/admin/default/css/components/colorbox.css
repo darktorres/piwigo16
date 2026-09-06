@@ -1,0 +1,195 @@
+/**
+ * First-party port of Colorbox's vendor stylesheet (`example2/colorbox.css`
+ * @1.5.14, https://cdn.jsdelivr.net/gh/jackmoore/colorbox@1.5.14/example2/colorbox.css).
+ * Scoped to exactly the ids/classes `themes/default/js/vendor/widgets/colorbox.ts`
+ * actually creates for its 8 real call sites -- see that file's own
+ * header for what real surface (photo/inline modes, `rel` grouping,
+ * next/prev/counter) survived porting.
+ *
+ * The prev/next/close button sprite and the loading spinner tile the
+ * real vendor `controls.png`/`loading.gif`, vendored unmodified at
+ * `../../images/colorbox/`, same `images/<component>/` convention
+ * `css/pages/rating_user.css`'s own `images/datatables/*.png` already
+ * establishes for this theme -- background-position offsets are the
+ * real vendor's own, unchanged, since the real sprite is unchanged.
+ *
+ * Dropped entirely (dead weight -- `colorbox.ts`'s own header confirms
+ * the `iframe`/`html`/`data` modes and slideshow are real, unreachable
+ * dead code no call site ever enables):
+ *   - `.cboxIframe` (both rules) -- iframe mode is never reached, no
+ *     element the port creates ever gets this class.
+ *   - `#cboxSlideshow` and the `.cboxSlideshow_on`/`.cboxSlideshow_off`
+ *     variants -- `slideshow` is a real, always-off default; the
+ *     button this styles is never created.
+ *   - `#colorbox, #cboxContent, #cboxLoadedContent{box-sizing:content-box; ...}`
+ *     -- a legacy defensive reset against page-author box-sizing
+ *     overrides. `dom.ts`'s own `width()`/`outerWidth()` (real source:
+ *     jQuery's `boxSizingReliable()`-derived box model) already
+ *     normalize against the *actual* computed `box-sizing`, border-box
+ *     or not, so this port's own layout math needs no such override --
+ *     confirmed via `colorbox.ts`'s real `outerWidth()`/`outerHeight()`
+ *     call sites, both box-sizing-agnostic. Reverting to content-box
+ *     here would only fight this project's own deliberate global
+ *     `box-sizing: border-box` reset (`themes/default/css/reset.css`)
+ *     for no functional benefit.
+ *   - `-ms-interpolation-mode:bicubic` (`.cboxPhoto`) -- an IE-only
+ *     bitmap-scaling hint, no engine in this project's floor reads it.
+ *   - `-webkit-overflow-scrolling: touch` (`#cboxLoadedContent`) --
+ *     momentum scrolling has been iOS Safari's unconditional default
+ *     since iOS 13, years before this project's Safari >= 17.5 floor;
+ *     the property is now a documented no-op.
+ *   - `filter: alpha(opacity = 90)` (`#cboxOverlay`) -- IE's own legacy
+ *     opacity syntax; the real `opacity: 0.9` in the same rule already
+ *     covers every target engine.
+ *
+ * `z-index: 9999` is kept as a literal, not mapped to this project's
+ * own `--z-*` scale (which tops out at `--z-tooltip: 1070`): the
+ * vendor's own intent is "always above literally everything, including
+ * any other overlay," which a same-tier reuse (e.g. `--z-modal`, used
+ * by the `jquery-confirm` port) would silently break should a confirm
+ * dialog and an open colorbox ever coexist.
+ *
+ * Physical (not logical) properties throughout, matching the `jcrop`
+ * port's own reasoning: `colorbox.ts` positions everything in absolute
+ * viewport-relative pixels, with no RTL-awareness added by the port or
+ * present in the original.
+ */
+
+#colorbox,
+#cboxOverlay,
+#cboxWrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+#cboxWrapper {
+  max-width: none;
+}
+
+#cboxOverlay {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background: var(--color-white);
+  opacity: 0.9;
+}
+
+#cboxMiddleLeft,
+#cboxBottomLeft {
+  clear: left;
+}
+
+#cboxContent {
+  position: relative;
+  margin-top: 32px;
+  overflow: visible;
+  background: var(--color-black);
+}
+
+#cboxLoadedContent {
+  overflow: auto;
+  background: var(--color-black);
+  padding: 1px;
+}
+
+#cboxTitle {
+  margin: 0;
+  position: absolute;
+  top: -22px;
+  left: 0;
+  color: var(--color-black);
+}
+
+#cboxLoadingOverlay,
+#cboxLoadingGraphic {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#cboxLoadingGraphic {
+  background: url("../../images/colorbox/loading.gif") no-repeat center
+    center;
+}
+
+#cboxLoadingOverlay {
+  background: var(--color-black);
+}
+
+#colorbox {
+  outline: 0;
+}
+
+#cboxError {
+  padding: 50px;
+  border: 1px solid var(--color-border);
+}
+
+#cboxCurrent {
+  position: absolute;
+  top: -22px;
+  right: 205px;
+  text-indent: -9999px;
+}
+
+.cboxPhoto {
+  float: left;
+  margin: auto;
+  border: 0;
+  display: block;
+  max-width: none;
+}
+
+#cboxPrevious,
+#cboxNext,
+#cboxClose {
+  cursor: pointer;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  text-indent: -9999px;
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  top: -20px;
+  background: url("../../images/colorbox/controls.png") no-repeat 0 0;
+}
+
+#cboxPrevious:active,
+#cboxNext:active,
+#cboxClose:active {
+  outline: 0;
+}
+
+#cboxPrevious {
+  background-position: 0 0;
+  right: 44px;
+}
+
+#cboxPrevious:hover {
+  background-position: 0 -25px;
+}
+
+#cboxNext {
+  background-position: -25px 0;
+  right: 22px;
+}
+
+#cboxNext:hover {
+  background-position: -25px -25px;
+}
+
+#cboxClose {
+  background-position: -50px 0;
+  right: 0;
+}
+
+#cboxClose:hover {
+  background-position: -50px -25px;
+}

@@ -55,11 +55,12 @@
 // has. The close fade (a plain opacity tween) has no such requirement
 // and goes through `dom.ts`'s own `fadeTo()`/`stop()` directly.
 //
-// CSS is unchanged (kept on the CDN, `ColorboxView`'s own `pageAssets()`)
-// -- every id/class this module creates (`#colorbox`, `#cboxOverlay`,
-// `#cboxContent`, `.cboxPhoto`, `cboxElement`, ...) matches the
-// original's own naming exactly so the existing stylesheet applies
-// without modification.
+// CSS is ported to first-party too (P52-K,
+// `themes/admin/default/css/components/colorbox.css`, `ColorboxView`'s
+// own `pageAssets()`) -- every id/class this module creates
+// (`#colorbox`, `#cboxOverlay`, `#cboxContent`, `.cboxPhoto`,
+// `cboxElement`, ...) matches the original's own naming exactly so
+// that ported stylesheet applies without modification.
 import { ajax } from "../utils/ajax";
 import {
   fadeTo,

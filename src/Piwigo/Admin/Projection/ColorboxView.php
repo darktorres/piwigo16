@@ -33,7 +33,7 @@ final readonly class ColorboxView implements View, HasPageAssets
     public function pageAssets(): array
     {
         return [
-            AssetContribution::css('https://cdn.jsdelivr.net/gh/jackmoore/colorbox@1.5.14/example2/colorbox.css', id: 'jquery.colorbox'),
+            AssetContribution::css('themes/admin/default/css/components/colorbox.css', id: 'jquery.colorbox'),
         ];
     }
 }

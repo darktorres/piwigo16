@@ -53,9 +53,9 @@
     id="theAdminPage"
     class="theAdminPage "
   >
-    <div id="the_page">
+    <div id="the_page" class="the-page">
 
-      <div id="pwgHead">
+      <div id="pwgHead" class="pwg-head">
         <a
           href="{{BASE_PATH}}/"
           class="visit-gallery tiptip"
@@ -63,7 +63,7 @@
         ><i class="icon-left-open"></i>Visit</a>
         <div class="pwgHead-gallery-title">Fixture Gallery</div>
 
-        <div id="headActions">
+        <div id="headActions" class="head-actions">
           <span class="admin-head-username"><i
               class="icon-user"
             ></i>fixture_admin</span>
@@ -85,9 +85,9 @@
       <div class="u-clear-both"></div>
 
 
-      <div id="pwgMain">
-<div id="menubar">
-  <div id="adminHome"><a href="admin.php" class="admin-main"><i
+      <div id="pwgMain" class="pwg-main">
+<div id="menubar" class="admin-menubar">
+  <div id="adminHome" class="admin-home"><a href="admin.php" class="admin-main"><i
           class="icon-television"
         ></i> Dashboard</a></div>
 
@@ -211,7 +211,7 @@
         class="admin-object-id"
       ></span></h1>
 
-  <div id="tabsheet">
+  <div id="tabsheet" class="tabsheet-wrapper">
   <ul class="tabsheet">
     <li
       class="selected_tab"
@@ -247,7 +247,7 @@
   
 
 <div class="add-album-popin-wrap">
-  <div id="addAlbumForm">
+  <div id="addAlbumForm" class="addAlbumFormWrap">
     <form>
       <div class="popinField addAlbumFormParent">
         <span class="popinFieldLabel">Parent album</span>
@@ -259,6 +259,7 @@
         <input name="category_name" type="text" maxlength="255">
         <span
           id="categoryNameError"
+          class="categoryNameErrorMessage"
         >The name of an album must not be empty</span>
       </div>
 
@@ -268,7 +269,7 @@
           value="Create"
           class="albumCreationButton"
         >
-        <span id="albumCreationLoading"><span
+        <span id="albumCreationLoading" class="albumCreationIndicator"><span
             class="icon-spin6 animate-spin"
           ></span></span>
       </div>
@@ -276,7 +277,7 @@
   </div>
 </div>
 
-<div id="photosAddContent">
+<div id="photosAddContent" class="photos-add-content">
    
 
 
@@ -326,17 +327,17 @@
           id="selectedAlbum"
         >
         <span
-            class="icon-sitemap"
+            class="icon-sitemap selected-album-name"
             id="selectedAlbumName"
           >Sample Album<span> / </span>Nested Sub Album</span>
-        <a class="icon-pencil" id="selectedAlbumEdit"></a>
+        <a class="icon-pencil selected-album-edit" id="selectedAlbumEdit"></a>
       </div>
       <div
           class="selectAlbumSelector u-hidden"
           id="addPhotosAS"
         >
         <p
-            class="head-button-1 icon-folder-open"
+            class="head-button-1 icon-folder-open album-selector-trigger"
             id="btnPhotosAS"
           >Select or create an album</p>
       </div>
@@ -361,7 +362,7 @@
           id="uploadOptionsContent"
         >
           <label class="switch">
-            <input type="checkbox" id="toggleUpdateMode">
+            <input type="checkbox" id="toggleUpdateMode" class="toggle-update-mode">
             <span class="slider round"></span>
           </label>
           <div class="update-mode-hint">
@@ -373,13 +374,13 @@
       <div class="selectFilesButtonBlock">
         <button
           id="addFiles"
-          class="buttonLike icon-plus-circled"
+          class="buttonLike icon-plus-circled add-files-button"
           
         >
           Add Photos
         </button>
         <div class="selectFilesinfo">
-          <p id="uploadWarningsSummary">
+          <p id="uploadWarningsSummary" class="upload-warnings-summary">
             Allowed file types: jpg, jpeg, png, gif, webp.
           </p>
         </div>
@@ -395,25 +396,25 @@
       </div>
     </fieldset>
 
-    <div id="uploadingActions" class="u-hidden">
+    <div id="uploadingActions" class="u-hidden uploading-actions">
       <div class="big-progressbar">
         <div class="progressbar"></div>
       </div>
       <button
         id="cancelUpload"
-        class="buttonLike icon-cancel-circled"
+        class="buttonLike icon-cancel-circled cancel-upload-button"
       >Cancel</button>
     </div>
 
     <button
       id="startUpload"
-      class="buttonLike icon-upload"
+      class="buttonLike icon-upload start-upload-button"
       disabled
     >Start Upload</button>
   </form>
 
   <fieldset class="Addedphotos u-hidden">
-    <div id="uploadedPhotos"></div>
+    <div id="uploadedPhotos" class="uploaded-photos"></div>
   </fieldset>
 </div> <!-- photosAddContent -->
 <div class="bg-modal" id="addFirstAlbum">
@@ -460,7 +461,7 @@
       </label>
       <p class="put-to-root-container">or</p>
 
-      <div id="linkedAlbumSearch">
+      <div id="linkedAlbumSearch" class="linked-album-search">
         <span class='icon-search search-icon'></span>
         <span class="icon-cancel search-cancel-linked-album"></span>
         <input
@@ -475,7 +476,7 @@
       <div class="searching gallery-icon-spin6 animate-spin"></div>
     </div>
 
-    <div id="searchResult"></div>
+    <div id="searchResult" class="linked-album-search-result"></div>
 
     <div class="album-create" id="linkedAlbumCreate">
       <div class="linked-album-subtitle">
@@ -508,7 +509,7 @@
       </div>
 
       <div class="AddAlbumErrors">
-        <p class="icon-cancel" id="linkedAddAlbumErrors">omg big big error</p>
+        <p class="icon-cancel linked-album-error-message" id="linkedAddAlbumErrors">omg big big error</p>
       </div>
 
       <div class="linked-album-create-btn">
@@ -556,7 +557,7 @@
 </div>
       </div>
 
-      <div id="footer">
+      <div id="footer" class="admin-footer">
         <div>
           <a
             class="externalLink tiptip piwigo-logo"
@@ -564,7 +565,7 @@
             title="Visit Piwigo project website"
           ><img src="themes/admin/default/images/piwigo-grey.svg"></a>
         </div>
-        <div id="pageInfos">
+        <div id="pageInfos" class="footer-info">
 
           Contact
           <a

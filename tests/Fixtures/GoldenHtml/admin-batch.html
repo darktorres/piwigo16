@@ -64,9 +64,9 @@
     id="theAdminPage"
     class="theAdminPage "
   >
-    <div id="the_page">
+    <div id="the_page" class="the-page">
 
-      <div id="pwgHead">
+      <div id="pwgHead" class="pwg-head">
         <a
           href="{{BASE_PATH}}/"
           class="visit-gallery tiptip"
@@ -74,7 +74,7 @@
         ><i class="icon-left-open"></i>Visit</a>
         <div class="pwgHead-gallery-title">Fixture Gallery</div>
 
-        <div id="headActions">
+        <div id="headActions" class="head-actions">
           <span class="admin-head-username"><i
               class="icon-user"
             ></i>fixture_admin</span>
@@ -96,9 +96,9 @@
       <div class="u-clear-both"></div>
 
 
-      <div id="pwgMain">
-<div id="menubar">
-  <div id="adminHome"><a href="admin.php" class="admin-main"><i
+      <div id="pwgMain" class="pwg-main">
+<div id="menubar" class="admin-menubar">
+  <div id="adminHome" class="admin-home"><a href="admin.php" class="admin-main"><i
           class="icon-television"
         ></i> Dashboard</a></div>
 
@@ -222,7 +222,7 @@
         class="admin-object-id"
       ></span></h1>
 
-  <div id="tabsheet">
+  <div id="tabsheet" class="tabsheet-wrapper">
   <ul class="tabsheet">
     <li
       class="selected_tab"
@@ -250,7 +250,7 @@
 
   
 <div class="add-album-popin-wrap">
-  <div id="addAlbumForm">
+  <div id="addAlbumForm" class="addAlbumFormWrap">
     <form>
       <div class="popinField addAlbumFormParent">
         <span class="popinFieldLabel">Parent album</span>
@@ -262,6 +262,7 @@
         <input name="category_name" type="text" maxlength="255">
         <span
           id="categoryNameError"
+          class="categoryNameErrorMessage"
         >The name of an album must not be empty</span>
       </div>
 
@@ -271,7 +272,7 @@
           value="Create"
           class="albumCreationButton"
         >
-        <span id="albumCreationLoading"><span
+        <span id="albumCreationLoading" class="albumCreationIndicator"><span
             class="icon-spin6 animate-spin"
           ></span></span>
       </div>
@@ -279,7 +280,7 @@
   </div>
 </div>
 
-<div id="batchManagerGlobal">
+<div id="batchManagerGlobal" class="batch-manager-root">
   <form action="admin.php?page=batch_manager" method="post">
     <input type="hidden" name="start" value="0">
     <input type="hidden" name="pwg_token" value="{{TOKEN}}">
@@ -288,10 +289,10 @@
       class='icon-filter icon-green'
     ></span>Filter</legend>
   <div class="filterBlock">
-    <ul id="filterList">
+    <ul id="filterList" class="batch-filter-list">
       <li
         id="filter_prefilter"
-        
+        class="batch-filter-prefilter"
       >
         <input
           type="checkbox"
@@ -403,7 +404,7 @@
 
         <span
           id="duplicates_options"
-          class="u-hidden"
+          class="duplicates-options u-hidden"
         >
           based on
           <label class="font-checkbox"><span class="icon-check"></span><input
@@ -437,9 +438,7 @@
       </li>
       <li
         id="filter_category"
-        
-        class="u-hidden"
-        
+        class="batch-filter-category u-hidden"
       >
         <input
           type="checkbox"
@@ -459,7 +458,7 @@
           class="u-hidden"
           
         >
-          <div class="selectedAlbum" id="selectedAlbumFilter">
+          <div class="selectedAlbum selectedAlbum-filter" id="selectedAlbumFilter">
             <input
               type="hidden"
               name="filter_category"
@@ -467,10 +466,10 @@
               value="null"
             >
             <span
-              class="icon-sitemap"
+              class="icon-sitemap selectedAlbum-filter-name"
               id="selectedAlbumNameFilter"
             ></span>
-            <a class="icon-pencil" id="selectedAlbumEditFilter"></a>
+            <a class="icon-pencil selectedAlbum-filter-edit" id="selectedAlbumEditFilter"></a>
           </div>
           <label class="font-checkbox"><span class="icon-check"></span><input
               type="checkbox"
@@ -479,14 +478,14 @@
             > include sub-albums</label>
         </div>
         <p
-          class="head-button-1"
+          class="head-button-1 select-album-prompt"
           id="selectAlbumFilter"
         >
           Select an album
         </p>
       </li>
 
-      <li id="filter_tags"  class="u-hidden" >
+      <li id="filter_tags" class="batch-filter-tags u-hidden">
         <input
           type="checkbox"
           name="filter_tags_use"
@@ -526,7 +525,7 @@
             > Any tag</span></label>
       </li>
 
-      <li id="filter_level"  class="u-hidden" >
+      <li id="filter_level" class="batch-filter-level u-hidden">
         <input
           type="checkbox"
           name="filter_level_use"
@@ -565,9 +564,7 @@
 
       <li
         id="filter_dimension"
-        
-        class="u-hidden"
-        
+        class="batch-filter-dimension u-hidden"
       >
         <input
           type="checkbox"
@@ -681,7 +678,7 @@
         </blockquote>
       </li>
 
-      <li id="filter_search"  class="u-hidden" >
+      <li id="filter_search" class="batch-filter-search u-hidden">
         <input
           type="checkbox"
           name="filter_search_use"
@@ -707,9 +704,7 @@
 
       <li
         id="filter_filesize"
-        
-        class="u-hidden"
-        
+        class="batch-filter-filesize u-hidden"
       >
         <input
           type="checkbox"
@@ -755,7 +750,7 @@
     <div class='noFilter'>No filter, add one</div>
 
     <div class="filterActions">
-      <div id="addFilter">
+      <div id="addFilter" class="addFilter-container">
         <div
           class="addFilter-button icon-plus"
         >Add a filter</div>
@@ -793,20 +788,20 @@
         </div>
         <a
           id="removeFilters"
-          class="icon-cancel u-hidden"
+          class="icon-cancel u-hidden addFilter-remove-all"
         >Remove all filters</a>
       </div>
 
-      <button id="applyFilter" name="submitFilter" type="submit">
+      <button id="applyFilter" name="submitFilter" type="submit" class="applyFilter-button">
         <i class="icon-arrows-cw"></i> Refresh photo set
       </button>
 
-      <div id="errorFilter" class="icon-red-error u-hidden"></div>
+      <div id="errorFilter" class="icon-red-error u-hidden errorFilter-message"></div>
     </div>
   </div>
 </fieldset>
 
-<div class="bg-modal" id="modalQuickSearch">
+<div class="bg-modal quick-search-modal" id="modalQuickSearch">
   <div class="modal-content">
     <a class="icon-cancel close-modal" id="closeModalQuickSearch"></a>
 
@@ -1133,7 +1128,7 @@
       </label>
       <p class="put-to-root-container">or</p>
 
-      <div id="linkedAlbumSearch">
+      <div id="linkedAlbumSearch" class="linked-album-search">
         <span class='icon-search search-icon'></span>
         <span class="icon-cancel search-cancel-linked-album"></span>
         <input
@@ -1148,7 +1143,7 @@
       <div class="searching gallery-icon-spin6 animate-spin"></div>
     </div>
 
-    <div id="searchResult"></div>
+    <div id="searchResult" class="linked-album-search-result"></div>
 
     <div class="album-create" id="linkedAlbumCreate">
       <div class="linked-album-subtitle">
@@ -1181,7 +1176,7 @@
       </div>
 
       <div class="AddAlbumErrors">
-        <p class="icon-cancel" id="linkedAddAlbumErrors">omg big big error</p>
+        <p class="icon-cancel linked-album-error-message" id="linkedAddAlbumErrors">omg big big error</p>
       </div>
 
       <div class="linked-album-create-btn">
@@ -1235,19 +1230,17 @@
         >No photos in the current set.</div>
     </fieldset>
 
-    <fieldset id="action">
+    <fieldset id="action" class="photoActionFieldset">
       <legend><span
           class='icon-cog icon-red'
         ></span>Action</legend>
       <div
         id="forbidAction"
-        
+        class="photoForbidAction"
       >No photos selected, no actions possible.</div>
       <div
         id="permitAction"
-        
-        class="u-hidden"
-        
+        class="permitActionPanel u-hidden"
       >
         <div class="permitActionListButton">
           <div>
@@ -1286,7 +1279,7 @@
               >Generate multiple size images</option>
             </select>
           </div>
-          <p id="confirmDel" class="u-invisible">
+          <p id="confirmDel" class="u-invisible confirmDeleteBlock">
             <label class="font-checkbox">
               <span class="icon-check"></span>
               <input
@@ -1299,7 +1292,7 @@
               class="errors u-invisible"
             >You must confirm deletion</span>
           </p>
-          <p id="applyActionBlock" class="actionButtons u-hidden">
+          <p id="applyActionBlock" class="actionButtons u-hidden photoApplyActionBlock">
             <button
               id="applyAction"
               name="submit"
@@ -1309,23 +1302,23 @@
               <i class="icon-cog-alt"></i> Apply action
             </button>
 
-            <span id="applyOnDetails"></span>
+            <span id="applyOnDetails" class="photoApplyOnDetails"></span>
           </p>
         </div>
         <div class="permitActionItem">
           <!-- delete -->
-          <div id="action_delete" class="bulkAction"></div>
+          <div id="action_delete" class="bulkAction actionDelete"></div>
 
           <!-- associate -->
-          <div id="action_associate" class="bulkAction">
-            <div class="head-button-2 icon-plus-circled" id="associate_as">
+          <div id="action_associate" class="bulkAction actionAssociate">
+            <div class="head-button-2 icon-plus-circled associate-as-trigger" id="associate_as">
               <p>Select an album</p>
             </div>
             <div class="selected-associate-action"></div>
           </div>
 
           <!-- move -->
-          <div id="action_move" class="bulkAction">
+          <div id="action_move" class="bulkAction actionMovePanel">
             <select
               data-selectize="categories"
               data-default=""
@@ -1341,7 +1334,7 @@
           </div>
 
           <!-- dissociate -->
-          <div id="action_dissociate" class="bulkAction">
+          <div id="action_dissociate" class="bulkAction actionDissociate">
             <select
               data-selectize="categories"
               placeholder="Type in a search term"
@@ -1350,7 +1343,7 @@
           </div>
 
           <!-- add_tags -->
-          <div id="action_add_tags" class="bulkAction">
+          <div id="action_add_tags" class="bulkAction actionAddTags">
             <select
               data-selectize="tags"
               data-create="true"
@@ -1361,11 +1354,11 @@
           </div>
 
           <!-- del_tags -->
-          <div id="action_del_tags" class="bulkAction">
+          <div id="action_del_tags" class="bulkAction actionDelTags">
           </div>
 
           <!-- author -->
-          <div id="action_author" class="bulkAction">
+          <div id="action_author" class="bulkAction actionAuthor">
             <label class="font-checkbox"><span class="icon-check"></span><input
                 type="checkbox"
                 name="remove_author"
@@ -1379,7 +1372,7 @@
           </div>
 
           <!-- title -->
-          <div id="action_title" class="bulkAction">
+          <div id="action_title" class="bulkAction actionTitlePanel">
             <label class="font-checkbox"><span class="icon-check"></span><input
                 type="checkbox"
                 name="remove_title"
@@ -1393,12 +1386,12 @@
           </div>
 
           <!-- date_creation -->
-          <div id="action_date_creation" class="bulkAction">
+          <div id="action_date_creation" class="bulkAction actionDateCreation">
             <label class="font-checkbox"><span class="icon-check"></span><input
                 type="checkbox"
                 name="remove_date_creation"
               > remove creation date</label><br>
-            <div id="set_date_creation">
+            <div id="set_date_creation" class="setDateCreationField">
               <input type="hidden" name="date_creation" value="2026-08-01 00:00:00">
               <label>
                 <i class="icon-calendar"></i>
@@ -1408,7 +1401,7 @@
           </div>
 
           <!-- level -->
-          <div id="action_level" class="bulkAction">
+          <div id="action_level" class="bulkAction actionLevel">
             <select name="level" size="1">
               <option
                 value="8"
@@ -1432,7 +1425,7 @@
           <div id="action_metadata" class="bulkAction"></div>
 
           <!-- generate derivatives -->
-          <div id="action_generate_derivatives" class="bulkAction">
+          <div id="action_generate_derivatives" class="bulkAction actionGenerateDerivatives">
             <div class="deleteDerivButtons">
               <a
                 href="#"
@@ -1510,7 +1503,7 @@
           </div>
 
           <!-- delete derivatives -->
-          <div id="action_delete_derivatives" class="bulkAction">
+          <div id="action_delete_derivatives" class="bulkAction actionDeleteDerivatives">
             <div class="deleteDerivButtons">
               <a href="#" class="js-select-del-deriv-all">All</a>
               <a
@@ -1592,8 +1585,8 @@
           </div>
         </div>
       </div> <!-- #permitAction -->
-      <div id="regenerationMsg" class="bulkAction u-hidden">
-        <div id="regenerationStatus">
+      <div id="regenerationMsg" class="bulkAction u-hidden regenerationMessage">
+        <div id="regenerationStatus" class="regenerationStatusPanel">
           <span
             id="regenerationText"
           >Generate multiple size images</span>
@@ -1603,7 +1596,7 @@
         <input type="hidden" name="regenerateError" value="0">
       </div>
       <!-- progress bar -->
-      <div id="uploadingActions" class="u-hidden">
+      <div id="uploadingActions" class="u-hidden uploading-actions">
         <div class="big-progressbar">
           <div class="progressbar"></div>
         </div>
@@ -1615,7 +1608,7 @@
 </div>
       </div>
 
-      <div id="footer">
+      <div id="footer" class="admin-footer">
         <div>
           <a
             class="externalLink tiptip piwigo-logo"
@@ -1623,7 +1616,7 @@
             title="Visit Piwigo project website"
           ><img src="themes/admin/default/images/piwigo-grey.svg"></a>
         </div>
-        <div id="pageInfos">
+        <div id="pageInfos" class="footer-info">
 
           Contact
           <a

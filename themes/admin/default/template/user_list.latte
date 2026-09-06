@@ -70,7 +70,7 @@
             </label>
           </div>
           <div class="in-selection-mode">
-            <div id="checkActions">
+            <div id="checkActions" class="userCheckActionsBar">
               <span>{='Select'|translate}</span>
               <a href="#" id="selectAllPage">{='The whole page'|translate}</a>
               <a href="#" id="selectSet">{='The whole set'|translate}</a><span
@@ -329,7 +329,7 @@
             </select>
           </div>
           {* delete *}
-          <div id="action_delete" class="bulkAction">
+          <div id="action_delete" class="bulkAction userActionDelete">
             <div class="user-list-checkbox" name="confirm_deletion">
               <span class="select-checkbox">
                 <i class="icon-ok"></i>
@@ -398,7 +398,7 @@
           </div>
 
           {* level *}
-          <div id="action_level" class="bulkAction">
+          <div id="action_level" class="bulkAction userActionLevel">
             <div class="user-action-select-container">
               <select class="user-action-select" name="level" size="1">
                 <option

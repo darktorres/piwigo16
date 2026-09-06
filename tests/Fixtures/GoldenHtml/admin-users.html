@@ -50,9 +50,9 @@
     id="theAdminPage"
     class="theAdminPage "
   >
-    <div id="the_page">
+    <div id="the_page" class="the-page">
 
-      <div id="pwgHead">
+      <div id="pwgHead" class="pwg-head">
         <a
           href="{{BASE_PATH}}/"
           class="visit-gallery tiptip"
@@ -60,7 +60,7 @@
         ><i class="icon-left-open"></i>Visit</a>
         <div class="pwgHead-gallery-title">Fixture Gallery</div>
 
-        <div id="headActions">
+        <div id="headActions" class="head-actions">
           <span class="admin-head-username"><i
               class="icon-user"
             ></i>fixture_admin</span>
@@ -82,9 +82,9 @@
       <div class="u-clear-both"></div>
 
 
-      <div id="pwgMain">
-<div id="menubar">
-  <div id="adminHome"><a href="admin.php" class="admin-main"><i
+      <div id="pwgMain" class="pwg-main">
+<div id="menubar" class="admin-menubar">
+  <div id="adminHome" class="admin-home"><a href="admin.php" class="admin-main"><i
           class="icon-television"
         ></i> Dashboard</a></div>
 
@@ -208,7 +208,7 @@
         class="admin-object-id"
       ></span></h1>
 
-  <div id="tabsheet">
+  <div id="tabsheet" class="tabsheet-wrapper">
   <ul class="tabsheet">
     <li
       class="selected_tab"
@@ -242,8 +242,8 @@
   <p>Selection mode</p>
 </div>
 
-<div id="user-table">
-  <div id="user-table-content">
+<div id="user-table" class="user-list-panel">
+  <div id="user-table-content" class="user-table-body">
     <div class="user-manager-header">
       <div class="UserViewSelector">
         <input
@@ -293,7 +293,7 @@
               <p>Edit guest user</p>
             </label>
           </div>
-          <div id="AddUserSuccess">
+          <div id="AddUserSuccess" class="AddUserSuccessBanner">
             <label class="icon-ok">
               <span>New user added</span><span
                 class="icon-pencil edit-now"
@@ -301,7 +301,7 @@
             </label>
           </div>
           <div class="in-selection-mode">
-            <div id="checkActions">
+            <div id="checkActions" class="userCheckActionsBar">
               <span>Select</span>
               <a href="#" id="selectAllPage">The whole page</a>
               <a href="#" id="selectSet">The whole set</a><span
@@ -322,7 +322,7 @@
       <span>Filters</span>
       <span class="filter-counter"></span>
     </div>
-    <div id='search-user'>
+    <div id='search-user' class='user-search-panel'>
       <div class='search-info'></div>
       <input
         id="user_search2"
@@ -337,7 +337,7 @@
       <input
         autocomplete="one-time-code"
         id="user_search"
-        class='search-input'
+        class='search-input user-search-input'
         type='text'
         placeholder="Search"
         
@@ -471,9 +471,9 @@
       <div class="user-header-col user-header-initials no-flex-grow"></div>
       <!-- username -->
       <div class="user-header-col user-header-username">
-        <span id="usr-list-user">Username <span
+        <span id="usr-list-user" class="sortable-username-header">Username <span
             id="icon-usr-list-user"
-            class="icon-up u-hidden"
+            class="icon-up u-hidden username-sort-icon"
           ></span></span>
       </div>
       <!-- status -->
@@ -486,9 +486,9 @@
       </div>
       <!-- registration date -->
       <div class="user-header-col user-header-registration">
-        <span id="usr-list-registered">Registered <span
+        <span id="usr-list-registered" class="sortable-registration-header">Registered <span
             id="icon-usr-list-registered"
-            class="icon-up"
+            class="icon-up registration-sort-icon"
           ></span></span>
       </div>
       <!-- groups -->
@@ -520,20 +520,21 @@
       </div>
     </div>
   </div>
-  <div id="selection-mode-block" class="in-selection-mode tag-selection">
+  <div id="selection-mode-block" class="in-selection-mode tag-selection user-selection-panel">
     <div class="user-selection-content">
       <div class="selection-mode-ul">
         <p>Your selection</p>
         <div class="user-selected-list"></div>
         <div class="selection-other-users"></div>
       </div>
-      <fieldset id="action">
+      <fieldset id="action" class="user-action-fieldset">
         <legend>Action</legend>
 
         <div
           id="forbidAction"
+          class="user-forbid-action"
         >No users selected, no actions possible.</div>
-        <div id="permitActionUserList">
+        <div id="permitActionUserList" class="user-permit-action">
           <div class="user-action-select-container">
             <select class="user-action-select" name="selectAction">
               <option value="-1">Choose an action</option>
@@ -571,7 +572,7 @@
               </optgroup>
             </select>
           </div>
-          <div id="action_delete" class="bulkAction">
+          <div id="action_delete" class="bulkAction userActionDelete">
             <div class="user-list-checkbox" name="confirm_deletion">
               <span class="select-checkbox">
                 <i class="icon-ok"></i>
@@ -655,7 +656,7 @@
             </span>
           </div>
 
-          <div id="action_level" class="bulkAction">
+          <div id="action_level" class="bulkAction userActionLevel">
             <div class="user-action-select-container">
               <select class="user-action-select" name="level" size="1">
                 <option
@@ -775,14 +776,14 @@
             </span>
           </div>
 
-          <p id="applyActionBlock" class="actionButtons u-hidden">
+          <p id="applyActionBlock" class="actionButtons u-hidden user-apply-action-block">
             <input
               id="applyAction"
               class="submit"
               type="submit"
               value="Apply action"
               name="submit"
-            > <span id="applyOnDetails"></span>
+            > <span id="applyOnDetails" class="user-apply-on-details"></span>
             <span id="applyActionLoading" class="u-hidden"><img
                 src="themes/default/images/ajax-loader-small.gif"
               ></span>
@@ -798,7 +799,7 @@
 </div>
 
 <!-- User container template -->
-<div id="template">
+<div id="template" class="user-row-template">
   <div class="user-container">
     <!-- edit-v1 -->
     <div
@@ -853,7 +854,7 @@
   </div>
 </div>
 
-<div id="UserList" class="UserListPopIn">
+<div id="UserList" class="UserListPopIn EditUserPopIn">
   <div class="UserListPopInContainer">
     <a class="icon-cancel CloseUserList"></a>
     <div class="summary-properties-update-container">
@@ -936,7 +937,7 @@
           </div>
           <div class="edit-user-slides">
             <!-- Pop in tabs 1 Properties -->
-            <div class="properties-container" id="tab_properties">
+            <div class="properties-container user-tab-properties" id="tab_properties">
               <div class="user-property-email">
                 <p class="user-property-label">Email Address</p>
                 <input
@@ -1207,10 +1208,10 @@
       </div>
 
       <div
-        class="edit-password-success u-hidden"
+        class="edit-password-success u-hidden password-email-result"
         id="edit_password_result_mail"
       >
-        <div class="update-password-success icon-green" id="result_send_mail">
+        <div class="update-password-success icon-green password-mail-sent-status" id="result_send_mail">
           <span class="icon-ok" id="icon_password_msg_result_mail"></span>
           <span id="password_msg_result_mail">text</span>
         </div>
@@ -1221,7 +1222,7 @@
       </div>
 
       <div
-        class="edit-password-success u-hidden"
+        class="edit-password-success u-hidden password-copy-result-panel"
         id="edit_password_result_mail_copy"
       >
         <div class="edit-password-success-reset-link">
@@ -1232,7 +1233,7 @@
           <span class="icon-docs" id="result_send_mail_copy_btn"></span>
         </div>
         <div
-          class="update-password-success icon-green"
+          class="update-password-success icon-green password-mail-copy-status"
           id="result_send_mail_copy"
         >
           <span class="icon-ok" id="result_send_mail_copy_icon"></span>
@@ -1310,10 +1311,10 @@
   </div>
 </div>
 
-<div id="GuestUserList" class="UserListPopIn">
+<div id="GuestUserList" class="UserListPopIn GuestUserPopIn">
   <div class="GuestUserListPopInContainer">
     <a class="icon-cancel CloseUserList CloseGuestUserList"></a>
-    <div id="guest-msg" class="messages">
+    <div id="guest-msg" class="messages guest-user-message">
       <span class="eiw-icon icon-info-circled-1"></span>
       <span>Users not logged in will have these settings applied, these settings are used by default for new users</span>
     </div>
@@ -1530,7 +1531,7 @@
   </div>
 </div>
 
-<div id="AddUser" class="UserListPopIn">
+<div id="AddUser" class="UserListPopIn AddUserPopIn">
   <div class="AddUserPopInContainer">
     <a class="icon-cancel CloseUserList CloseAddUser"></a>
     <div class="AddUserScrollableContent">
@@ -1541,7 +1542,7 @@
         <span>Add a new user</span>
       </div>
 
-      <div id="AddUserFieldContainer">
+      <div id="AddUserFieldContainer" class="AddUserFields">
         <div class="AddUserInputContainer">
           <label
             class="user-property-label AddUserLabelUsername"
@@ -1590,7 +1591,7 @@
           </div>
         </div>
 
-        <div id="add_user_password" class="u-hidden">
+        <div id="add_user_password" class="u-hidden AddUserPasswordBlock">
           <div class="AddUserGenPassword">
             <label
               for="add_user_pass"
@@ -1681,7 +1682,7 @@
         </div>
       </div>
 
-      <div id="AddUserSuccessContainer" class="u-hidden">
+      <div id="AddUserSuccessContainer" class="u-hidden AddUserSuccessPanel">
         <p
           class="icon-green border-green icon-ok AddUserResult"
           id="AddUserUpdated"
@@ -1705,7 +1706,7 @@
 </div>
       </div>
 
-      <div id="footer">
+      <div id="footer" class="admin-footer">
         <div>
           <a
             class="externalLink tiptip piwigo-logo"
@@ -1713,7 +1714,7 @@
             title="Visit Piwigo project website"
           ><img src="themes/admin/default/images/piwigo-grey.svg"></a>
         </div>
-        <div id="pageInfos">
+        <div id="pageInfos" class="footer-info">
 
           Contact
           <a

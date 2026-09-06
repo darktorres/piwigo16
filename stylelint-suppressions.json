@@ -159,7 +159,7 @@
       "count": 43
     },
     "declaration-block-no-duplicate-properties": {
-      "count": 18
+      "count": 17
     },
     "declaration-block-no-redundant-longhand-properties": {
       "count": 11
@@ -168,7 +168,7 @@
       "count": 2
     },
     "declaration-block-single-line-max-declarations": {
-      "count": 182
+      "count": 167
     },
     "declaration-property-value-no-unknown": {
       "count": 3
@@ -189,7 +189,7 @@
       "count": 1
     },
     "no-duplicate-selectors": {
-      "count": 27
+      "count": 25
     },
     "property-no-deprecated": {
       "count": 2
@@ -204,13 +204,13 @@
       "count": 26
     },
     "selector-type-case": {
-      "count": 216
+      "count": 203
     },
     "shorthand-property-no-redundant-values": {
-      "count": 39
+      "count": 37
     },
     "declaration-no-important": {
-      "count": 158
+      "count": 154
     }
   },
   "themes/admin/roma/theme.css": {
@@ -816,7 +816,7 @@
   },
   "themes/admin/default/css/pages/batch_manager_unit.css": {
     "declaration-no-important": {
-      "count": 1
+      "count": 12
     }
   },
   "themes/admin/default/css/pages/cat_list.css": {
@@ -856,7 +856,12 @@
   },
   "themes/admin/default/css/pages/user_list.css": {
     "declaration-no-important": {
-      "count": 20
+      "count": 31
+    }
+  },
+  "themes/admin/default/css/pages/batch_manager_global.css": {
+    "declaration-no-important": {
+      "count": 11
     }
   }
 }

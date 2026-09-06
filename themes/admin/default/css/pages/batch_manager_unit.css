@@ -70,25 +70,25 @@
 
 .actionAddTags .item,
 .actionAddTags .item.active {
-  background-image: none;
-  background-color: #ffa646;
-  border-color: transparent;
-  color: #000;
+  background-image: none !important;
+  background-color: #ffa646 !important;
+  border-color: transparent !important;
+  color: #000 !important;
 
-  border-radius: 20px;
+  border-radius: 20px !important;
 }
 
 .actionAddTags .item .remove {
-  background-color: transparent;
-  border-top-right-radius: 20px;
-  border-bottom-right-radius: 20px;
-  color: #000;
+  background-color: transparent !important;
+  border-top-right-radius: 20px !important;
+  border-bottom-right-radius: 20px !important;
+  color: #000 !important;
 
-  border-left: 1px solid transparent;
+  border-left: 1px solid transparent !important;
 }
 
 .actionAddTags .item .remove:hover {
-  background-color: #f70;
+  background-color: #f70 !important;
 }
 
 .breadcrumb-item {

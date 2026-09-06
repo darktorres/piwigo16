@@ -63,9 +63,9 @@
     id="theAdminPage"
     class="theAdminPage "
   >
-    <div id="the_page">
+    <div id="the_page" class="the-page">
 
-      <div id="pwgHead">
+      <div id="pwgHead" class="pwg-head">
         <a
           href="{{BASE_PATH}}/"
           class="visit-gallery tiptip"
@@ -73,7 +73,7 @@
         ><i class="icon-left-open"></i>Visit</a>
         <div class="pwgHead-gallery-title">Fixture Gallery</div>
 
-        <div id="headActions">
+        <div id="headActions" class="head-actions">
           <span class="admin-head-username"><i
               class="icon-user"
             ></i>fixture_admin</span>
@@ -95,9 +95,9 @@
       <div class="u-clear-both"></div>
 
 
-      <div id="pwgMain">
-<div id="menubar">
-  <div id="adminHome"><a href="admin.php" class="admin-main"><i
+      <div id="pwgMain" class="pwg-main">
+<div id="menubar" class="admin-menubar">
+  <div id="adminHome" class="admin-home"><a href="admin.php" class="admin-main"><i
           class="icon-television"
         ></i> Dashboard</a></div>
 
@@ -221,7 +221,7 @@
         class="admin-object-id"
       ></span></h1>
 
-  <div id="tabsheet">
+  <div id="tabsheet" class="tabsheet-wrapper">
   <ul class="tabsheet">
     <li
       class="normal_tab"
@@ -248,7 +248,7 @@
   </div> 
 
   
-<div id="batchManagerGlobal">
+<div id="batchManagerGlobal" class="batch-manager-root">
   <div class="clear-both"></div>
   <form method="post" action="admin.php?page=batch_manager&amp;mode=unit">
 <fieldset>
@@ -256,10 +256,10 @@
       class='icon-filter icon-green'
     ></span>Filter</legend>
   <div class="filterBlock">
-    <ul id="filterList">
+    <ul id="filterList" class="batch-filter-list">
       <li
         id="filter_prefilter"
-        
+        class="batch-filter-prefilter"
       >
         <input
           type="checkbox"
@@ -371,7 +371,7 @@
 
         <span
           id="duplicates_options"
-          class="u-hidden"
+          class="duplicates-options u-hidden"
         >
           based on
           <label class="font-checkbox"><span class="icon-check"></span><input
@@ -405,9 +405,7 @@
       </li>
       <li
         id="filter_category"
-        
-        class="u-hidden"
-        
+        class="batch-filter-category u-hidden"
       >
         <input
           type="checkbox"
@@ -427,7 +425,7 @@
           class="u-hidden"
           
         >
-          <div class="selectedAlbum" id="selectedAlbumFilter">
+          <div class="selectedAlbum selectedAlbum-filter" id="selectedAlbumFilter">
             <input
               type="hidden"
               name="filter_category"
@@ -435,10 +433,10 @@
               value="null"
             >
             <span
-              class="icon-sitemap"
+              class="icon-sitemap selectedAlbum-filter-name"
               id="selectedAlbumNameFilter"
             ></span>
-            <a class="icon-pencil" id="selectedAlbumEditFilter"></a>
+            <a class="icon-pencil selectedAlbum-filter-edit" id="selectedAlbumEditFilter"></a>
           </div>
           <label class="font-checkbox"><span class="icon-check"></span><input
               type="checkbox"
@@ -447,14 +445,14 @@
             > include sub-albums</label>
         </div>
         <p
-          class="head-button-1"
+          class="head-button-1 select-album-prompt"
           id="selectAlbumFilter"
         >
           Select an album
         </p>
       </li>
 
-      <li id="filter_tags"  class="u-hidden" >
+      <li id="filter_tags" class="batch-filter-tags u-hidden">
         <input
           type="checkbox"
           name="filter_tags_use"
@@ -494,7 +492,7 @@
             > Any tag</span></label>
       </li>
 
-      <li id="filter_level"  class="u-hidden" >
+      <li id="filter_level" class="batch-filter-level u-hidden">
         <input
           type="checkbox"
           name="filter_level_use"
@@ -533,9 +531,7 @@
 
       <li
         id="filter_dimension"
-        
-        class="u-hidden"
-        
+        class="batch-filter-dimension u-hidden"
       >
         <input
           type="checkbox"
@@ -649,7 +645,7 @@
         </blockquote>
       </li>
 
-      <li id="filter_search"  class="u-hidden" >
+      <li id="filter_search" class="batch-filter-search u-hidden">
         <input
           type="checkbox"
           name="filter_search_use"
@@ -675,9 +671,7 @@
 
       <li
         id="filter_filesize"
-        
-        class="u-hidden"
-        
+        class="batch-filter-filesize u-hidden"
       >
         <input
           type="checkbox"
@@ -723,7 +717,7 @@
     <div class='noFilter'>No filter, add one</div>
 
     <div class="filterActions">
-      <div id="addFilter">
+      <div id="addFilter" class="addFilter-container">
         <div
           class="addFilter-button icon-plus"
         >Add a filter</div>
@@ -761,20 +755,20 @@
         </div>
         <a
           id="removeFilters"
-          class="icon-cancel u-hidden"
+          class="icon-cancel u-hidden addFilter-remove-all"
         >Remove all filters</a>
       </div>
 
-      <button id="applyFilter" name="submitFilter" type="submit">
+      <button id="applyFilter" name="submitFilter" type="submit" class="applyFilter-button">
         <i class="icon-arrows-cw"></i> Refresh photo set
       </button>
 
-      <div id="errorFilter" class="icon-red-error u-hidden"></div>
+      <div id="errorFilter" class="icon-red-error u-hidden errorFilter-message"></div>
     </div>
   </div>
 </fieldset>
 
-<div class="bg-modal" id="modalQuickSearch">
+<div class="bg-modal quick-search-modal" id="modalQuickSearch">
   <div class="modal-content">
     <a class="icon-cancel close-modal" id="closeModalQuickSearch"></a>
 
@@ -1101,7 +1095,7 @@
       </label>
       <p class="put-to-root-container">or</p>
 
-      <div id="linkedAlbumSearch">
+      <div id="linkedAlbumSearch" class="linked-album-search">
         <span class='icon-search search-icon'></span>
         <span class="icon-cancel search-cancel-linked-album"></span>
         <input
@@ -1116,7 +1110,7 @@
       <div class="searching gallery-icon-spin6 animate-spin"></div>
     </div>
 
-    <div id="searchResult"></div>
+    <div id="searchResult" class="linked-album-search-result"></div>
 
     <div class="album-create" id="linkedAlbumCreate">
       <div class="linked-album-subtitle">
@@ -1149,7 +1143,7 @@
       </div>
 
       <div class="AddAlbumErrors">
-        <p class="icon-cancel" id="linkedAddAlbumErrors">omg big big error</p>
+        <p class="icon-cancel linked-album-error-message" id="linkedAddAlbumErrors">omg big big error</p>
       </div>
 
       <div class="linked-album-create-btn">
@@ -1231,7 +1225,7 @@
 </div>
       </div>
 
-      <div id="footer">
+      <div id="footer" class="admin-footer">
         <div>
           <a
             class="externalLink tiptip piwigo-logo"
@@ -1239,7 +1233,7 @@
             title="Visit Piwigo project website"
           ><img src="themes/admin/default/images/piwigo-grey.svg"></a>
         </div>
-        <div id="pageInfos">
+        <div id="pageInfos" class="footer-info">
 
           Contact
           <a

@@ -50,9 +50,9 @@
     id="theAdminPage"
     class="theAdminPage "
   >
-    <div id="the_page">
+    <div id="the_page" class="the-page">
 
-      <div id="pwgHead">
+      <div id="pwgHead" class="pwg-head">
         <a
           href="{{BASE_PATH}}/"
           class="visit-gallery tiptip"
@@ -60,7 +60,7 @@
         ><i class="icon-left-open"></i>Visit</a>
         <div class="pwgHead-gallery-title">Fixture Gallery</div>
 
-        <div id="headActions">
+        <div id="headActions" class="head-actions">
           <span class="admin-head-username"><i
               class="icon-user"
             ></i>fixture_admin</span>
@@ -82,9 +82,9 @@
       <div class="u-clear-both"></div>
 
 
-      <div id="pwgMain">
-<div id="menubar">
-  <div id="adminHome"><a href="admin.php" class="admin-main"><i
+      <div id="pwgMain" class="pwg-main">
+<div id="menubar" class="admin-menubar">
+  <div id="adminHome" class="admin-home"><a href="admin.php" class="admin-main"><i
           class="icon-television"
         ></i> Dashboard</a></div>
 
@@ -208,7 +208,7 @@
         class="admin-object-id"
       ></span></h1>
 
-  <div id="tabsheet">
+  <div id="tabsheet" class="tabsheet-wrapper">
   <ul class="tabsheet">
     <li
       class="selected_tab"
@@ -237,10 +237,11 @@
   <p>Selection mode</p>
 </div>
 
-<div id="selection-mode-block" class="in-selection-mode">
+<div id="selection-mode-block" class="in-selection-mode user-selection-panel">
   <div class="Selection-mode-content">
     <p
       id="nothing-selected"
+      class="nothing-selected-message"
     >No groups selected, no actions possible.</p>
     <div class="SelectionModeGroup">
       <p>Your selection</p>
@@ -258,7 +259,7 @@
       >Delete</button>
     </div>
 
-    <div id="MergeOptionsBlock">
+    <div id="MergeOptionsBlock" class="MergeOptionsPanel">
       <p>Choose which group to merge these groups into</p>
       <p
         class="ItalicTextInfo"
@@ -276,7 +277,7 @@
       >Cancel</a>
     </div>
 
-    <div id="ConfirmGroupAction">
+    <div id="ConfirmGroupAction" class="ConfirmGroupActionPanel">
       <p>You are about to delete <span class="number-Selected">0</span> groups, are you sure?</p>
       <button
         class="icon-ok ConfirmDeleteButton"
@@ -291,11 +292,11 @@
 
 <div class="group-manager">
   <div class="groups">
-    <div id="addGroupForm" class="GroupContainer">
+    <div id="addGroupForm" class="GroupContainer AddGroupFormContainer">
       <div class="groupError icon-cancel"></div>
       <div class="addGroupBlock">
         <div class="icon-plus-circled icon-blue icon-blue-full"></div>
-        <p id="addGroup">Add group</p>
+        <p id="addGroup" class="addGroupTitle">Add group</p>
       </div>
       <form>
         <fieldset>
@@ -307,6 +308,7 @@
             <input
               type="text"
               id="addGroupNameInput"
+              class="addGroupNameField"
               name="groupname"
               maxlength="50"
               size="20"
@@ -326,8 +328,7 @@
     </div>
 
 <div
-    id="group-template"
-    class="GroupContainer"
+    id="group-template" class="GroupContainer GroupTemplatePlaceholder"
     data-id="template"
     
     data-default="0"
@@ -358,7 +359,7 @@
     <div
         class="icon-ellipsis-vert group-dropdown-options not-in-selection-mode"
       >
-      <div id="GroupOptions" class="dropdown">
+      <div id="GroupOptions" class="dropdown GroupOptionsDropdown">
         <div
             class="icon-docs dropdown-option"
             id="GroupDuplicate"
@@ -396,7 +397,7 @@
       </div>
     </div>
 
-    <div id="EditGroupName">
+    <div id="EditGroupName" class="EditGroupNamePanel">
       <input
           class="input-edit-group-name"
           type="text"
@@ -429,8 +430,7 @@
 
 
 <div
-    id="group-1"
-    class="GroupContainer"
+    id="group-1" class="GroupContainer"
     data-id="1"
     
     data-default="0"
@@ -463,7 +463,7 @@
     <div
         class="icon-ellipsis-vert group-dropdown-options not-in-selection-mode"
       >
-      <div id="GroupOptions" class="dropdown">
+      <div id="GroupOptions" class="dropdown GroupOptionsDropdown">
         <div
             class="icon-docs dropdown-option"
             id="GroupDuplicate"
@@ -501,7 +501,7 @@
       </div>
     </div>
 
-    <div id="EditGroupName">
+    <div id="EditGroupName" class="EditGroupNamePanel">
       <input
           class="input-edit-group-name"
           type="text"
@@ -532,8 +532,7 @@
     >Manage Permissions</a>
 </div>
 <div
-    id="group-3"
-    class="GroupContainer"
+    id="group-3" class="GroupContainer"
     data-id="3"
     
     data-default="0"
@@ -566,7 +565,7 @@
     <div
         class="icon-ellipsis-vert group-dropdown-options not-in-selection-mode"
       >
-      <div id="GroupOptions" class="dropdown">
+      <div id="GroupOptions" class="dropdown GroupOptionsDropdown">
         <div
             class="icon-docs dropdown-option"
             id="GroupDuplicate"
@@ -604,7 +603,7 @@
       </div>
     </div>
 
-    <div id="EditGroupName">
+    <div id="EditGroupName" class="EditGroupNamePanel">
       <input
           class="input-edit-group-name"
           type="text"
@@ -635,8 +634,7 @@
     >Manage Permissions</a>
 </div>
 <div
-    id="group-2"
-    class="GroupContainer"
+    id="group-2" class="GroupContainer"
     data-id="2"
     
     data-default="0"
@@ -669,7 +667,7 @@
     <div
         class="icon-ellipsis-vert group-dropdown-options not-in-selection-mode"
       >
-      <div id="GroupOptions" class="dropdown">
+      <div id="GroupOptions" class="dropdown GroupOptionsDropdown">
         <div
             class="icon-docs dropdown-option"
             id="GroupDuplicate"
@@ -707,7 +705,7 @@
       </div>
     </div>
 
-    <div id="EditGroupName">
+    <div id="EditGroupName" class="EditGroupNamePanel">
       <input
           class="input-edit-group-name"
           type="text"
@@ -739,7 +737,7 @@
 </div>
   </div>
 
-  <div id="UserList" class="UserListPopIn">
+  <div id="UserList" class="UserListPopIn AssociateUserPopIn">
     <div class="UserListPopInContainer">
       <a class="icon-cancel CloseUserList"></a>
 
@@ -795,7 +793,7 @@
 </div>
       </div>
 
-      <div id="footer">
+      <div id="footer" class="admin-footer">
         <div>
           <a
             class="externalLink tiptip piwigo-logo"
@@ -803,7 +801,7 @@
             title="Visit Piwigo project website"
           ><img src="themes/admin/default/images/piwigo-grey.svg"></a>
         </div>
-        <div id="pageInfos">
+        <div id="pageInfos" class="footer-info">
 
           Contact
           <a

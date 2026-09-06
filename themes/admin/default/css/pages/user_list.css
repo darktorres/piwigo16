@@ -1490,27 +1490,29 @@
 .GuestUserPopIn .item.active,
 .AddUserPopIn .item,
 .AddUserPopIn .item.active {
-  background-image:none;
-  background-color: #ffa646;
-  border-color: transparent;
+  background-image:none !important;
+  background-color: #ffa646 !important;
+  border-color: transparent !important;
+  color: #000 !important;
 
-  border-radius: 20px;
+  border-radius: 20px !important;
 }
 
 .EditUserPopIn .item .remove,
 .GuestUserPopIn .item .remove,
 .AddUserPopIn .item .remove {
-  background-color: transparent;
-  border-top-right-radius: 20px;
-  border-bottom-right-radius: 20px;
+  background-color: transparent !important;
+  border-top-right-radius: 20px !important;
+  border-bottom-right-radius: 20px !important;
+  color: #000 !important;
 
-  border-left: 1px solid transparent;
+  border-left: 1px solid transparent !important;
 
 }
 .EditUserPopIn .item .remove:hover,
 .GuestUserPopIn .item .remove:hover,
 .AddUserPopIn .item .remove:hover {
-  background-color: #f70;
+  background-color: #f70 !important;
 }
 
 /* selection panel */

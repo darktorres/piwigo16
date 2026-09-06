@@ -162,6 +162,13 @@
     --color-info: light-dark(oklch(65.20% 0.1901 253.21), oklch(65.20% 0.1901 253.21));
     --color-backdrop: light-dark(oklch(59.25% 0.0309 248.35), oklch(59.25% 0.0309 248.35));
 
+    /* jqtree's real #0000ff drag-drop-target indicator is a materially
+       different, much stronger/darker blue than --color-info's
+       dodgerblue (L 45.2% vs 65.2%, C 0.313 vs 0.1901 -- a bigger gap
+       than the danger/danger-flat split above), so it gets its own
+       sibling rather than a forced reuse. */
+    --color-info-strong: light-dark(oklch(45.2% 0.313 264.05), oklch(45.2% 0.313 264.05));
+
     /* Scale values */
     --z-dropdown: 1000;
     --z-sticky: 1020;

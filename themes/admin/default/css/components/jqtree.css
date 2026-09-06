@@ -1,0 +1,159 @@
+/**
+ * First-party port of jqtree's vendor stylesheet (`jqtree.css`
+ * @1.4.12, https://cdn.jsdelivr.net/npm/jqtree@1.4.12/jqtree.css).
+ * Scoped to exactly the classes `themes/default/js/vendor/widgets/jqtree.ts`
+ * (and its one real consumer, `albums.ts`'s drag-and-drop album tree)
+ * actually emit -- see jqtree.ts's own header for what real surface
+ * survived porting.
+ *
+ * New token this file introduces (declared in tokens.css):
+ * `--color-info-strong`, for the real `#0000ff` drop-target indicator
+ * -- a materially stronger/darker blue than `--color-info` (added by
+ * the `jquery-confirm` port), not a forced reuse.
+ *
+ * Dropped entirely (dead weight -- no element the real port ever
+ * creates carries these classes, or the classes exist but this exact
+ * selector can never actually match the real DOM shape the port
+ * builds):
+ *   - `.jqtree-toggler` (all 4 variants) -- click-to-toggle markup is
+ *     never rendered; `albums.ts`'s own `onCreateLi` unconditionally
+ *     wipes and replaces each node's content.
+ *   - `.jqtree-selected` -- selection is permanently disabled
+ *     (`onCanSelectNode: () => false`); this class is never applied
+ *     anywhere in the port.
+ *   - `ul.jqtree-tree .jqtree-title` / `.jqtree-title.jqtree-title-folder`
+ *     and the whole `.jqtree-rtl` family -- a real structural finding,
+ *     not an assumption: `.jqtree-title` is applied by the port in
+ *     exactly one place (`createDragElement()`'s floating drag-ghost
+ *     `<span>`), and that span is appended directly to the tree's own
+ *     *container* element (`albums.ts`'s `div.tree`), which is the
+ *     *parent* of the generated `ul.jqtree-tree`, not an
+ *     ancestor-scoped descendant of it -- so `ul.jqtree-tree
+ *     .jqtree-title` can never match it. The bare `span.jqtree-dragging`
+ *     rule (no `ul.jqtree-tree` ancestor requirement) is the only one
+ *     that's real for that span, and is kept below. `rtl` is also
+ *     explicitly dropped from the options surface entirely (jqtree.ts's
+ *     own header), so every `.jqtree-rtl`-scoped override is
+ *     unreachable too.
+ *   - `.jqtree-moving > .jqtree-element .jqtree-title` -- same root
+ *     cause: `.jqtree-moving` itself *is* real (added to the dragged
+ *     row's own `<li>`), but the only vendor rule for it targets a
+ *     nested `.jqtree-title` that never exists inside a real
+ *     `.jqtree-element`. The dragged source row gets no visual
+ *     treatment from the vendor stylesheet either -- a preexisting gap
+ *     in the original's own design for this usage shape, not
+ *     something introduced by porting; left unaddressed rather than
+ *     inventing new, unreviewed UX.
+ *
+ * `display: -webkit-box` (the 2009 tweener flexbox syntax, paired with
+ * the real `display: flex` in the same original rule) is dropped --
+ * `display: flex` alone has covered every real target for well over a
+ * decade before this project's floor.
+ *
+ * `margin-left`/`margin-right` on the plain indentation rules below
+ * are converted to `margin-inline-start`/`margin-inline-end`: this is
+ * genuinely a text-direction concern (nesting depth reads from the
+ * start side), and doing so means these two rules stay correct even
+ * in an RTL-localized admin page without needing the `.jqtree-rtl`
+ * overrides this file already drops as unreachable. The ghost/circle/
+ * line/border drop-hint elements are left with physical left/top/
+ * margin-right, since their exact pixel placement is computed by
+ * jqtree.ts's own physical-pixel math, not a clean direction
+ * abstraction.
+ *
+ * `clear: both` on `li.jqtree_common` is kept for parity even though
+ * nothing in this scoped file ever floats a preceding sibling --
+ * inert today, harmless to keep.
+ */
+
+ul.jqtree-tree {
+  list-style: none outside;
+  margin-inline-start: 0;
+  margin-bottom: 0;
+  padding: 0;
+}
+
+ul.jqtree-tree ul.jqtree_common {
+  list-style: none outside;
+  margin-inline: 12px 0;
+  margin-bottom: 0;
+  padding: 0;
+  display: block;
+}
+
+ul.jqtree-tree li.jqtree-closed > ul.jqtree_common {
+  display: none;
+}
+
+ul.jqtree-tree li.jqtree_common {
+  clear: both;
+  list-style-type: none;
+}
+
+ul.jqtree-tree .jqtree-element {
+  cursor: pointer;
+  position: relative;
+  display: flex;
+}
+
+ul.jqtree-tree li.jqtree-folder {
+  margin-bottom: 4px;
+}
+
+ul.jqtree-tree li.jqtree-folder.jqtree-closed {
+  margin-bottom: 1px;
+}
+
+ul.jqtree-tree li.jqtree-ghost {
+  position: relative;
+  z-index: 10;
+  margin-right: 10px;
+}
+
+ul.jqtree-tree li.jqtree-ghost span {
+  display: block;
+}
+
+ul.jqtree-tree li.jqtree-ghost span.jqtree-circle {
+  border: solid 2px var(--color-info-strong);
+  border-radius: 100px;
+  height: 8px;
+  width: 8px;
+  position: absolute;
+  top: -4px;
+  left: -6px;
+  box-sizing: border-box;
+}
+
+ul.jqtree-tree li.jqtree-ghost span.jqtree-line {
+  background-color: var(--color-info-strong);
+  height: 2px;
+  padding: 0;
+  position: absolute;
+  top: -1px;
+  left: 2px;
+  width: 100%;
+}
+
+ul.jqtree-tree li.jqtree-ghost.jqtree-inside {
+  margin-left: 48px;
+}
+
+ul.jqtree-tree span.jqtree-border {
+  position: absolute;
+  display: block;
+  left: -2px;
+  top: 0;
+  border: solid 2px var(--color-info-strong);
+  border-radius: 6px;
+  margin: 0;
+  box-sizing: content-box;
+}
+
+span.jqtree-dragging {
+  color: var(--color-white);
+  background: var(--color-black);
+  opacity: 0.6;
+  cursor: pointer;
+  padding: 2px 8px;
+}

@@ -9,12 +9,10 @@
       class='icon-filter icon-green'
     ></span>{='Filter'|translate}</legend>
   <div class="filterBlock">
-    <ul id="filterList">
+    <ul id="filterList" class="batch-filter-list">
       <li
         id="filter_prefilter"
-        {if $filter->prefilter === null}
-        class="u-hidden"
-        {/if}
+        class="batch-filter-prefilter{if $filter->prefilter === null} u-hidden{/if}"
       >
         <input
           type="checkbox"
@@ -95,7 +93,7 @@
 
         <span
           id="duplicates_options"
-          class="{if $filter->prefilter === null || $filter->prefilter !== 'duplicates'}u-hidden{/if}"
+          class="duplicates-options{if $filter->prefilter === null || $filter->prefilter !== 'duplicates'} u-hidden{/if}"
         >
           {='based on'|translate}
           <label class="font-checkbox"><span class="icon-check"></span><input
@@ -136,9 +134,7 @@
       {* categories *}
       <li
         id="filter_category"
-        {if $filter->category === null}
-        class="u-hidden"
-        {/if}
+        class="batch-filter-category{if $filter->category === null} u-hidden{/if}"
       >
         <input
           type="checkbox"
@@ -162,7 +158,7 @@
           class="u-hidden"
           {/if}
         >
-          <div class="selectedAlbum" id="selectedAlbumFilter">
+          <div class="selectedAlbum selectedAlbum-filter" id="selectedAlbumFilter">
             <input
               type="hidden"
               name="filter_category"
@@ -170,10 +166,10 @@
               value="{$filter_category_selected|json_encode}"
             >
             <span
-              class="icon-sitemap"
+              class="icon-sitemap selectedAlbum-filter-name"
               id="selectedAlbumNameFilter"
             >{$filter_category_selected_name}</span>
-            <a class="icon-pencil" id="selectedAlbumEditFilter"></a>
+            <a class="icon-pencil selectedAlbum-filter-edit" id="selectedAlbumEditFilter"></a>
           </div>
           <label class="font-checkbox"><span class="icon-check"></span><input
               type="checkbox"
@@ -184,14 +180,14 @@
             > {='include child albums'|translate}</label>
         </div>
         <p
-          class="head-button-1{if $filter_category_selected !== null} u-hidden{/if}"
+          class="head-button-1 select-album-prompt{if $filter_category_selected !== null} u-hidden{/if}"
           id="selectAlbumFilter"
         >
           {="Select an album"|translate}
         </p>
       </li>
 
-      <li id="filter_tags" {if !$filter->tagsUsed} class="u-hidden" {/if}>
+      <li id="filter_tags" class="batch-filter-tags{if !$filter->tagsUsed} u-hidden{/if}">
         <input
           type="checkbox"
           name="filter_tags_use"
@@ -235,7 +231,7 @@
             > {='Any tag'|translate}</span></label>
       </li>
 
-      <li id="filter_level" {if $filter->level === null} class="u-hidden" {/if}>
+      <li id="filter_level" class="batch-filter-level{if $filter->level === null} u-hidden{/if}">
         <input
           type="checkbox"
           name="filter_level_use"
@@ -268,9 +264,7 @@
 
       <li
         id="filter_dimension"
-        {if !$filter->dimensionUsed}
-        class="u-hidden"
-        {/if}
+        class="batch-filter-dimension{if !$filter->dimensionUsed} u-hidden{/if}"
       >
         <input
           type="checkbox"
@@ -405,7 +399,7 @@
         </blockquote>
       </li>
 
-      <li id="filter_search" {if !$filter->searchUsed} class="u-hidden" {/if}>
+      <li id="filter_search" class="batch-filter-search{if !$filter->searchUsed} u-hidden{/if}">
         <input
           type="checkbox"
           name="filter_search_use"
@@ -441,9 +435,7 @@
 
       <li
         id="filter_filesize"
-        {if !$filter->filesizeUsed}
-        class="u-hidden"
-        {/if}
+        class="batch-filter-filesize{if !$filter->filesizeUsed} u-hidden{/if}"
       >
         <input
           type="checkbox"
@@ -491,7 +483,7 @@
     <div class='noFilter'>{='No filter, add one'|translate}</div>
 
     <div class="filterActions">
-      <div id="addFilter">
+      <div id="addFilter" class="addFilter-container">
         <div
           class="addFilter-button icon-plus"
         >{='Add a filter'|translate}</div>
@@ -541,20 +533,20 @@
         </div>
         <a
           id="removeFilters"
-          class="icon-cancel u-hidden"
+          class="icon-cancel u-hidden addFilter-remove-all"
         >{='Remove all filters'|translate}</a>
       </div>
 
-      <button id="applyFilter" name="submitFilter" type="submit">
+      <button id="applyFilter" name="submitFilter" type="submit" class="applyFilter-button">
         <i class="icon-arrows-cw"></i> {='Refresh photo set'|translate}
       </button>
 
-      <div id="errorFilter" class="icon-red-error u-hidden"></div>
+      <div id="errorFilter" class="icon-red-error u-hidden errorFilter-message"></div>
     </div>
   </div>
 </fieldset>
 
-<div class="bg-modal" id="modalQuickSearch">
+<div class="bg-modal quick-search-modal" id="modalQuickSearch">
   <div class="modal-content">
     <a class="icon-cancel close-modal" id="closeModalQuickSearch"></a>
 

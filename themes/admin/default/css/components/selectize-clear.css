@@ -17,9 +17,13 @@
 .selectize-input,
 .selectize-input input {
   font-family: inherit;
-  font-size: 13px;
   line-height: 18px;
   -webkit-font-smoothing: inherit;
+}
+
+.selectize-dropdown,
+.selectize-input input {
+  font-size: 13px;
 }
 
 .selectize-input {
@@ -108,6 +112,7 @@
 
 .selectize-input {
   background: #fff;
+  font-size: 13px;
 }
 
 }

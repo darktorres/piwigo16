@@ -56,7 +56,6 @@
 }
 
 .select-checkbox {
-  display: inline-block;
 }
 
 .delete-sizes {
@@ -85,4 +84,11 @@
     transform: rotate(360deg);
   }
 }
+}
+
+@layer pages-base {
+.select-checkbox {
+  display: inline-block;
+}
+
 }

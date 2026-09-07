@@ -32,10 +32,7 @@
 
 .ClosePopIn {
   position: absolute;
-  right: -40px;
-  top: -40px;
   font-size: 30px;
-  color: #FFF;
 }
 
 .ClosePopIn:hover {
@@ -288,4 +285,13 @@
   text-align: start;
   padding: 10px;
 }
+}
+
+@layer components-base {
+.ClosePopIn {
+  right: -40px;
+  top: -40px;
+  color: #FFF;
+}
+
 }

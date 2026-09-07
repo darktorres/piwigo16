@@ -103,11 +103,10 @@
 
 /* Pagination */
 .user-pagination {
-    margin: 0;
-    display: flex;
-    padding: 0;
-    justify-content: space-between;
-    align-items: center;
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 /* User Table */
@@ -145,15 +144,12 @@
 
 /* User Container */
 .user-container {
-    display:flex;
-    width:100%;
-    height:50px;
-
-    font-weight:bold;
-    border-radius:10px;
-    margin-bottom:10px;
-    transition: background-color 500ms linear;
-    box-shadow: 0 2px 2px #00000024;
+  display:flex;
+  width:100%;
+  font-weight:bold;
+  border-radius:10px;
+  transition: background-color 500ms linear;
+  box-shadow: 0 2px 2px #00000024;
 }
 
 .user-header-select,
@@ -255,7 +251,6 @@
 
 
 .user-container-checkbox.user-list-checkbox .select-checkbox {
-  background-color: #F3F3F3;
 }
 
 .user-container-checkbox.user-list-checkbox i {
@@ -1281,16 +1276,14 @@
 }
 
 .close-update-button {
-    cursor: pointer;
-    color: #A4A4A4;
-    padding:10px 0;
-    font-size:1.1em;
-    font-weight:bold;
-    align-self: center;
+  cursor: pointer;
+  padding:10px 0;
+  font-size:1.1em;
+  font-weight:bold;
+  align-self: center;
 }
 
 .close-update-button:hover{
-  color: #474747;
 }
 
 .close-update-button.icon-cancel-circled::before {
@@ -1341,7 +1334,6 @@
 }
 
 .unavailable {
-  color:#CBCBCB;
 }
 
 .unclickable {
@@ -1453,7 +1445,6 @@
   cursor:pointer;
   font-weight:bold;
   color: #3F3E40;
-  background-color: #ffa646;
   padding: 10px;
   margin-top: 5px;
   font-size:1em;
@@ -1461,14 +1452,12 @@
 }
 
 .AddUserCancel {
-  color: #A4A4A4;
   font-weight: bold;
   cursor: pointer;
   font-size:1em;
 }
 
 .AddUserCancel:hover{
-  color: #474747;
 }
 
 .AddUserResult {
@@ -1553,7 +1542,6 @@
 }
 
 .search-icon {
-  top: 20px;
   z-index: 13;
 }
 
@@ -1635,7 +1623,6 @@ Advanced filter
 
 .advanced-filter-close {
   font-size: 1.8em;
-  color: #C5C5C5;
   cursor:pointer;
 }
 
@@ -2141,4 +2128,52 @@ Advanced filter
 .AddUserSuccessPanel.u-hidden {
   display: none;
 }
+}
+
+@layer pages-base {
+.user-pagination {
+  padding: 0;
+}
+
+.user-container {
+  height:50px;
+  margin-bottom:10px;
+}
+
+.user-container-checkbox.user-list-checkbox .select-checkbox {
+  background-color: #F3F3F3;
+}
+
+.close-update-button {
+  color: #A4A4A4;
+}
+
+.close-update-button:hover {
+  color: #474747;
+}
+
+.unavailable {
+  color:#CBCBCB;
+}
+
+.AddUserSubmit {
+  background-color: #ffa646;
+}
+
+.AddUserCancel {
+  color: #A4A4A4;
+}
+
+.AddUserCancel:hover {
+  color: #474747;
+}
+
+.search-icon {
+  top: 20px;
+}
+
+.advanced-filter-close {
+  color: #C5C5C5;
+}
+
 }

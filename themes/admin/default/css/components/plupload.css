@@ -62,7 +62,6 @@
 }
 
 .plupload_container {
-  padding: 8px;
   background: url("../../images/plupload/transp50.png");
 }
 
@@ -73,9 +72,7 @@
 }
 
 .plupload_scroll .plupload_filelist {
-  height: 185px;
   background: #f5f5f5;
-  overflow-y: scroll;
 }
 
 .plupload_filelist li {
@@ -174,6 +171,21 @@ li.plupload_droptext {
   text-align: center;
   vertical-align: middle;
   border: 0;
+}
+}
+
+@layer components-base {
+.plupload_container {
+  padding: 8px;
+}
+
+.plupload_scroll .plupload_filelist {
+  height: 185px;
+  overflow-y: scroll;
+}
+
+li.plupload_droptext {
   line-height: 165px;
 }
+
 }

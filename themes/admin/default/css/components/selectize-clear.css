@@ -16,13 +16,9 @@
 .selectize-dropdown,
 .selectize-input,
 .selectize-input input {
-  color: #303030;
   font-family: inherit;
   font-size: 13px;
   line-height: 18px;
-  /* No unprefixed equivalent exists; still a real, effective font-
-     rendering hint on every WebKit/Blink target in this project's
-     floor. */
   -webkit-font-smoothing: inherit;
 }
 
@@ -106,4 +102,13 @@
 .selectize-dropdown.single {
   border-color: #b8b8b8;
 }
+}
+
+@layer components-base {
+.selectize-dropdown,
+.selectize-input,
+.selectize-input input {
+  color: #303030;
+}
+
 }

@@ -201,18 +201,11 @@
 
 .detail-item {
   margin: 0 10px 0 0;
-  padding: 4px 8px;
-  border-radius: 5px;
-
-  max-width: 130px;
   height: 20px;
-
   text-align: center;
-
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: default;
-
   white-space: nowrap;
 }
 .detail-item::before {
@@ -451,4 +444,13 @@
     max-width: 170px;
   }
 }
+}
+
+@layer pages-base {
+.detail-item {
+  padding: 4px 8px;
+  border-radius: 5px;
+  max-width: 130px;
+}
+
 }

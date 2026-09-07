@@ -256,7 +256,6 @@ input[name="position"] {
 
 .notClickable {
   pointer-events: none;
-  opacity: 0.5;
 }
 
 .notClickable:hover {
@@ -273,7 +272,6 @@ input[name="position"] {
 
 .jqtree-moving .move-cat-container .badge-container i,
 .jqtree-moving .move-cat-container .node-icon {
-  color: #ffd7ad;
   background-color: #f98100;
 }
 
@@ -372,4 +370,16 @@ input[name="position"] {
     max-width: 40%;
   }
 }
+}
+
+@layer pages-base {
+.notClickable {
+  opacity: 0.5;
+}
+
+.jqtree-moving .move-cat-container .badge-container i,
+.jqtree-moving .move-cat-container .node-icon {
+  color: #ffd7ad;
+}
+
 }

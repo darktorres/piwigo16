@@ -18,11 +18,11 @@
 /* text color */
 
 body, h3, dt, h2, .throw, .content, label , legend  {
-	color:#777;
 }
 
 th { color: #888; }
-input { color:#666; background-color: #ccc; }
+input {
+}
 
 select, textarea { --select-or-textarea-color: #666; --select-or-textarea-bg: #ccc; }
 option[disabled] { background-color: #ccc; }
@@ -31,7 +31,6 @@ input[type="radio"], input[type="checkbox"] { background-color: transparent; }
 
 
 input[type="text"], input[type="file"] {
-	background-color: #ddd;
 }
 
 select, textarea {
@@ -43,7 +42,8 @@ input:focus, select:focus, textarea:focus {
   color: #666;
 }
 
-input, select, textarea { border: 1px solid #999; }
+input, select, textarea {
+}
 
 .showInfo { color:#999; }
 .showInfo:hover { color:#333; }
@@ -68,7 +68,8 @@ html, body {
 
 /* #the_page { margin: 0; padding: 0; z-index: 1; top:0px; */
 /* padding-top: 0; min-height: 100%; width:100%; position:absolute; left:0px; } */
-h3, .throw, .row1 { background-color: #ddd; }
+h3, .throw, .row1 {
+}
 .row2 { background-color:#eee; }
 
 #content {
@@ -80,7 +81,8 @@ h3, .throw, .row1 { background-color: #ddd; }
 .content h3 ~ h3{ margin-top: 40px; }
 .content h4 { color: #aaa; font-size:14px; text-align:center; padding:3px; margin-top: 0; margin-bottom: 10px;}
 
-.content dl, dd { margin:5px; }
+.content dl, dd {
+}
 
 ul.thumbnails span.wrap2 {
 	background-color:transparent;
@@ -89,7 +91,6 @@ ul.thumbnails span.wrap2 {
 
 /* borders */
 fieldset {
-  border: none;
 }
 
 fieldset.with-border {
@@ -97,14 +98,17 @@ fieldset.with-border {
 }
 
 
-textarea { cursor:text; font-size: 13px; }
+textarea {
+  cursor:text;
+}
 .tagSelection label { padding-right:12px; }
 .tagSelection li.tagSelected {background-color:#dbe8f3;}
 .tagSelected label {color:black;}
 
 ul.thumbnails input { color:#666; font-size:10px; margin:0; background-color:#bbb; text-align: center;}
 .throw  { font-size: 120%; line-height: 26px; padding-top: 10px; font-weight: bold; }
-label { cursor:pointer }
+label {
+}
 .menuLi { background: #F3F3F3; }
 .menuLi_hidden { background: #ccc !important; }
 a.Piwigo {
@@ -118,12 +122,10 @@ table.table2 { border: 2px solid #ddd; }
 
 *, *:focus, *:active, input:active, a:active, input:focus, a:focus { outline: none; -moz-outline-width: 0; }
 a{
-	color:#3A3A3A;
 }
 
 a:hover, a:active {
-	color: #ffa646;
-	cursor: pointer; 
+  cursor: pointer;
 }
 
 ul.actions, .content form#waiting  {text-align:center;}
@@ -152,7 +154,8 @@ body .ui-resizable-autohide .ui-resizable-handle { display: none; } /* use 'body
 #ui-datepicker-div .ui-datepicker-title {color:black;}
 #ui-datepicker-div .ui-icon-circle-triangle-w {background: transparent url("icon/prev.png") no-repeat;}
 #ui-datepicker-div .ui-icon-circle-triangle-e {background: transparent url("icon/next.png") no-repeat;}
-#ui-datepicker-div .ui-datepicker-control, #ui-datepicker-div a {background-color: #FFF !important;}
+#ui-datepicker-div .ui-datepicker-control, #ui-datepicker-div a {
+}
 #ui-datepicker-div a.ui-datepicker-prev, #ui-datepicker-div a.ui-datepicker-next {
   --ui-datepicker-div-a-ui-datepicker-next-or-ui-datepicker-div-a-ui-datepicker-prev-bg: transparent !important;
 }
@@ -162,7 +165,9 @@ body .ui-resizable-autohide .ui-resizable-handle { display: none; } /* use 'body
   background-color:#eee !important;border:1px solid #aaa;
 }
 
-#ui-datepicker-div .ui-datepicker-control, #ui-datepicker-div  a { background-color: #eee; color: #08f !important;}
+#ui-datepicker-div .ui-datepicker-control, #ui-datepicker-div  a {
+  color: #08f !important;
+}
 #ui-datepicker-div .ui-datepicker-days-row { background-color: #bbb;}
 #ui-datepicker-div .ui-datepicker-week-end-cell, #ui-datepicker-div .ui-datepicker-week-end-cell  a { background-color: #ddd; color: #0cc; border-color: #bbb; border-top-color: #ddd; border-left-color: #ddd;}
 #ui-datepicker-div .ui-datepicker-title-row { background-color: #eee;}
@@ -206,8 +211,10 @@ input[type="text"].large  { width: 317px; }
 
 #pluginsMenuSeparator {border:1px solid #555;}
 
-#pwgHead, #footer {
+#pwgHead {
 	background-color: #333;
+}
+#pwgHead, #footer {
 	color: #ccc;
 }
 
@@ -684,10 +691,12 @@ form#categoryOrdering p.albumActions .userSeparator {border: 1px solid #E1E1E1;}
 .font-checkbox:hover .icon-check-empty, .font-checkbox:hover .icon-check {color: #F70;}
 .font-checkbox .icon-check {color: #FFA646;}
 
-legend {color: #3C3C3C;}
+legend {
+}
 a#showPermissions {color: #5B5B5B; border: 1px solid #D6D6D6; background-color: #FAFAFA;}
 a#showPermissions:hover {border-color: #A5A5A5;}
-.icon-plus.cboxElement {background-color: #F6F6F6;}
+.icon-plus.cboxElement {
+}
 .icon-plus.cboxElement:hover {background-color: #F2F2F2;}
 .selectize-control.single .selectize-input {border: 2px solid #FFA646!important; color: #3C3C3C;}
 .selectize-control.single .selectize-input:hover {border-color: #FAC17E!important;}
@@ -709,7 +718,8 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 
 .addFilesButtonChanged:hover {background-color: #BBB;}
 
-#checkActions a, .deleteDerivButtons a {background-color: #E8E8E8;}
+#checkActions a, .deleteDerivButtons a {
+}
 #filterList select, .pictureLevels select, #permitAction select, .sort-by select {background-color: #FFF; color: #4E4E4E; border: 2px solid #7070704f !important; outline: none !important;}
 #filter_category .selectize-input.items.full.has-options.has-items, #filter_tags .selectize-input.items.not-full.has-options,
 #filter_tags .selectize-input.items.not-full, #filter_search input, #action_move .selectize-input.items.full.has-options.has-items,
@@ -833,7 +843,6 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 }
 
 .linked-albums-badge {
-  background: #DBDBDB;
 }
 
 .breadcrumb-item {
@@ -851,13 +860,11 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
   background-color: white;
 }
 .AddIconTitle {
-  color: #000;
 }
 
 .search-result-item {
   background-color: #fafafa;
   box-shadow: 0 2px #00000024;
-  color: #777;
 }
 
 .search-result-item .icon-plus-circled{
@@ -978,4 +985,98 @@ label:has(> .filters-icon-check:disabled), span:has(+ .filters-icon-check:disabl
 .filter-manager-options-container.selected-filter-container:hover{
   background-color: #5D5D5D;
 }
+}
+
+@layer theme-skin-base {
+body, h3, dt, h2, .throw, .content, label , legend {
+  color:#777;
+}
+
+input {
+  color:#666;
+  background-color: #ccc;
+}
+
+input[type="text"], input[type="file"] {
+  background-color: #ddd;
+}
+
+input, select, textarea {
+  border: 1px solid #999;
+}
+
+h3, .throw, .row1 {
+  background-color: #ddd;
+}
+
+.content dl, dd {
+  margin:5px;
+}
+
+fieldset {
+  border: none;
+}
+
+textarea {
+  font-size: 13px;
+}
+
+label {
+  cursor:pointer
+}
+
+a {
+  color:#3A3A3A;
+}
+
+a:hover, a:active {
+  color: #ffa646;
+}
+
+#ui-datepicker-div .ui-datepicker-control, #ui-datepicker-div a {
+  background-color: #FFF !important;
+}
+
+#ui-datepicker-div .ui-datepicker-control, #ui-datepicker-div  a {
+  background-color: #eee;
+}
+
+legend {
+  color: #3C3C3C;
+}
+
+.icon-plus.cboxElement {
+  background-color: #F6F6F6;
+}
+
+#checkActions a, .deleteDerivButtons a {
+  background-color: #E8E8E8;
+}
+
+.linked-albums-badge {
+  background: #DBDBDB;
+}
+
+.AddIconTitle {
+  color: #000;
+}
+
+.search-result-item {
+  color: #777;
+}
+
+/* #footer and default/theme.css's `#theAdminPage .admin-footer` are the
+   SAME real element (id="footer" class="admin-footer") -- confirmed live
+   via a real screenshot diff, not text/specificity analysis: the two
+   selectors share no substring at all, so no static scanner (this
+   campaign's included) can ever detect this pairing. Under normal
+   cascade #theAdminPage .admin-footer's higher specificity wins
+   (background-color: transparent); demoted here so that still holds now
+   that theme-skin would otherwise win unconditionally by layer position.
+   color:#ccc stays above -- .admin-footer itself sets no color, so
+   there's no real conflict for that property. */
+#pwgHead, #footer {
+  background-color: #333;
+}
+
 }

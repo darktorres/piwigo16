@@ -14,7 +14,6 @@ form p {
 }
 
 li {
-  margin: 5px;
 }
 
 .badge-release {
@@ -54,4 +53,11 @@ p.release .errors {
 .autoupdate_bar.u-hidden {
   display: none;
 }
+}
+
+@layer pages-base {
+li {
+  margin: 5px;
+}
+
 }

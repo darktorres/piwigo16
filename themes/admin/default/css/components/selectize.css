@@ -74,7 +74,6 @@
 }
 
 .selectize-input::after {
-  content: " ";
   display: block;
   clear: left;
 }
@@ -102,7 +101,6 @@
 
 .selectize-dropdown-content {
   overflow: hidden auto;
-  max-height: 200px;
 }
 
 .selectize-control.single .selectize-input,
@@ -111,7 +109,6 @@
 }
 
 .selectize-control.single .selectize-input::after {
-  content: " ";
   display: block;
   position: absolute;
   top: 50%;
@@ -170,4 +167,19 @@
 .selectize-control.plugin-remove_button [data-value] .remove:hover {
   background: rgb(0 0 0 / 0.05);
 }
+}
+
+@layer components-base {
+.selectize-input::after {
+  content: " ";
+}
+
+.selectize-dropdown-content {
+  max-height: 200px;
+}
+
+.selectize-control.single .selectize-input::after {
+  content: " ";
+}
+
 }

@@ -2,15 +2,20 @@
    always loads first for the admin layout (Template::setTheme()'s
    parent-before-child walk) -- `roma`/`clear` need no equivalent
    declaration of their own, since this always loads before either
-   skin's own theme.css. `theme-skin-base` and `vendor-base` (P52,
-   the @layer wrap) sit before `theme-chain` on purpose: both hold
-   content that must lose to `theme-chain`/`theme-skin` on ordinary
-   specificity grounds -- roma/clear's own generic/reset-shaped rules
-   for `theme-skin-base`, and fontello.css/animation.css's generic
-   icon-font and `@keyframes spin` rules for `vendor-base` -- so they
-   can never win by virtue of layer position alone the way a later
-   layer would. */
-@layer reset, tokens, base, theme-skin-base, vendor-base, theme-chain, theme-skin, components, pages, utilities;
+   skin's own theme.css. `theme-skin-base`, `vendor-base`,
+   `components-base` and `pages-base` (P52, the @layer wrap + Step 6's
+   scan) all sit before `theme-chain` on purpose: each holds content
+   that must lose to `theme-chain`/`theme-skin` on ordinary specificity
+   grounds -- roma/clear's own generic/reset-shaped rules for
+   `theme-skin-base`; fontello.css/animation.css's generic icon-font
+   and `@keyframes spin` rules for `vendor-base`; jquery-ui.css's/
+   selectize's generic widget-state styling (confirmed still needed
+   unscoped elsewhere -- e.g. `.ui-widget-content` for cluetip
+   tooltips -- so demoted, not deleted) for `components-base`; and
+   `history.css`'s `.detail-item`/`user_list.css`'s two `:hover`
+   states for `pages-base` -- so none of them can win by virtue of
+   layer position alone the way a later layer would. */
+@layer reset, tokens, base, theme-skin-base, vendor-base, components-base, pages-base, theme-chain, theme-skin, components, pages, utilities;
 
 @layer theme-chain {
 

@@ -49,11 +49,8 @@ div.jGrowl.top-right {
 
 div.jGrowl div.jGrowl-closer,
 div.jGrowl div.jGrowl-notification {
-  background-color: #000;
-  opacity: 0.85;
   width: 235px;
   padding: 10px;
-  font-family: Tahoma, Arial, Helvetica, sans-serif;
   font-size: 1em;
   text-align: left;
   display: none;
@@ -92,4 +89,14 @@ div.jGrowl div.jGrowl-closer {
     display: none;
   }
 }
+}
+
+@layer components-base {
+div.jGrowl div.jGrowl-closer,
+div.jGrowl div.jGrowl-notification {
+  background-color: #000;
+  opacity: 0.85;
+  font-family: Tahoma, Arial, Helvetica, sans-serif;
+}
+
 }

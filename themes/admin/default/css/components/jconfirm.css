@@ -46,7 +46,7 @@
 /* Real, load-bearing: `jconfirm.ts` reference-counts this class onto
    `document.body` for as long as any dialog is open. */
 body[class*="jconfirm-no-scroll-"] {
-  overflow: hidden !important;
+  overflow: hidden;
 }
 
 .jconfirm {
@@ -65,7 +65,7 @@ body[class*="jconfirm-no-scroll-"] {
 }
 
 .jconfirm .jconfirm-bg.jconfirm-bg-h {
-  opacity: 0 !important;
+  opacity: 0;
 }
 
 /* display:table/table-row/table-cell -> flex: see
@@ -119,11 +119,11 @@ body[class*="jconfirm-no-scroll-"] {
 }
 
 .jconfirm .jconfirm-box.jconfirm-type-red .jconfirm-title-c .jconfirm-icon-c {
-  color: var(--color-danger-flat) !important;
+  color: var(--color-danger-flat);
 }
 
 .jconfirm .jconfirm-box.jconfirm-type-orange .jconfirm-title-c .jconfirm-icon-c {
-  color: var(--color-warning) !important;
+  color: var(--color-warning);
 }
 
 .jconfirm .jconfirm-box.loading {
@@ -168,8 +168,8 @@ body[class*="jconfirm-no-scroll-"] {
   cursor: pointer;
   opacity: 0.6;
   text-align: center;
-  font-size: 27px !important;
-  line-height: 14px !important;
+  font-size: 27px;
+  line-height: 14px;
   display: none;
   z-index: 1;
 }

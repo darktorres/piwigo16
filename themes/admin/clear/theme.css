@@ -713,7 +713,7 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 #addAlbumForm input[name="category_name"] {border:none!important; margin-top: 5px!important;}
 #addAlbumForm input[name="category_name"]:focus {background-color: #DDD;}
 .buttonSeparator {color: #3C3C3C;}
-#uploadForm li.plupload_droptext {background-color: #F5F5F5!important;}
+#uploadForm li.plupload_droptext {background-color: #F5F5F5;}
 .addFilesButtonChanged {background-color: #E5E5E5;}
 
 .addFilesButtonChanged:hover {background-color: #BBB;}

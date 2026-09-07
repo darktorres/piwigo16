@@ -77,8 +77,6 @@
 
 .plupload_filelist li {
   padding: 10px 8px;
-  background: #f5f5f5 url("../../images/plupload/backgrounds.gif") repeat-x 0
-    -156px;
   border-bottom: 1px solid #ddd;
 }
 
@@ -167,7 +165,6 @@ li.plupload_done a {
 }
 
 li.plupload_droptext {
-  background: transparent;
   text-align: center;
   vertical-align: middle;
   border: 0;
@@ -185,6 +182,7 @@ li.plupload_droptext {
 }
 
 li.plupload_droptext {
+  background: transparent;
   line-height: 165px;
 }
 

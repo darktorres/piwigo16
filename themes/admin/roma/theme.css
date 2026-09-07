@@ -70,6 +70,7 @@ h1 .bc-albums {
 }
 .tabsheet li.selected_tab a {
   --tabsheet-li-selected-tab-a-color: #c1c1c1;
+  color: var(--tabsheet-li-selected-tab-a-color);
 }
 .tabsheet a {
   color: #7e7e7e;
@@ -1071,7 +1072,7 @@ li.plupload_delete a.remove-format:hover{color: #c0c0c0;}
   --addalbum-form-input-placeholder-color: #777 !important;
 }
 
-#uploadForm li.plupload_droptext {background-color: #343434!important; color: #777 !important;}
+#uploadForm li.plupload_droptext {background-color: #343434; color: #777 !important;}
 .addFilesButtonChanged {background-color: #888;}
 .addFilesButtonChanged:hover {background-color: #777;}
 .selectAlbumFirst {

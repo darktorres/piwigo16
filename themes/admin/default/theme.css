@@ -6913,7 +6913,7 @@ fieldset.environment-fieldset legend i[class*="icon-"] {
 .plupload_filelist_header {display: none;}
 .plupload_filelist {scrollbar-width: thin!important;}
 .plupload_wrapper, .plupload_file_size {font-weight: bold;}
-.plupload_filelist li {background: none!important; font-weight: bold;}
+.plupload_filelist li {background: none; font-weight: bold;}
 li.plupload_delete a {background: url("images/cancel.svg")!important; background-size: cover !important; width: 10px; height: 10px; margin-top: 3px;}
 li.plupload_delete a:hover {background: url("images/cancelhover.svg")!important; background-size: cover !important;}
 .plupload_file_status {margin-right: 45px;}

@@ -1,10 +1,10 @@
 @layer pages {
 .eiw .messages ul li {
-  list-style-type: none !important;
+  list-style-type: none;
 }
 
 .eiw .messages .eiw-icon {
-  margin-right: 10px !important;
+  margin-right: 10px;
 }
 
 /* Beats theme.css's .activity-chart{grid-template-rows:repeat(4,5vw)} (equal specificity, cascade-order risk). */

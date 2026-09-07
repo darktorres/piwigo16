@@ -50,7 +50,7 @@
 
 .jcrop-vline {
   height: 100%;
-  width: 1px !important;
+  width: 1px;
 }
 
 .jcrop-vline.right {
@@ -58,7 +58,7 @@
 }
 
 .jcrop-hline {
-  height: 1px !important;
+  height: 1px;
   width: 100%;
 }
 

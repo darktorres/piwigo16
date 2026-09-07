@@ -4,7 +4,7 @@
  */
 
 .tabsheet-wrapper, .selectedAlbum {
-  margin: 0 0 10px !important;
+  margin: 0 0 10px;
 }
 
 .selectedAlbum {
@@ -67,7 +67,7 @@
  */
 
 .tile_add.addAlbum form input::placeholder {
-  color: transparent !important;
+  color: transparent;
 }
 
 .albumTop {

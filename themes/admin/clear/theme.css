@@ -110,9 +110,9 @@ ul.thumbnails input { color:#666; font-size:10px; margin:0; background-color:#bb
 label {
 }
 .menuLi { background: #F3F3F3; }
-.menuLi_hidden { background: #ccc !important; }
+.menuLi_hidden { background: #ccc; }
 a.Piwigo {
-  font-family: verdana, arial, helvetica, sans-serif !important;
+  font-family: verdana, arial, helvetica, sans-serif;
   font-size: 11px; font-weight: normal; letter-spacing: 0;
   color : #0cc; text-decoration: none; border: 0; }
 a.Piwigo:hover  span.Piwigo  {
@@ -157,26 +157,26 @@ body .ui-resizable-autohide .ui-resizable-handle { display: none; } /* use 'body
 #ui-datepicker-div .ui-datepicker-control, #ui-datepicker-div a {
 }
 #ui-datepicker-div a.ui-datepicker-prev, #ui-datepicker-div a.ui-datepicker-next {
-  --ui-datepicker-div-a-ui-datepicker-next-or-ui-datepicker-div-a-ui-datepicker-prev-bg: transparent !important;
+  --ui-datepicker-div-a-ui-datepicker-next-or-ui-datepicker-div-a-ui-datepicker-prev-bg: transparent;
 }
 #ui-datepicker-div a.ui-datepicker-prev:hover,
 #ui-datepicker-div a.ui-datepicker-next:hover
 {
-  background-color:#eee !important;border:1px solid #aaa;
+  background-color:#eee;border:1px solid #aaa;
 }
 
 #ui-datepicker-div .ui-datepicker-control, #ui-datepicker-div  a {
-  color: #08f !important;
+  color: #08f;
 }
 #ui-datepicker-div .ui-datepicker-days-row { background-color: #bbb;}
 #ui-datepicker-div .ui-datepicker-week-end-cell, #ui-datepicker-div .ui-datepicker-week-end-cell  a { background-color: #ddd; color: #0cc; border-color: #bbb; border-top-color: #ddd; border-left-color: #ddd;}
 #ui-datepicker-div .ui-datepicker-title-row { background-color: #eee;}
 #ui-datepicker-div .ui-datepicker-title-row .ui-datepicker-week-end-cell a { color: #0cc;}
-#ui-datepicker-div  a:hover { color: #0cc !important; background-color: #eee !important;}
+#ui-datepicker-div  a:hover { color: #0cc; background-color: #eee;}
 #ui-datepicker-div .ui-datepicker-header select { background-color:#bbb; color:#666; font-weight:normal;}
 #ui-datepicker-div .ui-datepicker-links { background-color:#ddd;}
 #ui-datepicker-div .ui-datepicker-header { background-color:#bbb;}
-#ui-datepicker-div .ui-datepicker-current-day { background-color: #eee !important; border-color: #bbb; border-top-color: #eee; border-left-color: #eee;}
+#ui-datepicker-div .ui-datepicker-current-day { background-color: #eee; border-color: #bbb; border-top-color: #eee; border-left-color: #eee;}
 #ui-datepicker-div .ui-datepicker-days-cell { background-color:#bbb; border:1px solid #ddd; border-top-color: #bbb; border-left-color: #bbb;}
 img.ui-datepicker-trigger{margin:-2px 10px 1px -2px;}
 
@@ -223,7 +223,7 @@ input[type="text"].large  { width: 317px; }
 
 .AlbumViewSelector {background: #fafafa;}
 .pluginName {color:#111;}
-.pluginBox.incompatible {border-color:#a00 !important;}
+.pluginBox.incompatible {border-color:#a00;}
 
 .languageBox {background-color:#ddd;}
 .languageName {color:black;}
@@ -246,10 +246,10 @@ ul.thumbnails li.rank-of-image {--ul-thumbnails-li-rank-of-image-bg: #ddd;}
   color: #999;
 }
 
-#batchManagerGlobal .thumbSelected { background-color:transparent !important }
+#batchManagerGlobal .thumbSelected { background-color:transparent}
 
 #batchManagerGlobal .thumbSelected .wrap2 {
-  background-color: transparent !important;
+  background-color: transparent;
 }
 
 #batchManagerGlobal #selectedMessage {
@@ -295,8 +295,8 @@ ul.thumbnails li.rank-of-image {--ul-thumbnails-li-rank-of-image-bg: #ddd;}
 }
 
 .buttonLike:disabled, input[type="submit"]:disabled, input[type="button"]:disabled, input[type="reset"]:disabled {
-  background: #ECECEC !important;
-  color: #D5D5D5 !important;
+  background: #ECECEC;
+  color: #D5D5D5;
   cursor: not-allowed;
 }
 
@@ -383,7 +383,7 @@ label>p.group_select {
 }
 
 .groups .Group-name .Group-name-container p:focus{
-  border:1px solid #3c3c3c!important;
+  border:1px solid #3c3c3c;
   background-color:white;
 }
 
@@ -472,7 +472,7 @@ label>p.group_select {
 }
 
 .selectize-control.user-selecter.single .selectize-input, .selectize-control.action-selecter.single .selectize-input{
-    border-color: #D3D3D3 !important;
+    border-color: #D3D3D3;
 }
 
 /* Selection mode */
@@ -504,16 +504,16 @@ input:focus + .slider {
 }
 
 .GroupBackgroudSelected{
-  background-color:#ffd7ad!important;
+  background-color:#ffd7ad;
 }
 
 .OrangeIcon{
-  background-color:#f98100!important;
-  color:#ffe4c7!important;
+  background-color:#f98100;
+  color:#ffe4c7;
 }
 
 .OrangeFont{
-  color:#f70!important;
+  color:#f70;
 }
 
 /* Selection mode content */
@@ -618,12 +618,12 @@ input:focus + .slider {
 }
 
 .ValidationUserAssociated, .ValidationUserDissociated{
-  color:#0a0 !important;
+  color:#0a0;
   background-color:#c2f5c2;
 }
 
 .ValidationUserAssociated p, .ValidationUserDissociated p {
-  color:#0a0 !important;
+  color:#0a0;
 }
 
 /* ------ */
@@ -633,29 +633,29 @@ input:focus + .slider {
 }
 
 table.dataTable tr.even {
-  background-color: #ddd !important;
+  background-color: #ddd;
 }
 
 table.dataTable tr.even td.sorting_1 {
-  background-color: #ccc !important;
+  background-color: #ccc;
   color:#333;
 }
 
 table.dataTable tr.odd {
-  background-color: #eee !important;
+  background-color: #eee;
 }
 
 table.dataTable tr.odd td.sorting_1 {
-  background-color: #ddd !important;
+  background-color: #ddd;
   color:#333;
 }
 
 table.dataTable thead th, table.dataTable.no-footer {
-  border-color: #ddd !important;
+  border-color: #ddd;
 }
 
 .dataTables_wrapper .dataTables_info {
-  color:#777 !important;
+  color:#777;
 }
 
 .userPropertiesContainer {border-color:#ddd;}
@@ -700,8 +700,8 @@ a#showPermissions:hover {border-color: #A5A5A5;}
 .icon-plus.cboxElement:hover {background-color: #F2F2F2;}
 .selectize-control.single .selectize-input {border: 2px solid #FFA646!important; color: #3C3C3C;}
 .selectize-control.single .selectize-input:hover {border-color: #FAC17E!important;}
-.plupload_filelist {scrollbar-color: #CBCBCB #fff!important; background-color: #fff!important;}
-.plupload_filelist_footer {background-color: #F5F5F5!important;}
+.plupload_filelist {scrollbar-color: #CBCBCB #fff; background-color: #fff;}
+.plupload_filelist_footer {background-color: #F5F5F5;}
 li.plupload_delete a {background: url("images/cancel.svg")!important; background-size: cover!important;}
 li.plupload_delete a:hover {background: url("images/cancelhover.svg")!important; background-size: cover!important;}
 li.plupload_delete a span {background: #FFF;}
@@ -710,7 +710,7 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 
 .addAlbumEmpty {color: #3C3C3C;}
 #permitAction p {background: #FFF;}
-#addAlbumForm input[name="category_name"] {border:none!important; margin-top: 5px!important;}
+#addAlbumForm input[name="category_name"] {border:none; margin-top: 5px;}
 #addAlbumForm input[name="category_name"]:focus {background-color: #DDD;}
 .buttonSeparator {color: #3C3C3C;}
 #uploadForm li.plupload_droptext {background-color: #F5F5F5;}
@@ -720,11 +720,11 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 
 #checkActions a, .deleteDerivButtons a {
 }
-#filterList select, .pictureLevels select, #permitAction select, .sort-by select {background-color: #FFF; color: #4E4E4E; border: 2px solid #7070704f !important; outline: none !important;}
+#filterList select, .pictureLevels select, #permitAction select, .sort-by select {background-color: #FFF; color: #4E4E4E; border: 2px solid #7070704f; outline: none;}
 #filter_category .selectize-input.items.full.has-options.has-items, #filter_tags .selectize-input.items.not-full.has-options,
 #filter_tags .selectize-input.items.not-full, #filter_search input, #action_move .selectize-input.items.full.has-options.has-items,
 #action_dissociate .selectize-input.items.full.has-options.has-items {
-  border: 2px solid #7070704f !important;
+  border: 2px solid #7070704f;
   background: #FFF;
   color: #3C3C3CBD;
 }
@@ -733,14 +733,14 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 #action_title .large, #action_author .large {background-color: #FFF; color: #4E4E4E;}
 #filter_dimension .slider-choice, #filter_filesize .slider-choice {background-color: #EEE; color: #777;}
 #filter_dimension .slider-choice:hover, #filter_filesize .slider-choice:hover, .dimension-cancel:hover {
-  text-decoration: none; background-color: #ffa646 !important; color: initial;
+  text-decoration: none; background-color: #ffa646; color: initial;
 }
 #filterList .ui-slider .ui-slider-range {background: rgb(255,166,70, 0.9); margin-top: -1px; border: 1px solid #ffaf58;}
 #filterList .ui-widget-content {border: 1px solid #EEE; background: #DDD;}
 
 #batchManagerGlobal option[disabled] {background-color: #EEE;}
-.dimension-cancel {background-color: #F8F8F8 !important;}
-.pageNumberSelected {color: #FFF !important; font-weight: bold;}
+.dimension-cancel {background-color: #F8F8F8;}
+.pageNumberSelected {color: #FFF; font-weight: bold;}
 
 #batchManagerGlobal .ui-state-default, #batchManagerGlobal .ui-widget-content .ui-state-default,#batchManagerGlobal .ui-widget-header .ui-state-default {
   border: 1px solid #ffaf58; background: #ffaf58;
@@ -878,7 +878,7 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 .breadcrumb-item.add-item.highlight {
   background: #ffa646;
   box-shadow: 0 2px #af7200;
-  color: white !important;
+  color: white;
 }
 
 .move-cat-container:hover .badge-container i,
@@ -934,15 +934,15 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 .cat-modify-footer-see-out,
 .savebar-see-out,
 .buttonSecond {
-  background-color: #ECECEC!important;
-  color: #3C3C3C!important;
+  background-color: #ECECEC;
+  color: #3C3C3C;
 }
 
 .cat-modify-footer-see-out:hover,
 .savebar-see-out:hover,
 .buttonSecond:hover {
-  background-color: #F29F4B!important;
-  color: #3C3C3C!important;
+  background-color: #F29F4B;
+  color: #3C3C3C;
 }
 
 .cat-modify-footer-see-out:focus {
@@ -961,7 +961,7 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 
 /* Filters options */
 label:has(> .filters-icon-check:disabled), span:has(+ .filters-icon-check:disabled){
-  color: #D5D5D5 !important;
+  color: #D5D5D5;
   cursor: not-allowed;
 }
 

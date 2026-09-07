@@ -21,7 +21,11 @@ body, h3, dt, h2, .throw, .content, label , legend  {
 }
 
 th { color: #888; }
-input, select, textarea { color:#666; background-color: #ccc; }
+input, select, textarea { color:#666; background-color: #ccc;
+
+  --select-color: #666;
+  --select-bg: #ccc;
+}
 option[disabled] { background-color: #ccc; }
 input[type="radio"], input[type="checkbox"] { background-color: transparent; }
 
@@ -33,10 +37,12 @@ input[type="text"], input[type="file"] {
 
 select, textarea {
 	background-color: #ddd;
+
+  --select-bg: #ddd;
 }
 
 input:focus, select:focus, textarea:focus {
-  background-color: #eee;
+  --input-focus-bg: #eee;
   color: #666;
 }
 
@@ -130,8 +136,8 @@ ul.actions, .content form#waiting  {text-align:center;}
 	color: #000;
 	background-color: #eee;
 }
-.cluetip-outer { border-color:#999; color: #777; background-color: #eee; }
-.cluetip-title { background-color: #ddd; }
+.cluetip-outer { border-color:#999; --cluetip-outer-color: #777; --cluetip-outer-bg: #eee; }
+.cluetip-title { --cluetip-title-bg: #ddd; }
 /* jQuery ui resizable */
 .ui-resizable { position: relative; }
 .ui-wrapper { border: 0; }
@@ -151,7 +157,7 @@ body .ui-resizable-autohide .ui-resizable-handle { display: none; } /* use 'body
 #ui-datepicker-div .ui-icon-circle-triangle-e {background: transparent url("icon/next.png") no-repeat;}
 #ui-datepicker-div .ui-datepicker-control, #ui-datepicker-div a {background-color: #FFF !important;}
 #ui-datepicker-div a.ui-datepicker-prev, #ui-datepicker-div a.ui-datepicker-next {
-  background-color:transparent !important;
+  --ui-datepicker-div-a-ui-datepicker-prev-bg: transparent !important;
 }
 #ui-datepicker-div a.ui-datepicker-prev:hover,
 #ui-datepicker-div a.ui-datepicker-next:hover
@@ -219,7 +225,7 @@ input[type="text"].large  { width: 317px; }
 .languageName {color:black;}
 .languageDefault {background-color:#dbe8f3;}
 
-ul.thumbnails li.rank-of-image {background-color: #ddd;}
+ul.thumbnails li.rank-of-image {--ul-thumbnails-li-rank-of-image-bg: #ddd;}
 
 /* Batch Manager */
 #batchManagerGlobal .thumbnails .font-checkbox [class*="icon-check"]::before {

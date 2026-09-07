@@ -48,21 +48,21 @@
 
 .selectize-input > input {
   display: inline-block !important;
-  padding: 0 !important;
-  min-height: 0 !important;
-  max-height: none !important;
-  max-width: 100% !important;
-  margin: 0 1px !important;
-  text-indent: 0 !important;
-  border: 0 none !important;
-  background: none !important;
-  line-height: inherit !important;
+  padding: 0;
+  min-height: 0;
+  max-height: none;
+  max-width: 100%;
+  margin: 0 1px;
+  text-indent: 0;
+  border: 0 none;
+  background: none;
+  line-height: inherit;
   /* Real vendor source only ever had `-webkit-user-select`; unprefixed
      `user-select` has covered every target engine (including Firefox)
      since long before this project's floor, so it replaces the
      prefixed form rather than sitting alongside it. */
-  user-select: auto !important;
-  box-shadow: none !important;
+  user-select: auto;
+  box-shadow: none;
 }
 
 .selectize-input > input::-ms-clear {
@@ -70,7 +70,7 @@
 }
 
 .selectize-input > input:focus {
-  outline: none !important;
+  outline: none;
 }
 
 .selectize-input::after {

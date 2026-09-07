@@ -21,11 +21,9 @@ body, h3, dt, h2, .throw, .content, label , legend  {
 }
 
 th { color: #888; }
-input, select, textarea { color:#666; background-color: #ccc;
+input { color:#666; background-color: #ccc; }
 
-  --select-color: #666;
-  --select-bg: #ccc;
-}
+select, textarea { --select-or-textarea-color: #666; --select-or-textarea-bg: #ccc; }
 option[disabled] { background-color: #ccc; }
 input[type="radio"], input[type="checkbox"] { background-color: transparent; }
 
@@ -36,13 +34,11 @@ input[type="text"], input[type="file"] {
 }
 
 select, textarea {
-	background-color: #ddd;
-
-  --select-bg: #ddd;
+	--select-or-textarea-bg: #ddd;
 }
 
 input:focus, select:focus, textarea:focus {
-  --input-focus-bg: #eee;
+  --input-focus-or-select-focus-or-textarea-focus-bg: #eee;
   color: #666;
 }
 
@@ -157,7 +153,7 @@ body .ui-resizable-autohide .ui-resizable-handle { display: none; } /* use 'body
 #ui-datepicker-div .ui-icon-circle-triangle-e {background: transparent url("icon/next.png") no-repeat;}
 #ui-datepicker-div .ui-datepicker-control, #ui-datepicker-div a {background-color: #FFF !important;}
 #ui-datepicker-div a.ui-datepicker-prev, #ui-datepicker-div a.ui-datepicker-next {
-  --ui-datepicker-div-a-ui-datepicker-prev-bg: transparent !important;
+  --ui-datepicker-div-a-ui-datepicker-next-or-ui-datepicker-div-a-ui-datepicker-prev-bg: transparent !important;
 }
 #ui-datepicker-div a.ui-datepicker-prev:hover,
 #ui-datepicker-div a.ui-datepicker-next:hover

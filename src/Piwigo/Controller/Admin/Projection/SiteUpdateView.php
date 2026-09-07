@@ -65,7 +65,6 @@ final readonly class SiteUpdateView implements View, HasPageAssets
     {
         return [
             AssetContribution::script('site_update', 'themes/admin/default/js/site/update.ts', loadMode: LoadMode::Footer),
-            AssetContribution::css('themes/admin/default/css/pages/site_update.css', id: 'site_update'),
         ];
     }
 }

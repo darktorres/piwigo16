@@ -1,10 +1,10 @@
 input[type='radio'] {
-  accent-color: #ff7700;
+  accent-color: #f70;
 }
 
 .input-container:focus-within,
 .input-modal:focus-within{
-  border:1px solid #ff7700!important;
+  border:1px solid #f70!important;
 }
 
 .gallery-icon-checkmark {
@@ -12,7 +12,7 @@ input[type='radio'] {
 }
 
 .btn-main{
-  background-color:#ff7700!important;
+  background-color:#f70!important;
   color:white!important;
 }
 
@@ -22,7 +22,7 @@ input[type='radio'] {
 }
 
 .btn-main:disabled {
-  background-color:#aaaaaa!important;
+  background-color:#aaa!important;
   color: #3C3C3C !important;
 }
 
@@ -31,13 +31,13 @@ input[type='radio'] {
 }
 
 #lang-select #other-languages span:hover{
-  color:#ff7700; 
+  color:#f70; 
 }
 
 .profile-section .api-icon-action i:hover,
 .close-modal:hover,
 .profile-section .icon-clone:hover  {
-  color: #ff7700;
+  color: #f70;
 }
 
 .profile-section div.api-tab-line:nth-child(even) {
@@ -45,7 +45,7 @@ input[type='radio'] {
 }
 
 .profile-section #api_key_list .edit {
-  border: 1px solid #ff7700 !important;
+  border: 1px solid #f70 !important;
 }
 
 .profile-section .new-apikey .btn-link{
@@ -53,14 +53,14 @@ input[type='radio'] {
 }
 
 .bg-modal {
-  background-color: rgba(0,0,0,0.7);
+  background-color: rgb(0,0,0,0.7);
 }
 
 .slider {
   background-color: #ccc;
 }
 
-.slider:before {
+.slider::before {
   background-color: white;
 }
 
@@ -77,10 +77,10 @@ input[type='radio'] {
 .light #password-form,
 .light #lang-select #other-languages,
 .light .profile-section,
-.light .slider:before,
+.light .slider::before,
 .light .body-modal,
 .light [data-tooltip]:hover::after {
-  background-color:#ffffff;
+  background-color:#fff;
 }
 
 #theIdentificationPage .light a,
@@ -109,13 +109,13 @@ input[type='radio'] {
 #theRegisterPage .light a:hover,
 #thePasswordPage .light a:hover,
 #theProfilePage .light a:hover{
-  color:#ff7700;
+  color:#f70;
 }
 
 .light #header-options a,
 .light #header-options .toggle-mode,
 .light #selected-language-container{
-  color:#ff7700;
+  color:#f70;
 }
 
 .light .input-container,
@@ -128,7 +128,7 @@ input[type='radio'] {
 .light .input-container input:is(:-webkit-autofill, :autofill)
 {
   box-shadow: 0 0 0 100px #F0F0F0 inset;
-  -webkit-box-shadow: 0 0 0px 1000px #F0F0F0 inset !important;
+  box-shadow: 0 0 0 1000px #F0F0F0 inset !important;
   -webkit-text-fill-color: #3C3C3C;
   color:#3C3C3C;
 }
@@ -166,7 +166,7 @@ input[type='radio'] {
 }
 
 .light .slider {
-  background-color: #CCCCCC;
+  background-color: #CCC;
 }
 
 .light .api-list-body > div:nth-child(4n+1),
@@ -183,7 +183,7 @@ input[type='radio'] {
 }
 
 .light .close-modal {
-  color: #ffffff;
+  color: #fff;
 }
 
 .light input[type="date"] {
@@ -246,7 +246,7 @@ input[type='radio'] {
 #thePasswordPage .dark a:hover,
 #theProfilePage .dark a:hover,
 .dark #lang-select #other-languages span{
-  color:#ff7700;
+  color:#f70;
 }
 
 .dark .input-container,
@@ -258,7 +258,7 @@ input[type='radio'] {
 .dark .input-container input:is(:-webkit-autofill, :autofill)
 {
   box-shadow: 0 0 0 100px #303030 inset;
-  -webkit-box-shadow: 0 0 0px 1000px #303030 inset !important;
+  box-shadow: 0 0 0 1000px #303030 inset !important;
   -webkit-text-fill-color: #D6D6D6;
   color:#D6D6D6;
 }
@@ -273,7 +273,7 @@ input[type='radio'] {
 
 .dark #lang-select #other-languages,
 .dark .slider,
-.dark input:checked + .slider:before {
+.dark input:checked + .slider::before {
   background-color: #3C3C3C;
 }
 
@@ -302,8 +302,8 @@ input[type='radio'] {
   background-color: #FFA646;
 }
 
-.dark .slider:before {
-  background-color: #777777;
+.dark .slider::before {
+  background-color: #777;
 }
 
 .dark .api-list-head,
@@ -313,7 +313,7 @@ input[type='radio'] {
 
 .dark .api-list-body > div:nth-child(4n+1),
 .dark .api-list-body > div:nth-child(4n+2) {
-  background-color: #333333;
+  background-color: #333;
 }
 
 .dark .icon-collapse {

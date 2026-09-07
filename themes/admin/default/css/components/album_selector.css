@@ -7,7 +7,7 @@
   width: 100%;
   height: 100%;
   overflow: auto;
-  background-color: rgba(0,0,0,0.7);
+  background-color: rgb(0,0,0,0.7);
 }
 
 .linkedAlbumPopInContainer {
@@ -88,7 +88,7 @@
   width: 100%;
   overflow-y: auto;
   max-height: 400px;
-  margin: 10px 0 0 0;
+  margin: 10px 0 0;
 }
 
 .put-to-root {
@@ -118,7 +118,7 @@
 }
 
 .search-result-item {
-  margin: 10px 0px;
+  margin: 10px 0;
   padding: 5px 10px;
   height: 25px;
   border-radius: 5px;
@@ -193,19 +193,19 @@
 }
 
 .linked-album-subtitle {
-  margin: 0 0 30px 0;
+  margin: 0 0 30px;
 }
 
 .linked-album-subtitle p {
   margin: 0;
   font-style: italic;
   font-weight: 700;
-  color: #AAAAAA;
+  color: #AAA;
 }
 
 .linked-add-album {
   display: none;
-  margin: 0px;
+  margin: 0;
 }
 
 .album-switch-bottom {

@@ -1,3 +1,4 @@
+@layer vendor-base {
 @font-face {
   font-family: fontello;
   src: url('../font/fontello.eot?78376652');
@@ -190,3 +191,4 @@
 .icon-toggle-on::before { content: '\f205'; } /* '' */
 .icon-user-secret::before { content: '\f21b'; } /* '' */
 .icon-television::before { content: '\f26c'; } /* '' */
+}

@@ -1,3 +1,4 @@
+@layer components {
 /**
  * Clear-scheme half of the selectize port (see `selectize.css`'s own
  * header) -- every rule below is real and differs from
@@ -104,4 +105,5 @@
 .selectize-control.single .selectize-input,
 .selectize-dropdown.single {
   border-color: #b8b8b8;
+}
 }

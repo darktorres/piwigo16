@@ -1,4 +1,6 @@
+@layer pages {
 select[data-selectize="groups"],
 select[data-selectize="users"] {
   width: 600px;
+}
 }

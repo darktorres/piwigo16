@@ -1,3 +1,4 @@
+@layer components {
 .ratio-slider-label {
   margin-bottom: 11px;
 }
@@ -9,4 +10,5 @@
 
 .errorFilter-message {
   margin-left: 10px;
+}
 }

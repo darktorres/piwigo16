@@ -1,3 +1,4 @@
+@layer pages {
 .batch-manager-root {
   margin-bottom: 80px;
 }
@@ -93,4 +94,5 @@
 
 .breadcrumb-item {
   margin: 5px 0 !important;
+}
 }

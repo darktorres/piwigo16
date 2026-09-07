@@ -1,3 +1,4 @@
+@layer pages {
 /* specific to this page, do not move in theme.css */
 .addAlbumFormParent {
   display: none;
@@ -50,4 +51,5 @@
 
 .uploading-actions .progressbar {
   width: 0%;
+}
 }

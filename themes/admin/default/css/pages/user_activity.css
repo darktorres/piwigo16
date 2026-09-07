@@ -1,3 +1,4 @@
+@layer pages {
 .container {
   padding: 0 30px;
 }
@@ -277,4 +278,5 @@ div:has(> .activity-header) {
 .action-section::before {
   margin: 0 -5px 0 10px;
   opacity: 0.6;
+}
 }

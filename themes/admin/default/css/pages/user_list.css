@@ -1,4 +1,4 @@
-
+@layer pages {
 .icon-help-circled {
   color: #777 !important;
   cursor: help;
@@ -2140,4 +2140,5 @@ Advanced filter
 /* Beats this file's own .AddUserSuccessPanel{display:flex} (higher specificity). */
 .AddUserSuccessPanel.u-hidden {
   display: none;
+}
 }

@@ -1,3 +1,4 @@
+@layer pages {
 .thumbnails .wrap2 {
   width: var(--tn-width);
   height: var(--tn-height);
@@ -74,4 +75,5 @@
 
 .actionAddTags .item .remove:hover {
   background-color: #f70 !important;
+}
 }

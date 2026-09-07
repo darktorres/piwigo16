@@ -1,3 +1,4 @@
+@layer pages {
 .rating-album-filter {
   width: 400px;
 }
@@ -16,4 +17,5 @@
 
 .rating-detail-table {
   width: 100%;
+}
 }

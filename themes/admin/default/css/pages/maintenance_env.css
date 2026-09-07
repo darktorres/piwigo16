@@ -1,3 +1,4 @@
+@layer pages {
 .bold-list {
   font-weight: bold;
 }
@@ -19,4 +20,5 @@
 
 .badge-number {
   color: #fff;
+}
 }

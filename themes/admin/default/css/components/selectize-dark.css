@@ -1,3 +1,4 @@
+@layer components {
 /**
  * Dark-scheme half of the selectize port (see `selectize.css`'s own
  * header) -- every rule below is real and differs from
@@ -104,4 +105,5 @@
   background-color: #343434;
   background-image: linear-gradient(to bottom, #363636, #303030);
   background-repeat: repeat-x;
+}
 }

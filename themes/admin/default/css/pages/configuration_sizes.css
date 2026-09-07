@@ -1,3 +1,4 @@
+@layer pages {
 .sizeEnable {
   width: 50px;
 }
@@ -49,4 +50,5 @@ p.sizeDetails.u-block {
 
 .sizeEditOpen {
   margin-left: 10px;
+}
 }

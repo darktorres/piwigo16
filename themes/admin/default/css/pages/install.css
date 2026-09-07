@@ -1,3 +1,4 @@
+@layer pages {
 body {
   font-size: 12px;
 }
@@ -175,4 +176,5 @@ select:focus {
 
 .field-error:empty {
   display: none;
+}
 }

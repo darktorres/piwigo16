@@ -1,3 +1,4 @@
+@layer pages {
 .search-album-input-container {
   position: relative;
 }
@@ -370,4 +371,5 @@ input[name="position"] {
   .move-cat-title-container {
     max-width: 40%;
   }
+}
 }

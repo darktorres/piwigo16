@@ -1,3 +1,4 @@
+@layer components {
 /**
  * First-party port of plupload's own queue-widget stylesheet
  * (`jquery.plupload.queue.css` @2.1.2,
@@ -174,4 +175,5 @@ li.plupload_droptext {
   vertical-align: middle;
   border: 0;
   line-height: 165px;
+}
 }

@@ -1,3 +1,4 @@
+@layer pages {
         .icon-th-list {
             padding: 0;
             font-size: unset;
@@ -129,3 +130,4 @@
             grid-template-columns: 1fr 1.2fr 1fr 1.6fr 3fr;
             }
         }
+}

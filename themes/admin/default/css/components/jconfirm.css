@@ -1,3 +1,4 @@
+@layer components {
 /**
  * First-party port of jquery-confirm v3.3.4's dist CSS
  * (https://cdn.jsdelivr.net/npm/jquery-confirm@3.3.4/dist/jquery-confirm.min.css),
@@ -397,4 +398,5 @@ body[class*="jconfirm-no-scroll-"] {
 
 .jconfirm .jconfirm-box.jconfirm-animation-scale {
   transform: scale(0.5);
+}
 }

@@ -1,3 +1,4 @@
+@layer pages {
 /* Beats theme.css's .dropdown-option{display:block} (equal specificity, cascade-order risk). */
 .dropdown-option.u-hidden {
   display: none;
@@ -10,4 +11,5 @@
 
 .thumbnailsActionsShow {
   font-weight: bold;
+}
 }

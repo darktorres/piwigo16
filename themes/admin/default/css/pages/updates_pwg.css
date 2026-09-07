@@ -1,3 +1,4 @@
+@layer pages {
 form {
   width: 750px;
 }
@@ -52,4 +53,5 @@ p.release .errors {
 /* Beats theme.css's .autoupdate_bar{display:flex} (equal specificity, cascade-order risk). */
 .autoupdate_bar.u-hidden {
   display: none;
+}
 }

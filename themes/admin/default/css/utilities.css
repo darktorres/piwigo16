@@ -1,3 +1,4 @@
+@layer utilities {
 /* Shared utility classes for the admin theme. */
 
 .u-hidden {
@@ -26,4 +27,5 @@
 
 .u-clear-both {
   clear: both;
+}
 }

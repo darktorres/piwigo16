@@ -1,3 +1,4 @@
+@layer components {
 /**
  * First-party port of jqtree's vendor stylesheet (`jqtree.css`
  * @1.4.12, https://cdn.jsdelivr.net/npm/jqtree@1.4.12/jqtree.css).
@@ -156,4 +157,5 @@ span.jqtree-dragging {
   opacity: 0.6;
   cursor: pointer;
   padding: 2px 8px;
+}
 }

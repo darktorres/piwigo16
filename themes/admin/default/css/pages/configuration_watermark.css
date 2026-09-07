@@ -1,3 +1,4 @@
+@layer pages {
 /* Beats theme.css's .watermark-add-panel{display:none} (higher ID specificity). */
 .watermark-add-panel.u-inline {
   display: inline;
@@ -7,4 +8,5 @@
   display: block;
   margin-top: 10px;
   font-weight: normal;
+}
 }

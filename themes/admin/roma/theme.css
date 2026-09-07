@@ -1,3 +1,4 @@
+@layer theme-skin {
 /* text color */
 body, h3, dt, .throw, .content, label, legend {
 	color:#777;
@@ -2570,4 +2571,5 @@ label:has(> .filters-icon-check:disabled){
 
 .comments-search input:focus {
   outline: none;
+}
 }

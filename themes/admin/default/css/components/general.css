@@ -1,3 +1,4 @@
+@layer theme-chain {
 /* -------------
 Head Buttons
 ------------- 
@@ -332,4 +333,5 @@ Info
 
 .tree .badge-container i.icon-imagefolder-01.nb-sub-photos::before{
     margin-right:0.5em!important;
+}
 }

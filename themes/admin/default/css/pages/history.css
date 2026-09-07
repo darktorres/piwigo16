@@ -1,4 +1,4 @@
-
+@layer pages {
 .notClickable {
   opacity: 0.5;
 }
@@ -450,4 +450,5 @@
   .detail-item {
     max-width: 170px;
   }
+}
 }

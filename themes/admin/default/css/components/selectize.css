@@ -1,3 +1,4 @@
+@layer components {
 /**
  * First-party port of selectize.js's own theme stylesheets
  * (`selectize.default.css`/`selectize.dark.css` @0.11.2,
@@ -168,4 +169,5 @@
 
 .selectize-control.plugin-remove_button [data-value] .remove:hover {
   background: rgb(0 0 0 / 0.05);
+}
 }

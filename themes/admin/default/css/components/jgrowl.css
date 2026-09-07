@@ -1,3 +1,4 @@
+@layer components {
 /**
  * First-party port of jGrowl's own vendor stylesheet
  * (`jquery.jgrowl.min.css` @1.3.0,
@@ -90,4 +91,5 @@ div.jGrowl div.jGrowl-closer {
   div.jGrowl {
     display: none;
   }
+}
 }

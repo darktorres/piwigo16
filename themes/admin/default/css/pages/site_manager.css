@@ -1,3 +1,4 @@
+@layer pages {
 .site-row {
   text-align: left;
 }
@@ -9,4 +10,5 @@
 
 .create-site-directory {
   margin-top: 0;
+}
 }

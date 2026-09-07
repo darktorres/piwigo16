@@ -1,3 +1,4 @@
+@layer components {
 .linkedAlbumPopIn {
   display:none;
   position: fixed;
@@ -286,4 +287,5 @@
   margin: 0;
   text-align: start;
   padding: 10px;
+}
 }

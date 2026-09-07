@@ -1,3 +1,4 @@
+@layer pages {
 .showAddPermalink {
   text-align: left;
   margin-left: 1em;
@@ -32,4 +33,5 @@ table.table2.permalinks-table {
 
 .hit-history-spacer {
   width: 5px;
+}
 }

@@ -1,3 +1,4 @@
+@layer components {
 /**
  * First-party port of Jcrop's vendor stylesheet (`jquery.Jcrop.css`
  * v0.9.12, fetched from
@@ -181,4 +182,5 @@
 
 .jcrop-dragbar.ord-w {
   margin-left: -4px;
+}
 }

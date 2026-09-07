@@ -1,3 +1,4 @@
+@layer pages {
 .toggle-comment-option {
   cursor: pointer;
   position: relative;
@@ -73,4 +74,5 @@
 
 .cat-modify-infos .cat-modify-info-content.directory::first-letter {
   text-transform: none;
+}
 }

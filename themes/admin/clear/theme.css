@@ -1,3 +1,4 @@
+@layer theme-skin {
 /* generic colors - clear
 .gcText { color: #777777; }                 used for text
 .gcText2 { color: #777777; }                used for table header
@@ -976,4 +977,5 @@ label:has(> .filters-icon-check:disabled), span:has(+ .filters-icon-check:disabl
 
 .filter-manager-options-container.selected-filter-container:hover{
   background-color: #5D5D5D;
+}
 }

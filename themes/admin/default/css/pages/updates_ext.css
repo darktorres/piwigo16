@@ -1,3 +1,4 @@
+@layer pages {
 /* Beats theme.css's .autoupdate_bar{display:flex} (equal specificity, cascade-order risk). */
 .autoupdate_bar.u-hidden {
   display: none;
@@ -11,4 +12,5 @@
 /* Beats theme.css's .pluginBox{display:flex} (equal specificity, cascade-order risk). */
 .pluginBox.pluginMiniBox.u-hidden {
   display: none;
+}
 }

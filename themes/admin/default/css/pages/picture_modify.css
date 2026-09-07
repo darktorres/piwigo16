@@ -1,3 +1,4 @@
+@layer pages {
 /* Named for the shape they style -- see batch_manager_unit.css, which
    carries the same pair for the same markup. */
 .other-image-format.is-landscape {
@@ -37,4 +38,5 @@
 
 .selectize-input .item .remove:hover {
   background-color: #f70 !important;
+}
 }

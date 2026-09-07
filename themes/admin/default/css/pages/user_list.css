@@ -1,6 +1,6 @@
 @layer pages {
 .icon-help-circled {
-  color: #777 !important;
+  color: #777;
   cursor: help;
 }
 
@@ -164,7 +164,7 @@
 }
 
 .user-container-initials .small {
-  font-size: 1em !important;
+  font-size: 1em;
   line-height: 30px;
 }
 
@@ -538,7 +538,7 @@
 
 .dropdown-mores-plugins .selected,
 .dropdown-mores-plugins .edit-user-tabsheet {
-  border-bottom: unset !important;
+  border-bottom: unset;
 }
 
 .dropdown-mores-plugins .edit-user-tabsheet {
@@ -600,7 +600,7 @@
 
 .user-property-input-icon .user-property-input {
   background-color: transparent;
-  padding: 0 0 0 5px !important;
+  padding: 0 0 0 5px;
   font-size: 16px;
 }
 
@@ -718,7 +718,7 @@
 }
 
 .user-property-initials .small {
-  font-size: 3em !important;
+  font-size: 3em;
 }
 
 .user-property-username {
@@ -1065,7 +1065,7 @@
 
 .user-property-register,
 .user-property-last-visit {
-  font-size: 11px !important;
+  font-size: 11px;
   min-width: 80px;
 }
 
@@ -1140,7 +1140,7 @@
 }
 
 .user-property-main-user-body .main-user-rewrite-footer span {
-  background-color: transparent !important;
+  background-color: transparent;
 }
 
 .user-property-main-user-body .main-user-proceed-desc,
@@ -1200,7 +1200,7 @@
 }
 
 .user-property-group-container .selectize-input {
-  height: 70px !important;
+  height: 70px;
 }
 
 
@@ -1248,10 +1248,10 @@
 
 /* plugins tabsheet */
 .edit-user-tabsheet-plugins {
-  width: 435px !important;
-  height: 480px !important;
-  margin-right: 15px !important;
-  margin-top: 29px !important;
+  width: 435px;
+  height: 480px;
+  margin-right: 15px;
+  margin-top: 29px;
 }
 /* update */
 
@@ -1346,7 +1346,7 @@
 }
 
 .hide-user-property-password {
-  display: none !important;
+  display: none;
 }
 
 .AddUserPopInContainer{
@@ -1479,29 +1479,29 @@
 .GuestUserPopIn .item.active,
 .AddUserPopIn .item,
 .AddUserPopIn .item.active {
-  background-image:none !important;
-  background-color: #ffa646 !important;
-  border-color: transparent !important;
-  color: #000 !important;
+  background-image:none;
+  background-color: #ffa646;
+  border-color: transparent;
+  color: #000;
 
-  border-radius: 20px !important;
+  border-radius: 20px;
 }
 
 .EditUserPopIn .item .remove,
 .GuestUserPopIn .item .remove,
 .AddUserPopIn .item .remove {
-  background-color: transparent !important;
-  border-top-right-radius: 20px !important;
-  border-bottom-right-radius: 20px !important;
-  color: #000 !important;
+  background-color: transparent;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+  color: #000;
 
-  border-left: 1px solid transparent !important;
+  border-left: 1px solid transparent;
 
 }
 .EditUserPopIn .item .remove:hover,
 .GuestUserPopIn .item .remove:hover,
 .AddUserPopIn .item .remove:hover {
-  background-color: #f70 !important;
+  background-color: #f70;
 }
 
 /* selection panel */
@@ -1843,7 +1843,7 @@ Advanced filter
 
   width: min-content;
 
-  margin: 20px 20px 0  0 !important;
+  margin: 20px 20px 0  0;
   border-radius: 25px;
 
   position: relative;
@@ -1853,7 +1853,7 @@ Advanced filter
 .compactView .user-container .user-container-email,
 .compactView .user-container .user-container-groups,
 .compactView .user-container .user-container-registration {
-  display: none !important;
+  display: none;
 }
 
 .compactView .user-container-username  {
@@ -1935,7 +1935,7 @@ Advanced filter
 }
 
 .selectize-input.items .item {
-  color: #000 !important;
+  color: #000;
 }
 
 /* Selection mode */ 
@@ -1957,7 +1957,7 @@ Advanced filter
 }
 
 .selectable:hover .select-checkbox{
-  background-color: #ffa646 !important;
+  background-color: #ffa646;
 }
 
 .selectable .user-first-col:hover {

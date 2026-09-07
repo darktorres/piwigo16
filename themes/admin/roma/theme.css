@@ -19,7 +19,6 @@ textarea:focus {
 }
 
 
-.showInfo { color:#666; }
 .showInfo:hover { color:#999; }
 
 h2 { color: #ccc; }
@@ -2676,6 +2675,10 @@ legend {
 
 .search-result-item {
   color: #777;
+}
+
+.showInfo {
+  color: #666;
 }
 
 }

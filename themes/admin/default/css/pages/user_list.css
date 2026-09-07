@@ -1543,6 +1543,7 @@
 
 .search-icon {
   z-index: 13;
+  top: 20px;
 }
 
 /* ----------------------
@@ -2166,10 +2167,6 @@ Advanced filter
 
 .AddUserCancel:hover {
   color: #474747;
-}
-
-.search-icon {
-  top: 20px;
 }
 
 .advanced-filter-close {

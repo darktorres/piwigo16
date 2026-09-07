@@ -380,6 +380,9 @@ a.stat-box:hover {
   border-right-color:#333;
   box-shadow: none;
 }
+.pluginBox, .pluginContent, .groups .GroupContainer {
+  border-left: none;
+}
 .pluginContainer.line-form .pluginBox:hover .pluginContent {background: #1e1e1d;}
 .groups #addGroupForm:hover{
   background-color: #1b1b1b;
@@ -2640,10 +2643,6 @@ a:hover, a:active {
 
 .showInfo-dropdown-header a {
   color:#3A3A3A
-}
-
-.pluginBox, .pluginContent, .groups .GroupContainer {
-  border-left: none;
 }
 
 .AddUserSubmit, .update-user-button, .user-property-main-user-body .main-user-btn-validate {

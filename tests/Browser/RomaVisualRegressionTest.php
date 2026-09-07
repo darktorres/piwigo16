@@ -401,6 +401,36 @@ it('renders the .AddPluginSuccess jGrowl-adjacent marker under roma', function (
             "DELETE FROM activity WHERE object = 'system' AND details LIKE '%" .
                 H::dbEscape($db, ROMA_VR_PLUGIN_FIXTURE_ID) . "%'"
         );
+
+        // Defensive, unconditional fallback for the API-based uninstall
+        // above: that call sits in the `try` block *after*
+        // assertScreenshotMatches(), so a real assertion failure (this
+        // marker has its own bug, tracked separately) throws before the
+        // uninstall ever runs, skipping straight to this `finally`. The
+        // plugin directory still gets removed below either way, so the
+        // DB is left with an "installed" row pointing at files that no
+        // longer exist -- confirmed live, this exact "THIS PLUGIN IS
+        // MISSING BUT IT IS INSTALLED" error card corrupted
+        // admin-plugins-installed's own baseline for the rest of the
+        // same composer test:visual run. A raw DELETE here needs no
+        // page/session/CSRF state to still be valid, unlike the fetch-
+        // based uninstall, so it cleans up even when everything above it
+        // already threw.
+        //
+        // `plugin_migrations` first: `plugins`.`id` is the parent side of
+        // `fk_plugin_migrations_plugin_id` (ON DELETE RESTRICT, not
+        // CASCADE) -- confirmed live, deleting `plugins` first throws
+        // "Cannot delete or update a parent row" and this whole `finally`
+        // block aborts right there, skipping the theme/activity cleanup
+        // that runs after it too.
+        H::dbQuery(
+            $db,
+            "DELETE FROM plugin_migrations WHERE plugin_id = '" . H::dbEscape($db, ROMA_VR_PLUGIN_FIXTURE_ID) . "'"
+        );
+        H::dbQuery(
+            $db,
+            "DELETE FROM plugins WHERE id = '" . H::dbEscape($db, ROMA_VR_PLUGIN_FIXTURE_ID) . "'"
+        );
         H::dbClose($db);
         romaVisualRegressionPluginFixtureRemove($dir);
     }

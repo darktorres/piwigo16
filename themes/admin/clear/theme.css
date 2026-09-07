@@ -1041,10 +1041,6 @@ a:hover, a:active {
   background-color: #eee;
 }
 
-legend {
-  color: #3C3C3C;
-}
-
 .icon-plus.cboxElement {
   background-color: #F6F6F6;
 }
@@ -1077,6 +1073,10 @@ legend {
    there's no real conflict for that property. */
 #pwgHead, #footer {
   background-color: #333;
+}
+
+legend {
+  color: #3C3C3C;
 }
 
 }

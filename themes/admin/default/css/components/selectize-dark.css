@@ -23,7 +23,6 @@
 }
 
 .selectize-input {
-  background: #333;
   cursor: text;
   display: inline-block;
   overflow: hidden;
@@ -104,6 +103,7 @@
 }
 
 .selectize-input {
+  background: #333;
   border: 1px solid #555;
   padding: 8px;
   width: 100%;

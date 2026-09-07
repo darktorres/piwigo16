@@ -23,7 +23,6 @@
 }
 
 .selectize-input {
-  background: #fff;
   cursor: text;
   display: inline-block;
   width: 100%;
@@ -105,6 +104,10 @@
 .selectize-input,
 .selectize-input input {
   color: #303030;
+}
+
+.selectize-input {
+  background: #fff;
 }
 
 }

@@ -77,13 +77,11 @@
 
 .plupload_filelist li {
   padding: 10px 8px;
-  border-bottom: 1px solid #ddd;
 }
 
 .plupload_filelist_footer {
   background: #dfdfdf;
   padding: 8px;
-  color: #42454a;
 }
 
 .plupload_file_name {
@@ -139,10 +137,6 @@ li.plupload_done {
   color: #aaa;
 }
 
-li.plupload_delete a {
-  background: url("../../images/plupload/delete.gif");
-}
-
 li.plupload_failed a {
   background: url("../../images/plupload/error.gif");
   cursor: default;
@@ -184,6 +178,22 @@ li.plupload_droptext {
 li.plupload_droptext {
   background: transparent;
   line-height: 165px;
+}
+
+/* Demoted from `components` -- each admin skin's own `!important`-free
+   re-skin of the filelist/footer/delete-icon (`theme-skin` layer)
+   would otherwise lose to these generic vendor-port defaults via
+   ordinary layer position (components is later than theme-skin). */
+li.plupload_delete a {
+  background: url("../../images/plupload/delete.gif");
+}
+
+.plupload_filelist li {
+  border-bottom: 1px solid #ddd;
+}
+
+.plupload_filelist_footer {
+  color: #42454a;
 }
 
 }

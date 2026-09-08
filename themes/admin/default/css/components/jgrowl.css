@@ -62,10 +62,6 @@ div.jGrowl div.jGrowl-notification {
   min-height: 40px;
 }
 
-div.jGrowl div.jGrowl-notification div.jGrowl-header {
-  font-weight: 700;
-  font-size: 0.85em;
-}
 
 div.jGrowl div.jGrowl-notification div.jGrowl-close {
   z-index: 99;
@@ -97,6 +93,14 @@ div.jGrowl div.jGrowl-notification {
   background-color: #000;
   opacity: 0.85;
   font-family: Tahoma, Arial, Helvetica, sans-serif;
+}
+
+/* Demoted from `components` -- theme.css's own `div.jGrowl-header`
+   override (theme-chain) would otherwise lose to this via ordinary
+   layer position. */
+div.jGrowl div.jGrowl-notification div.jGrowl-header {
+  font-weight: 700;
+  font-size: 0.85em;
 }
 
 }

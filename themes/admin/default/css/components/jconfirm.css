@@ -109,7 +109,6 @@ body[class*="jconfirm-no-scroll-"] {
 }
 
 .jconfirm .jconfirm-box.jconfirm-type-red {
-  border-top: solid 7px var(--color-danger-flat);
   animation-name: type-red;
 }
 
@@ -134,7 +133,6 @@ body[class*="jconfirm-no-scroll-"] {
   content: "";
   position: absolute;
   inset: 0;
-  background: var(--color-white);
   border-radius: var(--radius-lg);
   z-index: 1;
 }
@@ -287,7 +285,6 @@ body[class*="jconfirm-no-scroll-"] {
 }
 
 .jconfirm .jconfirm-box .jconfirm-buttons button.btn-red {
-  background-color: var(--color-danger-flat);
   color: var(--color-white);
   text-shadow: none;
   transition: background 0.2s;
@@ -299,15 +296,8 @@ body[class*="jconfirm-no-scroll-"] {
 }
 
 .jconfirm .jconfirm-box .jconfirm-buttons button.btn-default {
-  background-color: var(--color-surface-muted);
-  color: var(--color-black);
   text-shadow: none;
   transition: background 0.2s;
-}
-
-.jconfirm .jconfirm-box .jconfirm-buttons button.btn-default:hover {
-  background-color: color-mix(in oklch, var(--color-surface-muted) 85%, var(--color-black));
-  color: var(--color-black);
 }
 
 .jconfirm .jconfirm-clear {
@@ -398,5 +388,35 @@ body[class*="jconfirm-no-scroll-"] {
 
 .jconfirm .jconfirm-box.jconfirm-animation-scale {
   transform: scale(0.5);
+}
+}
+
+@layer components-base {
+/* Demoted from `components` -- roma/theme.css's own theme-skin-layer
+   overrides of these same selectors would otherwise lose to this
+   generic vendor-port default via ordinary layer position (components
+   is later than theme-skin in the master order), even though they're
+   more specific/intentional. Splitting these off lets roma's rules
+   apply without `!important`. */
+.jconfirm .jconfirm-box.jconfirm-type-red {
+  border-top: solid 7px var(--color-danger-flat);
+}
+
+.jconfirm .jconfirm-box.loading::before {
+  background: var(--color-white);
+}
+
+.jconfirm .jconfirm-box .jconfirm-buttons button.btn-red {
+  background-color: var(--color-danger-flat);
+}
+
+.jconfirm .jconfirm-box .jconfirm-buttons button.btn-default {
+  background-color: var(--color-surface-muted);
+  color: var(--color-black);
+}
+
+.jconfirm .jconfirm-box .jconfirm-buttons button.btn-default:hover {
+  background-color: color-mix(in oklch, var(--color-surface-muted) 85%, var(--color-black));
+  color: var(--color-black);
 }
 }

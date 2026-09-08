@@ -339,8 +339,8 @@ table.languages tr td { padding: 7px 20px; }
   margin-top: 20px;
   font-size: 15px;
   color: var(--addalbum-form-input-color, #353535);
-  background-color: var(--addalbum-form-input-bg, #F3F3F3) !important;
-  border: none !important;
+  background-color: var(--addalbum-form-input-bg, #F3F3F3);
+  border: none;
 }
 
 .addAlbum form input::placeholder {
@@ -2374,8 +2374,8 @@ div.jGrowl div.jGrowl-notification div.jGrowl-message {
   margin: 0% 0% 0% 28%;
 }
 div.jGrowl div.jGrowl-notification div.jGrowl-header {
-  font-size: 1.2em !important;
-	font-weight: 800 !important;
+  font-size: 1.2em;
+	font-weight: 800;
   margin: 5% 0% 2% 28%;
 }
 div.success div.jGrowl-close, div.error div.jGrowl-close {
@@ -5266,7 +5266,6 @@ p.upload-warnings-summary .showInfo {margin-left:3px;}
   display: flex;
   align-items: center;
   box-shadow: 0 2px 3px #00000024;
-  background-color: #fafafa;
   border-radius: 5px;
   color: #777;
   padding: 5px 10px;
@@ -5476,24 +5475,24 @@ ul.jqtree-tree ul.jqtree_common {
 }
 
 ul.jqtree-tree span.jqtree-border {
-  border: solid 2px var(--ul-jqtree-tree-span-jqtree-border-border, #FFBD4D) !important;
+  border: solid 2px var(--ul-jqtree-tree-span-jqtree-border-border, #FFBD4D);
   width: 98%;
 }
 
 ul.jqtree-tree li.jqtree-ghost span.jqtree-circle {
-  border: solid 2px var(--ul-jqtree-tree-li-jqtree-ghost-span-jqtree-circle-border, #FFBD4D) !important;
+  border: solid 2px var(--ul-jqtree-tree-li-jqtree-ghost-span-jqtree-circle-border, #FFBD4D);
   margin: 0;
 }
 
 ul.jqtree-tree li.jqtree-ghost span.jqtree-line {
-  background-color: var(--ul-jqtree-tree-li-jqtree-ghost-span-jqtree-line-bg, #FFBD4D) !important;
-  position: relative !important;
+  background-color: var(--ul-jqtree-tree-li-jqtree-ghost-span-jqtree-line-bg, #FFBD4D);
+  position: relative;
   height: 2px;
   margin: 0;
 }
 
 ul.jqtree-tree .jqtree-element {
-  cursor: move !important;
+  cursor: move;
 }
 
 .albumBlock {display: flex; justify-content: space-between; padding: 10px 10px 0;}
@@ -6891,8 +6890,8 @@ fieldset.environment-fieldset legend i[class*="icon-"] {
 .plupload_filelist {scrollbar-width: thin;}
 .plupload_wrapper, .plupload_file_size {font-weight: bold;}
 .plupload_filelist li {background: none; font-weight: bold;}
-li.plupload_delete a {background: url("images/cancel.svg")!important; background-size: cover; width: 10px; height: 10px; margin-top: 3px;}
-li.plupload_delete a:hover {background: url("images/cancelhover.svg")!important; background-size: cover;}
+li.plupload_delete a {background: url("images/cancel.svg"); background-size: cover; width: 10px; height: 10px; margin-top: 3px;}
+li.plupload_delete a:hover {background: url("images/cancelhover.svg"); background-size: cover;}
 .plupload_file_status {margin-right: 45px;}
 .plupload_file_size {margin-right: 25px;}
 .plupload_total_file_size {margin-right: -8px;}
@@ -6943,7 +6942,7 @@ li.plupload_delete a:hover {background: url("images/cancelhover.svg")!important;
 .addAlbumEmpty a{display: inline-block; padding: 10px 15px; font-weight: bold; font-size: 14px;}
 .addAlbumEmpty a:hover{text-decoration: none;}
 .addAlbumEmpty a::first-letter {text-transform: capitalize;}
-#cboxLoadedContent {height: auto !important; padding: 20px !important;}
+#cboxLoadedContent {height: auto !important; padding: 20px;}
 .buttonSeparator {font-weight: bold; text-transform: uppercase;}
 .popinButtons {text-align: right; margin-top: 24px;}
 .popinButtons input[type="submit"] {margin-right: 0;}
@@ -7020,7 +7019,7 @@ li.plupload_delete a:hover {background: url("images/cancelhover.svg")!important;
 .permitActionItem select { margin-bottom: 25px;}
 .permitActionItem {margin-left: 30px; width: 225px;}
 .permitActionItem .selectize-control.single.plugin-remove_button {width: auto;}
-.permitActionItem .selectize-input.items.full.has-options.has-items {width: 500px !important; line-height: 23px;}
+.permitActionItem .selectize-input.items.full.has-options.has-items {width: 500px; line-height: 23px;}
 .actionMovePanel {display: flex;}
 .actionMovePanel a:last-child {margin-left: 15px; padding: 10px;}
 .actionAssociate .head-button-2 {width: fit-content;}

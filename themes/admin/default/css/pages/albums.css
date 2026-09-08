@@ -77,7 +77,6 @@
 .DeleteAlbumPopInContainer {
   width: 40%;
   border-radius: 4px;
-  border-top: solid 7px #e74c3c;
 }
 
 .RenameAlbumPopInContainer {
@@ -261,9 +260,6 @@ input[name="position"] {
   transition: 0.2s;
 }
 
-.jqtree-moving .move-cat-container {
-  background-color: #ffd7ad;
-}
 
 .jqtree-moving .move-cat-container .badge-container i,
 .jqtree-moving .move-cat-container .node-icon {
@@ -368,6 +364,29 @@ input[name="position"] {
 }
 
 @layer pages-base {
+/* Demoted from `pages` -- roma/theme.css's own overrides of these same
+   properties (theme-skin) would otherwise lose to these generic
+   defaults via ordinary layer position (pages is later than
+   theme-skin in the master order). */
+.DeleteAlbumPopInContainer {
+  border-top: solid 7px #e74c3c;
+}
+
+/* `.move-cat-container`'s own generic background-color (theme.css,
+   theme-chain) moves here too, alongside the more specific override
+   right below -- both need the same layer so ordinary specificity
+   decides between them; if only the override moved, the still-later
+   `theme-chain` rule would win via layer position regardless of its
+   lower specificity (same bug shape as the `.lineView
+   .user-container-initials-wrapper > span` fix in user_list.css). */
+.move-cat-container {
+  background-color: #fafafa;
+}
+
+.jqtree-moving .move-cat-container {
+  background-color: #ffd7ad;
+}
+
 .notClickable {
   opacity: 0.5;
 }

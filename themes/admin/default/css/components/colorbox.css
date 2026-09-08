@@ -93,7 +93,6 @@
 #cboxLoadedContent {
   overflow: auto;
   background: var(--color-black);
-  padding: 1px;
 }
 
 #cboxTitle {
@@ -101,7 +100,6 @@
   position: absolute;
   top: -22px;
   left: 0;
-  color: var(--color-black);
 }
 
 #cboxLoadingOverlay,
@@ -193,5 +191,19 @@
 
 #cboxClose:hover {
   background-position: -50px -25px;
+}
+}
+
+@layer components-base {
+/* Demoted from `components` -- theme.css's own `#cboxLoadedContent`
+   padding override and roma/theme.css's own `#cboxTitle` color
+   override (both theme-chain/theme-skin) would otherwise lose to
+   these generic vendor-port defaults via ordinary layer position. */
+#cboxLoadedContent {
+  padding: 1px;
+}
+
+#cboxTitle {
+  color: var(--color-black);
 }
 }

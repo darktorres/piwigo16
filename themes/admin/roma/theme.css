@@ -900,8 +900,8 @@ input:focus + .slider {
 }
 
 .user-property-main-user-content-header .main-user-icon {
-  background-color: #BE4949 !important;
-  color: #FFC8C8 !important;
+  background-color: #BE4949;
+  color: #FFC8C8;
 }
 
 /* .UserListPopInContainer .slider-bar-wrapper .ui-slider-horizontal .ui-slider-range {
@@ -915,11 +915,11 @@ input:focus + .slider {
 }
 
 .GuestUserListPopInContainer{
-  background-color:#444 !important;
+  background-color:#444;
 }
 
 .AddUserSubmit, .update-user-button, .user-property-main-user-body .main-user-btn-validate{
-  color: #493C21!important;
+  color: #493C21;
 }
 
 table.dataTable tr.even {
@@ -986,8 +986,8 @@ a#showPermissions:hover {border-color: #A5A5A5;}
 .selectize-control.single .selectize-input {border: 2px solid #FFA646; color: #D5D5D5;}
 .selectize-control.single .selectize-input:hover {border-color: #F70;}
 .plupload_filelist {background-color: #444; scrollbar-color: #555 #444;}
-.plupload_filelist li {border-bottom: 1px solid #343434 !important; color: #A5A5A5;}
-.plupload_filelist_footer {background-color: #3c3939; border: 0; color: #A5A5A5!important}
+.plupload_filelist li {border-bottom: 1px solid #343434; color: #A5A5A5;}
+.plupload_filelist_footer {background-color: #3c3939; border: 0; color: #A5A5A5}
 
 li.plupload_delete a span {background: #444;}
 li.plupload_delete a:hover span {background: #444;}
@@ -995,7 +995,7 @@ li.plupload_delete a.remove-format:hover{color: #c0c0c0;}
 
 .addAlbumEmpty {color: #c1c1c1;}
 .buttonSeparator {color: #c1c1c1;}
-#cboxTitle {color: #7f7f7f !important;}
+#cboxTitle {color: #7f7f7f;}
 #addAlbumForm {color: #999;}
 .addAlbum form input {
   --addalbum-form-input-color: #777;
@@ -1240,17 +1240,17 @@ li.plupload_delete a.remove-format:hover{color: #c0c0c0;}
 }
 
 .jconfirm .jconfirm-box .jconfirm-buttons button.btn-default {
-  color: #777 !important;
-  background-color: #222 !important;
+  color: #777;
+  background-color: #222;
 }
 
 .jconfirm .jconfirm-box .jconfirm-buttons button.btn-default:hover {
-  color: #222!important;
-  background-color: #777 !important;
+  color: #222;
+  background-color: #777;
 }
 
 .jconfirm .jconfirm-box .jconfirm-buttons button.btn-red {
-  background-color:#BE4949!important;
+  background-color:#BE4949;
 }
 
 .DeleteAlbumSubmit {
@@ -1259,7 +1259,7 @@ li.plupload_delete a.remove-format:hover{color: #c0c0c0;}
 
 .jconfirm .jconfirm-box.jconfirm-type-red,
 .DeleteAlbumPopInContainer{
-  border-top:7px solid #BE4949!important;
+  border-top:7px solid #BE4949;
 }
 .jconfirm .jconfirm-box .jconfirm-buttons button.btn-red:hover,
 .DeleteAlbumSubmit:hover{
@@ -1276,7 +1276,7 @@ background:#6C2D2D;
 }
 
 .jconfirm .jconfirm-box.loading::before {
-  background: #333 !important;
+  background: #333;
 }
 
 /* Tag Manager */
@@ -1653,16 +1653,44 @@ background:#6C2D2D;
   color: #c1c1c1;
 }
 
-.head-button-1 {
-  color: #444 !important;
+/* Scoped to `.album-selector-trigger` (the only real real use of this
+   dark-gray text on `.head-button-1`, confirmed live on
+   photos_add_direct.latte's "choose album" trigger) rather than a
+   bare `.head-button-1`, so it beats general.css's own
+   `.head-button-1 {color: white}` (same layer, same specificity)
+   via real specificity instead of `!important` -- both files are
+   `theme-skin`, so a bare selector here would otherwise depend on
+   asset load order between the two files. */
+.head-button-1.album-selector-trigger {
+  color: #444;
 }
 
 .head-button-1:hover {
   color: #444;
 }
 
+/* `.icon-blue`/`.icon-green`/etc's own non-important per-album color
+   classes sit in this same `theme-skin` layer (roma's own general.css);
+   `.albumIconLineHover` needs to win over them regardless of which
+   color class an album has, hence no property overlap needed to
+   reason about here -- ordinary same-layer specificity/property-name
+   independence already decides it. Previously required `!important`
+   (plus a `theme-skin-base` relocation) only because it was fighting
+   `default/theme.css`'s own `theme-chain`-layer `.albumIconLineHover`
+   `!important`; moving it to `theme-skin` (later than `theme-chain`)
+   lets ordinary layer position decide instead. */
+.albumIconLineHover {
+  background: #ae5d1e;
+  color: #ffa96b;
+  border-color: #ae5d1e;
+}
+
 .head-button-2 {
   background-color: #333;
+  /* Beats default/theme.css's `.head-button-2 {box-shadow: 0 2px
+     #00000024}` (theme-chain, earlier layer) via ordinary layer
+     position now that this sits in theme-skin, not theme-skin-base. */
+  box-shadow: 0 2px #0000007a;
 }
 
 .head-button-2:hover {
@@ -1724,7 +1752,7 @@ background:#6C2D2D;
 }
 
 .user-groups{
-  padding: 6px 15px!important;
+  padding: 6px 15px;
 }
 
 /****  */
@@ -1842,12 +1870,12 @@ background:#6C2D2D;
 
 .edit-password-success-ok .icon-button,
 .user-property-main-user-close .icon-button {
-  background-color: #333 !important;
+  background-color: #333;
 }
 
 .edit-password-success-ok .icon-button:hover,
 .user-property-main-user-close .icon-button:hover {
-  color: #c1c1c1 !important;
+  color: #c1c1c1;
 }
 
 .main-user-proceed, 
@@ -1878,8 +1906,8 @@ background:#6C2D2D;
 }
 
 .lineView .user-container-initials-wrapper > span {
-  height: 31px!important;
-  width: 31px!important;
+  height: 31px;
+  width: 31px;
 }
 
 .storage-chart span{
@@ -1903,7 +1931,7 @@ background:#6C2D2D;
 /* Activity Tab in user manager */
 
 .activity-more-filters, .activity-more-filters-content {
-  background-color: #343434 !important;
+  background-color: #343434;
 }
 
 .selectize-control.user-selecter.single .selectize-input, .selectize-control.action-selecter.single .selectize-input {
@@ -2203,7 +2231,7 @@ ul.jqtree-tree li.jqtree-ghost span.jqtree-line {
 }
 
 .jqtree-moving .move-cat-container {
-  background-color: #232323!important;
+  background-color: #232323;
 }
 
 .jqtree-moving .move-cat-container .badge-container i.icon-green,
@@ -2453,23 +2481,6 @@ label:has(> .filters-icon-check:disabled){
 }
 
 @layer theme-skin-base {
-/* Must be `!important` and must be here (not `theme-skin`): the
-   generic `.albumIconLineHover` rule this overrides lives in
-   `default/theme.css`'s `theme-chain` layer with its own `!important`
-   (needed there to beat `.icon-blue`/`.icon-green`/etc's own
-   non-important, later `theme-skin`-layer per-album color classes).
-   For `!important` declarations layer priority is reversed (earlier
-   layer wins), so sitting in `theme-skin` (after `theme-chain`)
-   always lost to that generic rule -- confirmed live: hovering an
-   album on the categories list page under roma always showed
-   default's orange, never roma's own darker orange. `theme-skin-base`
-   is earlier than `theme-chain`, restoring the intended win. */
-.albumIconLineHover {
-  background: #ae5d1e !important;
-  color: #ffa96b !important;
-  border-color: #ae5d1e;
-}
-
 body, h3, dt, .throw, .content, label, legend {
   color:#777;
 }
@@ -2533,10 +2544,6 @@ legend {
 
 .move-cat-container, .search-album-elem {
   background-color: #333;
-}
-
-.head-button-2 {
-  box-shadow:0 2px #0000007a!important;
 }
 
 .advanced-filter-item-label, .advanced-filter-title, .advanced-filter-close {

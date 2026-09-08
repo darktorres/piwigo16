@@ -29,7 +29,6 @@
 .selectize-input {
   cursor: text;
   display: inline-block;
-  width: 100%;
   overflow: hidden;
   position: relative;
   z-index: 1;
@@ -119,6 +118,11 @@
 .selectize-input {
   background: #fff;
   font-size: 13px;
+  /* Demoted alongside `background` above for the same reason: lets
+     `general.css`'s `.advanced-filter-item-container ...` override and
+     `theme.css`'s `.permitActionItem .selectize-input...` override
+     (both `theme-chain`) win without `!important`. */
+  width: 100%;
 }
 
 }

@@ -189,11 +189,6 @@ div:has(> .activity-header) {
   padding-bottom: 10px;
 }
 
-.activity-more-filters,
-.activity-more-filters-content {
-  background-color: #f3f3f3;
-}
-
 .activity-more-filters-content {
   display: flex;
   position: relative;
@@ -278,5 +273,15 @@ div:has(> .activity-header) {
 .action-section::before {
   margin: 0 -5px 0 10px;
   opacity: 0.6;
+}
+}
+
+@layer pages-base {
+/* Demoted from `pages` -- roma/theme.css's own override of this same
+   property (theme-skin) would otherwise lose to this generic default
+   via ordinary layer position. */
+.activity-more-filters,
+.activity-more-filters-content {
+  background-color: #f3f3f3;
 }
 }

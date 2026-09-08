@@ -730,7 +730,7 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 }
 
 .addAlbum form input {
-  background-color: white;
+  --addalbum-form-input-bg: white;
   border: 1px solid #d5d5d5;
 }
 

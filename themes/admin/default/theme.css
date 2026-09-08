@@ -2503,7 +2503,7 @@ div.jGrowl div.jGrowl-notification{
 }
 
 .advanced-filter-new-plugin .advanced-filter-container {
-  display: grid !important;
+  display: grid;
   grid-template-columns: repeat(5, 20%);
 }
 
@@ -2513,7 +2513,7 @@ div.jGrowl div.jGrowl-notification{
 }
 
 .advanced-filter-revision-date .advanced-filter-item-label {
-  display: inline !important;
+  display: inline;
 
 }
 
@@ -2794,7 +2794,7 @@ div.jGrowl div.jGrowl-notification{
 }
 
 .pluginUpdateContainer {
-  margin-bottom: 5px !important;
+  margin-bottom: 5px;
 }
 
 .pluginUpdateContainer legend{
@@ -2802,7 +2802,7 @@ div.jGrowl div.jGrowl-notification{
 }
 
 .pluginUpdateContainer .pluginActions {
-  margin-right: 0 !important;
+  margin-right: 0;
 }
 
 /* 
@@ -3323,7 +3323,7 @@ legend {text-align:left;}
 
 .pluginContainer.line-form .pluginBox .pluginDesc{
   margin:  auto 10px;
-  display: flex !important;
+  display: flex;
   align-items: center;
 
   white-space: nowrap;
@@ -5478,7 +5478,7 @@ p.upload-warnings-summary .showInfo {margin-left:3px;}
 }
 
 li.jqtree-ghost {
-  display: flex !important;
+  display: flex;
   margin: 0;
 }
 
@@ -5499,7 +5499,7 @@ ul.jqtree-tree li.jqtree-ghost span.jqtree-circle {
 ul.jqtree-tree li.jqtree-ghost span.jqtree-line {
   background-color: var(--ul-jqtree-tree-li-jqtree-ghost-span-jqtree-line-bg, #FFBD4D) !important;
   position: relative !important;
-  height: 2px !important;
+  height: 2px;
   margin: 0;
 }
 
@@ -6166,8 +6166,8 @@ input:checked + .slider.small::before, input:checked + .slider.small::after {
 }
 
 .jconfirmWarning .jconfirm-icon-c i {
-  color: #ffa744 !important;
-  background-color: #ffe9cf !important;
+  color: #ffa744;
+  background-color: #ffe9cf;
 }
 
 .jconfirm-title {
@@ -6928,8 +6928,8 @@ fieldset.environment-fieldset legend i[class*="icon-"] {
 .plupload_filelist {scrollbar-width: thin;}
 .plupload_wrapper, .plupload_file_size {font-weight: bold;}
 .plupload_filelist li {background: none; font-weight: bold;}
-li.plupload_delete a {background: url("images/cancel.svg")!important; background-size: cover !important; width: 10px; height: 10px; margin-top: 3px;}
-li.plupload_delete a:hover {background: url("images/cancelhover.svg")!important; background-size: cover !important;}
+li.plupload_delete a {background: url("images/cancel.svg")!important; background-size: cover; width: 10px; height: 10px; margin-top: 3px;}
+li.plupload_delete a:hover {background: url("images/cancelhover.svg")!important; background-size: cover;}
 .plupload_file_status {margin-right: 45px;}
 .plupload_file_size {margin-right: 25px;}
 .plupload_total_file_size {margin-right: -8px;}

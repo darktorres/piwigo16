@@ -1012,7 +1012,7 @@ a:hover, a:active {
    original `theme-skin-base` split, not something this campaign
    introduced. Removed rather than kept as inert history. */
 #ui-datepicker-div .ui-datepicker-control, #ui-datepicker-div a {
-  background-color: #FFF !important;
+  background-color: #FFF;
 }
 
 .icon-plus.cboxElement {

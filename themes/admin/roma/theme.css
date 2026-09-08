@@ -1116,12 +1116,6 @@ li.plupload_delete a.remove-format:hover{color: #c0c0c0;}
   text-decoration: none;
 }
 
-.albumIconLineHover {
-  background: #ae5d1e ! important;
-  color: #ffa96b !important;
-  border-color: #ae5d1e;
-}
-
 #checkActions a, .deleteDerivButtons a {
 }
 #checkActions a:hover, .deleteDerivButtons a:hover {
@@ -2504,6 +2498,23 @@ label:has(> .filters-icon-check:disabled){
 }
 
 @layer theme-skin-base {
+/* Must be `!important` and must be here (not `theme-skin`): the
+   generic `.albumIconLineHover` rule this overrides lives in
+   `default/theme.css`'s `theme-chain` layer with its own `!important`
+   (needed there to beat `.icon-blue`/`.icon-green`/etc's own
+   non-important, later `theme-skin`-layer per-album color classes).
+   For `!important` declarations layer priority is reversed (earlier
+   layer wins), so sitting in `theme-skin` (after `theme-chain`)
+   always lost to that generic rule -- confirmed live: hovering an
+   album on the categories list page under roma always showed
+   default's orange, never roma's own darker orange. `theme-skin-base`
+   is earlier than `theme-chain`, restoring the intended win. */
+.albumIconLineHover {
+  background: #ae5d1e !important;
+  color: #ffa96b !important;
+  border-color: #ae5d1e;
+}
+
 body, h3, dt, .throw, .content, label, legend {
   color:#777;
 }

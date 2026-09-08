@@ -56,24 +56,24 @@
 
 .actionAddTags .item,
 .actionAddTags .item.active {
-  background-image: none !important;
-  background-color: #ffa646 !important;
-  border-color: transparent !important;
-  color: #000 !important;
+  background-image: none;
+  background-color: #ffa646;
+  border-color: transparent;
+  color: #000;
 
-  border-radius: 20px !important;
+  border-radius: 20px;
 }
 
 .actionAddTags .item .remove {
-  background-color: transparent !important;
-  border-top-right-radius: 20px !important;
-  border-bottom-right-radius: 20px !important;
-  color: #000 !important;
+  background-color: transparent;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+  color: #000;
 
-  border-left: 1px solid transparent !important;
+  border-left: 1px solid transparent;
 }
 
 .actionAddTags .item .remove:hover {
-  background-color: #f70 !important;
+  background-color: #f70;
 }
 }

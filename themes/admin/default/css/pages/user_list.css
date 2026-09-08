@@ -1763,7 +1763,7 @@ Advanced filter
 }
 
 .hide {
-  display: none !important;
+  display: none;
 }
 
 .tileView .user-container-edit {

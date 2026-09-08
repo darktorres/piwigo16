@@ -7516,6 +7516,28 @@ stale `declaration-no-important` baseline, at 154/172/52 for three
 files, was discovered and corrected to reflect the real zero count),
 and the scanner's own `--important`/`--inversions` report.
 
+**Final structural validation (Done), with an honest scope caveat.**
+Every file this whole admin-theme effort touched since P52-B (69
+files currently on disk, found via `git log --name-only` across the
+full commit range, 5 more since renamed/consolidated away by P52-C's
+Open Sans work) parses with **zero `parseErrors`** under `stylelint`
+(which uses `postcss` internally — its `parseErrors` field is
+`postcss`'s own `CssSyntaxError`, not a style-rule finding) for both
+`clear`'s and `roma`'s files alongside `default`'s shared ones. This
+proves syntax validity only, confirmed directly rather than assumed:
+`postcss` has no `@layer`-specific cascade logic at all, and
+`stylelint`'s only layer-aware rule (`layer-name-pattern`) is a naming-
+convention check with zero cascade-priority awareness — re-confirmed
+this session with a synthetic two-layer `!important` conflict file
+(a case where the *earlier* layer should provably win): `stylelint`
+flagged the blanket `declaration-no-important`/`color-named` issues on
+each declaration individually and said nothing whatsoever about which
+one actually wins, or that the two even conflict. The real semantic
+proof for cascade-layer-priority and `!important`-reversal correctness
+is `tools/css-layers/scan.py` (Step 10) plus the real-Chromium-
+rendered `composer test:visual`/`test:golden-html` suites above, never
+this check.
+
 **P52-E (scoped, not started)** — `default` (public gallery, 1,014
 lines + `css/{pages,components}`, `utilities.css`,
 `search.css`/`clear-search.css`/`dark-search.css`, `css/help/

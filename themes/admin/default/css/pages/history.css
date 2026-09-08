@@ -52,7 +52,8 @@
 }
 
 .hasDatepicker {
-  border: solid 1px #D4D4D4;
+  border-width: 1px;
+  border-style: solid;
   padding: 5px 10px;
   max-width: 180px;
 }
@@ -69,7 +70,8 @@
 }
 
 .elem-type-select{
-  border: solid 1px #D4D4D4;
+  border-width: 1px;
+  border-style: solid;
   padding: 5px 10px;
   margin-bottom: 5px;
 }
@@ -451,6 +453,16 @@
   padding: 4px 8px;
   border-radius: 5px;
   max-width: 130px;
+}
+
+/* `.hasDatepicker, .elem-type-select {border-color: transparent}`
+   (roma/theme.css, theme-skin) and clear's own equivalent are
+   deliberate skin overrides -- `pages` being declared after
+   `theme-skin` in the master order would otherwise let this generic
+   border-color always win regardless. */
+.hasDatepicker,
+.elem-type-select {
+  border-color: #D4D4D4;
 }
 
 }

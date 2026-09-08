@@ -1792,7 +1792,7 @@ ul.tagSelection {
 
 ul.tagSelection li {
 	display:inline-block;
-        width:150px!important;
+        width:150px;
         overflow:hidden;
 	white-space: nowrap;
 }
@@ -2423,10 +2423,6 @@ div.jGrowl div.jGrowl-notification{
   margin-left:5px;
 }
 
-.buttonSubmitLocal {
-  margin-left: 9px !important;
-}
-
 .infos li, .errors li, .warnings li, .messages li { list-style-type:none; }
 .infos .submit {margin-left:30px;}
 
@@ -2664,7 +2660,6 @@ div.jGrowl div.jGrowl-notification{
 }
 
 .buttonInstall {
-  margin-left: 0 !important;
   margin-right: 5px;
 }
 
@@ -3518,8 +3513,14 @@ legend span {
   box-shadow: 5px 5px 5px rgb(0, 0, 0, 0.2);
   background-color: var(--elementedit-bg, #FAFAFA);
   padding:0;
-  margin: 1.5em !important;
   border-radius: 4px;
+}
+/* `.batch-manager-root fieldset {margin: 30px 0 0}` has higher specificity
+   (0,1,1) than `.elementEdit` alone (0,1,0) -- `.elementEdit` is always a
+   `<fieldset>` inside `.batch-manager-root`, so scoping with that real
+   ancestor wins outright instead of relying on `!important`. */
+.batch-manager-root .elementEdit {
+  margin: 1.5em;
 }
 
 .pictureIdLabel{
@@ -3664,7 +3665,7 @@ legend span {
   border-radius: 2px;
   padding: 0 7px;
   border: 1px solid var(--full-line-info-box-input-or-half-line-info-box-input-or-half-line-info-box-select-border, #D3D3D3);
-  background-color: var(--full-line-info-box-input-or-half-line-info-box-input-or-half-line-info-box-select-bg, #FFF) !important;
+  background-color: var(--full-line-info-box-input-or-half-line-info-box-input-or-half-line-info-box-select-bg, #FFF);
   flex: 1;
 }
 
@@ -3711,7 +3712,7 @@ legend span {
 .full-line-info-box input,
 .half-line-info-box input,
 .description-box{
-  outline: none !important;
+  outline: none;
 }
 
 .privacy-label-container{
@@ -3792,7 +3793,7 @@ legend span {
   justify-content: left;
   align-items: center;
   padding:0;
-  margin: 1.5em !important;
+  margin: 1.5em;
 }
 
 .validation-container{
@@ -3819,17 +3820,24 @@ legend span {
 .count-badge {
   display: inline-block;
   text-align: center;
-  border-radius: 100px !important;
-  padding: 3px 9px !important;
-  background-color: #686868 !important;
-  color: #FFF !important;
+  background-color: #686868;
+  color: #FFF;
   margin-left: 5px;
+}
+/* `.batch-manager-root legend span {border-radius: 100%; padding: 3px}`
+   has higher specificity (0,1,2) than `.count-badge` alone (0,1,0) --
+   `.count-badge` is always that same `<span>` inside `<legend>`, so
+   scoping with both real ancestors wins outright instead of relying on
+   `!important`. */
+.batch-manager-root legend .count-badge {
+  border-radius: 100px;
+  padding: 3px 9px;
 }
 
 /* Batch Manager, global mode */
 .batch-manager-root .photoActionFieldset p {text-align:left;}
 .batch-manager-root .bulkAction {text-align:left; padding:0;}
-.batch-manager-root .actionDelTags ul.tagSelection {margin:0 !important; width:620px;}
+.batch-manager-root .actionDelTags ul.tagSelection {margin:0; width:620px;}
 .batch-manager-root .checkActionsBar {text-align:left; margin:0 0 20px;}
 .batch-manager-root ul.thumbnails div.actions {
 	display: none;
@@ -3869,7 +3877,7 @@ legend span {
 .batch-manager-root .selectionCountMessage {padding:5px; border-radius:5px; float: right;}
 .batch-manager-root .photoApplyOnDetails {text-align: center; margin-top: 8px; color: #FFA646; font-weight: bold;}
 .batch-manager-root .actionButtons {text-align:left; display: flex; flex-direction: column;}
-.batch-manager-root .batch-filter-list {padding-left:0; display: flex; flex-wrap: wrap; align-items: start; margin-top: 0; margin-bottom: 10px !important;}
+.batch-manager-root .batch-filter-list {padding-left:0; display: flex; flex-wrap: wrap; align-items: start; margin-top: 0; margin-bottom: 10px;}
 .batch-manager-root .batch-filter-list li {
   list-style-type:none;
   background-color: #fafafa;
@@ -4701,7 +4709,7 @@ p.upload-warnings-summary .showInfo {margin-left:3px;}
 .picture-content-panel select {
   background-color: #FFF;
   color: #4E4E4E;
-  border: 2px solid #7070704f !important;
+  border: 2px solid #7070704f;
   padding: 10px 18px;
   appearance: none;
   font-weight: 700;
@@ -6905,6 +6913,12 @@ fieldset.environment-fieldset legend i[class*="icon-"] {
 .icon-plus.cboxElement:hover {box-shadow: 0 2px 4px rgb(0, 0, 0, 0.16);}
 .selectize-control.single .selectize-input {border-radius: 0; font-weight: bold;font-size: 12px;}
 .buttonLike {padding: 8px 10px; margin-left: 5px;}
+.buttonSubmitLocal {
+  margin-left: 9px;
+}
+.buttonInstall {
+  margin-left: 0;
+}
 .changeUsername .buttonLike {padding: 1px 10px;}
 .changePassword .buttonLike {padding: 1px 10px;}
 .selectFilesButtonBlock {display: flex; margin-top: 10px;}
@@ -7003,7 +7017,7 @@ li.plupload_delete a:hover {background: url("images/cancelhover.svg")!important;
 
 .selectedAlbum .selectedAlbum-filter-name {
   background-color:#fff;
-  border: 2px solid #7070704f !important;
+  border: 2px solid #7070704f;
   border-radius: 0;
   width: 100%;
   text-align: start;
@@ -7087,7 +7101,7 @@ li.plupload_delete a:hover {background: url("images/cancelhover.svg")!important;
 }
 
 .picture-modify-form .selectize-input.items.not-full, .elementEdit .selectize-input.items.not-full {
-  height: auto !important;
+  height: auto;
   max-height: 184px;
 }
 
@@ -7767,6 +7781,15 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
   background: #f3f3f3;
 }
 
+/* Genuinely needs !important: `.hasDatepicker`/`.elem-type-select` has to
+   win over several DIFFERENT, unrelated page-specific input-background
+   rules across the admin theme (history's own, `.picture-content-panel
+   input[type="text"]...`'s (0,2,0), `input:focus`'s (0,1,1) while the
+   datepicker is open) -- each with its own higher specificity, so no
+   single selector bump covers every real page context this class
+   appears in. Confirmed live: naming the element type only fixed
+   history.php's datepicker before regressing admin-photo-editor's
+   Creation-date field the same way. */
 .hasDatepicker, .elem-type-select {
   background: var(--elem-type-select-or-hasdatepicker-bg, white) !important;
 }
@@ -7776,7 +7799,7 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
 }
 
 .selectable-filter .elem-type-select {
-  margin-top: 5px !important;
+  margin-top: 5px;
 }
 
 .filter-title, .remove-filter, .filter-icon {
@@ -8311,7 +8334,13 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
 .filters-grid{
   display: grid;
   grid-template-columns: 200px 150px 25px;
-  margin-bottom: 0 !important;
+}
+/* `form.properties li, form.syncForm ul {margin-bottom: 0.5em}` has higher
+   specificity (0,1,2) than `.filters-grid` (0,1,0) alone -- `.filters-grid`
+   is always an `<li>` inside `#configContent`, so scoping with that real
+   ancestor ID wins outright instead of relying on `!important`. */
+#configContent .filters-grid {
+  margin-bottom: 0;
 }
 .select-views{
   background-color: #f3f3f3;
@@ -8338,10 +8367,17 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
   font-weight: bold;
 }
 
+/* `#configContent label:not(.no-bold), .config-content label:not(.no-bold)
+   {font-weight: bold}` has specificity (1,1,1) via its own ID scope --
+   `.filter-manager-options-container` is always a `<label>` inside
+   `#configContent .searchConf`, so scoping with those real ancestors
+   wins outright instead of relying on `!important`. */
+#configContent .searchConf label.filter-manager-options-container {
+  font-weight: normal;
+}
 .filter-manager-options-container{
   display: inline-block;
   font-size: 11px;
-  font-weight: normal !important;
   border: 1px solid #777;
   border-radius: 20px;
   padding: 4px 10px;

@@ -84,10 +84,13 @@ final readonly class ThemeBaseAssets
     {
         $assets = [
             // P52-B: reset/tokens/base layers, loaded before everything
-            // else so the rendered HTML matches the @layer declaration
-            // order in theme.css (not functionally required for layer
-            // priority, which comes from that declaration alone, but
-            // keeps the <head> legible).
+            // else so the rendered HTML roughly matches the @layer
+            // declaration order (Step 9: that one-time declaration now
+            // lives at the top of default/theme-base.css, the first
+            // per-theme file the loop below registers) -- not
+            // functionally required for layer priority, which comes
+            // from that declaration alone regardless of file order,
+            // but keeps the <head> legible.
             AssetContribution::css('themes/default/css/reset.css', order: -30),
             AssetContribution::css('themes/admin/default/css/tokens.css', order: -29),
             AssetContribution::css('themes/default/css/base.css', order: -28),
@@ -100,6 +103,16 @@ final readonly class ThemeBaseAssets
                 continue;
             }
 
+            // Step 9 (P52 follow-up): each theme's own theme.css split
+            // into a `theme-base.css`/`theme.css` pair matching its
+            // real layer boundary -- `default`'s theme-base.css holds
+            // its (huge) theme-chain content plus the master @layer
+            // order declaration; `theme.css` holds its (tiny)
+            // theme-skin exception. `roma`/`clear`'s theme-base.css
+            // holds their (small) theme-skin-base content; `theme.css`
+            // holds their (bulk) real theme-skin overrides. Pure file
+            // split, same content, same two `@layer` names either way.
+            $assets[] = AssetContribution::css('themes/admin/' . $theme->id . '/theme-base.css', order: -11);
             $assets[] = AssetContribution::css('themes/admin/' . $theme->id . '/theme.css', order: -10);
             $assets[] = AssetContribution::css('themes/admin/' . $theme->id . '/css/components/general.css', order: -9);
         }

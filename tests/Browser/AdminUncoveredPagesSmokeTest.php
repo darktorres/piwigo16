@@ -340,7 +340,7 @@ it('batch manager unit mode shows the caddie prefilter active by default with an
     // state), so a fresh navigation here
     // ALWAYS has a real, active filter -- the .noFilter div's "No filter,
     // add one" text is genuinely CSS `display:none` by default
-    // (themes/admin/default/theme.css) and is only ever toggled visible
+    // (themes/admin/default/theme-base.css) and is only ever toggled visible
     // by JS after the user removes every filter client-side, a state a
     // plain GET request can never reach. batch_manager_filter.inc.latte's
     // own "Empty caddie" link, by contrast, is server-rendered WITHOUT
@@ -396,7 +396,7 @@ it('admin popuphelp renders real help content inside the popup page chrome', fun
 
     $page->assertPresent('body#thePopuphelpPage');
 
-    // Not assertSee(): themes/admin/default/theme.css's own global `h2 {
+    // Not assertSee(): themes/admin/default/theme-base.css's own global `h2 {
     // ... display: none; }` rule (the
     // heading takes up zero rendered height, "Options management for..."
     // starts right at the top of the viewport) makes this exact heading

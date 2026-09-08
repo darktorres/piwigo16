@@ -25,7 +25,6 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * To (re)generate baselines:
  *   vendor/bin/pest tests/Browser/RomaVisualRegressionTest.php --update-snapshots
  */
-
 it('renders admin-history under roma with the datepicker open', function (): void {
     $db = H::connect();
     $before = H::dbFetchAssoc($db, 'SELECT preferences FROM user_infos WHERE user_id = 1');
@@ -33,7 +32,10 @@ it('renders admin-history under roma with the datepicker open', function (): voi
 
     try {
         $page = H::asAdmin($this);
-        H::setSessionPreference($page, ['param' => 'admin_theme', 'value' => 'roma']);
+        H::setSessionPreference($page, [
+            'param' => 'admin_theme',
+            'value' => 'roma',
+        ]);
         H::truncateHistory();
 
         $page = H::navigateOk($page, '/admin.php?page=history');
@@ -88,7 +90,10 @@ it('renders the batch manager under roma', function (): void {
 
     try {
         $page = H::asAdmin($this);
-        H::setSessionPreference($page, ['param' => 'admin_theme', 'value' => 'roma']);
+        H::setSessionPreference($page, [
+            'param' => 'admin_theme',
+            'value' => 'roma',
+        ]);
 
         $page = H::navigateOk($page, '/admin.php?page=batch_manager&mode=unit&filter=prefilter-all_photos&display=2');
         H::assertNoServerErrors($page, 'admin-batch-unit-paged-first (roma)');
@@ -110,7 +115,10 @@ it('renders the add-photos page under roma', function (): void {
 
     try {
         $page = H::asAdmin($this);
-        H::setSessionPreference($page, ['param' => 'admin_theme', 'value' => 'roma']);
+        H::setSessionPreference($page, [
+            'param' => 'admin_theme',
+            'value' => 'roma',
+        ]);
 
         $page = H::navigateOk($page, '/admin.php?page=photos_add');
         H::assertNoServerErrors($page, 'admin-photos-add (roma)');
@@ -145,7 +153,10 @@ it('renders the photo editor under roma', function (): void {
         H::freezeImageHits(1, 5);
 
         $page = H::asAdmin($this);
-        H::setSessionPreference($page, ['param' => 'admin_theme', 'value' => 'roma']);
+        H::setSessionPreference($page, [
+            'param' => 'admin_theme',
+            'value' => 'roma',
+        ]);
 
         $page = H::navigateOk($page, '/admin.php?page=photo-1');
         H::assertNoServerErrors($page, 'admin-photo-editor (roma)');
@@ -174,7 +185,10 @@ it('renders the admin dashboard (sidebar/footer) under roma', function (): void 
         H::truncateGuestActivity();
 
         $page = H::asAdmin($this);
-        H::setSessionPreference($page, ['param' => 'admin_theme', 'value' => 'roma']);
+        H::setSessionPreference($page, [
+            'param' => 'admin_theme',
+            'value' => 'roma',
+        ]);
 
         $page = H::navigateOk($page, '/admin.php');
         H::assertNoServerErrors($page, 'admin-dashboard (roma)');
@@ -292,7 +306,10 @@ it('renders the .AddPluginSuccess jGrowl-adjacent marker under roma', function (
 
     try {
         $page = H::asAdmin($this);
-        H::setSessionPreference($page, ['param' => 'admin_theme', 'value' => 'roma']);
+        H::setSessionPreference($page, [
+            'param' => 'admin_theme',
+            'value' => 'roma',
+        ]);
 
         $page = H::navigateOk($page, '/admin.php?page=plugins&tab=installed');
         $page->script(<<<JS

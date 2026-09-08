@@ -1,0 +1,91 @@
+/* clear's theme-skin-base content: generic/reset-shaped rules that
+   must lose to `default`'s own theme-chain content on ordinary
+   specificity grounds (this layer sits before theme-chain in the
+   master order for exactly that reason -- see
+   `default/theme-base.css`'s own comment). The bulk of clear's real,
+   deliberate overrides live in `theme.css` (theme-skin), not here. */
+@layer theme-skin-base {
+body, h3, dt, h2, .throw, .content, label , legend {
+  color:#777;
+}
+
+input {
+  color:#666;
+  background-color: #ccc;
+}
+
+input[type="text"], input[type="file"] {
+  background-color: #ddd;
+}
+
+input, select, textarea {
+  border: 1px solid #999;
+}
+
+h3, .throw, .row1 {
+  background-color: #ddd;
+}
+
+.content dl, dd {
+  margin:5px;
+}
+
+fieldset {
+  border: none;
+}
+
+textarea {
+  font-size: 13px;
+}
+
+label {
+  cursor:pointer
+}
+
+a {
+  color:#3A3A3A;
+}
+
+a:hover, a:active {
+  color: #ffa646;
+}
+
+.icon-plus.cboxElement {
+  background-color: #F6F6F6;
+}
+
+#checkActions a, .deleteDerivButtons a {
+  background-color: #E8E8E8;
+}
+
+.linked-albums-badge {
+  background: #DBDBDB;
+}
+
+.AddIconTitle {
+  color: #000;
+}
+
+.search-result-item {
+  color: #777;
+}
+
+/* #footer and default/theme.css's `#theAdminPage .admin-footer` are the
+   SAME real element (id="footer" class="admin-footer") -- confirmed live
+   via a real screenshot diff, not text/specificity analysis: the two
+   selectors share no substring at all, so no static scanner (this
+   campaign's included) can ever detect this pairing. Under normal
+   cascade #theAdminPage .admin-footer's higher specificity wins
+   (background-color: transparent); demoted here so that still holds now
+   that theme-skin would otherwise win unconditionally by layer position.
+   color:#ccc stays above -- .admin-footer itself sets no color, so
+   there's no real conflict for that property. */
+#pwgHead, #footer {
+  background-color: #333;
+}
+
+legend {
+  color: #3C3C3C;
+}
+
+}

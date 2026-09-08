@@ -94,41 +94,17 @@
     }
   },
   "themes/admin/clear/theme.css": {
-    "color-function-alias-notation": {
-      "count": 1
-    },
-    "color-hex-length": {
-      "count": 23
-    },
     "color-named": {
-      "count": 23
-    },
-    "comment-whitespace-inside": {
-      "count": 21
+      "count": 22
     },
     "declaration-block-single-line-max-declarations": {
-      "count": 43
-    },
-    "function-url-quotes": {
-      "count": 3
-    },
-    "length-zero-no-unit": {
-      "count": 11
+      "count": 33
     },
     "no-duplicate-selectors": {
       "count": 2
     },
-    "selector-attribute-quotes": {
-      "count": 2
-    },
-    "selector-pseudo-element-colon-notation": {
-      "count": 1
-    },
-    "selector-type-case": {
-      "count": 38
-    },
-    "declaration-no-important": {
-      "count": 52
+    "block-no-empty": {
+      "count": 14
     }
   },
   "themes/admin/default/print.css": {
@@ -139,125 +115,21 @@
       "count": 1
     }
   },
-  "themes/admin/default/theme.css": {
-    "alpha-value-notation": {
-      "count": 2
-    },
-    "at-rule-no-vendor-prefix": {
-      "count": 1
-    },
-    "color-function-alias-notation": {
-      "count": 35
-    },
-    "color-hex-length": {
-      "count": 50
-    },
-    "color-named": {
-      "count": 72
-    },
-    "comment-whitespace-inside": {
-      "count": 43
-    },
-    "declaration-block-no-duplicate-properties": {
-      "count": 17
-    },
-    "declaration-block-no-redundant-longhand-properties": {
-      "count": 11
-    },
-    "declaration-block-no-shorthand-property-overrides": {
-      "count": 2
-    },
-    "declaration-block-single-line-max-declarations": {
-      "count": 167
-    },
-    "declaration-property-value-no-unknown": {
-      "count": 3
-    },
-    "font-family-name-quotes": {
-      "count": 2
-    },
-    "font-family-no-missing-generic-family-keyword": {
-      "count": 6
-    },
-    "function-url-quotes": {
-      "count": 3
-    },
-    "length-zero-no-unit": {
-      "count": 116
-    },
-    "media-feature-name-no-vendor-prefix": {
-      "count": 1
-    },
-    "no-duplicate-selectors": {
-      "count": 25
-    },
-    "property-no-deprecated": {
-      "count": 2
-    },
-    "property-no-vendor-prefix": {
-      "count": 47
-    },
-    "selector-attribute-quotes": {
-      "count": 8
-    },
-    "selector-pseudo-element-colon-notation": {
-      "count": 26
-    },
-    "selector-type-case": {
-      "count": 203
-    },
-    "shorthand-property-no-redundant-values": {
-      "count": 37
-    },
-    "declaration-no-important": {
-      "count": 154
-    }
-  },
   "themes/admin/roma/theme.css": {
-    "alpha-value-notation": {
-      "count": 2
-    },
-    "color-function-alias-notation": {
-      "count": 1
-    },
-    "color-hex-length": {
-      "count": 85
-    },
     "color-named": {
-      "count": 10
-    },
-    "comment-whitespace-inside": {
-      "count": 41
-    },
-    "declaration-block-no-redundant-longhand-properties": {
-      "count": 1
+      "count": 9
     },
     "declaration-block-single-line-max-declarations": {
-      "count": 62
-    },
-    "function-url-quotes": {
-      "count": 8
-    },
-    "length-zero-no-unit": {
-      "count": 10
+      "count": 45
     },
     "no-duplicate-selectors": {
-      "count": 8
+      "count": 9
     },
-    "selector-attribute-quotes": {
+    "block-no-empty": {
+      "count": 13
+    },
+    "custom-property-empty-line-before": {
       "count": 3
-    },
-    "selector-pseudo-element-colon-notation": {
-      "count": 1
-    },
-    "selector-type-case": {
-      "count": 22
-    },
-    "shorthand-property-no-redundant-values": {
-      "count": 4
-    },
-    "declaration-no-important": {
-      "count": 172
     }
   },
   "themes/default/css/clear-search.css": {
@@ -877,6 +749,32 @@
   "themes/admin/default/css/components/selectize.css": {
     "declaration-no-important": {
       "count": 14
+    }
+  },
+  "themes/admin/default/theme-base.css": {
+    "color-named": {
+      "count": 72
+    },
+    "declaration-block-no-shorthand-property-overrides": {
+      "count": 2
+    },
+    "declaration-block-single-line-max-declarations": {
+      "count": 166
+    },
+    "declaration-property-value-no-unknown": {
+      "count": 3
+    },
+    "font-family-no-missing-generic-family-keyword": {
+      "count": 6
+    },
+    "media-feature-name-no-unknown": {
+      "count": 1
+    },
+    "no-duplicate-selectors": {
+      "count": 27
+    },
+    "property-no-deprecated": {
+      "count": 2
     }
   }
 }

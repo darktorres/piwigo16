@@ -1,3 +1,8 @@
+/* roma's own theme-skin-layer content -- its deliberate, whole-selector
+   overrides of `default`'s theme-chain rules. `theme-base.css` holds
+   the smaller theme-skin-base portion (generic/reset-shaped rules that
+   must lose to `default`'s own theme-chain content on ordinary
+   specificity grounds, per `default/theme-base.css`'s own comment). */
 @layer theme-skin {
 /* text color */
 body, h3, dt, .throw, .content, label, legend {
@@ -2506,87 +2511,3 @@ label:has(> .filters-icon-check:disabled){
 }
 }
 
-@layer theme-skin-base {
-body, h3, dt, .throw, .content, label, legend {
-  color:#777;
-}
-
-input {
-  color:#999;
-  background-color: #444;
-}
-
-select, textarea {
-  color:#999;
-}
-
-h3, .row2, .content {
-  background-color: #222;
-}
-
-.content dl, dd {
-  margin:5px;
-}
-
-fieldset {
-  border: none;
-}
-
-input, select, textarea {
-  border: 1px solid #666;
-}
-
-textarea {
-  font-size: 13px;
-}
-
-label {
-  cursor:pointer
-}
-
-a {
-  color:#777;
-}
-
-a:hover, a:active {
-  color: #ffa646;
-}
-
-.showInfo-dropdown-header a {
-  color:#3A3A3A
-}
-
-.AddUserSubmit, .update-user-button, .user-property-main-user-body .main-user-btn-validate {
-  background-color:#FFA646;
-}
-
-legend {
-  color: #c1c1c1;
-}
-
-#checkActions a, .deleteDerivButtons a {
-  background-color: #393939;
-}
-
-.move-cat-container, .search-album-elem {
-  background-color: #333;
-}
-
-.advanced-filter-item-label, .advanced-filter-title, .advanced-filter-close {
-  color:#777;
-}
-
-.linked-albums-badge {
-  background: #777;
-  color: #333;
-}
-
-.search-result-item {
-  color: #777;
-}
-
-.showInfo {
-  color: #666;
-}
-
-}

@@ -41,7 +41,7 @@ function makeInstallView(array $themes): InstallView
     );
 }
 
-test('pageAssets registers each theme\'s own theme.css when loadCss is true', function (): void {
+test('pageAssets registers each theme\'s own theme-base.css/theme.css pair when loadCss is true', function (): void {
     $view = makeInstallView([
         new ThemeChainEntry(id: 'clear', loadCss: true),
         new ThemeChainEntry(id: 'dark', loadCss: true),
@@ -49,12 +49,14 @@ test('pageAssets registers each theme\'s own theme.css when loadCss is true', fu
 
     $cssIds = array_map(
         static fn (AssetContribution $c): string => $c->path,
-        array_filter($view->pageAssets(), static fn (AssetContribution $c): bool => str_contains($c->path, 'theme.css'))
+        array_filter($view->pageAssets(), static fn (AssetContribution $c): bool => str_ends_with($c->path, '/theme.css') || str_ends_with($c->path, '/theme-base.css'))
     );
 
     expect($cssIds)
         ->toBe([
+            'themes/admin/clear/theme-base.css',
             'themes/admin/clear/theme.css',
+            'themes/admin/dark/theme-base.css',
             'themes/admin/dark/theme.css',
         ]);
 });
@@ -64,7 +66,7 @@ test('pageAssets skips a theme whose loadCss is false', function (): void {
         new ThemeChainEntry(id: 'clear', loadCss: false),
     ]);
 
-    $themeCss = array_filter($view->pageAssets(), static fn (AssetContribution $c): bool => str_contains($c->path, 'theme.css'));
+    $themeCss = array_filter($view->pageAssets(), static fn (AssetContribution $c): bool => str_ends_with($c->path, '/theme.css') || str_ends_with($c->path, '/theme-base.css'));
 
     expect($themeCss)
         ->toBe([]);

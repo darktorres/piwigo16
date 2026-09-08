@@ -83,7 +83,11 @@ final readonly class InstallView implements View, HasPageAssets, ExposesPageData
      * through the automatic theme-base wiring (`applyThemeBase: false`,
      * see `InstallWizard::boot()`'s own docblock), and never registered
      * `fontello.css`/`utilities.css`/`general.css` even before this
-     * migration, only each theme's own `theme.css`.
+     * migration, only each theme's own `theme.css`. Step 9's
+     * `theme-base.css`/`theme.css` split isn't a new dependency the
+     * same way those are, though -- it's the other half of the exact
+     * file this page already loaded, so both still need registering
+     * here.
      */
     #[Override]
     public function pageAssets(): array
@@ -92,6 +96,7 @@ final readonly class InstallView implements View, HasPageAssets, ExposesPageData
 
         foreach ($this->themes as $theme) {
             if ($theme->loadCss) {
+                $assets[] = AssetContribution::css('themes/admin/' . $theme->id . '/theme-base.css', order: -11);
                 $assets[] = AssetContribution::css('themes/admin/' . $theme->id . '/theme.css', order: -10);
             }
         }

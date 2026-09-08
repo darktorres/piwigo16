@@ -128,7 +128,6 @@ ul.jqtree-tree li.jqtree-ghost span.jqtree-circle {
 
 ul.jqtree-tree li.jqtree-ghost span.jqtree-line {
   background-color: var(--color-info-strong);
-  height: 2px;
   padding: 0;
   position: absolute;
   top: -1px;

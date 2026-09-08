@@ -8,7 +8,6 @@
 }
 
 .selectedAlbum {
-  display: flex;
   flex-direction: row;
   justify-content: space-between;
   padding: 0 34px 0 22px;
@@ -20,12 +19,10 @@
 
 .AlbumViewSelector {
   padding: 7px 0;
-  margin-right: 0;
   border-radius: 10px;
 }
 
 .AlbumViewSelector span {
-  border-radius: 0;
   padding: 7px;
 }
 
@@ -33,25 +30,11 @@
   white-space: nowrap;
 }
 
-/* Should be done with :first-child and :last-child but doesn't work */
-
-.AlbumViewSelector label span.firstIcon {
-  border-radius: 7px 0 0 7px;
-}
-
-.AlbumViewSelector label span.lastIcon {
-  border-radius: 0 7px 7px 0;
-}
-
 .icon-th-large, .icon-th-list, .icon-pause {
   padding: 10px;
   font-size: 19px;
 
   transition: 0.3s;
-}
-
-.switchLayout {
-  display: none;
 }
 
 .albumActions a span.iconLegend {
@@ -84,13 +67,6 @@
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-}
-
-.albumIcon span {
-  font-size: 19px;
-  width: 27px;
-  padding: 10px;
-  border-radius: 30px;
 }
 
 .albumInfos {
@@ -132,7 +108,6 @@
 }
 
 .addAlbum form input {
-  border: none;
   border-radius: 5px;
 
   margin: 0 10px;
@@ -152,8 +127,5 @@
 }
 
 @layer pages-base {
-.selectedAlbum {
-  align-items: baseline;
-}
 
 }

@@ -1,7 +1,4 @@
 @layer pages {
-.search-album-input-container {
-  position: relative;
-}
 
 .album-search-result-container,
 .search-album-elem,
@@ -95,8 +92,6 @@
 
 .AddIcon {
   border-radius: 50%;
-  padding: 10px;
-  font-size: 2em;
 }
 
 .AddIconTitle, .RenameAlbumTitle {

@@ -50,7 +50,6 @@
   padding-bottom:10px;
 }
 
-
 .AddUserSuccessBanner {
   display:none;
   position: absolute;
@@ -94,14 +93,6 @@
   flex-direction: column;
   justify-content: center;
   padding-right: 15px;
-}
-
-/* Pagination */
-.user-pagination {
-  margin: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 /* User Table */
@@ -253,7 +244,6 @@
     margin-bottom:0;
 }
 
-
 .user-container-checkbox.user-list-checkbox .select-checkbox {
 }
 
@@ -350,24 +340,7 @@
   max-width: 835px;
 }
 
-.UserListPopIn{
-    position: fixed;
-    z-index: 100;
-    left: 0;
-    top: 0;
-    width: 100%; 
-    height: 100%;
-    overflow: auto; 
-    background-color: rgb(0,0,0,0.7);
-}
-
 .UserListPopInContainer{
-    position:absolute;
-    left:50%;
-    top: 50%;
-    transform:translate(-50%, -48%);
-    text-align:left;
-    padding:30px;
     display:flex;
     width:745px;
     height: 630px;
@@ -535,7 +508,6 @@
   border-color: transparent transparent #ff952a;
 }
 
-
 .dropdown-mores-plugins .selected,
 .dropdown-mores-plugins .edit-user-tabsheet {
   border-bottom: unset;
@@ -561,13 +533,6 @@
 
 .dropdown-mores-plugins .edit-user-tabsheet:hover {
   background-color: #00000012;
-}
-
-.user-property-label {
-    color:#A4A4A4;
-    font-weight:bold;
-    font-size:1.1em;
-    margin-bottom:5px;
 }
 
 .AddUserPopIn .user-property-label {
@@ -640,7 +605,6 @@
 }
 
 .user-property-select-container::before {
-  margin-top: 10px;
   margin-left: 418px;
 }
 
@@ -1203,7 +1167,6 @@
   height: 70px;
 }
 
-
 /* preferences */
 
 .preferencies-container {
@@ -1317,7 +1280,6 @@
     background-color: rgb(0,0,0,0.7);
 }
 
-
 .GuestUserListPopInContainer{
     display:flex;
     position:absolute;
@@ -1403,18 +1365,8 @@
   margin-top: 10px;
 }
 
-.AddIcon {
-  border-radius:9999px;
-  padding:10px;
-  font-size: 2em;
-}
-
 .AddIconTitle {
-  font-size:1.4em;
-  font-weight:bold;
   margin-bottom:20px;
-  margin-top:15px;
-  text-align: center;
 }
 
 .AddUserInputContainer {
@@ -1707,11 +1659,6 @@ Advanced filter
   transition: 0.3s;
 }
 
-.switchLayout {
-  display: none;
-}
-
-
 /* Tile View */
 
 .tileView {
@@ -1927,7 +1874,6 @@ Advanced filter
   margin-right: 15px;
 }
 
-
 /* User Edit */
 
 .user-edit-icon {
@@ -2132,9 +2078,6 @@ Advanced filter
 }
 
 @layer pages-base {
-.user-pagination {
-  padding: 0;
-}
 
 .user-container {
   height:50px;

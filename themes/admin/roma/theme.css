@@ -2010,7 +2010,7 @@ background:#6C2D2D;
 }
 
 .selectize-control.user-selecter.single .selectize-input, .selectize-control.action-selecter.single .selectize-input {
-  border-color: #555 !important;
+  border-color: #555;
 }
 
 .activity-select-title {
@@ -2232,7 +2232,14 @@ background:#6C2D2D;
 }
 
 .hasDatepicker, .elem-type-select {
-  --elem-type-select-or-hasdatepicker-bg: #252525 !important;
+  --elem-type-select-or-hasdatepicker-bg: #252525;
+  /* Genuinely needs !important, same reasoning as default/theme.css's
+     own `.hasDatepicker, .elem-type-select` background: has to beat
+     `#picture-content input[type="text"], ...` (theme-skin, but
+     ID-scoped -- (1,0,1) always outranks this rule's (0,1,0) on
+     specificity alone) on the photo-editor page specifically.
+     Confirmed live: removing it regressed admin-photo-editor-under-roma's
+     Creation-date field border. */
   border-color: transparent !important;
   color: #777;
 }

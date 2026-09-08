@@ -881,14 +881,26 @@ final class BrowserTestHelpers
      * Still asserts the logout link is present, exactly like
      * loginAsAdmin() -- if the cookie-based auth ever silently failed, the
      * very first test using this fails loudly here instead of masking it.
+     * $loggedInSelector overrides that check's selector (or skips it
+     * entirely, passed `null`) for the rare page whose real markup has no
+     * such link at all -- `themes/standard_pages/template/profile.latte`,
+     * confirmed by reading it directly, not assumed.
      */
-    public static function asAdmin(object $test, string $path = '/admin.php'): Webpage|PendingAwaitablePage|AwaitableWebpage
+    public static function asAdmin(object $test, string $path = '/admin.php', ?string $colorScheme = null, ?string $loggedInSelector = 'a[href*="act=logout"]'): Webpage|PendingAwaitablePage|AwaitableWebpage
     {
         $options = self::testModeOptions();
         $options['storageState'] = [
             'cookies' => self::adminSessionCookies(),
             'origins' => [],
         ];
+        if ($colorScheme !== null) {
+            // Only real caller today: StandardPagesVisualRegressionTest.php's
+            // dark-mode profile.php captures -- standard_pages.ts's client-side
+            // `.light`/`.dark` toggle falls back to `prefers-color-scheme` with
+            // no `mode` cookie set, which is exactly what this context option
+            // controls (Playwright's own launch-time color-scheme emulation).
+            $options['colorScheme'] = $colorScheme;
+        }
 
         // @phpstan-ignore method.notFound
         $result = $test->visit(self::baseUrl() . $path, $options);
@@ -905,7 +917,15 @@ final class BrowserTestHelpers
         }
 
         self::assertNoServerErrors($result, $path);
-        $result->assertPresent('a[href*="act=logout"]');
+        if ($loggedInSelector !== null) {
+            // Nullable, not just a different default: `themes/standard_pages/
+            // template/profile.latte` (StandardPagesVisualRegressionTest.php's
+            // own only non-default-theme caller) has no logout link at all --
+            // a genuinely minimal template, confirmed by reading it directly,
+            // not a markup difference this selector could be adjusted to
+            // match instead.
+            $result->assertPresent($loggedInSelector);
+        }
 
         return $result;
     }

@@ -18,7 +18,6 @@ textarea:focus {
   outline: #ffa646 solid 1px;
 }
 
-
 .showInfo:hover { color:#999; }
 
 h2 { color: #ccc; }
@@ -175,7 +174,6 @@ ul.actions, .content form#waiting  {text-align:center;}
 }
 
 .selected-pagination{
-  background:#ffa646;
   color:#444;
 }
 
@@ -265,10 +263,8 @@ a.stat-box:hover {
 
 .stat-data-selector label {
   --stat-data-selector-label-color: #777;
-  padding: 10px;
 
   --stat-data-selector-label-bg: #333;
-  transition: 0.2s ease;
 }
 
 .stat-data-selector input:checked + label{
@@ -505,8 +501,6 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {background-co
 
 .disabledToggle .move-cat-toogler{
   --disabledtoggle-move-cat-toogler-color: gray;
-  opacity: 0.5;
-  pointer-events: none;
 }
 .move-cat-container.disabledToggle:hover .move-cat-toogler{
   opacity: 0.5;
@@ -691,7 +685,6 @@ label>p.group_select {
   background-color:transparent;
 }
 
-
 .groups .manage-users:hover,
 .groups .manage-permissions:hover{
   background-color:#ffa744;
@@ -700,7 +693,6 @@ label>p.group_select {
 }
 
 /* UserList Pop in */
-
 
 .UserListPopInContainer{
   --userlistpopincontainer-bg-1: #444;
@@ -811,7 +803,6 @@ input:focus + .slider {
   color:#c0c0c0;
 }
 
-
 #selection-mode-block button:hover,
 #commentsSelection button:hover {
   background-color: #ffa744;
@@ -827,12 +818,7 @@ input:focus + .slider {
   color: #777;
 }
 
-.ConfirmDeleteButton{
-  background-color: #ffa744;
-}
-
 /* Merge Options */
-
 
 #MergeOptionsBlock p{
   color: #777;
@@ -850,7 +836,6 @@ input:focus + .slider {
 
 .MergeOptionsContainer select{
   --mergeoptionscontainer-select-bg: #1a1a1a;
-  box-shadow: 0 0 2px #c5c5c5;
 }
 
 /* Group checkbox */
@@ -869,7 +854,6 @@ input:focus + .slider {
 
 .groups .Group-checkbox .group-checkmark::after {
   --groups-group-checkbox-group-checkmark-after-border: #ebebeb;
-  border-width: 0 3px 3px 0;
 }
 
 /* Group manager buttons */
@@ -968,14 +952,9 @@ input:focus + .slider {
   color: #493C21!important;
 }
 
-.AddUserSubmit:hover{
-  background-color: #f70;
-}
-
 /* Edit user popin */
 
 .user_form_popin .ui-slider-horizontal .ui-slider-handle{
-  background-color:#FFA646;
 
   --user-form-popin-ui-slider-horizontal-ui-slider-handle-border: #5a5a5a;
 }
@@ -1031,11 +1010,10 @@ table.qsearch_help_table td {
 
 #wImg {border-color:#555;}
 
-.afterUploadActions a {color: #3C3C3C; font-weight: bold; background-color: #FFA646;}
+.afterUploadActions a {color: #3C3C3C; background-color: #FFA646;}
 .afterUploadActions a:hover {text-decoration: none; background-color: #f70;}
 .afterUploadActions a.secondary_button {background-color: #333;color: #777;}
 .afterUploadActions a.secondary_button:hover {background-color: #ffa744;color: #3C3C3C;}
-
 
 .font-checkbox {color: #898888;}
 .font-checkbox:hover {color: #ededed;}
@@ -1055,8 +1033,7 @@ a#showPermissions:hover {border-color: #A5A5A5;}
 .plupload_filelist {background-color: #444; scrollbar-color: #555 #444;}
 .plupload_filelist li {border-bottom: 1px solid #343434 !important; color: #A5A5A5;}
 .plupload_filelist_footer {background-color: #3c3939; border: 0; color: #A5A5A5!important}
-li.plupload_delete a {background: url("images/cancel.svg")!important; background-size: cover!important;}
-li.plupload_delete a:hover {background: url("images/cancelhover.svg")!important; background-size: cover!important;}
+
 li.plupload_delete a span {background: #444;}
 li.plupload_delete a:hover span {background: #444;}
 li.plupload_delete a.remove-format:hover{color: #c0c0c0;}
@@ -1068,7 +1045,6 @@ li.plupload_delete a.remove-format:hover{color: #c0c0c0;}
 .addAlbum form input {
   --addalbum-form-input-color: #777;
   --addalbum-form-input-bg: #252525;
-  border: none !important;
 }
 .addAlbum form input::placeholder {
   --addalbum-form-input-placeholder-color: #777;
@@ -1143,7 +1119,6 @@ li.plupload_delete a.remove-format:hover{color: #c0c0c0;}
 .albumIconLineHover {
   background: #ae5d1e ! important;
   color: #ffa96b !important;
-  transition: 0.5s ease;
   border-color: #ae5d1e;
 }
 
@@ -1315,11 +1290,6 @@ li.plupload_delete a.remove-format:hover{color: #c0c0c0;}
   --jconfirmalert-jconfirm-icon-c-i-bg: #0a0;
 }
 
-.jconfirmWarning .jconfirm-icon-c i {
-  color: #ffa744 !important;
-  background-color: #ffe9cf !important;
-}
-
 .jconfirm .jconfirm-box .jconfirm-buttons button.btn-default {
   color: #777 !important;
   background-color: #222 !important;
@@ -1467,7 +1437,6 @@ background:#6C2D2D;
 }
 .search-album-ghost span{
   --search-album-ghost-span-bg: #5a5757;
-  color: #c1c1c1;
 }
 
 /* Icon colors */
@@ -1551,18 +1520,6 @@ background:#6C2D2D;
   --pluginactionlevel2-or-pluginunavailableaction-color: #666;
 }
 
-.pluginTypeFilter {
-  display: flex;
-  flex-direction: row;
-
-  position: absolute;
-
-  left: 225px;
-  z-index: 2;
-
-  transform: translateY(13px);
-}
-
 .tab-filters label,
 .pluginTypeFilter label {
   display: flex;
@@ -1615,7 +1572,6 @@ background:#6C2D2D;
 }
 
 .pluginContainer.line .pluginBox:hover .pluginContent{
-  transition: 0.4s;
 
   --plugincontainer-line-pluginbox-hover-plugincontent-bg: #333;
 }
@@ -1656,7 +1612,6 @@ background:#6C2D2D;
 }
 
 .pluginBox.active .pluginActionsSmallIcons a span:hover {
-  background: #f70;
   color: #111;
 }
 
@@ -1799,14 +1754,8 @@ background:#6C2D2D;
 }
 
 .user-container.container-selected {
-  display:flex;
-  width:100%;
-  height:80px;
 
   --user-container-container-selected-bg: #1B1B1B;
-  font-weight:bold;
-  border-radius:10px;
-  margin-bottom:20px;
 }
 
 .user-container.container-selected .user-container-username {
@@ -1988,7 +1937,6 @@ background:#6C2D2D;
   opacity:1;
 }
 
-
 .cache-size-value {
   --cache-size-value-bg: #555;
   color: #c1c1c1;
@@ -2047,34 +1995,14 @@ background:#6C2D2D;
 
 .line {
   --line-bg: transparent;
-
-  display: flex;
-  flex-direction: row;
-
-  height: 40px;
-
-  align-items: center;
-
-  margin-bottom: 10px;
   color: #bbb;
 }
 
 .line .detail-item {
   background: #555;
-  margin: 0 10px 0 0;
-  padding: 3px 6px;
-  border-radius: 20px;
 
   min-width: 50px; 
   max-width: 150px;
-
-  text-align: center;
-
-  overflow: hidden;
-  text-overflow: ellipsis;
-  cursor: default;
-
-  white-space: nowrap;
 }
 
 .download_csv {
@@ -2082,14 +2010,9 @@ background:#6C2D2D;
   width: 30px;
 
   --download-csv-bg: #555;
-  display: flex;
   flex-direction: row;
-  align-items: center;
-  justify-content: center;
 
   --download-csv-color: #b8b8b8;
-  cursor: pointer;
-  border-radius: 5px;
 }
 
 .download_csv:hover {
@@ -2155,7 +2078,6 @@ background:#6C2D2D;
 .border-green {
   --border-green-or-update-password-success-or-update-user-success-or-update-username-success-border-left: #a9f6e3;
 }
-
 
 .linked-albums-badge {
 }
@@ -2290,7 +2212,6 @@ background:#6C2D2D;
   --cat-modify-ariane-a-icon-sitemap-after-bg: #111;
 }
 
-
 .cat-modify-footer-see-out,
 .savebar-see-out,
 .buttonSecond {
@@ -2308,7 +2229,6 @@ background:#6C2D2D;
   border: 2px solid #777;
   background: #1B1B1B;
 }
-
 
 .cat-modify-footer-see-out.disabled {
   background: #5d5d5d;
@@ -2332,7 +2252,6 @@ ul.jqtree-tree li.jqtree-ghost span.jqtree-circle {
 ul.jqtree-tree li.jqtree-ghost span.jqtree-line {
   --ul-jqtree-tree-li-jqtree-ghost-span-jqtree-line-bg: #ededed;
 }
-
 
 .jqtree-moving .move-cat-container {
   background-color: #232323!important;
@@ -2447,10 +2366,6 @@ ul.jqtree-tree li.jqtree-ghost span.jqtree-line {
   --main-info-block-bg: #333;
 }
 
-.main-info-desc {
-  color: #777;
-}
-
 .main-info-title {
   --main-info-title-color: #C1C1C1;
 }
@@ -2463,8 +2378,6 @@ ul.jqtree-tree li.jqtree-ghost span.jqtree-line {
 .media-box{
   --media-box-bg: #1C1C1C;
 }
-
-
 
 .full-line-tag-box select, .calendar-input, .description-box {
   --full-line-tag-box-select-border: #474747;
@@ -2495,11 +2408,6 @@ ul.jqtree-tree li.jqtree-ghost span.jqtree-line {
 
 .pictureIdLabel{
   --pictureidlabel-color: #C1C1C1;
-}
-
-.badge-unsaved{
-  background-color: #FADDA2;
-  color: #E18C32;
 }
 
 .badge-succes{

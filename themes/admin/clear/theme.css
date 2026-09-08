@@ -28,8 +28,6 @@ select, textarea { --select-or-textarea-color: #666; --select-or-textarea-bg: #c
 option[disabled] { background-color: #ccc; }
 input[type="radio"], input[type="checkbox"] { background-color: transparent; }
 
-
-
 input[type="text"], input[type="file"] {
 }
 
@@ -47,7 +45,6 @@ input, select, textarea {
 
 .showInfo { color:#999; }
 .showInfo:hover { color:#333; }
-
 
 #copyright { color:#777; margin:5px auto 0 240px; text-align:center;
 padding-bottom: 15px; }
@@ -88,7 +85,6 @@ ul.thumbnails span.wrap2 {
 	background-color:transparent;
 }
 
-
 /* borders */
 fieldset {
 }
@@ -96,7 +92,6 @@ fieldset {
 fieldset.with-border {
   border: 2px solid #ddd;
 }
-
 
 textarea {
   cursor:text;
@@ -194,7 +189,6 @@ input[type="text"].large  { width: 317px; }
 .bigbutton {background:none;margin-right:-5px; padding: 10px;height:auto;position:static;width:auto;text-align:right;}
 .bigtext {display:none;position:static;}
 .bigbutton input[type="submit"] {display:inline;position:static;height:auto;width:auto;font-size:18px;padding:10px;}
-
 
 /* hacks */
 * html[lang="en"] body .content h2 , *+html[lang="en"] body .content h2 { text-transform:capitalize; } /* IE */
@@ -375,7 +369,6 @@ label>p.group_select {
   color:#e0e0e0;
 }
 
-
 /* Edit group name */
 
 .groups .Group-name{
@@ -410,7 +403,6 @@ label>p.group_select {
   background-color:transparent;
 }
 
-
 .groups .manage-users:hover,
 .groups .manage-permissions:hover{
   background-color:#ffa744;
@@ -419,7 +411,6 @@ label>p.group_select {
 }
 
 /* UserList Pop in */
-
 
 .UserListPopInContainer{
   background-color:white;
@@ -527,7 +518,6 @@ input:focus + .slider {
   border: 1px solid #e7e7e7;
 }
 
-
 #selection-mode-block button:hover,
 #commentsSelection button:hover {
   background-color: #ffa744;
@@ -542,12 +532,7 @@ input:focus + .slider {
   color: #777;
 }
 
-.ConfirmDeleteButton{
-  background-color: #ffa744;
-}
-
 /* Merge Options */
-
 
 #MergeOptionsBlock p{
   color: #777;
@@ -565,7 +550,6 @@ input:focus + .slider {
 
 .MergeOptionsContainer select{
   background-color: white;
-  box-shadow: 0 0 2px #c5c5c5;
 }
 
 /* Group checkbox */
@@ -581,7 +565,6 @@ input:focus + .slider {
 .groups .Group-checkbox input:checked ~ .group-checkmark {
   background-color: #ffa646;
 }
-
 
 /* Group manager buttons */
 
@@ -665,7 +648,6 @@ table.dataTable thead th, table.dataTable.no-footer {
   background: #3C3C3C;
 }
 
-
 #watermarkPositionBox {
   border:2px solid #ccc;
   background-color:#e5e5e5;
@@ -681,7 +663,7 @@ form#categoryOrdering p.albumActions a:hover {background-color: #FFA844; color: 
 form#categoryOrdering p.albumActions .userSeparator {border: 1px solid #E1E1E1;}
 #addAlbumOpen, #autoOrderOpen {border: 1px solid #D6D6D6; color: #5B5B5B;}
 #addAlbumOpen:hover, #autoOrderOpen:hover {border: 1px solid #aaa; text-decoration: none;}
-.afterUploadActions a {color: #3C3C3C; font-weight: bold; background-color: #FFA646;}
+.afterUploadActions a {color: #3C3C3C; background-color: #FFA646;}
 .afterUploadActions a:hover {text-decoration: none; background-color: #f70;}
 .afterUploadActions a.secondary_button {background-color: #ECECEC;}
 .afterUploadActions a.secondary_button:hover {background-color: #FFA646;}
@@ -702,8 +684,7 @@ a#showPermissions:hover {border-color: #A5A5A5;}
 .selectize-control.single .selectize-input:hover {border-color: #FAC17E;}
 .plupload_filelist {scrollbar-color: #CBCBCB #fff; background-color: #fff;}
 .plupload_filelist_footer {background-color: #F5F5F5;}
-li.plupload_delete a {background: url("images/cancel.svg")!important; background-size: cover!important;}
-li.plupload_delete a:hover {background: url("images/cancelhover.svg")!important; background-size: cover!important;}
+
 li.plupload_delete a span {background: #FFF;}
 li.plupload_delete a:hover span {background: #FFF;}
 li.plupload_delete a.remove-format:hover{color: #474747;}
@@ -789,10 +770,6 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 
 .albumInfos {
   color: #d5d5d5;
-}
-
-.albumActions a {
-  color: #848484;
 }
 
 .albumActions a:hover {
@@ -924,7 +901,6 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
   background-color:#FFA646;
 }
 
-
 .cat-modify-footer,
 .savebar-footer {
   border-color: #ececec;
@@ -963,10 +939,6 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 label:has(> .filters-icon-check:disabled), span:has(+ .filters-icon-check:disabled){
   color: #D5D5D5;
   cursor: not-allowed;
-}
-
-.select-views{
-  background-color: #f3f3f3;
 }
 
 .filter-manager-options-container{

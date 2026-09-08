@@ -1005,12 +1005,14 @@ a:hover, a:active {
   color: #ffa646;
 }
 
+/* `background-color: #eee` on this exact same selector list used to
+   sit right below this rule -- dead on arrival (identical selector,
+   identical layer, no `!important` of its own, so this rule's
+   `!important` always won). Confirmed pre-existing back to the
+   original `theme-skin-base` split, not something this campaign
+   introduced. Removed rather than kept as inert history. */
 #ui-datepicker-div .ui-datepicker-control, #ui-datepicker-div a {
   background-color: #FFF !important;
-}
-
-#ui-datepicker-div .ui-datepicker-control, #ui-datepicker-div  a {
-  background-color: #eee;
 }
 
 .icon-plus.cboxElement {

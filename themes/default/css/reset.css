@@ -15,7 +15,33 @@
  * existing explicit declaration. It only takes effect on properties no
  * unlayered rule sets at all (a real, accepted, VR-caught risk -- see
  * this phase's own docs/PLAN.md entry).
+ *
+ * P52-E/F prerequisite: the full 12-name master `@layer` order,
+ * declared here rather than only in each chain's own `theme.css`/
+ * `theme-base.css`. This file is the one genuinely shared,
+ * always-first-loaded stylesheet across all 3 layouts (`order: -30`
+ * in every one of `ThemeBaseAssets`'s 3 methods) -- found necessary
+ * by reading `search.html`'s real golden-html `<head>` output: several
+ * `default`/`standard_pages` pages cross-load already-`@layer`-wrapped
+ * admin-namespaced files directly (`themes/admin/default/css/
+ * components/jquery-ui.css` et al., `vendor-base`/`components-base`
+ * from the admin campaign) without ever loading `admin/default/
+ * theme-base.css`, the only other place this order was declared.
+ * Per the Cascade Layers spec, a layer name never yet declared gets
+ * its position fixed by first-encounter order in that page's own
+ * cascade -- so `components-base` was landing *after* `components`
+ * on those pages (the order the two blocks happen to appear inside
+ * `jquery-ui.css` itself), the opposite of the admin architecture's
+ * intent. Declaring the full order here, before any per-chain file
+ * ever loads, makes it deterministic regardless of which chain's
+ * files a given page ends up combining. Each chain's own `theme.css`/
+ * `theme-base.css` keeps re-declaring the same statement too --
+ * harmless per spec (re-declaring an already-established set in the
+ * same relative order is a no-op) and keeps each entry file
+ * self-documenting.
  */
+@layer reset, tokens, base, theme-skin-base, vendor-base, components-base, pages-base, theme-chain, theme-skin, components, pages, utilities;
+
 @layer reset {
   *,
   *::before,

@@ -85,13 +85,21 @@ final readonly class ThemeBaseAssets
         $assets = [
             // P52-B: reset/tokens/base layers, loaded before everything
             // else so the rendered HTML roughly matches the @layer
-            // declaration order (Step 9: that one-time declaration now
-            // lives at the top of default/theme-base.css, the first
-            // per-theme file the loop below registers) -- not
-            // functionally required for layer priority, which comes
-            // from that declaration alone regardless of file order,
-            // but keeps the <head> legible.
-            AssetContribution::css('themes/default/css/reset.css', order: -30),
+            // declaration order. `reset.css`'s own `order` (P52-E/F
+            // prerequisite) is NOT just for <head> legibility, unlike
+            // the comment here used to claim -- confirmed the hard way,
+            // live in a real browser: a layer name not yet declared
+            // anywhere gets its position fixed by first-encounter order
+            // in that page's own cascade, so `reset.css` (which now
+            // carries the full 12-name master order, see its own
+            // docblock) genuinely has to load before any other
+            // stylesheet that references one of those names, on every
+            // page, including ones combining files from more than one
+            // chain. -999 is the lowest `order` any other real
+            // `AssetContribution::css()` call site uses today
+            // (`SearchFiltersView`'s own `jquery-ui.css` registration)
+            // -- -100000 leaves real headroom below that.
+            AssetContribution::css('themes/default/css/reset.css', order: -100000),
             AssetContribution::css('themes/admin/default/css/tokens.css', order: -29),
             AssetContribution::css('themes/default/css/base.css', order: -28),
             AssetContribution::css('themes/admin/default/fontello/css/fontello.css', order: -10),
@@ -160,7 +168,7 @@ final readonly class ThemeBaseAssets
     {
         $assets = [
             // P52-B: see forAdminLayout()'s own comment.
-            AssetContribution::css('themes/default/css/reset.css', order: -30),
+            AssetContribution::css('themes/default/css/reset.css', order: -100000),
             AssetContribution::css('themes/default/css/tokens.css', order: -29),
             AssetContribution::css('themes/default/css/base.css', order: -28),
         ];
@@ -178,7 +186,7 @@ final readonly class ThemeBaseAssets
     {
         $assets = [
             // P52-B: see forAdminLayout()'s own comment.
-            AssetContribution::css('themes/default/css/reset.css', order: -30),
+            AssetContribution::css('themes/default/css/reset.css', order: -100000),
             AssetContribution::css('themes/standard_pages/css/tokens.css', order: -29),
             AssetContribution::css('themes/default/css/base.css', order: -28),
         ];

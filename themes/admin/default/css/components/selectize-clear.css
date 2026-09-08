@@ -97,13 +97,19 @@
   background-repeat: repeat-x;
 }
 
+}
+
+@layer components-base {
+/* Demoted from `components` -- clear/theme.css's own
+   `.selectize-control.single .selectize-input {border-color: #FFA646}`
+   (theme-skin) is a deliberate skin override for this exact selector;
+   `components` being declared after `theme-skin` in the master order
+   would otherwise let this generic vendor default always win
+   regardless. */
 .selectize-control.single .selectize-input,
 .selectize-dropdown.single {
   border-color: #b8b8b8;
 }
-}
-
-@layer components-base {
 .selectize-dropdown,
 .selectize-input,
 .selectize-input input {

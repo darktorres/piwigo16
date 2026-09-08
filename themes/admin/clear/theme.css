@@ -698,8 +698,8 @@ a#showPermissions:hover {border-color: #A5A5A5;}
 .icon-plus.cboxElement {
 }
 .icon-plus.cboxElement:hover {background-color: #F2F2F2;}
-.selectize-control.single .selectize-input {border: 2px solid #FFA646!important; color: #3C3C3C;}
-.selectize-control.single .selectize-input:hover {border-color: #FAC17E!important;}
+.selectize-control.single .selectize-input {border: 2px solid #FFA646; color: #3C3C3C;}
+.selectize-control.single .selectize-input:hover {border-color: #FAC17E;}
 .plupload_filelist {scrollbar-color: #CBCBCB #fff; background-color: #fff;}
 .plupload_filelist_footer {background-color: #F5F5F5;}
 li.plupload_delete a {background: url("images/cancel.svg")!important; background-size: cover!important;}

@@ -4,11 +4,6 @@
   cursor: help;
 }
 
-/* general */
-.no-flex-grow {
-    flex-grow:0 !important;
-}
-
 .user-row-template {
     display:none;
 }
@@ -225,7 +220,7 @@
 
 .user-header-registration,
 .user-container-registration {
-    width: 10% !important;
+    width: 10%;
     max-width: 700px;
     min-width: 130px;
     margin-left: auto;
@@ -237,6 +232,15 @@
     display:flex;
     align-items:center;
     flex-grow:1;
+}
+
+/* general -- always paired with `.user-header-col`/`.user-col` on the
+   same element (see user_list.latte), so this only ever needs to beat
+   those two `flex-grow: 1` rules -- moved after both so plain source
+   order settles the tie (same specificity, same layer) instead of
+   `!important`. */
+.no-flex-grow {
+    flex-grow:0;
 }
 
 .user-first-col {
@@ -303,10 +307,6 @@
 
 .user-container-status {
     text-transform:capitalize;
-}
-
-.user-container-registration {
-    width:15%;
 }
 
 .user-container-registration > div {

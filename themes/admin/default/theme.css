@@ -6947,7 +6947,12 @@ li.plupload_delete a:hover {background: url("images/cancelhover.svg"); backgroun
 .addAlbumEmpty a{display: inline-block; padding: 10px 15px; font-weight: bold; font-size: 14px;}
 .addAlbumEmpty a:hover{text-decoration: none;}
 .addAlbumEmpty a::first-letter {text-transform: capitalize;}
-#cboxLoadedContent {height: auto !important; padding: 20px;}
+/* No longer needs `!important`: colorbox.ts now clears its own
+   `loaded.style.height` once the box-resize animation finishes
+   (that inline height was only ever needed for computeTargetBox()'s
+   animation math, never read back afterward), so there's no inline
+   style left to beat once the box settles. */
+#cboxLoadedContent {height: auto; padding: 20px;}
 .buttonSeparator {font-weight: bold; text-transform: uppercase;}
 .popinButtons {text-align: right; margin-top: 24px;}
 .popinButtons input[type="submit"] {margin-right: 0;}

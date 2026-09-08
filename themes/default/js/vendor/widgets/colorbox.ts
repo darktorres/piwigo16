@@ -717,6 +717,13 @@ function prep(node: Node): void {
     titleEl.innerHTML = getTitleText(state.el);
     titleEl.style.display = "";
     loaded.style.display = "";
+    // The fixed pixel height set above (measured for computeTargetBox()'s
+    // own outer-box animation math, never read back from this element)
+    // is only needed while the box is resizing to fit; clearing it once
+    // that finishes lets `#cboxLoadedContent`'s own `height: auto`
+    // govern the settled content, matching this element's real content
+    // height exactly instead of a frozen snapshot of it.
+    loaded.style.height = "";
 
     const total = state.related.length;
     if (total > 1) {

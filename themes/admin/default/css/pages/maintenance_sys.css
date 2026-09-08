@@ -1,9 +1,4 @@
 @layer pages {
-        .icon-th-list {
-            padding: 0;
-            font-size: unset;
-        }
-
         .major-infos {
             position: relative;
         }

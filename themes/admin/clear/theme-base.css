@@ -70,6 +70,17 @@ a:hover, a:active {
   color: #777;
 }
 
+/* Demoted alongside `cat_list.css`'s own `.albumInfos` color (see that
+   file's `pages-base` comment): without this, clear's plain
+   `.albumInfos` (theme-skin) would win over the pages-base rule via
+   layer position for the exact same reason theme-skin previously beat
+   `pages-base` everywhere else -- confirmed the hard way, by a real VR
+   regression on `admin-cat-list` (the album-count text rendered too
+   light) caught while fixing the roma-hover finding below. */
+.albumInfos {
+  color: #d5d5d5;
+}
+
 /* #footer and default/theme.css's `#theAdminPage .admin-footer` are the
    SAME real element (id="footer" class="admin-footer") -- confirmed live
    via a real screenshot diff, not text/specificity analysis: the two

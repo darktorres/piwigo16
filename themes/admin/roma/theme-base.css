@@ -74,6 +74,80 @@ legend {
   color:#777;
 }
 
+/* Demoted from `general.css`'s own `theme-skin` layer (found by
+   tools/css-layers/scan.py's --inversions check): `default`'s
+   theme-chain content has two selectors specifically overriding these
+   same properties for one real case each --
+   `.advanced-filter-new-plugin .advanced-filter-container` (grid, not
+   flex, for the "Add new plugin" page's 5-column layout) and
+   `.advanced-filter-revision-date .advanced-filter-item-label` (inline,
+   not flex, so that label sits beside its date input) -- both real DOM
+   matches (plugins_new.latte). At `theme-skin`'s original layer
+   position those specific overrides silently lost to this generic
+   `display` unconditionally, a real, previously undetected bug: roma
+   has no automated visual-regression coverage, so nothing ever caught
+   the "Add new plugin" grid collapsing to a single flex row under this
+   skin. Demoted here so ordinary specificity decides, matching every
+   other `-base` fix in this campaign. */
+.advanced-filter-container, .advanced-filter-item-label {
+  display: flex;
+}
+
+/* Demoted from `theme.css`'s own `theme-skin` layer (found by
+   tools/css-layers/scan.py's --inversions check): `default`'s
+   theme-chain content has `.plugin-inactive .pluginContent { border:
+   none; border-left: solid 5px #999; }`, a real, deliberate visual
+   marker for deactivated plugins on the Plugins page (real DOM match,
+   `plugins_installed.latte`'s row gets a dynamic `plugin-inactive`
+   class both server-side and via `installed.ts`'s AJAX toggle). At
+   `theme-skin`'s original layer position this generic `border-left:
+   none` (shared with `.pluginBox`/`.groups .GroupContainer`, which
+   have no such competing specific override and stay in `theme.css`)
+   silently won unconditionally, another real, previously undetected
+   bug from roma's own lack of visual-regression coverage: every
+   inactive plugin under this skin lost its distinguishing left
+   border, with no visual difference from an active one. */
+.pluginContent {
+  border-left: none;
+}
+
+/* The rest of this section: also found by tools/css-layers/scan.py's
+   --inversions check, same root cause and same fix as the two findings
+   above -- each is a real, confirmed DOM match on a real admin page
+   (verified via grep against the real templates/JS, not assumed),
+   where `default`'s theme-chain content sets a more specific override
+   that `theme-skin`'s original layer position let this generic rule
+   silently beat. None of these had ever been visually verified: roma
+   carries no automated visual-regression coverage at all, so nothing
+   ever caught them. */
+
+/* vs. `.tag-container .tag-box` (Tags page, `tags.latte`). */
+.tag-box {
+  background-color: #333;
+}
+
+/* vs. `.batch-manager-root .deleteDerivButtons a:hover` (Batch Manager
+   Global's derivative-delete buttons, `batch_manager_global.latte`).
+   `#checkActions a:hover` (still in `theme.css`, unaffected) has no
+   competing override and stays untouched. */
+.deleteDerivButtons a:hover {
+  background-color: #1b1b1b;
+  color: #777;
+}
+
+/* vs. `.cat-modify-infos .cat-modify-info-card` (Album Properties page,
+   `cat_modify.latte`) -- only `background` conflicts; this selector's
+   own `color: #c1c1c1` (still in `theme.css`) has no competing
+   override there and stays untouched. */
+.cat-modify-info-card {
+  background: #333;
+}
+
+/* vs. `.cat-modify-infos .cat-modify-info-content` (same page). */
+.cat-modify-info-content {
+  color: #c1c1c1;
+}
+
 .linked-albums-badge {
   background: #777;
   color: #333;

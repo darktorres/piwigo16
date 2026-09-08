@@ -70,8 +70,6 @@
 }
 
 .albumInfos {
-  color: #a9a9a9;
-
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -127,5 +125,19 @@
 }
 
 @layer pages-base {
+
+/* Demoted `.albumInfos`'s own `color` (found by
+   tools/css-layers/scan.py's --inversions check): roma's
+   `.categoryBox.line_cat:hover .albumInfos { color: #333; }`
+   (`theme.css`, theme-skin) is a real, more specific hover-state
+   override -- confirmed against `categories/list.ts`'s own
+   `addClass`/`css()` calls, which really do combine `.categoryBox`,
+   `.line_cat`, and `.albumInfos` on the same rendered elements -- but
+   `pages` sits after `theme-skin` in the master order, so this generic
+   rule silently won on hover regardless, another real bug roma's lack
+   of visual-regression coverage never caught. */
+.albumInfos {
+  color: #a9a9a9;
+}
 
 }

@@ -575,23 +575,11 @@
     }
   },
   "themes/admin/roma/css/components/general.css": {
-    "color-hex-length": {
-      "count": 2
-    },
     "color-named": {
-      "count": 1
-    },
-    "font-family-name-quotes": {
       "count": 1
     },
     "font-family-no-missing-generic-family-keyword": {
       "count": 1
-    },
-    "length-zero-no-unit": {
-      "count": 2
-    },
-    "declaration-no-important": {
-      "count": 5
     }
   },
   "themes/admin/default/fontello/css/animation.css": {
@@ -691,11 +679,6 @@
       "count": 12
     }
   },
-  "themes/admin/default/css/pages/cat_list.css": {
-    "declaration-no-important": {
-      "count": 2
-    }
-  },
   "themes/admin/default/css/pages/history.css": {
     "declaration-no-important": {
       "count": 3
@@ -774,6 +757,16 @@
       "count": 27
     },
     "property-no-deprecated": {
+      "count": 2
+    }
+  },
+  "themes/admin/default/css/components/selectize-dark.css": {
+    "block-no-empty": {
+      "count": 2
+    }
+  },
+  "themes/admin/default/css/components/jquery-ui.css": {
+    "block-no-empty": {
       "count": 2
     }
   }

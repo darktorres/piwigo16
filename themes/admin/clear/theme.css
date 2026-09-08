@@ -748,9 +748,8 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
   color: #3c3c3c;
 }
 
-.albumInfos {
-  color: #d5d5d5;
-}
+/* `.albumInfos`'s own `color` moved to theme-base.css's theme-skin-base
+   layer -- see that file's own comment. */
 
 .albumActions a:hover {
   color: #FFA646;

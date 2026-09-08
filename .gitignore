@@ -41,6 +41,10 @@
 # deptrac's incremental-analysis cache (P6+)
 /.deptrac.cache
 
+# Python bytecode cache (tools/css-layers/scan.py, P52 Step 10)
+__pycache__/
+*.pyc
+
 # PHPUnit's own test-result cache (--order-by=defects, risky/incomplete tracking)
 /.phpunit.result.cache
 

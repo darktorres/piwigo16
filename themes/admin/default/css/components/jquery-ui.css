@@ -381,7 +381,6 @@
 }
 
 .ui-slider-horizontal .ui-slider-handle {
-  top: -0.3em;
   margin-left: -0.6em;
 }
 
@@ -395,6 +394,22 @@
 }
 
 @layer components-base {
+/* `.ui-slider-horizontal .ui-slider-handle`'s own `top` (found by
+   tools/css-layers/scan.py's --inversions check): `default`'s
+   theme-chain content has two real, more specific overrides for this
+   same widget -- `.slider-bar-wrapper .ui-slider-horizontal
+   .ui-slider-handle` and `.batch-manager-root .ui-slider-horizontal
+   .ui-slider-handle` (Batch Manager's own slider bar,
+   `batch_manager_global.latte`/`batch_manager_unit.latte`) -- that
+   this generic vendor rule silently beat via layer position despite
+   its lower specificity, exactly the bug shape `components-base`
+   already exists for elsewhere in this file (`.ui-icon-circle-
+   triangle-*`'s own `background-position`). `margin-left` (still in
+   `components` above) has no competing override and stays untouched. */
+.ui-slider-horizontal .ui-slider-handle {
+  top: -0.3em;
+}
+
 .ui-corner-all {
   border-radius: 4px;
 }

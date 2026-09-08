@@ -115,9 +115,9 @@ Advanced filter
     color: #f70;
 }
 
-.advanced-filter-container {
-    display: flex;
-}
+/* .advanced-filter-container's `display: flex` moved to
+   theme-base.css's theme-skin-base layer -- see that file's own
+   comment. */
 
 .advanced-filter-item:not(:last-child) {
     margin-right: 30px;
@@ -125,7 +125,6 @@ Advanced filter
 
 .advanced-filter-item-label {
     text-align: left;
-    display: flex;
     margin-bottom: 5px;
 
     color:#777;

@@ -834,16 +834,6 @@ li.menuLi {
   font-size: 18px;
 }
 
-.albumsFilter .search-cancel {
-  position: absolute;
-  top: auto;
-  right: auto;
-  transform: translateY(0);
-  font-size: 18px;
-  margin-left: 215px;
-  margin-top: 10px;
-}
-
 .search-cancel:hover {
   opacity: 1;
 }
@@ -852,13 +842,6 @@ li.menuLi {
   position: absolute;
   top: 50%;
   transform: translate(4px, -50%);
-  font-size: 18px;
-}
-
-.albumsFilter .search-icon {
-  position: absolute;
-  top: auto;
-  transform: translate(6px, 40%);
   font-size: 18px;
 }
 
@@ -2510,7 +2493,6 @@ div.jGrowl div.jGrowl-notification{
 }
 
 .pluginFilter {justify-content: end;position: absolute;right: 160px; z-index: 2; transform: translateY(6px);}
-.albumsFilter { margin-left: auto; }
 
 .pluginBox {
   display:flex;

@@ -22,6 +22,17 @@
   -webkit-font-smoothing: inherit;
 }
 
+/* `.selectize-input input`'s own `font-size` kept out of the
+   `components-base` block below (found by tools/css-layers/scan.py's
+   --inversions check): `default`'s theme-chain content has a bare
+   `input { font-size: 1em; }` reset that would otherwise silently win
+   here via layer position despite this selector's much higher
+   specificity, enlarging the selectize widget's inner search input's
+   text past the rest of the (13px) widget. */
+.selectize-input input {
+  font-size: 13px;
+}
+
 .selectize-input {
   cursor: text;
   display: inline-block;
@@ -98,8 +109,12 @@
 .selectize-input input {
   color: #fefefe;
   font-family: inherit;
-  font-size: 13px;
   line-height: 18px;
+}
+
+.selectize-dropdown,
+.selectize-input {
+  font-size: 13px;
 }
 
 .selectize-input {

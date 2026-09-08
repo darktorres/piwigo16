@@ -359,9 +359,11 @@ a.stat-box:hover {
   border-right-color:#333;
   box-shadow: none;
 }
-.pluginBox, .pluginContent, .groups .GroupContainer {
+.pluginBox, .groups .GroupContainer {
   border-left: none;
 }
+/* `.pluginContent`'s own `border-left: none` moved to theme-base.css's
+   theme-skin-base layer -- see that file's own comment. */
 .pluginContainer.line-form .pluginBox:hover .pluginContent {background: #1e1e1d;}
 .groups #addGroupForm:hover{
   background-color: #1b1b1b;
@@ -1054,8 +1056,10 @@ li.plupload_delete a.remove-format:hover{color: #c0c0c0;}
   transition: 0.2s linear;
 }
 
+/* `.cat-modify-info-card`'s own `background` moved to
+   theme-base.css's theme-skin-base layer -- see that file's own
+   comment. */
 .cat-modify-info-card {
-  background: #333;
   color :  #c1c1c1}
 
 .cat-modify-input-container input, .cat-modify-input-container textarea {
@@ -1067,8 +1071,8 @@ li.plupload_delete a.remove-format:hover{color: #c0c0c0;}
   background-color: #333;
 }
 
-.cat-modify-info-content {
-  color :  #c1c1c1}
+/* `.cat-modify-info-content`'s own `color` moved to theme-base.css's
+   theme-skin-base layer -- see that file's own comment. */
 
 .cat-modify-footer,
 .savebar-footer {
@@ -1101,10 +1105,13 @@ li.plupload_delete a.remove-format:hover{color: #c0c0c0;}
 
 #checkActions a, .deleteDerivButtons a {
 }
-#checkActions a:hover, .deleteDerivButtons a:hover {
+#checkActions a:hover {
   background-color: #1b1b1b;
   color: #777;
 }
+/* `.deleteDerivButtons a:hover`'s own `background-color`/`color` moved
+   to theme-base.css's theme-skin-base layer -- see that file's own
+   comment. */
 #addFilter, #filterList select, .pictureLevels select, #permitAction select, .sort-by select {
   background-color: #444; color: #BFBFBF
 }
@@ -1314,9 +1321,8 @@ background:#6C2D2D;
 
 /* Tag Manager */
 
-.tag-box {
-  background-color: #333;
-}
+/* `.tag-box`'s own `background-color` moved to theme-base.css's
+   theme-skin-base layer -- see that file's own comment. */
 
 .tag-header .selection-controller a, .comments-selection-controller .comments-selection-btn {
   --comments-selection-controller-comments-selection-btn-or-tag-header-selection-controller-a-bg: #333;

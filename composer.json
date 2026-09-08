@@ -175,6 +175,7 @@
     ],
     "analyse:phpstan:extensions": "bash tools/analyse-ported-extensions.sh",
     "bench": "@php vendor/bin/phpbench run",
+    "check:css-layers": "python3 tools/css-layers/scan.py",
     "check:doc-drift": "@php tools/doc-drift-check.php",
     "generate:latte-shims": "@php bin/piwigo phpstan-latte:generate-shims",
     "lint:composer": "@composer normalize --dry-run",

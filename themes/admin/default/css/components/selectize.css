@@ -138,10 +138,16 @@
 /* `remove_button` plugin (the only selectize plugin any real call site
    enables) -- `.remove`'s own `border-left` color (#0073bb) matches the
    chip background border above in both real theme sources, kept as
-   one shared literal rather than 2 identical scheme-file copies. */
-.selectize-control.plugin-remove_button [data-value] {
+   one shared literal rather than 2 identical scheme-file copies.
+   `div[data-value]` (not bare `[data-value]`) -- `.selectize-control.multi
+   .selectize-input > div {padding: 2px 6px}` above has the same real
+   chip element in mind and ties this rule's specificity exactly at
+   (0,3,1) without the type qualifier, letting it win by mere source
+   order; naming the real element type here keeps the win, without
+   `!important`, independent of source order. */
+.selectize-control.plugin-remove_button div[data-value] {
   position: relative;
-  padding-right: 24px !important;
+  padding-right: 24px;
 }
 
 .selectize-control.plugin-remove_button [data-value] .remove {

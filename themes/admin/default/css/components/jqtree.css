@@ -76,7 +76,6 @@ ul.jqtree-tree {
 
 ul.jqtree-tree ul.jqtree_common {
   list-style: none outside;
-  margin-inline: 12px 0;
   margin-bottom: 0;
   padding: 0;
   display: block;
@@ -173,5 +172,13 @@ ul.jqtree-tree li.jqtree-ghost span.jqtree-line {
 
 ul.jqtree-tree span.jqtree-border {
   border: solid 2px var(--color-info-strong);
+}
+
+/* margin-inline (logical) competes with theme.css's/albums.css's own
+   margin-left (physical) overrides for the same box edge -- same
+   demotion reasoning applies across the logical/physical property
+   pair. */
+ul.jqtree-tree ul.jqtree_common {
+  margin-inline: 12px 0;
 }
 }

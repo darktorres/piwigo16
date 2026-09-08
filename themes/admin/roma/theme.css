@@ -99,8 +99,17 @@ fieldset {
 input, select, textarea {
 }
 input:focus, select:focus, textarea:focus {
-	background-color: #444;
 	color: #999;
+}
+
+/* `.hasDatepicker`/`.elem-type-select` need a different, skin-driven
+   background regardless of focus state (see theme.css's own
+   `.hasDatepicker, .elem-type-select`) -- excluded here rather than
+   from `color` too, which they never conflicted over (that's real,
+   pre-existing behavior: the datepicker input's text legitimately
+   brightens like any other input while its calendar is open). */
+input:focus:not(.hasDatepicker), select:focus:not(.elem-type-select), textarea:focus {
+	background-color: #444;
 }
 
 textarea {
@@ -438,9 +447,18 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {background-co
 
 /* Picture edit */
 #picture-content input[type="text"], #picture-content textarea, #picture-content .selectize-input, #picture-content select {
-  background-color: #444;
-  border: 1px solid #666;
+  border-width: 1px;
+  border-style: solid;
   color: #c1c1c1;
+}
+
+/* `.hasDatepicker` needs a different, skin-driven background/border
+   color regardless (see `.hasDatepicker, .elem-type-select` below) --
+   excluded here rather than from the whole rule, which it still needs
+   for border-width/style/color. */
+#picture-content input[type="text"]:not(.hasDatepicker), #picture-content textarea, #picture-content .selectize-input, #picture-content select {
+  background-color: #444;
+  border-color: #666;
 }
 
 .info-framed-title, .info-framed-icon {
@@ -983,8 +1001,13 @@ a#showPermissions {color: #D6D6D6; border: 1px solid #D6D6D6; background-color: 
 a#showPermissions:hover {border-color: #A5A5A5;}
 .icon-plus.cboxElement {border: 1px solid #777; color: #c0c0c0;}
 .icon-plus.cboxElement:hover {border: 1px solid #aaa;}
-.selectize-control.single .selectize-input {border: 2px solid #FFA646; color: #D5D5D5;}
-.selectize-control.single .selectize-input:hover {border-color: #F70;}
+/* `:not(.advanced-filter-item-container *)`: the advanced-filter
+   panel's own selectize (general.css) intentionally wants a plain dark
+   box, not this generic orange single-select treatment, on the same
+   `.selectize-control.single .selectize-input` element -- excluding it
+   here (the real competitor) lets that rule apply without `!important`. */
+.selectize-control.single .selectize-input:not(.advanced-filter-item-container *) {border: 2px solid #FFA646; color: #D5D5D5;}
+.selectize-control.single .selectize-input:hover:not(.advanced-filter-item-container *) {border-color: #F70;}
 .plupload_filelist {background-color: #444; scrollbar-color: #555 #444;}
 .plupload_filelist li {border-bottom: 1px solid #343434; color: #A5A5A5;}
 .plupload_filelist_footer {background-color: #3c3939; border: 0; color: #A5A5A5}
@@ -1098,8 +1121,13 @@ li.plupload_delete a.remove-format:hover{color: #c0c0c0;}
 }
 #permitAction select {background: #3C3C3C; color: #C0C0C0;}
 #set_date_creation input {
-  background: #3C3C3C;
   color: #C0C0C0;
+}
+
+/* `.hasDatepicker` needs a different, skin-driven background
+   regardless (see `.hasDatepicker, .elem-type-select` below). */
+#set_date_creation input:not(.hasDatepicker) {
+  background: #3C3C3C;
 }
 #action_move a:last-child {color: #C0C0C0; background-color: #464646;}
 #filter_dimension .slider-choice, #filter_filesize .slider-choice {background-color: #393939;}
@@ -1669,17 +1697,17 @@ background:#6C2D2D;
   color: #444;
 }
 
-/* `.icon-blue`/`.icon-green`/etc's own non-important per-album color
-   classes sit in this same `theme-skin` layer (roma's own general.css);
-   `.albumIconLineHover` needs to win over them regardless of which
-   color class an album has, hence no property overlap needed to
-   reason about here -- ordinary same-layer specificity/property-name
-   independence already decides it. Previously required `!important`
-   (plus a `theme-skin-base` relocation) only because it was fighting
-   `default/theme.css`'s own `theme-chain`-layer `.albumIconLineHover`
-   `!important`; moving it to `theme-skin` (later than `theme-chain`)
-   lets ordinary layer position decide instead. */
-.albumIconLineHover {
+/* Scoped to the real `.albumIcon` ancestor (same reasoning as
+   default/theme.css's own `.albumIcon .albumIconLineHover`) rather
+   than relying on this file's own `.icon-blue`/`.icon-green`/etc
+   (same `theme-skin` layer, same specificity as a bare
+   `.albumIconLineHover`) always sitting earlier in source order --
+   real specificity decides it regardless of order now. Previously
+   required `!important` (plus a `theme-skin-base` relocation) only
+   because it was fighting `default/theme.css`'s own `theme-chain`-
+   layer `.albumIconLineHover` `!important`; moving to `theme-skin`
+   (later than `theme-chain`) already fixed that part. */
+.albumIcon .albumIconLineHover {
   background: #ae5d1e;
   color: #ffa96b;
   border-color: #ae5d1e;
@@ -2132,14 +2160,10 @@ background:#6C2D2D;
 
 .hasDatepicker, .elem-type-select {
   --elem-type-select-or-hasdatepicker-bg: #252525;
-  /* Genuinely needs !important, same reasoning as default/theme.css's
-     own `.hasDatepicker, .elem-type-select` background: has to beat
-     `#picture-content input[type="text"], ...` (theme-skin, but
-     ID-scoped -- (1,0,1) always outranks this rule's (0,1,0) on
-     specificity alone) on the photo-editor page specifically.
-     Confirmed live: removing it regressed admin-photo-editor-under-roma's
-     Creation-date field border. */
-  border-color: transparent !important;
+  /* No longer needs `!important`: `#picture-content input[type="text"],
+     ...` (this file) now excludes `.hasDatepicker` via `:not()` instead
+     of this rule trying to out-specificity an ID selector. */
+  border-color: transparent;
   color: #777;
 }
 
@@ -2379,7 +2403,9 @@ ul.jqtree-tree li.jqtree-ghost span.jqtree-line {
   color: #A4A4A4;
 }
 
-.calendar-input input{
+/* `.hasDatepicker` needs a different, skin-driven background
+   regardless (see `.hasDatepicker, .elem-type-select` in theme.css). */
+.calendar-input input:not(.hasDatepicker) {
   background-color: #333;
 }
 

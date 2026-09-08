@@ -650,8 +650,13 @@ a#showPermissions:hover {border-color: #A5A5A5;}
 .icon-plus.cboxElement {
 }
 .icon-plus.cboxElement:hover {background-color: #F2F2F2;}
-.selectize-control.single .selectize-input {border: 2px solid #FFA646; color: #3C3C3C;}
-.selectize-control.single .selectize-input:hover {border-color: #FAC17E;}
+/* `:not(.advanced-filter-item-container *)`: the advanced-filter
+   panel's own selectize (general.css) intentionally wants a plain gray
+   box, not this generic orange single-select treatment, on the same
+   `.selectize-control.single .selectize-input` element -- excluding it
+   here (the real competitor) lets that rule apply without `!important`. */
+.selectize-control.single .selectize-input:not(.advanced-filter-item-container *) {border: 2px solid #FFA646; color: #3C3C3C;}
+.selectize-control.single .selectize-input:hover:not(.advanced-filter-item-container *) {border-color: #FAC17E;}
 .plupload_filelist {scrollbar-color: #CBCBCB #fff; background-color: #fff;}
 .plupload_filelist_footer {background-color: #F5F5F5;}
 

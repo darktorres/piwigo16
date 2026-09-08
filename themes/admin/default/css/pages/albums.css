@@ -342,7 +342,7 @@ input[name="position"] {
   }
 
   ul.jqtree-tree ul.jqtree_common {
-    margin-left: 20px !important;
+    margin-left: 20px;
   }
 
   .move-cat-title-container {

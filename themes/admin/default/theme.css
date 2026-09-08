@@ -192,8 +192,6 @@ table.languages tr td { padding: 7px 20px; }
 }
 
 .albumIconLineHover {
-  background: #f98100! important;
-  color: #ffd7ad !important;
   transition: 0.5s ease;
 }
 
@@ -2538,7 +2536,7 @@ div.jGrowl div.jGrowl-notification{
   .pluginBigBox {
     max-width: 100%;
     min-width: 100%;
-    margin-right: 0!important;
+    margin-right: 0;
   }
 }
 
@@ -3433,7 +3431,7 @@ select, textarea {
   background-color: var(--select-or-textarea-bg, #666);
 }
 
-input:focus, select:focus, textarea:focus {
+input:focus:not(.hasDatepicker), select:focus:not(.elem-type-select), textarea:focus {
   background-color: var(--input-focus-or-select-focus-or-textarea-focus-bg, #444);	/* whitesmoke */
 }
 
@@ -4657,12 +4655,19 @@ p.upload-warnings-summary .showInfo {margin-left:3px;}
 
 .picture-content-panel input[type="text"], .picture-content-panel textarea, .picture-content-panel .selectize-input {
   width: calc(100% - 15px);
-  background-color: #f8f8f8;
   padding: 8px;
   border-radius: 4px;
   border-color: #DDD;
   transition: ease 0.2s;
   font-family: "Open Sans", "Lucida Grande",Verdana,Arial,"Bitstream Vera Sans",sans-serif;
+}
+
+/* `.hasDatepicker` needs a different, skin-driven background
+   regardless (see `.hasDatepicker, .elem-type-select` above) --
+   excluded here rather than from the whole rule, which it still needs
+   for width/padding/border-radius/etc. */
+.picture-content-panel input[type="text"]:not(.hasDatepicker), .picture-content-panel textarea, .picture-content-panel .selectize-input {
+  background-color: #f8f8f8;
 }
 
 .picture-content-panel .selectize-input {
@@ -7054,7 +7059,10 @@ li.plupload_delete a:hover {background: url("images/cancelhover.svg"); backgroun
 .actionDateCreation input, .actionTitlePanel input, .actionAuthor input {margin-right: 4px;}
 .setDateCreationField label {position: relative;}
 .setDateCreationField i {position: absolute;font-size: 20px;top: 50%;transform: translate(6px, -50%);opacity: 0.6;}
-.setDateCreationField input {background-color: #f8f8f8;padding: 8px;padding-left: 35px;border-radius: 4px;border-color: #DDD;}
+.setDateCreationField input {padding: 8px;padding-left: 35px;border-radius: 4px;border-color: #DDD;}
+/* `.hasDatepicker` needs a different, skin-driven background regardless
+   (see `.hasDatepicker, .elem-type-select` above). */
+.setDateCreationField input:not(.hasDatepicker) {background-color: #f8f8f8;}
 .setDateCreationField {margin-top: 5px; margin-left: -2px;}
 .actionTitlePanel .large, .actionAuthor .large {padding: 12px 10px; border: 1px solid #787777a6;margin-bottom: 8px;}
 .actionAddTags .selectize-input.items.not-full.has-options, 
@@ -7743,17 +7751,19 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
   background: #f3f3f3;
 }
 
-/* Genuinely needs !important: `.hasDatepicker`/`.elem-type-select` has to
-   win over several DIFFERENT, unrelated page-specific input-background
-   rules across the admin theme (history's own, `.picture-content-panel
-   input[type="text"]...`'s (0,2,0), `input:focus`'s (0,1,1) while the
-   datepicker is open) -- each with its own higher specificity, so no
-   single selector bump covers every real page context this class
-   appears in. Confirmed live: naming the element type only fixed
-   history.php's datepicker before regressing admin-photo-editor's
-   Creation-date field the same way. */
+/* Previously needed `!important` (documented history: two specificity-
+   bump attempts each fixed one page and broke another, since
+   `.picture-content-panel input[type="text"]`'s (0,2,0),
+   `#picture-content input[type="text"]`'s (1,0,1, roma), and
+   `input:focus`/`.advanced-filter-select`'s (0,1,0) are all
+   different specificities on different pages). Root-caused instead:
+   none of those rules actually *intend* to restyle the datepicker
+   input/select-filter -- each is a broad catch-all that happens to
+   also match it. Excluding `.hasDatepicker`/`.elem-type-select` from
+   each (a `:not()` on the real competitor, not a specificity fight on
+   this rule) lets this win via ordinary non-conflict instead. */
 .hasDatepicker, .elem-type-select {
-  background: var(--elem-type-select-or-hasdatepicker-bg, white) !important;
+  background: var(--elem-type-select-or-hasdatepicker-bg, white);
 }
 
 .selectable-filter label {
@@ -8455,4 +8465,20 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
   padding-top:30px;
 }
 
+}
+
+@layer theme-skin {
+/* Scoped to the real `.albumIcon` ancestor (categories/list.ts's own
+   `addClass(children(children(children(this, ".albumTop"),
+   ".albumIcon"), "span"), "albumIconLineHover")`) rather than a bare
+   `.albumIconLineHover`, and placed in `theme-skin` rather than
+   `theme-chain`: has to beat each skin's own `.icon-blue`/`.icon-green`/
+   etc per-album color classes (also `theme-skin`, same specificity as
+   a bare `.albumIconLineHover` would have) regardless of which skin is
+   active. Real ancestor-scoped specificity decides it now, rather than
+   `!important` -- confirmed live for both roma and clear. */
+.albumIcon .albumIconLineHover {
+  background: #f98100;
+  color: #ffd7ad;
+}
 }

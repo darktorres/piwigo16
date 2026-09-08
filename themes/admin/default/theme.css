@@ -1825,12 +1825,6 @@ ul.tagSelection li {
 	padding: 10px;
 }
 
-/* jQuery datepicker */
-img.ui-datepicker-trigger {
-  cursor : pointer;
-  vertical-align: middle;
-  margin:-3px 5px 2px;
-}
 
 /* Add photos, direct mode */
 
@@ -3035,11 +3029,6 @@ div.jGrowl div.jGrowl-notification{
 .languageName {font-size:1.1em; margin:5px 0;}
 .languageActions {display: table-row; font-size:12px; }
 .languageActions div {display: table-cell; vertical-align: middle; line-height:18px; }
-
-#ui-datepicker-div { border-radius:5px;}
-#ui-datepicker-div .ui-icon-circle-triangle-w, #ui-datepicker-div .ui-icon-circle-triangle-e {color:transparent;}
-#ui-datepicker-div a.ui-datepicker-prev, #ui-datepicker-div a.ui-datepicker-next {background-color: var(--ui-datepicker-div-a-ui-datepicker-next-or-ui-datepicker-div-a-ui-datepicker-prev-bg, transparent);}
-#ui-datepicker-div a.ui-datepicker-prev:hover, #ui-datepicker-div a.ui-datepicker-next:hover {border-radius:5px;}
 
 .HelpActions {
   float:right;
@@ -6676,12 +6665,6 @@ a.group_users {
 .userProperty {width:340px;float:left;margin-bottom:15px;}
 .userActions {float:right;text-align:right;}
 
-.user_form_popin {
-  width:750px;
-  height:450px;
-  padding:20px;
-}
-
 .userProperties form {
   text-align:left;
 }
@@ -6794,26 +6777,6 @@ a.group_users {
   color: var(--see-out-disabled-p-color, #B8B8B8);
 }
 
-
-/* Edit user popin */
-
-
-.user_form_popin .ui-slider-horizontal .ui-slider-handle{
-  background-color:#FFA646;
-  border-radius:25px;
-  border: 1px solid var(--user-form-popin-ui-slider-horizontal-ui-slider-handle-border, #818181);
-}
-
-.user_form_popin .ui-slider-horizontal .ui-slider-range-min{
-  background-color: var(--user-form-popin-ui-slider-horizontal-ui-slider-range-min-bg, #818181);
-  border-radius:25px;
-}
-
-.user_form_popin .ui-slider-horizontal{
-  background-color: var(--user-form-popin-ui-slider-horizontal-bg, #e3e3e3);
-  border:none;
-  border-radius:25px;
-}
 
 /* table in help/quick_search.html */
 table.qsearch_help_table {

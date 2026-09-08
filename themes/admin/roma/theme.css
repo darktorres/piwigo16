@@ -195,16 +195,6 @@ ul.actions, .content form#waiting  {text-align:center;}
 body .ui-resizable-disabled .ui-resizable-handle { display: none; } /* use 'body' to make it more specific (css order) */
 body .ui-resizable-autohide .ui-resizable-handle { display: none; } /* use 'body' to make it more specific (css order) */
 
-#ui-datepicker-div {background-color: #555; border:2px solid #333;}
-#ui-datepicker-div.ui-widget-content { background: #555}
-#ui-datepicker-div .ui-datepicker-title {color:white;}
-#ui-datepicker-div .ui-icon-circle-triangle-w {background: transparent url("icon/prev.png") no-repeat;}
-#ui-datepicker-div .ui-icon-circle-triangle-e {background: transparent url("icon/next.png") no-repeat;}
-#ui-datepicker-div a.ui-datepicker-prev:hover,
-#ui-datepicker-div a.ui-datepicker-next:hover
-{
-  background-color:#eee;border:1px solid #aaa;
-}
 .ui-datepicker th {color:#ccc;}
 .ui-state-disabled {color:#aaa;}
 .ui-timepicker-div, .ui-timepicker-div dt {color:#ccc;}
@@ -213,26 +203,6 @@ body .ui-resizable-autohide .ui-resizable-handle { display: none; } /* use 'body
 .ui-slider .ui-slider-handle { border:1px solid #f36;background:#222;border-radius:0.6em; }
 .ui-slider .ui-slider-range { background:#666;border-radius:2px; }
 
-#ui-datepicker-div .ui-datepicker-control, #ui-datepicker-div  a {
-  color: #f70;
-}
-#ui-datepicker-div .ui-datepicker-days-row { background-color: #444;}
-#ui-datepicker-div .ui-datepicker-week-end-cell, #ui-datepicker-div .ui-datepicker-week-end-cell  a { background-color: #222; color: #f33; border-color: #444; border-top-color: #222; border-left-color: #222;}
-#ui-datepicker-div .ui-datepicker-title-row { background-color: #111;}
-#ui-datepicker-div .ui-datepicker-title-row .ui-datepicker-week-end-cell a { color: #f33;}
-#ui-datepicker-div  a:hover { color: #f33; border: 0; background-color: #111;}
-#ui-datepicker-div .ui-datepicker-header select { background-color:#444; color:#999; font-weight:normal;}
-#ui-datepicker-div .ui-datepicker-links { background-color:#222;}
-#ui-datepicker-div .ui-datepicker-header { background:#555;}
-#ui-datepicker-div .ui-widget-header { border: 1px solid #3c3939; }
-#ui-datepicker-div .ui-datepicker-current-day { background-color: #111; border-color: #444; border-top-color: #111; border-left-color: #111;}
-#ui-datepicker-div .ui-datepicker-days-cell { background-color:#444; border:1px solid #222; border-top-color: #444; border-left-color: #444;}
-#ui-datepicker-div .ui-datepicker-calendar .ui-state-default { background: #333; color: #ccc; border: 1px solid #3c3939;}
-#ui-datepicker-div .ui-slider .ui-slider-handle { background: #333; border:1px solid #3c3939; cursor: pointer;}
-#ui-datepicker-div .ui-datepicker-buttonpane .ui-state-default { background: #333; color: #ccc; border:1px solid #3c3939;}
-#ui-datepicker-div .ui-datepicker-buttonpane .ui-state-default:hover { background: #111; }
-#ui-datepicker-div .ui-datepicker-buttonpane .ui-state-error { background: #BE4949; color: #FFC8C8;}
-#ui-datepicker-div .ui-datepicker-buttonpane .ui-state-error:hover { background: #7e3030;}
 input[type="text"].large  { width: 317px; }
 
 .buttonLike:disabled, .filters-icon-check:disabled, input[type="button"]:disabled, input[type="submit"]:disabled, input[type="reset"]:disabled {
@@ -950,21 +920,6 @@ input:focus + .slider {
 
 .AddUserSubmit, .update-user-button, .user-property-main-user-body .main-user-btn-validate{
   color: #493C21!important;
-}
-
-/* Edit user popin */
-
-.user_form_popin .ui-slider-horizontal .ui-slider-handle{
-
-  --user-form-popin-ui-slider-horizontal-ui-slider-handle-border: #5a5a5a;
-}
-
-.user_form_popin .ui-slider-horizontal .ui-slider-range-min{
-  --user-form-popin-ui-slider-horizontal-ui-slider-range-min-bg: #5a5a5a;
-}
-.user_form_popin .ui-slider-horizontal{
-  --user-form-popin-ui-slider-horizontal-bg: #151515;
-
 }
 
 table.dataTable tr.even {
@@ -2558,10 +2513,6 @@ a {
 
 a:hover, a:active {
   color: #ffa646;
-}
-
-#ui-datepicker-div .ui-datepicker-control, #ui-datepicker-div  a {
-  background-color: #111;
 }
 
 .showInfo-dropdown-header a {

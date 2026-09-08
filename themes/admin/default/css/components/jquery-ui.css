@@ -67,8 +67,8 @@
  * `default`/`roma`/`clear`) turned out to be 100% dead -- confirmed via
  * a repo-wide grep, that id and those 2 classes are never assigned by
  * any real element anywhere in this codebase, only by this same
- * pre-port legacy CSS. Left in place for a dedicated follow-up cleanup
- * commit (out of scope for a CSS *port*), not silently deleted here.
+ * pre-port legacy CSS. Removed in the P52 !important-cleanup follow-up
+ * commit this comment originally deferred it to.
  * The skins' remaining `.ui-slider*`/`.ui-state-*`/`.ui-widget-content`/
  * `.ui-datepicker th`/`.ui-timepicker-div` overrides (`.slider-bar-wrapper`
  * in `user_list.latte`/`plugins_new.latte`, `.batch-manager-root`,

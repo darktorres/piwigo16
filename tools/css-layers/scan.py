@@ -109,6 +109,22 @@ Usage:
   python3 tools/css-layers/scan.py --json /tmp/report.json
   python3 tools/css-layers/scan.py --inversions --update-baseline
   composer check:css-layers
+
+P52-E/F generalization: `--chain {admin,default,standard_pages}` (default
+`admin`, so `composer check:css-layers`'s own bare invocation keeps
+scanning exactly what it always has) selects which theme's real
+`AssetContribution::css()` file set and skin list to build the pool
+from -- `default`'s own "skin" dimension is its 2 search-page
+colorscheme variants (`dark-search`/`clear-search`, the only per-page
+alternate-CSS choice that theme has), and `standard_pages`' is its real
+11-skin system. Each chain's universal set includes the real, confirmed
+cross-chain files pages in that chain actually load (found by tracing
+`AssetContribution::css()` call sites, not assumed from directory
+layout) -- e.g. `default`'s search page cross-loads 4 admin-namespaced
+files via `SearchFiltersView`'s own composition of `AlbumSelectorView`/
+`ColorboxView`. Findings are namespaced by chain (`inversion_fingerprint()`
+includes it) so `known-findings.json` stays one shared baseline file
+across all 3 chains without cross-chain fingerprint collisions.
 """
 
 from __future__ import annotations
@@ -155,7 +171,7 @@ LAYER_INDEX = {name: i for i, name in enumerate(LAYER_ORDER)}
 # whether two rules in it can conflict with the universal/skin files
 # below. Keep in sync by hand with `ThemeBaseAssets::forAdminLayout()`
 # if a new universal file is ever registered there.
-UNIVERSAL = (
+ADMIN_UNIVERSAL = (
     [
         "themes/default/css/reset.css",
         "themes/admin/default/css/tokens.css",
@@ -181,7 +197,7 @@ UNIVERSAL = (
 # value (`roma`) that `AdminRomaThemeTest`/`H::setSessionPreference` use
 # on the runtime side; neither name is wrong, they're just two different
 # real identifiers for the same skin.
-SKIN_FILES = {
+ADMIN_SKINS = {
     "clear": [
         "themes/admin/clear/theme-base.css",
         "themes/admin/clear/theme.css",
@@ -194,6 +210,84 @@ SKIN_FILES = {
         "themes/admin/roma/css/components/general.css",
         "themes/admin/default/css/components/selectize-dark.css",
     ],
+}
+
+# `default`'s (public gallery) real universal set, P52-E/F Step 6. Its
+# only per-page alternate-CSS choice is the search page's colorscheme
+# (below, modeled as this chain's "skin" dimension) -- `default` has no
+# whole-theme skin system at all. The 4 admin-namespaced files are real,
+# confirmed cross-chain loads (P52-E/F Step 3's audit): `jquery-ui.css`/
+# `animation.css` directly and `album_selector.css`/`colorbox.css` via
+# `SearchFiltersView`'s own composition of `AlbumSelectorView`/
+# `ColorboxView` -- search page only, but co-occurrence for this tool's
+# purposes only needs "can load on the same page," not "always loads."
+DEFAULT_UNIVERSAL = (
+    [
+        "themes/default/css/reset.css",
+        "themes/default/css/tokens.css",
+        "themes/default/css/base.css",
+        "themes/default/theme.css",
+        "themes/default/print.css",
+        "themes/default/vendor/fontello/css/gallery-icon.css",
+        "themes/default/css/utilities.css",
+        "themes/default/css/search.css",
+        "themes/default/css/help/quick_search.css",
+        "themes/admin/default/css/components/jquery-ui.css",
+        "themes/admin/default/fontello/css/animation.css",
+        "themes/admin/default/css/components/album_selector.css",
+        "themes/admin/default/css/components/colorbox.css",
+    ]
+    + sorted(str(p.relative_to(ROOT)) for p in ROOT.glob("themes/default/css/components/*.css"))
+    + sorted(str(p.relative_to(ROOT)) for p in ROOT.glob("themes/default/css/pages/*.css"))
+)
+
+DEFAULT_SKINS = {
+    "dark-search": ["themes/default/css/dark-search.css"],
+    "clear-search": ["themes/default/css/clear-search.css"],
+}
+
+# `standard_pages`' real universal set. `reset.css`/`base.css` are
+# shared with `default` (Step 1); the 2 admin-namespaced cross-chain
+# files are real, confirmed loads (`gallery-icon.css` on most of this
+# chain's own pages, `fontello.css` on `ProfileView` only -- same
+# "can co-occur" standard as `default`'s own cross-chain entries above).
+STANDARD_PAGES_UNIVERSAL = (
+    [
+        "themes/default/css/reset.css",
+        "themes/default/css/base.css",
+        "themes/standard_pages/css/tokens.css",
+        "themes/standard_pages/theme.css",
+        "themes/standard_pages/css/utilities.css",
+        "themes/default/vendor/fontello/css/gallery-icon.css",
+        "themes/admin/default/fontello/css/fontello.css",
+    ]
+    + sorted(str(p.relative_to(ROOT)) for p in ROOT.glob("themes/standard_pages/css/pages/*.css"))
+)
+
+STANDARD_PAGES_SKINS = {
+    name: [f"themes/standard_pages/skins/{name}.css"]
+    for name in (
+        "cadmium",
+        "cobalt",
+        "default",
+        "fuchsia",
+        "green",
+        "lime",
+        "purple",
+        "red",
+        "sienna",
+        "silver",
+        "teal",
+    )
+}
+
+# One entry per real theme chain this tool understands -- `--chain`
+# selects among these (default `admin`, so a bare `composer
+# check:css-layers` keeps scanning exactly what it always has).
+CHAINS: dict[str, dict[str, object]] = {
+    "admin": {"universal": ADMIN_UNIVERSAL, "skins": ADMIN_SKINS},
+    "default": {"universal": DEFAULT_UNIVERSAL, "skins": DEFAULT_SKINS},
+    "standard_pages": {"universal": STANDARD_PAGES_UNIVERSAL, "skins": STANDARD_PAGES_SKINS},
 }
 
 SPEC_ID_RE = re.compile(r"#[a-zA-Z0-9_-]+")
@@ -368,15 +462,21 @@ def resolve_winner(decls: list[Decl]) -> Decl | None:
     return max(pool, key=lambda d: (prio(d["layer"]), d["specificity"], d["order"]))
 
 
-def build_pool(skin: str, files: list[str] | None = None) -> list[Decl]:
-    file_list = files if files is not None else UNIVERSAL + SKIN_FILES[skin]
+def build_pool(chain: str, skin: str, files: list[str] | None = None) -> list[Decl]:
+    if files is not None:
+        file_list = files
+    else:
+        chain_def = CHAINS[chain]
+        universal = cast("list[str]", chain_def["universal"])
+        skins = cast("dict[str, list[str]]", chain_def["skins"])
+        file_list = universal + skins[skin]
     pool: list[Decl] = []
     for f in file_list:
         pool.extend(parse_file(ROOT / f))
     return pool
 
 
-def check_important(pool: list[Decl], skin: str) -> list[dict]:
+def check_important(pool: list[Decl], chain: str, skin: str) -> list[dict]:
     by_key: dict[tuple[str, str], list[Decl]] = defaultdict(list)
     for d in pool:
         by_key[(d["selector"], d["prop"])].append(d)
@@ -403,6 +503,7 @@ def check_important(pool: list[Decl], skin: str) -> list[dict]:
 
             findings.append(
                 {
+                    "chain": chain,
                     "skin": skin,
                     "classification": classification,
                     "file": d["file"],
@@ -414,7 +515,7 @@ def check_important(pool: list[Decl], skin: str) -> list[dict]:
     return findings
 
 
-def check_inversions(pool: list[Decl], skin: str) -> list[dict]:
+def check_inversions(pool: list[Decl], chain: str, skin: str) -> list[dict]:
     """A declaration A is flagged when a strictly more generic selector B
     (B's compound chain is an exact trailing subsequence of A's) carries
     a *different* value for the same property, and the real winner under
@@ -454,6 +555,7 @@ def check_inversions(pool: list[Decl], skin: str) -> list[dict]:
                 seen.add(key)
                 findings.append(
                     {
+                        "chain": chain,
                         "skin": skin,
                         "prop": a["prop"],
                         "specific_selector": a["selector"],
@@ -476,8 +578,19 @@ def inversion_fingerprint(f: dict) -> str:
     # Deliberately excludes the two `*_value` fields: a future edit that
     # only changes which value a known, already-triaged-harmless pairing
     # carries isn't a new inversion to re-triage, it's the same pairing.
+    # `chain` leads (P52-E/F generalization) so `standard_pages`' own
+    # `default` skin name can never collide with the `default` *chain*'s
+    # fingerprints, or with any other chain's skin names.
     return "|".join(
-        [f["skin"], f["prop"], f["specific_selector"], f["specific_file"], f["generic_selector"], f["generic_file"]]
+        [
+            f["chain"],
+            f["skin"],
+            f["prop"],
+            f["specific_selector"],
+            f["specific_file"],
+            f["generic_selector"],
+            f["generic_file"],
+        ]
     )
 
 
@@ -487,8 +600,17 @@ def load_baseline(path: Path) -> set[str]:
     return set(json.loads(path.read_text(encoding="utf-8")))
 
 
-def save_baseline(path: Path, findings: list[dict]) -> None:
-    fingerprints = sorted({inversion_fingerprint(f) for f in findings})
+def save_baseline(path: Path, findings: list[dict], chain: str) -> None:
+    # Merges rather than overwrites: the baseline is one shared file
+    # across all 3 chains (P52-E/F generalization), but a single
+    # --update-baseline run only ever re-scans one chain at a time.
+    # Overwriting wholesale would silently wipe every other chain's
+    # already-triaged findings. Every fingerprint leads with its own
+    # chain (inversion_fingerprint()), so the other chains' entries are
+    # identified by prefix, not by re-running their own scan here.
+    existing = load_baseline(path)
+    other_chains = {fp for fp in existing if not fp.startswith(f"{chain}|")}
+    fingerprints = sorted(other_chains | {inversion_fingerprint(f) for f in findings})
     path.write_text(json.dumps(fingerprints, indent=2) + "\n", encoding="utf-8")
 
 
@@ -501,12 +623,12 @@ def _print_important(findings: list[dict]) -> None:
         print(f"  {cls}: {by_class.get(cls, 0)}", file=sys.stderr)
     for f in findings:
         if f["classification"] != "LOAD_BEARING":
-            print(f"  [{f['classification']}] {f['skin']}: {f['file']}  {f['selector']} {{ {f['prop']}: {f['value']} !important }}", file=sys.stderr)
+            print(f"  [{f['classification']}] {f['chain']}/{f['skin']}: {f['file']}  {f['selector']} {{ {f['prop']}: {f['value']} !important }}", file=sys.stderr)
 
 
 def _print_inversion(f: dict) -> None:
     print(
-        f"  [{f['skin']}] {f['prop']}: "
+        f"  [{f['chain']}/{f['skin']}] {f['prop']}: "
         f"specific `{f['specific_selector']}` ({f['specific_file']}, layer={f['specific_layer']}) = {f['specific_value']!r} "
         f"loses to generic `{f['generic_selector']}` ({f['generic_file']}, layer={f['generic_layer']}) = {f['generic_value']!r}",
         file=sys.stderr,
@@ -532,7 +654,13 @@ def _print_inversions(findings: list[dict], baseline: set[str]) -> list[dict]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--skin", choices=["clear", "roma", "both"], default="both")
+    parser.add_argument(
+        "--chain",
+        choices=sorted(CHAINS),
+        default="admin",
+        help="which theme chain to scan (default: admin, so a bare `composer check:css-layers` is unchanged)",
+    )
+    parser.add_argument("--skin", default="both", help="a skin name for the chosen --chain, or 'both' (default) for all of that chain's skins")
     parser.add_argument("--important", action="store_true", help="run the !important classification")
     parser.add_argument("--inversions", action="store_true", help="run the layer-priority-inversion check")
     parser.add_argument("--json", metavar="PATH", help="write the raw findings as JSON to PATH")
@@ -549,6 +677,10 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    chain_skins = cast("dict[str, list[str]]", CHAINS[args.chain]["skins"])
+    if args.skin != "both" and args.skin not in chain_skins:
+        parser.error(f"--skin {args.skin!r} isn't valid for --chain {args.chain!r} (choices: {', '.join(sorted(chain_skins))}, or 'both')")
+
     run_important = args.important
     run_inversions = args.inversions
     if not run_important and not run_inversions:
@@ -556,16 +688,16 @@ def main() -> int:
     if args.update_baseline:
         run_inversions = True
 
-    skins = ["clear", "roma"] if args.skin == "both" else [args.skin]
+    skins = sorted(chain_skins) if args.skin == "both" else [args.skin]
 
     important_findings: list[dict] = []
     inversion_findings: list[dict] = []
     for skin in skins:
-        pool = build_pool(skin)
+        pool = build_pool(args.chain, skin)
         if run_important:
-            important_findings += check_important(pool, skin)
+            important_findings += check_important(pool, args.chain, skin)
         if run_inversions:
-            inversion_findings += check_inversions(pool, skin)
+            inversion_findings += check_inversions(pool, args.chain, skin)
 
     if run_important:
         _print_important(important_findings)
@@ -573,8 +705,8 @@ def main() -> int:
     new_inversions: list[dict] = []
     if run_inversions:
         if args.update_baseline:
-            save_baseline(Path(args.baseline), inversion_findings)
-            print(f"wrote {len(inversion_findings)} finding(s) to {args.baseline}", file=sys.stderr)
+            save_baseline(Path(args.baseline), inversion_findings, args.chain)
+            print(f"wrote {len(inversion_findings)} finding(s) for chain={args.chain} to {args.baseline}", file=sys.stderr)
         else:
             baseline = load_baseline(Path(args.baseline))
             new_inversions = _print_inversions(inversion_findings, baseline)

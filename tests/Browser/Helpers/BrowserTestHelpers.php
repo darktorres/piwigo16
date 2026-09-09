@@ -1832,6 +1832,54 @@ final class BrowserTestHelpers
     }
 
     /**
+     * Same polling shape as waitUntilHidden(), but for a <canvas> element
+     * whose internal resolution (its `width`/`height` attributes, set by
+     * `LineChart#resize()` in themes/default/js/vendor/widgets/lineChart.ts)
+     * to stop changing across two consecutive checks, instead of a selector
+     * disappearing. Closes a real, confirmed race on `admin-stats`:
+     * `LineChart`'s constructor draws once synchronously against whatever
+     * width its container reports at construction time, then a
+     * `ResizeObserver` on that same container fires its own (spec-
+     * guaranteed) initial notification shortly after, redrawing at the
+     * container's true settled width. `assertScreenshotMatches()`'s own
+     * networkidle wait resolves independently of either draw, so it can
+     * fire between them -- caught live via 4 back-to-back real runs with
+     * zero code changes: 3 passed, 1 failed at ~2.5x the other three's
+     * duration, and the committed baseline itself already showed the
+     * cramped, overlapping x-axis labels this race produces (the chart
+     * canvas at less than its final width, given the same 4-month date
+     * range every other run renders correctly spread out).
+     */
+    public static function waitForStableCanvasSize(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $selector, float $timeoutSeconds = 5.0): void
+    {
+        $timeoutMs = (int) ($timeoutSeconds * 1000.0);
+        $js = <<<JS
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + {$timeoutMs};
+            let lastSize = null;
+            const check = () => {
+                const el = document.querySelector('{$selector}');
+                if (el === null) {
+                    return reject(new Error('{$selector} not found while waiting for its size to stabilize'));
+                }
+                const size = el.width + ',' + el.height;
+                if (size === lastSize && el.width > 0) {
+                    return resolve(true);
+                }
+                lastSize = size;
+                if (Date.now() > deadline) {
+                    return reject(new Error('Timed out waiting for {$selector} size to stabilize'));
+                }
+                setTimeout(check, 100);
+            };
+            check();
+        })
+        JS;
+
+        $page->script($js);
+    }
+
+    /**
      * Same polling shape as waitUntilHidden(), but for <img> elements
      * finishing to load rather than a selector disappearing. Two distinct
      * races this closes, not one: lazily generated derivative thumbnails

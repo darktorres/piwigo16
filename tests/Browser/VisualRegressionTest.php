@@ -83,6 +83,23 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *     activity table populates via an async request behind a '.loading'
  *     spinner, so this test waits for it the same way (found live -- the
  *     previously-committed baseline had itself been captured mid-load).
+ *   - admin-stats races for a different, non-network reason: its
+ *     `LineChart` widget (themes/default/js/vendor/widgets/lineChart.ts)
+ *     draws once synchronously in its constructor against whatever width
+ *     its container reports at that instant, then a `ResizeObserver` on
+ *     the same container fires its own spec-guaranteed initial
+ *     notification shortly after and redraws at the container's true
+ *     settled width. Neither draw is a network request, so
+ *     assertScreenshotMatches()'s networkidle wait doesn't order against
+ *     either one — it can fire in the gap between them, capturing the
+ *     chart's x-axis labels cramped into less than its final width.
+ *     Found live via 4 back-to-back runs with zero code changes (3
+ *     passed, 1 took ~2.5x as long and failed) — the previously-committed
+ *     baseline itself already showed the cramped, overlapping labels this
+ *     race produces. H::waitForStableCanvasSize() polls the canvas's own
+ *     `width`/`height` attributes until they stop changing, the same
+ *     "poll a real DOM signal, not a fixed delay" shape as
+ *     H::waitUntilHidden() above.
  */
 // notification.php mints a new per-request feed subscription ID (see
 // NotificationController::findAvailableFeedId()) -- but the rendered
@@ -224,6 +241,21 @@ foreach ($routes as $name => [$path, $needsAuth]) {
                 // wait, which resolves once outstanding requests finish, not
                 // once every <img> has actually painted.
                 H::waitUntilImagesLoaded($page, 10.0, '.comment-img');
+            }
+
+            if ($name === 'admin-stats') {
+                // See H::waitForStableCanvasSize()'s own docblock: a real,
+                // confirmed race between LineChart's constructor-time draw
+                // (against whatever width its container reports at that
+                // moment) and its ResizeObserver's own guaranteed-but-async
+                // initial notification, which redraws at the container's
+                // true settled width shortly after. assertScreenshotMatches()
+                // can fire in between, capturing the chart's x-axis labels
+                // cramped into less than its final width -- caught live via
+                // 4 back-to-back runs with no code change (3 passed, 1 took
+                // ~2.5x as long and failed), not assumed from a single
+                // observation.
+                H::waitForStableCanvasSize($page, '#stat-graph');
             }
 
             if ($name === 'admin-themes-standard-pages') {

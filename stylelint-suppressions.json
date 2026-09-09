@@ -1,12 +1,4 @@
 {
-  "themes/default/fix-khtml.css": {
-    "selector-type-case": {
-      "count": 2
-    },
-    "shorthand-property-no-redundant-values": {
-      "count": 1
-    }
-  },
   "themes/default/iconset.css": {
     "comment-whitespace-inside": {
       "count": 8
@@ -621,33 +613,6 @@
     },
     "selector-pseudo-element-colon-notation": {
       "count": 138
-    }
-  },
-  "themes/default/vendor/fontello/css/animation.css": {
-    "at-rule-no-vendor-prefix": {
-      "count": 4
-    },
-    "property-no-vendor-prefix": {
-      "count": 33
-    }
-  },
-  "themes/default/vendor/fontello/css/gallery-icon-codes.css": {
-    "selector-pseudo-element-colon-notation": {
-      "count": 42
-    }
-  },
-  "themes/default/vendor/fontello/css/gallery-icon-embedded.css": {
-    "comment-whitespace-inside": {
-      "count": 1
-    },
-    "font-family-name-quotes": {
-      "count": 3
-    },
-    "font-family-no-missing-generic-family-keyword": {
-      "count": 1
-    },
-    "selector-pseudo-element-colon-notation": {
-      "count": 44
     }
   },
   "themes/default/vendor/fontello/css/gallery-icon.css": {

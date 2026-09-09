@@ -1,80 +1,32 @@
 {
   "themes/default/print.css": {
-    "selector-type-case": {
-      "count": 1
-    },
     "declaration-no-important": {
       "count": 1
     }
   },
   "themes/default/theme.css": {
-    "color-hex-length": {
-      "count": 4
-    },
     "color-named": {
       "count": 6
     },
-    "comment-whitespace-inside": {
-      "count": 37
-    },
     "declaration-block-single-line-max-declarations": {
-      "count": 9
+      "count": 8
     },
     "declaration-property-value-no-unknown": {
       "count": 1
-    },
-    "function-url-quotes": {
-      "count": 3
-    },
-    "length-zero-no-unit": {
-      "count": 2
-    },
-    "property-no-vendor-prefix": {
-      "count": 3
-    },
-    "selector-type-case": {
-      "count": 85
-    },
-    "shorthand-property-no-redundant-values": {
-      "count": 5
-    },
-    "declaration-no-important": {
-      "count": 8
     }
   },
   "themes/standard_pages/theme.css": {
-    "color-function-alias-notation": {
-      "count": 2
-    },
-    "comment-whitespace-inside": {
-      "count": 2
-    },
     "declaration-block-no-duplicate-properties": {
-      "count": 1
-    },
-    "declaration-block-no-redundant-longhand-properties": {
-      "count": 3
-    },
-    "font-family-name-quotes": {
-      "count": 1
-    },
-    "function-url-quotes": {
-      "count": 1
-    },
-    "length-zero-no-unit": {
-      "count": 3
-    },
-    "no-duplicate-selectors": {
-      "count": 1
-    },
-    "property-no-vendor-prefix": {
-      "count": 4
-    },
-    "selector-pseudo-element-colon-notation": {
       "count": 6
     },
+    "declaration-block-no-redundant-longhand-properties": {
+      "count": 1
+    },
+    "no-duplicate-selectors": {
+      "count": 10
+    },
     "declaration-no-important": {
-      "count": 15
+      "count": 3
     }
   },
   "themes/admin/clear/theme.css": {
@@ -82,7 +34,7 @@
       "count": 22
     },
     "declaration-block-single-line-max-declarations": {
-      "count": 33
+      "count": 32
     },
     "no-duplicate-selectors": {
       "count": 2
@@ -91,20 +43,12 @@
       "count": 14
     }
   },
-  "themes/admin/default/print.css": {
-    "color-hex-length": {
-      "count": 2
-    },
-    "selector-type-case": {
-      "count": 1
-    }
-  },
   "themes/admin/roma/theme.css": {
     "color-named": {
       "count": 9
     },
     "declaration-block-single-line-max-declarations": {
-      "count": 45
+      "count": 44
     },
     "no-duplicate-selectors": {
       "count": 9
@@ -117,387 +61,88 @@
     }
   },
   "themes/default/css/clear-search.css": {
-    "color-function-alias-notation": {
-      "count": 2
-    },
-    "color-hex-length": {
-      "count": 15
-    },
     "color-named": {
       "count": 15
-    },
-    "length-zero-no-unit": {
-      "count": 4
     },
     "no-duplicate-selectors": {
       "count": 1
-    },
-    "declaration-no-important": {
-      "count": 6
     }
   },
   "themes/default/css/dark-search.css": {
-    "color-function-alias-notation": {
-      "count": 3
-    },
-    "color-hex-length": {
-      "count": 9
-    },
     "color-named": {
       "count": 6
     },
-    "length-zero-no-unit": {
-      "count": 4
-    },
-    "selector-pseudo-element-colon-notation": {
-      "count": 1
-    },
     "declaration-no-important": {
-      "count": 8
+      "count": 4
     }
   },
   "themes/default/css/search.css": {
-    "color-function-alias-notation": {
-      "count": 2
-    },
-    "color-hex-length": {
-      "count": 3
-    },
     "color-named": {
       "count": 3
     },
-    "comment-whitespace-inside": {
-      "count": 3
-    },
-    "declaration-block-no-duplicate-properties": {
-      "count": 1
-    },
     "declaration-block-no-redundant-longhand-properties": {
-      "count": 6
-    },
-    "declaration-property-value-no-unknown": {
       "count": 1
-    },
-    "length-zero-no-unit": {
-      "count": 1
-    },
-    "selector-pseudo-element-colon-notation": {
-      "count": 3
-    },
-    "shorthand-property-no-redundant-values": {
-      "count": 7
     },
     "declaration-no-important": {
-      "count": 16
+      "count": 4
     }
   },
   "themes/standard_pages/skins/cadmium.css": {
-    "color-function-alias-notation": {
-      "count": 1
-    },
-    "color-hex-length": {
-      "count": 6
-    },
     "color-named": {
-      "count": 4
-    },
-    "length-zero-no-unit": {
-      "count": 2
-    },
-    "property-no-vendor-prefix": {
-      "count": 2
-    },
-    "selector-pseudo-element-colon-notation": {
-      "count": 4
-    },
-    "declaration-no-important": {
-      "count": 20
+      "count": 1
     }
   },
   "themes/standard_pages/skins/cobalt.css": {
-    "color-function-alias-notation": {
-      "count": 1
-    },
-    "color-hex-length": {
-      "count": 6
-    },
     "color-named": {
-      "count": 4
-    },
-    "length-zero-no-unit": {
-      "count": 2
-    },
-    "property-no-vendor-prefix": {
-      "count": 2
-    },
-    "selector-pseudo-element-colon-notation": {
-      "count": 4
-    },
-    "declaration-no-important": {
-      "count": 20
-    }
-  },
-  "themes/standard_pages/skins/default.css": {
-    "color-function-alias-notation": {
       "count": 1
-    },
-    "color-hex-length": {
-      "count": 15
-    },
-    "color-named": {
-      "count": 4
-    },
-    "length-zero-no-unit": {
-      "count": 2
-    },
-    "property-no-vendor-prefix": {
-      "count": 2
-    },
-    "selector-pseudo-element-colon-notation": {
-      "count": 4
-    },
-    "declaration-no-important": {
-      "count": 20
     }
   },
   "themes/standard_pages/skins/fuchsia.css": {
-    "color-function-alias-notation": {
-      "count": 1
-    },
-    "color-hex-length": {
-      "count": 6
-    },
     "color-named": {
-      "count": 4
-    },
-    "length-zero-no-unit": {
-      "count": 2
-    },
-    "property-no-vendor-prefix": {
-      "count": 2
-    },
-    "selector-pseudo-element-colon-notation": {
-      "count": 4
-    },
-    "declaration-no-important": {
-      "count": 20
+      "count": 1
     }
   },
   "themes/standard_pages/skins/green.css": {
-    "color-function-alias-notation": {
-      "count": 1
-    },
-    "color-hex-length": {
-      "count": 6
-    },
     "color-named": {
-      "count": 4
-    },
-    "length-zero-no-unit": {
-      "count": 2
-    },
-    "property-no-vendor-prefix": {
-      "count": 2
-    },
-    "selector-pseudo-element-colon-notation": {
-      "count": 4
-    },
-    "declaration-no-important": {
-      "count": 20
+      "count": 1
     }
   },
   "themes/standard_pages/skins/lime.css": {
-    "color-function-alias-notation": {
-      "count": 1
-    },
-    "color-hex-length": {
-      "count": 6
-    },
     "color-named": {
-      "count": 4
-    },
-    "length-zero-no-unit": {
-      "count": 2
-    },
-    "property-no-vendor-prefix": {
-      "count": 2
-    },
-    "selector-pseudo-element-colon-notation": {
-      "count": 4
-    },
-    "declaration-no-important": {
-      "count": 20
+      "count": 1
     }
   },
   "themes/standard_pages/skins/purple.css": {
-    "color-function-alias-notation": {
-      "count": 1
-    },
-    "color-hex-length": {
-      "count": 6
-    },
     "color-named": {
-      "count": 4
-    },
-    "length-zero-no-unit": {
-      "count": 2
-    },
-    "property-no-vendor-prefix": {
-      "count": 2
-    },
-    "selector-pseudo-element-colon-notation": {
-      "count": 4
-    },
-    "declaration-no-important": {
-      "count": 20
+      "count": 1
     }
   },
   "themes/standard_pages/skins/red.css": {
-    "color-function-alias-notation": {
-      "count": 1
-    },
-    "color-hex-length": {
-      "count": 6
-    },
     "color-named": {
-      "count": 4
-    },
-    "length-zero-no-unit": {
-      "count": 2
-    },
-    "property-no-vendor-prefix": {
-      "count": 2
-    },
-    "selector-pseudo-element-colon-notation": {
-      "count": 4
-    },
-    "declaration-no-important": {
-      "count": 20
+      "count": 1
     }
   },
   "themes/standard_pages/skins/sienna.css": {
-    "color-function-alias-notation": {
-      "count": 1
-    },
-    "color-hex-length": {
-      "count": 6
-    },
     "color-named": {
-      "count": 4
-    },
-    "length-zero-no-unit": {
-      "count": 2
-    },
-    "property-no-vendor-prefix": {
-      "count": 2
-    },
-    "selector-pseudo-element-colon-notation": {
-      "count": 4
-    },
-    "declaration-no-important": {
-      "count": 20
+      "count": 1
     }
   },
   "themes/standard_pages/skins/silver.css": {
-    "color-function-alias-notation": {
-      "count": 1
-    },
-    "color-hex-length": {
-      "count": 6
-    },
     "color-named": {
-      "count": 4
-    },
-    "length-zero-no-unit": {
-      "count": 2
-    },
-    "property-no-vendor-prefix": {
-      "count": 2
-    },
-    "selector-pseudo-element-colon-notation": {
-      "count": 4
-    },
-    "declaration-no-important": {
-      "count": 20
+      "count": 1
     }
   },
   "themes/standard_pages/skins/teal.css": {
-    "color-function-alias-notation": {
-      "count": 1
-    },
-    "color-hex-length": {
-      "count": 6
-    },
     "color-named": {
-      "count": 4
-    },
-    "length-zero-no-unit": {
-      "count": 2
-    },
-    "property-no-vendor-prefix": {
-      "count": 2
-    },
-    "selector-pseudo-element-colon-notation": {
-      "count": 4
-    },
-    "declaration-no-important": {
-      "count": 20
-    }
-  },
-  "themes/default/css/help/quick_search.css": {
-    "color-hex-length": {
       "count": 1
-    },
-    "declaration-no-important": {
-      "count": 2
-    }
-  },
-  "themes/admin/clear/css/components/general.css": {
-    "no-empty-source": {
-      "count": 1
-    }
-  },
-  "themes/admin/default/css/components/album_selector.css": {
-    "color-function-alias-notation": {
-      "count": 1
-    },
-    "color-hex-length": {
-      "count": 1
-    },
-    "length-zero-no-unit": {
-      "count": 2
-    },
-    "shorthand-property-no-redundant-values": {
-      "count": 2
-    },
-    "declaration-no-important": {
-      "count": 2
     }
   },
   "themes/admin/default/css/components/general.css": {
-    "color-hex-length": {
-      "count": 4
-    },
     "color-named": {
       "count": 5
     },
-    "font-family-name-quotes": {
-      "count": 1
-    },
     "font-family-no-missing-generic-family-keyword": {
       "count": 1
-    },
-    "length-zero-no-unit": {
-      "count": 8
-    },
-    "property-no-deprecated": {
-      "count": 1
-    },
-    "selector-pseudo-element-colon-notation": {
-      "count": 1
-    },
-    "declaration-no-important": {
-      "count": 9
     }
   },
   "themes/admin/roma/css/components/general.css": {
@@ -506,98 +151,6 @@
     },
     "font-family-no-missing-generic-family-keyword": {
       "count": 1
-    }
-  },
-  "themes/admin/default/fontello/css/animation.css": {
-    "at-rule-no-vendor-prefix": {
-      "count": 4
-    },
-    "property-no-vendor-prefix": {
-      "count": 33
-    }
-  },
-  "themes/admin/default/fontello/css/fontello.css": {
-    "comment-whitespace-inside": {
-      "count": 1
-    },
-    "font-family-name-quotes": {
-      "count": 2
-    },
-    "font-family-no-missing-generic-family-keyword": {
-      "count": 1
-    },
-    "selector-pseudo-element-colon-notation": {
-      "count": 138
-    }
-  },
-  "themes/standard_pages/css/utilities.css": {
-    "declaration-no-important": {
-      "count": 2
-    }
-  },
-  "themes/admin/default/css/pages/albums.css": {
-    "declaration-no-important": {
-      "count": 6
-    }
-  },
-  "themes/admin/default/css/pages/batch_manager_unit.css": {
-    "declaration-no-important": {
-      "count": 12
-    }
-  },
-  "themes/admin/default/css/pages/history.css": {
-    "declaration-no-important": {
-      "count": 3
-    }
-  },
-  "themes/admin/default/css/pages/install.css": {
-    "declaration-no-important": {
-      "count": 1
-    }
-  },
-  "themes/admin/default/css/pages/intro.css": {
-    "declaration-no-important": {
-      "count": 2
-    }
-  },
-  "themes/admin/default/css/pages/maintenance_sys.css": {
-    "declaration-no-important": {
-      "count": 4
-    }
-  },
-  "themes/admin/default/css/pages/picture_modify.css": {
-    "declaration-no-important": {
-      "count": 11
-    }
-  },
-  "themes/admin/default/css/pages/user_activity.css": {
-    "declaration-no-important": {
-      "count": 3
-    }
-  },
-  "themes/admin/default/css/pages/user_list.css": {
-    "declaration-no-important": {
-      "count": 31
-    }
-  },
-  "themes/admin/default/css/pages/batch_manager_global.css": {
-    "declaration-no-important": {
-      "count": 11
-    }
-  },
-  "themes/admin/default/css/components/jconfirm.css": {
-    "declaration-no-important": {
-      "count": 6
-    }
-  },
-  "themes/admin/default/css/components/jcrop.css": {
-    "declaration-no-important": {
-      "count": 2
-    }
-  },
-  "themes/admin/default/css/components/selectize.css": {
-    "declaration-no-important": {
-      "count": 14
     }
   },
   "themes/admin/default/theme-base.css": {
@@ -621,9 +174,6 @@
     },
     "no-duplicate-selectors": {
       "count": 27
-    },
-    "property-no-deprecated": {
-      "count": 2
     }
   },
   "themes/admin/default/css/components/selectize-dark.css": {

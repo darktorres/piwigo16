@@ -1,3 +1,5 @@
+@layer pages {
+
 .redirect-message {
   margin: 2em;
   text-align: center;
@@ -7,4 +9,6 @@
 .redirect-fallback-link {
   margin: 2em;
   text-align: center;
+}
+
 }

@@ -1,5 +1,7 @@
 /* Shared utility classes for the standard_pages theme. */
 
+@layer utilities {
+
 /*
  * .error-message's own base rule (theme.css) sets display:none;bottom:5px,
  * and page-specific ID-scoped rules (e.g. #password-form .error-message)
@@ -10,4 +12,6 @@
 .error-message-visible {
   display: block !important;
   bottom: -20px !important;
+}
+
 }

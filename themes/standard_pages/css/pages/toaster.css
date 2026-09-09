@@ -1,3 +1,5 @@
+@layer pages {
+
 .toast.template-pwg-toaster {
   display: none;
 }
@@ -47,4 +49,6 @@
 .dark .toast.error {
   background-color: #be4949;
   color: #ffc8c8;
+}
+
 }

@@ -1,7 +1,11 @@
+@layer pages {
+
 .thumbnailCategory .illustration {
   width: var(--cat-illustration-width);
 }
 
 .content .thumbnailCategory .description {
   height: var(--cat-description-height);
+}
+
 }

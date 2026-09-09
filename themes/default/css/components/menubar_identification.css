@@ -1,3 +1,7 @@
+@layer components {
+
 .quickconnect-input {
   width: 99%;
+}
+
 }

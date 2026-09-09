@@ -1,3 +1,5 @@
+@layer pages {
+
 .commentElement .illustration {
   width: var(--comment-illustration-width);
 }
@@ -9,4 +11,6 @@
 .actions {
   float: right;
   font-size: 90%;
+}
+
 }

@@ -1,4 +1,7 @@
 /* Search specific CSS, colors are defined in seperate files */
+
+@layer pages {
+
 .filter-container {
   display: flex;
   flex-flow: row wrap;
@@ -1060,4 +1063,6 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
 }

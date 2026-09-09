@@ -1,3 +1,5 @@
+@layer pages {
+
 .calendar-nav-prev {
   float: left;
   margin-right: 5px;
@@ -12,4 +14,6 @@
 .calMonth .calImg {
   width: var(--cal-cell-width);
   height: var(--cal-cell-height);
+}
+
 }

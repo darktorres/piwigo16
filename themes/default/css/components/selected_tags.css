@@ -1,3 +1,7 @@
+@layer components {
+
 #selected-tags-container .selected-related-tag-remove {
   border: none;
+}
+
 }

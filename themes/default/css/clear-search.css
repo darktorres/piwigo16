@@ -1,4 +1,7 @@
 /* Search default clear colors */
+
+@layer pages {
+
 .filter .filter-icon {
   color: #474747;
 }
@@ -344,4 +347,6 @@
   .arrow-fill {
     fill: white;
   }
+}
+
 }

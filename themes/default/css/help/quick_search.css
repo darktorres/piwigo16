@@ -1,3 +1,5 @@
+@layer pages {
+
 .quick-search-headers {
   font-size: 19px;
   font-weight: bold;
@@ -69,4 +71,6 @@
 
 .quick-search-section-others {
   padding-top: 30px;
+}
+
 }

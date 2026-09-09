@@ -6,6 +6,9 @@
    shared with the rest of the app; the other 4 are this chain's own,
    `.light`/`.dark`-scoped since their value genuinely depends on the
    active color mode, not the skin alone. */
+
+@layer theme-skin {
+
 :root {
   --color-accent: #b0b0b0;
   --color-accent-contrast: black;
@@ -299,4 +302,6 @@
 
 .dark .btn-revoked {
   background-color: #BE4949 !important;
+}
+
 }

@@ -1,3 +1,5 @@
+@layer pages {
+
 .thumbnails span,
 .thumbnails .wrap2 a,
 .thumbnails label {
@@ -10,4 +12,6 @@
 
 .thumbLegend {
   font-size: var(--thumb-legend-font-size);
+}
+
 }

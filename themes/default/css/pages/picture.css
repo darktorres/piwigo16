@@ -1,7 +1,11 @@
+@layer pages {
+
 #rateForm {
   margin: 0;
 }
 
 .clear-both {
   clear: both;
+}
+
 }

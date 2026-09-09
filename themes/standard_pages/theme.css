@@ -1,7 +1,13 @@
 /* P52-B: cascade-layer order, declared once here since this file
    always loads first (Template::setTheme()'s parent-before-child
-   walk). */
-@layer reset, tokens, base, theme-chain, theme-skin, components, pages, utilities;
+   walk). P52-E/F Step 5: updated to the full 12-name master order
+   (authoritative copy in `themes/default/css/reset.css`, guaranteed
+   first-loaded across all 3 layouts -- this re-declaration is a no-op
+   per spec, kept for this chain's own entry file to stay
+   self-documenting, matching `default`/`admin/default`). */
+@layer reset, tokens, base, theme-skin-base, vendor-base, components-base, pages-base, theme-chain, theme-skin, components, pages, utilities;
+
+@layer theme-chain {
 
 @font-face {
   font-family: "Open_Sans";
@@ -941,4 +947,6 @@ input[type='radio'] {
 .dark #header-options .toggle-mode,
 .dark #selected-language-container {
   color: var(--color-dark-header-link, #FFEBD0);
+}
+
 }

@@ -1,3 +1,5 @@
+@layer theme-chain {
+
 @media print {
 #menubar, .content .navigationBar, .categoryActions, .content .calendarViews, .calendarBar,
 #imageToolBar, .navThumb, #commentAdd {
@@ -13,4 +15,6 @@ body {
 #theCategoryPage .content {
 	margin: 0 !important; 
 }
+}
+
 }

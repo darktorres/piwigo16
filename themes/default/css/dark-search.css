@@ -1,4 +1,7 @@
 /* Search */
+
+@layer pages {
+
 .filter .filter-icon {
   color:#aeaeae;
 }
@@ -332,4 +335,6 @@
   .arrow-fill {
     fill: #333 !important;
   }
+}
+
 }

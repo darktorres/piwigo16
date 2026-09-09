@@ -2,9 +2,17 @@
    always loads first (Template::setTheme()'s parent-before-child
    walk). @layer statements (no block) are spec-exempted from the
    normal "@import must come first" rule, so this can precede the
-   @import below -- verified against MDN, not assumed. */
-@layer reset, tokens, base, theme-chain, theme-skin, components, pages, utilities;
-@import "iconset.css";
+   @import below -- verified against MDN, not assumed.
+   P52-E/F Step 5: updated to the full 12-name master order (the
+   authoritative copy lives in `css/reset.css`, the one file every
+   layout guarantees loads first -- see its own docblock; this
+   re-declaration is a no-op per spec, kept only so this chain's own
+   entry file stays self-documenting, matching every other chain). */
+@layer reset, tokens, base, theme-skin-base, vendor-base, components-base, pages-base, theme-chain, theme-skin, components, pages, utilities;
+@import "iconset.css" layer(theme-chain);
+
+@layer theme-chain {
+
 /**
  * Menubar
  */
@@ -1018,4 +1026,6 @@ span.related-tags .tag-counter{
   #breadcrumb{
     flex-direction:column;
   }
+}
+
 }

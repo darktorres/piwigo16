@@ -3,6 +3,8 @@
    skin would otherwise redefine, so unlike its 10 siblings this file
    declares none of the 7 tokens documented in `css/tokens.css`. */
 
+@layer theme-skin {
+
 .gallery-icon-checkmark {
     border: 1px solid #777;
 }
@@ -280,4 +282,6 @@
 
 .dark .btn-revoked {
   background-color: #BE4949 !important;
+}
+
 }

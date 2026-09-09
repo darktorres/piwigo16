@@ -98,7 +98,7 @@ ul.thumbnails .levelIndicatorF {
   bottom: 0;
   text-shadow: 0 0 1px #000;
   padding:0 0 2px 5px;
-  color:white;
+  color:#fff;
   font-weight:bold;
   z-index: 10;
 }
@@ -850,7 +850,7 @@ li.menuLi {
   padding: 5px 0;
   border-radius: 10px;
   background: linear-gradient(130deg, #f70 0%, #ffa744 100%);
-  color: white;
+  color: #fff;
   -moz-osx-font-smoothing: grayscale;
 }
 
@@ -876,7 +876,7 @@ li.menuLi {
   padding: 5px 10px;
   font-size: 13px;
   padding-inline-end: 15px;
-  color: white;
+  color: #fff;
   font-weight: 600;
   cursor: pointer;
 }
@@ -888,14 +888,14 @@ li.menuLi {
   padding: 5px 10px;
   font-size: 13px;
   padding-inline-end: 15px;
-  color: white;
+  color: #fff;
   font-weight: 600;
   cursor: pointer;
 }
 
 .dropdown-option:hover {
   text-decoration: none;
-  color: white;
+  color: #fff;
   background-color: #00000012;
 }
 
@@ -1019,7 +1019,7 @@ background: #ffa646;
   margin: 10px;
   z-index: 1000;
   background-color: #FFBD4D;
-  color: white;
+  color: #fff;
   padding: 20px;
   font-weight: bold;
   border-radius: 34px;
@@ -1045,14 +1045,14 @@ background: #ffa646;
 }
 
 .stat-data-selector label {
-  color: var(--stat-data-selector-label-color, black);
+  color: var(--stat-data-selector-label-color, #000);
   padding: 10px;
   background-color: var(--stat-data-selector-label-bg, #eee);
   transition: 0.2s ease;
 }
 
 .stat-data-selector label.unavailable {
-  color: var(--stat-data-selector-label-unavailable-color, gray);
+  color: var(--stat-data-selector-label-unavailable-color, #808080);
   background-color: #aaa;
   cursor: default;
   pointer-events: none;
@@ -1063,7 +1063,7 @@ background: #ffa646;
 
 .stat-data-selector input:checked + label {
   background-color: #FFA646;
-  color: var(--stat-data-selector-input-checked-label-color, white);
+  color: var(--stat-data-selector-input-checked-label-color, #fff);
   pointer-events: none;
 }
 
@@ -1102,7 +1102,7 @@ padding: 5px;
 inset-inline-start: -1000px;
 border: 1px solid #ff3363;
 visibility: hidden;
-color: black;
+color: #000;
 text-decoration: none;
 }
 
@@ -1410,7 +1410,7 @@ a.stat-box:hover {
 
 .activity-chart .row-legend::after {
   content: "";
-  border-top: 2px solid black;
+  border-top: 2px solid #000;
   opacity: 0.05;
   position: absolute;
   width: 700%;
@@ -1418,7 +1418,7 @@ a.stat-box:hover {
 }
 
 .activity-chart .col-legend .line-vertical {
-  border-inline-start: 2px solid black;
+  border-inline-start: 2px solid #000;
   opacity: 0.05;
   position: absolute;
   height: 250%;
@@ -1453,7 +1453,7 @@ a.stat-box:hover {
   z-index: 102;
   font-size: 12px;
   font-weight: normal;
-  background-color: white;
+  background-color: #fff;
   padding: 10px;
   box-shadow: 0 0 5px #acacac;
   border-radius: 10px;
@@ -1577,12 +1577,12 @@ a.stat-box:hover {
   margin-inline-start: -5px;
   border-width: 5px;
   border-style: solid;
-  border-color: var(--activity-chart-tooltip-arrow-or-storage-tooltips-tooltip-arrow-border-color, transparent transparent white);
+  border-color: var(--activity-chart-tooltip-arrow-or-storage-tooltips-tooltip-arrow-border-color, transparent transparent #fff);
 }
 
 .storage-tooltips .tooltip-arrow.bottom {
   top: 100%;
-  border-color: var(--storage-tooltips-tooltip-arrow-bottom-border-color, white transparent transparent);
+  border-color: var(--storage-tooltips-tooltip-arrow-bottom-border-color, #fff transparent transparent);
 }
 
 .storage-tooltips .separated {
@@ -1660,7 +1660,7 @@ a.stat-box:hover {
 .storage-chart span p{
   font-weight: bold;
   font-size: 16px;
-  color: black;
+  color: #000;
   opacity: 0;
   line-height: 0;
   transition: ease 0.2s;
@@ -2179,10 +2179,10 @@ margin-top:4px; padding-bottom:3px; padding-top:3px; top:1px;
 .themeBox .showInfo-dropdown {position: absolute; inset-inline-end: 0; transform: translateX(40%); display: none; text-align: start; padding-bottom: 0;}
 .themeSelect {box-shadow: 0 2px 1px #00000024; display: inline-block; text-align: center; padding: 0 10px 8px; margin-inline-end: 10px; transition: 0.4s ease;}
 .showInfo-dropdown-header {padding: 5px 10px; white-space: nowrap; font-weight: bold; font-size: 12px;}
-.showInfo-dropdown-header a:hover {color: white;}
+.showInfo-dropdown-header a:hover {color: #fff;}
 .showInfo-dropdown-content {padding: 5px 10px; -moz-osx-font-smoothing: initial;}
-.showInfo-dropdown-action {padding: 8px 10px; border-top: 1px solid #ffffff45; color: white; text-decoration: none; display: block; margin-top: 5px; border-radius: 0 0 10px 10px; font-weight: bold;}
-.showInfo-dropdown-action:hover {background-color: rgb(0, 0, 0, 0.192); color: white;}
+.showInfo-dropdown-action {padding: 8px 10px; border-top: 1px solid #ffffff45; color: #fff; text-decoration: none; display: block; margin-top: 5px; border-radius: 0 0 10px 10px; font-weight: bold;}
+.showInfo-dropdown-action:hover {background-color: rgb(0, 0, 0, 0.192); color: #fff;}
 .themeActions {display: flex;flex-direction: column;}
 .themeActions div {display: table-cell; vertical-align: middle; line-height:18px;}
 .themeActions span, .themeActions a {padding: 10px; margin: 0 10px 10px; font-weight: bold; font-size: 12px;}
@@ -2367,7 +2367,7 @@ div.jGrowl div.jGrowl-notification{
 
 .badge {
   background-color:#0a0;
-  color:white;
+  color:#fff;
   padding:1px 5px;
   border-radius:10px;
   margin-inline-start:5px;
@@ -2621,7 +2621,7 @@ div.jGrowl div.jGrowl-notification{
 
 .plugin-version {
   border-radius: 5px;
-  color: var(--plugin-version-color, white);
+  color: var(--plugin-version-color, #fff);
   padding: 0 5px;
   background: #f70;
   font-weight: bold;
@@ -2656,7 +2656,7 @@ div.jGrowl div.jGrowl-notification{
 .pluginBox table {width:99%;}
 .pluginBox td {text-align:start;}
 
-.PluginOptionsBlock a:hover { color: white ;}
+.PluginOptionsBlock a:hover { color: #fff ;}
 .pluginContent {
   width: 100%;
   text-align: start;
@@ -2693,7 +2693,7 @@ div.jGrowl div.jGrowl-notification{
 
 .pluginDesc {
   font-size: 12px;
-  color: grey;
+  color: #808080;
   line-height: 1.5em;
   position: relative;
   overflow: hidden;
@@ -2874,7 +2874,7 @@ div.jGrowl div.jGrowl-notification{
 .tab-filters input:checked + label,
 .pluginTypeFilter input:checked + label{
   background: var(--plugintypefilter-input-checked-label-or-tab-filters-input-checked-label-bg, #ffa500);
-  color: var(--plugintypefilter-input-checked-label-or-tab-filters-input-checked-label-color, white);
+  color: var(--plugintypefilter-input-checked-label-or-tab-filters-input-checked-label-color, #fff);
   box-shadow: 0 2px var(--plugintypefilter-input-checked-label-or-tab-filters-input-checked-label-shadow, #d18800);
 }
 
@@ -3408,11 +3408,11 @@ input[type="radio"], input[type="checkbox"] {
 }
 .header_msgs a {
   background-color: #ff5252;
-  color: white;
+  color: #fff;
   padding: 8px 20px;
 }
 .header_msgs a:hover {
-  color: white;
+  color: #fff;
   text-decoration: underline;
 }
 
@@ -3832,7 +3832,7 @@ legend span {
 }
 .batch-manager-root a.removeFilter::before {margin-inline: 6px 0; font-size: 12pt; color: #777;}
 .batch-manager-root a.removeFilter:hover::before {color: #ffa646;}
-.batch-manager-root a.removeFilter:hover {color:red;}
+.batch-manager-root a.removeFilter:hover {color:#f00;}
 .batch-manager-root .removeFilter span {display:none}
 .batch-manager-root .useFilterCheckbox {display:none;}
 
@@ -3880,7 +3880,7 @@ legend span {
   padding: 5px 0;
   border-radius: 10px 10px 0 0;
   background: linear-gradient(130deg, #f70 0%, #ffa744 100%);
-  color: white;
+  color: #fff;
   position: absolute;
   bottom:100%;
   overflow: hidden;
@@ -3894,14 +3894,14 @@ legend span {
   padding: 5px 10px;
   font-size: 12px;
   padding-inline-end: 15px;
-  color: white;
+  color: #fff;
   font-weight: 600;
   cursor: pointer;
 }
 
 .addFilter-dropdown a:hover {
   text-decoration: none;
-  color: white;
+  color: #fff;
   background-color: rgb(0, 0, 0, 0.123)
 }
 
@@ -4208,7 +4208,7 @@ p.upload-warnings-summary .showInfo {margin-inline-start:3px;}
   display: flex;
   margin: auto;
   justify-content: space-between;
-  color: white;
+  color: #fff;
   border-bottom: solid 1px #ffffff3d;
   padding: 5px 10px; 
   min-width: 150px;
@@ -4306,7 +4306,7 @@ p.upload-warnings-summary .showInfo {margin-inline-start:3px;}
   color: var(--tag-box-tag-rename-tag-name-editable-color, #3c3c3c);
   font-family: "Open Sans", "Lucida Grande",Verdana,Arial,"Bitstream Vera Sans",sans-serif;
   margin: 0;
-  background-color: var(--tag-box-tag-rename-tag-name-editable-bg, white);
+  background-color: var(--tag-box-tag-rename-tag-name-editable-bg, #fff);
   border: 1px solid #d5d5d5;
   padding-inline-start: 6px;
 }
@@ -4317,7 +4317,7 @@ p.upload-warnings-summary .showInfo {margin-inline-start:3px;}
 
 .tag-pagination .selected {
   background: #ffa646;
-  color: black;
+  color: #000;
 }
 
 .tag-container .tag-box .tag-rename span {
@@ -4384,12 +4384,12 @@ p.upload-warnings-summary .showInfo {margin-inline-start:3px;}
   font-weight: bold;
   margin-inline-start: 6px;
   background-color: var(--tag-select-message-a-bg, #0051a5);
-  color: var(--tag-select-message-a-color, white);
+  color: var(--tag-select-message-a-color, #fff);
   padding: 0 4px;
 }
 
 .tag-select-message a:hover {
-  color: white;
+  color: #fff;
   text-decoration: none;
   background-color: #002e5f;
 }
@@ -4492,7 +4492,7 @@ p.upload-warnings-summary .showInfo {margin-inline-start:3px;}
   visibility:hidden;
   width:100%;
   padding:5px;
-  border-inline-start:solid 3px red;
+  border-inline-start:solid 3px #f00;
 }
 
 .TagSubmitOptions {
@@ -4726,7 +4726,7 @@ p.upload-warnings-summary .showInfo {margin-inline-start:3px;}
 }
 
 .format-card-ext {
-  color: white;
+  color: #fff;
   font-weight: bolder;
   font-size: 50px;
   z-index: 2;
@@ -4743,13 +4743,13 @@ p.upload-warnings-summary .showInfo {margin-inline-start:3px;}
 }
 
 .format-card-actions a {
-  color: white;
+  color: #fff;
   font-size: 24px;
   margin: 0 10px;
 }
 
 .format-card-size {
-  color: white;
+  color: #fff;
   margin-top: 5px;
   z-index: 2;
   font-size: 20px;
@@ -5199,7 +5199,7 @@ p.upload-warnings-summary .showInfo {margin-inline-start:3px;}
 }
 
 .cat-move-header .cat-move-info::before {
-  color: grey;
+  color: #808080;
   font-size: 20px;
 }
 
@@ -5398,7 +5398,7 @@ p.upload-warnings-summary .showInfo {margin-inline-start:3px;}
   inset-inline-end: -40px;
   top: -40px;
   font-size: 30px;
-  color: var(--cat-move-order-popin-close-popin-color, white);
+  color: var(--cat-move-order-popin-close-popin-color, #fff);
 }
 
 .cat-move-order-popin .close-popin:hover { color: #ffa646;}
@@ -5492,14 +5492,14 @@ ul.jqtree-tree .jqtree-element {
 }
 
 input[type="text"].dError {border-color:#ff7070; background-color:#FFe5e5;}
-.dErrorDesc {background-color:red; color:white; padding:0 5px;border-radius:10px; font-weight:bold;cursor:help;}
+.dErrorDesc {background-color:#f00; color:#fff; padding:0 5px;border-radius:10px; font-weight:bold;cursor:help;}
 
 .watermark-preview {max-height:100px;border:2px solid #ccc;margin-top:5px;}
 .watermark-add-panel {display:none;}
 
 .adminMenubarCounter {
   background-color:#666;
-  color:white;
+  color:#fff;
   padding:1px 5px;
   border-radius:10px;
   margin-inline-start:5px;
@@ -6005,7 +6005,7 @@ input:checked + .slider.small::before, input:checked + .slider.small::after {
 .MergeOptionsContainer select{
   padding: 10px 5px;
   border: none;
-  background-color: var(--mergeoptionscontainer-select-bg, white);
+  background-color: var(--mergeoptionscontainer-select-bg, #fff);
   box-shadow: 0 0 2px #c5c5c5;
   border-radius: 5px;
 }
@@ -6187,7 +6187,7 @@ input:checked + .slider.small::before, input:checked + .slider.small::after {
   top: 5px;
   width: 5px;
   height: 10px;
-  border: solid var(--groups-group-checkbox-group-checkmark-after-border, white);
+  border: solid var(--groups-group-checkbox-group-checkmark-after-border, #fff);
   border-width: 0 3px 3px 0;
   transform: rotate(45deg);
 }
@@ -6411,7 +6411,7 @@ input:checked + .slider.small::before, input:checked + .slider.small::after {
 .AddUserErrors, .update-user-fail, .AddAlbumErrors, .EditUserErrors, .update-password-fail, .icon-red-error {
   background-color: var(--addusererrors-or-editusererrors-or-icon-red-error-or-update-password-fail-or-update-user-fail-bg, #ffcfcf);
   color: var(--addusererrors-or-editusererrors-or-icon-red-error-or-update-password-fail-or-update-user-fail-color, #ff5252);
-  border-inline-start: solid 3px var(--addusererrors-or-editusererrors-or-icon-red-error-or-update-password-fail-or-update-user-fail-border-left, red);
+  border-inline-start: solid 3px var(--addusererrors-or-editusererrors-or-icon-red-error-or-update-password-fail-or-update-user-fail-border-left, #f00);
 }
 
 .AddUserSuccessBanner span {
@@ -6640,7 +6640,7 @@ a.group_users {
   inset-inline-start:50%;
   font-size:50px;
   line-height:50px;
-  color:white;
+  color:#fff;
   z-index:100;
   text-shadow:0 0 20px rgb(0,0,0,0.4);
   transition:opacity 200ms ease;
@@ -6743,11 +6743,11 @@ table.qsearch_help_table q {
 }
 table.qsearch_help_table q::before {
 	content: '\'';
-	color: green;
+	color: #008000;
 }
 table.qsearch_help_table q::after {
 	content: '\'';
-	color: green;
+	color: #008000;
 }
 table.qsearch_help_table td {
 	border: 1px solid #ccc;
@@ -6891,7 +6891,7 @@ li.plupload_delete a:hover {background: url("images/cancelhover.svg"); backgroun
   background: linear-gradient(#0000, #000000b8);
 }
 .photos-add-content .Addedphotos .format-ext-name span {
-  color: white;
+  color: #fff;
   font-size: 16px;
   font-weight: bold;
   text-transform: uppercase;
@@ -7135,7 +7135,7 @@ li.plupload_delete a:hover {background: url("images/cancelhover.svg"); backgroun
 }
 
 .disabledToggle .move-cat-toogler{
-  color: var(--disabledtoggle-move-cat-toogler-color, gray);
+  color: var(--disabledtoggle-move-cat-toogler-color, #808080);
   opacity: 0.5;
   pointer-events: none;
 }
@@ -7318,7 +7318,7 @@ li.plupload_delete a:hover {background: url("images/cancelhover.svg"); backgroun
 
 .cancel-upload-button:hover {
   background-color: #ff9b32;
-  color: white;
+  color: #fff;
   text-decoration: none;
 }
 
@@ -7333,7 +7333,7 @@ li.plupload_delete a:hover {background: url("images/cancelhover.svg"); backgroun
 .AlbumViewSelector input:checked + label,
 .UserViewSelector input:checked + label{
   background: transparent;
-  color: white;
+  color: #fff;
 }
 
 .AlbumViewSelector input:checked + label span,
@@ -7389,7 +7389,7 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
 }
 
 .user-action-select {
-  background: var(--user-action-select-bg, white);
+  background: var(--user-action-select-bg, #fff);
 }
 
 .user-property-select {
@@ -7398,7 +7398,7 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
 }
 
 .UserListPopInContainer {
-  background-color: var(--userlistpopincontainer-bg-1, white);
+  background-color: var(--userlistpopincontainer-bg-1, #fff);
 }
 
 .user-property-column-title, .edit-username-title {
@@ -7482,7 +7482,7 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
 .user-property-username-change-content,
 .user-property-password-change-content,
 .user-property-main-user-content {
-  background-color: var(--user-property-main-user-content-or-user-property-password-change-content-or-user-property-username-change-content-bg, white);
+  background-color: var(--user-property-main-user-content-or-user-property-password-change-content-or-user-property-username-change-content-bg, #fff);
 }
 
 .update-container {
@@ -7560,7 +7560,7 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--download-csv-color, black);
+  color: var(--download-csv-color, #000);
   cursor: pointer;
   border-radius: 5px;
   font-size: 15px;
@@ -7569,14 +7569,14 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
 
 .download_csv:hover {
   background: var(--download-csv-hover-bg, #aaa);
-  color: var(--download-csv-hover-color, black);
+  color: var(--download-csv-hover-color, #000);
 }
 
 .AddUserPopInContainer,
 .AddAlbumPopInContainer,
 .DeleteAlbumPopInContainer,
 .RenameAlbumPopInContainer {
-  background-color: var(--addalbumpopincontainer-or-adduserpopincontainer-or-deletealbumpopincontainer-or-renamealbumpopincontainer-bg, white);
+  background-color: var(--addalbumpopincontainer-or-adduserpopincontainer-or-deletealbumpopincontainer-or-renamealbumpopincontainer-bg, #fff);
 }
 
 .AddUserPopInContainer .AddIconTitle,
@@ -7596,7 +7596,7 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
 .AddAlbumPopInContainer .AddAlbumInput,
 .DeleteAlbumPopInContainer .DeleteAlbumInput,
 .RenameAlbumPopInContainer .RenameAlbumInput {
-  background-color: var(--adduserpopincontainer-adduserinput-or-deletealbumpopincontainer-deletealbuminput-or-renamealbumpopincontainer-renamealbuminput-bg, white);
+  background-color: var(--adduserpopincontainer-adduserinput-or-deletealbumpopincontainer-deletealbuminput-or-renamealbumpopincontainer-renamealbuminput-bg, #fff);
   border: solid 2px var(--adduserpopincontainer-adduserinput-or-deletealbumpopincontainer-deletealbuminput-or-renamealbumpopincontainer-renamealbuminput-border, #D4D4D4);
 }
 
@@ -7645,8 +7645,8 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
 }
 
 .linked-albums-badge.badge-red {
-  background: red;
-  color: white;
+  background: #f00;
+  color: #fff;
 }
 
 .breadcrumb-item {
@@ -7662,7 +7662,7 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
   margin-inline-end: 15px;
 }
 .breadcrumb-item:hover .icon-cancel-circled{
-  color: black;
+  color: #000;
 }
 
 .breadcrumb-item a {
@@ -7731,7 +7731,7 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
    each (a `:not()` on the real competitor, not a specificity fight on
    this rule) lets this win via ordinary non-conflict instead. */
 .hasDatepicker, .elem-type-select {
-  background: var(--elem-type-select-or-hasdatepicker-bg, white);
+  background: var(--elem-type-select-or-hasdatepicker-bg, #fff);
 }
 
 .selectable-filter label {
@@ -7756,7 +7756,7 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
 
 .search-result-item .notClickable {
   opacity: 0.3;
-  color: black;
+  color: #000;
 }
 
 .promote-apps{
@@ -7938,11 +7938,11 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
 }
 
 .badge-dropdown {
-  background: linear-gradient(130deg, white 0%, white 100%);
+  background: linear-gradient(130deg, #fff 0%, #fff 100%);
 }
 
 .badge-dropdown::after {
-  border-color: var(--badge-dropdown-after-border-color, transparent transparent white);
+  border-color: var(--badge-dropdown-after-border-color, transparent transparent #fff);
 }
 
 .sortable-username-header,
@@ -7980,7 +7980,7 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
 .desc-modal-content {
   position: absolute;
   border-radius: 10px;
-  background-color: var(--desc-modal-content-bg, white);
+  background-color: var(--desc-modal-content-bg, #fff);
   margin: auto;
   width: 75vw;
   height: 75vh;
@@ -8039,7 +8039,7 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
 }
 
 .close-modal {
-  color: var(--close-modal-color, white);
+  color: var(--close-modal-color, #fff);
   position: absolute;
   inset-inline-end: -40px;
   top: -40px;
@@ -8050,7 +8050,7 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
 .new-album-modal-content {
   display: flex;
   flex-direction: column;
-  background-color: var(--modal-content-or-new-album-modal-content-bg, white);
+  background-color: var(--modal-content-or-new-album-modal-content-bg, #fff);
   position: absolute;
   border-radius: 10px;
   inset-inline-start: 50%;

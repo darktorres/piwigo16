@@ -917,7 +917,7 @@ input[type='radio'] {
 
 .btn-main {
   background-color: var(--color-accent, #f70);
-  color: var(--color-accent-contrast, white);
+  color: var(--color-accent-contrast, #fff);
 }
 
 #theIdentificationPage .light a:hover,
@@ -1013,7 +1013,7 @@ input[type='radio'] {
 }
 
 .slider::before {
-  background-color: white;
+  background-color: #fff;
 }
 
 /* Light */
@@ -1207,7 +1207,7 @@ input[type='radio'] {
 
 .dark .btn-secondary {
   background-color: #202020;
-  color: white;
+  color: #fff;
 }
 
 .dark input:checked + .slider {
@@ -1229,7 +1229,7 @@ input[type='radio'] {
 }
 
 .dark .icon-collapse {
-  color: white;
+  color: #fff;
 }
 
 .dark .close-modal {

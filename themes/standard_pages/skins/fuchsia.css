@@ -11,7 +11,7 @@
 
 :root {
   --color-accent: #ff3363;
-  --color-accent-contrast: white;
+  --color-accent-contrast: #fff;
 }
 
 .light {

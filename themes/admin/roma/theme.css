@@ -368,7 +368,7 @@ a.stat-box:hover {
 }
 
 #batchManagerGlobal ul.thumbnails li:hover .wrap2 {
-  color: white;
+  color: #fff;
 }
 
 #batchManagerGlobal .thumbSelected { background-color:transparent}
@@ -465,7 +465,7 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {background-co
 }
 
 .disabledToggle .move-cat-toogler{
-  --disabledtoggle-move-cat-toogler-color: gray;
+  --disabledtoggle-move-cat-toogler-color: #808080;
 }
 .move-cat-container.disabledToggle:hover .move-cat-toogler{
   opacity: 0.5;
@@ -748,7 +748,7 @@ input:focus + .slider {
 }
 
 .BlackFont{
-  color:black;
+  color:#000;
 }
 
 #checkActions a:hover {
@@ -1050,7 +1050,7 @@ li.plupload_delete a.remove-format:hover{color: #c0c0c0;}
 
 .cat-modify-actions a:hover
 .cat-modify-actions .toggle-comment-option:hover  {
-  color: white;
+  color: #fff;
 }
 
 .cat-modify-actions a::after,
@@ -1325,7 +1325,7 @@ background:#6C2D2D;
 
 .tag-container .tag-box .tag-rename .tag-name-editable {
   --tag-box-tag-rename-tag-name-editable-bg: #666;
-  --tag-box-tag-rename-tag-name-editable-color: white;
+  --tag-box-tag-rename-tag-name-editable-color: #fff;
   border-color: #333;
 }
 
@@ -1349,7 +1349,7 @@ background:#6C2D2D;
 }
 
 .info-warning a, .info-message a, .info-error a {
-  color: white;
+  color: #fff;
 }
 
 .info-error {
@@ -1369,11 +1369,11 @@ background:#6C2D2D;
 
 .cat-move-order-popin .order-popin-container {
   --cat-move-order-popin-order-popin-container-bg: #444;
-  color: white;
+  color: #fff;
 }
 
 .cat-move-order-popin .album-name {
-  --cat-move-order-popin-album-name-color-1: white;
+  --cat-move-order-popin-album-name-color-1: #fff;
 }
 
 .cat-move-order-popin input[name="recursiveAutoOrder"] {
@@ -1633,7 +1633,7 @@ background:#6C2D2D;
 .AlbumViewSelector input:checked + label,
 .UserViewSelector input:checked + label{
   background: transparent;
-  color: white;
+  color: #fff;
 }
 
 .AlbumViewSelector input:checked + label span,

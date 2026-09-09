@@ -89,7 +89,7 @@ textarea {
 }
 .tagSelection label { padding-inline-end:12px; }
 .tagSelection li.tagSelected {background-color:#dbe8f3;}
-.tagSelected label {color:black;}
+.tagSelected label {color:#000;}
 
 ul.thumbnails input { color:#666; font-size:10px; margin:0; background-color:#bbb; text-align: center;}
 .throw  { font-size: 120%; line-height: 26px; padding-top: 10px; font-weight: bold; }
@@ -148,7 +148,7 @@ input[type="text"].large  { width: 317px; }
 .bigbutton input[type="submit"] {display:inline;position:static;height:auto;width:auto;font-size:18px;padding:10px;}
 
 .themeBox {background-color:#fafafa; box-shadow: 0 0 5px #acacac;}
-.themeName {color:black;}
+.themeName {color:#000;}
 .themeActions span {background-color: #ddd;}
 #themesContent h3 {border-bottom:1px solid #aaa;}
 .themeSelect {background-color: #fafafa;}
@@ -164,14 +164,14 @@ input[type="text"].large  { width: 317px; }
 }
 
 #pwgHead a, #footer a {color:#ccc;}
-#pwgHead a:hover, #footer a:hover {color:white;}
+#pwgHead a:hover, #footer a:hover {color:#fff;}
 
 .AlbumViewSelector {background: #fafafa;}
 .pluginName {color:#111;}
 .pluginBox.incompatible {border-color:#a00;}
 
 .languageBox {background-color:#ddd;}
-.languageName {color:black;}
+.languageName {color:#000;}
 .languageDefault {background-color:#dbe8f3;}
 
 ul.thumbnails li.rank-of-image {--ul-thumbnails-li-rank-of-image-bg: #ddd;}
@@ -182,7 +182,7 @@ ul.thumbnails li.rank-of-image {--ul-thumbnails-li-rank-of-image-bg: #ddd;}
 }
 
 #batchManagerGlobal li.thumbSelected .font-checkbox [class*="icon-check"]::before {
-  color: white; 
+  color: #fff; 
   display: block;
 }
 
@@ -225,7 +225,7 @@ ul.thumbnails li.rank-of-image {--ul-thumbnails-li-rank-of-image-bg: #ddd;}
 
 #batchManagerGlobal .addFilter-button.highlight:hover {
   background-color: #f70;
-  color: white;
+  color: #fff;
   text-decoration: none;
 }
 
@@ -311,7 +311,7 @@ label>p.group_select {
 }
 
 .groups input[type="text"]{
-  background-color:white;
+  background-color:#fff;
   border:1px solid #d5d5d5;
 }
 
@@ -328,7 +328,7 @@ label>p.group_select {
 
 .groups .Group-name .Group-name-container p:focus{
   border:1px solid #3c3c3c;
-  background-color:white;
+  background-color:#fff;
 }
 
 /* Add Group */
@@ -364,7 +364,7 @@ label>p.group_select {
 /* UserList Pop in */
 
 .UserListPopInContainer{
-  background-color:white;
+  background-color:#fff;
   border-radius:10px;
 
 }
@@ -380,7 +380,7 @@ label>p.group_select {
 
 #UserList .AddUserBlock input,
 #UserList .FilterUserBlock input{
-  background-color:white;
+  background-color:#fff;
 }
 
 #UserList .AddUserBlock p,
@@ -424,11 +424,11 @@ label>p.group_select {
 }
 
 .slider::before {
-  background-color: white;
+  background-color: #fff;
 }
 
 .slider::after {
-  color: white;
+  color: #fff;
 }
 
 input:checked + .slider {
@@ -500,7 +500,7 @@ input:focus + .slider {
 }
 
 .MergeOptionsContainer select{
-  background-color: white;
+  background-color: #fff;
 }
 
 /* Group checkbox */
@@ -529,7 +529,7 @@ input:focus + .slider {
 /* UserList Pop in */
 
 .CloseUserList, .CloseAddAlbum, .CloseDeleteAlbum, .CloseRenameAlbum {
-  color:white;
+  color:#fff;
 }
 
 #UserList .group-name-block p{
@@ -710,7 +710,7 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 }
 
 .addAlbum form input {
-  --addalbum-form-input-bg: white;
+  --addalbum-form-input-bg: #fff;
   border: 1px solid #d5d5d5;
 }
 
@@ -765,7 +765,7 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 }
 
 .applicationCard .applicationName {
-  color: black;
+  color: #000;
 }
 
 
@@ -781,7 +781,7 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 }
 
 .linkedAlbumPopInContainer {
-  background-color: white;
+  background-color: #fff;
 }
 
 .search-result-item {
@@ -790,7 +790,7 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 }
 
 .search-result-item .icon-plus-circled{
-  color: black;
+  color: #000;
 }
 
 .search-result-item .icon-plus-circled:hover{
@@ -800,7 +800,7 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 .breadcrumb-item.add-item.highlight {
   background: #ffa646;
   box-shadow: 0 2px #af7200;
-  color: white;
+  color: #fff;
 }
 
 .move-cat-container:hover .badge-container i,
@@ -826,11 +826,11 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 }
 
 #whats_new_popin{
-  background-color: white;
+  background-color: #fff;
 }
 
 .close_whats_new{
-  color:white
+  color:#fff
 }
 
 #whats_new h3{
@@ -849,7 +849,7 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 .cat-modify-footer,
 .savebar-footer {
   border-color: #ececec;
-  background: white;
+  background: #fff;
 }
 
 .cat-modify-footer-see-out,

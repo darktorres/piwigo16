@@ -5,9 +5,6 @@
     }
   },
   "themes/default/theme.css": {
-    "color-named": {
-      "count": 6
-    },
     "declaration-block-single-line-max-declarations": {
       "count": 8
     }
@@ -21,9 +18,6 @@
     }
   },
   "themes/admin/clear/theme.css": {
-    "color-named": {
-      "count": 22
-    },
     "declaration-block-single-line-max-declarations": {
       "count": 32
     },
@@ -32,9 +26,6 @@
     }
   },
   "themes/admin/roma/theme.css": {
-    "color-named": {
-      "count": 9
-    },
     "declaration-block-single-line-max-declarations": {
       "count": 44
     },
@@ -43,93 +34,21 @@
     }
   },
   "themes/default/css/clear-search.css": {
-    "color-named": {
-      "count": 15
-    },
     "no-duplicate-selectors": {
       "count": 1
     }
   },
   "themes/default/css/dark-search.css": {
-    "color-named": {
-      "count": 6
-    },
     "declaration-no-important": {
       "count": 4
     }
   },
   "themes/default/css/search.css": {
-    "color-named": {
-      "count": 3
-    },
     "declaration-no-important": {
       "count": 4
     }
   },
-  "themes/standard_pages/skins/cadmium.css": {
-    "color-named": {
-      "count": 1
-    }
-  },
-  "themes/standard_pages/skins/cobalt.css": {
-    "color-named": {
-      "count": 1
-    }
-  },
-  "themes/standard_pages/skins/fuchsia.css": {
-    "color-named": {
-      "count": 1
-    }
-  },
-  "themes/standard_pages/skins/green.css": {
-    "color-named": {
-      "count": 1
-    }
-  },
-  "themes/standard_pages/skins/lime.css": {
-    "color-named": {
-      "count": 1
-    }
-  },
-  "themes/standard_pages/skins/purple.css": {
-    "color-named": {
-      "count": 1
-    }
-  },
-  "themes/standard_pages/skins/red.css": {
-    "color-named": {
-      "count": 1
-    }
-  },
-  "themes/standard_pages/skins/sienna.css": {
-    "color-named": {
-      "count": 1
-    }
-  },
-  "themes/standard_pages/skins/silver.css": {
-    "color-named": {
-      "count": 1
-    }
-  },
-  "themes/standard_pages/skins/teal.css": {
-    "color-named": {
-      "count": 1
-    }
-  },
-  "themes/admin/default/css/components/general.css": {
-    "color-named": {
-      "count": 5
-    }
-  },
-  "themes/admin/roma/css/components/general.css": {
-    "color-named": {
-      "count": 1
-    }
-  },
   "themes/admin/default/theme-base.css": {
-    "color-named": {
-      "count": 72
-    },
     "declaration-block-single-line-max-declarations": {
       "count": 166
     },

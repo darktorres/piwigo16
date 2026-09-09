@@ -197,7 +197,7 @@
 	font-weight: bold;
 	margin: 0 1px;
 	padding: 0 1px;
-	border: 1px solid gray;
+	border: 1px solid #808080;
 }
 
 .calendarCalBar {
@@ -223,7 +223,7 @@ td.calDayCellFull, td.calDayCellEmpty {
 	vertical-align: top;
 	font-weight: bold;
 	font-size: 18px;
-	border: 1px solid gray;
+	border: 1px solid #808080;
 }
 
 .calBackDate {
@@ -467,7 +467,7 @@ td.calDayCellFull, td.calDayCellEmpty {
 div.thumbHover{ /* only first & last holders are divs */
   width: 108px;
 	height: 118px;
-	border: 1px solid gray;
+	border: 1px solid #808080;
 	padding: 0 5px;
   line-height: 1.2;
 }
@@ -759,10 +759,10 @@ input[type="radio"], input[type="checkbox"] {
 }
 
 .errors { /* Errors display */
-	color: red;
+	color: #f00;
 	font-weight: bold;
 	margin: 5px;
-	border: 1px solid red;
+	border: 1px solid #f00;
 	background: #ffe1e1 url("icon/errors.png") no-repeat center right;
 	padding: 10px 50px 10px 10px;
 }
@@ -816,7 +816,7 @@ legend {
 #linkToPiwigo {text-align:center;}
 
 .message {
-  background-color: lightyellow;
+  background-color: #ffffe0;
   color:#333;
   margin-bottom:1em;
   padding: 12px;

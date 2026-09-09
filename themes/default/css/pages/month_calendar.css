@@ -1,5 +1,11 @@
 @layer pages {
 
+/* `.calendarBar` also contains a variable-length, possibly-wrapping
+   row of `.calItem` links between these two (year/day navigation) --
+   float lets prev/next stay pinned to their outer corners across
+   however many wrapped lines that middle content needs; flex has no
+   equivalent for "wrap the middle only, anchor these two corners"
+   without a materially more complex layout. Kept as float. */
 .calendar-nav-prev {
   float: inline-start;
   margin-inline-end: 5px;

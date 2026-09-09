@@ -251,12 +251,13 @@ td.calDayCellFull, td.calDayCellEmpty {
 	list-style: none;
 	overflow: hidden;
 	width: 100%;
+	display: flex;
+	flex-wrap: wrap;
 }
 
 .thumbnailCategories li {
 	margin: 0;
 	padding: 0;
-	float: inline-start;
 	width: 49.7%;    /* 49.7% for 2 per line, 33.2% for 3 per line */
 }
 
@@ -439,6 +440,13 @@ td.calDayCellFull, td.calDayCellEmpty {
 	min-height: 120px;
 }
 
+/* `.navThumbs` sits inside `#imageInfos` (`position: relative;
+   min-height: 120px;`) deliberately still floating over/beside the
+   `<dl>` info table that follows it in source order, without
+   displacing it -- confirmed by a real VR regression when this was
+   tried as `display: flex`: removing the float let these boxes push
+   the whole info table down by their own height instead of sitting
+   beside it. Kept as float. */
 #linkPrev {
 	float: inline-start;
 	margin: 5px 10px 0 5px;
@@ -823,9 +831,13 @@ legend {
 
 /* image comments rules */
 
+#pictureComments { display: flex; }
 #commentAdd, #pictureCommentList 	{ width: 48%; padding: 0 1%;}
-#commentAdd  						{ float: inline-start; }
-#pictureCommentList 					{ float: inline-end; }
+/* `margin-inline-start: auto` (not the container's own `justify-
+   content: space-between`) so #pictureCommentList still pins to the
+   end even on the rare page where #commentAdd is absent -- the two
+   render independently of each other. */
+#pictureCommentList { margin-inline-start: auto; }
 
 #commentAdd input[type="text"],
 #comments textarea {
@@ -841,8 +853,13 @@ legend {
 	font-style: italic
 }
 
-#pictureCommentList .commentsOrder	{ float: inline-start; margin-bottom: 5px;}
-#pictureCommentList .navigationBar	{ float: inline-end; margin-bottom: 5px;}
+#pictureCommentNavBar { display: flex; }
+#pictureCommentList .commentsOrder	{ margin-bottom: 5px;}
+/* `margin-inline-start: auto` (not the container's own `justify-
+   content: space-between`) so this still pins to the end even on the
+   rare page where .commentsOrder is absent -- the two render
+   independently of each other. */
+#pictureCommentList .navigationBar	{ margin-bottom: 5px; margin-inline-start: auto; }
 #pictureComments h4					{ margin: 0;}
 #comments form p	 {
 	margin: 5px 0; text-align: start;

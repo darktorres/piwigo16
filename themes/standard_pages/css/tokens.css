@@ -4,12 +4,29 @@
  * (shared verbatim across all 3 chains' tokens.css files).
  *
  * This chain's own literal audit is sparse (10 distinct normalized
- * literals at 2+ occurrences, vs. `admin/default`'s 141) -- it already
- * gets most of its real color identity from its own 11-skin system
- * (`skins/*.css`, out of scope here, converts in a later phase) rather
- * than `theme.css` literals. `--color-accent` matches this chain's own
- * `skins/default.css:2`'s real `accent-color: #ff7700;` -- the same
- * brand hue as the other 2 chains.
+ * literals at 2+ occurrences, vs. `admin/default`'s 141) -- it gets
+ * most of its real color identity from its own 11-skin system
+ * (`skins/*.css`) rather than `theme.css` literals. `--color-accent`
+ * matches this chain's own `skins/default.css`'s real (pre-P52-E/F-
+ * Step-4) `accent-color: #ff7700;` -- the same brand hue as the other
+ * 2 chains. P52-E/F Step 4 converted every genuine cross-skin color
+ * difference (13 selector groups, all 11 skins) into named custom
+ * properties: `--color-accent`/`--color-accent-contrast` here (shared,
+ * mode-agnostic); `--gradient-light`/`--color-light-header-link`/
+ * `--color-dark-link`/`--color-dark-link-hover`/
+ * `--color-dark-header-link` in each skin file itself (`.light`/
+ * `.dark`-scoped, since their value genuinely depends on the active
+ * color mode, not just the skin). `theme.css` now owns every one of
+ * these selectors directly (`var(--name, <default-skin-value>)`); no
+ * skin file declares these literal properties any more. The 10
+ * non-`default` skins redefine all 7 tokens; `default.css` itself
+ * redefines none (its own values already equal every token's `var()`
+ * fallback, by construction). Found and fixed one real, unrelated bug
+ * along the way: `default.css` had a malformed selector (two comma-
+ * list entries accidentally glued into one dead compound selector via
+ * a missing comma+newline) that silently dropped `.dark #header-
+ * options a`'s color entirely under the `default` skin -- split back
+ * into 2 selectors, matching all 10 sibling skins' own shape.
  *
  * `standard_pages` already ships a real, separate, live dark-mode
  * mechanism today (`standard_pages.ts`'s cookie/`prefers-color-scheme`
@@ -122,6 +139,7 @@
        chain's own skins/default.css accent-color today */
     --color-accent: light-dark(oklch(71.87% 0.1917 49.38), oklch(71.87% 0.1917 49.38));
     --color-accent-light: light-dark(oklch(79.75% 0.1505 64.26), oklch(79.75% 0.1505 64.26));
+    --color-accent-contrast: light-dark(oklch(100% 0 0), oklch(100% 0 0));
 
     /* Status -- toaster.css's own error-toast pair (#be4949 background,
        #ffc8c8 text) */

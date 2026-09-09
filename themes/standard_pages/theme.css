@@ -856,3 +856,89 @@ input:checked + .slider::before, input:checked + .slider::after {
     position:unset;
   }
 }
+
+/* P52-E/F Step 4: this chain's own color identity, hooked up via the
+   named tokens each of the 11 `skins/*.css` files now redefines (see
+   `css/tokens.css`'s docblock for the full list and rationale) instead
+   of duplicating these selectors with a competing literal. Every
+   `var()`'s own fallback matches `skins/default.css`'s real value --
+   the `default` skin no longer needs to redefine anything itself.
+
+   One token (`--color-light-header-link`) is consumed here via
+   `.light #header-options a` in EVERY skin file instead of centrally
+   here: that selector ties on specificity with the untouched, uniform
+   `#theIdentificationPage .light a, ... { color:#3C3C3C; }` rule
+   (still in each skin file, unchanged -- Step 8's dedup territory),
+   and pre-`@layer` a tie is broken by source/file order, not
+   specificity. Centralizing it here (loads before the skin file) would
+   let that generic rule silently win regardless of the token's value --
+   a real regression this file's own history caught by pixel diff
+   before landing. Keeping it in the skin file, after the generic rule,
+   preserves the original file's own (order-dependent) win. Step 5's
+   `@layer` wrap removes the file-order dependency entirely; move this
+   selector here then. `--color-dark-header-link` has no such
+   competing generic rule (no plain `.dark a` entry exists in any
+   skin's uniform list), so it stays centralized safely. */
+
+input[type='radio'] {
+  accent-color: var(--color-accent, #f70);
+}
+
+.input-container:focus-within,
+.input-modal:focus-within {
+  border: 1px solid var(--color-accent, #f70) !important;
+}
+
+#lang-select #other-languages span:hover {
+  color: var(--color-accent, #f70);
+}
+
+.profile-section .api-icon-action i:hover,
+.close-modal:hover,
+.profile-section .icon-clone:hover {
+  color: var(--color-accent, #f70);
+}
+
+.profile-section #api_key_list .edit {
+  border: 1px solid var(--color-accent, #f70) !important;
+}
+
+.btn-main {
+  background-color: var(--color-accent, #f70) !important;
+  color: var(--color-accent-contrast, white) !important;
+}
+
+#theIdentificationPage .light a:hover,
+#theRegisterPage .light a:hover,
+#thePasswordPage .light a:hover,
+#theProfilePage .light a:hover {
+  color: var(--color-accent, #f70);
+}
+
+#theIdentificationPage .light,
+#theRegisterPage .light,
+#thePasswordPage .light,
+#theProfilePage .light {
+  background: var(--gradient-light, linear-gradient(75.69deg, #FFEACF 7.64%, #FFFAF3 77.87%));
+}
+
+#theIdentificationPage .dark a,
+#theRegisterPage .dark a,
+#thePasswordPage .dark a,
+#theProfilePage .dark a:not(.close-modal) {
+  color: var(--color-dark-link, #FFEBD0);
+}
+
+#theIdentificationPage .dark a:hover,
+#theRegisterPage .dark a:hover,
+#thePasswordPage .dark a:hover,
+#theProfilePage .dark a:hover,
+.dark #lang-select #other-languages span {
+  color: var(--color-dark-link-hover, #f70);
+}
+
+.dark #header-options a,
+.dark #header-options .toggle-mode,
+.dark #selected-language-container {
+  color: var(--color-dark-header-link, #FFEBD0);
+}

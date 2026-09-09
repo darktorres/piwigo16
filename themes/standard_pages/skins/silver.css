@@ -1,19 +1,29 @@
-input[type='radio'] {
-  accent-color: #b0b0b0;
+/* P52-E/F Step 4: color-only token conversion. This skin's identity
+   is now expressed as named custom properties (`theme.css` consumes
+   each via `var(--name, <default-skin-value>)`) instead of duplicate,
+   competing selectors -- see `themes/standard_pages/css/tokens.css`'s
+   own `--color-accent`/`--color-accent-contrast` for the 2 tokens
+   shared with the rest of the app; the other 4 are this chain's own,
+   `.light`/`.dark`-scoped since their value genuinely depends on the
+   active color mode, not the skin alone. */
+:root {
+  --color-accent: #b0b0b0;
+  --color-accent-contrast: black;
 }
 
-.input-container:focus-within,
-.input-modal:focus-within{
-  border:1px solid #b0b0b0!important;
+.light {
+  --gradient-light: linear-gradient(75.69deg, #d1d1d1 7.64%, #fdfdfd 77.87%);
+  --color-light-header-link: #7a7a7a;
+}
+
+.dark {
+  --color-dark-link: #d1d1d1;
+  --color-dark-link-hover: #FFFBE6;
+  --color-dark-header-link: #d1d1d1;
 }
 
 .gallery-icon-checkmark {
     border: 1px solid #777;
-}
-
-.btn-main{
-  background-color:#b0b0b0!important;
-  color:black!important;
 }
 
 .btn-secondary {
@@ -30,22 +40,8 @@ input[type='radio'] {
   border-bottom:1px solid #D8D8D8;
 }
 
-#lang-select #other-languages span:hover{
-  color:#b0b0b0; 
-}
-
-.profile-section .api-icon-action i:hover,
-.close-modal:hover,
-.profile-section .icon-clone:hover  {
-  color: #b0b0b0;
-}
-
 .profile-section div.api-tab-line:nth-child(even) {
   background-color: #303030;
-}
-
-.profile-section #api_key_list .edit {
-  border: 1px solid #b0b0b0 !important;
 }
 
 .profile-section .new-apikey .btn-link{
@@ -65,13 +61,6 @@ input[type='radio'] {
 }
 
 /* Light */
-#theIdentificationPage .light,
-#theRegisterPage .light,
-#thePasswordPage .light,
-#theProfilePage .light{
-  background: linear-gradient(75.69deg, #d1d1d1 7.64%, #fdfdfd 77.87%);
-}
-
 .light #login-form,
 .light #register-form,
 .light #password-form,
@@ -105,17 +94,10 @@ input[type='radio'] {
   color:#3C3C3C;
 }
 
-#theIdentificationPage .light a:hover,
-#theRegisterPage .light a:hover,
-#thePasswordPage .light a:hover,
-#theProfilePage .light a:hover{
-  color:#b0b0b0;
-}
-
 .light #header-options a,
 .light #header-options .toggle-mode,
-.light #selected-language-container{
-  color:#7a7a7a;
+.light #selected-language-container {
+  color: var(--color-light-header-link, #f70);
 }
 
 .light .input-container,
@@ -214,13 +196,6 @@ input[type='radio'] {
   background-color:#3C3C3C;
 }
 
-#theIdentificationPage .dark a,
-#theRegisterPage .dark a,
-#thePasswordPage .dark a,
-#theProfilePage .dark a:not(.close-modal){
-  color:#d1d1d1;
-}
-
 .dark h1,
 .dark .input-container input,
 .dark .input-modal input,
@@ -237,20 +212,6 @@ input[type='radio'] {
 .dark .btn-cancel,
 .dark .btn-link {
   color:#D6D6D6;
-}
-
-#theIdentificationPage .dark a:hover,
-#theRegisterPage .dark a:hover,
-#thePasswordPage .dark a:hover,
-#theProfilePage .dark a:hover,
-.dark #lang-select #other-languages span{
-  color:#FFFBE6;
-}
-
-.dark #header-options a,
-.dark #header-options .toggle-mode,
-.dark #selected-language-container{
-  color:#d1d1d1;
 }
 
 .dark .input-container,

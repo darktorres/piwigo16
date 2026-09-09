@@ -7745,6 +7745,27 @@ all 11 skins exhaustively); `composer test:golden-html`; `tools/css-
 layers/scan.py --chain standard_pages` (0 `!important` outside the 2
 confirmed-load-bearing declarations, 0 inversions).
 
+**Final structural validation (Done), with the same honest scope
+caveat P52-D's own closeout used.** Every CSS file this P52-E/F effort
+touched (40 files found via `git log --name-only` across the full
+commit range; 4 no longer exist — `fix-khtml.css` plus the 3 dead
+vendor-fontello files, deleted in the dead-code sweep above — leaving
+36 to check) parses with **zero `parseErrors`**, confirmed two ways:
+`stylelint`'s own aggregate run reports no `CssSyntaxError`, and a
+direct `postcss.parse()` over all 36 files independently confirms the
+same zero. This proves syntax validity only — the same limitation
+admin's own Step 12 documented applies identically here: `postcss` has
+no `@layer`-specific cascade logic, and `stylelint`'s only layer-aware
+rule (`layer-name-pattern`) is a naming-convention check with zero
+cascade-priority awareness. The real semantic proof for this phase's
+own cascade-layer/`!important`-reversal correctness is `tools/css-
+layers/scan.py` (generalized to this scope as part of this same
+phase, see above) plus the real-Chromium-rendered `composer
+test:visual`/`test:golden-html` suites above, never this check. This
+closes out every step in the P52-E/F `default`/`standard_pages`
+`@layer`/`!important`/dedup campaign (`deep-exploring-starlight.md`'s
+plan).
+
 **P52-G (scoped, not started)** — SVG icon-system rewrite, all three
 systems. `iconset.css` (8 `.latte` templates —
 `menubar_identification`, `picture_nav_buttons`, `identification`,

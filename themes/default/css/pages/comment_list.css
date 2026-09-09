@@ -9,7 +9,7 @@
 }
 
 .actions {
-  float: right;
+  float: inline-end;
   font-size: 90%;
 }
 

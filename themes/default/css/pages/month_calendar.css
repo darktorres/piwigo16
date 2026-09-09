@@ -1,13 +1,13 @@
 @layer pages {
 
 .calendar-nav-prev {
-  float: left;
-  margin-right: 5px;
+  float: inline-start;
+  margin-inline-end: 5px;
 }
 
 .calendar-nav-next {
-  float: right;
-  margin-left: 5px;
+  float: inline-end;
+  margin-inline-start: 5px;
 }
 
 .calMonth td,

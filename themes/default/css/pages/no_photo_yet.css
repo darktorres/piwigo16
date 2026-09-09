@@ -17,12 +17,12 @@ td {
 
 #global {
 position:absolute;
-left: 50%;
+inset-inline-start: 50%;
 top: 50%;
 width: 700px;
 height: 400px;
 margin-top: -200px; /* height half */
-margin-left: -350px; /* width half */
+margin-inline-start: -350px; /* width half */
 
 background-color: #f1f1f1;
 border:2px solid #ddd;

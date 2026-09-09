@@ -17,7 +17,7 @@
  * Menubar
  */
 #menubar {
-	float: left;
+	float: inline-start;
 	margin: 0 0 10px 1em;
 	padding: 0;
 	display: inline;
@@ -29,7 +29,7 @@
 }
 
 .menubarFilter {
-	float: right;
+	float: inline-end;
 	margin: -4px 0 0;
 }
 
@@ -94,14 +94,14 @@
 
 #menuTagCloud span {
 	white-space: nowrap;
-	margin-right: 5px;
+	margin-inline-end: 5px;
 }
 
 /**
  * Content
  */
 .contentWithMenu {
-	margin-left: 20em;  /* = #menubar width + 2em */
+	margin-inline-start: 20em;  /* = #menubar width + 2em */
 }
 
 .content .navigationBar, .content .additional_info, .content .calendarBar {
@@ -127,7 +127,7 @@
 }
 
 #menubar .badge {
-  margin-left:5px;
+  margin-inline-start:5px;
 }
 
 .badge::before {
@@ -180,7 +180,7 @@
 	text-indent: 0;
 	list-style: none;
 	text-align: center;
-	float: right;
+	float: inline-end;
 }
 
 .categoryActions li {
@@ -189,7 +189,7 @@
 
 /* begin chronology/calendar elements */
 .calendarViews {
-	float: right;
+	float: inline-end;
 	margin: 5px 5px 0 0;
 }
 
@@ -227,7 +227,7 @@ td.calDayCellFull, td.calDayCellEmpty {
 }
 
 .calBackDate {
-	padding-left: 4px;
+	padding-inline-start: 4px;
 	padding-top: 0;
 	z-index: 2;
 	position: absolute;
@@ -236,7 +236,7 @@ td.calDayCellFull, td.calDayCellEmpty {
 }
 
 .calForeDate {
-	padding-left: 5px;
+	padding-inline-start: 5px;
 	padding-top: 1px;
 	z-index: 3;
 	position: absolute;
@@ -256,7 +256,7 @@ td.calDayCellFull, td.calDayCellEmpty {
 .thumbnailCategories li {
 	margin: 0;
 	padding: 0;
-	float: left;
+	float: inline-start;
 	width: 49.7%;    /* 49.7% for 2 per line, 33.2% for 3 per line */
 }
 
@@ -273,7 +273,7 @@ td.calDayCellFull, td.calDayCellEmpty {
 }
 
 .thumbnailCategory .description h3 {
-	text-align: left;
+	text-align: start;
 	margin: 0;
 	padding: 0.1em;
 	font-size: 120%;
@@ -284,23 +284,22 @@ td.calDayCellFull, td.calDayCellEmpty {
 }
 
 .illustration {/* also used by comment lists */
-	text-align: left;
+	text-align: start;
 	margin: 2px 0 0 2px;
-	float: left;
+	float: inline-start;
 }
 
 /* Loader gif new in 2.5 */
 .loader {
   display: none;
   position: fixed;
-  right: 0;
+  inset-inline-end: 0;
   bottom: 0;
 }
 
 /* User comments */
 #comments {
-	padding-left: 5px;
-	padding-right: 5px;
+	padding-inline: 5px;
 }
 
 .commentsList {
@@ -315,7 +314,7 @@ td.calDayCellFull, td.calDayCellEmpty {
 	border-radius: 5px;
 	margin: 5px;
 	padding: 2px 0 0 2px;
-	float: left;
+	float: inline-start;
 	width:99%;
 }
 
@@ -374,12 +373,12 @@ td.calDayCellFull, td.calDayCellEmpty {
 }
 
 #imageHeaderBar .browsePath {
-	float: left;
-	margin-left: 10px;
+	float: inline-start;
+	margin-inline-start: 10px;
 }
 
 #imageToolBar .imageNumber {
-	float: right;
+	float: inline-end;
 	margin:-20px 9px 0 0;
 }
 
@@ -396,18 +395,18 @@ td.calDayCellFull, td.calDayCellEmpty {
 	height: 28px;
 }
 
-#imageToolBar .actionButtons { float: left; }
-#imageToolBar .navigationButtons   { float: right; }
+#imageToolBar .actionButtons { float: inline-start; }
+#imageToolBar .navigationButtons   { float: inline-end; }
 #imageToolBar .pwg-button {width:42px;}
 
 .switchBox {
 	padding: 0.5em 5px;
 	border-radius: 4px;
 	z-index: 100;
-	text-align:left;
+	text-align:start;
 	display: none;
 	position: absolute;
-	left: 0; top: 0; /* left, right set through js */
+	inset-inline-start: 0; top: 0; /* left, right set through js */
 }
 
 .switchBoxTitle {
@@ -441,14 +440,14 @@ td.calDayCellFull, td.calDayCellEmpty {
 }
 
 #linkPrev {
-	float: left;
+	float: inline-start;
 	margin: 5px 10px 0 5px;
 }
 
 #linkNext {
-	float: right;
+	float: inline-end;
 	margin: 5px 5px 0 10px;
-  text-align: right;
+  text-align: end;
 }
 
 #linkPrev img.svgImg,
@@ -534,7 +533,7 @@ h1 {
 h2 {
 	margin: 0;
 	padding: 5px 0.5em;
-	text-align: left;
+	text-align: start;
 	font-size: 120%;
 }
 
@@ -561,8 +560,7 @@ input, select {
 }
 
 table {	/* horizontaly centered */
-	margin-left: auto;
-	margin-right: auto;
+	margin-inline: auto;
 }
 
 
@@ -587,7 +585,7 @@ fieldset {
 
 .filter ul {
 	display: block;
-	float: left;
+	float: inline-start;
 	margin: 0 1em 1em 0;
 	padding: 0;
 }
@@ -602,7 +600,7 @@ fieldset {
 }
 
 .filter p {
-  text-align:left;
+  text-align:start;
   margin:0 0 15px;
   line-height:20px;
 }
@@ -617,11 +615,11 @@ fieldset {
 }
 
 .filter input[type="submit"] {
-  margin-left:1em;
+  margin-inline-start:1em;
 }
 
 .filter p label {
-  margin-right:1em;
+  margin-inline-end:1em;
 }
 
 
@@ -636,14 +634,14 @@ fieldset {
 	margin-bottom: 0.5em;
 	padding: 0;
 	line-height: 1.8em;
-	clear: left;
+	clear: inline-start;
 }
 
 .properties span.property {
 	font-weight: bold;
-	float: left;
+	float: inline-start;
 	width: 50%;
-	text-align: right;
+	text-align: end;
 	margin: 0;
 	padding: 0 0.5em 0 0;
 }
@@ -685,7 +683,7 @@ tr.tagLine {
 	border-bottom: 1px solid #ddd;
 }
 td.nbEntries {
-	text-align: right;
+	text-align: end;
 	font-style: italic;
 	font-size: 90%;
 }
@@ -818,7 +816,7 @@ legend {
 }
 
 #lostPassword p {
-  text-align: left;
+  text-align: start;
   margin: 1.5em 0;
   line-height: 1.5em;
 }
@@ -826,8 +824,8 @@ legend {
 /* image comments rules */
 
 #commentAdd, #pictureCommentList 	{ width: 48%; padding: 0 1%;}
-#commentAdd  						{ float: left; }
-#pictureCommentList 					{ float: right; }
+#commentAdd  						{ float: inline-start; }
+#pictureCommentList 					{ float: inline-end; }
 
 #commentAdd input[type="text"],
 #comments textarea {
@@ -843,19 +841,19 @@ legend {
 	font-style: italic
 }
 
-#pictureCommentList .commentsOrder	{ float: left; margin-bottom: 5px;}
-#pictureCommentList .navigationBar	{ float: right; margin-bottom: 5px;}
+#pictureCommentList .commentsOrder	{ float: inline-start; margin-bottom: 5px;}
+#pictureCommentList .navigationBar	{ float: inline-end; margin-bottom: 5px;}
 #pictureComments h4					{ margin: 0;}
 #comments form p	 {
-	margin: 5px 0; text-align: left;
+	margin: 5px 0; text-align: start;
 }
 
 /* image info table */
 
 .imageInfoTable {display:table; margin: auto;}
 .imageInfo {display:table-row; line-height:20px;}
-.imageInfo dt {display:table-cell; text-align:right; font-weight:bold; padding-right:0.5em;}
-.imageInfo dd {display:table-cell; text-align:left; font-weight:normal;}
+.imageInfo dt {display:table-cell; text-align:end; font-weight:bold; padding-inline-end:0.5em;}
+.imageInfo dd {display:table-cell; text-align:start; font-weight:normal;}
 
 /* Selectize */
 .selectize-dropdown [data-selectable], .selectize-dropdown .optgroup-header {
@@ -876,7 +874,7 @@ because of this it needs to specifically be added to each theme */
   font-weight:600;
 }
 .mcs-side-results.search-in-set-button a::before {
-  margin-right:10px;
+  margin-inline-end:10px;
 }
 .mcs-side-results.search-in-set-button a:hover {
   color:#777;
@@ -901,7 +899,7 @@ because of this it needs to specifically be added to each theme */
   display: flex;
   align-items: center;
   cursor: pointer;
-  margin-right: 15px;
+  margin-inline-end: 15px;
   color: #ccc;
   width: fit-content;
 }
@@ -925,7 +923,7 @@ because of this it needs to specifically be added to each theme */
   border-radius: 25px;
   font-weight: 700;
   color: #fafafa;
-  margin-left: 5px;
+  margin-inline-start: 5px;
   padding: 2px 5px;
   font-size: 10px;
   background: #777;
@@ -941,7 +939,7 @@ because of this it needs to specifically be added to each theme */
 
 h3.related-tags-title{
   margin:4px 0;
-  margin-right:10px;
+  margin-inline-end:10px;
   font-weight:400;
 }
 
@@ -964,7 +962,7 @@ span.related-tags:hover{
 
 span.related-tags .tag-counter{
   display: inline-block;
-  margin-left:9px;
+  margin-inline-start:9px;
   color:#ACACAC;
   font-weight:700;
 }
@@ -986,8 +984,8 @@ span.related-tags .tag-counter{
   color:#f70;
   border-radius:15px;
   padding:2px 10px;
-  padding-right:5px;
-  margin-right:15px;
+  padding-inline-end:5px;
+  margin-inline-end:15px;
 }
 
 #selected-tags-container .selected-related-tag.unique-tag{

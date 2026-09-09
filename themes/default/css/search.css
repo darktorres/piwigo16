@@ -13,7 +13,7 @@
 .albums-found-popin {
   position: fixed;
   z-index: 100;
-  left: 0;
+  inset-inline-start: 0;
   top: 0;
   width: 100%; 
   height: 100%;
@@ -26,10 +26,10 @@
 .albums-found-popin-container {
   display:flex;
   position:absolute;
-  left:50%;
+  inset-inline-start:50%;
   top: 50%;
   transform:translate(-50%, -48%);
-  text-align:left;
+  text-align:start;
   padding:20px;
   flex-direction:column;
   border-radius:15px;
@@ -41,14 +41,14 @@
 .tags-found-close,
 .albums-found-close {
   position: absolute;
-  right: -40px;
+  inset-inline-end: -40px;
   top: -40px;
   font-size: 30px;
   cursor: pointer;
 }
 
 .filter-manager-controller-container .mcs-icon::before{
-  margin-right:5px;
+  margin-inline-end:5px;
 }
 
 .filter-manager .mcs-icon::before {
@@ -92,6 +92,11 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   cursor: default;
+  /* `direction: rtl` here is a deliberate ellipsis-truncation trick
+     (not real text directionality) -- `text-align` must stay the
+     physical `left` so the visible text keeps hugging the same edge
+     regardless of the page's own real direction. Flagged for P52-I's
+     own real RTL-correction pass, not converted here. */
   direction: rtl;
   text-align: left;
 }
@@ -179,7 +184,7 @@
 }
 
 .mcs-icon.pwg-icon-cog {
-  margin-right: 5px;
+  margin-inline-end: 5px;
 }
 
 .mcs-container .filter {
@@ -210,7 +215,7 @@
   padding: 20px;
   border-radius: 5px;
   top: 35px;
-  left: 0;
+  inset-inline-start: 0;
   cursor: default;
   flex-direction: column;
 }
@@ -224,7 +229,7 @@
   display: flex;
   flex-direction: row;
   top: 20px;
-  right: 20px;
+  inset-inline-end: 20px;
   gap: 5px;
 }
 
@@ -271,12 +276,12 @@
 
 .filter-validate {
   width: fit-content;
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 
 .form-container .filter-validate {
   width: fit-content;
-  margin-left: 20px;
+  margin-inline-start: 20px;
 }
 
 .filter .search-words {
@@ -365,7 +370,7 @@
 .preset_created_date .date_created-option label .checked-icon{
   display: none;
   position: absolute;
-  left: 3px;
+  inset-inline-start: 3px;
   top: 4px;
 }
 
@@ -373,7 +378,7 @@
 .custom_created_date .date_created-option label .checked-icon{
   display: none;
   position: absolute;
-  right: 3px;
+  inset-inline-end: 3px;
   top: 4px;
 }
 
@@ -387,17 +392,17 @@
 .preset_posted_date .date_posted-option .date-period,
 .preset_created_date .date_created-option .date-period,
 .ratings-option label .ratings-name {
-  margin-left: 30px;
+  margin-inline-start: 30px;
 }
 
 .added_by-option label .added_by-name{
   white-space: nowrap;
-  margin-right: 10px;
+  margin-inline-end: 10px;
 }
 
 .custom_posted_date .date_posted-option label .date-period,
 .custom_created_date .date_created-option label .date-period{
-  margin-right: 30px;
+  margin-inline-end: 30px;
 }
 
 .filetypes-option label .ext-badge,
@@ -406,7 +411,7 @@
 .ratings-option label .ratings-badge,
 .preset_posted_date .date_posted-option label .date_posted-badge,
 .preset_created_date .date_created-option label .date_created-badge {
-  margin-left: auto;
+  margin-inline-start: auto;
   border-radius: 10px;
   padding: 0 5px;
   font-weight: 600;
@@ -469,7 +474,7 @@
   align-items: baseline;
   position: relative;
   padding: 5px;
-  margin-left:-1px;
+  margin-inline-start:-1px;
 }
 
 .custom_posted_date .date_posted-option label,
@@ -491,14 +496,14 @@
 
 .date_posted-option.month,
 .date_created-option.month{
-  margin-left:15px;
+  margin-inline-start:15px;
   display:none;
 }
 
 .date_posted-option.day,
 .date_created-option.day{
-  margin-left:30px;
-  margin-right:10px;
+  margin-inline-start:30px;
+  margin-inline-end:10px;
   display:none;
 }
 
@@ -581,6 +586,12 @@
 }
 
 .breadcrumb-item .link-path {
+  /* `margin-right` here must stay physical: `direction: rtl` below is
+     a deliberate ellipsis-truncation trick (not real text
+     directionality), and this element's own logical inline-end would
+     resolve against that forced rtl direction, flipping which visible
+     edge the margin lands on. Flagged for P52-I's own real
+     RTL-correction pass, not converted here. */
   margin-right: 15px;
   white-space: nowrap;
   max-width: 350px;
@@ -590,7 +601,7 @@
 }
 
 .breadcrumb-item .remove-item {
-  margin-left: auto;
+  margin-inline-start: auto;
   cursor: pointer;
 }
 
@@ -601,10 +612,10 @@
 
 .breadcrumb-item .icon-cancel-circled,
 .breadcrumb-item .help-item {
-  margin-left: auto;
+  margin-inline-start: auto;
   cursor: pointer;
   position: absolute;
-  right: 10px;
+  inset-inline-end: 10px;
 }
 
 .breadcrumb-item.add-item {
@@ -793,7 +804,7 @@
 
   .filter-actions {
     top: 15px;
-    right: 15px;
+    inset-inline-end: 15px;
   }
 
   .search-params-title,
@@ -817,7 +828,7 @@
 
   .form-container .filter-validate {
     width: fit-content;
-    margin-left: auto;
+    margin-inline-start: auto;
     margin-top: 10px;
   }
 
@@ -972,7 +983,7 @@
 }
 
 .mcs-container div .slider_input .max_input{
-  text-align:right;
+  text-align:end;
 }
 
 .mcs-container input[type="number"],
@@ -1005,7 +1016,7 @@
   display: none;
   position: fixed;
   z-index: 999;
-  left: 0;
+  inset-inline-start: 0;
   top: 0;
   width: 100%;
   height: 100%;
@@ -1016,7 +1027,7 @@
 .close-modal {
   color: white;
   position: absolute;
-  right: -40px;
+  inset-inline-end: -40px;
   top: -40px;
   font-size: 30px;
   cursor: pointer;
@@ -1033,10 +1044,10 @@
   background-color: white;
   position: absolute;
   border-radius: 10px;
-  left: 50%;
+  inset-inline-start: 50%;
   top: 50%;
   transform: translate(-50%, -48%);
-  text-align: left;
+  text-align: start;
   padding: 30px;
   width: 400px;
 }

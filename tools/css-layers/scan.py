@@ -320,8 +320,43 @@ def _specificity_compound(compound: str) -> tuple[int, int, int]:
     return (ids, classes, elems)
 
 
+def split_top_level(s: str, seps: str) -> list[str]:
+    """Splits `s` on any character in `seps`, but only at paren-depth 0 --
+    a comma or space inside a pseudo-class function's argument list
+    (`:is(:-webkit-autofill, :autofill)`, `:not(.a .b)`) is part of that
+    one selector, not a real selector-list/compound/combinator boundary.
+    Found live: without this, `input:is(:-webkit-autofill, :autofill)`
+    (P52-E/F's `standard_pages` skins) silently split into two bogus
+    "selectors" at both the top-level comma-splitter and
+    split_compounds()'s own whitespace split, corrupting every
+    specificity/inversion finding touching that real selector. No
+    admin-theme selector ever exercised this (confirmed: no `:is/:not/
+    :where(...,...)` with an internal comma anywhere in `themes/admin`),
+    which is why this went unnoticed until this chain's own content."""
+    parts = []
+    depth = 0
+    buf = ""
+    for ch in s:
+        if ch == "(":
+            depth += 1
+            buf += ch
+        elif ch == ")":
+            depth -= 1
+            buf += ch
+        elif depth == 0 and ch in seps:
+            parts.append(buf)
+            buf = ""
+        else:
+            buf += ch
+    parts.append(buf)
+    return parts
+
+
 def split_compounds(selector: str) -> tuple[str, ...]:
-    return tuple(p for p in re.split(r"\s*[>+~]\s*|\s+", selector.strip()) if p)
+    compounds: list[str] = []
+    for combinator_part in split_top_level(selector.strip(), ">+~"):
+        compounds.extend(p for p in split_top_level(combinator_part, " \t\n\r\f") if p)
+    return tuple(compounds)
 
 
 def total_specificity(selector: str) -> tuple[int, int, int]:
@@ -419,7 +454,7 @@ def parse_file(path: Path) -> list[Decl]:
                 continue
             close = skip_balanced(i)
             body = text[i + 1 : close - 1]
-            for part in (p.strip() for p in token.split(",")):
+            for part in (p.strip() for p in split_top_level(token, ",")):
                 if not part:
                     continue
                 compounds = split_compounds(part)

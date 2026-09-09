@@ -244,8 +244,6 @@
     margin-bottom:0;
 }
 
-.user-container-checkbox.user-list-checkbox .select-checkbox {
-}
 
 .user-container-checkbox.user-list-checkbox i {
     margin-inline-start:7px;
@@ -1227,8 +1225,6 @@
   align-self: center;
 }
 
-.close-update-button:hover{
-}
 
 .close-update-button.icon-cancel-circled::before {
   margin-inline-start: 0;
@@ -1275,8 +1271,6 @@
     border-radius:15px;
 }
 
-.unavailable {
-}
 
 .unclickable {
   pointer-events: none;
@@ -1388,8 +1382,6 @@
   font-size:1em;
 }
 
-.AddUserCancel:hover{
-}
 
 .AddUserResult {
   padding: 10px;

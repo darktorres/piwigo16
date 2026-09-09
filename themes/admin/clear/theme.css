@@ -22,19 +22,13 @@
 */
 /* text color */
 
-body, h3, dt, h2, .throw, .content, label , legend  {
-}
 
 th { color: #888; }
-input {
-}
 
 select, textarea { --select-or-textarea-color: #666; --select-or-textarea-bg: #ccc; }
 option[disabled] { background-color: #ccc; }
 input[type="radio"], input[type="checkbox"] { background-color: transparent; }
 
-input[type="text"], input[type="file"] {
-}
 
 select, textarea {
 	--select-or-textarea-bg: #ddd;
@@ -45,8 +39,6 @@ input:focus, select:focus, textarea:focus {
   color: #666;
 }
 
-input, select, textarea {
-}
 
 .showInfo { color:#999; }
 .showInfo:hover { color:#333; }
@@ -70,8 +62,6 @@ html, body {
 
 /* #the_page { margin: 0; padding: 0; z-index: 1; top:0px; */
 /* padding-top: 0; min-height: 100%; width:100%; position:absolute; left:0px; } */
-h3, .throw, .row1 {
-}
 .row2 { background-color:#eee; }
 
 #content {
@@ -83,16 +73,12 @@ h3, .throw, .row1 {
 .content h3 ~ h3{ margin-top: 40px; }
 .content h4 { color: #aaa; font-size:14px; text-align:center; padding:3px; margin-top: 0; margin-bottom: 10px;}
 
-.content dl, dd {
-}
 
 ul.thumbnails span.wrap2 {
 	background-color:transparent;
 }
 
 /* borders */
-fieldset {
-}
 
 fieldset.with-border {
   border: 2px solid #ddd;
@@ -107,8 +93,6 @@ textarea {
 
 ul.thumbnails input { color:#666; font-size:10px; margin:0; background-color:#bbb; text-align: center;}
 .throw  { font-size: 120%; line-height: 26px; padding-top: 10px; font-weight: bold; }
-label {
-}
 .menuLi { background: #F3F3F3; }
 .menuLi_hidden { background: #ccc; }
 a.Piwigo {
@@ -121,8 +105,6 @@ a.Piwigo:hover  span.Piwigo  {
 table.table2 { border: 2px solid #ddd; }
 
 *, *:focus, *:active, input:active, a:active, input:focus, a:focus { outline: none; -moz-outline-width: 0; }
-a{
-}
 
 a:hover, a:active {
   cursor: pointer;
@@ -642,12 +624,8 @@ form#categoryOrdering p.albumActions .userSeparator {border: 1px solid #E1E1E1;}
 .font-checkbox:hover .icon-check-empty, .font-checkbox:hover .icon-check {color: #F70;}
 .font-checkbox .icon-check {color: #FFA646;}
 
-legend {
-}
 a#showPermissions {color: #5B5B5B; border: 1px solid #D6D6D6; background-color: #FAFAFA;}
 a#showPermissions:hover {border-color: #A5A5A5;}
-.icon-plus.cboxElement {
-}
 .icon-plus.cboxElement:hover {background-color: #F2F2F2;}
 /* `:not(.advanced-filter-item-container *)`: the advanced-filter
    panel's own selectize (general.css) intentionally wants a plain gray
@@ -673,8 +651,6 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 
 .addFilesButtonChanged:hover {background-color: #BBB;}
 
-#checkActions a, .deleteDerivButtons a {
-}
 #filterList select, .pictureLevels select, #permitAction select, .sort-by select {background-color: #FFF; color: #4E4E4E; border: 2px solid #7070704f; outline: none;}
 #filter_category .selectize-input.items.full.has-options.has-items, #filter_tags .selectize-input.items.not-full.has-options,
 #filter_tags .selectize-input.items.not-full, #filter_search input, #action_move .selectize-input.items.full.has-options.has-items,
@@ -792,8 +768,6 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
   color: black;
 }
 
-.linked-albums-badge {
-}
 
 .breadcrumb-item {
   background-color: #fafafa;
@@ -808,8 +782,6 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 
 .linkedAlbumPopInContainer {
   background-color: white;
-}
-.AddIconTitle {
 }
 
 .search-result-item {

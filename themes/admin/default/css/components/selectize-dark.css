@@ -42,8 +42,6 @@
   box-sizing: border-box;
 }
 
-.selectize-input.full {
-}
 
 /* Real vendor source had this as 2 separate declarations at different
    points in the file (box-shadow, then background-color) -- losslessly
@@ -52,8 +50,6 @@
   background-color: #363636;
 }
 
-.selectize-input.dropdown-active {
-}
 
 .selectize-input.dropdown-active::before {
   content: " ";

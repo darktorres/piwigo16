@@ -114,8 +114,6 @@
   height: 16px;
 }
 
-.ui-corner-all {
-}
 
 .ui-widget-content {
   color: #222;
@@ -377,8 +375,6 @@
   background-position: 0 0;
 }
 
-.ui-slider-horizontal {
-}
 
 .ui-slider-horizontal .ui-slider-handle {
   margin-left: -0.6em;

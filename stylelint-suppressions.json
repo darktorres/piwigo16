@@ -29,9 +29,6 @@
     },
     "no-duplicate-selectors": {
       "count": 2
-    },
-    "block-no-empty": {
-      "count": 14
     }
   },
   "themes/admin/roma/theme.css": {
@@ -43,9 +40,6 @@
     },
     "no-duplicate-selectors": {
       "count": 9
-    },
-    "block-no-empty": {
-      "count": 13
     }
   },
   "themes/default/css/clear-search.css": {
@@ -141,16 +135,6 @@
     },
     "no-duplicate-selectors": {
       "count": 27
-    }
-  },
-  "themes/admin/default/css/components/selectize-dark.css": {
-    "block-no-empty": {
-      "count": 2
-    }
-  },
-  "themes/admin/default/css/components/jquery-ui.css": {
-    "block-no-empty": {
-      "count": 2
     }
   }
 }

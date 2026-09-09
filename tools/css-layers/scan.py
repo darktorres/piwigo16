@@ -74,6 +74,28 @@ Two independent checks:
     `standard_pages`, ~278 real `!important` declarations, neither
     wrapped in `@layer` at all yet).
 
+    KNOWN BLIND SPOT, found the hard way during P52-E/F Step 7 (not
+    fixed here -- see below): this classification only compares a
+    declaration against OTHER declarations sharing its *exact* selector
+    text (grouped by `(selector, prop)`). It cannot see a same-
+    specificity, *different*-selector-text competitor in a *later*
+    layer -- exactly `check_inversions()`'s whole job, but that check
+    deliberately excludes `!important` declarations from both sides
+    (its priority model is the reversed one, not the normal one).
+    Concretely: `standard_pages/theme.css`'s `.profile-section
+    .username { border: none !important; }` and `skins/*.css`'s
+    `.light .input-container { border: 1px solid ...; }` share the DOM
+    element (the div carries both classes) and the same 2-class
+    specificity, with `.username` in the earlier `theme-chain` layer --
+    this tool reported REDUNDANT (nothing else declares `border` for
+    the literal selector `.profile-section .username`), but removing
+    it in practice let the skin's border win, breaking the page's
+    layout. Found only by the real `composer test:visual` run this
+    tool's own docstring says is the final word -- not a hole to
+    special-case away here, a reason the VR suite stays mandatory
+    after every `--important`-driven removal, not just a
+    nice-to-have.
+
 Known, deliberate scope limits (same as the migration's own VR suite):
 `@media`/`@supports`/pseudo-class-gated content (`:hover`, `:focus`,
 print styles, `prefers-reduced-motion`) is parsed structurally but its

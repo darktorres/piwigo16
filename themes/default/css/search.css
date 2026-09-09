@@ -508,7 +508,7 @@
 }
 
 .grey-icon{
-  display:block!important;
+  display:block;
 }
 
 .custom_posted_date_toggle,
@@ -557,12 +557,12 @@
 }
 
 .head-button-2 p {
-  margin: 0!important;
+  margin: 0;
   white-space: nowrap;
 }
 
 .head-button-2:hover {
-  text-decoration: none !important;
+  text-decoration: none;
 }
 
 .breadcrumb-item {
@@ -596,7 +596,7 @@
 
 .breadcrumb-item .icon-cancel-circled,
 .breadcrumb-item .help-item {
-  margin-left: auto !important;
+  margin-left: auto;
   cursor: pointer;
   position: absolute;
   right: 10px;
@@ -687,7 +687,7 @@
 .filter-added_by-form .selectize-input input:focus-visible,
 .filter-tag-form .selectize-input input:focus-visible{
   border:none;
-  outline:none!important;
+  outline:none;
 }
 
 .filter-tag-form .selectize-control.multi .selectize-input > div,
@@ -752,11 +752,11 @@
 .added_by-option,
 .ratios-option,
 .ratings-option{
-  min-width:150px!important;
+  min-width:150px;
 }
 
 .section-search .sticky-top{
-  z-index: 10!important;
+  z-index: 10;
 }
 
 .search-input{
@@ -952,8 +952,8 @@
 
 .disableSlider{
   pointer-events: none;
-  border:1px solid #ccc!important;
-  background-color:#ccc!important;
+  border:1px solid #ccc;
+  background-color:#ccc;
 }
 
 .ui-slider-horizontal .ui-slider-handle:hover{
@@ -992,7 +992,7 @@
 }
 
 .mcs_hide{
-  display:none!important;
+  display:none;
 }
 
 /* expert mode : search tips modal */
@@ -1038,12 +1038,12 @@
 
 .help-popin-search {
   cursor: pointer;
-  font-weight: normal !important;
+  font-weight: normal;
 }
 
 .help-popin-search:hover span,
 .help-popin-search:hover .icon-help-circled::before {
-  color: #3C3C3C !important;
+  color: #3C3C3C;
 }
 
 #modalQuickSearch p {

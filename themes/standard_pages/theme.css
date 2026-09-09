@@ -29,10 +29,6 @@ html{
   display:none;
 }
 
-.api-hide {
-  display: none !important;
-}
-
 #theIdentificationPage,
 #theRegisterPage,
 #thePasswordPage,
@@ -146,12 +142,12 @@ h1 i{
 }
 
 input:-webkit-autofill {
-  background-color: transparent !important;
-  color: inherit !important;
+  background-color: transparent;
+  color: inherit;
 }
 
 input:-webkit-autofill::first-line {
-  color: inherit !important;
+  color: inherit;
 }
 
 .input-container input:focus,
@@ -240,7 +236,7 @@ p.form-instructions{
   padding:15px;
   margin-top:15px;
   cursor:pointer;
-  text-decoration:none!important;
+  text-decoration:none;
 }
 
 .btn-cancel,
@@ -407,7 +403,7 @@ a.btn-main{
 .error-message i,
 p.error-message,
 .modal-secret {
-  color: #EB3223!important;
+  color: #EB3223;
 }
 
 .error_block_container {
@@ -529,6 +525,14 @@ p.error-message,
   vertical-align: middle;
 }
 
+/* !important is deliberate and load-bearing here (P52-E/F Step 7):
+   this read-only username display must look unstyled regardless of
+   skin, but `.light .input-container`/`.dark .input-container` (same
+   2-class specificity, in the later theme-skin layer) would otherwise
+   always win by layer position -- theme-chain can never out-rank
+   theme-skin without it. Found live: removing it let the active
+   skin's real 1px border render, adding 2px to the page's total
+   height and shifting everything below it. */
 .profile-section .username {
   width: fit-content;
   cursor: not-allowed;
@@ -648,11 +652,11 @@ p.error-message,
 }
 
 .profile-section #api_key_list .border-line {
-  border: 1px solid transparent !important;
+  border: 1px solid transparent;
 }
 
 .profile-section .api-list-head > p{
-  text-align: start !important;
+  text-align: start;
 }
 
 .profile-section .api_last_use {
@@ -695,7 +699,7 @@ p.error-message,
 .profile-section .api_key
 .profile-section #api_id_key,
 .profile-section #api_secret_key {
-  font-family: monospace !important;
+  font-family: monospace;
 }
 
 .profile-section .display-section {
@@ -720,7 +724,7 @@ p.error-message,
   right: -40px;
   top: -40px;
   font-size: 30px;
-  text-decoration: none !important;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -747,12 +751,12 @@ p.error-message,
 }
 
 .title-modal {
-  font-size: 24px !important;
-  font-weight: 600 !important;
+  font-size: 24px;
+  font-weight: 600;
 }
 
 .subtitle-modal {
-  font-size: 16px !important;
+  font-size: 16px;
   font-weight: 400;
 }
 
@@ -890,6 +894,13 @@ input[type='radio'] {
   accent-color: var(--color-accent, #f70);
 }
 
+/* !important is deliberate and load-bearing (P52-E/F Step 7): same
+   theme-chain-vs-theme-skin gap as .profile-section .username above --
+   `.light`/`.dark .input-container` (same 2-class specificity, later
+   theme-skin layer) would otherwise always win the accent-colored
+   focus border by layer position. Confirmed live via composer
+   test:visual after removing it: the focus border silently reverted
+   to the skin's own plain border color. */
 .input-container:focus-within,
 .input-modal:focus-within {
   border: 1px solid var(--color-accent, #f70) !important;
@@ -906,12 +917,12 @@ input[type='radio'] {
 }
 
 .profile-section #api_key_list .edit {
-  border: 1px solid var(--color-accent, #f70) !important;
+  border: 1px solid var(--color-accent, #f70);
 }
 
 .btn-main {
-  background-color: var(--color-accent, #f70) !important;
-  color: var(--color-accent-contrast, white) !important;
+  background-color: var(--color-accent, #f70);
+  color: var(--color-accent-contrast, white);
 }
 
 #theIdentificationPage .light a:hover,

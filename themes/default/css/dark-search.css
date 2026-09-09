@@ -97,12 +97,12 @@
 
 .mcs-container .filter-filled {
   background: #f70b;
-  border: none!important;
-  color: #ffeacf!important;
+  border: none;
+  color: #ffeacf;
 }
 
 .mcs-container .filter-filled .filter-icon {
-  color: #ffeacf!important;
+  color: #ffeacf;
 }
 
 .word-help {
@@ -185,7 +185,7 @@
 
 .head-button-2:hover {
   background: #000;
-  color: #777 !important;
+  color: #777;
 }
 
 .breadcrumb-item {

@@ -473,27 +473,35 @@ div.thumbHover{ /* only first & last holders are divs */
 	list-style-type: square;
 }
 
-.rateButton, .rateButtonSelected, .rateButtonStarFull, .rateButtonStarEmpty  {
+/* #rateForm-scoped (P52-E/F Step 7): these need to beat the generic
+   `input[type="button"], input[type="submit"], ... { background-color:
+   #d3d3d3; }` reset below, which is more specific by element-type
+   alone ((0,1,1) vs a bare class's (0,1,0)) -- !important used to paper
+   over that gap; #rateForm (the only real ancestor these classes ever
+   render under -- confirmed, only picture.latte uses them) gives real,
+   deliberate specificity instead. Found live: removing !important
+   without this let the grey default button background win. */
+#rateForm .rateButton, #rateForm .rateButtonSelected, #rateForm .rateButtonStarFull, #rateForm .rateButtonStarEmpty  {
 	padding:0;
 	border:0;
 	color:inherit;
-	background-color:transparent !important;	/* Konqueror doesn't accept transparent here */
+	background-color:transparent;	/* Konqueror doesn't accept transparent here */
 }
 
-.rateButton, .rateButtonStarFull, .rateButtonStarEmpty {
+#rateForm .rateButton, #rateForm .rateButtonStarFull, #rateForm .rateButtonStarEmpty {
 	cursor: pointer;
 }
 
-.rateButtonSelected {
+#rateForm .rateButtonSelected {
 	font-weight:bold;
 	font-size:120%;
 }
 
-.rateButtonStarFull {
+#rateForm .rateButtonStarFull {
 	background: url('icon/rating-stars.gif') no-repeat -16px center; width:16px;
 }
 
-.rateButtonStarEmpty {
+#rateForm .rateButtonStarEmpty {
 	background: url('icon/rating-stars.gif') no-repeat 0 center; width:16px;
 }
 
@@ -655,11 +663,11 @@ fieldset {
 }
 
 
-.tagLevel5 { font-size: 150% !important; }
-.tagLevel4 { font-size: 140% !important; }
-.tagLevel3 { font-size: 120% !important; }
-.tagLevel2 { font-size: 100% !important; }
-.tagLevel1 { font-size: 90%  !important; }
+.tagLevel5 { font-size: 150%; }
+.tagLevel4 { font-size: 140%; }
+.tagLevel3 { font-size: 120%; }
+.tagLevel2 { font-size: 100%; }
+.tagLevel1 { font-size: 90%; }
 
 
 /* Popup help page */
@@ -861,7 +869,7 @@ legend {
 
 /* Selectize */
 .selectize-dropdown [data-selectable], .selectize-dropdown .optgroup-header {
-    padding: 0 5px !important;
+    padding: 0 5px;
 }
 
 /* Search in this set button CSS, 
@@ -928,7 +936,7 @@ because of this it needs to specifically be added to each theme */
   font-weight: 700;
   color: #fafafa;
   margin-left: 5px;
-  padding: 2px 5px!important;
+  padding: 2px 5px;
   font-size: 10px;
   background: #777;
 }

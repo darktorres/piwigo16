@@ -5,13 +5,28 @@
 /*
  * .error-message's own base rule (theme.css) sets display:none;bottom:5px,
  * and page-specific ID-scoped rules (e.g. #password-form .error-message)
- * can set a higher-specificity bottom override too -- !important guarantees
- * this reveal wins on every page that reuses it, matching what the inline
- * style it replaces always guaranteed.
+ * can set a higher-specificity bottom override too. P52-E/F Step 7: no
+ * longer needs !important to win that -- `utilities` is a later layer
+ * than `theme-chain`, so layer position (not specificity) decides now;
+ * confirmed via composer test:visual after removing it, not assumed.
  */
 .error-message-visible {
-  display: block !important;
-  bottom: -20px !important;
+  display: block;
+  bottom: -20px;
+}
+
+/* Always-hidden-until-JS-reveals-it marker (api-copy's "copied!"
+ * success message). P52-E/F Step 7: moved here from theme.css's own
+ * theme-chain content after removing its !important surfaced a real
+ * bug -- `.success-message` (also theme-chain, same 1-class
+ * specificity, later in that file) was winning the `display` tie via
+ * source order, permanently revealing every api-hide'd success message
+ * instead of hiding it until JS toggles it. Layer position (utilities
+ * after theme-chain) now does what the source-order accident used to,
+ * without needing !important or depending on staying later in the file.
+ */
+.api-hide {
+  display: none;
 }
 
 }

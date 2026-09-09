@@ -4,11 +4,6 @@
       "count": 1
     }
   },
-  "themes/default/theme.css": {
-    "declaration-block-single-line-max-declarations": {
-      "count": 8
-    }
-  },
   "themes/standard_pages/theme.css": {
     "no-duplicate-selectors": {
       "count": 10
@@ -18,17 +13,11 @@
     }
   },
   "themes/admin/clear/theme.css": {
-    "declaration-block-single-line-max-declarations": {
-      "count": 32
-    },
     "no-duplicate-selectors": {
       "count": 2
     }
   },
   "themes/admin/roma/theme.css": {
-    "declaration-block-single-line-max-declarations": {
-      "count": 44
-    },
     "no-duplicate-selectors": {
       "count": 9
     }
@@ -49,9 +38,6 @@
     }
   },
   "themes/admin/default/theme-base.css": {
-    "declaration-block-single-line-max-declarations": {
-      "count": 166
-    },
     "no-duplicate-selectors": {
       "count": 27
     }

@@ -572,7 +572,10 @@ table {	/* horizontaly centered */
 }
 
 
-form { padding: 0; margin: 0; }
+form {
+  padding: 0;
+  margin: 0;
+}
 
 form p {
 	text-align: center;
@@ -812,7 +815,10 @@ legend {
 	color: inherit;
 }
 
-#piwigoAbout {width:600px;margin:0 auto;}
+#piwigoAbout {
+  width:600px;
+  margin:0 auto;
+}
 #linkToPiwigo {text-align:center;}
 
 .message {
@@ -832,7 +838,10 @@ legend {
 /* image comments rules */
 
 #pictureComments { display: flex; }
-#commentAdd, #pictureCommentList 	{ width: 48%; padding: 0 1%;}
+#commentAdd, #pictureCommentList {
+  width: 48%;
+  padding: 0 1%;
+}
 /* `margin-inline-start: auto` (not the container's own `justify-
    content: space-between`) so #pictureCommentList still pins to the
    end even on the rare page where #commentAdd is absent -- the two
@@ -859,7 +868,10 @@ legend {
    content: space-between`) so this still pins to the end even on the
    rare page where .commentsOrder is absent -- the two render
    independently of each other. */
-#pictureCommentList .navigationBar	{ margin-bottom: 5px; margin-inline-start: auto; }
+#pictureCommentList .navigationBar {
+  margin-bottom: 5px;
+  margin-inline-start: auto;
+}
 #pictureComments h4					{ margin: 0;}
 #comments form p	 {
 	margin: 5px 0; text-align: start;
@@ -867,10 +879,25 @@ legend {
 
 /* image info table */
 
-.imageInfoTable {display:table; margin: auto;}
-.imageInfo {display:table-row; line-height:20px;}
-.imageInfo dt {display:table-cell; text-align:end; font-weight:bold; padding-inline-end:0.5em;}
-.imageInfo dd {display:table-cell; text-align:start; font-weight:normal;}
+.imageInfoTable {
+  display:table;
+  margin: auto;
+}
+.imageInfo {
+  display:table-row;
+  line-height:20px;
+}
+.imageInfo dt {
+  display:table-cell;
+  text-align:end;
+  font-weight:bold;
+  padding-inline-end:0.5em;
+}
+.imageInfo dd {
+  display:table-cell;
+  text-align:start;
+  font-weight:normal;
+}
 
 /* Selectize */
 .selectize-dropdown [data-selectable], .selectize-dropdown .optgroup-header {

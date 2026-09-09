@@ -429,8 +429,7 @@ p.error-message,
 
 .error_block .gallery-icon-cancel::before{
   font-size:33px;
-  margin-inline-start:0;
-  margin-inline-end:15px;
+  margin-inline:0 15px;
 }
 
 #password-form p.intro-paragraph{
@@ -805,7 +804,6 @@ label.switch {
   cursor: pointer;
   inset: 0;
   transition: .4s;
-  transition: .4s;
 }
 
 .slider::before {
@@ -816,12 +814,9 @@ label.switch {
   inset-inline-start: 4px;
   bottom: 4px;
   transition: .4s;
-  transition: .4s;
 }
 
 input:checked + .slider::before {
-  transform: translateX(26px);
-  transform: translateX(26px);
   transform: translateX(26px);
 }
 
@@ -1064,7 +1059,6 @@ input[type='radio'] {
 
 .light .input-container input:is(:-webkit-autofill, :autofill)
 {
-  box-shadow: 0 0 0 100px #F0F0F0 inset;
   box-shadow: 0 0 0 1000px #F0F0F0 inset;
   -webkit-text-fill-color: #3C3C3C;
   color:#3C3C3C;
@@ -1176,7 +1170,6 @@ input[type='radio'] {
 
 .dark .input-container input:is(:-webkit-autofill, :autofill)
 {
-  box-shadow: 0 0 0 100px #303030 inset;
   box-shadow: 0 0 0 1000px #303030 inset;
   -webkit-text-fill-color: #D6D6D6;
   color:#D6D6D6;

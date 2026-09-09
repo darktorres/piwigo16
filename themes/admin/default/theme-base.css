@@ -29,7 +29,7 @@
 .content form { text-align: start; margin-inline: 7px 9px;}
 .content dt { margin-bottom: 5px; font-style: italic;
   font-size: 110%; }
-ul.categoryActions { margin: 0 2px; width: auto; list-style-position:outside;
+ul.categoryActions { margin: 0 2px; width: auto;
   padding: 0; text-indent: 0; list-style: none; text-align: center; }
 .content div.titrePage { padding: 0 0 3px; }
 
@@ -1907,7 +1907,7 @@ li.plupload_delete a.remove-format:hover{
   text-decoration: none;
 }
 
-html, body {height:100; min-height: 100%; margin:0; padding:0;}
+html, body {min-height: 100%; margin:0; padding:0;}
 .the-page {min-height:100%; position:absolute; width:100%; padding:0;margin:0;}
 
 .pwg-main {
@@ -2036,20 +2036,6 @@ a.admin-main:hover {color:#fff;}
 	margin-inline-start: -7px;
 	border-inline-start-color: rgb(25,25,25);
 	border-inline-start-color: rgb(25,25,25,0.92);
-}
-
-/* Webkit Hacks  */
-@media screen and (min-device-pixel-ratio:0) {
-	#tiptip_content {
-		padding: 4px 8px 5px;
-		background-color: rgb(45,45,45,0.88);
-	}
-	#tiptip_holder.tip_bottom #tiptip_arrow_inner {
-		border-bottom-color: rgb(45,45,45,0.88);
-	}
-	#tiptip_holder.tip_top #tiptip_arrow_inner {
-		border-top-color: rgb(20,20,20,0.92);
-	}
 }
 
 /* Set the width of the menubar for the galery */
@@ -2265,7 +2251,7 @@ h2:lang(en) { text-transform:capitalize; }
 }
 
 .infos ul, .errors ul, .warnings ul, .messages ul {
-  margin:1_px 0;
+  margin:1px 0;
   padding-inline-start:0;
 }
 
@@ -2315,7 +2301,7 @@ div.jGrowl div.jGrowl-notification.success{
   background-color: #D6FFCF;
   opacity: 1;
   text-align: start;
-  font-family: 'Open Sans'; 
+  font-family: "Open Sans", "Lucida Grande",Verdana,Arial,"Bitstream Vera Sans",sans-serif;
   box-shadow: 0 5px 10px 5px rgb(0,0,0,0.1);
   margin-bottom: 1em;
 }
@@ -2331,7 +2317,7 @@ div.jGrowl div.jGrowl-notification.error{
   background-color: #FFC8C8;
   opacity: 1;
   text-align: start;
-  font-family: 'Open Sans';
+  font-family: "Open Sans", "Lucida Grande",Verdana,Arial,"Bitstream Vera Sans",sans-serif;
   box-shadow: 0 5px 10px 5px rgb(0,0,0,0.1);
   margin-bottom: 1em;
 }
@@ -3479,7 +3465,6 @@ legend span {
   position: absolute;
   bottom: 3px;
   inset-inline-end: 0;
-  align-items: right;
   color: var(--pictureidlabel-color, #7a7a7a89);
   font-size: 14px;
   padding: 14px 20px 14px 0;
@@ -3553,7 +3538,7 @@ legend span {
 .main-info-desc{
   color: #777;
   text-align: center;
-  font-family: "Open Sans";
+  font-family: "Open Sans", "Lucida Grande",Verdana,Arial,"Bitstream Vera Sans",sans-serif;
   font-size: 12px;
   font-style: normal;
   font-weight: 400;
@@ -3845,7 +3830,7 @@ legend span {
   inset-inline-end: 5px;
   top: 5px;
 }
-.batch-manager-root a.removeFilter::before {margin-inline: 6px 0; content: '\e822'; font-size: 12pt;color: #777;}
+.batch-manager-root a.removeFilter::before {margin-inline: 6px 0; font-size: 12pt; color: #777;}
 .batch-manager-root a.removeFilter:hover::before {color: #ffa646;}
 .batch-manager-root a.removeFilter:hover {color:red;}
 .batch-manager-root .removeFilter span {display:none}
@@ -4523,7 +4508,6 @@ p.upload-warnings-summary .showInfo {margin-inline-start:3px;}
   background-color: #FFA836;
   padding: 10px 20px;
   font-size:1em;
-  margin-bottom:0;
   margin: 0 15px;
 }
 .TagLoading{
@@ -5759,9 +5743,11 @@ input[type="text"].dError {border-color:#ff7070; background-color:#FFe5e5;}
 }
 
 .slider::after {
-  content: "\E81D";
-  font-family: fontello;
-  font-size: 15px;
+  background-color: currentColor;
+  mask-image: url('icons/spin6.svg');
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
   opacity: 0;
 }
 
@@ -6752,7 +6738,7 @@ table.qsearch_help_table {
   margin:1em;
 }
 table.qsearch_help_table q {
-	font-family: Courier, Fixed;
+	font-family: Courier, monospace;
 	font-weight: bold;
 }
 table.qsearch_help_table q::before {
@@ -7014,7 +7000,7 @@ li.plupload_delete a:hover {background: url("images/cancelhover.svg"); backgroun
 .actionButtons:first-child::after,.batch-filter-prefilter::before,.batch-filter-level::before,
 .permitActionListButton div::before, .actionLevel::after, .userActionLevel::after, .pictureLevels::before,
 .user-property-select-container::before, .sort-by .select-container::before {
-  content: '\e835'; font-size: 17px; position: absolute; font-family: fontello; color: #6E6E6E; pointer-events: none;
+  content: ''; font-size: 17px; position: absolute; display: inline-block; width: 1em; height: 1em; background-color: #6E6E6E; mask-image: url('icons/down-open.svg'); mask-repeat: no-repeat; mask-position: center; mask-size: contain; pointer-events: none;
 }
 .permitActionListButton div::before {margin-inline-start: 250px; margin-top: 11px;}
 .pictureLevels::before {margin-inline-start: 216px; margin-top: 10px;}
@@ -7065,7 +7051,7 @@ li.plupload_delete a:hover {background: url("images/cancelhover.svg"); backgroun
 .batch-manager-root ul.thumbnails .wrap2 .icon-plus {margin-inline-end: 2px;}
 .batch-manager-root li .font-checkbox [class*="icon-check"] {height: 20px; width: 20px; border-radius: 100%}
 .batch-manager-root li.thumbSelected .font-checkbox [class*="icon-check"]::before {
-  content: '\E819'; 
+  mask-image: url('icons/ok.svg');
   display: none;
   animation: icon-check-animation 0.4s ease-out;
 }
@@ -7078,7 +7064,7 @@ li.plupload_delete a:hover {background: url("images/cancelhover.svg"); backgroun
 
 .batch-manager-root li.thumbSelected .font-checkbox [class*="icon-check"] {background-color: #fea744; border: solid 2px #fea744;}
 .batch-manager-root .thumbSelected span.icon-check {display: block; z-index: 1;}
-.batch-manager-root .thumbnails .wrap1 .icon-check-empty::before {content: '\E823';}
+.batch-manager-root .thumbnails .wrap1 .icon-check-empty::before {mask-image: url('icons/plus.svg');}
 .batch-manager-root .thumbnails .font-checkbox [class*="icon-check"]::before {font-size: 17px; position: absolute; inset-inline-start: 50%; top: 50%; transform: translate(-50%, -50%);}
 .batch-manager-root ul.thumbnails .wrap2 .icon-pencil:hover, .batch-manager-root ul.thumbnails .wrap2 .icon-zoom-square:hover {color: #fea744;}
 .batch-manager-root .deleteDerivButtons a:hover, .batch-manager-root .checkActionsBar a:hover {background-color: #ddd;color: #3A3A3A;text-decoration: none;}

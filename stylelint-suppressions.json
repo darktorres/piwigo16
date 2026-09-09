@@ -10,18 +10,9 @@
     },
     "declaration-block-single-line-max-declarations": {
       "count": 8
-    },
-    "declaration-property-value-no-unknown": {
-      "count": 1
     }
   },
   "themes/standard_pages/theme.css": {
-    "declaration-block-no-duplicate-properties": {
-      "count": 6
-    },
-    "declaration-block-no-redundant-longhand-properties": {
-      "count": 1
-    },
     "no-duplicate-selectors": {
       "count": 10
     },
@@ -55,9 +46,6 @@
     },
     "block-no-empty": {
       "count": 13
-    },
-    "custom-property-empty-line-before": {
-      "count": 3
     }
   },
   "themes/default/css/clear-search.css": {
@@ -79,9 +67,6 @@
   "themes/default/css/search.css": {
     "color-named": {
       "count": 3
-    },
-    "declaration-block-no-redundant-longhand-properties": {
-      "count": 1
     },
     "declaration-no-important": {
       "count": 4
@@ -140,16 +125,10 @@
   "themes/admin/default/css/components/general.css": {
     "color-named": {
       "count": 5
-    },
-    "font-family-no-missing-generic-family-keyword": {
-      "count": 1
     }
   },
   "themes/admin/roma/css/components/general.css": {
     "color-named": {
-      "count": 1
-    },
-    "font-family-no-missing-generic-family-keyword": {
       "count": 1
     }
   },
@@ -157,20 +136,8 @@
     "color-named": {
       "count": 72
     },
-    "declaration-block-no-shorthand-property-overrides": {
-      "count": 2
-    },
     "declaration-block-single-line-max-declarations": {
       "count": 166
-    },
-    "declaration-property-value-no-unknown": {
-      "count": 3
-    },
-    "font-family-no-missing-generic-family-keyword": {
-      "count": 6
-    },
-    "media-feature-name-no-unknown": {
-      "count": 1
     },
     "no-duplicate-selectors": {
       "count": 27

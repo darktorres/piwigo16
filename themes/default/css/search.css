@@ -502,8 +502,7 @@
 
 .date_posted-option.day,
 .date_created-option.day{
-  margin-inline-start:30px;
-  margin-inline-end:10px;
+  margin-inline:30px 10px;
   display:none;
 }
 

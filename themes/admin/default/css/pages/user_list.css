@@ -1588,8 +1588,7 @@ Advanced filter
 }
 
 .yes_no_radio .user-list-checkbox .user-list-checkbox-label {
-  margin-inline-start: 0;
-  margin-inline-end: 10px;
+  margin-inline: 0 10px;
 }
 
 .user-list-panel .user-action-fieldset {

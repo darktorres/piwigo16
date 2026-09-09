@@ -166,7 +166,7 @@ select {
 .input-container i,
 .input-modal i {
   font-size:15px;
-  margin-right:5px;
+  margin-inline-end:5px;
 }
 
 .column-flex{
@@ -188,7 +188,7 @@ select {
   font-family: 'Open_Sans', sans-serif;
   font-size: 16px;
   margin-bottom:5px;
-  margin-left:20px;
+  margin-inline-start:20px;
 }
 
 .gallery-icon-checkmark {
@@ -196,7 +196,7 @@ select {
   height: 18px;
   border-radius: 2px;
   display: inline-block;
-  margin-right: 8px;
+  margin-inline-end: 8px;
   line-height: 18px;
   font-size: 14px;
 }
@@ -328,7 +328,7 @@ a.btn-main{
   justify-content: flex-end;
   font-size:15px;
   position: fixed;
-  right: 0;
+  inset-inline-end: 0;
   bottom: 0;
 }
 
@@ -346,11 +346,11 @@ a.btn-main{
   border-radius: 5px;
   padding: 15px;
   box-shadow: 0 0 10px rgb(0, 0, 0, 0.15);
-  margin-right:11px;
+  margin-inline-end:11px;
   width:max-content;
   position:absolute;
   bottom:40px;
-  right:0;
+  inset-inline-end:0;
   max-height:50vh;
   overflow:auto;
 }
@@ -374,7 +374,7 @@ a.btn-main{
 }
 
 #selected-language{
-  margin-left:5px;
+  margin-inline-start:5px;
   text-decoration:underline;
 }
 
@@ -388,10 +388,10 @@ a.btn-main{
 }
 
 .error-message{
-  text-align: left;
+  text-align: start;
   position: absolute;
   bottom: 5px;
-  left:0;
+  inset-inline-start:0;
   margin: 0;
   display:none;
 }
@@ -408,7 +408,7 @@ p.error-message,
 
 .error_block_container {
   position: absolute;
-  right: 15px;
+  inset-inline-end: 15px;
   max-width: 300px;
   top:40px;
 }
@@ -429,8 +429,8 @@ p.error-message,
 
 .error_block .gallery-icon-cancel::before{
   font-size:33px;
-  margin-left:0;
-  margin-right:15px;
+  margin-inline-start:0;
+  margin-inline-end:15px;
 }
 
 #password-form p.intro-paragraph{
@@ -484,7 +484,7 @@ p.error-message,
 
 .profile-section .modal-input-keys {
   position: absolute;
-  right: 30px;
+  inset-inline-end: 30px;
 }
 
 .profile-section .save .btn-main,
@@ -504,7 +504,7 @@ p.error-message,
   position: absolute;
   top: 50%;
   cursor: pointer;
-  right: 0;
+  inset-inline-end: 0;
   transition: transform 0.5s ease;
 }
 
@@ -516,7 +516,7 @@ p.error-message,
 
 .profile-section .api-icon-collapse .icon-collapse.close {
   top: 2px;
-  left: -0.2px;
+  inset-inline-start: -0.2px;
 }
 
 .profile-section .icon-collapse {
@@ -547,7 +547,7 @@ p.error-message,
 }
 
 .profile-section .api-icon-action {
-  padding-right: 10px;
+  padding-inline-end: 10px;
   font-size: 14px;
 }
 
@@ -712,7 +712,7 @@ p.error-message,
   display: none;
   position: fixed;
   z-index: 100;
-  left: 0;
+  inset-inline-start: 0;
   top: 0;
   width: 100%;
   height: 100%;
@@ -721,7 +721,7 @@ p.error-message,
 
 .close-modal {
   position: absolute;
-  right: -40px;
+  inset-inline-end: -40px;
   top: -40px;
   font-size: 30px;
   text-decoration: none;
@@ -733,10 +733,10 @@ p.error-message,
   flex-direction: column;
   position: absolute;
   border-radius: 10px;
-  left: 50%;
+  inset-inline-start: 50%;
   top: 50%;
   transform: translate(-50%, -48%);
-  text-align: left;
+  text-align: start;
   padding: 30px;
   max-width: 600px;
   width: 100%;
@@ -813,7 +813,7 @@ label.switch {
   content: "";
   height: 16px;
   width: 16px;
-  left: 4px;
+  inset-inline-start: 4px;
   bottom: 4px;
   transition: .4s;
   transition: .4s;
@@ -826,7 +826,7 @@ input:checked + .slider::before {
 }
 
 input:checked + .slider::before, input:checked + .slider::after {
-  margin-left: 10px;
+  margin-inline-start: 10px;
 }
 
 .slider.round {
@@ -1081,7 +1081,7 @@ input[type='radio'] {
 .light .success-message{
   background-color: #DBF6D7;
   color: #6DCE5E;
-  border-left: 4px solid #6DCE5E;
+  border-inline-start: 4px solid #6DCE5E;
 }
 
 .light .success-message i{
@@ -1091,7 +1091,7 @@ input[type='radio'] {
 .light .infos-message{
   background-color: #bde5f8;
   color: #00529b;
-  border-left: 4px solid #00529b;
+  border-inline-start: 4px solid #00529b;
 }
 
 .light input:checked + .slider {
@@ -1199,7 +1199,7 @@ input[type='radio'] {
 .dark .success-message{
   background-color: #4EA590;
   color: #AAF6E4;
-  border-left: 4px solid #AAF6E4;
+  border-inline-start: 4px solid #AAF6E4;
 }
 
 .dark .success-message i{
@@ -1209,7 +1209,7 @@ input[type='radio'] {
 .dark .infos-message{
   background-color: #4f71a4;
   color: #bad6ff;
-  border-left: 4px solid #bad6ff;
+  border-inline-start: 4px solid #bad6ff;
 }
 
 .dark .btn-secondary {

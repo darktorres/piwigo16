@@ -97,9 +97,14 @@
 }
 
 .albums-found-container .album-item {
+  /* `stretch` (the real standardized name) isn't safely supported at
+     this project's floor yet (Chromium 138+/Safari 27/Firefox partial
+     via a `-webkit-fill-available` alias) -- these 2 non-standard,
+     vendor-specific keywords are the only real cross-engine coverage
+     today. Bare unprefixed `fill-available` (no vendor prefix) was
+     never a real value in any engine and is dropped as invalid. */
   max-width: -moz-available;
   max-width: -webkit-fill-available;
-  max-width: fill-available;
 }
 
 .tags-found-container .tag-item a,

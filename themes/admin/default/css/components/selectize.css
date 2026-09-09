@@ -65,10 +65,6 @@
   box-shadow: none;
 }
 
-.selectize-input > input::-ms-clear {
-  display: none;
-}
-
 .selectize-input > input:focus {
   outline: none;
 }

@@ -7797,6 +7797,37 @@ error), each in the commit of the sub-phase that first makes the
 codebase clean enough to pass it. Document or `stylelint-disable`-with-
 comment any remaining `!important`.
 
+**Vendor-prefix exception list, pre-built during the item-6 sweep's own
+Step 2** (real, per-property compat verification, not assumed):
+permanently required at this repo's floor (Chrome≥123/Edge≥123/
+Firefox≥128/Safari≥17.5) — `-webkit-line-clamp` + `display: -webkit-box`
++ `-webkit-box-orient: vertical` (unprefixed `line-clamp` is confirmed
+non-Baseline, kept alongside as forward-compat, never as a replacement);
+`-webkit-scrollbar`/`-webkit-scrollbar-track`/`-webkit-scrollbar-thumb`
+(alongside, not replacing, `scrollbar-color`/`-width` per P52-C's own
+precedent — Safari still has no unprefixed equivalent); `:-webkit-
+autofill`/`-webkit-text-fill-color` (no standard equivalent);
+`-webkit-tap-highlight-color`, `-webkit-touch-callout`,
+`-webkit-calendar-picker-indicator` (WebKit/Blink-only, no standard
+equivalent exists at all); `-webkit-font-smoothing`/`-moz-osx-font-
+smoothing` (no standard equivalent); `-webkit-fill-available`/
+`-moz-available` (the real standardized name, `stretch`, shipped
+Chromium 138/Firefox 145-via-alias/Safari 27 — all above this floor,
+confirmed via real search, not assumed; keep both non-standard
+keywords until `stretch` itself clears the floor). Confirmed genuinely
+dead and removed in the same step: `-webkit-overflow-scrolling: touch`
+(momentum scrolling has been iOS Safari's unconditional default since
+Safari 13, matching `colorbox.css`'s own already-documented precedent
+for the identical case), `-ms-overflow-style`/`::-ms-clear` (EdgeHTML/
+IE-only, dropped when Edge moved to Chromium at Edge 79 — this floor's
+Edge≥123 never implemented either), a bare unprefixed `fill-available`
+keyword (`search.css` — never a real value in any engine, a mistaken
+guess at the eventual standardized name before the spec settled on
+`stretch`), and `-moz-line-clamp`/`-ms-line-clamp`/`-moz-box-orient`/
+`-ms-box-orient` (found in item-6 Step 1 — neither Firefox nor IE ever
+implemented a prefixed `line-clamp`; Firefox instead aliases the literal
+`-webkit-` properties, already present).
+
 **P52-I (scoped, not started)** — remaining RTL correction.
 `album_selector.css:164` and `admin/default/theme.css:7442` (the
 ellipsis-truncation trick — verify its visual intent survives the

@@ -460,64 +460,6 @@
       "count": 2
     }
   },
-  "themes/default/js/plugins/selectize.clear.css": {
-    "color-function-alias-notation": {
-      "count": 21
-    },
-    "color-hex-length": {
-      "count": 12
-    },
-    "declaration-block-no-redundant-longhand-properties": {
-      "count": 1
-    },
-    "no-duplicate-selectors": {
-      "count": 2
-    },
-    "property-no-vendor-prefix": {
-      "count": 32
-    },
-    "selector-pseudo-element-colon-notation": {
-      "count": 4
-    },
-    "shorthand-property-no-redundant-values": {
-      "count": 7
-    },
-    "value-no-vendor-prefix": {
-      "count": 9
-    },
-    "declaration-no-important": {
-      "count": 22
-    }
-  },
-  "themes/default/js/plugins/selectize.dark.css": {
-    "color-function-alias-notation": {
-      "count": 17
-    },
-    "color-hex-length": {
-      "count": 17
-    },
-    "declaration-block-no-redundant-longhand-properties": {
-      "count": 1
-    },
-    "no-duplicate-selectors": {
-      "count": 3
-    },
-    "property-no-vendor-prefix": {
-      "count": 31
-    },
-    "selector-pseudo-element-colon-notation": {
-      "count": 4
-    },
-    "shorthand-property-no-redundant-values": {
-      "count": 7
-    },
-    "value-no-vendor-prefix": {
-      "count": 9
-    },
-    "declaration-no-important": {
-      "count": 22
-    }
-  },
   "themes/admin/clear/css/components/general.css": {
     "no-empty-source": {
       "count": 1

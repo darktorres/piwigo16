@@ -12,7 +12,7 @@
 }
 
 .rating-sum-rate {
-  border-right: 1px solid;
+  border-inline-end: 1px solid;
 }
 
 .rating-detail-table {

@@ -28,13 +28,13 @@
   font-size: 15px;
   font-weight: bold;
   margin: 20px 0 10px;
-  padding-right: 15px;
-  text-align: left;
+  padding-inline-end: 15px;
+  text-align: start;
 }
 
 .applicationCard .applicationDesc {
-  text-align: left;
-  padding-right: 15px;
+  text-align: start;
+  padding-inline-end: 15px;
 
   display: -webkit-box;
   -webkit-line-clamp: 6;
@@ -52,6 +52,6 @@
 
 .applicationCard .applicationLink a {
   text-decoration: none;
-  margin-left: 0;
+  margin-inline-start: 0;
 }
 }

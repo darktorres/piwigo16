@@ -1,11 +1,11 @@
 @layer pages {
 .site-row {
-  text-align: left;
+  text-align: start;
 }
 
 .showCreateSite {
-  text-align: left;
-  margin-left: 1em;
+  text-align: start;
+  margin-inline-start: 1em;
 }
 
 .create-site-directory {

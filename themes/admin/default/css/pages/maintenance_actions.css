@@ -5,12 +5,12 @@
 }
 
 .delete-size-check .select-checkbox .icon-ok {
-  margin-left: 8px;
+  margin-inline-start: 8px;
 }
 
 .delete-size-check .picture-deletion-size {
   font-size: 14px;
-  margin-left: 5px;
+  margin-inline-start: 5px;
   padding-top: 2px;
 }
 
@@ -27,7 +27,7 @@
 .maintenance-action {
   border: solid 1px;
   padding: 8px 10px;
-  margin-right: 20px;
+  margin-inline-end: 20px;
   margin-bottom: 20px;
 }
 .maintenance-action.icon-th-list {
@@ -36,7 +36,7 @@
 
 .delete-size-checks {
   display: flex;
-  text-align: left;
+  text-align: start;
   margin-bottom: 5px;
 
   flex-direction: column;
@@ -49,7 +49,7 @@
 }
 
 .delete-size-check {
-  margin-right: 15px;
+  margin-inline-end: 15px;
   margin-bottom: 10px;
   display: flex;
   cursor: pointer
@@ -61,7 +61,7 @@
 .delete-sizes {
   display: block;
   width: max-content;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
   padding: 8px 10px;
   font-weight: bold;

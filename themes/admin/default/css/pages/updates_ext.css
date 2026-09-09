@@ -5,8 +5,8 @@
 }
 
 .up-to-date-message {
-  text-align: left;
-  margin-left: 20px;
+  text-align: start;
+  margin-inline-start: 20px;
 }
 
 /* Beats theme.css's .pluginBox{display:flex} (equal specificity, cascade-order risk). */

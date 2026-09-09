@@ -14,7 +14,7 @@
 }
 
 .selectedAlbum-first {
-  margin-left: 0;
+  margin-inline-start: 0;
 }
 
 .AlbumViewSelector {
@@ -77,7 +77,7 @@
 
 .albumInfos p {
   margin: 0 20px;
-  text-align: right;
+  text-align: end;
 }
 
 .albumActions {
@@ -92,11 +92,11 @@
 }
 
 .albumActions a:first-child {
-  margin-left: 35px;
+  margin-inline-start: 35px;
 }
 
 .albumActions a:last-child {
-  margin-right: 35px;
+  margin-inline-end: 35px;
 }
 
 .addAlbum form {

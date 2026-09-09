@@ -4,7 +4,7 @@
 }
 
 .eiw .messages .eiw-icon {
-  margin-right: 10px;
+  margin-inline-end: 10px;
 }
 
 /* Beats theme.css's .activity-chart{grid-template-rows:repeat(4,5vw)} (equal specificity, cascade-order risk). */

@@ -5,7 +5,7 @@
 
 .sizeEnable .icon-ok {
   position: relative;
-  left: 2px;
+  inset-inline-start: 2px;
 }
 
 .sizeEditForm {
@@ -31,7 +31,7 @@
 
 .sizeDetails {
   display: none;
-  margin-left: 10px;
+  margin-inline-start: 10px;
 }
 
 /* Beats .sizeDetails{display:none} above (equal specificity, cascade-order risk). */
@@ -49,6 +49,6 @@ p.sizeDetails.u-block {
 }
 
 .sizeEditOpen {
-  margin-left: 10px;
+  margin-inline-start: 10px;
 }
 }

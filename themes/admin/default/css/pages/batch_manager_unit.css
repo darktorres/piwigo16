@@ -16,7 +16,7 @@
 }
 
 .pagination-per-page {
-  margin-right: 21px;
+  margin-inline-end: 21px;
 }
 
 /* Beats theme.css's .pagination-per-page span{color:#BBB} (equal specificity, cascade-order risk). */
@@ -26,7 +26,7 @@
 }
 
 .pagination-reload-container {
-  margin-left: 22px;
+  margin-inline-start: 22px;
 }
 
 .button-reload {
@@ -62,7 +62,7 @@
 }
 
 .info-framed-icon {
-  margin-right: 0;
+  margin-inline-end: 0;
 }
 
 .actionAddTags .item,
@@ -81,7 +81,7 @@
   border-bottom-right-radius: 20px;
   color: #000;
 
-  border-left: 1px solid transparent;
+  border-inline-start: 1px solid transparent;
 }
 
 .actionAddTags .item .remove:hover {

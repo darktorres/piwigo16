@@ -108,7 +108,7 @@ legend {
    inactive plugin under this skin lost its distinguishing left
    border, with no visual difference from an active one. */
 .pluginContent {
-  border-left: none;
+  border-inline-start: none;
 }
 
 /* The rest of this section: also found by tools/css-layers/scan.py's

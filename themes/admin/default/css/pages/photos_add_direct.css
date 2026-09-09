@@ -24,7 +24,7 @@
 }
 
 .update-mode-hint {
-  margin-left: 6px;
+  margin-inline-start: 6px;
 }
 
 /* Beats theme.css's .selectedAlbum{display:flex} (equal specificity, cascade-order risk). */

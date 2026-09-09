@@ -9,8 +9,8 @@ fieldset {
 
 p,
 form p {
-  text-align: left;
-  margin-left: 20px;
+  text-align: start;
+  margin-inline-start: 20px;
 }
 
 li {

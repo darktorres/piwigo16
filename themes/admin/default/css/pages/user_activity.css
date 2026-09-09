@@ -19,7 +19,7 @@
 }
 
 .tab-title div {
-  text-align: left;
+  text-align: start;
   font-size: 1.1em;
   font-weight: bold;
 
@@ -62,7 +62,7 @@
 .tab-title .action-title,
 .tab-title .date-title,
 .tab-title .user-title {
-  text-align: left;
+  text-align: start;
   /* width: 22%; */
 }
 
@@ -76,7 +76,7 @@
 .tab-title .detail-title {
   display: flex;
   flex-grow: 1;
-  margin-right: 0;
+  margin-inline-end: 0;
 }
 
 .action-section {
@@ -99,7 +99,7 @@
 }
 
 .action-infos span {
-  margin-right: 5px;
+  margin-inline-end: 5px;
 }
 
 .date-section .date-day {
@@ -120,7 +120,7 @@
 
   border-radius: 50%;
 
-  margin-right: 10px;
+  margin-inline-end: 10px;
 
   display: flex;
 
@@ -159,11 +159,11 @@ div:has(> .activity-header) {
 }
 
 .actions-filters {
-  margin-left: 25%;
+  margin-inline-start: 25%;
 }
 
 .user_activity_end_options {
-  margin-left: auto;
+  margin-inline-start: auto;
   display: flex;
 }
 
@@ -176,7 +176,7 @@ div:has(> .activity-header) {
 }
 
 .activity-more-filters {
-  margin-left: 14px;
+  margin-inline-start: 14px;
   justify-content: center;
   cursor: pointer;
   padding: 10px;
@@ -204,7 +204,7 @@ div:has(> .activity-header) {
 }
 
 .additional-filters-section {
-  margin-left: 5%;
+  margin-inline-start: 5%;
 }
 
 .additional-filters-info {
@@ -217,11 +217,11 @@ div:has(> .activity-header) {
 }
 
 .activity-filter-container span::before {
-  margin-right: 6px;
+  margin-inline-end: 6px;
 }
 
 .activity-filter-container .icon-cancel {
-  margin-left: 5px;
+  margin-inline-start: 5px;
 }
 
 .activity-date-selecter {
@@ -249,7 +249,7 @@ div:has(> .activity-header) {
 }
 
 .selectize-input {
-  text-align: left;
+  text-align: start;
 }
 
 .selectize-control.single .selectize-input input {
@@ -257,7 +257,7 @@ div:has(> .activity-header) {
 }
 
 .selectize-dropdown {
-  text-align: left;
+  text-align: start;
 }
 
 .cancel-icon {

@@ -28,7 +28,7 @@
 }
 
 .regenerationMessage {
-  margin-left: 0;
+  margin-inline-start: 0;
 }
 
 .regenerationStatusPanel {
@@ -70,7 +70,7 @@
   border-bottom-right-radius: 20px;
   color: #000;
 
-  border-left: 1px solid transparent;
+  border-inline-start: 1px solid transparent;
 }
 
 .actionAddTags .item .remove:hover {

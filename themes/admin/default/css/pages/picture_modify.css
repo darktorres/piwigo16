@@ -33,7 +33,7 @@
   border-bottom-right-radius: 20px;
   color: #000;
 
-  border-left: 1px solid transparent;
+  border-inline-start: 1px solid transparent;
 }
 
 .selectize-input .item .remove:hover {

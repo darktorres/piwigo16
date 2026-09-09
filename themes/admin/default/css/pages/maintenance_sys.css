@@ -10,7 +10,7 @@
             height: 100%;
             background-color: #F4AB4F;
             position: absolute;
-            left: -8px;
+            inset-inline-start: -8px;
         }
 
         .tab-header,
@@ -26,7 +26,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            margin-right: 5px;
+            margin-inline-end: 5px;
         }
 
         .tab-body-object p,
@@ -40,7 +40,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            margin-right: 5px;
+            margin-inline-end: 5px;
             padding: 10px;
         }
 
@@ -63,8 +63,7 @@
         }
 
         .tab-body-object .icon_object {
-            margin-left: 10px;
-            margin-right: 0.4em;
+            margin-inline: 10px 0.4em;
         }
 
         .tab-body-action .color_action {
@@ -74,7 +73,7 @@
         }
 
         .tab-body-action .icon_action {
-            margin-right: 0.3em;
+            margin-inline-end: 0.3em;
         }
 
         .tab-body-users p {
@@ -87,7 +86,7 @@
             height: 30px;
             min-width: 30px;
             border-radius: 50%;
-            margin-right: 10px;
+            margin-inline-end: 10px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -109,8 +108,8 @@
             align-items: center;
             border-radius: 3px;
             padding: 4px;
-            padding-right: 8px;
-            margin-right: 5px;
+            padding-inline-end: 8px;
+            margin-inline-end: 5px;
             font-weight: normal;
         }
         @media (min-width: 1350px) {

@@ -3,7 +3,7 @@
   display:none;
   position: fixed;
   z-index: 102;
-  left: 0;
+  inset-inline-start: 0;
   top: 0;
   width: 100%;
   height: 100%;
@@ -14,10 +14,10 @@
 .linkedAlbumPopInContainer {
   display:flex;
   position:absolute;
-  left:50%;
+  inset-inline-start:50%;
   top: 50%;
   transform:translate(-50%, -48%);
-  text-align:left;
+  text-align:start;
   padding:20px;
   flex-direction:column;
   border-radius:15px;
@@ -99,7 +99,7 @@
 
 /* Prefill */
 .display-subcat {
-  margin-right: 2px;
+  margin-inline-end: 2px;
 }
 
 .display-subcat:hover {
@@ -127,7 +127,7 @@
 }
 
 .search-result-item .item-add {
-  margin-left: auto;
+  margin-inline-start: auto;
   cursor: pointer;
 }
 
@@ -156,6 +156,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 350px;
+  /* `direction: rtl` here is a deliberate ellipsis-truncation trick
+     (not real text directionality) -- `text-align` must stay the
+     physical `left` so the visible text keeps hugging the same edge
+     regardless of the page's own real direction. Flagged for P52-I's
+     own real RTL-correction pass, not converted here. */
   direction: rtl;
   text-align: left;
 }
@@ -248,7 +253,7 @@
 }
 
 .linked-add-radio-input input {
-  margin-right: 5px;
+  margin-inline-end: 5px;
 }
 
 .linked-add-radio-input label {
@@ -289,7 +294,7 @@
 
 @layer components-base {
 .ClosePopIn {
-  right: -40px;
+  inset-inline-end: -40px;
   top: -40px;
   color: #FFF;
 }

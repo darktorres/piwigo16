@@ -538,20 +538,6 @@
       "count": 138
     }
   },
-  "themes/default/vendor/fontello/css/gallery-icon.css": {
-    "comment-whitespace-inside": {
-      "count": 1
-    },
-    "font-family-name-quotes": {
-      "count": 2
-    },
-    "font-family-no-missing-generic-family-keyword": {
-      "count": 1
-    },
-    "selector-pseudo-element-colon-notation": {
-      "count": 44
-    }
-  },
   "themes/standard_pages/css/utilities.css": {
     "declaration-no-important": {
       "count": 2

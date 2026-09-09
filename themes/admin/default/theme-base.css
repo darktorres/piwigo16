@@ -6770,6 +6770,16 @@ table.qsearch_help_table td {
 }
 
 .font-checkbox [class*="icon-check"]::before {
+  /* P52-G: `height` explicitly pinned to match `line-height` -- the
+     shared `[class^="icon-"]::before` base rule's `height: 1em` would
+     otherwise resolve against *this* rule's own `font-size: 145%`
+     (~18.5px) instead of the fixed 16px `line-height` it was tuned
+     against, growing this one icon ~2.5px taller than intended and
+     compounding into a real, measured ~23px cumulative page-content
+     shift by the time a `.font-checkbox`-heavy settings page reaches
+     its 9th-or-so checkbox row -- confirmed via live getBoundingClientRect
+     comparison before landing this fix, not guessed at. */
+  height: 16px;
   line-height:16px;
   margin-inline: 0 5px;
   font-size: 145%;

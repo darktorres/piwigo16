@@ -524,25 +524,6 @@
       "count": 33
     }
   },
-  "themes/admin/default/fontello/css/fontello-codes.css": {
-    "selector-pseudo-element-colon-notation": {
-      "count": 136
-    }
-  },
-  "themes/admin/default/fontello/css/fontello-embedded.css": {
-    "comment-whitespace-inside": {
-      "count": 1
-    },
-    "font-family-name-quotes": {
-      "count": 3
-    },
-    "font-family-no-missing-generic-family-keyword": {
-      "count": 1
-    },
-    "selector-pseudo-element-colon-notation": {
-      "count": 138
-    }
-  },
   "themes/admin/default/fontello/css/fontello.css": {
     "comment-whitespace-inside": {
       "count": 1

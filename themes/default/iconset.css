@@ -1,10 +1,66 @@
+/* P52-G: SVG-mask icons, replacing the `s26/outline_808080.png` CSS
+   sprite entirely -- each `.pwg-icon-<name>` rule below points
+   `mask-image` at a real, per-icon SVG cropped from that sprite in
+   Step 1 (no vector source exists for this system -- these are
+   raster-sourced, wrapped in a minimal <svg><image> for a uniform
+   delivery mechanism with the other 2 icon systems, not true vector
+   paths; documented in Step 1's own commit). Fixed `#808080`, not
+   `currentColor`: unlike the fontello/gallery-icon systems (real font
+   glyphs, always colored via the inherited `color` -- preserved as-is
+   in Steps 2/3), this sprite was always flat gray regardless of
+   surrounding link color (only 1 of the 7 shipped color variants was
+   ever actually wired up -- see Step 1's own commit). `currentColor`
+   here would have been a real, undesired visual change (icons
+   suddenly matching link color instead of staying neutral gray) --
+   caught by a real VR diff, not assumed safe. The 6 dead sprite color
+   variants (`s26/outline_ffff80.png` etc.) were confirmed dead via a
+   fresh repo-wide grep immediately before deleting them, not from
+   memory.
+
+   `mask-image: url("icons/default.svg")` on the *shared* rule (not
+   just a per-icon override) is deliberate, not a placeholder: the
+   original sprite's very first cell (position 0 0, before any named
+   `-26px`-stepped icon) has a real drawn icon that was never given
+   its own CSS class -- any bare `.pwg-icon` usage with no matching
+   `.pwg-icon-<name>` (real site: `index.latte`'s `class="pwg-icon
+   gallery-icon-tag"`) fell through to it by the plain CSS cascade,
+   showing that icon by accident rather than design. Preserving that
+   exact accidental fallback (rather than "fixing" it to show nothing,
+   which a mask-image `none` default would have done) is what the
+   real VR baseline actually expects -- confirmed by decoding the
+   original sprite's own (0,0) pixels, not assumed. */
 .pwg-icon {
 	display: inline-block;
-	text-indent: -9999px; overflow: hidden; background-repeat: no-repeat;
-	width: 26px; height: 26px; background-image: url("s26/outline_808080.png");
+	width: 26px;
+	height: 26px;
+	background-color: #808080;
+	mask-image: url("icons/default.svg");
+	mask-repeat: no-repeat;
+	mask-position: center;
+	mask-size: contain;
 	vertical-align: bottom;
 }
-.pwg-button-text { display:none; }
+
+/* P52-G: was `display: none` -- real screen readers could still see
+   this button's own `title` attribute as a fallback accessible name,
+   but `title`-only accessible names are unreliable across browsers/
+   screen readers (WCAG explicitly discourages depending on them
+   alone). The standard "visually hidden but accessible" pattern keeps
+   the `title` tooltip for sighted mouse users while giving every
+   `.pwg-button` a real, robust accessible name from its own visible-
+   to-AT text -- verified via VR that this doesn't change any visual
+   layout (a mouse/keyboard/sighted user sees no difference at all). */
+.pwg-button-text {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+	border: 0;
+}
 
 .pwg-state-disabled .pwg-icon {
 	opacity: .5;
@@ -16,55 +72,51 @@
   cursor:pointer;
 }
 
-.pwg-icon-home {background-position: -26px 0}
-.pwg-icon-camera {background-position: -52px 0}
-.pwg-icon-save {background-position: -78px 0}
-.pwg-icon-cloud {background-position: -104px 0}
-.pwg-icon-letters {background-position: -130px 0}
-.pwg-icon-calendar {background-position: -156px 0}
-.pwg-icon-camera-calendar {background-position: -182px 0}
+.pwg-icon-home {mask-image: url("icons/home.svg");}
+.pwg-icon-camera {mask-image: url("icons/camera.svg");}
+.pwg-icon-save {mask-image: url("icons/save.svg");}
+.pwg-icon-cloud {mask-image: url("icons/cloud.svg");}
+.pwg-icon-letters {mask-image: url("icons/letters.svg");}
+.pwg-icon-calendar {mask-image: url("icons/calendar.svg");}
+.pwg-icon-camera-calendar {mask-image: url("icons/camera-calendar.svg");}
 
-.pwg-icon-arrow-n {background-position: 0 -26px}
-.pwg-icon-arrow-e {background-position: -26px -26px}
-/* .pwg-icon-arrow-s {background-position: -52px -26px} */
-.pwg-icon-arrow-w {background-position: -78px -26px}
-/* .pwg-icon-arrowstop-n {background-position: -104px -26px} */
-.pwg-icon-arrowstop-e {background-position: -130px -26px}
-/* .pwg-icon-arrowstop-s {background-position: -156px -26px} */
-.pwg-icon-arrowstop-w {background-position: -182px -26px}
+.pwg-icon-arrow-n {mask-image: url("icons/arrow-n.svg");}
+.pwg-icon-arrow-e {mask-image: url("icons/arrow-e.svg");}
+.pwg-icon-arrow-w {mask-image: url("icons/arrow-w.svg");}
+.pwg-icon-arrowstop-e {mask-image: url("icons/arrowstop-e.svg");}
+.pwg-icon-arrowstop-w {mask-image: url("icons/arrowstop-w.svg");}
 
-.pwg-icon-close {background-position: 0 -52px}
-.pwg-icon-category-edit {background-position: -26px -52px}
-.pwg-icon-sort {background-position: -52px -52px}
-.pwg-icon-sizes {background-position: -78px -52px}
-.pwg-icon-menu {background-position: -130px -52px}
-.pwg-icon-category-view-normal {background-position: -156px -52px}
-.pwg-icon-category-view-flat {background-position: -182px -52px}
+.pwg-icon-close {mask-image: url("icons/close.svg");}
+.pwg-icon-category-edit {mask-image: url("icons/category-edit.svg");}
+.pwg-icon-sort {mask-image: url("icons/sort.svg");}
+.pwg-icon-sizes {mask-image: url("icons/sizes.svg");}
+.pwg-icon-menu {mask-image: url("icons/menu.svg");}
+.pwg-icon-category-view-normal {mask-image: url("icons/category-view-normal.svg");}
+.pwg-icon-category-view-flat {mask-image: url("icons/category-view-flat.svg");}
 
-.pwg-icon-caddie {background-position: 0 -78px}
-.pwg-icon-caddie-add {background-position: -26px -78px}
-.pwg-icon-caddie-del {background-position: -52px -78px}
-.pwg-icon-favorite {background-position: -78px -78px}
-.pwg-icon-favorite-add {background-position: -104px -78px}
-.pwg-icon-favorite-del {background-position: -130px -78px}
-.pwg-icon-filter {background-position: -156px -78px}
-.pwg-icon-filter-del {background-position: -182px -78px}
+.pwg-icon-caddie {mask-image: url("icons/caddie.svg");}
+.pwg-icon-caddie-add {mask-image: url("icons/caddie-add.svg");}
+.pwg-icon-caddie-del {mask-image: url("icons/caddie-del.svg");}
+.pwg-icon-favorite {mask-image: url("icons/favorite.svg");}
+.pwg-icon-favorite-add {mask-image: url("icons/favorite-add.svg");}
+.pwg-icon-favorite-del {mask-image: url("icons/favorite-del.svg");}
+.pwg-icon-filter {mask-image: url("icons/filter.svg");}
+.pwg-icon-filter-del {mask-image: url("icons/filter-del.svg");}
 
-.pwg-icon-camera-info {background-position: 0 -104px}
-.pwg-icon-representative {background-position: -26px -104px}
-.pwg-icon-edit {background-position: -52px -104px}
-.pwg-icon-register {background-position: -78px -104px}
-.pwg-icon-lost-password {background-position: -104px -104px}
+.pwg-icon-camera-info {mask-image: url("icons/camera-info.svg");}
+.pwg-icon-representative {mask-image: url("icons/representative.svg");}
+.pwg-icon-edit {mask-image: url("icons/edit.svg");}
+.pwg-icon-register {mask-image: url("icons/register.svg");}
+.pwg-icon-lost-password {mask-image: url("icons/lost-password.svg");}
 
-.pwg-icon-slideshow {background-position: 0 -130px}
-.pwg-icon-play {background-position: -26px -130px}
-.pwg-icon-pause {background-position: -52px -130px}
-.pwg-icon-stop {background-position: -78px -130px}
-.pwg-icon-clock-plus {background-position: -104px -130px}
-.pwg-icon-clock-minus {background-position: -130px -130px}
-.pwg-icon-repeat-play {background-position: -156px -130px}
-.pwg-icon-repeat-stop {background-position: -182px -130px}
+.pwg-icon-slideshow {mask-image: url("icons/slideshow.svg");}
+.pwg-icon-play {mask-image: url("icons/play.svg");}
+.pwg-icon-pause {mask-image: url("icons/pause.svg");}
+.pwg-icon-stop {mask-image: url("icons/stop.svg");}
+.pwg-icon-clock-plus {mask-image: url("icons/clock-plus.svg");}
+.pwg-icon-clock-minus {mask-image: url("icons/clock-minus.svg");}
+.pwg-icon-repeat-play {mask-image: url("icons/repeat-play.svg");}
+.pwg-icon-repeat-stop {mask-image: url("icons/repeat-stop.svg");}
 
-.pwg-icon-map {background-position: 0 -156px}
-.pwg-icon-globe {background-position: -26px -156px}
-
+.pwg-icon-map {mask-image: url("icons/map.svg");}
+.pwg-icon-globe {mask-image: url("icons/globe.svg");}

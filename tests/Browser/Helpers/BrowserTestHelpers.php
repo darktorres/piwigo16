@@ -1955,6 +1955,73 @@ final class BrowserTestHelpers
     }
 
     /**
+     * Waits for every `mask-image` this page's `icon-`/`pwg-icon-`/
+     * `gallery-icon-` classed elements reference (P52-G's SVG-icon
+     * conversion, replacing the old icon fonts/sprite) to finish
+     * loading. Closes a real, confirmed race, not a hypothetical one:
+     * `admin-users` failed `assertScreenshotMatches()` twice in three
+     * consecutive full-suite runs with the exact same diff both
+     * times -- one `<span class="icon-king">` crown badge rendered on
+     * one run and not the other, from byte-identical server-rendered
+     * HTML. A `mask-image` triggers its own real network fetch,
+     * separate per URL; the old icon fonts needed exactly one such
+     * fetch for an *entire page's* icons (one shared font file,
+     * already warm from any earlier icon on the same page), so this
+     * class of race did not exist before this conversion.
+     * assertScreenshotMatches()'s own `networkidle` wait does not
+     * order against a `mask-image` fetch that happens to start (or a
+     * paint that happens to be scheduled) just past its own idle
+     * window -- the same category of gap `waitForStableCanvasSize()`'s
+     * own doc comment describes for `ResizeObserver`, just for a
+     * different browser subsystem. `new Image()` is used rather than a
+     * raw `fetch()`: it exercises the exact same image-decode pipeline
+     * the browser's own `mask-image` consumer does (a bare byte fetch
+     * would confirm the network round trip but not that the browser
+     * has actually finished decoding the resource into a paintable
+     * image), and it works identically for the SVG URLs every icon
+     * here happens to use today and any future raster one.
+     */
+    public static function waitForMaskImagesLoaded(Webpage|PendingAwaitablePage|AwaitableWebpage $page, float $timeoutSeconds = 5.0): void
+    {
+        $timeoutMs = (int) ($timeoutSeconds * 1000.0);
+        $js = <<<JS
+        new Promise((resolve, reject) => {
+            const deadline = Date.now() + {$timeoutMs};
+            const urls = new Set();
+            document.querySelectorAll('[class*="icon-"]').forEach((el) => {
+                for (const pseudo of [null, '::before']) {
+                    const cs = getComputedStyle(el, pseudo);
+                    const mi = cs.maskImage && cs.maskImage !== 'none' ? cs.maskImage : cs.webkitMaskImage;
+                    if (!mi || mi === 'none') continue;
+                    const m = mi.match(/url\\((?:"([^"]+)"|'([^']+)'|([^)]+))\\)/);
+                    const url = m ? (m[1] || m[2] || m[3]) : null;
+                    if (url) urls.add(url);
+                }
+            });
+            if (urls.size === 0) {
+                return resolve(true);
+            }
+            const loaders = Array.from(urls).map((url) => new Promise((res) => {
+                const img = new Image();
+                img.onload = () => res(true);
+                img.onerror = () => res(true);
+                img.src = url;
+                if (img.complete) res(true);
+            }));
+            Promise.race([
+                Promise.all(loaders).then(() => true),
+                new Promise((_, rej) => {
+                    const remaining = deadline - Date.now();
+                    setTimeout(() => rej(new Error('Timed out waiting for ' + urls.size + ' mask-image resource(s) to load: ' + Array.from(urls).join(', '))), Math.max(remaining, 0));
+                }),
+            ]).then(resolve, reject);
+        })
+        JS;
+
+        $page->script($js);
+    }
+
+    /**
      * Deletes every row from history before a visual-regression
      * screenshot of admin.php?page=history. Its "Search" tab always filters
      * to today's date server-side (admin/history.php has no start/end GET

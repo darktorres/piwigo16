@@ -72,6 +72,7 @@ it('renders admin-history under roma with the datepicker open', function (): voi
             JS);
 
         $page->assertPresent('.ui-datepicker');
+        H::waitForMaskImagesLoaded($page);
         $page->assertScreenshotMatches();
     } finally {
         H::dbQuery(
@@ -97,6 +98,7 @@ it('renders the batch manager under roma', function (): void {
 
         $page = H::navigateOk($page, '/admin.php?page=batch_manager&mode=unit&filter=prefilter-all_photos&display=2');
         H::assertNoServerErrors($page, 'admin-batch-unit-paged-first (roma)');
+        H::waitForMaskImagesLoaded($page);
         $page->assertScreenshotMatches();
     } finally {
         H::dbQuery(
@@ -122,6 +124,7 @@ it('renders the add-photos page under roma', function (): void {
 
         $page = H::navigateOk($page, '/admin.php?page=photos_add');
         H::assertNoServerErrors($page, 'admin-photos-add (roma)');
+        H::waitForMaskImagesLoaded($page);
         $page->assertScreenshotMatches();
     } finally {
         H::dbQuery(
@@ -160,6 +163,7 @@ it('renders the photo editor under roma', function (): void {
 
         $page = H::navigateOk($page, '/admin.php?page=photo-1');
         H::assertNoServerErrors($page, 'admin-photo-editor (roma)');
+        H::waitForMaskImagesLoaded($page);
         $page->assertScreenshotMatches();
     } finally {
         // Theme restore first and unconditional -- see the jGrowl test's
@@ -192,6 +196,7 @@ it('renders the admin dashboard (sidebar/footer) under roma', function (): void 
 
         $page = H::navigateOk($page, '/admin.php');
         H::assertNoServerErrors($page, 'admin-dashboard (roma)');
+        H::waitForMaskImagesLoaded($page);
         $page->assertScreenshotMatches();
     } finally {
         H::dbQuery(
@@ -368,6 +373,7 @@ it('renders the .AddPluginSuccess jGrowl-adjacent marker under roma', function (
             style.textContent = '#{$id} .AddPluginSuccess { opacity: 1 !important; display: flex !important; }';
             document.head.appendChild(style);
             JS);
+        H::waitForMaskImagesLoaded($page);
         $page->assertScreenshotMatches();
 
         // Uninstall via the exact same fetch call installed.ts's own

@@ -294,6 +294,16 @@ foreach ($routes as $name => [$path, $needsAuth]) {
                 H::rawWebpage($page)->hover('html>body');
             }
 
+            // See H::waitForMaskImagesLoaded()'s own docblock: a real,
+            // confirmed race (admin-users, twice in three consecutive
+            // full-suite runs) between P52-G's SVG `mask-image` icons
+            // finishing their own network fetch and assertScreenshotMatches()'s
+            // networkidle wait. Applied to every route, not just admin-users --
+            // this is a property of the shared icon-rendering mechanism, not a
+            // page-specific quirk, so any route with icons could race the same
+            // way; resolves immediately (no-op) on a route with nothing pending.
+            H::waitForMaskImagesLoaded($page);
+
             $page->assertScreenshotMatches();
         } finally {
             if ($originalGalleriesUrl !== null) {

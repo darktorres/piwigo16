@@ -1,12 +1,4 @@
 {
-  "themes/default/iconset.css": {
-    "comment-whitespace-inside": {
-      "count": 8
-    },
-    "function-url-quotes": {
-      "count": 1
-    }
-  },
   "themes/default/print.css": {
     "selector-type-case": {
       "count": 1

@@ -103,6 +103,7 @@ function standardPagesCaptureAnonymous(object $test, string $path, string $color
 
     try {
         $page = standardPagesVisit($test, $path, $colorScheme);
+        H::waitForMaskImagesLoaded($page);
         $page->assertScreenshotMatches();
     } finally {
         H::setUserTheme($guestUserId, $previousTheme ?? 'default');
@@ -185,6 +186,7 @@ function standardPagesCaptureAuthenticated(object $test, string $colorScheme, ?s
         // really land on the authenticated page, not a login redirect"
         // purpose.
         $page = H::asAdmin($test, '/profile.php', $colorScheme, loggedInSelector: '#account-section');
+        H::waitForMaskImagesLoaded($page);
         $page->assertScreenshotMatches();
     } finally {
         H::setUserTheme($defaultUserId, $previousTheme ?? 'default');

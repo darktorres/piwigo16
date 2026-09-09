@@ -58,7 +58,6 @@
 	margin-bottom: 0;
 }
 
-/* IE6 needs override because of > selector */
 #menubar li.selected>a {
 	font-weight: bold;
 }
@@ -80,7 +79,7 @@
 
 #quickconnect fieldset {
 	margin: 0 5px 0 0;
-	padding: 0; /* IE6 requires padding 0 */
+	padding: 0;
 }
 
 #quickconnect div {
@@ -217,7 +216,7 @@
 table.calMonth {
 	border: 0;
 	border-collapse: collapse;
-	margin-bottom: 10px;	/* <-IE ignores this */
+	margin-bottom: 10px;
 }
 
 td.calDayCellFull, td.calDayCellEmpty {
@@ -338,16 +337,15 @@ td.calDayCellFull, td.calDayCellEmpty {
 
 .thumbnails .wrap1 {
 	margin: 0 7px 5px;
-	display: table-cell; display: inline-table;
-	display: inline-block;/* Why 3 display option ??? */
-	vertical-align: top;	/* OK with Opera and IE6 not Geko */
-	text-align: center;		/* to center the thumbnail and legend in Geko/Opera */
+	display: inline-block;
+	vertical-align: top;
+	text-align: center;		/* to center the thumbnail and legend */
 }
 .thumbnails .wrap2 {
 	margin: 0;			/* important reset the margins */
 	display: table-cell;/* block prevents vertical-align here */
-	vertical-align: middle;/* Ok with Opera and Geko not IE6 */
-	border-radius: 4px;	/* round corners with CSS3 compliant browsers */
+	vertical-align: middle;
+	border-radius: 4px;
 }
 
 .thumbnails .wrap2 a {
@@ -438,7 +436,7 @@ td.calDayCellFull, td.calDayCellEmpty {
 }
 
 #imageInfos {
-	position: relative; /* for IE7 positioning of "who can see this photo" */
+	position: relative;
 	min-height: 120px;
 }
 
@@ -485,7 +483,7 @@ div.thumbHover{ /* only first & last holders are divs */
 	padding:0;
 	border:0;
 	color:inherit;
-	background-color:transparent;	/* Konqueror doesn't accept transparent here */
+	background-color:transparent;
 }
 
 #rateForm .rateButton, #rateForm .rateButtonStarFull, #rateForm .rateButtonStarEmpty {
@@ -513,11 +511,11 @@ body {
 	padding: 0;
 	font-size: 0.8em;
 	font-family: Arial,Helvetica,sans-serif;
-	min-width: 60em;  /* ~ 3* #menubar width; width of the page before getting a scrollbar; IE6 doesn't get that */
+	min-width: 60em;  /* ~ 3* #menubar width; width of the page before getting a scrollbar */
 }
 
 img {
-	border: 0; /* IE<=9 adds border for linked images */
+	border: 0;
 }
 
 #thePopuphelpPage {
@@ -731,13 +729,8 @@ img.ui-datepicker-trigger {
 }
 
 /* Tables & forms */
-/* IE <= 6 is so bad with this that you can't merge with the following rule */
 input[type="text"], input[type="password"], input[type="button"],
-input[type="submit"], input[type="reset"], input[type="file"] {
-	color: #000;
-	background-color: #d3d3d3;	/* lightgrey */
-}
-
+input[type="submit"], input[type="reset"], input[type="file"],
 select, textarea {
 	color: #000;
 	background-color: #d3d3d3;	/* lightgrey */
@@ -749,7 +742,7 @@ input:focus, select:focus, textarea:focus {
 
 /* some theme set a border on INPUT  which is not pretty for radio/checkbox */
 input[type="radio"], input[type="checkbox"] {
-	border: none;	/* <= Opera needs this */
+	border: none;
 }
 
 
@@ -810,7 +803,7 @@ input[type="radio"], input[type="checkbox"] {
 
 legend {
 	font-style: italic;
-	color: inherit; /* for IE */
+	color: inherit;
 }
 
 #piwigoAbout {width:600px;margin:0 auto;}
@@ -821,9 +814,6 @@ legend {
   color:#333;
   margin-bottom:1em;
   padding: 12px;
-  border-radius: 3px;
-  border-radius: 3px;
-  border-radius: 3px;
   border-radius: 3px;
 }
 

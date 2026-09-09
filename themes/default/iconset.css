@@ -1,5 +1,5 @@
 .pwg-icon {
-	display: inline-block; /* IE6 does not get this correctly */
+	display: inline-block;
 	text-indent: -9999px; overflow: hidden; background-repeat: no-repeat;
 	width: 26px; height: 26px; background-image: url("s26/outline_808080.png");
 	vertical-align: bottom;

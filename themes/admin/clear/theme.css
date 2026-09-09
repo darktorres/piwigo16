@@ -165,12 +165,6 @@ input[type="text"].large  { width: 317px; }
 .bigtext {display:none;position:static;}
 .bigbutton input[type="submit"] {display:inline;position:static;height:auto;width:auto;font-size:18px;padding:10px;}
 
-/* hacks */
-* html[lang="en"] body .content h2 , *+html[lang="en"] body .content h2 { text-transform:capitalize; } /* IE */
-*+html  .bigtext { left: 70px; }
-*+html  .bigbutton input, * html  .bigbutton input  { left:0; position:relative; top:-40px; }
-* html .bigtext { margin-right: 300px; }
-
 .themeBox {background-color:#fafafa; box-shadow: 0 0 5px #acacac;}
 .themeName {color:black;}
 .themeActions span {background-color: #ddd;}

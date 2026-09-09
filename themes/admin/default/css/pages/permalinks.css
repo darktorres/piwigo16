@@ -18,7 +18,7 @@ form fieldset p.actionButtons {
   max-width: 600px;
 }
 
-/* Beats theme.css's TABLE.table2{margin:0 auto} (higher tag+class specificity). */
+/* Beats theme.css's table.table2{margin:0 auto} (higher tag+class specificity). */
 table.table2.permalinks-table {
   margin: 0;
 }

@@ -67,15 +67,14 @@ ul.thumbnails li.rank-of-image {
 
 ul.thumbnails span.wrap1 {
   margin: 5px;
-  display: table-cell; display: inline-table;
-  display: inline-block; /* Why 3 display option ??? */
-  vertical-align: top;		/* OK with Opera and IE6 not Geko */
-  text-align: center;		/* to center the thumbnail and legend in Geko/Opera */
+  display: inline-block;
+  vertical-align: top;
+  text-align: center;		/* to center the thumbnail and legend */
 }
 ul.thumbnails span.wrap2 {
   margin: 0;			/* important reset the margins */
   display: table-cell;		/* block prevents vertical-align here */
-  vertical-align: middle;	/* Ok with Opera and Geko not IE6 */
+  vertical-align: middle;
 	border-radius: 4px;
 }
 ul.thumbnails label {
@@ -1232,7 +1231,7 @@ select.categoryList {
 
 div.comment blockquote {
 	padding: 0.5em;
-	overflow: auto;	/* no solution for IE6 */
+	overflow: auto;
 	min-height: 2.75em;	/* fix a Gecko bug whith scrollbar and 1 line only */
 }
 
@@ -1274,20 +1273,12 @@ form.filter fieldset ul.tagSelection label {
 	margin-right:0.5em;/* reduce from above */
 }
 
-/* cannot use FIELDSET>LABEL because of IE<=6 */
-form.filter fieldset label input,
-form.filter fieldset label select,
-form.filter fieldset label span,
-form.filter fieldset label textarea {
+form.filter fieldset label :is(input, select, span, textarea) {
 	display: block;
 	margin: 0.5em 0;
 }
-form.filter fieldset * label input,
-form.filter fieldset * label select,
-form.filter fieldset * label textarea,
-form.filter fieldset label span input,
-form.filter fieldset label span select,
-form.filter fieldset label span textarea {
+form.filter fieldset * label :is(input, select, textarea),
+form.filter fieldset label span :is(input, select, textarea) {
 	display: inline;
 	vertical-align: top;
 	margin: 0 0.5em 0 0;
@@ -1303,10 +1294,6 @@ form.filter fieldset p
 	clear: left;
 	display: block;
 }
-
-/* FORM.filter INPUT[type="submit"] {
-	margin-top: 1.8em;
-} */
 
 form.properties ul, form.syncForm ul {
 	list-style-type: none;
@@ -1985,9 +1972,7 @@ a.admin-main:hover {color:#fff;}
 	text-shadow: 0 0 2px #000;
 	padding: 4px 8px;
 	border: 1px solid rgb(255,255,255,0.25);
-	background-color: rgb(25,25,25);
 	background-color: rgb(25,25,25,0.92);
-	background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(transparent), to(#000));
 	border-radius: 3px;
 	box-shadow: 0 0 3px #555;
 }
@@ -2725,24 +2710,18 @@ div.jGrowl div.jGrowl-notification{
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -moz-box-orient: vertical;
-  -ms-box-orient: vertical;
 }
 
 .pluginMiniBox .pluginDesc {
   margin-top: 43px;
   height: 3em;
   -webkit-line-clamp: 2;
-  -moz-line-clamp: 2;
-  -ms-line-clamp: 2;
   line-clamp: 2;
 }
 
 .pluginBigBox .pluginDesc {
   height: auto;
   -webkit-line-clamp: 8;
-  -moz-line-clamp: 8;
-  -ms-line-clamp: 8;
   line-clamp: 8;
 }
 
@@ -3419,7 +3398,7 @@ input:focus:not(.hasDatepicker), select:focus:not(.elem-type-select), textarea:f
 
 /* some theme set a border on INPUT  which is not pretty for radio/checkbox */
 input[type="radio"], input[type="checkbox"] {
-  border: none;	/* <= Opera needs this */
+  border: none;
 }
 
 

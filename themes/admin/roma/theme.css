@@ -139,10 +139,6 @@ a.Piwigo:hover  span.Piwigo  {
   border-bottom: 1px solid #FF3363;
 }
 
-/* RADU - I comment this because it makes FF form controls activation very slow)
-*, *:focus, *:active, input:active, a:active, input:focus, a:focus { outline: none; -moz-outline-width: 0px; }
-*/
-
 a {
 }
 a:hover, a:active {
@@ -332,13 +328,6 @@ a.stat-box:hover {
 .storage-chart span:nth-child(1), .storage-chart-legend div:nth-child(1) span {
   --storage-chart-legend-div-nth-child-1-span-or-storage-chart-span-nth-child-1-bg: #d47f44;
 }
-
-/* hacks */
-* html[lang="en"] body .content h2 , *+html[lang="en"] body .content h2 { text-transform:capitalize; } /* IE */
-*+html  .bigtext { left: 70px; }
-*+html  .bigbutton input, * html  .bigbutton input  { left:0; position:relative; top:-40px; }
-
-* html .bigtext { margin-right: 300px; }
 
 .themeBox {background-color:#232323;}
 .themeName {color:#ccc;}

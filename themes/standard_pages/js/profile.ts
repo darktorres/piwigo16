@@ -16,7 +16,6 @@ import {
   copyToClipboard as writeToClipboard,
   data,
   fadeIn,
-  fadeOut,
   find,
   hasClass,
   hide,
@@ -119,6 +118,20 @@ const preferencesDefaultValues = {
 };
 const selectedDate = pwg_getPageData<string>("selected_date");
 const canManageApi = pwg_getPageData<boolean>("api_can_manage");
+
+/**
+ * `#api_modal`/`#api_modal_edit`/`#api_modal_revoke` render as real
+ * `<dialog>`s (converted from hand-rolled fixed-position overlay
+ * `<div>`s, docs/PLAN.md P52-J) -- narrowed once here so every open/
+ * close call site can use the native `showModal()`/`close()` API.
+ */
+function dialogElOf(id: string): HTMLDialogElement | null {
+  const el = document.getElementById(id);
+  return el instanceof HTMLDialogElement ? el : null;
+}
+const apiModalDialogEl = dialogElOf("api_modal");
+const apiModalEditDialogEl = dialogElOf("api_modal_edit");
+const apiModalRevokeDialogEl = dialogElOf("api_modal_revoke");
 
 const strCopyKeyId = pwg_getPageString("ID copied.");
 const strCopyKeySecret = pwg_getPageString(
@@ -362,10 +375,32 @@ ready(function () {
       closeApiModal();
     },
   );
+  on(document.querySelectorAll("#close_api_modal"), "keydown", function (
+    event,
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+    const { key } = event as KeyboardEvent;
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      closeApiModal();
+    }
+  });
 
   on(document.querySelectorAll("#close_api_modal_edit"), "click", function () {
     closeApiEditModal();
   });
+  on(
+    document.querySelectorAll("#close_api_modal_edit"),
+    "keydown",
+    function (event) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+      const { key } = event as KeyboardEvent;
+      if (key === "Enter" || key === " ") {
+        event.preventDefault();
+        closeApiEditModal();
+      }
+    },
+  );
 
   on(
     document.querySelectorAll("#close_api_modal_revoke, #cancel_api_revoke"),
@@ -374,6 +409,45 @@ ready(function () {
       closeApiRevokeModal();
     },
   );
+  on(
+    document.querySelectorAll("#close_api_modal_revoke"),
+    "keydown",
+    function (event) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+      const { key } = event as KeyboardEvent;
+      if (key === "Enter" || key === " ") {
+        event.preventDefault();
+        closeApiRevokeModal();
+      }
+    },
+  );
+
+  // Native <dialog> has no light-dismiss of its own; this matches each
+  // dialog's own ::backdrop with the usual click-outside-to-close idiom.
+  if (apiModalDialogEl !== null) {
+    on(apiModalDialogEl, "click", function (e: Event) {
+      if (e.target === apiModalDialogEl) {
+        apiModalDialogEl.close();
+      }
+    });
+    on(apiModalDialogEl, "close", resetApiModal);
+  }
+  if (apiModalEditDialogEl !== null) {
+    on(apiModalEditDialogEl, "click", function (e: Event) {
+      if (e.target === apiModalEditDialogEl) {
+        apiModalEditDialogEl.close();
+      }
+    });
+    on(apiModalEditDialogEl, "close", resetApiEditModal);
+  }
+  if (apiModalRevokeDialogEl !== null) {
+    on(apiModalRevokeDialogEl, "click", function (e: Event) {
+      if (e.target === apiModalRevokeDialogEl) {
+        apiModalRevokeDialogEl.close();
+      }
+    });
+    on(apiModalRevokeDialogEl, "close", resetApiRevokeModal);
+  }
 
   on(
     document.querySelectorAll("#show_expired_list"),
@@ -396,29 +470,9 @@ ready(function () {
     },
   );
 
-  on(window, "keydown", function (e: Event) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
-    const { key } = e as KeyboardEvent;
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- profile.latte renders #api_modal unconditionally.
-    const haveApiModal = isVisible(document.getElementById("api_modal")!);
-    const haveApiEditModal = isVisible(
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- profile.latte renders #api_modal_edit unconditionally.
-      document.getElementById("api_modal_edit")!,
-    );
-    const haveApiRevokeModal = isVisible(
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- profile.latte renders #api_modal_revoke unconditionally.
-      document.getElementById("api_modal_revoke")!,
-    );
-    if (haveApiModal && key === "Escape") {
-      closeApiModal();
-    }
-    if (haveApiEditModal && key === "Escape") {
-      closeApiEditModal();
-    }
-    if (haveApiRevokeModal && key === "Escape") {
-      closeApiRevokeModal();
-    }
-  });
+  // Native <dialog> already closes on Escape; each dialog's own "close"
+  // event (wired alongside its open()/close() functions below) runs the
+  // same reset logic this used to trigger manually for that case.
 
   on(
     document.querySelectorAll('select[name="api_expiration"]'),
@@ -736,34 +790,40 @@ function resetSection(selector: string, scroll = true, maxContent = false) {
 }
 
 function openApiModal() {
-  fadeIn(document.querySelectorAll("#api_modal"));
+  apiModalDialogEl?.showModal();
   document.getElementById("api_key_name")?.focus();
   saveApiKeyEvent();
 }
 
+// Only asks the dialog to close -- the real reset (also needed for the
+// native Escape/backdrop-click close paths, which never call this
+// function) runs from the dialog's own "close" event, wired in ready()
+// above.
 function closeApiModal() {
-  fadeOut(document.querySelectorAll("#api_modal"), () => {
-    setVal(document.querySelectorAll("#api_key_name"), "");
-    setVal(
-      document.querySelectorAll('select[name="api_expiration"]'),
-      selectedDate,
-    );
-    trigger(
-      document.querySelectorAll('select[name="api_expiration"]'),
-      "change",
-    );
-    setVal(document.querySelectorAll("#api_expiration_date"), "");
+  apiModalDialogEl?.close();
+}
 
-    setVal(document.querySelectorAll("#api_secret_key"), "");
-    hide(document.querySelectorAll("#retrieves_keyapi"));
-    show(document.querySelectorAll("#generate_keyapi"));
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- profile.latte renders #done_apikey unconditionally.
-    document.querySelector<HTMLButtonElement>("#done_apikey")!.disabled = true;
-    addClass(
-      document.querySelectorAll("#api_key_copy_success, #api_id_copy_success"),
-      "api-hide",
-    );
-  });
+function resetApiModal() {
+  setVal(document.querySelectorAll("#api_key_name"), "");
+  setVal(
+    document.querySelectorAll('select[name="api_expiration"]'),
+    selectedDate,
+  );
+  trigger(
+    document.querySelectorAll('select[name="api_expiration"]'),
+    "change",
+  );
+  setVal(document.querySelectorAll("#api_expiration_date"), "");
+
+  setVal(document.querySelectorAll("#api_secret_key"), "");
+  hide(document.querySelectorAll("#retrieves_keyapi"));
+  show(document.querySelectorAll("#generate_keyapi"));
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- profile.latte renders #done_apikey unconditionally.
+  document.querySelector<HTMLButtonElement>("#done_apikey")!.disabled = true;
+  addClass(
+    document.querySelectorAll("#api_key_copy_success, #api_id_copy_success"),
+    "api-hide",
+  );
   unbindApiKeyEvents();
 }
 
@@ -803,16 +863,19 @@ function openApiEditModal(selector: string) {
     "pkid",
   );
   setVal(document.querySelectorAll("#api_key_edit"), value);
-  fadeIn(document.querySelectorAll("#api_modal_edit"));
+  apiModalEditDialogEl?.showModal();
   document.getElementById("api_key_edit")?.focus();
   saveApiEditEvents(pkid);
 }
 
+// See closeApiModal()'s own comment above -- same reasoning.
 function closeApiEditModal() {
-  fadeOut(document.querySelectorAll("#api_modal_edit"), () => {
-    setVal(document.querySelectorAll("#api_key_edit"), "");
-    unbindApiEditEvents();
-  });
+  apiModalEditDialogEl?.close();
+}
+
+function resetApiEditModal() {
+  setVal(document.querySelectorAll("#api_key_edit"), "");
+  unbindApiEditEvents();
 }
 
 function saveApiEditEvents(pkid: string) {
@@ -855,15 +918,18 @@ function openApiRevokeModal(selector: string) {
   const titleText = sprintf(strRevokeKey, apiName);
   text(document.querySelectorAll("#api_modal_revoke_title"), titleText);
 
-  fadeIn(document.querySelectorAll("#api_modal_revoke"));
+  apiModalRevokeDialogEl?.showModal();
   saveApiRevokeEvents(pkid);
 }
 
+// See closeApiModal()'s own comment above -- same reasoning.
 function closeApiRevokeModal() {
-  fadeOut(document.querySelectorAll("#api_modal_revoke"), () => {
-    text(document.querySelectorAll("#api_modal_revoke_title"), "");
-    unbindApiRevokeEvents();
-  });
+  apiModalRevokeDialogEl?.close();
+}
+
+function resetApiRevokeModal() {
+  text(document.querySelectorAll("#api_modal_revoke_title"), "");
+  unbindApiRevokeEvents();
 }
 
 function saveApiRevokeEvents(pkid: string) {

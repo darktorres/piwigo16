@@ -460,9 +460,14 @@
       </div>
 
       {* API KEY MODAL *}
-      <div class="bg-modal" id="api_modal">
+      <dialog class="bg-modal" id="api_modal">
         <div class="body-modal">
-          <a class="icon-cancel close-modal" id="close_api_modal"></a>
+          <a
+            class="icon-cancel close-modal"
+            id="close_api_modal"
+            role="button"
+            tabindex="0"
+          ></a>
 
           <div id="generate_keyapi">
             <div class="head-modal">
@@ -579,12 +584,17 @@
             </div>
           </div>
         </div>
-      </div>
+      </dialog>
 
       {* API KEY MODAL EDIT *}
-      <div class="bg-modal" id="api_modal_edit">
+      <dialog class="bg-modal" id="api_modal_edit">
         <div class="body-modal">
-          <a class="icon-cancel close-modal" id="close_api_modal_edit"></a>
+          <a
+            class="icon-cancel close-modal"
+            id="close_api_modal_edit"
+            role="button"
+            tabindex="0"
+          ></a>
 
           <div>
             <div class="head-modal">
@@ -611,11 +621,16 @@
             </div>
           </div>
         </div>
-      </div>
+      </dialog>
       {* API KEY MODAL REVOKE *}
-      <div class="bg-modal" id="api_modal_revoke">
+      <dialog class="bg-modal" id="api_modal_revoke">
         <div class="body-modal">
-          <a class="icon-cancel close-modal" id="close_api_modal_revoke"></a>
+          <a
+            class="icon-cancel close-modal"
+            id="close_api_modal_revoke"
+            role="button"
+            tabindex="0"
+          ></a>
 
           <div>
             <div class="head-modal">
@@ -634,7 +649,7 @@
             </div>
           </div>
         </div>
-      </div>
+      </dialog>
     </section>
 
     <section n:if="count($languageOptions) > 1" id="language-switch">

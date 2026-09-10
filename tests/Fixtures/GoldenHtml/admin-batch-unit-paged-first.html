@@ -668,7 +668,12 @@
           size="40"
           value=""
         >
-        <p title="Help" class="help-popin-search">
+        <p
+          title="Help"
+          class="help-popin-search"
+          role="button"
+          tabindex="0"
+        >
           <i class="icon-help-circled"></i>
           <span>Search tips</span>
         </p>
@@ -773,9 +778,14 @@
   </div>
 </fieldset>
 
-<div class="bg-modal quick-search-modal" id="modalQuickSearch">
+<dialog class="bg-modal quick-search-modal" id="modalQuickSearch">
   <div class="modal-content">
-    <a class="icon-cancel close-modal" id="closeModalQuickSearch"></a>
+    <a
+      class="icon-cancel close-modal"
+      id="closeModalQuickSearch"
+      role="button"
+      tabindex="0"
+    ></a>
 
     <div class="quick-search-content">
       <div class="quick-search-header">
@@ -1079,7 +1089,7 @@
       </div>
     </div>
   </div>
-</div>
+</dialog>
 <div id="addLinkedAlbum" class="linkedAlbumPopIn">
   <div class="linkedAlbumPopInContainer">
     <a class="gallery-icon-cancel ClosePopIn" id="closeAlbumPopIn"></a>

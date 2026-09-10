@@ -23,7 +23,6 @@ import {
   addClass,
   attrOf,
   fadeIn,
-  fadeOut,
   hide,
   html,
   isVisible,
@@ -335,11 +334,54 @@ ready(function () {
     },
   );
 
-  on(document.querySelectorAll(".help-popin-search"), "click", function () {
-    fadeIn(document.querySelectorAll("#modalQuickSearch"));
-  });
+  const quickSearchTrigger = document.querySelectorAll(".help-popin-search");
+  const quickSearchCloseBtn = document.querySelectorAll(
+    "#closeModalQuickSearch",
+  );
+  const quickSearchModalEl = document.getElementById("modalQuickSearch");
+  const quickSearchModal =
+    quickSearchModalEl instanceof HTMLDialogElement
+      ? quickSearchModalEl
+      : null;
 
-  on(document.querySelectorAll("#closeModalQuickSearch"), "click", function () {
-    fadeOut(document.querySelectorAll("#modalQuickSearch"));
+  on(quickSearchTrigger, "click", function () {
+    quickSearchModal?.showModal();
   });
+  on(quickSearchCloseBtn, "click", function () {
+    quickSearchModal?.close();
+  });
+  // Both `.help-popin-search` (a <p>) and `#closeModalQuickSearch`
+  // (an <a> with no `href`) are a `role="button"` element, never
+  // natively focusable/keyboard-activatable on their own -- WAI-ARIA's
+  // own authoring rules require the page to provide the Enter/Space
+  // activation a real <button> gets for free.
+  on(quickSearchTrigger, "keydown", function (e: Event) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+    const { key } = e as KeyboardEvent;
+    if (key === "Enter" || key === " ") {
+      e.preventDefault();
+      quickSearchModal?.showModal();
+    }
+  });
+  on(quickSearchCloseBtn, "keydown", function (e: Event) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+    const { key } = e as KeyboardEvent;
+    if (key === "Enter" || key === " ") {
+      e.preventDefault();
+      quickSearchModal?.close();
+    }
+  });
+  if (quickSearchModal !== null) {
+    // Native showModal() already gives ESC-to-close and a real focus
+    // trap for free -- this click handler is the one piece `<dialog>`
+    // doesn't provide on its own: clicking its own `::backdrop`
+    // dispatches a real click whose target is the dialog element
+    // itself (verified live, not assumed), so this is the standard
+    // "click outside to close" idiom.
+    on(quickSearchModal, "click", function (e: Event) {
+      if (e.target === quickSearchModal) {
+        quickSearchModal.close();
+      }
+    });
+  }
 });

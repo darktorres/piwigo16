@@ -128,9 +128,9 @@
   <div></div> <a></a>
 </div>
 
-<div id="RenameTag" class="RenameTagPopIn">
+<dialog id="RenameTag" class="RenameTagPopIn">
   <div class="RenameTagPopInContainer">
-    <a class="icon-cancel ClosePopIn"></a>
+    <a class="icon-cancel ClosePopIn" role="button" tabindex="0"></a>
 
     <div class="AddIconContainer">
       <span class="AddIcon icon-blue icon-tags"></span>
@@ -149,7 +149,7 @@
     <div class="TagErrors icon-cancel"></div>
 
     <div class="TagSubmitOptions">
-      <div class="TagSubmit">
+      <div class="TagSubmit" role="button" tabindex="0">
         <span>{='Rename Tag'|translate}</span>
       </div>
 
@@ -157,12 +157,12 @@
         <i class='icon-spin6 animate-spin'></i>
       </div>
 
-      <div class="TagCancel">
+      <div class="TagCancel" role="button" tabindex="0">
         <span>{='Cancel'|translate}</span>
       </div>
     </div>
   </div>
-</div>
+</dialog>
 
 <div
   class='tag-container'

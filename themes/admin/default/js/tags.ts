@@ -97,6 +97,17 @@ const strDeleteOrphanTags = pwg_getPageString("Delete orphan tags ?");
 const strOrphanTags = pwg_getPageString("You have %s1 orphan : %s2");
 const strDeleteThem = pwg_getPageString("Delete them");
 const strKeepThem = pwg_getPageString("Keep them");
+
+/**
+ * `#RenameTag` renders as a real `<dialog>` (converted from a hand-rolled
+ * fixed-position overlay `<div>`, docs/PLAN.md P52-J) -- narrowed once here
+ * so `renameTagOpen()`/`renameTagClose()` can use the native
+ * `showModal()`/`close()` API.
+ */
+const renameTagDialogEl = (() => {
+  const el = document.getElementById("RenameTag");
+  return el instanceof HTMLDialogElement ? el : null;
+})();
 const strCopy = pwg_getPageString(" (copy)");
 const strOtherCopy = pwg_getPageString(" (copy %s)");
 const strMergedInto = pwg_getPageString(
@@ -296,6 +307,25 @@ on(
 //Display/Hide tag option
 document.querySelectorAll(".tag-box").forEach((tagBox) => {
   setupTagbox(tagBox);
+});
+
+// Native <dialog> already closes on Escape; the click-outside-to-close
+// idiom below matches its own ::backdrop.
+if (renameTagDialogEl !== null) {
+  on(renameTagDialogEl, "click", function (e: Event) {
+    if (e.target === renameTagDialogEl) {
+      renameTagDialogEl.close();
+    }
+  });
+}
+
+on(document.querySelectorAll(".TagSubmit"), "keydown", function (event) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+  const { key } = event as KeyboardEvent;
+  if (key === "Enter" || key === " ") {
+    event.preventDefault();
+    trigger(document.querySelectorAll(".TagSubmit"), "click");
+  }
 });
 
 //Call the API when rename a tag
@@ -570,6 +600,18 @@ function setUpPopin(id: number, tagRawName: string, tagName: string): void {
       renameTagClose();
     },
   );
+  on(
+    document.querySelectorAll(".ClosePopIn, .TagCancel"),
+    "keydown",
+    function (event) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+      const { key } = event as KeyboardEvent;
+      if (key === "Enter" || key === " ") {
+        event.preventDefault();
+        renameTagClose();
+      }
+    },
+  );
   html(document.querySelectorAll(".TagSubmit"), strYesRenameConfirmation);
   setVal(
     find(
@@ -581,11 +623,11 @@ function setUpPopin(id: number, tagRawName: string, tagName: string): void {
 }
 
 function renameTagClose(): void {
-  fadeOut(document.querySelectorAll("#RenameTag"));
+  renameTagDialogEl?.close();
 }
 
 function renameTagOpen(): void {
-  fadeIn(document.querySelectorAll("#RenameTag"));
+  renameTagDialogEl?.showModal();
   document.querySelector<HTMLElement>(".tag-property-input")?.focus();
 }
 

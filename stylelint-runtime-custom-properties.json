@@ -1,0 +1,22 @@
+{
+  "//": "Custom properties consumed via var() in a page's own CSS but never declared in any :root -- each is set per-instance via a real inline style=\"--foo: ...\" attribute in the paired .latte template (server-rendered sizes/positions/urls), not a design token from tokens.css. Referenced by stylelint's csstools/value-no-unknown-custom-properties rule (see .stylelintrc.json) so it doesn't flag these as unknown. Verified via a repo-wide grep for each name's real declaring template before being added here -- see the property list below for the exact template/line.",
+  "custom-properties": {
+    "--comment-illustration-width": "0",
+    "--comment-description-min-height": "0",
+    "--cat-illustration-width": "0",
+    "--cat-description-height": "0",
+    "--cal-cell-width": "0",
+    "--cal-cell-height": "0",
+    "--thumb-width": "0",
+    "--thumb-height": "0",
+    "--thumb-legend-font-size": "0",
+    "--tn-width": "0",
+    "--tn-height": "0",
+    "--activity-chart-rows": "0",
+    "--size-in-unit": "0",
+    "--line-height": "0",
+    "--storage-width": "0",
+    "--screenshot-url": "none",
+    "--rating-tooltip-max-width": "0"
+  }
+}

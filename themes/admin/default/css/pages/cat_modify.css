@@ -43,15 +43,15 @@
 .comment-option span:hover:first-child {
   color: #fff;
   background-color: #00000012;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
+  border-start-start-radius: 10px;
+  border-start-end-radius: 10px;
 }
 
 .comment-option span:hover:last-child {
   color: #fff;
   background-color: #00000012;
-  border-bottom-left-radius: 10px;
-  border-bottom-right-radius: 10px;
+  border-end-start-radius: 10px;
+  border-end-end-radius: 10px;
 }
 
 .cat-modify-footer .spinner {

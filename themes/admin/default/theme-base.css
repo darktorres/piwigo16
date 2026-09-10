@@ -2675,8 +2675,8 @@ div.jGrowl div.jGrowl-notification{
 .pluginBox {
   display:flex;
   margin: 0 15px 15px 0;
-  border-top-right-radius:5px;
-  border-bottom-right-radius:5px;
+  border-start-end-radius:5px;
+  border-end-end-radius:5px;
   box-shadow: 1px 1px 0 1px #e0e0e0;
   transition: 0.5s;
   position: relative;
@@ -2865,8 +2865,8 @@ div.jGrowl div.jGrowl-notification{
   padding: 15px;
   position: relative;
   border-inline-start: solid 5px var(--plugincontent-border-left, #ffc17e);
-  border-top-right-radius:5px;
-  border-bottom-right-radius:5px;
+  border-start-end-radius:5px;
+  border-end-end-radius:5px;
   /* border-right:solid 5px #fafafa; */
   /* border-radius: 5px; */
 }
@@ -6826,8 +6826,8 @@ input:checked + .slider.small::before, input:checked + .slider.small::after {
   font-size:12px;
   text-align:start;
   padding: 4px 6px;
-  border-top-right-radius:10px;
-  border-bottom-right-radius:10px;
+  border-start-end-radius:10px;
+  border-end-end-radius:10px;
   margin-inline: -5px 10px;
 }
 

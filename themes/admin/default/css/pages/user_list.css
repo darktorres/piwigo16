@@ -235,8 +235,8 @@
 }
 
 .user-first-col {
-    border-top-left-radius: 15%;
-    border-bottom-left-radius: 15%;
+    border-start-start-radius: 15%;
+    border-end-start-radius: 15%;
     cursor:pointer;
 }
 
@@ -1389,8 +1389,8 @@
 .GuestUserPopIn .item .remove,
 .AddUserPopIn .item .remove {
   background-color: transparent;
-  border-top-right-radius: 20px;
-  border-bottom-right-radius: 20px;
+  border-start-end-radius: 20px;
+  border-end-end-radius: 20px;
   color: #000;
 
   border-inline-start: 1px solid transparent;

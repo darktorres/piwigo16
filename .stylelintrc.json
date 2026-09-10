@@ -1,5 +1,9 @@
 {
   "extends": ["stylelint-config-standard"],
+  "plugins": [
+    "stylelint-use-logical",
+    "stylelint-value-no-unknown-custom-properties"
+  ],
   "rules": {
     "custom-property-pattern": "^[a-z][a-z0-9-]*$",
     "color-no-invalid-hex": true,
@@ -15,10 +19,44 @@
     "keyframes-name-pattern": null,
     "no-duplicate-selectors": true,
     "declaration-no-important": true,
-    "declaration-property-value-disallowed-list": {
-      "/^(left|right|margin-left|margin-right|padding-left|padding-right)$/": ["/.*/"],
-      "text-align": ["/^(left|right)$/"]
-    },
+    "csstools/use-logical": [
+      "always",
+      {
+        "except": [
+          "top",
+          "bottom",
+          "width",
+          "height",
+          "min-width",
+          "max-width",
+          "min-height",
+          "max-height",
+          "margin-top",
+          "margin-bottom",
+          "padding-top",
+          "padding-bottom",
+          "border-top",
+          "border-bottom",
+          "border-top-width",
+          "border-top-style",
+          "border-top-color",
+          "border-bottom-width",
+          "border-bottom-style",
+          "border-bottom-color"
+        ]
+      }
+    ],
+    "csstools/value-no-unknown-custom-properties": [
+      true,
+      {
+        "importFrom": [
+          "themes/admin/default/css/tokens.css",
+          "themes/default/css/tokens.css",
+          "themes/standard_pages/css/tokens.css",
+          "stylelint-runtime-custom-properties.json"
+        ]
+      }
+    ],
     "alpha-value-notation": "number",
     "color-function-notation": null,
     "hue-degree-notation": null,

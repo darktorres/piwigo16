@@ -1,26 +1,26 @@
 {
   "themes/admin/default/theme-base.css": {
-    "declaration-property-value-disallowed-list": {
+    "csstools/use-logical": {
       "count": 1
     }
   },
   "themes/default/css/search.css": {
-    "declaration-property-value-disallowed-list": {
+    "csstools/use-logical": {
       "count": 2
     }
   },
   "themes/admin/default/css/components/album_selector.css": {
-    "declaration-property-value-disallowed-list": {
+    "csstools/use-logical": {
       "count": 1
     }
   },
   "themes/admin/default/css/components/colorbox.css": {
-    "declaration-property-value-disallowed-list": {
+    "csstools/use-logical": {
       "count": 1
     }
   },
   "themes/admin/default/css/components/jcrop.css": {
-    "declaration-property-value-disallowed-list": {
+    "csstools/use-logical": {
       "count": 21
     }
   }

@@ -42,6 +42,14 @@
  *   - `filter: alpha(opacity = 90)` (`#cboxOverlay`) -- IE's own legacy
  *     opacity syntax; the real `opacity: 0.9` in the same rule already
  *     covers every target engine.
+ *   - `#cboxMiddleLeft, #cboxBottomLeft { clear: left; }` -- a leftover
+ *     from the vendor's own 9-cell border-chrome grid
+ *     (`#cboxTopLeft`.."#cboxBottomRight`); `colorbox.ts` never creates
+ *     any element in that family (confirmed via a repo-wide grep for
+ *     each id), so this rule never matched anything -- missed by this
+ *     comment's own original "dropped entirely" audit, found later via
+ *     `stylelint-use-logical` flagging its physical `clear: left` value
+ *     with no real element to convert it for.
  *
  * `z-index: 9999` is kept as a literal, not mapped to this project's
  * own `--z-*` scale (which tops out at `--z-tooltip: 1070`): the
@@ -113,11 +121,6 @@
   opacity: 0.9;
 }
 
-#cboxMiddleLeft,
-#cboxBottomLeft {
-  clear: left;
-}
-
 #cboxContent {
   position: relative;
   margin-top: 32px;
@@ -171,7 +174,7 @@
 }
 
 .cboxPhoto {
-  float: left;
+  float: inline-start;
   margin: auto;
   border: 0;
   display: block;

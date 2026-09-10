@@ -116,8 +116,8 @@
 }
 
 .remove-filter {
-  border-bottom-right-radius: 25px;
-  border-top-right-radius: 25px;
+  border-end-end-radius: 25px;
+  border-start-end-radius: 25px;
   padding-inline: 5px 10px;
 }
 .remove-filter:hover {
@@ -126,8 +126,8 @@
 
 .filter-icon {
   padding-inline-start: 10px;
-  border-bottom-left-radius: 25px;;
-  border-top-left-radius: 25px;;
+  border-end-start-radius: 25px;
+  border-start-start-radius: 25px;
 }
 
 .user-name, .user-ip {
@@ -342,15 +342,15 @@
 .img-option a:hover:first-child {
   color: #fff;
   background-color: #00000012;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
+  border-start-start-radius: 10px;
+  border-start-end-radius: 10px;
 }
 
 .img-option a:hover:last-child {
   color: #fff;
   background-color: #00000012;
-  border-bottom-left-radius: 10px;
-  border-bottom-right-radius: 10px;
+  border-end-start-radius: 10px;
+  border-end-end-radius: 10px;
 }
 
 .type-icon img {

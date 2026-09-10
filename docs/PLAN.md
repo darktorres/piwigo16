@@ -6420,11 +6420,15 @@ analysis-only Workflow-tool runs (survey → dedup → adversarial verify →
 synthesize, ~350 subagents total, no files modified), each auditing the
 whole P51-touched JS/TS/DOM surface through a different lens, explicitly
 instructed not to re-report the others' findings or P53's already-scoped
-items. Full write-ups committed at repo root
-(`TMP-p51-consolidation-audit.md`, `TMP-p51-greenfield-naming-audit.md`,
-`TMP-p51-type-safety-audit.md`, `TMP-p51-accessibility-audit.md`) —
-every item below is condensed from, and traceable back to, its own
-numbered item in that file (workflow run id/task id given per phase).
+items. Full write-ups (`TMP-p51-consolidation-audit.md`,
+`TMP-p51-greenfield-naming-audit.md`, `TMP-p51-type-safety-audit.md`,
+`TMP-p51-accessibility-audit.md`) were committed at repo root in
+`7d0fd7b8b9`, verified item-by-item and token-by-token against the
+entries below, then removed once migration was confirmed complete —
+recoverable via `git show 7d0fd7b8b9:<filename>` if deeper detail than
+what's condensed below is ever needed, and each workflow's own
+run id/task id (given per phase below) still resolves to the full
+agent transcript/journal for anything neither file captured.
 Sequencing across P51-AB–AE is open; each item stands alone unless its
 own text says otherwise. Two items overlap already-scoped `P53` work
 and are cross-referenced rather than duplicated (P51-AB item 5 → P53-M;
@@ -8933,11 +8937,14 @@ adversarial verify → synthesize, no files modified), each auditing the
 whole P52-touched CSS surface through a different lens — mirroring the
 same 4-lens pattern already run over P51 (see `P51-AB`–`P51-AE`
 above), explicitly instructed not to re-report each other's findings.
-Full write-ups committed at repo root (`TMP-p52-consolidation-audit.md`,
+Full write-ups (`TMP-p52-consolidation-audit.md`,
 `TMP-p52-greenfield-naming-audit.md`,
 `TMP-p52-quality-completeness-audit.md`,
-`TMP-p52-accessibility-audit.md`) — every item below is condensed from,
-and traceable back to, its own numbered item in that file. One item
+`TMP-p52-accessibility-audit.md`) were committed at repo root in
+`7d0fd7b8b9`, verified item-by-item and token-by-token against the
+entries below, then removed once migration was confirmed complete —
+recoverable via `git show 7d0fd7b8b9:<filename>` if deeper detail than
+what's condensed below is ever needed. One item
 (`P52-M`'s naming audit) needed a same-session correction before being
 recorded here — see its own note below — and **3 real target-name/
 sequencing conflicts exist between `P52-M` and the already-committed

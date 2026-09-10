@@ -2,26 +2,244 @@
   "themes/admin/default/theme-base.css": {
     "csstools/use-logical": {
       "count": 1
+    },
+    "plugin/declaration-block-no-ignored-properties": {
+      "count": 1
+    },
+    "plugin/no-low-performance-animation-properties": {
+      "count": 35
+    },
+    "a11y/media-prefers-reduced-motion": {
+      "count": 48
+    },
+    "a11y/selector-pseudo-class-focus": {
+      "count": 124
     }
   },
   "themes/default/css/search.css": {
     "csstools/use-logical": {
       "count": 2
+    },
+    "plugin/no-low-performance-animation-properties": {
+      "count": 6
+    },
+    "a11y/media-prefers-reduced-motion": {
+      "count": 6
+    },
+    "a11y/selector-pseudo-class-focus": {
+      "count": 6
     }
   },
   "themes/admin/default/css/components/album_selector.css": {
     "csstools/use-logical": {
       "count": 1
+    },
+    "plugin/no-low-performance-animation-properties": {
+      "count": 1
+    },
+    "a11y/media-prefers-reduced-motion": {
+      "count": 1
+    },
+    "a11y/selector-pseudo-class-focus": {
+      "count": 5
     }
   },
   "themes/admin/default/css/components/colorbox.css": {
     "csstools/use-logical": {
       "count": 1
+    },
+    "a11y/selector-pseudo-class-focus": {
+      "count": 5
     }
   },
   "themes/admin/default/css/components/jcrop.css": {
     "csstools/use-logical": {
       "count": 21
+    }
+  },
+  "themes/admin/clear/theme.css": {
+    "plugin/declaration-block-no-ignored-properties": {
+      "count": 2
+    },
+    "plugin/no-low-performance-animation-properties": {
+      "count": 1
+    },
+    "a11y/media-prefers-reduced-motion": {
+      "count": 1
+    },
+    "a11y/selector-pseudo-class-focus": {
+      "count": 40
+    }
+  },
+  "themes/admin/default/css/components/selectize.css": {
+    "a11y/no-outline-none": {
+      "count": 1
+    },
+    "a11y/selector-pseudo-class-focus": {
+      "count": 1
+    }
+  },
+  "themes/admin/roma/theme.css": {
+    "plugin/no-low-performance-animation-properties": {
+      "count": 5
+    },
+    "a11y/media-prefers-reduced-motion": {
+      "count": 5
+    },
+    "a11y/selector-pseudo-class-focus": {
+      "count": 104
+    }
+  },
+  "themes/admin/default/css/pages/albums.css": {
+    "plugin/no-low-performance-animation-properties": {
+      "count": 6
+    },
+    "a11y/media-prefers-reduced-motion": {
+      "count": 5
+    },
+    "a11y/selector-pseudo-class-focus": {
+      "count": 4
+    }
+  },
+  "themes/standard_pages/theme.css": {
+    "plugin/no-low-performance-animation-properties": {
+      "count": 4
+    },
+    "a11y/media-prefers-reduced-motion": {
+      "count": 7
+    },
+    "a11y/selector-pseudo-class-focus": {
+      "count": 10
+    }
+  },
+  "themes/admin/default/css/pages/user_list.css": {
+    "plugin/no-low-performance-animation-properties": {
+      "count": 3
+    },
+    "a11y/media-prefers-reduced-motion": {
+      "count": 6
+    },
+    "a11y/selector-pseudo-class-focus": {
+      "count": 22
+    }
+  },
+  "themes/default/css/clear-search.css": {
+    "plugin/no-low-performance-animation-properties": {
+      "count": 1
+    },
+    "a11y/media-prefers-reduced-motion": {
+      "count": 1
+    },
+    "a11y/selector-pseudo-class-focus": {
+      "count": 8
+    }
+  },
+  "themes/admin/default/css/pages/cat_list.css": {
+    "plugin/no-low-performance-animation-properties": {
+      "count": 1
+    },
+    "a11y/media-prefers-reduced-motion": {
+      "count": 1
+    }
+  },
+  "themes/admin/default/css/components/jconfirm.css": {
+    "plugin/no-low-performance-animation-properties": {
+      "count": 1
+    },
+    "a11y/media-prefers-reduced-motion": {
+      "count": 10
+    },
+    "a11y/selector-pseudo-class-focus": {
+      "count": 3
+    }
+  },
+  "themes/admin/default/css/components/general.css": {
+    "plugin/no-low-performance-animation-properties": {
+      "count": 1
+    },
+    "a11y/media-prefers-reduced-motion": {
+      "count": 2
+    },
+    "a11y/selector-pseudo-class-focus": {
+      "count": 5
+    }
+  },
+  "themes/admin/default/fontello/css/animation.css": {
+    "a11y/media-prefers-reduced-motion": {
+      "count": 1
+    }
+  },
+  "themes/admin/default/css/pages/maintenance_actions.css": {
+    "a11y/media-prefers-reduced-motion": {
+      "count": 1
+    },
+    "a11y/selector-pseudo-class-focus": {
+      "count": 2
+    }
+  },
+  "themes/default/css/dark-search.css": {
+    "a11y/selector-pseudo-class-focus": {
+      "count": 9
+    }
+  },
+  "themes/admin/default/css/pages/history.css": {
+    "a11y/selector-pseudo-class-focus": {
+      "count": 8
+    }
+  },
+  "themes/default/theme.css": {
+    "a11y/selector-pseudo-class-focus": {
+      "count": 6
+    }
+  },
+  "themes/default/css/pages/no_photo_yet.css": {
+    "a11y/selector-pseudo-class-focus": {
+      "count": 3
+    }
+  },
+  "themes/admin/roma/theme-base.css": {
+    "a11y/selector-pseudo-class-focus": {
+      "count": 2
+    }
+  },
+  "themes/admin/roma/css/components/general.css": {
+    "a11y/selector-pseudo-class-focus": {
+      "count": 2
+    }
+  },
+  "themes/admin/default/css/pages/updates_pwg.css": {
+    "a11y/selector-pseudo-class-focus": {
+      "count": 2
+    }
+  },
+  "themes/admin/default/css/pages/cat_modify.css": {
+    "a11y/selector-pseudo-class-focus": {
+      "count": 2
+    }
+  },
+  "themes/admin/default/css/pages/picture_modify.css": {
+    "a11y/selector-pseudo-class-focus": {
+      "count": 1
+    }
+  },
+  "themes/admin/default/css/pages/install.css": {
+    "a11y/selector-pseudo-class-focus": {
+      "count": 1
+    }
+  },
+  "themes/admin/default/css/pages/batch_manager_unit.css": {
+    "a11y/selector-pseudo-class-focus": {
+      "count": 1
+    }
+  },
+  "themes/admin/default/css/pages/batch_manager_global.css": {
+    "a11y/selector-pseudo-class-focus": {
+      "count": 1
+    }
+  },
+  "themes/admin/clear/theme-base.css": {
+    "a11y/selector-pseudo-class-focus": {
+      "count": 1
     }
   }
 }

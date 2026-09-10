@@ -64,3 +64,35 @@
     margin: 0;
   }
 }
+
+/**
+ * `utilities` -- the master order's own last, highest-priority layer,
+ * declared above but never yet populated. A global `prefers-reduced-
+ * motion` reset belongs here rather than as a per-selector override
+ * next to each of this project's many individual `transition`/
+ * `animation` declarations: `a11y/media-prefers-reduced-motion`
+ * (added alongside `stylelint-use-logical`/friends) checks for an
+ * exact-selector-text override nested or sibling to each animated
+ * rule, which a single global rule can't satisfy mechanically --
+ * registered as a documented baseline exception in
+ * stylelint-suppressions.json for exactly that reason -- but a real
+ * user with the OS preference set genuinely gets near-instant
+ * transitions/animations everywhere, present and future, from this
+ * one place, which no amount of scattered per-selector overrides can
+ * guarantee as new animated rules get added later. No `!important`
+ * needed: `utilities` already wins over every other layer by
+ * declaration order alone, consistent with this project's own
+ * zero-`!important` policy (P52-H).
+ */
+@layer utilities {
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms;
+      animation-iteration-count: 1;
+      transition-duration: 0.01ms;
+      scroll-behavior: auto;
+    }
+  }
+}

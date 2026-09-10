@@ -2,7 +2,11 @@
   "extends": ["stylelint-config-standard"],
   "plugins": [
     "stylelint-use-logical",
-    "stylelint-value-no-unknown-custom-properties"
+    "stylelint-value-no-unknown-custom-properties",
+    "stylelint-no-unsupported-browser-features",
+    "stylelint-declaration-block-no-ignored-properties",
+    "stylelint-high-performance-animation",
+    "@double-great/stylelint-a11y"
   ],
   "rules": {
     "custom-property-pattern": "^[a-z][a-z0-9-]*$",
@@ -57,6 +61,20 @@
         ]
       }
     ],
+    "plugin/no-unsupported-browser-features": [
+      true,
+      {
+        "severity": "warning"
+      }
+    ],
+    "plugin/declaration-block-no-ignored-properties": true,
+    "plugin/no-low-performance-animation-properties": [
+      true,
+      { "ignore": "paint-properties" }
+    ],
+    "a11y/media-prefers-reduced-motion": true,
+    "a11y/no-outline-none": true,
+    "a11y/selector-pseudo-class-focus": true,
     "alpha-value-notation": "number",
     "color-function-notation": null,
     "hue-degree-notation": null,

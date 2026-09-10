@@ -215,9 +215,12 @@ body[class*="jconfirm-no-scroll-"] {
 }
 
 .jconfirm .jconfirm-box div.jconfirm-content-pane {
+  /* `transition` was dead: `height` is always `auto` here (confirmed
+     via `jconfirm.ts` -- it never writes a concrete pixel height to
+     this element), and `auto` isn't an interpolable value a
+     transition can animate to or from. */
   margin-bottom: var(--space-4);
   height: auto;
-  transition: height 0.4s ease-in;
   display: inline-block;
   width: 100%;
   position: relative;

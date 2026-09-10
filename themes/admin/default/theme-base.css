@@ -86,8 +86,10 @@ ul.thumbnails span.wrap1 {
   text-align: center;		/* to center the thumbnail and legend */
 }
 ul.thumbnails span.wrap2 {
-  margin: 0;			/* important reset the margins */
-  display: table-cell;		/* block prevents vertical-align here */
+  /* `margin` never applies to a `table-cell` box (CSS2 17.4) -- no
+     margin declaration needed or possible here. `vertical-align` does
+     apply, unlike to a `block` box. */
+  display: table-cell;
   vertical-align: middle;
 	border-radius: 4px;
 }
@@ -1302,6 +1304,14 @@ form.filter fieldset label :is(input, select, span, textarea) {
 }
 form.filter fieldset * label :is(input, select, textarea),
 form.filter fieldset label span :is(input, select, textarea) {
+	/* `margin` is not fully "ignored" by `display: inline` the way
+	   stylelint-declaration-block-no-ignored-properties' static check
+	   treats the whole shorthand -- only the vertical (top/bottom)
+	   components have no effect on a non-replaced inline box; the
+	   horizontal (right) component here is real and genuinely applies.
+	   The vertical components are already 0, so nothing is lost either
+	   way -- a confirmed tool false positive, registered in
+	   stylelint-suppressions.json. */
 	display: inline;
 	vertical-align: top;
 	margin: 0 0.5em 0 0;
@@ -1869,13 +1879,17 @@ ul.tagSelection li {
 }
 
 .options-open::after {
+  /* `transition` here is fully dead: `.options-open` is the only
+     selector this `::after` ever matches -- there is no un-toggled
+     state for the pseudo-element to exist in first, so it's always
+     created fresh already at its final height, never animating a
+     real change. */
   content: '';
   width: 100%;
   height: 27px;
   position: absolute;
   bottom: -24px;
   inset-inline-start: 0;
-  transition:height 8s;
 }
 
 .toggle-update-mode + .slider.round{
@@ -2075,9 +2089,12 @@ a.admin-main:hover {color:#fff;}
 
 /* Set the width of the menubar for the galery */
 .admin-menubar {
+  /* `display` is inert here -- `position: fixed` always blockifies its
+     element (CSS Display Module Level 3, "Blockification") regardless
+     of the declared value, so `width`/`margin` above apply to a real
+     block box, not an inline one. */
   width: 205px;
   margin: 0;
-  display: inline;
   position: fixed;
   top: 50px;
   bottom: 0;
@@ -2179,7 +2196,6 @@ a.admin-main:hover {color:#fff;}
   margin:0;
   width:auto;
   list-style-type:none;
-  list-style-image:none;
   text-decoration:none;
 }
 .tabsheet li {
@@ -5143,6 +5159,17 @@ p.upload-warnings-summary .showInfo {margin-inline-start:3px;}
 .comments-search:hover {
   background-color: var(--comments-search-hover-bg, #f0f0f0);}
 
+/* `.comments-search input`'s own `all: unset` below already strips its
+   outline unconditionally -- with no compensating indicator anywhere,
+   that left keyboard focus on this control fully invisible. Ringing
+   the whole search pill on `:focus-within` (same pattern as
+   `.input-container:focus-within` elsewhere in this project) restores
+   real focus visibility without fighting the reset. */
+.comments-search:focus-within {
+  outline: 2px solid var(--color-accent, #f70);
+  outline-offset: 1px;
+}
+
 .comments-search-icon,
 .comments-search-cancel {
   font-size: 18px;
@@ -5837,7 +5864,8 @@ input[type="text"].dError {
 }
 
 .groups .GroupContainer {
-  vertical-align: middle;
+  /* `vertical-align` has no effect on a flex container (only applies
+     to inline-level/table-cell boxes). */
   position: relative;
   display: flex;
   flex-direction: column;

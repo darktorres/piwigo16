@@ -2602,8 +2602,9 @@ label:has(> .filters-icon-check:disabled){
 .comments-search:hover {
   --comments-search-hover-bg: #222;}
 
-.comments-search input:focus {
-  outline: none;
-}
+/* Dead: theme-base.css's own `.comments-search input { all: unset; }`
+   already strips this unconditionally, in every skin. See
+   theme-base.css's own `.comments-search:focus-within` for the real
+   (missing until now) focus indicator this input relied on. */
 }
 

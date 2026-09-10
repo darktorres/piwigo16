@@ -120,10 +120,14 @@ a.Piwigo:hover  span.Piwigo  {
 }
 table.table2 { border: 2px solid #ddd; }
 
-*, *:focus, *:active, input:active, a:active, input:focus, a:focus {
-  outline: none;
-  -moz-outline-width: 0;
-}
+/* Dropped: a blanket "no outline on anything, ever" legacy reset (plus
+   a `-moz-outline-width` companion for an engine that dropped that
+   property decades ago). This project's floor browsers already gate
+   the native default outline to real keyboard focus on their own
+   (`:focus-visible` heuristics), so this rule no longer serves its
+   original "outline looks ugly on a mouse click" purpose -- it only
+   left every keyboard user with zero focus indication anywhere in
+   this skin. */
 
 a:hover, a:active {
   cursor: pointer;
@@ -192,6 +196,12 @@ input[type="text"].large  { width: 317px; }
   position:static;
 }
 .bigbutton input[type="submit"] {
+  /* `height`/`width` are not actually ignored here -- form controls
+     are replaced-like elements for sizing purposes, exempt from the
+     restriction that normally makes `width`/`height` inert on a
+     non-replaced `display: inline` box (CSS2.1 10.3.3/10.6.2). A
+     confirmed tool false positive, registered in
+     stylelint-suppressions.json. */
   display:inline;
   position:static;
   height:auto;

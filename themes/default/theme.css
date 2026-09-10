@@ -17,10 +17,13 @@
  * Menubar
  */
 #menubar {
+	/* `display` is inert here -- a float always blockifies its element
+	   (CSS Display Module Level 3, "Blockification") regardless of the
+	   declared value, so `margin`/`width` above apply to a real block
+	   box, not an inline one. */
 	float: inline-start;
 	margin: 0 0 10px 1em;
 	padding: 0;
-	display: inline;
 	width: 18em;
 }
 
@@ -231,7 +234,6 @@ td.calDayCellFull, td.calDayCellEmpty {
 	padding-top: 0;
 	z-index: 2;
 	position: absolute;
-	vertical-align: top;
 	color: #000;
 }
 
@@ -240,7 +242,6 @@ td.calDayCellFull, td.calDayCellEmpty {
 	padding-top: 1px;
 	z-index: 3;
 	position: absolute;
-	vertical-align: top;
 	color: #fff;
 }
 
@@ -342,8 +343,10 @@ td.calDayCellFull, td.calDayCellEmpty {
 	text-align: center;		/* to center the thumbnail and legend */
 }
 .thumbnails .wrap2 {
-	margin: 0;			/* important reset the margins */
-	display: table-cell;/* block prevents vertical-align here */
+	/* `margin` never applies to a `table-cell` box (CSS2 17.4) -- no
+	   margin declaration needed or possible here. `vertical-align`
+	   does apply, unlike to a `block` box. */
+	display: table-cell;
 	vertical-align: middle;
 	border-radius: 4px;
 }

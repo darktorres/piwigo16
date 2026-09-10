@@ -9012,12 +9012,13 @@ regressions and should land before the lower-stakes cleanup below.**
    Fix: add `transition-delay: 0.01ms; animation-delay: 0.01ms;` to
    the same global rule.
 6. *[inconsistency, low risk]* `admin/roma/theme.css:2501-2505`
-   (`.jqtree-moving` icon-blue) is byte-identical to the icon-green
-   block immediately above instead of icon-blue's own base values
-   (lines 1643-1646) — every other color correctly echoes its own
-   base before the shared `opacity:0.6` dim; blue is the sole
-   outlier, so drag-moving a category shows the wrong shade in roma.
-   Fix: change the values at 2501-2505 to icon-blue's own
+   (`.jqtree-moving ... i.icon-blue`/`.node-icon.icon-blue`) is
+   byte-identical to the icon-green block immediately above instead
+   of icon-blue's own base values (lines 1643-1646) — every other
+   color correctly echoes its own base before the shared
+   `opacity:0.6` dim; blue is the sole outlier, so drag-moving a
+   category shows the wrong shade in roma. Fix: change both
+   selectors' background/color values at 2501-2505 to icon-blue's own
    `#4f71a4`/`#9fbef1`.
 7. *[inconsistency, medium risk]* The "Date created" search filter
    has zero dark-mode colors — `clear-search.css` has a full 13-rule
@@ -9105,16 +9106,24 @@ regressions and should land before the lower-stakes cleanup below.**
 
 17. *[remove, low risk]* 7 independently-verified dead legacy
     selector groups in `theme-base.css` (plus sibling dead
-    declarations in `roma`/`clear`/`default theme.css`): both
-    byte-identical `@keyframes animatedBackground` blocks; the
+    declarations in `roma`/`clear`/`default theme.css`): (1) both
+    byte-identical `@keyframes animatedBackground` blocks
+    (`theme-base.css:4334-4342`); (2) the
     `.userSeparator`/`.userProperties*`/`.userPrefs`/`.userProperty`/
-    `.userActions` family; `.AddUserLabel`/`.AddAlbumLabel`/
-    `.DeleteAlbumLabel`/3 more `*Input` selectors;
-    `.dataTables_filter`/`.dataTables_length` (never created by the
-    ported `dataTable.ts`); `.optgroup-header` (selectize has no
-    optgroup support); `.sort .icon-sort-number-up`; the dead half of
-    `.user-property-column-title, .edit-username-title` (keep
-    `.edit-username-title` only). Fix: delete all 7 groups and their
+    `.userActions` family (`theme-base.css:5847,7027-7057`) plus
+    color overrides in `roma/theme.css:1047,1084-1085` and
+    `clear/theme.css:658,688-689,714`; (3) `.AddUserLabel`/
+    `.AddAlbumLabel`/`.DeleteAlbumLabel`/`.AddUserInput`/
+    `.AddAlbumInput`/`.DeleteAlbumInput`/`.RenameAlbumInput`
+    (`theme-base.css:8349-8361`); (4) `.dataTables_filter`/
+    `.dataTables_length` (never created by the ported `dataTable.ts`);
+    (5) `.optgroup-header` (selectize has no optgroup support; also
+    dupes at `themes/default/theme.css:908`); (6) `.sort
+    .icon-sort-number-up` (`theme-base.css:151-153`); (7) the dead
+    half of `.user-property-column-title, .edit-username-title`
+    (`theme-base.css:8159`, plus the same dead half at
+    `roma/theme.css:2023-2024` and `user_list.css:411-419`) — keep
+    `.edit-username-title` only. Fix: delete all 7 groups and their
     siblings in one pass.
 18. *[remove, medium risk]* A further 23 selectors in `theme-base.css`
     (`.addGroupFormTitle`, `.advanced-filter-dates-max/-min`,
@@ -9261,11 +9270,16 @@ regressions and should land before the lower-stakes cleanup below.**
     standalone action here; when that campaign is picked up, start
     with these accent-orange instances since `tokens.css` already
     names this exact shared value.
-34. *[other, low risk]* Add `stylelint-declaration-strict-value`
-    (configured for color/border-color/background-color/z-index) to
-    enforce that future edits can't reintroduce a raw hex color or
-    magic z-index outside the token system — complements, and should
-    land alongside, item 33's eventual raw-hex campaign and the
+34. *[other, low risk]* `csstools/value-no-unknown-custom-properties`
+    (already installed) only checks that a referenced custom property
+    exists, not that literals are avoided — nothing currently enforces
+    that a future edit can't reintroduce a raw hex color or magic
+    z-index outside the token system. Fix: install
+    `stylelint-declaration-strict-value` and configure its
+    `scale-unlimited/declaration-strict-value` rule for
+    color/border-color/background-color/z-index to require
+    `var(--token)` or keyword values — complements, and should land
+    alongside, item 33's eventual raw-hex campaign and the
     already-deferred `selector-max-id: 0` enforcement (154 remaining
     ID selectors, per the same P52-H closeout note).
 35. *[other, low risk]* Evaluate `stylelint-plugin-use-baseline`

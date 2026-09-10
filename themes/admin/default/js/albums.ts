@@ -30,8 +30,6 @@ import {
   dataId,
   delegate,
   escapeId,
-  fadeIn,
-  fadeOut,
   find,
   hide,
   html,
@@ -47,6 +45,7 @@ import {
   show,
   swing,
   text,
+  trigger,
   val,
   valueAt,
   windowHeight,
@@ -193,6 +192,21 @@ const addAlbumRootTitle = pwg_getPageString("Create a new album at root");
 const addSubAlbumOf = pwg_getPageString('Create a sub-album of "%s"');
 const tiptipLockedAlbum = pwg_getPageString("Locked album");
 
+/**
+ * The 4 real popin `<dialog>` elements this file drives (converted from
+ * hand-rolled fixed-position overlay `<div>`s, docs/PLAN.md P52-J) --
+ * narrowed once here so every open/close call site can use the native
+ * `showModal()`/`close()` API.
+ */
+function dialogElOf(selector: string): HTMLDialogElement | null {
+  const el = document.querySelector(selector);
+  return el instanceof HTMLDialogElement ? el : null;
+}
+const addAlbumDialogEl = dialogElOf("#AddAlbum");
+const renameAlbumDialogEl = dialogElOf("#RenameAlbum");
+const deleteAlbumDialogEl = dialogElOf("#DeleteAlbum");
+const catMoveOrderDialogEl = dialogElOf(".cat-move-order-popin");
+
 // jQuery's default easing (`effects/Tween.js`) and speed-name table, both
 // re-exported by dom.ts -- reused here rather than duplicated, since
 // `scrollTop` is a DOM property, not a CSS one, and dom.ts's own
@@ -274,8 +288,25 @@ ready(() => {
     ".cat-move-order-popin .close-popin",
   );
   on(closePopin, "click", function () {
-    fadeOut(document.querySelectorAll(".cat-move-order-popin"));
+    catMoveOrderDialogEl?.close();
   });
+  on(closePopin, "keydown", function (event) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+    const { key } = event as KeyboardEvent;
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      catMoveOrderDialogEl?.close();
+    }
+  });
+  // Native <dialog> already closes on Escape; the click-outside-to-close
+  // idiom below matches its own ::backdrop.
+  if (catMoveOrderDialogEl !== null) {
+    on(catMoveOrderDialogEl, "click", function (e: Event) {
+      if (e.target === catMoveOrderDialogEl) {
+        catMoveOrderDialogEl.close();
+      }
+    });
+  }
 
   const openUppercats =
     openCat === "-1"
@@ -407,7 +438,7 @@ ready(() => {
     const nodeId = attrOf(this, "data-id");
     const node = getAlbumTree().getNodeById(nodeId);
     if (node) {
-      fadeIn(document.querySelectorAll(".cat-move-order-popin"));
+      catMoveOrderDialogEl?.showModal();
       html(
         document.querySelectorAll(".cat-move-order-popin .album-name"),
         getPathNode(node),
@@ -426,7 +457,7 @@ ready(() => {
   });
 
   on(document.querySelectorAll(".order-root"), "click", function () {
-    fadeIn(document.querySelectorAll(".cat-move-order-popin"));
+    catMoveOrderDialogEl?.showModal();
     html(
       document.querySelectorAll(".cat-move-order-popin .album-name"),
       strRoot,
@@ -490,10 +521,46 @@ ready(() => {
   on(document.querySelectorAll(".CloseRenameAlbum"), "click", function () {
     closeRenameAlbumPopIn();
   });
+  on(
+    document.querySelectorAll(".CloseRenameAlbum"),
+    "keydown",
+    function (event) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+      const { key } = event as KeyboardEvent;
+      if (key === "Enter" || key === " ") {
+        event.preventDefault();
+        closeRenameAlbumPopIn();
+      }
+    },
+  );
   on(document.querySelectorAll(".RenameAlbumCancel"), "click", function () {
     closeRenameAlbumPopIn();
   });
+  on(
+    document.querySelectorAll(".RenameAlbumCancel"),
+    "keydown",
+    function (event) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+      const { key } = event as KeyboardEvent;
+      if (key === "Enter" || key === " ") {
+        event.preventDefault();
+        closeRenameAlbumPopIn();
+      }
+    },
+  );
 
+  on(
+    document.querySelectorAll(".RenameAlbumSubmit"),
+    "keydown",
+    function (event) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+      const { key } = event as KeyboardEvent;
+      if (key === "Enter" || key === " ") {
+        event.preventDefault();
+        trigger(document.querySelectorAll(".RenameAlbumSubmit"), "click");
+      }
+    },
+  );
   on(
     document.querySelectorAll(".RenameAlbumSubmit"),
     "click",
@@ -545,6 +612,36 @@ ready(() => {
   // AddAlbumPopIn
   hide(document.querySelectorAll(".AddAlbumErrors"));
   hide(document.querySelectorAll(".DeleteAlbumErrors"));
+
+  // Native <dialog> already closes on Escape; the click-outside-to-close
+  // idiom below matches each dialog's own ::backdrop. #AddAlbum's own
+  // "close" event (fired for every close path, including Escape) also
+  // hides .AddAlbumErrors, replacing the old fadeOut() callback.
+  if (addAlbumDialogEl !== null) {
+    on(addAlbumDialogEl, "click", function (e: Event) {
+      if (e.target === addAlbumDialogEl) {
+        addAlbumDialogEl.close();
+      }
+    });
+    on(addAlbumDialogEl, "close", function () {
+      hide(document.querySelectorAll(".AddAlbumErrors"));
+    });
+  }
+  if (renameAlbumDialogEl !== null) {
+    on(renameAlbumDialogEl, "click", function (e: Event) {
+      if (e.target === renameAlbumDialogEl) {
+        renameAlbumDialogEl.close();
+      }
+    });
+  }
+  if (deleteAlbumDialogEl !== null) {
+    on(deleteAlbumDialogEl, "click", function (e: Event) {
+      if (e.target === deleteAlbumDialogEl) {
+        deleteAlbumDialogEl.close();
+      }
+    });
+  }
+
   on(document.querySelectorAll(".add-album-button"), "click", function () {
     openAddAlbumPopIn(0);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- albums.latte renders .AddAlbumSubmit unconditionally.
@@ -565,13 +662,61 @@ ready(() => {
   on(document.querySelectorAll(".CloseAddAlbum"), "click", function () {
     closeAddAlbumPopIn();
   });
+  on(
+    document.querySelectorAll(".CloseAddAlbum"),
+    "keydown",
+    function (event) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+      const { key } = event as KeyboardEvent;
+      if (key === "Enter" || key === " ") {
+        event.preventDefault();
+        closeAddAlbumPopIn();
+      }
+    },
+  );
   on(document.querySelectorAll(".AddAlbumCancel"), "click", function () {
     closeAddAlbumPopIn();
   });
+  on(
+    document.querySelectorAll(".AddAlbumCancel"),
+    "keydown",
+    function (event) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+      const { key } = event as KeyboardEvent;
+      if (key === "Enter" || key === " ") {
+        event.preventDefault();
+        closeAddAlbumPopIn();
+      }
+    },
+  );
   on(document.querySelectorAll(".DeleteAlbumCancel"), "click", function () {
     closeDeleteAlbumPopIn();
   });
+  on(
+    document.querySelectorAll(".DeleteAlbumCancel"),
+    "keydown",
+    function (event) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+      const { key } = event as KeyboardEvent;
+      if (key === "Enter" || key === " ") {
+        event.preventDefault();
+        closeDeleteAlbumPopIn();
+      }
+    },
+  );
 
+  on(
+    document.querySelectorAll(".AddAlbumSubmit"),
+    "keydown",
+    function (event) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+      const { key } = event as KeyboardEvent;
+      if (key === "Enter" || key === " ") {
+        event.preventDefault();
+        trigger(document.querySelectorAll(".AddAlbumSubmit"), "click");
+      }
+    },
+  );
   on(
     document.querySelectorAll(".AddAlbumSubmit"),
     "click",
@@ -948,7 +1093,7 @@ function openAddAlbumPopIn(parentAlbumId: number) {
       addAlbumRootTitle,
     );
   }
-  fadeIn(document.querySelectorAll("#AddAlbum"));
+  addAlbumDialogEl?.showModal();
   const modalInput = document.querySelectorAll(
     ".AddAlbumLabelUsername .user-property-input",
   );
@@ -971,21 +1116,19 @@ function openAddAlbumPopIn(parentAlbumId: number) {
     if (key === "Enter") {
       document.querySelector<HTMLElement>(".AddAlbumSubmit")?.click();
     }
-    if (key === "Escape") {
-      closeAddAlbumPopIn();
-    }
   });
 }
 
+// Native <dialog> already closes on Escape; #AddAlbum's own "close" event
+// (registered once in ready() below) hides .AddAlbumErrors for that path
+// too, so this only has to ask the dialog to close.
 function closeAddAlbumPopIn() {
-  fadeOut(document.querySelectorAll("#AddAlbum"), function () {
-    hide(document.querySelectorAll(".AddAlbumErrors"));
-  });
+  addAlbumDialogEl?.close();
 }
 
 function openRenameAlbumPopIn(replacedAlbumName: string | undefined) {
   const safeName = replacedAlbumName ?? "";
-  fadeIn(document.querySelectorAll("#RenameAlbum"));
+  renameAlbumDialogEl?.showModal();
   html(
     document.querySelectorAll(".RenameAlbumTitle span"),
     renameItem.replace("%s", safeName),
@@ -1003,14 +1146,15 @@ function openRenameAlbumPopIn(replacedAlbumName: string | undefined) {
   off(document, "keypress");
   on(document, "keypress", function (e: Event) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keypress" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
-    if ((e as KeyboardEvent).key === "Enter") {
+    const { key } = e as KeyboardEvent;
+    if (key === "Enter" && renameAlbumDialogEl?.open === true) {
       document.querySelector<HTMLElement>(".RenameAlbumSubmit")?.click();
     }
   });
 }
 
 function closeRenameAlbumPopIn() {
-  fadeOut(document.querySelectorAll("#RenameAlbum"));
+  renameAlbumDialogEl?.close();
 }
 
 async function triggerDeleteAlbum(cat_id: number): Promise<void> {
@@ -1071,7 +1215,7 @@ async function triggerDeleteAlbum(cat_id: number): Promise<void> {
 }
 
 function openDeleteAlbumPopIn(cat_to_delete: number) {
-  fadeIn(document.querySelectorAll("#DeleteAlbum"));
+  deleteAlbumDialogEl?.showModal();
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real caller passes a real dataId()-read album id, always a real tree node.
   const node = getAlbumTree().getNodeById(cat_to_delete)!;
   if (node.children.length === 0) {
@@ -1090,6 +1234,15 @@ function openDeleteAlbumPopIn(cat_to_delete: number) {
 
   // Actually delete
   const deleteSubmit = document.querySelectorAll(".DeleteAlbumSubmit");
+  off(deleteSubmit, "keydown");
+  on(deleteSubmit, "keydown", function (event) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+    const { key } = event as KeyboardEvent;
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      trigger(deleteSubmit, "click");
+    }
+  });
   off(deleteSubmit, "click");
   on(deleteSubmit, "click", function () {
     void (async () => {
@@ -1124,7 +1277,7 @@ function openDeleteAlbumPopIn(cat_to_delete: number) {
 }
 
 function closeDeleteAlbumPopIn() {
-  fadeOut(document.querySelectorAll("#DeleteAlbum"));
+  deleteAlbumDialogEl?.close();
 }
 
 function getAllSubAlbumsFromNode(node: AlbumJqTreeNode): number {

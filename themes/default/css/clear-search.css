@@ -330,10 +330,15 @@
 }
 
 @media (max-width: 600px) {
+  /* Overrides this file's own bare `.filter-form` box-shadow (above,
+     unconditional) by source order -- both are the same 1-class
+     specificity, so this later, media-scoped declaration wins without
+     needing `!important`. */
   .filter-form {
     width: 101vw;
     border-top: 1px solid #AAA;
     border-bottom: 1px solid #AAA;
+    box-shadow: none;
   }
 
   .arrow-border {

@@ -1065,6 +1065,15 @@ span.related-tags .tag-counter{
   #breadcrumb{
     flex-direction:column;
   }
+
+  /* iOS Safari auto-zooms on focus for any input/select/textarea
+     below 16px. Placed after this file's own `input, select { font-
+     size: 1em }` (same element-level specificity, later in this same
+     file wins the tie) so every default-chain page gets the fix, not
+     just the search/filter forms this was originally scoped to. */
+  input, select, textarea {
+    font-size: 16px;
+  }
 }
 
 }

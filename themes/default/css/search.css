@@ -784,12 +784,6 @@
     width: 100vw;
     padding: 15px;
     border-radius: 0;
-    /* !important is deliberate and load-bearing: dark-search.css's
-       own bare `.filter-form` rule sets a real box-shadow, same
-       specificity, same layer -- whichever skin file happens to load
-       last would otherwise win regardless of this mobile-only
-       override's intent. */
-    box-shadow: none !important;
     top: 37px
   }
   .form_mobile_arrow {
@@ -806,16 +800,23 @@
     inset-inline-end: 15px;
   }
 
-  .search-params-title,
-  .search-params {
-    /* !important is deliberate and load-bearing: `.filter-tag-form
-       .search-params`/`.filter-authors .search-params`/`.filter-
-       album-form .search-params`/`.filter-word-form .search-params`
-       (all higher-specificity, 2-class compound selectors) set
-       `display: flex` and would otherwise always win over this bare
-       `.search-params` mobile override regardless of which specific
-       filter form is active. */
-    display: block !important;
+  .search-params-title {
+    display: block;
+  }
+
+  /* Matches `.filter-tag-form .search-params`/`.filter-authors
+     .search-params`/`.filter-album-form .search-params`/
+     `.filter-word-form .search-params` above 1:1 (same 2-class
+     specificity, later in this same file) instead of relying on a
+     bare, lower-specificity `.search-params` + `!important` -- these
+     4 are the only real `.search-params` rules that ever set
+     `display: flex`, so matching them exactly covers every filter
+     form that actually needs the mobile override. */
+  .filter-tag-form .search-params,
+  .filter-authors .search-params,
+  .filter-album-form .search-params,
+  .filter-word-form .search-params {
+    display: block;
   }
 
   .word-search-options {
@@ -859,13 +860,18 @@
     height: auto;
   }
 
-  .search-result-path,
-  .link-path {
-    /* !important is deliberate and load-bearing: `.breadcrumb-item
-       .link-path` (higher-specificity, 2-class) sets `white-space:
-       nowrap` and would otherwise always win over this bare
-       `.link-path` mobile override. */
-    white-space: unset !important;
+  /* Matches each real competing rule's own specificity instead of a
+     bare selector + `!important`: `.breadcrumb-item .link-path` (same
+     file, 2-class, sets `white-space: nowrap`) and
+     `album_selector.css`'s own bare `.search-result-path` (a
+     different, cross-chain-shared file -- qualifying with its real
+     `.linkedAlbumPopInContainer` ancestor here reaches 2-class
+     specificity too, an unconditional win over that file's 1-class
+     rule regardless of load order, without touching a file the admin
+     chain also loads). */
+  .breadcrumb-item .link-path,
+  .linkedAlbumPopInContainer .search-result-path {
+    white-space: unset;
   }
 
   .delete,
@@ -878,15 +884,11 @@
     font-size: 15px;
   }
 
-  /* disable zoom on focus in IOS Device -- !important is deliberate
-     and load-bearing: iOS Safari auto-zooms on focus for any input/
-     select/textarea below 16px, and this bare-tag mobile override
-     must beat every other, more-specific font-size rule already set
-     on individual inputs throughout this file, not just one known
-     competitor. */
-  input, select, textarea {
-    font-size: 16px !important;
-  }
+  /* iOS zoom-on-focus prevention itself moved to theme.css (the base
+     rule's own file, `input, select { font-size: 1em }`) and
+     jquery-ui.css (`.ui-datepicker .ui-datepicker-title select`, the
+     one higher-specificity real competitor) -- each fixed at its own
+     source instead of fought from here with `!important`. */
 
   #word-search {
     max-width: 100%;

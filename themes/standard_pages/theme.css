@@ -531,21 +531,6 @@ p.error-message,
   vertical-align: middle;
 }
 
-/* !important is deliberate and load-bearing here (P52-E/F Step 7):
-   this read-only username display must look unstyled regardless of
-   skin, but `.light .input-container`/`.dark .input-container` (same
-   2-class specificity, in the later theme-skin layer) would otherwise
-   always win by layer position -- theme-chain can never out-rank
-   theme-skin without it. Found live: removing it let the active
-   skin's real 1px border render, adding 2px to the page's total
-   height and shifting everything below it. */
-.profile-section .username {
-  width: fit-content;
-  cursor: not-allowed;
-  background-color: transparent !important;
-  border: none !important;
-}
-
 .profile-section .input-container.radio,
 .profile-section .section-expiration,
 .profile-section .api-icon-action   {
@@ -895,18 +880,6 @@ input[type='radio'] {
   accent-color: var(--color-accent, #f70);
 }
 
-/* !important is deliberate and load-bearing (P52-E/F Step 7): same
-   theme-chain-vs-theme-skin gap as .profile-section .username above --
-   `.light`/`.dark .input-container` (same 2-class specificity, later
-   theme-skin layer) would otherwise always win the accent-colored
-   focus border by layer position. Confirmed live via composer
-   test:visual after removing it: the focus border silently reverted
-   to the skin's own plain border color. */
-.input-container:focus-within,
-.input-modal:focus-within {
-  border: 1px solid var(--color-accent, #f70) !important;
-}
-
 .profile-section .api-icon-action i:hover,
 .close-modal:hover,
 .profile-section .icon-clone:hover {
@@ -1214,6 +1187,26 @@ input[type='radio'] {
 
 .dark .btn-revoked {
   background-color: #BE4949;
+}
+
+/* Relocated below `.light .input-container`/`.dark .input-container`
+   (same 2-class specificity as `.profile-section .username`, both in
+   this same `theme-chain` layer) so source order -- not `!important`
+   -- decides the tie: this read-only username display must look
+   unstyled regardless of the active light/dark mode. */
+.profile-section .username {
+  width: fit-content;
+  cursor: not-allowed;
+  background-color: transparent;
+  border: none;
+}
+
+/* Same reasoning as `.profile-section .username` above -- relocated
+   past `.light`/`.dark .input-container` (equal 2-class specificity)
+   so the accent-colored focus border wins by source order. */
+.input-container:focus-within,
+.input-modal:focus-within {
+  border: 1px solid var(--color-accent, #f70);
 }
 
 }

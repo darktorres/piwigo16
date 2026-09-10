@@ -8,7 +8,7 @@
     "shorthand-property-no-redundant-values": true,
     "declaration-block-no-redundant-longhand-properties": true,
     "length-zero-no-unit": true,
-    "selector-no-vendor-prefix": [true, { "severity": "warning" }],
+    "selector-no-vendor-prefix": true,
     "no-descending-specificity": null,
     "selector-class-pattern": null,
     "selector-id-pattern": null,

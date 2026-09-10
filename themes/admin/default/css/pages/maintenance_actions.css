@@ -19,7 +19,8 @@
   white-space: nowrap;
 }
 
-.maintenance-action:hover {
+.maintenance-action:hover,
+.maintenance-action:focus-visible {
   color: #f70;
   text-decoration: none;
 }
@@ -67,7 +68,8 @@
   color: #3c3c3c;
 }
 
-.delete-sizes:hover {
+.delete-sizes:hover,
+.delete-sizes:focus-visible {
   background-color: #f70;
   color: #3c3c3c;
   text-decoration: none;

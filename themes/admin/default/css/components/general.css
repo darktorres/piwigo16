@@ -38,7 +38,8 @@ or
     white-space: nowrap;
 }
 
-.head-button-1:hover {
+.head-button-1:hover,
+.head-button-1:focus-visible {
     background: #f70;
     text-decoration: none;
     color: #fff;
@@ -50,7 +51,8 @@ or
     box-shadow: 0 2px #00000024;
 }
 
-.head-button-2:hover {
+.head-button-2:hover,
+.head-button-2:focus-visible {
     text-decoration: none;
     color: inherit;
 }
@@ -130,7 +132,8 @@ Advanced filter
     cursor: pointer;
 }
 
-.advanced-filter-close:hover {
+.advanced-filter-close:hover,
+.advanced-filter-close:focus-visible {
     color: #f70;
 }
 
@@ -244,7 +247,8 @@ Info Framed
     align-items: center;
 }
 
-a.info-framed:hover {
+a.info-framed:hover,
+a.info-framed:focus-visible {
     color: inherit;
     text-decoration: none;
 } 
@@ -333,7 +337,12 @@ Info
     animation-timing-function: ease;
 }
 
-.info-message a:hover, .info-warning a:hover, .info-error a:hover {
+.info-message a:hover,
+.info-warning a:hover,
+.info-error a:hover,
+.info-message a:focus-visible,
+.info-warning a:focus-visible,
+.info-error a:focus-visible {
     color: #fff;
 }
 

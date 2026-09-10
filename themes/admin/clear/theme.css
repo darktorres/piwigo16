@@ -39,7 +39,8 @@ input:focus, select:focus, textarea:focus {
 
 
 .showInfo { color:#999; }
-.showInfo:hover { color:#333; }
+.showInfo:hover,
+.showInfo:focus-visible { color:#333; }
 
 #copyright { color:#777; margin:5px auto 0 240px; text-align:center;
 padding-bottom: 15px; }
@@ -115,7 +116,8 @@ a.Piwigo {
   font-family: verdana, arial, helvetica, sans-serif;
   font-size: 11px; font-weight: normal; letter-spacing: 0;
   color : #0cc; text-decoration: none; border: 0; }
-a.Piwigo:hover  span.Piwigo  {
+a.Piwigo:hover  span.Piwigo,
+a.Piwigo:focus-visible  span.Piwigo  {
   border-bottom: 1px solid #0cc;
 }
 table.table2 { border: 2px solid #ddd; }
@@ -129,7 +131,9 @@ table.table2 { border: 2px solid #ddd; }
    left every keyboard user with zero focus indication anywhere in
    this skin. */
 
-a:hover, a:active {
+a:hover,
+a:active,
+a:focus-visible {
   cursor: pointer;
 }
 
@@ -230,7 +234,10 @@ input[type="text"].large  { width: 317px; }
 }
 
 #pwgHead a, #footer a {color:#ccc;}
-#pwgHead a:hover, #footer a:hover {color:#fff;}
+#pwgHead a:hover,
+#footer a:hover,
+#pwgHead a:focus-visible,
+#footer a:focus-visible {color:#fff;}
 
 .AlbumViewSelector {background: #fafafa;}
 .pluginName {color:#111;}
@@ -252,7 +259,8 @@ ul.thumbnails li.rank-of-image {--ul-thumbnails-li-rank-of-image-bg: #ddd;}
   display: block;
 }
 
-#batchManagerGlobal ul.thumbnails li:hover .wrap2 {
+#batchManagerGlobal ul.thumbnails li:hover .wrap2,
+#batchManagerGlobal ul.thumbnails li:focus-visible .wrap2 {
   background-color: transparent;
   color: #999;
 }
@@ -274,12 +282,16 @@ ul.thumbnails li.rank-of-image {--ul-thumbnails-li-rank-of-image-bg: #ddd;}
   background-color: #ececec;
 }
 
-.buttonSecondary:hover {
+.buttonSecondary:hover,
+.buttonSecondary:focus-visible {
   color: #3C3C3C;
   background-color: #aaa;
 }
 
-#batchManagerGlobal #applyFilter:hover, #batchManagerGlobal .addFilter-button:hover {
+#batchManagerGlobal #applyFilter:hover,
+#batchManagerGlobal .addFilter-button:hover,
+#batchManagerGlobal #applyFilter:focus-visible,
+#batchManagerGlobal .addFilter-button:focus-visible {
   color: #111;
   background-color: #ff9b32 ;
 }
@@ -289,7 +301,8 @@ ul.thumbnails li.rank-of-image {--ul-thumbnails-li-rank-of-image-bg: #ddd;}
   background-color: #ffc17e;
 }
 
-#batchManagerGlobal .addFilter-button.highlight:hover {
+#batchManagerGlobal .addFilter-button.highlight:hover,
+#batchManagerGlobal .addFilter-button.highlight:focus-visible {
   background-color: #f70;
   color: #fff;
   text-decoration: none;
@@ -326,7 +339,8 @@ ul.thumbnails li.rank-of-image {--ul-thumbnails-li-rank-of-image-bg: #ddd;}
   border: 1px solid #D5D5D5;
   transition: all 125ms ease-out;
 }
-#formCreateAlbum input[name="virtual_name"]:hover {border-color: #3C3C3C;}
+#formCreateAlbum input[name="virtual_name"]:hover,
+#formCreateAlbum input[name="virtual_name"]:focus-visible {border-color: #3C3C3C;}
 
 p.albumTitle img {margin-bottom:-3px;}
 
@@ -345,7 +359,8 @@ p.albumTitle img {margin-bottom:-3px;}
 }
 
 .groups #addGroupForm:hover  #addGroup,
-.groups .addGroupFormTitle{
+.groups .addGroupFormTitle,
+.groups #addGroupForm:focus-visible  #addGroup{
   color:#3c3c3c;
   text-decoration:none;
 }
@@ -362,7 +377,8 @@ p.albumTitle img {margin-bottom:-3px;}
   color:#3c3c3c;
 }
 
-.addUserButton:hover{
+.addUserButton:hover,
+.addUserButton:focus-visible{
   text-decoration:none;
   color:#3c3c3c;
   background-color:#f3f3f3;
@@ -409,7 +425,8 @@ label>p.group_select {
   color:#3c3c3c;
 }
 
-.groups button.submit:hover{
+.groups button.submit:hover,
+.groups button.submit:focus-visible{
   background-color:#f70;
 }
 
@@ -422,7 +439,9 @@ label>p.group_select {
 }
 
 .groups .manage-users:hover,
-.groups .manage-permissions:hover{
+.groups .manage-permissions:hover,
+.groups .manage-users:focus-visible,
+.groups .manage-permissions:focus-visible{
   background-color:#ffa744;
   border:1px solid #ffa744;
   cursor:pointer;
@@ -441,7 +460,8 @@ label>p.group_select {
   color:#3c3c3c;
 }
 
-#UserList .AddUserBlock button:hover{
+#UserList .AddUserBlock button:hover,
+#UserList .AddUserBlock button:focus-visible{
   background-color:#f70;
 }
 
@@ -459,7 +479,8 @@ label>p.group_select {
   color:#d5d5d5;
 }
 
-.UsersInGroupList .icon-cancel:hover{
+.UsersInGroupList .icon-cancel:hover,
+.UsersInGroupList .icon-cancel:focus-visible{
   color:#f70;
 }
 
@@ -537,7 +558,9 @@ input:focus + .slider {
 }
 
 #selection-mode-block button:hover,
-#commentsSelection button:hover {
+#commentsSelection button:hover,
+#selection-mode-block button:focus-visible,
+#commentsSelection button:focus-visible {
   background-color: #ffa744;
   border: 1px solid #ffa744;
 }
@@ -576,7 +599,8 @@ input:focus + .slider {
   border:2px solid #ffa646;
 }
 
-.groups .Group-checkbox:hover input ~ .group-checkmark {
+.groups .Group-checkbox:hover input ~ .group-checkmark,
+.groups .Group-checkbox:focus-visible input ~ .group-checkmark {
   background-color: #ffa646;
 }
 
@@ -589,7 +613,9 @@ input:focus + .slider {
 .groups .manage-users,
 .groups .manage-users:hover,
 .groups .manage-permissions,
-.groups .manage-permissions:hover{
+.groups .manage-permissions:hover,
+.groups .manage-users:focus-visible,
+.groups .manage-permissions:focus-visible{
   color:#3c3c3c;
 }
 
@@ -680,7 +706,8 @@ form#categoryOrdering p.albumActions a {
   border-inline-start:1px solid #D6D6D6;
   background-color: #E8E8E8;
 }
-form#categoryOrdering p.albumActions a:hover {
+form#categoryOrdering p.albumActions a:hover,
+form#categoryOrdering p.albumActions a:focus-visible {
   background-color: #FFA844;
   color: #3A3A3A;
 }
@@ -689,7 +716,10 @@ form#categoryOrdering p.albumActions .userSeparator {border: 1px solid #E1E1E1;}
   border: 1px solid #D6D6D6;
   color: #5B5B5B;
 }
-#addAlbumOpen:hover, #autoOrderOpen:hover {
+#addAlbumOpen:hover,
+#autoOrderOpen:hover,
+#addAlbumOpen:focus-visible,
+#autoOrderOpen:focus-visible {
   border: 1px solid #aaa;
   text-decoration: none;
 }
@@ -697,16 +727,22 @@ form#categoryOrdering p.albumActions .userSeparator {border: 1px solid #E1E1E1;}
   color: #3C3C3C;
   background-color: #FFA646;
 }
-.afterUploadActions a:hover {
+.afterUploadActions a:hover,
+.afterUploadActions a:focus-visible {
   text-decoration: none;
   background-color: #f70;
 }
 .afterUploadActions a.secondary_button {background-color: #ECECEC;}
-.afterUploadActions a.secondary_button:hover {background-color: #FFA646;}
+.afterUploadActions a.secondary_button:hover,
+.afterUploadActions a.secondary_button:focus-visible {background-color: #FFA646;}
 
-.font-checkbox:hover {color: #3C3C3C;}
+.font-checkbox:hover,
+.font-checkbox:focus-visible {color: #3C3C3C;}
 .font-checkbox.selected {color: #ffa646;}
-.font-checkbox:hover .icon-check-empty, .font-checkbox:hover .icon-check {color: #F70;}
+.font-checkbox:hover .icon-check-empty,
+.font-checkbox:hover .icon-check,
+.font-checkbox:focus-visible .icon-check-empty,
+.font-checkbox:focus-visible .icon-check {color: #F70;}
 .font-checkbox .icon-check {color: #FFA646;}
 
 a#showPermissions {
@@ -714,8 +750,10 @@ a#showPermissions {
   border: 1px solid #D6D6D6;
   background-color: #FAFAFA;
 }
-a#showPermissions:hover {border-color: #A5A5A5;}
-.icon-plus.cboxElement:hover {background-color: #F2F2F2;}
+a#showPermissions:hover,
+a#showPermissions:focus-visible {border-color: #A5A5A5;}
+.icon-plus.cboxElement:hover,
+.icon-plus.cboxElement:focus-visible {background-color: #F2F2F2;}
 /* `:not(.advanced-filter-item-container *)`: the advanced-filter
    panel's own selectize (general.css) intentionally wants a plain gray
    box, not this generic orange single-select treatment, on the same
@@ -725,7 +763,8 @@ a#showPermissions:hover {border-color: #A5A5A5;}
   border: 2px solid #FFA646;
   color: #3C3C3C;
 }
-.selectize-control.single .selectize-input:hover:not(.advanced-filter-item-container *) {border-color: #FAC17E;}
+.selectize-control.single .selectize-input:hover:not(.advanced-filter-item-container *),
+.selectize-control.single .selectize-input:focus-visible:not(.advanced-filter-item-container *) {border-color: #FAC17E;}
 .plupload_filelist {
   scrollbar-color: #CBCBCB #fff;
   background-color: #fff;
@@ -733,8 +772,10 @@ a#showPermissions:hover {border-color: #A5A5A5;}
 .plupload_filelist_footer {background-color: #F5F5F5;}
 
 li.plupload_delete a span {background: #FFF;}
-li.plupload_delete a:hover span {background: #FFF;}
-li.plupload_delete a.remove-format:hover{color: #474747;}
+li.plupload_delete a:hover span,
+li.plupload_delete a:focus-visible span {background: #FFF;}
+li.plupload_delete a.remove-format:hover,
+li.plupload_delete a.remove-format:focus-visible{color: #474747;}
 
 .addAlbumEmpty {color: #3C3C3C;}
 #permitAction p {background: #FFF;}
@@ -747,7 +788,8 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 #uploadForm li.plupload_droptext {background-color: #F5F5F5;}
 .addFilesButtonChanged {background-color: #E5E5E5;}
 
-.addFilesButtonChanged:hover {background-color: #BBB;}
+.addFilesButtonChanged:hover,
+.addFilesButtonChanged:focus-visible {background-color: #BBB;}
 
 #filterList select, .pictureLevels select, #permitAction select, .sort-by select {
   background-color: #FFF;
@@ -776,7 +818,12 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
   background-color: #EEE;
   color: #777;
 }
-#filter_dimension .slider-choice:hover, #filter_filesize .slider-choice:hover, .dimension-cancel:hover {
+#filter_dimension .slider-choice:hover,
+#filter_filesize .slider-choice:hover,
+.dimension-cancel:hover,
+#filter_dimension .slider-choice:focus-visible,
+#filter_filesize .slider-choice:focus-visible,
+.dimension-cancel:focus-visible {
   text-decoration: none; background-color: #ffa646; color: initial;
 }
 #filterList .ui-slider .ui-slider-range {
@@ -844,7 +891,8 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 /* `.albumInfos`'s own `color` moved to theme-base.css's theme-skin-base
    layer -- see that file's own comment. */
 
-.albumActions a:hover {
+.albumActions a:hover,
+.albumActions a:focus-visible {
   color: #FFA646;
   text-decoration: none;
 }
@@ -896,10 +944,12 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
   background-color: #fafafa;
   box-shadow: 0 2px #00000024;
 }
-.breadcrumb-item:hover {
+.breadcrumb-item:hover,
+.breadcrumb-item:focus-visible {
   background: #ffd7ad;
 }
-.breadcrumb-item .icon-cancel-circled:hover {
+.breadcrumb-item .icon-cancel-circled:hover,
+.breadcrumb-item .icon-cancel-circled:focus-visible {
   color: #f70;
 }
 
@@ -916,7 +966,8 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
   color: #000;
 }
 
-.search-result-item .icon-plus-circled:hover{
+.search-result-item .icon-plus-circled:hover,
+.search-result-item .icon-plus-circled:focus-visible{
   color: #f70;
 }
 
@@ -927,7 +978,9 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 }
 
 .move-cat-container:hover .badge-container i,
-.move-cat-container:hover .node-icon{
+.move-cat-container:hover .node-icon,
+.move-cat-container:focus-visible .badge-container i,
+.move-cat-container:focus-visible .node-icon{
   color: #ffd7ad;
   background-color: #f98100;
 }
@@ -944,7 +997,8 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
   background-color: #d9d9d9;
 }
 
-.cat-move-order-popin input[name="recursiveAutoOrder"]:hover {
+.cat-move-order-popin input[name="recursiveAutoOrder"]:hover,
+.cat-move-order-popin input[name="recursiveAutoOrder"]:focus-visible {
   background-color: #ffc17e;
 }
 
@@ -965,7 +1019,8 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
   color: #3C3C3C;
 }
 
-#whats_new button:hover{
+#whats_new button:hover,
+#whats_new button:focus-visible{
   background-color:#FFA646;
 }
 
@@ -984,7 +1039,10 @@ li.plupload_delete a.remove-format:hover{color: #474747;}
 
 .cat-modify-footer-see-out:hover,
 .savebar-see-out:hover,
-.buttonSecond:hover {
+.buttonSecond:hover,
+.cat-modify-footer-see-out:focus-visible,
+.savebar-see-out:focus-visible,
+.buttonSecond:focus-visible {
   background-color: #F29F4B;
   color: #3C3C3C;
 }
@@ -1013,7 +1071,8 @@ label:has(> .filters-icon-check:disabled), span:has(+ .filters-icon-check:disabl
   color: #474747;
 }
 
-.filter-manager-options-container:hover{
+.filter-manager-options-container:hover,
+.filter-manager-options-container:focus-visible{
   background-color: #EDEDED;
 }
 
@@ -1022,7 +1081,8 @@ label:has(> .filters-icon-check:disabled), span:has(+ .filters-icon-check:disabl
   color: #FFF;
 }
 
-.filter-manager-options-container.selected-filter-container:hover{
+.filter-manager-options-container.selected-filter-container:hover,
+.filter-manager-options-container.selected-filter-container:focus-visible{
   background-color: #5D5D5D;
 }
 }

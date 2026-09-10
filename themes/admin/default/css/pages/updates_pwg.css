@@ -19,7 +19,8 @@ form p {
   border-radius: 5px;
 }
 
-a.badge-release:hover {
+a.badge-release:hover,
+a.badge-release:focus-visible {
   text-decoration: none;
   color: currentColor;
 }
@@ -29,7 +30,8 @@ a.badge-release:hover {
   font-weight: bold;
 }
 
-.goto-update-page:hover {
+.goto-update-page:hover,
+.goto-update-page:focus-visible {
   text-decoration: none;
 }
 

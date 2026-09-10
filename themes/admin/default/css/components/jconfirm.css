@@ -175,7 +175,8 @@ body[class*="jconfirm-no-scroll-"] {
   display: none;
 }
 
-.jconfirm .jconfirm-box div.jconfirm-closeIcon:hover {
+.jconfirm .jconfirm-box div.jconfirm-closeIcon:hover,
+.jconfirm .jconfirm-box div.jconfirm-closeIcon:focus-visible {
   opacity: 1;
 }
 
@@ -291,7 +292,8 @@ body[class*="jconfirm-no-scroll-"] {
   transition: background 0.2s;
 }
 
-.jconfirm .jconfirm-box .jconfirm-buttons button.btn-red:hover {
+.jconfirm .jconfirm-box .jconfirm-buttons button.btn-red:hover,
+.jconfirm .jconfirm-box .jconfirm-buttons button.btn-red:focus-visible {
   background-color: color-mix(in oklch, var(--color-danger-flat) 86%, var(--color-black));
   color: var(--color-white);
 }
@@ -415,7 +417,8 @@ body[class*="jconfirm-no-scroll-"] {
   color: var(--color-black);
 }
 
-.jconfirm .jconfirm-box .jconfirm-buttons button.btn-default:hover {
+.jconfirm .jconfirm-box .jconfirm-buttons button.btn-default:hover,
+.jconfirm .jconfirm-box .jconfirm-buttons button.btn-default:focus-visible {
   background-color: color-mix(in oklch, var(--color-surface-muted) 85%, var(--color-black));
   color: var(--color-black);
 }

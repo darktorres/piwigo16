@@ -484,7 +484,9 @@
 }
 
 .date_posted-option .accordion-toggle:hover,
-.date_created-option .accordion-toggle:hover{
+.date_created-option .accordion-toggle:hover,
+.date_posted-option .accordion-toggle:focus-visible,
+.date_created-option .accordion-toggle:focus-visible{
   color:#f70;
   cursor:pointer;
 }
@@ -565,7 +567,8 @@
   white-space: nowrap;
 }
 
-.head-button-2:hover {
+.head-button-2:hover,
+.head-button-2:focus-visible {
   text-decoration: none;
 }
 
@@ -915,7 +918,8 @@
     margin: 0 3px;
 }
 
-.slider-choice:hover
+.slider-choice:hover,
+.slider-choice:focus-visible
 {
   text-decoration: none;
   color: initial;
@@ -989,7 +993,8 @@
   background-color:#ccc;
 }
 
-.ui-slider-horizontal .ui-slider-handle:hover{
+.ui-slider-horizontal .ui-slider-handle:hover,
+.ui-slider-horizontal .ui-slider-handle:focus-visible{
   cursor:pointer;
 }
 
@@ -1051,7 +1056,8 @@
   cursor: pointer;
 }
 
-.close-modal:hover {
+.close-modal:hover,
+.close-modal:focus-visible {
   color: #fff;
   text-decoration: none;
 }
@@ -1073,7 +1079,9 @@
 }
 
 .help-popin-search:hover span,
-.help-popin-search:hover .icon-help-circled::before {
+.help-popin-search:hover .icon-help-circled::before,
+.help-popin-search:focus-visible span,
+.help-popin-search:focus-visible .icon-help-circled::before {
   color: #3C3C3C;
 }
 

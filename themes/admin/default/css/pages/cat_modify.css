@@ -40,14 +40,16 @@
   margin-inline-end: -1px;
 }
 
-.comment-option span:hover:first-child {
+.comment-option span:hover:first-child,
+.comment-option span:focus-visible:first-child {
   color: #fff;
   background-color: #00000012;
   border-start-start-radius: 10px;
   border-start-end-radius: 10px;
 }
 
-.comment-option span:hover:last-child {
+.comment-option span:hover:last-child,
+.comment-option span:focus-visible:last-child {
   color: #fff;
   background-color: #00000012;
   border-end-start-radius: 10px;

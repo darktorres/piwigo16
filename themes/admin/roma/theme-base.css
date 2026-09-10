@@ -46,7 +46,9 @@ a {
   color:#777;
 }
 
-a:hover, a:active {
+a:hover,
+a:active,
+a:focus-visible {
   color: #ffa646;
 }
 
@@ -130,7 +132,8 @@ legend {
    Global's derivative-delete buttons, `batch_manager_global.latte`).
    `#checkActions a:hover` (still in `theme.css`, unaffected) has no
    competing override and stays untouched. */
-.deleteDerivButtons a:hover {
+.deleteDerivButtons a:hover,
+.deleteDerivButtons a:focus-visible {
   background-color: #1b1b1b;
   color: #777;
 }

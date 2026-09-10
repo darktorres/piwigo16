@@ -176,7 +176,8 @@
   border-end-end-radius: 2px;
 }
 
-.selectize-control.plugin-remove_button [data-value] .remove:hover {
+.selectize-control.plugin-remove_button [data-value] .remove:hover,
+.selectize-control.plugin-remove_button [data-value] .remove:focus-visible {
   background: rgb(0 0 0 / 0.05);
 }
 }

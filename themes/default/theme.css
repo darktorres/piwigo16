@@ -551,10 +551,12 @@ h2 {
 a {
 	text-decoration:none;
 }
-a:hover {
+a:hover,
+a:focus-visible {
 	border-bottom: 1px solid #858460;
 }
-a.pwg-state-default:hover {
+a.pwg-state-default:hover,
+a.pwg-state-default:focus-visible {
 	border-bottom: 0; /* reset above for icons */
 }
 
@@ -923,7 +925,8 @@ because of this it needs to specifically be added to each theme */
 .mcs-side-results.search-in-set-button a::before {
   margin-inline-end:10px;
 }
-.mcs-side-results.search-in-set-button a:hover {
+.mcs-side-results.search-in-set-button a:hover,
+.mcs-side-results.search-in-set-button a:focus-visible {
   color:#777;
   font-weight:600;
   text-decoration: none;
@@ -951,7 +954,8 @@ because of this it needs to specifically be added to each theme */
   width: fit-content;
 }
 
-.mcs-side-results > div:hover {
+.mcs-side-results > div:hover,
+.mcs-side-results > div:focus-visible {
   background: #444;
   color: #777;
 }
@@ -1003,7 +1007,8 @@ span.related-tags a{
   text-decoration:none;
 }
 
-span.related-tags:hover{
+span.related-tags:hover,
+span.related-tags:focus-visible{
   background-color:#e5e5e5;
 }
 
@@ -1045,7 +1050,8 @@ span.related-tags .tag-counter{
   color:#f70;
   }
 
-#selected-tags-container .selected-related-tag a.selected-related-tag-remove:hover{
+#selected-tags-container .selected-related-tag a.selected-related-tag-remove:hover,
+#selected-tags-container .selected-related-tag a.selected-related-tag-remove:focus-visible{
   text-decoration:none;
   color:#000;
 }

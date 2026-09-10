@@ -31,7 +31,8 @@ or
   color: #fff;
 }
 
-.head-button-1:hover {
+.head-button-1:hover,
+.head-button-1:focus-visible {
     background: #f70;
 }
 
@@ -111,7 +112,8 @@ Advanced filter
   cursor: pointer;
 }
 
-.advanced-filter-close:hover {
+.advanced-filter-close:hover,
+.advanced-filter-close:focus-visible {
     color: #f70;
 }
 

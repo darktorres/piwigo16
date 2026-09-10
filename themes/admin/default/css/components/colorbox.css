@@ -208,7 +208,8 @@
   inset-inline-end: 44px;
 }
 
-#cboxPrevious:hover {
+#cboxPrevious:hover,
+#cboxPrevious:focus-visible {
   background-position: 0 -25px;
 }
 
@@ -217,7 +218,8 @@
   inset-inline-end: 22px;
 }
 
-#cboxNext:hover {
+#cboxNext:hover,
+#cboxNext:focus-visible {
   background-position: -25px -25px;
 }
 
@@ -226,7 +228,8 @@
   inset-inline-end: 0;
 }
 
-#cboxClose:hover {
+#cboxClose:hover,
+#cboxClose:focus-visible {
   background-position: -50px -25px;
 }
 
@@ -251,7 +254,8 @@ html[dir="rtl"] #cboxPrevious {
   background-position: -25px 0;
 }
 
-html[dir="rtl"] #cboxPrevious:hover {
+html[dir="rtl"] #cboxPrevious:hover,
+html[dir="rtl"] #cboxPrevious:focus-visible {
   background-position: -25px -25px;
 }
 
@@ -259,7 +263,8 @@ html[dir="rtl"] #cboxNext {
   background-position: 0 0;
 }
 
-html[dir="rtl"] #cboxNext:hover {
+html[dir="rtl"] #cboxNext:hover,
+html[dir="rtl"] #cboxNext:focus-visible {
   background-position: 0 -25px;
 }
 }

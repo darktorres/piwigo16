@@ -52,7 +52,8 @@ border:2px solid #ddd;
     padding:20px;
 }
 
-.bigButton a:hover {
+.bigButton a:hover,
+.bigButton a:focus-visible {
     background-color:#f70;
     outline:none;
     color:#fff;
@@ -81,7 +82,8 @@ border:2px solid #ddd;
     color:#f70;
 }
 
-#deactivate a:hover {
+#deactivate a:hover,
+#deactivate a:focus-visible {
   border-bottom:1px dotted #f70;
 }
 
@@ -122,7 +124,8 @@ border:2px solid #ddd;
   border-radius:5px;
 }
 
-#quickconnect input[type="submit"]:hover {
+#quickconnect input[type="submit"]:hover,
+#quickconnect input[type="submit"]:focus-visible {
   background-color:#f70;
   color:#fff;
 }

@@ -46,7 +46,9 @@ a {
   color:#3A3A3A;
 }
 
-a:hover, a:active {
+a:hover,
+a:active,
+a:focus-visible {
   color: #ffa646;
 }
 

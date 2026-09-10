@@ -199,11 +199,13 @@ input[name="position"] {
   transition: 0.1s;
 }
 
-.DeleteAlbumCancel:hover {
+.DeleteAlbumCancel:hover,
+.DeleteAlbumCancel:focus-visible {
   background: #bdc3c7;
 }
 
-.DeleteAlbumSubmit:hover {
+.DeleteAlbumSubmit:hover,
+.DeleteAlbumSubmit:focus-visible {
   background: #c0392b;
 }
 
@@ -250,7 +252,8 @@ input[name="position"] {
   pointer-events: none;
 }
 
-.notClickable:hover {
+.notClickable:hover,
+.notClickable:focus-visible {
   cursor: not-allowed;
 }
 
@@ -278,7 +281,8 @@ input[name="position"] {
   display: none;
 }
 
-.badge-container:hover .badge-dropdown {
+.badge-container:hover .badge-dropdown,
+.badge-container:focus-visible .badge-dropdown {
   display: flex;
 }
 

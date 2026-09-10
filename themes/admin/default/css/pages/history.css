@@ -120,7 +120,8 @@
   border-start-end-radius: 25px;
   padding-inline: 5px 10px;
 }
-.remove-filter:hover {
+.remove-filter:hover,
+.remove-filter:focus-visible {
   cursor: pointer;
 }
 
@@ -217,12 +218,14 @@
   display: none;
 }
 
-.user-name:hover .add-filter {
+.user-name:hover .add-filter,
+.user-name:focus-visible .add-filter {
   display: inline;
   margin-inline-start: 4px;
 }
 
-.user-ip:hover .add-filter {
+.user-ip:hover .add-filter,
+.user-ip:focus-visible .add-filter {
   display: inline;
   margin-inline-start: 4px;
 }
@@ -339,14 +342,16 @@
   margin-inline-end: -1px;
 }
 
-.img-option a:hover:first-child {
+.img-option a:hover:first-child,
+.img-option a:focus-visible:first-child {
   color: #fff;
   background-color: #00000012;
   border-start-start-radius: 10px;
   border-start-end-radius: 10px;
 }
 
-.img-option a:hover:last-child {
+.img-option a:hover:last-child,
+.img-option a:focus-visible:last-child {
   color: #fff;
   background-color: #00000012;
   border-end-start-radius: 10px;
@@ -405,11 +410,13 @@
   display: none;
 }
 
-.summary-user-item:hover .icon-plus-circled {
+.summary-user-item:hover .icon-plus-circled,
+.summary-user-item:focus-visible .icon-plus-circled {
   display: inline-block;
 }
 
-.summary-user-item:hover .icon-user-1 {
+.summary-user-item:hover .icon-user-1,
+.summary-user-item:focus-visible .icon-user-1 {
   display: none;
 }
 
@@ -429,7 +436,10 @@
   text-decoration: none;
 }
 
-.start-unset-link:hover, .end-unset-link:hover {
+.start-unset-link:hover,
+.end-unset-link:hover,
+.start-unset-link:focus-visible,
+.end-unset-link:focus-visible {
   color: #ffa500;
 }
 

@@ -63,7 +63,9 @@
 }
 
 .filter-manager:hover,
-.filter-validate:hover {
+.filter-validate:hover,
+.filter-manager:focus-visible,
+.filter-validate:focus-visible {
   background: #f70b;
 }
 
@@ -72,7 +74,8 @@
   color: #ccc;
 }
 
-.filter-cancel:hover {
+.filter-cancel:hover,
+.filter-cancel:focus-visible {
   background: #444;
 }
 
@@ -91,7 +94,8 @@
   color: #aaa;
 }
 
-.filter-actions > *:hover{
+.filter-actions > *:hover,
+.filter-actions > *:focus-visible{
   color: #777;
 }
 
@@ -113,7 +117,8 @@
   color:#ccc;
 }
 
-.help-popin-search:hover {
+.help-popin-search:hover,
+.help-popin-search:focus-visible {
   color:#fff;
 }
 
@@ -183,7 +188,8 @@
   box-shadow: 0 2px #00000024;
 }
 
-.head-button-2:hover {
+.head-button-2:hover,
+.head-button-2:focus-visible {
   background: #000;
   color: #777;
 }
@@ -192,7 +198,8 @@
   background-color: #f4ab4f;
 }
 
-.breadcrumb-item:hover .icon-cancel-circled{
+.breadcrumb-item:hover .icon-cancel-circled,
+.breadcrumb-item:focus-visible .icon-cancel-circled{
   color: #000;
 }
 
@@ -200,11 +207,13 @@
   color: #777;
 }
 
-.breadcrumb-item a:hover {
+.breadcrumb-item a:hover,
+.breadcrumb-item a:focus-visible {
   color: #3A3A3A;
 }
 
-.breadcrumb-item .icon-cancel-circled:hover {
+.breadcrumb-item .icon-cancel-circled:hover,
+.breadcrumb-item .icon-cancel-circled:focus-visible {
   color: #f70b;
 }
 
@@ -230,7 +239,8 @@
   color: #f70b;
 }
 
-.ClosePopIn:hover {
+.ClosePopIn:hover,
+.ClosePopIn:focus-visible {
   color: #fff;
 }
 

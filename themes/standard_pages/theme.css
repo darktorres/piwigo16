@@ -202,7 +202,8 @@ select {
   border: 1px solid #777;
 }
 
-.remember-me-container:hover label{
+.remember-me-container:hover label,
+.remember-me-container:focus-visible label{
   cursor:pointer;
 }
 
@@ -293,7 +294,11 @@ a.btn-main{
 #theIdentificationPage a:hover,
 #theRegisterPage a:hover,
 #thePasswordPage a:hover,
-#theProfilePage a:hover{
+#theProfilePage a:hover,
+#theIdentificationPage a:focus-visible,
+#theRegisterPage a:focus-visible,
+#thePasswordPage a:focus-visible,
+#theProfilePage a:focus-visible{
   border-bottom:none;
 }
 
@@ -367,12 +372,14 @@ a.btn-main{
   padding:5px 0;
 }
 
-#lang-select #other-languages span:hover{
+#lang-select #other-languages span:hover,
+#lang-select #other-languages span:focus-visible{
   cursor:pointer;
   color: var(--color-accent, #f70);
 }
 
-#lang-select:hover #other-languages{
+#lang-select:hover #other-languages,
+#lang-select:focus-visible #other-languages{
   display:block;
 }
 
@@ -824,7 +831,8 @@ input:checked + .slider::before, input:checked + .slider::after {
 }
 
 /* Tooltips */
-[data-tooltip]:hover::after {
+[data-tooltip]:hover::after,
+[data-tooltip]:focus-visible::after {
     position: absolute;
     content: attr(data-tooltip);
     animation: fadeIn 100ms cubic-bezier(0.42, 0, 0.62, 1.32) forwards;
@@ -882,7 +890,10 @@ input[type='radio'] {
 
 .profile-section .api-icon-action i:hover,
 .close-modal:hover,
-.profile-section .icon-clone:hover {
+.profile-section .icon-clone:hover,
+.profile-section .api-icon-action i:focus-visible,
+.close-modal:focus-visible,
+.profile-section .icon-clone:focus-visible {
   color: var(--color-accent, #f70);
 }
 
@@ -893,7 +904,11 @@ input[type='radio'] {
 #theIdentificationPage .light a:hover,
 #theRegisterPage .light a:hover,
 #thePasswordPage .light a:hover,
-#theProfilePage .light a:hover {
+#theProfilePage .light a:hover,
+#theIdentificationPage .light a:focus-visible,
+#theRegisterPage .light a:focus-visible,
+#thePasswordPage .light a:focus-visible,
+#theProfilePage .light a:focus-visible {
   color: var(--color-accent, #f70);
 }
 
@@ -915,7 +930,11 @@ input[type='radio'] {
 #theRegisterPage .dark a:hover,
 #thePasswordPage .dark a:hover,
 #theProfilePage .dark a:hover,
-.dark #lang-select #other-languages span {
+.dark #lang-select #other-languages span,
+#theIdentificationPage .dark a:focus-visible,
+#theRegisterPage .dark a:focus-visible,
+#thePasswordPage .dark a:focus-visible,
+#theProfilePage .dark a:focus-visible {
   color: var(--color-dark-link-hover, #f70);
 }
 
@@ -965,7 +984,8 @@ input[type='radio'] {
 .light .profile-section,
 .light .slider::before,
 .light .body-modal,
-.light [data-tooltip]:hover::after {
+.light [data-tooltip]:hover::after,
+.light [data-tooltip]:focus-visible::after {
   background-color:#fff;
 }
 
@@ -1160,7 +1180,8 @@ input[type='radio'] {
 }
 
 .dark .api-list-head,
-.dark [data-tooltip]:hover::after{
+.dark [data-tooltip]:hover::after,
+.dark [data-tooltip]:focus-visible::after{
   background-color: #2A2A2A;
 }
 

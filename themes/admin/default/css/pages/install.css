@@ -71,7 +71,10 @@ a.bigButton {
 
 input[type="submit"]:hover,
 input[type="button"]:hover,
-a.bigButton:hover {
+a.bigButton:hover,
+input[type="submit"]:focus-visible,
+input[type="button"]:focus-visible,
+a.bigButton:focus-visible {
   background-color: #f70;
   color: #fff;
 }

@@ -13,11 +13,13 @@
   margin-inline-start: 5px;
 }
 
-.can-change:hover {
+.can-change:hover,
+.can-change:focus-visible {
   cursor: pointer;
 }
 
-.cannot-change:hover {
+.cannot-change:hover,
+.cannot-change:focus-visible {
   cursor: default;
 }
 
@@ -441,7 +443,9 @@
   text-decoration: none;
 }
 .edit-user-tab-title p:hover,
-.guest-edit-user-tab-title p:hover {
+.guest-edit-user-tab-title p:hover,
+.edit-user-tab-title p:focus-visible,
+.guest-edit-user-tab-title p:focus-visible {
   cursor: pointer;
 }
 
@@ -473,7 +477,8 @@
   z-index: -1;
 }
 
-.mores-plugins:hover::after {
+.mores-plugins:hover::after,
+.mores-plugins:focus-visible::after {
   width: 35px;
   height: 35px;
   opacity: 1;
@@ -524,7 +529,8 @@
   opacity: 1;
 }
 
-.dropdown-mores-plugins .edit-user-tabsheet:hover {
+.dropdown-mores-plugins .edit-user-tabsheet:hover,
+.dropdown-mores-plugins .edit-user-tabsheet:focus-visible {
   background-color: #00000012;
 }
 
@@ -552,7 +558,8 @@
   cursor: pointer;
 }
 
-.user-property-input-icon .icon-show-password:hover {
+.user-property-input-icon .icon-show-password:hover,
+.user-property-input-icon .icon-show-password:focus-visible {
   color:#ffa646;
 }
 
@@ -562,7 +569,8 @@
   font-size: 16px;
 }
 
-.user-property-input-icon .user-property-input:hover {
+.user-property-input-icon .user-property-input:hover,
+.user-property-input-icon .user-property-input:focus-visible {
   background-color: transparent;
 }
 
@@ -730,7 +738,8 @@
   color: #3c3c3c;
 }
 
-.user-property-password .icon-edit-pass:hover {
+.user-property-password .icon-edit-pass:hover,
+.user-property-password .icon-edit-pass:focus-visible {
   background-color: #f70;
 }
 
@@ -810,7 +819,9 @@
 }
 
 .edit-password-success .edit-password-success-reset-link span:hover,
-.AddUserPasswordInputContainer span:hover {
+.AddUserPasswordInputContainer span:hover,
+.edit-password-success .edit-password-success-reset-link span:focus-visible,
+.AddUserPasswordInputContainer span:focus-visible {
   color: #fff;
   background-color: #f70;
 }
@@ -893,8 +904,11 @@
   font-size: 1.1em;
   cursor:pointer;
 }
-.EditUserGenPassword:hover, .EditUserGenPassword:active,
-.AddUserGenPassword span:hover {
+.EditUserGenPassword:hover,
+.EditUserGenPassword:active,
+.AddUserGenPassword span:hover,
+.EditUserGenPassword:focus-visible,
+.AddUserGenPassword span:focus-visible {
   color:#ffa646;
 }
 
@@ -953,7 +967,9 @@
 }
 
 .user-property-permissions a:hover,
-.user-property-history a:hover {
+.user-property-history a:hover,
+.user-property-permissions a:focus-visible,
+.user-property-history a:focus-visible {
   color: inherit;
   text-decoration: none;
 }
@@ -970,7 +986,9 @@
 }
 
 .edit-username-validate:hover,
-.edit-password-validate:hover {
+.edit-password-validate:hover,
+.edit-username-validate:focus-visible,
+.edit-password-validate:focus-visible {
     background-color: #f70;
     color: #000;
     cursor: pointer;
@@ -985,7 +1003,10 @@
 
 .edit-username-cancel:hover,
 .edit-password-cancel:hover,
-.user-property-main-user-cancel:hover {
+.user-property-main-user-cancel:hover,
+.edit-username-cancel:focus-visible,
+.edit-password-cancel:focus-visible,
+.user-property-main-user-cancel:focus-visible {
     color: #000;
 }
 
@@ -1208,7 +1229,9 @@
 }
 
 .update-user-button:hover,
-.user-property-main-user-body .main-user-btn-rewrite:hover {
+.user-property-main-user-body .main-user-btn-rewrite:hover,
+.update-user-button:focus-visible,
+.user-property-main-user-body .main-user-btn-rewrite:focus-visible {
     background-color: #f70;
 }
 
@@ -1398,7 +1421,10 @@
 }
 .EditUserPopIn .item .remove:hover,
 .GuestUserPopIn .item .remove:hover,
-.AddUserPopIn .item .remove:hover {
+.AddUserPopIn .item .remove:hover,
+.EditUserPopIn .item .remove:focus-visible,
+.GuestUserPopIn .item .remove:focus-visible,
+.AddUserPopIn .item .remove:focus-visible {
   background-color: #f70;
 }
 
@@ -1715,7 +1741,8 @@ Advanced filter
   color: transparent;
 }
 
-.tileView .user-container:hover .user-container-edit{
+.tileView .user-container:hover .user-container-edit,
+.tileView .user-container:focus-visible .user-container-edit{
   color: #777;
 }
 
@@ -1845,11 +1872,13 @@ Advanced filter
  margin: 5px 0 0 13px;
 }
 
-.selectable:hover .select-checkbox{
+.selectable:hover .select-checkbox,
+.selectable:focus-visible .select-checkbox{
   background-color: #ffa646;
 }
 
-.selectable .user-first-col:hover {
+.selectable .user-first-col:hover,
+.selectable .user-first-col:focus-visible {
     background-color: transparent;
 }
 
@@ -1880,7 +1909,8 @@ Advanced filter
   pointer-events: none;
 }
 
-.notClickable:hover {
+.notClickable:hover,
+.notClickable:focus-visible {
   cursor: not-allowed;
 }
 
@@ -2035,7 +2065,8 @@ Advanced filter
   color: #A4A4A4;
 }
 
-.close-update-button:hover {
+.close-update-button:hover,
+.close-update-button:focus-visible {
   color: #474747;
 }
 
@@ -2052,7 +2083,8 @@ Advanced filter
   color: #A4A4A4;
 }
 
-.AddUserCancel:hover {
+.AddUserCancel:hover,
+.AddUserCancel:focus-visible {
   color: #474747;
 }
 
@@ -2079,7 +2111,11 @@ Advanced filter
 .edit-password-success-ok .icon-button:hover,
 .edit-username-success-ok .icon-button:hover,
 .user-property-main-user-close .icon-button:hover,
-.AddUserSuccessPanel .icon-button:hover {
+.AddUserSuccessPanel .icon-button:hover,
+.edit-password-success-ok .icon-button:focus-visible,
+.edit-username-success-ok .icon-button:focus-visible,
+.user-property-main-user-close .icon-button:focus-visible,
+.AddUserSuccessPanel .icon-button:focus-visible {
   background-color: #ddd;
   color: #3A3A3A;
 }

@@ -36,7 +36,8 @@
   border-inline-start: 1px solid transparent;
 }
 
-.selectize-input .item .remove:hover {
+.selectize-input .item .remove:hover,
+.selectize-input .item .remove:focus-visible {
   background-color: #f70;
 }
 }

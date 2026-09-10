@@ -73,7 +73,8 @@
   border-inline-start: 1px solid transparent;
 }
 
-.actionAddTags .item .remove:hover {
+.actionAddTags .item .remove:hover,
+.actionAddTags .item .remove:focus-visible {
   background-color: #f70;
 }
 }

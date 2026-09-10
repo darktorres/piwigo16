@@ -33,7 +33,8 @@
   font-size: 30px;
 }
 
-.ClosePopIn:hover {
+.ClosePopIn:hover,
+.ClosePopIn:focus-visible {
   text-decoration: none;
   cursor: pointer;
 }
@@ -72,7 +73,8 @@
   transform: translate(215px, 8px);
 }
 
-.search-cancel-linked-album:hover {
+.search-cancel-linked-album:hover,
+.search-cancel-linked-album:focus-visible {
   opacity: 1;
 }
 
@@ -100,7 +102,8 @@
   margin-inline-end: 2px;
 }
 
-.display-subcat:hover {
+.display-subcat:hover,
+.display-subcat:focus-visible {
   cursor: pointer;
 }
 
@@ -134,7 +137,8 @@
   cursor: default;
 }
 
-.notClickable:hover {
+.notClickable:hover,
+.notClickable:focus-visible {
   cursor: default;
 }
 
@@ -275,7 +279,8 @@
   font-weight: 700;
 }
 
-.linked-button-cancel:hover {
+.linked-button-cancel:hover,
+.linked-button-cancel:focus-visible {
   color: #000;
 }
 

@@ -154,7 +154,7 @@ Three structural changes produced that drift:
 | P49 | Remove jQuery + retire other abandoned/outdated vendored JS deps | Done — P49-A done (every first-party call site converted off jQuery to native DOM/fetch, `themes/default/js/vendor/dom.ts`/`ajax.ts`). P49-B done: `jquery.geoip.js`'s only real call target (freegeoip.net) was long dead, so its mechanism was replaced entirely by a self-hosted DB-IP geolocation lookup (`GET /api/v1/geoip`) rather than ported as-is; `jquery.sort.js`/`jquery.autogrow-textarea.js` (both real, single-consumer micro-plugins with no findable upstream source) ported natively to `themes/default/js/vendor/sortElements.ts`/`autogrow.ts`. `jquery.cookie.js` ported to `themes/default/js/vendor/cookie.ts` (real source read from the CDN, `jquery.cookie@1.4.1`). `jquery.ajaxmanager.js` ported to a concurrency-limited FIFO queue, `themes/default/js/vendor/ajaxQueue.ts` (real source read from `github:aFarkas/Ajaxmanager#3.12`), including a cross-file refactor (`batchManagerGlobal.ts`'s `getDerivativeUrls()` now takes its queue as an explicit parameter instead of relying on the library's own global string-keyed manager registry). `jquery.tipTip.js` ported natively to `themes/default/js/vendor/tiptip.ts` (real source read from `github:drewwilson/TipTip#277e33629e`) across all 27 real call sites in 10 admin `.ts` files; found and removed 2 genuinely dead registrations along the way (`TagsView`'s own `tiptip` entry -- `tags.ts` never called it -- and `SearchFiltersView`'s front-end `jquery.tipTip` entry -- no front-end `.ts` file ever did either, despite `.tiptip`-classed markup in `search_filters.inc.latte`). This closes out P49-B group 2 entirely. `jgrowl` (P49-B group 3) ported to `themes/default/js/vendor/jgrowl.ts` (real source read from the CDN, `jgrowl@1.3.0`) -- both real call sites (`updates_ext.ts`'s update/ignore-extension toasts), including the queued-render-one-per-250ms-tick and hover-pauses-every-notification-in-the-container behaviors, faithfully preserved since real bulk actions exercise both; a new Browser test closes a real, pre-existing gap (jGrowl's own rendering was never behaviorally asserted, jQuery-based or not). jQuery UI's slider widget (P49-B group 4) ported to `themes/default/js/vendor/slider.ts` (real source read from the vendored `jquery-ui@1.10.4` bundle) across `user_list.ts` (19 call sites), `plugins_new.ts` (6), and `doubleSlider.ts`'s own first-party `pwgDoubleSlider` wrapper (converted from a `jQuery.fn` extension to a plain function in the same pass, its 2 real consumers -- `batchManagerFilter.ts`, `mcs.ts` -- updated); `jquery.ui`'s own script registration dropped from the 3 pages (`UserListView`, `PluginsNewView`, `SearchFiltersView`) that only ever needed it for the slider, kept on pages still needing `pwgDatepicker` (group 5). New Browser tests (mutation-verified) close a real gap: no prior test, jQuery-based or not, ever drove any slider interactively. `jquery-confirm` (P49-B group 5, `$.confirm`/`$.alert` only -- `$.dialog` and the `$.fn.confirm` jQuery.fn form were never used by any real call site) ported to `themes/default/js/vendor/jconfirm.ts` (real source + CSS read from the CDN, `jquery-confirm@3.3.4`), across 15 admin `.ts` files (~29 call sites total, plus `common.ts`'s own `pwg_jconfirm_follow_href` first-party wrapper, converted from a `jQuery.fn` extension to a plain function alongside it, and its 7 consumers updated). Every real call site sets the same `draggable`/`theme`/`animation`/`useBootstrap`/`animateFromElement`/`typeAnimated`/`backgroundDismiss` values with no deviation, so none of the drag-to-reposition, theme system, bootstrap grid, or pulsing type-color animation machinery was ported -- only a single fixed "modern"/"zoom" modal. `content` as a function returning this app's own `ajax()` thenable (loading-spinner-then-`setContent()`-from-the-callback, not from the resolved value) is real, load-bearing usage, faithfully ported; `tags.ts`'s own bulk-delete flow returns a bare native `Promise` instead, which the original library's own `.always()` detection genuinely can't see either, a pre-existing quirk (blank dialog content) preserved exactly rather than fixed. `onClose` is the one callback option real usage needed (`plugins_installated.ts`'s incompatible-activation revert, since `backgroundDismiss` means the cancel button's own action never runs for a backdrop/Escape dismissal). CDN script registrations dropped from all 21 consuming Views (CSS kept); `HistoryView`'s own registration was dead weight (no real call site) and removed outright. A new, mutation-verified Browser test closes a real gap (`cat_modify.ts`'s delete-album dialog's ajax-loaded content was never behaviorally asserted, jQuery-based or not). selectize.js (P49-B group 6A -- jqtree and Jcrop, both loosely bundled under the same in-tree "group 6" label, are separate follow-ups, both since completed below) ported to `themes/default/js/vendor/selectize.ts` (real source read from the CDN, `selectize.js@v0.11.2`), across 13 admin/front-end `.ts` files (~20 real call sites, `LocalStorageCache.ts`'s own 4 Cache classes included) -- narrowed to the real subset every call site uses: only the `remove_button` plugin (a real, unconditional no-op for single-select, matching the original's own `if (mode === 'single') return;`), no optgroups/remote search/custom score, but search-term highlighting and the `create: true` inline-item-creation flow are real, always-on behavior and were ported, not dropped. Faithfully replicated several non-obvious real mechanics found only by reading the vendored CSS/JS directly rather than assumed: the original's own class-copying (`$wrapper.addClass(classes)`) onto the control/dropdown wrapper, its `items`/`has-options`/`full` state classes several page-specific stylesheets key off, its `autoGrow()` text-input sizing (no CSS rule sizes the input to its own content otherwise), its `updatePlaceholder()` (removes the placeholder attribute entirely while any item is selected, not just visually), its `isFocused`-gated dropdown-reopen suppression during silent/programmatic item seeding (else a preselected value force-opens the dropdown), and critically `updateOriginalInput()`'s own full `<option>`-list *regeneration* from the current items on every change (caught via `RatingPageInteractionTest.php`'s own pre-existing test, which failed against an initial, incorrect toggle-`.selected`-on-existing-options implementation -- real API-sourced `<select>`s here start with zero real `<option>` children). `triggerChange()` dispatches a real native `change` event on the underlying `<select>` (unlike the original's jQuery-internal trigger), letting `rating.ts`'s and `batchManagerUnit.ts`'s own native `"change"` listeners convert too. CDN script registrations dropped from all 13 consuming Views (CSS kept); `@types/selectize` and the `selectize` npm dependency removed. A new, mutation-verified Browser test closes a real gap (no prior test, jQuery-based or not, ever drove selectize's search input or keyboard handling, only its zero-state render or direct API/DOM state) -- 3 existing tests needed fixing since they read the removed `.selectize` instance property directly rather than simulating real interaction or reading rendered DOM. jqtree (P49-B group 6B) ported to `themes/default/js/vendor/jqtree.ts` (real source read from `github:mbraak/jqtree`'s own `lib/*.js`), across `albums.ts`'s drag-and-drop-orderable album tree (~32 real call sites, the one real consumer). Narrowed hard: selection is permanently disabled at this consumer (`onCanSelectNode: () => false`), so the click-handling/select-node-handler/key-handler machinery and jqtree's own internal `.jqtree-toggler`/`.jqtree-title` markup (which `onCreateLi` unconditionally wipes and replaces anyway) aren't ported at all; `autoOpen`/`saveState` are always the real init's own `false`, collapsing the original's initial-state-restore/auto-open dance to a no-op (`getState()`'s own `open_nodes` list *is* real and kept); remote `dataUrl` loading is never used and isn't ported. Drag-and-drop -- real, load-bearing, and genuinely the hardest single piece of new code in the whole P49 campaign -- is ported in full: hit-area generation (including the original's own exact, slightly odd group-flush arithmetic, ported literally rather than "fixed"), the ghost/border drop-hint, the folder auto-expand-on-hover-during-drag timer, scroll-during-drag, and the `tree.move` cancelable event with its `do_move()` callback. `jquery.tree`'s own CDN script registration dropped from `AlbumsView` (CSS kept); `jqtree` npm dependency and its bundled `.d.ts` (`INode`/`IJQTreePlugin`/the ambient `AlbumTreeNode`/`AlbumJqTreeNode`) removed from `build/jquery-plugins.d.ts`, replaced by real exported types in the new module. New, mutation-verified Browser tests close a real gap (drag-and-drop was never behaviorally tested, jQuery-based or not -- 16.x-v2's own version of this suite found jqTree's jQuery-internal mouse-event state machine unreachable from Playwright; the native port's plain `mousedown`/`mousemove`/`mouseup` listeners have no such problem): one for same-level reordering (`position: "after"`), one for re-parenting (`position: "inside"`, the distinct border-drop-hint/`changeParent` branch). A live browser session verifying the drag-and-drop port surfaced a real, independent, and more serious bug: a single click on `.AddAlbumSubmit` silently created 2 real categories via 2 real `POST` requests. Root cause was a page-wide asset-loading defect, not anything specific to albums or jqtree -- `cat_search.ts` statically imports `albums.ts`'s own `data` export (`dependsOn: ['albums']`), and Vite's own emitted inter-chunk `import` specifier for that carries no cache-busting query string, while `albums`'s own independently-registered `<script src=".../albums-{hash}.js?v17.0.0">` tag did -- two different URLs for the same module is two separate module instances to the browser, double-registering every `ready()` handler in the file. Fixed by making every script tag stop appending a version query unconditionally (`PageAssets::resolveScripts()`, `Template::makeAssetSrc()`) -- content-hashed Vite filenames make it redundant for built assets, and the same rule now applies uniformly rather than conditionally, so no other script (Vite-built or the one raw vendored plugin file) can hit this class of bug either. `TemplateInstanceTest.php`'s own 10 unit tests asserting the old versioned-script behavior updated to match. Adversarial pass over the whole of `AlbumTreeTest.php` (not just the 2 new tests) mutation-verified all 5 pre-existing tests too, and found one real, independent weakness: the existing "add-album" test's own `assertSee($newName)` + delete-all-matching-by-name cleanup would have passed identically whether 1 or 2 real categories got created -- exactly blind to the bug just found -- strengthened to assert an exact match count, mutation-verified by reproducing the double-POST shape directly. Jcrop (P49-B group 6, the last "group 6"-labeled library -- `jquery-ui`'s datepicker+`jquery-timepicker-addon` remains the one real, separate, still-unstarted P49-B surface outside this numbered-group scheme (`jquery.colorbox` is since completed too, below); `jquery-cluetip` is since completed too, below) ported to `themes/default/js/vendor/jcrop.ts` (real source read from `github:tapmodo/Jcrop#v0.9.12`'s own `js/jquery.Jcrop.js`), across `picture_coi.ts`'s center-of-interest cropper (the one real call site, an `<img>` target only -- the library's own separate "crop an arbitrary `<div>`" mode, and the `shade` darkened-background option it forces on for that mode, is real, unreachable dead weight here and isn't ported). `aspectRatio`/`maxSize`/`minSize`/`minSelect` are never set (always their own falsy/zero defaults), collapsing `Coords.getFixed()`'s aspect-ratio branch and `getRect()`'s min/max-size clamps to dead code -- not ported; the bounds-clamping that *is* reachable is, including one exact pre-existing quirk in the original's own `getRect()` (its `x1 > boundx` branch computes `delta` from `boundy`, not `boundx`), ported literally rather than "fixed", same policy as `vendor/jqtree.ts`'s own hit-area arithmetic. `allowSelect`/`allowMove`/`allowResize`/`keySupport`/`drawBorders`/`dragEdges` all default `true` and are never overridden -- real, always-on behavior (draw/move/8-handle-resize/arrow-key-nudge/Escape-to-release) and are ported in full. Mouse and touch are unified through native Pointer Events rather than the original's own separate mouse/touch listener pairs -- a deliberate simplification, not a literal translation, since every real target browser here already dispatches pointer events for both. A live browser session (creating a real test photo via the TUS upload API, confirming the port live rather than assuming) found and fixed 2 real bugs before landing: (1) cloning `#jcrop` re-triggers the clone's own independent, asynchronous image decode regardless of the original's own load state, so reading the clone's rendered size synchronously right after `cloneNode()` raced that decode and `presize()` measured a 0x0 box -- fixed by explicitly sizing the clone from the already-known original dimensions first, matching the real source's own `$img.width($origimg.width())`, and by porting the real source's own `$.Jcrop.Loader` wrapper (poll `img.complete`, defer via `load` otherwise) that this port had first skipped as supposedly unreachable; (2) a corner-resize handle (e.g. `se`) re-anchored the *wrong* corner (the one just dragged, not its opposite), silently relocating the whole selection instead of resizing it in place -- a `setPressed`/`setCurrent` argument swap in `startDragMode()`. Both were manually reproduced and fixed live against real drag interactions, then covered by 2 of 3 new, mutation-verified Browser tests (`PictureCoiInteractionTest.php`: draw a new selection, move-then-corner-resize -- the second is the direct regression net for bug (2) -- and Escape-releases); none of jcrop's own interactive behavior was ever tested before, jQuery-based or not. The pre-existing `PictureCoiPageRendererTest.php`'s own "round-trips a stored center of interest" test (written during P49-A, already anticipating exactly this class of "measured the wrong box" bug for whichever Jcrop implementation was live) continues to pass unmodified against the native port. Jcrop's own CDN script registration dropped from `PictureCoiView` (CSS kept); the `jquery.jcrop` npm dependency and its ambient `.d.ts` `Jcrop()` declaration removed from `build/jquery-plugins.d.ts`. `jquery-cluetip` ported to `themes/default/js/vendor/cluetip.ts` (real source read from the vendored `jquery-cluetip@1.2.6` package), across its 2 real, live call sites -- `install.ts`'s newsletter-subscribe span (`positionBy: "bottomTop"`) and `languages_new.ts`'s per-language external-link cells (the real default, `positionBy: "auto"`) -- both call `.cluetip({width: 300, splitTitle: "|"[, positionBy]})` and nothing else: no `rel`-attribute/ajax/local content source, no click/focus activation (always hover), no arrows/sticky/mouseOutClose/tracking/hoverClass/truncate, `multiple` is always its own real `false` default (one shared tooltip element, not one per call site), and the delimiter is hardcoded rather than exposed as an option since every real call site passes the same `"|"`. A third call site, `intro.ts`'s own `.cluetip()` registration, was genuinely dead (no `.cluetip`-classed markup anywhere on the admin intro page, statically or dynamically -- its own newsletter-promo box uses `.tiptip`, already ported) -- removed outright, along with `IntroView.php`'s CDN script registration, rather than ported as an always-no-op call; `InstallView.php`'s own bare `jquery` registration became dead weight the same way once its only real consumer (`jquery.cluetip`) went, and was removed too. `dropShadow`'s real effect (every real target browser supports `box-shadow`) collapses to one inline style rather than porting the original's own old-browser div-based fallback; the shared tooltip element stays permanently `display: block`, toggled via `visibility` instead of the original's `.hide()`/`.show()`, so it stays measurable (`offsetHeight`) at any time without needing the original's own internal unhide-to-measure trick. `delayedClose`'s real 50ms default is ported (a quick re-hover cancels the pending hide instead of flickering), confirmed via a live browser session and mutation-verified via a dedicated test. New, mutation-verified Browser tests close a real gap (no prior test, jQuery-based or not, ever drove cluetip's hover/position/content/deactivate cycle): `LanguagesNewInteractionTest.php` covers the "auto" positioning branch (both the right-of-link and overflow-driven left-of-link sub-cases, computed from the same real geometry the port itself reads, not guessed) plus native-title suppression/restore and the delayed-close-cancels-on-re-hover behavior; `InstallTest.php`'s own pre-existing install-flow test gained the equivalent "bottomTop" coverage inline (reaching that page at all already pays a real DB-wipe cost, so a separate test would pay it again for nothing). Two real bugs surfaced during this verification and were fixed at the source rather than in the test: `StatsPageRendererGetMonthOfLastYearsTest.php` (Integration) and `StatsPageRendererTest.php` (Browser) both computed their own expected "now" via a raw `new DateTime()` instead of `Env::now()` (which the app's own `StatsPageRenderer` uses, frozen by `PIWIGO_TEST_NOW` in test mode) -- a real, pre-existing, unrelated bug that silently passed only by coincidence whenever the real wall-clock month matched the frozen one, and broke deterministically (not a boundary race) once the real date rolled into a different month; fixed by switching both tests to `Env::now()`, matching the SUT's own time source. Colorbox ported to `themes/default/js/vendor/colorbox.ts` (real source read from the vendored `jquery.colorbox` package, `github:jackmoore/colorbox#1.5.14`), across its 8 real call sites in 7 admin `.ts` files (`batchManagerGlobal.ts`/`picture_modify.ts`/`batchManagerUnit.ts`'s own `photo:true` popups, `themes_installed.ts`/`configuration_main.ts`'s own auto-detected-via-`photoRegex` screenshot popups, `admin_help.ts`'s own site-wide ajax/HTML-fallback help popup, and `photos_add_applications.ts`'s own 9-item `rel:"group1"` grouped gallery -- the one real multi-item group, so the only page where next/prev/counter/loop is reachable at all). `addAlbum.ts`'s own `jQuery.fn.pwgAddAlbum` (the one real `inline`-mode consumer) converted from a `jQuery.fn` extension to a plain function in the same pass, its one real caller (`batchManagerGlobal.ts`) updated to call it directly; its own `jQuery.error(...)` calls converted to plain `throw new Error(...)`, removing the file's last jQuery dependency entirely. `scalePhotos`/`retinaImage`/`retinaUrl`/`maxWidth`/`maxHeight`/`innerWidth`/`innerHeight`/`top`/`bottom`/`left`/`right`/`fixed`/`className`/`slideshow`/`iframe`/ajax-POST-`data` are all real, never-set-by-any-call-site options and aren't ported; positioning is always the original's own "center in the viewport" default, and text (`current`/`previous`/`next`/`close`/`xhrError`/`imgError`) is the original's own hardcoded English literals, never overridden. The "elastic" grow/reposition transition (real, default, never overridden to "fade"/"none") needed a continuous per-frame callback dom.ts's own `animate()` has no hook for, so this port hand-rolls a small `requestAnimationFrame` tween reusing dom.ts's own `swing()` easing, rather than extending the shared helper for a need only this module has; the close fade goes through dom.ts's `fadeTo()`/`stop()` directly. CDN script registration dropped from `ColorboxView` (CSS kept, every id/class this module creates matches the original's own naming); stale `jquery.colorbox`/(`jquery` where now-unused) `dependsOn` entries removed from 8 consuming Views; `@types/jquery.colorbox`/`jquery.colorbox` npm packages and the ambient `.d.ts`'s own `.colorbox()`/`pwgAddAlbum()` declarations removed. New, mutation-verified Browser tests close 2 real gaps (no prior test, jQuery-based or not, ever drove colorbox's own click-to-open/group-navigation/counter/close behavior, only its registration marker and `AddAlbumInteractionTest.php`'s own end-to-end `inline`-mode flow): `PhotosAddApplicationsInteractionTest.php` covers group open/next/counter/Escape-close (tolerating the group's own real screenshot URLs being unreachable in test mode -- colorbox's own real `imgError` path still runs `prep()`, so the counter/title chrome this test asserts on is unaffected either way), `ConfigurationMainInteractionTest.php` gained the ajax/HTML-fallback-mode coverage inline. Verifying this live (pixel-by-pixel golden-html/VR comparison, not a visual sample) surfaced 2 real, independent, pre-existing bugs unrelated to colorbox and fixed alongside it: `AdminShell.php`'s own stats-history link built its year/month from the real wall clock (`date('Y')`/`date('n')`) instead of `Env::now()`, silently drifting out of sync with `PIWIGO_TEST_NOW` across a real calendar-month rollover; and `themes_standard_pages.ts`'s own "scroll mini to show the selected skin" used dom.ts's jQuery-style `position()`, which is offsetParent-relative -- `.std_pgs_mini_previews` has no `position` rule of its own, so it was never the real offsetParent of its `<img>` children, and `position()` returned the *container's* own distance from an unrelated positioned ancestor instead, scrolling the real default skin (needing zero scroll) to an arbitrary offset every time. Fixed with `scrollIntoView({block: "nearest"})`, which needs no offsetParent assumption, plus waiting for every mini-preview `<img>` to settle before scrolling (a separate, real image-load race). Mutation- and stability-verified (3 independent fresh-fixture VR runs, all green). The rest of that same diff was legitimate already-shipped-but-never-rebaselined drift, not a bug: the what's-new banner correctly stays hidden once `show_whats_new_17` is persisted `false` (an already-landed `>=` comparison fix), and the already-ported `jquery-cluetip` script tag was already gone from every admin page. jQuery UI's datepicker widget + `jquery-timepicker-addon` (`pwgDatepicker`) -- the last unstarted P49-B surface -- ported to `themes/default/js/vendor/datepicker.ts` (real source read from the vendored `jquery-ui@1.10.4` bundle's own `ui/datepicker.js` and `jquery-timepicker-addon@v1.4.4`'s own `src/jquery-ui-timepicker-addon.js`), across all 4 real call sites: `batchManagerGlobal.ts`/`batchManagerUnit.ts`/`picture_modify.ts`'s own `{showTimepicker: true, cancelButton: ...}` creation-date pickers, and `history.ts`'s own plain (no time, no cancel button) `start`/`end` search-range pair. `datepicker.ts`'s own former `jQuery.fn.pwgDatepicker` wrapper (including its own real customization replacing jQuery UI's year `<select>` with a free-typed number `<input>`) folded directly into the new module rather than kept as a separate wrapper layer, and is deleted outright, along with `include/datepicker.inc.latte`/`DatepickerView.php`/`DatepickerViewTest.php` (contract-only, never rendered via `Renderer::render()` -- its own bare `{include}` in `history.latte` deleted too) and `pages/history.ts` (the `historyPage` bundle entry existed only to trigger Rollup's shared chunking of `datepicker.ts` via a side-effect import, with no other real code of its own -- moot now that all 4 real call sites import the new module directly). Narrowed hard to what these 4 real call sites actually reach: every real picker is "linked" (`data-datepicker` always matches a real hidden `<input>`), so the original's own unlinked/standalone branch isn't ported; every real visible input is `readonly`, so `constrainInput`/keyup-parses-what-you-typed sync aren't ported; single month view only, no inline mode, no `beforeShowDay`/`showOtherMonths`; `yearRange`'s own min/max-year arrow-disabling isn't ported since the year `<select>`-to-number-`<input>` customization already replaces its only other real effect (bounded typing) with unbounded free typing; time is hour+minute only (`timeFormat` always `"HH:mm"`), reusing the already-ported `vendor/slider.ts` for the two always-visible sliders rather than reimplementing jQuery UI's slider widget again. Locale IS real and load-bearing here, unlike most other P49 ports: `DatepickerView.php`'s own former per-request `jqueryCode` picked which of jQuery UI's 67 real `ui/i18n/jquery.ui.datepicker-*.js` files and jquery-timepicker-addon's own 39 real `i18n/jquery-ui-timepicker-*.js` files to load for this install's 72 real installed languages -- `vendor/datepickerLocales.ts` carries both real, authoritative locale sets verbatim (extracted programmatically via a Node.js script that `eval()`s the real vendor files inside a minimal sandboxed `$`-shim to capture their own `$.datepicker.regional[code]`/`$.timepicker.regional[code]` object literals as JSON, rather than risking hand-transcription of 106 locale files), keyed the same way `Lang::langInfo()['jquery_code']` resolves; a new `jquery_code` page-data key (exposed by all 4 consuming Views, sourced from each PageRenderer's already-computed `$jquery_code`) supplies the current request's own code client-side, falling back to the same English defaults every other P49 port hardcodes when it matches neither list -- a real, pre-existing production gap replicated exactly, not introduced (e.g. Basque's real `jquery_code` "eus" vs. jQuery UI's own "eu" already silently fell back to English via `DatepickerView.php`'s own `in_array()` gate). `firstDay`/`isRTL`/`showMonthAfterYear` (all real, non-default for some of the 72 installed languages) are honored in the calendar/header rendering, not just the flat string tables. `DatepickerView.php`'s own CSS-only registrations (`jquery-ui.css`, `jquery-ui-timepicker-addon.min.css`, still real -- the native port reuses jQuery UI's own class names for free theming) relocated directly into the 4 consuming Views; their own `jquery.ui.timepicker-addon`/per-locale CDN script `dependsOn` chains removed entirely, along with the dead direct `jquery.ui` JS-only registrations on `BatchManagerGlobalView`/`BatchManagerUnitView` (confirmed no other real jQuery UI widget usage on either of those 2 specific pages -- unlike `UpdatesExtView`/`RatingUserView`/`MenubarView`/`ElementSetRanksView`, which keep real `jquery.ui` JS for their own separate `.sortable()`/`.tooltip()` usage, a distinct, not-yet-ported P49-B gap this work newly surfaced but didn't touch); `jquery-ui`/`jquery-timepicker-addon` npm dependencies and the ambient `.d.ts`'s own `pwgDatepicker()`/`datetimepicker()`/`datepicker()`/`JQueryStatic.timepicker`/`JQueryUI.Datepicker` declarations removed. Two real, VR-catching regressions surfaced during verification and were fixed at the source: (1) the original's own `set(date, true)` unconditionally calls through to `_updateDateTime()` (a real `.trigger("change")` on the visible field) for every linked picker at init, real prior value or not -- `history.ts`'s own `.date-start`/`.date-end` change listeners (native now, since the port's own `writeValue()` dispatches a real bubbling native "change" event, unlike jQuery's internal-only `.trigger()`) depend on exactly this to fire the page's very first, unfiltered search on load; registering the input with a bare `input.value = ...` write instead of calling `writeValue()` silently dropped this, confirmed live and fixed. (2) `$.datepicker`'s own real `markerClassName` ("hasDatepicker", stamped onto every attached input) and its own hardcoded-`true` `autoSize` (sizes the visible field to the longest real day/month name in the active locale, +6 characters when `showTimepicker`) were both dropped, a real, non-decorative regression (`history.css`'s own `.hasDatepicker` rule supplies the field's border/padding/max-width) caught only by pixel-diffing 4 routes' VR baselines, not by golden-html (server-rendered HTML predates the client-side class/size writes) -- fixed by porting both exactly, mutation-verified via 3 fresh VR runs (0 baseline changes needed once fixed, confirming the visual match is exact, not merely close). A third, unrelated pre-existing bug was found and fixed alongside this work: `PhotosAddApplicationsInteractionTest.php`'s own `$opened['total']` (from `H::scriptJson()`, typed `mixed`) failed PHPStan's `binaryOp.invalid` on string concatenation -- narrowed via a `photosAddApplicationsInteractionOpened()` helper, matching the established `commonInteractionRow()`-style narrowing pattern used elsewhere in this suite. New, mutation-verified Browser tests close a real gap (no prior test, jQuery-based or not, ever drove the calendar/time-slider/cancel/unset UI itself, only the *consequences* of a field change): `DatepickerInteractionTest.php` covers open/select-a-day/adjust-hour-and-minute-sliders/commit-on-Done (`picture_modify.php`, the widest single real configuration), Cancel reverting to the original value, the unset link clearing the field, and `history.php`'s own real `data-datepicker-start`/`data-datepicker-end` cross-linking (closing the start picker constrains the end picker's own calendar, disabling every day before it) -- mutation-verified by temporarily reverting the cross-linking assignment and confirming the new test catches it. This closes out P49-B's entire numbered-group scheme. P49-C (scope extension, direct instruction): finish off every remaining real jQuery consumer, then broaden the phase to retire every other genuinely outdated or abandoned vendored JS dependency too, not just jQuery-based ones -- both halves driven by an exhaustive, grep-verified audit (real `jQuery(`/`.trigger(`/`dependsOn` call sites, not assumption), done: underscore.js removed outright (confirmed completely unused); the 9 confirmed-stale dependsOn entries removed; the 8 bare .trigger() call sites converted to dom.ts's own native trigger() (tags.ts: 1, user_list.ts: 7, fixing a real, confirmed pre-existing bug along the way -- selectionMode()'s own former jQuery(...).trigger("change") never actually reached select[name=selectAction]'s own real native "change" listener, so toggling selection mode left #applyActionBlock visibly stuck open); Piecon ported natively (vendor/piecon.ts) and its abandoned npm package removed; jQuery UI's sortable widget ported natively (vendor/sortable.ts, both real call sites), finding and fixing 2 more real bugs (a placeholder that didn't inherit its own real `float: left` layout, and preventDefault() on pointerdown breaking a nested checkbox's native click-forwarding -- fixed properly by porting the original's own real `distance` threshold, not just papering over the symptom). Done for jQuery UI's `.tooltip()`+datatables.net's `.dataTable()`/`.DataTable()` (`rating_user.ts`, ported together as one unit per the coupling note above -- native `vendor/dataTable.ts`/`vendor/tooltip.ts`, both real call sites; `RatingUserView`'s own `jquery.dataTables`/`jquery.ui` script registrations dropped entirely, zero real jQuery/jQuery-UI/datatables.net calls left in `rating_user.ts`). Done for plupload too (`photos_add_direct.ts`, native `vendor/uploadQueue.ts`) -- a narrowed HTML5-only port of `plupload.Uploader` + `jquery.plupload.queue.js`'s own file-list widget (real source read from the vendored `moxiecode/plupload@v2.1.2` tag), dropping the dead multi-runtime negotiation, real upload/chunking state machine (the app's own transport was already tus, not plupload's own uploader, before this campaign started), and every UI element this app's own theme.css keeps permanently hidden (header, column-header row, auto-generated buttons, progress bar). Found and fixed a real bug in the port itself before landing it: `bind()`/`trigger()`'s own `fn(this, ...args)` calling convention (matching real plupload's own `fn(up, ...)`) means a listener's first argument is the uploader, not the payload -- the module's own 3 internal listeners (`Error`'s alert, `FileUploaded`/`UploadProgress`'s status/progress rendering) were all reading `args[0]` instead of `args[1]`, caught by manually driving a real rejected upload and finding the alert silently never fired. Still open: chart.js+moment.js (`stats.ts`, the single biggest remaining lift, and the last item in this extension). Remaining real jQuery surface: `photos_add_direct.ts`'s own `$("#uploader").pluploadQueue({...})` (plupload, `github:moxiecode/plupload#v2.1.2` -- abandoned upstream, real CDN `plupload.full.min.js`/`jquery.plupload.queue.min.js` scripts) -- the only real jQuery/jQuery-UI/datatables.net consumer left anywhere in the app, confirmed via a repo-wide grep (`.sortable()`, `.tooltip()`/`.dataTable()`, bare `.trigger()` call sites, and every stale `dependsOn: ['jquery'/'jquery.ui']` registration are all done now). Done: with plupload's port landing, a repo-wide grep found jQuery itself had zero remaining real consumers anywhere (2 more stale ambient-type leftovers turned up in the process -- `enableShiftClick()`/`.size()`, both already real plain functions with no jQuery call site, just never had their old `interface JQuery` augmentation cleaned up; and `BatchManagerGlobalView`'s own `dependsOn: ['jquery']` plus its `jquery.progressBar` script registration, both dead the same way). `ThemeBaseAssets`'s own unconditional `jquery` script registration (all 3 real layout families, every single page) is removed outright, the dead `interface JQuery` augmentation block is gone from `build/jquery-plugins.d.ts`, and `jquery`/`@types/jquery`/`@types/jqueryui`/`datatables.net`/`plupload`/`@types/plupload` are all out of `package.json`. Verified against the whole app, not just this phase's own files: 89 of 91 golden-html fixtures changed, every single diff being exactly the jQuery/plupload/progressBar script-tag removal and nothing else; all 82 visual-regression baselines confirmed pixel-identical (one, `admin-batch-unit-paged-first`, needed a re-capture after a real but unrelated pre-existing flakiness source turned up -- a fixture photo's own hit counter drifting between test runs earlier in the same suite, not this change); the full Unit/Arch (5578) and Browser suites both green (5 Browser failures were the same pre-existing parallel-run flakiness confirmed earlier in this campaign, not a regression -- all 39 passed in isolation). Non-jQuery scope extension: `chart.js` (2.9.3, current major is 4.x) + `moment.js` (2.26.0, its own maintainers declared it "legacy" in 2020) -- both real, `stats.ts`'s own graph rendering (a repo-wide grep confirmed it as the only real consumer of either) -- done: replaced by a purpose-built canvas line chart, `themes/default/js/vendor/lineChart.ts`, not a generic Chart.js workalike -- narrowed to the one real chart this app ever rendered, in its two real axis modes (a single time-scaled series with a gradient fill; several category-scaled series with a legend, "compare mode"). `stats`'s own built bundle dropped from 453kB to ~11kB (`.size-limit.json` regenerated via `bun run size:update`, which also picked up genuinely stale budgets left over from the jQuery-removal commit above, which never ran it). Two real, confirmed pre-existing behaviors were preserved rather than "fixed": `changeData()`'s own wholesale `chart.options` reassignment silently dropped `maintainAspectRatio: false` on every call after the first (Chart.js's `updateConfig()` re-merges the *current* options against its own defaults, not the original config, and the global default is `true`), so the real rendered chart was always locked to the `<canvas width="400" height="150">` markup's own 400:150 ratio, not "fill the container" -- reproduced directly against the container's real width rather than reintroducing a `maintainAspectRatio` concept this app never got to use; and the gradient fill's own `ctx.createLinearGradient(0, 400, 0, 0)` kept its hardcoded 400px span regardless of the canvas's real ~241px rendered height. One real behavior was deliberately NOT preserved: `moment.locale(lang_code)` never actually took effect in production -- no `moment/locale/*` file was ever imported anywhere in this app (a separate repo-wide grep), so every real deployment silently rendered every date in English regardless of the admin's own language -- `Intl.DateTimeFormat` needs no separate locale data file, so the native port's real `LangCode`-derived BCP-47 locale is a genuine improvement, not a preserved quirk. Verified against the whole app: golden-html regenerated cleanly (the `stats` page's own script-tag/CSS-link changes, plus a `rolldown-runtime` shared chunk that dropped out of 2 unrelated pages' own modulepreload lists once chart.js/moment's own CJS/UMD interop needs went with them); `stats`'s own VR baseline re-captured (a real, expected full-pixel change, not a regression -- a different charting engine renders different pixels by design); typecheck/lint/knip/build all clean. Found and fixed 2 unrelated stale-comment leftovers while touching `build/jquery-plugins.d.ts` for the last time before its own rename (below): `rating_user.ts` still referenced a `declare const GeoIp` this file hasn't carried since geoip was ported to a real endpoint (P49-B group 1), and `eslint.config.ts`'s own any-relaxation comment still blamed jquery-confirm/cluetip/Jcrop/DataTables/plupload for needing it, when none of those types live there any more (only `global_params`/`fullname_of_cat`/one real variadic do). `build/jquery-plugins.d.ts` itself renamed to `build/ambient-globals.d.ts` (P49-C's own final act, user-flagged): the old name stopped describing its real content once the last jQuery-plugin-shaped entries left it, and everything remaining was always genuinely first-party (`Window.SwitchBox`, page-data globals, `AlbumSelector`/`StorageDetails` types, ...), never a jQuery plugin at all -- every real reference to the old path updated alongside it. A second, deeper audit pass (user request, "check the codebase to see if we didn't miss anything") found 3 more dead jQuery-only mechanisms the first pass's own grep-for-the-word-"jquery" sweep didn't surface, since none of the 3 mention jQuery by name at their own call sites: `vite.config.ts`'s own `moment` alias (dead the moment chart.js/moment left, nothing imports "moment" any more); `PageAssets`'s own jQuery-UI known-script-by-naming-convention resolver (`$knownPaths`/`isKnownId()`/`knownPath()`/`knownRequires()`/`resolveMissingDependencies()`/`fillKnownScript()`) -- its only 2 real entries ever, `'jquery'`/`'jquery.ui'`, unreachable from any real `dependsOn` anywhere in the app; and `plupload_code` (`Lang.php`/`Template.php`/4 language packs' own `.po` headers/`tools/i18n/php-to-po-fn.php`), dead since the plupload port removed its only real reader. All 3 removed, verified via full PHPStan/ECS/Unit-Arch plus a golden-html regeneration showing zero diff across all 91 fixtures (confirming each was truly unreachable dead code, not just untested). `underscore` (1.5.2, ancient) -- done, removed outright (confirmed completely unused, zero real call sites anywhere in `themes/`). `piecon` (`github:lipka/piecon#0.5.0`, an abandoned upstream fork pin) -- done, ported natively (`vendor/piecon.ts`, real source read from `node_modules/piecon/piecon.js`) and its abandoned npm package removed. `knip.json`'s own stale `ignoreDependencies` entries for `jquery-timepicker-addon`/`jquery-ui`/`underscore` and its `entry` array's own already-deleted `themes/admin/default/js/pages/history.ts` -- done, cleaned up. | 0 |
 | P50 | Lit component catalog (conditional on P49) | Skipped — P49-B ported every vendored widget natively to vanilla TS, including this entry's own named candidates (selectize for tag autocomplete, jqtree for tree picker); no widget was left needing a framework, and no `lit`/`lit-element` dependency exists anywhere in `package.json` | 0 |
 | P51 | TS modernization | Done (all of P51-A through P51-AA closed); P51-AB through P51-AE scoped, not started — 4 post-closure analysis-only audits (consolidation/duplication, greenfield jQuery-era naming/structure, type-safety/code-quality tail, accessibility) found real remaining cleanup, see their own entries below — P51-A through L done (P51-D closed with a narrower final scope than planned — see its own entry below for the `album_selector.ts` cluster excluded outright; P51-G/H/I all closed with a broader final scope than planned instead; P51-J closed with a narrower final scope than planned — its own entry below has the excluded `Projection\Comment::$authorId` target; P51-K's own follow-up investigation found its 41-docblock target already moot and carved its bulk-array-ids target out into a new P51-K2, whose own real count — 38, not the ~46 first estimated — is corrected in its own entry; P51-K2's own originally-planned second batch, K2b, was investigated and found unnecessary, contradicting this campaign's own established `CategoryService`-stays-primitive precedent, see its own entry below; P51-L closed via a user-chosen risk-prioritized audit rather than a literal re-read of all 423 touched files, see its own entry below, with a full green closing suite gate bar one confirmed-flaky, unrelated Browser test); P51-M (third-party ESLint plugin exploration) done for `eslint-plugin-sonarjs` (116 real sites across every `recommended` rule but `no-unused-vars`, all fixed — see its own entry below for the real bugs found along the way); `eslint-plugin-unicorn` stays deferred (4,314 sites, mostly fighting this codebase's own deliberate conventions, see its own entry); P51-N (eliminate inline-`onclick=`/`window.X` coupling, found during P51-G planning) done — 12 real sites across 4 files converted, not the 15-across-6 first estimated (3 sites correctly excluded as different, already-legitimate `window.X` shapes — see its own entry below for a real `ReferenceError` bug found and fixed along the way); P51-O (close the `no-non-null-assertion` warn population left open by P51-A) done — 679 real sites across 59 files under `themes/**` closed (the rule is now `"error"`), the explicitly out-of-scope 43-site `tests/Unit/*.test.ts` remainder kept at `"warn"` via a scoped override at the time, later closed too (see its own addendum below — a shared `tests/Unit/Vendor/dom-test-helpers.ts` and a reused `valueAt()`, no override left at all) — see its own entry below for the shared `valueAt()` helper and a real `getInitials()` bug found and fixed along the way; P51-P (make `ajax()`'s return type genuinely generic) done — 56 real call sites across 24 files converted to `await ajax<Foo>({...})`, collapsing the largest duplicated `no-unsafe-type-assertion` disable bucket, net zero new unsafe-cast sites in the vendor file itself — see its own entry below; P51-Q (typed `data<T>()` accessor) done — 43 real `data-*`-read call sites across 13 files converted to `data<T>(el, key)`, closing the second-largest `no-unsafe-type-assertion` disable bucket, plus a real non-null-assertion-in-disguise bug found and fixed in `users/activity.ts` along the way — see its own entry below; P51-R (backend: retype `UserRepository`'s 5 raw-int id params to `ImageId`/`UserId`) done — closes a genuine, live double-parse bug in `FavoriteAddController.php` plus 4 other real call sites, and drops a redundant internal `UserId::tryFrom()` validation layer and 3 now-redundant `ParameterType::INTEGER` binds found along the way — see its own entry below; P51-S (backend: retype `TagRepository`'s 2 raw-int id params to `TagId`) done — fixes a double-parse-per-request bug in 3 controllers, each parsing the same route-param id 2-3 separate times — see its own entry below; P51-T (backend: `ImageRepository`, close `FormatId`/`ImageId` raw-int gaps at 5 methods) done — retypes `findFormatById()`/`updateFormatFilesize()`/`insertFormat()` (now returns `FormatId`)/`updateDimensions()`/`findByIdOrFilePattern()` (the latter's `0`-sentinel became a nullable `?ImageId`), plus a call-site-only unwrap for `SrcImage::getSize()`'s "degrades to 0" DTO contract and a found-along-the-way `ActionRequest::$formatId` retype — see its own entry below; P51-W/X (P51-H addenda: stale `ambient-globals.d.ts` comment fixed, dead commented-out debug code removed) done, comment/dead-code-only; P51-U (typed `cloneElement<T>()` helper) done — 19 real `.cloneNode(true) as X` sites across 9 files converted, closing the third `no-unsafe-type-assertion` disable bucket after P51-P/Q — see its own entry below; P51-V (tsconfig: `allowUnreachableCode`/`allowUnusedLabels`/`noUncheckedSideEffectImports`) done — the first 2 flags are free tree-wide, the third surfaces 2 real dead `throw` sites in `jcrop.ts`'s `oppositeLockCorner()`/`getCorner()`, moved into each switch's own `default:` branch rather than deleted outright to keep `consistent-return` satisfied — see its own entry below; P51-Y (shared `copyToClipboard()` helper) done — 6 real sites across `users/list.ts`/`profile.ts` converted, verified via a manual Playwright smoke test since this path has no automated Browser-test coverage — see its own entry below; P51-Z (shared `escapeHtml()`/`escapeRegExp()` helpers) done — absorbs 2 independent duplication pairs across `selectize.ts`/`jqtree.ts`/`uploadQueue.ts`, each fold adopting the real superset implementation — see its own entry below; P51-AA (`install.latte`'s one leftover inline `onchange=` site, adjacent to P51-N) done — moved into `install.ts`'s own change listener, also fixed an unrelated pre-existing stale golden-html modulepreload link found along the way — see its own entry below. P51-O through P51-AA's gap-analysis sequence is now fully closed | 17 |
-| P52 | CSS architecture modernization | In progress — Tailwind call resolved (not adopted); full design scoped below (P52-A through J); P52-A done (`.browserslistrc` floor bump), P52-B done (tokens + reset + base layers, theme-independent — see its own entry below), P52-C partially done (font consolidation, `:focus-visible` audit, `@container`/`@media` conversion, jqtree-RTL resolution all done; the ID→class detox re-scoped into its own follow-up once its real cross-Latte-template footprint became clear, whose own first batch — 33 dead-rule deletions, 9 safe repoints (a 10th, `uploadForm`, was reverted after the full VR run caught a real regression a conditionally-rendered class introduced), `$BODY_CLASSES` wiring, 4 vendor-widget exceptions, 3 JS-generated ids, all workflow-validated — is done too; the 144-id second batch is done too (workflow-scoped, 140/144 confirmed safe outright, a handful of real cross-template gaps and CSS-specificity regressions self-caught by the mandated full VR run and fixed — see its own entry below); the rest of "item 6" surfaced a new prerequisite, P52-K (port the 8 remaining vendor-widget CSS files to first-party before the `@layer theme-chain` wrap — see its own entry below), now complete (`jquery-confirm` 20 views, `jqtree` 1 view, `jcrop` 1 view, `colorbox` 1 view/28 pages, `jquery-ui`+timepicker 7 views, `plupload` 1 view, `selectize` 12 views, `jgrowl` 1 view); item 6's remaining lowercase/logical-property/vendor-prefix/float sweep is now done too, across all 3 chains — see its own entry below); P52-D done (`roma`/`clear` color-only diffs converted to theme-skin token redefinitions, 260 rule-instance groups/~350 property conversions — see its own entry below), the `@layer` wrap for the admin theme done too (all 60 confirmed files wrapped, 4 new `-base` layers invented to keep specificity deciding within each priority tier, `!important` eliminated from 483 to 0, the 3 monolithic skin `theme.css` files split into `theme-base.css`/`theme.css` pairs, and the migration's own scanner promoted to a permanent `tools/css-layers/scan.py` tool wired into `composer check:css-layers` — see its own entry below), P52-E and P52-F done too (`default`/`standard_pages`'s own `@layer` wraps, `!important` eliminated from a measured 236 to 0 outside 10 confirmed-necessary `@media`-gated declarations, `standard_pages`'s 33 real color-only skin differences converted to theme-skin token redefinitions the same way P52-D's were, 126 byte-identical cross-skin duplicate declarations deduplicated, 4 confirmed-dead CSS files deleted, `scan.py` generalized to `--chain {admin,default,standard_pages}` in the process — see their own entries below), P52-G done too (SVG icon-system rewrite, all 3 systems, 220 icons converted — see its own entry below), P52-H done too (`!important`/stylelint enforcement, 531 real violations resolved, `lint:css` now exits 0 repo-wide — see its own entry below), P52-I done too (RTL correction, 44 real vendor-widget physical properties converted, the physical-property-ban enforcement rule landed — see its own entry below), P52-J done too (native `<dialog>` rewrite, 22 real popin/modal instances across all 3 theme chains, including a real gap the original plan missed entirely — see its own entry below) | 1 |
+| P52 | CSS architecture modernization | In progress — Tailwind call resolved (not adopted); full design scoped below (P52-A through J); P52-A done (`.browserslistrc` floor bump), P52-B done (tokens + reset + base layers, theme-independent — see its own entry below), P52-C partially done (font consolidation, `:focus-visible` audit, `@container`/`@media` conversion, jqtree-RTL resolution all done; the ID→class detox re-scoped into its own follow-up once its real cross-Latte-template footprint became clear, whose own first batch — 33 dead-rule deletions, 9 safe repoints (a 10th, `uploadForm`, was reverted after the full VR run caught a real regression a conditionally-rendered class introduced), `$BODY_CLASSES` wiring, 4 vendor-widget exceptions, 3 JS-generated ids, all workflow-validated — is done too; the 144-id second batch is done too (workflow-scoped, 140/144 confirmed safe outright, a handful of real cross-template gaps and CSS-specificity regressions self-caught by the mandated full VR run and fixed — see its own entry below); the rest of "item 6" surfaced a new prerequisite, P52-K (port the 8 remaining vendor-widget CSS files to first-party before the `@layer theme-chain` wrap — see its own entry below), now complete (`jquery-confirm` 20 views, `jqtree` 1 view, `jcrop` 1 view, `colorbox` 1 view/28 pages, `jquery-ui`+timepicker 7 views, `plupload` 1 view, `selectize` 12 views, `jgrowl` 1 view); item 6's remaining lowercase/logical-property/vendor-prefix/float sweep is now done too, across all 3 chains — see its own entry below); P52-D done (`roma`/`clear` color-only diffs converted to theme-skin token redefinitions, 260 rule-instance groups/~350 property conversions — see its own entry below), the `@layer` wrap for the admin theme done too (all 60 confirmed files wrapped, 4 new `-base` layers invented to keep specificity deciding within each priority tier, `!important` eliminated from 483 to 0, the 3 monolithic skin `theme.css` files split into `theme-base.css`/`theme.css` pairs, and the migration's own scanner promoted to a permanent `tools/css-layers/scan.py` tool wired into `composer check:css-layers` — see its own entry below), P52-E and P52-F done too (`default`/`standard_pages`'s own `@layer` wraps, `!important` eliminated from a measured 236 to 0 outside 10 confirmed-necessary `@media`-gated declarations, `standard_pages`'s 33 real color-only skin differences converted to theme-skin token redefinitions the same way P52-D's were, 126 byte-identical cross-skin duplicate declarations deduplicated, 4 confirmed-dead CSS files deleted, `scan.py` generalized to `--chain {admin,default,standard_pages}` in the process — see their own entries below), P52-G done too (SVG icon-system rewrite, all 3 systems, 220 icons converted — see its own entry below), P52-H done too (`!important`/stylelint enforcement, 531 real violations resolved, `lint:css` now exits 0 repo-wide — see its own entry below), P52-I done too (RTL correction, 44 real vendor-widget physical properties converted, the physical-property-ban enforcement rule landed — see its own entry below), P52-J done too (native `<dialog>` rewrite, 22 real popin/modal instances across all 3 theme chains, including a real gap the original plan missed entirely — see its own entry below); P52-K done too (8 vendor-widget CSS files ported first-party); P52-L through P52-O scoped, not started — 4 post-P52-K/-J analysis-only audits (consolidation/dead-code/regressions, greenfield jQuery-era naming/structure, quality-completeness, visual accessibility) found real remaining cleanup, including 3 live regressions and a naming-target conflict with `P51-AC` requiring reconciliation before execution, see their own entries below | 1 |
 | P53 | Per-page TS architecture audit (post-P51) | Not started — a dedicated gap analysis of `vendor/`-port and Piwigo's-own per-page TS files beyond P51's own scope; verdict is targeted cleanup, not a rewrite, 18 items (P53-A through P53-R) scoped, sequencing across them open | 18 |
 | P54 | i18n modernization: gettext/`.po` → `symfony/translation` + ICU MessageFormat, semantic ids | Not started — found via a full translation-system audit (322 `.po` files, ~2,000+ call sites); see its own plan detail below | 0 |
 | P55 | Picture pipeline (new feature) | Not started | 0 |
@@ -6565,14 +6565,20 @@ item 17 is a flag only, not an execution item.
    in `theme-base.css`/`roma/theme.css`). **Update the 3 real Browser
    tests asserting `.jconfirm` selectors** (`CatModifyInteractionTest`,
    `CommentsInteractionTest`, `PluginsIncompatiblePanelTest`) in the
-   same commit.
+   same commit. *(No conflict with `P52-M` item 8 — same target
+   names — but see `P52-M`'s conflict note: land the `.jconfirm-*` DOM
+   class rename as its own separate follow-on per `P52-M` item 16,
+   not bundled into this same commit as written here.)*
 3. *[rename, medium risk]* `colorbox.ts`→`lightbox.ts`
    (`colorbox()`→`openLightbox()`, `closeColorbox()`→`closeLightbox()`,
    8 call sites); `colorbox.css`→`lightbox.css` (~65 selector lines
    across 5 theme CSS files); `ColorboxView.php`→`LightboxView.php`
    (**16 real PHP callers**, widest cross-language footprint here);
    move `images/colorbox/`. One coordinated commit given the CSS/PHP/
-   asset coupling.
+   asset coupling. *(No conflict with `P52-M` item 5 — same target
+   names, and `P52-M` corrects the PHP-caller count to 23; see its
+   conflict note for the `.cbox*` DOM-id sequencing — land that
+   separately per `P52-M` item 16, not in this same commit.)*
 4. *[rename, low risk]* `jcrop.ts`→`imageCropper.ts`
    (`jcrop()`→`cropImage()`, `JcropOptions`→`ImageCropperOptions`,
    `JcropApi`→`ImageCropperApi`; sole caller `pictureCoi.ts`);
@@ -6580,7 +6586,12 @@ item 17 is a flag only, not an execution item.
    `picture_coi.latte`'s `id="jcrop"`, `PictureCoiView.php`'s asset
    registration, `stylelint-suppressions.json:43`, the golden-HTML
    `<link>` href, 2 Browser tests, `images/jcrop/`, and comment
-   cross-refs in `sortable.ts`/`jqtree.css`/`jquery-ui.css`.
+   cross-refs in `sortable.ts`/`jqtree.css`/`jquery-ui.css`. **Target
+   name superseded — see `P52-M`'s conflict note**: `P52-M` item 1
+   independently proposes `coiCropper.ts`/`coi-cropper.css` instead,
+   matching this codebase's already-established "Coi"
+   (center-of-interest) vocabulary; use that name, not
+   `imageCropper.ts`/`image-cropper.css`, when executing this item.
 5. *[rename, medium risk]* `jqtree.ts`→`tree.ts`; rename exported
    `JqTreeNode`/`JqTreeMoveInfo`/`JqTreeOptions`/`JqTreeInstance` →
    `TreeNode`/`TreeMoveInfo`/`TreeOptions`/`TreeInstance` — **first
@@ -6590,7 +6601,16 @@ item 17 is a flag only, not an execution item.
    sites); rename the ~11 emitted `jqtree-*` DOM classes to a `tree-*`
    prefix and their ~55 CSS occurrences; **update
    `tests/Browser/AlbumTreeTest.php`'s live selector assertions in the
-   same commit**.
+   same commit**. **Target name conflict — see `P52-M`'s conflict
+   note**: `P52-M` item 3 independently proposes `albumTree.ts`/
+   `album-tree.css` instead (naming for the real sole consumer,
+   `albums.ts`), and also renames the `jqtree.css` file itself (not
+   scoped here). Recommended resolution: use `albumTree.ts`/
+   `album-tree.css`; the type renames above (`TreeNode`/etc.) stay
+   valid regardless of which module-path name wins. Also, per
+   `P52-M`'s sequencing note, land the `jqtree-*`→`tree-*` DOM-class
+   rename (and the `AlbumTreeTest.php` update) as its own separate
+   follow-on per `P52-M` item 16, not bundled into this same commit.
 6. *[rename, medium risk]* `jgrowl.ts`→`toast.ts`
    (`jGrowl()`→`showToast()`, `JGrowlOptions`→`ToastOptions`; sole
    consumer `updates/ext.ts`); `jgrowl.css`→`toast.css` (+ the ~60-line
@@ -6653,7 +6673,13 @@ item 17 is a flag only, not an execution item.
     classes' `AssetContribution::css(...)` registrations. File-rename
     only — leave the internal `.ui-*` DOM class family as a separate,
     larger follow-on (touches live VR/snapshot tests). Sequence after
-    item 7.
+    item 7. **Target name superseded — see `P52-M`'s conflict note**:
+    `P52-M` item 7 independently proposes `date-slider.css`, backed by
+    a real finding this item didn't have — the file's `cluetip`-related
+    classes are confirmed dead/comment-only, so its true live scope is
+    only datepicker+slider, not datepicker/slider/splitTooltip as
+    guessed here. Use `date-slider.css`, not the tentative examples
+    above.
 14. *[rename, low risk]* Drop stale `str`-prefix Hungarian notation
     from 192 confirmed `const/let str*` declarations across 24 files
     (186 file-private, 6 cross-file exports: `strAlbumsFound`/
@@ -8899,6 +8925,922 @@ started: wrap `admin/default`'s remaining CSS in `@layer theme-chain`
 of "item 6" (lowercase tags/logical properties/vendor-prefix sweep on
 the non-widget files, `:is()`/`:where()`, native nesting), then P52-D
 (`roma`/`clear` skin conversion).
+
+**P52-L through P52-O (scoped, not started) — post-P52 consolidation,
+greenfield-naming, quality-completeness, and visual-accessibility
+audits.** Four analysis-only Workflow-tool runs (survey → dedup →
+adversarial verify → synthesize, no files modified), each auditing the
+whole P52-touched CSS surface through a different lens — mirroring the
+same 4-lens pattern already run over P51 (see `P51-AB`–`P51-AE`
+above), explicitly instructed not to re-report each other's findings.
+Full write-ups committed at repo root (`TMP-p52-consolidation-audit.md`,
+`TMP-p52-greenfield-naming-audit.md`,
+`TMP-p52-quality-completeness-audit.md`,
+`TMP-p52-accessibility-audit.md`) — every item below is condensed from,
+and traceable back to, its own numbered item in that file. One item
+(`P52-M`'s naming audit) needed a same-session correction before being
+recorded here — see its own note below — and **3 real target-name/
+sequencing conflicts exist between `P52-M` and the already-committed
+`P51-AC`** (the two audits independently proposed different rename
+targets for the same jcrop/jqtree/jquery-ui.css files, and different
+bundling of the DOM-class rename with the file rename) — flagged
+explicitly in `P52-M`'s own entry below, with a recommended resolution
+per conflict, not silently auto-picked. Sequencing across P52-L–O is
+open; each item stands alone unless its own text says otherwise.
+
+**P52-L (scoped, not started) — consolidation, dead-code removal &
+regression fixes.** From `wf_0e6f7133-52e` (task `w3kf0ncn4`), 35
+survivors out of 49 raw findings across 7 survey dimensions. Two
+findings caught real mistakes in this session's own earlier work (see
+"Notable self-correcting findings" at the end) — item 2's
+`jquery-ui.css` "isRTL never true" claim and item 27's colorbox
+"never creates #cboxMiddleLeft" claim were both this session's own
+prior conclusions, both wrong. **Items 1-8 are real, currently-live
+regressions and should land before the lower-stakes cleanup below.**
+
+*Real, currently-live regressions — fix first:*
+
+1. *[inconsistency, medium risk]* 3 confirmed live sites strip
+   `outline:none` via a selector that never contains `:focus` (so
+   `no-outline-none` never inspects them), with no compensating focus
+   style at a winning layer/specificity: `admin/clear/theme.css:794-799`
+   (`#filterList`/`#permitAction`/`.sort-by` selects),
+   `admin/roma/theme.css:614-624` (AddAlbum/AddUser/DeleteAlbum/
+   RenameAlbum popin inputs), `admin/default/theme-base.css:3903-3928`
+   (`.calendar-box`/`.half-line-info-box`/`.description-box` inputs).
+   Keyboard-only admins lose all visible focus indication on these
+   real, in-use controls. (`standard_pages theme.css`'s instance is a
+   confirmed false positive — already covered by a `:focus-within`
+   compensator at lines 1228-1230 — do not touch.) Fix: add explicit
+   `:focus`/`:focus-visible` replacement styling at the 3 confirmed
+   sites, verified with a real keyboard tab-through per theme.
+2. *[inconsistency, medium risk]* `jquery-ui.css`'s header wrongly
+   claims `isRTL` is never true — real `isRTL:true` locales (e.g.
+   `ar`) are reachable via 3 real call sites
+   (`pictureModify.ts`/`batch_manager/global.ts`/`batch_manager/
+   unit.ts`) passing `showTimepicker:true`. Most RTL positioning
+   already auto-flips via logical properties, but
+   `.ui-timepicker-div dl dd` was left as a hardcoded physical
+   `margin:0 10px 10px 40%` while its `dl dt` sibling was correctly
+   converted — a real RTL layout bug (label/value overlap) for a real
+   RTL-language admin. Fix: correct the false header comment; add an
+   RTL-aware override for `dl dd` mirroring the vendor's original
+   `.ui-timepicker-rtl dl dd { margin: 0 40% 10px 10px; }`.
+3. *[inconsistency, medium risk]* Dark-mode "Search tips" label loses
+   contrast on hover/focus: `search.css:1081-1086` sets
+   `.help-popin-search:hover/:focus-visible span` to `#3C3C3C` at
+   specificity `(0,2,1)`; `dark-search.css:120-123` sets the intended
+   `#fff` at only `(0,2,0)` in the same `@layer pages`, so it always
+   loses — a real, currently-live contrast regression. The
+   `.icon-help-circled::before` half of the same selector group is
+   also dead (stale pre-P52-G icon class). Fix: add a
+   same-or-higher-specificity override in `dark-search.css`; drop the
+   dead `.icon-help-circled::before` branches from `search.css`.
+4. *[other, medium risk]* `standard_pages theme.css:695-699` is
+   missing a comma between two selectors, silently gluing them into
+   one dead compound selector — the intended monospace styling for
+   the API-key display and ID input never applies, and has been
+   confirmed broken since the original 2025 import. Fix: insert the
+   missing comma; verify visually both regain monospace.
+5. *[inconsistency, low risk]* `reset.css`'s global
+   `prefers-reduced-motion: reduce` rule zeroes `animation`/
+   `transition-duration` but never touches `animation-delay`/
+   `transition-delay`, so real two-stage interactions
+   (`theme-base.css:296-361`'s add-album reveal,
+   `standard_pages theme.css:839`) still make a reduced-motion user
+   wait through the full delay before the now-instant change fires.
+   Fix: add `transition-delay: 0.01ms; animation-delay: 0.01ms;` to
+   the same global rule.
+6. *[inconsistency, low risk]* `admin/roma/theme.css:2501-2505`
+   (`.jqtree-moving` icon-blue) is byte-identical to the icon-green
+   block immediately above instead of icon-blue's own base values
+   (lines 1643-1646) — every other color correctly echoes its own
+   base before the shared `opacity:0.6` dim; blue is the sole
+   outlier, so drag-moving a category shows the wrong shade in roma.
+   Fix: change the values at 2501-2505 to icon-blue's own
+   `#4f71a4`/`#9fbef1`.
+7. *[inconsistency, medium risk]* The "Date created" search filter
+   has zero dark-mode colors — `clear-search.css` has a full 13-rule
+   dark/light-independent set for `date_created`, but
+   `dark-search.css` only ever refactored the pre-existing
+   `date_posted` rules and never added `date_created` equivalents, so
+   the whole panel renders unstyled in dark mode. Predates P52; a
+   missing-selector gap no lint rule catches. Fix: add the 13 missing
+   `date_created`-scoped dark-mode rules using `clear-search.css`'s
+   rules as the structural template.
+8. *[inconsistency, low risk]* Mobile `.filter-form` width diverges
+   between color schemes: `clear-search.css:347` uses `width:101vw`
+   while `dark-search.css:339`/`search.css:787` use `100vw` — traced
+   to a day-one 2023 copy/paste slip, not a later regression. Fix:
+   change `clear-search.css:347` to `100vw`.
+
+*Real, unaddressed gaps:*
+
+9. *[other, low risk]* `album_selector.css`'s `.search-icon`/
+   `.search-cancel-linked-album` position via fixed
+   `transform: translate(Npx, 8px)` physical offsets with no RTL
+   adjustment anywhere in `album_selector.ts` — an ordinary text-input
+   decoration with no photo-pixel justification (unlike jcrop/
+   colorbox/slider's documented exception). Fix: replace with logical
+   `inset-inline-start`/`end` positioning.
+10. *[inconsistency, low risk]* `standard_pages tokens.css:144-147`
+    defines `--color-danger`/`--color-danger-text` as an exact OKLCH
+    conversion of `toaster.css`'s own error-toast colors, naming
+    `toaster.css` as the source — yet `toaster.css` still hardcodes
+    the literals and has zero `var()` consumers repo-wide. Fix:
+    replace `toaster.css`'s hardcoded `#be4949`/`#ffc8c8` in
+    `.light/.dark .toast.error` (~lines 39-52) with the tokens.
+11. *[inconsistency, low risk]* jQuery-UI range-slider colors
+    (`search.css:905-998`) are hardcoded hex with zero occurrences in
+    `clear-search.css`/`dark-search.css`, even though `slider.ts` is
+    a real, live-driven widget behind the filesize/height/width/ratio
+    filters — a sibling `16.x-rewrite` commit (`496a476302`) already
+    fixed this exact gap by tokenizing to `var(--search-*)` but it was
+    never ported forward. Fix: port that commit's approach — tokenize
+    and add colorscheme-specific values.
+
+*Consolidation (merge duplicated components):*
+
+12. *[merge, low risk]* 5 scattered `<dialog>` reset rules in
+    `theme-base.css` (`.RenameTagPopIn`, `.cat-move-order-popin`,
+    `.UserListPopIn`, `.bg-modal`, `.desc-modal`) each independently
+    declare the identical P52-J dialog-reset shorthand, 4 of the 5
+    also with an identical `::backdrop` — the file already
+    demonstrates the better comma-grouped pattern one file over
+    (`albums.css`). Fix: consolidate into one comma-separated
+    selector list, mirroring `albums.css`'s existing pattern.
+13. *[merge, low risk]* Selectize "orange chip" styling
+    (`.item`/`.item.active`/`.item .remove`) duplicated verbatim
+    across `batch_manager_global.css`/`batch_manager_unit.css`/
+    `picture_modify.css`/`user_list.css` — an RTL border-radius bug in
+    this exact block was already fixed independently in each of the 4
+    copies rather than consolidated, direct evidence of real
+    maintenance cost. `tokens.css` already has
+    `--color-accent-light` for this value. Fix: extract into one
+    shared `components/` rule (comma-grouped), switching `#ffa646` to
+    the token; also fix `user_list.css`'s stray missing space in
+    `background-image:none`.
+14. *[merge, low risk]* View-selector icon sizing is redeclared
+    (redundantly — `theme-base.css`'s `theme-chain`-layer copy always
+    wins) in both `cat_list.css:33-38` and `user_list.css:1626-1631`;
+    `.selectedAlbum-first { margin-inline-start: 0; }` is separately a
+    genuine byte-identical duplicate between the two page files. Fix:
+    delete both redundant icon-sizing blocks; move
+    `.selectedAlbum-first` into one shared location.
+15. *[merge, medium risk]* `cat_modify.css`'s
+    `.toggle-comment-option`/`.comment-option` and `history.css`'s
+    `.toggle-img-option`/`.img-option` are the same ellipsis
+    dropdown/flyout component (identical gradient, radius, hover/
+    focus corners, triangle-tail, icon-scale transform), varying only
+    by flyout direction, anchor strategy, and element tag. Fix:
+    extract into a `components/` file parameterized by direction/
+    anchor/tag; have both files consume it.
+16. *[merge, low risk]* 4 blocks (`.container`/`.tab` flex layout,
+    `.tab-title` flex row, `.hide`, `.tab-title div` text styling) are
+    byte-identical between `history.css` and `user_activity.css`,
+    confirmed live via matching real markup in both templates. Fix:
+    move into a shared `components/` file or `theme-base.css` rule.
+
+*Dead-code removal:*
+
+17. *[remove, low risk]* 7 independently-verified dead legacy
+    selector groups in `theme-base.css` (plus sibling dead
+    declarations in `roma`/`clear`/`default theme.css`): both
+    byte-identical `@keyframes animatedBackground` blocks; the
+    `.userSeparator`/`.userProperties*`/`.userPrefs`/`.userProperty`/
+    `.userActions` family; `.AddUserLabel`/`.AddAlbumLabel`/
+    `.DeleteAlbumLabel`/3 more `*Input` selectors;
+    `.dataTables_filter`/`.dataTables_length` (never created by the
+    ported `dataTable.ts`); `.optgroup-header` (selectize has no
+    optgroup support); `.sort .icon-sort-number-up`; the dead half of
+    `.user-property-column-title, .edit-username-title` (keep
+    `.edit-username-title` only). Fix: delete all 7 groups and their
+    siblings in one pass.
+18. *[remove, medium risk]* A further 23 selectors in `theme-base.css`
+    (`.addGroupFormTitle`, `.advanced-filter-dates-max/-min`,
+    `.albumBlock`, etc. — full list in the source report) have zero
+    matches anywhere outside the file, but **no individual root cause
+    has been traced yet**, unlike item 17's groups. Fix: run a
+    targeted per-selector verification pass (grep + template/JS
+    trace) confirming a root cause for each, the way item 17's groups
+    were confirmed, before deleting any.
+19. *[remove, low risk]* 5 more verified-dead sites in the `default`
+    (frontend) chain: `.related-tag-condition` (orphaned template);
+    the `.optgroup-header` half of the selectize-dropdown rule; 3
+    stale pre-rename icon selectors superseded by the gallery-icon-*
+    rename; `.disableSlider`/`.ui-state-hover`/`.ui-state-focus`
+    (never toggled by `slider.ts`); a duplicated non-color
+    `.search-input` block in `clear-search.css`. Fix: delete all 5;
+    apply the icon-selector group after item 3's contrast fix lands
+    (shares live `span` selectors).
+21. *[remove, low risk]* `maintenance_actions.css:78-86`'s
+    `.rotate-anim` + private `@keyframes spin` are applied nowhere —
+    the established, actively-used mechanism is `icon-spin6`/
+    `animate-spin` backed by the shared `@keyframes spin` at
+    `theme-base.css:6166` (15+ consumers). Fix: delete both.
+22. *[remove, low risk]* `user_activity.css`'s `.actions-filters`,
+    `.activity-period-info`, `.cancel-icon`, `.activity-filter-container
+    .icon-cancel` (left over from the original P39-B port) have zero
+    matches anywhere else — the real template uses
+    `.additional-filters`/`.additional-filters-info` instead. Fix:
+    remove all 4.
+23. *[remove, low risk]* `standard_pages theme.css`'s
+    `[data-tooltip]:hover/::after` rule + `.light`/`.dark` variants
+    render `attr(data-tooltip)` content that no template anywhere
+    sets. Fix: remove the rule and both variants at the 3 line
+    ranges in the source report.
+24. *[remove, low risk]* `standard_pages theme.css`'s top
+    `display:none` hide-list (lines 21-30) mixes real selectors with
+    4 dead ones (`#theHeader`/`#copyright` only exist in `default`'s
+    `layout.latte`, which standard_pages doesn't share;
+    `.template-section` matches no template; `.api_name_edit` matches
+    no markup — the real class is `.api_name`), and
+    `.api_name_edit` also has its own separately-dead rule at
+    lines 667-672. Fix: remove all 4 from the hide-list; delete the
+    separately-dead rule.
+25. *[remove, low risk]* 5 of 6 z-index scale tokens (18 `@property`
+    blocks total across all 3 `tokens.css` files) have zero real
+    consumers repo-wide — only `--z-modal` is used
+    (`jconfirm.css:55`) despite obvious unmapped candidates
+    (`selectize.css:86`, `toaster.css:15`, `jgrowl.css:35`,
+    `jqtree.css:126`). Fix: either wire the 5 unused tokens to those
+    obvious candidates, or delete them, keeping only `--z-modal`.
+
+*Split (files that outgrew their bounds):*
+
+20. *[split, medium risk]* The single-page `.cat-modify-*` component
+    (`theme-base.css:419-808`, ~200 lines) is confirmed used
+    exclusively by `cat_modify.latte`/`modify.ts`, yet sits in the
+    monolithic `theme-base.css` instead of the already-existing
+    `cat_modify.css` (which already extends this same component,
+    confirming the split precedent). The shared `.savebar-*`
+    selectors must stay in `theme-base.css` (14 other templates use
+    them). `cat_modify.css` also already has a dead
+    `.cat-modify-footer .spinner` rule to remove in the same pass.
+    Fix: move the component (excluding `.savebar-*`) into
+    `cat_modify.css`'s existing `@layer pages`/`pages-base` structure.
+26. *[split, low risk]* `standard_pages theme.css`'s
+    `.profile-section`/`.api-*` rules (~453-704) and the API-key
+    modal system (`.bg-modal`/`.body-modal`/`.close-modal`/etc.,
+    707-778) are confirmed used only by `profile.latte`, while
+    `css/pages/profile.css` already exists as the designated home
+    but holds only 3 lines. Fix: move both blocks out of `theme.css`'s
+    `theme-chain` content into `profile.css`'s `pages`-layer content
+    — preserves the current cascade outcome exactly since `pages`
+    already loads after `theme-chain`.
+27. *[split, medium risk]* `user_list.css` (2155 lines/38.7KB) has
+    grown ~4.5× larger than the next-largest page file (`history.css`,
+    477 lines), bundling selection mode, the header/filters bar, 3
+    table row-view variants (Tile/Compact/Line), and 3 distinct
+    `<dialog>`-backed popins (EditUser/GuestUser/AddUser) each with
+    their own sub-UI, plus cross-cutting selectize/slider rules
+    shared by all three. This is a distinct concern from item 13's
+    duplicated chip styling (same file, different problem). Fix:
+    split along existing internal section boundaries — e.g.
+    `user_list_table.css` (views + selector) and
+    `user_list_popins.css` (the 3 popins + shared rules) — following
+    the `theme.css`/`theme-base.css` split as precedent.
+
+*Meta / tooling / documentation:*
+
+28. *[inconsistency, low risk]* `pages/picture.css` independently
+    defines a same-shaped generic clearfix `.clear-both` inside the
+    `pages` layer instead of using `utilities.css`'s dedicated
+    `utilities` layer / `u-`-prefix convention (admin already has a
+    `.u-clear-both` precedent). Fix: move it into `utilities.css` as
+    `u-clear-both`; update its single consumer (`picture.latte:532`).
+29. *[inconsistency, low risk]* `colorbox.css`'s "never creates
+    #cboxMiddleLeft/#cboxBottomLeft" comment is factually wrong —
+    `colorbox.ts`'s `tag(id)` helper builds these ids via string
+    concatenation (`tag('MiddleLeft')` → `cboxMiddleLeft`), invisible
+    to a literal grep. The rule removal is still safe, just for a
+    different, uncredited reason (`clear:left` is applied via inline
+    JS style on the row wrappers instead). **This is a generalizable
+    blind spot** — any "confirmed dead via grep" claim in this
+    campaign should be re-checked wherever an id/class is built via
+    string concatenation/template literal (also applies to
+    `jcrop.ts`'s `` `ord-${ord}` `` and `jgrowl.ts`'s
+    `` `${p.theme}` ``). Fix: correct the header comment to state the
+    real reason; spot-re-check other grep-based dead-selector claims
+    in this campaign for the same blind spot.
+30. *[inconsistency, medium risk]* `tools/css-layers/scan.py` has no
+    `@import` handling, so `theme.css:12`'s real, live
+    `@import "iconset.css" layer(theme-chain);` (~33 selectors) is
+    invisible to `scan.py`'s `--inversions`/`--important`
+    cascade-collision analysis for the default chain. Fix: add
+    `@import`-statement parsing that resolves the path and merges its
+    selectors into the target layer's analysis; re-run
+    `--inversions`/`--important` for the default chain afterward.
+31. *[inconsistency, low risk]* No shared naming convention exists
+    across the 3 `tokens.css` files for "status-color variant"
+    (admin's `-flat`) vs. "text/foreground pairing" (standard_pages'
+    `-text`/`-contrast`) tokens — structurally different concepts
+    introduced in separate campaigns, and admin/default has no
+    foreground-pairing token despite a real confirmed need
+    (`theme-base.css:7432-7433`'s `.albumCreationIndicator` hardcodes
+    `color:#3c3c3c`). Fix: adopt one consistent suffix convention
+    repo-wide and add the missing admin/default foreground-pairing
+    token.
+32. *[inconsistency, low risk]* 3 stale self-referential
+    comments/docstrings contradict reality: `reset.css:69-70` claims
+    the `utilities` layer was "never yet populated" (false — 3
+    per-chain `utilities.css` files already populate it);
+    `scan.py:109`'s docstring says "118" triaged admin-chain inversion
+    candidates (real current baseline is 104); `.browserslistrc`'s
+    "no real tooling consumer today" comment is now false since
+    `stylelint-no-unsupported-browser-features` consumes it. Fix:
+    update all 3.
+33. *[other, low risk — informational, already covered by an existing
+    deferral]* ~61 literal `#ffa646`/`#FFA646`/`#ffa744` occurrences
+    across `roma`/`clear theme.css` could reference `tokens.css`'s
+    `--color-accent`/`--color-accent-light`. This is the same,
+    already-scoped-out gap `docs/PLAN.md`'s P52-H closeout deferred
+    as its own future repo-wide raw-hex-outside-`tokens.css` campaign
+    (2492 such declarations exist today, see the "Two of the plan's
+    originally-scoped new enforcement rules" note above) — no
+    standalone action here; when that campaign is picked up, start
+    with these accent-orange instances since `tokens.css` already
+    names this exact shared value.
+34. *[other, low risk]* Add `stylelint-declaration-strict-value`
+    (configured for color/border-color/background-color/z-index) to
+    enforce that future edits can't reintroduce a raw hex color or
+    magic z-index outside the token system — complements, and should
+    land alongside, item 33's eventual raw-hex campaign and the
+    already-deferred `selector-max-id: 0` enforcement (154 remaining
+    ID selectors, per the same P52-H closeout note).
+35. *[other, low risk]* Evaluate `stylelint-plugin-use-baseline`
+    (Baseline-dataset-based) alongside or in place of the currently
+    installed caniuse/browserslist-based
+    `stylelint-no-unsupported-browser-features`, to check the specific
+    modern features (`light-dark()`, `@property`, relative color
+    syntax, Popover API) that motivated the P52 `.browserslistrc`
+    floor bump — not previously considered anywhere in the project's
+    history.
+
+**P52-M (scoped, not started) — greenfield jQuery-era CSS naming/
+structure cleanup.** From `wf_58cd3e09-86e` (task `w982z9ijl`), 17
+items. **Same-session correction applied before recording here**: the
+audit's original items 15/16 recommended *not* renaming 6 widgets' DOM
+class vocabularies, reasoned entirely around "cost/benefit — doesn't
+clear the bar," because this workflow's own prompt text told subagents
+to weigh a cost/benefit bar — a repeat of a standing, previously-flagged
+mistake (blast radius is never itself a reason to skip a real fix; see
+memory `feedback_greenfield_churn_ok.md`). Corrected below into real
+executable items; only item 17 (`standard_pages/skins/` vs. admin
+`theme.json`, genuinely different mechanisms) remains a legitimate "no
+action" finding.
+
+**Known conflicts with the already-committed `P51-AC` (TS-side naming
+audit) — resolve before executing either, do not run both as
+independent:** both audits independently proposed renames for the same
+shared `.ts`/`.css` file pairs, and disagree in 3 places plus one
+systemic sequencing question:
+
+- **`jcrop`**: `P51-AC` item 4 proposed `imageCropper.ts`/
+  `image-cropper.css` (generic name); `P52-M` item 1 proposes
+  `coiCropper.ts`/`coi-cropper.css`, matching the already-established
+  "Coi" (center-of-interest) vocabulary already used by
+  `PictureCoiView.php`/`pictureCoi.ts`/`picture_coi.latte`.
+  **Recommended resolution: `coiCropper.ts`/`coi-cropper.css`** —
+  consistency with existing sibling naming beats a generic name with
+  no other user in this codebase.
+- **`jqtree`**: `P51-AC` item 5 proposed `tree.ts` (implying a
+  reusable, generically-named widget) without renaming `jqtree.css`
+  itself; `P52-M` item 3 proposes `albumTree.ts`/`album-tree.css`
+  (the real load-bearing reference is `albums.ts`'s import, its sole
+  consumer). **Recommended resolution: `albumTree.ts`/
+  `album-tree.css`** — name for the real, sole current consumer; the
+  internal type renames `P51-AC` item 5 already scoped
+  (`TreeNode`/`TreeMoveInfo`/`TreeOptions`/`TreeInstance`, and the
+  `TreeNodeImpl` collision-avoidance rename) stay valid regardless of
+  which filename wins, since those are exported symbol names, not the
+  module path.
+- **`jquery-ui.css`**: `P51-AC` item 13 gave two tentative examples
+  (`legacy-widget-theme.css` or `datepicker-slider-tooltip.css`);
+  `P52-M` item 7 proposes `date-slider.css`, backed by a real
+  finding `P51-AC` didn't have — the file's `cluetip.ts`-related
+  classes are confirmed dead/comment-only, so the file's true live
+  scope is only datepicker+slider. **Recommended resolution:
+  `date-slider.css`** — better-verified scope claim supersedes the
+  tentative options.
+- **DOM-class-rename bundling, all 6 shared widgets**: `P51-AC`'s
+  items 2/3/5 each bundle the widget's DOM-class rename (`.jconfirm-*`,
+  `.cbox*`, `.jqtree-*`) into the *same* commit as the file/type
+  rename. `P52-M`'s corrected items 15/16 explicitly defer **all 6**
+  widgets' DOM-class renames (`.ui-*`, `.jconfirm-*`, `.jcrop-*`,
+  `.jGrowl-*`, `.jqtree-*`, `.selectize-*`, `.cbox*`) to their own
+  follow-on campaign(s) after the file renames land, given the
+  combined Browser-test/golden-HTML/VR blast radius. **Recommended
+  resolution: follow `P52-M`'s sequencing** (file/type rename first,
+  DOM-class rename as its own dedicated follow-on per widget) — it
+  more precisely counts the test/fixture blast radius per widget
+  (e.g. colorbox's real count is 23 references, not `P51-AC`'s
+  citation), and per-widget review is easier to verify than a
+  combined file+class rename. When executing `P51-AC` items 2/3/5,
+  treat their "update the `.jconfirm-*`/`.cbox*`/`jqtree-*` selectors"
+  language as superseded by this sequencing — do the file/type rename
+  from `P51-AC`'s item text, but land the DOM-class rename separately
+  per `P52-M` items 15/16 below, not in the same commit.
+
+*Quick, low-risk vendor-brand file renames (do these first):*
+
+1. *[rename, low risk]* `jcrop.css`/`jcrop.ts` →
+   `coi-cropper.css`/`coiCropper.ts` — smallest, cleanest rename in
+   the set (see conflict note above for the name choice). Full
+   corrected blast radius: 6 files, including a
+   `stylelint-suppressions.json` key (21-count suppression, silently
+   orphans on a bare rename if missed) and 2 `#jcrop` querySelector
+   calls in `pictureCoi.ts` an earlier pass's file list omitted. Fix:
+   rename both files in one commit; update `PictureCoiView.php:53`,
+   `stylelint-suppressions.json:43`, `pictureCoi.ts:3/27/52`,
+   `picture_coi.latte:50`'s `id="jcrop"`, and the golden-HTML fixture
+   href. Leave `.jcrop-*` DOM classes untouched (vendor-mirrored, see
+   item 16).
+2. *[rename, low risk]* `plupload.css` → `upload-queue.css` — the
+   `.ts` half (`uploadQueue.ts`) was already renamed by P49; CSS is
+   the sole holdout. Fix: rename the file; update
+   `PhotosAddDirectView.php:95`, the golden-HTML fixture, and the
+   `docs/PLAN.md` mention. Optionally rename `images/plupload/`.
+   Leave the `.plupload_*` selector overrides as a separate,
+   not-yet-scoped follow-on.
+3. *[rename, low risk]* `jqtree.css`/`jqtree.ts` →
+   `album-tree.css`/`albumTree.ts` (see conflict note above). Fix:
+   rename both together; update `AlbumsView.php:46`, `albums.ts:23`,
+   the golden-HTML fixture; sweep ~8 comment-only mentions. Leave
+   `.jqtree-*` classes untouched (live-asserted by `AlbumTreeTest.php`,
+   see item 16).
+4. *[rename, medium risk]* `jgrowl.css`/`jgrowl.ts` →
+   `toast.css`/`toast.ts` (consistent with `P51-AC` item 6 — no
+   conflict here), 1 real call site
+   (`UpdatesExtView.php:47`). Bundle in the same commit: reword 2 test
+   titles mentioning "jGrowl" purely descriptively
+   (`RomaVisualRegressionTest.php`, `CommentsInteractionTest.php`),
+   letting the Pest snapshot filename regenerate. `.jGrowl*` DOM
+   classes stay untouched (asserted 15× in
+   `UpdatesExtInteractionTest.php`, see item 16).
+5. *[rename, medium risk]* `colorbox.css`/`colorbox.ts`/
+   `ColorboxView.php` → `lightbox.css`/`lightbox.ts`/
+   `LightboxView.php` (consistent with `P51-AC` item 3 — no conflict).
+   Corrects an earlier "17 references" claim to the verified **23**
+   (14 `new ColorboxView()` sites, 3 `use` imports, 4 comment
+   mentions, 2 self-references). Fix: rename all 3 in one commit;
+   update all 23 references across 14 View.php files,
+   `colorbox.inc.latte:1`, `stylelint-suppressions.json:38`,
+   `scan.py:260`; regenerate 27 golden-HTML fixtures. Leave `.cbox*`/
+   `#cbox*` DOM ids untouched (4 Browser test files only touch those,
+   see item 16).
+6. *[rename, low risk]* Retire the internal `"jquery.*"`
+   `AssetContribution` dedup-key namespace — **~32 real
+   `id: 'jquery.*'` call sites across 15 PHP files**, confirmed a pure
+   `PageAssets::$css[$id]` dedup key never rendered to HTML/read by
+   any `.ts`/`.latte`/test file (the resolver that once gave these
+   strings special meaning was removed in P49-C). Zero functional/test
+   risk. Fix: `id: 'jquery.ui'` (7 sites) → `'date-slider'`,
+   `id: 'jquery.selectize'`/`'jquery.selectize.scheme'` (12+12 sites)
+   → `'tag-select'`/`'tag-select.scheme'`, `id: 'jquery.colorbox'` (1
+   site) → `'lightbox'` — mirroring items 5/7/9's renames. Pure PHP
+   string find/replace.
+7. *[rename, medium risk]* `jquery-ui.css` → `date-slider.css` (see
+   conflict note above), file rename only. Fix: update 7 View.php
+   call sites, `scan.py:257`, `known-findings.json`'s suppression
+   keys, 9 golden-HTML fixtures. **Do NOT rename the 115 internal
+   `.ui-*` selectors** (see item 15). Optional separate follow-on:
+   split into `datepicker.css` + `slider.css` (the front-end search
+   page currently loads ~120 unused datepicker/timepicker lines just
+   for the slider).
+8. *[rename, medium risk]* `jconfirm.css`/`jconfirm.ts` →
+   `confirm-dialog.css`/`confirmDialog.ts` (consistent with `P51-AC`
+   item 2 — no conflict), registered from **20 View.php files**
+   (widest registration-count of any item, entirely mechanical). Fix:
+   rename all 3 files (+ `jconfirmPresets.ts`); update all 20 call
+   sites; regenerate ~26 golden-HTML fixtures. Leave the 23
+   `.jconfirm-*` DOM classes and 8 Browser test files asserting them
+   untouched (see item 16).
+9. *[rename, high risk]* 3 `selectize` CSS files + `selectize.ts` →
+   `tag-select`/`tagSelect.ts` (consistent with `P51-AC` item 15 — no
+   conflict). **Largest total surface in the audit**: 12 Views × 2
+   registrations = 24 sites, the `data-selectize` bootstrap attribute
+   (14 occurrences across 7 templates, read by 7 `.ts` page
+   controllers — not by `selectize.ts` itself), a live attribute
+   selector in `cat_perm.css`, 5 Browser tests asserting
+   `.selectize-input`/`-control`/`-dropdown` directly. Fix: rename the
+   3 CSS files + `selectize.ts`; update all 24 registration sites
+   (pair with item 6), the `data-selectize` attribute across 7+7
+   files, `cat_perm.css`'s attribute selector. Leave `.selectize-*`
+   classes untouched (see item 16). **Execute as its own dedicated
+   PR, last among the vendor-file renames** — matches `P51-AC` item
+   15's own sequencing.
+
+*Structural moves and larger campaigns:*
+
+10. *[move, medium risk]* Split `admin/default/css/components/` into
+    `components/` (first-party) vs. `components/vendor/`
+    (ported-widget) — the directory currently mixes 10 vendor-ported
+    stylesheets (items 1-9) with first-party shared components with
+    no structural signal distinguishing them. Corrected blast radius:
+    **30 PHP files** reference the directory, **~59 golden-HTML
+    fixtures** embed hrefs into it, and 4 vendor files' relative
+    `url("../../images/...")` references need a directory-depth
+    adjustment. Fix: **after items 1-9 land** (so paths are touched
+    once), move the 10 renamed vendor CSS files into
+    `components/vendor/`; update ~30 PHP call sites, ~59 fixture
+    hrefs, adjust the 4 files' relative image paths. One move-only
+    commit.
+11. *[rename, medium risk]* PascalCase `*PopIn*` dialog family (19
+    distinct tokens — `AddAlbumPopIn`/`-Container`, `DeleteAlbumPopIn`,
+    `UserListPopIn`, `GuestUserPopIn`, `EditUserPopIn`,
+    `linkedAlbumPopIn`, `ClosePopIn`, etc.) survived the P52-J native
+    `<dialog>` conversion untouched — that campaign converted the
+    markup but never the PascalCase naming. The same admin chain also
+    spells its own "close this dialog" affordance **3 incompatible
+    ways** (`close-popin`, `ClosePopIn`, `close-modal`) for the
+    identical role. Fix: convert all 19 tokens to kebab-case
+    (`AddAlbumPopIn` → `add-album-popin`, etc.); consolidate the 3
+    close-button spellings onto one term (recommend `close-popin`,
+    the dominant term); regenerate 5 named golden-HTML fixtures;
+    update 2 Browser tests' hardcoded selectors; sweep the shared
+    `.ClosePopIn` usage in the unrelated front-end search dialog in
+    the same commit.
+12. *[rename, low risk]* Quick-win scoped camelCase/mixed-case fixes
+    across ~29 files, distinct from the giant item-14 campaign: 9
+    mixed-case tokens (`addFilter-button`, `selectedAlbum-first`,
+    `batchManager-pagination`, etc.), the 20-token "action*" family
+    (`actionButtons`, `actionEdit`, `actionDelete`, etc. — including
+    `user_list.latte`'s `userActionDelete`/`userActionLevel`, the
+    **last 2 camelCase holdouts** in an otherwise already-kebab-cased
+    file), plus `categoryNameErrorMessage`/`errorFilter-message`.
+    None are vendor-coupled. Fix: batch all into one cleanup PR,
+    including the 9 golden-HTML fixtures that embed the "action*"
+    tokens.
+13. *[other, low risk]* Of 7 bare `/* jQuery ... */` section-header
+    comments across `roma`/`clear`/`admin theme-base.css`/`default
+    theme.css`, 5 are confirmed live and genuinely mislabeled (sitting
+    over `.ui-tooltip`/`.cluetip-*`/`#tiptip_holder` rules actually
+    driven by `tooltip.ts`/`cluetip.ts`/`tiptip.ts` today); 1
+    (`/* jQuery datepicker */`, `theme.css:730`) sits over a block
+    already documented as 100% dead in `docs/PLAN.md:8238` and should
+    be deleted, not relabeled; 2 more (`/* jQuery ui resizable */`)
+    have zero live references but aren't formally tracked as dead
+    yet. Fix: reword the 5 live comments to name the real widget;
+    delete the dead block at `theme.css:730-731` per its existing
+    PLAN.md disposition; leave the 2 "jQuery ui resizable" comments
+    for a separate dead-code-verification pass.
+14. *[rename, high risk — its own dedicated future campaign, not a
+    mechanical punch-list entry]* ~83 `.latte` files across **both**
+    admin AND public themes (51 admin, 32 public/standard_pages —
+    corrected from an earlier "admin-only" report, ~39% of the
+    footprint) carry ~360-440 distinct camelCase/PascalCase tokens
+    (`buttonLike`/`bulkAction`/`categoryActions`/`contentWithMenu`/
+    `switchBox`/`togglePassword`/`titrePage`, the `month_calendar`
+    "cal*" family, `imageInfo`/`dError`, etc.). `.stylelintrc.json`
+    currently disables `selector-class-pattern`/`selector-id-pattern`/
+    `keyframes-name-pattern` (all `null`) with **no enforcement
+    mechanism** guarding against new violations meanwhile. Several
+    tokens overlap with `P52-L`'s already-flagged dead selectors and
+    need re-verification before renaming to avoid wasted churn. Fix:
+    open a dedicated, phased kebab-case-conversion plan (its own
+    P-numbered campaign) covering the full footprint across both
+    themes; re-verify each token against `P52-L`'s dead-selector list
+    first; on completion, flip the 3 disabled naming-pattern rules to
+    enforce kebab-case going forward.
+
+*Vendor-mirrored DOM class vocabularies (corrected — see the conflict
+note above for sequencing relative to `P51-AC`; do not leave any of
+these "as-is," only a genuine external contract would justify that,
+and none exists here):*
+
+15. *[rename, medium risk]* The jQuery-UI `.ui-*` selector convention
+    — 52 unique classes, 115 selector lines — hardcoded as literal
+    className strings in `datepicker.ts` (~29 sites) and `slider.ts`
+    (~8 sites), directly asserted by 3 real test files
+    (`DatepickerInteractionTest.php`, `RomaVisualRegressionTest.php`,
+    `BatchManagerFilterInteractionTest.php`). Fully enumerable and
+    mechanical, just larger than the other items. Fix: pick a real
+    functional prefix (e.g. `date-slider-*`, or split per-widget
+    `datepicker-*`/`slider-*`); rename all 52 classes across
+    `datepicker.ts`/`slider.ts`/`date-slider.css` together; update the
+    3 test files' hardcoded selectors and any VR snapshot in the same
+    commit. Sequence after item 7 (the file rename).
+16. *[rename, high risk]* The other 5 vendor-mirrored DOM class
+    vocabularies: `.jconfirm-*` (8 Browser test files), `.jcrop-*`,
+    `.jGrowl-*` (15 occurrences + a classList assertion in
+    `UpdatesExtInteractionTest.php`), `.jqtree-*`
+    (`AlbumTreeTest.php`), `.selectize-*` (5 Browser test files),
+    `.cbox*` — each `.ts` port hardcodes its own DOM class literals
+    matching the original plugin's convention. Fix: treat as its own
+    dedicated follow-on campaign after items 1-9 land; for each
+    widget, pick a real functional class prefix, rename every DOM
+    class literal in its `.ts` file and CSS, update every asserting
+    test/fixture in the same commit **per widget** (don't batch all 6
+    into one commit — each widget's blast radius already warrants
+    independent review).
+
+17. *[DECISION — no action]* `standard_pages/skins/*.css` (11
+    accent-color variants selected via string interpolation — a
+    same-theme accent-variant picker, corrected from an earlier
+    miscount of 17) and admin `roma`/`clear theme.json`'s
+    `parent`/`loadParentCss` fields (driving `ThemeChain.php`'s
+    general-purpose theme-inheritance mechanism) are genuinely
+    different, structurally distinct facilities. Not accidental
+    drift — confirmed, no merge or rename.
+
+**P52-N (scoped, not started) — quality-completeness &
+modernization-completeness tail.** From `wf_adbcb0c0-319` (task
+`w797tmocm`), 9 items across 7 survey dimensions (ID-selector
+specificity hacks, print-style completeness, dark-mode parity, unused
+custom properties, container-query/modern-layout adoption, a
+regression re-check of `P52`'s item-6 sweep, and
+`stylelint-suppressions.json` staleness). Explicitly instructed not to
+re-report `P52-L`'s findings (confirmed clean of overlap). Roughly a
+third of these items are pre-`@layer` specificity hacks now provably
+dead weight since layer order already resolves the winner
+unconditionally — a recurring theme across this campaign's audits.
+
+1. *[bug, low risk]* `standard_pages/skins/silver.css:24`'s dark-mode
+   `--color-dark-link-hover: #FFFBE6;` is byte-identical to
+   `cadmium.css:24`'s own yellow value, even though every other
+   token in `silver.css` is grayscale (`--color-accent:#b0b0b0`,
+   `--color-dark-link:#d1d1d1`) — a real, user-visible copy-paste leak
+   breaking silver's own grayscale identity, undocumented as
+   intentional. Fix: replace with a grey consistent with the file's
+   own dark-mode tokens (e.g. a variant of `#d1d1d1`).
+2. *[specificity-hack, low risk]* 4 confirmed sites use an ID (alone
+   or compounded with a class) purely to out-rank a same-property
+   class rule, when the master `@layer` order already resolves the
+   winner unconditionally regardless of specificity:
+   `profile.css:5`'s `#api_collapse.template-api{display:none}`
+   (in `@layer pages`, beats `theme.css:629`'s `@layer theme-chain`
+   rule via layer order alone — the ID contributes nothing);
+   `theme.css:118`/`:413` escalate against a base `.error-message`
+   rule when a `@layer pages` file already exists per page;
+   `theme-base.css:9075-9080`/`:9105-9113` (2 `#configContent` rules
+   whose own comments claim they exist to "win outright instead of
+   relying on `!important`" — the file's own adjacent class-only
+   pattern already works). Related to the already-deferred
+   `selector-max-id: 0` enforcement noted in `P52-L` item 34. Fix:
+   drop the ID from each selector (or relocate to `@layer pages` as a
+   class-only rule); update or remove each stale comment to note
+   layer order as the real mechanism.
+3. *[specificity-hack, medium risk]* 16 confirmed
+   `.<class>.u-hidden{display:none}` blocks (19 selectors) across 7
+   admin files compound a page/component class onto `.u-hidden`
+   purely for specificity, though `.u-hidden` already lives in the
+   terminal `@layer utilities` and wins unconditionally by layer
+   order — **3 sites carry a "(higher ID specificity)" comment that
+   is factually wrong on two counts** (no ID is present at all, and
+   the real reason is cross-layer order, not specificity). Fix: sweep
+   the 16 blocks and drop the redundant leading class; correct or
+   remove the 3 wrong comments; while in the area, also review the
+   related `.u-block`/`.u-inline` compounding in
+   `configuration_sizes.css`.
+4. *[other, low risk]* `.stylelintrc.json:20`'s
+   `"no-descending-specificity": null` has **zero documented
+   rationale or re-enable trigger** anywhere in `docs/PLAN.md` or
+   either prior audit file — unlike its 3 sibling disabled naming
+   rules (see `P52-M` item 14) — and has been `null` since the file's
+   first commit through 11+ later edits. It's exactly the rule that
+   would have flagged items 2 and 3 above. Fix: after items 2/3 land,
+   flip `no-descending-specificity` back on and triage remaining
+   hits, adding scoped `stylelint-suppressions.json` entries with
+   real rationale for any genuine exceptions.
+5. *[other, medium risk]* `user_list.css`'s filter-bar toolbar
+   (`.filtered-users`, `.advanced-filter-btn`, `#search-user
+   .user-search-panel`) are 3 independently absolutely-positioned
+   siblings inside an already-`display:flex` parent
+   (`.user-manager-header`), with magic-number offsets hand-retuned
+   in lockstep across 2 separate breakpoints — a real, fragile pattern
+   with real overlap risk at intermediate widths, distinct from
+   `P52-L` item 27's file-size split concern (same file, different
+   problem). Fix: remove the absolute positioning from all three
+   children, let the parent's existing flex row lay them out via
+   `gap` + `margin-inline-start:auto` on the first item; delete both
+   magic-number breakpoint blocks; verify visually at both former
+   breakpoint widths.
+6. *[other, medium risk]* 160 of 190 suppressed stylelint violations
+   (`no-low-performance-animation-properties` +
+   `media-prefers-reduced-motion`, across 14 files) have **no local,
+   in-file justification** — the rationale exists only in one commit
+   message and in `reset.css`'s own comment, which no suppressed file
+   points back to, unlike the other 3 suppressed rules in the same
+   file which do carry real inline justification. Fix: add a short
+   comment at each suppressed site (or one file-level comment per
+   file) referencing `reset.css`'s global reduced-motion rationale
+   and the commit that established it.
+7. *[unused-token, low risk]* 3 dead design tokens with zero real
+   consumers anywhere: `--color-success` (no `var()` consumers, no
+   source literal either); `--color-surface-subtle` (declared with
+   real per-chain values in 2 chains, zero consumers — the `#fafafa`
+   literal it was meant to replace persists hardcoded in 5+ files);
+   `--space-8` (4rem, identical in all 3 chains, zero consumers unlike
+   `--space-1`..`--space-7`). Fix: delete `--color-success` outright;
+   for `--color-surface-subtle`, either wire it into the real
+   `#fafafa` sites or delete it if not planned soon; delete
+   `--space-8`'s registration/value from all 3 `tokens.css` files.
+8. *[other, low risk]* A `:not(:last-child)` margin pattern (plus a
+   last-child override) simulating flex-gap is duplicated verbatim in
+   `admin/default/css/components/general.css` and
+   `admin/roma/css/components/general.css`, even though both
+   containers are already `display:flex` and the codebase relies on
+   `gap` pervasively elsewhere, with no comment documenting avoiding
+   `gap` here. Fix: add `gap` to the flex container rule in both
+   files and drop both margin-based rules (leave admin/roma's
+   separately-relocated `display:flex` in `theme-base.css` untouched
+   — that move serves an unrelated cascade-layer-inversion reason).
+9. *[other, low risk]* 459 live uppercase hex-color declarations
+   exist across 23 files with no lint coverage (stylelint dropped
+   `color-hex-case` from core; `.stylelintrc.json` disables
+   `value-keyword-case`); separately, `theme-base.css:6801` has a
+   stray `Position:relative;` (capital P) — the **sole non-lowercase
+   property name in the whole tree**, which no current rule catches
+   either. Fix: fix the typo at `theme-base.css:6801` now; add a
+   custom stylelint rule or configure
+   `stylelint-declaration-strict-value` (see `P52-L` item 34) for
+   color case to catch new uppercase hex/property-case typos going
+   forward; treat the 459 existing instances as a separate future
+   lowercasing pass, matching the deferral already given to `P52-L`
+   item 33's broader raw-hex campaign.
+
+**P52-O (scoped, not started) — visual accessibility (CSS-only)
+remediation.** From `wf_147eab94-2b5` (task `wkwqr92sm`), 23 items
+across 7 survey dimensions (contrast — computed, not eyeballed; touch
+targets; zoom/reflow WCAG 1.4.10; focus-ring visual sufficiency;
+forced-colors/high-contrast-mode support; truncated-text
+accessibility; skip-links/landmarks). **Complements, doesn't
+duplicate, the already-committed `P51-AE`** (JS/DOM keyboard/ARIA
+accessibility) — this phase covers CSS-only concerns (color, layout,
+sizing) `P51-AE`'s JS/DOM lens didn't touch. **Notable: this audit
+found real gaps in this session's own earlier accessibility work** —
+the reduced-motion reset and the mechanical `:hover`→`:focus-visible`
+rollout (both committed earlier this session) are correct as far as
+they go, but item 3 found a selectize input suite that suppresses
+`:focus-visible` entirely (untouched by that rollout since it had no
+matching `:hover` rule to mirror), and item 4 found several sites
+where the rollout mirrored an already-too-subtle `:hover` color delta,
+so the resulting focus ring is present but fails the WCAG 3:1
+non-text-contrast bar. **Items 1, 2, and 6 are sitewide structural
+failures hitting every visitor and should land first.**
+
+*Reflow/zoom — sitewide structural failures:*
+
+1. *[reflow-zoom, high risk]* `body { min-width: 60em }` (~960px) on
+   both `themes/default/theme.css` (public gallery) and
+   `admin/default/theme-base.css`, with **zero relaxing media query
+   anywhere** — unconditionally blocks WCAG 1.4.10 Reflow at 400%
+   zoom or on any viewport under ~768-960px, across essentially every
+   page in the app. Fix: remove `min-width: 60em` from `body` in both
+   files; replace the menubar/sidebar layout with a real responsive
+   pattern (collapse to off-canvas below ~768-960px); re-verify at
+   400% zoom on representative pages.
+2. *[reflow-zoom, high risk]* No `<meta viewport>` tag on
+   `themes/default/template/layout.latte` or
+   `admin/default/template/layout.latte` — `standard_pages`'s layout
+   already has one. Without it, mobile browsers fall back to a
+   virtual ~980px viewport, so **none of the site's real `@media`
+   breakpoints can ever engage on an actual phone**, independent of
+   any other fix. Fix: add `<meta name="viewport"
+   content="width=device-width, initial-scale=1">` to both layouts.
+6. *[structure-navigation, high risk]* A repo-wide grep for
+   `<main>`/`role=main`/`<nav>`/`role=navigation` returns **zero hits
+   anywhere** in `themes/` — no landmarks or skip-link on any of the
+   3 template chains, forcing every keyboard/screen-reader user to
+   tab through the full header/sidebar before reaching content on
+   every page load. A WCAG 2.4.1 (Level A) failure hitting every
+   visitor. Fix: wrap each chain's real content region in `<main>`,
+   wrap menubars/sidebars in `<nav aria-label="...">`, add one "Skip
+   to content" link as the first focusable element in each of the 3
+   `layout.latte` files.
+16-19. *[reflow-zoom, medium-high risk]* Four independent hard-coded-pixel
+    dialogs/panels block reflow, unrelated to item 1's `body
+    min-width`: **(16)** `user_list.css`'s 3 popin dialogs (745/635/
+    350px); **(17)** `install.css`'s 800px install wizard with **no
+    media query at all**; **(18)** `search.css`'s 400px filter-panel
+    `min-width` overriding its own mobile breakpoint; **(19)** a
+    500×400px quick-search dialog (also `search.css`) with its
+    browser-default max-size safety net explicitly disabled
+    (`max-width:none; max-height:none`). Fix: add responsive
+    step-downs per file (see the source report for exact values);
+    replace `search.css`'s mobile-breakpoint `overflow-x:hidden`
+    (clips rather than fixes) with a real width fix.
+
+*Focus indicators — including gaps in this session's own earlier
+work:*
+
+3. *[focus-indicator, high risk]* `search.css` has a dedicated
+   `:focus-visible { border:none; outline:none; }` rule for 3 real,
+   live selectize tag/author/added-by filter inputs, on top of an
+   already `border:none` base rule, with **no substitute indicator
+   anywhere in the ancestor/descendant chain** — a clean WCAG 2.4.7
+   failure. Untouched by this session's 378-site mechanical
+   `:hover`→`:focus-visible` pass since these inputs have no `:hover`
+   counterpart to mirror. Fix: delete the suppression rule, or
+   replace it with a real visible ring.
+4. *[focus-indicator, high risk]* Because the earlier mechanical pass
+   mirrored each existing `:hover` rule verbatim into
+   `:focus-visible`, several already-subtle mouse-only affordances
+   (a remove-chip color delta at ~1.37:1 in `selectize.css`,
+   chip-remove overlays at ~1.10:1, flyout/dropdown-menu overlays at
+   ~1.15-1.16:1 across 5 admin page CSS files and `theme-base.css`)
+   now carry a keyboard focus indicator that is technically present
+   but fails the 3:1 non-text-contrast bar — visually
+   indistinguishable from unfocused. Fix: as its own follow-up pass,
+   for each listed selector replace the mirrored `:hover` color delta
+   with an independent outline/box-shadow ring reaching ≥3:1 against
+   both states.
+5. *[focus-indicator, high risk]* `standard_pages theme.css` +11 skin
+   files: `.dark`/`.light a:hover/:focus-visible` change only text
+   color with underline present unconditionally before and after
+   (carrying no state signal) — **all 11 dark-mode variants fail
+   3:1** (one is a byte-identical zero-delta swap), and 5 of 10
+   light-mode variants fail too, on the account-management pages
+   every user passes through. Fix: add a non-color state change
+   (outline, background tint, or underline-thickness) to both rules
+   so at least one property clears 3:1 independent of the per-skin
+   color swap; verify per-skin.
+13. *[focus-indicator, medium risk]* `admin/clear`/`admin/roma`: 3
+    real toggle controls change only border color on hover/
+    focus-visible with no compensating change (1.70:1 and 1.60:1
+    contrast-of-change, both failing WCAG 2.4.11's 3:1 requirement).
+    Fix: replace the border-color-only swap with a pair reaching
+    3:1, or add a background-color change alongside it.
+
+*Color contrast (computed) — pervasive, on real visible text:*
+
+8. *[contrast, high risk]* Pagination/breadcrumb text and calendar
+   day numbers (`#b0b0b0`) are 2.17:1 against the page background on
+   nearly every paginated public listing, vs. the 4.5:1 floor. Fix:
+   darken to at least `#757575` (≈4.5:1 on white).
+9. *[contrast, high risk]* The standard_pages fixed header-options
+   link fails 4.5:1 against its own gradient on **10 of 11 skins**
+   (lime 1.60:1, cadmium 1.91:1, green 1.71:1, default 2.27:1, fuchsia
+   2.69:1, silver 2.81:1, red 2.29:1, cobalt 3.32:1, sienna 3.99:1,
+   teal 4.32:1 all fail — only "purple" at 4.91:1 clearly passes).
+   Fix: re-pick each skin's header-link token (or add a translucent
+   scrim behind the header), using "purple" as the only current
+   passing reference.
+11. *[contrast, high risk]* Selected-tag pill text is 2.26:1.
+12. *[contrast, medium risk]* The related-tags/search-in-set widget
+    cluster has 3 independently-failing colors in the same CSS block:
+    the hover/focus pair drops from a barely-passing 4.64:1 resting
+    state to a failing 2.18:1 (the same mechanical-mirroring issue as
+    item 4, on the default-chain side); `span.related-tags a` is
+    4.05:1; `.tag-counter` is 2.08:1; `.mcs-side-badge` is 4.29:1.
+    Fix (11+12): darken each color per the specific values in the
+    source report; for the hover/focus pair, don't darken both sides
+    equally.
+14. *[contrast, medium risk]* The upgrade/maintenance header banner
+    text is 3.67:1 — bold at body's inherited ~12.8px doesn't qualify
+    for the bold-large-text exception, and it's live on the **public**
+    gallery too (a maintenance-lock message), not admin-only. Fix:
+    darken or lighten the pair to reach 4.5:1.
+
+*Touch targets — real, computed rendered sizes:*
+
+7. *[touch-target, high risk]* The public filter-chip remove icon
+   renders at only ~15×15 CSS px (inherits a 15px font-size with no
+   explicit width/height) — about 39% of the WCAG 2.5.8 AA 24×24
+   minimum area, the smallest confirmed target on the site. Fix: give
+   the control an explicit `min-width`/`min-height: 24px`, decoupling
+   the hit area from the inherited font-size.
+20-21, 23. *[touch-target, low-medium risk]* Three more real,
+    computed undersized targets: **(20)** selectize/admin chip remove
+    buttons render at 17px; **(21)** colorbox prev/next/close render
+    at 20×20px; **(23)** rating stars render at 16px, compounded by
+    `rating.ts` setting inline `marginLeft/marginRight: 0` and
+    stripping whitespace text nodes between adjacent star inputs,
+    actively zeroing inter-button spacing. Fix: widen each to reach
+    24px per the source report's specific values; for rating stars,
+    also remove the JS margin-zeroing.
+
+*Text truncation and forced-colors:*
+
+10. *[text-truncation, high risk]* `album_selector.ts`'s
+    `#fillResults()` calls `#getEllipsisName()`, which slices the
+    album name down to its trailing 50 characters **before ever
+    inserting it into the DOM** — not a CSS clip, so the full path is
+    unrecoverable by a screen reader or copy-paste, with no `title`
+    fallback either. Affects the shared move/permissions/
+    notifications/search-album-filter dialog used across both admin
+    and public flows. Fix: stop calling `#getEllipsisName()` before
+    insertion — insert the full text and apply CSS
+    `text-overflow: ellipsis` (as the sibling `#prefillResults()`
+    path already correctly does) plus a `title`.
+22. *[text-truncation, medium risk]* Truncated text with no `title`
+    fallback recurs across 5 separate components (CSS-only ellipsis,
+    full text recoverable in principle but with no actual way to
+    recover it): admin album grids, the shared breadcrumb renderer,
+    upload-queue filenames, group names, front-end search-filter
+    tags/albums. Fix: add a `title` at each site; fixing the shared
+    PHP breadcrumb renderer covers 2 sites in one change.
+15. *[forced-colors, high risk]* A repo-wide search for
+    `forced-colors`/`forced-color-adjust` returns **zero hits** across
+    the entire codebase. Several real toggle-chip components signal
+    checked/selected state purely via `background-color` (or a
+    non-inset `box-shadow`, also suppressed by forced-colors) — under
+    Windows High Contrast Mode, the selected filter/view becomes
+    indistinguishable from unselected ones. Fix: add a baseline
+    `@media (forced-colors: active)` block restoring `border`/
+    `outline` on custom controls, plus a system-color fallback for
+    the checked-state rules named in the source report.
 
 **P53 — per-page TS architecture audit (post-P51).** A dedicated
 multi-agent audit run after P51-A through P51-AA were scoped, answering

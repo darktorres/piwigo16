@@ -177,9 +177,13 @@
 
 
   <div class="mcs-container">
-  <div class="filter-manager-popin">
+  <dialog class="filter-manager-popin">
     <div class="filter-manager-popin-container">
-      <span class="gallery-icon-cancel filter-manager-close"></span>
+      <span
+        class="gallery-icon-cancel filter-manager-close"
+        role="button"
+        tabindex="0"
+      ></span>
 
       <div class="mcs-popin-title">Choose filters</div>
 
@@ -324,17 +328,17 @@
       </div>
 
       <div class="filter-manager-actions">
-        <div class="filter-cancel">
+        <div class="filter-cancel" role="button" tabindex="0">
           Cancel
         </div>
-        <div class="filter-validate">
+        <div class="filter-validate" role="button" tabindex="0">
           <i class="loading gallery-icon-spin6 animate-spin"></i>
           <span class="validate-text">Validate</span>
         </div>
       </div>
     </div>
-  </div>
-  <div class="filter-manager">
+  </dialog>
+  <div class="filter-manager" role="button" tabindex="0">
     <span
       class="mcs-icon gallery-icon-selecters"
     ></span>Choose filters
@@ -1014,7 +1018,12 @@
 
       <input type="text" id="expert-search" name="expert">
 
-      <p title="Help" class="help-popin-search">
+      <p
+        title="Help"
+        class="help-popin-search"
+        role="button"
+        tabindex="0"
+      >
         <i class="gallery-icon-help-circled"></i>
         <span>Search tips</span>
       </p>
@@ -1033,9 +1042,14 @@
   </div>
 </div>
 
-<div class="bg-modal" id="modalQuickSearch">
+<dialog class="bg-modal" id="modalQuickSearch">
   <div class="modal-content">
-    <a class="gallery-icon-cancel close-modal" id="closeModalQuickSearch"></a>
+    <a
+      class="gallery-icon-cancel close-modal"
+      id="closeModalQuickSearch"
+      role="button"
+      tabindex="0"
+    ></a>
 
     <div class="quick-search-content">
       <div class="quick-search-syntax">
@@ -1334,7 +1348,7 @@
       </div>
     </div>
   </div>
-</div>
+</dialog>
 
 
 

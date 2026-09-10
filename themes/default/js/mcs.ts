@@ -74,8 +74,6 @@ import {
   data,
   empty,
   escapeId,
-  fadeIn,
-  fadeOut,
   find,
   hasClass,
   hide,
@@ -1424,22 +1422,32 @@ function wireFilterManagerPopin(): void {
   /**
    * Filter Manager
    */
+  const filterManagerDialogEl = (() => {
+    const el = document.querySelector(".filter-manager-popin");
+    return el instanceof HTMLDialogElement ? el : null;
+  })();
+
   on(document.querySelectorAll(".filter-manager"), "click", function () {
-    show(document.querySelectorAll(".filter-manager-popin"));
+    filterManagerDialogEl?.showModal();
+  });
+  on(document.querySelectorAll(".filter-manager"), "keydown", function (
+    event,
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+    const { key } = event as KeyboardEvent;
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      trigger(document.querySelectorAll(".filter-manager"), "click");
+    }
   });
 
+  // Native <dialog> already closes .filter-manager-popin on Escape (and
+  // #modalQuickSearch closes itself the same way) -- only the unrelated
+  // "apply the currently-visible filter-form's own Validate button"
+  // shortcut stays here.
   on(document, "keyup", function (e: Event) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keyup" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
     const { key } = e as KeyboardEvent;
-    if (key === "Escape") {
-      trigger(
-        document.querySelectorAll(
-          ".filter-manager-popin .filter-manager-close",
-        ),
-        "click",
-      );
-      trigger(document.querySelectorAll("#closeModalQuickSearch"), "click");
-    }
     if (key === "Enter") {
       document
         .querySelectorAll(".filter-form .filter-validate")
@@ -1451,33 +1459,18 @@ function wireFilterManagerPopin(): void {
     }
   });
 
-  on(
-    document.querySelectorAll(".filter-manager-popin"),
-    "click",
-    function (this: Element, e: Event) {
-      // Was `$(this).is(e.target) && $(this).has(e.target).length === 0`
-      // -- since `.has()` never matches the element itself (descendants
-      // only), that second half is always true once the first half
-      // holds, so the pair reduces to "the click landed on the backdrop
-      // itself, not a descendant of it".
-      if (e.target === this) {
-        trigger(
-          document.querySelectorAll(
-            ".filter-manager-popin .filter-manager-close",
-          ),
-          "click",
-        );
+  if (filterManagerDialogEl !== null) {
+    // Native <dialog> has no light-dismiss of its own; this matches its
+    // own ::backdrop with the usual click-outside-to-close idiom.
+    on(filterManagerDialogEl, "click", function (e: Event) {
+      if (e.target === filterManagerDialogEl) {
+        filterManagerDialogEl.close();
       }
-    },
-  );
-
-  on(
-    document.querySelectorAll(
-      ".filter-manager-popin .filter-cancel, .filter-manager-popin .filter-manager-close",
-    ),
-    "click",
-    function () {
-      hide(document.querySelectorAll(".filter-manager-popin"));
+    });
+    // Runs for every close path (the Cancel/close-icon click handler
+    // below, Escape, backdrop click) -- keeps the filter checkboxes in
+    // sync with whichever filter-forms are actually visible.
+    on(filterManagerDialogEl, "close", function () {
       document
         .querySelectorAll(".filter-manager-controller-container input")
         .forEach((el) => {
@@ -1492,9 +1485,48 @@ function wireFilterManagerPopin(): void {
             }
           }
         });
+    });
+  }
+
+  on(
+    document.querySelectorAll(
+      ".filter-manager-popin .filter-cancel, .filter-manager-popin .filter-manager-close",
+    ),
+    "click",
+    function () {
+      filterManagerDialogEl?.close();
+    },
+  );
+  on(
+    document.querySelectorAll(
+      ".filter-manager-popin .filter-cancel, .filter-manager-popin .filter-manager-close",
+    ),
+    "keydown",
+    function (event) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+      const { key } = event as KeyboardEvent;
+      if (key === "Enter" || key === " ") {
+        event.preventDefault();
+        filterManagerDialogEl?.close();
+      }
     },
   );
 
+  on(
+    document.querySelectorAll(".filter-manager-popin .filter-validate"),
+    "keydown",
+    function (event) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+      const { key } = event as KeyboardEvent;
+      if (key === "Enter" || key === " ") {
+        event.preventDefault();
+        trigger(
+          document.querySelectorAll(".filter-manager-popin .filter-validate"),
+          "click",
+        );
+      }
+    },
+  );
   on(
     document.querySelectorAll(".filter-manager-popin .filter-validate"),
     "click",
@@ -1523,57 +1555,84 @@ function wireTagsAlbumsFoundPopins(): void {
   /**
    * Tags & Albums found
    */
+  const tagsFoundDialogEl = (() => {
+    const el = document.querySelector(".tags-found-popin");
+    return el instanceof HTMLDialogElement ? el : null;
+  })();
+  const albumsFoundDialogEl = (() => {
+    const el = document.querySelector(".albums-found-popin");
+    return el instanceof HTMLDialogElement ? el : null;
+  })();
+
   on(document.querySelectorAll(".mcs-tags-found"), "click", function () {
-    show(document.querySelectorAll(".tags-found-popin"));
+    tagsFoundDialogEl?.showModal();
+  });
+  on(document.querySelectorAll(".mcs-tags-found"), "keydown", function (
+    event,
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+    const { key } = event as KeyboardEvent;
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      trigger(document.querySelectorAll(".mcs-tags-found"), "click");
+    }
   });
   on(document.querySelectorAll(".mcs-albums-found"), "click", function () {
-    show(document.querySelectorAll(".albums-found-popin"));
+    albumsFoundDialogEl?.showModal();
   });
-
-  on(document, "keyup", function (e: Event) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keyup" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
-    if ((e as KeyboardEvent).key === "Escape") {
-      trigger(
-        document.querySelectorAll(".tags-found-popin .tags-found-close"),
-        "click",
-      );
-      trigger(
-        document.querySelectorAll(".albums-found-popin .albums-found-close"),
-        "click",
-      );
+  on(document.querySelectorAll(".mcs-albums-found"), "keydown", function (
+    event,
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+    const { key } = event as KeyboardEvent;
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      trigger(document.querySelectorAll(".mcs-albums-found"), "click");
     }
   });
 
-  on(
-    document.querySelectorAll(".tags-found-popin"),
-    "click",
-    function (this: Element, e: Event) {
-      if (e.target === this) {
-        trigger(
-          document.querySelectorAll(".tags-found-popin .tags-found-close"),
-          "click",
-        );
+  // Native <dialog> already closes both on Escape; this matches each
+  // one's own ::backdrop with the usual click-outside-to-close idiom.
+  if (tagsFoundDialogEl !== null) {
+    on(tagsFoundDialogEl, "click", function (e: Event) {
+      if (e.target === tagsFoundDialogEl) {
+        tagsFoundDialogEl.close();
       }
-    },
-  );
+    });
+  }
   on(document.querySelectorAll(".tags-found-close"), "click", function () {
-    hide(document.querySelectorAll(".tags-found-popin"));
+    tagsFoundDialogEl?.close();
+  });
+  on(document.querySelectorAll(".tags-found-close"), "keydown", function (
+    event,
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+    const { key } = event as KeyboardEvent;
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      tagsFoundDialogEl?.close();
+    }
   });
 
-  on(
-    document.querySelectorAll(".albums-found-popin"),
-    "click",
-    function (this: Element, e: Event) {
-      if (e.target === this) {
-        trigger(
-          document.querySelectorAll(".albums-found-popin .albums-found-close"),
-          "click",
-        );
+  if (albumsFoundDialogEl !== null) {
+    on(albumsFoundDialogEl, "click", function (e: Event) {
+      if (e.target === albumsFoundDialogEl) {
+        albumsFoundDialogEl.close();
       }
-    },
-  );
+    });
+  }
   on(document.querySelectorAll(".albums-found-close"), "click", function () {
-    hide(document.querySelectorAll(".albums-found-popin"));
+    albumsFoundDialogEl?.close();
+  });
+  on(document.querySelectorAll(".albums-found-close"), "keydown", function (
+    event,
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+    const { key } = event as KeyboardEvent;
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      albumsFoundDialogEl?.close();
+    }
   });
 }
 
@@ -2940,10 +2999,57 @@ on(window, "resize", function () {
   resizeFilterForm();
 });
 
+/**
+ * `#modalQuickSearch` renders as a real `<dialog>` (converted from a
+ * hand-rolled fixed-position overlay `<div>`, docs/PLAN.md P52-J) --
+ * narrowed once here so open/close can use the native
+ * `showModal()`/`close()` API. This is the default-chain's own
+ * independent instance (own CSS in search.css/dark-search.css/
+ * clear-search.css, own `.help-popin-search`/`#closeModalQuickSearch`
+ * triggers) -- never co-loaded with the admin chain's
+ * `#modalQuickSearch` (batch_manager/filter.ts), which was converted
+ * separately.
+ */
+const quickSearchDialogEl = (() => {
+  const el = document.getElementById("modalQuickSearch");
+  return el instanceof HTMLDialogElement ? el : null;
+})();
+
 on(document.querySelectorAll(".help-popin-search"), "click", function () {
-  fadeIn(document.querySelectorAll("#modalQuickSearch"));
+  quickSearchDialogEl?.showModal();
+});
+on(document.querySelectorAll(".help-popin-search"), "keydown", function (
+  event,
+) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+  const { key } = event as KeyboardEvent;
+  if (key === "Enter" || key === " ") {
+    event.preventDefault();
+    quickSearchDialogEl?.showModal();
+  }
 });
 
 on(document.querySelectorAll("#closeModalQuickSearch"), "click", function () {
-  fadeOut(document.querySelectorAll("#modalQuickSearch"));
+  quickSearchDialogEl?.close();
 });
+on(
+  document.querySelectorAll("#closeModalQuickSearch"),
+  "keydown",
+  function (event) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+    const { key } = event as KeyboardEvent;
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      quickSearchDialogEl?.close();
+    }
+  },
+);
+// Native <dialog> has no light-dismiss of its own; this matches its own
+// ::backdrop with the usual click-outside-to-close idiom.
+if (quickSearchDialogEl !== null) {
+  on(quickSearchDialogEl, "click", function (e: Event) {
+    if (e.target === quickSearchDialogEl) {
+      quickSearchDialogEl.close();
+    }
+  });
+}

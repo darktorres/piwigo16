@@ -6,9 +6,9 @@
   color:#aeaeae;
 }
 
-.filter-manager-popin,
-.tags-found-popin,
-.albums-found-popin {
+.filter-manager-popin::backdrop,
+.tags-found-popin::backdrop,
+.albums-found-popin::backdrop {
   background-color: rgb(0,0,0,0.7);
 }
 

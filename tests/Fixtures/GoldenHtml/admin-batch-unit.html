@@ -1087,9 +1087,14 @@
     </div>
   </div>
 </dialog>
-<div id="addLinkedAlbum" class="linkedAlbumPopIn">
+<dialog id="addLinkedAlbum" class="linkedAlbumPopIn">
   <div class="linkedAlbumPopInContainer">
-    <a class="gallery-icon-cancel ClosePopIn" id="closeAlbumPopIn"></a>
+    <a
+        class="gallery-icon-cancel ClosePopIn"
+        id="closeAlbumPopIn"
+        role="button"
+        tabindex="0"
+      ></a>
 
     <div class="AddIconContainer">
       <span class="AddIcon icon-blue gallery-icon-plus-circled"></span>
@@ -1102,6 +1107,8 @@
       <label
           class="head-button-2 put-to-root-container notClickable"
           id="put-to-root"
+          role="button"
+          tabindex="0"
         >
         <p class="icon-home">Put at the root</p>
       </label>
@@ -1162,10 +1169,14 @@
         <p
             class="linked-button-cancel"
             id="linkedAlbumCancel"
+            role="button"
+            tabindex="0"
           >Cancel</p>
         <p
             class="buttonLike icon-plus"
             id="linkedAddNewAlbum"
+            role="button"
+            tabindex="0"
           >Create and select</p>
       </div>
     </div>
@@ -1193,12 +1204,14 @@
         <p
             class="head-button-2 icon-plus-circled linked-add-album"
             id="linkedAddAlbum"
+            role="button"
+            tabindex="0"
           >
           Create a root album</p>
       </div>
     </div>
   </div>
-</div>
+</dialog>
   </form>
   <legend class="list-legend">
     <span class='icon-menu icon-blue'></span>

@@ -132,15 +132,6 @@ function q(selector: string): HTMLElement[] {
   return Array.from(document.querySelectorAll<HTMLElement>(selector));
 }
 
-window.addEventListener("keypress", function (e) {
-  // `:visible` is not a CSS selector -- `matches()` throws a SyntaxError on
-  // it. jQuery computes it from layout, which `isVisible()` reproduces.
-  const haveAlbumSelector = q("#addLinkedAlbum").some(isVisible);
-  if (haveAlbumSelector && e.key === "Enter") {
-    e.preventDefault();
-  }
-});
-
 // Real pre-existing bug, found via plugins/installedConfig.ts's own
 // P48 module conversion: this file's own `#create_album()` reads
 // `pwgToken` bare with no local declaration of its own, relying on
@@ -196,7 +187,6 @@ export class AlbumSelector {
    * Selector for AlbumSelector
    */
   static readonly selectors = {
-    addLinkedAlbum: q("#addLinkedAlbum"),
     closeAlbumPopIn: q("#closeAlbumPopIn"),
     searchInput: q("#search-input-ab"),
     searchResult: q("#searchResult"),
@@ -222,6 +212,18 @@ export class AlbumSelector {
     putToRootBtn: q("#put-to-root"),
     linkedAlbumPopInContainer: q(".linkedAlbumPopInContainer"),
   };
+
+  /**
+   * `#addLinkedAlbum` renders as a real `<dialog>` (converted from a
+   * hand-rolled fixed-position overlay `<div>`, docs/PLAN.md P52-J) --
+   * narrowed once here so every open/close/state-check call site can
+   * use the native `showModal()`/`close()`/`.open` API instead of the
+   * old fade/`isVisible()` idioms.
+   */
+  static readonly dialogEl = (() => {
+    const el = document.getElementById("addLinkedAlbum");
+    return el instanceof HTMLDialogElement ? el : null;
+  })();
 
   constructor({
     selectedCategoriesIds = [],
@@ -314,7 +316,7 @@ export class AlbumSelector {
     if (activeAlbumSelector === this) {
       activeAlbumSelector = null;
     }
-    this.#closeAlbumSelector();
+    AlbumSelector.#closeAlbumSelector();
   }
 
   removeSelectedAlbum(id: string | number) {
@@ -369,31 +371,55 @@ export class AlbumSelector {
     // event close album selector
     off(AlbumSelector.selectors.closeAlbumPopIn, `click${instanceAb}`);
     on(AlbumSelector.selectors.closeAlbumPopIn, `click${instanceAb}`, () => {
-      this.#closeAlbumSelector();
+      AlbumSelector.#closeAlbumSelector();
     });
+    off(AlbumSelector.selectors.closeAlbumPopIn, `keydown${instanceAb}`);
+    on(
+      AlbumSelector.selectors.closeAlbumPopIn,
+      `keydown${instanceAb}`,
+      (event) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+        const { key } = event as KeyboardEvent;
+        if (key === "Enter" || key === " ") {
+          event.preventDefault();
+          trigger(AlbumSelector.selectors.closeAlbumPopIn, `click${instanceAb}`);
+        }
+      },
+    );
 
-    // event escape album selector
+    // Native <dialog> already closes on Escape (firing "close" itself) and
+    // provides ::backdrop for the click-outside-to-close idiom below -- both
+    // paths converge on the dialog's own "close" event, which runs the same
+    // state-reset/event-teardown this method's callers used to run inline.
+    if (AlbumSelector.dialogEl !== null) {
+      off(AlbumSelector.dialogEl, `close${instanceAb}`);
+      on(AlbumSelector.dialogEl, `close${instanceAb}`, () => {
+        this.#onDialogClosed();
+      });
+
+      off(AlbumSelector.dialogEl, `click${instanceAb}`);
+      on(AlbumSelector.dialogEl, `click${instanceAb}`, (event) => {
+        if (event.target === AlbumSelector.dialogEl) {
+          AlbumSelector.dialogEl?.close();
+        }
+      });
+    }
+
+    // event enter creates the pending new album (same action as clicking
+    // "Create and select"), while the album-creation sub-form is showing
     off(document, `keyup${instanceAb}`);
     on(document, `keyup${instanceAb}`, (event) => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keyup" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
       const e = event as KeyboardEvent;
       if (
-        e.key === "Escape" &&
-        AlbumSelector.selectors.addLinkedAlbum.some(isVisible)
-      ) {
-        this.#closeAlbumSelector();
-      }
-
-      if (
         e.key === "Enter" &&
-        AlbumSelector.selectors.addLinkedAlbum.some(isVisible)
+        AlbumSelector.dialogEl?.open === true &&
+        q("#linkedAddNewAlbum").some(isVisible)
       ) {
-        if (q("#linkedAddNewAlbum").some(isVisible)) {
-          trigger(
-            AlbumSelector.selectors.linkedAddNewAlbum,
-            `click${instanceAb}`,
-          );
-        }
+        trigger(
+          AlbumSelector.selectors.linkedAddNewAlbum,
+          `click${instanceAb}`,
+        );
       }
     });
 
@@ -440,9 +466,22 @@ export class AlbumSelector {
           addClass(curr, "notClickable");
           this.#putToRoot = true;
           this.#selectAlbum({ album: { id: 0, root: strRoot } });
-          this.#closeAlbumSelector();
+          AlbumSelector.#closeAlbumSelector();
         }
       });
+      off(AlbumSelector.selectors.putToRootBtn, `keydown${instanceAb}`);
+      on(
+        AlbumSelector.selectors.putToRootBtn,
+        `keydown${instanceAb}`,
+        (event) => {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+          const { key } = event as KeyboardEvent;
+          if (key === "Enter" || key === " ") {
+            event.preventDefault();
+            trigger(AlbumSelector.selectors.putToRootBtn, `click${instanceAb}`);
+          }
+        },
+      );
     }
   }
 
@@ -473,7 +512,7 @@ export class AlbumSelector {
 
         this.#currentSelectedId = cat.id;
         this.#selectAlbum({ album: cat });
-        this.#closeAlbumSelector();
+        AlbumSelector.#closeAlbumSelector();
       });
     }
   }
@@ -534,7 +573,7 @@ export class AlbumSelector {
       if (!tempSelect.includes(formatedCatId)) {
         this.#currentSelectedId = cat.id;
         this.#selectAlbum({ album: cat });
-        this.#closeAlbumSelector();
+        AlbumSelector.#closeAlbumSelector();
       }
     });
   }
@@ -572,10 +611,21 @@ export class AlbumSelector {
       "placeholder",
       this.#searchPlaceholder,
     );
-    fadeIn(AlbumSelector.selectors.addLinkedAlbum);
+    AlbumSelector.dialogEl?.showModal();
   }
 
-  #closeAlbumSelector() {
+  /**
+   * Only asks the dialog to close -- the actual state reset/event teardown
+   * runs from `#onDialogClosed()`, wired to the dialog's own native "close"
+   * event in `#loadGeneralEvent()`. That keeps every close path (this
+   * method, Escape, backdrop click) converging on the same cleanup, instead
+   * of duplicating it per path.
+   */
+  static #closeAlbumSelector() {
+    AlbumSelector.dialogEl?.close();
+  }
+
+  #onDialogClosed() {
     this.#cats = {};
     this.#searchCat = {};
     this.#currentSelectedId = "";
@@ -583,8 +633,6 @@ export class AlbumSelector {
     this.#loadingAdd = false;
 
     this.#destroyEvent();
-
-    fadeOut(AlbumSelector.selectors.addLinkedAlbum);
   }
 
   #resetAlbumSelector() {
@@ -636,6 +684,19 @@ export class AlbumSelector {
       on(AlbumSelector.selectors.linkedAddAlbum, `click${instanceAb}`, () => {
         this.#switchAlbumView("root");
       });
+      off(AlbumSelector.selectors.linkedAddAlbum, `keydown${instanceAb}`);
+      on(
+        AlbumSelector.selectors.linkedAddAlbum,
+        `keydown${instanceAb}`,
+        (event) => {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+          const { key } = event as KeyboardEvent;
+          if (key === "Enter" || key === " ") {
+            event.preventDefault();
+            trigger(AlbumSelector.selectors.linkedAddAlbum, `click${instanceAb}`);
+          }
+        },
+      );
     } else {
       if (AlbumSelector.selectors.putToRoot.length) {
         fadeIn(AlbumSelector.selectors.putToRoot);
@@ -645,6 +706,7 @@ export class AlbumSelector {
       fadeIn(AlbumSelector.selectors.linkedModalTitle);
       hide(AlbumSelector.selectors.linkedAddAlbum);
       off(AlbumSelector.selectors.linkedAddAlbum, "click");
+      off(AlbumSelector.selectors.linkedAddAlbum, `keydown${instanceAb}`);
     }
   }
 
@@ -664,11 +726,43 @@ export class AlbumSelector {
     on(AlbumSelector.selectors.linkedAddNewAlbum, `click${instanceAb}`, () => {
       void this.#addNewAlbum(cat === "root" ? cat : cat.id);
     });
+    off(AlbumSelector.selectors.linkedAddNewAlbum, `keydown${instanceAb}`);
+    on(
+      AlbumSelector.selectors.linkedAddNewAlbum,
+      `keydown${instanceAb}`,
+      (event) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+        const { key } = event as KeyboardEvent;
+        if (key === "Enter" || key === " ") {
+          event.preventDefault();
+          trigger(
+            AlbumSelector.selectors.linkedAddNewAlbum,
+            `click${instanceAb}`,
+          );
+        }
+      },
+    );
 
     off(AlbumSelector.selectors.linkedAlbumCancel, `click${instanceAb}`);
     on(AlbumSelector.selectors.linkedAlbumCancel, `click${instanceAb}`, () => {
-      this.#closeAlbumSelector();
+      AlbumSelector.#closeAlbumSelector();
     });
+    off(AlbumSelector.selectors.linkedAlbumCancel, `keydown${instanceAb}`);
+    on(
+      AlbumSelector.selectors.linkedAlbumCancel,
+      `keydown${instanceAb}`,
+      (event) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+        const { key } = event as KeyboardEvent;
+        if (key === "Enter" || key === " ") {
+          event.preventDefault();
+          trigger(
+            AlbumSelector.selectors.linkedAlbumCancel,
+            `click${instanceAb}`,
+          );
+        }
+      },
+    );
 
     off(AlbumSelector.selectors.linkedAlbumInput, `input${instanceAb}`);
     on(AlbumSelector.selectors.linkedAlbumInput, `input${instanceAb}`, () => {
@@ -688,12 +782,16 @@ export class AlbumSelector {
   #selectNewAlbumAndClose(cat: CategoryAdmin) {
     this.#currentSelectedId = cat.id;
     this.#selectAlbum({ album: cat });
-    this.#closeAlbumSelector();
+    AlbumSelector.#closeAlbumSelector();
   }
 
   #destroyEvent() {
     const instanceAb = `.${this.instanceId}`;
 
+    if (AlbumSelector.dialogEl !== null) {
+      off(AlbumSelector.dialogEl, `close${instanceAb}`);
+      off(AlbumSelector.dialogEl, `click${instanceAb}`);
+    }
     off(document, `keyup${instanceAb}`);
     off(document, `click${instanceAb}`);
     off(document, `change${instanceAb}`);
@@ -1046,3 +1144,9 @@ export class AlbumSelector {
     }
   }
 }
+
+window.addEventListener("keypress", function (e) {
+  if (AlbumSelector.dialogEl?.open === true && e.key === "Enter") {
+    e.preventDefault();
+  }
+});

@@ -7937,12 +7937,35 @@ conversion gap, fixed).
 The deferred `declaration-property-value-disallowed-list` rule
 (banning physical `left`/`right`/`margin-left`/`margin-right`/
 `padding-left`/`padding-right`, and `text-align: left|right`) is now
-added — the real gap that made it premature in P52-H is closed. 39
-real, confirmed-necessary exceptions remain, registered in
-`stylelint-suppressions.json`: the 38 deliberately-physical vendor-
-widget properties above, plus the 4 known RTL-trick sites (1 counted
-via `theme-base.css`'s own line, 2 in `search.css`, 1 in
-`album_selector.css`).
+added — the real gap that made it premature in P52-H is closed.
+
+**Correction (P52-J follow-up, same campaign):** a later "fix all of
+them properly" pass on the full `stylelint-suppressions.json` baseline
+(both this rule and `declaration-no-important`, 46 real violations
+total) found the "38 deliberately-physical vendor-widget properties"
+conclusion above was **half wrong**, caught by re-tracing each
+widget's own `.ts` source per CSS rule instead of trusting the file-
+level header comment. Only `jcrop.css` (21) is genuinely locked
+physical — its handles are compass directions on the photo's own
+pixel grid, not the admin UI's reading direction. `jqtree.css` (5)
+and 6 of `colorbox.css`'s 7 flagged properties were never actually
+JS-positioned (only `#colorbox` itself, and only `.jqtree-dragging`,
+are) and are now correctly converted to logical properties —
+`jqtree`'s own dropped `.jqtree-rtl` vendor variant restored, and
+`colorbox`'s prev/next buttons gained a `html[dir="rtl"]`
+`background-position` swap so their arrows point outward rather than
+into each other. `jquery-ui.css`'s slider (2) got a real `isPageRTL()`
+helper (`vendor/utils/dom.ts`) driving direction-aware mouse/keyboard
+handling in `slider.ts`, writing `insetInlineStart` instead of `left`.
+All 7 `declaration-no-important` violations were also eliminated at
+their real root cause (same-specificity source-order ties, cross-file
+load-order fights) rather than left suppressed. Final state: 26 real,
+confirmed-necessary exceptions remain in `stylelint-suppressions.json`
+— 21 jcrop + 5 others (the 4 known RTL-trick sites plus 1 genuinely
+JS-animated colorbox property) — see project memory
+`project_p52i_rtl_correction_complete.md` for the full worked example
+and `feedback_reverify_per_element_not_per_file_classification.md`
+for the generalized lesson.
 
 `bun run lint:css` exits 0, `composer test:visual`/`test:golden-html`
 both clean throughout.

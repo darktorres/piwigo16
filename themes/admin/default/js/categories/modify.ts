@@ -15,11 +15,9 @@ import {
   append,
   attr,
   escapeId,
-  fadeToggle,
   find,
   hide,
   html,
-  isVisible,
   on,
   ready,
   removeClass,
@@ -565,31 +563,52 @@ ready(function () {
 
   const descModal = document.getElementById("desc-modal");
   const textareas = document.querySelectorAll(".sync-textarea");
-  on(
-    document.querySelectorAll("#desc-zoom-square, #desc-modal-close"),
-    "click",
-    function () {
-      if (descModal !== null) fadeToggle([descModal]);
-    },
-  );
+  if (descModal instanceof HTMLDialogElement) {
+    const zoomTrigger = document.querySelectorAll("#desc-zoom-square");
+    const shrinkTrigger = document.querySelectorAll("#desc-modal-close");
+    on(zoomTrigger, "click", function () {
+      descModal.showModal();
+    });
+    on(shrinkTrigger, "click", function () {
+      descModal.close();
+    });
+    // Both triggers are a `role="button"` <span>/<p>, not a real
+    // <button> (real source: cat_modify.latte's own markup, kept as-is
+    // to avoid inheriting UA button styling) -- WAI-ARIA's own
+    // authoring rules require the page to provide the Enter/Space
+    // activation a native <button> gets for free.
+    on(zoomTrigger, "keydown", function (e: Event) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+      const { key } = e as KeyboardEvent;
+      if (key === "Enter" || key === " ") {
+        e.preventDefault();
+        descModal.showModal();
+      }
+    });
+    on(shrinkTrigger, "keydown", function (e: Event) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+      const { key } = e as KeyboardEvent;
+      if (key === "Enter" || key === " ") {
+        e.preventDefault();
+        descModal.close();
+      }
+    });
+    // Native showModal() already gives ESC-to-close and a real focus
+    // trap for free -- this click handler is the one piece `<dialog>`
+    // doesn't provide on its own: clicking its own `::backdrop`
+    // dispatches a real click whose target is the dialog element
+    // itself (verified live, not assumed), so this is the standard
+    // "click outside to close" idiom, not a leftover from the old
+    // fixed-overlay-div implementation.
+    on(descModal, "click", function (e: Event) {
+      if (e.target === descModal) {
+        descModal.close();
+      }
+    });
+  }
   on(textareas, "keyup", function (this: Element) {
     const value = val([this]) ?? "";
     setVal(textareas, value);
-  });
-  on(window, "click", function (e: Event) {
-    if (e.target === descModal) {
-      if (descModal !== null) fadeToggle([descModal]);
-    }
-  });
-  on(document, "keyup", function (e: Event) {
-    if (
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keyup" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
-      (e as KeyboardEvent).key === "Escape" &&
-      descModal !== null &&
-      isVisible(descModal)
-    ) {
-      fadeToggle([descModal]);
-    }
   });
 });
 

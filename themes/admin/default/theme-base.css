@@ -8569,27 +8569,31 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
   display: block;
 }
 /* Cat modify description modal */
+/* Sizing lives on the dialog itself, not `.desc-modal-content` --
+   `showModal()`'s own UA-stylesheet centering (`position: fixed;
+   inset: 0; margin: auto;`, on the dialog element) needs the dialog's
+   own box to have a real size to center; an absolutely-positioned
+   child contributes no intrinsic size for that box to auto-fit to. */
 .desc-modal {
-  display: none;
-  position: fixed;
-  z-index: 100;
-  inset-inline-start: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  background-color: rgb(0,0,0);
+  padding: 0;
+  border: none;
+  background: transparent;
+  width: 75vw;
+  height: 75vh;
+  max-width: none;
+  max-height: none;
+  overflow: visible;
+}
+
+.desc-modal::backdrop {
   background-color: rgb(0,0,0,0.4);
 }
 
 .desc-modal-content {
-  position: absolute;
   border-radius: 10px;
   background-color: var(--desc-modal-content-bg, #fff);
-  margin: auto;
-  width: 75vw;
-  height: 75vh;
-  inset: 0;
+  width: 100%;
+  height: 100%;
   display: grid;
   grid-template-rows: min-content auto min-content;
 }

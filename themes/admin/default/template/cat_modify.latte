@@ -154,6 +154,8 @@
             id="desc-zoom-square"
             class="icon-resize-full tiptip"
             title="{='Expand'|translate}"
+            role="button"
+            tabindex="0"
           ></span></label>
         <textarea
           class="sync-textarea"
@@ -248,7 +250,7 @@
         ></i> {='Save Settings'|translate}</span>
     </div>
   </div>
-  <div class="desc-modal" id="desc-modal">
+  <dialog class="desc-modal" id="desc-modal">
     <div class="desc-modal-content">
       <div class="desc-modal-header">
         <p>{='Description'|translate}</p>
@@ -261,10 +263,10 @@
         >{$catComment}</textarea>
       </div>
       <div class="desc-modal-footer">
-        <p id="desc-modal-close" class="cat-modify-footer-see-out"><span
+        <p id="desc-modal-close" class="cat-modify-footer-see-out" role="button" tabindex="0"><span
             class="icon-resize-small"
           ></span>{='Shrink'|translate}</p>
       </div>
     </div>
-  </div>
+  </dialog>
 </div>

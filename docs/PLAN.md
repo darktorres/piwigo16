@@ -6524,6 +6524,18 @@ findings across 7 survey dimensions.
     retype the parameter, using `tryFrom()`'s null path to preserve
     the current "skip WHERE clause on non-numeric input" behavior.
 
+**P51-AB watchlist (2 candidates raised but not verified enough to
+scope as items — not silently dropped, deliberately not actionable
+today):** a proposed `jqtree.ts` (1563 lines) file split was surveyed,
+but the adversarial verifier returned `holds: false` for the specific
+split shape proposed — worth a fresh look only if `jqtree.ts` churn is
+ever on the table for another reason (e.g. alongside `P51-AC` item 5's
+rename). `profile.ts` (1050 lines) mixing 3 concerns, with its
+~700-line API-key subsystem as a clean split candidate, was raised by
+the standard-pages-js survey agent but never independently
+re-verified — see workflow `wf_a6bdcde1-fd5`'s own `journal.jsonl` for
+the full verify record before scoping this as a real item.
+
 **P51-AC (scoped, not started) — greenfield jQuery-era naming/structure
 cleanup.** From `wf_8d21bdca-fe9` (task `w3us5i1a6`), 17 items merged
 from 78 raw findings. None of this is functional jQuery — every file

@@ -3461,7 +3461,7 @@ legend {
   content: " ";
   position: absolute;
   top: 20px;
-  left: calc(100% + 5px);
+  inset-inline-start: calc(100% + 5px);
   margin-inline-start: -5px;
   border-width: 5px;
   border-style: solid;
@@ -5477,7 +5477,7 @@ p.upload-warnings-summary .showInfo {margin-inline-start:3px;}
 
 .cat-move-header .cat-move-info .spinner {
   position: absolute;
-  left: calc(100% + 6px);
+  inset-inline-start: calc(100% + 6px);
   font-size: 20px;
   display: none;
 }

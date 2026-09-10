@@ -1,17 +1,7 @@
 {
-  "themes/default/print.css": {
-    "declaration-no-important": {
-      "count": 1
-    }
-  },
   "themes/standard_pages/theme.css": {
     "declaration-no-important": {
       "count": 3
-    }
-  },
-  "themes/default/css/dark-search.css": {
-    "declaration-no-important": {
-      "count": 4
     }
   },
   "themes/default/css/search.css": {

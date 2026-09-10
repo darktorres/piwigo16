@@ -789,6 +789,11 @@
     width: 100vw;
     padding: 15px;
     border-radius: 0;
+    /* !important is deliberate and load-bearing: dark-search.css's
+       own bare `.filter-form` rule sets a real box-shadow, same
+       specificity, same layer -- whichever skin file happens to load
+       last would otherwise win regardless of this mobile-only
+       override's intent. */
     box-shadow: none !important;
     top: 37px
   }
@@ -808,6 +813,13 @@
 
   .search-params-title,
   .search-params {
+    /* !important is deliberate and load-bearing: `.filter-tag-form
+       .search-params`/`.filter-authors .search-params`/`.filter-
+       album-form .search-params`/`.filter-word-form .search-params`
+       (all higher-specificity, 2-class compound selectors) set
+       `display: flex` and would otherwise always win over this bare
+       `.search-params` mobile override regardless of which specific
+       filter form is active. */
     display: block !important;
   }
 
@@ -854,6 +866,10 @@
 
   .search-result-path,
   .link-path {
+    /* !important is deliberate and load-bearing: `.breadcrumb-item
+       .link-path` (higher-specificity, 2-class) sets `white-space:
+       nowrap` and would otherwise always win over this bare
+       `.link-path` mobile override. */
     white-space: unset !important;
   }
 
@@ -867,7 +883,12 @@
     font-size: 15px;
   }
 
-  /* disable zoom on focus in IOS Device */
+  /* disable zoom on focus in IOS Device -- !important is deliberate
+     and load-bearing: iOS Safari auto-zooms on focus for any input/
+     select/textarea below 16px, and this bare-tag mobile override
+     must beat every other, more-specific font-size rule already set
+     on individual inputs throughout this file, not just one known
+     competitor. */
   input, select, textarea {
     font-size: 16px !important;
   }

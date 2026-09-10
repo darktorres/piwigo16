@@ -137,9 +137,12 @@ table.table2 tr {
 table.table2 thead td { padding:7px 10px 3px; }
 table.table2 tr.throw { text-align: center; }
 .sort {
-  display:block;
   padding:1em 2em 0;
   text-align: start;
+  clear: none;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
 }
 
 .sort .icon-sort-number-up {
@@ -190,6 +193,7 @@ table.languages tr td { padding: 7px 20px; }
 .slider-bar-wrapper .ui-slider-horizontal{
     border:none;
     border-radius:25px;
+    background-color: var(--slider-bar-wrapper-ui-slider-horizontal-bg, #e3e3e3);
 }
 
 /* Category List */
@@ -297,6 +301,9 @@ table.languages tr td { padding: 7px 20px; }
 
 .addAlbum.input-mode form {
   display: flex;
+  opacity: 1;
+  pointer-events: all;
+  transition-delay: 0.4s;
 }
 
 .addAlbum label {
@@ -323,6 +330,8 @@ table.languages tr td { padding: 7px 20px; }
 .addAlbum.input-mode .addAlbumHead {
   transition-delay: 0s;
   padding: 0;
+  transform: translateY(0);
+  margin-top: 0;
 }
 
 .addAlbumHead span {
@@ -368,17 +377,6 @@ table.languages tr td { padding: 7px 20px; }
   font-weight: bold;
 }
 
-.addAlbum.input-mode .addAlbumHead{
- transform: translateY(0);
- margin-top: 0;
-}
-
-.addAlbum.input-mode form {
-  opacity: 1;
-  pointer-events: all;
-  transition-delay: 0.4s;
-}
- 
 /* menuOrdering */
 form.menu-ordering-form {
 	padding-inline: 1em;
@@ -895,8 +893,8 @@ li.menuLi {
   font-size: 13px;
   padding-inline-end: 15px;
   color: #fff;
-  font-weight: 600;
   cursor: pointer;
+  font-weight: bold;
 }
 
 .dropdown-option-content {
@@ -907,8 +905,8 @@ li.menuLi {
   font-size: 13px;
   padding-inline-end: 15px;
   color: #fff;
-  font-weight: 600;
   cursor: pointer;
+  font-weight: bold;
 }
 
 .dropdown-option:hover {
@@ -2085,6 +2083,9 @@ a.admin-main:hover {color:#fff;}
   bottom: 0;
   inset-inline-start: 0;
   background-color: #3c3c3c;
+  padding:0;
+  z-index:99;
+  text-align: start;
 }
 
 .admin-menubar i {font-size:20px;}
@@ -2098,10 +2099,6 @@ a.admin-main:hover {color:#fff;}
 }
 
 /* menubar is on all admin pages => No specific css file */
-.admin-menubar {
-  padding:0; width:205px; z-index:99; text-align: start;
-  margin-inline-start:0;
-}
 
 /* P52-C: max-height replaces 3 discrete @media steps (400px at
    <=920px, 300px at <=830px, 200px at <=700px, on top of the 500px
@@ -2216,8 +2213,6 @@ margin-top:4px; padding-bottom:3px; padding-top:3px; top:1px;
   margin-inline-end:2px;
   padding:0 3px 0 1px;
 }
-
-.sort { clear: none; }
 
 .content {
   padding:0;
@@ -2594,12 +2589,6 @@ div.jGrowl div.jGrowl-notification{
 
 /* Plugin */
 
-.sort {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 15px;
-}
-
 .sort-actions {
   display: flex;
   align-items: center;
@@ -2689,6 +2678,8 @@ div.jGrowl div.jGrowl-notification{
   border-top-right-radius:5px;
   border-bottom-right-radius:5px;
   box-shadow: 1px 1px 0 1px #e0e0e0;
+  transition: 0.5s;
+  position: relative;
 }
 
 .pluginMiniBox {
@@ -2820,10 +2811,6 @@ div.jGrowl div.jGrowl-notification{
 .pluginInstall {
   display: flex;
   align-items: center;
-}
-
-.buttonInstall {
-  margin-inline-end: 5px;
 }
 
 .autoupdate_bar {
@@ -3163,6 +3150,9 @@ div.jGrowl div.jGrowl-notification{
 .RestorePluginSuccess label {
   background-color: var(--addpluginsuccess-label-or-deactivatepluginsuccess-label-or-restorepluginsuccess-label-bg, #c2f5c2);
   color: var(--addpluginsuccess-label-or-deactivatepluginsuccess-label-or-restorepluginsuccess-label-color, #0a0);
+  padding: 10px;
+  cursor: default;
+  border-radius: 30px;
 }
 
 .PluginActionError span {
@@ -3172,6 +3162,9 @@ div.jGrowl div.jGrowl-notification{
 .PluginActionError label {
   background-color: var(--pluginactionerror-label-bg-1, #f5c2c2);
   color: var(--pluginactionerror-label-color-1, rgb(170, 0, 0));
+  padding: 10px;
+  cursor: default;
+  border-radius: 30px;
 }
 
  .PluginOptionsBlock{
@@ -3243,7 +3236,13 @@ div.jGrowl div.jGrowl-notification{
   font-size: 22px;
 }
 
-legend {text-align:start;}
+legend {
+  text-align:start;
+  font-weight: bold;
+  font-size: 14px;
+  margin: 10px 0;
+  padding: 0;
+}
 
 /* Plugin page multiple views */
 
@@ -3258,9 +3257,6 @@ legend {text-align:start;}
   align-items: center;
 
   transform: translateY(6px);
-}
-
-.AlbumViewSelector {
   padding: 0;
   margin-inline-end: 0;
   border-radius: 7px;
@@ -3352,11 +3348,6 @@ legend {text-align:start;}
   text-decoration: none;
 }
 
-.pluginBox {
-  transition: 0.5s;
-  position: relative;
-}
-
 .unavailablePlugin {
   cursor: default;
   opacity: 0.5;
@@ -3373,20 +3364,12 @@ legend {text-align:start;}
   padding: 5px 10px;
 }
 
-.dropdown-option-content {
-  font-weight: bold;
-}
-
 .separator-top {
   border-top: 1px solid #ffffff45;
 }
 
 .dropdown-option.icon-cancel-circled {
   margin-bottom: -5px;
-}
-
-.dropdown-option {
-  font-weight: bold;
 }
 
 .pluginContainer {
@@ -3397,6 +3380,11 @@ legend {text-align:start;}
 
 .switch {
   margin: 0 10px 0 0;
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 24px;
+  vertical-align:middle;
 }
 
 .plugin-inactive .pluginActions a {
@@ -3432,34 +3420,6 @@ legend {text-align:start;}
   font-weight:bold;
   z-index: 2;
   white-space: nowrap;
-}
-
-.AddPluginSuccess span,
-.RestorePluginSuccess span,
-.DeactivatePluginSuccess span {
-  color: var(--addpluginsuccess-span-or-deactivatepluginsuccess-span-or-restorepluginsuccess-span-color, #0a0);
-}
-
-.AddPluginSuccess label,
-.DeactivatePluginSuccess label,
-.RestorePluginSuccess label {
-  padding: 10px;
-  background-color: var(--addpluginsuccess-label-or-deactivatepluginsuccess-label-or-restorepluginsuccess-label-bg, #c2f5c2);
-  cursor: default;
-  color: var(--addpluginsuccess-label-or-deactivatepluginsuccess-label-or-restorepluginsuccess-label-color, #0a0);
-  border-radius: 30px;
-}
-
-.PluginActionError span {
-  color: var(--pluginactionerror-span-color-2, rgb(170, 0, 0));
-}
-
-.PluginActionError label {
-  padding: 10px;
-  background-color: var(--pluginactionerror-label-bg-2, #f5c2c2);
-  cursor: default;
-  color: var(--pluginactionerror-label-color-2, rgb(170, 0, 0));
-  border-radius: 30px;
 }
 
 /* Line view */
@@ -3678,13 +3638,6 @@ input[type="radio"], input[type="checkbox"] {
   top: 90px;
   position: absolute;
   text-align: end;
-}
-
-legend {
-  font-weight: bold;
-  font-size: 14px;
-  margin: 10px 0;
-  padding: 0;
 }
 
 legend span {
@@ -4128,6 +4081,7 @@ legend span {
 .batch-manager-root .ui-slider-horizontal {
   width:280px;
   margin:10px 0 10px 9px;
+  height: 2px;
 }
 .batch-manager-root .batch-filter-dimension .ui-slider-horizontal {width:580px;}
 
@@ -5141,9 +5095,6 @@ p.upload-warnings-summary .showInfo {margin-inline-start:3px;}
 .comments-filters {
   display: grid;
   grid-template-columns: 1fr 250px;
-}
-
-.comments-filters {
   align-items: center;
 }
 
@@ -5596,20 +5547,17 @@ p.upload-warnings-summary .showInfo {margin-inline-start:3px;}
 
 .move-cat-container .move-cat-toogler {
   display: flex;
-  color: var(--move-cat-container-move-cat-toogler-color-1, #FFBD4D);
   margin-inline-start: 5px;
   align-items: center;
   cursor: pointer;
   z-index: 2;
   font-weight: 600;
+  color: var(--move-cat-container-move-cat-toogler-color-2, #f70);
+  transform: scale(1.4);
 }
 
 .move-cat-container .move-cat-toogler .icon-left-open{
   transform: rotate(180deg);
-}
-.move-cat-container .move-cat-toogler{
-  color: var(--move-cat-container-move-cat-toogler-color-2, #f70);
-  transform: scale(1.4);
 }
 
 .move-cat-action-cont {
@@ -5993,6 +5941,7 @@ input[type="text"].dError {
 .groups .addGroupFormTitle{
   font-size:1.2em;
   font-weight:700;
+  margin:0;
 }
 
 .groups input[type="text"]{
@@ -6052,10 +6001,6 @@ input[type="text"].dError {
   text-align: center;
 }
 
-.groups .addGroupFormTitle{
-  margin:0;
-}
-
  form.properties .groups .GroupContainer,
  .groups form.syncForm .groups ul {
 	margin-bottom: 15px;
@@ -6070,14 +6015,6 @@ input[type="text"].dError {
   position:absolute;
   inset-inline-end:15px;
   z-index:11;
-}
-
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 60px;
-  height: 24px;
-  vertical-align:middle;
 }
 
 .format-mode-group-manager p, .selection-mode-group-manager p{
@@ -6337,6 +6274,7 @@ input:checked + .slider.small::before, input:checked + .slider.small::after {
 .MergeOptionsContainer {
   display: block;
   position: relative;
+  font-size:15px;
 }
 
 .MergeOptionsContainer input {
@@ -6355,9 +6293,6 @@ input:checked + .slider.small::before, input:checked + .slider.small::after {
   margin-top:40px;
 }
 
-.MergeOptionsContainer{
-  font-size:15px;
-}
 .MergeOptionsContainer label,
 .MergeOptionsContainer select{
   display:block;
@@ -6460,6 +6395,8 @@ input:checked + .slider.small::before, input:checked + .slider.small::after {
   border-radius: 60px;
   padding: 2px;
   font-size: 45px;
+  color: var(--jconfirmalert-jconfirm-icon-c-i-color, #0a0);
+  background-color: var(--jconfirmalert-jconfirm-icon-c-i-bg, #c2f5c2);
 }
 
 .jconfirmAlert .jconfirm-icon-c {
@@ -6470,10 +6407,6 @@ input:checked + .slider.small::before, input:checked + .slider.small::after {
   font-size: 20px;
 }
 
-.jconfirmAlert .jconfirm-icon-c i {
-  color: var(--jconfirmalert-jconfirm-icon-c-i-color, #0a0);
-  background-color: var(--jconfirmalert-jconfirm-icon-c-i-bg, #c2f5c2);
-}
 
 .jconfirmWarning .jconfirm-icon-c i {
   color: #ffa744;
@@ -6716,6 +6649,7 @@ input:checked + .slider.small::before, input:checked + .slider.small::after {
   transform:translate(-50%, -48%);
   text-align:start;
   padding:30px;
+  background-color: var(--userlistpopincontainer-bg-1, #fff);
 }
 
 .group-name-block{
@@ -7235,11 +7169,11 @@ fieldset.environment-fieldset legend i[class*="icon-"] {
   padding: 8px 10px;
   margin-inline-start: 5px;
 }
+.buttonInstall {
+  margin-inline: 0 5px;
+}
 .buttonSubmitLocal {
   margin-inline-start: 9px;
-}
-.buttonInstall {
-  margin-inline-start: 0;
 }
 .changeUsername .buttonLike {padding: 1px 10px;}
 .changePassword .buttonLike {padding: 1px 10px;}
@@ -7535,6 +7469,7 @@ li.plupload_delete a:hover {
   display: flex;
   flex-wrap: wrap;
   margin-top: 0;
+  width: 320px;
 }
 .deleteDerivButtons a {
   border-radius: 4px;
@@ -7774,11 +7709,9 @@ li.plupload_delete a:hover {
 }
 
 .batch-manager-root .ui-slider-horizontal .ui-slider-range {height: 2px;}
-.batch-manager-root .ui-slider-horizontal {height: 2px;}
 .batch-manager-root .ui-slider-range.ui-widget-header.ui-corner-all {margin-top: -1px;}
 .batch-manager-root .font-checkbox.selected span:first-child::before {content: '\f192';}
-.actionDeleteDerivatives .font-checkbox span, .actionDeleteDerivatives .font-checkbox span {margin-inline-end: 5px;}
-.actionGenerateDerivatives, .actionDeleteDerivatives {width: 320px;}
+.actionDeleteDerivatives .font-checkbox span {margin-inline-end: 5px;}
 .associate-as-trigger {margin-bottom: 10px;}
 .selected-associate-item {
   background-color: var(--selected-associate-item-bg, #fafafa);
@@ -7857,9 +7790,6 @@ li.plupload_delete a:hover {
   display: none;
   cursor: help;
   font-size: 20px;
-}
-
-.search-album-help {
   position: absolute;
   inset-inline-end: 0;
   transform: translateX(calc(100% + 10px));
@@ -8080,10 +8010,6 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
   color: var(--user-property-select-color, #353535);
 }
 
-.UserListPopInContainer {
-  background-color: var(--userlistpopincontainer-bg-1, #fff);
-}
-
 .user-property-column-title, .edit-username-title {
   color: var(--edit-username-title-or-user-property-column-title-color, #353535);
 }
@@ -8120,10 +8046,6 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
 
 .user-property-register-visit .icon-calendar {
   color: var(--user-property-register-visit-icon-calendar-color, #4c4c4c);}
-
-.slider-bar-wrapper .ui-slider-horizontal{
-  background-color: var(--slider-bar-wrapper-ui-slider-horizontal-bg, #e3e3e3);
-}
 
 .edit-user-tab,
 .guest-edit-user-tab {

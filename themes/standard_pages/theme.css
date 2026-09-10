@@ -199,6 +199,7 @@ select {
   margin-inline-end: 8px;
   line-height: 18px;
   font-size: 14px;
+  border: 1px solid #777;
 }
 
 .remember-me-container:hover label{
@@ -237,6 +238,8 @@ p.form-instructions{
   margin-top:15px;
   cursor:pointer;
   text-decoration:none;
+  background-color: var(--color-accent, #f70);
+  color: var(--color-accent-contrast, #fff);
 }
 
 .btn-cancel,
@@ -265,6 +268,8 @@ a.btn-main{
 
 .btn-main:disabled {
   cursor: not-allowed;
+  background-color:#aaa;
+  color: #3C3C3C;
 }
 
 #return-to-gallery{
@@ -296,6 +301,7 @@ a.btn-main{
   width:300px;
   display:block;
   margin: 15px auto;
+  border-bottom:1px solid #D8D8D8;
 }
 
 #header-options{
@@ -363,6 +369,7 @@ a.btn-main{
 
 #lang-select #other-languages span:hover{
   cursor:pointer;
+  color: var(--color-accent, #f70);
 }
 
 #lang-select:hover #other-languages{
@@ -643,6 +650,7 @@ p.error-message,
 
 .profile-section #show_expired_list {
   display: none;
+  margin: 15px 0;
 }
 
 .profile-section #api_key_list_expired .api_expiration {
@@ -673,16 +681,13 @@ p.error-message,
 
 .profile-section .new-apikey .btn-link{
   font-weight: 700;
+  color: #9A9A9A;
 }
 
 .profile-section .api-copy {
   padding: 1px 10px;
   width: fit-content;
   font-size: 12px;
-}
-
-.profile-section #show_expired_list {
-  margin: 15px 0;
 }
 
 .profile-section #api_key_list_expired {
@@ -716,6 +721,7 @@ p.error-message,
   width: 100%;
   height: 100%;
   overflow: auto;
+  background-color: rgb(0,0,0,0.7);
 }
 
 .close-modal {
@@ -804,6 +810,7 @@ label.switch {
   cursor: pointer;
   inset: 0;
   transition: .4s;
+  background-color: #ccc;
 }
 
 .slider::before {
@@ -814,6 +821,7 @@ label.switch {
   inset-inline-start: 4px;
   bottom: 4px;
   transition: .4s;
+  background-color: #fff;
 }
 
 input:checked + .slider::before {
@@ -901,10 +909,6 @@ input[type='radio'] {
   border: 1px solid var(--color-accent, #f70) !important;
 }
 
-#lang-select #other-languages span:hover {
-  color: var(--color-accent, #f70);
-}
-
 .profile-section .api-icon-action i:hover,
 .close-modal:hover,
 .profile-section .icon-clone:hover {
@@ -913,11 +917,6 @@ input[type='radio'] {
 
 .profile-section #api_key_list .edit {
   border: 1px solid var(--color-accent, #f70);
-}
-
-.btn-main {
-  background-color: var(--color-accent, #f70);
-  color: var(--color-accent-contrast, #fff);
 }
 
 #theIdentificationPage .light a:hover,
@@ -978,42 +977,13 @@ input[type='radio'] {
    (not restored elsewhere) since its generic value was always
    dead weight the moment the hover-tint cluster also targets it. */
 
-.gallery-icon-checkmark {
-    border: 1px solid #777;
-}
-
 .btn-secondary {
   background-color: #ECECEC;
   color: #3C3C3C;
 }
 
-.btn-main:disabled {
-  background-color:#aaa;
-  color: #3C3C3C;
-}
-
-#separator{
-  border-bottom:1px solid #D8D8D8;
-}
-
 .profile-section div.api-tab-line:nth-child(even) {
   background-color: #303030;
-}
-
-.profile-section .new-apikey .btn-link{
-  color: #9A9A9A;
-}
-
-.bg-modal {
-  background-color: rgb(0,0,0,0.7);
-}
-
-.slider {
-  background-color: #ccc;
-}
-
-.slider::before {
-  background-color: #fff;
 }
 
 /* Light */

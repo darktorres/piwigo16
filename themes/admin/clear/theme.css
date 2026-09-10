@@ -27,15 +27,10 @@ th { color: #888; }
 
 select, textarea {
   --select-or-textarea-color: #666;
-  --select-or-textarea-bg: #ccc;
+  --select-or-textarea-bg: #ddd;
 }
 option[disabled] { background-color: #ccc; }
 input[type="radio"], input[type="checkbox"] { background-color: transparent; }
-
-
-select, textarea {
-	--select-or-textarea-bg: #ddd;
-}
 
 input:focus, select:focus, textarea:focus {
   --input-focus-or-select-focus-or-textarea-focus-bg: #eee;
@@ -330,18 +325,13 @@ p.albumTitle img {margin-bottom:-3px;}
 .groups .addGroupFormBlock{
   font-size: 1.2em;
   background-color:#fafafa;
+  box-shadow: 0 2px 5px #00000024;
 }
 
 .groups .Group-name>p,
 .addGroupForm .addGroupFormTitle{
   color:#3c3c3c;
   font-size: 1.2em;
-}
-
-.groups .GroupContainer,
-.groups .showCreateGroup,
-.groups .addGroupFormBlock{
-  box-shadow: 0 2px 5px #00000024;
 }
 
 .groups #addGroupForm:hover  #addGroup,

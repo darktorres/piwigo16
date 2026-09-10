@@ -20,6 +20,7 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: #ffa646 solid 1px;
+  color: #999;
 }
 
 .showInfo:hover { color:#999; }
@@ -111,10 +112,6 @@ ul.thumbnails span.wrap2 {
 /* .throw, */ td h3 {
  background-image: url("images/fillet.png"); background-repeat: repeat-x; }
 /* borders */
-
-input:focus, select:focus, textarea:focus {
-	color: #999;
-}
 
 /* `.hasDatepicker`/`.elem-type-select` need a different, skin-driven
    background regardless of focus state (see theme.css's own
@@ -390,7 +387,10 @@ a.stat-box:hover {
   --storage-chart-legend-div-nth-child-1-span-or-storage-chart-span-nth-child-1-bg: #d47f44;
 }
 
-.themeBox {background-color:#232323;}
+.themeBox {
+  background-color:#232323;
+  box-shadow: 0 0 5px #333;
+}
 .themeName {color:#ccc;}
 .themeSelect {
   background-color: #333;
@@ -632,28 +632,18 @@ div.token-input-dropdown ul li.token-input-selected-dropdown-item {background-co
   background-color:#111;
 }
 
-label>p.group_select {
-  color: #d5d5d5;
-  background-color:#555;
-}
-
 .groups .GroupContainer,
 .groups .showCreateGroup,
 .groups .addGroupFormBlock{
   font-size: 1.2em;
   background-color:#333;
+  box-shadow: -1px 1px 2px #1a1a1a;
 }
 
 .groups .Group-name>p,
 .addGroupForm .addGroupFormTitle{
   color:#3c3c3c;
   font-size: 1.2em;
-}
-
-.groups .GroupContainer,
-.groups .showCreateGroup,
-.groups .addGroupFormBlock{
-  box-shadow: -1px 1px 2px #1a1a1a;
 }
 
 .groups .showCreateGroup:hover  #addGroup,
@@ -750,13 +740,6 @@ label>p.group_select {
 .groups .manage-permissions{
   border:1px solid #777;
   background-color:transparent;
-}
-
-.groups .manage-users:hover,
-.groups .manage-permissions:hover{
-  background-color:#ffa744;
-  border:1px solid #ffa744;
-  cursor:pointer;
 }
 
 /* UserList Pop in */
@@ -935,6 +918,9 @@ input:focus + .slider {
 .groups .manage-users:hover,
 .groups .manage-permissions:hover{
   color:#3c3c3c;
+  background-color:#ffa744;
+  border:1px solid #ffa744;
+  cursor:pointer;
 }
 
 /* UserList Pop in */
@@ -980,8 +966,7 @@ input:focus + .slider {
 }
 
 .groups .showCreateGroup .icon-plus-circled,
-#UserList .group-name-block span,
-.groups .showCreateGroup .icon-plus-circled{
+#UserList .group-name-block span{
   color: #A0C0F1;
   background-color: #4E71A5;
 }
@@ -1211,10 +1196,6 @@ li.plupload_delete a.remove-format:hover{color: #c0c0c0;}
   text-decoration: none;
 }
 
-#checkActions a:hover {
-  background-color: #1b1b1b;
-  color: #777;
-}
 /* `.deleteDerivButtons a:hover`'s own `background-color`/`color` moved
    to theme-base.css's theme-skin-base layer -- see that file's own
    comment. */
@@ -1263,7 +1244,6 @@ li.plupload_delete a.remove-format:hover{color: #c0c0c0;}
   color: #c1c1c1;
 }
 
-.pageNumberSelected {--pagenumberselected-bg: #b4b4b4;}
 #action_title .large, #action_author .large {
   background-color: #333;
   color: #fefefe;
@@ -1271,6 +1251,7 @@ li.plupload_delete a.remove-format:hover{color: #c0c0c0;}
 #addFilter optgroup, #batchManagerGlobal option[disabled] {background-color: #555;}
 .dimension-cancel {background-color: #555;}
 .pageNumberSelected {
+  --pagenumberselected-bg: #b4b4b4;
   color: #777;
   font-weight: bold;
 }
@@ -1597,10 +1578,6 @@ background:#6C2D2D;
   color: #444;
 }
 
-.themeBox{
-  box-shadow: 0 0 5px #333;
-}
-
 .pluginActionLevel1,
 .themeActions a:nth-child(1) {
   --pluginactionlevel1-bg: #FFA646;
@@ -1731,14 +1708,11 @@ background:#6C2D2D;
 
 .PluginActionError span {
   --pluginactionerror-span-color-1: #ffd5dc;
-  --pluginactionerror-span-color-2: #ffd5dc;
 }
 
 .PluginActionError label {
   --pluginactionerror-label-bg-1: #f22;
   --pluginactionerror-label-color-1: #ffd5dc;
-  --pluginactionerror-label-bg-2: #f22;
-  --pluginactionerror-label-color-2: #ffd5dc;
 }
 
 .pluginTags > span {
@@ -1777,7 +1751,6 @@ background:#6C2D2D;
 }
 
 .move-cat-container .move-cat-toogler{
-  --move-cat-container-move-cat-toogler-color-1: #ededed;
   --move-cat-container-move-cat-toogler-color-2: #ededed;
 }
 
@@ -1939,10 +1912,6 @@ background:#6C2D2D;
 .user-property-select {
   --user-property-select-bg: #333; 
   --user-property-select-color: #c1c1c1;
-}
-
-.UserListPopInContainer {
-  --userlistpopincontainer-bg-1: #444;
 }
 
 .user-property-column-title, .edit-username-title {

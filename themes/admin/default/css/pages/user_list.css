@@ -2070,6 +2070,7 @@ Advanced filter
 
 .AddUserSubmit {
   background-color: #ffa646;
+  color: #3F3E40;
 }
 
 .AddUserCancel {
@@ -2121,10 +2122,6 @@ Advanced filter
 
 .GuestUserListPopInContainer {
   background-color: #fff;
-}
-
-.AddUserSubmit {
-  color: #3F3E40;
 }
 
 /* The generic base rule moves here too (not just the `.lineView`

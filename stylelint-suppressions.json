@@ -5,26 +5,8 @@
     }
   },
   "themes/standard_pages/theme.css": {
-    "no-duplicate-selectors": {
-      "count": 10
-    },
     "declaration-no-important": {
       "count": 3
-    }
-  },
-  "themes/admin/clear/theme.css": {
-    "no-duplicate-selectors": {
-      "count": 2
-    }
-  },
-  "themes/admin/roma/theme.css": {
-    "no-duplicate-selectors": {
-      "count": 9
-    }
-  },
-  "themes/default/css/clear-search.css": {
-    "no-duplicate-selectors": {
-      "count": 1
     }
   },
   "themes/default/css/dark-search.css": {
@@ -35,11 +17,6 @@
   "themes/default/css/search.css": {
     "declaration-no-important": {
       "count": 4
-    }
-  },
-  "themes/admin/default/theme-base.css": {
-    "no-duplicate-selectors": {
-      "count": 27
     }
   }
 }

@@ -80,6 +80,19 @@ const serverKey = pwg_getPageData<string>("cache_key_users");
 const serverId = pwg_getPageData<string>("cache_key_hash");
 const rootUrl = pwg_getPageData<string>("root_url");
 
+/**
+ * `#UserList` renders as a real `<dialog>` (converted from a hand-rolled
+ * fixed-position overlay `<div>`, docs/PLAN.md P52-J) -- narrowed once
+ * here so open/close can use the native `showModal()`/`close()` API.
+ * group_list.latte's own `#UserList` instance, independent of
+ * user_list.latte's own (users/list.ts, converted separately) --
+ * never co-loaded, different page.
+ */
+const userListDialogEl = (() => {
+  const el = document.getElementById("UserList");
+  return el instanceof HTMLDialogElement ? el : null;
+})();
+
 /*-------
  Manage User Part
  -------*/
@@ -226,7 +239,7 @@ export async function openUserManager(grpId: number): Promise<void> {
     html(document.querySelectorAll(".UsersInGroupList"), "");
 
     //Display the popin
-    fadeIn(document.querySelectorAll("#UserList"));
+    userListDialogEl?.showModal();
 
     //Fill with user blocks
     usersInGroup = response.users;
@@ -383,8 +396,27 @@ function updateMembernumber(number: number, grpId: number) {
 
 // Close pop-up on cross click
 on(document.querySelectorAll(".CloseUserList"), "click", function () {
-  fadeOut(document.querySelectorAll("#UserList"));
+  userListDialogEl?.close();
 });
+on(document.querySelectorAll(".CloseUserList"), "keydown", function (
+  event,
+) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+  const { key } = event as KeyboardEvent;
+  if (key === "Enter" || key === " ") {
+    event.preventDefault();
+    userListDialogEl?.close();
+  }
+});
+// Native <dialog> has no light-dismiss of its own; this matches its own
+// ::backdrop with the usual click-outside-to-close idiom.
+if (userListDialogEl !== null) {
+  on(userListDialogEl, "click", function (e: Event) {
+    if (e.target === userListDialogEl) {
+      userListDialogEl.close();
+    }
+  });
+}
 
 // Adding Group Action
 on(document.querySelectorAll(".AddUserBlock button"), "click", function () {
@@ -548,20 +580,10 @@ on(document.querySelectorAll(".input-user-name"), "input", function () {
   }
 });
 
-on(document, "keydown", function (e: Event) {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
-  if ((e as KeyboardEvent).key === "Escape") {
-    fadeOut(document.querySelectorAll("#UserList"));
-  }
-});
-on(document, "click", function (e: Event) {
-  if (
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a real click inside the document always targets an Element (or null), never a bare EventTarget with no Element interface.
-    (e.target as Element | null)?.closest(".UserListPopInContainer") === null
-  ) {
-    fadeOut(document.querySelectorAll("#UserList"));
-  }
-});
+// Native <dialog> already closes #UserList on Escape, and blocks real
+// clicks anywhere else on the page while open (true modal semantics) --
+// the click-outside-to-close idiom is now handled by the dialog's own
+// "click"/::backdrop wiring above instead of this document-wide listener.
 
 // temporary fix for #1283 (begin) : force user local storage cache on page load.
 usersCache = new UsersCache({

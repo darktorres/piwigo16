@@ -210,14 +210,31 @@ const hasGroup = pwg_getPageData<string | null>("filter_group");
 Escape of pop-in
 ----------------*/
 
-//get out of pop in via escape key
+// #UserList/#GuestUserList/#AddUser are real <dialog>s now (docs/PLAN.md
+// P52-J) -- Escape already closes whichever one is open natively.
+// `hideModals()` still runs here unconditionally: it resets the 3
+// internal sub-panels (.user-property-*-change), a pre-existing
+// behavior that was never tied to which outer popin (if any) was open.
 on(document, "keydown", function (e: Event) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
   if ((e as KeyboardEvent).key === "Escape") {
     hideModals();
-    closeUserList();
   }
 });
+
+/**
+ * `#UserList`/`#GuestUserList`/`#AddUser` render as real `<dialog>`s
+ * (converted from hand-rolled fixed-position overlay `<div>`s,
+ * docs/PLAN.md P52-J) -- narrowed once here so every open/close call
+ * site can use the native `showModal()`/`close()` API.
+ */
+function dialogElOf(id: string): HTMLDialogElement | null {
+  const el = document.getElementById(id);
+  return el instanceof HTMLDialogElement ? el : null;
+}
+const userListDialogEl = dialogElOf("UserList");
+const guestUserListDialogEl = dialogElOf("GuestUserList");
+const addUserDialogEl = dialogElOf("AddUser");
 
 /*----------------
 Group Selectize
@@ -250,23 +267,24 @@ OnClick functions
 -----------------*/
 function openUserList() {
   hideTemporaryMessages();
-  fadeIn(document.querySelectorAll("#UserList"));
+  userListDialogEl?.showModal();
 }
 
+// Only asks the dialog to close -- the real cleanup (also needed for the
+// native Escape/backdrop-click close paths, which never call this
+// function) runs from the dialog's own "close" event, wired once below.
 function closeUserList() {
-  hideTemporaryMessages();
-  setVal(document.querySelectorAll("#result_send_mail_copy_input"), "");
-  fadeOut(document.querySelectorAll("#UserList"));
+  userListDialogEl?.close();
 }
 
 function openGuestUserList() {
   hideTemporaryMessages();
-  fadeIn(document.querySelectorAll("#GuestUserList"));
+  guestUserListDialogEl?.showModal();
 }
 
+// See closeUserList()'s own comment above -- same reasoning.
 function closeGuestUserList() {
-  hideTemporaryMessages();
-  fadeOut(document.querySelectorAll("#GuestUserList"));
+  guestUserListDialogEl?.close();
 }
 
 function isSelectionMode() {
@@ -349,7 +367,50 @@ ready(function () {
     "click",
     closeUserList,
   );
+  on(
+    document.querySelectorAll("#UserList .close-update-button"),
+    "keydown",
+    function (event) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+      const { key } = event as KeyboardEvent;
+      if (key === "Enter" || key === " ") {
+        event.preventDefault();
+        closeUserList();
+      }
+    },
+  );
   on(document.querySelectorAll(".CloseUserList"), "click", closeUserList);
+  on(document.querySelectorAll(".CloseUserList"), "keydown", function (
+    event,
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+    const { key } = event as KeyboardEvent;
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      // `.CloseUserList` is shared by all 3 popins' own close icons
+      // (real pre-existing overlap, not fixed here) -- closeUserList()
+      // is a harmless no-op via .close() when #UserList isn't the one
+      // actually open.
+      closeUserList();
+    }
+  });
+
+  // Native <dialog> already closes on Escape; these match each
+  // dialog's own ::backdrop with the usual click-outside-to-close
+  // idiom. The real cleanup that used to run inline in closeUserList()/
+  // closeGuestUserList() moved to each dialog's own "close" event so it
+  // runs for every close path (these buttons, Escape, backdrop click).
+  if (userListDialogEl !== null) {
+    on(userListDialogEl, "click", function (e: Event) {
+      if (e.target === userListDialogEl) {
+        userListDialogEl.close();
+      }
+    });
+    on(userListDialogEl, "close", function () {
+      hideTemporaryMessages();
+      setVal(document.querySelectorAll("#result_send_mail_copy_input"), "");
+    });
+  }
 
   setChecked(document.querySelectorAll("#toggleSelectionMode"), false);
   on(document.querySelectorAll("#toggleSelectionMode"), "click", function () {
@@ -365,15 +426,61 @@ ready(function () {
     openGuestUserList,
   );
   on(
+    document.querySelectorAll(".edit-guest-user-button"),
+    "keydown",
+    function (event) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+      const { key } = event as KeyboardEvent;
+      if (key === "Enter" || key === " ") {
+        event.preventDefault();
+        openGuestUserList();
+      }
+    },
+  );
+  on(
     document.querySelectorAll(".CloseGuestUserList"),
     "click",
     closeGuestUserList,
+  );
+  on(
+    document.querySelectorAll(".CloseGuestUserList"),
+    "keydown",
+    function (event) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+      const { key } = event as KeyboardEvent;
+      if (key === "Enter" || key === " ") {
+        event.preventDefault();
+        closeGuestUserList();
+      }
+    },
   );
   on(
     document.querySelectorAll("#GuestUserList .close-update-button"),
     "click",
     closeGuestUserList,
   );
+  on(
+    document.querySelectorAll("#GuestUserList .close-update-button"),
+    "keydown",
+    function (event) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+      const { key } = event as KeyboardEvent;
+      if (key === "Enter" || key === " ") {
+        event.preventDefault();
+        closeGuestUserList();
+      }
+    },
+  );
+  if (guestUserListDialogEl !== null) {
+    on(guestUserListDialogEl, "click", function (e: Event) {
+      if (e.target === guestUserListDialogEl) {
+        guestUserListDialogEl.close();
+      }
+    });
+    on(guestUserListDialogEl, "close", function () {
+      hideTemporaryMessages();
+    });
+  }
   /* Action */
   hide(document.querySelectorAll("[id^=action_]"));
 
@@ -423,11 +530,86 @@ ready(function () {
     "click",
     () => void addUser(),
   );
+  on(
+    document.querySelectorAll(".AddUserSubmit"),
+    "keydown",
+    function (event) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+      const { key } = event as KeyboardEvent;
+      if (key === "Enter" || key === " ") {
+        event.preventDefault();
+        void addUser();
+      }
+    },
+  );
   on(document.querySelectorAll(".AddUserCancel"), "click", addUserClose);
+  on(document.querySelectorAll(".AddUserCancel"), "keydown", function (
+    event,
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+    const { key } = event as KeyboardEvent;
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      addUserClose();
+    }
+  });
   on(document.querySelectorAll(".CloseAddUser"), "click", addUserClose);
+  on(document.querySelectorAll(".CloseAddUser"), "keydown", function (
+    event,
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+    const { key } = event as KeyboardEvent;
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      addUserClose();
+    }
+  });
+  on(document.querySelectorAll("#AddUserButton"), "keydown", function (
+    event,
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+    const { key } = event as KeyboardEvent;
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      trigger(document.querySelectorAll("#AddUserButton"), "click");
+    }
+  });
+  on(document.querySelectorAll(".edit-now"), "keydown", function (event) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+    const { key } = event as KeyboardEvent;
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      trigger(document.querySelectorAll(".edit-now"), "click");
+    }
+  });
+
+  if (addUserDialogEl !== null) {
+    on(addUserDialogEl, "click", function (e: Event) {
+      if (e.target === addUserDialogEl) {
+        addUserDialogEl.close();
+      }
+    });
+    on(addUserDialogEl, "close", function () {
+      css(
+        document.querySelectorAll("#AddUser .AddUserErrors"),
+        "visibility",
+        "hidden",
+      );
+    });
+  }
 
   //open add user pop in
   on(document.querySelectorAll(".add-user-button"), "click", addUserOpen);
+  on(document.querySelectorAll(".add-user-button"), "keydown", function (
+    event,
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+    const { key } = event as KeyboardEvent;
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      addUserOpen();
+    }
+  });
 
   /* Select */
 
@@ -1447,14 +1629,12 @@ function genPassword() {
   return password;
 }
 
+// Only asks the dialog to close -- the AddUserErrors reset (also needed
+// for the native Escape/backdrop-click close paths, which never call
+// this function) runs from the dialog's own "close" event, wired once
+// in ready() above.
 function addUserClose() {
-  fadeOut(document.querySelectorAll("#AddUser"), () => {
-    css(
-      document.querySelectorAll("#AddUser .AddUserErrors"),
-      "visibility",
-      "hidden",
-    );
-  });
+  addUserDialogEl?.close();
 }
 
 function addUserOpen() {
@@ -1471,7 +1651,7 @@ function addUserOpen() {
   );
   hide(document.querySelectorAll("#add_user_password"));
   fillNewUser();
-  fadeIn(document.querySelectorAll("#AddUser"));
+  addUserDialogEl?.showModal();
   document.querySelector<HTMLElement>(".AddUserLabelUsername input")?.focus();
   const statusSelect = document.querySelectorAll(
     "#AddUser .user-property-status .user-property-select",
@@ -3453,7 +3633,7 @@ function bindUserEditClickHandler(): void {
       lastUserIndex = uidIndex;
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see the comment above.
       fillUserEdit(currentUsers[uidIndex]!);
-      fadeIn(document.querySelectorAll("#UserList"));
+      userListDialogEl?.showModal();
       document.querySelector("#tab_properties")?.scrollIntoView({
         behavior: "instant",
       });

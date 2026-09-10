@@ -284,7 +284,11 @@
       <div class="user-header-actions-row">
         <div class="user-header-actions-left">
           <div class="not-in-selection-mode user-header-button add-user-button">
-            <label class="head-button-2 icon-plus-circled">
+            <label
+              class="head-button-2 icon-plus-circled"
+              role="button"
+              tabindex="0"
+            >
               <p>Add a user</p>
             </label>
           </div>
@@ -292,6 +296,8 @@
           <div class="not-in-selection-mode user-header-button">
             <label
               class="head-button-2 icon-user-secret edit-guest-user-button"
+              role="button"
+              tabindex="0"
             >
               <p>Edit guest user</p>
             </label>
@@ -300,6 +306,8 @@
             <label class="icon-ok">
               <span>New user added</span><span
                 class="icon-pencil edit-now"
+                role="button"
+                tabindex="0"
               >Edit</span>
             </label>
           </div>
@@ -857,9 +865,9 @@
   </div>
 </div>
 
-<div id="UserList" class="UserListPopIn EditUserPopIn">
+<dialog id="UserList" class="UserListPopIn EditUserPopIn">
   <div class="UserListPopInContainer">
-    <a class="icon-cancel CloseUserList"></a>
+    <a class="icon-cancel CloseUserList" role="button" tabindex="0"></a>
     <div class="summary-properties-update-container">
       <div class="summary-properties-container">
         <div class="summary-container">
@@ -1093,6 +1101,8 @@
       <div class="update-container">
         <span
           class="close-update-button icon-cancel-circled"
+          role="button"
+          tabindex="0"
         >Close</span>
         <p>
           <span
@@ -1312,11 +1322,15 @@
       </div>
     </div>
   </div>
-</div>
+</dialog>
 
-<div id="GuestUserList" class="UserListPopIn GuestUserPopIn">
+<dialog id="GuestUserList" class="UserListPopIn GuestUserPopIn">
   <div class="GuestUserListPopInContainer">
-    <a class="icon-cancel CloseUserList CloseGuestUserList"></a>
+    <a
+      class="icon-cancel CloseUserList CloseGuestUserList"
+      role="button"
+      tabindex="0"
+    ></a>
     <div id="guest-msg" class="messages guest-user-message">
       <span class="eiw-icon icon-info-circled-1"></span>
       <span>Users not logged in will have these settings applied, these settings are used by default for new users</span>
@@ -1519,6 +1533,8 @@
       <div class="update-container">
         <span
           class="close-update-button icon-cancel-circled"
+          role="button"
+          tabindex="0"
         >Close</span>
         <p>
           <span
@@ -1532,11 +1548,15 @@
       </div>
     </div>
   </div>
-</div>
+</dialog>
 
-<div id="AddUser" class="UserListPopIn AddUserPopIn">
+<dialog id="AddUser" class="UserListPopIn AddUserPopIn">
   <div class="AddUserPopInContainer">
-    <a class="icon-cancel CloseUserList CloseAddUser"></a>
+    <a
+      class="icon-cancel CloseUserList CloseAddUser"
+      role="button"
+      tabindex="0"
+    ></a>
     <div class="AddUserScrollableContent">
       <div class="AddIconContainer">
         <span class="AddIcon icon-blue icon-plus-circled"></span>
@@ -1675,11 +1695,11 @@
         <div class="AddUserErrors  icon-cancel"></div>
 
         <div class="AddUserSubmitContainer">
-          <div class="AddUserCancel">
+          <div class="AddUserCancel" role="button" tabindex="0">
             <span>Cancel</span>
           </div>
 
-          <div class="AddUserSubmit">
+          <div class="AddUserSubmit" role="button" tabindex="0">
             <span class="icon-plus"></span><span>Add User</span>
           </div>
         </div>
@@ -1698,13 +1718,18 @@
           <input class="AddUserPasswordInput" id="AddUserPasswordLink" />
           <span class="icon-docs" id="AddUserCopyPassword"></span>
         </div>
-        <p class="icon-button" id="AddUserButton"><span
+        <p
+          class="icon-button"
+          id="AddUserButton"
+          role="button"
+          tabindex="0"
+        ><span
             class="icon-ok"
           ></span> Ok</p>
       </div>
     </div>
   </div>
-</div>
+</dialog>
 
 </div>
       </div>

@@ -85,7 +85,7 @@
 }
 
 .plupload_file_name {
-  float: left;
+  float: inline-start;
   overflow: hidden;
 }
 
@@ -99,14 +99,14 @@
 
 .plupload_file_size,
 .plupload_file_status {
-  float: right;
+  float: inline-end;
   width: 80px;
 }
 
 .plupload_file_size,
 .plupload_file_status,
 .plupload_file_action {
-  text-align: right;
+  text-align: end;
 }
 
 .plupload_filelist .plupload_file_name {
@@ -116,10 +116,10 @@
 }
 
 .plupload_file_action {
-  float: right;
+  float: inline-end;
   width: 16px;
   height: 16px;
-  margin-left: 15px;
+  margin-inline-start: 15px;
 }
 
 .plupload_file_action * {
@@ -148,7 +148,7 @@ li.plupload_done a {
 }
 
 .plupload_scroll .plupload_filelist_footer .plupload_file_action {
-  margin-right: 17px;
+  margin-inline-end: 17px;
 }
 
 .plupload_clearer {

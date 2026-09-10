@@ -71,7 +71,7 @@
 
 .selectize-input::after {
   display: block;
-  clear: left;
+  clear: inline-start;
 }
 
 .selectize-dropdown {
@@ -108,7 +108,7 @@
   display: block;
   position: absolute;
   top: 50%;
-  right: 15px;
+  inset-inline-end: 15px;
   margin-top: -3px;
   width: 0;
   height: 0;
@@ -132,7 +132,7 @@
 }
 
 /* `remove_button` plugin (the only selectize plugin any real call site
-   enables) -- `.remove`'s own `border-left` color (#0073bb) matches the
+   enables) -- `.remove`'s own `border-inline-start` color (#0073bb) matches the
    chip background border above in both real theme sources, kept as
    one shared literal rather than 2 identical scheme-file copies.
    `div[data-value]` (not bare `[data-value]`) -- `.selectize-control.multi
@@ -143,14 +143,14 @@
    `!important`, independent of source order. */
 .selectize-control.plugin-remove_button div[data-value] {
   position: relative;
-  padding-right: 24px;
+  padding-inline-end: 24px;
 }
 
 .selectize-control.plugin-remove_button [data-value] .remove {
   z-index: 1;
   position: absolute;
   top: 0;
-  right: 0;
+  inset-inline-end: 0;
   bottom: 0;
   width: 17px;
   text-align: center;
@@ -161,9 +161,10 @@
   vertical-align: middle;
   display: inline-block;
   padding: 2px 0 0;
-  border-left: 1px solid #0073bb;
+  border-inline-start: 1px solid #0073bb;
   box-sizing: border-box;
-  border-radius: 0 2px 2px 0;
+  border-start-end-radius: 2px;
+  border-end-end-radius: 2px;
 }
 
 .selectize-control.plugin-remove_button [data-value] .remove:hover {

@@ -252,19 +252,19 @@
 }
 
 .ui-datepicker .ui-datepicker-prev {
-  left: 2px;
+  inset-inline-start: 2px;
 }
 
 .ui-datepicker .ui-datepicker-next {
-  right: 2px;
+  inset-inline-end: 2px;
 }
 
 .ui-datepicker .ui-datepicker-prev span,
 .ui-datepicker .ui-datepicker-next span {
   display: block;
   position: absolute;
-  left: 50%;
-  margin-left: -8px;
+  inset-inline-start: 50%;
+  margin-inline-start: -8px;
   top: 50%;
   margin-top: -8px;
 }
@@ -307,7 +307,7 @@
 .ui-datepicker td a {
   display: block;
   padding: 0.2em;
-  text-align: right;
+  text-align: end;
   text-decoration: none;
 }
 
@@ -315,13 +315,12 @@
   background-image: none;
   margin: 0.7em 0 0;
   padding: 0 0.2em;
-  border-left: 0;
-  border-right: 0;
+  border-inline: 0;
   border-bottom: 0;
 }
 
 .ui-datepicker .ui-datepicker-buttonpane button {
-  float: right;
+  float: inline-end;
   margin: 0.5em 0.2em 0.4em;
   cursor: pointer;
   padding: 0.2em 0.6em 0.3em;
@@ -330,7 +329,7 @@
 }
 
 .ui-datepicker .ui-datepicker-buttonpane button.ui-datepicker-current {
-  float: left;
+  float: inline-start;
 }
 
 /* Timepicker addon */
@@ -340,13 +339,13 @@
 }
 
 .ui-timepicker-div dl {
-  text-align: left;
+  text-align: start;
 }
 
 .ui-timepicker-div dl dt {
-  float: left;
-  clear: left;
-  padding: 0 0 0 5px;
+  float: inline-start;
+  clear: inline-start;
+  padding-inline-start: 5px;
 }
 
 .ui-timepicker-div dl dd {
@@ -357,7 +356,7 @@
 
 .ui-slider {
   position: relative;
-  text-align: left;
+  text-align: start;
 }
 
 .ui-slider .ui-slider-handle {
@@ -376,6 +375,12 @@
 }
 
 
+/* Physical, not logical: slider.ts sets the handle's/range's own
+   position via a real `css(el, "left", pct + "%")` JS call (never a
+   logical inset), so this centering-adjustment margin and the
+   range-min anchor must match that same physical edge -- matching
+   jcrop's/colorbox's own documented reasoning for the same class of
+   JS-computed-pixel-math widget. */
 .ui-slider-horizontal .ui-slider-handle {
   margin-left: -0.6em;
 }

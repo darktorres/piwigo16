@@ -54,8 +54,7 @@
   background: #f0f0f0;
   height: 1px;
   bottom: 0;
-  left: 0;
-  right: 0;
+  inset-inline: 0;
 }
 
 .selectize-dropdown {

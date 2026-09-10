@@ -43,7 +43,7 @@ body > div.jGrowl {
 }
 
 div.jGrowl.top-right {
-  right: 0;
+  inset-inline-end: 0;
   top: 0;
 }
 
@@ -52,7 +52,7 @@ div.jGrowl div.jGrowl-notification {
   width: 235px;
   padding: 10px;
   font-size: 1em;
-  text-align: left;
+  text-align: start;
   display: none;
   border-radius: 5px;
   margin: 10px;
@@ -65,7 +65,7 @@ div.jGrowl div.jGrowl-notification {
 
 div.jGrowl div.jGrowl-notification div.jGrowl-close {
   z-index: 99;
-  float: right;
+  float: inline-end;
   font-weight: 700;
   font-size: 1em;
   cursor: pointer;

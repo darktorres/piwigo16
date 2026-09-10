@@ -102,8 +102,7 @@ body[class*="jconfirm-no-scroll-"] {
   outline: 0;
   padding: var(--space-4) var(--space-4) 0;
   overflow: hidden;
-  margin-left: auto;
-  margin-right: auto;
+  margin-inline: auto;
   opacity: 1;
   transition-property: all;
 }
@@ -147,8 +146,8 @@ body[class*="jconfirm-no-scroll-"] {
   width: 30px;
   border: solid 3px transparent;
   position: absolute;
-  left: 50%;
-  margin-left: -15px;
+  inset-inline-start: 50%;
+  margin-inline-start: -15px;
   border-radius: 50%;
   animation: jconfirm-spin 1s infinite linear;
   border-bottom-color: var(--color-info);
@@ -162,7 +161,7 @@ body[class*="jconfirm-no-scroll-"] {
   width: 20px;
   position: absolute;
   top: 10px;
-  right: 10px;
+  inset-inline-end: 10px;
   cursor: pointer;
   opacity: 0.6;
   text-align: center;
@@ -257,8 +256,7 @@ body[class*="jconfirm-no-scroll-"] {
 
 .jconfirm .jconfirm-box .jconfirm-buttons > button {
   margin-bottom: var(--space-1);
-  margin-left: 2px;
-  margin-right: 2px;
+  margin-inline: 2px;
 }
 
 .jconfirm .jconfirm-box .jconfirm-buttons button {
@@ -323,7 +321,7 @@ body[class*="jconfirm-no-scroll-"] {
 .jconfirm.jconfirm-modern .jconfirm-box div.jconfirm-closeIcon {
   color: var(--color-text-primary);
   top: var(--space-4);
-  right: var(--space-4);
+  inset-inline-end: var(--space-4);
 }
 
 .jconfirm.jconfirm-modern .jconfirm-box div.jconfirm-title-c {
@@ -338,8 +336,7 @@ body[class*="jconfirm-no-scroll-"] {
   transition: transform 0.5s;
   transform: scale(0);
   display: block;
-  margin-right: 0;
-  margin-left: 0;
+  margin-inline: 0;
   margin-bottom: var(--space-2);
   font-size: 69px;
   color: var(--color-text-muted);
@@ -366,7 +363,7 @@ body[class*="jconfirm-no-scroll-"] {
 }
 
 .jconfirm.jconfirm-modern .jconfirm-box .jconfirm-buttons button + button {
-  margin-left: var(--space-1);
+  margin-inline-start: var(--space-1);
 }
 
 .jconfirm.jconfirm-modern.jconfirm-open .jconfirm-box .jconfirm-title-c .jconfirm-icon-c {

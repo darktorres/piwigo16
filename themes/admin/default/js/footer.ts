@@ -7,8 +7,18 @@
 // anyone else's bundle.
 import { pwg_getPageData } from "../../../default/js/pageData";
 import { ajax, AjaxError } from "../../../default/js/vendor/utils/ajax";
-import { hide, on, show } from "../../../default/js/vendor/utils/dom";
+import { on } from "../../../default/js/vendor/utils/dom";
 import { tipTip } from "../../../default/js/vendor/widgets/tiptip";
+
+/**
+ * `#whats_new` renders as a real `<dialog>` (converted from a hand-rolled
+ * fixed-position overlay `<div>`, docs/PLAN.md P52-J) -- narrowed once here
+ * so open/close can use the native `showModal()`/`close()` API.
+ */
+const whatsNewDialogEl = (() => {
+  const el = document.getElementById("whats_new");
+  return el instanceof HTMLDialogElement ? el : null;
+})();
 
 // This file's own registration stays its own standalone Vite entry,
 // unfolded (docs/PLAN.md P48, this file's own catalog line's
@@ -46,9 +56,11 @@ on(
   },
 );
 
-async function hideUserWhatsNew(): Promise<void> {
-  hide(document.querySelectorAll("#whats_new"));
-
+// Persists the user's dismissal server-side -- run from the dialog's own
+// native "close" event (registered below) so every close path (the close
+// icon, the "Ok, got it!" button, Escape, backdrop click) saves it exactly
+// once, instead of duplicating the call per trigger.
+async function persistWhatsNewDismissed(): Promise<void> {
   try {
     await ajax({
       url:
@@ -67,11 +79,24 @@ async function hideUserWhatsNew(): Promise<void> {
 }
 
 function showUserWhatsNew() {
-  show(document.querySelectorAll("#whats_new"));
+  whatsNewDialogEl?.showModal();
 }
 
 if (pwg_getPageData<boolean>("show_whats_new")) {
   showUserWhatsNew();
+}
+
+if (whatsNewDialogEl !== null) {
+  on(whatsNewDialogEl, "close", (): void => {
+    void persistWhatsNewDismissed();
+  });
+  // Native <dialog> already closes on Escape; this matches its own
+  // ::backdrop with the usual click-outside-to-close idiom.
+  on(whatsNewDialogEl, "click", function (e: Event) {
+    if (e.target === whatsNewDialogEl) {
+      whatsNewDialogEl.close();
+    }
+  });
 }
 
 on(
@@ -80,9 +105,31 @@ on(
   showUserWhatsNew,
 );
 on(
+  document.querySelectorAll("#whats_new_notification"),
+  "keydown",
+  function (event: Event) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+    const { key } = event as KeyboardEvent;
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      showUserWhatsNew();
+    }
+  },
+);
+on(
   document.querySelectorAll(".close_whats_new, .js-hide-whats-new"),
   "click",
   (): void => {
-    void hideUserWhatsNew();
+    whatsNewDialogEl?.close();
   },
 );
+on(document.querySelectorAll(".close_whats_new"), "keydown", function (
+  event: Event,
+) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+  const { key } = event as KeyboardEvent;
+  if (key === "Enter" || key === " ") {
+    event.preventDefault();
+    whatsNewDialogEl?.close();
+  }
+});

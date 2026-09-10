@@ -268,6 +268,8 @@
             id="whats_new_notification"
             class="icon-blue tiptip whats_new_bell"
             title="{='What\'s new in version %s'|translate:$WHATS_NEW_MAJOR_VERSION}"
+            role="button"
+            tabindex="0"
           >
             <i class="icon-bell"></i>
           </span>
@@ -285,13 +287,13 @@
       </div>{* <!-- footer --> *}
     </div>{* <!-- the_page --> *}
 
-    <div
+    <dialog
       n:if="(isset($SHOW_WHATS_NEW) and $SHOW_WHATS_NEW) or (isset($DISPLAY_BELL) and $DISPLAY_BELL)"
       id="whats_new"
       class="whats_new_wrapper"
     >
       <div id="whats_new_popin" class="whats_new_dialog">
-        <a class="icon-cancel close_whats_new"></a>
+        <a class="icon-cancel close_whats_new" role="button" tabindex="0"></a>
         <h3>{='What\'s new in version %s'|translate:$WHATS_NEW_MAJOR_VERSION}</h3>
         <div>
           <div class="whats_new_block_container">
@@ -326,7 +328,7 @@
             ></i> {='Read the release note'|translate}</a>
         </div>
       </div>
-    </div>
+    </dialog>
 
     {=getPageDataScript()}
 

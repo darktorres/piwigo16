@@ -50,10 +50,20 @@
  * by the `jquery-confirm` port) would silently break should a confirm
  * dialog and an open colorbox ever coexist.
  *
- * Physical (not logical) properties throughout, matching the `jcrop`
- * port's own reasoning: `colorbox.ts` positions everything in absolute
- * viewport-relative pixels, with no RTL-awareness added by the port or
- * present in the original.
+ * RTL pass (P52-J, re-verified directly against colorbox.ts rather
+ * than re-asserting the original port's own blanket claim): only
+ * `#colorbox`'s own `left` is genuinely physical -- `positionOverlay()`
+ * (real source) always writes a real inline `left` there, computed in
+ * absolute viewport-relative pixels animating from wherever the
+ * clicked thumbnail sat, a real screen-space concept with no logical
+ * "start/end" meaning to convert to. Every other position in this file
+ * turned out to be a static "fill/align flush with my own container"
+ * pattern colorbox.ts's own JS never touches, genuinely convertible
+ * with zero functional difference -- see each rule's own comment.
+ * `#cboxPrevious`/`#cboxNext`'s own icon (not just position) also
+ * swaps for `html[dir="rtl"]` -- new behavior, not a restoration
+ * (colorbox's own upstream vendor library never had RTL awareness to
+ * begin with, unlike jqtree's dropped `.jqtree-rtl` family).
  */
 
 #colorbox,
@@ -61,9 +71,34 @@
 #cboxWrapper {
   position: absolute;
   top: 0;
-  left: 0;
   z-index: 9999;
   overflow: hidden;
+}
+
+/* Physical, not logical: `colorbox.ts`'s own `positionOverlay()`
+   (real source, `boxEl.style.left = ...`) always writes a real
+   inline `left`, computed in absolute viewport-relative pixels
+   (animating from wherever the clicked thumbnail sat) -- never
+   overwritten before the box is first shown, so this static default
+   never actually renders, but keeping it as the same physical
+   property JS writes avoids any ambiguity in how a browser resolves a
+   stylesheet-level logical property against an element's own inline
+   physical one. */
+#colorbox {
+  left: 0;
+  outline: 0;
+}
+
+/* `#cboxOverlay`/`#cboxWrapper` are never touched by that same JS
+   write (`positionOverlay()` only ever sets `#colorbox`'s own inline
+   style) -- both are pure "fill/align flush with my own container"
+   patterns (the full-viewport backdrop; a child flush with
+   `#colorbox`'s own start corner), genuinely convertible with no
+   functional difference (0 from the logical start === 0 from the
+   physical left either way once direction is fixed for the page). */
+#cboxOverlay,
+#cboxWrapper {
+  inset-inline-start: 0;
 }
 
 #cboxWrapper {
@@ -95,18 +130,21 @@
   background: var(--color-black);
 }
 
+/* Neither is ever touched by `colorbox.ts`'s own JS (only their
+   `display` is toggled, never position) -- both are static "flush
+   with/fill my own container" patterns, genuinely convertible. */
 #cboxTitle {
   margin: 0;
   position: absolute;
   top: -22px;
-  left: 0;
+  inset-inline-start: 0;
 }
 
 #cboxLoadingOverlay,
 #cboxLoadingGraphic {
   position: absolute;
   top: 0;
-  left: 0;
+  inset-inline-start: 0;
   width: 100%;
   height: 100%;
 }
@@ -120,10 +158,6 @@
   background: var(--color-black);
 }
 
-#colorbox {
-  outline: 0;
-}
-
 #cboxError {
   padding: 50px;
   border: 1px solid var(--color-border);
@@ -132,7 +166,7 @@
 #cboxCurrent {
   position: absolute;
   top: -22px;
-  right: 205px;
+  inset-inline-end: 205px;
   text-indent: -9999px;
 }
 
@@ -168,7 +202,7 @@
 
 #cboxPrevious {
   background-position: 0 0;
-  right: 44px;
+  inset-inline-end: 44px;
 }
 
 #cboxPrevious:hover {
@@ -177,7 +211,7 @@
 
 #cboxNext {
   background-position: -25px 0;
-  right: 22px;
+  inset-inline-end: 22px;
 }
 
 #cboxNext:hover {
@@ -186,11 +220,44 @@
 
 #cboxClose {
   background-position: -50px 0;
-  right: 0;
+  inset-inline-end: 0;
 }
 
 #cboxClose:hover {
   background-position: -50px -25px;
+}
+
+/* `inset-inline-end` above already relocates the toolbar correctly for
+   RTL (close/next/previous read right-to-left in the physical layout,
+   matching the natural RTL scan order previous->next->close). Without
+   this, though, each button's own icon would keep pointing its
+   original LTR-only direction after moving -- "previous" (a left-
+   pointing arrow) sitting on the toolbar's new physical right side,
+   pointing back toward "next" instead of away from it. Swapping which
+   sprite offset (`controls.png`, unchanged) each button uses restores
+   the same real convention this project's own jqtree-drop-hint
+   restoration follows: the vendor sprite already contains both arrow
+   shapes, this only changes which button shows which one, so
+   "previous"/"next" keep pointing outward and toward their real
+   direction of travel through the (now right-to-left-ordered) photo
+   sequence. Colorbox's own upstream vendor library never had RTL
+   awareness to restore (unlike jqtree's dropped `.jqtree-rtl` family)
+   -- this is new, not a restoration, and scoped to exactly these 2
+   buttons' own icon, nothing else in the widget. */
+html[dir="rtl"] #cboxPrevious {
+  background-position: -25px 0;
+}
+
+html[dir="rtl"] #cboxPrevious:hover {
+  background-position: -25px -25px;
+}
+
+html[dir="rtl"] #cboxNext {
+  background-position: 0 0;
+}
+
+html[dir="rtl"] #cboxNext:hover {
+  background-position: 0 -25px;
 }
 }
 

@@ -1,20 +1,12 @@
 {
-  "themes/standard_pages/theme.css": {
-    "declaration-no-important": {
-      "count": 3
-    }
-  },
-  "themes/default/css/search.css": {
-    "declaration-no-important": {
-      "count": 4
-    },
-    "declaration-property-value-disallowed-list": {
-      "count": 2
-    }
-  },
   "themes/admin/default/theme-base.css": {
     "declaration-property-value-disallowed-list": {
       "count": 1
+    }
+  },
+  "themes/default/css/search.css": {
+    "declaration-property-value-disallowed-list": {
+      "count": 2
     }
   },
   "themes/admin/default/css/components/album_selector.css": {
@@ -24,22 +16,12 @@
   },
   "themes/admin/default/css/components/colorbox.css": {
     "declaration-property-value-disallowed-list": {
-      "count": 7
+      "count": 1
     }
   },
   "themes/admin/default/css/components/jcrop.css": {
     "declaration-property-value-disallowed-list": {
       "count": 21
-    }
-  },
-  "themes/admin/default/css/components/jqtree.css": {
-    "declaration-property-value-disallowed-list": {
-      "count": 5
-    }
-  },
-  "themes/admin/default/css/components/jquery-ui.css": {
-    "declaration-property-value-disallowed-list": {
-      "count": 2
     }
   }
 }

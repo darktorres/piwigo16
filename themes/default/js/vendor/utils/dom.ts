@@ -206,6 +206,20 @@ export function isHiddenForDisplay(el: Element): boolean {
   );
 }
 
+/**
+ * The real, authoritative RTL signal in this app: every real
+ * `layout.latte` (admin/default/standard_pages, all 3 chains) renders
+ * `<html lang="{$lang_info['code']}" dir="{$lang_info['direction']}">`
+ * server-side, from the current language's own real direction data --
+ * not a widget-local guess. Any widget that computes its own physical
+ * pixel/percentage math (sliders, drag-and-drop, absolute-positioned
+ * overlays) and needs to resolve that math against the page's real
+ * writing direction reads this, once, at the point it needs to know.
+ */
+export function isPageRTL(): boolean {
+  return document.documentElement.dir === "rtl";
+}
+
 function actualDisplay(nodeName: string, doc: Document): string {
   const probe = doc.createElement(nodeName);
   doc.body.appendChild(probe);

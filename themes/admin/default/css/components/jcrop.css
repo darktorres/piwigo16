@@ -28,9 +28,22 @@
  */
 
 .jcrop-holder {
-  /* Pinned regardless of page direction -- Jcrop's own coordinate math
-     is always physical-pixel-based, never RTL-aware, so this is not a
-     text-direction bug to "fix" with logical properties. */
+  /* Pinned regardless of page direction -- re-verified directly
+     against jcrop.ts and pictureCoi.ts (P52-J's own vendor-widget RTL
+     pass), not just re-asserted: this whole subtree's coordinate space
+     is the photo's own pixel grid, not the admin UI's reading
+     direction. The selection box/dimmed background (`moveTo()`) are
+     positioned via `x`/`y` offsets measured from the image's own
+     top-left corner (`mouseAbs()`'s own `docOffset`); the resize
+     handles below (`.jcrop-handle.ord-*`) are compass directions on
+     that SAME photo-relative box -- `ord-w`/`ord-e` mean "the crop
+     box's own left/right edge on the photo," not "the logical start/
+     end of some UI text." An Arabic-language admin still drags a
+     mouse in physical screen space over a photo that has a physical
+     left and right, unrelated to their UI language; mirroring these
+     properties would make "west" stop meaning "the photo's left edge"
+     -- a real functional regression for that admin, not just a style
+     inconsistency, so this stays physical on purpose. */
   direction: ltr;
   text-align: left;
 }

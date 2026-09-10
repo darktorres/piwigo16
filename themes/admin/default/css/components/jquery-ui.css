@@ -375,14 +375,14 @@
 }
 
 
-/* Physical, not logical: slider.ts sets the handle's/range's own
-   position via a real `css(el, "left", pct + "%")` JS call (never a
-   logical inset), so this centering-adjustment margin and the
-   range-min anchor must match that same physical edge -- matching
-   jcrop's/colorbox's own documented reasoning for the same class of
-   JS-computed-pixel-math widget. */
+/* slider.ts now sets the handle's/range's own position via
+   `insetInlineStart` (a real logical inset, resolved against the
+   page's own direction) instead of a physical `left` -- see its own
+   `isPageRTL()` usage for the matching JS-side mouse/keyboard flip.
+   This centering-adjustment margin and the range-min/range-max
+   anchors follow the same logical edges. */
 .ui-slider-horizontal .ui-slider-handle {
-  margin-left: -0.6em;
+  margin-inline-start: -0.6em;
 }
 
 .ui-slider-horizontal .ui-slider-range {
@@ -390,7 +390,27 @@
 }
 
 .ui-slider-horizontal .ui-slider-range-min {
-  left: 0;
+  inset-inline-start: 0;
+}
+
+/* Not present in the original vendor port -- `refreshValue()`'s own
+   "range: max" branch only ever set `width`, relying on the range
+   div's unverified absolute-position static-position fallback to
+   anchor its other edge. Made explicit and direction-correct instead
+   of relying on that. */
+.ui-slider-horizontal .ui-slider-range-max {
+  inset-inline-end: 0;
+}
+
+/* iOS Safari auto-zooms on focus for any input/select/textarea below
+   16px. Matches `.ui-datepicker .ui-datepicker-title select`'s own
+   2-class+element specificity exactly (placed after it, same file) --
+   a bare `select` rule elsewhere can't out-rank this real competitor
+   by source order alone. */
+@media (max-width: 600px) {
+  .ui-datepicker .ui-datepicker-title select {
+    font-size: 16px;
+  }
 }
 }
 

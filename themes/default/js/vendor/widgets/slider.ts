@@ -1,4 +1,12 @@
-import { addClass, css, off, on, removeClass, valueAt } from "../utils/dom";
+import {
+  addClass,
+  css,
+  isPageRTL,
+  off,
+  on,
+  removeClass,
+  valueAt,
+} from "../utils/dom";
 
 /**
  * Port of jQuery UI 1.10.4's `ui.slider` widget (real source read from
@@ -86,6 +94,14 @@ function trimAlign(state: SliderState, val: number): number {
   return parseFloat(aligned.toFixed(5));
 }
 
+/**
+ * `insetInlineStart` (not `left`) so the handle/range positioning
+ * this computes resolves against the element's own real direction --
+ * `isPageRTL()`'s own flip below then makes "percent" itself mean
+ * "distance from the slider's logical start" in both directions,
+ * instead of always meaning "distance from the physical left" the way
+ * a bare `left` write always would.
+ */
 function refreshValue(_el: HTMLElement, state: SliderState): void {
   if (state.isRange) {
     let lastPercent = 0;
@@ -93,9 +109,9 @@ function refreshValue(_el: HTMLElement, state: SliderState): void {
       const percent =
         ((valueAt(state.values, i) - state.min) / (state.max - state.min)) *
         100;
-      css(handle, "left", `${percent}%`);
+      css(handle, "insetInlineStart", `${percent}%`);
       if (i === 0 && state.rangeEl !== null) {
-        css(state.rangeEl, "left", `${percent}%`);
+        css(state.rangeEl, "insetInlineStart", `${percent}%`);
       }
       if (i === 1 && state.rangeEl !== null) {
         css(state.rangeEl, "width", `${percent - lastPercent}%`);
@@ -111,7 +127,7 @@ function refreshValue(_el: HTMLElement, state: SliderState): void {
     state.max !== state.min
       ? ((value - state.min) / (state.max - state.min)) * 100
       : 0;
-  css(valueAt(state.handles, 0), "left", `${percent}%`);
+  css(valueAt(state.handles, 0), "insetInlineStart", `${percent}%`);
 
   if (state.rangeEl !== null) {
     if (state.range === "min") {
@@ -204,9 +220,20 @@ function closestHandleIndex(state: SliderState, normValue: number): number {
   return closestIndex;
 }
 
+/**
+ * `event.clientX`/`rect.left` are always real, physical viewport
+ * coordinates -- unlike `refreshValue()`'s own `insetInlineStart`
+ * write, there's no CSS layer here to resolve that against the
+ * element's direction automatically, so the physical-to-logical flip
+ * has to happen explicitly: in RTL, the slider's own logical start
+ * (value = min) sits at the visual right, so the raw left-to-right
+ * fraction needs inverting before it means "distance from the
+ * logical start."
+ */
 function normValueFromMouse(el: HTMLElement, state: SliderState, event: MouseEvent): number {
   const rect = el.getBoundingClientRect();
-  const percent = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+  const rawPercent = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+  const percent = isPageRTL() ? 1 - rawPercent : rawPercent;
 
   return trimAlign(state, state.min + percent * (state.max - state.min));
 }
@@ -281,6 +308,14 @@ function bindKeyboard(el: HTMLElement, handle: HTMLAnchorElement, index: number)
     const curVal = valueAt(state.values, index);
     let newVal: number;
 
+    // The handle's own visual movement direction, not the literal key
+    // name, is what should drive value change -- ArrowRight always
+    // means "move the handle toward where it visually points," which
+    // is the increasing side in LTR and the decreasing side in RTL.
+    const rtl = isPageRTL();
+    const increaseKey = rtl ? "ArrowLeft" : "ArrowRight";
+    const decreaseKey = rtl ? "ArrowRight" : "ArrowLeft";
+
     switch (event.key) {
       case "Home":
         newVal = state.min;
@@ -295,14 +330,14 @@ function bindKeyboard(el: HTMLElement, handle: HTMLAnchorElement, index: number)
         newVal = trimAlign(state, curVal - (state.max - state.min) / 5);
         break;
       case "ArrowUp":
-      case "ArrowRight":
+      case increaseKey:
         if (curVal === state.max) {
           return;
         }
         newVal = trimAlign(state, curVal + state.step);
         break;
       case "ArrowDown":
-      case "ArrowLeft":
+      case decreaseKey:
         if (curVal === state.min) {
           return;
         }

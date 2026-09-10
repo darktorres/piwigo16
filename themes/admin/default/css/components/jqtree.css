@@ -56,11 +56,20 @@
  * genuinely a text-direction concern (nesting depth reads from the
  * start side), and doing so means these two rules stay correct even
  * in an RTL-localized admin page without needing the `.jqtree-rtl`
- * overrides this file already drops as unreachable. The ghost/circle/
- * line/border drop-hint elements are left with physical left/top/
- * margin-right, since their exact pixel placement is computed by
- * jqtree.ts's own physical-pixel math, not a clean direction
- * abstraction.
+ * overrides this file already drops as unreachable.
+ *
+ * The ghost/circle/line/border drop-hint elements' own left/top/margin
+ * offsets are ALSO converted to logical properties (re-verified
+ * directly against jqtree.ts, correcting this comment's own earlier
+ * claim that they're JS-pixel-math-driven): `setPageOffset()`'s real
+ * physical-pixel math only ever moves `span.jqtree-dragging` (a
+ * separate element, positioned entirely via inline styles); these 5
+ * are small, static, purely decorative nudges with no tie to that math
+ * at all, so plain logical properties alone (no JS direction check
+ * needed, unlike slider.ts/jcrop.ts/colorbox.ts) resolve them
+ * correctly against the page's real `<html dir>` -- restoring real
+ * bidi-correctness the original vendor widget's own now-dropped
+ * `.jqtree-rtl` variants once provided for this exact markup.
  *
  * `clear: both` on `li.jqtree_common` is kept for parity even though
  * nothing in this scoped file ever floats a preceding sibling --
@@ -103,10 +112,19 @@ ul.jqtree-tree li.jqtree-folder.jqtree-closed {
   margin-bottom: 1px;
 }
 
+/* Re-verified against jqtree.ts directly (not just the P52-K port
+   comment's own claim): `setPageOffset()`'s real physical-pixel math
+   only ever moves `span.jqtree-dragging` (the floating drag clone,
+   positioned entirely via inline styles, no static CSS rule at all).
+   `#addDropHint()`'s only JS-computed values for these 5 elements are
+   the `.jqtree-border` span's own width/height (a size, not a
+   position) -- every left/top/margin offset below is a small, static,
+   purely decorative nudge, genuinely convertible to logical
+   properties like the tree's own indentation rules above. */
 ul.jqtree-tree li.jqtree-ghost {
   position: relative;
   z-index: 10;
-  margin-right: 10px;
+  margin-inline-end: 10px;
 }
 
 ul.jqtree-tree li.jqtree-ghost span {
@@ -119,25 +137,25 @@ ul.jqtree-tree li.jqtree-ghost span.jqtree-circle {
   width: 8px;
   position: absolute;
   top: -4px;
-  left: -6px;
+  inset-inline-start: -6px;
   box-sizing: border-box;
 }
 
 ul.jqtree-tree li.jqtree-ghost span.jqtree-line {
   padding: 0;
   top: -1px;
-  left: 2px;
+  inset-inline-start: 2px;
   width: 100%;
 }
 
 ul.jqtree-tree li.jqtree-ghost.jqtree-inside {
-  margin-left: 48px;
+  margin-inline-start: 48px;
 }
 
 ul.jqtree-tree span.jqtree-border {
   position: absolute;
   display: block;
-  left: -2px;
+  inset-inline-start: -2px;
   top: 0;
   border-radius: 6px;
   margin: 0;

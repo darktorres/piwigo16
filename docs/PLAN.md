@@ -8071,6 +8071,32 @@ cross-engine risk requiring a manual non-Chromium pass, unlike the
 Popover API's own confirmed light-dismiss/shadow-DOM caveats (moot
 here — every real instance found needed `<dialog>`, not `popover`).
 
+**Follow-on (post-P52, lint tooling)** — the hand-rolled
+`declaration-property-value-disallowed-list` regex P52-I/P52-J's own
+suppression baseline relied on is retired in favor of the real,
+maintained `stylelint-use-logical` plugin plus a new
+`stylelint-value-no-unknown-custom-properties` rule (a
+`stylelint-runtime-custom-properties.json` manifest declares the 21
+real per-render inline `style="--foo: ..."` custom properties Latte
+templates set, distinct from the `tokens.css` design-token system, so
+the rule doesn't flag them). Scoped via `except` to skip the block axis
+(`top`/`bottom`/`margin-top`/`margin-bottom`/`padding-top`/
+`padding-bottom`/`border-top`/`border-bottom`/`width`/`height`) since
+this project uses no vertical writing-mode, so those carry no real RTL
+difference from their logical form. The wider net this plugin casts
+over the old regex (border-radius corners, `float`/`clear`) surfaced
+**11 real, previously-unaudited RTL bugs** — chip/pill "remove"
+buttons, plugin boxes, and user-list rows rounding the physical
+left/right corner instead of the flow-relative one, several sitting
+right next to an already-logical `border-inline-start` sibling — plus
+a fully dead `#cboxMiddleLeft`/`#cboxBottomLeft` colorbox rule (targets
+an id `colorbox.ts` never creates) missed by P52-K's own port audit,
+now deleted. The 26 genuine physical-property exceptions from P52-I
+carry over unchanged under the new rule name, reverified via the same
+temporary-suppressions-removal technique. `bun run lint:css` exits 0;
+`composer test:visual` (96/96) and `test:golden-html` (91/91) both
+pass clean.
+
 **P52-K (new, discovered while scoping the rest of "item 6") — port
 vendor widget CSS to first-party.** Wrapping `admin/default`'s own CSS
 in `@layer theme-chain` (part of "item 6," and the actual prerequisite

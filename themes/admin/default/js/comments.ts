@@ -17,8 +17,6 @@ import {
   dataId,
   empty,
   escapeId,
-  fadeIn,
-  fadeOut,
   find,
   hide,
   html,
@@ -82,7 +80,9 @@ const commentsSelectedArea = document.getElementById("commentsSelected");
 const commentsSelectedOthers = document.getElementById(
   "commentsSelectedOthers",
 );
-const modalViewComment = document.getElementById("modalViewComment");
+const modalViewCommentEl = document.getElementById("modalViewComment");
+const modalViewComment =
+  modalViewCommentEl instanceof HTMLDialogElement ? modalViewCommentEl : null;
 
 const commentsPaginElipsis = "<span>...</span>";
 const commentsPaginItems =
@@ -210,9 +210,37 @@ ready(function () {
     void getComments(commentsParams);
   });
 
-  on(document.querySelectorAll("#closeModalViewComment"), "click", function () {
+  const closeModalViewCommentBtn = document.querySelectorAll(
+    "#closeModalViewComment",
+  );
+  on(closeModalViewCommentBtn, "click", function () {
     closeModalViewComment();
   });
+  // `#closeModalViewComment` is a `role="button"` <a> with no `href`,
+  // never natively focusable/keyboard-activatable on its own --
+  // WAI-ARIA's own authoring rules require the page to provide the
+  // Enter/Space activation a real <button> gets for free.
+  on(closeModalViewCommentBtn, "keydown", function (e: Event) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+    const { key } = e as KeyboardEvent;
+    if (key === "Enter" || key === " ") {
+      e.preventDefault();
+      closeModalViewComment();
+    }
+  });
+  if (modalViewComment !== null) {
+    // Native showModal() already gives ESC-to-close and a real focus
+    // trap for free -- this click handler is the one piece `<dialog>`
+    // doesn't provide on its own: clicking its own `::backdrop`
+    // dispatches a real click whose target is the dialog element
+    // itself (verified live, not assumed), so this is the standard
+    // "click outside to close" idiom.
+    on(modalViewComment, "click", function (e: Event) {
+      if (e.target === modalViewComment) {
+        closeModalViewComment();
+      }
+    });
+  }
 
   on(
     document.querySelectorAll("#commentSearchInput"),
@@ -234,13 +262,6 @@ ready(function () {
 
   on(document.querySelectorAll("#commentsResetFilters"), "click", function () {
     commentsClearFilters();
-  });
-
-  on(window, "keydown", function (e: Event) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
-    if ((e as KeyboardEvent).key === "Escape") {
-      closeModalViewComment();
-    }
   });
 
   // get comments and set display
@@ -657,11 +678,11 @@ function showModalViewComment(id: number) {
     closeModalViewComment();
   });
 
-  fadeIn([modalViewComment]);
+  modalViewComment.showModal();
 }
 
 function closeModalViewComment() {
-  if (modalViewComment !== null) fadeOut([modalViewComment]);
+  modalViewComment?.close();
   off(document.querySelectorAll("#commentsModalValidate"), "click");
   off(document.querySelectorAll("#commentsModalDelete"), "click");
 }

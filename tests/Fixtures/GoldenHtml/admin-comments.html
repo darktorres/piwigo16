@@ -413,9 +413,14 @@
   </div>
 </div>
 
-<div class="bg-modal" id="modalViewComment">
+<dialog class="bg-modal" id="modalViewComment">
   <div class="modal-content comments-modal">
-    <a class="icon-cancel close-modal" id="closeModalViewComment"></a>
+    <a
+      class="icon-cancel close-modal"
+      id="closeModalViewComment"
+      role="button"
+      tabindex="0"
+    ></a>
     <div class="comments-modal-container">
       <div class="comments-modal-header">
         <div class="comments-modal-infos">
@@ -447,7 +452,7 @@
       </div>
     </div>
   </div>
-</div>
+</dialog>
 
 <div class="comment-template">
   <div class="comment-container">

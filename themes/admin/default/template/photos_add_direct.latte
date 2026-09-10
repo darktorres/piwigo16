@@ -74,6 +74,8 @@
       <a
         class="buttonLike"
         id="btnFirstAlbum"
+        role="button"
+        tabindex="0"
       >{='Create a first album'|translate}</a>
     </div>
   </div>
@@ -247,9 +249,14 @@
     <div id="uploadedPhotos" class="uploaded-photos"></div>
   </fieldset>
 </div> <!-- photosAddContent -->
-<div class="bg-modal" id="addFirstAlbum">
+<dialog class="bg-modal" id="addFirstAlbum">
   <div class="new-album-modal-content">
-    <a class="icon-cancel close-modal" id="closeFirstAlbum"></a>
+    <a
+      class="icon-cancel close-modal"
+      id="closeFirstAlbum"
+      role="button"
+      tabindex="0"
+    ></a>
 
     <div class="AddIconContainer">
       <span class="AddIcon icon-blue icon-add-album"></span>
@@ -267,9 +274,11 @@
     <a
       class="buttonLike icon-plus"
       id="btnAddFirstAlbum"
+      role="button"
+      tabindex="0"
     >{='Create and select'|translate}</a>
   </div>
-</div>
+</dialog>
 
 {* Kept -- real markup (the linked-album popin), not just asset
    registration; PhotosAddDirectView::pageAssets()/exposedStrings()

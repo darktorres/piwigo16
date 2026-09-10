@@ -8635,15 +8635,27 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
   margin-inline-end: 5px;
 }
 
+/* `.bg-modal` is still shared with `#modalQuickSearch`
+   (batch_manager_filter.inc.latte), not yet converted to a real
+   <dialog> -- `:not([open])` keeps that still-plain-<div> instance
+   correctly hidden by default (it never gains an `[open]` attribute,
+   so this rule always applies to it), while doing nothing extra for
+   a real <dialog>: browsers already hide `dialog:not([open])` via
+   their own UA stylesheet, and `showModal()` sets `[open]` itself. */
 .bg-modal {
+  padding: 0;
+  border: none;
+  background: transparent;
+  max-width: none;
+  max-height: none;
+  overflow: visible;
+}
+
+.bg-modal:not([open]) {
   display: none;
-  position: fixed;
-  z-index: 999;
-  inset-inline-start: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
+}
+
+.bg-modal::backdrop {
   background-color: rgb(0,0,0,0.7);
 }
 
@@ -8655,16 +8667,20 @@ color: var(--user-container-container-selected-registration-clock-or-user-contai
   font-size: 30px;
 }
 
+/* `position: relative` (not the old `absolute; inset-inline-start:50%;
+   top:50%; transform:translate(-50%,-48%)` centering trick) -- the
+   dialog itself now centers natively, and this box needs to stay a
+   real, normal-flow child so the dialog auto-sizes to fit it (an
+   absolutely-positioned child contributes no intrinsic size). Kept
+   `position: relative` specifically so `.close-modal`'s own
+   `position: absolute` still anchors to this box's corner, unchanged. */
 .modal-content,
 .new-album-modal-content {
   display: flex;
   flex-direction: column;
   background-color: var(--modal-content-or-new-album-modal-content-bg, #fff);
-  position: absolute;
+  position: relative;
   border-radius: 10px;
-  inset-inline-start: 50%;
-  top: 50%;
-  transform: translate(-50%, -48%);
   text-align: start;
   padding: 30px;
   width: 400px;

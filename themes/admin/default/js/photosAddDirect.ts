@@ -34,7 +34,6 @@ import {
   css,
   escapeId,
   fadeIn,
-  fadeOut,
   hide,
   html,
   off,
@@ -96,7 +95,9 @@ interface MultipartParams {
 Variables
 --------------*/
 const btnFirstAlbum = document.getElementById("btnFirstAlbum");
-const modalFirstAlbum = document.getElementById("addFirstAlbum");
+const modalFirstAlbumEl = document.getElementById("addFirstAlbum");
+const modalFirstAlbum =
+  modalFirstAlbumEl instanceof HTMLDialogElement ? modalFirstAlbumEl : null;
 const closeModalFirstAlbum = document.getElementById("closeFirstAlbum");
 const inputFirstAlbum =
   document.querySelector<HTMLInputElement>("#inputFirstAlbum");
@@ -372,9 +373,22 @@ ready(function () {
   // album" onboarding flow this check exists for could never actually
   // trigger. Fixed to a real numeric comparison.
   if (Number(nbAlbums) === 0) {
+    // `btnFirstAlbum`/`closeModalFirstAlbum`/`btnAddFirstAlbum` are
+    // all a `role="button"` <a> with no `href`, never natively
+    // focusable/keyboard-activatable on their own -- WAI-ARIA's own
+    // authoring rules require the page to provide the Enter/Space
+    // activation a real <button> gets for free.
     if (btnFirstAlbum !== null) {
       on(btnFirstAlbum, "click", function () {
         openNewAlbumModal();
+      });
+      on(btnFirstAlbum, "keydown", function (e: Event) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+        const { key } = e as KeyboardEvent;
+        if (key === "Enter" || key === " ") {
+          e.preventDefault();
+          openNewAlbumModal();
+        }
       });
     }
 
@@ -382,11 +396,41 @@ ready(function () {
       on(closeModalFirstAlbum, "click", function () {
         closeNewAlbumModal();
       });
+      on(closeModalFirstAlbum, "keydown", function (e: Event) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+        const { key } = e as KeyboardEvent;
+        if (key === "Enter" || key === " ") {
+          e.preventDefault();
+          closeNewAlbumModal();
+        }
+      });
     }
 
     if (btnAddFirstAlbum !== null) {
       on(btnAddFirstAlbum, "click", function () {
         void addFirstAlbum(ab.selectAlbum.bind(ab));
+      });
+      on(btnAddFirstAlbum, "keydown", function (e: Event) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- "keydown" always dispatches a real KeyboardEvent; on()'s own handler param is typed generically via the native EventListener interface.
+        const { key } = e as KeyboardEvent;
+        if (key === "Enter" || key === " ") {
+          e.preventDefault();
+          trigger([btnAddFirstAlbum], "click");
+        }
+      });
+    }
+
+    if (modalFirstAlbum !== null) {
+      // Native showModal() already gives ESC-to-close and a real
+      // focus trap for free -- this click handler is the one piece
+      // `<dialog>` doesn't provide on its own: clicking its own
+      // `::backdrop` dispatches a real click whose target is the
+      // dialog element itself (verified live, not assumed), so this
+      // is the standard "click outside to close" idiom.
+      on(modalFirstAlbum, "click", function (e: Event) {
+        if (e.target === modalFirstAlbum) {
+          closeNewAlbumModal();
+        }
       });
     }
 
@@ -1034,16 +1078,16 @@ First album functions
 
 function openNewAlbumModal() {
   if (inputFirstAlbum !== null) setVal([inputFirstAlbum], "");
-  if (modalFirstAlbum !== null) fadeIn([modalFirstAlbum]);
+  modalFirstAlbum?.showModal();
   inputFirstAlbum?.focus();
 }
 
 function closeNewAlbumModal() {
-  if (modalFirstAlbum !== null) fadeOut([modalFirstAlbum]);
+  modalFirstAlbum?.close();
 }
 
 function hideFirstAlbum(cat_name: string) {
-  if (modalFirstAlbum !== null) hide(modalFirstAlbum);
+  if (modalFirstAlbum?.open === true) modalFirstAlbum.close();
   hide(firstAlbum);
 
   if (addPhotosAS !== null) hide(addPhotosAS);

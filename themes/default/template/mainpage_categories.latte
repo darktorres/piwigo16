@@ -2,6 +2,7 @@
 <div class="loader"><img
     src="{$ROOT_URL}{$themeconf['img_dir']}/ajax_loader.gif"
   ></div>
+{block categoryList}
 <ul
   class="thumbnailCategories"
   style="--cat-illustration-width: {$derivativeParams->maxWidth() + 5}px; --cat-description-height: {$derivativeParams->maxHeight() + 5}px;"
@@ -61,3 +62,4 @@
     </li>
   {/foreach}
 </ul>
+{/block}

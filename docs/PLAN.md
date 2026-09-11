@@ -131,7 +131,7 @@ Three structural changes produced that drift:
 | P26 | Admin fragment surface — UI-facing WS methods off the envelope | Done — the WS layer no longer exists at all; every admin UI surface already renders via Latte pages/fragments, not a JSON/XML envelope | ~15 |
 | P27 | Public API v1 (REST + OpenAPI 3.2 + tus) — WS deleted here | Done — 134 `Controller\Api\*` files, 88 registered `/api/v1` routes, full tus 1.0.0 chunked-upload protocol (6 dedicated controllers), RFC 9457 problem+json errors, hand-authored OpenAPI 3.2 spec (88 operations/11 domains) with a `redocly lint` CI gate + Gesso runtime contract enforcement, a generated TypeScript client, REST-body `Content-Type` validation (SEC-39), and an opt-in `Idempotency-Key` replay store (SEC-65); see Epoch G | ~151 |
 | P28 | Security hardening | Not started | 0 |
-| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 (port the `modus` theme) underway: Phase 0 (verification spike), Phase 1 (core/shared infrastructure, 11 sub-items P29.6-A..K), and Phase 2 (template `{block}`-refactor of `themes/default`, 6 templates, P29.6-L..P) done; Phases 3-11 (the theme package itself, admin settings, CSS/skins, JS/masonry, i18n, packaging, verification) not started — see its own entries below | 33 |
+| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 (port the `modus` theme) underway: Phase 0 (verification spike), Phase 1 (core/shared infrastructure, 11 sub-items P29.6-A..K), and Phase 2 (template `{block}`-refactor of `themes/default`, 6 templates, P29.6-L..P) done in this repo; Phase 3 (package scaffold) done in the sibling `../piwigo16-themes` repo (`modus_17.0.0/`, not this repo's own `themes/`); Phases 4-11 (admin settings, CSS/skins, JS/masonry, i18n, packaging, verification), also in `../piwigo16-themes`, not started — see its own entries below | 33 |
 | P30 | Layer decoupling + repository restructure | Done — deptrac's 6-layer model enforces 0 violations in CI (established P6); the pre-consolidation repository-restructure plan's load-bearing goals were already met by the simpler `public/`-as-sibling-directory approach that shipped | 1 |
 | P31 | Smarty → Latte template migration | Done | 80 |
 | P32 | Latte lint/format tooling | Done — enforcement is P45 | 11 |
@@ -1191,10 +1191,19 @@ not a scope target.
 
 **P29 — Plugin / Theme contracts + bundled extensions.** In progress.
 P29.0–P29.5 and P29.7–P29.15 are done and landed on this branch. **P29.6,
-porting the 7 bundled extensions onto the new contract, has not started
-here**: `plugins/` holds nothing but `index.php` and `trash`, and
-`themes/` holds no bundled third-party theme. Ownership of P29.6 moved to
-this session on 2026-08-14. Do not treat P29 as done until it lands.
+porting the 7 bundled extensions onto the new contract, is underway but
+not done**: `plugins/` holds nothing but `index.php` and `trash` (this
+repo never bundles third-party plugins/themes directly — per
+`../piwigo16-plugins/CLAUDE.md`'s explicit note, `elegant`/`modus`/
+`smartpocket` "belong in `../piwigo16-themes`, out of scope" for this
+repo's own `themes/`). A port's *core-infrastructure* dependencies
+(new `ExtensionContext` accessors, template `{block}` seams, events
+like `GetColorscheme`, build-tool fixes) land here in `src/`/`themes/
+default`; the port itself — the theme's/plugin's own package — lands in
+`../piwigo16-plugins`/`../piwigo16-themes` as a `<id>_17.0.0/` directory,
+verified from here via `composer analyse:phpstan:extensions`. Ownership
+of P29.6 moved to this session on 2026-08-14. Do not treat P29 as done
+until it lands.
 
 Sub-item tags: P29.0 EventDispatcher PSR-14 conformance +
 `Piwigo\Listener\*`; P29.1/P29.2 `ExtensionInterface` + manifests + JSON
@@ -1276,7 +1285,11 @@ The JSON manifest format is kept from the reference design.
 introduced to validate manifests or compare versions.
 
 **P29.6 (in progress) — port the legacy `modus` theme onto the v17
-extension contract.** Full feasibility analysis at
+extension contract.** The theme package itself lands in the sibling
+`../piwigo16-themes` repo (`modus_17.0.0/`), not this repo's own
+`themes/` — see the "Correction (architecture, not scope)" note after
+Phase 2 below; only the core-infrastructure work this port depends on
+(Phases 0-2) landed here. Full feasibility analysis at
 `docs/theme-porting/modus-port-analysis.md`; execution plan (11 phases,
 45 numbered sub-items) at the session plan file, re-verified by a
 12-agent read-only survey/adversarial-verify workflow before
@@ -1444,11 +1457,47 @@ loop scope), then referencing only those resolved values inside the
 block body. Verified byte-identical via `composer test:golden-html`
 (91/91 passed) plus a clean full-repo PHPStan run.
 
-This closes P29.6's Phase 2. Phase 3 (the modus package scaffold —
-`theme.json`, `src/Theme.php`, `src/Skin.php`/`src/SkinCatalog.php`,
-`src/ModusThemeSettings.php`) is next; Phases 4-11 (admin settings page,
-CSS/skins, JS/masonry port, i18n, packaging, and the mandatory closing
-verification gate) remain scoped but not started.
+This closes P29.6's Phase 2.
+
+**Correction (architecture, not scope)**: Phase 3 onward — the modus
+theme package itself (`theme.json`, `src/Theme.php`, `src/Skin.php`/
+`src/SkinCatalog.php`, `src/ModusThemeSettings.php`, its templates,
+CSS/skins, JS, i18n, and packaging) does **not** land in this repo's own
+`themes/` directory. Confirmed directly against `../piwigo16-plugins/
+CLAUDE.md` (explicit: *"(`elegant`, `modus`, `smartpocket` are *themes*
+— they belong in `../piwigo16-themes`, out of scope here.)"*) and
+`../piwigo16-themes/CLAUDE.md`'s own porting guide + `MockTestTheme_17.0.0`
+precedent: third-party/bundled theme ports live in the sibling
+`../piwigo16-themes` repo as a versioned `<id>_17.0.0/` directory +
+zip + `manifest.json` catalog entry (a real, already-served-locally PEM
+mirror `PIWIGO_ALT_THEMES_PEM_URL` points at), verified from this repo
+via `composer analyse:phpstan:extensions` (`tools/analyse-ported-extensions.sh`,
+globs `../piwigo16-plugins/*_17.0.0/src` + `../piwigo16-themes/*_17.0.0/src`).
+This repo's own `themes/` directory only ever holds genuinely first-party
+themes (`default`, `admin`, `standard_pages`, `golden_html_test`) —
+Phases 0-2 above (core/shared infrastructure + `themes/default`'s own
+`{block}`-refactor) correctly landed here regardless, since that's real
+framework capability every theme port depends on, not theme-owned
+content.
+
+Phase 3 (the modus package scaffold) landed in
+`../piwigo16-themes/modus_17.0.0/` (commit `f782be8`, not this repo):
+`theme.json` (`hasSettings: false` for now), `src/Theme.php`
+(`activate()`/`uninstall()` via `ExtensionContext::getSetting()`/
+`setSetting()`/`deleteSetting()` under the legacy-compatible
+`'modus_theme'` key, `GetColorscheme` subscriber), `src/Skin.php`/
+`src/SkinCatalog.php` (all 18 real skins, colorscheme hand-verified
+against each skin's own real `BODY` colors per the note above), and
+`src/ModusThemeSettings.php`. Verified via `composer analyse:phpstan:extensions`
+(PHPStan level 8, clean) — this port's own test coverage lives with it
+in `../piwigo16-themes` (no Pest/PHPUnit infrastructure there; PHPStan
++ a real end-to-end install-through-the-PEM-mirror check at the closing
+gate is this campaign's established verification bar for ported
+extensions, not an automated test suite in this repo).
+
+Phases 4-11 (admin settings page, CSS/skins, JS/masonry port, i18n,
+packaging refinement, and the mandatory closing verification gate)
+remain scoped but not started, all in `../piwigo16-themes/modus_17.0.0/`.
 
 **P30 — Layer decoupling + repository restructure.** Both halves done.
 

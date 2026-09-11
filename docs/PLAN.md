@@ -131,7 +131,7 @@ Three structural changes produced that drift:
 | P26 | Admin fragment surface — UI-facing WS methods off the envelope | Done — the WS layer no longer exists at all; every admin UI surface already renders via Latte pages/fragments, not a JSON/XML envelope | ~15 |
 | P27 | Public API v1 (REST + OpenAPI 3.2 + tus) — WS deleted here | Done — 134 `Controller\Api\*` files, 88 registered `/api/v1` routes, full tus 1.0.0 chunked-upload protocol (6 dedicated controllers), RFC 9457 problem+json errors, hand-authored OpenAPI 3.2 spec (88 operations/11 domains) with a `redocly lint` CI gate + Gesso runtime contract enforcement, a generated TypeScript client, REST-body `Content-Type` validation (SEC-39), and an opt-in `Idempotency-Key` replay store (SEC-65); see Epoch G | ~151 |
 | P28 | Security hardening | Not started | 0 |
-| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 (port the `modus` theme) underway: Phase 0 (verification spike), Phase 1 (core/shared infrastructure, 11 sub-items P29.6-A..K), and Phase 2 (template `{block}`-refactor of `themes/default`, 8 templates, P29.6-L..R) done in this repo; Phases 3-7 items 33-34 (package scaffold, admin settings page, CSS/skins, template overrides, partial JS port) done in the sibling `../piwigo16-themes` repo (`modus_17.0.0/`, not this repo's own `themes/`); Phase 7 items 35-36, Phase 8 (masonry), Phases 9-11 (i18n/packaging/verification), items 32a/32b (menubar rewrite), and the new Phase 12 (nest sibling catalog repos as git submodules — campaign-wide, not modus-specific) not started — see its own entries below | 33 |
+| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 (port the `modus` theme) underway: Phase 0 (verification spike), Phase 1 (core/shared infrastructure, 11 sub-items P29.6-A..K plus a new `MenubarSpecialsPageContext`/`setCorePictureDeriv()` pair added while scoping items 31/32), and Phase 2 (template `{block}`-refactor of `themes/default`, 8 templates, P29.6-L..R) done in this repo; Phase 6 items 27-32b (template overrides, including the menubar rewrite) and Phase 7 items 33-35 (JS port, `photo-autosize.ts`) done in the sibling `../piwigo16-themes` repo (`modus_17.0.0/`, not this repo's own `themes/`); Phase 7 item 36, Phase 8 (masonry), Phases 9-11 (i18n/packaging/verification), and the new Phase 12 (nest sibling catalog repos as git submodules — campaign-wide, not modus-specific) not started — see its own entries below | 33 |
 | P30 | Layer decoupling + repository restructure | Done — deptrac's 6-layer model enforces 0 violations in CI (established P6); the pre-consolidation repository-restructure plan's load-bearing goals were already met by the simpler `public/`-as-sibling-directory approach that shipped | 1 |
 | P31 | Smarty → Latte template migration | Done | 80 |
 | P32 | Latte lint/format tooling | Done — enforcement is P45 | 11 |
@@ -1782,34 +1782,67 @@ inferred from the plan's own summary text.
   server-side masonry helper exists to render against — not skipped,
   a real sequencing dependency.
 
-**Items 31/32a/32b remain, both larger than the rest of Phase 6
-combined — flagged here, not attempted yet:**
+**Items 31/32a/32b landed.** The `render_element_content`-equivalent
+extension point turned out to already exist and be fully wired:
+`Piwigo\Controller\Event\RenderElementContent`, dispatched from
+`PictureController::__invoke()`, with the exact same "someone hooked us,
+skip" guard on both sides legacy's own `modus_picture_content()`/
+`default_picture_content()` pair has. Registration order is safe with no
+priority tuning: a theme's `subscribedEvents()` handler is wired during
+`ThemeRegistry::bootCurrent()` (bootstrap-time), while core's own
+`defaultPictureContent()` handler registers inline, mid-request, inside
+`PictureController::__invoke()` — both at the same default priority 50,
+and Symfony's dispatcher preserves insertion order for ties, so the
+theme's handler always runs first.
 
-- **Item 31** (`picture_content_asize.latte`, adaptive picture sizing):
-  legacy's real `render_element_content` event handler
-  (`modus_picture_content()`, `themeconf.inc.php`) computes
-  `unique_derivatives`/`RVAS_PENDING` server-side and the template
-  itself is built entirely around `photo.autosize.js`'s `RVAS`/
-  `rvas_choose()` JS globals — genuinely blocked on Phase 7's own
-  `photo-autosize.ts` port existing first (writing the Latte template
-  now, with no JS to drive it, would ship inert markup). Also an open
-  question not yet resolved: does this repo have a
-  `render_element_content`-equivalent extension point for a theme to
-  override the main picture's own markup at all, or is that itself new
-  core infrastructure this port needs to add.
+- **Item 31** (`picture_content_asize.latte`): `Theme::
+  onRenderElementContent()` reimplements `defaultPictureContent()`'s own
+  derivative-selection + cookie-to-session `picture_deriv` promotion
+  logic (unavoidable duplication — that method is private), plus the
+  real `$available_size`/`$selected_derivative` RVAS logic keyed off a
+  new namespaced `phavsz` cookie (`ExtensionCookie`, not a bare cookie —
+  no external contract to interop with, since `photo-autosize.ts` is
+  both its only writer and reader). New `ModusPictureContentAsizeView`
+  exposes the RVAS derivatives list via `exposedPageData()`
+  (`rvas_derivatives`/`rvas_cookie_path`/`rvas_pending`), the v17
+  replacement for legacy's own inline `{footer_script}RVAS = {...}`.
+  Deliberately not ported: the `caps` cookie/session fallback (its only
+  real writer is masonry's own `thumb.arrange.js`, Phase 8, not yet
+  built — `phavsz` alone is fully correct after the first view) and
+  legacy's own dead-relative-to-this-template `rvas_display_size`/
+  `rvas_natural_size`/next-picture `U_PREFETCH` rewrite (core's own
+  `PictureController::__invoke()` already computes `U_PREFETCH`
+  independently). New small core addition surfaced by this handler's own
+  cookie-to-session duplication: `SessionService::setPictureDeriv()` +
+  `ExtensionContext::setCorePictureDeriv()`, the write-side counterpart
+  Phase 1.3's `corePictureDeriv()` never needed until now.
 - **Items 32a/32b** (`menubar_identification.latte`/`menubar.latte`/
-  `menubar_specials.latte`): reading the real legacy `menubar.tpl` in
-  full (155 lines) shows modus does not cleanly override
-  "identification" and "the rest" separately — it hand-rolls the
-  *entire* menubar from `$blocks` itself (per-block-id branching for
-  `mbLinks`/`mbTags`/`mbSpecials`, the `mbMostVisited`/`mbBestRated`/
-  `recent_pics` horizontal-hoisting `<dl>`s, the search box, and the
-  guest/logged-in identification split — two separate `float:right`
-  `<dl>`s with different `<dt>` label text, the logged-in case having
-  no `<dd>` at all). This is realistically its own full-`menubar.latte`
-  rewrite against the current `MenubarHtmlPageContext`/
-  `MenubarSpecialRow`/`MenubarSpecialKind` (Phase 1.6) data shape, not
-  a small block-seam addition like items 27-30 — scoped but not started.
+  `menubar_specials.latte`/`menubar_links.latte`): confirmed, while
+  scoping, that `MenubarView`/`DisplayBlock` only ever carry each
+  block's already-rendered HTML (`raw_content`) — the raw
+  `MenubarSpecialRow[]`/`MenubarMenuRow[]` rows legacy's monolithic
+  `menubar.tpl` reads to hoist `most_visited`/`best_rated` into
+  standalone top-level blocks and merge `mbMenu`'s links into
+  `mbSpecials`'s own dropdown are gone by the time `menubar.latte` runs
+  — a real gap, not something an override alone could work around. Fixed
+  with one small, precedented core addition: `MenubarSpecialsPageContext`
+  (`MENUBAR_SPECIALS`/`MENUBAR_MENU_LINKS` ambient vars), mirroring
+  `MenubarQuerySearchPageContext`'s own existing pattern in the very same
+  `MenubarRenderer::render()` method. With that in place, all 4 menubar
+  templates are full-file overrides, no further core changes: `menubar_
+  identification.latte` reproduces the guest/logged-in float:right split
+  (guest never gets a "Hello" greeting; the logged-in case has no `<dd>`
+  at all); `menubar_specials.latte` merges `mbMenu`'s links into the
+  "Explore" dropdown after an `<hr>`; `menubar.latte` skips `mbMenu`
+  entirely from the generic per-block loop (its rows only survive via
+  that merge) and `mbIdentification` too (its own override renders
+  complete, independently-floated `<dl>` elements that would otherwise
+  double-nest inside the loop's own `<dl id="mbIdentification">`), hoists
+  `MostVisited`/`BestRated`/`RecentPics` into their own always-visible
+  top-level blocks (still also listed inside the dropdown — both real),
+  and gives quicksearch its own standalone `<dl>`; `menubar_links.latte`
+  collapses a single external link to a bare `<dt>`, matching legacy's
+  own dt-only shape instead of always rendering a dropdown.
 
 **Phase 7 (JS port), items 33-34 landed** in
 `../piwigo16-themes/modus_17.0.0/` (3 commits, all in this repo's own
@@ -1857,23 +1890,27 @@ combined — flagged here, not attempted yet:**
   loading it on every page is a deliberate, harmless simplification
   (the script no-ops when neither switcher element exists).
 
-**Items 31/35 real dependency confirmed, not yet started**: reading
-`themes/default/js/picture.ts` shows Phase 1.7's `derivativeSwitchOverride`
-hook (`setDerivativeSwitchOverride()`) is exactly the mechanism
-`photo-autosize.ts` (item 35) needs — a real, already-built, unused-until-now
-piece of infrastructure, confirmed by reading the file rather than
-assumed from its own docblock. What's still unresolved: item 31's own
-`RVAS` config object (the derivatives list + cookie path
-`photo-autosize.ts` reads) has to come from *somewhere* server-side —
-whether that's a genuinely new core extension point (a
-`render_element_content` equivalent) or something simpler is still an
-open question, not investigated yet.
+**Item 35** (`photo-autosize.ts`) landed: a jQuery-free port of legacy's
+`photo.autosize.js`, using Phase 1.7's `setDerivativeSwitchOverride()`
+hook confirmed exactly as designed — this override function reimplements
+`changeImgSrc()`'s own body (cookie write + switcher visual state) since
+that function is module-private and cannot be called from the override,
+then applies the DPR-aware rescale on top, mirroring legacy's own
+`RVAS.changeImgSrcOrig` delegation shape. Reads `rvas_derivatives`/
+`rvas_cookie_path`/`rvas_pending` off item 31's `ModusPictureContentAsizeView
+::exposedPageData()`. Also ports the image-click prev/next/up navigation
+zones bundled in the same legacy file (unrelated to RVAS itself, but part
+of the same source file, and confirmed not already covered anywhere in
+`themes/default`'s own JS). Verified: `tsc --noEmit` against a scratch
+tsconfig mirroring the repo's real one, `eslint`, `prettier`, and
+`tools/build-ported-extension-assets.mjs`'s own build (confirmed
+self-contained, zero `import`/`export` in the built `dist/photo-autosize.js`).
 
 **Item 36** (`thumb-arrange.ts`, the real masonry algorithm) and
 **Phase 8** (the server-side masonry helper items 30/part-2 depends
 on) remain scoped but not started, along with Phases 9-11
-(i18n/packaging/closing verification) and items 32a/32b (the menubar
-rewrite) — all in `../piwigo16-themes/modus_17.0.0/`.
+(i18n/packaging/closing verification) — all in
+`../piwigo16-themes/modus_17.0.0/`.
 
 **Phase 12 (new, deliberately last) — nest `../piwigo16-plugins`/
 `../piwigo16-themes` as real git submodules.** Scoped, not started;

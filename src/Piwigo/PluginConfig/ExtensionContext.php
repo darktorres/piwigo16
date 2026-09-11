@@ -19,6 +19,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\NotificationConfig;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\ApiContext;
+use Piwigo\Core\DeviceHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
@@ -414,6 +415,21 @@ final readonly class ExtensionContext
     public function setCorePictureDeriv(string $type): void
     {
         $this->sessionService->setPictureDeriv($type);
+    }
+
+    /**
+     * `'mobile'`/`'tablet'`/`'desktop'` -- see `Core\DeviceHelper::
+     * getDevice()`'s own docblock: v17 dropped UA-sniffing (responsive CSS
+     * covers it for core), so this defaults to `'desktop'` absent an
+     * explicit override (a plugin, or `?mobile=`), unlike legacy's own
+     * always-real `get_device()`. Exposed for a theme porting real
+     * per-device layout logic that legacy branched on (P29.6, the `modus`
+     * theme's masonry margin sizing) -- correct either way, just less
+     * often anything but `'desktop'` in practice than it was in legacy.
+     */
+    public function device(): string
+    {
+        return DeviceHelper::getDevice($this->sessionService);
     }
 
     /**

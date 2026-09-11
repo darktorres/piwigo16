@@ -995,6 +995,24 @@ final class ExtensionContextTest extends IntegrationTestCase
     }
 
     /**
+     * P29.6 (the `modus` theme port): `device()` reads/writes the same
+     * `$_SESSION['pwg_device']` slot `DeviceHelper::getDevice()` does --
+     * defaults to `'desktop'` absent any prior value (v17's own real
+     * default, no UA-sniffing), and reflects an explicit override once one
+     * exists.
+     */
+    public function testDeviceReadsTheRealSharedDeviceSessionKey(): void
+    {
+        $_SESSION = [];
+        $context = $this->buildContext(PluginId::from('any-plugin'));
+
+        self::assertSame('desktop', $context->device());
+
+        $_SESSION['pwg_device'] = 'mobile';
+        self::assertSame('mobile', $context->device());
+    }
+
+    /**
      * P29.6 (the `modus` theme port): `imageStdParams()` exposes the same
      * shared, already-composed `ImageStdParams` instance the container
      * hands to real production code, needed for a settings page listing

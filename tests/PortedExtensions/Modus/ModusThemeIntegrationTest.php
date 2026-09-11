@@ -330,14 +330,14 @@ final class ModusThemeIntegrationTest extends IntegrationTestCase
 
         $event = $this->eventDispatcher->dispatch(new GetPageAssets());
 
-        $menuhScript = null;
+        $byId = [];
         foreach ($event->assets as $asset) {
-            if ($asset->id === 'modus-menuh') {
-                $menuhScript = $asset;
-            }
+            $byId[$asset->id] = $asset;
         }
-        self::assertNotNull($menuhScript, 'Theme::onGetPageAssets() must contribute the modus-menuh script');
-        self::assertSame('themes/modus/dist/menuh.js', $menuhScript->path);
+        self::assertArrayHasKey('modus-menuh', $byId, 'Theme::onGetPageAssets() must contribute the modus-menuh script');
+        self::assertSame('themes/modus/dist/menuh.js', $byId['modus-menuh']->path);
+        self::assertArrayHasKey('modus-async', $byId, 'Theme::onGetPageAssets() must contribute the modus-async script');
+        self::assertSame('themes/modus/dist/modus-async.js', $byId['modus-async']->path);
     }
 
     private function realRegistry(): ThemeRegistry

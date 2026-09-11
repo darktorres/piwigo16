@@ -20,6 +20,9 @@
         <testsuite name="Browser">
             <directory>tests/Browser</directory>
         </testsuite>
+        <testsuite name="PortedExtensions">
+            <directory>tests/PortedExtensions</directory>
+        </testsuite>
     </testsuites>
 
     <source ignoreIndirectDeprecations="true">

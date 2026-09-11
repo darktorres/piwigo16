@@ -235,6 +235,10 @@
       "bash tools/reimport-fixture.sh",
       "@php vendor/bin/pest --testsuite Integration"
     ],
+    "test:ported-extensions": [
+      "bash tools/reimport-fixture.sh",
+      "@php vendor/bin/pest --testsuite PortedExtensions"
+    ],
     "test:mutate": "@php vendor/bin/pest --mutate --testsuite Unit --parallel --everything --covered-only",
     "test:profile": [
       "bash tools/reimport-fixture.sh",

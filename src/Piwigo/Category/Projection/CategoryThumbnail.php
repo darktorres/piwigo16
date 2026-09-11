@@ -44,6 +44,16 @@ use Piwigo\Image\SrcImage;
  * ({@see \Piwigo\Category\CategoryService::getDisplayImagesCount()}) joins
  * `Lang::plural()`/`Lang::t()`'s own always-translator-authored strings
  * with a hardcoded `'<br>'` literal, never user data.
+ *
+ * `$coi` (P29.6) is the representative image's own center-of-interest --
+ * available on the same row `$representative` itself is built from
+ * ({@see \Piwigo\Category\CategoryCatsRenderer::render()}'s own
+ * `$representativeInfos['coi']`), but never previously threaded through:
+ * no core renderer crops a category thumbnail around it. A theme's own
+ * `IndexCategoryThumbnailsRendered` handler is the one real consumer
+ * (the `modus` theme's own album-thumbnail crop math, P29.6 Phase 8).
+ * See `MenubarSpecialRow::$kind`'s own docblock for the same "lands ahead
+ * of its consumer on purpose" rationale.
  */
 final readonly class CategoryThumbnail
 {
@@ -57,5 +67,7 @@ final readonly class CategoryThumbnail
         public ?Html $description,
         public ?RecentIcon $iconTs = null,
         public ?string $infoDates = null,
+        // No real reader yet -- see this class's own docblock.
+        public ?string $coi = null,
     ) {}
 }

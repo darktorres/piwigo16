@@ -452,6 +452,7 @@ final readonly class CategoryCatsRenderer
                     description: $literalDescription !== '' ? new Html($literalDescription) : null,
                     iconTs: $iconTs,
                     infoDates: $infoDates,
+                    coi: $representativeInfos !== null && is_string($representativeInfos['coi']) ? $representativeInfos['coi'] : null,
                 );
             }
 

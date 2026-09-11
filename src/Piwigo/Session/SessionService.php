@@ -384,6 +384,17 @@ final readonly class SessionService
     }
 
     /**
+     * Counterpart to {@see getPictureDeriv()} -- the cookie-to-session
+     * promotion any handler of `Controller\Event\RenderElementContent`
+     * that fully replaces `PictureController::defaultPictureContent()`'s
+     * own rendering must also replicate (P29.6, the `modus` theme).
+     */
+    public function setPictureDeriv(string $type): void
+    {
+        $this->setSessionVar('picture_deriv', $type);
+    }
+
+    /**
      * Deletes a persistent variable for the current session.
      */
     public function unsetSessionVar(string $var): bool

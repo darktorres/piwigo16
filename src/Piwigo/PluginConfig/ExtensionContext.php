@@ -407,6 +407,16 @@ final readonly class ExtensionContext
     }
 
     /**
+     * Counterpart to {@see corePictureDeriv()} -- see that method's own
+     * docblock for why this reaches the core, un-namespaced session key
+     * directly rather than through {@see session()}.
+     */
+    public function setCorePictureDeriv(string $type): void
+    {
+        $this->sessionService->setPictureDeriv($type);
+    }
+
+    /**
      * Namespaced `pwg_*` cookie accessor -- see `ExtensionCookie`'s own
      * docblock for why this doesn't reopen `CookieService`'s deliberate
      * "no generic reader" rule.

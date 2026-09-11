@@ -975,6 +975,26 @@ final class ExtensionContextTest extends IntegrationTestCase
     }
 
     /**
+     * P29.6 (the `modus` theme port): `setCorePictureDeriv()` is the
+     * counterpart `RenderElementContent` handlers that fully replace core's
+     * own `PictureController::defaultPictureContent()` need to replicate
+     * its cookie-to-session promotion -- proves it writes the same
+     * `$_SESSION` slot `corePictureDeriv()`/`SessionService::
+     * getPictureDeriv()` read.
+     */
+    public function testSetCorePictureDerivWritesTheRealSharedCoreSessionKey(): void
+    {
+        $_SESSION = [];
+        $context = $this->buildContext(PluginId::from('any-plugin'));
+
+        self::assertNull($context->corePictureDeriv());
+
+        $context->setCorePictureDeriv('xsmall');
+
+        self::assertSame('xsmall', $context->corePictureDeriv());
+    }
+
+    /**
      * P29.6 (the `modus` theme port): `imageStdParams()` exposes the same
      * shared, already-composed `ImageStdParams` instance the container
      * hands to real production code, needed for a settings page listing

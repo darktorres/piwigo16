@@ -685,6 +685,18 @@ test('getPictureDeriv returns null when unset or non-string, and the string when
         ->toBe('2large');
 });
 
+test('setPictureDeriv writes the same shared core session key getPictureDeriv reads', function (): void {
+    $service = makeSessionService();
+    $_SESSION = [];
+
+    $service->setPictureDeriv('xsmall');
+
+    expect($_SESSION['pwg_picture_deriv'])
+        ->toBe('xsmall')
+        ->and($service->getPictureDeriv())
+        ->toBe('xsmall');
+});
+
 /**
  * [Mutation] A scoped `pest --mutate` rerun leaves 12 mutations
  * "untested" -- zero real Unit-suite gaps, all individually

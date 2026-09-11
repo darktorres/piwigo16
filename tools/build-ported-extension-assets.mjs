@@ -27,7 +27,7 @@
 // repo's own dist/.
 //
 //   node tools/build-ported-extension-assets.mjs
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { build } from "vite";
 
@@ -77,35 +77,53 @@ for (const portDir of portDirs) {
   if (Object.keys(entries).length === 0) continue;
 
   builtAny = true;
+  const entryNames = Object.keys(entries);
   console.error(
-    `Building ${Object.keys(entries).length} entr${Object.keys(entries).length === 1 ? "y" : "ies"} for ${portDir}...`,
+    `Building ${entryNames.length} entr${entryNames.length === 1 ? "y" : "ies"} for ${portDir}...`,
   );
 
-  await build({
-    // Real bug, caught by checking the actual dist/ output rather than
-    // the exit code: without this, Vite auto-discovers and uses this
-    // repo's OWN vite.config.ts (CWD is this repo's root) instead of the
-    // options object below -- the entire main app (72+ entries, vitals.js
-    // included) got built into the port's own dist/ the first time this
-    // ran. `configFile: false` disables that auto-discovery outright.
-    configFile: false,
-    // Vite's own default publicDir ("<root>/public") is this repo's real
-    // web-root directory, not this tool's business -- same reasoning as
-    // vite.config.ts's own `publicDir: false` (a symlinked _data/combined
-    // under it makes the default copy step recurse into itself).
-    publicDir: false,
-    logLevel: "warn",
-    build: {
-      outDir: join(portDir, "dist"),
-      emptyOutDir: true,
-      target: "esnext",
-      lib: {
-        entry: entries,
-        formats: ["es"],
-        fileName: (_format, entryName) => `${entryName}.js`,
+  // One entry per portDir gets its own real page (menuh.ts loads
+  // globally, settings.ts only on the admin settings page -- never both
+  // at once), so each is built in its own separate build() call rather
+  // than one multi-entry call. Real bug caught by checking the actual
+  // dist/ output: a single multi-entry build lets Rollup extract any
+  // module 2+ entries import (e.g. dom.ts) into a shared chunk file,
+  // leaving a real `import` statement in each entry -- silently breaking
+  // the "self-contained, ready to serve as a plain <script>" contract
+  // this tool exists for once a second entry shares any import with the
+  // first. A separate build per entry duplicates that shared code
+  // instead, which costs nothing here since the 2 files are never
+  // fetched on the same page.
+  const outDir = join(portDir, "dist");
+  rmSync(outDir, { recursive: true, force: true });
+
+  for (const [entryName, entryPath] of Object.entries(entries)) {
+    await build({
+      // Real bug, caught by checking the actual dist/ output rather than
+      // the exit code: without this, Vite auto-discovers and uses this
+      // repo's OWN vite.config.ts (CWD is this repo's root) instead of the
+      // options object below -- the entire main app (72+ entries, vitals.js
+      // included) got built into the port's own dist/ the first time this
+      // ran. `configFile: false` disables that auto-discovery outright.
+      configFile: false,
+      // Vite's own default publicDir ("<root>/public") is this repo's real
+      // web-root directory, not this tool's business -- same reasoning as
+      // vite.config.ts's own `publicDir: false` (a symlinked _data/combined
+      // under it makes the default copy step recurse into itself).
+      publicDir: false,
+      logLevel: "warn",
+      build: {
+        outDir,
+        emptyOutDir: false,
+        target: "esnext",
+        lib: {
+          entry: entryPath,
+          formats: ["es"],
+          fileName: () => `${entryName}.js`,
+        },
       },
-    },
-  });
+    });
+  }
 }
 
 if (!builtAny) {

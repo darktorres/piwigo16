@@ -1,5 +1,8 @@
+includes:
+    - vendor/phpstan/phpstan/conf/bleedingEdge.neon
+
 parameters:
-    level: 8
+    level: 10
     # shipmonk/dead-code-detector traces usage only within the analysed
     # set. Every plugin/theme's own ExtensionInterface lifecycle methods
     # (boot/install/activate/deactivate/uninstall/update/subscribedEvents)

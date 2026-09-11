@@ -1481,19 +1481,43 @@ framework capability every theme port depends on, not theme-owned
 content.
 
 Phase 3 (the modus package scaffold) landed in
-`../piwigo16-themes/modus_17.0.0/` (commit `f782be8`, not this repo):
-`theme.json` (`hasSettings: false` for now), `src/Theme.php`
+`../piwigo16-themes/modus_17.0.0/` (commits `f782be8`, `ae9aeed`, not
+this repo): `theme.json` (`hasSettings: false` for now), `src/Theme.php`
 (`activate()`/`uninstall()` via `ExtensionContext::getSetting()`/
 `setSetting()`/`deleteSetting()` under the legacy-compatible
 `'modus_theme'` key, `GetColorscheme` subscriber), `src/Skin.php`/
 `src/SkinCatalog.php` (all 18 real skins, colorscheme hand-verified
 against each skin's own real `BODY` colors per the note above), and
 `src/ModusThemeSettings.php`. Verified via `composer analyse:phpstan:extensions`
-(PHPStan level 8, clean) — this port's own test coverage lives with it
-in `../piwigo16-themes` (no Pest/PHPUnit infrastructure there; PHPStan
-+ a real end-to-end install-through-the-PEM-mirror check at the closing
-gate is this campaign's established verification bar for ported
-extensions, not an automated test suite in this repo).
+(now PHPStan level 10 + `bleedingEdge.neon`, matching this repo's own
+`phpstan.neon` — the config's original `level: 8` had no documented
+reason for sitting below this repo's own bar and was fixed to match,
+`phpstan-extensions.neon`, unrelated to modus itself) — this port's own
+test coverage lives with it in `../piwigo16-themes` (no Pest/PHPUnit
+infrastructure there; PHPStan + a real end-to-end
+install-through-the-PEM-mirror check at the closing gate is this
+campaign's established verification bar for ported extensions, not an
+automated test suite in this repo).
+
+**Adversarial re-validation caught 2 real bugs in the just-landed
+scaffold** before they ever shipped (commit `ae9aeed`): (1)
+`album_thumb_size` is legacy's own on/off switch for the "masonry"-style
+square-thumbnail album listing, not just a pixel size
+(`themeconf.inc.php`'s `modus_index_category_thumbnails()` hook and
+`mainpage_categories.tpl`'s own template both branch on the same
+`!empty($album_thumb_size)` flag) — the original scaffold modeled it as
+a plain always-clamped-200-400 int with no way to represent "off",
+which would have silently re-enabled masonry every time settings were
+saved even after a webmaster unchecked "use square thumbs". Fixed to
+`?int` (`null` = off) with a real `fromPost()` (not a thin `fromArray()`
+alias) matching legacy's exact checkbox-absence-means-off semantics,
+and a `fromArray()` fix distinguishing "key absent" (default 250) from
+"key present with value 0" (a real, valid off state) — caught live via
+a throwaway manual verification script when both cases collapsed to the
+same wrong answer. (2) `Theme::activate()` only seeded defaults when
+nothing existed yet; legacy's real `theme_activate()` always
+re-normalizes and re-persists on every activation. Both fixed and
+re-verified (16-scenario manual script, PHPStan, ECS).
 
 Phases 4-11 (admin settings page, CSS/skins, JS/masonry port, i18n,
 packaging refinement, and the mandatory closing verification gate)

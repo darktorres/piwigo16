@@ -131,7 +131,7 @@ Three structural changes produced that drift:
 | P26 | Admin fragment surface — UI-facing WS methods off the envelope | Done — the WS layer no longer exists at all; every admin UI surface already renders via Latte pages/fragments, not a JSON/XML envelope | ~15 |
 | P27 | Public API v1 (REST + OpenAPI 3.2 + tus) — WS deleted here | Done — 134 `Controller\Api\*` files, 88 registered `/api/v1` routes, full tus 1.0.0 chunked-upload protocol (6 dedicated controllers), RFC 9457 problem+json errors, hand-authored OpenAPI 3.2 spec (88 operations/11 domains) with a `redocly lint` CI gate + Gesso runtime contract enforcement, a generated TypeScript client, REST-body `Content-Type` validation (SEC-39), and an opt-in `Idempotency-Key` replay store (SEC-65); see Epoch G | ~151 |
 | P28 | Security hardening | Not started | 0 |
-| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 (port the `modus` theme) underway: Phase 0 (verification spike) and Phase 1 (core/shared infrastructure, 11 sub-items P29.6-A..K) done; Phase 2 (template `{block}`-refactor of `themes/default`) started (P29.6-L, 1 of 6 templates); Phases 3-11 (the theme package itself, CSS/skins, JS/masonry, i18n, packaging, verification) not started — see its own entries below | 33 |
+| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 (port the `modus` theme) underway: Phase 0 (verification spike), Phase 1 (core/shared infrastructure, 11 sub-items P29.6-A..K), and Phase 2 (template `{block}`-refactor of `themes/default`, 6 templates, P29.6-L..P) done; Phases 3-11 (the theme package itself, admin settings, CSS/skins, JS/masonry, i18n, packaging, verification) not started — see its own entries below | 33 |
 | P30 | Layer decoupling + repository restructure | Done — deptrac's 6-layer model enforces 0 violations in CI (established P6); the pre-consolidation repository-restructure plan's load-bearing goals were already met by the simpler `public/`-as-sibling-directory approach that shipped | 1 |
 | P31 | Smarty → Latte template migration | Done | 80 |
 | P32 | Latte lint/format tooling | Done — enforcement is P45 | 11 |
@@ -1427,10 +1427,26 @@ override (Phase 6). Verified byte-identical via `composer test:golden-html`
 button (Phase 6). True no-op today. Verified byte-identical via
 `composer test:golden-html` (91/91 passed).
 
-Phase 2 (refactor `themes/default`'s remaining templates to expose named
-`{block}` regions modus's overrides will extend —
-`mainpage_categories.latte`,
-`thumbnails.latte`) continues next; Phases 3-11 (the modus package itself,
+**P29.6-P (Done)** — `themes/default/template/mainpage_categories.latte`
+and `thumbnails.latte`'s recent-icon glyph markup wrapped in a shared
+`{block albSymbol}` seam, for modus's own glyph-translation override
+(Phase 6). Real finding: a `{block}` compiles to a separate PHP method
+that only receives the enclosing scope via `extract()` of
+`get_defined_vars()`, so PHPStan can no longer see `$cat`/`$thumbnail`'s
+real type inside it (only `mixed`) — flagged every `->iconTs` property
+access as `property.nonObject`. This is a genuine limitation of this
+project's phpstan-latte shim (it types top-level `TemplateType`
+properties via `injectVarDocblocks`, not ad hoc `{foreach}` loop
+variables), not a suppression-worthy nitpick. Fixed by resolving every
+`$cat->iconTs`/`$thumbnail->iconTs` property access to a plain
+scalar/bool `{var}` *outside* the block (in the still-correctly-typed
+loop scope), then referencing only those resolved values inside the
+block body. Verified byte-identical via `composer test:golden-html`
+(91/91 passed) plus a clean full-repo PHPStan run.
+
+This closes P29.6's Phase 2. Phase 3 (the modus package scaffold —
+`theme.json`, `src/Theme.php`, `src/Skin.php`/`src/SkinCatalog.php`,
+`src/ModusThemeSettings.php`) is next; Phases 4-11 (admin settings page,
 CSS/skins, JS/masonry port, i18n, packaging, and the mandatory closing
 verification gate) remain scoped but not started.
 

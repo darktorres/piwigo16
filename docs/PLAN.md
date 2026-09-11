@@ -131,7 +131,7 @@ Three structural changes produced that drift:
 | P26 | Admin fragment surface — UI-facing WS methods off the envelope | Done — the WS layer no longer exists at all; every admin UI surface already renders via Latte pages/fragments, not a JSON/XML envelope | ~15 |
 | P27 | Public API v1 (REST + OpenAPI 3.2 + tus) — WS deleted here | Done — 134 `Controller\Api\*` files, 88 registered `/api/v1` routes, full tus 1.0.0 chunked-upload protocol (6 dedicated controllers), RFC 9457 problem+json errors, hand-authored OpenAPI 3.2 spec (88 operations/11 domains) with a `redocly lint` CI gate + Gesso runtime contract enforcement, a generated TypeScript client, REST-body `Content-Type` validation (SEC-39), and an opt-in `Idempotency-Key` replay store (SEC-65); see Epoch G | ~151 |
 | P28 | Security hardening | Not started | 0 |
-| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 (port the `modus` theme) underway: Phase 0 (verification spike), Phase 1 (core/shared infrastructure, 11 sub-items P29.6-A..K plus a new `MenubarSpecialsPageContext`/`setCorePictureDeriv()` pair added while scoping items 31/32), and Phase 2 (template `{block}`-refactor of `themes/default`, 8 templates, P29.6-L..R) done in this repo; Phase 6 items 27-32b (template overrides, including the menubar rewrite) and Phase 7 items 33-35 (JS port, `photo-autosize.ts`) done in the sibling `../piwigo16-themes` repo (`modus_17.0.0/`, not this repo's own `themes/`); Phase 7 item 36, Phase 8 (masonry), Phases 9-11 (i18n/packaging/verification), and the new Phase 12 (nest sibling catalog repos as git submodules — campaign-wide, not modus-specific) not started — see its own entries below | 33 |
+| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 (port the `modus` theme) underway: Phase 0 (verification spike), Phase 1 (core/shared infrastructure, 11 sub-items P29.6-A..K plus a `MenubarSpecialsPageContext`/`setCorePictureDeriv()`/`CategoryThumbnail::$coi` trio added while scoping items 31/32/38), and Phase 2 (template `{block}`-refactor of `themes/default`, 9 templates, P29.6-L..S) done in this repo; Phase 6 items 27-32b/38 (template overrides, including the menubar rewrite and the album-thumbnail crop math) and Phase 7 items 33-35 (JS port, `photo-autosize.ts`) plus Phase 8 groundwork (`GetIndexDerivativeParams` wiring, `caps` cookie/session) done in the sibling `../piwigo16-themes` repo (`modus_17.0.0/`, not this repo's own `themes/`); item 37 (masonry photo-grid candidates), item 36 (`thumb-arrange.ts`), Phases 9-11 (i18n/packaging/verification), and the new Phase 12 (nest sibling catalog repos as git submodules — campaign-wide, not modus-specific) not started — see its own entries below | 33 |
 | P30 | Layer decoupling + repository restructure | Done — deptrac's 6-layer model enforces 0 violations in CI (established P6); the pre-consolidation repository-restructure plan's load-bearing goals were already met by the simpler `public/`-as-sibling-directory approach that shipped | 1 |
 | P31 | Smarty → Latte template migration | Done | 80 |
 | P32 | Latte lint/format tooling | Done — enforcement is P45 | 11 |
@@ -1906,9 +1906,46 @@ tsconfig mirroring the repo's real one, `eslint`, `prettier`, and
 `tools/build-ported-extension-assets.mjs`'s own build (confirmed
 self-contained, zero `import`/`export` in the built `dist/photo-autosize.js`).
 
-**Item 36** (`thumb-arrange.ts`, the real masonry algorithm) and
-**Phase 8** (the server-side masonry helper items 30/part-2 depends
-on) remain scoped but not started, along with Phases 9-11
+**Phase 8 groundwork landed**: `GetIndexDerivativeParams` (like
+`RenderElementContent`, a fully-wired, previously-unused core event) now
+carries the settings page's own `indexPhotoDeriv`/`indexPhotoDerivHdpi`
+fields through to the real index-thumbnail derivative type —
+`Theme::onGetIndexDerivativeParams()`, gated on `coreIndexDeriv() ===
+null` (never overriding a visitor's own explicit session choice, exactly
+matching legacy's own guard) and switching to the HDPI variant once a
+new `caps` cookie/session mechanism (`js/caps.ts`, `Theme::boot()`'s own
+promotion, real legacy `modus_on_end_index()`/`themeconf.inc.php` port)
+reports a large/high-DPR viewport. This is shared, mode-independent
+infrastructure both the standard grid and item 38 below need, not
+masonry-specific itself.
+
+**Item 38 landed** (`mainpage_categories.latte`'s own crop math): real
+`modus_index_category_thumbnails()` port. `CategoryThumbnail` needed one
+small new field (`$coi`, the representative's center of interest —
+available on the same row `$representative` is built from, never
+previously threaded through since no core renderer needed it), and
+`themes/default/template/mainpage_categories.latte` needed a new
+`{block categoryList}` seam (P29.6-S) wrapping the *whole* `<ul>` —
+modus's own "albThumbs" masonry-like layout is a genuinely different
+`<li>` shape (fixed-square crop, caption-as-overlay), not just an
+illustration swap, so no narrower seam would do. Verified via
+DOMDocument-normalized structural comparison (not just assumed) that
+the resulting golden-html diff (`gallery-home`, `category-1`) was a pure
+indentation shift from the new `{block}` wrapper, before accepting the
+new baselines. `Theme::onIndexCategoryThumbnailsRendered()` computes
+each category's crop URL/style (reusing an existing standard derivative
+type at the exact configured height when the source is landscape/square
+and large enough, matching legacy's own `$alt_params` search; a centered
+custom square derivative otherwise) via a new ambient
+`ModusAlbumThumbsPageContext` — `CategoryThumbnail` itself has no field
+for this theme-specific data. Caption text deliberately reuses
+`$cat->captionNbImages` verbatim rather than reproducing legacy's own
+separate comma+tooltip formatting for this one mode — a named
+simplification, not a missed detail.
+
+**Item 37** (`ModusThumbView::forMasonry()`, the photo-grid justified-row
+candidate computation) and **item 36** (`thumb-arrange.ts`, the client-
+side reflow) remain scoped but not started, along with Phases 9-11
 (i18n/packaging/closing verification) — all in
 `../piwigo16-themes/modus_17.0.0/`.
 

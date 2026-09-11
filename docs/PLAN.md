@@ -1740,9 +1740,69 @@ combined — flagged here, not attempted yet:**
   `MenubarSpecialRow`/`MenubarSpecialKind` (Phase 1.6) data shape, not
   a small block-seam addition like items 27-30 — scoped but not started.
 
-Phases 7-11 (JS/masonry port, i18n, packaging refinement, and the
-mandatory closing verification gate) remain scoped but not started,
-all in `../piwigo16-themes/modus_17.0.0/`.
+**Phase 7 (JS port), items 33-34 landed** in
+`../piwigo16-themes/modus_17.0.0/` (3 commits, all in this repo's own
+`tools/build-ported-extension-assets.mjs` plus the sibling repo):
+
+- **Item 33** (`menuh.ts`): jQuery-free port of legacy's `menuh.js`
+  (`vendor/utils/dom.ts` house style) — the mobile `#menuSwitcher`
+  toggle and the per-`<dt>` dropdown toggle (a no-op on the wide/
+  horizontal layout, matching legacy's own early return). Registered
+  site-wide via a new `Theme::onGetPageAssets()` handler (`GetPageAssets`
+  is dispatched once per page for whichever theme is active — see next
+  bullet for why this, not `onGetColorscheme()`, is where a theme
+  should put this kind of thing).
+- **Real production bug, caught by `composer test:ported-extensions`
+  itself, not just reasoned about**: the item-27 design (assigning
+  `$MODUS_DISPLAY_PAGE_BANNER` from `onGetColorscheme()`) throws on
+  every real request, not only in a test dispatching the event
+  directly — `GetColorscheme` fires from inside `Template`'s own
+  constructor, *before* `RequestBootstrap::finalize()` calls
+  `CurrentTemplate::set($template)`, so `ExtensionContext::template()`
+  is never actually safe to call from that handler. Fixed by moving the
+  assignment into the new `onGetPageAssets()` handler (dispatched from
+  `Renderer::render()`, safely after `CurrentTemplate` is set) and
+  adding a real regression test (`testGetPageAssetsContributesMenuhScriptWithoutThrowing()`)
+  that builds a real `Template` and registers it the same way a real
+  request does, rather than dispatching the event in isolation like
+  the existing `GetColorscheme` test did (which is exactly why that
+  test never caught this).
+- **Real bug in `tools/build-ported-extension-assets.mjs` itself**,
+  caught the moment a 2nd JS entry (`menuh.ts`) started sharing an
+  import (`vendor/utils/dom.ts`) with the 1st (Phase 4's `settings.ts`):
+  one multi-entry `build()` call lets Rollup extract the shared module
+  into a separate chunk file, leaving a real `import` statement in each
+  entry — silently breaking the "self-contained, servable as a plain
+  `<script>`" contract this tool exists for. Fixed to do one separate
+  `build()` call per entry (verified: grep-confirmed zero remaining
+  `import`/`export` in any of the 3 real `dist/*.js` files now).
+- **Item 34** (`modus-async.ts`): the shared open/close/position logic
+  behind `#albumActionsSwitcher` (item 29) and `#imageActionsSwitch`
+  (item 28) — legacy's own 2 call sites are byte-identical, so this is
+  one small shared helper rather than a duplicated port. Also
+  registered via `onGetPageAssets()`; legacy only loads this on the 2
+  pages whose markup it patches in, but there's no per-View asset hook
+  this theme can reach for core's own `IndexView`/`PictureView` —
+  loading it on every page is a deliberate, harmless simplification
+  (the script no-ops when neither switcher element exists).
+
+**Items 31/35 real dependency confirmed, not yet started**: reading
+`themes/default/js/picture.ts` shows Phase 1.7's `derivativeSwitchOverride`
+hook (`setDerivativeSwitchOverride()`) is exactly the mechanism
+`photo-autosize.ts` (item 35) needs — a real, already-built, unused-until-now
+piece of infrastructure, confirmed by reading the file rather than
+assumed from its own docblock. What's still unresolved: item 31's own
+`RVAS` config object (the derivatives list + cookie path
+`photo-autosize.ts` reads) has to come from *somewhere* server-side —
+whether that's a genuinely new core extension point (a
+`render_element_content` equivalent) or something simpler is still an
+open question, not investigated yet.
+
+**Item 36** (`thumb-arrange.ts`, the real masonry algorithm) and
+**Phase 8** (the server-side masonry helper items 30/part-2 depends
+on) remain scoped but not started, along with Phases 9-11
+(i18n/packaging/closing verification) and items 32a/32b (the menubar
+rewrite) — all in `../piwigo16-themes/modus_17.0.0/`.
 
 **P30 — Layer decoupling + repository restructure.** Both halves done.
 

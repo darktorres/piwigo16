@@ -19,9 +19,10 @@
 
     {block imageToolBar}
     <div id="imageToolBar">
-      <div class="imageNumber">{$photo}</div>
+      {block toolBarImageNumber}<div class="imageNumber">{$photo}</div>{/block}
       {include 'picture_nav_buttons.latte'}
 
+      {block actionButtons}
       <div class="actionButtons">
         {if count($sizeOptions) > 1}
           {spaceless}<a
@@ -208,6 +209,7 @@
             </a>
           {/if}{/spaceless}{* caddie management END *}
       </div>
+      {/block}
     </div>{* imageToolBar *}
     {/block}
     <div id="theImageAndInfos">

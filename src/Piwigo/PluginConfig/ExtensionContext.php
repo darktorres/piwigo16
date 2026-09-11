@@ -378,6 +378,31 @@ final readonly class ExtensionContext
     }
 
     /**
+     * The core, un-namespaced `pwg_index_deriv` session key --
+     * `Category\CategoryDefaultRenderer`'s own selected derivative size for
+     * the index thumbnail grid. Deliberately NOT exposed through
+     * `session()` (which is namespaced per-extension, by design) -- this is
+     * one of a small, explicitly-named set of real shared *core* session
+     * keys an extension may legitimately need to read (P29.6, the `modus`
+     * theme's HDPI-aware derivative-size heuristic).
+     */
+    public function coreIndexDeriv(): ?string
+    {
+        return $this->sessionService->getIndexDeriv();
+    }
+
+    /**
+     * The core, un-namespaced `pwg_picture_deriv` session key --
+     * `Controller\PictureController`'s own selected derivative size for the
+     * picture view / prefetch link. See `coreIndexDeriv()`'s own docblock
+     * for why this is separate from `session()`.
+     */
+    public function corePictureDeriv(): ?string
+    {
+        return $this->sessionService->getPictureDeriv();
+    }
+
+    /**
      * @template T of object
      * @param T $event
      * @return T

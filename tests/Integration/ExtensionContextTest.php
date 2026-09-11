@@ -914,6 +914,29 @@ final class ExtensionContextTest extends IntegrationTestCase
         self::assertSame('value-from-b', $pluginB->session()->get('key'), 'removing plugin-a\'s key must not affect plugin-b\'s');
     }
 
+    /**
+     * P29.6 (the `modus` theme port): a real shared *core* session key,
+     * deliberately not routed through `session()`'s per-extension
+     * namespacing -- proves `coreIndexDeriv()`/`corePictureDeriv()` read
+     * the same `$_SESSION` slots `SessionService::getIndexDeriv()`/
+     * `getPictureDeriv()` do, real callers this fork already has
+     * (`Category\CategoryDefaultRenderer`/`Controller\PictureController`).
+     */
+    public function testCoreIndexDerivAndCorePictureDerivReadTheRealSharedCoreSessionKeys(): void
+    {
+        $_SESSION = [];
+        $context = $this->buildContext(PluginId::from('any-plugin'));
+
+        self::assertNull($context->coreIndexDeriv());
+        self::assertNull($context->corePictureDeriv());
+
+        $_SESSION['pwg_index_deriv'] = '2small';
+        $_SESSION['pwg_picture_deriv'] = 'xsmall';
+
+        self::assertSame('2small', $context->coreIndexDeriv());
+        self::assertSame('xsmall', $context->corePictureDeriv());
+    }
+
     public function testDispatchReachesARegisteredHandler(): void
     {
         $eventDispatcher = $this->containerGet(EventDispatcher::class);

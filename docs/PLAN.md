@@ -1403,8 +1403,20 @@ own `layout.latte` override (Phase 6) can replace it with modus's real
 full-file copy override. Verified byte-identical via
 `composer test:golden-html` (91/91 passed).
 
+**P29.6-M (Done)** — `themes/default/template/picture.latte`'s
+`#imageHeaderBar` and `#imageToolBar` divs wrapped in named
+`{block imageHeaderBar}`/`{block imageToolBar}` seams for modus's own
+titrePage/actionButtonsWrapper overrides (Phase 6). `#imageToolBar`'s
+close originally swallowed a blank line via a trailing HTML comment
+(`{* imageToolBar *}`, whose closing tag eats up to 2 newlines per
+`vendor/latte/latte`'s own `TemplateLexer` comment-close regex); a plain
+`{/block}` tag only ever eats 1, so it was placed where the blank line
+used to be (not after it) to reproduce the exact same newline-eating
+arithmetic. Verified byte-identical via `composer test:golden-html`
+(91/91 passed).
+
 Phase 2 (refactor `themes/default`'s remaining templates to expose named
-`{block}` regions modus's overrides will extend — `picture.latte`,
+`{block}` regions modus's overrides will extend —
 `slideshow.latte`, `index.latte`, `mainpage_categories.latte`,
 `thumbnails.latte`) continues next; Phases 3-11 (the modus package itself,
 CSS/skins, JS/masonry port, i18n, packaging, and the mandatory closing

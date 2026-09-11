@@ -281,6 +281,7 @@ final class MenubarRenderer
                     ]),
                     title: $lang->t('display your favorites photos'),
                     name: $lang->t('Your favorites'),
+                    kind: MenubarSpecialKind::Favorites,
                 );
             }
 
@@ -290,6 +291,7 @@ final class MenubarRenderer
                 ]),
                 title: $lang->t('display most visited photos'),
                 name: $lang->t('Most visited'),
+                kind: MenubarSpecialKind::MostVisited,
             );
 
             if ($currentConfig->rateEnabled) {
@@ -299,6 +301,7 @@ final class MenubarRenderer
                     ]),
                     title: $lang->t('display best rated photos'),
                     name: $lang->t('Best rated'),
+                    kind: MenubarSpecialKind::BestRated,
                 );
             }
 
@@ -308,6 +311,7 @@ final class MenubarRenderer
                 ]),
                 title: $lang->t('display most recent photos'),
                 name: $lang->t('Recent photos'),
+                kind: MenubarSpecialKind::RecentPics,
             );
 
             $specials[] = new MenubarSpecialRow(
@@ -316,12 +320,14 @@ final class MenubarRenderer
                 ]),
                 title: $lang->t('display recently updated albums'),
                 name: $lang->t('Recent albums'),
+                kind: MenubarSpecialKind::RecentCats,
             );
 
             $specials[] = new MenubarSpecialRow(
                 url: $urlService->getRootUrl() . 'random.php',
                 title: $lang->t('display a set of random photos'),
                 name: $lang->t('Random photos'),
+                kind: MenubarSpecialKind::Random,
                 noFollow: true,
             );
 
@@ -336,6 +342,7 @@ final class MenubarRenderer
                 ),
                 title: $lang->t('display each day with photos, month per month'),
                 name: $lang->t('Calendar'),
+                kind: MenubarSpecialKind::Calendar,
                 noFollow: true,
             );
 

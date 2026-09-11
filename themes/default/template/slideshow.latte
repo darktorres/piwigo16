@@ -2,6 +2,7 @@
 {layout 'layout.latte'}
 {block content}
   <div id="slideshow">
+    {block imageHeaderBar}
     <div id="imageHeaderBar">
       <div class="browsePath">
         {if isset($uSlideshowStop)}
@@ -12,6 +13,7 @@
         <h2 class="showtitle">{$navCurrent->element->title}</h2>
       </div>
     </div>
+    {/block}
 
     <div id="imageToolBar">
       <div class="imageNumber">{$photo}</div>

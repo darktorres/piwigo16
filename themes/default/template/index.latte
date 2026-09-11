@@ -12,6 +12,7 @@
 
   <div id="content" class="content{if isset($MENUBAR)} contentWithMenu{/if}">
     <div class="titrePage{if isset($chronology)} calendarTitleBar{/if}">
+      {block categoryActionsSwitcher}{/block}
       <ul class="categoryActions">
         <li
           n:if="isset($searchInSetAction) and $searchInSetAction"

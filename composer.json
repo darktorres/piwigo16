@@ -236,6 +236,7 @@
       "@php vendor/bin/pest --testsuite Integration"
     ],
     "test:ported-extensions": [
+      "@php tools/link-ported-extension-tests.php",
       "bash tools/reimport-fixture.sh",
       "@php vendor/bin/pest --testsuite PortedExtensions"
     ],

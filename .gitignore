@@ -38,6 +38,12 @@
 /tests/Fixtures/GoldenHtml/.diffs
 /tests/Fixtures/GoldenHtml/mail/.diffs
 
+# tools/link-ported-extension-tests.php's own symlinks into each ported
+# extension's real tests/ dir (../piwigo16-plugins, ../piwigo16-themes) --
+# generated fresh every composer test:ported-extensions run, not real
+# content of this repo.
+/tests/PortedExtensions/*
+
 # deptrac's incremental-analysis cache (P6+)
 /.deptrac.cache
 

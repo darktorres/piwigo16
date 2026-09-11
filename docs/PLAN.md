@@ -131,7 +131,7 @@ Three structural changes produced that drift:
 | P26 | Admin fragment surface — UI-facing WS methods off the envelope | Done — the WS layer no longer exists at all; every admin UI surface already renders via Latte pages/fragments, not a JSON/XML envelope | ~15 |
 | P27 | Public API v1 (REST + OpenAPI 3.2 + tus) — WS deleted here | Done — 134 `Controller\Api\*` files, 88 registered `/api/v1` routes, full tus 1.0.0 chunked-upload protocol (6 dedicated controllers), RFC 9457 problem+json errors, hand-authored OpenAPI 3.2 spec (88 operations/11 domains) with a `redocly lint` CI gate + Gesso runtime contract enforcement, a generated TypeScript client, REST-body `Content-Type` validation (SEC-39), and an opt-in `Idempotency-Key` replay store (SEC-65); see Epoch G | ~151 |
 | P28 | Security hardening | Not started | 0 |
-| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 (port the `modus` theme) underway: Phase 0 (verification spike), Phase 1 (core/shared infrastructure, 11 sub-items P29.6-A..K), and Phase 2 (template `{block}`-refactor of `themes/default`, 6 templates, P29.6-L..P) done in this repo; Phases 3-4 (package scaffold + admin settings page) done in the sibling `../piwigo16-themes` repo (`modus_17.0.0/`, not this repo's own `themes/`); Phases 5-11 (CSS/skins, JS/masonry, i18n, packaging, verification), also in `../piwigo16-themes`, not started — see its own entries below | 33 |
+| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 (port the `modus` theme) underway: Phase 0 (verification spike), Phase 1 (core/shared infrastructure, 11 sub-items P29.6-A..K), and Phase 2 (template `{block}`-refactor of `themes/default`, 8 templates, P29.6-L..R) done in this repo; Phases 3-7 items 33-34 (package scaffold, admin settings page, CSS/skins, template overrides, partial JS port) done in the sibling `../piwigo16-themes` repo (`modus_17.0.0/`, not this repo's own `themes/`); Phase 7 items 35-36, Phase 8 (masonry), Phases 9-11 (i18n/packaging/verification), items 32a/32b (menubar rewrite), and the new Phase 12 (nest sibling catalog repos as git submodules — campaign-wide, not modus-specific) not started — see its own entries below | 33 |
 | P30 | Layer decoupling + repository restructure | Done — deptrac's 6-layer model enforces 0 violations in CI (established P6); the pre-consolidation repository-restructure plan's load-bearing goals were already met by the simpler `public/`-as-sibling-directory approach that shipped | 1 |
 | P31 | Smarty → Latte template migration | Done | 80 |
 | P32 | Latte lint/format tooling | Done — enforcement is P45 | 11 |
@@ -1592,6 +1592,77 @@ instead of an HTTP fetch, and skips cleanly when the sibling repo isn't
 checked out). All 23 pass; the existing 5579-test Unit/Arch suite still
 passes after the shared `tests/bootstrap.php` change.
 
+**Correction (architecture, not scope)**, same class of mistake as the
+earlier one two sections up: both test files above initially landed in
+*this* repo's own `tests/PortedExtensions/Modus/` — wrong, by the exact
+same "ported extensions are committed only in the sibling catalog
+repo" rule everything else about this port already follows, caught by
+the user directly asking "shouldn't those tests files be in the modus
+folder in the other repo?". Moved to
+`../piwigo16-themes/modus_17.0.0/tests/` (real content of that repo
+now). Since PHPUnit's `<directory>` config is static XML with no glob
+support (unlike `analyse-ported-extensions.sh`/
+`build-ported-extension-assets.mjs`, which glob their sibling paths
+fresh on every invocation), a hardcoded per-port `<directory>` entry
+would need a `phpunit.xml.dist` edit for every new port — closed the
+same way instead: new `tools/link-ported-extension-tests.php`, run as
+the first step of `composer test:ported-extensions`, globs
+`../piwigo16-plugins/*_17.0.0/tests` + `../piwigo16-themes/*_17.0.0/tests`
+fresh every run and refreshes a symlink per port under this repo's own
+`tests/PortedExtensions/<id>_17.0.0` (gitignored — generated, not real
+content here) — `phpunit.xml.dist`'s single existing `<directory>
+tests/PortedExtensions</directory>` entry needs no further change as
+new ports gain their own tests. `phpstan.neon`'s own `paths: [.]` scan
+follows symlinked directories (already known and excluded for once for
+`public/`'s own bridge symlinks) — without an equivalent
+`tests/PortedExtensions/*` exclude added here, the main `composer
+analyse` would silently start pulling sibling-repo content back into
+this repo's own gate through the new symlinks, undoing the entire
+point of keeping ported-extension verification opt-in. The now-obsolete
+`tests/phpstan-ported-extensions-bootstrap.php` (only ever needed to
+resolve modus's classes from test files that lived in *this* repo) is
+deleted outright, not left as dead config, and `phpstan-extensions.neon`
+now globs `tests/` alongside `src/` (with its own new
+`tests/phpstan-dba-bootstrap.php` bootstrap entry, needed only once
+real DB-touching integration-test code — not just plain `src/` — enters
+that config's scope) so PHPStan coverage for these files isn't lost by
+the move. A real, second bug surfaced by the relocation itself (not
+just the architecture question): the integration test's own
+`dirname(__DIR__, 3)` guess at `../piwigo17-rewrite`'s root broke
+outright once the file's real physical location changed depth — fixed
+by resolving `Piwigo\Core\Paths` from the container instead
+(`$this->containerGet(Paths::class)`), which is already correctly
+rooted regardless of where the test file calling it physically lives.
+Re-verified end to end: `composer test:ported-extensions` 24/24,
+`composer analyse:phpstan:extensions` clean, main `composer analyse`
+clean (symlink correctly excluded).
+
+**A related, deliberately-deferred question**: the user separately
+asked whether the whole `../piwigo16-plugins`/`../piwigo16-themes`
+sibling-directory convention itself — relied on by every cross-repo
+tool this campaign has built (`analyse-ported-extensions.sh`,
+`build-ported-extension-assets.mjs`, `link-ported-extension-tests.php`,
+the local PEM mirror's own `http://localhost/piwigo16-themes/...` URLs)
+— is portable/reproducible for someone else setting this up, and
+whether git submodules would be the idiomatic fix. Investigated, not
+resolved here: verified empirically that a git submodule cannot use a
+`../` path (git refuses it outright, escaping-the-repo protection), so
+a submodule could only ever live *inside* `piwigo17-rewrite`'s own
+tree, never preserve the current sibling layout. Also confirmed via
+`git worktree list` that `piwigo17-rewrite` is one of *5* worktrees of
+the same repo (`17.x-rewrite`/`-2`/`-3`/`-4`/`frozen`), and that
+`../piwigo16-plugins`/`../piwigo16-themes` are independently referenced
+by `../piwigo16-rewrite` too (a wholly separate, unrelated project) —
+these are a shared reference/PEM-mirror dataset consumed by multiple
+independent projects, not something any single `piwigo17-rewrite`
+worktree should own as its own submodule (a naive per-worktree
+submodule would duplicate the ~150-zip-file repo 5+ times on disk).
+**Decision: nest them as real git submodules anyway, but as its own
+final phase** (scoped below as **P29.6 Phase 12**) — deliberately after
+every other phase, once the real path/URL/tooling impact across the
+whole campaign (not just modus) is fully known, rather than
+mid-stream during Phase 7.
+
 Phase 5 (CSS/skins) landed in `../piwigo16-themes/modus_17.0.0/`
 (commit `157ece2`): `theme.css` consolidates the Smarty-templated
 `css/*.css.tpl` chain into static CSS, replacing every
@@ -1803,6 +1874,39 @@ open question, not investigated yet.
 on) remain scoped but not started, along with Phases 9-11
 (i18n/packaging/closing verification) and items 32a/32b (the menubar
 rewrite) — all in `../piwigo16-themes/modus_17.0.0/`.
+
+**Phase 12 (new, deliberately last) — nest `../piwigo16-plugins`/
+`../piwigo16-themes` as real git submodules.** Scoped, not started;
+see the "related, deliberately-deferred question" note above for the
+investigation this is based on. Not modus-specific — this is a
+campaign-wide infrastructure change, affecting every already-ported
+extension, not just this one. Real open questions to resolve *during*
+this phase, not assumed now:
+
+- Where the submodules actually live inside `piwigo17-rewrite` (git
+  will not allow `../` — confirmed empirically), and what that does to
+  every relative-path assumption built across this campaign:
+  `analyse-ported-extensions.sh`/`build-ported-extension-assets.mjs`/
+  `link-ported-extension-tests.php`'s own `SIBLING_DIRS`/glob roots, a
+  ported extension's own JS files' real relative imports back into
+  `themes/default/js/vendor/...` (e.g. `modus_17.0.0/js/settings.ts`'s
+  own `../../../piwigo17-rewrite/themes/default/js/...`), and every
+  `CLAUDE.md` doc describing the sibling layout.
+- What happens to the *other* consumers confirmed to depend on the
+  current `../piwigo16-plugins`/`../piwigo16-themes` sibling paths —
+  `../piwigo16-rewrite` (a separate, unrelated project) and this
+  repo's other 4 worktrees (`17.x-rewrite-2`/`-3`/`-4`/`frozen`) — since
+  a submodule nested inside *this* worktree doesn't help any of them,
+  and duplicating a ~150-zip-file repo across 5 worktrees is real disk
+  cost worth weighing against the reproducibility win.
+- The local PEM mirror's own served URLs (`manifest.json`'s
+  `file_url`/`download_url: http://localhost/piwigo16-themes/...`) —
+  whatever currently serves that path (a vhost, a dev server) needs to
+  keep resolving correctly once the real directory moves.
+- Whether both sibling repos move together or this is scoped narrower
+  at first (e.g. only the 2-3 directories a real port actually touches,
+  not entire catalog repos each holding 100+ unrelated legacy theme/
+  plugin zips).
 
 **P30 — Layer decoupling + repository restructure.** Both halves done.
 

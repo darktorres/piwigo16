@@ -2,6 +2,14 @@ includes:
     - vendor/phpstan/phpstan/conf/bleedingEdge.neon
 
 parameters:
+    # A ported extension's own integration tests (tests/ is globbed
+    # alongside src/ by analyse-ported-extensions.sh) exercise real
+    # DBAL/query code -- phpstan-dba's query-reflection rule is active
+    # for any PHPStan invocation regardless of -c config (registered via
+    # phpstan-extension-installer), but its reflector still needs this
+    # same bootstrap the main phpstan.neon already uses.
+    bootstrapFiles:
+        - tests/phpstan-dba-bootstrap.php
     level: 10
     # shipmonk/dead-code-detector traces usage only within the analysed
     # set. Every plugin/theme's own ExtensionInterface lifecycle methods

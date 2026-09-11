@@ -21,7 +21,6 @@ parameters:
     tmpDir: /tmp/phpstan%currentWorkingDirectory%
     bootstrapFiles:
         - tests/phpstan-dba-bootstrap.php
-        - tests/phpstan-ported-extensions-bootstrap.php
     doctrine:
         objectManagerLoader: tests/phpstan-object-manager.php
     stubFiles:
@@ -47,6 +46,14 @@ parameters:
             # that knplabs/github-api must be `composer require`d manually
             # before running it — it's not one of this project's own deps.
             - tools/github_issues.php
+            # tools/link-ported-extension-tests.php's own symlinks into a
+            # ported extension's real tests/ (../piwigo16-plugins,
+            # ../piwigo16-themes) -- PHPStan follows symlinked directories
+            # when scanning `.` (see the public/ note below), which would
+            # otherwise pull sibling-repo content into this repo's own
+            # gate; composer analyse:phpstan:extensions is the intentional,
+            # opt-in place that content is verified (phpstan-extensions.neon).
+            - tests/PortedExtensions/*
             # Part II (web-root isolation): these are symlinks bridging
             # public/ (the new DocumentRoot) back to already-scanned real
             # directories (themes/, dist/, _data/combined/). PHPStan follows

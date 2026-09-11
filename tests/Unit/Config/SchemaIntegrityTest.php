@@ -60,7 +60,7 @@ const SCHEMA_INTEGRITY_PRIVATE_SET_LIST = [
     'sendPiwigoInfosUpdateUrl', 'sessionGcProbability', 'sessionName', 'sessionSaveHandler', 'sessionUseCookies',
     'sessionUseOnlyCookies', 'sessionUseTransSid', 'showMobileAppBannerInAdmin', 'showMobileAppBannerInGallery', 'showNewsletterSubscription',
     'showPiwigoLatestNews', 'showThumbnailCaption', 'slideshowPeriodStep', 'standardPagesSelectedLogo',
-    'standardPagesSelectedLogoPath', 'standardPagesSelectedSkin', 'statCompareYearDisplayed', 'tagLettersColumnNumber', 'tagsDefaultDisplayMode',
+    'standardPagesSelectedLogoPath', 'standardPagesSelectedSkin', 'statCompareYearDisplayed', 'tagsDefaultDisplayMode',
     'templateForceCompile', 'topNumber', 'trustedProxies', 'uniquenessMode', 'updateNotifyReminderPeriod',
     'uploadFormAutomaticRotation', 'uploadFormChunkSize', 'uploadFormMaxFileSize',
 ];

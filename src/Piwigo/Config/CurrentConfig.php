@@ -1439,9 +1439,14 @@ final class CurrentConfig
 
     // === tag_letters_column_number ===
     /**
-     * Number of columns in the alphabetical tag index layout.
+     * Number of columns in the alphabetical tag index layout. `public`, not
+     * `public private(set)`, since a real external writer exists: the
+     * `modus` theme's `boot()` mutates this per-request based on the
+     * current device (P29.6, `themeconf.inc.php`'s own
+     * `get_device()`-based override) -- an in-memory-only override, not a
+     * DB write, matching this class's own documented rule above.
      */
-    public private(set) int $tagLettersColumnNumber = 4;
+    public int $tagLettersColumnNumber = 4;
 
     // === tag_url_style ===
     /**

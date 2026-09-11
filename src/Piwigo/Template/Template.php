@@ -53,6 +53,7 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Page\PageDataPayload;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\Event\CombinedScript;
+use Piwigo\Template\Event\GetColorscheme;
 use Piwigo\Template\Latte\PiwigoExtension;
 use Piwigo\Template\Projection\LocalHeadView;
 use Piwigo\Template\Projection\ThemeChainPageContext;
@@ -525,9 +526,21 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             $this->setTemplateDir($dir);
         }
 
+        // P29.6: lets a theme override its own effective colorscheme at
+        // request time (see GetColorscheme's own docblock) -- a genuine
+        // no-op for every theme that doesn't register a handler, so
+        // $themeconf below is unchanged from today for default/
+        // standard_pages/every admin skin.
+        $colorschemeEvent = $this->eventDispatcher->dispatch(new GetColorscheme(
+            $theme,
+            is_string($resolution->themeconf['colorscheme'] ?? null) ? $resolution->themeconf['colorscheme'] : $colorscheme,
+        ));
+        $themeconf = $resolution->themeconf;
+        $themeconf['colorscheme'] = $colorschemeEvent->colorscheme;
+
         $this->assignContext(new ThemeChainPageContext(
             themes: $resolution->themes,
-            themeconf: $resolution->themeconf,
+            themeconf: $themeconf,
         ));
 
         if ($applyThemeBase) {

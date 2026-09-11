@@ -23,6 +23,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Http\ResponseReadyException;
+use Piwigo\Template\Event\GetColorscheme;
 use Piwigo\Template\Template;
 use Piwigo\Template\TemplateAdapter;
 use Piwigo\Template\ThemeChainEntry;
@@ -682,6 +683,41 @@ test('setTheme preserves an already-set colorscheme instead of overwriting it', 
 
     expect($t->getThemeconf('colorscheme'))
         ->toBe('theme-defined');
+});
+
+test('setTheme dispatches GetColorscheme and is a no-op when nothing handles it', function (): void {
+    $root = rtrim(CurrentPathsTestFactory::get()->root, '/');
+    template_instance_test_write_themeconf($root . '/cs-theme3', [
+        'marker' => 'x',
+    ]);
+    $t = TemplateTestFactory::build();
+
+    $t->setTheme($root, ThemeId::from('cs-theme3'), 'template', true, true, 'default-scheme');
+
+    expect($t->getThemeconf('colorscheme'))
+        ->toBe('default-scheme');
+});
+
+test('setTheme lets a registered GetColorscheme handler override the effective colorscheme', function (): void {
+    $root = rtrim(CurrentPathsTestFactory::get()->root, '/');
+    template_instance_test_write_themeconf($root . '/cs-theme4', [
+        'marker' => 'x',
+    ]);
+    $t = TemplateTestFactory::build();
+    $receivedThemeId = null;
+    EventDispatcherTestFactory::get()->addTypedHandler(GetColorscheme::class, function (GetColorscheme $event) use (&$receivedThemeId): GetColorscheme {
+        $receivedThemeId = $event->theme;
+        $event->colorscheme = 'overridden-by-theme';
+
+        return $event;
+    });
+
+    $t->setTheme($root, ThemeId::from('cs-theme4'), 'template', true, true, 'default-scheme');
+
+    expect($t->getThemeconf('colorscheme'))
+        ->toBe('overridden-by-theme')
+        ->and($receivedThemeId?->value)
+        ->toBe('cs-theme4');
 });
 
 test('setTheme merges themeconf directly into the flat "themeconf" template var, not nested under an index', function (): void {

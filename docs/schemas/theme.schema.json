@@ -131,7 +131,7 @@
     "colorscheme": {
       "type": "string",
       "enum": ["dark", "light"],
-      "description": "Picks a CSS variant in standard_pages/batch-manager templates. Omit when the theme inherits its colorscheme from its parent."
+      "description": "Picks a CSS variant in standard_pages/batch-manager templates. Omit when the theme inherits its colorscheme from its parent. This is the static declared fallback only -- a theme may override the effective value at request time via Piwigo\\Template\\Event\\GetColorscheme (P29.6)."
     },
     "useStandardPages": {
       "type": "boolean",

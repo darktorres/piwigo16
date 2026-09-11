@@ -196,6 +196,7 @@ final class ThemeRegistryTest extends IntegrationTestCase
             $this->contextFactory,
             $currentConfig,
             Paths::fromRoot(dirname(__DIR__, 2)),
+            $this->containerGet(Lang::class),
         );
     }
 

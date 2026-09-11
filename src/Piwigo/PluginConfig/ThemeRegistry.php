@@ -12,6 +12,7 @@ use Opis\JsonSchema\Validator;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
+use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ThemeRepository;
 use RuntimeException;
@@ -64,6 +65,7 @@ final class ThemeRegistry
         private readonly ExtensionContextFactory $contextFactory,
         private readonly CurrentConfig $currentConfig,
         private readonly Paths $paths,
+        private readonly Lang $lang,
     ) {
         $this->validator = new Validator();
     }
@@ -278,6 +280,17 @@ final class ThemeRegistry
         }
 
         foreach ($instances as $id => $instance) {
+            // A theme's own theme.po (if it ships one -- none of
+            // default/admin/standard_pages do today, only a real port like
+            // modus, P29.6) -- loaded before boot() so a boot()-time
+            // $context->lang()->t() call already sees it. Safe here: theme
+            // boot() runs after LanguageMiddleware (unlike plugin boot(),
+            // see PluginRegistry::onLoadingLang()'s own docblock for why
+            // that one goes through the LoadingLang event instead), so
+            // Lang's own current-locale resolution is already wired up.
+            // A no-op (Lang::load() returns false, silently) for every
+            // theme that ships no language/ directory of its own.
+            $this->lang->load('theme.lang', $this->paths->themes . $id . '/');
             $instance->boot($this->contextFactory->build(ThemeId::from($id)));
         }
     }

@@ -657,6 +657,7 @@ final class RequestBootstrap
             self::extensionContextFactory($conn),
             self::currentConfig(),
             self::paths(),
+            self::lang(),
         );
     }
 

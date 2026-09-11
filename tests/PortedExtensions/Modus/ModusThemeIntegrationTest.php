@@ -8,12 +8,16 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Override;
+use Piwigo\Asset\Event\GetPageAssets;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\CookieService;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\ThemeId;
+use Piwigo\Config\ConfigEntry;
+use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AdminContext;
@@ -27,6 +31,8 @@ use Piwigo\Core\ThemeRepository;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
@@ -45,7 +51,11 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Event\GetColorscheme;
 use Piwigo\Template\Renderer;
 use Piwigo\Tests\Integration\IntegrationTestCase;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\DbTransactionTestOverride;
+use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Theme\Modus\SkinCatalog;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserRepository;
@@ -124,6 +134,19 @@ final class ModusThemeIntegrationTest extends IntegrationTestCase
         DbTransactionTestOverride::begin();
 
         $this->conn = DbConnection::build();
+
+        // Template's own constructor needs a populated CurrentConfigService
+        // (testGetPageAssetsContributesMenuhScriptWithoutThrowing() builds a
+        // real one) -- wired the same way MailGoldenHtmlSnapshotTest.php's
+        // own setUp() does; IntegrationTestCase::tearDown() resets it after
+        // every test.
+        ConfigLoader::applyDefaults();
+        ConfigLoader::applyEnvOverrides();
+        $configRepo = TypedRepository::narrow(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), ConfigRepository::class);
+        $configService = new ConfigService($configRepo, CurrentConfigTestFactory::get());
+        CurrentConfigServiceTestFactory::get()
+            ->set($configService);
+        $configService->loadConfFromDb();
 
         $currentUser = Kernel::container()->get(CurrentUser::class);
         if (! $currentUser instanceof CurrentUser) {
@@ -275,6 +298,46 @@ final class ModusThemeIntegrationTest extends IntegrationTestCase
         $registry->bootCurrent(ThemeId::from('modus'));
         $event = $this->eventDispatcher->dispatch(new GetColorscheme(ThemeId::from('modus'), 'this-should-be-overridden'));
         self::assertSame('dark', $event->colorscheme, 'dark_sky is a real dark skin (SkinCatalog)');
+    }
+
+    /**
+     * Real bug this test locks in: `GetColorscheme` fires from inside
+     * `Template`'s own constructor, *before* `CurrentTemplate::set()`
+     * runs (`RequestBootstrap::finalize()`'s real call order) --
+     * `ExtensionContext::template()` throws if called from that
+     * handler, in the real pipeline, not only when a test dispatches
+     * the event directly. `GetPageAssets` (dispatched from
+     * `Renderer::render()`, well after `CurrentTemplate` is set) is the
+     * one this port's own `Theme::onGetPageAssets()` uses instead --
+     * this test builds a real `Template`, registers it as *the* current
+     * one (matching what `RequestBootstrap::finalize()` does for a real
+     * request), and confirms dispatching doesn't throw.
+     */
+    public function testGetPageAssetsContributesMenuhScriptWithoutThrowing(): void
+    {
+        $registry = $this->realRegistry();
+        $registry->install('modus');
+        $registry->activate('modus');
+
+        $template = TemplateTestFactory::build(
+            root: rtrim($this->extractedThemesDir, '/'),
+            theme: 'modus',
+        );
+        CurrentTemplateTestFactory::get()
+            ->set($template);
+
+        $registry->bootCurrent(ThemeId::from('modus'));
+
+        $event = $this->eventDispatcher->dispatch(new GetPageAssets());
+
+        $menuhScript = null;
+        foreach ($event->assets as $asset) {
+            if ($asset->id === 'modus-menuh') {
+                $menuhScript = $asset;
+            }
+        }
+        self::assertNotNull($menuhScript, 'Theme::onGetPageAssets() must contribute the modus-menuh script');
+        self::assertSame('themes/modus/dist/menuh.js', $menuhScript->path);
     }
 
     private function realRegistry(): ThemeRegistry

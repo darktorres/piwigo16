@@ -19,6 +19,23 @@ import { pwg_getPageData, pwg_getPageString } from "./pageData";
 import { ajax, AjaxError } from "./vendor/utils/ajax";
 import { css, ready } from "./vendor/utils/dom";
 
+// P29.6: a small, deliberate override slot, following ratingAutoQueue.ts's
+// own module-level mutable-handler shape -- no theme needs this yet, so it
+// stays `null` and every call below falls through to changeImgSrc()'s
+// existing body unchanged. The modus theme's photo-autosize.ts is the
+// real, planned consumer (a DPR-aware derivative-src switch); `picture.ts`
+// itself has no exported hook otherwise, and changeImgSrc() is
+// module-private.
+let derivativeSwitchOverride:
+  | ((url: string, typeSave: string, typeMap: string) => void)
+  | null = null;
+
+export function setDerivativeSwitchOverride(
+  fn: typeof derivativeSwitchOverride,
+): void {
+  derivativeSwitchOverride = fn;
+}
+
 function changeImgSrc(url: string, typeSave: string, typeMap: string): void {
   const theImg = document.querySelector<HTMLImageElement>("#theMainImage");
   if (theImg) {
@@ -54,14 +71,20 @@ if (derivativeSwitchBox) {
       return;
     }
     e.preventDefault();
-    changeImgSrc(
+    const url =
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- every real "[data-derivative-url]" link always renders all 3 data attributes together (the same template row).
-      link.dataset["derivativeUrl"]!,
+      link.dataset["derivativeUrl"]!;
+    const typeSave =
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see above.
-      link.dataset["derivativeTypeSave"]!,
+      link.dataset["derivativeTypeSave"]!;
+    const typeMap =
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- see above.
-      link.dataset["derivativeTypeMap"]!,
-    );
+      link.dataset["derivativeTypeMap"]!;
+    if (derivativeSwitchOverride) {
+      derivativeSwitchOverride(url, typeSave, typeMap);
+    } else {
+      changeImgSrc(url, typeSave, typeMap);
+    }
   });
 }
 registerSwitchBox("#derivativeSwitchLink", "#derivativeSwitchBox");

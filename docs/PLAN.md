@@ -131,7 +131,7 @@ Three structural changes produced that drift:
 | P26 | Admin fragment surface — UI-facing WS methods off the envelope | Done — the WS layer no longer exists at all; every admin UI surface already renders via Latte pages/fragments, not a JSON/XML envelope | ~15 |
 | P27 | Public API v1 (REST + OpenAPI 3.2 + tus) — WS deleted here | Done — 134 `Controller\Api\*` files, 88 registered `/api/v1` routes, full tus 1.0.0 chunked-upload protocol (6 dedicated controllers), RFC 9457 problem+json errors, hand-authored OpenAPI 3.2 spec (88 operations/11 domains) with a `redocly lint` CI gate + Gesso runtime contract enforcement, a generated TypeScript client, REST-body `Content-Type` validation (SEC-39), and an opt-in `Idempotency-Key` replay store (SEC-65); see Epoch G | ~151 |
 | P28 | Security hardening | Not started | 0 |
-| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 (port the `modus` theme) underway: Phase 0 (verification spike), Phase 1 (core/shared infrastructure, 11 sub-items P29.6-A..K), and Phase 2 (template `{block}`-refactor of `themes/default`, 6 templates, P29.6-L..P) done in this repo; Phase 3 (package scaffold) done in the sibling `../piwigo16-themes` repo (`modus_17.0.0/`, not this repo's own `themes/`); Phases 4-11 (admin settings, CSS/skins, JS/masonry, i18n, packaging, verification), also in `../piwigo16-themes`, not started — see its own entries below | 33 |
+| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 (port the `modus` theme) underway: Phase 0 (verification spike), Phase 1 (core/shared infrastructure, 11 sub-items P29.6-A..K), and Phase 2 (template `{block}`-refactor of `themes/default`, 6 templates, P29.6-L..P) done in this repo; Phases 3-4 (package scaffold + admin settings page) done in the sibling `../piwigo16-themes` repo (`modus_17.0.0/`, not this repo's own `themes/`); Phases 5-11 (CSS/skins, JS/masonry, i18n, packaging, verification), also in `../piwigo16-themes`, not started — see its own entries below | 33 |
 | P30 | Layer decoupling + repository restructure | Done — deptrac's 6-layer model enforces 0 violations in CI (established P6); the pre-consolidation repository-restructure plan's load-bearing goals were already met by the simpler `public/`-as-sibling-directory approach that shipped | 1 |
 | P31 | Smarty → Latte template migration | Done | 80 |
 | P32 | Latte lint/format tooling | Done — enforcement is P45 | 11 |
@@ -1546,9 +1546,25 @@ registration just needs to pass its own version explicitly (the
 parameter's own default falls back to *core's* `AppInfo::VERSION`, not
 the extension's).
 
-Phases 4-11 (admin settings page, CSS/skins, JS/masonry port, i18n,
-packaging refinement, and the mandatory closing verification gate)
-remain scoped but not started, all in `../piwigo16-themes/modus_17.0.0/`.
+Phase 4 (admin settings page) landed in `../piwigo16-themes/modus_17.0.0/`
+(commit `02ec547`): `Theme::handleSettingsRequest()` (real CSRF check
+via `ExtensionContext::checkCsrfOrFail()`, legacy had none),
+`src/ModusSettingsView.php` + `template/modus_admin.latte` (skin picker
+with a colorbox screenshot preview, the square-thumbs slider, two
+derivative-size `<select>`s sourced from `ImageStdParams::
+getDefinedTypeMap()`'s keys, page-banner checkbox), and `js/settings.ts`
+— the first real exercise of the new `build:ported-extensions` tool,
+built into `dist/settings.js` and referenced directly (not the `.ts`
+source) with its own real version string for cache-busting.
+`theme.json` now declares `hasSettings: true`. Verified via
+`composer analyse:phpstan:extensions` (clean, 7 files), `tools/latte-lint.php`
+on the new template, and a standalone `tsc --noEmit` run (this repo has
+no `tsconfig.json` of its own — a scratch config extending
+`../piwigo17-rewrite`'s real one).
+
+Phases 5-11 (CSS/skins, JS/masonry port, i18n, packaging refinement,
+and the mandatory closing verification gate) remain scoped but not
+started, all in `../piwigo16-themes/modus_17.0.0/`.
 
 **P30 — Layer decoupling + repository restructure.** Both halves done.
 

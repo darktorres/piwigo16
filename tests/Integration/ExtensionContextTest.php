@@ -37,6 +37,7 @@ use Piwigo\Db\TypedRepository;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\ExtensionContext;
@@ -251,6 +252,7 @@ final class ExtensionContextTest extends IntegrationTestCase
             $this->categoryWriteFacade,
             new Renderer($this->containerGet(CurrentTemplate::class)),
             $this->containerGet(CookieService::class),
+            $this->containerGet(ImageStdParams::class),
         );
     }
 
@@ -970,6 +972,19 @@ final class ExtensionContextTest extends IntegrationTestCase
 
         self::assertSame('2small', $context->coreIndexDeriv());
         self::assertSame('xsmall', $context->corePictureDeriv());
+    }
+
+    /**
+     * P29.6 (the `modus` theme port): `imageStdParams()` exposes the same
+     * shared, already-composed `ImageStdParams` instance the container
+     * hands to real production code, needed for a settings page listing
+     * real derivative-size choices.
+     */
+    public function testImageStdParamsReturnsTheSameSharedInstanceCoreCodeReads(): void
+    {
+        $context = $this->buildContext(PluginId::from('any-plugin'));
+
+        self::assertSame($this->containerGet(ImageStdParams::class), $context->imageStdParams());
     }
 
     public function testDispatchReachesARegisteredHandler(): void

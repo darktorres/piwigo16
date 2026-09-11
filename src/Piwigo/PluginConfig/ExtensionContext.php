@@ -28,6 +28,7 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\View;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\LangService;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\Facade\CategoryWriteFacade;
@@ -102,6 +103,7 @@ final readonly class ExtensionContext
         private CategoryWriteFacade $categoryWriteFacade,
         private Renderer $renderer,
         private CookieService $cookieService,
+        private ImageStdParams $imageStdParams,
     ) {}
 
     /**
@@ -412,6 +414,18 @@ final readonly class ExtensionContext
     public function cookies(): ExtensionCookie
     {
         return new ExtensionCookie($this->cookieService, $this->extensionId);
+    }
+
+    /**
+     * `ImageStdParams` is already a narrow, read-oriented value object --
+     * exposed directly, matching the `images()`/`users()`/`themes()`
+     * narrow-facade convention above without inventing a redundant wrapper
+     * class around a type that's already narrow. Needed for a settings
+     * page listing real derivative-size choices (P29.6, the `modus` theme).
+     */
+    public function imageStdParams(): ImageStdParams
+    {
+        return $this->imageStdParams;
     }
 
     /**

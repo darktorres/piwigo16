@@ -42,6 +42,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\LoungeMaintenance;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
@@ -148,6 +149,7 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
         private CurrentLogger $currentLogger,
         private Renderer $renderer,
         private CookieService $cookieService,
+        private ImageStdParams $imageStdParams,
     ) {}
 
     #[Override]
@@ -288,6 +290,7 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
             $this->categoryWriteFacade($conn),
             $this->renderer,
             $this->cookieService,
+            $this->imageStdParams,
         );
     }
 

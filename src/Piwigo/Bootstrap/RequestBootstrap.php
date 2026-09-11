@@ -640,6 +640,7 @@ final class RequestBootstrap
             self::categoryWriteFacade($conn),
             self::templateRenderer(),
             new CookieService(),
+            self::imageStdParams(),
         );
     }
 

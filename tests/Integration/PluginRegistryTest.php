@@ -29,6 +29,7 @@ use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\ExtensionContextFactory;
@@ -150,6 +151,7 @@ final class PluginRegistryTest extends IntegrationTestCase
             $categoryWriteFacade,
             new Renderer($this->containerGet(CurrentTemplate::class)),
             $this->containerGet(CookieService::class),
+            $this->containerGet(ImageStdParams::class),
         );
     }
 

@@ -19,6 +19,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\Facade\CategoryWriteFacade;
 use Piwigo\PluginConfig\Facade\ImageReadFacade;
@@ -68,6 +69,7 @@ final readonly class ExtensionContextFactory
         private CategoryWriteFacade $categoryWriteFacade,
         private Renderer $renderer,
         private CookieService $cookieService,
+        private ImageStdParams $imageStdParams,
     ) {}
 
     public function build(PluginId|ThemeId $extensionId): ExtensionContext
@@ -99,6 +101,7 @@ final readonly class ExtensionContextFactory
             $this->categoryWriteFacade,
             $this->renderer,
             $this->cookieService,
+            $this->imageStdParams,
         );
     }
 }

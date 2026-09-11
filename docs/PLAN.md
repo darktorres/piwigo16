@@ -1592,9 +1592,77 @@ instead of an HTTP fetch, and skips cleanly when the sibling repo isn't
 checked out). All 23 pass; the existing 5579-test Unit/Arch suite still
 passes after the shared `tests/bootstrap.php` change.
 
-Phases 5-11 (CSS/skins, JS/masonry port, i18n, packaging refinement,
-and the mandatory closing verification gate) remain scoped but not
-started, all in `../piwigo16-themes/modus_17.0.0/`.
+Phase 5 (CSS/skins) landed in `../piwigo16-themes/modus_17.0.0/`
+(commit `157ece2`): `theme.css` consolidates the Smarty-templated
+`css/*.css.tpl` chain into static CSS, replacing every
+`{if !empty($skin.X)}` gate with `var(--modus-x)` (no fallback — an
+unset custom property makes its own declaration invalid-at-compute-time,
+which is treated as if the declaration were never written, reproducing
+the Smarty gate exactly) or, at the handful of sites where legacy's own
+gate intentionally falls through to a *different* token (pageTitle
+link color reverting to `A`'s color; `buttons` reusing `controls`'
+look when a skin defines no buttons section), an explicit
+`var(a, var(b))` chain instead. The ~35 new `--modus-*` tokens are
+registered via `@property` (unlayered, matching `themes/default/css/
+tokens.css`'s own convention) so stylelint can still typecheck real
+`var()` misuse in this new code.
+
+**Real discovery the original plan's `*.css.tpl` glob missed
+entirely**: `template/header.tpl`'s actual `combine_css` call order
+pulls in 3 more real, always-loaded files — `open-sans/open-sans.css`
+(a plain `<link>`, not combined; sets the theme's real body font,
+`base.css.tpl` itself only ever declares Arial/Helvetica), `tags.css`,
+and a skin-agnostic, un-templated 889-line `hf_base.css` that loads
+*last* of the skin-agnostic files and so wins every same-specificity
+tie against base/picture/index/menuh/tags — including a hardcoded
+`100×100px` nav-thumbnail size that silently overrides
+`picture.css.tpl`'s own `$SQUARE_WIDTH`-based sizing, meaning that
+hardcoded value, not the dynamic one, is what modus_16.3.0.1 users
+actually see today. All 3 are folded into `theme.css` in their real
+load position. `plugin_compatibility.css` is dropped outright — every
+rule in it is scoped to the UserCollections plugin, which has no v17
+port. Vendored fontello + open-sans webfonts (woff2/woff only, this
+fork's modern-browser-only baseline; `.eot`/`.svg`/`.ttf` dropped).
+
+18 `skins/<id>.css` files: a generated `:root { --modus-*: ... }`
+block per skin (from that skin's own real `.inc.php` array, via a
+throwaway PHP extraction script) plus, for the 11 skins with their own
+hand-authored `.css` override file, that file's content appended
+verbatim in the same `@layer theme-skin` block, matching real load
+order (skin CSS loads last of everything). Generated and
+verbatim-appended via script rather than hand-retyped specifically to
+avoid transcription errors across ~8,800 lines of real per-skin CSS —
+verified by spot-reading generated output, not just trusting the
+script.
+
+**CSS-lint policy decision** (a real "are you doing this properly"
+question, answered here rather than assumed): stylelint against
+`theme.css` + all 18 skin files reports ~3,300 findings, but every one
+is `selector-type-case`/`color-named`/`csstools/use-logical`/
+`a11y/selector-pseudo-class-focus`/`declaration-no-important`-class
+house-style rules — zero real CSS syntax errors (confirmed by manually
+checking every distinct rule name; a couple of genuine pre-existing
+vendor typos surfaced this way too, e.g. `:placeholder` missing its
+second colon in 2 skins' own `.css` files — left as-is, since "fix" would
+change rendered behavior for a decorative, non-settings-affecting
+detail, and this port's mandate is fidelity to the real shipped
+theme). This repo already treats *other* vendored CSS the same way —
+`themes/admin/default/fontello/css/animation.css` carries its own
+`stylelint-suppressions.json` entries rather than being rewritten to
+house style — so modus's ported skin art gets the same treatment:
+faithful transcription, not a rewrite into this repo's own RTL/
+accessibility/naming conventions. `stylelint-suppressions.json` itself
+isn't touched, since it only governs paths inside *this* repo; a
+dedicated cross-repo CSS-lint tool (mirroring
+`analyse:phpstan:extensions`/`build:ported-extensions`) would be a
+reasonable future addition but wasn't built now — same accepted-gap
+treatment as the already-documented ESLint-can't-reach-sibling-repos
+limitation from Phase 4.
+
+Phases 6-11 (template overrides via Phase 2's `{block}` seams, JS/
+masonry port, i18n, packaging refinement, and the mandatory closing
+verification gate) remain scoped but not started, all in
+`../piwigo16-themes/modus_17.0.0/`.
 
 **P30 — Layer decoupling + repository restructure.** Both halves done.
 

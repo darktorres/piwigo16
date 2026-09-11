@@ -16,6 +16,7 @@ use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Auth\CookieService;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Bootstrap\Event\Init;
 use Piwigo\Bootstrap\Projection\HeaderMessagesPageContext;
@@ -638,6 +639,7 @@ final class RequestBootstrap
             self::imageWriteFacade($conn),
             self::categoryWriteFacade($conn),
             self::templateRenderer(),
+            new CookieService(),
         );
     }
 

@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Latte\Runtime\Html;
 use LogicException;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\CookieService;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\PhotoSortOrder;
 use Piwigo\Common\ValueObject\PluginId;
@@ -100,6 +101,7 @@ final readonly class ExtensionContext
         private ImageWriteFacade $imageWriteFacade,
         private CategoryWriteFacade $categoryWriteFacade,
         private Renderer $renderer,
+        private CookieService $cookieService,
     ) {}
 
     /**
@@ -400,6 +402,16 @@ final readonly class ExtensionContext
     public function corePictureDeriv(): ?string
     {
         return $this->sessionService->getPictureDeriv();
+    }
+
+    /**
+     * Namespaced `pwg_*` cookie accessor -- see `ExtensionCookie`'s own
+     * docblock for why this doesn't reopen `CookieService`'s deliberate
+     * "no generic reader" rule.
+     */
+    public function cookies(): ExtensionCookie
+    {
+        return new ExtensionCookie($this->cookieService, $this->extensionId);
     }
 
     /**

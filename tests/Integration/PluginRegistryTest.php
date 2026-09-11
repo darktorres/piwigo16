@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Override;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\CookieService;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -148,6 +149,7 @@ final class PluginRegistryTest extends IntegrationTestCase
             $imageWriteFacade,
             $categoryWriteFacade,
             new Renderer($this->containerGet(CurrentTemplate::class)),
+            $this->containerGet(CookieService::class),
         );
     }
 

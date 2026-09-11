@@ -11,6 +11,7 @@ use Nyholm\Psr7\ServerRequest;
 use Override;
 use Piwigo\Admin\LoadedPlugins;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\CookieService;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -171,6 +172,7 @@ final class PluginSettingsPageDispatchTest extends IntegrationTestCase
             $imageWriteFacade,
             $categoryWriteFacade,
             new Renderer($this->containerGet(CurrentTemplate::class)),
+            $this->containerGet(CookieService::class),
         );
 
         $this->containerGet(CurrentTemplate::class)->set(TemplateTestFactory::build());

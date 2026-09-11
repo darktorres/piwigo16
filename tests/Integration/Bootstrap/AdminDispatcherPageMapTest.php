@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Override;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\CookieService;
 use Piwigo\Bootstrap\AdminDispatcher;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
@@ -144,6 +145,7 @@ final class AdminDispatcherPageMapTest extends IntegrationTestCase
             $imageWriteFacade,
             $categoryWriteFacade,
             new Renderer($this->containerGet(CurrentTemplate::class)),
+            $this->containerGet(CookieService::class),
         );
     }
 

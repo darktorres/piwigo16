@@ -12,6 +12,7 @@ use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Auth\CookieService;
 use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
@@ -146,6 +147,7 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
         private CurrentPluginRegistry $currentPluginRegistry,
         private CurrentLogger $currentLogger,
         private Renderer $renderer,
+        private CookieService $cookieService,
     ) {}
 
     #[Override]
@@ -285,6 +287,7 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
             $this->imageWriteFacade($conn),
             $this->categoryWriteFacade($conn),
             $this->renderer,
+            $this->cookieService,
         );
     }
 

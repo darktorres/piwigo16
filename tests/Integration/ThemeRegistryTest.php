@@ -10,6 +10,7 @@ use LogicException;
 use Nyholm\Psr7\ServerRequest;
 use Override;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\CookieService;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -149,6 +150,7 @@ final class ThemeRegistryTest extends IntegrationTestCase
             $imageWriteFacade,
             $categoryWriteFacade,
             new Renderer($this->containerGet(CurrentTemplate::class)),
+            $this->containerGet(CookieService::class),
         );
     }
 

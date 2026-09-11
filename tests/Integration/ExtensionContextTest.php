@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Override;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Auth\CookieService;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -249,6 +250,7 @@ final class ExtensionContextTest extends IntegrationTestCase
             $this->imageWriteFacade,
             $this->categoryWriteFacade,
             new Renderer($this->containerGet(CurrentTemplate::class)),
+            $this->containerGet(CookieService::class),
         );
     }
 
@@ -912,6 +914,39 @@ final class ExtensionContextTest extends IntegrationTestCase
             ->remove('key');
         self::assertNull($pluginA->session()->get('key'));
         self::assertSame('value-from-b', $pluginB->session()->get('key'), 'removing plugin-a\'s key must not affect plugin-b\'s');
+    }
+
+    /**
+     * P29.6 (the `modus` theme port): same real-world scenario as
+     * `testSessionIsNamespacedPerExtensionId()`, for cookies -- two
+     * extensions writing the same bare key must never collide, and
+     * `CookieService`'s own deliberate "no generic reader" rule stays
+     * intact (this reads `$_COOKIE` directly, namespaced, the same way its
+     * own named accessors do).
+     */
+    public function testCookiesAreNamespacedPerExtensionId(): void
+    {
+        $_COOKIE = [];
+
+        $pluginA = $this->buildContext(PluginId::from('plugin-a'));
+        $pluginB = $this->buildContext(PluginId::from('plugin-b'));
+
+        // setcookie() itself can't be observed under the CLI SAPI (see
+        // CookieService::setCookieVar()'s own docblock) -- $_COOKIE is the
+        // one real, externally observable effect available here, same
+        // idiom this class's own get()/set() pair relies on internally.
+        $pluginA->cookies()
+            ->set('key', 'value-from-a');
+        $pluginB->cookies()
+            ->set('key', 'value-from-b');
+
+        self::assertSame('value-from-a', $pluginA->cookies()->get('key'));
+        self::assertSame('value-from-b', $pluginB->cookies()->get('key'));
+
+        $pluginA->cookies()
+            ->remove('key');
+        self::assertNull($pluginA->cookies()->get('key'));
+        self::assertSame('value-from-b', $pluginB->cookies()->get('key'), 'removing plugin-a\'s key must not affect plugin-b\'s');
     }
 
     /**

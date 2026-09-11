@@ -1659,10 +1659,90 @@ reasonable future addition but wasn't built now — same accepted-gap
 treatment as the already-documented ESLint-can't-reach-sibling-repos
 limitation from Phase 4.
 
-Phases 6-11 (template overrides via Phase 2's `{block}` seams, JS/
-masonry port, i18n, packaging refinement, and the mandatory closing
-verification gate) remain scoped but not started, all in
-`../piwigo16-themes/modus_17.0.0/`.
+Phase 6 (template overrides, items 27-30) landed in
+`../piwigo16-themes/modus_17.0.0/` (5 commits). **Real source for all
+of Phase 6** turned out to be `functions.inc.php`'s
+`modus_smarty_prefilter()` — a compile-time Smarty prefilter that
+regex-patches the *compiled source* of `default`'s inherited templates
+(exactly the mechanism Phase 2's `{block}` seams were designed to
+replace) — read in full before writing any override, rather than
+inferred from the plan's own summary text.
+
+- **Item 27** (`layout.latte`): reproduces the prefilter's real
+  `#theHeader` gate, `!empty($PAGE_BANNER) && $MODUS_DISPLAY_PAGE_BANNER`
+  — the second half a genuine webmaster-facing admin-settings checkbox
+  (`ModusThemeSettings::$displayPageBanner`, Phase 4's own settings
+  page), not a core value. New `ModusPageBannerVisibilityPageContext` +
+  `Template::assignContext()` carries it into the template's scope,
+  assigned from `Theme::onGetColorscheme()` (unrelated in substance,
+  but the one event modus already subscribes to that fires from
+  `Template::setTheme()` at a point where `ExtensionContext::template()`
+  is actually callable — `boot()` itself throws on that call). The
+  legacy body-class hook `modus-withPageBanner` is dropped — confirmed
+  dead, zero real CSS anywhere in the whole legacy theme references it.
+- **Items P29.6-Q/R** (new, `themes/default` itself): 2 more targeted
+  `{block}` seams discovered while implementing item 28 —
+  `{block toolBarImageNumber}` (around `picture.latte`/`slideshow.latte`'s
+  `imageNumber` div, so modus can empty it) and `{block actionButtons}`
+  (around `picture.latte`'s whole `.actionButtons` div, so modus's own
+  override can wrap it via `{include parent}` without re-typing ~90
+  lines of real button markup). Zero rendering change for `default`
+  itself — `composer test:golden-html` 91/91 (one *unrelated*
+  pre-existing baseline, `admin-themes-new`, needed updating for the
+  `modus_17.0.0` PEM entry a much earlier commit this same phase added
+  — never re-verified against golden-html until now).
+- **Item 28** (`picture.latte`/`slideshow.latte`): `class="titrePage"`
+  on `#imageHeaderBar`, the `imageNumber` move, and (`picture.latte`
+  only — confirmed against the real legacy `slideshow.tpl`, which has
+  no `.actionButtons` div at all) the `.actionButtonsWrapper` +
+  `#imageActionsSwitch` wrap via the new `actionButtons` seam.
+- **Item 29** (`index.latte`): the `#albumActionsSwitcher` mobile
+  toggle. Legacy's real gate is a *static, template-authored* `<li>`
+  count on the compiled Smarty source (`substr_count(...) > 2`), not
+  request data — default's own real content has always had well over 2
+  action buttons, so this renders unconditionally rather than
+  re-deriving a brittle literal-count check with no clean runtime
+  equivalent.
+- **Item 30, part 1** (`mainpage_categories.latte`/`thumbnails.latte`):
+  the `<img src="recent[_by_child].png">` → `<span class="albSymbol">`
+  glyph-span replacement (`MODUS_STR_RECENT`/`MODUS_STR_RECENT_CHILD`,
+  themeconf.inc.php's real UTF-8 constants U+273D/U+273B). **Part 2
+  (the masonry-mode branch) is deferred to Phase 8**, once the
+  server-side masonry helper exists to render against — not skipped,
+  a real sequencing dependency.
+
+**Items 31/32a/32b remain, both larger than the rest of Phase 6
+combined — flagged here, not attempted yet:**
+
+- **Item 31** (`picture_content_asize.latte`, adaptive picture sizing):
+  legacy's real `render_element_content` event handler
+  (`modus_picture_content()`, `themeconf.inc.php`) computes
+  `unique_derivatives`/`RVAS_PENDING` server-side and the template
+  itself is built entirely around `photo.autosize.js`'s `RVAS`/
+  `rvas_choose()` JS globals — genuinely blocked on Phase 7's own
+  `photo-autosize.ts` port existing first (writing the Latte template
+  now, with no JS to drive it, would ship inert markup). Also an open
+  question not yet resolved: does this repo have a
+  `render_element_content`-equivalent extension point for a theme to
+  override the main picture's own markup at all, or is that itself new
+  core infrastructure this port needs to add.
+- **Items 32a/32b** (`menubar_identification.latte`/`menubar.latte`/
+  `menubar_specials.latte`): reading the real legacy `menubar.tpl` in
+  full (155 lines) shows modus does not cleanly override
+  "identification" and "the rest" separately — it hand-rolls the
+  *entire* menubar from `$blocks` itself (per-block-id branching for
+  `mbLinks`/`mbTags`/`mbSpecials`, the `mbMostVisited`/`mbBestRated`/
+  `recent_pics` horizontal-hoisting `<dl>`s, the search box, and the
+  guest/logged-in identification split — two separate `float:right`
+  `<dl>`s with different `<dt>` label text, the logged-in case having
+  no `<dd>` at all). This is realistically its own full-`menubar.latte`
+  rewrite against the current `MenubarHtmlPageContext`/
+  `MenubarSpecialRow`/`MenubarSpecialKind` (Phase 1.6) data shape, not
+  a small block-seam addition like items 27-30 — scoped but not started.
+
+Phases 7-11 (JS/masonry port, i18n, packaging refinement, and the
+mandatory closing verification gate) remain scoped but not started,
+all in `../piwigo16-themes/modus_17.0.0/`.
 
 **P30 — Layer decoupling + repository restructure.** Both halves done.
 

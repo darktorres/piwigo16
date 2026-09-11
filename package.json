@@ -21,7 +21,8 @@
     "format:latte:fix": "prettier --write --plugin=./tools/latte-prettier/plugin.cjs \"{themes,template-extension}/**/*.latte\"",
     "knip": "knip",
     "size-limit": "node tools/size-budget.mjs --verify && size-limit",
-    "size:update": "node tools/size-budget.mjs --update && prettier --write .size-limit.json"
+    "size:update": "node tools/size-budget.mjs --update && prettier --write .size-limit.json",
+    "build:ported-extensions": "node tools/build-ported-extension-assets.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.2",

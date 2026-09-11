@@ -40,12 +40,16 @@
           </span>
           <span n:if="$showThumbnailCaption" class="thumbLegend">
             <span class="thumbName">{$thumbnail->name}</span>
+            {var $hasIconTs = $thumbnail->iconTs !== null}
+            {var $iconTsTitle = $thumbnail->iconTs?->title}
+            {block albSymbol}
             <img
-              n:if="$thumbnail->iconTs !== null"
-              title="{$thumbnail->iconTs->title}"
+              n:if="$hasIconTs"
+              title="{$iconTsTitle}"
               src="{$ROOT_URL}{$themeconf['icon_dir']}/recent.png"
               alt="(!)"
             >
+            {/block}
             <span
               n:if="$thumbnail->nbComments !== null"
               class="{if $thumbnail->nbComments === 0}zero {/if}nb-comments"

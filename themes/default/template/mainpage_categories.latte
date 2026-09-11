@@ -34,12 +34,17 @@
         <div class="description">
           <h3>
             <a href="{$cat->url}">{$cat->name}</a>
+            {var $hasIconTs = $cat->iconTs !== null}
+            {var $iconTsTitle = $cat->iconTs?->title}
+            {var $iconTsByChild = $cat->iconTs !== null && $cat->iconTs->isChildDate}
+            {block albSymbol}
             <img
-              n:if="$cat->iconTs !== null"
-              title="{$cat->iconTs->title}"
-              src="{$ROOT_URL}{$themeconf['icon_dir']}/recent{if $cat->iconTs->isChildDate}_by_child{/if}.png"
+              n:if="$hasIconTs"
+              title="{$iconTsTitle}"
+              src="{$ROOT_URL}{$themeconf['icon_dir']}/recent{if $iconTsByChild}_by_child{/if}.png"
               alt="(!)"
             >
+            {/block}
           </h3>
           <div class="text">
             <p

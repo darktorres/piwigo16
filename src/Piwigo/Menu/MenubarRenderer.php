@@ -39,6 +39,7 @@ use Piwigo\Menu\Projection\MenubarQuerySearchPageContext;
 use Piwigo\Menu\Projection\MenubarRelatedCategoriesView;
 use Piwigo\Menu\Projection\MenubarRelatedCategoryRow;
 use Piwigo\Menu\Projection\MenubarSpecialRow;
+use Piwigo\Menu\Projection\MenubarSpecialsPageContext;
 use Piwigo\Menu\Projection\MenubarSpecialsView;
 use Piwigo\Menu\Projection\MenubarTagRow;
 use Piwigo\Menu\Projection\MenubarTagsView;
@@ -272,8 +273,10 @@ final class MenubarRenderer
             }
         }
 
+        $specials = [];
+        $menuLinks = [];
+
         if (($block = $menu->getBlock('mbSpecials')) instanceof DisplayBlock) {
-            $specials = [];
             if (! $accessLevelChecker->isAGuest()) {// favorites
                 $specials[] = new MenubarSpecialRow(
                     url: $urlService->makeIndexUrl([
@@ -444,6 +447,7 @@ final class MenubarRenderer
         }
 
         $template->assignContext(new MenubarQuerySearchPageContext($query_search));
+        $template->assignContext(new MenubarSpecialsPageContext($specials, $menuLinks));
 
         $menu->apply();
 

@@ -1421,9 +1421,15 @@ name used in `picture.latte` (P29.6-M), for modus's own slideshow
 override (Phase 6). Verified byte-identical via `composer test:golden-html`
 (91/91 passed).
 
+**P29.6-O (Done)** — `themes/default/template/index.latte` gets an empty
+`{block categoryActionsSwitcher}{/block}` seam immediately before
+`<ul class="categoryActions">`, for modus's own albumActionsSwitcher
+button (Phase 6). True no-op today. Verified byte-identical via
+`composer test:golden-html` (91/91 passed).
+
 Phase 2 (refactor `themes/default`'s remaining templates to expose named
 `{block}` regions modus's overrides will extend —
-`index.latte`, `mainpage_categories.latte`,
+`mainpage_categories.latte`,
 `thumbnails.latte`) continues next; Phases 3-11 (the modus package itself,
 CSS/skins, JS/masonry port, i18n, packaging, and the mandatory closing
 verification gate) remain scoped but not started.

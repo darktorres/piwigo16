@@ -1519,6 +1519,33 @@ nothing existed yet; legacy's real `theme_activate()` always
 re-normalizes and re-persists on every activation. Both fixed and
 re-verified (16-scenario manual script, PHPStan, ECS).
 
+**New tool, real architectural gap closed ahead of Phase 7's JS port**:
+a ported extension's own `.ts` source (in `../piwigo16-plugins`/
+`../piwigo16-themes`) can never become part of this repo's own
+`vite.config.ts` `rollupOptions.input` (only scans this repo's own
+tree), so its `AssetContribution::script()` call would otherwise serve
+raw, unexecutable TypeScript on a live install — "PEM serves zip files
+that are fully built," there is no build step there. New
+`tools/build-ported-extension-assets.mjs` (`bun run
+build:ported-extensions`, opt-in like `analyse:phpstan:extensions`)
+globs every port's own `js/*.ts` and bundles each into a self-contained
+ES module via Vite's programmatic `build()` API, writing output back
+into that same port's own `dist/` to ship inside its zip. The
+extension's own `AssetContribution::script()` then references
+`dist/<name>.js` directly — `PageAssets::resolvePath()` already falls
+back to serving an unmatched path as-is (the same mechanism 66/78 of
+this app's own theme JS files already rely on). Real bug caught by
+checking the actual `dist/` output rather than the exit code: the first
+run built this repo's *entire main app* (72+ entries) into the port's
+own `dist/`, because Vite's `build()` API auto-discovers and uses this
+repo's own `vite.config.ts` from CWD unless `configFile: false` is set
+explicitly. Cache-busting needs no new work either — `AssetContribution::
+script()`'s existing `$version` param already produces a `?v=<version>`
+query string (`Template.php:938-939`); a ported extension's own script
+registration just needs to pass its own version explicitly (the
+parameter's own default falls back to *core's* `AppInfo::VERSION`, not
+the extension's).
+
 Phases 4-11 (admin settings page, CSS/skins, JS/masonry port, i18n,
 packaging refinement, and the mandatory closing verification gate)
 remain scoped but not started, all in `../piwigo16-themes/modus_17.0.0/`.

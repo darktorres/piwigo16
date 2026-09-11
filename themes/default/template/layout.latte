@@ -264,7 +264,7 @@
         {/foreach}
       </div>
 
-      <div id="theHeader">{$PAGE_BANNER}</div>
+      {block pageBanner}<div id="theHeader">{$PAGE_BANNER}</div>{/block}
 
       <div n:if="$header_notes !== null" class="header_notes">
         <p n:foreach="$header_notes as $elt">{$elt}</p>

@@ -1415,9 +1415,15 @@ used to be (not after it) to reproduce the exact same newline-eating
 arithmetic. Verified byte-identical via `composer test:golden-html`
 (91/91 passed).
 
+**P29.6-N (Done)** — `themes/default/template/slideshow.latte`'s
+`#imageHeaderBar` div wrapped in the same `{block imageHeaderBar}` seam
+name used in `picture.latte` (P29.6-M), for modus's own slideshow
+override (Phase 6). Verified byte-identical via `composer test:golden-html`
+(91/91 passed).
+
 Phase 2 (refactor `themes/default`'s remaining templates to expose named
 `{block}` regions modus's overrides will extend —
-`slideshow.latte`, `index.latte`, `mainpage_categories.latte`,
+`index.latte`, `mainpage_categories.latte`,
 `thumbnails.latte`) continues next; Phases 3-11 (the modus package itself,
 CSS/skins, JS/masonry port, i18n, packaging, and the mandatory closing
 verification gate) remain scoped but not started.

@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "fs";
+import { existsSync, readdirSync, readFileSync } from "fs";
 import { join, resolve } from "path";
 
 // Real Vite bundle entries and knip's own `entry` field come from the
@@ -23,8 +23,30 @@ const KNOWN_NON_REGISTERED_ENTRIES = ["build/vitals.ts", "build/noop.ts"];
 // `new URL("../src", import.meta.url)` throws there. `import.meta.dirname`
 // needs no URL parsing at all and works in all 3.
 const srcDir = join(import.meta.dirname, "../src");
+// Every theme/plugin owns its own PSR-4 `src/` (registered at boot time via
+// its own `theme.json`/`plugin.json` `autoload.psr-4`, not the root
+// composer.json -- see `ThemeRegistry::registerAutoload()`), so a theme- or
+// plugin-owned `AssetContribution::script()` call lives outside `srcDir`
+// above and was never scanned for -- confirmed real and currently latent
+// (zero theme/plugin registers a script today; P29.6, the modus port, is
+// what first triggers it).
+const themesDir = join(import.meta.dirname, "../themes");
+const pluginsDir = join(import.meta.dirname, "../plugins");
+
+function findThemeAndPluginSrcDirs(root: string): string[] {
+  if (!existsSync(root)) {
+    return [];
+  }
+  return readdirSync(root, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => join(root, entry.name, "src"))
+    .filter((dir) => existsSync(dir));
+}
 
 function findPhpFiles(dir: string): string[] {
+  if (!existsSync(dir)) {
+    return [];
+  }
   const files: string[] = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const full = resolve(dir, entry.name);
@@ -52,21 +74,39 @@ function extractTsPath(callArgs: string): string | undefined {
   return path?.endsWith(".ts") === true ? path : undefined;
 }
 
-export function collectScriptEntries(): string[] {
+/**
+ * @param roots Overridable only for `collectScriptEntries.test.ts`'s own
+ *   fixture-tree assertions -- every real caller (`vite.config.ts`,
+ *   `knip.config.ts`) uses the default, real repo-relative roots.
+ */
+export function collectScriptEntries(
+  roots: { src: string; themes: string; plugins: string } = {
+    src: srcDir,
+    themes: themesDir,
+    plugins: pluginsDir,
+  },
+): string[] {
   const paths = new Set<string>(KNOWN_NON_REGISTERED_ENTRIES);
+  const scanDirs = [
+    roots.src,
+    ...findThemeAndPluginSrcDirs(roots.themes),
+    ...findThemeAndPluginSrcDirs(roots.plugins),
+  ];
 
-  for (const file of findPhpFiles(srcDir)) {
-    const content = readFileSync(file, "utf8");
-    const callPattern = /AssetContribution::script\(([^;]*?)\)/gs;
-    let match;
-    while ((match = callPattern.exec(content))) {
-      const [, callArgs] = match;
-      if (callArgs === undefined) {
-        continue;
-      }
-      const tsPath = extractTsPath(callArgs);
-      if (tsPath !== undefined) {
-        paths.add(tsPath);
+  for (const dir of scanDirs) {
+    for (const file of findPhpFiles(dir)) {
+      const content = readFileSync(file, "utf8");
+      const callPattern = /AssetContribution::script\(([^;]*?)\)/gs;
+      let match;
+      while ((match = callPattern.exec(content))) {
+        const [, callArgs] = match;
+        if (callArgs === undefined) {
+          continue;
+        }
+        const tsPath = extractTsPath(callArgs);
+        if (tsPath !== undefined) {
+          paths.add(tsPath);
+        }
       }
     }
   }

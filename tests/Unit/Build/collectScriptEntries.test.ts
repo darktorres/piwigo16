@@ -31,4 +31,27 @@ describe("collectScriptEntries()", () => {
     expect(entries).toContain("themes/admin/default/js/tags.ts");
     expect(entries).toContain("themes/default/js/mcs.ts");
   });
+
+  it("discovers a theme- and a plugin-owned AssetContribution::script() call under themes/*/src and plugins/*/src (P29.6 -- confirmed real and latent until a theme/plugin actually registers a script)", () => {
+    const fixtureRoot = join(import.meta.dirname, "../../Fixtures/Build/CollectScriptEntries");
+    const entries = collectScriptEntries({
+      src: join(fixtureRoot, "no-such-core-src-dir"),
+      themes: join(fixtureRoot, "themes"),
+      plugins: join(fixtureRoot, "plugins"),
+    });
+
+    expect(entries).toContain("themes/fixture-theme/src/fixture-theme.ts");
+    expect(entries).toContain("plugins/fixture-plugin/src/fixture-plugin.ts");
+  });
+
+  it("tolerates a src/themes/plugins root that doesn't exist, rather than throwing", () => {
+    const fixtureRoot = join(import.meta.dirname, "../../Fixtures/Build/CollectScriptEntries");
+    expect(() =>
+      collectScriptEntries({
+        src: join(fixtureRoot, "no-such-core-src-dir"),
+        themes: join(fixtureRoot, "no-such-themes-dir"),
+        plugins: join(fixtureRoot, "no-such-plugins-dir"),
+      }),
+    ).not.toThrow();
+  });
 });

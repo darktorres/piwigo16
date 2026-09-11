@@ -131,7 +131,7 @@ Three structural changes produced that drift:
 | P26 | Admin fragment surface — UI-facing WS methods off the envelope | Done — the WS layer no longer exists at all; every admin UI surface already renders via Latte pages/fragments, not a JSON/XML envelope | ~15 |
 | P27 | Public API v1 (REST + OpenAPI 3.2 + tus) — WS deleted here | Done — 134 `Controller\Api\*` files, 88 registered `/api/v1` routes, full tus 1.0.0 chunked-upload protocol (6 dedicated controllers), RFC 9457 problem+json errors, hand-authored OpenAPI 3.2 spec (88 operations/11 domains) with a `redocly lint` CI gate + Gesso runtime contract enforcement, a generated TypeScript client, REST-body `Content-Type` validation (SEC-39), and an opt-in `Idempotency-Key` replay store (SEC-65); see Epoch G | ~151 |
 | P28 | Security hardening | Not started | 0 |
-| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 unstarted | 22 |
+| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 (port the `modus` theme) underway: Phase 0 (verification spike) and Phase 1 (core/shared infrastructure, 11 sub-items P29.6-A..K) done; Phases 2-11 (template `{block}`-refactor, the theme package itself, CSS/skins, JS/masonry, i18n, packaging, verification) not started — see its own entries below | 33 |
 | P30 | Layer decoupling + repository restructure | Done — deptrac's 6-layer model enforces 0 violations in CI (established P6); the pre-consolidation repository-restructure plan's load-bearing goals were already met by the simpler `public/`-as-sibling-directory approach that shipped | 1 |
 | P31 | Smarty → Latte template migration | Done | 80 |
 | P32 | Latte lint/format tooling | Done — enforcement is P45 | 11 |
@@ -1200,7 +1200,8 @@ Sub-item tags: P29.0 EventDispatcher PSR-14 conformance +
 `Piwigo\Listener\*`; P29.1/P29.2 `ExtensionInterface` + manifests + JSON
 schemas + the `ExtensionContext` SDK; P29.3 `PluginRegistry`/
 `ThemeRegistry`; P29.4 request-time boot retarget; P29.5 admin lifecycle
-retarget + page-renderer listing merge; P29.7 SEC-49, `eval_visible`
+retarget + page-renderer listing merge; P29.6 porting the `modus` theme
+(own entries below, `P29.6-A` onward); P29.7 SEC-49, `eval_visible`
 replaced by a typed `CheckMenuLinkVisibility` event; P29.8 dead
 `PluginMaintain`/`ThemeMaintain`/`insertPlugin()` removal; P29.9
 `AppInfo::VERSION` bump to `17.0.0` plus a local PEM mirror; P29.10 full
@@ -1273,6 +1274,129 @@ The JSON manifest format is kept from the reference design.
 `opis/json-schema` and `composer/semver` are already resolved in
 `composer.lock` as transitive dependencies, so nothing new has to be
 introduced to validate manifests or compare versions.
+
+**P29.6 (in progress) — port the legacy `modus` theme onto the v17
+extension contract.** Full feasibility analysis at
+`docs/theme-porting/modus-port-analysis.md`; execution plan (11 phases,
+45 numbered sub-items) at the session plan file, re-verified by a
+12-agent read-only survey/adversarial-verify workflow before
+implementation started (caught one real bug in the draft plan itself —
+a `debug` skin colorscheme-labeling trap — and refuted one claim about
+3 menubar templates needing no override, when only 2 of the 3 actually
+don't). Three binding decisions, all picking the higher-investment,
+more-complete option: (1) a real runtime colorscheme-override event in
+core, not a static value; (2) a `{block}`-based Latte template-
+inheritance refactor of `default`'s own templates, not full-file copy
+overrides; (3) both of modus's "standard" and "masonry" thumbnail
+layout modes ship in v1, not deferred. Phase 0 and Phase 1 (core/shared
+infrastructure, independent of modus's own package) are done:
+
+**P29.6-A (Done)** — a live (not just statically-reasoned) confirmation
+that Latte's `{layout}` tag accepts a dynamic PHP expression
+(`{layout $ROOT_PATH . 'themes/default/template/layout.latte'}`), not
+only a bare string literal, and that a nested `{include}` inside an
+overriding block resolves relative to the child theme's own directory —
+kept as a permanent regression test
+(`tests/Unit/Template/LatteBlockInheritanceCrossDirectoryTest.php`)
+since this becomes load-bearing infrastructure for every future themed
+override (modus now, `elegant`/`smartpocket` later). A second test
+proves the negative: a bare `{layout 'layout.latte'}` self-references
+instead of reaching the intended file.
+
+**P29.6-B (Done)** — `build/collectScriptEntries.ts` only ever scanned
+core `src/**/*.php` for `AssetContribution::script()` calls, confirmed
+real and currently latent (zero theme/plugin registers a script today).
+Broadened to scan every `themes/*/src`/`plugins/*/src` directory that
+exists on disk, via a new optional `roots` parameter real callers
+(`vite.config.ts`, `knip.config.ts`) don't pass. A fixture theme +
+plugin under `tests/Fixtures/Build/CollectScriptEntries/` proves the
+new scan branch.
+
+**P29.6-C (Done)** — `CurrentConfig::$tagLettersColumnNumber` flipped
+from `public private(set)` to plain `public`, per the class's own
+documented rule (a property goes public exactly when a real external
+writer exists) — modus's boot()-time, device-responsive tag-cloud
+column count becomes that writer.
+
+**P29.6-D (Done)** — `ExtensionContext::coreIndexDeriv()`/
+`corePictureDeriv()`, two one-line pass-throughs to
+`SessionService::getIndexDeriv()`/`getPictureDeriv()`, deliberately
+separate from the per-extension-namespaced `session()` since these read
+real shared *core* session keys.
+
+**P29.6-E (Done)** — new `ExtensionCookie` + `ExtensionContext::cookies()`,
+mirroring `ExtensionSession`'s namespacing shape exactly
+(`pwg_ext_<id>_<key>`), without reopening `CookieService`'s own
+deliberate "no generic reader" rule (writes still go through the
+already-generic `setCookieVar()`; reads hit `$_COOKIE` directly, the
+same way `CookieService`'s own named accessors do). Threaded a new
+`CookieService` param through `ExtensionContext`/`ExtensionContextFactory`
+and all 6 real call sites.
+
+**P29.6-F (Done)** — `ExtensionContext::imageStdParams()`, exposing the
+already-composed, container-shared `ImageStdParams` instance directly
+(it's already a narrow read-oriented VO, so no wrapper facade needed) —
+matches the `images()`/`users()`/`themes()` convention. Same 6 call
+sites threaded.
+
+**P29.6-G (Done)** — new `Piwigo\Menu\MenubarSpecialKind` backed enum
+(`Favorites`/`MostVisited`/`BestRated`/`RecentPics`/`RecentCats`/
+`Random`/`Calendar`) and a new `MenubarSpecialRow::$kind`, populated at
+all 7 real `MenubarRenderer::render()` construction sites (exhaustively
+enumerated). Before this there was no way to tell "Most Visited" apart
+from "Best Rated" other than string-matching real, translated `$title`/
+`$name`. Lands ahead of its real reader (modus's own menubar override,
+Phase 6) on purpose — suppressed with this codebase's existing
+`@phpstan-ignore shipmonk.deadProperty` precedent for contract fields
+landing before their consumer.
+
+**P29.6-H (Done)** — `picture.ts`'s `derivativeSwitchOverride`, a small
+module-level mutable-handler slot (following `ratingAutoQueue.ts`'s own
+shape) on the derivative-size switcher's click handler — the only way
+an extension could ever intercept the derivative-src switch, since
+`changeImgSrc()` is module-private with no exported hook. Defaults to
+`null`; confirmed zero behavior change via the real
+`PictureControllerTest` Browser suite (37/37 passing).
+
+**P29.6-I (Done)** — `ThemeRegistry::bootCurrent()` now calls
+`Lang::load('theme.lang', <themeDir>)` for every theme in the resolved
+parent chain, before that theme's `boot()`. `Lang::load()` already
+transparently rewrites the historical `'<domain>.lang'` calling
+convention to the real `.po` sibling it actually reads (confirmed by
+direct source read, not assumed) — reuses its existing current-locale/
+parent-locale/default-locale fallback cascade. A no-op today (no theme
+ships a `language/` directory of its own yet); safe because theme
+`boot()` runs after `LanguageMiddleware` in the real pipeline order.
+
+**P29.6-J (Done)** — `PluginRegistry` now implements `SubscriberInterface`
+itself and self-registers in `bootActive()`; `onLoadingLang()` loads
+every active plugin's own `plugin.po` once `Lang\Event\LoadingLang`
+fires — deferred to that event rather than an inline call (unlike
+`ThemeRegistry`'s theme.po load) because plugin `boot()` runs *before*
+`LanguageMiddleware` sets up `Lang`'s real current-locale resolution, so
+an inline call would silently resolve the wrong locale. Deleted
+`LangService::loadLanguageForPlugin()`/`isInstalledLocale()` (zero real
+callers ever wired them up) and their 8 dedicated tests.
+**Real bug caught by the new regression test before it shipped**: the
+domain name passed to `Lang::load()` must be `'plugin.lang'`, not bare
+`'plugin'` — `Lang::load()` only rewrites a literal `.lang.php`-suffixed
+path to its `.po` sibling, so the bare form silently loaded nothing.
+
+**P29.6-K (Done)** — new `Piwigo\Template\Event\GetColorscheme`,
+dispatched from `Template::setTheme()` right after `ThemeChain::resolve()`
+and before the resolved `themeconf` is assigned to the page context —
+lets a theme override its own effective colorscheme at request time
+(decision 1 above). Zero-listener dispatch is a true no-op, confirmed
+by both an adversarial-verification pass and a real test with a
+registered handler mutating the value and receiving the real requested
+`ThemeId`. One-sentence addition to `docs/schemas/theme.schema.json`'s
+`colorscheme` description noting the runtime-override path.
+
+This closes P29.6's Phase 1. Phase 2 (refactor `themes/default`'s own
+templates to expose named `{block}` regions modus's overrides will
+extend) is next; Phases 3-11 (the modus package itself, CSS/skins,
+JS/masonry port, i18n, packaging, and the mandatory closing
+verification gate) remain scoped but not started.
 
 **P30 — Layer decoupling + repository restructure.** Both halves done.
 

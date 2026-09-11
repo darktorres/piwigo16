@@ -1562,6 +1562,36 @@ on the new template, and a standalone `tsc --noEmit` run (this repo has
 no `tsconfig.json` of its own — a scratch config extending
 `../piwigo17-rewrite`'s real one).
 
+**New test infrastructure, a real pre-existing gap closed**: ported
+extensions had no automated test coverage at all until now, only
+PHPStan + a manual live-install check. New
+`tests/Support/PortedExtensionAutoloader.php` registers real PSR-4
+autoloading for every ported extension's own `src/`, read from that
+port's own real `plugin.json`/`theme.json` `autoload.psr-4` map (the
+exact mechanism `ThemeRegistry::registerAutoload()`/`PluginRegistry`'s
+own equivalent use at runtime) — wired into `tests/bootstrap.php` (any
+test file can `use Piwigo\Theme\Modus\...` etc.) and into a new
+`tests/phpstan-ported-extensions-bootstrap.php` added to `phpstan.neon`'s
+own `bootstrapFiles` (the *main* `phpstan.neon` otherwise can't resolve
+a ported extension's classes referenced from `tests/PortedExtensions/**`
+at all — 67 real `class.notFound` errors caught live on the first
+attempt). New `PortedExtensions` testsuite + `composer
+test:ported-extensions`, kept separate from Unit/Integration/Browser
+(a ported extension's own test flakiness shouldn't gate this repo's
+core suite, same reasoning as `analyse:phpstan:extensions`/
+`build:ported-extensions`'s own opt-in precedent). First real content:
+`ModusThemeSettingsTest.php` (20 pure-VO tests, formalizing the exact
+throwaway-script scenarios that caught Phase 3's 2 real bugs into
+permanent regression coverage) and `ModusThemeIntegrationTest.php` (3
+tests against a *real extracted `modus_17.0.0.zip`*, not the versioned
+source directory directly — `ThemeRegistry::loadManifest()` requires
+the extracted directory's basename to equal `theme.json`'s own `id`,
+which the `_17.0.0`-suffixed catalog directory itself doesn't satisfy;
+mirrors a real PEM install's own fetch-extract step using the local zip
+instead of an HTTP fetch, and skips cleanly when the sibling repo isn't
+checked out). All 23 pass; the existing 5579-test Unit/Arch suite still
+passes after the shared `tests/bootstrap.php` change.
+
 Phases 5-11 (CSS/skins, JS/masonry port, i18n, packaging refinement,
 and the mandatory closing verification gate) remain scoped but not
 started, all in `../piwigo16-themes/modus_17.0.0/`.

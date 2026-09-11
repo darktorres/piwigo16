@@ -304,6 +304,7 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
             $this->currentConfig,
             $this->paths,
             $conn,
+            $this->lang,
         );
     }
 }

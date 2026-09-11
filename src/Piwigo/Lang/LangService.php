@@ -10,39 +10,24 @@ use Piwigo\Core\Paths;
 use Piwigo\Db\TypedRepository;
 
 /**
- * Thin object-oriented facade over Lang/Translator for constructor
- * injection -- t()/l10n() delegate straight to Lang::t(), matching the
- * now-deleted free function l10n()'s former contract exactly (both accept
- * a possibly-null key for parity with legacy call sites that pass an
- * unchecked array value).
+ * Thin object-oriented facade over Lang for constructor injection --
+ * t()/l10n() delegate straight to Lang::t(), matching the now-deleted free
+ * function l10n()'s former contract exactly (both accept a possibly-null
+ * key for parity with legacy call sites that pass an unchecked array
+ * value).
  *
- * loadLanguageForPlugin() is new: discovers and loads a plugin's own PO
- * file (`<pluginDir>/language/<locale>/plugin.po`). `$locale` is an
- * explicit parameter rather than resolved internally from
- * `Piwigo\Users\CurrentUser` -- `Piwigo\Lang\` is L1Infrastructure, and
- * deptrac's ruleset only lets L1Infrastructure depend on L0Data, not
- * upward on `Users`' L2aCoreDomain (same layer shape as `Kernel`'s
- * own `CurrentUser::attachGlobals()` exclusion). Callers resolve the
- * active locale themselves (typically `CurrentUser::get()->language`) and
- * pass it in.
- *
- * [SEC-26] `$locale` in real deployments is ultimately user/DB-controlled
- * (a registered user's stored language preference); validated against the
- * real, filesystem-verifiable set of installed `language/<locale>/`
- * directories under the core `language/` tree before it's composed into
- * any path, blocking path traversal (`../../etc/passwd`) or reads of
- * arbitrary files outside a plugin's language directory. There is no
- * `CurrentConfig::availableLanguages()` accessor to validate against
- * (not in the 277-key SCHEMA) -- the filesystem check is both simpler and
- * authoritative (a "locale" with no matching core directory isn't a real,
- * loadable locale regardless of what a DB row claims).
+ * `loadLanguageForPlugin()`/`isInstalledLocale()` (a plugin `.po` loader)
+ * were removed (P29.6): zero real callers ever wired them up, and the
+ * real, generalized mechanism ended up being
+ * `PluginConfig\PluginRegistry::onLoadingLang()`, which reuses `Lang::
+ * load()`'s own existing current-locale/parent-locale/default-locale
+ * fallback cascade rather than the narrower explicit-locale-only shape
+ * this class's own version had.
  */
 final readonly class LangService
 {
     public function __construct(
         private Lang $lang,
-        private Paths $paths,
-        private Translator $translator,
     ) {}
 
     public function t(?string $key, mixed ...$args): string
@@ -61,9 +46,8 @@ final readonly class LangService
      *
      * Static since it needs no other instance state, matching
      * InputValidator's own mixed static/instance precedent; takes Paths
-     * as an explicit parameter rather than $this->paths since a static
-     * method can't reach constructor-injected state, same as
-     * loadLanguageForPlugin()'s own $locale parameter.
+     * as an explicit parameter since a static method can't reach
+     * constructor-injected state.
      *
      * @return array<string, string>
      */
@@ -79,30 +63,5 @@ final readonly class LangService
         }
 
         return $languages;
-    }
-
-    public function loadLanguageForPlugin(string $pluginDir, string $locale): bool
-    {
-        if (! $this->isInstalledLocale($locale)) {
-            return false;
-        }
-
-        $poFile = rtrim($pluginDir, '/') . '/language/' . $locale . '/plugin.po';
-        if (! is_readable($poFile)) {
-            return false;
-        }
-
-        $this->translator->load($locale, $poFile);
-
-        return true;
-    }
-
-    private function isInstalledLocale(string $locale): bool
-    {
-        if (preg_match('/^[a-z]{2,3}(_[A-Z]{2})?$/', $locale) !== 1) {
-            return false;
-        }
-
-        return is_dir($this->paths->root . 'language/' . $locale);
     }
 }

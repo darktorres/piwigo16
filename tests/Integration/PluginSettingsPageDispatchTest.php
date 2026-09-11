@@ -236,6 +236,7 @@ final class PluginSettingsPageDispatchTest extends IntegrationTestCase
             $this->containerGet(CurrentConfig::class),
             $paths,
             $this->conn,
+            $this->containerGet(Lang::class),
         );
     }
 

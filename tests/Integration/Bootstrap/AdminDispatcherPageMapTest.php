@@ -203,6 +203,7 @@ final class AdminDispatcherPageMapTest extends IntegrationTestCase
             $this->containerGet(CurrentConfig::class),
             $paths,
             $this->conn,
+            $this->containerGet(Lang::class),
         );
     }
 

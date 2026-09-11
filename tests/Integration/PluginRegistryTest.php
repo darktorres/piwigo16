@@ -30,6 +30,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Lang\Event\LoadingLang;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\PluginConfig\ExtensionContextFactory;
@@ -214,6 +215,7 @@ final class PluginRegistryTest extends IntegrationTestCase
             $this->containerGet(CurrentConfig::class),
             $paths,
             $this->conn,
+            $this->containerGet(Lang::class),
         );
     }
 
@@ -1225,5 +1227,53 @@ final class PluginRegistryTest extends IntegrationTestCase
         $route = $routes->get($id . '_page');
         self::assertNotNull($route, 'the booted plugin\'s page route must land in the collection');
         self::assertSame('/' . $id . '.php', $route->getPath());
+    }
+
+    /**
+     * P29.6 regression test for the LoadingLang wiring: a real active
+     * plugin's own `language/<locale>/plugin.po` only becomes translatable
+     * once `LoadingLang` is dispatched (simulating `Http\Middleware\
+     * LanguageMiddleware`'s own real dispatch), never inline during
+     * `bootActive()` itself -- proving both halves of `PluginRegistry::
+     * onLoadingLang()`'s own contract: it fires at all, and it's genuinely
+     * deferred, not accidentally already-loaded by the time `bootActive()`
+     * returns.
+     */
+    public function testOnLoadingLangLoadsAnActivePluginsOwnPoFileOnceLoadingLangDispatches(): void
+    {
+        $dir = $this->makeTempDir();
+        $suffix = uniqid('', false);
+        $id = 'zz-lang-loading-' . $suffix;
+        $this->writeFixturePlugin($dir, $id, 'LangLoading' . $suffix);
+
+        mkdir($dir . '/' . $id . '/language/en_UK', 0o777, true);
+        file_put_contents($dir . '/' . $id . '/language/en_UK/plugin.po', <<<'PO'
+            msgid ""
+            msgstr ""
+            "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+            msgid "zz_lang_loading_greeting"
+            msgstr "fixture plugin hi"
+            PO);
+
+        $registry = $this->buildRegistry($dir);
+        $registry->install($id);
+        $registry->activate($id);
+
+        $lang = $this->containerGet(Lang::class);
+
+        $registry->bootActive();
+        self::assertSame(
+            'zz_lang_loading_greeting',
+            $lang->t('zz_lang_loading_greeting'),
+            'not yet loaded -- bootActive() alone must not load a plugin\'s own PO file',
+        );
+
+        $this->eventDispatcher->dispatch(new LoadingLang());
+        self::assertSame(
+            'fixture plugin hi',
+            $lang->t('zz_lang_loading_greeting'),
+            'LoadingLang must trigger onLoadingLang() to load the active plugin\'s own plugin.po',
+        );
     }
 }

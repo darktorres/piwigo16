@@ -4,17 +4,22 @@ declare(strict_types=1);
 
 namespace Piwigo\PluginConfig;
 
+use Closure;
 use Composer\Autoload\ClassLoader;
 use Composer\Semver\Semver;
 use Doctrine\DBAL\Connection;
 use JsonException;
 use Opis\JsonSchema\Errors\ValidationError;
 use Opis\JsonSchema\Validator;
+use Override;
 use Piwigo\Common\ValueObject\PluginId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
+use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
+use Piwigo\Core\SubscriberInterface;
+use Piwigo\Lang\Event\LoadingLang;
 use Piwigo\PluginConfig\Event\PluginsLoaded;
 use RuntimeException;
 use Symfony\Component\Routing\RouteCollection;
@@ -25,8 +30,21 @@ use Symfony\Component\Routing\RouteCollection;
  *
  * Adapted, not copied, from `../piwigo16-rewrite`'s own `Plugin\
  * PluginRegistry`.
+ *
+ * Implements `SubscriberInterface` itself (distinct from the individual
+ * plugin instances `bootActive()` also registers) so `onLoadingLang()` can
+ * load each active plugin's own `plugin.po`. This has to go through the
+ * `LoadingLang` event rather than an inline `Lang::load()` call inside
+ * `bootActive()` (contrast `ThemeRegistry::bootCurrent()`, which calls it
+ * inline) because plugin `boot()` runs from `Http\Middleware\
+ * PluginBootstrapMiddleware`, strictly *before* `Http\Middleware\
+ * LanguageMiddleware` sets up `Lang`'s current-locale resolution -- an
+ * inline call here would silently resolve the wrong (fallback/default)
+ * locale instead of the real current user's. `LoadingLang` fires later,
+ * once `LanguageMiddleware` has already run, so waiting for it is what
+ * makes the locale resolution correct.
  */
-final class PluginRegistry
+final class PluginRegistry implements SubscriberInterface
 {
     /**
      * @var array<string, PluginManifest>
@@ -66,8 +84,42 @@ final class PluginRegistry
         private readonly CurrentConfig $currentConfig,
         private readonly Paths $paths,
         private readonly Connection $connection,
+        private readonly Lang $lang,
     ) {
         $this->validator = new Validator();
+    }
+
+    /**
+     * @return array<class-string, Closure|list<Closure>>
+     */
+    #[Override]
+    public function subscribedEvents(): array
+    {
+        return [
+            LoadingLang::class => $this->onLoadingLang(...),
+        ];
+    }
+
+    /**
+     * Loads every active plugin's own `plugin.po` (if it ships one -- most
+     * don't) once `LanguageMiddleware` has already established the real
+     * current-locale resolution. See this class's own docblock for why
+     * this can't be an inline `bootActive()` call the way `ThemeRegistry::
+     * bootCurrent()`'s theme.po load is.
+     */
+    public function onLoadingLang(LoadingLang $event): void
+    {
+        foreach (array_keys($this->bootedInstances) as $pluginId) {
+            // 'plugin.lang', not 'plugin' -- Lang::load() only rewrites a
+            // literal '.lang.php'-suffixed candidate path to its real '.po'
+            // sibling (see that method's own body); 'plugin.lang' is what
+            // produces 'plugin.po' -- the exact filename this project's
+            // now-removed LangService::loadLanguageForPlugin() already
+            // used. A bare 'plugin' silently loads nothing (confirmed live
+            // -- caught this exact mistake via a real integration test
+            // before it shipped).
+            $this->lang->load('plugin.lang', rtrim($this->paths->plugins, '/') . '/' . $pluginId . '/');
+        }
     }
 
     /**
@@ -359,6 +411,11 @@ final class PluginRegistry
         }
 
         $this->bootedInstances = $instances;
+        // Self-registration, not one of the loop's own plugin instances --
+        // lets onLoadingLang() run once LanguageMiddleware later dispatches
+        // LoadingLang (see this class's own docblock for why that has to
+        // be deferred rather than called inline here).
+        $this->eventDispatcher->registerSubscriber($this);
         $this->eventDispatcher->dispatch(new PluginsLoaded());
     }
 

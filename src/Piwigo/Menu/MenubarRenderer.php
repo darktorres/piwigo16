@@ -276,7 +276,8 @@ final class MenubarRenderer
         $specials = [];
         $menuLinks = [];
 
-        if (($block = $menu->getBlock('mbSpecials')) instanceof DisplayBlock) {
+        $mbSpecialsBlock = $menu->getBlock('mbSpecials');
+        if ($mbSpecialsBlock instanceof DisplayBlock) {
             if (! $accessLevelChecker->isAGuest()) {// favorites
                 $specials[] = new MenubarSpecialRow(
                     url: $urlService->makeIndexUrl([
@@ -348,11 +349,10 @@ final class MenubarRenderer
                 kind: MenubarSpecialKind::Calendar,
                 noFollow: true,
             );
-
-            $block->raw_content = $renderer->render(new MenubarSpecialsView($specials));
         }
 
-        if (($block = $menu->getBlock('mbMenu')) instanceof DisplayBlock) {
+        $mbMenuBlock = $menu->getBlock('mbMenu');
+        if ($mbMenuBlock instanceof DisplayBlock) {
             $menuLinks = [
                 // tags link
                 new MenubarMenuRow(
@@ -404,8 +404,24 @@ final class MenubarRenderer
                     counter: $item->counter,
                 );
             }
+        }
 
-            $block->raw_content = $renderer->render(new MenubarMenuView(
+        // Assigned before either block below actually renders (not just
+        // before $menu->apply()'s own later menubar.latte render): a
+        // theme's own menubar_specials.latte override (P29.6, modus) reads
+        // $MENUBAR_MENU_LINKS ambiently *during* mbSpecials's own render
+        // just below -- real bug this class's own end-to-end test caught,
+        // assigning this only right before apply() (after both blocks had
+        // already rendered) left it undefined at the point that override
+        // actually needed it.
+        $template->assignContext(new MenubarSpecialsPageContext($specials, $menuLinks));
+
+        if ($mbSpecialsBlock instanceof DisplayBlock) {
+            $mbSpecialsBlock->raw_content = $renderer->render(new MenubarSpecialsView($specials));
+        }
+
+        if ($mbMenuBlock instanceof DisplayBlock) {
+            $mbMenuBlock->raw_content = $renderer->render(new MenubarMenuView(
                 quickSearch: true,
                 links: $menuLinks,
                 rootUrl: $urlService->getRootUrl(),
@@ -447,7 +463,6 @@ final class MenubarRenderer
         }
 
         $template->assignContext(new MenubarQuerySearchPageContext($query_search));
-        $template->assignContext(new MenubarSpecialsPageContext($specials, $menuLinks));
 
         $menu->apply();
 

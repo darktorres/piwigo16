@@ -2241,6 +2241,21 @@ running log itself.**
   (`LatteBlockInheritanceCrossDirectoryTest.php`) with the exact missing
   case — confirmed it fails without the fix (renders
   `default`'s own unconditional page-banner div) and passes with it.
+  Also extended `MockTestTheme_17.0.0` (the sibling catalog repo's own
+  bare lifecycle-only fixture theme, previously "renders nothing of its
+  own") with a minimal `layout.latte`/`index.latte` override pair
+  mirroring modus's exact shape, plus a new
+  `MockTestThemeTemplateOverrideTest.php` proving the same fix against a
+  *real, packaged* theme.json/zip through the real `ThemeChain`-built
+  directory chain — a real-theme-level complement to the unit test's
+  synthetic fixture, catching a real `theme.json`/`parent`-chain wiring
+  bug the unit test's hand-built dirs list never touches. That work
+  itself found one more real, previously-unexercised bug:
+  `MockTestTheme_17.0.0.zip`'s own internal root folder was the
+  versioned `MockTestTheme_17.0.0/`, not bare `MockTestTheme/` — the
+  exact `id === extracted-directory-basename` check
+  `ThemeRegistry::loadManifest()` enforces, so a real PEM install of
+  this fixture would have failed outright; repackaged correctly.
   Two further, unrelated pre-existing gaps surfaced only by re-running
   the *full* verification suite (not just targeted checks) during this
   follow-up, both fixed the same way as any other confirmed pre-existing

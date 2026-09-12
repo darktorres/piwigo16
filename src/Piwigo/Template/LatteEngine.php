@@ -9,6 +9,8 @@ use Latte\Engine;
 use Latte\Feature;
 use Piwigo\Core\Env;
 use Piwigo\Template\Latte\PiwigoExtension;
+use Piwigo\Template\Latte\ThemeChainLoader;
+use Piwigo\Template\TemplateLocator;
 
 /**
  * Thin wrapper around `Latte\Engine`, constructed once per owning `Template`
@@ -18,11 +20,16 @@ use Piwigo\Template\Latte\PiwigoExtension;
  * this `Template` is "the" registered current-request one, which matters for
  * throwaway instances like `MailService`'s).
  *
- * No custom `Latte\Loader` -- `Template::resolveLatteTemplatePath()` resolves
- * bare filenames to a real, absolute filesystem path before ever calling
- * into this class, and Latte's own default `FileLoader` (constructed with no
- * base dir) accepts an absolute path directly. See docs/PLAN.md's P31
- * section, "Template-directory resolution".
+ * Uses a custom `Latte\Loader` (`ThemeChainLoader`) built from the SAME
+ * `TemplateLocator` `Template::resolveLatteTemplatePath()` already resolves
+ * the entry file through -- see that class's own docblock for the real bug
+ * this fixes (P29.6 item 44): without it, only the *entry* `.latte` file
+ * benefits from theme-chain-aware resolution; every `{layout}`/`{include}`
+ * reference found *inside* an already-loaded template falls through to
+ * Latte's own stock `Loaders\FileLoader`, which has no notion of a theme
+ * chain at all. See docs/PLAN.md's P31 section, "Template-directory
+ * resolution", for the surrounding `TemplateLocator`/`ThemeChain`
+ * extraction this builds on.
  */
 final readonly class LatteEngine
 {
@@ -34,12 +41,13 @@ final readonly class LatteEngine
      *     to a plain `number_format()` call when null, matching this
      *     engine's pre-P33G behavior exactly -- see `Engine::setLocale()`).
      */
-    public function __construct(string $cacheDirectory, bool $autoRefresh, PiwigoExtension $extension, ?string $locale)
+    public function __construct(string $cacheDirectory, bool $autoRefresh, PiwigoExtension $extension, ?string $locale, TemplateLocator $templateLocator, string $projectRoot)
     {
         $this->engine = new Engine();
         $this->engine->setCacheDirectory($cacheDirectory);
         $this->engine->setAutoRefresh($autoRefresh);
         $this->engine->addExtension($extension);
+        $this->engine->setLoader(new ThemeChainLoader($templateLocator, $projectRoot));
         // P31's mechanical conversion left every paired-tag block's own
         // source indentation as literal output whitespace; the tree is
         // now consistently reformatted (see the two preceding commits),

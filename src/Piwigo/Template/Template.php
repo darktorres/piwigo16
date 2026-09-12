@@ -467,7 +467,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         }
 
         $extension = new PiwigoExtension($this, $this->lang, $this->accessLevelChecker, $this->urlService);
-        $this->latteEngineInstance = new LatteEngine($cacheDir, $this->currentConfig->templateCompileCheck, $extension, $this->lang->currentUserLanguage());
+        $this->latteEngineInstance = new LatteEngine($cacheDir, $this->currentConfig->templateCompileCheck, $extension, $this->lang->currentUserLanguage(), $this->templateLocator, $this->paths->root);
 
         return $this->latteEngineInstance;
     }

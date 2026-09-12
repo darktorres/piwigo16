@@ -29,6 +29,27 @@ use Piwigo\Tests\Support\TemplateTestFactory;
  *    layout's directory -- confirming per-layer relative-include
  *    resolution behaves as expected once mixed with cross-directory
  *    `{layout}`.
+ *
+ * A third fact was *not* covered here until P29.6 item 44's own live
+ * verification found the real gap the hard way: fact 2's own "resolves
+ * relative to whichever file textually owns it" also applies to a bare
+ * `{layout '...'}` sitting at a file's *top level* (not just inside a
+ * `{block}` body) -- and unlike an `{include}` inside an inherited
+ * block (which a child theme deliberately wants resolved against ITS
+ * OWN directory), a parent theme's own page template (`index.latte`)
+ * doing a bare `{layout 'layout.latte'}` has no idea a child theme even
+ * exists, so that reference always lands back on the parent's own
+ * `layout.latte` -- silently defeating a real, shipped
+ * `themes/modus/template/layout.latte` override (its whole
+ * `$MODUS_DISPLAY_PAGE_BANNER` gate) for every page reached through
+ * `themes/default/template/index.latte`'s own bare reference. Confirmed
+ * live (`_data/templates_c/latte/` held a compiled
+ * `default-template-layout.latte--*.php` and never a `modus-`prefixed
+ * one) before `Piwigo\Template\Latte\ThemeChainLoader` was written to
+ * fix it: a bare reference anywhere in the chain now resolves through
+ * the *same* `TemplateLocator` chain the entry file itself was resolved
+ * through, not through Latte's own stock `Loaders\FileLoader`. The third
+ * test below is the regression test that fix needed and never had.
  */
 function latte_block_inheritance_test_rrmdir(string $dir): void
 {
@@ -129,6 +150,56 @@ test('confirms the negative: a bare {layout \'layout.latte\'} self-references in
     expect($output)
         ->toContain('SELF-REFERENCED')
         ->not->toContain('SHOULD-NOT-BE-REACHED');
+
+    latte_block_inheritance_test_rrmdir($this->root);
+});
+
+test('a child theme\'s own layout.latte override is reached even when a *parent* theme\'s own file bare-references it -- the real P29.6 item 44 bug', function (): void {
+    // Exactly modus's real shape: default's own index.latte reaches its
+    // own layout.latte via a bare reference, with no idea a child theme
+    // exists; modus's own index.latte absolute-jumps into that same
+    // default file to inherit its real content; modus's own layout.latte
+    // absolute-jumps into default's real layout.latte to override just
+    // one block.
+    file_put_contents(
+        $this->root . '/themes/default/template/layout.latte',
+        'DEFAULT-LAYOUT{block pageBanner}DEFAULT-BANNER{/block}{block content}{/block}',
+    );
+    file_put_contents(
+        $this->root . '/themes/default/template/index.latte',
+        <<<'LATTE'
+        {layout 'layout.latte'}
+        {block content}DEFAULT-INDEX-CONTENT{/block}
+        LATTE
+        ,
+    );
+    file_put_contents(
+        $this->root . '/themes/modus/template/layout.latte',
+        <<<'LATTE'
+        {layout $ROOT_PATH . 'themes/default/template/layout.latte'}
+        {block pageBanner}MODUS-BANNER{/block}
+        LATTE
+        ,
+    );
+    file_put_contents(
+        $this->root . '/themes/modus/template/index.latte',
+        "{layout \$ROOT_PATH . 'themes/default/template/index.latte'}",
+    );
+
+    $t = TemplateTestFactory::build();
+    // Order matters -- matches ThemeChain::resolve()'s own real
+    // child-first, parent-fallback dirs order for an active modus theme
+    // whose parent is default.
+    $t->setTemplateDir($this->root . '/themes/modus/template');
+    $t->setTemplateDir($this->root . '/themes/default/template');
+
+    $output = $t->parse('index.latte');
+
+    expect($output)
+        ->toContain('DEFAULT-LAYOUT')
+        ->toContain('DEFAULT-INDEX-CONTENT')
+        ->toContain('MODUS-BANNER')
+        ->not->toContain('DEFAULT-BANNER');
 
     latte_block_inheritance_test_rrmdir($this->root);
 });

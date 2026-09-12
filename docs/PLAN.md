@@ -12480,11 +12480,22 @@ with `darkroom-*` classes against the Phase 4 palette. Live-verified:
 `about.php`/`notification.php` render with real content, zero
 console/PHP errors.
 
-Remaining Phase 5 work: password/identification/register, comments/
-comment_list, tags (flat-cloud only), thumbnails, mainpage_categories,
-month_calendar, profile/profile_content (its own sub-item, 218 lines).
-Phases 6-10 (index/picture pages, JS interactivity, i18n/packaging,
-closing verification) land in the same sibling directory, not started.
+**Correction, found starting the next sub-item, before writing any
+templates for it:** dropped password/identification/register/profile/
+profile_content from Phase 5's scope entirely.
+`Piwigo\Config\CurrentConfig::$useStandardPages` defaults to `true`, and
+`ThemeChain::walk()` switches the whole theme chain (templates, not just
+CSS) to `standard_pages` whenever the current script is one of
+`identification`/`register`/`password`/`profile` and that flag is true —
+a gallery theme's own overrides for these 4 pages are unreachable on the
+platform's own default configuration. `modus`'s own real, fully
+closed-out port never built these templates either, confirming this as
+already-established precedent rather than an oversight.
+
+Remaining Phase 5 work: comments/comment_list, tags (flat-cloud only),
+thumbnails, mainpage_categories, month_calendar. Phases 6-10
+(index/picture pages, JS interactivity, i18n/packaging, closing
+verification) land in the same sibling directory, not started.
 
 ## Greenfield tracks (T3, cuttable — outside the P0–P60 backbone)
 

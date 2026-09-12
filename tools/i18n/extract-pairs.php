@@ -9,6 +9,17 @@ declare(strict_types=1);
 // supported a 2-form singular/plural distinction in PHP source, regardless
 // of how many real plural forms the target locale has -- see plural-
 // forms.php's docblock for what that means for 3+-form languages).
+//
+// Also scans .tpl files for the equivalent Smarty modifier,
+// |@translate_dec:'singular':'plural' (the '@' is optional -- both forms
+// are real, confirmed across every legacy theme/plugin that uses it).
+// Real, confirmed gap this closes (P29.6, the modus theme): a
+// theme/plugin whose only plural usage is template-side -- modus's own
+// "%d album"/"%d albums" (mainpage_categories.tpl) -- has no l10n_dec()
+// call anywhere in its PHP source at all, so the PHP-only scan silently
+// found zero pairs for it, and php-to-po-fn.php would have emitted the
+// singular/plural .lang.php entries as two unrelated flat msgids instead
+// of one correct msgid/msgid_plural pair.
 
 /**
  * @return array<string, string>
@@ -17,7 +28,8 @@ function extract_plural_pairs(string $root): array
 {
     $pairs = [];
 
-    $pattern = '/l10n_dec\s*\(\s*\'((?:[^\'\\\\]|\\\\.)*)\'[\s\n]*,[\s\n]*\'((?:[^\'\\\\]|\\\\.)*)\'/s';
+    $phpPattern = '/l10n_dec\s*\(\s*\'((?:[^\'\\\\]|\\\\.)*)\'[\s\n]*,[\s\n]*\'((?:[^\'\\\\]|\\\\.)*)\'/s';
+    $tplPattern = '/\|@?translate_dec:\'((?:[^\'\\\\]|\\\\.)*)\':\'((?:[^\'\\\\]|\\\\.)*)\'/s';
 
     $files = new RecursiveIteratorIterator(
         new RecursiveDirectoryIterator($root, RecursiveDirectoryIterator::SKIP_DOTS),
@@ -25,7 +37,11 @@ function extract_plural_pairs(string $root): array
 
     foreach ($files as $file) {
         /** @var SplFileInfo $file RecursiveDirectoryIterator always yields SplFileInfo */
-        if (! $file->isFile() || $file->getExtension() !== 'php') {
+        if (! $file->isFile()) {
+            continue;
+        }
+        $extension = $file->getExtension();
+        if ($extension !== 'php' && $extension !== 'tpl') {
             continue;
         }
         $path = $file->getPathname();
@@ -44,6 +60,7 @@ function extract_plural_pairs(string $root): array
             continue;
         }
 
+        $pattern = $extension === 'php' ? $phpPattern : $tplPattern;
         if (preg_match_all($pattern, $content, $matches, PREG_SET_ORDER) === false) {
             continue;
         }

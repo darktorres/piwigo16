@@ -1077,6 +1077,19 @@ final class ExtensionContextTest extends IntegrationTestCase
     }
 
     /**
+     * P61 (the `bootstrap_darkroom` theme port): `paths()` exposes the
+     * same shared `Paths` instance core code reads, needed for a theme
+     * owning a real settings *file* (not a `getSetting()` config-blob
+     * value) under the site's overridable local directory.
+     */
+    public function testPathsReturnsTheSameSharedInstanceCoreCodeReads(): void
+    {
+        $context = $this->buildContext(PluginId::from('any-plugin'));
+
+        self::assertSame($this->containerGet(Paths::class), $context->paths());
+    }
+
+    /**
      * P61 (the `bootstrap_darkroom` theme port): `currentSection()` reads
      * the same shared `SectionContextRegistry` real gallery-context
      * controllers (`GalleryController` via `Section\SectionPopulator::

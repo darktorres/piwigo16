@@ -483,6 +483,23 @@ final readonly class ExtensionContext
     }
 
     /**
+     * `Paths` is already a narrow, read-only value object -- exposed
+     * directly, matching `imageStdParams()`'s own convention above.
+     * Needed for a real, kept legacy feature with no `getSetting()`
+     * equivalent: a theme-owned settings *file* stored under the site's
+     * overridable local directory (P61, `bootstrap_darkroom`'s own
+     * `custom_css`, legacy: `PWG_LOCAL_DIR . '<theme id>/custom.css'`,
+     * `Config::TYPE_FILE` handling) -- `$context->paths()->siteLocal` is
+     * the real modern equivalent of that constant, not `local` (see
+     * `Paths`'s own class docblock for why the two differ under a
+     * multi-site-instance deployment).
+     */
+    public function paths(): Paths
+    {
+        return $this->paths;
+    }
+
+    /**
      * The current request's `SectionContext` (gallery-navigation state:
      * `isHomepage`, `section`, `category`, `items`, ...) -- `null` for
      * every non-gallery controller, since only `Controller\

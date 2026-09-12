@@ -10,7 +10,6 @@ use Latte\Feature;
 use Piwigo\Core\Env;
 use Piwigo\Template\Latte\PiwigoExtension;
 use Piwigo\Template\Latte\ThemeChainLoader;
-use Piwigo\Template\TemplateLocator;
 
 /**
  * Thin wrapper around `Latte\Engine`, constructed once per owning `Template`

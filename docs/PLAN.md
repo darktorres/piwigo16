@@ -12461,6 +12461,18 @@ against a real running instance: navbar renders with the Phase 4 palette,
 the "Albums" dropdown opens natively and shows the real category tree
 with its badge count, zero console/PHP errors. All side effects reverted.
 
+**Real bug found and fixed starting Phase 5 (not a Phase 5 deliverable
+itself)** — Phase 3's own `settings.latte`/`about.latte` admin-template
+filenames were bare names at the theme's own `template/` root, the exact
+resolution path core's real public `Piwigo\Controller\Projection\AboutView`
+("About" page) walks via `TemplateLocator`'s theme-chain, child-first.
+Once activated on a real install this would have silently shadowed the
+real public About page for every visitor. Renamed to
+`darkroom_about.latte`/`darkroom_settings.latte`, matching `modus`'s own
+already-established `modus_admin.latte` theme-namespaced convention.
+Live-verified: `about.php` renders its own real content again, both
+admin settings tabs still work.
+
 Remaining Phase 5 work: infos_errors/navigation_bar/notification/about/
 redirect/profile, password/identification/register, comments/comment_list,
 tags (flat-cloud only), thumbnails, mainpage_categories, month_calendar,

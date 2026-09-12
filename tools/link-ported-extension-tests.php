@@ -24,6 +24,11 @@ declare(strict_types=1);
  *
  * Run automatically as the first step of `composer test:ported-extensions`.
  */
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit('This script can only be run from the command line.');
+}
+
 $root = dirname(__DIR__);
 $linkDir = $root . '/tests/PortedExtensions';
 

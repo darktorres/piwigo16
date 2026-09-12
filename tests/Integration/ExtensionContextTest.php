@@ -614,6 +614,32 @@ final class ExtensionContextTest extends IntegrationTestCase
      * own revert-after-mutate pattern -- other tests in this suite reuse
      * the same shared fixture image ids.
      */
+    /**
+     * P61 (the `bootstrap_darkroom` theme port): `findByIdsOrdered()`
+     * returns a `list<Image>` in the *caller's requested* order, not
+     * `ImageRepository::findByIds()`'s own `int`-keyed DB-result order --
+     * needed for a carousel that must render thumbnails in a specific
+     * sequence. Requesting id 1 before id 2, reversed from ascending id
+     * order, proves this isn't accidentally passing through DB order.
+     * The nonexistent id in the middle proves silent-drop, matching this
+     * facade's other methods' "not found -- absent, never an error"
+     * convention.
+     */
+    public function testImagesFindByIdsOrderedReturnsInRequestedOrderAndDropsMissingIds(): void
+    {
+        $result = $this->context->images()
+            ->findByIdsOrdered([2, 999999, 1]);
+
+        self::assertCount(2, $result);
+        self::assertSame(2, $result[0]->id->value);
+        self::assertSame(1, $result[1]->id->value);
+    }
+
+    public function testImagesFindByIdsOrderedReturnsEmptyListForNoMatches(): void
+    {
+        self::assertSame([], $this->context->images()->findByIdsOrdered([999999]));
+    }
+
     public function testImagesWriteUpdateDescriptiveFieldsPersistsToImagesTable(): void
     {
         $this->context->imagesWrite()

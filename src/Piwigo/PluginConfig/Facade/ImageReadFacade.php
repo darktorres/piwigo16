@@ -9,6 +9,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Image\Projection\Image;
 
 /**
  * Narrow, purpose-built read facade handed out by `ExtensionContext::
@@ -58,5 +59,33 @@ final readonly class ImageReadFacade
         }
 
         return $this->categoryRepository->findById($categoryIdVo)?->representativePictureId;
+    }
+
+    /**
+     * `ImageRepository::findByIds()` already does the real fetch but
+     * returns an `int`-keyed map in DB-result order, not a `list` in the
+     * caller's own requested order -- grounded in
+     * `bootstrap_darkroom_16.d/include/themecontroller.php`'s own
+     * `getAllThumbnailsInCategory()` (P61), which needs its carousel's
+     * thumbnails in the same order as the id list it was given. Any id
+     * not found is silently dropped, matching this facade's own other
+     * methods' "never found -- null/absent, never an error" convention.
+     *
+     * @param list<int|string> $ids
+     * @return list<Image>
+     */
+    public function findByIdsOrdered(array $ids): array
+    {
+        $byId = $this->imageRepository->findByIds($ids);
+
+        $ordered = [];
+        foreach ($ids as $id) {
+            $image = $byId[(int) $id] ?? null;
+            if ($image instanceof Image) {
+                $ordered[] = $image;
+            }
+        }
+
+        return $ordered;
     }
 }

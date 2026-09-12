@@ -253,6 +253,10 @@ final class ExtensionScanner
         $extension = $this->extractExtensionId($uri);
         $parent = is_string($data['parent'] ?? null) ? $data['parent'] : null;
         $useStandardPages = is_bool($data['useStandardPages'] ?? null) ? $data['useStandardPages'] : null;
+
+        $hasSettingsRaw = $data['hasSettings'] ?? false;
+        $hasSettings = $hasSettingsRaw === true
+            || ($hasSettingsRaw === 'webmaster' && $currentUser->get()->status === UserStatus::Webmaster);
         // ThemeManifest has no 'activable' field either -- no bundled or
         // ported theme has ever needed it, and ThemesInstalledPageRenderer's
         // own registry-merge fallback already defaults an unset key to
@@ -270,7 +274,13 @@ final class ExtensionScanner
                 . '/images/missing_screenshot.png';
         }
 
-        $adminUri = file_exists($path . '/admin/admin.inc.php')
+        // `hasSettings` (SettingsPageInterface, P29.6/modus's own Phase 4) is
+        // the real, current mechanism -- `admin/admin.inc.php` is the old
+        // pre-rewrite file-based admin page and no longer exists on any
+        // real theme, but is kept here as a harmless fallback rather than
+        // removed outright (matches this file's own "no legacy fallback"
+        // note above being scoped to `activable`, not this field).
+        $adminUri = $hasSettings || file_exists($path . '/admin/admin.inc.php')
             ? $urlService->getRootUrl() . 'admin.php?page=theme&theme=' . $themeId
             : null;
 

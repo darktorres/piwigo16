@@ -163,7 +163,7 @@ Three structural changes produced that drift:
 | P58 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P59 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
 | P60 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | **DONE** — **A 843 → 0, B 376 → 0**, and the CAMPAIGN-PENDING block is gone from `phpstan.neon`. All 26 identifier-wide ignores retired, each forced out by `reportUnmatchedIgnoredErrors` rather than noticed; 2 more left the *permanent* groups (`empty.variable`, `foreach.valueOverwrite`). Twenty-three live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
-| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra gaps in this repo) done: P61-A `ExtensionContext::currentSection()`, P61-B `ImageReadFacade::findByIdsOrdered()`, P61-C `ExtensionContext::isShowMetadataEnabled()`/`setShowMetadataEnabled()`. Phase 1's 4th item (a shared `photoswipe.ts` lightbox wrapper) deliberately deferred to Phase 6, on the user's own call: unlike `colorbox.ts` (narrowed against 8 real existing call sites), PhotoSwipe has zero real callers until darkroom's own `index.latte`/`picture.latte` exist. Phase 2 (manifest + `ExtensionInterface` skeleton) done in the sibling `../piwigo16-themes` repo as `bootstrap_darkroom_17.0.0/` — live-verified against a real running instance (theme lists/activates/sets-default, a real page renders with no PHP errors), which caught and fixed 2 real bugs before commit (`hasSettings: true` with no `SettingsPageInterface` implementor yet is a hard rejected contract, not a cosmetic gap; `"16.d"` fails the schema's version pattern, changed to `"16.0-d"`) and one unrelated regression in the sibling repo's own `ModusThemeIntegrationTest.php` (missing constructor arg from P61-A's `ExtensionContextFactory` change, not caught by this repo's own test sweep since that file lives in the sibling repo). Phases 3-10 (settings page, CSS foundation, templates, index/picture pages, JS interactivity, i18n/packaging, verification) not started — see plan detail below | 4 |
+| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra gaps in this repo) done: P61-A `ExtensionContext::currentSection()`, P61-B `ImageReadFacade::findByIdsOrdered()`, P61-C `ExtensionContext::isShowMetadataEnabled()`/`setShowMetadataEnabled()`, P61-D `ExtensionContext::paths()`. Phase 1's originally-planned 4th item (a shared `photoswipe.ts` lightbox wrapper) deliberately deferred to Phase 6, on the user's own call: unlike `colorbox.ts` (narrowed against 8 real existing call sites), PhotoSwipe has zero real callers until darkroom's own `index.latte`/`picture.latte` exist. Phase 2 (manifest + `ExtensionInterface` skeleton) and Phase 3 (typed settings VO + real tabbed settings page) both done in the sibling `../piwigo16-themes` repo as `bootstrap_darkroom_17.0.0/` — both live-verified against a real running instance end-to-end (activate/tabs/POST-save round-trip, including the separate file-backed `custom_css`), which caught and fixed real bugs before commit each time (Phase 2: `hasSettings: true` with no `SettingsPageInterface` implementor yet is a hard rejected manifest contract, not a cosmetic gap; an invalid schema version string; an unrelated `ModusThemeIntegrationTest.php` regression from P61-A missed by this repo's own sweep). Phases 4-10 (CSS foundation, templates, index/picture pages, JS interactivity, i18n/packaging, verification) not started — see plan detail below | 5 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -12278,6 +12278,14 @@ deliberately un-namespaced core session keys. Needed for darkroom's
 legacy `themeconf.inc.php`, which enables this flag unconditionally at
 boot.
 
+**P61-D (Done)** — `ExtensionContext::paths()`, exposing the shared
+`Paths` instance directly (matching `imageStdParams()`'s own
+already-narrow-VO convention). Needed for `bootstrap_darkroom`'s real,
+kept `custom_css` feature: legacy stores it as a separate file under the
+site's overridable local directory (`PWG_LOCAL_DIR`), not a
+`getSetting()` config-blob value — `$context->paths()->siteLocal` is the
+real modern equivalent.
+
 **Phase 1's 4th planned item — deferred to Phase 6 (user decision,
 2026-09-12), not dropped.** A shared `themes/default/js/vendor/widgets/
 photoswipe.ts` lightbox wrapper, following `colorbox.ts`'s exact pattern.
@@ -12330,9 +12338,46 @@ same way. The live check's own side effects (all 4 fixture users'
 reverted to the pre-existing fixture state afterward, confirmed via a
 direct DB query, not assumed.
 
-Remaining phases (3-10: settings page, CSS foundation, core templates,
-index/picture pages, JS interactivity, i18n/packaging, closing
-verification) land in the same sibling directory, not started.
+**P61 Phase 3 (Done)** — typed settings VO + real tabbed settings page,
+both in `../piwigo16-themes/bootstrap_darkroom_17.0.0/`.
+`BootstrapDarkroomThemeSettings` (`fromArray()`/`fromPost()`/`toArray()`/
+`defaults()`, modeled on `modus`'s own `ModusThemeSettings` precedent)
+keeps the ~18 legacy fields still real in this port's own architecture
+(PhotoSwipe toggle/interval, thumbnail display options, site logo, quick
+search, social-share buttons) and drops every field whose legacy
+referent is gone (Bootstrap skin/grid/navbar selection, jumbotron-style
+page-header variants, Disqus, the canvas tag cloud, the collapsed
+picture-info layout, the slick-carousel library) — see the class's own
+docblock for the field-by-field disposition. Real server-side
+enforcement added beyond legacy's own client-side-only JS rule:
+`thumbnail_linkto` can't point at a PhotoSwipe target while PhotoSwipe
+itself is disabled.
+
+`DarkroomSettingsTabRequest` (2 real tabs, `settings`/`about`, confirmed
+directly from legacy `admin/admin.inc.php`) dispatches
+`Theme::handleSettingsRequest()` to `BootstrapDarkroomSettingsView`/
+`BootstrapDarkroomAboutView`, with a real CSRF check on POST (legacy had
+none). `custom_css` — a real, kept feature legacy stores as a *separate
+file*, not inside the settings blob — gets its own read/write/delete
+helpers on `Theme.php` using the new `ExtensionContext::paths()`
+(P61-D). `activate()`/`uninstall()` now do real work (persist a
+normalized blob on activate; delete both the blob and the orphaned
+`custom_css` file on uninstall — legacy itself had no maintain hook for
+this theme at all, so no cleanup precedent existed).
+
+Verified against a real running instance end-to-end, same discipline as
+Phase 2: activated (now succeeds since `hasSettings`/
+`SettingsPageInterface` are paired correctly this time), both tabs
+render with no PHP errors, a real POST save round-trips correctly
+through both the config-table blob and the separate `custom.css` file
+under `local/`, reloading the page reflects the saved values. All
+live-check side effects were fully reverted afterward, confirmed via
+direct DB queries and `git status`, including a `sudo rm` needed for one
+`www-data`-owned file the live PHP process itself wrote.
+
+Remaining phases (4-10: CSS foundation, core templates, index/picture
+pages, JS interactivity, i18n/packaging, closing verification) land in
+the same sibling directory, not started.
 
 ## Greenfield tracks (T3, cuttable — outside the P0–P60 backbone)
 

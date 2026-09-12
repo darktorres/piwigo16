@@ -131,7 +131,7 @@ Three structural changes produced that drift:
 | P26 | Admin fragment surface — UI-facing WS methods off the envelope | Done — the WS layer no longer exists at all; every admin UI surface already renders via Latte pages/fragments, not a JSON/XML envelope | ~15 |
 | P27 | Public API v1 (REST + OpenAPI 3.2 + tus) — WS deleted here | Done — 134 `Controller\Api\*` files, 88 registered `/api/v1` routes, full tus 1.0.0 chunked-upload protocol (6 dedicated controllers), RFC 9457 problem+json errors, hand-authored OpenAPI 3.2 spec (88 operations/11 domains) with a `redocly lint` CI gate + Gesso runtime contract enforcement, a generated TypeScript client, REST-body `Content-Type` validation (SEC-39), and an opt-in `Idempotency-Key` replay store (SEC-65); see Epoch G | ~151 |
 | P28 | Security hardening | Not started | 0 |
-| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 (port the `modus` theme) substantively complete: Phase 0 (verification spike), Phase 1 (core/shared infrastructure, 11 sub-items P29.6-A..K plus a `MenubarSpecialsPageContext`/`setCorePictureDeriv()`/`CategoryThumbnail::$coi`/`ExtensionContext::device()` quartet, plus 2 further real bugs found via item 42's own end-to-end test — `MenubarRenderer`'s own block-vs-ambient-context ordering, `MenubarQuerySearchPageContext`'s conditional key omission — and a `ThemeRegistry::bootCurrent()` themesDir bug found via i18n's own end-to-end test), and Phase 2 (template `{block}`-refactor of `themes/default`, 10 templates, P29.6-L..T) done in this repo; Phases 6-11 (template overrides including the menubar rewrite, full JS port, masonry, i18n for 45 locales, packaging, and the closing end-to-end menubar-render test) done in the sibling `../piwigo16-themes` repo (`modus_17.0.0/`, not this repo's own `themes/`); only the new, deliberately-last Phase 12 (nest sibling catalog repos as git submodules — campaign-wide, not modus-specific) and item 44's own live/manual verification pass (needs modus genuinely installed in a real running instance, cannot be self-provisioned) remain — see its own entries below | 33 |
+| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 (port the `modus` theme) substantively complete: Phase 0 (verification spike), Phase 1 (core/shared infrastructure, 11 sub-items P29.6-A..K plus a `MenubarSpecialsPageContext`/`setCorePictureDeriv()`/`CategoryThumbnail::$coi`/`ExtensionContext::device()` quartet, plus 2 further real bugs found via item 42's own end-to-end test — `MenubarRenderer`'s own block-vs-ambient-context ordering, `MenubarQuerySearchPageContext`'s conditional key omission — a `ThemeRegistry::bootCurrent()` themesDir bug found via i18n's own end-to-end test, and an `ExtensionScanner::scanTheme()` `adminUri` bug found via item 44's own live-install verification), and Phase 2 (template `{block}`-refactor of `themes/default`, 10 templates, P29.6-L..T) done in this repo; Phases 6-11 (template overrides including the menubar rewrite, full JS port, masonry, i18n for 45 locales, packaging, and the closing end-to-end menubar-render test, plus 2 more real bugs found and fixed via item 44's own live PEM-install verification — missing skin CSS asset contribution, masonry's own script never loading due to an event-ordering bug) done in the sibling `../piwigo16-themes` repo (`modus_17.0.0/`, not this repo's own `themes/`); Phase 11 fully closed (items 39-45 all landed, item 44's own live verification confirmed skin switching/masonry/settings-round-trip and flagged one real, left-open finding: `GetColorscheme` does not actually reach `standard_pages`/admin-batch-manager's colorscheme as its own docblock claims); only the new, deliberately-last Phase 12 (nest sibling catalog repos as git submodules — campaign-wide, not modus-specific) remains — see its own entries below | 33 |
 | P30 | Layer decoupling + repository restructure | Done — deptrac's 6-layer model enforces 0 violations in CI (established P6); the pre-consolidation repository-restructure plan's load-bearing goals were already met by the simpler `public/`-as-sibling-directory approach that shipped | 1 |
 | P31 | Smarty → Latte template migration | Done | 80 |
 | P32 | Latte lint/format tooling | Done — enforcement is P45 | 11 |
@@ -2093,11 +2093,14 @@ running log itself.**
   user needs an explicit `'expand'` row value;
   `HtmlRenderingListener` needs manual registration outside a full HTTP
   bootstrap). This item's own further-reaching original scope — a full
-  real `Controller\GalleryController` HTTP response — needs live
-  infrastructure (modus genuinely reachable from a running webroot) this
-  session cannot self-provision without violating the "ported themes
-  live only in the sibling catalog repo" boundary the whole campaign has
-  kept; that gap stays open.
+  real `Controller\GalleryController` HTTP response — was closed out by
+  item 44's own live verification pass below: the "ported themes live
+  only in the sibling catalog repo" boundary turned out to be about
+  *source commits*, not *runtime installs* (`/themes/*` is gitignored,
+  confirmed via `git check-ignore -v`), so a real, temporary PEM-catalog
+  install into this worktree's own `themes/modus/` — exactly what the
+  manifest/mirror infrastructure exists for — was both possible and the
+  right way to close this gap, not a boundary violation.
 - **Item 43** (full golden-HTML/VR confirming every Phase 2 seam left
   `default` byte-identical) has been the standing per-seam verification
   gate all session, not a separate closing pass — every one of P29.6-L
@@ -2107,17 +2110,105 @@ running log itself.**
   structural comparison before accepting them). Re-confirmed clean once
   more after this session's own final `MenubarRenderer`/
   `MenubarQuerySearchPageContext` fixes.
-- **Item 44** (live Playwright checks: skin switching, masonry visual
-  correctness, settings-page save/reload, the `GetColorscheme` override
-  actually flipping `standard_pages`/admin batch-manager's dark/light
-  variant) is **not started, and — like item 42's own live-HTTP half —
-  cannot be self-provisioned by this session**: it needs modus genuinely
-  installed and reachable in a real running instance, which conflicts
-  with keeping ported themes out of this repo's own `themes/` directory.
-  This is the real, correctly-scoped remaining manual verification step,
-  matching this plan's own original text ("this theme has zero existing
-  test coverage to lean on, so a real manual pass is the primary net for
-  anything not covered by a new automated test").
+- **Item 44** (live Playwright checks) **landed** — a real, temporary
+  PEM-catalog install of modus into this worktree (`admin.php?page=themes&tab=new`
+  → Install → Activate against the live `http://localhost/piwigo16-themes/`
+  mirror, exactly the real end-user flow), verified against
+  `fixture_admin`/`X-Piwigo-Env: test`, then fully reverted (DB rows +
+  `themes/modus/` removed — `/themes/*` is gitignored so this was never a
+  tracked change). Found and fixed **2 more real bugs**, beyond item 42's
+  3, that no isolated test could have caught:
+  - **Skin CSS never loaded.** Every `skins/<id>.css` file (Phase 5) sets
+    its skin's `--modus-*` custom properties inside its own `@layer
+    theme-skin` block, but nothing ever contributed it as a page asset —
+    unlike `theme.css` itself (core's own per-theme
+    `ThemeBaseAssets.php` convention), a *skin's* stylesheet is
+    per-setting, so only the theme's own `GetPageAssets` handler can
+    know which one to load, and it never did. Fixed in
+    `Theme::onGetPageAssets()` (`../piwigo16-themes` commit): adds
+    `AssetContribution::css('themes/modus/skins/' . $this->currentSkin()->id . '.css', ...)`.
+    Before the fix every skin rendered identically (all `@property`
+    initial-values); after, switching skins visibly changes the whole
+    palette (confirmed: dark "newspaper" vs. light "clear" screenshots).
+  - **Masonry mode's own script never loaded, on any real page.**
+    `Theme.php` tracked masonry activation via a stateful
+    `$masonryThumbGridActive` flag set by `onIndexThumbnailsRendered()`
+    and read by `onGetPageAssets()`, on the documented assumption that
+    `GetPageAssets` (one-shot per `Template` instance) always fires
+    *after* `IndexThumbnailsRendered` within one request. False in
+    practice: `GetPageAssets` fires from the *first* `Renderer::render()`
+    call of the whole request — the menubar's own block rendering —
+    which happens well before `GalleryController`'s body-content phase
+    ever reaches `CategoryDefaultRenderer::render()`'s
+    `IndexThumbnailsRendered` dispatch. The flag was still `false` every
+    time `onGetPageAssets()` read it, so `thumb-arrange.js` never shipped
+    and masonry mode had no client-side reflow — confirmed live: a wide
+    derivative type produced correct server-side masonry markup
+    (per-item inline `width`/`height`/`top`) but each `<li>` rendered as
+    an oversized empty box, one per row, with the tiny image centered
+    inside — no justified rows. Fixed by removing the stateful flag
+    entirely: a new private `isMasonryModeActive()` helper recomputes the
+    same real condition independently in both handlers (mirroring the
+    "recompute independently, correct within one request" pattern this
+    class's own `resolveIndexDerivativeParams()` docblock already
+    established for `onGetIndexDerivativeParams()`/
+    `onIndexThumbnailsRendered()`), so `onGetPageAssets()` no longer
+    depends on event-dispatch order at all. Re-verified live: same wide
+    derivative type now reflows into a real justified row.
+  - **Also found, core-side (not modus-specific):**
+    `ExtensionScanner::scanTheme()`'s `adminUri` computation only checked
+    for the legacy, pre-rewrite `admin/admin.inc.php` file — modus (the
+    first real `SettingsPageInterface` theme, Phase 4) has no such file,
+    so `themes_installed.latte`'s own "Configuration" link rendered as an
+    inert, unclickable placeholder for *any* `hasSettings` theme with no
+    legacy admin file, even though `admin.php?page=theme&theme=<id>`
+    already worked correctly when reached directly. Fixed in
+    `piwigo17-rewrite` itself (`src/Piwigo/Admin/Extensions/ExtensionScanner.php`):
+    `adminUri` now also fires when the manifest declares `hasSettings`
+    (mirroring `scanPlugin()`'s already-correct pattern for plugins),
+    keeping the legacy file check as a harmless fallback rather than
+    removing it.
+  - **Positive checks, confirmed working after the above fixes**: skin
+    switching end-to-end (dark → light skin visibly changes the live
+    page); settings-page save/reload round-trip (`Save Settings` →
+    `modus_theme` config row updates → a fresh page load re-selects the
+    saved skin radio button); masonry-mode visual correctness on the
+    fixture's real 5-photo album (see above).
+  - **One real finding, not a fix**: the `GetColorscheme` event's own
+    docblock claims it makes `standard_pages`/admin-batch-manager "pick
+    the CSS variant that actually matches the active skin," but this
+    does not hold for either target as currently wired.
+    `standard_pages`' own dark/light state (`identification.latte`/
+    `password.latte`/`profile.latte`/`register.latte`'s `<container
+    id="mode" class="light">`) is a hardcoded default plus a
+    client-side-only toggle (`toggle_mode_light`/`toggle_mode_dark`),
+    never server-computed from `$themeconf['colorscheme']` at all. The
+    admin batch-manager's `selectize-{colorscheme}.css` choice is real
+    and dynamic, but reads the *admin* theme's own `Template` instance
+    (a separate `ThemeId`, bound during `RequestBootstrap::finalize()`'s
+    admin branch) — never the front-end gallery theme's — so no
+    front-end theme's `GetColorscheme` subscriber (modus's included) can
+    ever reach it. `GetColorscheme` itself works exactly as designed
+    (confirmed via the skin-CSS fix above); it is these two specific
+    downstream claims that don't hold. Left as a flagged, real gap for a
+    future session rather than silently marked done — fixing it belongs
+    with whichever future theme port or core change actually needs
+    `standard_pages`'/the admin batch-manager's scheme to track a
+    front-end theme, not bundled unreviewed into this port's own commits.
+  Real upstream reference used for fidelity comparison: a *fresh* Piwigo
+  16.3.0 install (`/home/torres/piwigo16`, `git branch: 16.x`) against a
+  brand-new `piwigo16_ref` database (the original `piwigo` DB was already
+  broken — `local/config/database.inc.php` expects `piwigo_`-prefixed
+  tables that don't exist in it, an unrelated, pre-existing environment
+  issue, left untouched) with the real legacy `modus_16.3.0.1` theme
+  copied in and a real local-sync of the repo's own `galleries/Wallpapers`
+  fixture photos — confirmed the port's menubar structure/hoisting
+  ("Explore"/"Most visited"/toolbar icons) matches the genuine legacy
+  render closely. Fully reverted afterward: `local/config/database.inc.php`
+  restored from backup so the live `piwigo16` install still points at its
+  original (pre-existing-broken) `piwigo` DB; `piwigo16_ref` DB and the
+  copied `themes/modus/` directory left in place as a reusable reference
+  fixture rather than deleted.
 - **Item 45** (update `docs/PLAN.md` to reflect real landed scope) is
   this section, and every other narrative update made incrementally
   throughout P29.6 rather than in one closing sweep.

@@ -131,7 +131,7 @@ Three structural changes produced that drift:
 | P26 | Admin fragment surface — UI-facing WS methods off the envelope | Done — the WS layer no longer exists at all; every admin UI surface already renders via Latte pages/fragments, not a JSON/XML envelope | ~15 |
 | P27 | Public API v1 (REST + OpenAPI 3.2 + tus) — WS deleted here | Done — 134 `Controller\Api\*` files, 88 registered `/api/v1` routes, full tus 1.0.0 chunked-upload protocol (6 dedicated controllers), RFC 9457 problem+json errors, hand-authored OpenAPI 3.2 spec (88 operations/11 domains) with a `redocly lint` CI gate + Gesso runtime contract enforcement, a generated TypeScript client, REST-body `Content-Type` validation (SEC-39), and an opt-in `Idempotency-Key` replay store (SEC-65); see Epoch G | ~151 |
 | P28 | Security hardening | Not started | 0 |
-| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 (port the `modus` theme) substantively complete: Phase 0 (verification spike), Phase 1 (core/shared infrastructure, 11 sub-items P29.6-A..K plus a `MenubarSpecialsPageContext`/`setCorePictureDeriv()`/`CategoryThumbnail::$coi`/`ExtensionContext::device()` quartet, plus 2 further real bugs found via item 42's own end-to-end test — `MenubarRenderer`'s own block-vs-ambient-context ordering, `MenubarQuerySearchPageContext`'s conditional key omission — a `ThemeRegistry::bootCurrent()` themesDir bug found via i18n's own end-to-end test, and an `ExtensionScanner::scanTheme()` `adminUri` bug found via item 44's own live-install verification), and Phase 2 (template `{block}`-refactor of `themes/default`, 10 templates, P29.6-L..T) done in this repo; Phases 6-11 (template overrides including the menubar rewrite, full JS port, masonry, i18n for 45 locales, packaging, and the closing end-to-end menubar-render test, plus 2 more real bugs found and fixed via item 44's own live PEM-install verification — missing skin CSS asset contribution, masonry's own script never loading due to an event-ordering bug) done in the sibling `../piwigo16-themes` repo (`modus_17.0.0/`, not this repo's own `themes/`); Phase 11 fully closed (items 39-45 all landed, item 44's own live verification confirmed skin switching/masonry/settings-round-trip and flagged one real, left-open finding: `GetColorscheme` does not actually reach `standard_pages`/admin-batch-manager's colorscheme as its own docblock claims); only the new, deliberately-last Phase 12 (nest sibling catalog repos as git submodules — campaign-wide, not modus-specific) remains — see its own entries below | 33 |
+| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 (port the `modus` theme) substantively complete: Phase 0 (verification spike), Phase 1 (core/shared infrastructure, 11 sub-items P29.6-A..K plus a `MenubarSpecialsPageContext`/`setCorePictureDeriv()`/`CategoryThumbnail::$coi`/`ExtensionContext::device()` quartet, plus 2 further real bugs found via item 42's own end-to-end test — `MenubarRenderer`'s own block-vs-ambient-context ordering, `MenubarQuerySearchPageContext`'s conditional key omission — a `ThemeRegistry::bootCurrent()` themesDir bug found via i18n's own end-to-end test, and an `ExtensionScanner::scanTheme()` `adminUri` bug found via item 44's own live-install verification), and Phase 2 (template `{block}`-refactor of `themes/default`, 10 templates, P29.6-L..T) done in this repo; Phases 6-11 (template overrides including the menubar rewrite, full JS port, masonry, i18n for 45 locales, packaging, and the closing end-to-end menubar-render test, plus 2 more real bugs found and fixed via item 44's own live PEM-install verification — missing skin CSS asset contribution, masonry's own script never loading due to an event-ordering bug) done in the sibling `../piwigo16-themes` repo (`modus_17.0.0/`, not this repo's own `themes/`); Phase 11 fully closed (items 39-45 all landed, item 44's own live verification confirmed skin switching/masonry/settings-round-trip and flagged one real, left-open finding: `GetColorscheme` does not actually reach `standard_pages`/admin-batch-manager's colorscheme as its own docblock claims; a direct visual comparison against a real legacy reference install then found a genuine core architecture gap — P29.6-U, a new `Piwigo\Template\Latte\ThemeChainLoader` fixing bare `{layout}`/`{include}` references to respect the active theme chain at every hop, not just the entry file, which had silently kept modus's entire `layout.latte` override from ever running for any real page — plus 2 further unrelated pre-existing gaps caught by re-running the full verification suite, `CategoryThumbnail::$coi`'s missing PHPStan suppression and `link-ported-extension-tests.php`'s missing SEC-02 guard); only the new, deliberately-last Phase 12 (nest sibling catalog repos as git submodules — campaign-wide, not modus-specific) remains — see its own entries below | 33 |
 | P30 | Layer decoupling + repository restructure | Done — deptrac's 6-layer model enforces 0 violations in CI (established P6); the pre-consolidation repository-restructure plan's load-bearing goals were already met by the simpler `public/`-as-sibling-directory approach that shipped | 1 |
 | P31 | Smarty → Latte template migration | Done | 80 |
 | P32 | Latte lint/format tooling | Done — enforcement is P45 | 11 |
@@ -2209,6 +2209,52 @@ running log itself.**
   original (pre-existing-broken) `piwigo` DB; `piwigo16_ref` DB and the
   copied `themes/modus/` directory left in place as a reusable reference
   fixture rather than deleted.
+- **P29.6-U, a real core architecture gap found by direct visual
+  comparison against the legacy reference** (the user caught this —
+  item 44's own screenshots looked visibly wrong next to
+  `piwigo16_ref`'s real render, which a purely functional pass had
+  missed): modus's own `template/layout.latte` override — the file
+  holding its entire `$MODUS_DISPLAY_PAGE_BANNER` gate, Phase 6 item 27
+  — was never compiled or used for *any* real page. `TemplateLocator`
+  already walks a `Template` instance's own theme directory chain
+  (child theme first, parent as fallback) for the *entry* `.latte`
+  file, but every `{layout}`/`{include}` reference found *inside* an
+  already-loaded template fell through to Latte's own stock
+  `Loaders\FileLoader` instead, which resolves a bare name relative to
+  whichever file textually contains it, with no theme-chain awareness
+  at all: `themes/modus/template/index.latte` jumps via an absolute
+  path into `themes/default/template/index.latte` to inherit its real
+  body markup, and *that* file's own `{layout 'layout.latte'}` — a bare
+  reference — always resolved to `themes/default/template/layout.latte`
+  regardless of which theme was active. Confirmed directly via
+  `_data/templates_c/latte/`: only a
+  `default-template-layout.latte--*.php` ever existed, never a
+  `modus-`prefixed one. Fixed generally (every theme, every chain
+  depth), not patched around for modus alone: a new
+  `Piwigo\Template\Latte\ThemeChainLoader` implementing `Latte\Loader`,
+  wired into `LatteEngine` via `Engine::setLoader()`, built from the
+  same `TemplateLocator` the entry file is already resolved through — a
+  bare reference now searches the active theme chain at every hop; an
+  absolute path still passes through unchanged, so every existing
+  `{layout $ROOT_PATH . '...'}` override site needed no change at all.
+  Extended the existing Phase 0 spike regression test
+  (`LatteBlockInheritanceCrossDirectoryTest.php`) with the exact missing
+  case — confirmed it fails without the fix (renders
+  `default`'s own unconditional page-banner div) and passes with it.
+  Two further, unrelated pre-existing gaps surfaced only by re-running
+  the *full* verification suite (not just targeted checks) during this
+  follow-up, both fixed the same way as any other confirmed pre-existing
+  failure: `CategoryThumbnail::$coi` was missing the
+  `@phpstan-ignore shipmonk.deadProperty.neverRead` its sibling
+  `MenubarSpecialRow::$kind` already carries for the identical
+  "external-theme-only consumer" situation (so `composer analyse` was
+  failing in this repo's own normal, no-ported-theme-installed state
+  since `$coi` was added); `tools/link-ported-extension-tests.php` had
+  no `PHP_SAPI !== 'cli'` guard at all, unlike every other `tools/*.php`
+  script (`tests/Arch/StructuralTest.php`'s own SEC-02 check). Full
+  `composer analyse`/`test`/`test:integration`/`test:golden-html` and
+  modus's own `analyse-ported-extensions.sh`/`test:ported-extensions`
+  all clean after all three fixes.
 - **Item 45** (update `docs/PLAN.md` to reflect real landed scope) is
   this section, and every other narrative update made incrementally
   throughout P29.6 rather than in one closing sweep.

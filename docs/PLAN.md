@@ -163,7 +163,7 @@ Three structural changes produced that drift:
 | P58 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P59 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
 | P60 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | **DONE** — **A 843 → 0, B 376 → 0**, and the CAMPAIGN-PENDING block is gone from `phpstan.neon`. All 26 identifier-wide ignores retired, each forced out by `reportUnmatchedIgnoredErrors` rather than noticed; 2 more left the *permanent* groups (`empty.variable`, `foreach.valueOverwrite`). Twenty-three live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
-| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra gaps in this repo) done: P61-A `ExtensionContext::currentSection()`, P61-B `ImageReadFacade::findByIdsOrdered()`, P61-C `ExtensionContext::isShowMetadataEnabled()`/`setShowMetadataEnabled()`, P61-D `ExtensionContext::paths()`. Phase 1's originally-planned 4th item (a shared `photoswipe.ts` lightbox wrapper) deliberately deferred to Phase 6, on the user's own call: unlike `colorbox.ts` (narrowed against 8 real existing call sites), PhotoSwipe has zero real callers until darkroom's own `index.latte`/`picture.latte` exist. Phase 2 (manifest + `ExtensionInterface` skeleton) and Phase 3 (typed settings VO + real tabbed settings page) both done in the sibling `../piwigo16-themes` repo as `bootstrap_darkroom_17.0.0/` — both live-verified against a real running instance end-to-end (activate/tabs/POST-save round-trip, including the separate file-backed `custom_css`), which caught and fixed real bugs before commit each time (Phase 2: `hasSettings: true` with no `SettingsPageInterface` implementor yet is a hard rejected manifest contract, not a cosmetic gap; an invalid schema version string; an unrelated `ModusThemeIntegrationTest.php` regression from P61-A missed by this repo's own sweep). Phase 4-A (CSS palette foundation) done — fixed `--darkroom-color-*` custom-property palette, real OKLCH conversions, live-verified; dropped a generic Bootstrap-clone grid/utility-class library as ungrounded (no such convention exists anywhere else in this codebase). Phase 5-A (all 8 menubar templates) done — horizontal navbar with native `<details>/<summary>` dropdowns, no JS; live-verified. Rest of Phase 5 plus Phases 6-10 (index/picture pages, JS interactivity, i18n/packaging, verification) not started — see plan detail below | 5 |
+| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra gaps in this repo) done: P61-A `ExtensionContext::currentSection()`, P61-B `ImageReadFacade::findByIdsOrdered()`, P61-C `ExtensionContext::isShowMetadataEnabled()`/`setShowMetadataEnabled()`, P61-D `ExtensionContext::paths()`. Phase 1's originally-planned 4th item (a shared `photoswipe.ts` lightbox wrapper) deliberately deferred to Phase 6, on the user's own call: unlike `colorbox.ts` (narrowed against 8 real existing call sites), PhotoSwipe has zero real callers until darkroom's own `index.latte`/`picture.latte` exist. Phase 2 (manifest + `ExtensionInterface` skeleton) and Phase 3 (typed settings VO + real tabbed settings page) both done in the sibling `../piwigo16-themes` repo as `bootstrap_darkroom_17.0.0/` — both live-verified against a real running instance end-to-end (activate/tabs/POST-save round-trip, including the separate file-backed `custom_css`), which caught and fixed real bugs before commit each time (Phase 2: `hasSettings: true` with no `SettingsPageInterface` implementor yet is a hard rejected manifest contract, not a cosmetic gap; an invalid schema version string; an unrelated `ModusThemeIntegrationTest.php` regression from P61-A missed by this repo's own sweep). Phase 4-A (CSS palette foundation) done — fixed `--darkroom-color-*` custom-property palette, real OKLCH conversions, live-verified; dropped a generic Bootstrap-clone grid/utility-class library as ungrounded (no such convention exists anywhere else in this codebase). Phase 5-A (all 8 menubar templates) done — horizontal navbar with native `<details>/<summary>` dropdowns, no JS; live-verified. A real pre-existing bug from Phase 3 was found and fixed while starting Phase 5: the settings-tab admin templates were named `settings.latte`/`about.latte` at the theme root, colliding with core's own bare-name-resolved public About page — renamed to `darkroom_settings.latte`/`darkroom_about.latte`. Phase 5-B (about/infos_errors/navigation_bar/notification/redirect) done. Rest of Phase 5 plus Phases 6-10 (index/picture pages, JS interactivity, i18n/packaging, verification) not started — see plan detail below | 5 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -12473,12 +12473,18 @@ already-established `modus_admin.latte` theme-namespaced convention.
 Live-verified: `about.php` renders its own real content again, both
 admin settings tabs still work.
 
-Remaining Phase 5 work: infos_errors/navigation_bar/notification/about/
-redirect/profile, password/identification/register, comments/comment_list,
-tags (flat-cloud only), thumbnails, mainpage_categories, month_calendar,
-profile_content. Phases 6-10 (index/picture pages, JS interactivity,
-i18n/packaging, closing verification) land in the same sibling directory,
-not started.
+**P61 Phase 5-B (Done)** — real overrides for `about` (the public page,
+bare `about.latte`), `infos_errors`, `navigation_bar`, `notification`,
+`redirect` — same core View/data contracts as `default`'s own, restyled
+with `darkroom-*` classes against the Phase 4 palette. Live-verified:
+`about.php`/`notification.php` render with real content, zero
+console/PHP errors.
+
+Remaining Phase 5 work: password/identification/register, comments/
+comment_list, tags (flat-cloud only), thumbnails, mainpage_categories,
+month_calendar, profile/profile_content (its own sub-item, 218 lines).
+Phases 6-10 (index/picture pages, JS interactivity, i18n/packaging,
+closing verification) land in the same sibling directory, not started.
 
 ## Greenfield tracks (T3, cuttable — outside the P0–P60 backbone)
 

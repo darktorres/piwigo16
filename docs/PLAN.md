@@ -131,7 +131,7 @@ Three structural changes produced that drift:
 | P26 | Admin fragment surface — UI-facing WS methods off the envelope | Done — the WS layer no longer exists at all; every admin UI surface already renders via Latte pages/fragments, not a JSON/XML envelope | ~15 |
 | P27 | Public API v1 (REST + OpenAPI 3.2 + tus) — WS deleted here | Done — 134 `Controller\Api\*` files, 88 registered `/api/v1` routes, full tus 1.0.0 chunked-upload protocol (6 dedicated controllers), RFC 9457 problem+json errors, hand-authored OpenAPI 3.2 spec (88 operations/11 domains) with a `redocly lint` CI gate + Gesso runtime contract enforcement, a generated TypeScript client, REST-body `Content-Type` validation (SEC-39), and an opt-in `Idempotency-Key` replay store (SEC-65); see Epoch G | ~151 |
 | P28 | Security hardening | Not started | 0 |
-| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 (port the `modus` theme) underway: Phase 0 (verification spike), Phase 1 (core/shared infrastructure, 11 sub-items P29.6-A..K plus a `MenubarSpecialsPageContext`/`setCorePictureDeriv()`/`CategoryThumbnail::$coi`/`ExtensionContext::device()` quartet added while scoping items 31/32/37/38), and Phase 2 (template `{block}`-refactor of `themes/default`, 10 templates, P29.6-L..T) done in this repo; Phase 6 items 27-32b/38 (template overrides, including the menubar rewrite and the album-thumbnail crop math), Phase 7 (JS port, all of items 33-36), Phase 8 (masonry, fully closed — index-derivative-params wiring plus items 37/38), and Phase 9 (i18n, fully closed — 45 locale `theme.po` files) done in the sibling `../piwigo16-themes` repo (`modus_17.0.0/`, not this repo's own `themes/`), plus a `ThemeRegistry::bootCurrent()` real bug fix in this repo the i18n work exposed end-to-end; Phases 10-11 (packaging/verification) and the new Phase 12 (nest sibling catalog repos as git submodules — campaign-wide, not modus-specific) not started — see its own entries below | 33 |
+| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 (port the `modus` theme) substantively complete: Phase 0 (verification spike), Phase 1 (core/shared infrastructure, 11 sub-items P29.6-A..K plus a `MenubarSpecialsPageContext`/`setCorePictureDeriv()`/`CategoryThumbnail::$coi`/`ExtensionContext::device()` quartet, plus 2 further real bugs found via item 42's own end-to-end test — `MenubarRenderer`'s own block-vs-ambient-context ordering, `MenubarQuerySearchPageContext`'s conditional key omission — and a `ThemeRegistry::bootCurrent()` themesDir bug found via i18n's own end-to-end test), and Phase 2 (template `{block}`-refactor of `themes/default`, 10 templates, P29.6-L..T) done in this repo; Phases 6-11 (template overrides including the menubar rewrite, full JS port, masonry, i18n for 45 locales, packaging, and the closing end-to-end menubar-render test) done in the sibling `../piwigo16-themes` repo (`modus_17.0.0/`, not this repo's own `themes/`); only the new, deliberately-last Phase 12 (nest sibling catalog repos as git submodules — campaign-wide, not modus-specific) and item 44's own live/manual verification pass (needs modus genuinely installed in a real running instance, cannot be self-provisioned) remain — see its own entries below | 33 |
 | P30 | Layer decoupling + repository restructure | Done — deptrac's 6-layer model enforces 0 violations in CI (established P6); the pre-consolidation repository-restructure plan's load-bearing goals were already met by the simpler `public/`-as-sibling-directory approach that shipped | 1 |
 | P31 | Smarty → Latte template migration | Done | 80 |
 | P32 | Latte lint/format tooling | Done — enforcement is P45 | 11 |
@@ -2057,6 +2057,70 @@ simplification, not a missed detail.
   switch via `CurrentUser` was silently ignored without also calling
   `setDefaultLanguageProvider()` directly — applied to both the new core
   test and modus's own equivalent i18n test.
+
+**Phase 10 (packaging) landed — item 41.** The `modus_17.0.0` manifest
+entry already existed (added early in the campaign, Phase 3's scaffold
+commit), but its `revision_description` still described the port as
+scaffold-plus-settings-page-only ("still to come: template overrides,
+CSS/skins, remaining JS, i18n, packaging refinement") — updated to
+reflect the real, complete port. `piwigo_compat` stays `["17.0"]`,
+already the established real convention for a v17 port (confirmed by
+checking every other manifest entry's own value — matches
+`MockTestTheme_17.0.0`, the only other entry using it; the original
+plan's own note citing a bare `"17"` was approximate, not the real
+convention). Re-verified `admin-themes-new`'s own golden-html snapshot
+(depends on this exact manifest entry) and the full golden-html suite
+after the description change — no diff.
+
+**Phase 11 (closing verification) — items 39/40 already covered i18n
+above; item 42 landed, items 43/44 partially covered, item 45 is this
+running log itself.**
+
+- **Item 42** (the closing end-to-end proof) landed as
+  `testMenubarRendererProducesTheRealHorizontalMenuMarkupEndToEnd()`:
+  the first test in the whole port to drive `MenubarRenderer::render()`
+  itself — the real orchestrator every actual page calls — through
+  modus's real theme chain, rather than one hand-built override View at
+  a time. Found and fixed 3 real bugs no isolated-View test could have
+  caught (see the two `piwigo17-rewrite` commits this produced, and the
+  test's own docblock): `MenubarRenderer`'s own `$MENUBAR_MENU_LINKS`
+  ordering bug, `MenubarQuerySearchPageContext`'s own conditional-
+  omission design (Latte's compiler rewrites a declared-type variable's
+  `isset()` check into `!== null`, so omitting an ambient key is never
+  safe against a template reading it unconditionally — a real, general
+  lesson for every future ported theme's own ambient-context design, not
+  modus-specific), and two real test-harness gaps (a synthetic guest
+  user needs an explicit `'expand'` row value;
+  `HtmlRenderingListener` needs manual registration outside a full HTTP
+  bootstrap). This item's own further-reaching original scope — a full
+  real `Controller\GalleryController` HTTP response — needs live
+  infrastructure (modus genuinely reachable from a running webroot) this
+  session cannot self-provision without violating the "ported themes
+  live only in the sibling catalog repo" boundary the whole campaign has
+  kept; that gap stays open.
+- **Item 43** (full golden-HTML/VR confirming every Phase 2 seam left
+  `default` byte-identical) has been the standing per-seam verification
+  gate all session, not a separate closing pass — every one of P29.6-L
+  through -T re-ran `composer test:golden-html` at the point it landed
+  (91/91 throughout, with two accepted pure-whitespace-shift baseline
+  updates for `categoryList`/P29.6-S, verified via DOMDocument-normalized
+  structural comparison before accepting them). Re-confirmed clean once
+  more after this session's own final `MenubarRenderer`/
+  `MenubarQuerySearchPageContext` fixes.
+- **Item 44** (live Playwright checks: skin switching, masonry visual
+  correctness, settings-page save/reload, the `GetColorscheme` override
+  actually flipping `standard_pages`/admin batch-manager's dark/light
+  variant) is **not started, and — like item 42's own live-HTTP half —
+  cannot be self-provisioned by this session**: it needs modus genuinely
+  installed and reachable in a real running instance, which conflicts
+  with keeping ported themes out of this repo's own `themes/` directory.
+  This is the real, correctly-scoped remaining manual verification step,
+  matching this plan's own original text ("this theme has zero existing
+  test coverage to lean on, so a real manual pass is the primary net for
+  anything not covered by a new automated test").
+- **Item 45** (update `docs/PLAN.md` to reflect real landed scope) is
+  this section, and every other narrative update made incrementally
+  throughout P29.6 rather than in one closing sweep.
 
 **Phase 12 (new, deliberately last) — nest `../piwigo16-plugins`/
 `../piwigo16-themes` as real git submodules.** Scoped, not started;

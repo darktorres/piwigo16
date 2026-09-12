@@ -163,6 +163,7 @@ Three structural changes produced that drift:
 | P58 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P59 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
 | P60 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | **DONE** — **A 843 → 0, B 376 → 0**, and the CAMPAIGN-PENDING block is gone from `phpstan.neon`. All 26 identifier-wide ignores retired, each forced out by `reportUnmatchedIgnoredErrors` rather than noticed; 2 more left the *permanent* groups (`empty.variable`, `foreach.valueOverwrite`). Twenty-three live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
+| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra gaps in this repo) substantively done: P61-A `ExtensionContext::currentSection()`, P61-B `ImageReadFacade::findByIdsOrdered()`, P61-C `ExtensionContext::isShowMetadataEnabled()`/`setShowMetadataEnabled()`. Phase 1's 4th item (a shared `photoswipe.ts` lightbox wrapper) deliberately deferred to Phase 6, on the user's own call: unlike `colorbox.ts` (narrowed against 8 real existing call sites), PhotoSwipe has zero real callers until darkroom's own `index.latte`/`picture.latte` exist. Phases 2-10 (manifest/skeleton, settings page, CSS foundation, templates, index/picture pages, JS interactivity, i18n/packaging, verification) land in the sibling `../piwigo16-themes` repo as `bootstrap_darkroom_17.0.0/`, not started yet — see plan detail below | 3 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -12222,6 +12223,77 @@ PHPStan discarded the annotation and every read of that variable analysed
 as `mixed`. `$ADMIN_PAGE_TITLE` is the case that surfaced it; the
 annotation was present and looked right in the compiled output, which is
 why it read as a template problem rather than a tool one.
+
+**P61 (in progress) — port the legacy `bootstrap_darkroom` theme onto the
+v17 extension contract.** Second theme port after `modus` (P29.6). A
+full, dedicated 5-research-pass feasibility analysis exists at
+`docs/theme-porting/bootstrap-darkroom-port-analysis.md`; the plan itself
+was independently adversarially re-verified against real current source
+before implementation started (several real corrections found — see
+`docs/theme-porting/bootstrap-darkroom-port-analysis.md`'s own §7 status
+table for what it flags as provisional, and the plan file's own context
+section for what changed since it was written). Lands in two places: a
+handful of shared-infra gaps in this repo (this section), the theme
+package itself in the sibling `../piwigo16-themes` repo as
+`bootstrap_darkroom_17.0.0/` (not started yet).
+
+Three "owner decision" flags the original analysis left open (§7 Q2/Q6/Q7)
+are resolved: packaging follows the `modus_17.0.0/` sibling-repo precedent
+(not a new repo, superseding the analysis's own recommendation);
+`search.tpl` is dropped entirely (core's existing `search_filters.inc.latte`
+refine bar is a confirmed strict superset); front-end community upload is
+out of scope entirely (the analysis itself reclassifies it as an
+independent, multi-phase core project, not a theme-porting item).
+
+**P61-A (Done)** — `Piwigo\PluginConfig\ExtensionContext::currentSection(): ?SectionContext`,
+a narrow accessor for the request's shared `SectionContextRegistry`,
+mirroring `imageStdParams()`'s whole-VO-return convention. This fully
+replaces the original analysis's proposed design for darkroom's legacy
+`checkIfHomepage()`/`stripBreadcrumbs()` hooks (a new PSR-14 event fired
+from `GalleryController`, carrying `is_homepage`/section/item-count) —
+re-reading the actual legacy hook bodies during adversarial plan review
+showed both are trivial (a boolean passthrough and a pure string
+transform on already-known title/section data) and that
+`Section\SectionContext` already computes `isHomepage` today; the real
+gap was only that extension code had no way to read it at all. No new
+event, no `GalleryController` change.
+
+**P61-B (Done)** — `PluginConfig\Facade\ImageReadFacade::findByIdsOrdered(array $ids): list<Image>`,
+a thin ordering wrapper around `Image\ImageRepository::findByIds()`
+(which already does the real fetch, just keyed by id in DB-result order,
+not a list in the caller's requested order). Needed for darkroom's
+carousel data assembly (`getAllThumbnailsInCategory()`'s legacy raw
+`pwg_query()`). Scope corrected from the original analysis during
+adversarial review: no new repository query was needed, and no separate
+derivative-params helper either — `ExtensionContext::
+imageStdParams()->getByType()`, already landed for `modus` (P29.6-F),
+covers that directly.
+
+**P61-C (Done)** — `Session\SessionService::setShowMetadataEnabled(bool)`
+(a new counterpart to the existing `isShowMetadataEnabled()` presence
+check) plus `ExtensionContext::isShowMetadataEnabled()`/
+`setShowMetadataEnabled()`, following the `coreIndexDeriv()`/
+`corePictureDeriv()`/`setCorePictureDeriv()` precedent for real,
+deliberately un-namespaced core session keys. Needed for darkroom's
+legacy `themeconf.inc.php`, which enables this flag unconditionally at
+boot.
+
+**Phase 1's 4th planned item — deferred to Phase 6 (user decision,
+2026-09-12), not dropped.** A shared `themes/default/js/vendor/widgets/
+photoswipe.ts` lightbox wrapper, following `colorbox.ts`'s exact pattern.
+Flagged during implementation, not assumed away: unlike `colorbox.ts`
+(narrowed against 8 real, already-existing call sites across 7 admin
+`.ts` files), PhotoSwipe has zero real callers anywhere in this repo
+today — darkroom's own `index.latte`/`picture.latte` (the actual
+callers) don't exist until Phase 6, in the sibling repo. Building it now
+would mean guessing at scope with nothing to narrow against, against
+this codebase's own repeatedly-stated "grounded in a real caller"
+convention. Lands alongside Phase 6's real template wiring instead.
+
+Remaining phases (2-10: manifest/`ExtensionInterface` skeleton, settings
+page, CSS foundation, core templates, index/picture pages, JS
+interactivity, i18n/packaging, closing verification) land in
+`../piwigo16-themes/bootstrap_darkroom_17.0.0/`, not started.
 
 ## Greenfield tracks (T3, cuttable — outside the P0–P60 backbone)
 

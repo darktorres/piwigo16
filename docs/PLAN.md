@@ -131,7 +131,7 @@ Three structural changes produced that drift:
 | P26 | Admin fragment surface — UI-facing WS methods off the envelope | Done — the WS layer no longer exists at all; every admin UI surface already renders via Latte pages/fragments, not a JSON/XML envelope | ~15 |
 | P27 | Public API v1 (REST + OpenAPI 3.2 + tus) — WS deleted here | Done — 134 `Controller\Api\*` files, 88 registered `/api/v1` routes, full tus 1.0.0 chunked-upload protocol (6 dedicated controllers), RFC 9457 problem+json errors, hand-authored OpenAPI 3.2 spec (88 operations/11 domains) with a `redocly lint` CI gate + Gesso runtime contract enforcement, a generated TypeScript client, REST-body `Content-Type` validation (SEC-39), and an opt-in `Idempotency-Key` replay store (SEC-65); see Epoch G | ~151 |
 | P28 | Security hardening | Not started | 0 |
-| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 (port the `modus` theme) underway: Phase 0 (verification spike), Phase 1 (core/shared infrastructure, 11 sub-items P29.6-A..K plus a `MenubarSpecialsPageContext`/`setCorePictureDeriv()`/`CategoryThumbnail::$coi` trio added while scoping items 31/32/38), and Phase 2 (template `{block}`-refactor of `themes/default`, 9 templates, P29.6-L..S) done in this repo; Phase 6 items 27-32b/38 (template overrides, including the menubar rewrite and the album-thumbnail crop math) and Phase 7 items 33-35 (JS port, `photo-autosize.ts`) plus Phase 8 groundwork (`GetIndexDerivativeParams` wiring, `caps` cookie/session) done in the sibling `../piwigo16-themes` repo (`modus_17.0.0/`, not this repo's own `themes/`); item 37 (masonry photo-grid candidates), item 36 (`thumb-arrange.ts`), Phases 9-11 (i18n/packaging/verification), and the new Phase 12 (nest sibling catalog repos as git submodules — campaign-wide, not modus-specific) not started — see its own entries below | 33 |
+| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 (port the `modus` theme) underway: Phase 0 (verification spike), Phase 1 (core/shared infrastructure, 11 sub-items P29.6-A..K plus a `MenubarSpecialsPageContext`/`setCorePictureDeriv()`/`CategoryThumbnail::$coi`/`ExtensionContext::device()` quartet added while scoping items 31/32/37/38), and Phase 2 (template `{block}`-refactor of `themes/default`, 10 templates, P29.6-L..T) done in this repo; Phase 6 items 27-32b/38 (template overrides, including the menubar rewrite and the album-thumbnail crop math), Phase 7 (JS port, all of items 33-36), and Phase 8 (masonry, fully closed — index-derivative-params wiring plus items 37/38) done in the sibling `../piwigo16-themes` repo (`modus_17.0.0/`, not this repo's own `themes/`); Phases 9-11 (i18n/packaging/verification) and the new Phase 12 (nest sibling catalog repos as git submodules — campaign-wide, not modus-specific) not started — see its own entries below | 33 |
 | P30 | Layer decoupling + repository restructure | Done — deptrac's 6-layer model enforces 0 violations in CI (established P6); the pre-consolidation repository-restructure plan's load-bearing goals were already met by the simpler `public/`-as-sibling-directory approach that shipped | 1 |
 | P31 | Smarty → Latte template migration | Done | 80 |
 | P32 | Latte lint/format tooling | Done — enforcement is P45 | 11 |
@@ -1943,11 +1943,74 @@ for this theme-specific data. Caption text deliberately reuses
 separate comma+tooltip formatting for this one mode — a named
 simplification, not a missed detail.
 
-**Item 37** (`ModusThumbView::forMasonry()`, the photo-grid justified-row
-candidate computation) and **item 36** (`thumb-arrange.ts`, the client-
-side reflow) remain scoped but not started, along with Phases 9-11
-(i18n/packaging/closing verification) — all in
-`../piwigo16-themes/modus_17.0.0/`.
+**Items 36/37 landed — Phase 8 (masonry) is now fully closed.**
+
+- **Item 37** (photo-grid justified-row candidate computation): real
+  `modus_thumbs()` port. `Theme::onIndexThumbnailsRendered()` reproduces
+  legacy's own masonry-activation heuristic (wide `>1.5:1` or small-and-
+  uncropped effective index derivative type) — computed via a new
+  `resolveIndexDerivativeParams()` helper shared with
+  `onGetIndexDerivativeParams()`, since `Category\
+  CategoryDefaultRenderer::render()` dispatches `IndexThumbnailsRendered`
+  *before* `GetIndexDerivativeParams` (confirmed by reading that method
+  directly — the new handler cannot simply read the other's result off
+  the event). Each thumbnail then picks the smallest of up to 3 candidate
+  derivative types that reaches the target row height, centering or
+  rescaling exactly like legacy. New ambient `ModusThumbGridPageContext`/
+  `ModusMasonryThumbItem` carry the computed data (`ThumbnailsView` has
+  no field for it). New core addition: `ExtensionContext::device()` (a
+  narrow pass-through to the already-existing `DeviceHelper::getDevice()`
+  core never exposed to extensions) for the real mobile/tablet/desktop
+  margin sizing — correct even though v17 itself defaults to `'desktop'`
+  absent an explicit override (UA-sniffing was dropped for responsive
+  CSS). Deliberately not ported: `path-ext`/`file-ext` `<li>` classes and
+  legacy's own separate "posted on %s" icon title (both need
+  `ImageThumbnail` fields core dropped as unused, the same situation as
+  `CategoryThumbnail::$coi` — reuses `$thumbnail->iconTs->title` instead).
+- **Item 36** (`thumb-arrange.ts`, the client-side reflow): real port of
+  the actual non-minified `RVGTLine`/`RVGThumbs` source. One correctness
+  fix required beyond a literal translation: legacy's own
+  `$elt.data("w")/.data("h")` jQuery cache is load-bearing, not an
+  optimization — `reposition()` overwrites each `<img>`'s real
+  `width`/`height` attributes on every pass, so a later `process()` call
+  (a resize) must read a once-measured *original* size, not what a
+  previous pass already wrote; ported as a module-level `WeakMap` serving
+  the same role. `themes/default/template/thumbnails.latte` needed a new
+  `{block thumbnailList}` seam (P29.6-T) — same reasoning as
+  `mainpage_categories.latte`'s own `categoryList` seam, a genuinely
+  different `<li>` shape, not a per-thumbnail swap.
+- **Real gap in this seam's own verification, caught the hard way**: an
+  in-place `{block}` wrap (content left at its original indentation, only
+  wrapped) passed `tools/latte-lint.php` cleanly but threw a real
+  `Latte\CompileException` ("Inconsistent indentation") on every actual
+  page render — `composer test:golden-html` caught it (HTTP 500), the
+  linter did not. Fixed by properly re-indenting the wrapped content one
+  level deeper, which also happened to render byte-identical to the
+  original (91/91 golden-html, zero baseline changes needed this time,
+  unlike `categoryList`'s own pure-whitespace-but-still-different diff).
+  A new end-to-end test (`testThumbnailsLatteRendersTheMasonryMarkupWithoutThrowing`)
+  renders `ThumbnailsView` through modus's real override, not just
+  template-var assertions, specifically to catch this class of bug in
+  future sub-items.
+- **Separate real gap found and fixed while linting item 36's own new
+  file**: `bunx eslint --config eslint.config.ts ../piwigo16-themes/...`
+  silently reports "File ignored because outside of base path" for
+  *every* modus `.ts` file (ESLint's flat-config base-path resolution
+  refuses anything outside the config's own project root) — exit code 0,
+  but nothing was actually being linted, for any modus JS file, all
+  session (and likely since Phase 7 began). Verified via a real check
+  (temporarily copying every `modus_17.0.0/js/*.ts` into a scratch dir
+  inside this repo's own `themes/` tree, with import paths adjusted to
+  resolve correctly from there, running real ESLint against that copy):
+  9 genuine violations surfaced across 4 pre-existing files (array-
+  destructuring preferences, an always-true `??` needing a more honest
+  `number | undefined` type, and `photo-autosize.ts`'s `chooseDerivative()`
+  exceeding the cognitive-complexity budget 48 vs. 15 — fixed by
+  extracting 4 smaller functions, same behavior). Filed as product
+  feedback (ESLint's own base-path behavior, not something this repo's
+  config can fix); the practical mitigation for future ported-extension
+  JS is the same scratch-copy technique, not trusting a bare `eslint
+  ../sibling-repo/...` invocation's exit code.
 
 **Phase 12 (new, deliberately last) — nest `../piwigo16-plugins`/
 `../piwigo16-themes` as real git submodules.** Scoped, not started;

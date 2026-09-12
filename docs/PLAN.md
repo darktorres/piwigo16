@@ -131,7 +131,7 @@ Three structural changes produced that drift:
 | P26 | Admin fragment surface — UI-facing WS methods off the envelope | Done — the WS layer no longer exists at all; every admin UI surface already renders via Latte pages/fragments, not a JSON/XML envelope | ~15 |
 | P27 | Public API v1 (REST + OpenAPI 3.2 + tus) — WS deleted here | Done — 134 `Controller\Api\*` files, 88 registered `/api/v1` routes, full tus 1.0.0 chunked-upload protocol (6 dedicated controllers), RFC 9457 problem+json errors, hand-authored OpenAPI 3.2 spec (88 operations/11 domains) with a `redocly lint` CI gate + Gesso runtime contract enforcement, a generated TypeScript client, REST-body `Content-Type` validation (SEC-39), and an opt-in `Idempotency-Key` replay store (SEC-65); see Epoch G | ~151 |
 | P28 | Security hardening | Not started | 0 |
-| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 (port the `modus` theme) underway: Phase 0 (verification spike), Phase 1 (core/shared infrastructure, 11 sub-items P29.6-A..K plus a `MenubarSpecialsPageContext`/`setCorePictureDeriv()`/`CategoryThumbnail::$coi`/`ExtensionContext::device()` quartet added while scoping items 31/32/37/38), and Phase 2 (template `{block}`-refactor of `themes/default`, 10 templates, P29.6-L..T) done in this repo; Phase 6 items 27-32b/38 (template overrides, including the menubar rewrite and the album-thumbnail crop math), Phase 7 (JS port, all of items 33-36), and Phase 8 (masonry, fully closed — index-derivative-params wiring plus items 37/38) done in the sibling `../piwigo16-themes` repo (`modus_17.0.0/`, not this repo's own `themes/`); Phases 9-11 (i18n/packaging/verification) and the new Phase 12 (nest sibling catalog repos as git submodules — campaign-wide, not modus-specific) not started — see its own entries below | 33 |
+| P29 | Plugin / Theme contracts + bundled extensions | In progress — P29.6 (port the `modus` theme) underway: Phase 0 (verification spike), Phase 1 (core/shared infrastructure, 11 sub-items P29.6-A..K plus a `MenubarSpecialsPageContext`/`setCorePictureDeriv()`/`CategoryThumbnail::$coi`/`ExtensionContext::device()` quartet added while scoping items 31/32/37/38), and Phase 2 (template `{block}`-refactor of `themes/default`, 10 templates, P29.6-L..T) done in this repo; Phase 6 items 27-32b/38 (template overrides, including the menubar rewrite and the album-thumbnail crop math), Phase 7 (JS port, all of items 33-36), Phase 8 (masonry, fully closed — index-derivative-params wiring plus items 37/38), and Phase 9 (i18n, fully closed — 45 locale `theme.po` files) done in the sibling `../piwigo16-themes` repo (`modus_17.0.0/`, not this repo's own `themes/`), plus a `ThemeRegistry::bootCurrent()` real bug fix in this repo the i18n work exposed end-to-end; Phases 10-11 (packaging/verification) and the new Phase 12 (nest sibling catalog repos as git submodules — campaign-wide, not modus-specific) not started — see its own entries below | 33 |
 | P30 | Layer decoupling + repository restructure | Done — deptrac's 6-layer model enforces 0 violations in CI (established P6); the pre-consolidation repository-restructure plan's load-bearing goals were already met by the simpler `public/`-as-sibling-directory approach that shipped | 1 |
 | P31 | Smarty → Latte template migration | Done | 80 |
 | P32 | Latte lint/format tooling | Done — enforcement is P45 | 11 |
@@ -2011,6 +2011,52 @@ simplification, not a missed detail.
   config can fix); the practical mitigation for future ported-extension
   JS is the same scratch-copy technique, not trusting a bare `eslint
   ../sibling-repo/...` invocation's exit code.
+
+**Phase 9 (i18n, 45 locales) landed — items 39/40.**
+
+- **Item 39** (`tools/i18n/extract-pairs.php` fix): confirmed real via a
+  full survey of every legacy theme/plugin's own `|@?translate_dec:`
+  usage (both the `@`-prefixed and plain forms are real) — modus's own
+  `"%d album"`/`"%d albums"` (`mainpage_categories.tpl`) has zero
+  `l10n_dec()` PHP call sites anywhere in that theme's source, so the
+  PHP-only scan silently found nothing for it. Fixed by also scanning
+  `.tpl` files for the Smarty modifier form, with its own new
+  `tests/Unit/Tools/ExtractPairsTest.php` (5 cases: a plain PHP pair, the
+  `@`-prefixed template form, the non-`@` form, both file types combined
+  in one root, and a non-php/tpl file correctly ignored). No behavior
+  change for core's own already-converted `.po` files — `src`/`themes`
+  are 100% Latte now, so the new `.tpl` scan finds nothing there.
+- **Item 40** (45 locale `theme.po` files): ran `tools/i18n/convert-all.php`
+  against a throwaway copy of the real legacy `modus_16.3.0.1` source
+  (never against that directory directly — it stays untouched, matching
+  Phase 10's own "leave the legacy entry alone" plan), then copied the
+  resulting `.po` files into `modus_17.0.0/language/<locale>/`.
+  `tools/i18n/verify-parity.php` confirmed 0 errors across all 45 pairs;
+  spot-checked `en_UK` (a clean `msgid`/`msgid_plural` pair) and `ru_RU`
+  (3 real plural forms in its `Plural-Forms` header, only 2 populated in
+  `msgstr[]` — the already-documented, accepted lossy-but-safe behavior
+  for any locale with 3+ forms, since the legacy `.lang.php` source never
+  carried more than 2).
+- **Real bug found and fixed end-to-end, not just theoretical**: a new
+  regression test proving a real *translated* string (not just "the load
+  didn't throw") loads through `ThemeRegistry::bootCurrent()` surfaced
+  that `bootCurrent()`'s own `theme.lang` load used `Paths::$themes` (a
+  fixed `{root}themes/`) instead of the *configurable* `themesDir`/
+  `themesPath` every other method in that class already resolves a
+  theme's directory through — silently found nothing whenever the two
+  diverge, with zero error (`Lang::load()` just returns `false` on a
+  miss). This is why no theme's own translations have ever worked under
+  a non-default `themesDir`, for any theme, ever — modus is simply the
+  first theme to ship a `language/` directory at all. Fixed in
+  `piwigo17-rewrite` directly (`ThemeRegistry.php` + a new
+  `ThemeRegistryTest.php` case using that file's own existing
+  fixture-theme infrastructure). A second, separate fix was needed to
+  make the new test's own assertion meaningful: `Lang::
+  $defaultLanguageProvider` is normally wired by `LanguageMiddleware`,
+  which never runs for a service-level Integration test, so a language
+  switch via `CurrentUser` was silently ignored without also calling
+  `setDefaultLanguageProvider()` directly — applied to both the new core
+  test and modus's own equivalent i18n test.
 
 **Phase 12 (new, deliberately last) — nest `../piwigo16-plugins`/
 `../piwigo16-themes` as real git submodules.** Scoped, not started;

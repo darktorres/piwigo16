@@ -14,6 +14,7 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -386,6 +387,57 @@ final class ThemeRegistryTest extends IntegrationTestCase
         self::assertTrue($childClass::$booted);
         self::assertInstanceOf(ExtensionContext::class, $parentClass::$receivedContext);
         self::assertInstanceOf(ExtensionContext::class, $childClass::$receivedContext);
+    }
+
+    /**
+     * Real bug this test catches (found via P29.6, the `modus` theme
+     * port's own end-to-end i18n test): `bootCurrent()`'s `theme.lang`
+     * load used to read `Paths::$themes` (a fixed `{root}themes/`,
+     * unrelated to this class's own *configurable* `themesDir`/
+     * `themesPath` that every other method here -- `getManifest()`/
+     * `load()` -- already resolves a theme's directory through). This
+     * test's own fixture theme lives under a temp dir, exactly like every
+     * other test in this file (`buildRegistry()`'s own `Paths::fromRoot()`
+     * points at the real project root, deliberately different from the
+     * fixture's `themesDir`) -- the old code would have silently found no
+     * `theme.po` at all (`Lang::load()` returns `false` on a miss, no
+     * error), and this assertion would still read the untranslated
+     * English fallback either way, hiding the bug completely.
+     */
+    public function testBootCurrentLoadsThemeLangFromTheConfiguredThemesDirNotPathsThemes(): void
+    {
+        $dir = $this->makeTempDir();
+        $suffix = uniqid('', false);
+        $id = 'zz-lang-' . $suffix;
+        $this->writeFixtureTheme($dir, $id, 'Lang' . $suffix);
+
+        mkdir($dir . '/' . $id . '/language/fr_FR', 0o777, true);
+        file_put_contents(
+            $dir . '/' . $id . '/language/fr_FR/theme.po',
+            <<<'PO'
+                msgid ""
+                msgstr ""
+                "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+                msgid "Explore"
+                msgstr "Explorer"
+                PO,
+        );
+
+        // Real request wiring (LanguageMiddleware) never runs for a
+        // service-level Integration test -- Lang::$defaultLanguageProvider
+        // stays null without this, so getCurrentLanguage() short-circuits
+        // via the nullsafe operator regardless of CurrentUser's own state.
+        $this->containerGet(Lang::class)
+            ->setDefaultLanguageProvider($this->containerGet(UserService::class));
+
+        $currentUser = $this->containerGet(CurrentUser::class);
+        $currentUser->updateLanguage(LangCode::from('fr_FR'));
+
+        $registry = $this->buildRegistry($dir);
+        $registry->bootCurrent(ThemeId::from($id));
+
+        self::assertSame('Explorer', $this->containerGet(Lang::class)->t('Explore'));
     }
 
     public function testActivateDeactivateRoundTrip(): void

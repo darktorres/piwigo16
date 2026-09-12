@@ -290,7 +290,17 @@ final class ThemeRegistry
             // Lang's own current-locale resolution is already wired up.
             // A no-op (Lang::load() returns false, silently) for every
             // theme that ships no language/ directory of its own.
-            $this->lang->load('theme.lang', $this->paths->themes . $id . '/');
+            //
+            // $this->currentConfig->themesPath, not $this->paths->themes:
+            // real bug this port's own end-to-end test caught -- the rest
+            // of this class (getManifest()/load()) already resolves a
+            // theme's directory via the *configurable* themesDir/
+            // themesPath, but this line used Paths::$themes, a fixed
+            // `{root}themes/` computed once at boot with no relationship
+            // to themesDir at all. Silently found nothing whenever the two
+            // diverge (any real themesDir override), with zero error --
+            // Lang::load() just returns false on a miss.
+            $this->lang->load('theme.lang', $this->currentConfig->themesPath . $id . '/');
             $instance->boot($this->contextFactory->build(ThemeId::from($id)));
         }
     }

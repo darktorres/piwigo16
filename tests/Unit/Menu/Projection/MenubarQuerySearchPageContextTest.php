@@ -8,12 +8,20 @@ use Piwigo\Menu\Projection\MenubarQuerySearchPageContext;
  * What is left of MenubarIdentificationPageContextTest. The three cases it
  * carried asserted the guest/identified-user key sets, which are now
  * MenubarIdentificationView's `$guest`/`$user` and typed rather than
- * conditionally-present array keys; the omit-when-null behaviour that
- * remains is `QUERY_SEARCH`'s alone.
+ * conditionally-present array keys.
  */
-test('toArray omits the key entirely when there is no query search', function (): void {
+test('toArray assigns an empty string when there is no query search, never omitting the key', function (): void {
+    // Always assigned, not conditionally omitted (P29.6, modus): a
+    // theme's own menubar.latte override reads $QUERY_SEARCH
+    // unconditionally, and Latte's compiler rewrites a declared-type
+    // variable's own isset() check into `!== null`, so an omitted key
+    // still throws "Undefined variable" at render time no matter how
+    // defensively the template checks for it -- see this class's own
+    // docblock.
     expect((new MenubarQuerySearchPageContext(null))->toArray())
-        ->toBe([]);
+        ->toBe([
+            'QUERY_SEARCH' => '',
+        ]);
 });
 
 test('toArray carries the query search when a search section set one', function (): void {

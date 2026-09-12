@@ -202,13 +202,19 @@ final class MenubarRendererTest extends IntegrationTestCase
         self::assertSame('<script>alert(1)</script>', $this->template->getTemplateVars('QUERY_SEARCH'));
     }
 
-    public function testRenderDoesNotAssignQuerySearchOutsideASearchSection(): void
+    public function testRenderAssignsAnEmptyQuerySearchOutsideASearchSection(): void
     {
+        // Always assigned, never omitted (P29.6, modus): a theme's own
+        // menubar.latte override reads $QUERY_SEARCH unconditionally, and
+        // Latte's compiler rewrites a declared-type variable's own
+        // isset() check into `!== null`, so an omitted key still throws
+        // "Undefined variable" at render time -- see
+        // MenubarQuerySearchPageContext's own docblock.
         $this->sectionContextRegistry->set(new SectionContext(section: Section::Categories));
 
         $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplateTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger(), $this->permissionService, $this->entityManager, new Renderer(CurrentTemplateTestFactory::get()));
 
-        self::assertNull($this->template->getTemplateVars('QUERY_SEARCH'));
+        self::assertSame('', $this->template->getTemplateVars('QUERY_SEARCH'));
     }
 
     /**

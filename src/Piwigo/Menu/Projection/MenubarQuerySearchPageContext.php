@@ -22,6 +22,17 @@ use Piwigo\Core\TemplatePageContext;
  * state and belongs with that producer (`GalleryController` holds the same
  * `SectionContext` this reads it from); until then it stays ambient rather
  * than being smuggled onto a view that does not render it.
+ *
+ * Always assigned (empty string when there's no active search), not
+ * conditionally omitted: a theme's own `menubar.latte` override (P29.6,
+ * modus) reads `$QUERY_SEARCH` unconditionally (not gated on an active
+ * search section the way `index.latte`'s own read already is) --
+ * confirmed real via that override's own end-to-end test that a `{varType}`-
+ * declared ambient var is not `isset()`-safe: Latte's compiler rewrites
+ * `isset($x)` into `$x !== null` for a variable it has a declared type
+ * for, so an unconditionally-omitted key still throws "Undefined
+ * variable" at render time regardless of how defensively the template
+ * itself checks for it.
  */
 final readonly class MenubarQuerySearchPageContext implements TemplatePageContext
 {
@@ -35,8 +46,8 @@ final readonly class MenubarQuerySearchPageContext implements TemplatePageContex
     #[Override]
     public function toArray(): array
     {
-        return $this->querySearch === null ? [] : [
-            'QUERY_SEARCH' => $this->querySearch,
+        return [
+            'QUERY_SEARCH' => $this->querySearch ?? '',
         ];
     }
 }

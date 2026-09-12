@@ -362,6 +362,23 @@ final readonly class SessionService
     }
 
     /**
+     * Counterpart to {@see isShowMetadataEnabled()} -- mirrors
+     * `Controller\PictureController`'s own real toggle exactly: enabling
+     * writes the same literal `1` presence value that controller itself
+     * writes, disabling removes the key entirely rather than storing a
+     * falsy value, matching `isShowMetadataEnabled()`'s own "existence
+     * check, not a value accessor" contract.
+     */
+    public function setShowMetadataEnabled(bool $enabled): void
+    {
+        if ($enabled) {
+            $this->setSessionVar('show_metadata', 1);
+        } else {
+            $this->unsetSessionVar('show_metadata');
+        }
+    }
+
+    /**
      * `referer_image_id` -- Controller\PictureController's own
      * same-picture-repeat-view hit-counting guard.
      */

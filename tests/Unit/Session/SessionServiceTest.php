@@ -653,6 +653,23 @@ test('isShowMetadataEnabled is a pure presence check, ignoring the stored value'
         ->toBeTrue();
 });
 
+test('setShowMetadataEnabled writes the same presence key isShowMetadataEnabled reads, and removes it entirely when disabled', function (): void {
+    $service = makeSessionService();
+    $_SESSION = [];
+
+    $service->setShowMetadataEnabled(true);
+    expect($_SESSION['pwg_show_metadata'])
+        ->toBe(1)
+        ->and($service->isShowMetadataEnabled())
+        ->toBeTrue();
+
+    $service->setShowMetadataEnabled(false);
+    expect($_SESSION)
+        ->not->toHaveKey('pwg_show_metadata')
+        ->and($service->isShowMetadataEnabled())
+        ->toBeFalse();
+});
+
 test('getRefererImageId returns null when unset or non-numeric, and the int when set', function (): void {
     $service = makeSessionService();
     $_SESSION = [];

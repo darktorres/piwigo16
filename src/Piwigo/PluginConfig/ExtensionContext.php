@@ -421,6 +421,31 @@ final readonly class ExtensionContext
     }
 
     /**
+     * The core, un-namespaced `pwg_show_metadata` session flag --
+     * `Controller\PictureController`'s own "show EXIF/IPTC metadata by
+     * default" toggle. See `coreIndexDeriv()`'s own docblock for why this
+     * reaches the core, un-namespaced session key directly rather than
+     * through `session()`. Legacy `bootstrap_darkroom`'s own
+     * `themeconf.inc.php` enables this unconditionally at boot (P61) --
+     * `SessionService::isShowMetadataEnabled()`'s own docblock explains
+     * why this is a pure presence check, not a value accessor.
+     */
+    public function isShowMetadataEnabled(): bool
+    {
+        return $this->sessionService->isShowMetadataEnabled();
+    }
+
+    /**
+     * Counterpart to {@see isShowMetadataEnabled()} -- see that method's
+     * own docblock for why this reaches the core, un-namespaced session
+     * key directly rather than through {@see session()}.
+     */
+    public function setShowMetadataEnabled(bool $enabled): void
+    {
+        $this->sessionService->setShowMetadataEnabled($enabled);
+    }
+
+    /**
      * `'mobile'`/`'tablet'`/`'desktop'` -- see `Core\DeviceHelper::
      * getDevice()`'s own docblock: v17 dropped UA-sniffing (responsive CSS
      * covers it for core), so this defaults to `'desktop'` absent an

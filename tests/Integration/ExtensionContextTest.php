@@ -1043,6 +1043,27 @@ final class ExtensionContextTest extends IntegrationTestCase
     }
 
     /**
+     * P61 (the `bootstrap_darkroom` theme port): `isShowMetadataEnabled()`/
+     * `setShowMetadataEnabled()` reach `Controller\PictureController`'s own
+     * real, un-namespaced `pwg_show_metadata` presence flag -- legacy
+     * `bootstrap_darkroom`'s own `themeconf.inc.php` enables this
+     * unconditionally at boot.
+     */
+    public function testIsShowMetadataEnabledAndSetShowMetadataEnabledReadWriteTheRealSharedCoreSessionKey(): void
+    {
+        $_SESSION = [];
+        $context = $this->buildContext(PluginId::from('any-plugin'));
+
+        self::assertFalse($context->isShowMetadataEnabled());
+
+        $context->setShowMetadataEnabled(true);
+        self::assertTrue($context->isShowMetadataEnabled());
+
+        $context->setShowMetadataEnabled(false);
+        self::assertFalse($context->isShowMetadataEnabled());
+    }
+
+    /**
      * P29.6 (the `modus` theme port): `imageStdParams()` exposes the same
      * shared, already-composed `ImageStdParams` instance the container
      * hands to real production code, needed for a settings page listing

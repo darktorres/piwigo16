@@ -423,7 +423,8 @@ final class ThemeRegistryTest extends IntegrationTestCase
 
                 msgid "Explore"
                 msgstr "Explorer"
-                PO,
+                PO
+            ,
         );
 
         // Real request wiring (LanguageMiddleware) never runs for a

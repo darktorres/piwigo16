@@ -41,7 +41,9 @@ test('extracts a plural pair from a real l10n_dec() PHP call', function (): void
         );
 
         expect(extract_plural_pairs($dir))
-            ->toBe(['%d comment' => '%d comments']);
+            ->toBe([
+                '%d comment' => '%d comments',
+            ]);
     } finally {
         removeExtractPairsScratchDir($dir);
     }
@@ -57,7 +59,9 @@ test('extracts a plural pair from a Smarty |@translate_dec template modifier wit
         );
 
         expect(extract_plural_pairs($dir))
-            ->toBe(['%d album' => '%d albums']);
+            ->toBe([
+                '%d album' => '%d albums',
+            ]);
     } finally {
         removeExtractPairsScratchDir($dir);
     }
@@ -73,7 +77,9 @@ test('extracts a plural pair from the non-@ |translate_dec modifier form too', f
         );
 
         expect(extract_plural_pairs($dir))
-            ->toBe(['%d hit' => '%d hits']);
+            ->toBe([
+                '%d hit' => '%d hits',
+            ]);
     } finally {
         removeExtractPairsScratchDir($dir);
     }

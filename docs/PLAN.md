@@ -163,7 +163,7 @@ Three structural changes produced that drift:
 | P58 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P59 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
 | P60 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | **DONE** — **A 843 → 0, B 376 → 0**, and the CAMPAIGN-PENDING block is gone from `phpstan.neon`. All 26 identifier-wide ignores retired, each forced out by `reportUnmatchedIgnoredErrors` rather than noticed; 2 more left the *permanent* groups (`empty.variable`, `foreach.valueOverwrite`). Twenty-three live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
-| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra gaps in this repo) done: P61-A `ExtensionContext::currentSection()`, P61-B `ImageReadFacade::findByIdsOrdered()`, P61-C `ExtensionContext::isShowMetadataEnabled()`/`setShowMetadataEnabled()`, P61-D `ExtensionContext::paths()`. Phase 1's originally-planned 4th item (a shared `photoswipe.ts` lightbox wrapper) deliberately deferred to Phase 6, on the user's own call: unlike `colorbox.ts` (narrowed against 8 real existing call sites), PhotoSwipe has zero real callers until darkroom's own `index.latte`/`picture.latte` exist. Phase 2 (manifest + `ExtensionInterface` skeleton) and Phase 3 (typed settings VO + real tabbed settings page) both done in the sibling `../piwigo16-themes` repo as `bootstrap_darkroom_17.0.0/` — both live-verified against a real running instance end-to-end (activate/tabs/POST-save round-trip, including the separate file-backed `custom_css`), which caught and fixed real bugs before commit each time (Phase 2: `hasSettings: true` with no `SettingsPageInterface` implementor yet is a hard rejected manifest contract, not a cosmetic gap; an invalid schema version string; an unrelated `ModusThemeIntegrationTest.php` regression from P61-A missed by this repo's own sweep). Phase 4-A (CSS palette foundation) done — fixed `--darkroom-color-*` custom-property palette, real OKLCH conversions, live-verified; dropped a generic Bootstrap-clone grid/utility-class library as ungrounded (no such convention exists anywhere else in this codebase). Phase 4-B onward through Phase 10 (core templates, index/picture pages, JS interactivity, i18n/packaging, verification) not started — see plan detail below | 5 |
+| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra gaps in this repo) done: P61-A `ExtensionContext::currentSection()`, P61-B `ImageReadFacade::findByIdsOrdered()`, P61-C `ExtensionContext::isShowMetadataEnabled()`/`setShowMetadataEnabled()`, P61-D `ExtensionContext::paths()`. Phase 1's originally-planned 4th item (a shared `photoswipe.ts` lightbox wrapper) deliberately deferred to Phase 6, on the user's own call: unlike `colorbox.ts` (narrowed against 8 real existing call sites), PhotoSwipe has zero real callers until darkroom's own `index.latte`/`picture.latte` exist. Phase 2 (manifest + `ExtensionInterface` skeleton) and Phase 3 (typed settings VO + real tabbed settings page) both done in the sibling `../piwigo16-themes` repo as `bootstrap_darkroom_17.0.0/` — both live-verified against a real running instance end-to-end (activate/tabs/POST-save round-trip, including the separate file-backed `custom_css`), which caught and fixed real bugs before commit each time (Phase 2: `hasSettings: true` with no `SettingsPageInterface` implementor yet is a hard rejected manifest contract, not a cosmetic gap; an invalid schema version string; an unrelated `ModusThemeIntegrationTest.php` regression from P61-A missed by this repo's own sweep). Phase 4-A (CSS palette foundation) done — fixed `--darkroom-color-*` custom-property palette, real OKLCH conversions, live-verified; dropped a generic Bootstrap-clone grid/utility-class library as ungrounded (no such convention exists anywhere else in this codebase). Phase 5-A (all 8 menubar templates) done — horizontal navbar with native `<details>/<summary>` dropdowns, no JS; live-verified. Rest of Phase 5 plus Phases 6-10 (index/picture pages, JS interactivity, i18n/packaging, verification) not started — see plan detail below | 5 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -12427,9 +12427,46 @@ regardless of its own `loadParentCss` value, which only gates the
 *parent's* entry) — real asset-pipeline wiring becomes necessary once
 Phase 5+ adds files beyond this one auto-loaded entry point.
 
-Remaining phases (4-B onward through 10: core templates, index/picture
-pages, JS interactivity, i18n/packaging, closing verification) land in
-the same sibling directory, not started.
+**P61 Phase 5-A (Done)** — all 8 `default`-theme menubar templates
+overridden in `bootstrap_darkroom_17.0.0/template/`: a horizontal navbar
+(legacy's own real structure) replacing `default`'s vertical sidebar
+`<dl>` list, using native `<details>/<summary>` disclosures instead of
+Bootstrap's JS-driven `.dropdown`/`data-toggle="dropdown"` behavior — no
+JS needed for open/close at all. Category/related-category trees render
+as one flat row list with a real `--darkroom-level` custom property set
+per row (`bootstrap_darkroom_17.0.0/theme.css`), replacing both legacy's
+own JS-computed padding-left hack and `default`'s nested `<ul>/<li>`
+tree-building.
+
+Two deliberate, documented simplifications: legacy's Menu+Specials
+"Discover" merged dropdown is dropped (no setting in
+`BootstrapDarkroomThemeSettings` controls it; every block renders
+independently, matching `default`'s own shell); `quicksearchNavbar`'s
+"render directly in the navbar row" variant isn't wired — `MenubarMenuView`
+has no channel to relocate part of its own already-rendered HTML into a
+sibling slot on the navbar shell, and real support would need a core
+`Menu\Event\BlockManagerPrepareDisplay` subscriber reshaping which block
+owns the quicksearch form, a bigger change than this phase's markup-only
+scope. Quick search always renders inside the "Menu" dropdown for now — a
+known, documented gap, not a silent drop.
+
+Verified: `composer lint:latte ../piwigo16-themes/bootstrap_darkroom_17.0.0/template`
+(this repo's own default-argument scan only covers `themes/`, so ported
+templates need an explicit path) and `stylelint` both clean — the latter
+needed `BROWSERSLIST_CONFIG` pointed explicitly at this repo's own
+`.browserslistrc`, since resolving it via the linted file's own directory
+fails silently for any path outside this repo, producing spurious
+browser-support warnings not seen for any in-repo file. Live-verified
+against a real running instance: navbar renders with the Phase 4 palette,
+the "Albums" dropdown opens natively and shows the real category tree
+with its badge count, zero console/PHP errors. All side effects reverted.
+
+Remaining Phase 5 work: infos_errors/navigation_bar/notification/about/
+redirect/profile, password/identification/register, comments/comment_list,
+tags (flat-cloud only), thumbnails, mainpage_categories, month_calendar,
+profile_content. Phases 6-10 (index/picture pages, JS interactivity,
+i18n/packaging, closing verification) land in the same sibling directory,
+not started.
 
 ## Greenfield tracks (T3, cuttable — outside the P0–P60 backbone)
 

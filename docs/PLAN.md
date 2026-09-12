@@ -163,7 +163,7 @@ Three structural changes produced that drift:
 | P58 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P59 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
 | P60 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | **DONE** — **A 843 → 0, B 376 → 0**, and the CAMPAIGN-PENDING block is gone from `phpstan.neon`. All 26 identifier-wide ignores retired, each forced out by `reportUnmatchedIgnoredErrors` rather than noticed; 2 more left the *permanent* groups (`empty.variable`, `foreach.valueOverwrite`). Twenty-three live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
-| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra gaps in this repo) done: P61-A `ExtensionContext::currentSection()`, P61-B `ImageReadFacade::findByIdsOrdered()`, P61-C `ExtensionContext::isShowMetadataEnabled()`/`setShowMetadataEnabled()`, P61-D `ExtensionContext::paths()`. Phase 1's originally-planned 4th item (a shared `photoswipe.ts` lightbox wrapper) deliberately deferred to Phase 6, on the user's own call: unlike `colorbox.ts` (narrowed against 8 real existing call sites), PhotoSwipe has zero real callers until darkroom's own `index.latte`/`picture.latte` exist. Phase 2 (manifest + `ExtensionInterface` skeleton) and Phase 3 (typed settings VO + real tabbed settings page) both done in the sibling `../piwigo16-themes` repo as `bootstrap_darkroom_17.0.0/` — both live-verified against a real running instance end-to-end (activate/tabs/POST-save round-trip, including the separate file-backed `custom_css`), which caught and fixed real bugs before commit each time (Phase 2: `hasSettings: true` with no `SettingsPageInterface` implementor yet is a hard rejected manifest contract, not a cosmetic gap; an invalid schema version string; an unrelated `ModusThemeIntegrationTest.php` regression from P61-A missed by this repo's own sweep). Phases 4-10 (CSS foundation, templates, index/picture pages, JS interactivity, i18n/packaging, verification) not started — see plan detail below | 5 |
+| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra gaps in this repo) done: P61-A `ExtensionContext::currentSection()`, P61-B `ImageReadFacade::findByIdsOrdered()`, P61-C `ExtensionContext::isShowMetadataEnabled()`/`setShowMetadataEnabled()`, P61-D `ExtensionContext::paths()`. Phase 1's originally-planned 4th item (a shared `photoswipe.ts` lightbox wrapper) deliberately deferred to Phase 6, on the user's own call: unlike `colorbox.ts` (narrowed against 8 real existing call sites), PhotoSwipe has zero real callers until darkroom's own `index.latte`/`picture.latte` exist. Phase 2 (manifest + `ExtensionInterface` skeleton) and Phase 3 (typed settings VO + real tabbed settings page) both done in the sibling `../piwigo16-themes` repo as `bootstrap_darkroom_17.0.0/` — both live-verified against a real running instance end-to-end (activate/tabs/POST-save round-trip, including the separate file-backed `custom_css`), which caught and fixed real bugs before commit each time (Phase 2: `hasSettings: true` with no `SettingsPageInterface` implementor yet is a hard rejected manifest contract, not a cosmetic gap; an invalid schema version string; an unrelated `ModusThemeIntegrationTest.php` regression from P61-A missed by this repo's own sweep). Phase 4-A (CSS palette foundation) done — fixed `--darkroom-color-*` custom-property palette, real OKLCH conversions, live-verified; dropped a generic Bootstrap-clone grid/utility-class library as ungrounded (no such convention exists anywhere else in this codebase). Phase 4-B onward through Phase 10 (core templates, index/picture pages, JS interactivity, i18n/packaging, verification) not started — see plan detail below | 5 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -12375,7 +12375,59 @@ live-check side effects were fully reverted afterward, confirmed via
 direct DB queries and `git status`, including a `sudo rm` needed for one
 `www-data`-owned file the live PHP process itself wrote.
 
-Remaining phases (4-10: CSS foundation, core templates, index/picture
+**P61 Phase 4-A (Done)** — CSS palette foundation,
+`bootstrap_darkroom_17.0.0/theme.css`. Re-audited the feasibility
+analysis's own provisional figures directly against the real `scss/`
+tree rather than trusting them: both check out (24 real custom partials
+survive the bootswatch/material vendor-skin drop, 34 real `!important`
+declarations among them). Landed a fixed ~8-role `--darkroom-color-*`
+custom-property palette — real sRGB→OKLab→OKLCH conversions (matching
+`themes/default/css/tokens.css`'s own documented conversion discipline)
+of the 8 real named grays in legacy's own
+`scss/darkroom-colors/_variables.scss` — plus global `body`/`a` base
+rules (background, text color, link color/hover, the `PT Sans` brand
+font).
+
+Two real corrections found before writing this file, not assumed from
+the original plan: (1) overriding `default`'s own shared `--color-*`
+token names (the originally-planned mechanism) would re-theme nothing —
+confirmed by direct grep that `default`'s inherited
+`base.css`/`utilities.css` carry zero color declarations, and its
+page/component stylesheets use only literal hex values, never
+`var(--color-*)`, repo-wide, today. Darkroom's palette is instead its
+own private `--darkroom-*` namespace with no skin-switching machinery
+(unlike `modus`'s own `--modus-*` per-skin properties), since this port
+ships exactly one skin. (2) Dropped the originally-planned generic
+"Grid/Flexbox layout system" utility-class library
+(`.row`/`.col-*`/`.d-flex`-equivalents) — confirmed `default`'s own real
+`utilities.css` is nearly empty and every one of its page/component
+stylesheets hand-authors its own layout directly, with no utility-first
+convention anywhere in this codebase to mirror. Real legacy grid usage
+was audited (`template/*.tpl`: `row`/`col-sm-*`/`justify-content-*`/etc.,
+all real Bootstrap 4) purely to confirm Phase 5+ will need responsive
+multi-column/flex layout somewhere — each template's own new stylesheet
+authors that directly, matching `default`'s own established
+per-component convention, not a shared utility layer landed here.
+
+Live-verified against a real running instance: activated, set default,
+confirmed the real page's computed `<body>`
+`background-color`/`color` match the declared palette values exactly
+(`oklch(0.4276 0 0)`/`oklch(0.8914 0 0)`), `theme.css` loads in the
+correct chain position (after `default`'s `reset`/`tokens`/`base`,
+before its `utilities.css`, no `default` theme.css present per
+`loadParentCss: false`), zero console/PHP errors, screenshot confirmed.
+All side effects fully reverted, including a `config` table row this
+activation writes (`Theme::activate()`'s settings-blob persist, landed
+Phase 3) that Phase 2's own check predates and didn't yet need to catch.
+
+Vite/`AssetContribution` wiring not yet needed: `theme.css` loads today
+via the automatic, unconditional `ThemeBaseAssets::themeChainCss()`
+registration (confirmed: a leaf theme's own `loadCss` is always `true`
+regardless of its own `loadParentCss` value, which only gates the
+*parent's* entry) — real asset-pipeline wiring becomes necessary once
+Phase 5+ adds files beyond this one auto-loaded entry point.
+
+Remaining phases (4-B onward through 10: core templates, index/picture
 pages, JS interactivity, i18n/packaging, closing verification) land in
 the same sibling directory, not started.
 

@@ -37,6 +37,8 @@ use Piwigo\PluginConfig\Facade\ImageReadFacade;
 use Piwigo\PluginConfig\Facade\ImageWriteFacade;
 use Piwigo\PluginConfig\Facade\ThemeReadFacade;
 use Piwigo\PluginConfig\Facade\UserReadFacade;
+use Piwigo\Section\SectionContext;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
@@ -105,6 +107,7 @@ final readonly class ExtensionContext
         private Renderer $renderer,
         private CookieService $cookieService,
         private ImageStdParams $imageStdParams,
+        private SectionContextRegistry $sectionContextRegistry,
     ) {}
 
     /**
@@ -452,6 +455,24 @@ final readonly class ExtensionContext
     public function imageStdParams(): ImageStdParams
     {
         return $this->imageStdParams;
+    }
+
+    /**
+     * The current request's `SectionContext` (gallery-navigation state:
+     * `isHomepage`, `section`, `category`, `items`, ...) -- `null` for
+     * every non-gallery controller, since only `Controller\
+     * GalleryController` (via `Section\SectionPopulator::populate()`)
+     * ever registers one; `RegisterController`/`IdentificationController`/
+     * `AboutController`/etc. never do. Returns the whole VO rather than
+     * narrow single-field passthroughs (matching `imageStdParams()`'s own
+     * whole-service convention above) since a theme porting a legacy
+     * "is this the homepage"/"which section" hook (P29.6,
+     * `bootstrap_darkroom`'s own `checkIfHomepage()`/`stripBreadcrumbs()`)
+     * needs more than one field and the set may grow with real callers.
+     */
+    public function currentSection(): ?SectionContext
+    {
+        return $this->sectionContextRegistry->current();
     }
 
     /**

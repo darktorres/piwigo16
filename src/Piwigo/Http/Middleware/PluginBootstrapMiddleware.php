@@ -61,6 +61,7 @@ use Piwigo\PluginConfig\PluginMigrationEntity;
 use Piwigo\PluginConfig\PluginMigrationRepository;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\PluginConfig\PluginRepository;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagRepository;
@@ -150,6 +151,7 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
         private Renderer $renderer,
         private CookieService $cookieService,
         private ImageStdParams $imageStdParams,
+        private SectionContextRegistry $sectionContextRegistry,
     ) {}
 
     #[Override]
@@ -291,6 +293,7 @@ final readonly class PluginBootstrapMiddleware implements MiddlewareInterface
             $this->renderer,
             $this->cookieService,
             $this->imageStdParams,
+            $this->sectionContextRegistry,
         );
     }
 

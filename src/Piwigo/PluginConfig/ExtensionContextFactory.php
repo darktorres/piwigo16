@@ -26,6 +26,7 @@ use Piwigo\PluginConfig\Facade\ImageReadFacade;
 use Piwigo\PluginConfig\Facade\ImageWriteFacade;
 use Piwigo\PluginConfig\Facade\ThemeReadFacade;
 use Piwigo\PluginConfig\Facade\UserReadFacade;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
@@ -70,6 +71,7 @@ final readonly class ExtensionContextFactory
         private Renderer $renderer,
         private CookieService $cookieService,
         private ImageStdParams $imageStdParams,
+        private SectionContextRegistry $sectionContextRegistry,
     ) {}
 
     public function build(PluginId|ThemeId $extensionId): ExtensionContext
@@ -102,6 +104,7 @@ final readonly class ExtensionContextFactory
             $this->renderer,
             $this->cookieService,
             $this->imageStdParams,
+            $this->sectionContextRegistry,
         );
     }
 }

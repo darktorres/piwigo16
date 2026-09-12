@@ -49,6 +49,8 @@ use Piwigo\PluginConfig\Facade\ImageReadFacade;
 use Piwigo\PluginConfig\Facade\ImageWriteFacade;
 use Piwigo\PluginConfig\Facade\ThemeReadFacade;
 use Piwigo\PluginConfig\Facade\UserReadFacade;
+use Piwigo\Section\SectionContext;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
@@ -209,6 +211,7 @@ final class ExtensionContextTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
+        $this->containerGet(SectionContextRegistry::class)->reset();
         DbTransactionTestOverride::rollback();
         parent::tearDown();
     }
@@ -253,6 +256,7 @@ final class ExtensionContextTest extends IntegrationTestCase
             new Renderer($this->containerGet(CurrentTemplate::class)),
             $this->containerGet(CookieService::class),
             $this->containerGet(ImageStdParams::class),
+            $this->containerGet(SectionContextRegistry::class),
         );
     }
 
@@ -1023,6 +1027,29 @@ final class ExtensionContextTest extends IntegrationTestCase
         $context = $this->buildContext(PluginId::from('any-plugin'));
 
         self::assertSame($this->containerGet(ImageStdParams::class), $context->imageStdParams());
+    }
+
+    /**
+     * P61 (the `bootstrap_darkroom` theme port): `currentSection()` reads
+     * the same shared `SectionContextRegistry` real gallery-context
+     * controllers (`GalleryController` via `Section\SectionPopulator::
+     * populate()`) register into -- `null` when nothing has (every
+     * non-gallery controller, e.g. `RegisterController`), the exact same
+     * instance otherwise (not a copy), so a theme can read `isHomepage`/
+     * `section` to reproduce legacy `checkIfHomepage()`/
+     * `stripBreadcrumbs()` without a new PSR-14 event.
+     */
+    public function testCurrentSectionReflectsTheRealSharedRegistry(): void
+    {
+        $registry = $this->containerGet(SectionContextRegistry::class);
+        $context = $this->buildContext(PluginId::from('any-plugin'));
+
+        self::assertNull($context->currentSection());
+
+        $sectionContext = new SectionContext(isHomepage: true);
+        $registry->set($sectionContext);
+
+        self::assertSame($sectionContext, $context->currentSection());
     }
 
     public function testDispatchReachesARegisteredHandler(): void

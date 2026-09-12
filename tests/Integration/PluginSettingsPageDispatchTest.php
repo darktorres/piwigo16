@@ -50,6 +50,7 @@ use Piwigo\PluginConfig\Facade\UserReadFacade;
 use Piwigo\PluginConfig\PluginMigrationRepository;
 use Piwigo\PluginConfig\PluginRegistry;
 use Piwigo\PluginConfig\PluginRepository;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
@@ -175,6 +176,7 @@ final class PluginSettingsPageDispatchTest extends IntegrationTestCase
             new Renderer($this->containerGet(CurrentTemplate::class)),
             $this->containerGet(CookieService::class),
             $this->containerGet(ImageStdParams::class),
+            $this->containerGet(SectionContextRegistry::class),
         );
 
         $this->containerGet(CurrentTemplate::class)->set(TemplateTestFactory::build());

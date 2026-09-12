@@ -90,6 +90,7 @@ use Piwigo\PluginConfig\Facade\ImageWriteFacade;
 use Piwigo\PluginConfig\Facade\ThemeReadFacade;
 use Piwigo\PluginConfig\Facade\UserReadFacade;
 use Piwigo\PluginConfig\ThemeRegistry;
+use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Site\SiteEntity;
 use Piwigo\Site\SiteRepository;
@@ -641,6 +642,7 @@ final class RequestBootstrap
             self::templateRenderer(),
             new CookieService(),
             self::imageStdParams(),
+            self::sectionContextRegistry(),
         );
     }
 
@@ -673,6 +675,22 @@ final class RequestBootstrap
         }
 
         return $paths;
+    }
+
+    /**
+     * Same container-shared instance `Section\SectionPopulator`/
+     * `Url\UrlService` are themselves constructor-injected with --
+     * `ExtensionContext::currentSection()` (P61) needs the *real* current
+     * request's registry, not a fresh throwaway one.
+     */
+    private static function sectionContextRegistry(): SectionContextRegistry
+    {
+        $registry = Kernel::container()->get(SectionContextRegistry::class);
+        if (! $registry instanceof SectionContextRegistry) {
+            throw new LogicException('Container returned an unexpected type for ' . SectionContextRegistry::class);
+        }
+
+        return $registry;
     }
 
     /**

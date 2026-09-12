@@ -163,7 +163,7 @@ Three structural changes produced that drift:
 | P58 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P59 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
 | P60 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | **DONE** — **A 843 → 0, B 376 → 0**, and the CAMPAIGN-PENDING block is gone from `phpstan.neon`. All 26 identifier-wide ignores retired, each forced out by `reportUnmatchedIgnoredErrors` rather than noticed; 2 more left the *permanent* groups (`empty.variable`, `foreach.valueOverwrite`). Twenty-three live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
-| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra gaps in this repo) done: P61-A `ExtensionContext::currentSection()`, P61-B `ImageReadFacade::findByIdsOrdered()`, P61-C `ExtensionContext::isShowMetadataEnabled()`/`setShowMetadataEnabled()`, P61-D `ExtensionContext::paths()`. Phase 1's originally-planned 4th item (a shared `photoswipe.ts` lightbox wrapper) deliberately deferred to Phase 6, on the user's own call: unlike `colorbox.ts` (narrowed against 8 real existing call sites), PhotoSwipe has zero real callers until darkroom's own `index.latte`/`picture.latte` exist. Phase 2 (manifest + `ExtensionInterface` skeleton) and Phase 3 (typed settings VO + real tabbed settings page) both done in the sibling `../piwigo16-themes` repo as `bootstrap_darkroom_17.0.0/` — both live-verified against a real running instance end-to-end (activate/tabs/POST-save round-trip, including the separate file-backed `custom_css`), which caught and fixed real bugs before commit each time (Phase 2: `hasSettings: true` with no `SettingsPageInterface` implementor yet is a hard rejected manifest contract, not a cosmetic gap; an invalid schema version string; an unrelated `ModusThemeIntegrationTest.php` regression from P61-A missed by this repo's own sweep). Phase 4-A (CSS palette foundation) done — fixed `--darkroom-color-*` custom-property palette, real OKLCH conversions, live-verified; dropped a generic Bootstrap-clone grid/utility-class library as ungrounded (no such convention exists anywhere else in this codebase). Phase 5-A (all 8 menubar templates) done — horizontal navbar with native `<details>/<summary>` dropdowns, no JS; live-verified. A real pre-existing bug from Phase 3 was found and fixed while starting Phase 5: the settings-tab admin templates were named `settings.latte`/`about.latte` at the theme root, colliding with core's own bare-name-resolved public About page — renamed to `darkroom_settings.latte`/`darkroom_about.latte`. Phase 5-B (about/infos_errors/navigation_bar/notification/redirect) done. Phase 5-C (comments/comment_list/tags) done. Password/identification/register/profile dropped from scope entirely -- useStandardPages defaults true and routes their whole theme chain to standard_pages regardless of active gallery theme, confirmed unreachable, matching modus's own established precedent. Remaining Phase 5 (thumbnails/mainpage_categories/month_calendar) plus Phases 6-10 not started — see plan detail below | 5 |
+| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra: `ExtensionContext::currentSection()`/`findByIdsOrdered()`/`isShowMetadataEnabled()`+`setShowMetadataEnabled()`/`paths()`, P61-A..D), Phase 2 (manifest + `ExtensionInterface` skeleton), Phase 3 (typed settings VO + real tabbed settings page), Phase 4 (CSS palette foundation, `--darkroom-color-*` custom properties, real OKLCH conversions), and Phase 5 (A-D: menubar family as a native `<details>`-dropdown navbar with no JS; generic pages; comments/tags; CSS-only thumbnails/mainpage_categories/month_calendar) are all done, each live-verified against a real running instance. PhotoSwipe (Phase 1's original 4th item) deliberately deferred to Phase 6, on the user's own call, for lack of a real caller until then. Two real bugs found and fixed along the way: a `settings.latte`/`about.latte` naming collision with core's own public About page (renamed to `darkroom_settings.latte`/`darkroom_about.latte`), and a cascade-layer height/overflow conflict with `default`'s own unconditional `mainpage_categories.css`. Password/identification/register/profile dropped from scope entirely — `useStandardPages` defaults `true` and routes their whole theme chain to `standard_pages` regardless of the active gallery theme, confirmed unreachable, matching `modus`'s own established precedent. Full detail in this file's own P61 narrative section below. Phases 6-10 (index/picture pages, JS interactivity, i18n/packaging, closing verification) not started | 5 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -12499,9 +12499,29 @@ uses plain CSS `columns: 2` instead of `default`'s own raw-HTML
 cross-iteration `<td>` splicing hack. Live-verified both pages
 end-to-end with real fixture data, zero console/PHP errors.
 
-Remaining Phase 5 work: thumbnails, mainpage_categories, month_calendar.
-Phases 6-10 (index/picture pages, JS interactivity, i18n/packaging,
-closing verification) land in the same sibling directory, not started.
+**P61 Phase 5-D (Done) — Phase 5 fully closed.** `thumbnails`/
+`mainpage_categories`/`month_calendar` land CSS-only (zero new `.latte`
+files — `default`'s own real markup is already plain, grid-agnostic
+HTML; confirmed against real `modus` precedent). Real bug found and
+fixed via live verification: `default`'s own unconditional
+`mainpage_categories.css` (`@layer pages`, outranking this file's own
+`@layer theme-chain` regardless of specificity) fixes `.description`'s
+height to the illustration's height — darkroom's longer text was
+spilling into the page footer. Fixed with `overflow-y: auto` (matching
+`default`'s own original excluded intent), not by fighting layer order.
+`thumbnails.latte`'s `<li>`-level styles land now; the `#thumbnails` CSS
+Grid wrapper itself is deferred to Phase 6 (rendered by `index.latte`,
+which doesn't exist yet). Live-verified: homepage category grid and
+month-calendar view both render correctly, zero console/PHP errors.
+
+Phase 5 (A through D) is now fully closed, along with the real
+about.latte/settings.latte collision fix and the
+password/identification/register/profile scope drop (unreachable by
+default, confirmed via `useStandardPages`).
+
+Phases 6-10 (index/picture pages including the deferred PhotoSwipe
+wrapper, JS interactivity, i18n/packaging, closing verification) land in
+the same sibling directory, not started.
 
 ## Greenfield tracks (T3, cuttable — outside the P0–P60 backbone)
 

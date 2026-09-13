@@ -183,6 +183,8 @@ Once this lands, darkroom's own `boot()` needs **zero** language-loading code �
 **Confirmed:** `.gitignore` allowlists no `themes/*` entry that fits a third-party theme; `../piwigo16-themes` is confirmed PEM-fixture data (137 scraped entries pointing at real piwigo.org URLs, used only via `.env`/`.env.test` to exercise `PemCatalog`'s fetch/filter logic) — **not** a real port destination, and darkroom itself is already present in it as one of those scraped fixture entries.
 **Recommendation:** a new sibling repo (e.g. `darktorres/piwigo17-themes`) hosting real v17-contract `theme.json` directories plus a root `manifest.json` in the exact shape `PemCatalog` already consumes, wired via `PIWIGO_ALT_THEMES_PEM_URL` in production — the same shape as `elegant`/`modus`/`smartpocket`. The fetch/extract mechanism needs **zero new application code**; this is purely a packaging/CI/release-process commitment. Effort: **medium** (process, not code).
 
+**Partly decided, confirmed 2026-09-12**: no new sibling repo was created — `bootstrap_darkroom_17.0.0/` lives directly in `../piwigo16-themes` (confirmed on disk), the same repo this section calls "not a real port destination," exactly like `modus_17.0.0/` before it. That characterization no longer holds for the *directory location* question. But the rest of this section's own recommendation (a real `manifest.json` entry, a packaged zip) is still genuinely undone — confirmed absent from `../piwigo16-themes/manifest.json` and no `.zip` on disk, matching this doc's own Phase 9 ("Packaging + legacy cleanup") status of not-yet-started.
+
 ### 5.14 Page-header state — resolved 2026-09-12, not via a new event
 **Not in the original report; originally proposed as a new event, since resolved differently.** `checkIfHomepage()`/`stripBreadcrumbs()` were proposed to map onto `Page\Event\PageHeaderRendering`/`PageHeaderRendered` — both are genuinely-dispatched (15+ real call sites) but remain structurally **empty marker classes** with zero properties as of this revalidation (confirmed directly against their current source); `PageHeaderRenderer::prepareContext()` still never computes `is_homepage`. Rather than the richer-event proposal below, `ExtensionContext::currentSection(): ?SectionContext` (added for this same port) closes the real need instead: a handler on *any* already-dispatched event (not necessarily the two page-header markers) can call `$context->currentSection()` directly to read `isHomepage`/section/category/items, pull-based rather than needing the payload pushed through a specific event. Confirmed real and sufficient for `checkIfHomepage()`/`stripBreadcrumbs()`'s own needs.
 ~~**Proposal:** a new, later, richer event fired from `GalleryController` after `SectionContext` is resolved, carrying real typed `is_homepage`/section/item-count properties~~ — not built, and no longer needed; superseded by `currentSection()` above.
@@ -217,12 +219,12 @@ Question 1 (Bootstrap vendoring) was resolved in a prior pass — see §1. Quest
 
 | # | Question | Status |
 |---|---|---|
-| 2 | Packaging location | Owner decision — recommendation: sibling repo + PEM mirror (§5.13) |
+| 2 | Packaging location | **Partly decided, confirmed 2026-09-12**: no new `darktorres/piwigo17-themes` sibling repo exists — `bootstrap_darkroom_17.0.0/` is real and lives directly in `../piwigo16-themes` (same precedent as `modus`), so the *directory* location question is settled without a new repo. But the full packaging step (a real `manifest.json` entry, a zip) hasn't happened yet — confirmed absent from `../piwigo16-themes/manifest.json` and no `.zip` on disk — matching this doc's own Phase 9 ("Packaging + legacy cleanup") being not-yet-started (§7, §5.13) |
 | 3 | Settings-page shape | **Resolved** — server-side `?tab=` via `ExtensionTabRequest` (§5.1) |
 | 4 | Skin/palette scope | **Resolved** — one fixed palette; dissolves §5.2 | 
 | 5 | Lightbox strategy | **Resolved** — PhotoSwipe v5 as shared `vendor/widgets/photoswipe.ts` (path corrected 2026-09-12) (§5.8) |
-| 6 | Advanced search page | Owner decision — recommendation: drop entirely (§5.9) |
-| 7 | Front-end community upload | Owner decision — reclassified as a net-new core project, not a theme item (§5.11) |
+| 6 | Advanced search page | **Confirmed 2026-09-12, recommendation followed**: no `search`-named template exists anywhere in the real `bootstrap_darkroom_17.0.0/` source — dropped as recommended (§5.9) |
+| 7 | Front-end community upload | **Confirmed 2026-09-12, recommendation followed**: no upload/add-photo capability exists in `bootstrap_darkroom_17.0.0/` — stayed out of scope, not pursued as a separate project either (§5.11) |
 | 8 | Third-party-plugin-override templates | **Resolved** — dropped, zero shim needed (§5.10) |
 | 9 | Picture-info skin count | **Resolved** — cards, corrected rationale (§4) |
 | 10 | Theme translation load timing | **Verified fact** — boot()-time works for themes (§5.12) |
@@ -233,8 +235,8 @@ Question 1 (Bootstrap vendoring) was resolved in a prior pass — see §1. Quest
 | 15 | `IndexThumbnailsRendering` dispatch | **Verified fact** — real dispatch site, carries a start offset (§3a) |
 | 16 | `PageHeaderRendering`/`Rendered` payload | **Closed 2026-09-12, not via a new event** — both are still empty markers, but `currentSection()` closes the real need instead (§5.14) |
 | 17 | Bootstrap 4→5 rename ownership | **Moot** — no framework vendored at all (§1) |
-| 18 | `!important` resolution policy | Resolved by precedent (provisional, not independently fact-checked) — case-by-case fixes (§3c) |
-| 19 | Font Awesome glyph strategy | Resolved by precedent (provisional, not independently fact-checked) — fold into `photography-icons` (§4) |
+| 18 | `!important` resolution policy | **Confirmed 2026-09-12, no longer provisional**: `grep -c '!important' bootstrap_darkroom_17.0.0/theme.css` returns 0 — every instance really was resolved with a real specificity fix, not deferred (§3c) |
+| 19 | Font Awesome glyph strategy | **Still open, confirmed 2026-09-12**: no `vendor/`, icon, or font directory of any kind exists yet in the real `bootstrap_darkroom_17.0.0/` source — the icon strategy (fold into `photography-icons` or otherwise) hasn't been implemented, consistent with Phases 8-10 not started (§4) |
 | 20 | Vite vs. Smarty combine semantics | **Verified fact, with a correction** — `AssetContribution`/`PageAssets` is the real mechanism; a fabricated quote in an earlier pass has been removed (§3c) |
 
 ---

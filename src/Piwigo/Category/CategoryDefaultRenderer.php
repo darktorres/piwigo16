@@ -225,6 +225,7 @@ final readonly class CategoryDefaultRenderer
                 nbComments: $nbCommentsForRow,
                 nbHits: $nbHits,
                 description: $desc !== '' ? $desc : null,
+                ratingScore: $row['rating_score'],
             );
         }
 

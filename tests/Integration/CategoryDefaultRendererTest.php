@@ -266,6 +266,21 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         self::assertSame('(5) Photo 3', $this->thumbnailAt($result, 0)->name);
     }
 
+    public function testRenderPopulatesRatingScoreUnconditionallyOfSection(): void
+    {
+        $this->seedUser(showNbHits: false, showNbComments: false);
+
+        // gdThumb port: unlike the BestRated-only name-prefix test above,
+        // ImageThumbnail::$ratingScore must be populated for every
+        // section, not just BestRated -- ids 3/5 real fixture
+        // rating_score is 5.00/NULL respectively (see this file's own
+        // fixture-values comment above).
+        $result = $this->renderer->render([3, 5], 0, 2, Section::Categories);
+
+        self::assertSame(5.0, $this->thumbnailAt($result, 0)->ratingScore);
+        self::assertNull($this->thumbnailAt($result, 1)->ratingScore);
+    }
+
     public function testRenderPrefixesTheNameWithTheHitCountForMostVisitedWhenShowNbHitsIsDisabled(): void
     {
         $this->seedUser(showNbHits: false, showNbComments: false);

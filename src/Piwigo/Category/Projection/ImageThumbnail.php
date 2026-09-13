@@ -31,6 +31,15 @@ use Piwigo\Image\SrcImage;
  * computed unconditionally either way (`CategoryDefaultRenderer`'s own
  * `renderElementDescription()` call already builds this same string for
  * `$tnTitle`), so this is a pure additive read, no new work done per row.
+ *
+ * `$ratingScore` (gdThumb port) is the same story again: the raw row
+ * `CategoryDefaultRenderer::render()` builds every `ImageThumbnail` from
+ * already carries `rating_score` (a native DBAL `float|null`) -- it's
+ * already read there today, but only inside the `Section::BestRated`
+ * branch, for an unrelated purpose (prefixing the admin thumbnail name
+ * label with `"(4.5) "`). A pure additive read of data already in hand,
+ * not a new query -- no reader existed for the public, per-thumbnail
+ * caption case this field is for until now.
  */
 final readonly class ImageThumbnail
 {
@@ -45,5 +54,6 @@ final readonly class ImageThumbnail
         public ?int $nbComments = null,
         public ?int $nbHits = null,
         public ?string $description = null,
+        public ?float $ratingScore = null,
     ) {}
 }

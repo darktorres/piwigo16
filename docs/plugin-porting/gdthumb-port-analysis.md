@@ -89,6 +89,63 @@ Dispatched in `CategoryCatsRenderer.php` at the existing `getByType(ImageStdPara
 
 `.github/workflows/ci.yml`'s `apache-deny-rules`/`container-deny-rules` jobs updated to match: `plugins/index.php` moved out of the generic "outside `public/`, 404s" assertion (it's reachable now) into a new dedicated step alongside the new positive (`plugins/.../fixture.css` → 200) and negative (`themes/.../Theme.php`, `plugins/index.php` → 403) assertions.
 
+### 3c. Five more small core prerequisites, found on re-review (2026-09-13)
+
+Before implementing the plugin itself, this doc's own §5 ("dropped for
+v1") was re-checked against current code rather than trusted at face
+value -- most of its "no accessor exists, drop" calls were three weeks
+stale, written before other ports landed the exact narrow accessor this
+plugin needed. All five landed the same day, same caliber of change as
+§3a/§3b above:
+
+1. **`Section\Event\GetNbImagePage`** + dispatch wrap in
+   `SectionPopulator::populate()` (mirrors `GetIndexDerivativeParams`/
+   `GetCategoryDerivativeParams` exactly) -- un-drops the forced
+   `nb_image_page` override §5 gave up on. `SectionPopulator.php`'s own
+   hardcoded `CurrentUser::get()->rawAttributes['nb_image_page']` read
+   was the same shape of hardcoded computation `GetCategoryDerivativeParams`
+   already wrapped once for `CategoryCatsRenderer`.
+2. **`ExtensionContext::clearCustomDerivativeCache()`** -- un-drops the
+   cache-purge admin tool §5 called a real, un-actionable gap.
+   `DerivativeCacheService::clearDerivativeCache()` already existed;
+   deliberately not exposed as a raw passthrough (would let any plugin
+   clear every core standard derivative type, not just custom ones) --
+   hardcodes `ImageStdParams::CUSTOM`.
+3. **`ImageRepository`/`ImageReadFacade::findIdsBefore()`** -- un-drops
+   the missing-derivative-scan admin tool §5 called blocked by "no raw
+   DB access is available to extensions, by design." That framing was
+   wrong: a paginated id-range scan is exactly the same narrow-method
+   shape as every other `ImageReadFacade` addition, not raw DB access.
+   A generic core equivalent was found in the same pass
+   (`Controller\Api\Images\ImageMissingDerivativesController`,
+   near-line-for-line the same algorithm as this plugin's own legacy
+   `getMissingDerivative` handler) but only scans the site's own
+   *defined* derivative types, never an arbitrary plugin-chosen custom
+   size -- can't cover this case, but its `DerivativeUrlStyleOverride`/
+   cache-buster/paginated-loop shape is the real model to build §4d's
+   precache endpoint against, not a re-derivation from legacy PHP.
+4. **`ImageThumbnail::$ratingScore`** restored -- a pure additive read
+   (`CategoryDefaultRenderer` already has `rating_score` on the same row
+   it builds every `ImageThumbnail` from, for an unrelated `BestRated`
+   admin-label purpose). Needed for the "merged" caption metamode's
+   rating line, which an earlier pass of this plan almost silently cut
+   for lack of a data source that was already sitting right there.
+5. **Category-grid `ThumbnailOverlay` counterpart**
+   (`Template::addCategoryThumbnailOverlay()`/`categoryThumbnailOverlays()`,
+   a new `CategoryCatsView` constructor param, a matching mount span in
+   `mainpage_categories.latte`) -- `Contribution\ThumbnailOverlay`
+   (P43-A) only ever reached the image grid; the category grid had no
+   equivalent, the same asymmetry class §3a already fixed once for
+   derivative params. Needed for the Overlay Ex caption mode's
+   category-grid item-count badge (§5's own "Overlay Ex" drop is also
+   corrected below).
+
+All five: PHPStan/ECS clean, real Pest tests (mutation-verified where a
+dispatch wrap was involved), full golden-HTML/VR run clean for the two
+template/renderer-touching items (`gallery-home`/`category-1`/
+`category-2` all pass; the one `admin-photo-editor` failure is
+confirmed pre-existing/unrelated, another session's own work).
+
 ---
 
 ## 4. Needs adaptation in the plugin itself (`GDThumb_17.0.0`)

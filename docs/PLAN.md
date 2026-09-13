@@ -163,7 +163,7 @@ Three structural changes produced that drift:
 | P58 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P59 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
 | P60 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | **DONE** — **A 843 → 0, B 376 → 0**, and the CAMPAIGN-PENDING block is gone from `phpstan.neon`. All 26 identifier-wide ignores retired, each forced out by `reportUnmatchedIgnoredErrors` rather than noticed; 2 more left the *permanent* groups (`empty.variable`, `foreach.valueOverwrite`). Twenty-three live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
-| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra: `ExtensionContext::currentSection()`/`findByIdsOrdered()`/`isShowMetadataEnabled()`+`setShowMetadataEnabled()`/`paths()`, P61-A..D), Phase 2 (manifest + `ExtensionInterface` skeleton), Phase 3 (typed settings VO + real tabbed settings page), Phase 4 (CSS palette foundation, `--darkroom-color-*` custom properties, real OKLCH conversions), and Phase 5 (A-D: menubar family as a native `<details>`-dropdown navbar with no JS; generic pages; comments/tags; CSS-only thumbnails/mainpage_categories/month_calendar) are all done, each live-verified against a real running instance. PhotoSwipe (Phase 1's original 4th item) deliberately deferred to Phase 6, on the user's own call, for lack of a real caller until then. Two real bugs found and fixed along the way: a `settings.latte`/`about.latte` naming collision with core's own public About page (renamed to `darkroom_settings.latte`/`darkroom_about.latte`), and a cascade-layer height/overflow conflict with `default`'s own unconditional `mainpage_categories.css`. Password/identification/register/profile dropped from scope entirely — `useStandardPages` defaults `true` and routes their whole theme chain to `standard_pages` regardless of the active gallery theme, confirmed unreachable, matching `modus`'s own established precedent. Phase 6-A (index.latte contextual navbar, `#thumbnails` CSS Grid) and Phase 6-B (full gesture-fidelity PhotoSwipe lightbox port, `themes/default/js/vendor/widgets/photoswipe.ts`, v4.1.3 real source, 10 passing Vitest tests) also done. Phase 6-C (picture.latte/picture_nav_buttons.latte/picture_content.latte, consolidated info cards, video playback branch) also done -- **Phase 6 is now fully closed** except for carousel/PhotoSwipe-wiring work that's genuinely Phase 7 scope. Full detail in this file's own P61 narrative section below. Phases 7-10 not started | 5 |
+| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra: `ExtensionContext::currentSection()`/`findByIdsOrdered()`/`isShowMetadataEnabled()`+`setShowMetadataEnabled()`/`paths()`, P61-A..D), Phase 2 (manifest + `ExtensionInterface` skeleton), Phase 3 (typed settings VO + real tabbed settings page), Phase 4 (CSS palette foundation, `--darkroom-color-*` custom properties, real OKLCH conversions), and Phase 5 (A-D: menubar family as a native `<details>`-dropdown navbar with no JS; generic pages; comments/tags; CSS-only thumbnails/mainpage_categories/month_calendar) are all done, each live-verified against a real running instance. PhotoSwipe (Phase 1's original 4th item) deliberately deferred to Phase 6, on the user's own call, for lack of a real caller until then. Two real bugs found and fixed along the way: a `settings.latte`/`about.latte` naming collision with core's own public About page (renamed to `darkroom_settings.latte`/`darkroom_about.latte`), and a cascade-layer height/overflow conflict with `default`'s own unconditional `mainpage_categories.css`. Password/identification/register/profile dropped from scope entirely — `useStandardPages` defaults `true` and routes their whole theme chain to `standard_pages` regardless of the active gallery theme, confirmed unreachable, matching `modus`'s own established precedent. Phase 6-A (index.latte contextual navbar, `#thumbnails` CSS Grid) and Phase 6-B (full gesture-fidelity PhotoSwipe lightbox port, `themes/default/js/vendor/widgets/photoswipe.ts`, v4.1.3 real source, 10 passing Vitest tests) also done. Phase 6-C (picture.latte/picture_nav_buttons.latte/picture_content.latte, consolidated info cards, video playback branch, real social-share buttons via `assignContext()`/`GetPageAssets` -- an earlier "no channel exists" note was wrong, corrected same day) also done -- **Phase 6 is now fully closed** except for carousel/PhotoSwipe-wiring work that's genuinely Phase 7 scope. Full detail in this file's own P61 narrative section below. Phases 7-10 not started | 5 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -12559,14 +12559,29 @@ inline in `picture.latte` (nothing left to switch between since Phase
 3 already dropped the cards/tabs/sidebar/disabled choice, so no
 separate shared partial file was warranted). Real markup addition:
 legacy's own inline `<video>` playback branch for mp4/m4v files.
-Documented, deliberate gap: social-share buttons are NOT ported —
-`PictureView` (core) has no established channel for a theme's own
-settings blob to reach it, unlike the real plugin extension points
-(`pluginPictureButtons`/`Actions`/`InfoRows`) that already exist;
-building that plumbing is real, new core-touching work, not solved
-speculatively here. Live-verified: `picture.php` renders end-to-end
-with real fixture data (nav/action buttons, image, Information/Tags
-cards, a real 2-comment thread), zero console/PHP errors.
+Live-verified: `picture.php` renders end-to-end with real fixture data
+(nav/action buttons, image, Information/Tags cards, a real 2-comment
+thread), zero console/PHP errors.
+
+**Correction (found starting Phase 7, fixed same day, commit `65a1795`
+in the sibling repo)**: the social-share gap noted here at first was
+wrong. `assignContext()` (`Piwigo\Core\TemplatePageContext`) is the
+real, already-established channel for a theme's own settings to reach a
+core-owned View's template scope — `modus`'s own real, shipped
+`ModusPageBannerVisibilityPageContext` already solves the identical
+problem this way, and `Template::renderView()` confirmed merging
+`assignContext()`'s vars with the View's own properties on every
+render. `Theme::onGetPageAssets()` now assigns
+`BootstrapDarkroomSocialSharingPageContext`, and `picture.latte` renders
+the real Twitter/Facebook/Pinterest/VK links (plain text, no icon
+glyphs exist in this theme's `pwg-icon` font). A real bug caught live
+along the way: the obvious `$U_CANONICAL` var is page-relative, not
+absolute, so a naive read broke the share links (`url=picture.php?/1`,
+no host) — fixed by capturing the current `PictureElement` via
+`RenderElementContent` and building a genuinely absolute URL with
+`UrlServiceInterface::setMakeFullUrl()`, the same real pattern
+`FeedController` already uses. Live-verified again after the fix
+(absolute URLs confirmed via `outerHTML`), fully reverted.
 
 Phase 6 is closed except for carousel/PhotoSwipe-wiring work that's
 genuinely Phase 7 scope (legacy's real PhotoSwipe trigger elements live

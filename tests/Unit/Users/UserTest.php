@@ -144,6 +144,29 @@ test('withLanguage returns a new immutable instance, original is untouched', fun
         ->not->toBe($original);
 });
 
+test('withTheme returns a new immutable instance, original is untouched', function (): void {
+    $original = new User(
+        id: UserId::from(1),
+        username: Username::from('bob'),
+        email: null,
+        language: LangCode::from('en_UK'),
+        theme: ThemeId::from('modus'),
+        status: UserStatus::Normal,
+        enabledHigh: false,
+    );
+
+    $updated = $original->withTheme(ThemeId::from('bootstrap_darkroom'));
+
+    expect($updated->theme)
+        ->toEqual(ThemeId::from('bootstrap_darkroom'))
+        ->and($original->theme)
+        ->toEqual(ThemeId::from('modus'))
+        ->and($updated)
+        ->not->toBe($original)
+        ->and($updated->rawAttributes['theme'] ?? null)
+        ->toBe('bootstrap_darkroom');
+});
+
 test('withUsername returns a new immutable instance', function (): void {
     $original = new User(
         id: UserId::from(1),
@@ -302,6 +325,7 @@ test('every existing wither propagates the 5 site-default fields unchanged', fun
 
     $withers = [
         $original->withLanguage(LangCode::from('fr_FR')),
+        $original->withTheme(ThemeId::from('bootstrap_darkroom')),
         $original->withUsername(Username::from('robert')),
         $original->withLevel(8),
         $original->withPreferences([

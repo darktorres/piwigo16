@@ -332,6 +332,37 @@ final class ExtensionContextTest extends IntegrationTestCase
         self::assertSame($before, $after);
     }
 
+    /**
+     * {@see testSyncLanguageForRequestUpdatesCurrentUserWithoutPersisting()}'s
+     * own `theme` counterpart -- `AdminTools_16.3.0`'s own `MultiView`
+     * "view as" feature needs this independently of `switchUser()`.
+     */
+    public function testSyncThemeForRequestUpdatesCurrentUserWithoutPersisting(): void
+    {
+        $this->impersonate(1);
+
+        $before = $this->conn->createQueryBuilder()
+            ->select('theme')
+            ->from('user_infos')
+            ->where('user_id = :id')
+            ->setParameter('id', 1)
+            ->executeQuery()
+            ->fetchOne();
+
+        $this->context->syncThemeForRequest('bootstrap_darkroom');
+
+        $after = $this->conn->createQueryBuilder()
+            ->select('theme')
+            ->from('user_infos')
+            ->where('user_id = :id')
+            ->setParameter('id', 1)
+            ->executeQuery()
+            ->fetchOne();
+
+        self::assertSame('bootstrap_darkroom', $this->context->currentUser()->theme->value);
+        self::assertSame($before, $after);
+    }
+
     public function testLanguagesReturnsEveryInstalledLanguageKeyedByCode(): void
     {
         $languages = $this->context->languages();

@@ -86,6 +86,15 @@ final class CurrentUser
     }
 
     /**
+     * {@see updateLanguage()}'s own `theme` counterpart.
+     */
+    public function updateTheme(ThemeId $theme): void
+    {
+        $this->user = $this->get()
+            ->withTheme($theme);
+    }
+
+    /**
      * Called by UserBootstrap::initialize() -- the only real per-request
      * user resolver -- right alongside its own set() call.
      */

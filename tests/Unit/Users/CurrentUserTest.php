@@ -91,6 +91,16 @@ test('updateLanguage replaces the instance with a language-updated copy', functi
         ->toEqual(LangCode::from('fr_FR'));
 });
 
+test('updateTheme replaces the instance with a theme-updated copy', function (): void {
+    $currentUser = new CurrentUser(new CurrentConfig());
+    $currentUser->attachGlobals();
+
+    $currentUser->updateTheme(ThemeId::from('bootstrap_darkroom'));
+
+    expect($currentUser->get()->theme)
+        ->toEqual(ThemeId::from('bootstrap_darkroom'));
+});
+
 test('reset clears the real-user-resolved flag back to false', function (): void {
     $currentUser = new CurrentUser(new CurrentConfig());
     $currentUser->markRealUserResolved();

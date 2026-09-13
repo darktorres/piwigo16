@@ -216,6 +216,19 @@ final readonly class ExtensionContext
     }
 
     /**
+     * {@see syncLanguageForRequest()}'s own `theme` counterpart --
+     * `AdminTools_16.3.0`'s own `MultiView` "view as" feature needs this
+     * independently of {@see switchUser()}: its own real `$user['theme']
+     * = $this->data['theme'];` follow-up can force a theme different from
+     * the impersonated user's own, not just whatever `switchUser()`
+     * already carries along for free.
+     */
+    public function syncThemeForRequest(string $theme): void
+    {
+        $this->currentUser->updateTheme(ThemeId::from($theme));
+    }
+
+    /**
      * Switches the effective current user for the rest of this request --
      * ported for `AdminTools_16.3.0`'s own "view as" (`MultiView`)
      * feature: the legacy plugin reassigns `$user` mid-request via

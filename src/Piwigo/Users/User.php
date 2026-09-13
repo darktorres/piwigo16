@@ -157,6 +157,38 @@ final readonly class User
         );
     }
 
+    /**
+     * {@see withLanguage()}'s own `theme` counterpart -- same
+     * `rawAttributes` sync convention, for the same reason: keeps the
+     * legacy-shaped raw snapshot from silently drifting out of sync with
+     * the typed field.
+     */
+    public function withTheme(ThemeId $theme): self
+    {
+        $rawAttributes = $this->rawAttributes;
+        $rawAttributes['theme'] = $theme->value;
+
+        return new self(
+            id: $this->id,
+            username: $this->username,
+            email: $this->email,
+            language: $this->language,
+            theme: $theme,
+            status: $this->status,
+            enabledHigh: $this->enabledHigh,
+            forbiddenCategories: $this->forbiddenCategories,
+            level: $this->level,
+            preferences: $this->preferences,
+            internalStatus: $this->internalStatus,
+            rawAttributes: $rawAttributes,
+            nbImagePage: $this->nbImagePage,
+            recentPeriod: $this->recentPeriod,
+            expand: $this->expand,
+            showNbComments: $this->showNbComments,
+            showNbHits: $this->showNbHits,
+        );
+    }
+
     public function withUsername(Username $username): self
     {
         $rawAttributes = $this->rawAttributes;

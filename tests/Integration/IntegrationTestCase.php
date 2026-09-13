@@ -15,6 +15,7 @@ use mysqli_sql_exception;
 use Override;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Cache\ConfigCachePool;
+use Piwigo\Cache\SectionImageIdsCachePool;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigRepository;
 use Piwigo\Core\CurrentLogger;
@@ -232,6 +233,17 @@ abstract class IntegrationTestCase extends TestCase
         // leak a stale cached row into whichever test runs next.
         $this->configCachePool()
             ->clear();
+        // SectionPopulator::resolveSectionItems() caches per user+query+order
+        // (30s TTL, Section\SectionPopulator's own docblock) -- a test
+        // mutating hit counts/ratings/category membership via raw SQL (so
+        // no confUpdateParam()-style cache-clearing write path ever fires)
+        // would otherwise leak a stale id list into whichever test runs
+        // next and happens to share the same cache key. Same reasoning as
+        // ConfigCachePool above, found live: SectionPopulatorTest's own
+        // MostVisited test failed intermittently once resolveSectionItems()
+        // started caching every branch, not just whole-gallery-flat mode.
+        $this->sectionImageIdsCachePool()
+            ->clear();
     }
 
     #[Override]
@@ -336,6 +348,21 @@ abstract class IntegrationTestCase extends TestCase
         }
 
         return $configCachePool;
+    }
+
+    /**
+     * Shared resolver for every Integration/Contract subclass reaching
+     * SectionImageIdsCachePool directly -- same reasoning as
+     * configCachePool() above.
+     */
+    protected function sectionImageIdsCachePool(): SectionImageIdsCachePool
+    {
+        $sectionImageIdsCachePool = Kernel::container()->get(SectionImageIdsCachePool::class);
+        if (! $sectionImageIdsCachePool instanceof SectionImageIdsCachePool) {
+            throw new LogicException('Container returned an unexpected type for ' . SectionImageIdsCachePool::class);
+        }
+
+        return $sectionImageIdsCachePool;
     }
 
     protected function setUpConnectionFromEnv(): void

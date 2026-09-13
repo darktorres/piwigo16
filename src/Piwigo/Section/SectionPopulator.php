@@ -668,9 +668,63 @@ final readonly class SectionPopulator
      * for why (rv_tscroller's infinite scroll would otherwise have
      * nothing left to load past the legacy 15-item cap).
      *
+     * Cached, 30s TTL, uniformly across every branch below -- not just the
+     * whole-gallery-flat case this used to special-case. Extracted for
+     * rv_tscroller's own AJAX "load more" route
+     * (docs/plugin-porting/rv-tscroller-port-analysis.md §3), which turns
+     * "re-run this on every page-2/page-3 click" (already this method's
+     * real cost before this cache existed at all) into "re-run this on
+     * every scroll tick" -- the same per-request cost, dramatically more
+     * often. Same reasoning/TTL as PermissionsCachePool: a photo added or
+     * a permission changed mid-scroll may not show up for up to 30s, an
+     * already-accepted trade-off in this codebase, not a new one.
+     *
+     * The cache key folds in resolveOrderBy()'s result unconditionally,
+     * even for the branches below (Tags/MostVisited/BestRated) whose own
+     * query never actually reads it -- cheap to compute (no DB write, just
+     * session/config/category-column reads already available off $query),
+     * and safer than special-casing which branches truly depend on it: at
+     * worst, an unrelated session-order change creates one extra cache
+     * partition no branch ever reads back, never a stale result.
+     *
      * @return list<int|string|null>
      */
     public function resolveSectionItems(SectionItemQuery $query): array
+    {
+        $userId = $this->currentUser->get()
+            ->id->value;
+        $orderByForCacheKey = $this->resolveOrderBy($query->section, $query->category, $query->flat);
+        $cacheKey = implode('_', [
+            'section_items',
+            $userId,
+            $query->section->value,
+            $query->category === null ? '' : (string) $query->category->id,
+            implode(',', $query->combinedCategoryIds),
+            $query->flat ? '1' : '0',
+            implode(',', $query->tagIds),
+            implode(',', $query->imageIds),
+            md5($orderByForCacheKey),
+        ]);
+
+        $cacheItem = $this->sectionImageIdsCachePool->getItem($cacheKey);
+        $cached = $cacheItem->isHit() ? $cacheItem->get() : null;
+        if (is_array($cached)) {
+            /** @var list<int|string|null> $cached */
+            return $cached;
+        }
+
+        $items = $this->resolveSectionItemsUncached($query);
+
+        $cacheItem->set($items);
+        $this->sectionImageIdsCachePool->save($cacheItem);
+
+        return $items;
+    }
+
+    /**
+     * @return list<int|string|null>
+     */
+    private function resolveSectionItemsUncached(SectionItemQuery $query): array
     {
         $permissionCriteria = $this->permissionService->getPermissionCriteria();
         // Same forbidden-condition pair populate() itself used to compute
@@ -750,23 +804,10 @@ final readonly class SectionPopulator
 
                 // Whole-gallery flat mode: no category restriction at all,
                 // so the scope fragment stays empty and the repository
-                // omits it from the WHERE. Same per-user/per-order cache
-                // reuse populate()'s own inline branch used to do -- kept
-                // here (not stripped as "a side effect") since it's an
-                // idempotent memoization safe to repeat on every AJAX
-                // scroll tick, unlike the disallowed side effects listed in
-                // this method's own docblock.
-                $userId = $this->currentUser->get()
-                    ->id->value;
-                $cacheItem = $this->sectionImageIdsCachePool
-                    ->getItem('all_iids_' . $userId . '_' . md5($orderBy));
-                $cached = $cacheItem->isHit() ? $cacheItem->get() : null;
-                if (is_array($cached)) {
-                    /** @var list<string|null> $cached */
-                    return $cached;
-                }
-
-                $items = $this->repo->findSectionImageIds(
+                // omits it from the WHERE. Caching is handled uniformly by
+                // resolveSectionItems() itself now -- see that method's own
+                // docblock -- this branch no longer needs its own.
+                return $this->repo->findSectionImageIds(
                     SqlCondition::fromRawSql(''),
                     $forbiddenCondition,
                     $orderBy,
@@ -774,11 +815,6 @@ final readonly class SectionPopulator
                     $forbiddenConditionDql,
                     null,
                 );
-
-                $cacheItem->set($items);
-                $this->sectionImageIdsCachePool->save($cacheItem);
-
-                return $items;
             }
 
             // plain category mode

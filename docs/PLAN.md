@@ -163,7 +163,7 @@ Three structural changes produced that drift:
 | P58 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P59 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
 | P60 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | **DONE** — **A 843 → 0, B 376 → 0**, and the CAMPAIGN-PENDING block is gone from `phpstan.neon`. All 26 identifier-wide ignores retired, each forced out by `reportUnmatchedIgnoredErrors` rather than noticed; 2 more left the *permanent* groups (`empty.variable`, `foreach.valueOverwrite`). Twenty-three live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
-| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra: `ExtensionContext::currentSection()`/`findByIdsOrdered()`/`isShowMetadataEnabled()`+`setShowMetadataEnabled()`/`paths()`, P61-A..D), Phase 2 (manifest + `ExtensionInterface` skeleton), Phase 3 (typed settings VO + real tabbed settings page), Phase 4 (CSS palette foundation, `--darkroom-color-*` custom properties, real OKLCH conversions), and Phase 5 (A-D: menubar family as a native `<details>`-dropdown navbar with no JS; generic pages; comments/tags; CSS-only thumbnails/mainpage_categories/month_calendar) are all done, each live-verified against a real running instance. PhotoSwipe (Phase 1's original 4th item) deliberately deferred to Phase 6, on the user's own call, for lack of a real caller until then. Two real bugs found and fixed along the way: a `settings.latte`/`about.latte` naming collision with core's own public About page (renamed to `darkroom_settings.latte`/`darkroom_about.latte`), and a cascade-layer height/overflow conflict with `default`'s own unconditional `mainpage_categories.css`. Password/identification/register/profile dropped from scope entirely — `useStandardPages` defaults `true` and routes their whole theme chain to `standard_pages` regardless of the active gallery theme, confirmed unreachable, matching `modus`'s own established precedent. Phase 6-A (index.latte contextual navbar, `#thumbnails` CSS Grid) and Phase 6-B (full gesture-fidelity PhotoSwipe lightbox port, `themes/default/js/vendor/widgets/photoswipe.ts`, v4.1.3 real source, 10 passing Vitest tests) also done. Phase 6-C (picture.latte/picture_nav_buttons.latte/picture_content.latte, consolidated info cards, video playback branch, real social-share buttons via `assignContext()`/`GetPageAssets` -- an earlier "no channel exists" note was wrong, corrected same day) also done -- **Phase 6 is now fully closed** except for carousel/PhotoSwipe-wiring work that's genuinely Phase 7 scope. Phase 7-A (thumbnail carousel data assembly via `ImageReadFacade::findByIdsOrdered()`, plain CSS scroll-snap filmstrip) and Phase 7-B (real PhotoSwipe click-to-open wiring, `js/gallery.ts`, plus 6 real bugs found and fixed in `photoswipe.ts` itself via this port's first live use of the engine) also done. Full detail in this file's own P61 narrative section below. Phases 7-10 not started | 5 |
+| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra: `ExtensionContext::currentSection()`/`findByIdsOrdered()`/`isShowMetadataEnabled()`+`setShowMetadataEnabled()`/`paths()`, P61-A..D), Phase 2 (manifest + `ExtensionInterface` skeleton), Phase 3 (typed settings VO + real tabbed settings page), Phase 4 (CSS palette foundation, `--darkroom-color-*` custom properties, real OKLCH conversions), and Phase 5 (A-D: menubar family as a native `<details>`-dropdown navbar with no JS; generic pages; comments/tags; CSS-only thumbnails/mainpage_categories/month_calendar) are all done, each live-verified against a real running instance. PhotoSwipe (Phase 1's original 4th item) deliberately deferred to Phase 6, on the user's own call, for lack of a real caller until then. Two real bugs found and fixed along the way: a `settings.latte`/`about.latte` naming collision with core's own public About page (renamed to `darkroom_settings.latte`/`darkroom_about.latte`), and a cascade-layer height/overflow conflict with `default`'s own unconditional `mainpage_categories.css`. Password/identification/register/profile dropped from scope entirely — `useStandardPages` defaults `true` and routes their whole theme chain to `standard_pages` regardless of the active gallery theme, confirmed unreachable, matching `modus`'s own established precedent. Phase 6-A (index.latte contextual navbar, `#thumbnails` CSS Grid) and Phase 6-B (full gesture-fidelity PhotoSwipe lightbox port, `themes/default/js/vendor/widgets/photoswipe.ts`, v4.1.3 real source, 10 passing Vitest tests) also done. Phase 6-C (picture.latte/picture_nav_buttons.latte/picture_content.latte, consolidated info cards, video playback branch, real social-share buttons via `assignContext()`/`GetPageAssets` -- an earlier "no channel exists" note was wrong, corrected same day) also done -- **Phase 6 is now fully closed** except for carousel/PhotoSwipe-wiring work that's genuinely Phase 7 scope. Phase 7-A (thumbnail carousel), Phase 7-B (real PhotoSwipe click-to-open wiring, plus 6 real bugs found and fixed in `photoswipe.ts` itself), and Phase 7-C (grid/list-view toggle, real `rating.ts` star-icon gap fixed, `grid_classes.tpl` confirmed replaced) all done -- **Phase 7 is now fully closed.** Full detail in this file's own P61 narrative section below. Phases 7-10 not started | 5 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -12636,8 +12636,45 @@ end-to-end (open at correct index, keyboard nav, button nav, share
 modal with 4 real absolute links, close) — zero console/PHP errors, full
 260-test Vitest suite + typecheck/lint/stylelint clean, fully reverted.
 
-Phases 7 (remainder)-10 (JS interactivity, i18n/packaging, closing
-verification) land in the same sibling directory, not started.
+**P61 Phase 7-C (Done) — Phase 7 now fully closed.** Grid/list-view
+toggle: real port of legacy `#btn-grid`/`#btn-list`, now one CSS class
+(`#content.is-list-view`) instead of legacy's own per-thumbnail
+Bootstrap-class rewriting — `thumbnails.latte`/`mainpage_categories.latte`
+need zero markup changes. `js/view-toggle.ts` writes a real
+`ExtensionCookie`-namespaced cookie via the cookie path
+`Theme::onGetPageAssets()` exposes (`exposeData()`, same real pattern
+`modus`'s own `caps.ts` uses), read back server-side
+(`BootstrapDarkroomViewModePageContext`) so the correct layout renders
+on the first response. This is also `grid_classes.tpl`'s own real
+replacement, confirmed already fully superseded by the existing
+`grid-template-columns: repeat(auto-fill, minmax(...))` rules from
+Phase 5-D/6-A.
+
+`rating.ts` reuse surfaced a real gap, not just a verification:
+`themes/default/js/rating.ts` (core, already unconditionally loaded by
+`PictureView` whenever needed) replaces each rate button's own
+`className` with `rateButtonStarFull`/`rateButtonStarEmpty` directly,
+discarding this theme's own classes once it hydrates — darkroom had no
+CSS for those two real class names at all. Fixed by reusing `default`'s
+own already-shared `rating-stars.gif` sprite, the same real asset
+`modus`'s own working port already reuses. `picture.latte`'s own
+`#ratingScore`/`#ratingCount`/`#updateRate` ids already matched
+`picture.ts`'s real AJAX contract with no changes needed.
+
+Also confirmed, no gap: `.darkroom-navbar-nav`'s `flex-wrap: wrap`
+(Phase 5-A) already gives zero-JS responsive behavior in place of
+Bootstrap's own JS-driven navbar-collapse hamburger (legacy's own real
+usage was contextual-navbar-only, never the main menubar); legacy has
+no real Bootstrap `.modal` usage anywhere to port either.
+
+Live-verified: view toggle persists across a reload, correct
+single-column layout for both categories and photos; a real rating
+click updates the score via AJAX with visible stars, zero console/PHP
+errors, fully reverted (including the real `rate` table row this
+session's own test vote wrote).
+
+Phases 8-10 (i18n/packaging, closing verification) land in the same
+sibling directory, not started.
 
 ## Greenfield tracks (T3, cuttable — outside the P0–P60 backbone)
 

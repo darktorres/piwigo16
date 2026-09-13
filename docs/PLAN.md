@@ -12923,21 +12923,28 @@ touched here).
     `theme.lang` afterward. Fixed at the tool level; both already-shipped
     ported themes' own `theme.po` files regenerated against the fix
     (sibling repo, one line removed per locale file, zero other diff).
-    **A wider, confirmed, separately-scoped finding from the same root
-    cause, not yet fixed**: several of this repo's own core
-    `language/<locale>/*.po` files (`admin.po`/`install.po`/
-    `help_quick_search.po`/`whats_new_*.po`/`upgrade.po` — every real
-    core language file except `common.po`, the only one real Piwigo
-    convention ever put `$lang_info` in) carry the same stale, now
-    provably wrong `ltr` header for every RTL locale — confirmed via a
-    real live `he_IL` session still showing `dir="ltr"` even with the
-    plain `default` theme active (no theme.po involved). The real
-    legacy `.lang.php` sources needed to regenerate them correctly
-    *are* available (`/home/torres/piwigo16/language/`, the real
-    Piwigo 16.x reference checkout already used elsewhere in this
-    campaign) — not fixed here because it's a fork-wide i18n
-    data-quality issue spanning every locale's core files, not a P61
-    scope item; left for a dedicated follow-up pass.
+    **Follow-up (Done, same day, user-requested):** the same stale
+    header turned out to affect this repo's own core
+    `language/<locale>/*.po` files too — every real domain except
+    `common.po` (`admin`/`install`/`help_quick_search`/`whats_new_15`/
+    `whats_new_16`/`upgrade`, confirmed exhaustively: 252 files across
+    every locale that ships one, every single match the literal value
+    `ltr`, nothing else). Confirmed live before fixing: a real `he_IL`
+    admin-panel session showed `dir="ltr"` from `admin.po`'s own stale
+    header alone, with no theme involved at all. Fixed with a targeted,
+    header-line-only edit (not a wholesale regeneration from the legacy
+    `.lang.php` source at `/home/torres/piwigo16/language/`, which would
+    have reverted real, incremental translation fixes these files have
+    picked up since their original migration, per their own git
+    history) — a plain grep/sed sweep removing exactly the one wrong
+    line per file, re-verified after (zero remaining matches outside
+    `common.po`, every `common.po`'s own real value untouched). New
+    regression test locks in the real *consumer* contract
+    (`tests/Unit/Core/LangTest.php`: a real RTL `common.lang` load must
+    survive a second file's own real, headerless load afterward).
+    Live-verified: a real `he_IL` session now shows `dir="rtl"` on both
+    the front-end and the admin panel, zero console/PHP errors, fully
+    reverted.
 - Settings-page tab save/reload round-trip, menubar dropdown/`<details>`
   behavior, and the carousel filmstrip were all already covered
   extensively by this campaign's own earlier per-phase live verification

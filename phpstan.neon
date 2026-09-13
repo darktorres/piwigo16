@@ -123,6 +123,16 @@ parameters:
             identifier: dba.keyValue
             path: tests/Integration/ImageStdParamsTest.php
         -
+            # ExtensionDatabase::insert()'s $table argument (tableName())
+            # is a dynamically-computed 'ext_<extensionId>_<suffix>' name,
+            # by design -- an extension's own tables don't exist in this
+            # analysis's static schema knowledge (they're created at
+            # runtime, per-plugin, via createTable()), so phpstan-dba can
+            # never resolve a real schema to validate $data's keys/types
+            # against. Not a real gap this analysis could otherwise catch.
+            identifier: dba.keyValue
+            path: src/Piwigo/PluginConfig/ExtensionDatabase.php
+        -
             # MySQL's `ON DUPLICATE KEY UPDATE` / Postgres's `ON CONFLICT`
             # inside driver-conditional code (own comment documents the
             # split) -- phpstan-dba validates the string literal from BOTH

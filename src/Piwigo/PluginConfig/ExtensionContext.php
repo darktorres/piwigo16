@@ -386,6 +386,21 @@ final readonly class ExtensionContext
     }
 
     /**
+     * Per-extension-namespaced raw-DB accessor -- see `ExtensionDatabase`'s
+     * own docblock for why this is a structured, table-restricted facade
+     * rather than a raw `Connection` passthrough. Safe to call from
+     * `boot()`/lifecycle hooks (`install()`/`uninstall()`/...) unlike
+     * `template()`/`currentUser()` above: the DB connection is already
+     * live well before `PluginRegistry::bootActive()`'s position in the
+     * request pipeline (`ConfigService::loadConfFromDb()` itself depends
+     * on it), so there's no early-lifecycle timing constraint here.
+     */
+    public function db(): ExtensionDatabase
+    {
+        return new ExtensionDatabase($this->entityManager->getConnection(), $this->extensionId);
+    }
+
+    /**
      * The core, un-namespaced `pwg_index_deriv` session key --
      * `Category\CategoryDefaultRenderer`'s own selected derivative size for
      * the index thumbnail grid. Deliberately NOT exposed through

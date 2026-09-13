@@ -982,6 +982,24 @@ final class ExtensionContextTest extends IntegrationTestCase
     }
 
     /**
+     * Same real-world scenario as `testSessionIsNamespacedPerExtensionId()`
+     * / `testCookiesAreNamespacedPerExtensionId()`, for `db()` -- two
+     * extensions asking for a table by the same bare suffix must resolve
+     * to two structurally distinct table names. Real DDL/CRUD round-trip
+     * coverage lives in `ExtensionDatabaseTest.php`; this is just the
+     * `ExtensionContext::db()` wiring itself (right `extensionId` reaches
+     * the facade).
+     */
+    public function testDbIsNamespacedPerExtensionId(): void
+    {
+        $pluginA = $this->buildContext(PluginId::from('plugin-a'));
+        $pluginB = $this->buildContext(PluginId::from('plugin-b'));
+
+        self::assertSame('ext_plugin-a_stats', $pluginA->db()->tableName('stats'));
+        self::assertSame('ext_plugin-b_stats', $pluginB->db()->tableName('stats'));
+    }
+
+    /**
      * P29.6 (the `modus` theme port): a real shared *core* session key,
      * deliberately not routed through `session()`'s per-extension
      * namespacing -- proves `coreIndexDeriv()`/`corePictureDeriv()` read

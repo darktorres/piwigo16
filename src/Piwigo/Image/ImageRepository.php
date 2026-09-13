@@ -237,11 +237,19 @@ final class ImageRepository extends EntityRepository
     /**
      * Bulk format-row insert -- Controller\Admin\SiteUpdateSubController's
      * own filesystem-sync "add every newly-discovered format at once"
-     * step, unlike insertFormat() above's single-row shape. Goes through
-     * the ORM (one flush for the whole batch) rather than BatchWriter --
-     * unlike Image\ImageRepository::massInsertImages()'s own dynamic
-     * column-map reasoning, every row here is the same fixed
-     * image_id/ext/filesize shape ImageFormatEntity already maps.
+     * step, unlike insertFormat() above's single-row shape.
+     *
+     * Used to go through the ORM (one flush() for the whole batch) rather
+     * than BatchWriter, reasoning every row here shares one fixed shape so
+     * there was no dynamic-column-map need. That missed that Doctrine has
+     * no batched INSERT for entities regardless: flush() still issues one
+     * prepared INSERT per persisted entity. Profiling a real sync found
+     * the structurally identical pattern in
+     * Activity\ActivityRepository::insertMany() responsible for ~80s of a
+     * ~157s profiled run at N=10,000 -- this method is reachable from the
+     * same sync flow whenever `isFormatsEnabled` is on, so the same fix
+     * applies. `format_id` excluded from `$dbfields` -- AUTO_INCREMENT/
+     * IDENTITY, DB-generated.
      *
      * @param  list<array{image_id: int, ext: string, filesize: ?int}>  $inserts
      */
@@ -251,12 +259,8 @@ final class ImageRepository extends EntityRepository
             return;
         }
 
-        $em = $this->getEntityManager();
-        foreach ($inserts as $insert) {
-            $em->persist(new ImageFormatEntity(ImageId::from($insert['image_id']), $insert['ext'], $insert['filesize']));
-        }
-
-        $em->flush();
+        new BatchWriter($this->getEntityManager()->getConnection())
+            ->massInsert('image_format', ['image_id', 'ext', 'filesize'], $inserts);
     }
 
     /**

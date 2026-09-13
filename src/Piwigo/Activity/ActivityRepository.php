@@ -27,7 +27,7 @@ use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\ActivitySystem;
-use Piwigo\Users\UserEntity;
+use Piwigo\Db\BatchWriter;
 
 /**
  * Persistence layer for the activity domain: `activity` (an append-only
@@ -47,6 +47,20 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
      * protocol limit, not tuned for a performance sweet spot.
      */
     private const int EXISTENCE_CHECK_CHUNK_SIZE = 10000;
+
+    /**
+     * `activity`'s own insertable columns, in the order `massInsert()`
+     * binds them -- `activity_id` excluded (AUTO_INCREMENT/IDENTITY,
+     * DB-generated), same convention every other `massInsert()` caller in
+     * this codebase already uses for its own surrogate key.
+     *
+     * @var list<string>
+     */
+    private const array INSERT_COLUMNS = [
+        'object', 'object_id', 'action', 'performed_by', 'session_idx',
+        'ip_address', 'occured_on', 'details', 'user_agent',
+        'user_id', 'category_id', 'image_id', 'tag_id', 'group_id', 'system_scope',
+    ];
 
     /**
      * Implements {@see \Piwigo\Auth\LoginActivityLookupInterface} so
@@ -107,56 +121,102 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
         // real caller passes every id from a sync pass at once).
         $existingReferentIds = $this->findExistingReferentIds($rows);
 
+        $insertRows = [];
         foreach ($rows as $row) {
-            $objectId = is_numeric($row['objectId']) ? (int) $row['objectId'] : 0;
-            $kind = ActivityObject::tryFrom($row['object']);
-
-            // The live reference: exactly one typed column, chosen by the
-            // discriminator, and only when the referenced row actually
-            // exists right now.
-            //
-            // That check is not defensive padding. record() accepts any id
-            // from any caller, and two ordinary cases supply one that is
-            // already gone: a deletion is logged *after* the row is removed,
-            // and callers legitimately record activity against ids they do
-            // not own. Handing either to the foreign key gets the insert
-            // rejected -- which for a deletion would take the delete itself
-            // down. A log entry must never be able to fail the operation it
-            // is recording.
-            //
-            // The history is unaffected: object_id keeps the id either way,
-            // and ActivityService adds details['deleted_object_ids'] for
-            // deletions.
-            $column = $kind?->referenceColumn();
-            if ($column !== null) {
-                $table = self::referentTable($kind);
-                if ($table === null || ! isset($existingReferentIds[$table][$objectId])) {
-                    $column = null;
-                }
-            }
-
-            $performedBy = $row['performedBy'] !== null ? UserId::tryFrom($row['performedBy']) : null;
-
-            $em->persist(new ActivityEntity(
-                object: $row['object'],
-                objectId: $objectId,
-                action: $row['action'],
-                performedByUser: $performedBy instanceof UserId ? $em->getReference(UserEntity::class, $performedBy) : null,
-                sessionIdx: $row['sessionIdx'],
-                ipAddress: $row['ipAddress'],
-                occuredOn: $row['occuredOn'],
-                details: $row['details'],
-                userAgent: $row['userAgent'],
-                userId: $column === 'userId' ? UserId::tryFrom($objectId) : null,
-                categoryId: $column === 'categoryId' ? CategoryId::tryFrom($objectId) : null,
-                imageId: $column === 'imageId' ? ImageId::tryFrom($objectId) : null,
-                tagId: $column === 'tagId' ? TagId::tryFrom($objectId) : null,
-                groupId: $column === 'groupId' ? GroupId::tryFrom($objectId) : null,
-                systemScope: $kind === ActivityObject::System ? $objectId : null,
-            ));
+            $insertRows[] = self::buildInsertRow($row, $existingReferentIds);
         }
 
-        $em->flush();
+        // Bypasses the ORM entirely -- profiling a real sync at 10,000
+        // images found the previous persist()-in-a-loop-then-flush()
+        // pattern responsible for ~80s of a ~157s profiled run
+        // (Doctrine's per-entity computeChangeSet/ClassMetadata
+        // introspection/bindValue overhead, paid once per row instead of
+        // once per chunk). No `$em->clear()` afterward, unlike other
+        // BatchWriter-bypass call sites in this codebase
+        // (Category\CategoryRepository::massInsertCategories()/
+        // Metadata\MetadataRepository::massUpdateImages()): those clear a
+        // stale identity map for entities their own call just wrote
+        // underneath the ORM's back, but this call never loads
+        // ActivityEntity objects before writing, so there's nothing stale
+        // to clear -- and record() is called from many places mid-request
+        // with unrelated entities already pending on this same
+        // EntityManager, which `clear()` would silently discard.
+        new BatchWriter($em->getConnection())
+            ->massInsert('activity', self::INSERT_COLUMNS, $insertRows);
+    }
+
+    /**
+     * One `activity` row, keyed exactly like {@see INSERT_COLUMNS}, built
+     * from one $rows entry (see insertMany()'s own param docblock for its
+     * shape) plus the batch's pre-computed referent-existence set. Every
+     * VO is unwrapped to its raw storage value here since `massInsert()`
+     * bypasses Doctrine's own Type conversion entirely (`is_scalar()`
+     * would otherwise silently null out a VO the way it already does for
+     * `details`' array, handled explicitly below via `json_encode()`).
+     *
+     * @param array{
+     *   object: string,
+     *   objectId: int|string,
+     *   action: string,
+     *   performedBy: ?int,
+     *   sessionIdx: string,
+     *   ipAddress: ?IpAddress,
+     *   occuredOn: SqlDateTime,
+     *   details: array<string, mixed>,
+     *   userAgent: ?string,
+     * } $row
+     * @param array<string, array<int, true>> $existingReferentIds table => set of ids that exist
+     * @return array<string, mixed>
+     */
+    private static function buildInsertRow(array $row, array $existingReferentIds): array
+    {
+        $objectId = is_numeric($row['objectId']) ? (int) $row['objectId'] : 0;
+        $kind = ActivityObject::tryFrom($row['object']);
+
+        // The live reference: exactly one typed column, chosen by the
+        // discriminator, and only when the referenced row actually
+        // exists right now.
+        //
+        // That check is not defensive padding. record() accepts any id
+        // from any caller, and two ordinary cases supply one that is
+        // already gone: a deletion is logged *after* the row is removed,
+        // and callers legitimately record activity against ids they do
+        // not own. Handing either to the foreign key gets the insert
+        // rejected -- which for a deletion would take the delete itself
+        // down. A log entry must never be able to fail the operation it
+        // is recording.
+        //
+        // The history is unaffected: object_id keeps the id either way,
+        // and ActivityService adds details['deleted_object_ids'] for
+        // deletions.
+        $column = $kind?->referenceColumn();
+        if ($column !== null) {
+            $table = self::referentTable($kind);
+            if ($table === null || ! isset($existingReferentIds[$table][$objectId])) {
+                $column = null;
+            }
+        }
+
+        $performedBy = $row['performedBy'] !== null ? UserId::tryFrom($row['performedBy']) : null;
+        $encodedDetails = json_encode($row['details']);
+
+        return [
+            'object' => $row['object'],
+            'object_id' => $objectId,
+            'action' => $row['action'],
+            'performed_by' => $performedBy?->value,
+            'session_idx' => $row['sessionIdx'],
+            'ip_address' => $row['ipAddress']?->value,
+            'occured_on' => $row['occuredOn']->value,
+            'details' => $encodedDetails === false ? null : $encodedDetails,
+            'user_agent' => $row['userAgent'],
+            'user_id' => $column === 'userId' ? UserId::tryFrom($objectId)?->value : null,
+            'category_id' => $column === 'categoryId' ? CategoryId::tryFrom($objectId)?->value : null,
+            'image_id' => $column === 'imageId' ? ImageId::tryFrom($objectId)?->value : null,
+            'tag_id' => $column === 'tagId' ? TagId::tryFrom($objectId)?->value : null,
+            'group_id' => $column === 'groupId' ? GroupId::tryFrom($objectId)?->value : null,
+            'system_scope' => $kind === ActivityObject::System ? $objectId : null,
+        ];
     }
 
     /**

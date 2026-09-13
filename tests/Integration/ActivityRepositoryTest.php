@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Logging\Middleware;
 use LogicException;
 use Override;
 use Piwigo\Activity\ActivityEntity;
@@ -25,6 +28,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\TypedRepository;
 use Piwigo\Tests\Support\DbTransactionTestOverride;
+use Piwigo\Tests\Support\StatementCountingLogger;
 
 /**
  * Fixture: 19 activity rows (activity_id 1-19). Row 1 is object='system',
@@ -283,6 +287,322 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             ], $rows);
         } finally {
             $this->conn->executeStatement("DELETE FROM activity WHERE action = 'n-plus-one-test'");
+        }
+    }
+
+    /**
+     * insertMany() now unwraps every exclusive-arc VO
+     * (userId/categoryId/imageId/tagId/groupId) to its raw value by hand
+     * (see ActivityRepository::buildInsertRow()) instead of handing it to
+     * the entity constructor -- but only `photo`/`imageId` had any
+     * coverage before this change (the test above), and every other
+     * existing insertMany() test in this file uses `object: 'disposable'`,
+     * which bypasses the typed-column logic entirely. One row per real
+     * ActivityObject kind, all in the same batched call, using each
+     * domain's own fixture referent (category 1, image 1, tag 1, group 1,
+     * user 3), asserts the correct single typed column (or system_scope
+     * for 'system') is set and the other 4 stay null.
+     */
+    public function testInsertManySetsTheCorrectSingleTypedColumnForEveryActivityObjectKind(): void
+    {
+        try {
+            $this->repo->insertMany([
+                [
+                    'object' => 'user',
+                    'objectId' => 3, // fixture regular_user
+                    'action' => 'typed-column-test',
+                    'performedBy' => 1,
+                    'sessionIdx' => 'sess-1',
+                    'ipAddress' => null,
+                    'occuredOn' => SqlDateTime::from('2026-07-12 00:00:00'),
+                    'details' => [],
+                    'userAgent' => null,
+                ],
+                [
+                    'object' => 'album',
+                    'objectId' => 1, // fixture 'Sample Album'
+                    'action' => 'typed-column-test',
+                    'performedBy' => 1,
+                    'sessionIdx' => 'sess-1',
+                    'ipAddress' => null,
+                    'occuredOn' => SqlDateTime::from('2026-07-12 00:00:01'),
+                    'details' => [],
+                    'userAgent' => null,
+                ],
+                [
+                    'object' => 'photo',
+                    'objectId' => 1, // fixture image id 1
+                    'action' => 'typed-column-test',
+                    'performedBy' => 1,
+                    'sessionIdx' => 'sess-1',
+                    'ipAddress' => null,
+                    'occuredOn' => SqlDateTime::from('2026-07-12 00:00:02'),
+                    'details' => [],
+                    'userAgent' => null,
+                ],
+                [
+                    'object' => 'tag',
+                    'objectId' => 1, // fixture 'nature'
+                    'action' => 'typed-column-test',
+                    'performedBy' => 1,
+                    'sessionIdx' => 'sess-1',
+                    'ipAddress' => null,
+                    'occuredOn' => SqlDateTime::from('2026-07-12 00:00:03'),
+                    'details' => [],
+                    'userAgent' => null,
+                ],
+                [
+                    'object' => 'group',
+                    'objectId' => 1, // fixture 'Editors'
+                    'action' => 'typed-column-test',
+                    'performedBy' => 1,
+                    'sessionIdx' => 'sess-1',
+                    'ipAddress' => null,
+                    'occuredOn' => SqlDateTime::from('2026-07-12 00:00:04'),
+                    'details' => [],
+                    'userAgent' => null,
+                ],
+                [
+                    'object' => 'system',
+                    'objectId' => ActivitySystem::Core,
+                    'action' => 'typed-column-test',
+                    'performedBy' => null,
+                    'sessionIdx' => 'sess-1',
+                    'ipAddress' => null,
+                    'occuredOn' => SqlDateTime::from('2026-07-12 00:00:05'),
+                    'details' => [],
+                    'userAgent' => null,
+                ],
+            ]);
+
+            $rows = $this->conn->createQueryBuilder()
+                ->select('object', 'user_id', 'category_id', 'image_id', 'tag_id', 'group_id', 'system_scope')
+                ->from('activity')
+                ->where("action = 'typed-column-test'")
+                ->orderBy('activity_id', 'ASC')
+                ->executeQuery()
+                ->fetchAllAssociative();
+
+            self::assertSame([
+                [
+                    'object' => 'user',
+                    'user_id' => 3,
+                    'category_id' => null,
+                    'image_id' => null,
+                    'tag_id' => null,
+                    'group_id' => null,
+                    'system_scope' => null,
+                ],
+                [
+                    'object' => 'album',
+                    'user_id' => null,
+                    'category_id' => 1,
+                    'image_id' => null,
+                    'tag_id' => null,
+                    'group_id' => null,
+                    'system_scope' => null,
+                ],
+                [
+                    'object' => 'photo',
+                    'user_id' => null,
+                    'category_id' => null,
+                    'image_id' => 1,
+                    'tag_id' => null,
+                    'group_id' => null,
+                    'system_scope' => null,
+                ],
+                [
+                    'object' => 'tag',
+                    'user_id' => null,
+                    'category_id' => null,
+                    'image_id' => null,
+                    'tag_id' => 1,
+                    'group_id' => null,
+                    'system_scope' => null,
+                ],
+                [
+                    'object' => 'group',
+                    'user_id' => null,
+                    'category_id' => null,
+                    'image_id' => null,
+                    'tag_id' => null,
+                    'group_id' => 1,
+                    'system_scope' => null,
+                ],
+                [
+                    'object' => 'system',
+                    'user_id' => null,
+                    'category_id' => null,
+                    'image_id' => null,
+                    'tag_id' => null,
+                    'group_id' => null,
+                    'system_scope' => ActivitySystem::Core,
+                ],
+            ], $rows);
+        } finally {
+            $this->conn->executeStatement("DELETE FROM activity WHERE action = 'typed-column-test'");
+        }
+    }
+
+    /**
+     * Regression proof for the batching itself, not just its correctness:
+     * a future accidental revert of insertMany() to a per-row
+     * persist()/flush() loop would still pass every correctness test
+     * above (it's still functionally correct, just slow) -- this fails
+     * immediately instead, by counting real round trips via a
+     * `Doctrine\DBAL\Logging\Middleware`-wrapped connection. Uses
+     * `object: 'disposable'` (unrecognized kind) so the only statements
+     * counted are massInsert()'s own chunked INSERTs, not the
+     * referent-existence check.
+     *
+     * `$loggedConn` is a genuinely separate physical connection (Doctrine
+     * bakes middlewares into a connection at construction, so there's no
+     * way to attach one to `$this->conn`'s own already-open, transaction-
+     * wrapped connection after the fact) -- it does NOT participate in
+     * this test's `DbTransactionTestOverride` rollback, so its own writes
+     * are real, immediately-committed rows against the shared fixture DB.
+     * Cleanup below runs on this SAME connection, not `$this->conn`: a
+     * DELETE issued on `$this->conn` would itself be inside the very
+     * transaction `tearDown()` rolls back, silently undoing the cleanup
+     * and leaking 1,200 rows into the shared fixture (caught live while
+     * writing this test). `markSharedFixtureDirty()` is a defensive
+     * second layer in case the process dies before `finally` runs.
+     */
+    public function testInsertManyIssuesOneStatementPerChunkNotOnePerRow(): void
+    {
+        IntegrationTestCase::markSharedFixtureDirty();
+
+        $logger = new StatementCountingLogger();
+        $config = new Configuration();
+        $config->setMiddlewares([new Middleware($logger)]);
+        $loggedConn = DriverManager::getConnection(DbConnection::params(), $config);
+        $loggedRepo = TypedRepository::narrow(EntityManagerFactory::build($loggedConn)->getRepository(ActivityEntity::class), ActivityRepository::class);
+
+        try {
+            $rows = [];
+            for ($i = 1; $i <= 1200; $i++) {
+                $rows[] = [
+                    'object' => 'disposable',
+                    'objectId' => $i,
+                    'action' => 'statement-count-test',
+                    'performedBy' => 1,
+                    'sessionIdx' => 'sess-1',
+                    'ipAddress' => null,
+                    'occuredOn' => SqlDateTime::from('2026-07-12 00:00:00'),
+                    'details' => [],
+                    'userAgent' => null,
+                ];
+            }
+
+            $loggedRepo->insertMany($rows);
+
+            // ceil(1200 / 500) = 3 real INSERT statements, not 1200.
+            self::assertSame(3, $logger->executedStatementCount);
+        } finally {
+            $loggedConn->executeStatement("DELETE FROM activity WHERE action = 'statement-count-test'");
+            $loggedConn->close();
+        }
+    }
+
+    /**
+     * Correctness sibling of the statement-count test above -- the same
+     * 1,200-row batch (spanning 3 internal `massInsert()` chunks) really
+     * does write every row, not just enough to pass a count check.
+     */
+    public function testInsertManyHandlesABatchSpanningMultipleChunksCorrectly(): void
+    {
+        try {
+            $rows = [];
+            for ($i = 1; $i <= 1200; $i++) {
+                $rows[] = [
+                    'object' => 'disposable',
+                    'objectId' => $i,
+                    'action' => 'large-batch-test',
+                    'performedBy' => 1,
+                    'sessionIdx' => 'sess-1',
+                    'ipAddress' => null,
+                    'occuredOn' => SqlDateTime::from('2026-07-12 00:00:00'),
+                    'details' => [],
+                    'userAgent' => null,
+                ];
+            }
+
+            $this->repo->insertMany($rows);
+
+            $count = $this->conn->fetchOne("SELECT COUNT(*) FROM activity WHERE action = 'large-batch-test'");
+            $minId = $this->conn->fetchOne("SELECT MIN(object_id) FROM activity WHERE action = 'large-batch-test'");
+            $maxId = $this->conn->fetchOne("SELECT MAX(object_id) FROM activity WHERE action = 'large-batch-test'");
+
+            self::assertSame(1200, $count);
+            self::assertSame(1, $minId);
+            self::assertSame(1200, $maxId);
+        } finally {
+            $this->conn->executeStatement("DELETE FROM activity WHERE action = 'large-batch-test'");
+        }
+    }
+
+    /**
+     * `details` used to be Doctrine's own automatic `json` Type
+     * conversion; the rewrite `json_encode()`s it by hand before handing
+     * it to `BatchWriter::massInsert()`. `json_encode([])` yields `'[]'`,
+     * a non-empty string -- this proves it survives `massInsert()`'s own
+     * `$value === '' ? null : $value` normalization correctly instead of
+     * being silently nulled, and that a real nested payload round-trips
+     * byte-for-byte.
+     */
+    public function testInsertManyRoundTripsDetailsAsJsonIncludingAnEmptyArray(): void
+    {
+        try {
+            $this->repo->insertMany([
+                [
+                    'object' => 'disposable',
+                    'objectId' => 1,
+                    'action' => 'json-details-test',
+                    'performedBy' => 1,
+                    'sessionIdx' => 'sess-1',
+                    'ipAddress' => null,
+                    'occuredOn' => SqlDateTime::from('2026-07-12 00:00:00'),
+                    'details' => [],
+                    'userAgent' => null,
+                ],
+                [
+                    'object' => 'disposable',
+                    'objectId' => 2,
+                    'action' => 'json-details-test',
+                    'performedBy' => 1,
+                    'sessionIdx' => 'sess-1',
+                    'ipAddress' => null,
+                    'occuredOn' => SqlDateTime::from('2026-07-12 00:00:01'),
+                    'details' => [
+                        'sync' => true,
+                        'nested' => [
+                            'a' => 1,
+                        ],
+                    ],
+                    'userAgent' => null,
+                ],
+            ]);
+
+            $rows = $this->conn->createQueryBuilder()
+                ->select('object_id', 'details')
+                ->from('activity')
+                ->where("action = 'json-details-test'")
+                ->orderBy('object_id', 'ASC')
+                ->executeQuery()
+                ->fetchAllAssociative();
+
+            self::assertCount(2, $rows);
+            self::assertIsString($rows[0]['details']);
+            self::assertSame([], json_decode($rows[0]['details'], true));
+            self::assertIsString($rows[1]['details']);
+            self::assertSame([
+                'sync' => true,
+                'nested' => [
+                    'a' => 1,
+                ],
+            ], json_decode($rows[1]['details'], true));
+        } finally {
+            $this->conn->executeStatement("DELETE FROM activity WHERE action = 'json-details-test'");
         }
     }
 

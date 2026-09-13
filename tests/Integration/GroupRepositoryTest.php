@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Logging\Middleware;
 use LogicException;
 use Override;
 use Piwigo\Common\ValueObject\CategoryId;
@@ -19,6 +22,7 @@ use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Tests\Support\DbTransactionTestOverride;
+use Piwigo\Tests\Support\StatementCountingLogger;
 
 final class GroupRepositoryTest extends IntegrationTestCase
 {
@@ -233,6 +237,65 @@ final class GroupRepositoryTest extends IntegrationTestCase
         $this->repo->delete([$groupId]);
     }
 
+    /**
+     * Sibling of the test above, but the already-existing member and the
+     * brand-new one arrive in the SAME `addMembers()` call -- the one
+     * genuinely new correctness risk from batching (`BatchWriter::
+     * massInsert(..., ignore: true)`'s IGNORE must still discriminate
+     * per row within one batched INSERT, not treat the whole statement
+     * as all-or-nothing).
+     */
+    public function testAddMembersAddsANewMemberAlongsideAnAlreadyExistingOneInTheSameBatchedCall(): void
+    {
+        $groupId = $this->repo->insert('p18-test-' . bin2hex(random_bytes(4)), false);
+        $this->repo->addMembers($groupId, [UserId::from(2)]);
+
+        $this->repo->addMembers($groupId, [UserId::from(2), UserId::from(3)]);
+
+        self::assertSame([2, 3], self::values($this->repo->findMemberUserIds($groupId)));
+
+        $this->repo->delete([$groupId]);
+    }
+
+    /**
+     * Regression proof for the batching itself: a future accidental
+     * revert of `addMembers()` to a per-row `Connection::insert()`+
+     * `catch` loop would still pass every correctness test above (still
+     * functionally correct, just slow) -- this fails immediately instead,
+     * by counting real round trips. Uses nonexistent user ids (silently
+     * skipped by `ignore: true`, same as a real FK violation always was)
+     * so no real fixture user data is needed and nothing is actually
+     * inserted -- self-contained on its own connection/group, no cleanup
+     * beyond deleting the group itself.
+     */
+    public function testAddMembersIssuesOneStatementNotOnePerUser(): void
+    {
+        $logger = new StatementCountingLogger();
+        $config = new Configuration();
+        $config->setMiddlewares([new Middleware($logger)]);
+        $loggedConn = DriverManager::getConnection(DbConnection::params(), $config);
+        $loggedRepo = TypedRepository::narrow(EntityManagerFactory::build($loggedConn)->getRepository(GroupEntity::class), GroupRepository::class);
+
+        try {
+            $groupId = $loggedRepo->insert('p18-test-' . bin2hex(random_bytes(4)), false);
+            $logger->executedStatementCount = 0;
+
+            $loggedRepo->addMembers($groupId, [
+                UserId::from(900001),
+                UserId::from(900002),
+                UserId::from(900003),
+                UserId::from(900004),
+                UserId::from(900005),
+            ]);
+
+            self::assertSame(1, $logger->executedStatementCount);
+
+            $loggedRepo->delete([$groupId]);
+        } finally {
+            $loggedConn->close();
+        }
+    }
+
     public function testRemoveMembersWithAnEmptyListIsANoop(): void
     {
         $this->repo->removeMembers(GroupId::from(1), []);
@@ -361,6 +424,38 @@ final class GroupRepositoryTest extends IntegrationTestCase
         self::assertSame([2], self::values($this->repo->getAuthorizedCategoryIds($groupId)));
 
         $this->repo->delete([$groupId]);
+    }
+
+    /**
+     * Regression proof for the batching itself, same reasoning as
+     * {@see testAddMembersIssuesOneStatementNotOnePerUser()} -- a future
+     * accidental revert of `addAccess()` to a per-row
+     * `persist()`/`flush()` loop would still pass the round-trip test
+     * above (still functionally correct, just slow). `addAccess()` has no
+     * `ignore` option (unlike `addMembers()`), so this uses the 2 real
+     * fixture categories rather than nonexistent ones -- an invalid
+     * category id here would throw, not silently skip.
+     */
+    public function testAddAccessIssuesOneStatementNotOnePerCategory(): void
+    {
+        $logger = new StatementCountingLogger();
+        $config = new Configuration();
+        $config->setMiddlewares([new Middleware($logger)]);
+        $loggedConn = DriverManager::getConnection(DbConnection::params(), $config);
+        $loggedRepo = TypedRepository::narrow(EntityManagerFactory::build($loggedConn)->getRepository(GroupEntity::class), GroupRepository::class);
+
+        try {
+            $groupId = $loggedRepo->insert('p18-test-' . bin2hex(random_bytes(4)), false);
+            $logger->executedStatementCount = 0;
+
+            $loggedRepo->addAccess($groupId, [CategoryId::from(1), CategoryId::from(2)]);
+
+            self::assertSame(1, $logger->executedStatementCount);
+
+            $loggedRepo->delete([$groupId]);
+        } finally {
+            $loggedConn->close();
+        }
     }
 
     public function testRemoveAccessWithAnEmptyListIsANoop(): void

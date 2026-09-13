@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Group;
 
 use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\Exception\ConstraintViolationException;
-use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query\Expr\Join;
 use LogicException;
@@ -15,6 +13,7 @@ use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\Env;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Group\Projection\Group;
 use Piwigo\Group\Projection\GroupListing;
 use Piwigo\Users\UserEntity;
@@ -348,52 +347,43 @@ final class GroupRepository extends EntityRepository
      * a nonexistent group_id/user_id (both real FKs --
      * `fk_user_group_group_id`/`fk_user_group_user_id`), is a silent
      * no-op (matching MySQL's own `INSERT IGNORE`, which downgrades both
-     * a duplicate-key error and a foreign-key violation to a warning,
-     * same as `Caddie\CaddieRepository::addElements()`'s own identical
-     * fix) -- (group_id, user_id) is the table's primary key, and callers
+     * a duplicate-key error and a foreign-key violation to a warning) --
+     * (group_id, user_id) is the table's primary key, and callers
      * (ws_groups_addUser, merge, duplicate) can legitimately pass an
-     * already-member user id. Plain DBAL `Connection::insert()` (a
-     * portable, bound `INSERT`, no MySQL-specific `IGNORE` syntax) per
-     * user, with both cases caught as a real
-     * {@see ConstraintViolationException} -- both ids unwrap to raw ints,
-     * matching every other plain-DBAL query in this file.
+     * already-member user id.
      *
-     * Not `persist()`/`flush()`: a caught
-     * {@see ConstraintViolationException} from a failed `flush()` leaves
-     * the EntityManager permanently closed
+     * Used to be a plain DBAL `Connection::insert()` per user, each
+     * wrapped in its own `catch (ConstraintViolationException)` for this
+     * exact IGNORE semantic -- deliberately NOT `persist()`/`flush()`,
+     * since a caught failure from a failed `flush()` leaves the
+     * EntityManager permanently closed
      * (`Doctrine\ORM\UnitOfWork::commit()`'s own `finally` branch calls
      * `$em->close()` on any failure, and `clear()` cannot undo that),
      * which would break every other repository sharing this request's
-     * EntityManager -- a real regression an already-a-member $userId
-     * would trigger in normal operation, not just a theoretical edge
-     * case. Plain DBAL `insert()` never touches the ORM's unit of work,
-     * so a caught failure here has no such blast radius.
+     * EntityManager. `Db\BatchWriter::massInsert(..., ['ignore' => true])`
+     * preserves both properties at once: it's still one atomic INSERT per
+     * chunk (no check-then-insert step, so no TOCTOU race reintroduced by
+     * pre-checking existence), and it never touches the ORM's unit of
+     * work either (same reasoning `Caddie\CaddieRepository::
+     * addElements()`'s own identical fix relies on) -- while collapsing
+     * what used to be one round trip per user into `N/500`. Real callers
+     * (`GroupService`'s merge-groups/bulk-membership paths, the
+     * `GroupAddUserController` API endpoint) pass genuinely unbounded
+     * $userIds, not a handful.
      *
      * @param list<UserId> $userIds
      */
     public function addMembers(GroupId $groupId, array $userIds): void
     {
-        $conn = $this->getEntityManager()
-            ->getConnection();
-        foreach ($userIds as $userId) {
-            try {
-                $conn->insert(
-                    'user_group',
-                    [
-                        'group_id' => $groupId->value,
-                        'user_id' => $userId->value,
-                    ],
-                    [
-                        'group_id' => ParameterType::INTEGER,
-                        'user_id' => ParameterType::INTEGER,
-                    ],
-                );
-            } catch (ConstraintViolationException) {
-                // Already a member, or group_id/user_id doesn't reference
-                // a real row -- same "IGNORE" semantic the raw INSERT
-                // IGNORE this replaces had.
-            }
-        }
+        $rows = array_map(static fn (UserId $userId): array => [
+            'group_id' => $groupId->value,
+            'user_id' => $userId->value,
+        ], $userIds);
+
+        new BatchWriter($this->getEntityManager()->getConnection())
+            ->massInsert('user_group', ['group_id', 'user_id'], $rows, [
+                'ignore' => true,
+            ]);
 
         // Bypasses the ORM entirely -- any UserGroupEntity this
         // EntityManager already loaded for this group would otherwise
@@ -549,16 +539,29 @@ final class GroupRepository extends EntityRepository
     }
 
     /**
+     * Bulk write via BatchWriter, not ORM persist()/flush() -- see
+     * Activity\ActivityRepository::insertMany()'s own docblock for the
+     * profiled reason (Doctrine has no batched INSERT for entities, so
+     * flush() still issues one prepared INSERT per persisted entity).
+     * Real callers (Admin\GroupPermPageRenderer's own "grant this group
+     * access to this whole category subtree" action) pass a genuinely
+     * gallery-scale $catIds, not a bounded UI selection. `group_access`
+     * has no surrogate id column -- `(group_id, cat_id)` is its own
+     * composite primary key, matching
+     * Category\CategoryRepository::massInsertGroupAccess()'s own
+     * identical table/shape.
+     *
      * @param list<CategoryId> $catIds
      */
     public function addAccess(GroupId $groupId, array $catIds): void
     {
-        $em = $this->getEntityManager();
-        foreach ($catIds as $catId) {
-            $em->persist(new GroupAccessEntity($groupId, $catId));
-        }
+        $rows = array_map(static fn (CategoryId $catId): array => [
+            'group_id' => $groupId->value,
+            'cat_id' => $catId->value,
+        ], $catIds);
 
-        $em->flush();
+        new BatchWriter($this->getEntityManager()->getConnection())
+            ->massInsert('group_access', ['group_id', 'cat_id'], $rows);
     }
 
     /**

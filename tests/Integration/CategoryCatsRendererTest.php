@@ -13,6 +13,7 @@ use Piwigo\Category\CategoryCatsRenderer;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\Projection\CategoryCatsResult;
+use Piwigo\Category\Projection\CategoryThumbnail;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
@@ -315,6 +316,23 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $html = $this->renderedCategoriesHtml($result);
         self::assertStringContainsString('Sample Album', $html);
         self::assertStringNotContainsString('Nested Sub Album', $html);
+    }
+
+    public function testRenderPopulatesRepresentativeFileExtFromTheRealOriginalFilename(): void
+    {
+        $this->seedUser();
+
+        $result = $this->renderer->render(Section::Categories, null, 0);
+        self::assertNotNull($result);
+
+        $withRepresentative = array_values(array_filter(
+            $result->categoryThumbnails,
+            static fn (CategoryThumbnail $cat): bool => $cat->representative !== null,
+        ));
+        self::assertNotSame([], $withRepresentative, 'fixture must have at least one category with a representative photo');
+        // gdThumb port: real fixture filenames are all fixture-photo-N.jpg
+        // (tests/Fixtures/piwigo-17.0.sql).
+        self::assertSame('jpg', $withRepresentative[0]->representativeFileExt);
     }
 
     /**

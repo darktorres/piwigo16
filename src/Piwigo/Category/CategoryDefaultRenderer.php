@@ -18,6 +18,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RecentIconResolver;
 use Piwigo\Core\RequestMetrics;
+use Piwigo\Core\StringHelper;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\Event\GetIndexDerivativeParams;
@@ -226,6 +227,7 @@ final readonly class CategoryDefaultRenderer
                 nbHits: $nbHits,
                 description: $desc !== '' ? $desc : null,
                 ratingScore: $row['rating_score'],
+                fileExt: StringHelper::getExtension($row['file']),
             );
         }
 

@@ -20,10 +20,9 @@ use Piwigo\Image\SrcImage;
  * own `show_nb_hits` preference -- which is what the template's two
  * `isset()` checks meant. `$iconTs` likewise follows `index_new_icon`.
  *
- * Two keys the merge produced are still gone rather than carried:
- * `path_ext` and `file_ext` have no reader in any template, anywhere in
- * `src/`, or in the one event this list is dispatched through (which has no
- * registered handler). `DESCRIPTION` was dropped for the same reason, but
+ * One key the merge produced is still gone rather than carried: `path_ext`
+ * has no reader anywhere (`file_ext`, its sibling, is restored below).
+ * `DESCRIPTION` was dropped for the same reason, but
  * a real reader now exists (`bootstrap_darkroom`'s own `{block thumbName}`
  * override, P61 closing audit -- legacy's `thumbnail_desc`/
  * `thumbnail_cat_desc` settings choose the photo's description over its
@@ -40,6 +39,18 @@ use Piwigo\Image\SrcImage;
  * label with `"(4.5) "`). A pure additive read of data already in hand,
  * not a new query -- no reader existed for the public, per-thumbnail
  * caption case this field is for until now.
+ *
+ * `$fileExt` (gdThumb port) restores the sibling key the class docblock
+ * above used to say was dropped alongside `path_ext` -- the raw row
+ * already carries `$row['file']` (real, original filename, used
+ * elsewhere in the same method for `image_file`), so this is
+ * `StringHelper::getExtension($row['file'])` on data already in hand,
+ * not a new query. Needed to distinguish a non-image mimetype
+ * (video/pdf/doc/etc.) by its real original extension --
+ * `SrcImage::$rel_path`/`getPath()` can't be used for this once
+ * `isMimetype()` is true, since it's already been rewritten to the
+ * *representative* image's own path at that point, losing the original
+ * extension entirely.
  */
 final readonly class ImageThumbnail
 {
@@ -55,5 +66,6 @@ final readonly class ImageThumbnail
         public ?int $nbHits = null,
         public ?string $description = null,
         public ?float $ratingScore = null,
+        public string $fileExt = '',
     ) {}
 }

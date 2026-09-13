@@ -281,6 +281,18 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         self::assertNull($this->thumbnailAt($result, 1)->ratingScore);
     }
 
+    public function testRenderPopulatesFileExtFromTheRealOriginalFilename(): void
+    {
+        $this->seedUser(showNbHits: false, showNbComments: false);
+
+        // gdThumb port: real fixture filenames are all fixture-photo-N.jpg
+        // (tests/Fixtures/piwigo-17.0.sql) -- this must reflect the real
+        // original extension, not a hardcoded/guessed value.
+        $result = $this->renderer->render([3], 0, 1, Section::Categories);
+
+        self::assertSame('jpg', $this->thumbnailAt($result, 0)->fileExt);
+    }
+
     public function testRenderPrefixesTheNameWithTheHitCountForMostVisitedWhenShowNbHitsIsDisabled(): void
     {
         $this->seedUser(showNbHits: false, showNbComments: false);

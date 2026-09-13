@@ -54,6 +54,20 @@ use Piwigo\Image\SrcImage;
  * (the `modus` theme's own album-thumbnail crop math, P29.6 Phase 8).
  * See `MenubarSpecialRow::$kind`'s own docblock for the same "lands ahead
  * of its consumer on purpose" rationale.
+ *
+ * `$representativeFileExt` (gdThumb port): the representative image's own
+ * real, original file extension -- `$representativeInfos['file']` is
+ * already in scope at this class's one real producer (an `Image::
+ * toArray()` row, same shape `ImageThumbnail::$fileExt`'s own docblock
+ * describes for the image-grid case), so this is another pure additive
+ * read, not a new query. Empty string when there is no representative.
+ *
+ * `$countImages` (gdThumb port): the same raw `int` `$captionNbImages`
+ * is itself formatted from (`CategoryCatsRenderer::render()`'s own
+ * `$catCountImages` local, already computed a few lines above the
+ * `CategoryThumbnail` construction it feeds) -- needed as a plain
+ * number, not `$captionNbImages`'s own translated "N photos"-shaped
+ * `Html` string, for a numeric badge.
  */
 final readonly class CategoryThumbnail
 {
@@ -68,7 +82,8 @@ final readonly class CategoryThumbnail
         public ?RecentIcon $iconTs = null,
         public ?string $infoDates = null,
         // No real reader yet -- see this class's own docblock.
-        // @phpstan-ignore shipmonk.deadProperty.neverRead
         public ?string $coi = null,
+        public string $representativeFileExt = '',
+        public int $countImages = 0,
     ) {}
 }

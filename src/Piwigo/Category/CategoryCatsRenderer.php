@@ -33,6 +33,7 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Core\Projection\Navbar;
 use Piwigo\Core\RecentIconResolver;
 use Piwigo\Core\RequestMetrics;
+use Piwigo\Core\StringHelper;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
@@ -454,6 +455,8 @@ final readonly class CategoryCatsRenderer
                     iconTs: $iconTs,
                     infoDates: $infoDates,
                     coi: $representativeInfos !== null && is_string($representativeInfos['coi']) ? $representativeInfos['coi'] : null,
+                    representativeFileExt: $representativeInfos !== null ? StringHelper::getExtension($representativeInfos['file']) : '',
+                    countImages: $catCountImages,
                 );
             }
 

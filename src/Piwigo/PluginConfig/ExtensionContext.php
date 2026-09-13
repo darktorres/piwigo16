@@ -29,6 +29,7 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\View;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Db\TypedRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\LangService;
 use Piwigo\Mail\MailService;
@@ -398,6 +399,43 @@ final readonly class ExtensionContext
     public function db(): ExtensionDatabase
     {
         return new ExtensionDatabase($this->entityManager->getConnection(), $this->extensionId);
+    }
+
+    /**
+     * Whether another, separately-named plugin is currently active --
+     * `PluginRegistry::isActive(string $pluginId): bool`'s own real logic,
+     * reached without depending on `PluginRegistry` itself: that class's
+     * own constructor already depends on `ExtensionContextFactory` (to
+     * build the context it hands each plugin's `boot()`), so injecting
+     * `PluginRegistry` here would be a real circular dependency, not just
+     * a style choice. `PluginRegistry::isActive()` is itself just
+     * `$this->repository->getDbPlugins('active', $pluginId) !== []` --
+     * reached here the same way `db()` above reaches `Connection`, via
+     * the already-injected `$entityManager` (safe at `boot()` time for
+     * the same reason `db()` is: the DB connection is already live well
+     * before `PluginRegistry::bootActive()`'s position in the request
+     * pipeline). `PluginEntity`'s own `repositoryClass` mapping is what
+     * makes `TypedRepository::narrow()` here a zero-cost assert rather
+     * than a real cast -- `$entityManager->getRepository(PluginEntity::
+     * class)` already *is* a `PluginRepository` at runtime, matching
+     * `Admin\Maintenance\MaintenanceActionDispatcher`'s own identical
+     * `TypedRepository::narrow($this->entityManager->getRepository(...),
+     * ...Repository::class)` precedent for `SiteRepository`.
+     *
+     * Grounded in a real, recurring legacy idiom, not just
+     * `block_search_13.0.a`'s own `SELECT state FROM PLUGINS_TABLE WHERE
+     * id = 'PWG_Stuffs'` check: `most_downloaded_12.0.a` and
+     * `whois_online_menu_12.0.a` both gate their own registration on the
+     * exact same "is this specific sibling plugin active" check against a
+     * different plugin id. Deliberately plugin-only (a raw `string`, not
+     * `PluginId|ThemeId`) -- no equivalent "is another theme active"
+     * caller exists anywhere in the real theme corpus.
+     */
+    public function isPluginActive(string $pluginId): bool
+    {
+        $repository = TypedRepository::narrow($this->entityManager->getRepository(PluginEntity::class), PluginRepository::class);
+
+        return $repository->getDbPlugins('active', $pluginId) !== [];
     }
 
     /**

@@ -1176,6 +1176,30 @@ final class ExtensionContextTest extends IntegrationTestCase
     }
 
     /**
+     * `block_search_13.0.a`'s own real `SELECT state FROM PLUGINS_TABLE
+     * WHERE id = 'PWG_Stuffs'` check -- `most_downloaded_12.0.a`/
+     * `whois_online_menu_12.0.a` gate their own registration on the exact
+     * same "is this specific sibling plugin active" idiom against a
+     * different id.
+     */
+    public function testIsPluginActiveReflectsTheRealPluginsTableState(): void
+    {
+        $context = $this->buildContext(PluginId::from('any-plugin'));
+        $suffix = uniqid('', false);
+        $activeId = 'zz-active-' . $suffix;
+        $inactiveId = 'zz-inactive-' . $suffix;
+
+        $this->conn->executeStatement(
+            'INSERT INTO plugins (id, state, version) VALUES (?, ?, ?), (?, ?, ?)',
+            [$activeId, 'active', '1.0', $inactiveId, 'inactive', '1.0'],
+        );
+
+        self::assertTrue($context->isPluginActive($activeId));
+        self::assertFalse($context->isPluginActive($inactiveId));
+        self::assertFalse($context->isPluginActive('zz-never-installed-' . $suffix));
+    }
+
+    /**
      * P29.6 (the `modus` theme port): `imageStdParams()` exposes the same
      * shared, already-composed `ImageStdParams` instance the container
      * hands to real production code, needed for a settings page listing

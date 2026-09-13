@@ -567,6 +567,15 @@ file needs to exist inside the image.
   `ext-imap`, `ext-intl`, `ext-libxml`, `ext-mbstring`, `ext-mysqli`,
   `ext-openssl`, `ext-pcntl`, `ext-pgsql`, `ext-session`, `ext-simplexml`,
   `ext-sqlite3`, `ext-zip`, `ext-zlib`; `pcov` for coverage)
+- ExifTool (`libimage-exiftool-perl` on Debian/Ubuntu) -- real photo
+  metadata (EXIF/IPTC/XMP) reads go through `Metadata\ExifTool\
+  ExifToolProcess`, not PHP's own `exif_read_data()`/`iptcparse()` (no
+  XMP support, incomplete tag dictionary, JPEG/TIFF-only). A hard
+  requirement, not optional: `Metadata\MetadataService::getExifData()`/
+  `getIptcData()` throw without it. `ext-exif` above stays required only
+  for `Admin\Image\ImageBackend::getRotationAngle()`'s own narrow,
+  unrelated use (reading just the `Orientation` tag to auto-rotate an
+  upload), which native PHP already serves adequately.
 - Composer 2.x
 - Node 24, bun, [`just`](https://github.com/casey/just)
 - MySQL 9.7 (or MariaDB 12.x / PostgreSQL 18 / SQLite — see the

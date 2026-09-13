@@ -22,6 +22,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\SqlDialect;
+use Piwigo\Metadata\ExifTool\ExifToolProcess;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\UserService;
@@ -116,12 +117,12 @@ final readonly class C13yInternal
             'use_exif' => $this->currentConfig->useExif,
         ];
         foreach ($checks as $value => $enabled) {
-            if ($enabled and (! function_exists('exif_read_data'))) {
+            if ($enabled and (! ExifToolProcess::isAvailable())) {
                 $c13y->addAnomaly(
-                    sprintf($this->lang->t('%s value is not correct file because exif are not supported'), '$conf[\'' . $value . '\']'),
+                    sprintf($this->lang->t('%s value is not correct file because ExifTool is not installed'), '$conf[\'' . $value . '\']'),
                     null,
                     null,
-                    sprintf($this->lang->t('%s must be to set to false in your local/config/config.inc.php file'), '$conf[\'' . $value . '\']')
+                    sprintf($this->lang->t('Install ExifTool, or set %s to false in your local/config/config.inc.php file'), '$conf[\'' . $value . '\']')
           . '<br>' .
           $c13y->getHtlmLinksMoreInfo()
                 );

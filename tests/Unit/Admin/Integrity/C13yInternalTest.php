@@ -18,14 +18,15 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
  * `UpdatesSubControllerTest.php`).
  *
  * Every check here is exercised against this environment's own real,
- * healthy state (a real PHP with the exif extension, a real DB above
+ * healthy state (a real installed `exiftool` binary, a real DB above
  * the required minimum version, real guest/default/webmaster user rows
  * with correct statuses) -- confirmed to add zero anomalies, matching
  * what a real healthy production install also reports. Forcing an
- * actual anomaly would mean faking `function_exists()`/downgrading the
- * real DB version/corrupting real user rows, none of which this class's
- * own thin-checker role justifies. `c13yCorrectionUser()` performs
- * real user-table writes and is not attempted either.
+ * actual anomaly would mean faking `ExifToolProcess::isAvailable()`'s
+ * own `command -v` probe/downgrading the real DB version/corrupting
+ * real user rows, none of which this class's own thin-checker role
+ * justifies. `c13yCorrectionUser()` performs real user-table writes and
+ * is not attempted either.
  */
 function c13yInternalTestSubject(): C13yInternal
 {
@@ -85,7 +86,7 @@ test('c13yVersion adds no anomaly against this environment\'s real, above-minimu
         ->toBe([]);
 });
 
-test('c13yExif adds no anomaly since this environment\'s real exif_read_data function exists', function (): void {
+test('c13yExif adds no anomaly since this environment has ExifTool installed', function (): void {
     CurrentConfigTestFactory::get()->showExif = true;
     CurrentConfigTestFactory::get()->useExif = true;
     $checkIntegrity = c13yInternalTestCheckIntegrity();

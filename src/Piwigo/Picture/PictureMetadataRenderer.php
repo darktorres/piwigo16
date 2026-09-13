@@ -10,6 +10,7 @@ use Piwigo\Controller\Projection\PictureElement;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
+use Piwigo\Metadata\ExifTool\ExifToolProcess;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Picture\Projection\MetadataPanel;
@@ -34,61 +35,76 @@ final class PictureMetadataRenderer
 
         $metadata = null;
 
-        if (($currentConfig->showExif) and function_exists('exif_read_data')) {
-            $showExifFields = $currentConfig->showExifFields;
-
-            $exifMapping = [];
-            foreach ($showExifFields as $field) {
-                $exifMapping[$field] = $field;
-            }
-
-            $exif = $metadataService->getExifData($picture->srcImage->getPath(), $exifMapping);
-
-            if (count($exif) > 0) {
-                $lines = [];
-
-                foreach ($showExifFields as $field) {
-                    if (! str_contains($field, ';')) {
-                        if (isset($exif[$field]) and ! is_array($exif[$field])) {
-                            $key = $field;
-                            if ($lang->has('exif_field_' . $field)) {
-                                $key = $lang->t('exif_field_' . $field);
-                            }
-                            $lines[$key] = $exif[$field];
-                        }
-                    } else {
-                        $tokens = explode(';', $field);
-                        if (isset($exif[$field]) and ! is_array($exif[$field])) {
-                            $key = $tokens[1];
-                            if ($lang->has('exif_field_' . $key)) {
-                                $key = $lang->t('exif_field_' . $key);
-                            }
-                            $lines[$key] = $exif[$field];
-                        }
-                    }
-                }
-                $metadata = [new MetadataPanel(title: $lang->t('EXIF Metadata'), lines: $lines)];
-            }
+        // Checked once, up front, for both panels below -- unlike sync
+        // (which should fail loudly for an admin when exiftool is
+        // missing), a visitor's picture page should never 500 over it:
+        // skip building an ExifToolProcess entirely (no panel) rather than
+        // constructing one and catching its throw.
+        if (! ExifToolProcess::isAvailable()) {
+            return null;
         }
 
-        if ($currentConfig->showIptc) {
-            $showIptcMapping = $currentConfig->showIptcMapping;
+        $exifTool = ($currentConfig->showExif || $currentConfig->showIptc) ? new ExifToolProcess() : null;
 
-            $iptc = $metadataService->getIptcData($picture->srcImage->getPath(), $showIptcMapping, ', ');
+        try {
+            if ($currentConfig->showExif && $exifTool instanceof ExifToolProcess) {
+                $showExifFields = $currentConfig->showExifFields;
 
-            if (count($iptc) > 0) {
-                $lines = [];
-
-                foreach ($iptc as $field => $value) {
-                    $key = $field;
-                    if ($lang->has($field)) {
-                        $key = $lang->t($field);
-                    }
-                    $lines[$key] = $value;
+                $exifMapping = [];
+                foreach ($showExifFields as $field) {
+                    $exifMapping[$field] = $field;
                 }
-                $metadata ??= [];
-                $metadata[] = new MetadataPanel(title: $lang->t('IPTC Metadata'), lines: $lines);
+
+                $exif = $metadataService->getExifData($picture->srcImage->getPath(), $exifMapping, $exifTool);
+
+                if (count($exif) > 0) {
+                    $lines = [];
+
+                    foreach ($showExifFields as $field) {
+                        if (! str_contains($field, ';')) {
+                            if (isset($exif[$field]) and ! is_array($exif[$field])) {
+                                $key = $field;
+                                if ($lang->has('exif_field_' . $field)) {
+                                    $key = $lang->t('exif_field_' . $field);
+                                }
+                                $lines[$key] = $exif[$field];
+                            }
+                        } else {
+                            $tokens = explode(';', $field);
+                            if (isset($exif[$field]) and ! is_array($exif[$field])) {
+                                $key = $tokens[1];
+                                if ($lang->has('exif_field_' . $key)) {
+                                    $key = $lang->t('exif_field_' . $key);
+                                }
+                                $lines[$key] = $exif[$field];
+                            }
+                        }
+                    }
+                    $metadata = [new MetadataPanel(title: $lang->t('EXIF Metadata'), lines: $lines)];
+                }
             }
+
+            if ($currentConfig->showIptc && $exifTool instanceof ExifToolProcess) {
+                $showIptcMapping = $currentConfig->showIptcMapping;
+
+                $iptc = $metadataService->getIptcData($picture->srcImage->getPath(), $showIptcMapping, $exifTool, ', ');
+
+                if (count($iptc) > 0) {
+                    $lines = [];
+
+                    foreach ($iptc as $field => $value) {
+                        $key = $field;
+                        if ($lang->has($field)) {
+                            $key = $lang->t($field);
+                        }
+                        $lines[$key] = $value;
+                    }
+                    $metadata ??= [];
+                    $metadata[] = new MetadataPanel(title: $lang->t('IPTC Metadata'), lines: $lines);
+                }
+            }
+        } finally {
+            $exifTool?->close();
         }
 
         return $metadata;

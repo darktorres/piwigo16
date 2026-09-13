@@ -38,9 +38,12 @@ FROM dunglas/frankenphp:1-php8.5 AS production
 # (jcupitt/vips) is pure FFI against the runtime .so, not a compiled
 # extension, so it needs no -dev headers here at all — add the plain
 # libvips runtime package (not -dev) + php-ffi when P19 actually lands it.
+# libimage-exiftool-perl (real ExifTool, driven via Metadata\ExifTool\
+# ExifToolProcess) is a genuine runtime dependency, not a build-time -dev
+# header package -- kept out of the apt-get purge below on purpose.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libicu-dev libzip-dev libwebp-dev libjpeg62-turbo-dev libpng-dev \
-        libxml2-dev libmagickwand-dev \
+        libxml2-dev libmagickwand-dev libimage-exiftool-perl \
     && docker-php-ext-configure gd --with-jpeg --with-webp \
     && docker-php-ext-install -j"$(nproc)" calendar gd intl mysqli pcntl zip \
     && pecl install imagick redis apcu \
@@ -99,10 +102,11 @@ ENTRYPOINT ["bun", "run", "test"]
 FROM php:8.5-apache AS production-apache
 
 # Same already-built-in set as the production stage (verified via `php -m` —
-# both images share the same underlying official php build).
+# both images share the same underlying official php build). Same
+# libimage-exiftool-perl runtime-dependency reasoning as that stage too.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libicu-dev libzip-dev libwebp-dev libjpeg62-turbo-dev libpng-dev \
-        libxml2-dev libmagickwand-dev \
+        libxml2-dev libmagickwand-dev libimage-exiftool-perl \
     && docker-php-ext-configure gd --with-jpeg --with-webp \
     && docker-php-ext-install -j"$(nproc)" calendar gd intl mysqli pcntl zip \
     && pecl install imagick redis apcu \

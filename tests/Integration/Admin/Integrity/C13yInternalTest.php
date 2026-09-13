@@ -16,6 +16,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\TypedRepository;
 use Piwigo\Lang\Translator;
+use Piwigo\Metadata\ExifTool\ExifToolProcess;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
@@ -77,10 +78,13 @@ afterEach(function (): void {
 // c13yVersion()/c13yExif() are deterministic in THIS environment: the app
 // itself couldn't be running at all if PHP_VERSION/the real MySQL version
 // didn't already satisfy AppInfo::REQUIRED_PHP_VERSION/SqlDialect::
-// REQUIRED_MYSQL_VERSION, and exif_read_data() is confirmed available here
-// (see ImageBackend's own getRotationAngle() tests) -- so both real checks
-// below are provably "zero anomalies" in this suite's own environment,
-// not just today's incidental happy path.
+// REQUIRED_MYSQL_VERSION, and ExifToolProcess::isAvailable() is confirmed
+// true here (a real installed `exiftool` binary -- a separate, independent
+// fact from native exif_read_data()'s own availability, which ImageBackend's
+// own getRotationAngle() tests confirm separately for its own, deliberately
+// unrelated, use case) -- so both real checks below are provably "zero
+// anomalies" in this suite's own environment, not just today's incidental
+// happy path.
 
 test('c13yVersion adds no anomaly when the running PHP/MySQL already satisfy the app\'s own minimum versions', function (): void {
     $c13y = c13yInternalTestCheckIntegrity();
@@ -91,8 +95,8 @@ test('c13yVersion adds no anomaly when the running PHP/MySQL already satisfy the
         ->toBe([]);
 });
 
-test('c13yExif adds no anomaly when exif_read_data() is available', function (): void {
-    expect(function_exists('exif_read_data'))
+test('c13yExif adds no anomaly when ExifTool is available', function (): void {
+    expect(ExifToolProcess::isAvailable())
         ->toBeTrue();
 
     $c13y = c13yInternalTestCheckIntegrity();
@@ -103,7 +107,7 @@ test('c13yExif adds no anomaly when exif_read_data() is available', function ():
 });
 
 // c13yVersion()'s and c13yExif()'s own addAnomaly()-calling branches
-// (the "PHP/MySQL version too low" and "exif extension missing" true
+// (the "PHP/MySQL version too low" and "ExifTool not installed" true
 // paths) are not exercised anywhere in this file, and can't genuinely be:
 // version_compare() only takes the anomaly path if the running PHP
 // predates AppInfo::REQUIRED_PHP_VERSION ('8.5.0'), which this project's
@@ -112,13 +116,11 @@ test('c13yExif adds no anomaly when exif_read_data() is available', function ():
 // knob or fixture that flips this without editing the constant itself
 // (not a bug, so out of scope here). SqlDialect::
 // REQUIRED_MYSQL_VERSION ('8.4.6') is equally unreachable here: this
-// environment's real MySQL server (8.4.10) is already above that floor,
-// so it can never report a version below it. c13yExif()'s branch is the exact same
-// "verified untestable without breaking a real runtime guarantee" shape
-// tests/Integration/MetadataServiceTest.php already documents for its own
-// exif_read_data() guard: function_exists() can't be forced to lie about
-// a real, loaded extension from inside a test process, and exif is loaded
-// in this environment.
+// environment's real MySQL server is already above that floor, so it can
+// never report a version below it. c13yExif()'s branch can't be forced
+// either: ExifToolProcess::isAvailable() memoizes its own `command -v`
+// probe result for the whole process, and exiftool really is installed in
+// this environment -- there is no config knob to make it lie.
 
 afterEach(function (): void {
     CurrentConfigTestFactory::get()->guestId = 2;

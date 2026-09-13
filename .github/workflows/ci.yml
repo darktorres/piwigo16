@@ -40,6 +40,10 @@ jobs:
           coverage: none
           extensions: ${{ env.PHP_EXTENSIONS }}
       - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      # Metadata\ExifTool\ExifToolProcess (Unit-suite tests included) needs
+      # a real `exiftool` binary -- installed explicitly rather than
+      # assumed pre-bundled on the runner image.
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libimage-exiftool-perl
       - run: composer test
 
   ecs:
@@ -661,6 +665,10 @@ jobs:
           coverage: none
           extensions: ${{ env.PHP_EXTENSIONS }}
       - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+      # Metadata\ExifTool\ExifToolProcess needs a real `exiftool` binary --
+      # installed explicitly rather than assumed pre-bundled on the runner
+      # image (same reasoning as the pest job above).
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libimage-exiftool-perl
       - name: Provision piwigo_test from the committed fixture
         run: |
           mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-17.0.sql

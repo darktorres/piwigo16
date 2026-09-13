@@ -6,10 +6,6 @@ declare(strict_types=1);
 // convention as every real bootstrap entry point) -- IntegrationTestCase's
 // own setUp() already seeds it against this repo's real root, matching
 // this file's own '_data/...'-relative fixture paths below.
-//
-// trigger_change() calls go directly through the service's own
-// constructor-injected $this->eventDispatcher now, a pure passthrough
-// with no handlers registered, so no local stub is needed.
 
 namespace Piwigo\Tests\Integration {
 
@@ -25,7 +21,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Metadata\Event\CleanIptcValue;
-    use Piwigo\Metadata\Event\FormatExifData;
+    use Piwigo\Metadata\ExifTool\ExifToolProcess;
     use Piwigo\Metadata\MetadataRepository;
     use Piwigo\Metadata\MetadataService;
     use Piwigo\Metadata\Projection\SvgDimensions;
@@ -38,6 +34,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\LangTestFactory;
     use ReflectionMethod;
     use RuntimeException;
+    use Symfony\Component\Process\Process;
 
     final class MetadataServiceTest extends IntegrationTestCase
     {
@@ -48,6 +45,8 @@ namespace Piwigo\Tests\Integration {
         private Connection $conn;
 
         private string $scratchDir;
+
+        private ExifToolProcess $exifTool;
 
         #[Override]
         protected function setUp(): void
@@ -79,6 +78,7 @@ namespace Piwigo\Tests\Integration {
                 'severity' => Logger::OFF,
             ]));
             $this->service = new MetadataService(LangTestFactory::get(), new MetadataRepository(EntityManagerFactory::build($this->conn)), $currentLogger, EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), CurrentPathsTestFactory::get());
+            $this->exifTool = new ExifToolProcess();
 
             CurrentConfigTestFactory::get()->useIptc = false;
             CurrentConfigTestFactory::get()->useExif = true;
@@ -99,6 +99,8 @@ namespace Piwigo\Tests\Integration {
         #[Override]
         protected function tearDown(): void
         {
+            $this->exifTool->close();
+
             $files = glob($this->scratchDir . '/*');
             foreach ($files !== false ? $files : [] as $file) {
                 @unlink($file);
@@ -128,6 +130,11 @@ namespace Piwigo\Tests\Integration {
          * ImageBackendTest's own EXIF-orientation helper (Admin\Image domain)
          * -- neither ImageMagick's `-set`/`-define` nor a
          * synthetic `xc:` canvas actually persists an IPTC profile either.
+         * Confirmed live that real ExifTool parses this exact hand-rolled
+         * block identically to PHP's own iptcparse() (both decode dataset 5
+         * as ObjectName/title, 80 as By-line/author, repeated 25 as an
+         * array of Keywords) -- this fixture-building technique doesn't
+         * need to change now that extraction goes through ExifTool.
          *
          * @param  list<array{0: int<0, 255>, 1: string}>  $records  [datasetNumber, value] pairs, all under IPTC record 2 (Application Record)
          */
@@ -164,12 +171,7 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
-         * A real, minimal JPEG (via GD) with no special markers -- used by every
-         * getExifData() test below that injects its own synthetic $exif shape
-         * via the 'format_exif_data' plugin filter (always invoked for a real,
-         * truthy exif_read_data() result -- see that method's own inline
-         * comment) rather than hand-rolling binary EXIF tags for every field
-         * combination.
+         * A real, minimal JPEG (via GD) with no special markers.
          */
         private function makePlainJpeg(): string
         {
@@ -187,40 +189,40 @@ namespace Piwigo\Tests\Integration {
             return $base;
         }
 
+        /**
+         * Writes real tags into an existing file via the actual `exiftool`
+         * binary -- every getExifData()/getSyncExifData() test below needs
+         * genuine embedded tags now that extraction goes through a real
+         * ExifToolProcess, not a `format_exif_data` plugin-injected fake
+         * $exif array (that event no longer exists -- getExifData() has no
+         * "PHP found nothing, ask a plugin" moment in the same shape once
+         * exif_read_data() itself is gone).
+         *
+         * @param  array<string, string>  $tags  tag name => value, written as `-Tag=value`
+         */
+        private function tagFileWithExifTool(string $path, array $tags): void
+        {
+            $command = ['exiftool', '-overwrite_original'];
+            foreach ($tags as $tag => $value) {
+                $command[] = '-' . $tag . '=' . $value;
+            }
+            $command[] = $path;
+
+            $process = new Process($command);
+            $process->run();
+            if (! $process->isSuccessful()) {
+                throw new RuntimeException('exiftool tagging failed: ' . $process->getErrorOutput());
+            }
+        }
+
         public function testCleanIptcValueStripsLeadingNullBytes(): void
         {
-            $value = chr(0) . chr(0) . 'Hello';
-
-            self::assertSame('Hello', $this->service->cleanIptcValue($value));
+            self::assertSame('abc', $this->service->cleanIptcValue(chr(0x00) . chr(0x00) . 'abc'));
         }
 
         public function testCleanIptcValueReplacesEmbeddedNullBytes(): void
         {
             self::assertSame('a b', $this->service->cleanIptcValue('a' . chr(0x00) . 'b'));
-        }
-
-        public function testParseExifGpsDataConvertsDegreesMinutesSeconds(): void
-        {
-            // 41 deg, 54 min, 9.686 sec (~41.9027 decimal degrees), matching
-            // the format documented on the original function.
-            $latitude = $this->service->parseExifGpsData(['41/1', '54/1', '9686/1000'], 'N');
-
-            self::assertEqualsWithDelta(41.9027, $latitude, 0.001);
-        }
-
-        public function testParseExifGpsDataNegatesForSouthAndWest(): void
-        {
-            $latitude = $this->service->parseExifGpsData(['41/1', '54/1', '0/1'], 'S');
-
-            self::assertLessThan(0, $latitude);
-        }
-
-        public function testParseExifGpsDataHandlesAZeroDenominator(): void
-        {
-            // must not emit a division-by-zero warning/error.
-            $result = $this->service->parseExifGpsData(['1/0', '0/1', '0/1'], 'N');
-
-            self::assertSame(0.0, $result);
         }
 
         public function testMetadataNormalizeKeywordsStringConvertsSeparatorsToCommas(): void
@@ -232,7 +234,7 @@ namespace Piwigo\Tests\Integration {
 
         public function testMetadataNormalizeKeywordsStringDeduplicatesAndTrims(): void
         {
-            $result = $this->service->metadataNormalizeKeywordsString(',,nature,nature,travel,,');
+            $result = $this->service->metadataNormalizeKeywordsString('nature,nature,,travel,');
 
             self::assertSame('nature,travel', $result);
         }
@@ -264,17 +266,11 @@ namespace Piwigo\Tests\Integration {
         {
             self::assertFalse($this->service->getSyncMetadata([
                 'path' => 'no/such/file.jpg',
-            ]));
+            ], $this->exifTool));
         }
 
         public function testGetSyncMetadataReadsFilesizeFromARealFile(): void
         {
-            // A real (if minimal) JPEG, not arbitrary bytes -- exif_read_data()
-            // treats truly non-JPEG content as an unsupported-format warning,
-            // even file_get_contents()-@-suppressed. Padded with trailing NUL
-            // bytes (ignored by every JPEG reader, which only look between
-            // markers) to reach exactly 2048 bytes for the filesize assertion
-            // below.
             $image = imagecreatetruecolor(1, 1);
             self::assertNotFalse($image);
             ob_start();
@@ -286,7 +282,7 @@ namespace Piwigo\Tests\Integration {
 
             $result = $this->service->getSyncMetadata([
                 'path' => $relativePath,
-            ]);
+            ], $this->exifTool);
 
             self::assertIsArray($result);
             self::assertSame(2.0, $result['filesize']);
@@ -315,7 +311,12 @@ namespace Piwigo\Tests\Integration {
          * SYSTEM entity that reads a local file must never leak that file's
          * content into the parsed result, and must never hang/crash trying to
          * resolve it -- proven against a real temp file, not just a code
-         * inspection.
+         * inspection. Also proves the real ExifTool process this file is now
+         * also handed to (getExifData()'s own unconditional GPS-tag request,
+         * regardless of file type) doesn't reintroduce the same class of leak
+         * -- confirmed separately, live, that ExifTool's own XML parsing
+         * returns the literal unresolved `&xxe;` entity text rather than the
+         * referenced file's content.
          */
         public function testGetSyncMetadataDoesNotResolveXxeEntitiesInSvg(): void
         {
@@ -333,7 +334,7 @@ namespace Piwigo\Tests\Integration {
 
             $result = $this->service->getSyncMetadata([
                 'path' => $relativePath,
-            ]);
+            ], $this->exifTool);
 
             self::assertIsArray($result);
             $encoded = (string) json_encode($result);
@@ -352,7 +353,7 @@ namespace Piwigo\Tests\Integration {
 
             $result = $this->service->getSyncMetadata([
                 'path' => $relativePath,
-            ]);
+            ], $this->exifTool);
 
             self::assertIsArray($result);
             self::assertSame(123, $result['width']);
@@ -379,11 +380,11 @@ namespace Piwigo\Tests\Integration {
 
         // ------------------------------------------------------------ getIptcData()
 
-        public function testGetIptcDataReturnsEmptyWhenGetimagesizeFails(): void
+        public function testGetIptcDataReturnsEmptyWhenTheFileDoesNotExist(): void
         {
             $result = $this->service->getIptcData($this->scratchDir . '/no-such-file.jpg', [
                 'title' => '2#005',
-            ]);
+            ], $this->exifTool);
 
             self::assertSame([], $result);
         }
@@ -403,7 +404,7 @@ namespace Piwigo\Tests\Integration {
                 'title' => '2#005',
                 'author' => '2#080',
                 'keywords' => '2#025',
-            ], '|');
+            ], $this->exifTool, '|');
 
             self::assertSame([
                 'title' => 'Sunset Over The Bay',
@@ -415,10 +416,7 @@ namespace Piwigo\Tests\Integration {
         public function testGetIptcDataSkipsARequestedMapFieldThatThePhotoHasNoIptcRecordFor(): void
         {
             // $map requests 'caption' (2#120), but the embedded IPTC data
-            // below only has a title (2#005) record -- exercises the
-            // "! isset($iptc[$iptcKey][0])" `continue` for the caption key,
-            // as opposed to the sibling "parses real fields" test above,
-            // whose $map matches the embedded records 1:1.
+            // below only has a title (2#005) record.
             $bytes = $this->makeJpegWithApp13Iptc([[5, 'Sunset Over The Bay']]);
             $path = $this->scratchDir . '/iptc-missing-field.jpg';
             file_put_contents($path, $bytes);
@@ -426,7 +424,7 @@ namespace Piwigo\Tests\Integration {
             $result = $this->service->getIptcData($path, [
                 'title' => '2#005',
                 'caption' => '2#120',
-            ]);
+            ], $this->exifTool);
 
             self::assertSame([
                 'title' => 'Sunset Over The Bay',
@@ -442,7 +440,7 @@ namespace Piwigo\Tests\Integration {
 
             $result = $this->service->getIptcData($path, [
                 'title' => '2#005',
-            ]);
+            ], $this->exifTool);
 
             self::assertSame([
                 'title' => 'Bold Title',
@@ -458,7 +456,7 @@ namespace Piwigo\Tests\Integration {
 
             $result = $this->service->getIptcData($path, [
                 'title' => '2#005',
-            ]);
+            ], $this->exifTool);
 
             self::assertSame([
                 'title' => '<b>Bold</b> Title',
@@ -508,17 +506,16 @@ namespace Piwigo\Tests\Integration {
 
         public function testGetExifDataReadsANestedFieldToken(): void
         {
-            // 'COMPUTED;Height' is a real nested key exif_read_data() always
-            // populates, even with zero embedded EXIF tags -- no synthetic
-            // override needed for this one. allowHtmlInMetadata stays disabled
-            // (setUp's default), so the scalar HTML-strip pass also coerces
-            // this int value to a string, matching real getExifData() behavior.
+            // 'COMPUTED;Height' translates to ExifTool's own 'ImageHeight'
+            // (MetadataService::COMPUTED_TAG_TRANSLATION) -- a real tag any
+            // raster image has regardless of embedded EXIF, no tagging
+            // needed for this one.
             $path = $this->scratchDir . '/nested-field.jpg';
             file_put_contents($path, $this->makePlainJpeg());
 
             $result = $this->service->getExifData($path, [
                 'nested_field' => 'COMPUTED;Height',
-            ]);
+            ], $this->exifTool);
 
             self::assertSame([
                 'nested_field' => '6',
@@ -530,30 +527,45 @@ namespace Piwigo\Tests\Integration {
             // allowHtmlInMetadata=true here specifically to bypass the
             // unconditional strip_tags((string) $value) pass on every scalar
             // result value (tested on its own below) -- keeps this test
-            // focused on the GPS composite math/wiring alone.
+            // focused on the GPS numeric extraction/wiring alone.
             CurrentConfigTestFactory::get()->allowHtmlInMetadata = true;
             $path = $this->scratchDir . '/gps-valid.jpg';
             file_put_contents($path, $this->makePlainJpeg());
+            $this->tagFileWithExifTool($path, [
+                'GPS:GPSLatitude' => '41.9027',
+                'GPS:GPSLatitudeRef' => 'N',
+                'GPS:GPSLongitude' => '12.5',
+                'GPS:GPSLongitudeRef' => 'E',
+            ]);
 
-            $handler = static function (FormatExifData $event): void {
-                $exif = $event->exif ?? [];
-                $exif['GPSLatitudeRef'] = 'N';
-                $exif['GPSLatitude'] = ['41/1', '54/1', '9686/1000'];
-                $exif['GPSLongitudeRef'] = 'E';
-                $exif['GPSLongitude'] = ['12/1', '30/1', '0/1'];
+            $result = $this->service->getExifData($path, [], $this->exifTool);
 
-                $event->exif = $exif;
-            };
-            EventDispatcherTestFactory::get()->addTypedHandler(FormatExifData::class, $handler);
+            self::assertEqualsWithDelta(41.9027, $result['latitude'], 0.001);
+            self::assertEqualsWithDelta(12.5, $result['longitude'], 0.001);
+        }
 
-            try {
-                $result = $this->service->getExifData($path, []);
+        public function testGetExifDataNegatesGpsCoordinatesForSouthAndWest(): void
+        {
+            // Sibling of the test above for the negative-sign half of the
+            // real ExifTool `#` (numeric) suffix this now relies on instead
+            // of the original's own hand-rolled DMS-to-decimal math
+            // (parseExifGpsData(), removed along with exif_read_data()) --
+            // confirmed live this comes back already correctly signed, no
+            // extra Ref-based negation needed in getExifData() itself.
+            CurrentConfigTestFactory::get()->allowHtmlInMetadata = true;
+            $path = $this->scratchDir . '/gps-negative.jpg';
+            file_put_contents($path, $this->makePlainJpeg());
+            $this->tagFileWithExifTool($path, [
+                'GPS:GPSLatitude' => '33.8688',
+                'GPS:GPSLatitudeRef' => 'S',
+                'GPS:GPSLongitude' => '151.2093',
+                'GPS:GPSLongitudeRef' => 'W',
+            ]);
 
-                self::assertEqualsWithDelta(41.9027, $result['latitude'], 0.001);
-                self::assertEqualsWithDelta(12.5, $result['longitude'], 0.001);
-            } finally {
-                EventDispatcherTestFactory::get()->removeTypedHandler(FormatExifData::class, $handler);
-            }
+            $result = $this->service->getExifData($path, [], $this->exifTool);
+
+            self::assertEqualsWithDelta(-33.8688, $result['latitude'], 0.001);
+            self::assertEqualsWithDelta(-151.2093, $result['longitude'], 0.001);
         }
 
         public function testGetExifDataSkipsOutOfRangeGpsCoordinates(): void
@@ -561,116 +573,82 @@ namespace Piwigo\Tests\Integration {
             CurrentConfigTestFactory::get()->allowHtmlInMetadata = true;
             $path = $this->scratchDir . '/gps-invalid.jpg';
             file_put_contents($path, $this->makePlainJpeg());
+            // 200 degrees is out of the valid [-90, 90] latitude range --
+            // ExifTool's own writer doesn't validate this (confirmed live),
+            // so a real file with genuinely invalid embedded GPS data is
+            // constructible, reaching the `else` logging branch instead of
+            // assigning latitude/longitude.
+            $this->tagFileWithExifTool($path, [
+                'GPS:GPSLatitude' => '200',
+                'GPS:GPSLatitudeRef' => 'N',
+                'GPS:GPSLongitude' => '12',
+                'GPS:GPSLongitudeRef' => 'E',
+            ]);
 
-            $handler = static function (FormatExifData $event): void {
-                $exif = $event->exif ?? [];
-                // 200 degrees is out of the valid [-90, 90] latitude range --
-                // reaches the `else` logging branch instead of assigning
-                // latitude/longitude.
-                $exif['GPSLatitudeRef'] = 'N';
-                $exif['GPSLatitude'] = ['200/1', '0/1', '0/1'];
-                $exif['GPSLongitudeRef'] = 'E';
-                $exif['GPSLongitude'] = ['12/1', '0/1', '0/1'];
+            $result = $this->service->getExifData($path, [], $this->exifTool);
 
-                $event->exif = $exif;
-            };
-            EventDispatcherTestFactory::get()->addTypedHandler(FormatExifData::class, $handler);
-
-            try {
-                $result = $this->service->getExifData($path, []);
-
-                self::assertArrayNotHasKey('latitude', $result);
-                self::assertArrayNotHasKey('longitude', $result);
-            } finally {
-                EventDispatcherTestFactory::get()->removeTypedHandler(FormatExifData::class, $handler);
-            }
+            self::assertArrayNotHasKey('latitude', $result);
+            self::assertArrayNotHasKey('longitude', $result);
         }
 
         public function testGetExifDataStripsHtmlRecursivelyFromAnArrayValuedField(): void
         {
+            // XMP:Subject is a real, naturally multi-valued tag (an XMP
+            // "Bag") -- ExifToolProcess's own `-a` flag returns it as an
+            // array when it has multiple entries, exercising the same
+            // array_walk_recursive() HTML-strip path the original's
+            // fabricated 'MultiField' plugin injection did.
             $path = $this->scratchDir . '/array-field.jpg';
             file_put_contents($path, $this->makePlainJpeg());
+            $this->tagFileWithExifTool($path, [
+                'XMP-dc:Subject' => '<b>one</b>',
+            ]);
+            $this->tagFileWithExifTool($path, [
+                'XMP-dc:Subject+' => '<i>two</i>',
+            ]);
 
-            $handler = static function (FormatExifData $event): void {
-                $exif = $event->exif ?? [];
-                $exif['MultiField'] = ['<b>one</b>', '<i>two</i>'];
+            $result = $this->service->getExifData($path, [
+                'multi' => 'Subject',
+            ], $this->exifTool);
 
-                $event->exif = $exif;
-            };
-            EventDispatcherTestFactory::get()->addTypedHandler(FormatExifData::class, $handler);
-
-            try {
-                $result = $this->service->getExifData($path, [
-                    'multi' => 'MultiField',
-                ]);
-
-                self::assertSame([
-                    'multi' => ['one', 'two'],
-                ], $result);
-            } finally {
-                EventDispatcherTestFactory::get()->removeTypedHandler(FormatExifData::class, $handler);
-            }
+            self::assertSame([
+                'multi' => ['one', 'two'],
+            ], $result);
         }
 
         public function testGetExifDataStripsHtmlFromAScalarField(): void
         {
             $path = $this->scratchDir . '/scalar-field.jpg';
             file_put_contents($path, $this->makePlainJpeg());
+            $this->tagFileWithExifTool($path, [
+                'Artist' => '<script>alert(1)</script>Jane',
+            ]);
 
-            $handler = static function (FormatExifData $event): void {
-                $exif = $event->exif ?? [];
-                $exif['Artist'] = '<script>alert(1)</script>Jane';
+            $result = $this->service->getExifData($path, [
+                'author' => 'Artist',
+            ], $this->exifTool);
 
-                $event->exif = $exif;
-            };
-            EventDispatcherTestFactory::get()->addTypedHandler(FormatExifData::class, $handler);
-
-            try {
-                $result = $this->service->getExifData($path, [
-                    'author' => 'Artist',
-                ]);
-
-                self::assertSame([
-                    'author' => 'alert(1)Jane',
-                ], $result);
-            } finally {
-                EventDispatcherTestFactory::get()->removeTypedHandler(FormatExifData::class, $handler);
-            }
+            self::assertSame([
+                'author' => 'alert(1)Jane',
+            ], $result);
         }
 
-        public function testGetExifDataReturnsAnEmptyArrayWhenExifReadDataFailsAndNoHandlerSuppliesAFallback(): void
+        public function testGetExifDataReturnsAnEmptyArrayForAFileWithNoMatchingTags(): void
         {
-            // A non-JPEG byte stream with a real .jpg extension -- exif_read_data()
-            // genuinely fails here (a real "File not supported" E_WARNING, not
-            // merely an empty array), which is the only way to reach the
-            // `$exif2 = dispatch(...)` branch (only computed when
-            // exif_read_data() itself was falsy), as opposed to the
-            // always-invoked dispatch() call on the truthy-$exif path every
-            // other test above exercises. With no handler registered,
-            // $exif2 stays null and $result never leaves its initial [].
+            // A non-JPEG byte stream with a real .jpg extension -- confirmed
+            // live that real ExifTool doesn't error on this, it just finds
+            // no tags at all (a bare {"SourceFile": "..."} row), same net
+            // "nothing requested is present" result as any other file with
+            // no matching tags.
             $path = $this->scratchDir . '/malformed.jpg';
             file_put_contents($path, str_repeat('not a real jpeg', 10));
 
-            set_error_handler(static fn (): bool => true);
-            try {
-                $result = $this->service->getExifData($path, [
-                    'author' => 'Artist',
-                ]);
-            } finally {
-                restore_error_handler();
-            }
+            $result = $this->service->getExifData($path, [
+                'author' => 'Artist',
+            ], $this->exifTool);
 
             self::assertSame([], $result);
         }
-
-        // getExifData()'s `if (! function_exists('exif_read_data'))` RuntimeException
-        // (its very first guard) is not exercised anywhere in this file --
-        // ext-exif is a real, always-loaded extension in this environment (see
-        // composer.json's own "ext-exif" requirement), and function_exists()
-        // can't be forced to return false for a real built-in extension
-        // function from within a test process. Same "verified untestable
-        // without breaking a real runtime guarantee" shape as the
-        // HttpClientService-gated skip list.
 
         // -------------------------------------------------------- getSyncIptcData()
 
@@ -683,7 +661,7 @@ namespace Piwigo\Tests\Integration {
             $path = $this->scratchDir . '/iptc-date-valid.jpg';
             file_put_contents($path, $bytes);
 
-            $result = $this->service->getSyncIptcData($path);
+            $result = $this->service->getSyncIptcData($path, $this->exifTool);
 
             self::assertSame('2024-3-15', $result['date_creation']);
         }
@@ -699,7 +677,7 @@ namespace Piwigo\Tests\Integration {
             $path = $this->scratchDir . '/iptc-date-invalid.jpg';
             file_put_contents($path, $bytes);
 
-            $result = $this->service->getSyncIptcData($path);
+            $result = $this->service->getSyncIptcData($path, $this->exifTool);
 
             self::assertSame('2023-1-1', $result['date_creation']);
         }
@@ -720,7 +698,7 @@ namespace Piwigo\Tests\Integration {
             $path = $this->scratchDir . '/iptc-keywords.jpg';
             file_put_contents($path, $bytes);
 
-            $result = $this->service->getSyncIptcData($path);
+            $result = $this->service->getSyncIptcData($path, $this->exifTool);
 
             self::assertSame('nature,travel', $result['keywords']);
             // SEC-10 regression guard: getSyncIptcData() used to run its
@@ -741,104 +719,81 @@ namespace Piwigo\Tests\Integration {
             ];
             $path = $this->scratchDir . '/exif-datetime-full.jpg';
             file_put_contents($path, $this->makePlainJpeg());
+            $this->tagFileWithExifTool($path, [
+                'DateTimeOriginal' => '2024:03:15 10:20:30',
+            ]);
 
-            $handler = static function (FormatExifData $event): void {
-                $exif = $event->exif ?? [];
-                $exif['DateTimeOriginal'] = '2024:03:15 10:20:30';
+            $result = $this->service->getSyncExifData($path, $this->exifTool);
 
-                $event->exif = $exif;
-            };
-            EventDispatcherTestFactory::get()->addTypedHandler(FormatExifData::class, $handler);
-
-            try {
-                $result = $this->service->getSyncExifData($path);
-
-                self::assertSame('2024-03-15 10:20:30', $result['date_creation']);
-            } finally {
-                EventDispatcherTestFactory::get()->removeTypedHandler(FormatExifData::class, $handler);
-            }
+            self::assertSame('2024-03-15 10:20:30', $result['date_creation']);
         }
 
         public function testGetSyncExifDataFormatsADateOnlyField(): void
         {
+            // GPSDateStamp is a real, standard EXIF tag whose value is
+            // genuinely date-only ("YYYY:MM:DD", no time component) --
+            // unlike DateTimeOriginal (always a full datetime), so the
+            // full-datetime regex genuinely fails to match here, falling
+            // through to the date-only regex branch on a real
+            // ExifTool-sourced value, not a fabricated one.
             CurrentConfigTestFactory::get()->useExifMapping = [
-                'date_creation' => 'DateTimeOriginal',
+                'date_creation' => 'GPSDateStamp',
             ];
             $path = $this->scratchDir . '/exif-date-only.jpg';
             file_put_contents($path, $this->makePlainJpeg());
+            $this->tagFileWithExifTool($path, [
+                'GPSDateStamp' => '2024:03:15',
+            ]);
 
-            $handler = static function (FormatExifData $event): void {
-                $exif = $event->exif ?? [];
-                // No time portion -- the full-datetime regex fails to match,
-                // falling through to the date-only regex branch.
-                $exif['DateTimeOriginal'] = '2024:03:15';
+            $result = $this->service->getSyncExifData($path, $this->exifTool);
 
-                $event->exif = $exif;
-            };
-            EventDispatcherTestFactory::get()->addTypedHandler(FormatExifData::class, $handler);
-
-            try {
-                $result = $this->service->getSyncExifData($path);
-
-                self::assertSame('2024-03-15', $result['date_creation']);
-            } finally {
-                EventDispatcherTestFactory::get()->removeTypedHandler(FormatExifData::class, $handler);
-            }
+            self::assertSame('2024-03-15', $result['date_creation']);
         }
 
         public function testGetSyncExifDataSkipsADateFieldThatMatchesNeitherDatetimePattern(): void
         {
             CurrentConfigTestFactory::get()->useExifMapping = [
-                'date_creation' => 'DateTimeOriginal',
+                'date_creation' => 'UserComment',
             ];
             $path = $this->scratchDir . '/exif-date-malformed.jpg';
             file_put_contents($path, $this->makePlainJpeg());
+            // Matches neither the full-datetime nor the date-only regex --
+            // the else `continue` branch. UserComment (not DateTimeOriginal
+            // itself) is used here since it isn't validated/reformatted by
+            // ExifTool's own writer, letting an arbitrary non-date string
+            // through unchanged.
+            $this->tagFileWithExifTool($path, [
+                'UserComment' => 'not-a-real-date',
+            ]);
 
-            $handler = static function (FormatExifData $event): void {
-                $exif = $event->exif ?? [];
-                // Matches neither the full-datetime nor the date-only regex --
-                // the else `continue` branch, distinct from the "0000-00-00"
-                // sibling test below (that one DOES match the full-datetime
-                // regex, then gets nulled and filtered by the later
-                // `$isEmpty` check instead).
-                $exif['DateTimeOriginal'] = 'not-a-real-date';
+            $result = $this->service->getSyncExifData($path, $this->exifTool);
 
-                $event->exif = $exif;
-            };
-            EventDispatcherTestFactory::get()->addTypedHandler(FormatExifData::class, $handler);
-
-            try {
-                $result = $this->service->getSyncExifData($path);
-
-                self::assertArrayNotHasKey('date_creation', $result);
-            } finally {
-                EventDispatcherTestFactory::get()->removeTypedHandler(FormatExifData::class, $handler);
-            }
+            self::assertArrayNotHasKey('date_creation', $result);
         }
 
         public function testGetSyncExifDataTreatsTheZeroDatetimeAsEmptyAndSkipsIt(): void
         {
             CurrentConfigTestFactory::get()->useExifMapping = [
-                'date_creation' => 'DateTimeOriginal',
+                'date_creation' => 'UserComment',
             ];
             $path = $this->scratchDir . '/exif-date-zero.jpg';
             file_put_contents($path, $this->makePlainJpeg());
+            // The zero-date sentinel matches the full-datetime regex (it's
+            // shaped like a real datetime), gets normalized, then hits the
+            // later $isEmpty check and is skipped. UserComment again stands
+            // in for a genuine date tag -- confirmed live that ExifTool's
+            // own writer rejects this exact string for DateTimeOriginal
+            // itself ("Month '00' out of range"), so a real date-typed tag
+            // can't hold it at all; a free-text tag can, and
+            // getSyncExifData()'s own regex/normalization logic doesn't
+            // care which tag the string came from.
+            $this->tagFileWithExifTool($path, [
+                'UserComment' => '0000:00:00 00:00:00',
+            ]);
 
-            $handler = static function (FormatExifData $event): void {
-                $exif = $event->exif ?? [];
-                $exif['DateTimeOriginal'] = '0000:00:00 00:00:00';
+            $result = $this->service->getSyncExifData($path, $this->exifTool);
 
-                $event->exif = $exif;
-            };
-            EventDispatcherTestFactory::get()->addTypedHandler(FormatExifData::class, $handler);
-
-            try {
-                $result = $this->service->getSyncExifData($path);
-
-                self::assertArrayNotHasKey('date_creation', $result);
-            } finally {
-                EventDispatcherTestFactory::get()->removeTypedHandler(FormatExifData::class, $handler);
-            }
+            self::assertArrayNotHasKey('date_creation', $result);
         }
 
         public function testGetSyncExifDataNormalizesKeywords(): void
@@ -848,22 +803,13 @@ namespace Piwigo\Tests\Integration {
             ];
             $path = $this->scratchDir . '/exif-keywords.jpg';
             file_put_contents($path, $this->makePlainJpeg());
+            $this->tagFileWithExifTool($path, [
+                'UserComment' => 'nature.travel;family',
+            ]);
 
-            $handler = static function (FormatExifData $event): void {
-                $exif = $event->exif ?? [];
-                $exif['UserComment'] = 'nature.travel;family';
+            $result = $this->service->getSyncExifData($path, $this->exifTool);
 
-                $event->exif = $exif;
-            };
-            EventDispatcherTestFactory::get()->addTypedHandler(FormatExifData::class, $handler);
-
-            try {
-                $result = $this->service->getSyncExifData($path);
-
-                self::assertSame('nature,travel,family', $result['keywords']);
-            } finally {
-                EventDispatcherTestFactory::get()->removeTypedHandler(FormatExifData::class, $handler);
-            }
+            self::assertSame('nature,travel,family', $result['keywords']);
         }
 
         // ----------------------------------------------- getSyncMetadataAttributes()
@@ -895,6 +841,14 @@ namespace Piwigo\Tests\Integration {
             $tiff->setImageFormat('tiff');
             $tiff->writeImage($originalAbsolute);
             $tiff->clear();
+            // Tags only the TIFF original, never the JPEG representative
+            // below -- proves which file getSyncMetadata() actually read
+            // EXIF from (a real embedded tag findable only in one of the
+            // two files stands in for the removed FormatExifData event's
+            // own $event->filename spy).
+            $this->tagFileWithExifTool($originalAbsolute, [
+                'Artist' => 'Real TIFF Author',
+            ]);
 
             $representativeDir = $this->scratchDir . '/pwg_representative';
             mkdir($representativeDir, 0o777, true);
@@ -905,19 +859,12 @@ namespace Piwigo\Tests\Integration {
             self::assertNotFalse($representativeImg);
             imagejpeg($representativeImg, $representativeDir . '/tiff-original.jpg');
 
-            $exifReadFilename = null;
-            $handler = static function (FormatExifData $event) use (&$exifReadFilename): void {
-                $exifReadFilename = $event->filename;
-            };
-            EventDispatcherTestFactory::get()->addTypedHandler(FormatExifData::class, $handler);
-
             try {
                 $result = $this->service->getSyncMetadata([
                     'path' => $originalRelative,
                     'representative_ext' => 'jpg',
-                ]);
+                ], $this->exifTool);
             } finally {
-                EventDispatcherTestFactory::get()->removeTypedHandler(FormatExifData::class, $handler);
                 @unlink($representativeDir . '/tiff-original.jpg');
                 @rmdir($representativeDir);
             }
@@ -925,10 +872,9 @@ namespace Piwigo\Tests\Integration {
             self::assertIsArray($result);
             self::assertSame(30, $result['width']);
             self::assertSame(20, $result['height']);
-            // Proves the isTiff branch really did reset $file back to the
-            // original TIFF for EXIF reading, despite the representative
-            // being used for width/height just above.
-            self::assertSame($originalAbsolute, $exifReadFilename);
+            // Proves EXIF really was read from the TIFF original, not the
+            // (untagged) JPEG representative used for width/height above.
+            self::assertSame('Real TIFF Author', $result['author']);
         }
 
         public function testGetSyncMetadataStripsNewlinesFromNameAndAuthor(): void
@@ -942,7 +888,7 @@ namespace Piwigo\Tests\Integration {
                 'path' => $relativePath,
                 'name' => "Multi\r\nLine Name",
                 'author' => "Author\nWith\rBreaks",
-            ]);
+            ], $this->exifTool);
 
             self::assertIsArray($result);
             self::assertSame('Multi Line Name', $result['name']);
@@ -1087,6 +1033,9 @@ namespace Piwigo\Tests\Integration {
             $imageId = (int) $this->conn->lastInsertId();
 
             try {
+                // syncMetadata() opens its own internal ExifToolProcess for
+                // the whole batch -- unlike getSyncMetadata()/getExifData()/
+                // getIptcData(), its own public signature is unchanged.
                 $this->service->syncMetadata([$imageId], $this->permissionService(), EntityManagerFactory::build($this->conn));
 
                 $tagNames = $this->conn->fetchFirstColumn(

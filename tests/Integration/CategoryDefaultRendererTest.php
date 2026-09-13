@@ -326,6 +326,33 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
     }
 
     /**
+     * `thumbnails.latte` has no `{layout ...}` directive -- `Renderer::render(
+     * new ThumbnailsView(...))` is already a genuine bare fragment render
+     * with no `<html>`/`<head>`/`<body>` wrapper, confirmed here rather than
+     * only by reading the template source. This is the exact mechanism
+     * rv_tscroller's own planned AJAX "load more" route depends on
+     * (docs/plugin-porting/rv-tscroller-port-analysis.md §5/§7 item 3,
+     * resolved: no new Renderer/Template primitive needed) -- a future
+     * change that accidentally gives thumbnails.latte a `{layout}` (folding
+     * page chrome into what's meant to stay a pure `<li>`-repeating
+     * fragment) would silently break that plugin's route the day it's
+     * built; this test exists to catch that regression immediately instead.
+     */
+    public function testRenderedThumbnailsHtmlIsABareFragmentWithNoPageChrome(): void
+    {
+        $this->seedUser(showNbHits: false, showNbComments: false);
+
+        $result = $this->renderer->render([3, 1, 2], 0, 3, Section::Categories);
+
+        $html = $this->renderedThumbnailsHtml($result);
+        self::assertStringNotContainsStringIgnoringCase('<!doctype', $html);
+        self::assertStringNotContainsStringIgnoringCase('<html', $html);
+        self::assertStringNotContainsStringIgnoringCase('<head', $html);
+        self::assertStringNotContainsStringIgnoringCase('<body', $html);
+        self::assertStringContainsString('<li', $html);
+    }
+
+    /**
      * A subscribed `GetIndexDerivativeParams` handler's mutation of
      * `$event->params` must reach `CategoryDefaultResult::derivativeParams`
      * -- `dispatch()` never reads a handler's return value (see

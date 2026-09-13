@@ -1,0 +1,255 @@
+/*
+ * Base styles for the native PhotoSwipe port (P61 Phase 7,
+ * `js/vendor/widgets/photoswipe.ts`). Not a copy of the legacy vendored
+ * package's own default-skin CSS -- that skin is sprite-image-based
+ * (a single PNG icon sheet); this is a fresh, framework-free stylesheet
+ * against the same real class names the engine builds, using plain
+ * Unicode glyphs for buttons instead of porting the icon-sprite
+ * technique (same "no sprite/icon-font dependency" choice already made
+ * for `bootstrap_darkroom`'s own social-share buttons).
+ *
+ * Absolute positioning of `.pswp__container`/`.pswp__item` is load-
+ * bearing, not cosmetic: the engine computes each slide's `transform:
+ * translate3d(...)` from `.pswp__scroll-wrap`'s own `clientWidth`
+ * (`updateSize()`), so every ancestor up to `.pswp` itself must size to
+ * the viewport for that math to place slides correctly.
+ */
+@layer components {
+  .pswp {
+    position: fixed;
+    inset: 0;
+    z-index: 1500;
+    overflow: hidden;
+    touch-action: none;
+    outline: 0;
+  }
+
+  .pswp__bg {
+    position: absolute;
+    inset: 0;
+    background: #000;
+  }
+
+  .pswp__scroll-wrap,
+  .pswp__container,
+  .pswp__item {
+    position: absolute;
+    inset: 0;
+  }
+
+  .pswp__item {
+    overflow: hidden;
+  }
+
+  .pswp__zoom-wrap {
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-start: 0;
+    transform-origin: left top;
+  }
+
+  .pswp__img {
+    max-width: none;
+    display: block;
+  }
+
+  .pswp__img-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+  }
+
+  .pswp__img-placeholder::after {
+    content: "";
+    inline-size: 2rem;
+    block-size: 2rem;
+    border: 2px solid rgb(255 255 255 / 0.3);
+    border-block-start-color: #fff;
+    border-radius: 50%;
+    animation: darkroom-pswp-spin 0.8s linear infinite;
+  }
+
+  @keyframes darkroom-pswp-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .pswp__ui {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .pswp__ui--hidden {
+    opacity: 0;
+  }
+
+  .pswp__ui--idle .pswp__top-bar,
+  .pswp__ui--idle .pswp__caption {
+    opacity: 0;
+  }
+
+  .pswp__top-bar,
+  .pswp__caption,
+  .pswp__button {
+    pointer-events: auto;
+  }
+
+  .pswp__top-bar {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: linear-gradient(rgb(0 0 0 / 0.6), transparent);
+    color: #fff;
+    transition: opacity 0.3s ease;
+  }
+
+  .pswp__counter {
+    font-size: 0.875rem;
+    margin-inline-end: auto;
+  }
+
+  .pswp__button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    font-size: 1.25rem;
+    line-height: 1;
+    padding: 0.4rem 0.6rem;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+
+  .pswp__button:hover,
+  .pswp__button:focus-visible {
+    background: rgb(255 255 255 / 0.15);
+  }
+
+  .pswp__button--close::before {
+    content: "\2715";
+  }
+
+  .pswp__button--share::before {
+    content: "\2197";
+  }
+
+  .pswp__button--fs::before {
+    content: "\26F6";
+  }
+
+  .pswp__button--zoom::before {
+    content: "\2295";
+  }
+
+  .pswp__button--autoplay::before {
+    content: "\25B6";
+  }
+
+  .pswp__button--autoplay-active::before {
+    content: "\23F8";
+  }
+
+  .pswp__button--arrow--left,
+  .pswp__button--arrow--right {
+    position: absolute;
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+    font-size: 2rem;
+    padding: 0.5rem 0.75rem;
+    background: rgb(0 0 0 / 0.3);
+  }
+
+  .pswp__button--arrow--left {
+    inset-inline-start: 0.5rem;
+  }
+
+  .pswp__button--arrow--right {
+    inset-inline-end: 0.5rem;
+  }
+
+  .pswp__button--arrow--left::before {
+    content: "\2039";
+  }
+
+  .pswp__button--arrow--right::before {
+    content: "\203A";
+  }
+
+  .pswp__preloader {
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+  }
+
+  .pswp__caption {
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline: 0;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(transparent, rgb(0 0 0 / 0.7));
+    color: #fff;
+    transition: opacity 0.3s ease;
+  }
+
+  .pswp__caption--empty {
+    display: none;
+  }
+
+  .pswp__share-modal {
+    position: absolute;
+    inset-block-start: 3rem;
+    inset-inline-end: 0.75rem;
+    background: #222;
+    color: #fff;
+    border-radius: 4px;
+    padding: 0.5rem;
+    z-index: 1;
+  }
+
+  .pswp__share-modal--hidden {
+    display: none;
+  }
+
+  .pswp__share-tooltip {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .pswp__share-tooltip a {
+    color: #fff;
+    text-decoration: none;
+    padding: 0.35rem 0.5rem;
+    white-space: nowrap;
+  }
+
+  .pswp__share-tooltip a:hover,
+  .pswp__share-tooltip a:focus-visible {
+    background: rgb(255 255 255 / 0.1);
+    border-radius: 4px;
+  }
+
+  .darkroom-pswp-video {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+  }
+
+  .darkroom-pswp-video video {
+    max-width: 100%;
+    max-height: 100%;
+  }
+}

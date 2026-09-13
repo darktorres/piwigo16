@@ -237,7 +237,17 @@ class PhotoSwipeGallery {
   private readonly items: SlideItem[];
   private readonly options: PhotoSwipeOptions;
   private currentIndex: number;
-  private positionIndex = 0;
+  // -1, not 0: open()'s initial setContent() loop puts the CURRENT slide
+  // in holders[1] (holders[0]/[2] get currentIndex-1/+1), and
+  // updateSize() positions holder i at (i + containerShiftIndex) *
+  // slideSize.x with containerShiftIndex starting at 0 -- so holders[1]
+  // sits at +1 slide-width until the container itself is shifted back by
+  // -1 slide-width (mainScrollPos = slideSize.x * positionIndex) to
+  // bring it to the visible x=0 position. A 0 default shows holders[0]
+  // (currentIndex - 1, wrapped to the LAST item when currentIndex is 0)
+  // instead of the real current slide -- a real bug this port's own
+  // first live picture-page verification caught (P61 Phase 7-B).
+  private positionIndex = -1;
   private containerShiftIndex = 0;
   private indexDiff = 0;
 
@@ -304,15 +314,33 @@ class PhotoSwipeGallery {
   private lastTapTime = 0;
   private lastTapPoint: Point = point();
 
+  // stopImmediatePropagation() on every handled key, registered on the
+  // CAPTURE phase (see open()'s own addEventListener(..., true)) -- a
+  // host page's own document-level keyboard shortcuts (e.g. darkroom's
+  // real picture-page previous/next-photo arrow-key navigation,
+  // `pictureNavButtons.ts`, registered on the same "keydown"/document
+  // target, at PAGE LOAD -- before the lightbox's own listener, which
+  // only attaches when a gallery actually opens) must not ALSO react to
+  // the same event while the lightbox is open: preventDefault() alone
+  // only suppresses the browser's own default action, and a later-
+  // registered bubble-phase listener can never preempt an
+  // earlier-registered one -- only a capture-phase listener fires
+  // before ANY bubble-phase listener, registration order notwithstanding.
+  // A real bug this port's own first live keyboard-navigation test
+  // caught (P61 Phase 7-B): ArrowRight navigated the underlying page
+  // away entirely instead of just advancing the lightbox.
   private readonly onKeyDown = (e: KeyboardEvent): void => {
     if (e.key === "Escape") {
       e.preventDefault();
+      e.stopImmediatePropagation();
       this.close();
     } else if (e.key === "ArrowLeft" && !e.altKey && !e.ctrlKey && !e.metaKey) {
       e.preventDefault();
+      e.stopImmediatePropagation();
       this.prev();
     } else if (e.key === "ArrowRight" && !e.altKey && !e.ctrlKey && !e.metaKey) {
       e.preventDefault();
+      e.stopImmediatePropagation();
       this.next();
     }
   };
@@ -360,7 +388,14 @@ class PhotoSwipeGallery {
 
   private buildUi(): PhotoSwipeGallery["ui"] {
     const root = document.createElement("div");
-    root.className = "pswp__ui pswp__ui--hidden";
+    // No pswp__ui--hidden here: controlsVisible (this.controlsVisible)
+    // defaults to true, and that class is only ever added/removed by
+    // toggleControls() -- hardcoding it here left the UI permanently
+    // invisible (though still clickable, opacity alone doesn't disable
+    // pointer events) until a tap toggled it off then on again. A real
+    // bug this port's own first live open-animation use caught (P61
+    // Phase 7-B).
+    root.className = "pswp__ui";
 
     const topBar = document.createElement("div");
     topBar.className = "pswp__top-bar";
@@ -448,13 +483,23 @@ class PhotoSwipeGallery {
       const index = this.currentIndex + i - 1;
       this.setContent(valueAt(this.holders, i), index);
     }
+    // calculateItemSize() only needs item.w/item.h (already known from
+    // construction, not the actual loaded <img>) -- called eagerly here
+    // so updateCurrZoomItem()/applyPan()/playOpenAnimation() below read
+    // this item's real fitRatio/initialZoomLevel/initialPosition rather
+    // than makeSlideItem()'s placeholder defaults (zoomLevel 1, position
+    // {0,0}), which loadItem()'s own async completion callback wouldn't
+    // fix until well after the "grow from thumbnail" animation already
+    // captured its (wrong) destination. A real bug this port's own first
+    // live use of `getThumbBounds` caught (P61 Phase 7-B).
+    this.calculateItemSize(this.currItem);
     this.updateCurrZoomItem();
     this.applyPan();
 
     this.isOpen = true;
     this.root.setAttribute("aria-hidden", "false");
 
-    document.addEventListener("keydown", this.onKeyDown);
+    document.addEventListener("keydown", this.onKeyDown, true);
     window.addEventListener("resize", this.onResize);
     this.root.addEventListener("wheel", this.onWheel, { passive: false });
     this.scrollWrap.addEventListener("pointerdown", this.onPointerDown);
@@ -471,10 +516,7 @@ class PhotoSwipeGallery {
       return;
     }
     this.isOpen = false;
-    document.removeEventListener("keydown", this.onKeyDown);
-    window.removeEventListener("resize", this.onResize);
-    this.root.removeEventListener("wheel", this.onWheel);
-    this.scrollWrap.removeEventListener("pointerdown", this.onPointerDown);
+    this.removeListeners();
     this.stopAutoplay();
     this.stopRenderLoop();
     if (this.momentumRafId !== undefined) {
@@ -488,13 +530,34 @@ class PhotoSwipeGallery {
     });
   }
 
+  /**
+   * Also called directly by `openGallery()` (via `gallery?.destroy()`)
+   * when one gallery replaces another still open one, bypassing
+   * `close()`'s own animation/cleanup entirely -- `removeListeners()`
+   * must run here too, or the replaced instance's `keydown`/`resize`/
+   * `wheel`/`pointerdown` listeners leak on `document`/`window` forever.
+   * A real bug this port's own first live use of `stopImmediatePropagation()`
+   * surfaced (P61 Phase 7-B): a leaked, stale instance's own `onKeyDown`
+   * fired first (registration order) and stopped the real, current
+   * instance's own handler from ever running. `removeEventListener()` on
+   * an already-detached listener is a safe no-op, so calling this
+   * unconditionally from both paths is correct either way.
+   */
   destroy(): void {
+    this.removeListeners();
     document.body.style.overflow = "";
     this.root.remove();
     this.lastFocusedEl?.focus();
     if (gallery === this) {
       gallery = undefined;
     }
+  }
+
+  private removeListeners(): void {
+    document.removeEventListener("keydown", this.onKeyDown, true);
+    window.removeEventListener("resize", this.onResize);
+    this.root.removeEventListener("wheel", this.onWheel);
+    this.scrollWrap.removeEventListener("pointerdown", this.onPointerDown);
   }
 
   // ── slide content / sizing ───────────────────────────────────────────
@@ -688,6 +751,11 @@ class PhotoSwipeGallery {
       }
     }
     this.indexDiff = 0;
+    // Same real reason as open()'s own eager call: the new current item
+    // may not have finished loading yet, and updateCurrZoomItem()/
+    // applyPan() below need its real fitRatio/initialZoomLevel/
+    // initialPosition, not makeSlideItem()'s placeholder defaults.
+    this.calculateItemSize(this.currItem);
     this.updateCurrZoomItem();
     this.applyPan();
     this.updateUi();
@@ -709,13 +777,17 @@ class PhotoSwipeGallery {
       return;
     }
     const target = e.target instanceof Element ? e.target : null;
+    // Real click-through allowance: legacy's own `isClickableElement`
+    // only ever matches `<a>` (share/caption links) -- buttons (close/
+    // share/fs/zoom/autoplay/prev/next) are real UI controls with their
+    // own click handlers already, and must never start a pan/pinch
+    // gesture or take pointer capture, or their own click never fires.
+    // A real bug this port's own first live click-through-a-button test
+    // caught (P61 Phase 7-B): the condition below only ever checked
+    // `.pswp__caption a` -- the `<button>` half of its own docblock's
+    // stated intent was never actually implemented.
     if (target?.closest("a, button") && this.pointers.size === 0) {
-      // Real click-through allowance: legacy's own `isClickableElement`
-      // only ever matches `<a>` (share/caption links) -- buttons are
-      // real UI controls with their own click handlers already.
-      if (target.closest(".pswp__caption a")) {
-        return;
-      }
+      return;
     }
     e.preventDefault();
     this.pointers.set(e.pointerId, point(e.pageX, e.pageY));

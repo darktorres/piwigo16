@@ -134,5 +134,10 @@
     "a11y/media-prefers-reduced-motion": {
       "count": 1
     }
+  },
+  "themes/default/css/components/photoswipe.css": {
+    "a11y/media-prefers-reduced-motion": {
+      "count": 4
+    }
   }
 }

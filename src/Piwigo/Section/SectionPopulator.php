@@ -38,6 +38,7 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\SearchService;
+use Piwigo\Section\Event\GetNbImagePage;
 use Piwigo\Section\Event\SectionInitialized;
 use Piwigo\Section\Projection\SectionFavoritePageContext;
 use Piwigo\Section\Request\FavoritesActionRequest;
@@ -184,7 +185,11 @@ final readonly class SectionPopulator
 
         // $page['nb_image_page'] is the number of picture to display on this page
         // By default, it is the same as CurrentUser::get()->rawAttributes['nb_image_page']
-        $page['nb_image_page'] = $this->currentUser->get()->rawAttributes['nb_image_page'] ?? null;
+        $rawNbImagePage = $this->currentUser->get()
+            ->rawAttributes['nb_image_page'] ?? null;
+        $page['nb_image_page'] = $this->eventDispatcher->dispatch(
+            new GetNbImagePage(is_numeric($rawNbImagePage) ? (int) $rawNbImagePage : 0)
+        )->value;
 
         // The current session stored image_order might be not compatible with
         // current image set, for example if the current image_order is the rank

@@ -52,6 +52,7 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Search\SearchService;
+use Piwigo\Section\Event\GetNbImagePage;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Section\SectionItemQuery;
 use Piwigo\Section\SectionPopulator;
@@ -140,6 +141,8 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
     private EntityManagerInterface $entityManager;
 
+    private EventDispatcher $eventDispatcher;
+
     #[Override]
     protected function setUp(): void
     {
@@ -171,6 +174,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $em = EntityManagerFactory::build($this->conn);
         $this->entityManager = $em;
+        $this->eventDispatcher = new EventDispatcher();
         $categoryRepo = new CategoryRepository($em, CurrentConfigTestFactory::get());
         $this->filterState = new FilterState();
         $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
@@ -261,7 +265,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             $this->sectionContextRegistry,
             new RequestMountDepth(),
             $this->sessionService,
-            new EventDispatcher(),
+            $this->eventDispatcher,
             PageStateTestFactory::get(),
             LayoutStateTestFactory::get(),
             RequestMetricsTestFactory::get(),
@@ -779,5 +783,40 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
         sort($items);
         self::assertSame(['1', '3'], $items);
+    }
+
+    public function testPopulateAppliesAGetNbImagePageHandlersOverride(): void
+    {
+        CurrentUserTestFactory::get()->set(new User(
+            id: UserId::from(3),
+            username: Username::from('regular_user'),
+            email: Email::from('regular@example.test'),
+            language: LangCode::from('en_UK'),
+            theme: ThemeId::from('default'),
+            status: UserStatus::Normal,
+            enabledHigh: true,
+            rawAttributes: [
+                'nb_image_page' => 30,
+            ],
+        ));
+        $_SERVER['SCRIPT_NAME'] = '/piwigo17/index.php';
+        $_SERVER['PATH_INFO'] = '/';
+
+        $handler = static function (GetNbImagePage $event): void {
+            $event->value = 5;
+        };
+
+        $this->eventDispatcher->addTypedHandler(GetNbImagePage::class, $handler);
+
+        try {
+            $this->makePopulator()
+                ->populate();
+
+            $ctx = $this->sectionContextRegistry->current();
+            self::assertNotNull($ctx);
+            self::assertSame(5, $ctx->nbImagePage);
+        } finally {
+            $this->eventDispatcher->removeTypedHandler(GetNbImagePage::class, $handler);
+        }
     }
 }

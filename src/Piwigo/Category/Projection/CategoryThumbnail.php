@@ -82,6 +82,7 @@ final readonly class CategoryThumbnail
         public ?RecentIcon $iconTs = null,
         public ?string $infoDates = null,
         // No real reader yet -- see this class's own docblock.
+        // @phpstan-ignore shipmonk.deadProperty.neverRead
         public ?string $coi = null,
         public string $representativeFileExt = '',
         public int $countImages = 0,

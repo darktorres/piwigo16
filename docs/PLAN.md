@@ -163,7 +163,7 @@ Three structural changes produced that drift:
 | P58 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P59 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
 | P60 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | **DONE** — **A 843 → 0, B 376 → 0**, and the CAMPAIGN-PENDING block is gone from `phpstan.neon`. All 26 identifier-wide ignores retired, each forced out by `reportUnmatchedIgnoredErrors` rather than noticed; 2 more left the *permanent* groups (`empty.variable`, `foreach.valueOverwrite`). Twenty-three live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
-| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra: `ExtensionContext::currentSection()`/`findByIdsOrdered()`/`isShowMetadataEnabled()`+`setShowMetadataEnabled()`/`paths()`, P61-A..D), Phase 2 (manifest + `ExtensionInterface` skeleton), Phase 3 (typed settings VO + real tabbed settings page), Phase 4 (CSS palette foundation, `--darkroom-color-*` custom properties, real OKLCH conversions), and Phase 5 (A-D: menubar family as a native `<details>`-dropdown navbar with no JS; generic pages; comments/tags; CSS-only thumbnails/mainpage_categories/month_calendar) are all done, each live-verified against a real running instance. PhotoSwipe (Phase 1's original 4th item) deliberately deferred to Phase 6, on the user's own call, for lack of a real caller until then. Two real bugs found and fixed along the way: a `settings.latte`/`about.latte` naming collision with core's own public About page (renamed to `darkroom_settings.latte`/`darkroom_about.latte`), and a cascade-layer height/overflow conflict with `default`'s own unconditional `mainpage_categories.css`. Password/identification/register/profile dropped from scope entirely — `useStandardPages` defaults `true` and routes their whole theme chain to `standard_pages` regardless of the active gallery theme, confirmed unreachable, matching `modus`'s own established precedent. Phase 6-A (index.latte contextual navbar, `#thumbnails` CSS Grid) and Phase 6-B (full gesture-fidelity PhotoSwipe lightbox port, `themes/default/js/vendor/widgets/photoswipe.ts`, v4.1.3 real source, 10 passing Vitest tests) also done. Phase 6-C (picture.latte/picture_nav_buttons.latte/picture_content.latte, consolidated info cards, video playback branch, real social-share buttons via `assignContext()`/`GetPageAssets` -- an earlier "no channel exists" note was wrong, corrected same day) also done -- **Phase 6 is now fully closed** except for carousel/PhotoSwipe-wiring work that's genuinely Phase 7 scope. Phase 7-A (thumbnail carousel), Phase 7-B (real PhotoSwipe click-to-open wiring, plus 6 real bugs found and fixed in `photoswipe.ts` itself), and Phase 7-C (grid/list-view toggle, real `rating.ts` star-icon gap fixed, `grid_classes.tpl` confirmed replaced) all done -- **Phase 7 is now fully closed.** Phase 9-A (i18n, 26 locale `theme.po` files, 0 parity errors) and Phase 9-B (Font Awesome fold-in and legacy cleanup both confirmed real no-gaps; zip + `manifest.json` packaging done, live-verified via the real "Add a new theme" install flow) also done -- **Phase 9 is now fully closed.** Full detail in this file's own P61 narrative section below. Phases 7-10 not started | 5 |
+| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra: `ExtensionContext::currentSection()`/`findByIdsOrdered()`/`isShowMetadataEnabled()`+`setShowMetadataEnabled()`/`paths()`, P61-A..D), Phase 2 (manifest + `ExtensionInterface` skeleton), Phase 3 (typed settings VO + real tabbed settings page), Phase 4 (CSS palette foundation, `--darkroom-color-*` custom properties, real OKLCH conversions), and Phase 5 (A-D: menubar family as a native `<details>`-dropdown navbar with no JS; generic pages; comments/tags; CSS-only thumbnails/mainpage_categories/month_calendar) are all done, each live-verified against a real running instance. PhotoSwipe (Phase 1's original 4th item) deliberately deferred to Phase 6, on the user's own call, for lack of a real caller until then. Two real bugs found and fixed along the way: a `settings.latte`/`about.latte` naming collision with core's own public About page (renamed to `darkroom_settings.latte`/`darkroom_about.latte`), and a cascade-layer height/overflow conflict with `default`'s own unconditional `mainpage_categories.css`. Password/identification/register/profile dropped from scope entirely — `useStandardPages` defaults `true` and routes their whole theme chain to `standard_pages` regardless of the active gallery theme, confirmed unreachable, matching `modus`'s own established precedent. Phase 6-A (index.latte contextual navbar, `#thumbnails` CSS Grid) and Phase 6-B (full gesture-fidelity PhotoSwipe lightbox port, `themes/default/js/vendor/widgets/photoswipe.ts`, v4.1.3 real source, 10 passing Vitest tests) also done. Phase 6-C (picture.latte/picture_nav_buttons.latte/picture_content.latte, consolidated info cards, video playback branch, real social-share buttons via `assignContext()`/`GetPageAssets` -- an earlier "no channel exists" note was wrong, corrected same day) also done -- **Phase 6 is now fully closed** except for carousel/PhotoSwipe-wiring work that's genuinely Phase 7 scope. Phase 7-A (thumbnail carousel), Phase 7-B (real PhotoSwipe click-to-open wiring, plus 6 real bugs found and fixed in `photoswipe.ts` itself), and Phase 7-C (grid/list-view toggle, real `rating.ts` star-icon gap fixed, `grid_classes.tpl` confirmed replaced) all done -- **Phase 7 is now fully closed.** Phase 9-A (i18n, 26 locale `theme.po` files, 0 parity errors) and Phase 9-B (Font Awesome fold-in and legacy cleanup both confirmed real no-gaps; zip + `manifest.json` packaging done, live-verified via the real "Add a new theme" install flow) also done -- **Phase 9 is now fully closed.** A real install-and-compare validation pass against a genuine Piwigo 16.x reference instance confirmed every Phase 3 settings decision and found one real gap (the page-header/hero-banner styling never wired up despite `layout.latte`'s own docblock stating it was planned), fixed the same day (`pageHeaderStyle`/`pageHeaderImage`, `BootstrapDarkroomPageHeaderPageContext`, a real `{block pageBanner}` override). Full detail in this file's own P61 narrative section below. Phase 10 not started | 5 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -12712,6 +12712,50 @@ theme. Live-verified via the real admin "Add a new theme" catalog flow
 end-to-end (download → extract → install, not just a symlink) — the
 theme installs and lists correctly, zero console/PHP errors, fully
 reverted.
+
+**P61 real-install validation pass (Done) — legacy theme installed live
+in a real Piwigo 16.x reference environment, compared field-by-field
+against this port.** Per the user's own request, before starting Phase
+10: real `bootstrap_darkroom_16.d` installed and activated in
+`/home/torres/piwigo16` (upstream Piwigo 16.3.0, database
+`piwigo16_ref` — a real, pre-existing reference install found already
+seeded when the DB name collision with piwigo17-rewrite's own dev DB
+was resolved; left running as a durable reference, not reverted).
+Compared side by side against this port across the homepage, category
+page, picture page, menubar, and every real settings-page field.
+
+Every kept-vs-dropped Phase 3 settings decision checked out exactly
+correct against the real legacy settings UI. Two benign, non-bug
+differences found: legacy's own Bootstrap dropdown menus render with a
+white background against the dark navbar (a real inconsistency in
+legacy's own SCSS, confirmed zero `.dropdown-menu` override outside the
+mobile-collapsed case — this port's consistently-dark dropdowns are
+arguably an improvement, not a regression to match); legacy uses
+icon-only buttons where this port pairs an icon with a text label (a
+readability improvement, not a fidelity gap).
+
+**One real, confirmed gap found and fixed the same day:** the page
+header/hero banner. Legacy's real `header.tpl` gives the core-supplied
+banner content one of 3 visual treatments (Jumbotron/Hero image/
+Disabled, defaulting to a full-width dark "Jumbotron" box) — this
+port's `layout.latte` only ever forwarded to `default`'s bare, unstyled
+`<div id="theHeader">`, and an earlier version of
+`BootstrapDarkroomThemeSettings`'s own docblock incorrectly claimed
+core's generic `pageBanner` mechanism made a per-theme variant
+unnecessary. Fixed: `pageHeaderStyle`/`pageHeaderImage` settings fields,
+a new `BootstrapDarkroomPageHeaderPageContext` (`assignContext()`, same
+channel as the view-mode/social-sharing contexts) carrying them into a
+real `{block pageBanner}` override in `layout.latte`, and `theme.css`
+styling for both the jumbotron and hero variants against this theme's
+own dark palette. `page_header_full`/`page_header_both_navs` stay
+dropped — both only configure legacy's own scroll-driven navbar-opacity
+JS effect, which this port deliberately does not carry over (same
+"CSS-only, no JS behavior" choice already made for the navbar/dropdown
+family, Phase 5-A). Live-verified all 3 styles end-to-end against a
+real running instance (jumbotron, hero with a background image,
+disabled), settings round-trip correctly through the real admin form,
+zero console/PHP errors, fully reverted. Zip + `manifest.json` rebuilt
+to match.
 
 Phase 10 (closing verification) lands in the same sibling directory,
 not started.

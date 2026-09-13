@@ -12,15 +12,26 @@ use Piwigo\Image\SizingParams;
  * untested). Every value below was independently confirmed by invoking the
  * real class before writing the assertion.
  *
- * Real finding, not fixed here (self-consistent, no observable bug --
- * addUrlTokens()'s result is only ever used as an internal cache-key
- * string, never parsed back character-by-character, see ImageStdParams::
- * getCustom()): SizingParams::classic()/square() both construct with an
- * *int* max_crop default/literal (0 and 1), but addUrlTokens()'s fast
- * paths check `=== 0.0`/`=== 1.0` (float, strict). An int 0/1 never
- * satisfies a strict float comparison in PHP, so every classic()/square()
- * instance actually falls through to the general (3-token) branch instead
- * of its own "intended" fast single-token path -- confirmed below.
+ * A previous pass through this file found the same int-vs-float
+ * `max_crop` mismatch documented below, but concluded it was
+ * "self-consistent, no observable bug -- addUrlTokens()'s result is
+ * only ever used as an internal cache-key string, never parsed back
+ * character-by-character." That's wrong for a real, reachable case:
+ * `Controller\ImageDerivativeController::parseCustomParams()` (`i.php`,
+ * the "script" derivative URL style, `DerivativeUrlStyleOverride`)
+ * parses this exact token string back character-by-character, and
+ * rejects the general 2-token form with a 400 "Sizing arr" for any
+ * `ImageStdParams::CUSTOM`-type derivative whose crop is the plain int
+ * `0` -- exactly what `getCustom($w, $h)`'s own int-default `$crop`
+ * produces for any caller that doesn't pass an explicit float (found
+ * live, porting gdThumb's own precache-scan feature, the first real
+ * caller in this fork to request a *custom*, uncropped derivative
+ * through the "script" URL style rather than `action.php`). Fixed at
+ * the source (`addUrlTokens()`'s own comparisons, matching the
+ * `(float)`-cast pattern `ImageDerivativeController.php` already uses
+ * at 3 other call sites against this same property) rather than
+ * worked around per-caller -- `classic()`/`square()` now correctly
+ * take their own intended fast single-token path, updated below.
  *
  * ideal_size/min_size/compute()'s $in_size and $scale_size are all
  * Dimensions VOs, not raw arrays -- toEqual() (structural), not toBe()
@@ -70,24 +81,22 @@ test('addUrlTokens takes the fast "e" single-token path only for an explicit flo
         ->toBe(['e120']);
 });
 
-test('addUrlTokens falls through to the general 2-token form for classic()\'s own int max_crop default', function (): void {
+test('addUrlTokens takes the fast "s" single-token path for classic()\'s own int max_crop default too', function (): void {
     $params = SizingParams::classic(100, 200);
     $tokens = [];
     $params->addUrlTokens($tokens);
 
-    // sizeToUrl + fractionToChar(0) -- NOT the 's100x200' fast form, per
-    // this file's own class docblock finding above.
     expect($tokens)
-        ->toBe(['100x200', 'a']);
+        ->toBe(['s100x200']);
 });
 
-test('addUrlTokens falls through to the general 3-token form for square()\'s own int max_crop literal', function (): void {
+test('addUrlTokens takes the fast "e" single-token path for square()\'s own int max_crop literal too', function (): void {
     $params = SizingParams::square(120);
     $tokens = [];
     $params->addUrlTokens($tokens);
 
     expect($tokens)
-        ->toBe([120, 'z', 120]);
+        ->toBe(['e120']);
 });
 
 test('addUrlTokens includes a 3rd min_size token only when min_size is set', function (): void {

@@ -57,9 +57,23 @@ final class SizingParams
      */
     public function addUrlTokens(array &$tokens): void
     {
-        if ($this->max_crop === 0.0) {
+        // Cast before comparing -- $max_crop is genuinely int at this
+        // class's own constructor default (0) and at square()'s literal
+        // (1), so a bare `=== 0.0`/`=== 1.0` silently never matches an
+        // int 0/1 (PHP's strict comparison treats int and float as
+        // different types). `ImageDerivativeController.php` already
+        // casts before every one of its own 3 comparisons against this
+        // exact property for the same reason -- this method was the one
+        // real gap, found live: `getCustom($w, $h)`'s int-default `$crop`
+        // (never cast anywhere before reaching here) produced a
+        // multi-token URL suffix instead of the short `s<size>` form,
+        // which `ImageDerivativeController::parseCustomParams()` then
+        // rejected outright (`i.php` 400 "Sizing arr") for any crop=0
+        // custom-derivative URL -- reachable by any real, uncropped
+        // `ImageStdParams::getCustom()` call, not just this port's own.
+        if ((float) $this->max_crop === 0.0) {
             $tokens[] = 's' . DerivativeUrlCodec::sizeToUrl($this->ideal_size);
-        } elseif ($this->max_crop === 1.0 && $this->min_size instanceof Dimensions && DerivativeUrlCodec::sizeEquals($this->ideal_size, $this->min_size)) {
+        } elseif ((float) $this->max_crop === 1.0 && $this->min_size instanceof Dimensions && DerivativeUrlCodec::sizeEquals($this->ideal_size, $this->min_size)) {
             $tokens[] = 'e' . DerivativeUrlCodec::sizeToUrl($this->ideal_size);
         } else {
             $tokens[] = DerivativeUrlCodec::sizeToUrl($this->ideal_size);

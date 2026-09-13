@@ -9,6 +9,7 @@ use Override;
 use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
+use Piwigo\Contribution\PictureEditField;
 use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Template\Latte\Attribute\Template;
@@ -36,6 +37,7 @@ final readonly class PictureModifyView implements View, HasPageAssets, ExposesPa
      * @param list<string> $relatedCategoriesIds
      * @param list<int> $representedAlbums
      * @param array<array-key, string> $cacheKeys
+     * @param list<PictureEditField> $pluginPictureEditFields
      */
     public function __construct(
         public ?string $saveSuccess,
@@ -66,6 +68,7 @@ final readonly class PictureModifyView implements View, HasPageAssets, ExposesPa
         public string $jqueryCode,
         public string $colorscheme,
         public string $rootUrl,
+        public array $pluginPictureEditFields,
     ) {}
 
     /**

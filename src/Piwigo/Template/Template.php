@@ -31,6 +31,7 @@ use Piwigo\Contribution\ButtonContribution;
 use Piwigo\Contribution\FieldOverride;
 use Piwigo\Contribution\FormProvider;
 use Piwigo\Contribution\MenuItem;
+use Piwigo\Contribution\PictureEditField;
 use Piwigo\Contribution\PictureInfoRow;
 use Piwigo\Contribution\ProfileField;
 use Piwigo\Contribution\ThumbnailOverlay;
@@ -231,6 +232,11 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * @var array<int, PictureInfoRow[]>
      */
     private array $pictureInfoRows = [];
+
+    /**
+     * @var array<int, PictureEditField[]>
+     */
+    private array $pictureEditFields = [];
 
     /**
      * @var array<int, ProfileField[]>
@@ -1463,6 +1469,16 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
+     * Registers a typed field to be displayed on the admin picture-edit
+     * form -- the typed replacement for a hand-written
+     * `set_prefilter('picture_modify', ...)` markup patch.
+     */
+    public function addPictureEditField(PictureEditField $field): void
+    {
+        $this->pictureEditFields[$field->order][] = $field;
+    }
+
+    /**
      * Registers a typed field to be displayed on the registration form
      * -- P43's typed replacement for a hand-written
      * `set_prefilter('register', ...)` markup patch.
@@ -1626,6 +1642,17 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     public function pictureInfoRows(): array
     {
         return self::flattenByOrder($this->pictureInfoRows);
+    }
+
+    /**
+     * Ksort+flatten by `$order`, same shape as the getters above -- the
+     * `View`-based sibling for `PictureModifyView::$pluginPictureEditFields`.
+     *
+     * @return list<PictureEditField>
+     */
+    public function pictureEditFields(): array
+    {
+        return self::flattenByOrder($this->pictureEditFields);
     }
 
     /**

@@ -487,6 +487,7 @@ final readonly class PictureModifyPageRenderer
             jqueryCode: $jquery_code,
             colorscheme: $template->themeConf('colorscheme'),
             rootUrl: $this->urlService->getRootUrl(),
+            pluginPictureEditFields: $template->pictureEditFields(),
         ));
 
         $this->eventDispatcher->dispatch(new PictureModifyPageRendered());

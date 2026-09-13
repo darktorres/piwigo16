@@ -80,6 +80,27 @@
       </div>
     </div>
 
+    <p n:foreach="$pluginPictureEditFields as $field">
+      <strong>{$field->label}</strong>
+      <br>
+      <input
+        n:if="$field->type === \Piwigo\Contribution\FieldType::Checkbox"
+        type="checkbox"
+        name="{$field->name}"
+        id="{$field->name}"
+        value="1"
+        n:attr="checked: $field->value !== '' ? 'checked' : null"
+      >
+      <input
+        n:if="$field->type !== \Piwigo\Contribution\FieldType::Checkbox"
+        type="text"
+        class="large"
+        name="{$field->name}"
+        id="{$field->name}"
+        value="{$field->value}"
+      >
+    </p>
+
     <p>
       <strong>{='Title'|translate}</strong>
       <br>

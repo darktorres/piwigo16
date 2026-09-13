@@ -15,6 +15,7 @@ use Piwigo\Contribution\FieldType;
 use Piwigo\Contribution\FormProvider;
 use Piwigo\Contribution\MenuItem;
 use Piwigo\Contribution\PanelLink;
+use Piwigo\Contribution\PictureEditField;
 use Piwigo\Contribution\PictureInfoRow;
 use Piwigo\Contribution\ProfileField;
 use Piwigo\Contribution\ThumbnailOverlay;
@@ -969,6 +970,22 @@ test('pictureInfoRows() is empty when no row was ever registered', function (): 
     $t = TemplateTestFactory::build();
 
     expect($t->pictureInfoRows())
+        ->toBe([]);
+});
+
+test('pictureEditFields() returns registered fields sorted by order', function (): void {
+    $t = TemplateTestFactory::build();
+    $t->addPictureEditField(new PictureEditField(label: 'B', name: 'b', order: 50));
+    $t->addPictureEditField(new PictureEditField(label: 'A', name: 'a', order: 10));
+
+    expect(array_map(static fn (PictureEditField $f): string => $f->label, $t->pictureEditFields()))
+        ->toBe(['A', 'B']);
+});
+
+test('pictureEditFields() is empty when no field was ever registered', function (): void {
+    $t = TemplateTestFactory::build();
+
+    expect($t->pictureEditFields())
         ->toBe([]);
 });
 

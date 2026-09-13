@@ -40,7 +40,18 @@
               </a>
             </span>
             <span n:if="$showThumbnailCaption" class="thumbLegend">
-              <span class="thumbName">{$thumbnail->name}</span>
+              {var $thumbName = $thumbnail->name}
+              {* $thumbDescription is unused by this block's own default
+                 content -- pre-extracted so a child theme's own
+                 {block thumbName} override (e.g. bootstrap_darkroom's,
+                 P61) can reference it with a real, narrowed type instead
+                 of "mixed" (a real phpstan-latte limitation: property
+                 access on a {foreach} item loses its type inside any
+                 {block}, parent or child, the same reason $hasIconTs/
+                 $iconTsTitle below are pre-extracted rather than read
+                 as $thumbnail->iconTs inside {block albSymbol}). *}
+              {var $thumbDescription = $thumbnail->description}
+              {block thumbName}<span class="thumbName">{$thumbName}</span>{/block}
               {var $hasIconTs = $thumbnail->iconTs !== null}
               {var $iconTsTitle = $thumbnail->iconTs?->title}
               {block albSymbol}

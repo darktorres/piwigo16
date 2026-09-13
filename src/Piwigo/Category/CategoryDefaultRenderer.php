@@ -224,6 +224,7 @@ final readonly class CategoryDefaultRenderer
                 iconTs: $iconTs,
                 nbComments: $nbCommentsForRow,
                 nbHits: $nbHits,
+                description: $desc !== '' ? $desc : null,
             );
         }
 

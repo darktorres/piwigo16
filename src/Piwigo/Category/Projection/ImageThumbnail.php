@@ -20,10 +20,17 @@ use Piwigo\Image\SrcImage;
  * own `show_nb_hits` preference -- which is what the template's two
  * `isset()` checks meant. `$iconTs` likewise follows `index_new_icon`.
  *
- * Three keys the merge produced are gone rather than carried: `DESCRIPTION`,
+ * Two keys the merge produced are still gone rather than carried:
  * `path_ext` and `file_ext` have no reader in any template, anywhere in
  * `src/`, or in the one event this list is dispatched through (which has no
- * registered handler).
+ * registered handler). `DESCRIPTION` was dropped for the same reason, but
+ * a real reader now exists (`bootstrap_darkroom`'s own `{block thumbName}`
+ * override, P61 closing audit -- legacy's `thumbnail_desc`/
+ * `thumbnail_cat_desc` settings choose the photo's description over its
+ * name in the thumbnail caption) -- restored as `$description`, already
+ * computed unconditionally either way (`CategoryDefaultRenderer`'s own
+ * `renderElementDescription()` call already builds this same string for
+ * `$tnTitle`), so this is a pure additive read, no new work done per row.
  */
 final readonly class ImageThumbnail
 {
@@ -37,5 +44,6 @@ final readonly class ImageThumbnail
         public ?RecentIcon $iconTs = null,
         public ?int $nbComments = null,
         public ?int $nbHits = null,
+        public ?string $description = null,
     ) {}
 }

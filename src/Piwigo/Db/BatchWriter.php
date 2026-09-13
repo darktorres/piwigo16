@@ -23,15 +23,29 @@ use LogicException;
  * former row-by-row loop alone responsible for ~27% of total instrumented
  * time (99s of 367s, 49,600 individual `UPDATE` statements), almost
  * entirely spent in per-statement network/parse/bind/execute overhead
- * rather than genuine work. Each chunk stays under {@see CHUNK_SIZE} rows,
- * safely below PostgreSQL's 65,535-parameter protocol limit and SQLite's
- * 32,766-variable default even for the widest real row shape (~30
- * admin-configurable EXIF/IPTC columns, `Metadata\MetadataService::
- * getSyncMetadataAttributes()`). The whole call (every chunk) still runs
- * inside one `Connection::transactional()` closure, so a failure in a
- * later chunk still rolls back every earlier chunk from the same call --
- * the all-or-nothing guarantee is unchanged, just no longer paid for with
- * a statement per row.
+ * rather than genuine work.
+ *
+ * {@see CHUNK_SIZE} is NOT sized off platform placeholder limits (both
+ * PostgreSQL's 65,535-parameter protocol limit and SQLite's 32,766-variable
+ * default sit far above where the real ceiling actually bites) -- a
+ * `massUpdate()` chunk's searched `CASE` costs the database O(chunk size)
+ * comparisons *per row* to find its own matching `WHEN` branch (branches
+ * are evaluated in order), so total CASE-evaluation work across one chunk
+ * is O(chunk_size²), not O(chunk_size). Measured directly against a real
+ * MySQL sync at 10,000 images (`tests/Bench/SiteSyncBench.php`): 100 rows/
+ * chunk ~52s, 500 ~54s, 1,000 ~56s (flat, within normal run-to-run noise),
+ * 2,000 ~65s, 5,000 ~98s (a clear, reproducible regression) -- bigger
+ * chunks trade fewer round trips for quadratically more per-chunk
+ * CASE-branch evaluation, and the two effects invert well before any
+ * placeholder limit is anywhere close. 500 sits inside the flat, safe
+ * region without chasing a marginal, possibly environment-specific
+ * "true" optimum between 100-1,000.
+ *
+ * The whole call (every chunk) still runs inside one
+ * `Connection::transactional()` closure, so a failure in a later chunk
+ * still rolls back every earlier chunk from the same call -- the
+ * all-or-nothing guarantee is unchanged, just no longer paid for with a
+ * statement per row.
  *
  * singleInsert()/singleUpdate() (and the private per-row updateRow() they
  * share) are deliberately NOT batched -- a lone row has no batching
@@ -52,8 +66,8 @@ final readonly class BatchWriter
 
     /**
      * Max rows per `massInsert()`/`massUpdate()` statement -- see this
-     * class's own docblock for why 500 is safe across every supported
-     * platform even at the widest realistic row shape.
+     * class's own docblock for why bigger is NOT better past this point
+     * (a real, measured regression, not just an untested assumption).
      */
     private const int CHUNK_SIZE = 500;
 

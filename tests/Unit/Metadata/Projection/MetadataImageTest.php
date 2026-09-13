@@ -3,51 +3,20 @@
 declare(strict_types=1);
 
 use Piwigo\Common\ValueObject\ImageId;
-use Piwigo\Common\ValueObject\SqlDateTime;
-use Piwigo\Image\ImageEntity;
 use Piwigo\Metadata\Projection\MetadataImage;
 
-/**
- * A transient (never-persisted, real-looking scalar values) ImageEntity
- * fixture, own-named to avoid colliding with
- * tests/Unit/Image/Projection/ImageTest.php's own global
- * transientImageEntity() helper.
- */
-function metadataImageTestEntity(?string $representativeExt = 'jpg'): ImageEntity
-{
-    $entity = new ImageEntity(
-        file: 'photo.jpg',
-        dateAvailable: null,
-        dateCreation: null,
-        name: null,
-        comment: null,
-        author: null,
-        hit: 0,
-        filesize: null,
-        width: null,
-        height: null,
-        coi: null,
-        representativeExt: $representativeExt,
-        dateMetadataUpdate: null,
-        ratingScore: null,
-        path: 'upload/2026/08/01/photo.jpg',
-        storageCategory: null,
-        level: 0,
-        md5sum: null,
-        addedByUser: null,
-        rotation: null,
-        latitude: null,
-        longitude: null,
-        lastmodified: SqlDateTime::from('2026-08-01 12:00:00'),
-    );
-    $entity->id = ImageId::from(42);
+test('fromRow copies id/path/representativeExt straight through', function (): void {
+    $image = MetadataImage::fromRow([
+        'id' => ImageId::from(42),
+        'path' => 'upload/2026/08/01/photo.jpg',
+        'representativeExt' => 'jpg',
+    ]);
 
-    return $entity;
-}
-
-test('fromEntity copies id/path/representativeExt straight through', function (): void {
-    $image = MetadataImage::fromEntity(metadataImageTestEntity());
-
+    expect($image)
+        ->not->toBeNull();
+    if ($image === null) {
+        return; // unreachable -- the assertion above already failed the test otherwise.
+    }
     expect($image->id)
         ->toBe(42)
         ->and($image->path)
@@ -56,21 +25,44 @@ test('fromEntity copies id/path/representativeExt straight through', function ()
         ->toBe('jpg');
 });
 
-test('fromEntity defaults id to 0 for a transient (never-persisted) entity', function (): void {
-    $entity = metadataImageTestEntity();
-    $entity->id = null;
+test('fromRow leaves a null representativeExt as null', function (): void {
+    $image = MetadataImage::fromRow([
+        'id' => ImageId::from(42),
+        'path' => 'upload/2026/08/01/photo.jpg',
+        'representativeExt' => null,
+    ]);
 
-    expect(MetadataImage::fromEntity($entity)->id)->toBe(0);
+    expect($image?->representativeExt)
+        ->toBeNull();
 });
 
-test('fromEntity leaves a null representativeExt as null', function (): void {
-    expect(MetadataImage::fromEntity(metadataImageTestEntity(null))->representativeExt)->toBeNull();
+test('fromRow returns null when id is not a real ImageId', function (): void {
+    // getArrayResult() still applies DBAL's custom Type conversion, so a
+    // real caller's own `id` is always an ImageId -- this proves the
+    // narrowing boundary itself, not a scenario either real caller's
+    // fixed SELECT can actually produce.
+    expect(MetadataImage::fromRow([
+        'id' => 42,
+        'path' => 'upload/2026/08/01/photo.jpg',
+        'representativeExt' => null,
+    ]))->toBeNull();
 });
 
-test('toArray round-trips the exact same shape fromEntity built', function (): void {
-    $roundTripped = MetadataImage::fromEntity(metadataImageTestEntity())->toArray();
+test('fromRow returns null when path is missing', function (): void {
+    expect(MetadataImage::fromRow([
+        'id' => ImageId::from(42),
+        'representativeExt' => null,
+    ]))->toBeNull();
+});
 
-    expect($roundTripped)
+test('toArray round-trips the exact same shape fromRow built', function (): void {
+    $image = MetadataImage::fromRow([
+        'id' => ImageId::from(42),
+        'path' => 'upload/2026/08/01/photo.jpg',
+        'representativeExt' => 'jpg',
+    ]);
+
+    expect($image?->toArray())
         ->toBe([
             'id' => 42,
             'path' => 'upload/2026/08/01/photo.jpg',

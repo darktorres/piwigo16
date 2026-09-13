@@ -34,6 +34,20 @@ final readonly class MetadataRepository
     ) {}
 
     /**
+     * Partial select (id/path/representativeExt only) + array hydration,
+     * not `select('i')`/`getResult()` -- this used to hydrate a full,
+     * change-tracked `ImageEntity` per row purely to build a 3-field
+     * `MetadataImage` and discard the entity immediately afterward.
+     * Profiling a real sync at 10,000 images found this responsible for a
+     * real chunk of `Doctrine\ORM\UnitOfWork::createEntity`/
+     * `AbstractHydrator::gatherRowData`/`computeChangeSet` overhead for
+     * objects nothing ever mutates or persists. Same technique
+     * `ImageRepository::findIdsAndPathsByStorageCategoryIds()` already
+     * established -- `id` still arrives as a real `ImageId` value object
+     * even under `getArrayResult()` (DBAL's custom Type conversion applies
+     * regardless of hydration mode), narrowed the same way via
+     * {@see MetadataImage::fromRow()}.
+     *
      * @param  list<int>  $ids
      * @return list<MetadataImage>
      */
@@ -43,15 +57,27 @@ final readonly class MetadataRepository
             return [];
         }
 
-        $images = $this->em->createQueryBuilder()
-            ->select('i')
+        $rows = $this->em->createQueryBuilder()
+            ->select('i.id', 'i.path', 'i.representativeExt')
             ->from(ImageEntity::class, 'i')
             ->where('i.id IN (:ids)')
             ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
             ->getQuery()
-            ->getResult();
+            ->getArrayResult();
 
-        return array_map(MetadataImage::fromEntity(...), $images);
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $image = MetadataImage::fromRow($row);
+            if ($image instanceof MetadataImage) {
+                $result[] = $image;
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -87,6 +113,9 @@ final readonly class MetadataRepository
      * Returns image id => row, matching the original's
      * `hash_from_query($query, 'id')` shape.
      *
+     * Partial select + array hydration, not full-entity `getResult()` --
+     * see {@see findImagesByIds()}'s own docblock for why.
+     *
      * @param  list<int>  $categoryIds
      * @return array<int, MetadataImage>
      */
@@ -97,7 +126,7 @@ final readonly class MetadataRepository
         }
 
         $qb = $this->em->createQueryBuilder()
-            ->select('i')
+            ->select('i.id', 'i.path', 'i.representativeExt')
             ->from(ImageEntity::class, 'i')
             ->where('i.storageCategory IN (:categoryIds)')
             ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER);
@@ -106,13 +135,19 @@ final readonly class MetadataRepository
             $qb->andWhere('i.dateMetadataUpdate IS NULL');
         }
 
-        $images = $qb->getQuery()
-            ->getResult();
+        $rows = $qb->getQuery()
+            ->getArrayResult();
 
         $result = [];
-        foreach ($images as $imageEntity) {
-            $image = MetadataImage::fromEntity($imageEntity);
-            $result[$image->id] = $image;
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $image = MetadataImage::fromRow($row);
+            if ($image instanceof MetadataImage) {
+                $result[$image->id] = $image;
+            }
         }
 
         return $result;

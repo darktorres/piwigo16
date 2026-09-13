@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Doctrine\DBAL\Logging\Middleware;
 use Override;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
+use Piwigo\Tests\Support\StatementCountingLogger;
 use Throwable;
 
 /**
@@ -378,6 +382,312 @@ final class BatchWriterTest extends IntegrationTestCase
             );
         } finally {
             $this->conn->executeStatement('DROP TABLE IF EXISTS ' . $quotedTable);
+        }
+    }
+
+    /**
+     * `massInsert()`/`massUpdate()` now issue one real multi-row statement
+     * per chunk (500 rows) instead of one per row -- the tests below cover
+     * exactly the behavior that only exists because of that change: chunk
+     * boundaries, the whole-call (every chunk) transaction still rolling
+     * back an already-executed earlier chunk, and the searched-`CASE`
+     * per-row-per-column `SKIP_EMPTY`/composite-key/`IS NULL` semantics
+     * staying correct when multiple rows share one batched statement.
+     */
+    public function testMassInsertSpansMultipleChunksAndAUniqueViolationInALaterChunkRollsBackAnEarlierChunkToo(): void
+    {
+        $rows = [];
+        for ($i = 1; $i <= 500; $i++) {
+            $rows[] = [
+                'id' => $i,
+                'name' => 'chunked-name' . $i,
+            ];
+        }
+        // Row 501 lands in the second chunk (chunk size 500) and collides
+        // with row 1's `name`, already in chunk 1 -- the chunk that will
+        // have already executed successfully by the time this one fails.
+        $rows[] = [
+            'id' => 501,
+            'name' => 'chunked-name1',
+        ];
+
+        $thrown = null;
+
+        try {
+            $this->writer->massInsert(self::TABLE, ['id', 'name'], $rows);
+        } catch (Throwable $e) {
+            $thrown = $e;
+        }
+
+        self::assertInstanceOf(UniqueConstraintViolationException::class, $thrown);
+        // Every row gone, not just row 501 -- proves the whole-call
+        // transaction rolled back chunk 1's own already-executed INSERT
+        // too, not just chunk 2's failing statement.
+        self::assertSame([], $this->fetchAllRows());
+    }
+
+    public function testMassUpdateSpansMultipleChunksAndAUniqueViolationInALaterChunkRollsBackAnEarlierChunkToo(): void
+    {
+        $seedValues = [];
+        for ($i = 1; $i <= 501; $i++) {
+            $seedValues[] = "({$i}, 'orig-name{$i}', NULL)";
+        }
+        $this->conn->executeStatement(
+            'INSERT INTO ' . self::TABLE . ' (id, name, note) VALUES ' . implode(',', $seedValues)
+        );
+
+        $updates = [];
+        for ($i = 1; $i <= 500; $i++) {
+            $updates[] = [
+                'id' => $i,
+                'name' => 'new-name' . $i,
+            ];
+        }
+        // Row 501 lands in the second chunk and collides with row 1's NEW
+        // name from chunk 1, which will already have been executed (not
+        // yet committed -- still inside the whole-call transaction) by
+        // the time chunk 2 fails.
+        $updates[] = [
+            'id' => 501,
+            'name' => 'new-name1',
+        ];
+
+        $thrown = null;
+
+        try {
+            $this->writer->massUpdate(self::TABLE, [
+                'primary' => ['id'],
+                'update' => ['name'],
+            ], $updates);
+        } catch (Throwable $e) {
+            $thrown = $e;
+        }
+
+        self::assertInstanceOf(UniqueConstraintViolationException::class, $thrown);
+        // Spot-check rows from BOTH chunks still hold their original
+        // names -- proves chunk 1's own already-executed UPDATE got
+        // rolled back too, not just chunk 2's failing statement.
+        self::assertSame('orig-name1', $this->conn->fetchOne('SELECT name FROM ' . self::TABLE . ' WHERE id = 1'));
+        self::assertSame('orig-name500', $this->conn->fetchOne('SELECT name FROM ' . self::TABLE . ' WHERE id = 500'));
+        self::assertSame('orig-name501', $this->conn->fetchOne('SELECT name FROM ' . self::TABLE . ' WHERE id = 501'));
+    }
+
+    /**
+     * The one genuinely new correctness risk in the searched-`CASE`
+     * design: a `SKIP_EMPTY` column's `WHEN` list only contains branches
+     * for rows that actually set it, so a row skipping it must fall
+     * through to `ELSE <column>` (its own current value) even though
+     * *other* rows in the very same batched statement do set that column.
+     */
+    public function testMassUpdateWithSkipEmptyAppliesPerRowPerColumnWithinTheSameBatchedStatement(): void
+    {
+        $this->conn->executeStatement(
+            'INSERT INTO ' . self::TABLE . " (id, name, note) VALUES (40, 'orig-name-40', 'orig-note-40'), (41, 'orig-name-41', 'orig-note-41')"
+        );
+
+        $this->writer->massUpdate(self::TABLE, [
+            'primary' => ['id'],
+            'update' => ['name', 'note'],
+        ], [
+            [
+                'id' => 40,
+                'name' => '', // skipped for row 40
+                'note' => 'updated-note-40',
+            ],
+            [
+                'id' => 41,
+                'name' => 'updated-name-41',
+                'note' => '', // skipped for row 41
+            ],
+        ], BatchWriter::SKIP_EMPTY);
+
+        self::assertSame([
+            [
+                'id' => 40,
+                'name' => 'orig-name-40',
+                'note' => 'updated-note-40',
+            ],
+            [
+                'id' => 41,
+                'name' => 'updated-name-41',
+                'note' => 'orig-note-41',
+            ],
+        ], $this->fetchAllRows());
+    }
+
+    /**
+     * `image_category`'s own real shape (`ImageRepository::
+     * massUpdateImageCategoryRanks()`) -- the one real composite-`primary`
+     * caller, so the searched-`CASE`/`AND`/`OR` predicate needs proving
+     * against a genuine 2-column key, not just the single-column shape
+     * every other real call site uses.
+     */
+    public function testMassUpdateSupportsACompositePrimaryKeyAcrossMultipleRowsInOneBatch(): void
+    {
+        $table = 'batchwriter_test_composite';
+        $this->conn->executeStatement('DROP TABLE IF EXISTS ' . $table);
+        $this->conn->executeStatement(
+            'CREATE TABLE ' . $table . ' (a_id INT NOT NULL, b_id INT NOT NULL, rnk INT NOT NULL, PRIMARY KEY (a_id, b_id))'
+        );
+
+        try {
+            $this->conn->executeStatement(
+                'INSERT INTO ' . $table . ' (a_id, b_id, rnk) VALUES (1,1,0), (1,2,0), (2,1,0)'
+            );
+
+            $this->writer->massUpdate($table, [
+                'primary' => ['a_id', 'b_id'],
+                'update' => ['rnk'],
+            ], [
+                [
+                    'a_id' => 1,
+                    'b_id' => 1,
+                    'rnk' => 10,
+                ],
+                [
+                    'a_id' => 1,
+                    'b_id' => 2,
+                    'rnk' => 20,
+                ],
+                [
+                    'a_id' => 2,
+                    'b_id' => 1,
+                    'rnk' => 30,
+                ],
+            ]);
+
+            $rankOneOne = $this->conn->fetchOne('SELECT rnk FROM ' . $table . ' WHERE a_id=1 AND b_id=1');
+            $rankOneTwo = $this->conn->fetchOne('SELECT rnk FROM ' . $table . ' WHERE a_id=1 AND b_id=2');
+            $rankTwoOne = $this->conn->fetchOne('SELECT rnk FROM ' . $table . ' WHERE a_id=2 AND b_id=1');
+            self::assertIsNumeric($rankOneOne);
+            self::assertIsNumeric($rankOneTwo);
+            self::assertIsNumeric($rankTwoOne);
+            self::assertSame(10, (int) $rankOneOne);
+            self::assertSame(20, (int) $rankOneTwo);
+            self::assertSame(30, (int) $rankTwoOne);
+        } finally {
+            $this->conn->executeStatement('DROP TABLE IF EXISTS ' . $table);
+        }
+    }
+
+    /**
+     * Batched sibling of {@see testSingleUpdateBuildsAnIsNullWhereClauseForANullWhereValueAndOnlyMatchesThatRow()} --
+     * a null-valued key row and a real-valued key row in the very same
+     * batched statement, proving the `IS NULL` branch and the `= :param`
+     * branch coexist correctly across rows sharing one `CASE`/`WHERE`.
+     */
+    public function testMassUpdateBuildsAnIsNullWhereClauseInBatchedFormAlongsideARealValuedRow(): void
+    {
+        $this->conn->executeStatement(
+            'INSERT INTO ' . self::TABLE . " (id, name, note) VALUES (50, 'row-fifty', NULL), (51, 'row-fifty-one', 'has-note')"
+        );
+
+        // 'note' (nullable, not the real PRIMARY KEY) stands in as the
+        // matching column here -- same technique the single-row sibling
+        // test above already uses, since massUpdate()'s own 'primary'
+        // list is whichever columns identify a row, not necessarily the
+        // table's real PK.
+        $this->writer->massUpdate(self::TABLE, [
+            'primary' => ['note'],
+            'update' => ['name'],
+        ], [
+            [
+                'note' => null,
+                'name' => 'updated-fifty',
+            ],
+            [
+                'note' => 'has-note',
+                'name' => 'updated-fifty-one',
+            ],
+        ]);
+
+        self::assertSame([
+            [
+                'id' => 50,
+                'name' => 'updated-fifty',
+                'note' => null,
+            ],
+            [
+                'id' => 51,
+                'name' => 'updated-fifty-one',
+                'note' => 'has-note',
+            ],
+        ], $this->fetchAllRows());
+    }
+
+    public function testMassInsertWithIgnoreSkipsOnlyDuplicateRowsWithinTheSameChunk(): void
+    {
+        $this->conn->executeStatement(
+            'INSERT INTO ' . self::TABLE . " (id, name, note) VALUES (60, 'existing-name', NULL)"
+        );
+
+        $this->writer->massInsert(self::TABLE, ['id', 'name'], [
+            [
+                'id' => 61,
+                'name' => 'existing-name', // duplicate -> silently skipped
+            ],
+            [
+                'id' => 62,
+                'name' => 'brand-new-name',
+            ],
+        ], [
+            'ignore' => true,
+        ]);
+
+        $countSixtyOne = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . self::TABLE . ' WHERE id = 61');
+        $countSixtyTwo = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . self::TABLE . ' WHERE id = 62');
+        self::assertIsNumeric($countSixtyOne);
+        self::assertIsNumeric($countSixtyTwo);
+        self::assertSame(0, (int) $countSixtyOne);
+        self::assertSame(1, (int) $countSixtyTwo);
+        self::assertSame('existing-name', $this->conn->fetchOne('SELECT name FROM ' . self::TABLE . ' WHERE id = 60'));
+    }
+
+    /**
+     * Regression proof for the batching itself, not just its correctness:
+     * a future accidental revert of `massInsert()`/`massUpdate()` to a
+     * per-row loop would still pass every correctness test above (it's
+     * still functionally correct, just slow) -- this fails immediately
+     * instead, by counting real round trips via a
+     * `Doctrine\DBAL\Logging\Middleware`-wrapped connection built from the
+     * same `DbConnection::params()` this class's own `$this->conn`
+     * already uses.
+     */
+    public function testMassInsertAndMassUpdateIssueOneStatementPerChunkNotOnePerRow(): void
+    {
+        $logger = new StatementCountingLogger();
+        $config = new Configuration();
+        $config->setMiddlewares([new Middleware($logger)]);
+        $loggedConn = DriverManager::getConnection(DbConnection::params(), $config);
+        $loggedWriter = new BatchWriter($loggedConn);
+
+        try {
+            $rows = [];
+            for ($i = 1; $i <= 1200; $i++) {
+                $rows[] = [
+                    'id' => $i,
+                    'name' => 'rt-name' . $i,
+                ];
+            }
+            $loggedWriter->massInsert(self::TABLE, ['id', 'name'], $rows);
+            // ceil(1200 / 500) = 3 real statements, not 1200.
+            self::assertSame(3, $logger->executedStatementCount);
+
+            $logger->executedStatementCount = 0;
+            $updates = [];
+            foreach ($rows as $row) {
+                $updates[] = [
+                    'id' => $row['id'],
+                    'name' => 'rt-updated-' . $row['id'],
+                ];
+            }
+            $loggedWriter->massUpdate(self::TABLE, [
+                'primary' => ['id'],
+                'update' => ['name'],
+            ], $updates);
+            self::assertSame(3, $logger->executedStatementCount);
+        } finally {
+            $loggedConn->close();
         }
     }
 }

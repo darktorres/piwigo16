@@ -40,7 +40,7 @@ function langTestRrmdir(string $dir): void
  * Piwigo\Lang\Translator/gettext\gettext PoLoader stack, not a fake, same
  * as the real language/*.po files this class ships with.
  */
-function langTestWritePo(string $path, string $language, string $translation, ?string $parent = null): void
+function langTestWritePo(string $path, string $language, string $translation, ?string $parent = null, ?string $direction = null): void
 {
     if (! is_dir(dirname($path))) {
         mkdir(dirname($path), 0o777, true);
@@ -51,6 +51,9 @@ function langTestWritePo(string $path, string $language, string $translation, ?s
     ];
     if ($parent !== null) {
         $headerLines[] = 'X-Piwigo-Parent: ' . $parent;
+    }
+    if ($direction !== null) {
+        $headerLines[] = 'X-Piwigo-Direction: ' . $direction;
     }
     $header = implode('', array_map(static fn (string $l): string => '"' . $l . "\\n\"\n", $headerLines));
 
@@ -1390,6 +1393,41 @@ test('poHeadersToLangInfo omits keys whose header is absent or explicitly empty'
             'code' => 'en_UK',
             'zero_plural' => false,
         ]);
+});
+
+test('load() never lets a secondary file with no real direction header clobber an already-correct RTL direction', function (): void {
+    // Real bug this locks in (P61 closing verification, found live): a
+    // real he_IL session showed lang="he" (code merged correctly -- its
+    // own default is '', so it's correctly omitted when absent) but
+    // dir="ltr" (direction merged incorrectly) on the same rendered
+    // page. Root cause was tools/i18n/php-to-po-fn.php defaulting a
+    // secondary domain's missing direction to the literal string 'ltr'
+    // instead of '' (fixed there, and every already-shipped
+    // language/<locale>/*.po file regenerated/stripped of the fake
+    // header) -- this test instead locks in the real *consumer*
+    // contract Lang::load()'s own merge relies on: a real secondary
+    // file that genuinely has no direction of its own (the correct,
+    // fixed shape) must never override common.lang's own real value,
+    // no matter how many more files load afterward.
+    $lang = langTestMake();
+    $dirname = $this->langRoot . '/plugins/rtl-preserved/';
+    langTestWritePo($dirname . 'language/he_IL/common.po', 'he_IL', 'Shalom', direction: 'rtl');
+    langTestWritePo($dirname . 'language/he_IL/admin.po', 'he_IL', 'Shalom Admin');
+
+    $lang->load('common.lang', $dirname, [
+        'language' => 'he_IL',
+        'no_fallback' => true,
+    ]);
+    expect($lang->langInfo()['direction'] ?? null)
+        ->toBe('rtl');
+
+    $lang->load('admin.lang', $dirname, [
+        'language' => 'he_IL',
+        'no_fallback' => true,
+    ]);
+
+    expect($lang->langInfo()['direction'] ?? null)
+        ->toBe('rtl');
 });
 
 test('current() resolves the real container-shared instance once Kernel::boot() has run', function (): void {

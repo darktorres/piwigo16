@@ -6,7 +6,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: ko_KR\n"
 "Plural-Forms: nplurals=1; plural=(0);\n"
-"X-Piwigo-Direction: ltr\n"
 "X-Piwigo-Zero-Plural: false\n"
 
 msgid "also given by your host provider"

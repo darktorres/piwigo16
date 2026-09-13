@@ -6,7 +6,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: hu_HU\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Piwigo-Direction: ltr\n"
 "X-Piwigo-Zero-Plural: false\n"
 
 msgid "UI redesigns that make a difference"

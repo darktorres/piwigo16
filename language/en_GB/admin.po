@@ -6,7 +6,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: en_GB\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Piwigo-Direction: ltr\n"
 "X-Piwigo-Zero-Plural: false\n"
 
 msgid "(this tag will be deleted)"

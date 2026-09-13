@@ -6,7 +6,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: eu_ES\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Piwigo-Direction: ltr\n"
 "X-Piwigo-Zero-Plural: false\n"
 
 msgid "Piwigo may try to switch your configuration to PHP 5 by creating or modifying a .htaccess file."

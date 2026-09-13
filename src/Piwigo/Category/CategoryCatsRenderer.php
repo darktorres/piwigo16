@@ -36,6 +36,7 @@ use Piwigo\Core\RequestMetrics;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Image\Event\GetCategoryDerivativeParams;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\Projection\SrcImageInfo;
@@ -459,7 +460,8 @@ final readonly class CategoryCatsRenderer
             // pagination
             $tplThumbnailsVarSelection = $tplThumbnailsVar;
 
-            $derivativeParams = $this->imageStdParams->getByType(ImageStdParams::THUMB);
+            $derivativeParams = $this->eventDispatcher->dispatch(new GetCategoryDerivativeParams($this->imageStdParams->getByType(ImageStdParams::THUMB)))
+                ->params;
             $tplThumbnailsVarSelection = $this->eventDispatcher->dispatch(new IndexCategoryThumbnailsRendered($tplThumbnailsVarSelection))
                 ->tplThumbnailsVar;
             $result = new CategoryCatsResult(

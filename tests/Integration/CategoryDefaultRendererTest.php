@@ -22,8 +22,11 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\TypedRepository;
+use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\Event\GetIndexDerivativeParams;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Image\SizingParams;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
@@ -320,5 +323,37 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         $html = $this->renderedThumbnailsHtml($result);
         self::assertStringContainsString('1 comment', $html);
         self::assertStringNotContainsString('1 comments', $html);
+    }
+
+    /**
+     * A subscribed `GetIndexDerivativeParams` handler's mutation of
+     * `$event->params` must reach `CategoryDefaultResult::derivativeParams`
+     * -- `dispatch()` never reads a handler's return value (see
+     * `EventDispatcher::dispatch()`'s own docblock), so the caller has to
+     * read the override off the same object it dispatched. Untested
+     * before this: the sibling `GetCategoryDerivativeParams` event on
+     * `CategoryCatsRenderer` (added alongside this test) shares the exact
+     * same contract.
+     */
+    public function testRenderAppliesAGetIndexDerivativeParamsHandlersOverride(): void
+    {
+        $this->seedUser(showNbHits: false, showNbComments: false);
+
+        $override = new DerivativeParams(SizingParams::classic(999, 888));
+        $handler = static function (GetIndexDerivativeParams $event) use ($override): void {
+            $event->params = $override;
+        };
+
+        EventDispatcherTestFactory::get()->addTypedHandler(GetIndexDerivativeParams::class, $handler);
+
+        try {
+            $result = $this->renderer->render([3, 1, 2], 0, 3, Section::Categories);
+
+            self::assertSame($override, $result->derivativeParams);
+            self::assertSame(999, $result->derivativeParams->sizing->ideal_size->width);
+            self::assertSame(888, $result->derivativeParams->sizing->ideal_size->height);
+        } finally {
+            EventDispatcherTestFactory::get()->removeTypedHandler(GetIndexDerivativeParams::class, $handler);
+        }
     }
 }

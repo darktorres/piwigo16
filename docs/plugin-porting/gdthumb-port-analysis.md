@@ -56,8 +56,10 @@ Two small, explicitly-decided core changes — not a generic capability.
 
 **Decision** (made explicitly, not silently worked around): add a new event mirroring the existing one exactly, rather than accept a visible v1 quality regression on the album grid or invent a CSS-only workaround legacy itself never used.
 
+**Landed 2026-09-12** — one correction from the original sketch below: the class lives under `Piwigo\Image\Event\`, not `Piwigo\Category\Event\`, co-located with its sibling `GetIndexDerivativeParams` (deptrac treats `Image`/`Category` as the same layer either way, so this was a pure consistency call, not an architecture constraint):
+
 ```php
-// src/Piwigo/Category/Event/GetCategoryDerivativeParams.php
+// src/Piwigo/Image/Event/GetCategoryDerivativeParams.php
 // same shape as Piwigo\Image\Event\GetIndexDerivativeParams:
 final class GetCategoryDerivativeParams
 {
@@ -65,7 +67,7 @@ final class GetCategoryDerivativeParams
 }
 ```
 
-Dispatch in `CategoryCatsRenderer.php` at the existing `getByType(ImageStdParams::THUMB)` call site, same pattern as `CategoryDefaultRenderer.php:234`.
+Dispatched in `CategoryCatsRenderer.php` at the existing `getByType(ImageStdParams::THUMB)` call site, same pattern as `CategoryDefaultRenderer.php:234`. While implementing this, found the exact same gap the port itself would have hit later: neither renderer's own test suite asserted that a subscribed handler's override of `$event->params` actually survives to the final result (`CategoryCatsResult`/`CategoryDefaultResult`). Fixed for both, not just the new event — `tests/Integration/CategoryCatsRendererTest.php::testRenderAppliesAGetCategoryDerivativeParamsHandlersOverride()` and the new `tests/Integration/CategoryDefaultRendererTest.php::testRenderAppliesAGetIndexDerivativeParamsHandlersOverride()`, both mutation-verified (temporarily reverted the dispatch wrap, confirmed the new test fails, restored it).
 
 ### 3b. `plugins/<id>/assets/*` isn't web-servable — for any plugin, not just gdThumb
 
@@ -156,7 +158,7 @@ Preserve both real attribution lines found in the source: Serguei Dosyukov as th
 
 Per `../piwigo16-plugins/CLAUDE.md`'s own explicit standard, raised after the 2026-08-25 revert found unit/PHP-parses-level "verified" ports still had real live bugs: **install for real against a running `piwigo17-rewrite` instance through the local PEM mirror** — fetch, compat filter, download, extract, install, activate, boot, and a real page render (both the image-grid index page and a mixed category/photo album page, exercising `do_merge`). Don't stop at PHPStan/ECS/unit-level checks. Additionally:
 
-1. `vendor/bin/phpstan analyse` + ECS scoped to the 2 new `src/Piwigo/Category/` files (§3a) and the plugin's own tree.
+1. `vendor/bin/phpstan analyse` + ECS scoped to the 2 new `src/Piwigo/Image/Event/`/`src/Piwigo/Category/` files (§3a, landed and green) and the plugin's own tree.
 2. Confirm `plugins/gdthumb/assets/*` returns 200 (not 403/404) through the real dev-stack Caddy config after §3b lands.
 3. A live/browser check confirming: default index and category pages unaffected when the plugin is inactive; masonry layout, hero first-thumb (with aspect-ratio suppression), caption-mode classes, and the mixed-page grid merge all apply once active.
-4. `git diff --stat` on `piwigo17-rewrite` should show changes confined to `src/Piwigo/Category/Event/GetCategoryDerivativeParams.php`, `src/Piwigo/Category/CategoryCatsRenderer.php`, and the `public/plugins` symlink + Caddyfile/vhost carve-out — nothing else.
+4. §3a's own `git diff --stat` (already landed) was confined to `src/Piwigo/Image/Event/GetCategoryDerivativeParams.php`, `src/Piwigo/Category/CategoryCatsRenderer.php`, and the 2 test files above — the remaining plugin work should confine its own diff to `public/plugins` symlink + Caddyfile/vhost carve-out (§3b) plus the plugin's own package, nothing else in `piwigo17-rewrite`.

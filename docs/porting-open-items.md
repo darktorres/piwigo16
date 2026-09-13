@@ -21,7 +21,7 @@ Source docs:
 
 ### Core prerequisites blocking a specific, already-designed port
 
-- [ ] **gdThumb** — new `GetCategoryDerivativeParams` event (mirrors the existing `GetIndexDerivativeParams`), dispatched from `CategoryCatsRenderer.php` at its hardcoded `getByType(ImageStdParams::THUMB)` call site. See `gdthumb-port-analysis.md` §3a.
+- [x] ~~**gdThumb** — new `GetCategoryDerivativeParams` event~~ — **done 2026-09-12**: `src/Piwigo/Image/Event/GetCategoryDerivativeParams.php` (co-located with its sibling, not `Category\Event\` as first proposed), dispatched from `CategoryCatsRenderer.php`. Also closed a test-coverage gap found along the way: neither renderer previously asserted a handler's derivative-size override actually survives to the result — both now covered and mutation-verified. See `gdthumb-port-analysis.md` §3a.
 - [ ] **gdThumb** — `public/plugins` symlink (matching `public/themes`/`public/dist`) + a Caddyfile `@deniedRelocated` carve-out + the equivalent Apache vhost rule. Currently `/plugins/*` 403s outright — blocks *any* plugin shipping its own CSS/JS, not just gdThumb. See §3b.
 - [ ] **rv_tscroller** — extract `SectionPopulator::resolveSectionItems()` (a new explicit-parameter, side-effect-free method) + a new `SectionItemQuery` VO, so page-1 rendering and the plugin's own AJAX route share one source of truth. See `rv-tscroller-port-analysis.md` §3.
 

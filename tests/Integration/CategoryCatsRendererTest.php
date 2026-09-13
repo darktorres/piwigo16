@@ -31,8 +31,11 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\TypedRepository;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\Event\GetCategoryDerivativeParams;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Image\SizingParams;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -543,5 +546,36 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
 
         $html = $this->renderedCategoriesHtml($result);
         self::assertStringNotContainsString('Sample Album', $html);
+    }
+
+    /**
+     * A subscribed `GetCategoryDerivativeParams` handler's mutation of
+     * `$event->params` must reach `CategoryCatsResult::derivativeParams`
+     * -- the real mechanism a plugin like gdThumb needs to override the
+     * album-grid thumbnail size, since `dispatch()` never reads a
+     * handler's return value (see `EventDispatcher::dispatch()`'s own
+     * docblock).
+     */
+    public function testRenderAppliesAGetCategoryDerivativeParamsHandlersOverride(): void
+    {
+        $this->seedUser();
+
+        $override = new DerivativeParams(SizingParams::classic(999, 888));
+        $handler = static function (GetCategoryDerivativeParams $event) use ($override): void {
+            $event->params = $override;
+        };
+
+        EventDispatcherTestFactory::get()->addTypedHandler(GetCategoryDerivativeParams::class, $handler);
+
+        try {
+            $result = $this->renderer->render(Section::Categories, null, 0);
+
+            self::assertNotNull($result);
+            self::assertSame($override, $result->derivativeParams);
+            self::assertSame(999, $result->derivativeParams->sizing->ideal_size->width);
+            self::assertSame(888, $result->derivativeParams->sizing->ideal_size->height);
+        } finally {
+            EventDispatcherTestFactory::get()->removeTypedHandler(GetCategoryDerivativeParams::class, $handler);
+        }
     }
 }

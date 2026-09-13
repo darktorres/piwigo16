@@ -111,7 +111,7 @@ final readonly class CatListPageRenderer
                 $catListRequest->photoDeletionMode
             );
 
-            $_SESSION['page_infos'] = [$this->lang->t('Virtual album deleted')];
+            $this->sessionService->queuePageInfo($this->lang->t('Virtual album deleted'));
             $categoryService->updateGlobalRank();
             PermissionCacheInvalidator::invalidate();
 

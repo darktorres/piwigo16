@@ -461,6 +461,30 @@ final readonly class ExtensionContext
     }
 
     /**
+     * Queues a flash message shown on the next page load, surviving a
+     * redirect -- the same `page_infos` mechanism several core
+     * controllers already use (`SessionService::queuePageInfo()`'s own
+     * docblock has the full list), grounded in
+     * `../piwigo16-plugins/bot_protection/admin/bot_protection_admin.php`'s
+     * own real `$_SESSION['page_infos'][] = ...; redirect(...);` pattern.
+     * See `coreIndexDeriv()`'s own docblock for why this reaches a core,
+     * un-namespaced session key directly rather than through
+     * {@see session()} (which is per-extension-namespaced by design).
+     */
+    public function addPageInfo(string $message): void
+    {
+        $this->sessionService->queuePageInfo($message);
+    }
+
+    /**
+     * {@see addPageInfo()}'s own `page_errors` counterpart.
+     */
+    public function addPageError(string $message): void
+    {
+        $this->sessionService->queuePageError($message);
+    }
+
+    /**
      * `'mobile'`/`'tablet'`/`'desktop'` -- see `Core\DeviceHelper::
      * getDevice()`'s own docblock: v17 dropped UA-sniffing (responsive CSS
      * covers it for core), so this defaults to `'desktop'` absent an

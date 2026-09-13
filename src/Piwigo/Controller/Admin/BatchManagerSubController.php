@@ -52,6 +52,7 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\SearchService;
+use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
@@ -114,6 +115,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
         private InputValidator $inputValidator,
         private Paths $paths,
         private Renderer $renderer,
+        private SessionService $sessionService,
     ) {}
 
     #[Override]
@@ -185,7 +187,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
                 ->render($cat_elements_id, $start, $filter_dimensions, $filter_filesize);
         }
 
-        return new BatchManagerGlobalPageRenderer($this->lang, $this->redirectService, $this->urlService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->tagService, $this->categoryService, $this->imageService, $this->htmlRenderer, $this->currentConfig, $this->csrfService, $this->inputValidator, $this->paths, $this->renderer)
+        return new BatchManagerGlobalPageRenderer($this->lang, $this->redirectService, $this->urlService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->tagService, $this->categoryService, $this->imageService, $this->htmlRenderer, $this->currentConfig, $this->csrfService, $this->inputValidator, $this->paths, $this->renderer, $this->sessionService)
             ->render($cat_elements_id, $start, $filter_dimensions, $filter_filesize, $duplicates_on_fields);
     }
 
@@ -203,9 +205,7 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
             TypedRepository::narrow($this->entityManager->getRepository(CaddieEntity::class), CaddieRepository::class)
                 ->replaceForUser($userId->value, []);
 
-            $_SESSION['page_infos'] = [
-                $this->lang->t('Information data registered in database'),
-            ];
+            $this->sessionService->queuePageInfo($this->lang->t('Information data registered in database'));
 
             $this->redirectService->redirect($this->urlService->getRootUrl() . 'admin.php?page=' . $getPage);
         }
@@ -214,14 +214,11 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
             $nb_orphans_deleted = $batchManagerRequest->nbOrphansDeleted;
 
             if ($nb_orphans_deleted > 0) {
-                if (! isset($_SESSION['page_infos']) || ! is_array($_SESSION['page_infos'])) {
-                    $_SESSION['page_infos'] = [];
-                }
-                $_SESSION['page_infos'][] = $this->translator->plural(
+                $this->sessionService->queuePageInfo($this->translator->plural(
                     '%d photo was deleted',
                     '%d photos were deleted',
                     $nb_orphans_deleted
-                );
+                ));
 
                 $this->redirectService->redirect($this->urlService->getRootUrl() . 'admin.php?page=' . $getPage);
             }
@@ -231,14 +228,11 @@ final readonly class BatchManagerSubController implements AdminSubControllerInte
             $nb_md5sum_added = $batchManagerRequest->nbMd5sumAdded;
 
             if ($nb_md5sum_added > 0) {
-                if (! isset($_SESSION['page_infos']) || ! is_array($_SESSION['page_infos'])) {
-                    $_SESSION['page_infos'] = [];
-                }
-                $_SESSION['page_infos'][] = $this->translator->plural(
+                $this->sessionService->queuePageInfo($this->translator->plural(
                     '%d checksums were added',
                     '%d checksums were added',
                     $nb_md5sum_added
-                );
+                ));
 
                 $this->redirectService->redirect($this->urlService->getRootUrl() . 'admin.php?page=' . $getPage);
             }

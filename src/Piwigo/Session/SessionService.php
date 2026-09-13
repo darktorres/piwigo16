@@ -412,6 +412,59 @@ final readonly class SessionService
     }
 
     /**
+     * Queues a flash message under the un-prefixed `page_infos` session
+     * key -- `Html\HtmlService::flushMessageList()`'s own read/clear
+     * counterpart, the mechanism several real controllers
+     * (`Controller\CommentsController`/`PictureController`/
+     * `RegisterController`, `Admin\BatchManagerGlobalPageRenderer`/
+     * `CatListPageRenderer`/`Maintenance\MaintenanceActionDispatcher`,
+     * `Controller\Admin\BatchManagerSubController`) already use to survive
+     * a redirect into the next request -- `Core\PageState::addInfo()`'s
+     * own in-memory accumulation doesn't, since a redirect starts a fresh
+     * request. Deliberately `string`-only, unlike `PageState::addInfo()`'s
+     * `string|Html`: `flushMessageList()`'s own read side silently drops
+     * anything that isn't a plain string from this session array
+     * (`array_filter(..., is_string(...))`), so an `Html` value queued
+     * here would just vanish on the next request.
+     *
+     * Deliberately doesn't reuse `setSessionVar()`/`getSessionVar()`:
+     * both auto-prefix with `pwg_`, but this key has always been the bare
+     * `page_infos`, matching `flushMessageList()`'s own literal `'page_' .
+     * $mode` read.
+     *
+     * Appends, never replaces -- several of the real call sites above
+     * used to assign `$_SESSION['page_infos'] = [$message]` directly
+     * instead of appending, silently discarding anything already queued
+     * earlier in the same request (a real bug, not a hypothetical one:
+     * nothing before this fix stopped two such call sites from clobbering
+     * each other, or from clobbering a plugin's own queued message via
+     * `ExtensionContext::addPageInfo()`).
+     */
+    public function queuePageInfo(string $message): void
+    {
+        if (! isset($_SESSION['page_infos']) || ! is_array($_SESSION['page_infos'])) {
+            $_SESSION['page_infos'] = [];
+        }
+        $_SESSION['page_infos'][] = $message;
+    }
+
+    /**
+     * {@see queuePageInfo()}'s own `page_errors` counterpart -- same
+     * append-only, `string`-only, un-prefixed-key reasoning, grounded in
+     * the same real need at `Controller\PictureController`/
+     * `CommentsController`/`PasswordController`'s own real call sites
+     * (all 3 already append safely; this just centralizes the duplicated
+     * guard, no bug fixed here).
+     */
+    public function queuePageError(string $message): void
+    {
+        if (! isset($_SESSION['page_errors']) || ! is_array($_SESSION['page_errors'])) {
+            $_SESSION['page_errors'] = [];
+        }
+        $_SESSION['page_errors'][] = $message;
+    }
+
+    /**
      * Deletes a persistent variable for the current session.
      */
     public function unsetSessionVar(string $var): bool

@@ -714,6 +714,61 @@ test('setPictureDeriv writes the same shared core session key getPictureDeriv re
         ->toBe('xsmall');
 });
 
+test('queuePageInfo appends to the un-prefixed page_infos session key without clobbering an earlier message', function (): void {
+    $service = makeSessionService();
+    $_SESSION = [];
+
+    $service->queuePageInfo('first');
+    $service->queuePageInfo('second');
+
+    expect($_SESSION['page_infos'])
+        ->toBe(['first', 'second']);
+});
+
+test('queuePageInfo initializes page_infos from scratch when nothing was queued yet', function (): void {
+    $service = makeSessionService();
+    $_SESSION = [];
+
+    $service->queuePageInfo('only');
+
+    expect($_SESSION['page_infos'])
+        ->toBe(['only']);
+});
+
+test('queuePageInfo overwrites a non-array page_infos session value rather than appending to it', function (): void {
+    $service = makeSessionService();
+    $_SESSION['page_infos'] = 'not an array';
+
+    $service->queuePageInfo('real message');
+
+    expect($_SESSION['page_infos'])
+        ->toBe(['real message']);
+});
+
+test('queuePageError appends to the un-prefixed page_errors session key without clobbering an earlier message', function (): void {
+    $service = makeSessionService();
+    $_SESSION = [];
+
+    $service->queuePageError('first');
+    $service->queuePageError('second');
+
+    expect($_SESSION['page_errors'])
+        ->toBe(['first', 'second']);
+});
+
+test('queuePageInfo and queuePageError use independent session keys', function (): void {
+    $service = makeSessionService();
+    $_SESSION = [];
+
+    $service->queuePageInfo('an info');
+    $service->queuePageError('an error');
+
+    expect($_SESSION['page_infos'])
+        ->toBe(['an info'])
+        ->and($_SESSION['page_errors'])
+        ->toBe(['an error']);
+});
+
 /**
  * [Mutation] A scoped `pest --mutate` rerun leaves 12 mutations
  * "untested" -- zero real Unit-suite gaps, all individually

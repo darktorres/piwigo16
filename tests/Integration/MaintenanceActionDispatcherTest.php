@@ -433,6 +433,18 @@ namespace Piwigo\Tests\Integration {
 
         public function testUnlockGalleryPersistsGalleryUnlockedAndRedirects(): void
         {
+            // $_SESSION['page_infos'] is read back by Html\HtmlService::
+            // flushMessageList() on the next request -- SessionService::
+            // queuePageInfo()'s own real, current mechanism, not an
+            // orphaned write. Pre-seeded here (a real scenario: something
+            // else queued a message earlier in the same request) to prove
+            // this call site appends via queuePageInfo() rather than
+            // clobbering -- confirmed live: before this call site was
+            // refactored, it did `$_SESSION['page_infos'] = [$message]`
+            // directly, which would have silently discarded 'Earlier
+            // message' here.
+            $_SESSION['page_infos'] = ['Earlier message'];
+
             try {
                 $this->dispatcher->dispatch('unlock_gallery');
                 self::fail('Expected RedirectServiceInterface::redirect() to throw ResponseReadyException');
@@ -441,10 +453,7 @@ namespace Piwigo\Tests\Integration {
 
             $raw = $this->conn->fetchOne("SELECT value FROM config WHERE param = 'gallery_locked'");
             self::assertFalse(json_decode(is_scalar($raw) ? (string) $raw : ''));
-            // $_SESSION['page_infos'] here has no reader anywhere in src/Piwigo
-            // (confirmed via full-repo grep) -- exercised for coverage credit
-            // without asserting on a visible effect that doesn't exist.
-            self::assertSame(['Gallery unlocked'], $_SESSION['page_infos'] ?? null);
+            self::assertSame(['Earlier message', 'Gallery unlocked'], $_SESSION['page_infos'] ?? null);
 
             $this->conn->executeStatement("DELETE FROM config WHERE param = 'gallery_locked'");
             unset($_SESSION['page_infos']);

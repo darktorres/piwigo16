@@ -190,10 +190,7 @@ final readonly class RegisterController implements ControllerInterface
                 if (count($errors) === 0) {
                     // email notification
                     if ($registerSubmit->sendPasswordByMail and InputValidator::checkEmailFormat($post_mail_address)) {
-                        if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
-                            $_SESSION['page_infos'] = [];
-                        }
-                        $_SESSION['page_infos'][] = $this->lang->t('Successfully registered, you will soon receive an email with your connection settings. Welcome!');
+                        $this->sessionService->queuePageInfo($this->lang->t('Successfully registered, you will soon receive an email with your connection settings. Welcome!'));
                     }
 
                     // [SEC-31] Only a real new account gets logged in -- a

@@ -544,15 +544,12 @@ final class PasswordController implements ControllerInterface
                 // deliberately still allowed to fire here since no
                 // password_form_error is queued) -- $this->errors is local
                 // to this request and would be discarded by that redirect.
-                // $_SESSION['page_errors'] is the same flash channel
+                // queuePageError() is the same flash channel
                 // CommentsController's own moderate/redirect flow uses;
                 // HtmlService::flushMessageList() merges it in regardless of
                 // which controller's flushPageMessages() call reads it, so
                 // identification.php's own render picks this up for real.
-                if (! isset($_SESSION['page_errors']) or ! is_array($_SESSION['page_errors'])) {
-                    $_SESSION['page_errors'] = [];
-                }
-                $_SESSION['page_errors'][] = $this->lang->t('Too many attempts, please try later..');
+                $this->sessionService->queuePageError($this->lang->t('Too many attempts, please try later..'));
                 return false;
             }
 

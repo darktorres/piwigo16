@@ -50,6 +50,7 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
@@ -93,6 +94,7 @@ final readonly class BatchManagerGlobalPageRenderer
         private InputValidator $inputValidator,
         private Paths $paths,
         private Renderer $renderer,
+        private SessionService $sessionService,
     ) {}
 
     /**
@@ -263,9 +265,7 @@ final readonly class BatchManagerGlobalPageRenderer
                         $associate_categories
                     );
 
-                    $_SESSION['page_infos'] = [
-                        $this->lang->t('Information data registered in database'),
-                    ];
+                    $this->sessionService->queuePageInfo($this->lang->t('Information data registered in database'));
 
                     // let's refresh the page because we the current set might be modified
                     if ($prefilter_value === 'no_album') {
@@ -289,9 +289,7 @@ final readonly class BatchManagerGlobalPageRenderer
                 $move_category = isset($post['move']) && is_numeric($post['move']) ? (int) $post['move'] : null;
                 $imageService->moveImagesToCategories($collection, $move_category !== null ? [$move_category] : []);
 
-                $_SESSION['page_infos'] = [
-                    $this->lang->t('Information data registered in database'),
-                ];
+                $this->sessionService->queuePageInfo($this->lang->t('Information data registered in database'));
 
                 // let's refresh the page because we the current set might be modified
                 if ($prefilter_value === 'no_album') {
@@ -312,9 +310,7 @@ final readonly class BatchManagerGlobalPageRenderer
                 $nb_dissociated = $imageService->dissociateImagesFromCategory($collection, $dissociate_category);
 
                 if ($nb_dissociated > 0) {
-                    $_SESSION['page_infos'] = [
-                        $this->lang->t('Information data registered in database'),
-                    ];
+                    $this->sessionService->queuePageInfo($this->lang->t('Information data registered in database'));
 
                     // let's refresh the page because the current set might be modified
                     $redirect = true;
@@ -396,14 +392,11 @@ final readonly class BatchManagerGlobalPageRenderer
                     // now done with ajax calls, with blocks
                     // $deleted_count = delete_elements($collection, true);
                     if (count($collection) > 0) {
-                        if (! isset($_SESSION['page_infos']) || ! is_array($_SESSION['page_infos'])) {
-                            $_SESSION['page_infos'] = [];
-                        }
-                        $_SESSION['page_infos'][] = $this->translator->plural(
+                        $this->sessionService->queuePageInfo($this->translator->plural(
                             '%d photo was deleted',
                             '%d photos were deleted',
                             count($collection)
-                        );
+                        ));
 
                         $redirect_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $get_page;
                         $redirect = true;

@@ -501,23 +501,14 @@ final readonly class PictureController implements ControllerInterface
                             $perform_redirect = false;
                             switch ($comment_action) {
                                 case 'moderate':
-                                    if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
-                                        $_SESSION['page_infos'] = [];
-                                    }
-                                    $_SESSION['page_infos'][] = $this->lang->t('An administrator must authorize your comment before it is visible.');
+                                    $this->sessionService->queuePageInfo($this->lang->t('An administrator must authorize your comment before it is visible.'));
                                     // no break
                                 case 'validate':
-                                    if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
-                                        $_SESSION['page_infos'] = [];
-                                    }
-                                    $_SESSION['page_infos'][] = $this->lang->t('Your comment has been registered');
+                                    $this->sessionService->queuePageInfo($this->lang->t('Your comment has been registered'));
                                     $perform_redirect = true;
                                     break;
                                 case 'reject':
-                                    if (! isset($_SESSION['page_errors']) or ! is_array($_SESSION['page_errors'])) {
-                                        $_SESSION['page_errors'] = [];
-                                    }
-                                    $_SESSION['page_errors'][] = $this->lang->t('Your comment has NOT been registered because it did not pass the validation rules');
+                                    $this->sessionService->queuePageError($this->lang->t('Your comment has NOT been registered because it did not pass the validation rules'));
                                     break;
                                 default:
                                     trigger_error('Invalid comment action ' . $comment_action, E_USER_WARNING);

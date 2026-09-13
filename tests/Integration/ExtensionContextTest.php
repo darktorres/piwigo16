@@ -1082,6 +1082,33 @@ final class ExtensionContextTest extends IntegrationTestCase
     }
 
     /**
+     * `../piwigo16-plugins/bot_protection/admin/bot_protection_admin.php`'s
+     * own real `$_SESSION['page_infos'][] = ...; redirect(...);` pattern --
+     * `addPageInfo()`/`addPageError()` reach the same real, un-namespaced
+     * `page_infos`/`page_errors` flash-message session keys several core
+     * controllers already write directly (`SessionService::
+     * queuePageInfo()`'s own docblock has the full list), read back by
+     * `Html\HtmlService::flushMessageList()` on the next request. Appends,
+     * never replaces: several real core call sites used to assign
+     * `$_SESSION['page_infos'] = [$message]` directly instead, silently
+     * discarding anything queued earlier in the same request -- a real
+     * bug this test also guards against (two calls, both messages must
+     * survive).
+     */
+    public function testAddPageInfoAndAddPageErrorQueueOnTheRealSharedCoreSessionKeysWithoutClobberingEachOther(): void
+    {
+        $_SESSION = [];
+        $context = $this->buildContext(PluginId::from('any-plugin'));
+
+        $context->addPageInfo('first info');
+        $context->addPageInfo('second info');
+        $context->addPageError('first error');
+
+        self::assertSame(['first info', 'second info'], $_SESSION['page_infos']);
+        self::assertSame(['first error'], $_SESSION['page_errors']);
+    }
+
+    /**
      * P29.6 (the `modus` theme port): `imageStdParams()` exposes the same
      * shared, already-composed `ImageStdParams` instance the container
      * hands to real production code, needed for a settings page listing

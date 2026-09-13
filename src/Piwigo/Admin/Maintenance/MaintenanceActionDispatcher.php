@@ -105,7 +105,7 @@ final readonly class MaintenanceActionDispatcher
             case 'unlock_gallery':
 
                 $this->configService->confUpdateParam('gallery_locked', false);
-                $_SESSION['page_infos'] = [$this->lang->t('Gallery unlocked')];
+                $this->sessionService->queuePageInfo($this->lang->t('Gallery unlocked'));
                 $this->activityService
                     ->record('system', ActivitySystem::Core, 'maintenance', [
                         'maintenance_action' => $action,

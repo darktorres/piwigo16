@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Caddie;
 
 use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\Exception\ConstraintViolationException;
-use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\BatchWriter;
@@ -15,12 +13,9 @@ use Piwigo\Db\BatchWriter;
  * Persistence layer for the caddie domain: `caddie` (a per-user
  * "shopping basket" of image ids, added from fill_caddie()/ws_caddie_add()).
  *
- * Real DQL against {@see CaddieEntity} -- `addElements()` stays on
- * plain DBAL (a bound, portable `INSERT` via
- * `Connection::insert()`, no MySQL-specific `IGNORE` syntax, duplicate
- * rows and nonexistent `element_id`s alike caught as
- * {@see \Doctrine\DBAL\Exception\ConstraintViolationException} per
- * element -- see its own docblock for why this isn't `persist()`).
+ * Real DQL against {@see CaddieEntity} -- `addElements()` bulk-writes via
+ * {@see \Piwigo\Db\BatchWriter}'s own `ignore` option instead, see its
+ * own docblock for why.
  *
  * @extends EntityRepository<CaddieEntity>
  */
@@ -36,58 +31,45 @@ final class CaddieRepository extends EntityRepository
      * the new ones" two-step, without needing the extra SELECT. Returns
      * the number of elements actually newly added.
      *
-     * Stays on raw DBAL, matching
-     * {@see \Piwigo\Group\GroupRepository::addMembers()}'s own identical
-     * shape and settled precedent: ORM `persist()`/`flush()` has no
-     * `INSERT IGNORE` equivalent at all, and a find-then-persist two-step
-     * introduces a real TOCTOU race (a concurrent request inserting
-     * between the existence check and the insert) that the atomic
+     * Used to be a plain DBAL `Connection::insert()` per element, each
+     * wrapped in its own `catch (ConstraintViolationException)` for this
+     * exact IGNORE semantic -- deliberately NOT `persist()`/`flush()`,
+     * since a caught failure from a failed `flush()` leaves the owning
+     * EntityManager permanently closed (`Doctrine\ORM\UnitOfWork::
+     * commit()`'s own `finally` branch calls `$em->close()` on any
+     * failure, and `clear()` cannot undo that), and a find-then-insert
+     * two-step would reintroduce a real TOCTOU race (a concurrent request
+     * inserting between the existence check and the insert) the atomic
      * `INSERT IGNORE` doesn't have.
      *
-     * Catches {@see ConstraintViolationException}, not just
-     * {@see \Doctrine\DBAL\Exception\UniqueConstraintViolationException}
-     * -- a real test (`addElements() silently skips a nonexistent image
-     * id`) covers both the duplicate-row case and the foreign-key case,
-     * since `element_id` genuinely references `images.id`.
+     * `Db\BatchWriter::massInsert(..., ['ignore' => true])` preserves both
+     * properties at once -- still one atomic INSERT per chunk (no
+     * check-then-insert step) and it never touches the ORM's unit of
+     * work either -- same fix as `Group\GroupRepository::addMembers()`'s
+     * own identical shape, while collapsing what used to be one round
+     * trip per element into `N/500`. The one remaining gap, "how many
+     * were actually newly added" without a separate existence check, is
+     * closed by `massInsert()`'s own return value: MySQL/PostgreSQL/
+     * SQLite's `IGNORE`/`ON CONFLICT DO NOTHING`/`OR IGNORE` variants all
+     * already exclude skipped rows from their own affected-row count.
+     * Called from `SiteUpdateSubController` via `CaddieService::
+     * fillCurrentUserCaddie()` with every newly-synced photo id when
+     * "add to caddie" is checked -- genuinely gallery-scale, not a
+     * handful.
      *
      * @param array<int, int> $elementIds
      */
     public function addElements(int $userId, array $elementIds): int
     {
-        $conn = $this->getEntityManager()
-            ->getConnection();
+        $rows = array_map(static fn (int $elementId): array => [
+            'element_id' => $elementId,
+            'user_id' => $userId,
+        ], $elementIds);
 
-        $added = 0;
-        foreach ($elementIds as $elementId) {
-            try {
-                $conn->insert(
-                    'caddie',
-                    [
-                        'element_id' => $elementId,
-                        'user_id' => $userId,
-                    ],
-                    [
-                        'element_id' => ParameterType::INTEGER,
-                        'user_id' => ParameterType::INTEGER,
-                    ],
-                );
-                $added++;
-            } catch (ConstraintViolationException) {
-                // Already in the caddie, or element_id doesn't reference a
-                // real image -- same "IGNORE" semantic the raw INSERT
-                // IGNORE this replaces had. Plain DBAL insert(), not
-                // persist()/flush(): a caught ConstraintViolationException
-                // from a failed flush() leaves the owning EntityManager
-                // permanently closed (Doctrine\ORM\UnitOfWork::commit()'s
-                // own finally branch calls $em->close() on any failure,
-                // and clear() cannot undo that), which would break every other repository
-                // sharing this request's EntityManager. A plain DBAL
-                // insert() never touches the ORM's unit of work at all,
-                // so a caught failure here has no such blast radius.
-            }
-        }
-
-        return $added;
+        return new BatchWriter($this->getEntityManager()->getConnection())
+            ->massInsert('caddie', ['element_id', 'user_id'], $rows, [
+                'ignore' => true,
+            ]);
     }
 
     /**

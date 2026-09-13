@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Logging\Middleware;
 use LogicException;
 use Override;
 use Piwigo\Caddie\CaddieEntity;
@@ -16,6 +19,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\TypedRepository;
 use Piwigo\Tests\Support\DbTransactionTestOverride;
+use Piwigo\Tests\Support\StatementCountingLogger;
 
 /**
  * caddie is empty in the fixture and only 4 real (FK-valid) user ids exist,
@@ -104,6 +108,35 @@ final class CaddieRepositoryTest extends IntegrationTestCase
 
         self::assertSame(0, $added);
         self::assertSame([], $this->fetchElementIds(1));
+    }
+
+    /**
+     * Regression proof for the batching itself: a future accidental
+     * revert of `addElements()` to a per-row `Connection::insert()`+
+     * `catch` loop would still pass every correctness test above (still
+     * functionally correct, just slow) -- this fails immediately instead,
+     * by counting real round trips via a
+     * `Doctrine\DBAL\Logging\Middleware`-wrapped connection. Uses
+     * nonexistent element ids (silently skipped by `ignore: true`, same
+     * as `testAddElementsSilentlySkipsANonexistentImageId()`'s own single-
+     * id case) so nothing is actually inserted and no cleanup is needed.
+     */
+    public function testAddElementsIssuesOneStatementNotOnePerElement(): void
+    {
+        $logger = new StatementCountingLogger();
+        $config = new Configuration();
+        $config->setMiddlewares([new Middleware($logger)]);
+        $loggedConn = DriverManager::getConnection(DbConnection::params(), $config);
+        $loggedRepo = TypedRepository::narrow(EntityManagerFactory::build($loggedConn)->getRepository(CaddieEntity::class), CaddieRepository::class);
+
+        try {
+            $added = $loggedRepo->addElements(2, [900001, 900002, 900003, 900004, 900005]);
+
+            self::assertSame(0, $added);
+            self::assertSame(1, $logger->executedStatementCount);
+        } finally {
+            $loggedConn->close();
+        }
     }
 
     public function testAddElementsScopesToTheGivenUser(): void

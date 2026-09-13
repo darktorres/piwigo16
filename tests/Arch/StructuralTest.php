@@ -689,7 +689,7 @@ test('src/Piwigo/ reads $_POST/$_GET/$_REQUEST/$_FILES only inside a Request DTO
     // established "the wrapper's internals are exempt from the rule it
     // enforces on everyone else" shape). A hit anywhere else means a new
     // raw read was introduced and must be migrated onto a Request DTO,
-    // not allowlisted -- the 3 files below are the only real exceptions
+    // not allowlisted -- the 4 files below are the only real exceptions
     // that survived a full repo audit, each already documented at its own
     // call site:
     //   - Admin/AdminShell.php: runDispatch()'s own page-slug alias
@@ -706,6 +706,12 @@ test('src/Piwigo/ reads $_POST/$_GET/$_REQUEST/$_FILES only inside a Request DTO
     //     (`count($_POST) > 0`), which must run before
     //     Admin\Request\BatchManagerGlobalRequest::fromGlobals() to match
     //     the original's own CSRF-before-field-validation ordering.
+    //   - PluginConfig/ExtensionContext.php: queryParam()/postParam()
+    //     themselves -- these two methods ARE the sanctioned migration
+    //     target this rule points everyone else at (a plugin/theme has no
+    //     Request DTO of its own to read through), the same "the wrapper's
+    //     internals are exempt from the rule it enforces on everyone
+    //     else" shape as RequestFactory::fromGlobals().
     $repoRoot = __DIR__ . '/../..';
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', ['$_POST', '$_GET', '$_REQUEST', '$_FILES']);
@@ -714,6 +720,7 @@ test('src/Piwigo/ reads $_POST/$_GET/$_REQUEST/$_FILES only inside a Request DTO
         'Admin/AdminShell.php',
         'Bootstrap/RequestBootstrap.php',
         'Admin/BatchManagerGlobalPageRenderer.php',
+        'PluginConfig/ExtensionContext.php',
     ];
     $unexpected = array_values(array_filter(
         $hits,

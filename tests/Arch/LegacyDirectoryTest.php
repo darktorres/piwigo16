@@ -98,13 +98,19 @@ test('admin/ does not exist -- its only remaining content (themes/) moved to the
 
 test('public/ contains exactly the relocated entry points, robots.txt, and the sanctioned asset symlinks', function (): void {
     // DocumentRoot is public/, not the repo root -- every PHP entry
-    // point lives here, plus symlinks back to the 3 static asset
-    // directories real requests need (themes/, dist/, _data/combined/).
-    // public/admin/ holds only popuphelp.php: the admin themes' live
-    // assets live at themes/admin/, already covered by the themes/
-    // symlink. upload/galleries/local/language/plugins and every other
-    // _data/ subdirectory are deliberately NOT bridged here -- they must
-    // not be directly, statically reachable (SEC-33/35/38/47) (see
+    // point lives here, plus symlinks back to the 4 static asset
+    // directories real requests need (themes/, dist/, plugins/,
+    // _data/combined/). public/admin/ holds only popuphelp.php: the
+    // admin themes' live assets live at themes/admin/, already covered
+    // by the themes/ symlink. `plugins/` (unlike `themes/`) was
+    // deliberately NOT bridged here until gdThumb's own port needed
+    // `plugins/<id>/assets/*` reachable over HTTP the same way
+    // `themes/<id>/...` already was (`docker/Caddyfile`'s
+    // `@extensionPhpSource` guard denies direct `.php` access under
+    // either tree, closing the same PHP-source-exposure gap `themes/`
+    // already had). upload/galleries/local/language and every other
+    // _data/ subdirectory are still deliberately NOT bridged -- they
+    // must not be directly, statically reachable (SEC-33/35/38/47) (see
     // docs/REFERENCE.md's "Web root" section).
     expect(listDirectoryEntries(dirname(__DIR__, 2) . '/public'))->toBe([
         '.htaccess',
@@ -129,6 +135,7 @@ test('public/ contains exactly the relocated entry points, robots.txt, and the s
         'notification.php',
         'password.php',
         'picture.php',
+        'plugins',
         'popuphelp.php',
         'profile.php',
         'qsearch.php',

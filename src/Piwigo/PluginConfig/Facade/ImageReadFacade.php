@@ -88,4 +88,25 @@ final readonly class ImageReadFacade
 
         return $ordered;
     }
+
+    /**
+     * Paginated raw-id descending scan -- `$cursor: null` means "start
+     * from the highest id". Grounded in a real caller: gdThumb's own
+     * legacy `admin.php`'s `getMissingDerivative` handler (`SELECT *
+     * FROM IMAGES_TABLE WHERE id < start_id ORDER BY id DESC LIMIT
+     * $qlimit`, `docs/plugin-porting/gdthumb-port-analysis.md`) -- a
+     * generic core equivalent exists
+     * ({@see \Piwigo\Controller\Api\Images\ImageMissingDerivativesController})
+     * but only scans the site's own admin-configured *defined*
+     * derivative types, never an arbitrary plugin-chosen custom size, so
+     * it can't cover this case.
+     *
+     * @return list<int>
+     */
+    public function findIdsBefore(?int $cursor, int $limit): array
+    {
+        $cursorVo = $cursor !== null ? ImageId::tryFrom($cursor) : null;
+
+        return $this->imageRepository->findIdsBefore($cursorVo, $limit);
+    }
 }

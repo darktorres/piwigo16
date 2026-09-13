@@ -1477,6 +1477,32 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
+     * Paginated raw-id descending scan -- `$cursor: null` means "start
+     * from the highest id". Mechanically the same `createQueryBuilder('i')`
+     * shape as `findByIds()`/`findOrphanImageIds()` above, a `WHERE`/
+     * `ORDER BY`/`LIMIT` instead of a `WHERE ... IN`. Grounded in a real
+     * caller (gdThumb's own legacy `admin.php`'s `getMissingDerivative`
+     * handler: `SELECT * FROM IMAGES_TABLE WHERE id < start_id ORDER BY
+     * id DESC LIMIT $qlimit`, `docs/plugin-porting/gdthumb-port-analysis.md`).
+     *
+     * @return list<int>
+     */
+    public function findIdsBefore(?ImageId $cursor, int $limit): array
+    {
+        $qb = $this->createQueryBuilder('i')
+            ->select('i.id')
+            ->orderBy('i.id', 'DESC')
+            ->setMaxResults($limit);
+
+        if ($cursor instanceof ImageId) {
+            $qb->where('i.id < :cursor')
+                ->setParameter('cursor', $cursor->value);
+        }
+
+        return array_values(array_map(static fn (mixed $v): int => $v instanceof ImageId ? $v->value : (is_numeric($v) ? (int) $v : 0), $qb->getQuery()->getSingleColumnResult()));
+    }
+
+    /**
      * @param array<int, int|string> $imageIds
      */
     public function touchLastmodified(array $imageIds): void

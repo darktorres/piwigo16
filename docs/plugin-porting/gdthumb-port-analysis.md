@@ -196,10 +196,16 @@ The schema (`docs/schemas/plugin.schema.json`) requires `id`, `name`, `version`,
   "main": "Piwigo\\Plugin\\GdThumb\\Plugin",
   "autoload": { "psr-4": { "Piwigo\\Plugin\\GdThumb\\": "src/" } },
   "hasSettings": true,
+  "hasApiRoutes": true,
   "author": "Serge Dosyukov",
   "authorUri": "http://blog.dragonsoft.us"
 }
 ```
+
+`hasApiRoutes: true` (added 2026-09-13, §3c/§5 correction): the
+missing-derivative precache endpoint (§5's own "descope" call reversed)
+needs `PluginConfig\ApiRouteProviderInterface::registerApiRoutes()`, a
+real `/api/v1/plugin-routes/gdthumb/...` route.
 
 `license: "GPL-2.0-or-later"` — **decided 2026-09-12, not a placeholder**: gdThumb ships no SPDX identifier anywhere, but `changelog.txt`'s own GPL v2-or-later FSF boilerplate text is the real, deliberate basis for this value. Use it as-is when implementing the port.
 
@@ -207,15 +213,84 @@ Preserve both real attribution lines found in the source: Serguei Dosyukov as th
 
 ---
 
-## 5. Investigated, dropped for v1
+## 5. Investigated, dropped for v1 (5 items corrected 2026-09-13 — see §3c)
 
-- **Forced site-wide `nb_image_page` override** (legacy `init` hook) — no `ExtensionContext` mutator exists for `CurrentUser`'s `nbImagePage`; `switchUser()` does a full DB-backed identity swap, not a partial-field override. Drop, or offer only as a real per-user profile default via the plugin's own settings.
-- **Mobile-theme bypass** (`if (mobile_theme()) return;`) — `DeviceHelper::mobileTheme()` exists in core but is never wrapped by `ExtensionContext` (needs `SessionService`, not exposed). v1 always renders.
-- **`$_GET['rvts']` "RV Thumbnails Scroller" compat toggle** — narrow legacy interop with an unrelated plugin (see `docs/plugin-porting/rv-tscroller-port-analysis.md` in this same directory for that plugin's own, unrelated, real port). No `ExtensionContext` accessor exists for reading the current request's query params from a rendering-path event listener (only `SettingsPageInterface::handleSettingsRequest()` gets a `ServerRequestInterface`, a different call path). Drop.
-- **Cache-purge admin tool** (`delete_gdthumb_cache()`/`clear_derivative_cache_rec()`) — `DerivativeCacheService` (the real, already-existing equivalent) is not exposed via `ImageReadFacade`/`ImageWriteFacade` or any other `PluginConfig\Facade`. Real gap, not a workaround target — descope.
-- **Missing-derivative-scan admin tool** (`getMissingDerivative` AJAX endpoint) — needs a paginated "list images missing a derivative of size X" repository/facade method that doesn't exist (no raw DB access is available to extensions, by design). Real gap — descope. If ported later, `DerivativeUrlStyleOverride` (confirmed real, 4th optional `DerivativeImage` constructor arg) cleanly replaces the legacy global-config-mutation hack (`$conf['question_mark_in_urls']`/etc.) this endpoint used.
-- **`changelog.php` standalone lightbox endpoint** — fold changelog text inline into the settings page `View` instead of a separate route/colorbox popup.
-- **`greydragon` theme soft-coupling** (admin CSS lookup gated on `GDTHEME_PATH`, the theme-gated "Overlay Ex" caption mode, `css/gdthumb.css`'s `body.theme-whitehawk` rules) — confirmed dead weight, no `greydragon`/`whitehawk` reference anywhere in `piwigo17-rewrite`. Drop entirely, including the theme-gated caption mode (reimplement plainly if wanted, no theme-conditional branch).
+Five of the original nine bullets here were re-checked before
+implementing and turned out to be real, buildable features this doc
+had wrongly called "no accessor exists"/"real gap, descope" without
+re-verifying against current code. Kept here for the historical
+record, corrected in place rather than silently deleted:
+
+- ~~**Forced site-wide `nb_image_page` override**~~ — **un-dropped, §3c
+  item 1**: `Section\Event\GetNbImagePage` (new), wrapping
+  `SectionPopulator::populate()`'s own hardcoded read. The `CurrentUser`
+  mutator this bullet looked for was never the right shape to look for.
+- **Mobile-theme bypass** (`if (mobile_theme()) return;`) — genuinely
+  still true as of this doc's original writing, but stale: `ExtensionContext::
+  device(): string` already existed by the time this port started
+  (used by `modus`'s own masonry margin sizing) — a plain
+  `if ($context->device() === 'mobile') return;` guard in the relevant
+  handlers, no new core work needed. Un-dropped.
+- ~~**`$_GET['rvts']` "RV Thumbnails Scroller" compat toggle**~~ —
+  **un-dropped**: re-read what the legacy flag's own code actually does
+  (`$conf['gdThumb']['big_thumb'] = false;` plus an already-redundant
+  handler re-registration) — its entire real effect is "suppress the
+  hero thumbnail for this one request," with zero actual dependency on
+  `rv_tscroller`'s own code existing. `ExtensionContext::queryParam()`
+  (already real, grounded in `TakeATour`) covers it in one line.
+- ~~**Cache-purge admin tool**~~ — **un-dropped, §3c item 2**:
+  `ExtensionContext::clearCustomDerivativeCache()` (new, narrow —
+  not a raw `DerivativeCacheService` passthrough).
+- ~~**Missing-derivative-scan admin tool**~~ — **un-dropped, §3c item
+  3**: `ImageReadFacade::findIdsBefore()` (new) + a plugin-owned
+  `/api/v1/plugin-routes/gdthumb/...` route (`ApiRouteProviderInterface`,
+  already real, P43-E) — this doc's own "no raw DB access is available
+  to extensions, by design" reasoning conflated a narrow, precedented
+  facade method with actual raw DB access; they aren't the same thing.
+  `DerivativeUrlStyleOverride` (confirmed real, 4th optional
+  `DerivativeImage` constructor arg) still cleanly replaces the legacy
+  global-config-mutation hack (`$conf['question_mark_in_urls']`/etc.)
+  this endpoint used, exactly as originally noted.
+- **`changelog.php` standalone lightbox endpoint** — still correctly
+  dropped: fold changelog text inline into the settings page `View`
+  instead of a separate route/colorbox popup. No functionality lost,
+  a real simplification, not an avoidance.
+- **`greydragon` theme soft-coupling** (admin CSS lookup gated on
+  `GDTHEME_PATH`, `css/gdthumb.css`'s `body.theme-whitehawk` rules) —
+  still correctly dropped, confirmed dead weight, no `greydragon`/
+  `whitehawk` reference anywhere in `piwigo17-rewrite`. **But the
+  "Overlay Ex" caption mode itself is un-dropped** (§4f) — that mode's
+  *feature* (item/hit-count badges, a rating badge, a media-type
+  marker) doesn't actually need greydragon's own CSS/Font-Awesome, only
+  legacy's specific *implementation* of it did; rebuilt against this
+  fork's own conventions instead (the same Unicode-glyph "no icon
+  dependency" call already made for `PhotoSwipe`'s own toolbar, P61
+  Phase 7-B, plus the shared `icon/rating-stars.gif` sprite
+  `modus`/`bootstrap_darkroom` already use).
+
+### 4f. "Overlay Ex" caption mode — rebuilt against this fork's own conventions, not dropped with greydragon
+
+Legacy's `thumb_mode_album`/`thumb_mode_photo` `overlay-ex` value (only
+offered when `GDTHEME_PATH . 'admin/css/styles.css'` exists on disk) is
+kept as a real, always-available option — no `CUSTOM_CSS`-style
+detection gate, since this port ships its own CSS for it unconditionally.
+Its item-count/hit-count badge and rating badge use plain numbers plus
+the existing `icon/rating-stars.gif` sprite; its per-media-type icon
+(video/music/pdf/doc/xls/ppt) uses plain Unicode/text glyphs, not Font
+Awesome or a new vendored icon set (none of those 6 file-type glyphs
+exist in either of this fork's own icon sets, confirmed by direct
+search — building 6 new SVGs for a caption-mode embellishment would be
+disproportionate; a plain-glyph fallback is the established move here,
+not a compromise). The rating/media-type badge content itself mounts
+through `Contribution\ThumbnailOverlay`/its new category-grid
+counterpart (§3c item 5), filled client-side from an `exposeData()`
+payload keyed by id — not raw JS-constructed DOM, and not the
+`.thumbLegend`/`.thumbName`/`.nb-comments`/`.nb-hits` markup every other
+caption mode already gets for free from `thumbnails.latte`/
+`mainpage_categories.latte`'s own existing server-render (confirmed by
+direct read: those elements already exist in core's own current
+markup, unconditionally — a caption mode is CSS-only repositioning of
+them, except Overlay Ex's own genuinely-new badge content).
 
 ---
 

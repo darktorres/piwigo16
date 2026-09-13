@@ -163,7 +163,7 @@ Three structural changes produced that drift:
 | P58 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P59 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
 | P60 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | **DONE** — **A 843 → 0, B 376 → 0**, and the CAMPAIGN-PENDING block is gone from `phpstan.neon`. All 26 identifier-wide ignores retired, each forced out by `reportUnmatchedIgnoredErrors` rather than noticed; 2 more left the *permanent* groups (`empty.variable`, `foreach.valueOverwrite`). Twenty-three live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
-| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra: `ExtensionContext::currentSection()`/`findByIdsOrdered()`/`isShowMetadataEnabled()`+`setShowMetadataEnabled()`/`paths()`, P61-A..D), Phase 2 (manifest + `ExtensionInterface` skeleton), Phase 3 (typed settings VO + real tabbed settings page), Phase 4 (CSS palette foundation, `--darkroom-color-*` custom properties, real OKLCH conversions), and Phase 5 (A-D: menubar family as a native `<details>`-dropdown navbar with no JS; generic pages; comments/tags; CSS-only thumbnails/mainpage_categories/month_calendar) are all done, each live-verified against a real running instance. PhotoSwipe (Phase 1's original 4th item) deliberately deferred to Phase 6, on the user's own call, for lack of a real caller until then. Two real bugs found and fixed along the way: a `settings.latte`/`about.latte` naming collision with core's own public About page (renamed to `darkroom_settings.latte`/`darkroom_about.latte`), and a cascade-layer height/overflow conflict with `default`'s own unconditional `mainpage_categories.css`. Password/identification/register/profile dropped from scope entirely — `useStandardPages` defaults `true` and routes their whole theme chain to `standard_pages` regardless of the active gallery theme, confirmed unreachable, matching `modus`'s own established precedent. Phase 6-A (index.latte contextual navbar, `#thumbnails` CSS Grid) and Phase 6-B (full gesture-fidelity PhotoSwipe lightbox port, `themes/default/js/vendor/widgets/photoswipe.ts`, v4.1.3 real source, 10 passing Vitest tests) also done. Phase 6-C (picture.latte/picture_nav_buttons.latte/picture_content.latte, consolidated info cards, video playback branch, real social-share buttons via `assignContext()`/`GetPageAssets` -- an earlier "no channel exists" note was wrong, corrected same day) also done -- **Phase 6 is now fully closed** except for carousel/PhotoSwipe-wiring work that's genuinely Phase 7 scope. Phase 7-A (thumbnail carousel), Phase 7-B (real PhotoSwipe click-to-open wiring, plus 6 real bugs found and fixed in `photoswipe.ts` itself), and Phase 7-C (grid/list-view toggle, real `rating.ts` star-icon gap fixed, `grid_classes.tpl` confirmed replaced) all done -- **Phase 7 is now fully closed.** Phase 9-A (i18n, 26 locale `theme.po` files, 0 parity errors) and Phase 9-B (Font Awesome fold-in and legacy cleanup both confirmed real no-gaps; zip + `manifest.json` packaging done, live-verified via the real "Add a new theme" install flow) also done -- **Phase 9 is now fully closed.** A real install-and-compare validation pass against a genuine Piwigo 16.x reference instance confirmed every Phase 3 settings decision and found one real gap (the page-header/hero-banner styling never wired up despite `layout.latte`'s own docblock stating it was planned), fixed the same day (`pageHeaderStyle`/`pageHeaderImage`, `BootstrapDarkroomPageHeaderPageContext`, a real `{block pageBanner}` override). Full detail in this file's own P61 narrative section below. Phase 10 not started | 5 |
+| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra: `ExtensionContext::currentSection()`/`findByIdsOrdered()`/`isShowMetadataEnabled()`+`setShowMetadataEnabled()`/`paths()`, P61-A..D), Phase 2 (manifest + `ExtensionInterface` skeleton), Phase 3 (typed settings VO + real tabbed settings page), Phase 4 (CSS palette foundation, `--darkroom-color-*` custom properties, real OKLCH conversions), and Phase 5 (A-D: menubar family as a native `<details>`-dropdown navbar with no JS; generic pages; comments/tags; CSS-only thumbnails/mainpage_categories/month_calendar) are all done, each live-verified against a real running instance. PhotoSwipe (Phase 1's original 4th item) deliberately deferred to Phase 6, on the user's own call, for lack of a real caller until then. Two real bugs found and fixed along the way: a `settings.latte`/`about.latte` naming collision with core's own public About page (renamed to `darkroom_settings.latte`/`darkroom_about.latte`), and a cascade-layer height/overflow conflict with `default`'s own unconditional `mainpage_categories.css`. Password/identification/register/profile dropped from scope entirely — `useStandardPages` defaults `true` and routes their whole theme chain to `standard_pages` regardless of the active gallery theme, confirmed unreachable, matching `modus`'s own established precedent. Phase 6-A (index.latte contextual navbar, `#thumbnails` CSS Grid) and Phase 6-B (full gesture-fidelity PhotoSwipe lightbox port, `themes/default/js/vendor/widgets/photoswipe.ts`, v4.1.3 real source, 10 passing Vitest tests) also done. Phase 6-C (picture.latte/picture_nav_buttons.latte/picture_content.latte, consolidated info cards, video playback branch, real social-share buttons via `assignContext()`/`GetPageAssets` -- an earlier "no channel exists" note was wrong, corrected same day) also done -- **Phase 6 is now fully closed** except for carousel/PhotoSwipe-wiring work that's genuinely Phase 7 scope. Phase 7-A (thumbnail carousel), Phase 7-B (real PhotoSwipe click-to-open wiring, plus 6 real bugs found and fixed in `photoswipe.ts` itself), and Phase 7-C (grid/list-view toggle, real `rating.ts` star-icon gap fixed, `grid_classes.tpl` confirmed replaced) all done -- **Phase 7 is now fully closed.** Phase 9-A (i18n, 26 locale `theme.po` files, 0 parity errors) and Phase 9-B (Font Awesome fold-in and legacy cleanup both confirmed real no-gaps; zip + `manifest.json` packaging done, live-verified via the real "Add a new theme" install flow) also done -- **Phase 9 is now fully closed.** A real install-and-compare validation pass against a genuine Piwigo 16.x reference instance confirmed every Phase 3 settings decision and found one real gap (the page-header/hero-banner styling never wired up despite `layout.latte`'s own docblock stating it was planned), fixed the same day (`pageHeaderStyle`/`pageHeaderImage`, `BootstrapDarkroomPageHeaderPageContext`, a real `{block pageBanner}` override). A follow-up full settings-wiring audit (cross-checking every kept `BootstrapDarkroomThemeSettings` field against its real template consumer) found 4 more of the same class of gap — site logo, custom CSS delivery (needed a real new core capability, `AssetContribution::inlineCss()`, since the obvious `local/`-relative static-file path is deliberately never web-reachable in this fork's own architecture), category/thumbnail description display (a real default-behavior inversion, not just a dead toggle), and a thumbnail-caption grid-view-only refinement — all fixed and live-verified the same day. Full detail in this file's own P61 narrative section below. Phase 10 not started | 5 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -12756,6 +12756,116 @@ real running instance (jumbotron, hero with a background image,
 disabled), settings round-trip correctly through the real admin form,
 zero console/PHP errors, fully reverted. Zip + `manifest.json` rebuilt
 to match.
+
+**P61 closing settings-wiring audit (Done) — 4 more real forgotten gaps
+found and fixed, same day.** Per the user's own request for "a full
+audit... to see what other tasks got forgotten": every field kept in
+`BootstrapDarkroomThemeSettings` since Phase 3 was cross-checked directly
+against its real template consumer (`grep`-verified, not assumed). Four
+more settings turned out stored/read/exposed in the admin form but never
+actually consumed anywhere — the exact same class of gap as the page-header
+fix above, all missed because Phase 5-D's real "CSS-only, reuse `default`'s
+unmodified templates" decision and Phase 5-A's own menubar shell design
+both silently dropped a setting's entire effect while looking complete.
+
+- **Site logo** (`logoImageEnabled`/`logoImagePath`): `menubar.latte` had
+  no brand slot at all — legacy's own navbar-main brand link has no
+  equivalent anywhere in this port's shell. New
+  `BootstrapDarkroomLogoPageContext` + a real `.darkroom-site-brand` link.
+  A real render-order bug caught live during this fix: core's own
+  `GALLERY_TITLE`/`U_HOME` (`Page\Projection\PageHeaderPageContext`)
+  looked like the obvious source (already-global `assignContext()` vars)
+  but rendered genuinely blank here — `PageHeaderRenderer::
+  prepareContext()` runs AFTER `Menu\BlockManager`'s own menubar render
+  call within the same request (menubar HTML is built as page content,
+  consumed by the page shell afterward). Fixed by computing both values
+  directly from `ExtensionContext::config()`/`url()` inside this theme's
+  own context instead, independent of that ordering hazard.
+- **Custom CSS**: a real admin read/write round-trip
+  (`readCustomCssFile()`/`saveCustomCssFile()`) existed since Phase 3, but
+  nothing ever contributed the file to a real page. The obvious fix
+  (`AssetContribution::css()` at a `local/`-relative path, matching
+  legacy's own `combine_css` call exactly) is a genuine 404 in
+  piwigo17-rewrite's own architecture: `local/` is deliberately never
+  web-reachable (`docker/Caddyfile`'s own `@deniedRelocated` block,
+  mirrored by `public/.htaccess`'s equivalent rule, part of the real P4
+  web-root-isolation hardening) — found live, not assumed, and confirmed
+  that core's own `Template::localCssRules()` (a differently-located
+  per-theme override file, `local/css/{theme}-rules.css`) has the exact
+  same real gap, its own tests only ever asserting the registered path
+  string, never a real HTTP fetch (a genuine, separate, pre-existing
+  core gap, out of scope to fix here). Real fix, landed in
+  piwigo17-rewrite itself: `AssetContribution::inlineCss()`, a new,
+  narrow, additive `AssetKind::Css` factory carrying literal code instead
+  of a path — `ResolvedAsset` already had a real `inline()` factory (built
+  for `AssetKind::InlineScript`, never used for CSS before now), so the
+  only new logic is `PageAssets::resolveCss()` branching on `$code !==
+  null` and `Template::finalizeHtml()` emitting a `<style>` block instead
+  of a `<link>`. Real, grounded core addition (one concrete caller), unit
+  + integration tested (`AssetContributionTest`/`PageAssetsTest`/
+  `TemplateInstanceTest`), full `composer analyse:phpstan` clean.
+- **`catDescriptions`/`catNbImages`/`thumbnailDesc`/`thumbnailCatDesc`**:
+  Phase 5-D's own decision to reuse `default`'s `mainpage_categories.latte`/
+  `thumbnails.latte` completely unmodified (correct for those files'
+  *structural* markup) silently dropped all 4 settings' real effect —
+  `default`'s own markup has no admin-toggle concept for any of them,
+  only data-presence conditionals. `catDescriptions` defaults **off** in
+  both legacy and this port, while `default`'s own template always shows
+  a category description when one exists regardless of any setting — a
+  real default-behavior inversion this fixes, not just a dead toggle.
+  `thumbnailDesc`/`thumbnailCatDesc` default off/'simple', matching
+  `default`'s own already-shipped behavior at those defaults exactly, so
+  that half was a dead-setting-only-when-toggled gap. Fixed via two new,
+  minimal block seams landed on `default`'s own shared templates
+  (`{block catNbImages}`/`{block catDescription}` in
+  `mainpage_categories.latte`, `{block thumbName}` in `thumbnails.latte`,
+  piwigo17-rewrite's own commit) plus 2 new override files in this port
+  consuming them, gated by a new `BootstrapDarkroomDisplayPageContext`.
+  `ImageThumbnail::$description` (dropped in an earlier, at-the-time
+  correct commit for having no real reader) is restored — a pure
+  additive read, `CategoryDefaultRenderer` already computes the same
+  string unconditionally for `$tnTitle`. A real phpstan-latte limitation
+  surfaced while doing this (property access on a `{foreach}` item loses
+  its real type inside any `{block}`, parent or child) — worked around by
+  pre-extracting each value into a local `{var}` before the block,
+  matching the existing `{block albSymbol}` precedent already in both
+  files.
+- **`thumbnailCaption`**: a real grid-view-only refinement on top of
+  core's own separate, global `show_thumbnail_caption` toggle (confirmed:
+  `default`'s own `thumbnails.latte` already has a real
+  `$showThumbnailCaption` gate, so this is genuinely additive, not a
+  duplicate) — legacy hides the per-photo caption in grid view only when
+  off, keeping it visible in list view. Purely CSS
+  (`.darkroom-hide-grid-captions`, gated on `#content`'s own class, the
+  same channel Phase 7-C's view-mode toggle already uses), bundled into
+  the existing `BootstrapDarkroomViewModePageContext` alongside
+  `thumbnailNbImages` (a real, isolated miss inside `index.latte`'s own
+  already-real Phase 6-A override — the item-count badge rendered
+  unconditionally on `$nbItems > 0` with no gate on this setting at all,
+  also found and fixed this same audit).
+
+Also confirmed real no-gaps during this same audit, left as-is:
+`quicksearchNavbar`'s navbar-relocation variant was already an honestly
+self-documented known gap (Phase 5-A's own docblock); `checkIfHomepage`/
+`stripBreadcrumbs` correctly need no wiring since their only real legacy
+usage was tied to `page_header_full`, already deliberately dropped;
+`exifReplacements` correctly has no admin UI because legacy itself never
+shipped one either (a code-only advanced hook in both). `Session\
+SessionService::setShowMetadataEnabled()` (built in Phase 1-C
+specifically for this theme) was found never actually called from
+`boot()` — fixed alongside the `file_ext` mutation it was always meant to
+sit next to.
+
+All 5 fixes live-verified end-to-end against a real running instance —
+including setting real test category/photo descriptions and a real
+custom-CSS rule, since the fixture ships neither — zero console/PHP
+errors, fully reverted (config/themes/user_infos/categories/images rows,
+symlink, the `local/bootstrap_darkroom/custom.css` file itself). Full
+`composer test`/`composer test:ported-extensions` clean throughout
+(one confirmed pre-existing, unrelated `Tests\Arch\LegacyDirectoryTest`
+failure found during the full-suite run — a real, in-progress concurrent
+session's own `public/plugins` symlink work in this shared worktree, not
+touched here).
 
 Phase 10 (closing verification) lands in the same sibling directory,
 not started.

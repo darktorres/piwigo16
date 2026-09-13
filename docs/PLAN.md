@@ -163,7 +163,7 @@ Three structural changes produced that drift:
 | P58 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P59 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
 | P60 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | **DONE** — **A 843 → 0, B 376 → 0**, and the CAMPAIGN-PENDING block is gone from `phpstan.neon`. All 26 identifier-wide ignores retired, each forced out by `reportUnmatchedIgnoredErrors` rather than noticed; 2 more left the *permanent* groups (`empty.variable`, `foreach.valueOverwrite`). Twenty-three live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
-| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra: `ExtensionContext::currentSection()`/`findByIdsOrdered()`/`isShowMetadataEnabled()`+`setShowMetadataEnabled()`/`paths()`, P61-A..D), Phase 2 (manifest + `ExtensionInterface` skeleton), Phase 3 (typed settings VO + real tabbed settings page), Phase 4 (CSS palette foundation, `--darkroom-color-*` custom properties, real OKLCH conversions), and Phase 5 (A-D: menubar family as a native `<details>`-dropdown navbar with no JS; generic pages; comments/tags; CSS-only thumbnails/mainpage_categories/month_calendar) are all done, each live-verified against a real running instance. PhotoSwipe (Phase 1's original 4th item) deliberately deferred to Phase 6, on the user's own call, for lack of a real caller until then. Two real bugs found and fixed along the way: a `settings.latte`/`about.latte` naming collision with core's own public About page (renamed to `darkroom_settings.latte`/`darkroom_about.latte`), and a cascade-layer height/overflow conflict with `default`'s own unconditional `mainpage_categories.css`. Password/identification/register/profile dropped from scope entirely — `useStandardPages` defaults `true` and routes their whole theme chain to `standard_pages` regardless of the active gallery theme, confirmed unreachable, matching `modus`'s own established precedent. Phase 6-A (index.latte contextual navbar, `#thumbnails` CSS Grid) and Phase 6-B (full gesture-fidelity PhotoSwipe lightbox port, `themes/default/js/vendor/widgets/photoswipe.ts`, v4.1.3 real source, 10 passing Vitest tests) also done. Phase 6-C (picture.latte/picture_nav_buttons.latte/picture_content.latte, consolidated info cards, video playback branch, real social-share buttons via `assignContext()`/`GetPageAssets` -- an earlier "no channel exists" note was wrong, corrected same day) also done -- **Phase 6 is now fully closed** except for carousel/PhotoSwipe-wiring work that's genuinely Phase 7 scope. Phase 7-A (thumbnail carousel data assembly via `ImageReadFacade::findByIdsOrdered()`, plain CSS scroll-snap filmstrip, no PhotoSwipe wiring yet) also done. Full detail in this file's own P61 narrative section below. Phases 7-10 not started | 5 |
+| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra: `ExtensionContext::currentSection()`/`findByIdsOrdered()`/`isShowMetadataEnabled()`+`setShowMetadataEnabled()`/`paths()`, P61-A..D), Phase 2 (manifest + `ExtensionInterface` skeleton), Phase 3 (typed settings VO + real tabbed settings page), Phase 4 (CSS palette foundation, `--darkroom-color-*` custom properties, real OKLCH conversions), and Phase 5 (A-D: menubar family as a native `<details>`-dropdown navbar with no JS; generic pages; comments/tags; CSS-only thumbnails/mainpage_categories/month_calendar) are all done, each live-verified against a real running instance. PhotoSwipe (Phase 1's original 4th item) deliberately deferred to Phase 6, on the user's own call, for lack of a real caller until then. Two real bugs found and fixed along the way: a `settings.latte`/`about.latte` naming collision with core's own public About page (renamed to `darkroom_settings.latte`/`darkroom_about.latte`), and a cascade-layer height/overflow conflict with `default`'s own unconditional `mainpage_categories.css`. Password/identification/register/profile dropped from scope entirely — `useStandardPages` defaults `true` and routes their whole theme chain to `standard_pages` regardless of the active gallery theme, confirmed unreachable, matching `modus`'s own established precedent. Phase 6-A (index.latte contextual navbar, `#thumbnails` CSS Grid) and Phase 6-B (full gesture-fidelity PhotoSwipe lightbox port, `themes/default/js/vendor/widgets/photoswipe.ts`, v4.1.3 real source, 10 passing Vitest tests) also done. Phase 6-C (picture.latte/picture_nav_buttons.latte/picture_content.latte, consolidated info cards, video playback branch, real social-share buttons via `assignContext()`/`GetPageAssets` -- an earlier "no channel exists" note was wrong, corrected same day) also done -- **Phase 6 is now fully closed** except for carousel/PhotoSwipe-wiring work that's genuinely Phase 7 scope. Phase 7-A (thumbnail carousel data assembly via `ImageReadFacade::findByIdsOrdered()`, plain CSS scroll-snap filmstrip) and Phase 7-B (real PhotoSwipe click-to-open wiring, `js/gallery.ts`, plus 6 real bugs found and fixed in `photoswipe.ts` itself via this port's first live use of the engine) also done. Full detail in this file's own P61 narrative section below. Phases 7-10 not started | 5 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -12600,6 +12600,41 @@ PhotoSwipe click-to-open wiring yet, both separate later sub-items.
 Live-verified: all 3 fixture photos render with correct thumbnails,
 current photo marked active, links preserve category-browsing context,
 zero console/PHP errors, fully reverted.
+
+**P61 Phase 7-B (Done)** — real PhotoSwipe click-to-open wiring
+(`js/gallery.ts`, new, built via `bun run build:ported-extensions` into
+`dist/gallery.js`). Carousel `data-*` attributes extended with real
+medium/large/xlarge/video variants (`BootstrapDarkroomImageVariant`,
+built via `SrcImage`/`SrcImageInfo`/`DerivativeImage::getOne()`, same
+pattern `CalendarMonthly.php` already uses). Resolution picked once at
+open time (legacy's own real 1335px-device-pixel threshold); video
+items get a real inline `<video>` overlay via plain CSS centering, not
+legacy's manual pixel math. Autoplay/share-buttons need no bespoke
+logic (the shared engine already implements both); share URLs reuse
+Phase 6-C's already-absolute anchors directly.
+
+This phase's own first live use of `photoswipe.ts` (P61 Phase 6-B, only
+ever jsdom-unit-tested before) surfaced **6 real, confirmed bugs**, all
+fixed in that file: (1) `positionIndex`'s wrong default showed the
+WRONG image on open; (2) the "grow from thumbnail" animation read
+placeholder zoom/position values instead of real computed ones; (3) the
+whole toolbar/caption/counter was permanently invisible
+(`pswp__ui--hidden` hardcoded despite `controlsVisible` defaulting
+true); (4) a host page's own real keyboard shortcuts
+(`pictureNavButtons.ts`) fired on the SAME `ArrowRight`/`ArrowLeft` and
+navigated the page away entirely (fixed via capture-phase
+`stopImmediatePropagation()`); (5) every toolbar button took pointer
+capture and never fired its own click handler (the button click-through
+exemption was never actually implemented, despite its own comment
+saying otherwise); (6) a stale, leaked gallery instance's own listener
+blocked the real one, surfaced by fix #4 (fixed via a shared
+`removeListeners()` used by both `close()` and `destroy()`). Also
+landed a real, framework-free base CSS for the engine
+(`themes/default/css/components/photoswipe.css`, previously nonexistent)
+using plain Unicode glyphs, no icon-font/sprite dependency. Live-verified
+end-to-end (open at correct index, keyboard nav, button nav, share
+modal with 4 real absolute links, close) — zero console/PHP errors, full
+260-test Vitest suite + typecheck/lint/stylelint clean, fully reverted.
 
 Phases 7 (remainder)-10 (JS interactivity, i18n/packaging, closing
 verification) land in the same sibling directory, not started.

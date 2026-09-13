@@ -30,6 +30,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\View;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\TypedRepository;
+use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\LangService;
 use Piwigo\Mail\MailService;
@@ -627,6 +628,44 @@ final readonly class ExtensionContext
     public function imageStdParams(): ImageStdParams
     {
         return $this->imageStdParams;
+    }
+
+    /**
+     * Clears every cached custom-sized (`ImageStdParams::CUSTOM`)
+     * derivative file site-wide -- deliberately narrower than
+     * `DerivativeCacheService::clearDerivativeCache()`'s own real
+     * signature (`string|array $types = 'all'`), which this method never
+     * exposes directly: an unscoped passthrough would let any plugin also
+     * wipe every *core* standard derivative type (SQUARE/THUMB/XSMALL/
+     * etc.), unlike every other narrowly-scoped accessor on this class
+     * (`db()` is structurally incapable of naming another extension's
+     * table, `isPluginActive()` is read-only). Hardcoding the derivative
+     * kind here is the real narrowing this fork's own conventions call
+     * for, since nothing tracks which plugin owns which cached file --
+     * unlike `db()`'s per-table scope, there is no per-*extension* scope
+     * to enforce here, only a per-*derivative-kind* one. This still
+     * clears every plugin's own custom-sized derivatives together, a
+     * real, disclosed limit, not a silently narrower guarantee than it
+     * sounds. Regenerates lazily on the next request that needs one
+     * (`DerivativeCacheService`'s own docblock) -- never a data-loss risk,
+     * only a one-time regeneration cost. Needed for a real caller
+     * (gdThumb, `docs/plugin-porting/gdthumb-port-analysis.md`): its own
+     * "Purge thumbnails cache"/height-change-invalidation behavior.
+     *
+     * `DerivativeCacheService` is constructed inline here, matching this
+     * fork's own established, universal convention for it -- every real
+     * call site (`PictureCoiPageRenderer`/`BatchManagerGlobalPageRenderer`/
+     * `MaintenanceActionDispatcher`/`SiteUpdateSubController`/
+     * `ImageService`/`ConfigurationSubController`) builds a fresh
+     * `new DerivativeCacheService($currentConfig, $paths)` locally; it is
+     * never constructor-injected/DI-shared anywhere in this codebase.
+     * `$currentConfig`/`$paths` are already this class's own constructor
+     * dependencies, needed for nothing else here.
+     */
+    public function clearCustomDerivativeCache(): void
+    {
+        new DerivativeCacheService($this->currentConfig, $this->paths)
+            ->clearDerivativeCache(ImageStdParams::CUSTOM);
     }
 
     /**

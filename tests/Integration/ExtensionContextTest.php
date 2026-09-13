@@ -672,6 +672,26 @@ final class ExtensionContextTest extends IntegrationTestCase
         self::assertSame([], $this->context->images()->findByIdsOrdered([999999]));
     }
 
+    /**
+     * gdThumb port: paginated raw-id descending scan, grounded in its own
+     * legacy `getMissingDerivative` handler. The real fixture ships
+     * exactly ids 1-5, no gaps (`tests/Fixtures/piwigo-17.0.sql`).
+     */
+    public function testImagesFindIdsBeforeReturnsAPageOfIdsDescendingFromTheGivenCursor(): void
+    {
+        self::assertSame([4, 3], $this->context->images()->findIdsBefore(5, 2));
+    }
+
+    public function testImagesFindIdsBeforeWithANullCursorStartsFromTheHighestId(): void
+    {
+        self::assertSame([5, 4, 3], $this->context->images()->findIdsBefore(null, 3));
+    }
+
+    public function testImagesFindIdsBeforeReturnsEmptyListWhenTheCursorIsTheLowestId(): void
+    {
+        self::assertSame([], $this->context->images()->findIdsBefore(1, 10));
+    }
+
     public function testImagesWriteUpdateDescriptiveFieldsPersistsToImagesTable(): void
     {
         $this->context->imagesWrite()
@@ -1257,6 +1277,52 @@ final class ExtensionContextTest extends IntegrationTestCase
         $context = $this->buildContext(PluginId::from('any-plugin'));
 
         self::assertSame($this->containerGet(ImageStdParams::class), $context->imageStdParams());
+    }
+
+    /**
+     * gdThumb (`docs/plugin-porting/gdthumb-port-analysis.md`): a real
+     * end-to-end check that `clearCustomDerivativeCache()` deletes a real
+     * cached custom-sized derivative file (`-cu_...` suffix, matching
+     * `ImageStdParams::CUSTOM`'s own real filename pattern) while leaving
+     * a standard-type derivative (`-th`) untouched -- `DerivativeCacheService::
+     * clearDerivativeCache()`'s own real branching is already exhaustively
+     * covered at the Unit level (`DerivativeCacheServiceTest.php`); this
+     * only needs to prove the new accessor reaches the real, shared
+     * `Paths`/`CurrentConfig` this context otherwise exposes, not
+     * re-prove the underlying service's own pattern logic.
+     */
+    public function testClearCustomDerivativeCacheDeletesOnlyCustomTypeDerivatives(): void
+    {
+        $paths = $this->containerGet(Paths::class);
+        $currentConfig = $this->containerGet(CurrentConfig::class);
+        // clearDerivativeCache() only ever recurses into a subdirectory
+        // directly under the derivative root (real Piwigo's own
+        // YYYY/MM/ storage layout) -- it never scans files placed at the
+        // bare root itself, confirmed against DerivativeCacheServiceTest.php's
+        // own real fixtures, all nested the same way.
+        $subDir = $paths->root . $currentConfig->derivativeDir . 'gdthumb-test-fixture';
+        mkdir($subDir, 0o777, true);
+        $customFile = $subDir . '/photo-cu_abc123.jpg';
+        $standardFile = $subDir . '/photo-th.jpg';
+        file_put_contents($customFile, 'x');
+        file_put_contents($standardFile, 'x');
+
+        try {
+            $this->context->clearCustomDerivativeCache();
+
+            self::assertFileDoesNotExist($customFile);
+            self::assertFileExists($standardFile);
+        } finally {
+            if (file_exists($customFile)) {
+                unlink($customFile);
+            }
+            if (file_exists($standardFile)) {
+                unlink($standardFile);
+            }
+            if (is_dir($subDir)) {
+                rmdir($subDir);
+            }
+        }
     }
 
     /**

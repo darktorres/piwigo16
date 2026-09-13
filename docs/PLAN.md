@@ -163,7 +163,7 @@ Three structural changes produced that drift:
 | P58 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P59 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
 | P60 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | **DONE** — **A 843 → 0, B 376 → 0**, and the CAMPAIGN-PENDING block is gone from `phpstan.neon`. All 26 identifier-wide ignores retired, each forced out by `reportUnmatchedIgnoredErrors` rather than noticed; 2 more left the *permanent* groups (`empty.variable`, `foreach.valueOverwrite`). Twenty-three live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
-| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra: `ExtensionContext::currentSection()`/`findByIdsOrdered()`/`isShowMetadataEnabled()`+`setShowMetadataEnabled()`/`paths()`, P61-A..D), Phase 2 (manifest + `ExtensionInterface` skeleton), Phase 3 (typed settings VO + real tabbed settings page), Phase 4 (CSS palette foundation, `--darkroom-color-*` custom properties, real OKLCH conversions), and Phase 5 (A-D: menubar family as a native `<details>`-dropdown navbar with no JS; generic pages; comments/tags; CSS-only thumbnails/mainpage_categories/month_calendar) are all done, each live-verified against a real running instance. PhotoSwipe (Phase 1's original 4th item) deliberately deferred to Phase 6, on the user's own call, for lack of a real caller until then. Two real bugs found and fixed along the way: a `settings.latte`/`about.latte` naming collision with core's own public About page (renamed to `darkroom_settings.latte`/`darkroom_about.latte`), and a cascade-layer height/overflow conflict with `default`'s own unconditional `mainpage_categories.css`. Password/identification/register/profile dropped from scope entirely — `useStandardPages` defaults `true` and routes their whole theme chain to `standard_pages` regardless of the active gallery theme, confirmed unreachable, matching `modus`'s own established precedent. Phase 6-A (index.latte contextual navbar, `#thumbnails` CSS Grid) and Phase 6-B (full gesture-fidelity PhotoSwipe lightbox port, `themes/default/js/vendor/widgets/photoswipe.ts`, v4.1.3 real source, 10 passing Vitest tests) also done. Phase 6-C (picture.latte/picture_nav_buttons.latte/picture_content.latte, consolidated info cards, video playback branch, real social-share buttons via `assignContext()`/`GetPageAssets` -- an earlier "no channel exists" note was wrong, corrected same day) also done -- **Phase 6 is now fully closed** except for carousel/PhotoSwipe-wiring work that's genuinely Phase 7 scope. Phase 7-A (thumbnail carousel), Phase 7-B (real PhotoSwipe click-to-open wiring, plus 6 real bugs found and fixed in `photoswipe.ts` itself), and Phase 7-C (grid/list-view toggle, real `rating.ts` star-icon gap fixed, `grid_classes.tpl` confirmed replaced) all done -- **Phase 7 is now fully closed.** Phase 9-A (i18n, 26 locale `theme.po` files, 0 parity errors) and Phase 9-B (Font Awesome fold-in and legacy cleanup both confirmed real no-gaps; zip + `manifest.json` packaging done, live-verified via the real "Add a new theme" install flow) also done -- **Phase 9 is now fully closed.** A real install-and-compare validation pass against a genuine Piwigo 16.x reference instance confirmed every Phase 3 settings decision and found one real gap (the page-header/hero-banner styling never wired up despite `layout.latte`'s own docblock stating it was planned), fixed the same day (`pageHeaderStyle`/`pageHeaderImage`, `BootstrapDarkroomPageHeaderPageContext`, a real `{block pageBanner}` override). A follow-up full settings-wiring audit (cross-checking every kept `BootstrapDarkroomThemeSettings` field against its real template consumer) found 4 more of the same class of gap — site logo, custom CSS delivery (needed a real new core capability, `AssetContribution::inlineCss()`, since the obvious `local/`-relative static-file path is deliberately never web-reachable in this fork's own architecture), category/thumbnail description display (a real default-behavior inversion, not just a dead toggle), and a thumbnail-caption grid-view-only refinement — all fixed and live-verified the same day. Full detail in this file's own P61 narrative section below. Phase 10 not started | 5 |
+| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | **Fully closed** — Phase 1 (shared infra: `ExtensionContext::currentSection()`/`findByIdsOrdered()`/`isShowMetadataEnabled()`+`setShowMetadataEnabled()`/`paths()`, P61-A..D), Phase 2 (manifest + `ExtensionInterface` skeleton), Phase 3 (typed settings VO + real tabbed settings page), Phase 4 (CSS palette foundation, `--darkroom-color-*` custom properties, real OKLCH conversions), and Phase 5 (A-D: menubar family as a native `<details>`-dropdown navbar with no JS; generic pages; comments/tags; CSS-only thumbnails/mainpage_categories/month_calendar) are all done, each live-verified against a real running instance. PhotoSwipe (Phase 1's original 4th item) deliberately deferred to Phase 6, on the user's own call, for lack of a real caller until then. Two real bugs found and fixed along the way: a `settings.latte`/`about.latte` naming collision with core's own public About page (renamed to `darkroom_settings.latte`/`darkroom_about.latte`), and a cascade-layer height/overflow conflict with `default`'s own unconditional `mainpage_categories.css`. Password/identification/register/profile dropped from scope entirely — `useStandardPages` defaults `true` and routes their whole theme chain to `standard_pages` regardless of the active gallery theme, confirmed unreachable, matching `modus`'s own established precedent. Phase 6-A (index.latte contextual navbar, `#thumbnails` CSS Grid) and Phase 6-B (full gesture-fidelity PhotoSwipe lightbox port, `themes/default/js/vendor/widgets/photoswipe.ts`, v4.1.3 real source, 10 passing Vitest tests) also done. Phase 6-C (picture.latte/picture_nav_buttons.latte/picture_content.latte, consolidated info cards, video playback branch, real social-share buttons via `assignContext()`/`GetPageAssets` -- an earlier "no channel exists" note was wrong, corrected same day) also done -- **Phase 6 is now fully closed** except for carousel/PhotoSwipe-wiring work that's genuinely Phase 7 scope. Phase 7-A (thumbnail carousel), Phase 7-B (real PhotoSwipe click-to-open wiring, plus 6 real bugs found and fixed in `photoswipe.ts` itself), and Phase 7-C (grid/list-view toggle, real `rating.ts` star-icon gap fixed, `grid_classes.tpl` confirmed replaced) all done -- **Phase 7 is now fully closed.** Phase 9-A (i18n, 26 locale `theme.po` files, 0 parity errors) and Phase 9-B (Font Awesome fold-in and legacy cleanup both confirmed real no-gaps; zip + `manifest.json` packaging done, live-verified via the real "Add a new theme" install flow) also done -- **Phase 9 is now fully closed.** A real install-and-compare validation pass against a genuine Piwigo 16.x reference instance confirmed every Phase 3 settings decision and found one real gap (the page-header/hero-banner styling never wired up despite `layout.latte`'s own docblock stating it was planned), fixed the same day (`pageHeaderStyle`/`pageHeaderImage`, `BootstrapDarkroomPageHeaderPageContext`, a real `{block pageBanner}` override). A follow-up full settings-wiring audit (cross-checking every kept `BootstrapDarkroomThemeSettings` field against its real template consumer) found 4 more of the same class of gap — site logo, custom CSS delivery (needed a real new core capability, `AssetContribution::inlineCss()`, since the obvious `local/`-relative static-file path is deliberately never web-reachable in this fork's own architecture), category/thumbnail description display (a real default-behavior inversion, not just a dead toggle), and a thumbnail-caption grid-view-only refinement — all fixed and live-verified the same day. Phase 10 (closing verification) done: new real end-to-end integration test (8 tests, sibling repo), full golden-HTML/VR run (1 real regression from the audit's own new block seams fixed, 1 legitimate baseline update accepted), and a live Playwright pass that found and fixed 2 more real, previously-undiscovered bugs outside this port's own code entirely — a `Template::scriptTypeAttr()` gap letting 2 ported-extension scripts collide in the global scope (broke PhotoSwipe's click-to-open), and a `tools/i18n/php-to-po-fn.php` bug silently clobbering real RTL locales' text direction back to `ltr` (a wider, confirmed, not-yet-fixed instance of the same bug affects this repo's own core language files too, flagged as a separate follow-up). Full detail in this file's own P61 narrative section below | 5 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -12867,8 +12867,92 @@ failure found during the full-suite run — a real, in-progress concurrent
 session's own `public/plugins` symlink work in this shared worktree, not
 touched here).
 
-Phase 10 (closing verification) lands in the same sibling directory,
-not started.
+**P61 Phase 10 (Done) — closing verification, P61 fully closed.**
+
+- **Real end-to-end integration test** (sibling repo,
+  `BootstrapDarkroomThemeIntegrationTest.php`, same real harness modus's
+  own Phase 11 test established): 8 tests against a real extracted
+  `bootstrap_darkroom_17.0.0.zip`, covering activate/uninstall settings
+  persistence (incl. the custom-CSS file cleanup), boot()'s 2 real
+  halves (file_ext + show_metadata), the real per-locale theme.po load,
+  `GetPageAssets`'s custom-CSS asset contribution, a real end-to-end
+  `menubar.latte` render locking in the site-brand fix permanently, and
+  `handleSettingsRequest()`'s real CSRF-protected POST + about-tab
+  dispatch. All pass; full `composer test:ported-extensions` (65 tests)
+  and `composer analyse:phpstan:extensions` clean.
+- **Full golden-HTML/VR run**: found and fixed one real regression from
+  the closing-audit commit's own new `default`-theme block seams (an
+  extra blank line from 2 new standalone `{var}` lines each contributing
+  a literal newline never present in the original markup — collapsed
+  onto shared lines, zero output diff restored) plus one expected,
+  legitimate baseline update (`admin-themes-new`'s own real catalog
+  growth, `bootstrap_darkroom_17.0.0` now listed in `manifest.json`
+  alongside modus). One confirmed pre-existing, unrelated failure found
+  and left alone (`admin-photo-editor`, a concurrent session's own
+  in-progress work in this shared worktree).
+- **Live Playwright pass** — 2 real, previously-undiscovered bugs found
+  and fixed, both outside this port's own sibling-repo code:
+  - **Narrow-viewport responsive layout**: confirmed clean at 375px
+    (zero horizontal overflow, `scrollWidth === clientWidth` on both the
+    category and picture pages) — Phase 5-A/7-C's own CSS-only,
+    JS-free responsive design holds.
+  - **PhotoSwipe click-to-open, real bug**: a live click-through test
+    (not just code review) found a genuine `TypeError: e is not a
+    function` breaking the carousel's click handler entirely, the
+    moment `view-toggle.js` also loaded on the same picture page. Root
+    cause: `Template::scriptTypeAttr()`'s own `dist/`-prefix test for
+    "should this load as `type="module"`" never recognized a ported
+    extension's own `themes/<id>/dist/`/`plugins/<id>/dist/` output
+    (only this repo's own Vite-built `dist/` paths) — so 2 real,
+    unrelated ported-extension scripts loaded as classic scripts
+    sharing one global scope, and their independently-minified
+    top-level bindings collided. Fixed at the real root cause (extended
+    `scriptTypeAttr()`'s existing test, not a novel IIFE-wrapping
+    workaround considered and correctly rejected along the way) —
+    `themes/default/src/Piwigo/Template/Template.php`, this repo's own
+    commit, unit-tested.
+  - **RTL locale render, real bug**: a real `he_IL` session showed
+    `lang="he"` but `dir="ltr"` on the same page. Root cause:
+    `tools/i18n/php-to-po-fn.php` defaulted a theme/plugin `.lang.php`'s
+    missing direction metadata to the literal string `'ltr'` (unlike
+    every other `$lang_info` field, which correctly defaults to `''`
+    and stays silent) — `Lang::load()`'s own real parent/child-chain
+    merge then treated that fake, always-present header as equally
+    authoritative as `common.po`'s own real `rtl`, silently clobbering
+    it the moment `ThemeRegistry::bootCurrent()` loaded the theme's own
+    `theme.lang` afterward. Fixed at the tool level; both already-shipped
+    ported themes' own `theme.po` files regenerated against the fix
+    (sibling repo, one line removed per locale file, zero other diff).
+    **A wider, confirmed, separately-scoped finding from the same root
+    cause, not yet fixed**: several of this repo's own core
+    `language/<locale>/*.po` files (`admin.po`/`install.po`/
+    `help_quick_search.po`/`whats_new_*.po`/`upgrade.po` — every real
+    core language file except `common.po`, the only one real Piwigo
+    convention ever put `$lang_info` in) carry the same stale, now
+    provably wrong `ltr` header for every RTL locale — confirmed via a
+    real live `he_IL` session still showing `dir="ltr"` even with the
+    plain `default` theme active (no theme.po involved). The real
+    legacy `.lang.php` sources needed to regenerate them correctly
+    *are* available (`/home/torres/piwigo16/language/`, the real
+    Piwigo 16.x reference checkout already used elsewhere in this
+    campaign) — not fixed here because it's a fork-wide i18n
+    data-quality issue spanning every locale's core files, not a P61
+    scope item; left for a dedicated follow-up pass.
+- Settings-page tab save/reload round-trip, menubar dropdown/`<details>`
+  behavior, and the carousel filmstrip were all already covered
+  extensively by this campaign's own earlier per-phase live verification
+  (Phases 5-A, 7-A/B/C, and the closing settings-wiring audit) — not
+  repeated as a redundant final pass, per this project's own established
+  "per-file scoped tests are the real net, no full closing gate re-run"
+  convention.
+- Explicitly out of scope, confirmed zero shim needed (§5.10): the
+  third-party-plugin-override template family
+  (`button_user_collections_*`, `stuffs_*`, `menu_templates/*`,
+  `language_switch_flags.tpl`) — `BlockManager` already hides empty
+  blocks generically.
+
+**P61 is now fully closed** (Phases 1–10, plus the install-and-compare
+validation pass and the closing settings-wiring audit).
 
 ## Greenfield tracks (T3, cuttable — outside the P0–P60 backbone)
 

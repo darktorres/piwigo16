@@ -44,6 +44,8 @@ final class SyncBenchEnvironment
 
     private readonly string $originalDbBase;
 
+    private bool $tornDown = false;
+
     public function __construct(int $scale)
     {
         $this->dbHost = self::env('PIWIGO_DB_HOST', '127.0.0.1');
@@ -59,6 +61,19 @@ final class SyncBenchEnvironment
         if (! mkdir($this->galleriesDir, 0o777, true) && ! is_dir($this->galleriesDir)) {
             throw new RuntimeException("Failed to create scratch galleries dir: {$this->galleriesDir}");
         }
+
+        // PHPBench's own subprocess template never reaches afterMethods
+        // (SiteSyncBench::afterSync(), which calls tearDown()) once the
+        // timed subject throws an uncaught error -- the whole subprocess
+        // just exits, confirmed live by 30 leaked scratch directories
+        // from failed benchmark runs during this class's own development.
+        // register_shutdown_function() still fires in that case, so it's
+        // the real safety net -- tearDown() itself is idempotent
+        // ($tornDown) since this then runs in addition to, not instead
+        // of, afterSync()'s own explicit call on a normal run.
+        register_shutdown_function(function (): void {
+            $this->tearDown();
+        });
     }
 
     /**
@@ -81,7 +96,13 @@ final class SyncBenchEnvironment
         if (Kernel::isBooted()) {
             Kernel::reset();
         }
-        Kernel::boot(Paths::fromRoot($this->repoRoot));
+        // isAdmin: true -- matches public/admin.php's own
+        // RequestBootstrap::bootEntryPoint($paths, isAdmin: true) call;
+        // without it, CurrentTemplate/Renderer resolve template paths
+        // against the front-end theme instead of themes/admin/, and
+        // SiteUpdateSubController::handle()'s own Tabsheet::assign() call
+        // fails to find tabsheet.latte.
+        Kernel::boot(Paths::fromRoot($this->repoRoot), isAdmin: true);
 
         DbConnection::build()->executeStatement(
             'UPDATE sites SET galleries_url = ? WHERE id = 1',
@@ -91,6 +112,11 @@ final class SyncBenchEnvironment
 
     public function tearDown(): void
     {
+        if ($this->tornDown) {
+            return;
+        }
+        $this->tornDown = true;
+
         if (Kernel::isBooted()) {
             Kernel::reset();
         }

@@ -75,6 +75,20 @@ Dispatched in `CategoryCatsRenderer.php` at the existing `getByType(ImageStdPara
 
 **Fix**: add the `public/plugins` symlink (matching the real `public/themes`/`public/dist` shape) plus a Caddyfile carve-out removing `/plugins/*` from `@deniedRelocated`, and the equivalent Apache vhost rule. Re-read `docker/Caddyfile`'s current exact rule shape before editing — don't invent a new pattern. This blocks *every* future plugin shipping its own CSS/JS, not just gdThumb; worth fixing here rather than deferring.
 
+**Landed 2026-09-12.** The "equivalent Apache vhost rule" turned out not to exist: `public/.htaccess` has no deny rule for `upload/galleries/local/language` at all, because this app has no single front-controller/catch-all rewrite (a multi-entry-point app — `index.php`/`picture.php`/`api.php`/etc. are each real files) — Caddy's `php_server` try-files fallback is what created the gap in the first place, and Apache's plain `mod_rewrite` setup was never exposed to it. `docker/apache-vhost.conf` already had `FollowSymLinks` on, so the symlink alone was sufficient there.
+
+**Scope grew by one real, closely-related item, found while implementing**: making `plugins/` web-reachable also makes plugin PHP source (`Plugin.php`, etc.) directly URL-fetchable — and `themes/` was *already* doing this with zero guard (`themes/default/src/Theme.php` was, and is, directly fetchable). Inert today (every current file is a pure class definition, no top-level side effects) but an unenforced convention, not a control. Closed for both trees at once, not just the newly-exposed one: `docker/Caddyfile`'s `@extensionPhpSource` and `public/.htaccess`'s matching `RewriteRule` deny any direct request for a `.php` file under `/themes/` or `/plugins/`, verified against real local Apache and FrankenPHP/Caddy instances (not just reasoned about) before landing:
+
+| Request | Before | After |
+|---|---|---|
+| `themes/default/vendor/fontello/css/gallery-icon.css` (real asset) | 200 | 200 (unchanged) |
+| `themes/default/src/Theme.php` (real theme PHP source) | 200 (!) | 403 |
+| `plugins/<id>/assets/*` (real plugin asset) | unreachable (403 Caddy / 404 Apache) | 200 |
+| `plugins/index.php` | unreachable (403 Caddy / 404 Apache) | 403 (now via `@extensionPhpSource`, not `@deniedRelocated`) |
+| `galleries/index.php` / `local/index.php` / `language/index.php` | unreachable | unchanged, still unreachable |
+
+`.github/workflows/ci.yml`'s `apache-deny-rules`/`container-deny-rules` jobs updated to match: `plugins/index.php` moved out of the generic "outside `public/`, 404s" assertion (it's reachable now) into a new dedicated step alongside the new positive (`plugins/.../fixture.css` → 200) and negative (`themes/.../Theme.php`, `plugins/index.php` → 403) assertions.
+
 ---
 
 ## 4. Needs adaptation in the plugin itself (`GDThumb_17.0.0`)

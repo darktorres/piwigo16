@@ -1064,10 +1064,15 @@ jobs:
           # still unreachable over HTTP, not just "this path happens not to
           # exist". galleries/language/plugins/local/ already ship a real
           # tracked index.php each, reused as-is.
-          mkdir -p upload/2026/01/01 _data/i _data/logs
+          mkdir -p upload/2026/01/01 _data/i _data/logs plugins/ci-fixture-plugin/assets
           echo fixture > upload/2026/01/01/photo.jpg
           echo fixture > _data/i/derivative-th.jpg
           echo fixture > _data/logs/piwigo.log
+          # A real plugin asset fixture -- plugins/ has no real _17.0.0
+          # port checked in yet, so this proves public/plugins's own
+          # symlink resolves a real static file, same reasoning as the
+          # 3 fixtures above.
+          echo 'body{color:red}' > plugins/ci-fixture-plugin/assets/fixture.css
       - name: Serve the checkout's public/ with the shipped .htaccess
         run: |
           cat <<VHOSTEOF | sudo tee /etc/apache2/sites-available/000-default.conf
@@ -1123,6 +1128,32 @@ jobs:
               exit 1
             fi
           done
+      - name: Assert plugins/ assets are servable but theme/plugin PHP source is denied (gdthumb-port-analysis.md §3b)
+        run: |
+          # public/plugins is a real symlink now (mirroring public/themes/
+          # public/dist) -- a real static asset must resolve...
+          status=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost/plugins/ci-fixture-plugin/assets/fixture.css")
+          echo "GET /plugins/ci-fixture-plugin/assets/fixture.css -> ${status}"
+          if [ "${status}" != "200" ]; then
+            echo "::error::expected 200 for a real plugin asset, got ${status}"
+            exit 1
+          fi
+          # ...but neither themes/ nor plugins/ should ever let a request
+          # invoke the PHP interpreter directly on their own source --
+          # class definitions autoloaded via PSR-4, never a URL target.
+          # themes/default/src/Theme.php proves this for themes/ (already
+          # web-reachable before this change, with no such guard);
+          # plugins/index.php proves it for the newly-symlinked plugins/
+          # (previously 404 because plugins/ wasn't reachable at all --
+          # see the previous step's own comment).
+          for path in themes/default/src/Theme.php plugins/index.php; do
+            status=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost/${path}")
+            echo "GET /${path} -> ${status}"
+            if [ "${status}" != "403" ]; then
+              echo "::error::expected 403 (theme/plugin PHP source must never execute via direct request) for /${path}, got ${status}"
+              exit 1
+            fi
+          done
       # The "Install Apache" step's APACHE_RUN_USER=runner fix above
       # addresses the real cause (AH00035, an OS-level permission wall,
       # not the .htaccess rule or any Directory/Require config). Kept as
@@ -1154,9 +1185,13 @@ jobs:
           # deny rule -- they're simply outside DocumentRoot (public/), so
           # a direct request 404s like any nonexistent URL instead of
           # serving the file off disk and bypassing i.php's/action.php's
-          # own permission checks.
+          # own permission checks. plugins/index.php is deliberately NOT
+          # in this list any more -- public/plugins is now a real symlink
+          # (gdthumb-port-analysis.md §3b), so it's reachable, and is
+          # asserted 403 (denied by the new @extensionPhpSource-equivalent
+          # rule below) in the next step instead of 404 (outside public/).
           for path in upload/2026/01/01/photo.jpg galleries/index.php local/index.php \
-              language/index.php plugins/index.php \
+              language/index.php \
               _data/i/derivative-th.jpg _data/logs/piwigo.log; do
             status=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost/${path}")
             echo "GET /${path} -> ${status}"
@@ -1239,13 +1274,40 @@ jobs:
               echo fixture > /app/upload/2026/01/01/photo.jpg && \
               echo fixture > /app/_data/i/derivative-th.jpg && \
               echo fixture > /app/_data/logs/piwigo.log"
+          # plugins/index.php deliberately NOT in this list -- public/plugins
+          # is now a real symlink (gdthumb-port-analysis.md §3b), denied by
+          # the new @extensionPhpSource rule instead, asserted in the next
+          # step alongside the rest of that rule's coverage.
           for path in upload/2026/01/01/photo.jpg galleries/index.php local/index.php \
-              language/index.php plugins/index.php \
+              language/index.php \
               _data/i/derivative-th.jpg _data/logs/piwigo.log; do
             status=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8080/${path}")
             echo "GET /${path} -> ${status}"
             if [ "${status}" != "403" ]; then
               echo "::error::expected 403 (denied by @deniedRelocated/@deniedData) for /${path}, got ${status}"
+              exit 1
+            fi
+          done
+      - name: Assert plugins/ assets are servable but theme/plugin PHP source is denied (gdthumb-port-analysis.md §3b)
+        run: |
+          docker exec piwigo-ci sh -c "mkdir -p /app/plugins/ci-fixture-plugin/assets && \
+              echo 'body{color:red}' > /app/plugins/ci-fixture-plugin/assets/fixture.css"
+          # public/plugins is a real symlink now (mirroring public/themes/
+          # public/dist) -- a real static asset must resolve...
+          status=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8080/plugins/ci-fixture-plugin/assets/fixture.css")
+          echo "GET /plugins/ci-fixture-plugin/assets/fixture.css -> ${status}"
+          if [ "${status}" != "200" ]; then
+            echo "::error::expected 200 for a real plugin asset, got ${status}"
+            exit 1
+          fi
+          # ...but neither themes/ nor plugins/ should ever let a request
+          # invoke the PHP interpreter directly on their own source --
+          # class definitions autoloaded via PSR-4, never a URL target.
+          for path in themes/default/src/Theme.php plugins/index.php; do
+            status=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8080/${path}")
+            echo "GET /${path} -> ${status}"
+            if [ "${status}" != "403" ]; then
+              echo "::error::expected 403 (theme/plugin PHP source must never execute via direct request) for /${path}, got ${status}"
               exit 1
             fi
           done

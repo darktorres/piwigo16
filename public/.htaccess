@@ -34,6 +34,18 @@
     RewriteCond %{REQUEST_URI} !/(themes|plugins)/[^/]+/vendor/ [NC]
     RewriteRule ^ - [F,L]
 
+    # gdThumb's own port (docs/plugin-porting/gdthumb-port-analysis.md §3b)
+    # needed public/plugins as a real symlink, the same as public/themes/
+    # public/dist already are, to serve a plugin's own CSS/JS. Mirrors
+    # docker/Caddyfile's own @extensionPhpSource: themes/ and plugins/ both
+    # also carry real PHP source (class definitions autoloaded via PSR-4,
+    # never a URL target) -- inert today (every current file is a pure
+    # class definition, no top-level side effects) but an unenforced
+    # convention, not a control. No request should ever invoke the PHP
+    # interpreter directly on a theme/plugin source file.
+    RewriteCond %{REQUEST_URI} /(themes|plugins)/.*\.php$ [NC]
+    RewriteRule ^ - [F,L]
+
     # SEC-01: deny direct access to sensitive root-level tooling configs and
     # dependency manifests too — not just the directories above. These have
     # no reason to ever be fetched by a browser and would help fingerprint

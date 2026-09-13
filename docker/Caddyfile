@@ -24,12 +24,15 @@
 	# precedent of keeping a rule even once its target is provably
 	# unreachable another way), not deleted.
 	#
-	# upload/galleries/local/language/plugins/_data (except _data/combined,
+	# upload/galleries/local/language/_data (except _data/combined,
 	# symlinked into public/) are NOT structurally unreachable the same way,
 	# despite living outside /app/public too -- php_server's try_files
 	# fallback routes any non-static path to index.php instead of 404ing, so
 	# they need their own explicit deny (see @deniedRelocated/@deniedData
-	# below), the same as everything else in this block.
+	# below), the same as everything else in this block. plugins/ is
+	# similarly outside /app/public but is now real, symlinked, publicly-
+	# servable content (like themes/dist already were) -- see
+	# @extensionPhpSource below for its own, narrower guard.
 	root * /app/public
 	encode zstd br gzip
 
@@ -56,15 +59,30 @@
 	respond @denied 403
 
 	# docs/PLAN.md gap-closure: `root * /app/public` alone doesn't make
-	# upload/galleries/local/language/plugins/_data (except _data/combined,
+	# upload/galleries/local/language/_data (except _data/combined,
 	# symlinked into public/) "structurally unreachable" the way the block
 	# comment above claims -- php_server's default try_files is `{path}
 	# {path}/index.php index.php`, so any request that isn't a real static
 	# file under /app/public silently falls through to index.php instead of
 	# 404ing at the web-server layer (confirmed against Caddy's own docs).
 	# Explicit deny, same as the @denied block above, closes that gap.
-	@deniedRelocated path /upload/* /galleries/* /local/* /language/* /plugins/*
+	# plugins/ deliberately excluded from this list -- see
+	# public/plugins's own symlink + @extensionPhpSource below.
+	@deniedRelocated path /upload/* /galleries/* /local/* /language/*
 	respond @deniedRelocated 403
+
+	# gdThumb's own port (docs/plugin-porting/gdthumb-port-analysis.md §3b)
+	# needed plugins/ to serve real static assets (CSS/JS), the same way
+	# public/themes/public/dist already do -- public/plugins is a real
+	# symlink now, not deny-listed above. But themes/ and plugins/ both
+	# also carry real PHP source (class definitions autoloaded via PSR-4,
+	# never a URL target) -- inert today (every current file is a pure
+	# class definition, no top-level side effects) but an unenforced
+	# convention, not a control, and the one real gap this closes for both
+	# trees at once, not just the newly-exposed one: no request should ever
+	# invoke the PHP interpreter directly on a theme/plugin source file.
+	@extensionPhpSource path_regexp extensionPhpSource ^/(themes|plugins)/.*\.php$
+	respond @extensionPhpSource 403
 	@deniedData {
 		path /_data/*
 		not path /_data/combined/*

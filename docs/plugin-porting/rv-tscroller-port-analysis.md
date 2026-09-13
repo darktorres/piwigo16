@@ -47,26 +47,33 @@ Verified against real dispatch sites and constructors, not docs.
 
 ## 3. Needs adaptation in piwigo17-rewrite
 
-One real change.
+**Done 2026-09-13** — landed as a standalone prerequisite commit ahead of the plugin itself (§7's item 4, resolved: standalone first).
 
 ### `SectionPopulator::resolveSectionItems()` extraction
 
-**Problem.** `SectionPopulator::populate()` is the modern, section-agnostic replacement for legacy's `$page['items']` population — one method, one `elseif` branch per section type (Categories/flat/combined_categories at ~line 200-386, Tags ~440-483, Search ~484-555, Favorites ~511-528 area, RecentPics/BestRated/MostVisited ~556-628, chronology ~654-688). It cannot be called directly from the plugin's own AJAX route:
+**Problem.** `SectionPopulator::populate()` is the modern, section-agnostic replacement for legacy's `$page['items']` population — one method, one `elseif` branch per section type. It cannot be called directly from the plugin's own AJAX route:
 
 - It derives section identity by parsing `$_SERVER['PATH_INFO']` directly inside `SectionInitializer::parse()` — not a pure function callable with an explicit parameter set; for a request hitting `/api/v1/plugin-routes/rv_tscroller/...`, the current request's own URL is simply the wrong input.
-- It carries real, page-load-only side effects unsafe to re-run on every scroll tick: a 301 permalink redirect, a category-restriction access-denied redirect, an `EventDispatcher->dispatch(RenderCategoryDescription)`, and a session write (`unsetSessionVar('image_order')`).
+- It carries real, page-load-only side effects unsafe to re-run on every scroll tick: a 301 permalink redirect, a category-restriction access-denied redirect, an `EventDispatcher->dispatch(RenderCategoryDescription)`, a session write (`unsetSessionVar('image_order')`), and (found while landing this) `UserService::checkUserFavorites()`/`removeAllFromFavorites()`/a template `assignContext()` call for Favorites, plus an empty-tag-result `accessDenied()`/security log for Tags.
 
-**Fix.** Extract the per-section item-id-resolution branches into a new, explicit-parameter, side-effect-free public method:
+**Landed shape.** Two new methods on `SectionPopulator`, both side-effect-free:
 
 ```php
-SectionPopulator::resolveSectionItems(Section $section, SectionItemQuery $params): array
+public function resolveSectionItems(SectionItemQuery $query): array
+private function resolveOrderBy(Section $section, ?CategoryInfo $category, bool $flat): string
 ```
 
-where `SectionItemQuery` is a small new value object carrying already-known section identity (category id(s) + flat/combined flags, tag ids + mode, `searchId`, chronology field/date/style/view) — no URL parsing, no redirects, no session writes, no event dispatch. `populate()` itself is refactored to call this new method internally instead of holding the logic inline, so page-1 rendering and the plugin's route share exactly one source of truth. If a future core patch changes one of these branches (a new filter dimension, a bugfix to a condition), both paths pick it up automatically — the alternative (the plugin duplicating this dispatch logic itself) is a permanent, silent drift risk.
+`SectionItemQuery` (`src/Piwigo/Section/SectionItemQuery.php`) is a small VO with **named constructors**, not one do-everything constructor with flat booleans — `categories()`, `combinedCategories()`, `flatCategory()`, `wholeGalleryFlat()`, `tags()`, `favorites()`, `recentPics()`, `mostVisited()`, `bestRated()`, `imageList()`. `combined_categories` and `flat` are mutually exclusive in the real dispatch this mirrors, so a flat boolean-soup shape would let both be set incoherently.
 
-This is a mechanical extract-method refactor plus one small VO — not new query logic, not a new REST surface.
+`resolveOrderBy()` exists because ordering is itself derived, per-user state (session preferred-order + a plain category's own custom `image_order` column), not something safe to accept as a raw string from a request — it's recomputed from the same session/category inputs on every call rather than threaded through as a parameter, so there is never a raw ORDER BY fragment anywhere near request input. It deliberately never clears the session's stale-preference key the way `populate()`'s own preamble still does right before calling it — that one page-load-only housekeeping side effect stays exclusively in `populate()` and is naturally (harmlessly) repeated on the next real page load if a caller here doesn't happen to trigger it.
 
-**Bundled decision, not an afterthought:** as part of this extraction, make explicit what's currently an accident of query construction — whether BestRated/MostVisited/whole-gallery-flat-mode should page through the **entire** permission-filtered corpus (legacy capped at a fixed `CurrentConfig::topNumber`). Recommendation: page through the whole corpus — a real, deliberate improvement over the legacy cap, made an explicit tested contract of `resolveSectionItems()` rather than an incidental side effect.
+**`Section::Search` is deliberately not covered by `resolveSectionItems()`**, unlike every other row in §4a's table below. `SearchService::getSearchResults()` also returns `'qs'`/`'search_details'` bookkeeping `populate()`'s own Search branch needs for `$page` — wrapping just the `'items'` half here would force any second caller needing that bookkeeping too (`populate()` itself included) to call `getSearchResults()` a second time, silently doubling the query. Both `populate()` and the plugin's own route call `SearchService::getSearchResults()` directly instead — already a single, directly reusable method call, with no per-branch dispatch logic worth centralizing the way the other 7 section types have. (This corrects this section's own earlier, more literal "one method covers every section" framing — caught while actually implementing it, not assumed going in.)
+
+`populate()` itself was refactored to call `resolveSectionItems()`/`resolveOrderBy()` internally instead of holding the query-dispatch logic inline, so page-1 rendering and the plugin's route share exactly one source of truth. If a future core patch changes one of these branches (a new filter dimension, a bugfix to a condition), both paths pick it up automatically — the alternative (the plugin duplicating this dispatch logic itself) is a permanent, silent drift risk.
+
+**Bundled decision, landed as specified:** `SectionRepository::findTopByHitsImageIds()`/`findTopRatedImageIds()` both widened `int $limit` → `?int $limit = null` (Doctrine's own `setMaxResults()` already treats `null` as "no limit" natively), and `resolveSectionItems()` calls both with no `$limit` at all — paging through the **entire** permission-filtered corpus, not `CurrentConfig::topNumber`'s fixed top-N cut. This changes `populate()`'s own existing page-1 behavior for these two sections too, not just the plugin's — a real, deliberate, user-facing change for every install (a "Best Rated"/"Most Visited" page goes from "top 15" to "browse the whole gallery sorted by rating/hits"), not an invisible refactor detail. It's also necessary, not just permitted: without it, rv_tscroller's infinite scroll on these two sections would have nothing left to load past the legacy cap. The two sections' link titles were also fixed to drop the now-inaccurate `{$topNumber}` prefix (`"15 Best rated"` while actually listing the whole corpus would have been a shipped bug, caught before landing rather than after).
+
+Covered by `tests/Integration/SectionPopulatorTest.php` — one test per `SectionItemQuery` named constructor (including a cache-reuse proof for whole-gallery flat mode, and two "ignores the `topNumber` cap" tests for MostVisited/BestRated), plus a pre-existing test gap found and fixed along the way: `testPopulateAppliesTheCategorysOwnCustomImageOrder()` previously only asserted an item *count*, never that the custom order actually took effect — mutation-testing the new `resolveOrderBy()` extraction against it passed silently until the fixture data and assertion were both strengthened to prove real ordering.
 
 ---
 
@@ -87,19 +94,19 @@ Every legacy section type maps to an already-real, already-DI-reachable service,
 
 | Section type | Item-id resolution — verified real | New core code needed |
 |---|---|---|
-| Categories (single/non-recursive) | `CategoryRepository::findImageIdsForCategories()` (same method `CategoryImagesController` already uses) | None |
-| Flat mode (single category) | Same, `recursive=true` / uppercats branch | None |
-| combined_categories | Same, multiple `catIds` | None |
-| Tags | `TagService::getImageIdsForTags()` (same call site `TagImagesController` already uses) | None |
-| Search (quick) | `SearchService::getQuickSearchResults()` (same as `ImageSearchController`) | None |
-| Search (saved/advanced, by `searchId`) | `SearchService::getSearchResults($searchId, ...)` — real method, just never wrapped by a public GET; plugin calls it directly | None |
-| Favorites | `UserService::getVisibleFavoriteImages()` (same as `FavoriteListController`) | None |
-| RecentPics | `UserService::getRecentPhotosCondition()` + `SectionRepository::findRecentImageIds()` — explicit `SqlCondition`/`orderBySql` params, no URL/session coupling | None |
-| BestRated | `SectionRepository::findTopRatedImageIds(SqlCondition, int $limit)` — explicit params | None (whole-corpus decision, §3) |
-| MostVisited | `SectionRepository::findTopByHitsImageIds(SqlCondition, int $limit)` — same shape | None (whole-corpus decision, §3) |
+| Categories (single/non-recursive) | `SectionPopulator::resolveSectionItems(SectionItemQuery::categories($category))` | None (landed, §3) |
+| Flat mode (single category or whole gallery) | `resolveSectionItems(SectionItemQuery::flatCategory($category))` / `::wholeGalleryFlat()` | None (landed, §3) |
+| combined_categories | `resolveSectionItems(SectionItemQuery::combinedCategories($catIds))` | None (landed, §3) |
+| Tags | `resolveSectionItems(SectionItemQuery::tags($tagIds))` | None (landed, §3) |
+| Search (quick) | `SearchService::getQuickSearchResults()` (same as `ImageSearchController`) — called directly, not via `resolveSectionItems()`, see §3 | None |
+| Search (saved/advanced, by `searchId`) | `SearchService::getSearchResults($searchId, ...)` — real method, just never wrapped by a public GET; plugin calls it directly, not via `resolveSectionItems()`, see §3 | None |
+| Favorites | `resolveSectionItems(SectionItemQuery::favorites())` | None (landed, §3) |
+| RecentPics | `resolveSectionItems(SectionItemQuery::recentPics())` | None (landed, §3) |
+| BestRated | `resolveSectionItems(SectionItemQuery::bestRated())` — no `$limit`, whole corpus | None (landed, §3) |
+| MostVisited | `resolveSectionItems(SectionItemQuery::mostVisited())` — same, no `$limit` | None (landed, §3) |
 | Calendar leaf-bucket listing | Shared `fMinDateAvailable`/`fMaxDateAvailable`/`fMinDateCreated`/`fMaxDateCreated` condition-building already common to the existing image-listing endpoints' `ImageFilterCriteriaBuilder` pipeline | None |
 | Calendar grid navigation (year/month/day drill-down counts) | `CalendarRenderer`/`CalendarService` — verified plain constructor-DI classes | None |
-| RecentCats (album tiles, not images) | `CategoryCatsRenderer::render(Section, ?Category, int $startcat)` — verified explicit-parameter, no URL coupling (confirmed from `GalleryController`'s own call site) | None |
+| RecentCats (album tiles, not images) | `CategoryCatsRenderer::render(Section, ?Category, int $startcat)` — verified explicit-parameter, no URL coupling (confirmed from `GalleryController`'s own call site); not covered by `resolveSectionItems()` either, same reasoning as Search | None |
 
 ### 4b. Frontend rewrite
 
@@ -136,13 +143,13 @@ One implementation-level detail flagged, not a design gap: whether `Renderer` ca
 1. **License.** rv_tscroller ships no SPDX identifier or license file anywhere in its source or `manifest.json` entry (unlike `bootstrap_darkroom`, which had real `changelog.txt` FSF boilerplate to anchor a GPL-2.0-or-later decision). Needs a decision before publishing a `_17.0.0` port — check upstream `github.com/Piwigo/piwigo-tscroller` directly for a `LICENSE` file not mirrored into this manifest snapshot.
 2. **`SectionItemQuery` VO shape and the client↔route contract.** Exact fields needed to fully describe "which section, which query, which page" round-trip between the TS client and the plugin's route — this mirrors how legacy's JS already carried `$page`-derived state (`start`, `total`, `perPage`, `urlModel`) from the page-1 render into each AJAX call, but needs a real typed shape now rather than ad hoc `$_GET` keys.
 3. **Fragment-partial rendering primitive** (§5's flagged implementation detail) — confirm whether `Renderer`/`Template` can render `thumbnails.latte`'s inner loop as a bare partial, or whether the plugin needs and should own a small mirroring Latte partial.
-4. **Timing: extract `SectionPopulator::resolveSectionItems()` (§3) as a standalone prerequisite commit, or as the first commit of the plugin-port branch itself?** Either works; doing it standalone first makes the core change reviewable independently of plugin-specific concerns.
+4. ~~**Timing: extract `SectionPopulator::resolveSectionItems()` (§3) as a standalone prerequisite commit, or as the first commit of the plugin-port branch itself?**~~ — **resolved 2026-09-13**: landed standalone, ahead of and independent of the plugin itself. See §3.
 
 ---
 
 ## 8. Suggested phased execution order
 
-1. `piwigo17-rewrite`: extract `SectionPopulator::resolveSectionItems()` + `SectionItemQuery` VO (§3), with unit tests covering every section-type branch being extracted. No behavior change to `populate()`'s own callers.
+1. ~~`piwigo17-rewrite`: extract `SectionPopulator::resolveSectionItems()` + `SectionItemQuery` VO (§3), with unit tests covering every section-type branch being extracted.~~ **Done 2026-09-13.** One real behavior change to `populate()`'s own callers, not zero: MostVisited/BestRated page through the whole corpus now, not `CurrentConfig::topNumber` — see §3's own "bundled decision" writeup for why this is deliberate.
 2. `piwigo16-plugins/rv_tscroller_17.0.0/`: `plugin.json` (`hasApiRoutes: true`, `id: rv_tscroller`) + `Plugin.php` implementing `ExtensionInterface` + `ApiRouteProviderInterface`, wiring the four clean-port event subscriptions (§2) and the AJAX route(s) (§4a) — categories/tags/flat/combined first (covers the overwhelming majority of real installs), then the remaining section types (§4a table) once the core extraction (step 1) is in place for all of them.
 3. Frontend: vanilla-TS rewrite of the scroll/AJAX-append logic (§4b).
 4. Repo bookkeeping per `../piwigo16-plugins/CLAUDE.md`: `manifest.json` `rv_tscroller_17.0.0` entry, zip packaging (bare `<id>` top folder, not versioned), thumbnail path carryover if the legacy entry has one.

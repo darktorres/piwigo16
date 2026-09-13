@@ -47,6 +47,14 @@ test('findTopRatedImageIds() respects the limit', function (): void {
         ->toBe(['3']);
 });
 
+test('findTopRatedImageIds() returns the whole corpus without a limit', function (): void {
+    // Image 5 (rating_score NULL) is excluded by the query's own
+    // `i.ratingScore IS NOT NULL` clause -- the null-limit case still
+    // returns only the 4 rated images, not all 5.
+    expect(sectionTestRepo()->findTopRatedImageIds(SqlCondition::fromRawSql('')))
+        ->toBe(['3', '1', '2', '4']);
+});
+
 test('findTopByHitsImageIds() returns ids ordered by hit desc', function (): void {
     $conn = DbConnection::build();
     $conn->executeStatement('UPDATE images SET hit = 5 WHERE id = 2');
@@ -63,6 +71,20 @@ test('findTopByHitsImageIds() returns ids ordered by hit desc', function (): voi
 test('findTopByHitsImageIds() returns empty when no image has a hit', function (): void {
     expect(sectionTestRepo()->findTopByHitsImageIds(SqlCondition::fromRawSql(''), 5))
         ->toBe([]);
+});
+
+test('findTopByHitsImageIds() returns the whole corpus without a limit', function (): void {
+    $conn = DbConnection::build();
+    $conn->executeStatement('UPDATE images SET hit = 5 WHERE id = 2');
+    $conn->executeStatement('UPDATE images SET hit = 10 WHERE id = 4');
+    $conn->executeStatement('UPDATE images SET hit = 1 WHERE id = 1');
+
+    try {
+        expect(sectionTestRepo()->findTopByHitsImageIds(SqlCondition::fromRawSql('')))
+            ->toBe(['4', '2', '1']);
+    } finally {
+        $conn->executeStatement('UPDATE images SET hit = 0 WHERE id IN (1, 2, 4)');
+    }
 });
 
 test('findSectionImageIds() runs the DQL path for a resolvable order and a single category (rank-eligible)', function (): void {

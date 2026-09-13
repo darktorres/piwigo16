@@ -45,7 +45,6 @@ use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserService;
-use Psr\Cache\CacheItemInterface;
 
 /**
  * Builds $page['items']/$page['title'] and everything else
@@ -102,13 +101,6 @@ final readonly class SectionPopulator
         // registered at the end.
         /** @var array<string, mixed> */
         $page = [];
-
-        // 'order_by' is progressively narrowed/overridden by several of
-        // this method's section-specific branches below and read back by
-        // several others -- a single local variable threaded through the
-        // whole method, seeded from CurrentConfig::orderBy().
-        $order_by = new SortRenderer($this->entityManager->getConnection())
-            ->toSql($this->currentConfig->orderBy);
 
         $page['items'] = [];
         $page['start'] = $page['startcat'] = 0;
@@ -194,63 +186,29 @@ final readonly class SectionPopulator
         // By default, it is the same as CurrentUser::get()->rawAttributes['nb_image_page']
         $page['nb_image_page'] = $this->currentUser->get()->rawAttributes['nb_image_page'] ?? null;
 
-        // if flat mode is active, we must consider the image set as a standard set
-        // and not as a category set because we can't use the #image_category.rank :
-        // displayed images are not directly linked to the displayed category
-        if ($section === Section::Categories and ! isset($page['flat'])) {
-            $order_by = new SortRenderer($this->entityManager->getConnection())
-                ->toSql($this->currentConfig->orderByInsideCategory);
-        }
-
+        // The current session stored image_order might be not compatible with
+        // current image set, for example if the current image_order is the rank
+        // and that we are displaying images related to a tag.
+        //
+        // In case of incompatibility, the session stored image_order is removed.
+        // The actual ORDER BY fragment this preference resolves to (plus
+        // the base per-section default and any per-category custom order)
+        // is computed on demand by resolveOrderBy() below, shared with
+        // resolveSectionItems() -- this block only owns the page-load-only
+        // side effect of clearing a stale preference, which resolveOrderBy()
+        // itself must never do (it also backs resolveSectionItems(), which
+        // must stay free of session writes -- see that method's own
+        // docblock).
         $image_order_id = $this->sessionService->getImageOrder() ?? 0;
         if ($image_order_id > 0) {
             $orders = $this->categoryService->getPreferredImageOrders();
-
-            // the current session stored image_order might be not compatible with
-            // current image set, for example if the current image_order is the rank
-            // and that we are displaying images related to a tag.
-            //
-            // In case of incompatibility, the session stored image_order is removed.
             if ($orders[$image_order_id]->visible) {
-                $order_by = str_replace(
-                    'ORDER BY ',
-                    'ORDER BY ' . $orders[$image_order_id]->orderBy . ',',
-                    $order_by
-                );
                 $page['super_order_by'] = true;
             } else {
                 $this->sessionService->unsetSessionVar('image_order');
                 $page['super_order_by'] = false;
             }
         }
-
-        $permissionCriteria = $this->permissionService->getPermissionCriteria();
-        // visible_images's own old fallthrough into forbidden_images
-        // (fieldName 'id' -> the images-table's own level check) -- see
-        // PermissionCriteria's own docblock.
-        $forbiddenCondition = SqlCondition::combine(
-            'AND',
-            $permissionCriteria->forbiddenCategoriesCondition('category_id'),
-            $permissionCriteria->visibleCategoriesCondition('category_id'),
-            $permissionCriteria->visibleImagesCondition('id'),
-            $permissionCriteria->maxLevelCondition('level'),
-        );
-        // Same condition, DQL-aliased -- shared by most_visited/best_rated's
-        // own real-DQL findTopByHitsImageIds()/findTopRatedImageIds() below
-        // and SectionRepository's own DQL-first path for
-        // findSectionImageIds()/findRecentImageIds()/findImageIdsAmongList()
-        // (the raw fallback binds against bare columns -- category_id/id/
-        // level -- and DQL needs entity-aliased property paths --
-        // ic.category/i.id/i.level -- instead). Computed unconditionally
-        // alongside $forbiddenCondition, same convention that one already
-        // follows.
-        $forbiddenConditionDql = SqlCondition::combine(
-            'AND',
-            $permissionCriteria->forbiddenCategoriesCondition('ic.category'),
-            $permissionCriteria->visibleCategoriesCondition('ic.category'),
-            $permissionCriteria->visibleImagesCondition('i.id'),
-            $permissionCriteria->maxLevelCondition('i.level'),
-        );
 
         // $page['category'] already holds the real CategoryInfo object
         // UrlService::parseSectionUrl() built via CategoryService::
@@ -301,7 +259,7 @@ final readonly class SectionPopulator
                     }
                 }
 
-                $page['items'] = $this->categoryService->getImageIdsForCategories($cat_ids);
+                $page['items'] = $this->resolveSectionItems(SectionItemQuery::combinedCategories($cat_ids));
             } elseif (
                 // startcat defaults to 0 above, and may be overwritten by a
                 // real 'startcat-N' URL token during parse_well_known_params_url()
@@ -313,125 +271,22 @@ final readonly class SectionPopulator
                     (isset($page['flat']))
                 )
             ) {
-                if ($page_category !== null) {
-                    $image_order_raw = $page_category->imageOrder;
-                    $image_order_is_set = $image_order_raw !== null && $image_order_raw !== '' && $image_order_raw !== '0';
-                    if ($image_order_is_set and ! isset($page['super_order_by'])) {
-                        $order_by = ' ORDER BY ' . $image_order_raw;
-                    }
-                }
-
-                $where_params = [];
-                $where_types = [];
-                // DQL-aliased counterpart of $where_sql/$where_params --
-                // null $dqlImageCategoryAlias means the scope spans more
-                // than one category (or all of them), so
-                // image_category.rank has no single value and
-                // resolveDqlOrderBy() must not be offered an `ic` alias to
-                // resolve Rank against, same reasoning as
-                // CategoryRepository::findImageIdsForCategories()'s own
-                // multi-category fallback.
-                $dqlWhere = SqlCondition::fromRawSql('');
-                $dqlImageCategoryAlias = null;
-                // flat categories mode
                 if (isset($page['flat'])) {
-                    // get all allowed sub-categories
                     if ($page_category !== null) {
-                        $uppercats = $page_category->uppercats;
-                        $subcatsCriteria = $this->permissionService->getPermissionCriteria();
-                        $subcatsCondition = SqlCondition::combine(
-                            'AND',
-                            $subcatsCriteria->forbiddenCategoriesCondition('c.id'),
-                            $subcatsCriteria->visibleCategoriesCondition('c.id'),
-                        );
-                        $subcat_ids_raw = $this->repo->findVisibleSubcategoryIds($uppercats, $subcatsCondition);
-                        $subcat_ids = array_values(array_filter($subcat_ids_raw, is_string(...)));
-                        $subcat_ids[] = (string) $page_category->id;
-                        $where_sql = 'category_id IN (:subcatIds)';
-                        $where_params['subcatIds'] = array_map(intval(...), $subcat_ids);
-                        $where_types['subcatIds'] = ArrayParameterType::INTEGER;
-                        $dqlWhere = SqlCondition::fromRawSql('ic.category IN (:subcatIds)', [
-                            'subcatIds' => array_map(intval(...), $subcat_ids),
-                        ], [
-                            'subcatIds' => ArrayParameterType::INTEGER,
-                        ]);
-                        // remove categories from forbidden because just checked above
-                        //
-                        // visible_images's own old fallthrough into
-                        // forbidden_images (fieldName 'id' -> the
-                        // images-table's own level check) -- see
-                        // PermissionCriteria's own docblock.
-                        $flatCriteria = $this->permissionService->getPermissionCriteria();
-                        $forbiddenCondition = SqlCondition::combine(
-                            'AND',
-                            $flatCriteria->visibleImagesCondition('id'),
-                            $flatCriteria->maxLevelCondition('level'),
-                        );
-                        $forbiddenConditionDql = SqlCondition::combine(
-                            'AND',
-                            $flatCriteria->visibleImagesCondition('i.id'),
-                            $flatCriteria->maxLevelCondition('i.level'),
-                        );
+                        $page['items'] = $this->resolveSectionItems(SectionItemQuery::flatCategory($page_category));
                     } else {
-                        $user = $this->currentUser->get();
-                        $user_id_for_cache = $user->id->value;
-                        $cache_item = $this->sectionImageIdsCachePool
-                            ->getItem('all_iids_' . $user_id_for_cache . '_' . md5($order_by));
-                        unset($page['is_homepage']);
                         // Whole-gallery flat mode: no category restriction at
-                        // all, so the scope fragment stays empty and the
-                        // repository omits it from the WHERE.
-                        $where_sql = '';
+                        // all.
+                        unset($page['is_homepage']);
+                        $page['items'] = $this->resolveSectionItems(SectionItemQuery::wholeGalleryFlat());
                     }
-                }
-                // normal mode
-                else {
+                } else {
                     // the enclosing elseif requires isset($page['category']) or
                     // isset($page['flat']); $page['flat'] isn't set in this branch
                     // (see the `if (isset($page['flat']))` above), so category
                     // must be the one that's set
                     assert($page_category !== null);
-                    $where_sql = 'category_id = :categoryId';
-                    $where_params['categoryId'] = $page_category->id;
-                    $dqlWhere = SqlCondition::fromRawSql('ic.category = :categoryId', [
-                        'categoryId' => $page_category->id,
-                    ]);
-                    $dqlImageCategoryAlias = 'ic';
-                }
-
-                // $cache_item is only ever assigned in the flat-mode/no-
-                // page_category branch above -- may be legitimately unset
-                // in every other branch.
-                $cache_item ??= null;
-                $cached_items = $cache_item?->isHit() === true ? $cache_item->get() : null;
-
-                if (is_array($cached_items)) {
-                    /** @var list<string|null> $cached_items */
-                    $page['items'] = $cached_items;
-                } else {
-                    // main query
-                    // `SELECT DISTINCT(image_id) ... ORDER BY <col not in
-                    // select>` is invalid under ONLY_FULL_GROUP_BY --
-                    // Piwigo\Db\DbConnection deliberately doesn't strip that
-                    // sql_mode the way the legacy dblayer does (see its own
-                    // docblock), so `GROUP BY id` (images' own primary key,
-                    // functionally dependent) replaces DISTINCT(image_id)
-                    // here, same fix as CalendarRepository::findImageIds()/
-                    // SearchService::getQuickSearchResultsNoCache() -- `id`
-                    // and `image_id` are equal per the JOIN condition.
-                    $page['items'] = $this->repo->findSectionImageIds(
-                        SqlCondition::fromRawSql($where_sql, $where_params, $where_types),
-                        $forbiddenCondition,
-                        $order_by,
-                        $dqlWhere,
-                        $forbiddenConditionDql,
-                        $dqlImageCategoryAlias,
-                    );
-
-                    if ($cache_item instanceof CacheItemInterface) {
-                        $cache_item->set($page['items']);
-                        $this->sectionImageIdsCachePool->save($cache_item);
-                    }
+                    $page['items'] = $this->resolveSectionItems(SectionItemQuery::categories($page_category));
                 }
             }
         }
@@ -461,7 +316,7 @@ final readonly class SectionPopulator
                 }
                 $page['tag_ids'] = $tag_ids;
 
-                $items = $this->tagService->getImageIdsForTags(array_map(TagId::from(...), $tag_ids));
+                $items = $this->resolveSectionItems(SectionItemQuery::tags($tag_ids));
 
                 if (count($items) === 0) {
                     $remote_addr = IpAddress::fromRemoteAddr()->value ?? '';
@@ -532,11 +387,7 @@ final readonly class SectionPopulator
                     $page = array_merge(
                         $page,
                         [
-                            'items' => $this->userService->getVisibleFavoriteImageIds(
-                                $current_user_id,
-                                $this->permissionService->getPermissionCriteria(),
-                                $order_by
-                            ),
+                            'items' => $this->resolveSectionItems(SectionItemQuery::favorites()),
                         ]
                     );
 
@@ -554,21 +405,6 @@ final readonly class SectionPopulator
                     }
                 }
             } elseif ($section === Section::RecentPics) {
-                if (! isset($page['super_order_by'])) {
-                    $order_by = str_replace(
-                        'ORDER BY ',
-                        'ORDER BY date_available DESC,',
-                        $order_by
-                    );
-                }
-
-                // GROUP BY id (images' own primary key), not DISTINCT --
-                // same ONLY_FULL_GROUP_BY fix as the categories-section
-                // query above; $order_by orders by date_available, images'
-                // own column, so `id` is a full functional-dependency key
-                // for it.
-                $recentCondition = $this->userService->getRecentPhotosCondition('date_available');
-                $dqlRecentCondition = $this->userService->getRecentPhotosDqlCondition('i.dateAvailable');
                 $page = array_merge(
                     $page,
                     [
@@ -576,13 +412,7 @@ final readonly class SectionPopulator
                             'start' => 0,
                         ]) . '">'
                                     . $this->lang->t('Recent photos') . '</a>',
-                        'items' => $this->repo->findRecentImageIds(
-                            $recentCondition,
-                            $forbiddenCondition,
-                            $order_by,
-                            $dqlRecentCondition,
-                            $forbiddenConditionDql,
-                        ),
+                        'items' => $this->resolveSectionItems(SectionItemQuery::recentPics()),
                     ]
                 );
             } elseif ($section === Section::RecentCats) {
@@ -598,31 +428,34 @@ final readonly class SectionPopulator
             } elseif ($section === Section::MostVisited) {
                 $page['super_order_by'] = true;
 
-                $top_number = $this->currentConfig->topNumber;
-
+                // No CurrentConfig::topNumber cap -- paging through the
+                // entire permission-filtered corpus (sorted by hit count)
+                // is a deliberate contract of resolveSectionItems(), not an
+                // accident of query construction; see its own docblock and
+                // docs/plugin-porting/rv-tscroller-port-analysis.md §3.
                 $page = array_merge(
                     $page,
                     [
                         'title' => '<a href="' . $this->urlService->duplicateIndexUrl([
                             'start' => 0,
                         ]) . '">'
-                                    . $top_number . ' ' . $this->lang->t('Most visited') . '</a>',
-                        'items' => $this->repo->findTopByHitsImageIds($forbiddenConditionDql, $top_number),
+                                    . $this->lang->t('Most visited') . '</a>',
+                        'items' => $this->resolveSectionItems(SectionItemQuery::mostVisited()),
                     ]
                 );
             } elseif ($section === Section::BestRated) {
                 $page['super_order_by'] = true;
 
-                $top_number = $this->currentConfig->topNumber;
-
+                // No CurrentConfig::topNumber cap -- same "whole corpus,
+                // not a fixed top-N cut" reasoning as MostVisited above.
                 $page = array_merge(
                     $page,
                     [
                         'title' => '<a href="' . $this->urlService->duplicateIndexUrl([
                             'start' => 0,
                         ]) . '">'
-                                    . $top_number . ' ' . $this->lang->t('Best rated') . '</a>',
-                        'items' => $this->repo->findTopRatedImageIds($forbiddenConditionDql, $top_number),
+                                    . $this->lang->t('Best rated') . '</a>',
+                        'items' => $this->resolveSectionItems(SectionItemQuery::bestRated()),
                     ]
                 );
             }
@@ -636,8 +469,6 @@ final readonly class SectionPopulator
                 assert(isset($page['list']));
                 $list_ids_raw = is_array($page['list']) ? array_filter($page['list'], is_scalar(...)) : [];
                 $list_ids = array_values(array_map(strval(...), $list_ids_raw));
-                // GROUP BY id, same ONLY_FULL_GROUP_BY fix as above --
-                // $order_by orders by images' own columns.
                 $page = array_merge(
                     $page,
                     [
@@ -645,7 +476,7 @@ final readonly class SectionPopulator
                             'start' => 0,
                         ]) . '">'
                                     . $this->lang->t('Random photos') . '</a>',
-                        'items' => $this->repo->findImageIdsAmongList($list_ids, $forbiddenCondition, $order_by, $forbiddenConditionDql),
+                        'items' => $this->resolveSectionItems(SectionItemQuery::imageList($list_ids)),
                     ]
                 );
             }
@@ -792,6 +623,288 @@ final readonly class SectionPopulator
         $this->sectionContextRegistry->set(self::buildSectionContext($page));
 
         $this->eventDispatcher->dispatch(new SectionInitialized());
+    }
+
+    /**
+     * The per-section item-id-resolution dispatch that used to live inline
+     * in populate()'s own "GET IMAGES LIST"/"special sections" blocks --
+     * extracted so a real page-1 render (via populate()) and any other
+     * caller needing the exact same item ids for the exact same section
+     * (rv_tscroller's own AJAX "load more" route,
+     * docs/plugin-porting/rv-tscroller-port-analysis.md §3) share one
+     * source of truth instead of the caller permanently duplicating and
+     * drifting from this dispatch logic.
+     *
+     * Explicit-parameter and side-effect-free by design -- no URL parsing,
+     * no redirects, no session writes, no event dispatch. Every real,
+     * page-load-only side effect the equivalent inline branches used to
+     * carry (the incompatible-session-order-clearing session write, the
+     * empty-tag-result accessDenied()/logging, the Favorites
+     * checkUserFavorites()/removeAllFromFavorites()/template
+     * assignContext() calls) stays in populate() itself, which now calls
+     * this method for just the item-id query and keeps doing its own
+     * wrapping policy work around it.
+     *
+     * `Section::Search` is deliberately not handled here (and has no
+     * SectionItemQuery case) -- SearchService::getSearchResults() also
+     * returns 'qs'/'search_details' bookkeeping populate()'s own Search
+     * branch needs for $page; wrapping just the 'items' half here would
+     * force any second caller needing the search-details bookkeeping too
+     * (populate() itself included) to call getSearchResults() a second
+     * time, silently doubling that query. Both populate() and the
+     * plugin's own route call SearchService::getSearchResults() directly
+     * instead -- already a real, directly reusable single method call,
+     * with no per-branch dispatch logic worth centralizing the way the
+     * other 7 section types below have.
+     *
+     * MostVisited/BestRated intentionally pass no $limit to
+     * SectionRepository::findTopByHitsImageIds()/findTopRatedImageIds()
+     * (both nullable, "no limit" by default) -- paging through the whole
+     * permission-filtered corpus, not CurrentConfig::topNumber's fixed
+     * top-N cut, is now this method's real, deliberate, tested contract,
+     * not an accident of query construction. This changes populate()'s own
+     * existing page-1 behavior for these two sections too, not just the
+     * plugin's: see docs/plugin-porting/rv-tscroller-port-analysis.md §3
+     * for why (rv_tscroller's infinite scroll would otherwise have
+     * nothing left to load past the legacy 15-item cap).
+     *
+     * @return list<int|string|null>
+     */
+    public function resolveSectionItems(SectionItemQuery $query): array
+    {
+        $permissionCriteria = $this->permissionService->getPermissionCriteria();
+        // Same forbidden-condition pair populate() itself used to compute
+        // unconditionally near the top of its own body -- see
+        // buildSectionContext()'s sibling docblocks in this file for the
+        // raw-SQL/DQL-aliased distinction.
+        $forbiddenCondition = SqlCondition::combine(
+            'AND',
+            $permissionCriteria->forbiddenCategoriesCondition('category_id'),
+            $permissionCriteria->visibleCategoriesCondition('category_id'),
+            $permissionCriteria->visibleImagesCondition('id'),
+            $permissionCriteria->maxLevelCondition('level'),
+        );
+        $forbiddenConditionDql = SqlCondition::combine(
+            'AND',
+            $permissionCriteria->forbiddenCategoriesCondition('ic.category'),
+            $permissionCriteria->visibleCategoriesCondition('ic.category'),
+            $permissionCriteria->visibleImagesCondition('i.id'),
+            $permissionCriteria->maxLevelCondition('i.level'),
+        );
+
+        if ($query->section === Section::Categories) {
+            if ($query->combinedCategoryIds !== []) {
+                return $this->categoryService->getImageIdsForCategories($query->combinedCategoryIds);
+            }
+
+            if ($query->flat) {
+                $orderBy = $this->resolveOrderBy($query->section, $query->category, flat: true);
+
+                if ($query->category !== null) {
+                    // get all allowed sub-categories
+                    $uppercats = $query->category->uppercats;
+                    $subcatsCondition = SqlCondition::combine(
+                        'AND',
+                        $permissionCriteria->forbiddenCategoriesCondition('c.id'),
+                        $permissionCriteria->visibleCategoriesCondition('c.id'),
+                    );
+                    $subcatIdsRaw = $this->repo->findVisibleSubcategoryIds($uppercats, $subcatsCondition);
+                    $subcatIds = array_values(array_filter($subcatIdsRaw, is_string(...)));
+                    $subcatIds[] = (string) $query->category->id;
+                    $subcatIdsInt = array_map(intval(...), $subcatIds);
+
+                    // remove categories from forbidden because just checked above
+                    //
+                    // visible_images's own old fallthrough into
+                    // forbidden_images (fieldName 'id' -> the images-table's
+                    // own level check) -- see PermissionCriteria's own
+                    // docblock.
+                    $flatForbiddenCondition = SqlCondition::combine(
+                        'AND',
+                        $permissionCriteria->visibleImagesCondition('id'),
+                        $permissionCriteria->maxLevelCondition('level'),
+                    );
+                    $flatForbiddenConditionDql = SqlCondition::combine(
+                        'AND',
+                        $permissionCriteria->visibleImagesCondition('i.id'),
+                        $permissionCriteria->maxLevelCondition('i.level'),
+                    );
+
+                    return $this->repo->findSectionImageIds(
+                        SqlCondition::fromRawSql('category_id IN (:subcatIds)', [
+                            'subcatIds' => $subcatIdsInt,
+                        ], [
+                            'subcatIds' => ArrayParameterType::INTEGER,
+                        ]),
+                        $flatForbiddenCondition,
+                        $orderBy,
+                        SqlCondition::fromRawSql('ic.category IN (:subcatIds)', [
+                            'subcatIds' => $subcatIdsInt,
+                        ], [
+                            'subcatIds' => ArrayParameterType::INTEGER,
+                        ]),
+                        $flatForbiddenConditionDql,
+                        'ic',
+                    );
+                }
+
+                // Whole-gallery flat mode: no category restriction at all,
+                // so the scope fragment stays empty and the repository
+                // omits it from the WHERE. Same per-user/per-order cache
+                // reuse populate()'s own inline branch used to do -- kept
+                // here (not stripped as "a side effect") since it's an
+                // idempotent memoization safe to repeat on every AJAX
+                // scroll tick, unlike the disallowed side effects listed in
+                // this method's own docblock.
+                $userId = $this->currentUser->get()
+                    ->id->value;
+                $cacheItem = $this->sectionImageIdsCachePool
+                    ->getItem('all_iids_' . $userId . '_' . md5($orderBy));
+                $cached = $cacheItem->isHit() ? $cacheItem->get() : null;
+                if (is_array($cached)) {
+                    /** @var list<string|null> $cached */
+                    return $cached;
+                }
+
+                $items = $this->repo->findSectionImageIds(
+                    SqlCondition::fromRawSql(''),
+                    $forbiddenCondition,
+                    $orderBy,
+                    SqlCondition::fromRawSql(''),
+                    $forbiddenConditionDql,
+                    null,
+                );
+
+                $cacheItem->set($items);
+                $this->sectionImageIdsCachePool->save($cacheItem);
+
+                return $items;
+            }
+
+            // plain category mode
+            $category = $query->category;
+            assert($category !== null);
+            $orderBy = $this->resolveOrderBy($query->section, $category, flat: false);
+
+            return $this->repo->findSectionImageIds(
+                SqlCondition::fromRawSql('category_id = :categoryId', [
+                    'categoryId' => $category->id,
+                ]),
+                $forbiddenCondition,
+                $orderBy,
+                SqlCondition::fromRawSql('ic.category = :categoryId', [
+                    'categoryId' => $category->id,
+                ]),
+                $forbiddenConditionDql,
+                'ic',
+            );
+        }
+
+        if ($query->section === Section::Tags) {
+            return $this->tagService->getImageIdsForTags(array_map(TagId::from(...), $query->tagIds));
+        }
+
+        if ($query->section === Section::Favorites) {
+            $orderBy = $this->resolveOrderBy($query->section, null, flat: false);
+
+            return $this->userService->getVisibleFavoriteImageIds(
+                $this->currentUser->get()
+                    ->id,
+                $permissionCriteria,
+                $orderBy,
+            );
+        }
+
+        if ($query->section === Section::RecentPics) {
+            $orderBy = $this->resolveOrderBy($query->section, null, flat: false);
+
+            return $this->repo->findRecentImageIds(
+                $this->userService->getRecentPhotosCondition('date_available'),
+                $forbiddenCondition,
+                $orderBy,
+                $this->userService->getRecentPhotosDqlCondition('i.dateAvailable'),
+                $forbiddenConditionDql,
+            );
+        }
+
+        if ($query->section === Section::MostVisited) {
+            return $this->repo->findTopByHitsImageIds($forbiddenConditionDql);
+        }
+
+        if ($query->section === Section::BestRated) {
+            return $this->repo->findTopRatedImageIds($forbiddenConditionDql);
+        }
+
+        // ListView is the only Section case left (Categories/Tags/
+        // Favorites/RecentPics/MostVisited/BestRated above; RecentCats has
+        // no items of its own -- see this method's own class-level
+        // docblock reference in SectionPopulator's populate() -- and
+        // Search is deliberately excluded, see this method's own docblock).
+        $orderBy = $this->resolveOrderBy($query->section, null, flat: false);
+
+        return $this->repo->findImageIdsAmongList($query->imageIds, $forbiddenCondition, $orderBy, $forbiddenConditionDql);
+    }
+
+    /**
+     * The ORDER BY resolution populate() used to compute inline as a single
+     * threaded-through $order_by local -- shared by resolveSectionItems()
+     * so it never has to duplicate this decision, and by populate() for the
+     * same reason. Layers, in order: the per-section base default
+     * (CurrentConfig::orderBy()/orderByInsideCategory()), the session's
+     * preferred-image-order override when it's still valid for this
+     * section (SessionService::getImageOrder()/
+     * CategoryService::getPreferredImageOrders()), a plain category's own
+     * custom image_order column (only when nothing already forced an
+     * order), and RecentPics's own date_available-first default.
+     *
+     * Deliberately never touches the session -- when the session's
+     * preferred order is *not* valid for this section, this method just
+     * skips applying it (identical net ordering to populate()'s own
+     * incompatible-order branch), rather than also clearing the stale
+     * session key the way populate() itself still does right before
+     * calling this method. That one page-load-only housekeeping side
+     * effect has nowhere reachable to live in a method
+     * resolveSectionItems() (and therefore any AJAX-tick caller) depends
+     * on -- it stays exclusively in populate(), and is naturally repeated
+     * (harmlessly, since it's idempotent) on the next real page load if a
+     * caller here doesn't happen to trigger it.
+     */
+    private function resolveOrderBy(Section $section, ?CategoryInfo $category, bool $flat): string
+    {
+        $orderBy = new SortRenderer($this->entityManager->getConnection())
+            ->toSql($section === Section::Categories && ! $flat ? $this->currentConfig->orderByInsideCategory : $this->currentConfig->orderBy);
+
+        $superOrderBy = false;
+        $imageOrderId = $this->sessionService->getImageOrder() ?? 0;
+        if ($imageOrderId > 0) {
+            $orders = $this->categoryService->getPreferredImageOrders();
+            if ($orders[$imageOrderId]->visible) {
+                $orderBy = str_replace(
+                    'ORDER BY ',
+                    'ORDER BY ' . $orders[$imageOrderId]->orderBy . ',',
+                    $orderBy
+                );
+                $superOrderBy = true;
+            }
+        }
+
+        if ($section === Section::Categories && ! $flat && $category !== null && ! $superOrderBy) {
+            $imageOrderRaw = $category->imageOrder;
+            $imageOrderIsSet = $imageOrderRaw !== null && $imageOrderRaw !== '' && $imageOrderRaw !== '0';
+            if ($imageOrderIsSet) {
+                $orderBy = ' ORDER BY ' . $imageOrderRaw;
+            }
+        }
+
+        if ($section === Section::RecentPics && ! $superOrderBy) {
+            $orderBy = str_replace(
+                'ORDER BY ',
+                'ORDER BY date_available DESC,',
+                $orderBy
+            );
+        }
+
+        return $orderBy;
     }
 
     /**

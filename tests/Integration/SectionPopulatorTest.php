@@ -53,6 +53,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Section\SectionContextRegistry;
+use Piwigo\Section\SectionItemQuery;
 use Piwigo\Section\SectionPopulator;
 use Piwigo\Section\SectionRepository;
 use Piwigo\Session\SessionEntity;
@@ -406,6 +407,15 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
     public function testPopulateAppliesTheCategorysOwnCustomImageOrder(): void
     {
+        // Fixture images 1-3 are all named 'Photo N' -- 'name ASC' alone
+        // wouldn't distinguish it from the default id-ascending order, so
+        // this renames them out of id order to actually prove the custom
+        // order_by is wired through, not just that 3 items come back
+        // (mutation-tested: without this rename, disabling the real
+        // override entirely left this assertion passing).
+        $this->conn->executeStatement("UPDATE images SET name = 'Zzz' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE images SET name = 'Mmm' WHERE id = 2");
+        $this->conn->executeStatement("UPDATE images SET name = 'Aaa' WHERE id = 3");
         $this->conn->executeStatement("UPDATE categories SET image_order = 'name ASC' WHERE id = 1");
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/index.php';
         $_SERVER['PATH_INFO'] = '/category/1';
@@ -415,11 +425,15 @@ final class SectionPopulatorTest extends IntegrationTestCase
                 ->populate();
         } finally {
             $this->conn->executeStatement('UPDATE categories SET image_order = NULL WHERE id = 1');
+            $this->conn->executeStatement(
+                "UPDATE images SET name = CASE id WHEN 1 THEN 'Photo 1' WHEN 2 THEN 'Photo 2' WHEN 3 THEN 'Photo 3' END WHERE id IN (1, 2, 3)"
+            );
         }
 
         $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
-        self::assertCount(3, $ctx->items);
+        // name ASC: image 3 ('Aaa') < image 2 ('Mmm') < image 1 ('Zzz').
+        self::assertSame(['3', '2', '1'], $ctx->items);
     }
 
     public function testPopulateDeniesAccessWhenATagHasZeroLinkedImages(): void
@@ -613,5 +627,157 @@ final class SectionPopulatorTest extends IntegrationTestCase
             // keeps its category instead of losing it (bare root path).
             self::assertStringContainsString('category/1-sample_album', $response->getHeaderLine('Location'));
         }
+    }
+
+    /**
+     * Covers SectionPopulator::resolveSectionItems() directly (one test per
+     * SectionItemQuery named constructor) -- the extracted, side-effect-free
+     * item-id-resolution dispatch behind populate()'s own per-section
+     * branches above. See docs/plugin-porting/rv-tscroller-port-analysis.md
+     * §3 for why this exists as its own public method rather than staying
+     * inline in populate().
+     */
+    public function testResolveSectionItemsForAPlainCategory(): void
+    {
+        $category = $this->categoryService->getCategoryInfo(1);
+        self::assertNotNull($category);
+
+        $items = $this->makePopulator()
+            ->resolveSectionItems(SectionItemQuery::categories($category));
+
+        self::assertSame(['1', '2', '3'], $items);
+    }
+
+    public function testResolveSectionItemsForAFlatCategory(): void
+    {
+        $category = $this->categoryService->getCategoryInfo(1);
+        self::assertNotNull($category);
+
+        $items = $this->makePopulator()
+            ->resolveSectionItems(SectionItemQuery::flatCategory($category));
+
+        // flat mode also includes subcategory 2's own images (4, 5)
+        // alongside category 1's own (1, 2, 3).
+        sort($items);
+        self::assertSame(['1', '2', '3', '4', '5'], $items);
+    }
+
+    public function testResolveSectionItemsForWholeGalleryFlatModeReusesTheCache(): void
+    {
+        $populator = $this->makePopulator();
+
+        $first = $populator->resolveSectionItems(SectionItemQuery::wholeGalleryFlat());
+        sort($first);
+        self::assertSame(['1', '2', '3', '4', '5'], $first);
+
+        // A second call for the same user+order must hit
+        // SectionImageIdsCachePool rather than requery -- proven by adding
+        // an image directly (bypassing the cache write path) and confirming
+        // it's still absent from the second result.
+        $this->conn->executeStatement(
+            "INSERT INTO images (id, file, date_available) VALUES (6, 'cache-test.jpg', NOW())"
+        );
+        $this->conn->executeStatement('INSERT INTO image_category (image_id, category_id) VALUES (6, 1)');
+        try {
+            $second = $populator->resolveSectionItems(SectionItemQuery::wholeGalleryFlat());
+            sort($second);
+            self::assertSame(['1', '2', '3', '4', '5'], $second);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM image_category WHERE image_id = 6');
+            $this->conn->executeStatement('DELETE FROM images WHERE id = 6');
+        }
+    }
+
+    public function testResolveSectionItemsForCombinedCategories(): void
+    {
+        // getImageIdsForCategories()'s default mode is 'AND' (an
+        // intersection) -- category 1's images (1,2,3) and category 2's
+        // images (4,5) are disjoint, so this is genuinely empty, same
+        // fixture reasoning as testPopulateBuildsACombinedCategoriesContextAndMergesTheirImageIds()
+        // above.
+        $items = $this->makePopulator()
+            ->resolveSectionItems(SectionItemQuery::combinedCategories([1, 2]));
+
+        self::assertSame([], $items);
+    }
+
+    public function testResolveSectionItemsForTags(): void
+    {
+        $items = $this->makePopulator()
+            ->resolveSectionItems(SectionItemQuery::tags([1]));
+
+        sort($items);
+        // TagService::getImageIdsForTags() returns list<int>, unlike every
+        // other branch here (list<string|null>) -- resolveSectionItems()'s
+        // own return type is the broad list<int|string|null> union to
+        // accommodate this.
+        self::assertSame([1, 2, 3], $items);
+    }
+
+    public function testResolveSectionItemsForFavorites(): void
+    {
+        $this->setAdminUser();
+
+        $items = $this->makePopulator()
+            ->resolveSectionItems(SectionItemQuery::favorites());
+
+        sort($items);
+        self::assertSame(['1', '3', '5'], $items);
+    }
+
+    public function testResolveSectionItemsForRecentPics(): void
+    {
+        // UserService::getRecentPhotosCondition() falls back to an
+        // always-false '0=1' condition unless the user's own
+        // 'last_photo_date' rawAttribute is set -- this fixture never sets
+        // it for any user, so this is genuinely empty here (same real
+        // behavior testPopulateBuildsTheRecentPicsSection above only
+        // checks the title for, not item count).
+        $items = $this->makePopulator()
+            ->resolveSectionItems(SectionItemQuery::recentPics());
+
+        self::assertSame([], $items);
+    }
+
+    public function testResolveSectionItemsForMostVisitedIgnoresTheTopNumberCap(): void
+    {
+        // topNumber is private(set) -- ConfigService::confUpdateParam()'s
+        // own reflection-based write (updateGlobal: true) is the real,
+        // non-hacky way to change it, same path production code uses.
+        CurrentConfigServiceTestFactory::get()->get()->confUpdateParam('top_number', 1, updateGlobal: true);
+        $this->conn->executeStatement('UPDATE images SET hit = 1 WHERE id IN (1, 2, 3, 4, 5)');
+
+        try {
+            $items = $this->makePopulator()
+                ->resolveSectionItems(SectionItemQuery::mostVisited());
+        } finally {
+            $this->conn->executeStatement('UPDATE images SET hit = 0 WHERE id IN (1, 2, 3, 4, 5)');
+        }
+
+        // Every hit image comes back despite CurrentConfig::topNumber = 1 --
+        // whole-corpus pagination, not a fixed top-N cut, is now this
+        // method's real contract (rv-tscroller-port-analysis.md §3).
+        self::assertCount(5, $items);
+    }
+
+    public function testResolveSectionItemsForBestRatedIgnoresTheTopNumberCap(): void
+    {
+        CurrentConfigServiceTestFactory::get()->get()->confUpdateParam('top_number', 1, updateGlobal: true);
+
+        $items = $this->makePopulator()
+            ->resolveSectionItems(SectionItemQuery::bestRated());
+
+        // 4 rated images (1-4); image 5's NULL rating excludes it -- same
+        // fixture shape as SectionRepositoryTest's own docblock.
+        self::assertCount(4, $items);
+    }
+
+    public function testResolveSectionItemsForAnImageList(): void
+    {
+        $items = $this->makePopulator()
+            ->resolveSectionItems(SectionItemQuery::imageList(['1', '3']));
+
+        sort($items);
+        self::assertSame(['1', '3'], $items);
     }
 }

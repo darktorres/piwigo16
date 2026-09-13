@@ -260,15 +260,21 @@ final readonly class SectionRepository
     }
 
     /**
-     * Image ids for the "most_visited" section, capped at $limit -- the
-     * caller's own `ORDER BY hit DESC, id DESC` is a hardcoded literal,
-     * per SectionPopulator.php's own real call site, not
+     * Image ids for the "most_visited" section, capped at $limit when given
+     * -- $limit is nullable so a caller can page through the entire
+     * permission-filtered corpus instead of a fixed top-N cut (see
+     * SectionPopulator::resolveSectionItems()'s own "whole corpus, not
+     * CurrentConfig::topNumber" decision, docs/plugin-porting/
+     * rv-tscroller-port-analysis.md §3). Doctrine's own setMaxResults()
+     * already treats null as "no limit" natively, so this needs no extra
+     * branching here. The caller's own `ORDER BY hit DESC, id DESC` is a
+     * hardcoded literal, per SectionPopulator.php's own real call site, not
      * CurrentConfig::orderBy()'s genuinely open-ended admin-typed
      * text, so this is real DQL.
      *
      * @return list<string>
      */
-    public function findTopByHitsImageIds(SqlCondition $forbiddenCondition, int $limit): array
+    public function findTopByHitsImageIds(SqlCondition $forbiddenCondition, ?int $limit = null): array
     {
         $qb = $this->em->createQueryBuilder()
             ->select('i.id')
@@ -289,13 +295,14 @@ final readonly class SectionRepository
     }
 
     /**
-     * Image ids for the "best_rated" section, capped at $limit -- same
-     * "hardcoded ORDER BY literal, real DQL" reasoning as
-     * {@see findTopByHitsImageIds()}.
+     * Image ids for the "best_rated" section, capped at $limit when given --
+     * same nullable-limit/"whole corpus" reasoning as
+     * {@see findTopByHitsImageIds()}, same "hardcoded ORDER BY literal, real
+     * DQL" reasoning too.
      *
      * @return list<string>
      */
-    public function findTopRatedImageIds(SqlCondition $forbiddenCondition, int $limit): array
+    public function findTopRatedImageIds(SqlCondition $forbiddenCondition, ?int $limit = null): array
     {
         $qb = $this->em->createQueryBuilder()
             ->select('i.id')

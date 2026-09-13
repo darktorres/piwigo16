@@ -82,6 +82,14 @@ final class SectionRepositoryTest extends IntegrationTestCase
         self::assertSame(['3'], $this->repo->findTopRatedImageIds(SqlCondition::fromRawSql(''), 1));
     }
 
+    public function testFindTopRatedImageIdsReturnsTheWholeCorpusWithoutALimit(): void
+    {
+        // Image 5 (rating_score NULL) is excluded by the query's own
+        // `i.ratingScore IS NOT NULL` clause -- the null-limit case still
+        // returns only the 4 rated images, not all 5.
+        self::assertSame(['3', '1', '2', '4'], $this->repo->findTopRatedImageIds(SqlCondition::fromRawSql('')));
+    }
+
     public function testFindTopByHitsImageIdsReturnsIdsOrderedByHitDesc(): void
     {
         $this->conn->executeStatement('UPDATE images SET hit = 5 WHERE id = 2');
@@ -99,5 +107,18 @@ final class SectionRepositoryTest extends IntegrationTestCase
     public function testFindTopByHitsImageIdsReturnsEmptyWhenNoImageHasAHit(): void
     {
         self::assertSame([], $this->repo->findTopByHitsImageIds(SqlCondition::fromRawSql(''), 5));
+    }
+
+    public function testFindTopByHitsImageIdsReturnsTheWholeCorpusWithoutALimit(): void
+    {
+        $this->conn->executeStatement('UPDATE images SET hit = 5 WHERE id = 2');
+        $this->conn->executeStatement('UPDATE images SET hit = 10 WHERE id = 4');
+        $this->conn->executeStatement('UPDATE images SET hit = 1 WHERE id = 1');
+
+        try {
+            self::assertSame(['4', '2', '1'], $this->repo->findTopByHitsImageIds(SqlCondition::fromRawSql('')));
+        } finally {
+            $this->conn->executeStatement('UPDATE images SET hit = 0 WHERE id IN (1, 2, 4)');
+        }
     }
 }

@@ -308,3 +308,72 @@ Per `../piwigo16-plugins/CLAUDE.md`'s own explicit standard, raised after the 20
 2. Confirm `plugins/gdthumb/assets/*` returns 200 (not 403/404) through the real dev-stack Caddy config after §3b lands.
 3. A live/browser check confirming: default index and category pages unaffected when the plugin is inactive; masonry layout, hero first-thumb (with aspect-ratio suppression), caption-mode classes, and the mixed-page grid merge all apply once active.
 4. §3a's own `git diff --stat` (already landed) was confined to `src/Piwigo/Image/Event/GetCategoryDerivativeParams.php`, `src/Piwigo/Category/CategoryCatsRenderer.php`, and the 2 test files above — the remaining plugin work should confine its own diff to `public/plugins` symlink + Caddyfile/vhost carve-out (§3b) plus the plugin's own package, nothing else in `piwigo17-rewrite`.
+
+## 8. Closing summary (2026-09-13) — port complete, all 9 phases landed
+
+Every item this doc's own §3c/§8-predecessor re-review un-dropped
+actually shipped, in `../piwigo16-plugins/GDThumb_17.0.0/`: cache-purge,
+the real missing-derivative pre-cache API endpoint, per-thumbnail
+rating display, a rebuilt Overlay Ex (own styling, no greydragon
+coupling), and the `rvts` compat flag. Nothing further was descoped
+during implementation.
+
+**Phase-by-phase, each its own sibling-repo commit** (plus the Phase 0
+core prerequisites, `piwigo17-rewrite` commits `be0ac9278d`/
+`d956b79467`/`deae1e7aab`/`4a7f05e4c1`/`27be0c8076`/`1a4ba5317f`):
+package skeleton; settings page + config VO; server-side derivative-
+sizing/hero-thumb/admin-menu event wiring; CSS (real restyling of
+core's own already-rendered markup, no new markup); the client-side
+masonry JS module (`js/layout.ts`, a faithful port of `build()`/
+`process()`/`resize()`, not a CSS-grid approximation); the cache-purge
++ pre-cache API endpoint; i18n (24 real locales); packaging
+(`manifest.json` + zip); closing test-coverage (96 tests total).
+
+**Two real, disclosed departures from legacy**, both forced by this
+fork's own architecture rather than a simplified port: (1)
+`thumbnails.latte`/`mainpage_categories.latte` never render `<img
+width height>` attributes the way legacy's own `get_size_htm()` did,
+so `js/layout.ts` measures `naturalWidth`/`naturalHeight` once each
+image has actually loaded, instead of reading server-rendered
+attributes up front; (2) the "block enlarging a panoramic photo"
+check evaluates the grid's own first item specifically, fixing what
+reads as a genuine legacy bug — `gdthumb.js`'s own per-iteration
+overwrite left it checking whichever thumbnail happened to render
+last on the page, not the hero candidate itself.
+
+**Live end-to-end verification at every phase**, per this campaign's
+own mandatory standard, against the real fixture gallery
+(`piwigo_test` DB, `fixture_admin`/`fixture_admin`, `X-Piwigo-Env:
+test` header): real masonry packing with no overlap on real fixture
+photos, real per-photo rating badges from `exposeData()`, `do_merge`
+correctly splicing a mixed category+photo album into one grid, the
+real settings page save/purge/pre-cache round-trip, 24-locale i18n
+(real French-translated settings labels confirmed live), and a full
+real admin "Add new" PEM-catalog install (fetch → extract → install →
+activate → boot → render), all with **zero console errors** — not
+just PHPStan/ECS/unit-level checks.
+
+**One real `piwigo17-rewrite` core bug found and fixed along the way**
+(commits `e873fcb8ca`/`6da37e52aa`), not scope creep — surfaced
+specifically by insisting on a real `i.php` URL rather than trusting
+the endpoint's own 200 status in isolation: `SizingParams::
+addUrlTokens()` compared an int `max_crop` (the type its own
+constructor defaults to) against a strict float `0.0`/`1.0`, so every
+`ImageStdParams::getCustom()` caller using the default uncropped mode
+silently got the wrong URL-suffix shape, rejected by
+`ImageDerivativeController::parseCustomParams()` with a 400 "Sizing
+arr" — unreachable by any caller before this port, since no prior
+`ImageStdParams::CUSTOM`-type derivative had ever been requested
+through the "script" URL style outside `action.php`'s own id-based
+indirection. A second, unrelated regression (`CategoryThumbnail::
+$coi`'s own dead-property PHPStan suppression, removed by an earlier
+commit this same session on a wrong assumption) was found by the same
+full, unscoped `composer analyse:phpstan` run and restored separately.
+
+Full main-repo Unit+Arch (2826, PHPStan-clean) and Integration (2240,
+1 confirmed pre-existing unrelated `UploadServiceTest` timing flake)
+suites green; ported-extensions suite green (96, up from 0 at the
+start of this session). `git diff --stat` for `piwigo17-rewrite`
+confined to Phase 0's own files plus the 2 core-bug-fix commits above
+— everything else lives in the sibling `GDThumb_17.0.0/` package and
+`manifest.json`.

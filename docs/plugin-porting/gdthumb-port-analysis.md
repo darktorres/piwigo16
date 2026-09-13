@@ -144,7 +144,7 @@ The schema (`docs/schemas/plugin.schema.json`) requires `id`, `name`, `version`,
 }
 ```
 
-`license: "GPL-2.0-or-later"` is an inference from `changelog.txt`'s GPL v2-or-later FSF boilerplate text — gdThumb ships no SPDX identifier anywhere. Flag this to whoever finalizes the port rather than treating it as a silently-settled fact; user sign-off already given for this session's own plan, worth re-confirming at implementation time in case the source is revisited.
+`license: "GPL-2.0-or-later"` — **decided 2026-09-12, not a placeholder**: gdThumb ships no SPDX identifier anywhere, but `changelog.txt`'s own GPL v2-or-later FSF boilerplate text is the real, deliberate basis for this value. Use it as-is when implementing the port.
 
 Preserve both real attribution lines found in the source: Serguei Dosyukov as the current author/copyright holder (2009-2022 per `changelog.txt`), and `main.inc.php`'s own credit "Original work by P@t - GTHumb+" for the earlier plugin gdThumb was inspired by.
 

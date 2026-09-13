@@ -40,7 +40,7 @@ Source docs:
 
 ### Open design/human decisions
 
-- [ ] gdThumb license — `GPL-2.0-or-later` is an *inference* from `changelog.txt`'s FSF boilerplate text; gdThumb ships no real SPDX identifier. Confirm before publishing a port.
+- [x] ~~gdThumb license~~ — **decided**: `GPL-2.0-or-later`, per `changelog.txt`'s own FSF boilerplate text. No SPDX identifier exists, but the boilerplate is the real, deliberate call — use it as-is, not a placeholder pending further confirmation.
 - [ ] rv_tscroller license — no SPDX/LICENSE file anywhere in this mirror's copy; check upstream `github.com/Piwigo/piwigo-tscroller` directly.
 - [ ] rv_tscroller — exact `SectionItemQuery` VO field shape (the client↔route contract for "which section, which query, which page").
 - [ ] rv_tscroller — fragment-rendering primitive: confirmed `Renderer` only has `render(View): Html` today, no bare-partial method. Decide whether to add one or have the plugin own a small mirroring Latte partial.

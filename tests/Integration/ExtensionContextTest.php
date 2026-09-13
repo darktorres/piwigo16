@@ -14,6 +14,7 @@ use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\PluginId;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigRepository;
@@ -216,7 +217,7 @@ final class ExtensionContextTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    private function buildContext(PluginId $extensionId, ?AdminContext $adminContext = null, ?MailService $mailService = null, ?ApiContext $apiContext = null): ExtensionContext
+    private function buildContext(PluginId|ThemeId $extensionId, ?AdminContext $adminContext = null, ?MailService $mailService = null, ?ApiContext $apiContext = null): ExtensionContext
     {
         $currentUser = Kernel::container()->get(CurrentUser::class);
         if (! $currentUser instanceof CurrentUser) {
@@ -1028,6 +1029,21 @@ final class ExtensionContextTest extends IntegrationTestCase
 
         self::assertSame('ext_plugin-a_stats', $pluginA->db()->tableName('stats'));
         self::assertSame('ext_plugin-b_stats', $pluginB->db()->tableName('stats'));
+    }
+
+    /**
+     * `db()` is wired identically for themes -- `ThemeRegistry` really
+     * does call `ExtensionContextFactory::build(ThemeId::from(...))` at
+     * every one of its own lifecycle-hook call sites, not just
+     * `PluginRegistry`. No real theme in the audited corpus actually
+     * needs this (see `docs/porting-open-items.md`'s own theme-side
+     * raw-DB-surface entry), but the accessor itself is not plugin-only.
+     */
+    public function testDbIsNamespacedPerExtensionIdForAThemeToo(): void
+    {
+        $theme = $this->buildContext(ThemeId::from('some-theme'));
+
+        self::assertSame('ext_some-theme_stats', $theme->db()->tableName('stats'));
     }
 
     /**

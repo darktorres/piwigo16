@@ -213,7 +213,7 @@ Notes on fields that needed cross-dimension reconciliation (all other fields wer
 | `modus_theme` blob persistence | adapt_in_modus_repo | `getSetting()`/`setSetting()` accept plain arrays natively; drops serialize/allowlist dance |
 | CSRF protection | adapt_in_modus_repo | Legacy has **zero** CSRF check; must be *added*, matching every other real caller |
 | Skin picker (18 skins, colorbox) | adapt_in_modus_repo | `glob()` still works from a theme's own PHP; colorbox already natively ported |
-| Album-thumbnail slider + checkboxes | adapt_in_modus_repo | `vendor/slider.ts` is an already-shipped drop-in replacement |
+| Album-thumbnail slider + checkboxes | adapt_in_modus_repo | `vendor/widgets/slider.ts` (path corrected 2026-09-12 — P51-I split `vendor/` into `widgets/`/`utils/` on 2026-09-10) is an already-shipped drop-in replacement |
 | Derivative-size dropdowns | closed 2026-09-12 | `ExtensionContext::imageStdParams(): ImageStdParams` now exists, the general-accessor option |
 | Theme-owned settings-page JS never reaches Vite | closed 2026-09-12, via the pre-existing ported-extension pipeline, not a `collectScriptEntries()` fix | `collectScriptEntries()` now scans `themes/**/src`/`plugins/**/src` too, but that's for a theme bundled *inside* `piwigo17-rewrite`'s own tree — modus's real JS ships through the separate, already-existing `tools/build-ported-extension-assets.mjs` instead (see §4-D) |
 | Single "Configuration" tabsheet | drop | Dispatcher builds no tab chrome at all; zero functional payload |
@@ -400,7 +400,7 @@ Consolidated and deduplicated from all 7 dimensions' `open_questions` arrays, or
 
 **O.** Who dispatches the custom `RVTS_loaded` DOM event `thumb.arrange.js` listens for? Not found among the 5 real `js/*.js` files — likely another modus PHP hook outside the JS dimension's assigned scope; needs confirmation before the ported thumb-arrange module's dispatcher-side counterpart is considered complete.
 
-**P.** Should the queue-drain pattern proposed for `rvas_choose()`/`RVGThumbs` construction (mirroring `SwitchBoxQueue`) become one shared, reusable helper in `vendor/dom.ts`, or should each module hand-roll its own small queue independently, matching how `SwitchBoxQueue`/`RatingAutoQueue` currently do it in `picture.ts`? Purely a code-organization call.
+**P.** Should the queue-drain pattern proposed for `rvas_choose()`/`RVGThumbs` construction (mirroring `SwitchBoxQueue`) become one shared, reusable helper in `vendor/utils/dom.ts` (path corrected 2026-09-12), or should each module hand-roll its own small queue independently, matching how `SwitchBoxQueue`/`RatingAutoQueue` currently do it in `picture.ts`? Purely a code-organization call.
 
 **Q.** Should `hasSettings` be plain `true` (matching legacy's actual, unrestricted admin behavior) rather than a `'webmaster'`-scoped variant the schema apparently also supports? Recommend `true` per confirmed legacy behavior.
 

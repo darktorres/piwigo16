@@ -198,11 +198,18 @@ final readonly class BatchWriter
      * @param string[] $dbfields fields from $datas to insert, in column order
      * @param array<int, array<string, mixed>> $datas
      * @param array{ignore?: bool} $options
+     * @return int the number of rows the database actually inserted --
+     *   with `ignore: true`, a row skipped as a duplicate/FK-violation
+     *   under `INSERT IGNORE`/`ON CONFLICT DO NOTHING`/`INSERT OR IGNORE`
+     *   is excluded from this count on every supported platform (each
+     *   already reports only genuinely-inserted rows via its own affected-
+     *   rows count), so this doubles as "how many were newly added"
+     *   without a separate existence check.
      */
-    public function massInsert(string $table, array $dbfields, array $datas, array $options = []): void
+    public function massInsert(string $table, array $dbfields, array $datas, array $options = []): int
     {
         if ($datas === []) {
-            return;
+            return 0;
         }
 
         // Same stays-raw shape as singleInsert() above -- see its own
@@ -217,7 +224,8 @@ final readonly class BatchWriter
         // later chunk still rolls back every earlier chunk already
         // executed in this same call, removing any chance of forgetting a
         // rollBack()-and-rethrow.
-        $this->conn->transactional(function (Connection $conn) use ($datas, $dbfields, $ignore, $protectedTable, $columnsSql): void {
+        return $this->conn->transactional(function (Connection $conn) use ($datas, $dbfields, $ignore, $protectedTable, $columnsSql): int {
+            $affected = 0;
             foreach (self::chunk($datas) as $chunk) {
                 $rowTuples = [];
                 $params = [];
@@ -236,8 +244,10 @@ final readonly class BatchWriter
                 $valuesSql = implode(',', $rowTuples);
                 $query = $this->buildInsertSql($protectedTable, $columnsSql, $valuesSql, $ignore);
 
-                $conn->executeStatement($query, $params);
+                $affected += (int) $conn->executeStatement($query, $params);
             }
+
+            return $affected;
         });
     }
 

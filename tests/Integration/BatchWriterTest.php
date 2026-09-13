@@ -621,7 +621,7 @@ final class BatchWriterTest extends IntegrationTestCase
             'INSERT INTO ' . self::TABLE . " (id, name, note) VALUES (60, 'existing-name', NULL)"
         );
 
-        $this->writer->massInsert(self::TABLE, ['id', 'name'], [
+        $added = $this->writer->massInsert(self::TABLE, ['id', 'name'], [
             [
                 'id' => 61,
                 'name' => 'existing-name', // duplicate -> silently skipped
@@ -641,6 +641,33 @@ final class BatchWriterTest extends IntegrationTestCase
         self::assertSame(0, (int) $countSixtyOne);
         self::assertSame(1, (int) $countSixtyTwo);
         self::assertSame('existing-name', $this->conn->fetchOne('SELECT name FROM ' . self::TABLE . ' WHERE id = 60'));
+        // The core new contract Caddie\CaddieRepository::addElements()/
+        // Group\GroupRepository::addMembers() depend on: the returned
+        // count is how many rows the DB actually inserted, excluding the
+        // one skipped as a duplicate -- not the 2 rows attempted.
+        self::assertSame(1, $added);
+    }
+
+    /**
+     * `massInsert()`'s return value (added for
+     * {@see \Piwigo\Caddie\CaddieRepository::addElements()}, which needs
+     * "how many rows were actually newly added" without a separate
+     * existence check) must reflect real inserted rows across every
+     * chunk, not just the last one.
+     */
+    public function testMassInsertReturnsTheTotalRowCountActuallyInsertedAcrossEveryChunk(): void
+    {
+        $rows = [];
+        for ($i = 1; $i <= 1200; $i++) {
+            $rows[] = [
+                'id' => $i,
+                'name' => 'count-name' . $i,
+            ];
+        }
+
+        $added = $this->writer->massInsert(self::TABLE, ['id', 'name'], $rows);
+
+        self::assertSame(1200, $added);
     }
 
     /**

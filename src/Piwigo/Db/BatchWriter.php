@@ -12,23 +12,37 @@ use LogicException;
 
 /**
  * Batched parameterized INSERT/UPDATE helpers, shared rather than
- * duplicated per-repository -- these 4 methods back ~20 call sites across
- * Category/Image/Admin/Controller/Mail, not a single domain's concern.
+ * duplicated per-repository -- these 4 methods back ~25 call sites across
+ * Category/Image/Admin/Controller/Mail/Config, not a single domain's
+ * concern.
  *
- * massUpdate()/singleUpdate() issue one parameterized `UPDATE` per row, for
- * every batch size, wrapped in a single transaction (all-or-nothing): a
- * mid-batch failure never leaves a batch half-applied. This trades away a
- * temp-table bulk-update strategy's large-batch performance advantage for
- * much simpler, safer, parameterized code (no raw string interpolation, and
- * no MySQL-specific DDL). Revisit with real profiling data if a
- * large-batch `massUpdate()` call site turns out to be a measured
- * bottleneck -- no such measurement exists today.
+ * massInsert()/massUpdate() issue real multi-row, chunked SQL (a single
+ * multi-row `VALUES (...), (...), ...` per `INSERT` chunk; a single
+ * searched-`CASE` `UPDATE` per chunk) rather than one statement per row --
+ * profiling a real admin-sync pass at 20,000 images found `massUpdate()`'s
+ * former row-by-row loop alone responsible for ~27% of total instrumented
+ * time (99s of 367s, 49,600 individual `UPDATE` statements), almost
+ * entirely spent in per-statement network/parse/bind/execute overhead
+ * rather than genuine work. Each chunk stays under {@see CHUNK_SIZE} rows,
+ * safely below PostgreSQL's 65,535-parameter protocol limit and SQLite's
+ * 32,766-variable default even for the widest real row shape (~30
+ * admin-configurable EXIF/IPTC columns, `Metadata\MetadataService::
+ * getSyncMetadataAttributes()`). The whole call (every chunk) still runs
+ * inside one `Connection::transactional()` closure, so a failure in a
+ * later chunk still rolls back every earlier chunk from the same call --
+ * the all-or-nothing guarantee is unchanged, just no longer paid for with
+ * a statement per row.
+ *
+ * singleInsert()/singleUpdate() (and the private per-row updateRow() they
+ * share) are deliberately NOT batched -- a lone row has no batching
+ * upside, and tests/Unit/Db/BatchWriterTest.php's mutation-testing-derived
+ * coverage is pinned to updateRow()'s exact per-row internals.
  */
 final readonly class BatchWriter
 {
     // Every $data/$where/$datas value below is genuinely arbitrary by
-    // design -- a generic column-name => value bag spanning ~20 call sites
-    // across Category/Image/Admin/Controller/Mail, one column can be an
+    // design -- a generic column-name => value bag spanning ~25 call sites
+    // across Category/Image/Admin/Controller/Mail/Config, one column can be an
     // int, string, float, bool, or null depending on the target table.
     // Matches Doctrine\DBAL\Connection::executeStatement()'s own `array
     // $params` parameter (not typed any narrower by DBAL itself); every
@@ -36,9 +50,25 @@ final readonly class BatchWriter
 
     public const int SKIP_EMPTY = 1;
 
+    /**
+     * Max rows per `massInsert()`/`massUpdate()` statement -- see this
+     * class's own docblock for why 500 is safe across every supported
+     * platform even at the widest realistic row shape.
+     */
+    private const int CHUNK_SIZE = 500;
+
     public function __construct(
         private Connection $conn,
     ) {}
+
+    /**
+     * @param array<int, array<string, mixed>> $datas
+     * @return list<list<array<string, mixed>>>
+     */
+    private static function chunk(array $datas): array
+    {
+        return array_chunk($datas, self::CHUNK_SIZE);
+    }
 
     /**
      * Routes through the DBAL platform's own identifier-quoting --
@@ -55,24 +85,31 @@ final readonly class BatchWriter
 
     /**
      * `INSERT IGNORE` has no Postgres or SQLite equivalent -- Postgres's
-     * `ON CONFLICT DO NOTHING` is appended after `VALUES (...)` rather
-     * than as a keyword before `INTO` like MySQL's `IGNORE`. No conflict
-     * target needed: a bare `ON CONFLICT DO NOTHING` downgrades any
-     * collision to a no-op, matching `INSERT IGNORE`'s own "duplicate key
-     * becomes a silent skip" semantic exactly for every real caller here
-     * (all about duplicate-key avoidance on a genuine unique/primary key,
-     * never a broader error-suppression need). SQLite's own real
+     * `ON CONFLICT DO NOTHING` is appended after `VALUES (...), (...)`
+     * rather than as a keyword before `INTO` like MySQL's `IGNORE`. No
+     * conflict target needed: a bare `ON CONFLICT DO NOTHING` downgrades
+     * any collision to a no-op, matching `INSERT IGNORE`'s own "duplicate
+     * key becomes a silent skip" semantic exactly for every real caller
+     * here (all about duplicate-key avoidance on a genuine unique/primary
+     * key, never a broader error-suppression need). SQLite's own real
      * equivalent is a genuinely different keyword placement again --
      * `INSERT OR IGNORE INTO ...`, its own "conflict clause" extension
      * (`OR ROLLBACK`/`ABORT`/`FAIL`/`REPLACE`/`IGNORE`), verified live: a
      * bare `INSERT IGNORE INTO ...` (MySQL's own syntax) is a real
      * SQLite syntax error, not a silent no-op.
+     *
+     * $valuesSql is the *complete*, already-parenthesized `VALUES` body --
+     * `(:p0,:p1)` for one row, `(:p0_0,:p0_1),(:p1_0,:p1_1)` for a
+     * multi-row batch -- this method only ever splices it in after
+     * `VALUES `, it never adds its own wrapping parens (singleInsert()'s
+     * one-row case and massInsert()'s multi-row case build that string
+     * themselves, since only they know how many rows/tuples it holds).
      */
-    private function buildInsertSql(string $protectedTable, string $columnsSql, string $placeholdersSql, bool $ignore): string
+    private function buildInsertSql(string $protectedTable, string $columnsSql, string $valuesSql, bool $ignore): string
     {
         if (! $ignore) {
             return <<<SQL
-                INSERT INTO {$protectedTable} ({$columnsSql}) VALUES ({$placeholdersSql})
+                INSERT INTO {$protectedTable} ({$columnsSql}) VALUES {$valuesSql}
                 SQL;
         }
 
@@ -80,13 +117,13 @@ final readonly class BatchWriter
 
         if ($platform instanceof PostgreSQLPlatform) {
             return <<<SQL
-                INSERT INTO {$protectedTable} ({$columnsSql}) VALUES ({$placeholdersSql}) ON CONFLICT DO NOTHING
+                INSERT INTO {$protectedTable} ({$columnsSql}) VALUES {$valuesSql} ON CONFLICT DO NOTHING
                 SQL;
         }
 
         if ($platform instanceof SQLitePlatform) {
             return <<<SQL
-                INSERT OR IGNORE INTO {$protectedTable} ({$columnsSql}) VALUES ({$placeholdersSql})
+                INSERT OR IGNORE INTO {$protectedTable} ({$columnsSql}) VALUES {$valuesSql}
                 SQL;
         }
 
@@ -95,7 +132,7 @@ final readonly class BatchWriter
         }
 
         return <<<SQL
-            INSERT IGNORE INTO {$protectedTable} ({$columnsSql}) VALUES ({$placeholdersSql})
+            INSERT IGNORE INTO {$protectedTable} ({$columnsSql}) VALUES {$valuesSql}
             SQL;
     }
 
@@ -125,8 +162,8 @@ final readonly class BatchWriter
 
         $protectedTable = $this->protectColumnName($table);
         $columnsSql = implode(',', $columns);
-        $placeholdersSql = implode(',', $placeholders);
-        $query = $this->buildInsertSql($protectedTable, $columnsSql, $placeholdersSql, $options['ignore'] ?? false);
+        $valuesSql = '(' . implode(',', $placeholders) . ')';
+        $query = $this->buildInsertSql($protectedTable, $columnsSql, $valuesSql, $options['ignore'] ?? false);
 
         $params = [];
         foreach ($data as $key => $value) {
@@ -161,22 +198,29 @@ final readonly class BatchWriter
         $protectedTable = $this->protectColumnName($table);
         $columnsSql = implode(',', $columns);
 
-        // Connection::transactional() wraps this in a single all-or-nothing
-        // transaction, removing any chance of forgetting a
+        // Connection::transactional() wraps the WHOLE call (every chunk)
+        // in a single all-or-nothing transaction -- a violation in a
+        // later chunk still rolls back every earlier chunk already
+        // executed in this same call, removing any chance of forgetting a
         // rollBack()-and-rethrow.
         $this->conn->transactional(function (Connection $conn) use ($datas, $dbfields, $ignore, $protectedTable, $columnsSql): void {
-            foreach ($datas as $insert) {
-                $placeholders = [];
+            foreach (self::chunk($datas) as $chunk) {
+                $rowTuples = [];
                 $params = [];
-                foreach ($dbfields as $i => $field) {
-                    $placeholder = 'p' . $i;
-                    $placeholders[] = ':' . $placeholder;
-                    $value = SqlDialect::booleanToInt($insert[$field] ?? null);
-                    $params[$placeholder] = ($value === '' || $value === null || ! is_scalar($value)) ? null : $value;
+                foreach ($chunk as $rowIndex => $insert) {
+                    $placeholders = [];
+                    foreach ($dbfields as $i => $field) {
+                        $placeholder = 'p' . $rowIndex . '_' . $i;
+                        $placeholders[] = ':' . $placeholder;
+                        $value = SqlDialect::booleanToInt($insert[$field] ?? null);
+                        $params[$placeholder] = ($value === '' || $value === null || ! is_scalar($value)) ? null : $value;
+                    }
+
+                    $rowTuples[] = '(' . implode(',', $placeholders) . ')';
                 }
 
-                $placeholdersSql = implode(',', $placeholders);
-                $query = $this->buildInsertSql($protectedTable, $columnsSql, $placeholdersSql, $ignore);
+                $valuesSql = implode(',', $rowTuples);
+                $query = $this->buildInsertSql($protectedTable, $columnsSql, $valuesSql, $ignore);
 
                 $conn->executeStatement($query, $params);
             }
@@ -203,22 +247,137 @@ final readonly class BatchWriter
         }
 
         // See massInsert()'s own comment -- same Connection::transactional()
-        // single-transaction wrapping.
+        // whole-call (every chunk) single-transaction wrapping.
         $this->conn->transactional(function () use ($table, $dbfields, $datas, $flags): void {
-            foreach ($datas as $data) {
-                $updateData = [];
-                foreach ($dbfields['update'] as $key) {
-                    $updateData[$key] = $data[$key] ?? null;
-                }
-
-                $where = [];
-                foreach ($dbfields['primary'] as $key) {
-                    $where[$key] = $data[$key] ?? null;
-                }
-
-                $this->updateRow($table, $updateData, $where, $flags);
+            foreach (self::chunk($datas) as $chunk) {
+                $this->updateChunk($table, $dbfields, $chunk, $flags);
             }
         });
+    }
+
+    /**
+     * One real, searched-`CASE` batched `UPDATE` for an entire chunk,
+     * replacing what used to be one `updateRow()` call per row. Portable
+     * as-is (searched `CASE`/`AND`/`OR` only) -- no per-platform branch
+     * needed here, unlike buildInsertSql()'s own `ignore` handling.
+     *
+     * Per row, first computes its own primary-key predicate (`col = :k` per
+     * primary column, ANDed together -- `col IS NULL` for a null/non-scalar
+     * key value, exactly like updateRow() -- and dropping the row entirely
+     * if every update column is empty-and-skipped, exactly like
+     * updateRow()'s own all-fields-skipped early return). Then, per SET
+     * column, only rows that actually touch *that* column get a `WHEN`
+     * branch -- a row skipping a column under SKIP_EMPTY simply has none,
+     * so it falls through to `ELSE <column>` (its own current value,
+     * unchanged) for that column specifically, while still being matched
+     * by the shared `WHERE` (built from the exact same per-row predicates)
+     * for whichever *other* column(s) it does set. One predicate per row,
+     * reused for both its own `WHEN` branches and its own `WHERE` branch,
+     * rather than two independently-built copies that could drift apart.
+     *
+     * @param array{primary: string[], update: string[]} $dbfields
+     * @param list<array<string, mixed>> $chunk
+     */
+    private function updateChunk(string $table, array $dbfields, array $chunk, int $flags): void
+    {
+        $protectedPrimary = array_map($this->protectColumnName(...), $dbfields['primary']);
+        $protectedUpdate = [];
+        foreach ($dbfields['update'] as $key) {
+            $protectedUpdate[$key] = $this->protectColumnName($key);
+        }
+
+        /** @var list<array{predicateSql: string, predicateParams: array<string, int|float|string>, setValues: array<string, mixed>}> */
+        $rows = [];
+        $paramIndex = 0;
+        foreach ($chunk as $data) {
+            $setValues = [];
+            foreach ($dbfields['update'] as $key) {
+                $value = SqlDialect::booleanToInt($data[$key] ?? null);
+                $isEmpty = ! isset($value) || $value === '' || ! is_scalar($value);
+                if ($isEmpty) {
+                    if ((bool) ($flags & self::SKIP_EMPTY)) {
+                        continue;
+                    }
+                    $setValues[$key] = null;
+                    continue;
+                }
+                $setValues[$key] = $value;
+            }
+
+            if ($setValues === []) {
+                continue;
+            }
+
+            $predicateParts = [];
+            $predicateParams = [];
+            foreach ($dbfields['primary'] as $primaryIndex => $key) {
+                $value = SqlDialect::booleanToInt($data[$key] ?? null);
+                if (isset($value) && is_scalar($value)) {
+                    $placeholder = 'k' . $paramIndex++;
+                    $predicateParts[] = $protectedPrimary[$primaryIndex] . ' = :' . $placeholder;
+                    $predicateParams[$placeholder] = $value;
+                } else {
+                    $predicateParts[] = $protectedPrimary[$primaryIndex] . ' IS NULL';
+                }
+            }
+
+            $rows[] = [
+                'predicateSql' => implode(' AND ', $predicateParts),
+                'predicateParams' => $predicateParams,
+                'setValues' => $setValues,
+            ];
+        }
+
+        if ($rows === []) {
+            return;
+        }
+
+        $qb = $this->conn->createQueryBuilder()
+            ->update($this->protectColumnName($table));
+
+        foreach ($dbfields['update'] as $key) {
+            $whenParts = [];
+            $columnParams = [];
+            foreach ($rows as $row) {
+                if (! array_key_exists($key, $row['setValues'])) {
+                    continue;
+                }
+
+                $value = $row['setValues'][$key];
+                if ($value === null) {
+                    $whenParts[] = 'WHEN ' . $row['predicateSql'] . ' THEN NULL';
+                } else {
+                    $placeholder = 'v' . $paramIndex++;
+                    $whenParts[] = 'WHEN ' . $row['predicateSql'] . ' THEN :' . $placeholder;
+                    $columnParams[$placeholder] = $value;
+                }
+
+                foreach ($row['predicateParams'] as $pName => $pValue) {
+                    $columnParams[$pName] = $pValue;
+                }
+            }
+
+            if ($whenParts === []) {
+                continue;
+            }
+
+            $protectedColumn = $protectedUpdate[$key];
+            $qb->set($protectedColumn, 'CASE ' . implode(' ', $whenParts) . ' ELSE ' . $protectedColumn . ' END');
+            foreach ($columnParams as $pName => $pValue) {
+                $qb->setParameter($pName, $pValue);
+            }
+        }
+
+        $whereParts = [];
+        foreach ($rows as $row) {
+            $whereParts[] = '(' . $row['predicateSql'] . ')';
+            foreach ($row['predicateParams'] as $pName => $pValue) {
+                $qb->setParameter($pName, $pValue);
+            }
+        }
+        $qb->where(implode(' OR ', $whereParts));
+
+        $qb->executeStatement();
     }
 
     /**

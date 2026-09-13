@@ -169,20 +169,29 @@ namespace Piwigo\Tests\Integration {
             self::assertNull($this->repo->findRandomImageId(CategoryId::from(1), '1', false, new PermissionCriteria([1], null, null, null, null, null)));
         }
 
-        public function testFindRandomImageIdInCategoryReturnsAnImageFromTheCategory(): void
+        public function testFindRandomImageIdsForCategoriesReturnsAnImageFromEachCategoryNotCrossContaminated(): void
         {
-            // Real regression coverage for the custom RandFunction DQL
-            // function's own `ORDER BY RAND()` -- runs enough draws to make it
-            // very unlikely a single lucky pick masks a query that's actually
-            // broken (e.g. always returning the same row, or the wrong pool).
+            // Real regression coverage for the raw ROW_NUMBER() OVER
+            // (PARTITION BY ...)/SqlDialect::randomFunction() query -- runs
+            // enough draws to make it very unlikely a single lucky pick
+            // masks a query that's actually broken (e.g. always returning
+            // the same row, or leaking category 2's pool into category 1's
+            // own result).
             for ($i = 0; $i < 10; $i++) {
-                self::assertContains($this->repo->findRandomImageIdInCategory(CategoryId::from(1)), [1, 2, 3]);
+                $result = $this->repo->findRandomImageIdsForCategories([1, 2]);
+                self::assertContains($result[1], [1, 2, 3]);
+                self::assertContains($result[2], [4, 5]);
             }
         }
 
-        public function testFindRandomImageIdInCategoryReturnsNullForACategoryWithoutImages(): void
+        public function testFindRandomImageIdsForCategoriesOmitsACategoryWithoutImagesFromTheResult(): void
         {
-            self::assertNull($this->repo->findRandomImageIdInCategory(CategoryId::from(999)));
+            self::assertSame([], $this->repo->findRandomImageIdsForCategories([999]));
+        }
+
+        public function testFindRandomImageIdsForCategoriesReturnsEmptyForNoCategoryIds(): void
+        {
+            self::assertSame([], $this->repo->findRandomImageIdsForCategories([]));
         }
 
         public function testFindComputedCategoriesRollupReturnsOneRowPerCategory(): void

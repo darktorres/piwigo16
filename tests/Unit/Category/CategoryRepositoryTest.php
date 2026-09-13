@@ -184,21 +184,30 @@ test('findRandomImageId() returns null when the permission condition excludes ev
         ->toBeNull();
 });
 
-test('findRandomImageIdInCategory() returns an image from the category', function (): void {
-    // Real regression coverage for the custom RandFunction DQL
-    // function's own `ORDER BY RAND()` -- runs enough draws to make it
-    // very unlikely a single lucky pick masks a query that's actually
-    // broken (e.g. always returning the same row, or the wrong pool).
+test('findRandomImageIdsForCategories() returns an image from each category, not cross-contaminated', function (): void {
+    // Real regression coverage for the raw ROW_NUMBER() OVER (PARTITION BY
+    // ...)/SqlDialect::randomFunction() query -- runs enough draws to make
+    // it very unlikely a single lucky pick masks a query that's actually
+    // broken (e.g. always returning the same row, or leaking category 2's
+    // pool into category 1's result).
     $repo = categoryTestRepo();
     for ($i = 0; $i < 10; $i++) {
-        expect($repo->findRandomImageIdInCategory(CategoryId::from(1)))
-            ->toBeIn([1, 2, 3]);
+        $result = $repo->findRandomImageIdsForCategories([1, 2]);
+        expect($result[1])
+            ->toBeIn([1, 2, 3])
+            ->and($result[2])
+            ->toBeIn([4, 5]);
     }
 });
 
-test('findRandomImageIdInCategory() returns null for a category without images', function (): void {
-    expect(categoryTestRepo()->findRandomImageIdInCategory(CategoryId::from(999)))
-        ->toBeNull();
+test('findRandomImageIdsForCategories() omits a category without images from the result', function (): void {
+    expect(categoryTestRepo()->findRandomImageIdsForCategories([999]))
+        ->toBe([]);
+});
+
+test('findRandomImageIdsForCategories() returns empty for no category ids', function (): void {
+    expect(categoryTestRepo()->findRandomImageIdsForCategories([]))
+        ->toBe([]);
 });
 
 test('findComputedCategoriesRollup() returns one row per category', function (): void {

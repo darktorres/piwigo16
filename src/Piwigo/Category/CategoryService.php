@@ -1760,17 +1760,24 @@ final readonly class CategoryService
     /**
      * Set a new random representant to the categories.
      *
+     * One query for every category via
+     * {@see CategoryRepository::findRandomImageIdsForCategories()}, not one
+     * per category -- every category still gets its own row in $datas
+     * (representative_picture_id explicitly null when the map has no entry
+     * for it), matching the former per-category lookup's own null-for-empty
+     * behavior exactly.
+     *
      * @param int[] $categories
      */
     public function setRandomRepresentant(array $categories): void
     {
+        $representatives = $this->repo->findRandomImageIdsForCategories(array_values($categories));
+
         $datas = [];
         foreach ($categories as $categoryId) {
-            $representative = $this->repo->findRandomImageIdInCategory(CategoryId::from($categoryId));
-
             $datas[] = [
                 'id' => $categoryId,
-                'representative_picture_id' => $representative,
+                'representative_picture_id' => $representatives[$categoryId] ?? null,
             ];
         }
 

@@ -297,6 +297,31 @@ namespace Piwigo\Tests\Integration {
             parent::tearDown();
         }
 
+        /**
+         * setRandomRepresentant() now fetches every category's random image
+         * in one query (CategoryRepository::findRandomImageIdsForCategories())
+         * instead of one per category -- end-to-end proof through the real
+         * service that categories 1 (images 1/2/3) and 2 (images 4/5) each
+         * get a representative genuinely drawn from their own pool, not the
+         * other's.
+         */
+        public function testSetRandomRepresentantSetsARepresentativeForEachCategoryFromItsOwnPool(): void
+        {
+            $this->service->setRandomRepresentant([1, 2]);
+
+            $rows = $this->conn->createQueryBuilder()
+                ->select('id', 'representative_picture_id')
+                ->from('categories')
+                ->where('id IN (1, 2)')
+                ->orderBy('id', 'ASC')
+                ->executeQuery()
+                ->fetchAllAssociative();
+
+            self::assertCount(2, $rows);
+            self::assertContains($rows[0]['representative_picture_id'], [1, 2, 3]);
+            self::assertContains($rows[1]['representative_picture_id'], [4, 5]);
+        }
+
         public function testCompareByGlobalRankOrdersNaturally(): void
         {
             $rows = [

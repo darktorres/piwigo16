@@ -106,6 +106,13 @@ use Piwigo\Permission\SqlCondition;
  */
 final readonly class CategoryRepository
 {
+    /**
+     * Max category ids per {@see findRandomImageIdsForCategories()} query --
+     * see that method's own docblock for why this is sized for the
+     * placeholder limit only, not a performance sweet spot.
+     */
+    private const int RANDOM_IMAGE_CHUNK_SIZE = 10000;
+
     public function __construct(
         private EntityManagerInterface $em,
         private CurrentConfig $currentConfig,
@@ -299,9 +306,8 @@ final readonly class CategoryRepository
      * Real DQL -- `image_category` is mapped
      * ({@see \Piwigo\Image\ImageCategoryEntity}), {@see PermissionCriteria}'s
      * `*Condition()` methods work identically against a DQL query builder
-     * (see {@see applyCondition()}), and `RAND()` uses the same portable
-     * custom DQL function ({@see \Piwigo\Db\DqlFunction\RandFunction}) as
-     * {@see findRandomImageIdInCategory()}.
+     * (see {@see applyCondition()}), and `RAND()` uses the portable custom
+     * DQL function {@see \Piwigo\Db\DqlFunction\RandFunction}.
      */
     public function findRandomImageId(CategoryId $catId, string $uppercats, bool $recursive, PermissionCriteria $criteria): ?int
     {
@@ -1582,39 +1588,72 @@ final readonly class CategoryRepository
     }
 
     /**
-     * Real DQL -- `image_category` is mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), and MySQL's `RAND()` has
-     * a portable custom DQL function
-     * ({@see \Piwigo\Db\DqlFunction\RandFunction}, per-platform dispatch,
-     * MySQL/MariaDB verified, PostgreSQL/SQLite unverified against a real
-     * install -- see that class's own docblock). `ic.image` is a real
-     * association -- `IDENTITY()` is needed in the `SELECT` regardless of
-     * hydration mode, so `getSingleColumnResult()`'s own "never applies a
-     * custom Type" safety (Gotcha #4) isn't the relevant reasoning here
-     * anymore. `$categoryId` binds as a real `CategoryId` VO directly
-     * against `ic.category` (a real association) -- confirmed live
-     * (P51-K) that Doctrine's parameter processing applies a registered
-     * custom Type's `convertToDatabaseValue()` by matching the bound
-     * value's own PHP class, regardless of whether the target path is a
-     * plain scalar-Typed column or an association's underlying FK; no
-     * `->value` unwrap needed.
+     * One random image id per category, for every category in $categoryIds
+     * that has at least one image -- categories with none are simply
+     * absent from the result, matching the former per-category
+     * findRandomImageIdInCategory()'s own null return for that case (see
+     * CategoryService::setRandomRepresentant(), the only real caller,
+     * which used to call that one category at a time: N categories needing
+     * a representative meant N separate `ORDER BY RAND() LIMIT 1` queries).
+     *
+     * Raw SQL, not DQL -- `ROW_NUMBER() OVER (PARTITION BY ...)` (the
+     * standard "one random row per group" technique) isn't DQL-expressible,
+     * so this can't reuse `Db\DqlFunction\RandFunction`'s own DQL-level
+     * registration the single-category version used; `Db\SqlDialect::
+     * randomFunction()` is the equivalent portable random-ordering
+     * expression for a raw-SQL context. `image_category`'s own raw table/
+     * column names (not `ImageCategoryEntity`'s DQL alias), same as every
+     * other raw-SQL query in this class.
+     *
+     * Chunked at {@see RANDOM_IMAGE_CHUNK_SIZE} ids per query -- a plain
+     * indexed lookup, not `Db\BatchWriter`'s per-row `CASE` (no O(n²)
+     * concern), so this only needs to stay safely under PostgreSQL's
+     * 65,535-parameter protocol limit.
+     *
+     * @param list<int> $categoryIds
+     * @return array<int, int> categoryId => a random image id in it
      */
-    public function findRandomImageIdInCategory(CategoryId $categoryId): ?int
+    public function findRandomImageIdsForCategories(array $categoryIds): array
     {
-        $values = $this->em
-            ->createQueryBuilder()
-            ->select('IDENTITY(ic.image)')
-            ->from(ImageCategoryEntity::class, 'ic')
-            ->where('ic.category = :categoryId')
-            ->setParameter('categoryId', $categoryId)
-            ->orderBy('RAND()')
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getSingleColumnResult();
+        if ($categoryIds === []) {
+            return [];
+        }
 
-        $value = $values[0] ?? null;
+        $conn = $this->em->getConnection();
+        $randomFn = SqlDialect::randomFunction();
 
-        return is_numeric($value) ? (int) $value : null;
+        $sql = <<<SQL
+            SELECT category_id, image_id FROM (
+                SELECT category_id, image_id,
+                       ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY {$randomFn}) AS rn
+                FROM image_category
+                WHERE category_id IN (:categoryIds)
+            ) ranked
+            WHERE rn = 1
+            SQL;
+
+        $result = [];
+        foreach (array_chunk($categoryIds, self::RANDOM_IMAGE_CHUNK_SIZE) as $chunk) {
+            $rows = $conn->executeQuery(
+                $sql,
+                [
+                    'categoryIds' => $chunk,
+                ],
+                [
+                    'categoryIds' => ArrayParameterType::INTEGER,
+                ]
+            )->fetchAllAssociative();
+
+            foreach ($rows as $row) {
+                $categoryId = $row['category_id'] ?? null;
+                $imageId = $row['image_id'] ?? null;
+                if (is_numeric($categoryId) && is_numeric($imageId)) {
+                    $result[(int) $categoryId] = (int) $imageId;
+                }
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -1736,8 +1775,7 @@ final readonly class CategoryRepository
         // WHERE resolves to the raw join column either way, and (P51-K,
         // confirmed live) binding the CategoryId VO directly here works
         // identically to a raw scalar bind, same as against a plain
-        // scalar-Typed column -- see findRandomImageIdInCategory()'s own
-        // docblock.
+        // scalar-Typed column -- see hasImages()'s own docblock.
         $this->em
             ->createQueryBuilder()
             ->update(ImageEntity::class, 'i')
@@ -2479,9 +2517,8 @@ final readonly class CategoryRepository
      *
      * Real DQL -- {@see PermissionCriteria}'s fragment works directly
      * against a DQL query builder (see {@see applyCondition()}), and
-     * `RAND()` uses the same portable custom DQL function
-     * ({@see \Piwigo\Db\DqlFunction\RandFunction}) as
-     * {@see findRandomImageIdInCategory()}. `IDENTITY(c.representativePicture)`
+     * `RAND()` uses the portable custom DQL function
+     * {@see \Piwigo\Db\DqlFunction\RandFunction}. `IDENTITY(c.representativePicture)`
      * extracts the raw FK id without hydrating the associated `ImageEntity`
      * -- the one context in this file where the bare association path
      * can't be used, since a bare path in `SELECT` would try to hydrate the
@@ -3052,9 +3089,11 @@ final readonly class CategoryRepository
      * preserve. `ic.category` is a real association -- `IDENTITY()` is
      * needed inside the `COUNT()` regardless of hydration mode. The bound
      * `$categoryId` is a real {@see CategoryId} VO passed directly --
-     * confirmed live (P51-K) that binding works identically for an
-     * association's own comparison as for a plain scalar-Typed column,
-     * see {@see findRandomImageIdInCategory()}'s own docblock.
+     * confirmed live (P51-K) that Doctrine's parameter processing applies a
+     * registered custom Type's `convertToDatabaseValue()` by matching the
+     * bound value's own PHP class, regardless of whether the target path is
+     * a plain scalar-Typed column or an association's underlying FK, so
+     * binding works identically either way -- no `->value` unwrap needed.
      */
     public function hasImages(CategoryId $categoryId): bool
     {

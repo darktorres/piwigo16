@@ -50,7 +50,21 @@ function convert_lang_php_to_po(string $phpFile, string $locale, array $pairs): 
     $pluralForm = get_plural_form($locale);
     $langName = is_string($lang_info['language_name'] ?? null) ? $lang_info['language_name'] : '';
     $country = is_string($lang_info['country'] ?? null) ? $lang_info['country'] : '';
-    $direction = is_string($lang_info['direction'] ?? null) ? $lang_info['direction'] : 'ltr';
+    // Real, confirmed bug (P61 Phase 10, found live): defaulting this to
+    // 'ltr' when absent -- unlike every other $lang_info field here,
+    // which correctly defaults to '' and so stays silent below -- means
+    // a theme/plugin .lang.php with no real $lang_info at all (the
+    // common case, confirmed for both modus and bootstrap_darkroom)
+    // still emits a real "X-Piwigo-Direction: ltr" header. Lang::load()'s
+    // own $lang_info merge treats every loaded file as equally
+    // authoritative (array_merge(), last write wins) -- a real RTL
+    // locale's own correct 'rtl' from common.lang gets silently
+    // clobbered back to 'ltr' the moment ThemeRegistry::bootCurrent()
+    // loads that theme's own theme.lang afterward, confirmed live: a
+    // real he_IL session showed lang="he" (code merged correctly, empty
+    // string default) but dir="ltr" (direction merged incorrectly, fake
+    // non-empty default) on the very same rendered page.
+    $direction = is_string($lang_info['direction'] ?? null) ? $lang_info['direction'] : '';
     $code = is_string($lang_info['code'] ?? null) ? $lang_info['code'] : '';
     $zeroPlural = ! in_array($lang_info['zero_plural'] ?? null, [null, false, 0, '0', '', []], true) ? 'true' : 'false';
     // parent: real fallback-chain data (5 locales, e.g. en_GB -> en_UK),

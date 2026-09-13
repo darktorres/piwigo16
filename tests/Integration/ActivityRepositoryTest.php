@@ -225,6 +225,67 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         }
     }
 
+    /**
+     * insertMany() now checks every row's referent existence with one
+     * `SELECT ... WHERE id IN (...)` per table instead of one per row --
+     * the one genuinely new correctness risk is that batching stops
+     * discriminating per row (e.g. an all-or-nothing result for the whole
+     * call). A real kind is needed here ('disposable', used by every test
+     * above, is deliberately unrecognized by ActivityObject and so never
+     * reaches the existence check at all) -- fixture image id 1 exists,
+     * 999999 does not, both rows share one insertMany() call.
+     */
+    public function testInsertManyChecksReferentExistenceIndependentlyForEachRowInOneBatch(): void
+    {
+        try {
+            $this->repo->insertMany([
+                [
+                    'object' => 'photo',
+                    'objectId' => 1,
+                    'action' => 'n-plus-one-test',
+                    'performedBy' => 1,
+                    'sessionIdx' => 'sess-1',
+                    'ipAddress' => null,
+                    'occuredOn' => SqlDateTime::from('2026-07-12 00:00:00'),
+                    'details' => [],
+                    'userAgent' => null,
+                ],
+                [
+                    'object' => 'photo',
+                    'objectId' => 999999,
+                    'action' => 'n-plus-one-test',
+                    'performedBy' => 1,
+                    'sessionIdx' => 'sess-1',
+                    'ipAddress' => null,
+                    'occuredOn' => SqlDateTime::from('2026-07-12 00:00:01'),
+                    'details' => [],
+                    'userAgent' => null,
+                ],
+            ]);
+
+            $rows = $this->conn->createQueryBuilder()
+                ->select('object_id', 'image_id')
+                ->from('activity')
+                ->where("action = 'n-plus-one-test'")
+                ->orderBy('object_id', 'ASC')
+                ->executeQuery()
+                ->fetchAllAssociative();
+
+            self::assertSame([
+                [
+                    'object_id' => 1,
+                    'image_id' => 1,
+                ],
+                [
+                    'object_id' => 999999,
+                    'image_id' => null,
+                ],
+            ], $rows);
+        } finally {
+            $this->conn->executeStatement("DELETE FROM activity WHERE action = 'n-plus-one-test'");
+        }
+    }
+
     public function testCountByUserMatchesTheFixture(): void
     {
         $counts = $this->repo->countByUser();

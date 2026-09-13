@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Activity;
 
 use Doctrine\Common\Collections\Criteria;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityRepository;
 use Override;
@@ -39,6 +40,14 @@ use Piwigo\Users\UserEntity;
  */
 final class ActivityRepository extends EntityRepository implements LoginActivityLookupInterface
 {
+    /**
+     * Max ids per existence-check `IN (...)` chunk -- a plain indexed
+     * lookup, not `Db\BatchWriter`'s per-row `CASE` (no O(n²) concern), so
+     * this only needs to stay safely under PostgreSQL's 65,535-parameter
+     * protocol limit, not tuned for a performance sweet spot.
+     */
+    private const int EXISTENCE_CHECK_CHUNK_SIZE = 10000;
+
     /**
      * Implements {@see \Piwigo\Auth\LoginActivityLookupInterface} so
      * `AuthRepository` can query login activity via constructor-injected
@@ -89,6 +98,15 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
         }
 
         $em = $this->getEntityManager();
+        // Every real caller (ActivityService::record(), the only one) builds
+        // $rows from one fixed $object kind, but this groups by kind/table
+        // generically rather than assuming that -- one SELECT ... WHERE id
+        // IN (...) per distinct table referenced anywhere in this batch,
+        // instead of one per row (see this method's own docblock: this call
+        // used to be assumed to run with "a handful of rows", but its one
+        // real caller passes every id from a sync pass at once).
+        $existingReferentIds = $this->findExistingReferentIds($rows);
+
         foreach ($rows as $row) {
             $objectId = is_numeric($row['objectId']) ? (int) $row['objectId'] : 0;
             $kind = ActivityObject::tryFrom($row['object']);
@@ -110,8 +128,11 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
             // and ActivityService adds details['deleted_object_ids'] for
             // deletions.
             $column = $kind?->referenceColumn();
-            if ($column !== null && ! $this->referentExists($kind, $objectId)) {
-                $column = null;
+            if ($column !== null) {
+                $table = self::referentTable($kind);
+                if ($table === null || ! isset($existingReferentIds[$table][$objectId])) {
+                    $column = null;
+                }
             }
 
             $performedBy = $row['performedBy'] !== null ? UserId::tryFrom($row['performedBy']) : null;
@@ -139,15 +160,13 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
     }
 
     /**
-     * Whether the row a typed reference would point at exists right now.
-     *
-     * One indexed primary-key lookup per activity row. Deliberately not
-     * cached across the batch: insertMany() is called with a handful of rows
-     * for one action, and a stale "yes" here means a rejected insert.
+     * The table a typed reference of this kind points at, or null when
+     * there is none ({@see ActivityObject::System}, or any discriminator
+     * this enum doesn't know).
      */
-    private function referentExists(ActivityObject $kind, int $objectId): bool
+    private static function referentTable(ActivityObject $kind): ?string
     {
-        $table = match ($kind) {
+        return match ($kind) {
             ActivityObject::User => 'users',
             ActivityObject::Album => 'categories',
             ActivityObject::Photo => 'images',
@@ -155,24 +174,73 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
             ActivityObject::Group => 'groups',
             ActivityObject::System => null,
         };
+    }
 
-        if ($table === null || $objectId <= 0) {
-            return false;
+    /**
+     * Which of $rows' own referenced ids actually exist right now, grouped
+     * by table -- one indexed `id IN (...)` lookup per distinct table
+     * instead of one per row. Deliberately computed once, at the start of
+     * this same insertMany() call, never cached *across* calls: a stale
+     * "yes" here means a rejected insert, same reasoning the former
+     * per-row referentExists() already documented, just no longer paid for
+     * with a query per row.
+     *
+     * @param list<array{object: string, objectId: int|string, ...}> $rows
+     * @return array<string, array<int, true>> table => set of ids that exist
+     */
+    private function findExistingReferentIds(array $rows): array
+    {
+        $idsByTable = [];
+        foreach ($rows as $row) {
+            $kind = ActivityObject::tryFrom($row['object']);
+            if (! $kind instanceof ActivityObject || $kind->referenceColumn() === null) {
+                continue;
+            }
+
+            $table = self::referentTable($kind);
+            if ($table === null) {
+                continue;
+            }
+
+            $objectId = is_numeric($row['objectId']) ? (int) $row['objectId'] : 0;
+            if ($objectId <= 0) {
+                continue;
+            }
+
+            $idsByTable[$table][$objectId] = true;
         }
 
-        $found = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('1')
-            // `groups` is a reserved word on both engines.
-            ->from($this->getEntityManager()->getConnection()->getDatabasePlatform()->quoteSingleIdentifier($table))
-            ->where('id = :id')
-            ->setParameter('id', $objectId)
-            ->setMaxResults(1)
-            ->executeQuery()
-            ->fetchOne();
+        if ($idsByTable === []) {
+            return [];
+        }
 
-        return $found !== false;
+        $conn = $this->getEntityManager()
+            ->getConnection();
+        $platform = $conn->getDatabasePlatform();
+
+        $existingByTable = [];
+        foreach ($idsByTable as $table => $idSet) {
+            $existingByTable[$table] = [];
+            // `groups` is a reserved word on both engines.
+            $quotedTable = $platform->quoteSingleIdentifier($table);
+            foreach (array_chunk(array_keys($idSet), self::EXISTENCE_CHECK_CHUNK_SIZE) as $chunk) {
+                $foundIds = $conn->createQueryBuilder()
+                    ->select('id')
+                    ->from($quotedTable)
+                    ->where('id IN (:ids)')
+                    ->setParameter('ids', $chunk, ArrayParameterType::INTEGER)
+                    ->executeQuery()
+                    ->fetchFirstColumn();
+
+                foreach ($foundIds as $foundId) {
+                    if (is_numeric($foundId)) {
+                        $existingByTable[$table][(int) $foundId] = true;
+                    }
+                }
+            }
+        }
+
+        return $existingByTable;
     }
 
     /**

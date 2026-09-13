@@ -283,6 +283,11 @@ final class PageAssets
         $resolved = [];
         $seenCssPaths = [];
         foreach ($ordered as $contribution) {
+            if ($contribution->code !== null) {
+                $resolved[] = ResolvedAsset::inline($contribution->code);
+
+                continue;
+            }
             $path = $this->resolvePath($contribution->path);
             $resolved[] = ResolvedAsset::file($path, null, $contribution->version);
             $seenCssPaths[$path] = true;

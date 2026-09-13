@@ -50,6 +50,23 @@ test('resolveCss() preserves registration order for equal order values', functio
         ->toBe(['a.css', 'b.css', 'c.css']);
 });
 
+test('resolveCss() resolves an inline CSS contribution to a ResolvedAsset carrying its code, not a file path', function (): void {
+    $assets = new PageAssets(pageAssetsTestManifest());
+    $assets->add(AssetContribution::css('themes/default/theme.css'));
+    $assets->add(AssetContribution::inlineCss('body { color: red; }', order: 10000));
+
+    $resolved = $assets->resolveCss();
+
+    expect($resolved)
+        ->toHaveCount(2)
+        ->and($resolved[0]->inlineCode)
+        ->toBeNull()
+        ->and($resolved[1]->inlineCode)
+        ->toBe('body { color: red; }')
+        ->and($resolved[1]->path)
+        ->toBe('');
+});
+
 test('css dedupes by id, keeping the higher order', function (): void {
     $assets = new PageAssets(pageAssetsTestManifest());
     $assets->add(AssetContribution::css('v1.css', id: 'shared', order: 5));

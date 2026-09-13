@@ -1411,6 +1411,16 @@ test('getCombinedCss returns the combined-css placeholder', function (): void {
         ->toBe(Template::COMBINED_CSS_TAG);
 });
 
+test('registerPageAssets renders an inline CSS contribution as a real <style> block, not a <link>', function (): void {
+    $t = TemplateTestFactory::build();
+    $t->registerPageAssets([AssetContribution::inlineCss('body { color: red; }', order: 10000)]);
+
+    $result = $t->finalizeHtml(Template::COMBINED_CSS_TAG);
+
+    expect($result)
+        ->toBe('<style>body { color: red; }</style>');
+});
+
 // --- finalizeHtml ---------------------------------------------------------
 
 test('finalizeHtml appends a version query string for a truthy combined_css version', function (): void {

@@ -934,6 +934,11 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
         $content = [];
         foreach ($css as $asset) {
+            if ($asset->inlineCode !== null) {
+                $content[] = '<style>' . $asset->inlineCode . '</style>';
+
+                continue;
+            }
             $href = $this->urlService->embellishUrl($this->urlService->getRootUrl() . $asset->path);
             if ($asset->version !== false) {
                 $href .= '?v' . ((bool) $asset->version ? $asset->version : AppInfo::VERSION);

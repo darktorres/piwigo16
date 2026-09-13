@@ -62,3 +62,31 @@ test('css() carries an explicit id and order', function (): void {
         ->and($contribution->order)
         ->toBe(-10);
 });
+
+test('inlineCss() defaults id to md5(code), empty path, order 0', function (): void {
+    $contribution = AssetContribution::inlineCss('body { color: red; }');
+
+    expect($contribution->id)
+        ->toBe(md5('body { color: red; }'))
+        ->and($contribution->kind)
+        ->toBe(AssetKind::Css)
+        ->and($contribution->path)
+        ->toBe('')
+        ->and($contribution->code)
+        ->toBe('body { color: red; }')
+        ->and($contribution->order)
+        ->toBe(0)
+        ->and($contribution->loadMode)
+        ->toBeNull()
+        ->and($contribution->dependsOn)
+        ->toBe([]);
+});
+
+test('inlineCss() carries an explicit id and order', function (): void {
+    $contribution = AssetContribution::inlineCss('body {}', id: 'darkroom-custom-css', order: 10000);
+
+    expect($contribution->id)
+        ->toBe('darkroom-custom-css')
+        ->and($contribution->order)
+        ->toBe(10000);
+});

@@ -76,6 +76,30 @@ final readonly class AssetContribution
     }
 
     /**
+     * Same `AssetKind::Css` kind as `css()` above (shares its ordering/
+     * dedup path through `PageAssets::resolveCss()` -- flows into the
+     * same sorted `<link>` list, just resolving to a `<style>` block
+     * instead once `$code !== null`), for admin/site-authored CSS with
+     * no real file to point a `<link>` at. Real, grounded caller:
+     * `bootstrap_darkroom`'s own `custom_css` setting -- P61's own
+     * `local/{theme}/custom.css` cannot be a real static-file `AssetContribution::css()`
+     * target at all in this fork's own architecture (`local/` is
+     * deliberately never web-reachable, `docker/Caddyfile`'s own
+     * `@deniedRelocated` block, mirrored by `public/.htaccess`'s
+     * equivalent rule -- found live, a real 404, not a missing symlink).
+     *
+     * @param string|false $version false disables version-based cache busting
+     */
+    public static function inlineCss(
+        string $code,
+        ?string $id = null,
+        int $order = 0,
+        string|false $version = '0',
+    ): self {
+        return new self($id ?? md5($code), AssetKind::Css, '', $version, null, $order, [], $code);
+    }
+
+    /**
      * @param list<string> $dependsOn ids of already-registered scripts
      *   this inline code depends on -- a dependency currently async
      *   gets promoted to footer-sync, matching

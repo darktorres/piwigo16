@@ -1109,6 +1109,73 @@ final class ExtensionContextTest extends IntegrationTestCase
     }
 
     /**
+     * `../piwigo16-plugins/TakeATour_16.3.0/main.inc.php`'s own real
+     * top-level `isset($_GET['tour_ended'])` check -- decides whether the
+     * plugin even registers an `init` handler.
+     */
+    public function testQueryParamReturnsTheRealGetValueOrNullWhenAbsentOrEmpty(): void
+    {
+        $context = $this->buildContext(PluginId::from('any-plugin'));
+
+        $_GET = [
+            'tour_ended' => '1',
+            'empty_one' => '',
+        ];
+
+        self::assertSame('1', $context->queryParam('tour_ended'));
+        self::assertNull($context->queryParam('empty_one'));
+        self::assertNull($context->queryParam('missing'));
+
+        $_GET = [];
+    }
+
+    /**
+     * `../piwigo16-plugins/TakeATour_16.3.0/main.inc.php`'s own real
+     * `isset($_REQUEST['submited_tour_path'])` check, served today via
+     * `queryParam()`/`postParam()` combined at the call site.
+     */
+    public function testPostParamReturnsTheRealPostValueOrNullWhenAbsentOrEmpty(): void
+    {
+        $context = $this->buildContext(PluginId::from('any-plugin'));
+
+        $_POST = [
+            'submited_tour_path' => 'tours/first_contact',
+            'empty_one' => '',
+        ];
+
+        self::assertSame('tours/first_contact', $context->postParam('submited_tour_path'));
+        self::assertNull($context->postParam('empty_one'));
+        self::assertNull($context->postParam('missing'));
+
+        $_POST = [];
+    }
+
+    /**
+     * A non-string value (e.g. a nested array from `foo[]=1&foo[]=2`)
+     * collapses to `null` the same way an absent key does -- neither
+     * method has a shape to hand back an array through a `?string`
+     * return, matching `Csrf\Request\CsrfTokenRequest`'s own
+     * `is_string()` guard.
+     */
+    public function testQueryParamAndPostParamReturnNullForANonStringValue(): void
+    {
+        $context = $this->buildContext(PluginId::from('any-plugin'));
+
+        $_GET = [
+            'tags' => ['a', 'b'],
+        ];
+        $_POST = [
+            'tags' => ['a', 'b'],
+        ];
+
+        self::assertNull($context->queryParam('tags'));
+        self::assertNull($context->postParam('tags'));
+
+        $_GET = [];
+        $_POST = [];
+    }
+
+    /**
      * P29.6 (the `modus` theme port): `imageStdParams()` exposes the same
      * shared, already-composed `ImageStdParams` instance the container
      * hands to real production code, needed for a settings page listing

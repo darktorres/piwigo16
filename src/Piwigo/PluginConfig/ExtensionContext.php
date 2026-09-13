@@ -485,6 +485,63 @@ final readonly class ExtensionContext
     }
 
     /**
+     * A single, arbitrary-named `$_GET` key -- unlike every core
+     * controller's own hand-typed `*Request::fromGlobals()` VO
+     * (`InputValidator`-checked, each field named and validated for one
+     * specific known page), a plugin/theme's own query-parameter names are
+     * open-ended and unknowable at core's own compile time, the same
+     * "unbounded set of names, no per-key hand-authored accessor is
+     * feasible" reasoning {@see ExtensionCookie::get()} already applies to
+     * `$_COOKIE`. No per-extension namespacing applies here (unlike
+     * `session()`/`cookies()`/`db()`): the request is the caller's own,
+     * already fully controlled by whatever URL its own templates/links
+     * generate, so there's no cross-extension collision for the framework
+     * to guard against -- exactly like legacy's own un-namespaced `$_GET`.
+     *
+     * Absent, non-string, or empty-string collapses to `null`, matching
+     * `Csrf\Request\CsrfTokenRequest`'s own established collapsing
+     * convention. Deliberately reads `$_GET` only, not `$_REQUEST`:
+     * `$_REQUEST`'s composition depends on the `request_order` php.ini
+     * directive (and historically could include `$_COOKIE` too), which
+     * this fork can't guarantee across every deployment -- an explicit
+     * `queryParam()`/`postParam()` split has no such ambiguity, matching
+     * how every other core `*Request` VO takes `$_GET`/`$_POST` as two
+     * separate arrays rather than one merged one.
+     *
+     * Safe to call from `boot()` (unlike `template()`/`currentUser()`
+     * above): `$_GET` is populated by PHP before any user code runs, so
+     * there's no early-lifecycle timing constraint here. Grounded in
+     * `../piwigo16-plugins/TakeATour_16.3.0/main.inc.php`'s own real
+     * top-level `isset($_GET['tour_ended'])`/`$_GET['page'] ==
+     * "plugin-TakeATour"` reads, which decide whether the plugin even
+     * registers an `init` handler -- and `Preload/main.inc.php`'s own
+     * equivalent `isset($_GET['slideshow'])` check gating whether it
+     * registers `loc_begin_page_header` at all.
+     */
+    public function queryParam(string $key): ?string
+    {
+        $value = $_GET[$key] ?? null;
+
+        return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    /**
+     * {@see queryParam()}'s own `$_POST` counterpart. Grounded in
+     * `../piwigo16-plugins/TakeATour_16.3.0/main.inc.php`'s own real
+     * `isset($_REQUEST['submited_tour_path'])` check -- served today via
+     * `$context->queryParam('submited_tour_path') ??
+     * $context->postParam('submited_tour_path')`, making the "either
+     * method" ambiguity explicit at the call site instead of hidden
+     * inside the framework's own contract.
+     */
+    public function postParam(string $key): ?string
+    {
+        $value = $_POST[$key] ?? null;
+
+        return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    /**
      * `'mobile'`/`'tablet'`/`'desktop'` -- see `Core\DeviceHelper::
      * getDevice()`'s own docblock: v17 dropped UA-sniffing (responsive CSS
      * covers it for core), so this defaults to `'desktop'` absent an

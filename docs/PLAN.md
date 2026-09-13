@@ -163,7 +163,7 @@ Three structural changes produced that drift:
 | P58 | Codebase-wide non-DI audit | Not started — found during P43-G's own review, extended codebase-wide; see its own plan detail below | 0 |
 | P59 | `default`/`standard_pages` theme-duplication investigation | Done — documentation-only phase, no code changed; recommends keeping both trees pending 2 prerequisites (see plan detail below) | 0 |
 | P60 | phpstan-latte CAMPAIGN-PENDING: type the View→template boundary, then modernize the templates | **DONE** — **A 843 → 0, B 376 → 0**, and the CAMPAIGN-PENDING block is gone from `phpstan.neon`. All 26 identifier-wide ignores retired, each forced out by `reportUnmatchedIgnoredErrors` rather than noticed; 2 more left the *permanent* groups (`empty.variable`, `foreach.valueOverwrite`). Twenty-three live bugs found and fixed along the way, and four gaps closed in the compile step itself | 1 |
-| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra: `ExtensionContext::currentSection()`/`findByIdsOrdered()`/`isShowMetadataEnabled()`+`setShowMetadataEnabled()`/`paths()`, P61-A..D), Phase 2 (manifest + `ExtensionInterface` skeleton), Phase 3 (typed settings VO + real tabbed settings page), Phase 4 (CSS palette foundation, `--darkroom-color-*` custom properties, real OKLCH conversions), and Phase 5 (A-D: menubar family as a native `<details>`-dropdown navbar with no JS; generic pages; comments/tags; CSS-only thumbnails/mainpage_categories/month_calendar) are all done, each live-verified against a real running instance. PhotoSwipe (Phase 1's original 4th item) deliberately deferred to Phase 6, on the user's own call, for lack of a real caller until then. Two real bugs found and fixed along the way: a `settings.latte`/`about.latte` naming collision with core's own public About page (renamed to `darkroom_settings.latte`/`darkroom_about.latte`), and a cascade-layer height/overflow conflict with `default`'s own unconditional `mainpage_categories.css`. Password/identification/register/profile dropped from scope entirely — `useStandardPages` defaults `true` and routes their whole theme chain to `standard_pages` regardless of the active gallery theme, confirmed unreachable, matching `modus`'s own established precedent. Phase 6-A (index.latte contextual navbar, `#thumbnails` CSS Grid) and Phase 6-B (full gesture-fidelity PhotoSwipe lightbox port, `themes/default/js/vendor/widgets/photoswipe.ts`, v4.1.3 real source, 10 passing Vitest tests) also done. Phase 6-C (picture.latte/picture_nav_buttons.latte/picture_content.latte, consolidated info cards, video playback branch, real social-share buttons via `assignContext()`/`GetPageAssets` -- an earlier "no channel exists" note was wrong, corrected same day) also done -- **Phase 6 is now fully closed** except for carousel/PhotoSwipe-wiring work that's genuinely Phase 7 scope. Phase 7-A (thumbnail carousel), Phase 7-B (real PhotoSwipe click-to-open wiring, plus 6 real bugs found and fixed in `photoswipe.ts` itself), and Phase 7-C (grid/list-view toggle, real `rating.ts` star-icon gap fixed, `grid_classes.tpl` confirmed replaced) all done -- **Phase 7 is now fully closed.** Phase 9-A (i18n, 26 locale `theme.po` files, 0 parity errors) also done. Full detail in this file's own P61 narrative section below. Phases 7-10 not started | 5 |
+| P61 | Port the legacy `bootstrap_darkroom` theme onto the v17 extension contract | In progress — Phase 1 (shared infra: `ExtensionContext::currentSection()`/`findByIdsOrdered()`/`isShowMetadataEnabled()`+`setShowMetadataEnabled()`/`paths()`, P61-A..D), Phase 2 (manifest + `ExtensionInterface` skeleton), Phase 3 (typed settings VO + real tabbed settings page), Phase 4 (CSS palette foundation, `--darkroom-color-*` custom properties, real OKLCH conversions), and Phase 5 (A-D: menubar family as a native `<details>`-dropdown navbar with no JS; generic pages; comments/tags; CSS-only thumbnails/mainpage_categories/month_calendar) are all done, each live-verified against a real running instance. PhotoSwipe (Phase 1's original 4th item) deliberately deferred to Phase 6, on the user's own call, for lack of a real caller until then. Two real bugs found and fixed along the way: a `settings.latte`/`about.latte` naming collision with core's own public About page (renamed to `darkroom_settings.latte`/`darkroom_about.latte`), and a cascade-layer height/overflow conflict with `default`'s own unconditional `mainpage_categories.css`. Password/identification/register/profile dropped from scope entirely — `useStandardPages` defaults `true` and routes their whole theme chain to `standard_pages` regardless of the active gallery theme, confirmed unreachable, matching `modus`'s own established precedent. Phase 6-A (index.latte contextual navbar, `#thumbnails` CSS Grid) and Phase 6-B (full gesture-fidelity PhotoSwipe lightbox port, `themes/default/js/vendor/widgets/photoswipe.ts`, v4.1.3 real source, 10 passing Vitest tests) also done. Phase 6-C (picture.latte/picture_nav_buttons.latte/picture_content.latte, consolidated info cards, video playback branch, real social-share buttons via `assignContext()`/`GetPageAssets` -- an earlier "no channel exists" note was wrong, corrected same day) also done -- **Phase 6 is now fully closed** except for carousel/PhotoSwipe-wiring work that's genuinely Phase 7 scope. Phase 7-A (thumbnail carousel), Phase 7-B (real PhotoSwipe click-to-open wiring, plus 6 real bugs found and fixed in `photoswipe.ts` itself), and Phase 7-C (grid/list-view toggle, real `rating.ts` star-icon gap fixed, `grid_classes.tpl` confirmed replaced) all done -- **Phase 7 is now fully closed.** Phase 9-A (i18n, 26 locale `theme.po` files, 0 parity errors) and Phase 9-B (Font Awesome fold-in and legacy cleanup both confirmed real no-gaps; zip + `manifest.json` packaging done, live-verified via the real "Add a new theme" install flow) also done -- **Phase 9 is now fully closed.** Full detail in this file's own P61 narrative section below. Phases 7-10 not started | 5 |
 
 Two adjacent, non-phase-numbered tracks, both not started:
 
@@ -12687,8 +12687,34 @@ grep — core's own translations already cover them, not a gap).
 switching a fixture user's language to `fr_FR` renders real translated
 labels end-to-end, zero console/PHP errors, fully reverted.
 
-Phase 9 (packaging/legacy cleanup remainder)-10 (closing verification)
-land in the same sibling directory, not started.
+**P61 Phase 9-B (Done) — Phase 9 now fully closed.** Font Awesome →
+`photography-icons` fold-in confirmed as a real no-gap: that name
+doesn't exist anywhere in the codebase, and cross-referencing legacy's
+full `fa-*` inventory against this port's own templates shows every
+real icon need was already met by an existing convention
+(`pwg-icon-*`/`gallery-icon-*`) or a deliberate plain-text/sprite
+choice already made in an earlier phase — confirmed by direct grep,
+zero Font Awesome references anywhere in this port's own code. Legacy
+cleanup is also a real no-gap: `obsolete.list`/`pem_metadata.txt`
+never existed in this fresh-built port, and every dropped dependency
+(Bootstrap, jQuery, Selectize, slick-carousel, jquery-migrate/
+touch-events/cookie/awesomeCloud/equalheights) has zero real
+references — confirmed by direct grep.
+
+Packaging is real, completed work: a zip built from this port's own
+`dist`/`language`/`src`/`template`/`theme.css`/`theme.json` (`js/`
+source and `tests/` excluded) into a bare `bootstrap_darkroom/` root,
+plus a `manifest.json` catalog entry matching `modus`'s own real
+shape, with an `extension_description` rewritten to describe what this
+port actually ships rather than legacy's now-inaccurate marketing copy,
+and a real screenshot captured live against the actual redesigned dark
+theme. Live-verified via the real admin "Add a new theme" catalog flow
+end-to-end (download → extract → install, not just a symlink) — the
+theme installs and lists correctly, zero console/PHP errors, fully
+reverted.
+
+Phase 10 (closing verification) lands in the same sibling directory,
+not started.
 
 ## Greenfield tracks (T3, cuttable — outside the P0–P60 backbone)
 

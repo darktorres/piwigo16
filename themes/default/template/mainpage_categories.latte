@@ -52,12 +52,8 @@
               n:if="$cat->infoDates !== null"
               class="dates"
             >{$cat->infoDates}</p>
-            {var $captionNbImages = $cat->captionNbImages}
-            {block catNbImages}<p class="Nb_images">{$captionNbImages}</p>{/block}
-            {var $catDescription = $cat->description}
-            {block catDescription}<p
-              n:if="$catDescription !== null"
-            >{$catDescription}</p>{/block}
+            {var $captionNbImages = $cat->captionNbImages}{var $catDescription = $cat->description}
+            {block catNbImages}<p class="Nb_images">{$captionNbImages}</p>{/block}{block catDescription}<p n:if="$catDescription !== null">{$catDescription}</p>{/block}
           </div>
         </div>
       </div>

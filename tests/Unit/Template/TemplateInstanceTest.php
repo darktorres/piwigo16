@@ -1198,6 +1198,38 @@ test('a Vite-built asset renders as type="module"', function (): void {
         ->toBe('<script type="module" src="dist/assets/built-abc12345.js"></script>');
 });
 
+test('a ported extension\'s own dist/ output renders as type="module"', function (): void {
+    $t = TemplateTestFactory::build();
+    $root = CurrentPathsTestFactory::get()->root;
+    @mkdir($root . '/themes/bootstrap_darkroom/dist', 0777, true);
+    @mkdir($root . '/plugins/some_plugin/dist', 0777, true);
+    file_put_contents($root . '/themes/bootstrap_darkroom/dist/gallery.js', 'export{};');
+    file_put_contents($root . '/plugins/some_plugin/dist/main.js', 'export{};');
+
+    // Real bug this test locks in (P61 closing verification, found live):
+    // `tools/build-ported-extension-assets.mjs` already builds a ported
+    // extension's own js/*.ts entries as real, self-contained ES modules
+    // -- but PageAssets::resolvePath() never resolves one through the
+    // Vite-manifest branch (no ported extension is ever a real
+    // rollupOptions.input entry of this repo's own vite.config.ts), so
+    // the plain `dist/`-prefix test alone always missed it, serving a
+    // real ES module as a classic script instead. Two such classic
+    // scripts loaded on the same real page then shared one global scope,
+    // each independently minified with no knowledge of the other's own
+    // top-level names -- confirmed live, one genuinely clobbered the
+    // other's identically-named binding, breaking a real click handler.
+    $t->registerPageAssets([
+        AssetContribution::script('darkroom-gallery', 'themes/bootstrap_darkroom/dist/gallery.js', LoadMode::Footer),
+        AssetContribution::script('some-plugin-main', 'plugins/some_plugin/dist/main.js', LoadMode::Footer),
+    ]);
+
+    expect(templateInstanceTestScriptTags($t)['footer'])
+        ->toBe(
+            '<script type="module" src="themes/bootstrap_darkroom/dist/gallery.js"></script>' . "\n" .
+            '<script type="module" src="plugins/some_plugin/dist/main.js"></script>',
+        );
+});
+
 test('a vendored classic script served from themes/ stays type="text/javascript"', function (): void {
     $t = TemplateTestFactory::build();
     $root = CurrentPathsTestFactory::get()->root;

@@ -1090,9 +1090,9 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      */
     /**
      * The `type` attribute for one script asset: `module` for anything
-     * Vite built, `text/javascript` for everything else.
+     * built as a real ES module, `text/javascript` for everything else.
      *
-     * The test is the `dist/` prefix, which is precisely
+     * The primary test is the `dist/` prefix, which is precisely
      * `PageAssets::resolvePath()`'s own signal: it returns
      * `'dist/' . $entry->file` when the Vite manifest resolved the asset
      * and the raw source path when it did not. So this asks "did Vite
@@ -1103,10 +1103,34 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * a classic script that assigns a bare global (no `export`) throws a
      * ReferenceError under module code, which is always strict, rather
      * than creating an implicit global.
+     *
+     * `themes/<id>/dist/` / `plugins/<id>/dist/` is the second, real
+     * signal: `tools/build-ported-extension-assets.mjs`'s own real
+     * output for a ported extension's `js/*.ts` entries (`format: "es"`,
+     * genuinely self-contained ES modules) -- never reaches
+     * `PageAssets::resolvePath()`'s Vite-manifest branch at all (no
+     * ported extension is ever a `rollupOptions.input` entry of this
+     * repo's own `vite.config.ts`), so the `dist/`-prefix test alone
+     * always missed it. Found live (P61 closing verification): 2 real,
+     * unrelated ported-extension scripts loaded on the same real page as
+     * plain classic scripts landed their own independently-minified
+     * top-level bindings directly in the shared global scope -- one
+     * genuinely, silently clobbered the other's identically-named
+     * binding, breaking a real click handler with a live `TypeError`.
+     * `type="module"` gives each entry its own private module scope by
+     * construction (top-level bindings never leak to `window` at all,
+     * unlike a classic script), the same real guarantee this method
+     * already provides for this repo's own Vite-built entries -- not a
+     * new mechanism, just this one already-correct test extended to
+     * cover a second, real class of self-contained ES module output.
      */
     private function scriptTypeAttr(ResolvedAsset $asset): string
     {
-        return str_starts_with($asset->path, 'dist/') ? 'module' : 'text/javascript';
+        if (str_starts_with($asset->path, 'dist/')) {
+            return 'module';
+        }
+
+        return preg_match('#^(?:themes|plugins)/[^/]+/dist/#', $asset->path) === 1 ? 'module' : 'text/javascript';
     }
 
     /**

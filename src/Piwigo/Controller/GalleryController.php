@@ -577,6 +577,7 @@ final readonly class GalleryController implements ControllerInterface
                     derivativeParams: $categoryCatsResult->derivativeParams,
                     rootUrl: $urlService->getRootUrl(),
                     iconDir: $template->themeConf('icon_dir'),
+                    pluginCategoryThumbnailOverlays: $template->categoryThumbnailOverlays(),
                 ));
                 $template->assignContext(new CategoryCatsHtmlPageContext($categoriesHtml));
             }

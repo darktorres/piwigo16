@@ -17,6 +17,12 @@
     >
       <div class="thumbnailCategory">
         <div class="illustration">
+          <span
+            n:foreach="$pluginCategoryThumbnailOverlays as $overlay"
+            n:attr="id: $overlay->id"
+            class="thumbnailOverlay"
+            data-category-id="{$cat->id}"
+          ><i class="{$overlay->icon}"></i></span>
           <a href="{$cat->url}">
             <img
               {if $cat->representative === null}

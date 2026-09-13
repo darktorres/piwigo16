@@ -9,6 +9,7 @@ use Piwigo\Asset\AssetContribution;
 use Piwigo\Asset\HasPageAssets;
 use Piwigo\Asset\LoadMode;
 use Piwigo\Category\Projection\CategoryThumbnail;
+use Piwigo\Contribution\ThumbnailOverlay;
 use Piwigo\Core\ExposesPageData;
 use Piwigo\Core\View;
 use Piwigo\Image\DerivativeParams;
@@ -22,12 +23,20 @@ use Piwigo\Template\Latte\Attribute\Template;
  * split as {@see ThumbnailsView}/`CategoryDefaultRenderer`. `$rootUrl`/
  * `$iconDir` are the ambient `$ROOT_URL`/`$themeconf['icon_dir']` the
  * template's own `error_icon` `exposeData` call reads.
+ *
+ * `$pluginCategoryThumbnailOverlays` is `$template->
+ * categoryThumbnailOverlays()` -- the `CategoryCatsRenderer`
+ * (L2aCoreDomain) may not call `Template` directly, so `GalleryController`
+ * (L3/L4) resolves it the same way it already resolves
+ * `ThumbnailsView::$pluginThumbnailOverlays` (gdThumb port, the first
+ * real caller of either mechanism).
  */
 #[Template('mainpage_categories.latte')]
 final readonly class CategoryCatsView implements View, HasPageAssets, ExposesPageData
 {
     /**
      * @param list<CategoryThumbnail> $categoryThumbnails
+     * @param list<ThumbnailOverlay> $pluginCategoryThumbnailOverlays
      */
     public function __construct(
         public int $maxRequests,
@@ -35,6 +44,7 @@ final readonly class CategoryCatsView implements View, HasPageAssets, ExposesPag
         public DerivativeParams $derivativeParams,
         public string $rootUrl,
         public string $iconDir,
+        public array $pluginCategoryThumbnailOverlays,
     ) {}
 
     /**

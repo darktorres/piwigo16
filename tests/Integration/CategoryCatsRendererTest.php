@@ -17,6 +17,7 @@ use Piwigo\Common\Enum\Section;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Contribution\ThumbnailOverlay;
 use Piwigo\Controller\Projection\CategoryCatsView;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\CurrentLogger;
@@ -299,6 +300,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             derivativeParams: $result->derivativeParams,
             rootUrl: '',
             iconDir: '',
+            pluginCategoryThumbnailOverlays: [],
         ));
 
         return (string) $html;
@@ -313,6 +315,34 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $html = $this->renderedCategoriesHtml($result);
         self::assertStringContainsString('Sample Album', $html);
         self::assertStringNotContainsString('Nested Sub Album', $html);
+    }
+
+    /**
+     * gdThumb port: `Template::addCategoryThumbnailOverlay()`/
+     * `categoryThumbnailOverlays()` had no real caller before this port
+     * -- confirms the new mount point in `mainpage_categories.latte`
+     * actually renders, mirroring the already-real image-grid
+     * equivalent (`ThumbnailsView::$pluginThumbnailOverlays`).
+     */
+    public function testRenderedCategoriesHtmlIncludesAPluginCategoryThumbnailOverlay(): void
+    {
+        $this->seedUser();
+
+        $result = $this->renderer->render(Section::Categories, null, 0);
+        self::assertNotNull($result);
+
+        $html = (string) new Renderer(CurrentTemplateTestFactory::get())->render(new CategoryCatsView(
+            maxRequests: $result->maxRequests,
+            categoryThumbnails: $result->categoryThumbnails,
+            derivativeParams: $result->derivativeParams,
+            rootUrl: '',
+            iconDir: '',
+            pluginCategoryThumbnailOverlays: [new ThumbnailOverlay('gdthumb-test-icon', 'gdthumb-test-overlay')],
+        ));
+
+        self::assertStringContainsString('id="gdthumb-test-overlay"', $html);
+        self::assertStringContainsString('class="thumbnailOverlay"', $html);
+        self::assertStringContainsString('<i class="gdthumb-test-icon">', $html);
     }
 
     public function testRenderRecentCatsExcludesACategoryWithZeroImages(): void

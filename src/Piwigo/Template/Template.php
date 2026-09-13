@@ -259,6 +259,15 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     private array $thumbnailOverlays = [];
 
     /**
+     * Category/album-grid counterpart to `$thumbnailOverlays` above --
+     * see `addCategoryThumbnailOverlay()`'s own docblock for why this
+     * exists as a second, separate property rather than one shared list.
+     *
+     * @var array<int, ThumbnailOverlay[]>
+     */
+    private array $categoryThumbnailOverlays = [];
+
+    /**
      * @var array<int, MenuItem[]>
      */
     private array $menuItems = [];
@@ -1545,6 +1554,26 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
+     * Category/album-grid counterpart to `addThumbnailOverlay()` above --
+     * that method only ever reaches `thumbnails.latte`
+     * (`ThumbnailsView::$pluginThumbnailOverlays`); `CategoryCatsView`
+     * (`mainpage_categories.latte`) had no equivalent mount point at all
+     * (confirmed by direct read: `GalleryController`'s own
+     * `CategoryCatsView` construction site passes no such field, unlike
+     * its neighboring `ThumbnailsView` construction 17 lines below it) --
+     * the same shape of image-grid/category-grid asymmetry
+     * `GetCategoryDerivativeParams` already closed once for this same
+     * port. Reuses the same `ThumbnailOverlay` VO, not a parallel type --
+     * the shape (icon/id/order) is identical, only the render target
+     * differs. Needed for gdThumb's own Overlay Ex caption mode's
+     * category-grid item-count badge (its first real caller).
+     */
+    public function addCategoryThumbnailOverlay(ThumbnailOverlay $overlay): void
+    {
+        $this->categoryThumbnailOverlays[$overlay->order][] = $overlay;
+    }
+
+    /**
      * Registers a typed navigational link to be appended to the
      * menubar's own "Menu" block -- P43's typed replacement for a
      * hand-written `set_prefilter('menubar', ...)` markup patch.
@@ -1723,6 +1752,17 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     public function thumbnailOverlays(): array
     {
         return self::flattenByOrder($this->thumbnailOverlays);
+    }
+
+    /**
+     * Ksort+flatten by `$order`, same shape as `thumbnailOverlays()`
+     * above -- the `CategoryCatsView`-side counterpart.
+     *
+     * @return list<ThumbnailOverlay>
+     */
+    public function categoryThumbnailOverlays(): array
+    {
+        return self::flattenByOrder($this->categoryThumbnailOverlays);
     }
 
     /**

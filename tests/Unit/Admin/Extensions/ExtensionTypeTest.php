@@ -48,7 +48,7 @@ test('scanDirectory returns each type\'s own filesystem root', function (): void
     // Piwigo\Admin\PluginLoader::pluginsPath() is the canonical value for
     // the Plugin type's scan directory.
     expect(ExtensionType::Plugin->scanDirectory(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get()))->toBe(PluginLoader::pluginsPath(CurrentPathsTestFactory::get()))
-        ->and(ExtensionType::Theme->scanDirectory(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get()))->toBe(CurrentConfigTestFactory::get()->themesPath)
+        ->and(ExtensionType::Theme->scanDirectory(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get()))->toBe(CurrentPathsTestFactory::get()->root . CurrentConfigTestFactory::get()->themesPath)
         ->and(ExtensionType::Language->scanDirectory(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get()))->toBe(CurrentPathsTestFactory::get()->root . 'language/');
 });
 

@@ -376,7 +376,7 @@ test('url() computes the derivative url via a real build() call, prefixed by the
         $url = DerivativeImage::url(new DerivativeParams(SizingParams::classic(80, 60)), $src);
 
         expect($url)
-            ->toBe('/gallery/i.php?/gallery/photo-cu_80x60_a.jpg');
+            ->toBe('/gallery/i.php?/gallery/photo-cu_s80x60.jpg');
     });
 });
 
@@ -506,18 +506,16 @@ test('build() strips a leading "./" from the source location and appends the cus
 
     $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(120, 90)), $src, CurrentConfigTestFactory::get());
 
-    // SizingParams::classic()'s own int max_crop=0 default never
-    // satisfies addUrlTokens()'s strict `=== 0.0` fast-path check (see
-    // SizingParamsTest.php's own documented finding), so the token is the
-    // general 2-token form ('120x90', fractionToChar(0)='a'), not the
-    // 's120x90' shorthand.
+    // SizingParams::classic()'s own int max_crop=0 default takes
+    // addUrlTokens()'s fast single-token 's120x90' path (see
+    // SizingParamsTest.php's own documented finding).
     expect($derivative->getPath())
-        ->toBe(CurrentPathsTestFactory::get()->root . '_data/i/gallery/photo-cu_120x90_a.jpg');
+        ->toBe(CurrentPathsTestFactory::get()->root . '_data/i/gallery/photo-cu_s120x90.jpg');
     // No real cached file exists on disk at that path -- build()'s own
     // filemtime() check correctly falls back to the dynamic i.php?
     // URL style rather than a direct cached-file URL.
     expect($derivative->getUrl())
-        ->toBe('i.php?/gallery/photo-cu_120x90_a.jpg');
+        ->toBe('i.php?/gallery/photo-cu_s120x90.jpg');
 });
 
 test('build() strips a leading "../" from the source location', function (): void {
@@ -532,11 +530,11 @@ test('build() strips a leading "../" from the source location', function (): voi
     $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(64, 64)), $src, CurrentConfigTestFactory::get());
 
     expect($derivative->getPath())
-        ->toBe(CurrentPathsTestFactory::get()->root . '_data/i/gallery/photo-cu_64_a.jpg');
+        ->toBe(CurrentPathsTestFactory::get()->root . '_data/i/gallery/photo-cu_s64.jpg');
     // Same reasoning as the leading-"./" test above: no cached file on
     // disk means the dynamic i.php? URL style, not a direct cached URL.
     expect($derivative->getUrl())
-        ->toBe('i.php?/gallery/photo-cu_64_a.jpg');
+        ->toBe('i.php?/gallery/photo-cu_s64.jpg');
 });
 
 test('build() searches the whole defined-type list without an out-of-bounds read when the current type is not found in it', function (): void {
@@ -672,7 +670,7 @@ test('build() does not strip a leading "../" look-alike that is not actually fol
     $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(64, 64)), $src, CurrentConfigTestFactory::get());
 
     expect($derivative->getPath())
-        ->toBe(CurrentPathsTestFactory::get()->root . '_data/i/..2026/gallery/photo-cu_64_a.jpg');
+        ->toBe(CurrentPathsTestFactory::get()->root . '_data/i/..2026/gallery/photo-cu_s64.jpg');
 });
 
 /**
@@ -699,14 +697,14 @@ test('build() treats a cached file as fresh when its mtime exactly equals last_m
     // it as stale.
     $root = sys_get_temp_dir() . '/piwigo-derivative-image-test-' . bin2hex(random_bytes(8));
     mkdir($root . '/_data/i/gallery', 0o777, true);
-    file_put_contents($root . '/_data/i/gallery/photo-cu_80x60_a.jpg', 'cached-bytes');
+    file_put_contents($root . '/_data/i/gallery/photo-cu_s80x60.jpg', 'cached-bytes');
     Kernel::boot(Paths::fromRoot($root));
     $currentConfig = CurrentConfigTestFactory::get();
     $currentConfig->derivativeUrlStyle = 0;
 
     try {
         $params = new DerivativeParams(SizingParams::classic(80, 60));
-        $mtime = filemtime($root . '/_data/i/gallery/photo-cu_80x60_a.jpg');
+        $mtime = filemtime($root . '/_data/i/gallery/photo-cu_s80x60.jpg');
         if ($mtime === false) {
             throw new RuntimeException('filemtime() unexpectedly failed on a file this test just wrote');
         }
@@ -723,7 +721,7 @@ test('build() treats a cached file as fresh when its mtime exactly equals last_m
         expect($derivative->isCached())
             ->toBeTrue();
         expect($derivative->getUrl())
-            ->toBe('_data/i/gallery/photo-cu_80x60_a.jpg');
+            ->toBe('_data/i/gallery/photo-cu_s80x60.jpg');
     } finally {
         $currentConfig->derivativeUrlStyle = 2;
         derivativeCacheServiceRrmdirDerivativeImageTest($root);
@@ -890,7 +888,7 @@ test('build() routes through i.php and marks itself not cached when derivative_u
         expect($derivative->isCached())
             ->toBeFalse();
         expect($derivative->getUrl())
-            ->toBe('i.php?/gallery/photo-cu_80x60_a.jpg');
+            ->toBe('i.php?/gallery/photo-cu_s80x60.jpg');
     } finally {
         $currentConfig->derivativeUrlStyle = 2;
         derivativeCacheServiceRrmdirDerivativeImageTest($root);
@@ -906,7 +904,7 @@ test('build() links directly to a static file when derivative_url_style is auto 
 
     try {
         mkdir($root . '/_data/i/gallery', 0o777, true);
-        file_put_contents($root . '/_data/i/gallery/photo-cu_80x60_a.jpg', 'cached-bytes');
+        file_put_contents($root . '/_data/i/gallery/photo-cu_s80x60.jpg', 'cached-bytes');
 
         $src = new SrcImage(SrcImageInfo::fromRow([
             'id' => 1,
@@ -919,7 +917,7 @@ test('build() links directly to a static file when derivative_url_style is auto 
         expect($derivative->isCached())
             ->toBeTrue();
         expect($derivative->getUrl())
-            ->toBe('_data/i/gallery/photo-cu_80x60_a.jpg');
+            ->toBe('_data/i/gallery/photo-cu_s80x60.jpg');
     } finally {
         $currentConfig->derivativeUrlStyle = 2;
         derivativeCacheServiceRrmdirDerivativeImageTest($root);
@@ -945,7 +943,7 @@ test('getUrl() prefixes the computed rel_url with the real root url', function (
         $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, CurrentConfigTestFactory::get());
 
         expect($derivative->getUrl())
-            ->toBe('/gallery/i.php?/gallery/photo-cu_80x60_a.jpg');
+            ->toBe('/gallery/i.php?/gallery/photo-cu_s80x60.jpg');
     });
 });
 

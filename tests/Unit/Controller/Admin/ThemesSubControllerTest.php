@@ -68,7 +68,11 @@ test('handle dispatches ?tab=standard_pages to the real standard-pages renderer'
 
         $emptyThemesDir = $root . 'empty-themes/';
         mkdir($emptyThemesDir, 0o777, true);
-        CurrentConfigTestFactory::get()->themesDir = rtrim($emptyThemesDir, '/');
+        // themesDir is root-relative (composed as `$paths->root . themesPath`
+        // by every real consumer) -- Paths::fromRoot($root) above makes
+        // $paths->root === $root, so the bare relative 'empty-themes'
+        // resolves back to $emptyThemesDir.
+        CurrentConfigTestFactory::get()->themesDir = 'empty-themes';
 
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(1),

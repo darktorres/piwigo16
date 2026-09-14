@@ -378,7 +378,11 @@ beforeEach(function () use (&$themesInstalledFixtureRoot): void {
     $themesInstalledFixtureRoot = sys_get_temp_dir() . '/piwigo-themes-installed-page-renderer-test-' . bin2hex(random_bytes(4)) . '/';
     mkdir($themesInstalledFixtureRoot . 'themes', 0o777, true);
     Kernel::boot(Paths::fromRoot($themesInstalledFixtureRoot));
-    CurrentConfigTestFactory::get()->themesDir = rtrim($themesInstalledFixtureRoot, '/') . '/themes';
+    // themesDir is root-relative (composed as `$paths->root . themesPath`
+    // by every real consumer) -- Paths::fromRoot() above makes $paths->root
+    // === $themesInstalledFixtureRoot, so the bare relative 'themes'
+    // resolves back to the exact directory created above.
+    CurrentConfigTestFactory::get()->themesDir = 'themes';
 });
 
 afterEach(function () use (&$themesInstalledFixtureRoot): void {

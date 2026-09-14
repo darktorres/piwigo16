@@ -267,7 +267,11 @@ beforeEach(function () use (&$fixtureRoot): void {
     mkdir($fixtureRoot . 'plugins', 0o777, true);
     mkdir($fixtureRoot . 'themes', 0o777, true);
     mkdir($fixtureRoot . 'language', 0o777, true);
-    CurrentConfigTestFactory::get()->themesDir = rtrim($fixtureRoot, '/') . '/themes';
+    // themesDir is root-relative (composed as `$paths->root . themesPath`
+    // by every real consumer) -- Paths::fromRoot($fixtureRoot) above makes
+    // $paths->root === $fixtureRoot, so the bare relative 'themes' resolves
+    // back to the exact $fixtureRoot . 'themes' directory created above.
+    CurrentConfigTestFactory::get()->themesDir = 'themes';
 
     extensionUpdateCachePool()
         ->deleteItem('extensions_need_update');

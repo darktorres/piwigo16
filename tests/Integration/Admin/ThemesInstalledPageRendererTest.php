@@ -142,9 +142,16 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         }
         $this->renderer = new ThemesInstalledPageRenderer(LangTestFactory::get(), $accessControl, new RedirectService(LangTestFactory::get(), $userService, new EventDispatcher(), LayoutStateTestFactory::get(), new Renderer(CurrentTemplateTestFactory::get())), $urlService, $this->configService, $currentLogger, new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplateTestFactory::get(), $activityService, $userService, HtmlServiceTestFactory::build(), CurrentConfigTestFactory::get(), new CsrfService(CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), CurrentPathsTestFactory::get(), $pluginRegistry, $themeRegistry, $entityManager, new Renderer(CurrentTemplateTestFactory::get()));
 
-        $this->fixtureRoot = sys_get_temp_dir() . '/piwigo-themes-installed-integration-' . bin2hex(random_bytes(6)) . '/';
+        // themesDir is root-relative (composed as `$paths->root . themesPath`
+        // by every real consumer), so the fixture has to live under the
+        // real container Paths::$root (via CurrentPathsTestFactory above,
+        // never rebuilt in this test) rather than sys_get_temp_dir() --
+        // same real, writable `_data/tmp/` scratch convention as
+        // MailServiceTest.php/PictureControllerTest.php.
+        $relativeThemesDir = '_data/tmp/piwigo-themes-installed-integration-' . bin2hex(random_bytes(6));
+        $this->fixtureRoot = CurrentPathsTestFactory::get()->root . $relativeThemesDir . '/';
         mkdir($this->fixtureRoot . 'themes', 0o777, true);
-        $currentConfig->themesDir = rtrim($this->fixtureRoot, '/') . '/themes';
+        $currentConfig->themesDir = $relativeThemesDir . '/themes';
 
         $_GET = [];
     }

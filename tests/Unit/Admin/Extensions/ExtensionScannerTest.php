@@ -119,12 +119,12 @@ test('scan skips a language directory with no common.po', function (): void {
 // the webmaster-gated hasSettings flag, and every optional theme
 // manifest field). Unlike the two tests above, these don't touch the
 // real git-tracked plugins/themes/language trees at all -- Paths::fromRoot()
-// (unlike ExtensionType::scanDirectory()'s own hardcoded composition)
-// genuinely accepts *any* root directory, so a disposable temp root is a
-// real, safe injection point here (CurrentConfig::setThemesDir() likewise
-// accepts an absolute override -- same technique
-// ExtensionUpdateCheckerTest/ThemesInstalledPageRendererTest/
-// InstallServiceTest already rely on). scanTheme()'s only real DB
+// genuinely accepts *any* root directory, so a disposable temp root
+// booted as the real Kernel root is a real, safe injection point here
+// (themesDir stays root-relative and composes against that same fixture
+// root -- see extensionScannerFixtureRoot()'s own comment; ExtensionType::
+// scanDirectory()'s Theme case composes root the same way Plugin's
+// PluginLoader::pluginsPath() always has). scanTheme()'s only real DB
 // dependency (PreferencesService, when a theme has no screenshot.png)
 // is deliberately sidestepped below by always providing a screenshot.png
 // fixture file, keeping this file's own "Unit-testable without a full
@@ -145,7 +145,11 @@ function extensionScannerFixtureRoot(): string
     // takes.
     Kernel::reset();
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->themesDir = rtrim($root, '/') . '/themes';
+    // themesDir is root-relative (composed as `$paths->root . themesPath`
+    // by every real consumer) -- Paths::fromRoot($root) just above makes
+    // $paths->root === $root, so the bare relative 'themes' resolves back
+    // to the exact $root . 'themes' directory created above.
+    CurrentConfigTestFactory::get()->themesDir = 'themes';
 
     return $root;
 }

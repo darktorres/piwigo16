@@ -188,24 +188,46 @@ final class ThemeRegistryTest extends IntegrationTestCase
     private function buildRegistry(string $themesDir): ThemeRegistry
     {
         $currentConfig = $this->containerGet(CurrentConfig::class);
-        // themesPath is a get-only property hook derived from themesDir
-        // ($this->themesDir . '/') -- no trailing slash here, themesPath
-        // itself appends it.
-        $currentConfig->themesDir = rtrim($themesDir, '/');
+        $realRoot = dirname(__DIR__, 2) . '/';
+        $themesDir = rtrim($themesDir, '/') . '/';
+        // themesDir is root-relative by contract (CurrentConfig::$themesDir's
+        // own docblock: "compose with a real, constructor-injected
+        // Paths::$root for an absolute filesystem path") -- every real
+        // consumer now does `$paths->root . $currentConfig->themesPath`.
+        // Paths::$root has to stay the real project root here (not the
+        // fixture dir's own parent): loadSchema() below separately reads
+        // `{root}docs/schemas/theme.schema.json`, a real repo asset, off
+        // this same Paths instance. makeTempDir() builds its fixture under
+        // that real root's own `_data/tmp/` for exactly this reason (see
+        // its own docblock), so the fixture path always starts with
+        // $realRoot and can be turned back into a themesDir relative to it.
+        if (! str_starts_with($themesDir, $realRoot)) {
+            throw new LogicException("Fixture themes dir '{$themesDir}' is not under the real project root '{$realRoot}' -- makeTempDir() must build under it for this composition to work.");
+        }
+        $currentConfig->themesDir = substr($themesDir, strlen($realRoot));
 
         return new ThemeRegistry(
             $this->repository,
             $this->eventDispatcher,
             $this->contextFactory,
             $currentConfig,
-            Paths::fromRoot(dirname(__DIR__, 2)),
+            Paths::fromRoot($realRoot),
             $this->containerGet(Lang::class),
         );
     }
 
+    /**
+     * Builds under this file's own real project root's `_data/tmp/` (the
+     * project's established real, writable scratch convention -- see
+     * MailServiceTest.php/PictureControllerTest.php's own `_data/tmp/`
+     * usage), not `sys_get_temp_dir()`: buildRegistry() needs Paths::$root
+     * to stay the real project root (for its own loadSchema() reads), so
+     * every fixture built here has to live under that same root for
+     * themesDir's root-relative composition to resolve to it.
+     */
     private function makeTempDir(): string
     {
-        $dir = sys_get_temp_dir() . '/piwigo_theme_registry_test_' . uniqid('', true);
+        $dir = dirname(__DIR__, 2) . '/_data/tmp/piwigo_theme_registry_test_' . uniqid('', true);
         mkdir($dir, 0o777, true);
         $this->tempDirs[] = $dir;
 
@@ -399,12 +421,16 @@ final class ThemeRegistryTest extends IntegrationTestCase
      * `themesPath` that every other method here -- `getManifest()`/
      * `load()` -- already resolves a theme's directory through). This
      * test's own fixture theme lives under a temp dir, exactly like every
-     * other test in this file (`buildRegistry()`'s own `Paths::fromRoot()`
-     * points at the real project root, deliberately different from the
-     * fixture's `themesDir`) -- the old code would have silently found no
-     * `theme.po` at all (`Lang::load()` returns `false` on a miss, no
-     * error), and this assertion would still read the untranslated
-     * English fallback either way, hiding the bug completely.
+     * other test in this file (`buildRegistry()` keeps `Paths::$root` at
+     * the real project root and points the *configurable* `themesDir` at
+     * the fixture's own root-relative `_data/tmp/...` path instead, so
+     * `$paths->themes` -- the fixed `{root}themes/` field -- resolves to
+     * a real but different directory, this repo's own live themes/ tree,
+     * distinct from the fixture's own composed `$paths->root .
+     * $currentConfig->themesPath`) -- the old code would have silently
+     * found no `theme.po` at all (`Lang::load()` returns `false` on a
+     * miss, no error), and this assertion would still read the
+     * untranslated English fallback either way, hiding the bug completely.
      */
     public function testBootCurrentLoadsThemeLangFromTheConfiguredThemesDirNotPathsThemes(): void
     {

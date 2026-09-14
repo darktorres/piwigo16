@@ -426,7 +426,7 @@ final readonly class ExtensionLifecycle
                     // with no admin/maintain.inc.php.
                 }
 
-                FilesystemHelper::deltree($this->currentConfig->themesPath . $id, $this->currentConfig->themesPath . 'trash');
+                FilesystemHelper::deltree($this->paths->root . $this->currentConfig->themesPath . $id, $this->paths->root . $this->currentConfig->themesPath . 'trash');
                 break;
 
             case 'set_default':

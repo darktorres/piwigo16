@@ -409,7 +409,17 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
 
     public function testStandardPagesUsedByAccumulatesOnlyTheRealThemeThatDeclaresTheFlag(): void
     {
-        $themesFixtureRoot = sys_get_temp_dir() . '/piwigo-std-pages-themes-' . bin2hex(random_bytes(6)) . '/';
+        // themesDir is root-relative (composed as `$paths->root . themesPath`
+        // by every real consumer), so the fixture has to live under the
+        // real container Paths::$root rather than sys_get_temp_dir() --
+        // same real, writable `_data/tmp/` scratch convention as
+        // MailServiceTest.php/PictureControllerTest.php.
+        $paths = Kernel::container()->get(Paths::class);
+        if (! $paths instanceof Paths) {
+            throw new LogicException('Container returned an unexpected type for ' . Paths::class);
+        }
+        $relativeThemesDir = '_data/tmp/piwigo-std-pages-themes-' . bin2hex(random_bytes(6));
+        $themesFixtureRoot = $paths->root . $relativeThemesDir . '/';
         mkdir($themesFixtureRoot . 'themes', 0o777, true);
         $this->fixtureRootsToClean[] = $themesFixtureRoot;
 
@@ -423,7 +433,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $currentConfig->themesDir = rtrim($themesFixtureRoot, '/') . '/themes';
+        $currentConfig->themesDir = $relativeThemesDir . '/themes';
         // themes_standard_pages.latte's own "still used by these themes"
         // warning box only renders when $isStandardPagesUsed AND
         // !$useStandardPages (CurrentConfig::$useStandardPages defaults to

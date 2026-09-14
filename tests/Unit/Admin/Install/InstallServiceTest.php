@@ -61,12 +61,42 @@ function installServiceTestConfigService(): ConfigService
     );
 }
 
+/**
+ * Builds under this file's own real Kernel root's `_data/tmp/` (the
+ * project's established real, writable scratch convention -- see
+ * MailServiceTest.php/PictureControllerTest.php's own `_data/tmp/`
+ * usage), not `sys_get_temp_dir()`: `themesDir` is root-relative by
+ * contract (see installServiceTestRelativeThemesDir()'s own docblock),
+ * so the fixture has to live under the real root for that composition
+ * to resolve to it at all.
+ */
 function installServiceTestFixtureRoot(string $label): string
 {
-    $root = sys_get_temp_dir() . '/piwigo-install-service-test-' . $label . '-' . bin2hex(random_bytes(6)) . '/';
+    $root = dirname(__DIR__, 4) . '/_data/tmp/piwigo-install-service-test-' . $label . '-' . bin2hex(random_bytes(6)) . '/';
     mkdir($root, 0o777, true);
 
     return $root;
+}
+
+/**
+ * CurrentConfig::$themesDir is root-relative by contract (its own
+ * docblock: "compose with a real, constructor-injected Paths::$root for
+ * an absolute filesystem path") -- every real consumer now does
+ * `$paths->root . $currentConfig->themesPath`. installServiceTestFixtureRoot()
+ * returns an absolute sys_get_temp_dir()-based path for direct
+ * mkdir()/file_put_contents() calls to use as-is; this strips the real
+ * Kernel root (`dirname(__DIR__, 4)`, see installServiceTestBootKernel())
+ * back off so the same directory can also be assigned to `themesDir`
+ * without the composed path doubling up.
+ */
+function installServiceTestRelativeThemesDir(string $absoluteThemesDir): string
+{
+    $root = dirname(__DIR__, 4) . '/';
+    if (! str_starts_with($absoluteThemesDir, $root)) {
+        throw new LogicException("Fixture themes dir '{$absoluteThemesDir}' is not under the real Kernel root '{$root}' -- installServiceTestFixtureRoot() must build under it for this composition to work.");
+    }
+
+    return substr($absoluteThemesDir, strlen($root));
 }
 
 /**
@@ -269,7 +299,7 @@ test('activateCoreThemes() does not activate the non-selectable default placehol
     // needs a real logged-in CurrentUser this test never sets -- same
     // technique ExtensionScannerTest.php already established.
     file_put_contents($themesDir . $themeId . '/screenshot.png', 'not a real png -- only its existence is checked');
-    CurrentConfigTestFactory::get()->themesDir = $themesDir;
+    CurrentConfigTestFactory::get()->themesDir = installServiceTestRelativeThemesDir($themesDir);
 
     // Owns the `themes` row space for $themeId rather than assuming the
     // shared DB's ambient state -- performThemeAction()'s own activate
@@ -295,7 +325,7 @@ test('activateCoreThemes() does not activate the non-selectable default placehol
 test('activateCoreThemes() activates nothing when no default template theme directory is found on disk', function (): void {
     installServiceTestBootKernel();
     $emptyThemesDir = installServiceTestFixtureRoot('themes-empty');
-    CurrentConfigTestFactory::get()->themesDir = $emptyThemesDir;
+    CurrentConfigTestFactory::get()->themesDir = installServiceTestRelativeThemesDir($emptyThemesDir);
 
     // See the sibling test above: owns the `themes` row space rather
     // than assuming the shared DB's ambient state.

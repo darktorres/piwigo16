@@ -19,6 +19,7 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Lang;
 use Piwigo\Core\LayoutState;
+use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ControllerInterface;
@@ -67,6 +68,7 @@ final readonly class AboutController implements ControllerInterface
         private CurrentTemplate $currentTemplate,
         private HtmlService $htmlService,
         private CurrentConfig $currentConfig,
+        private Paths $paths,
         private Translator $translator,
         private CurrentLogger $currentLogger,
         private PermissionService $permissionService,
@@ -98,7 +100,7 @@ final readonly class AboutController implements ControllerInterface
         $user_theme = $this->currentUser->get()
             ->theme->value;
 
-        $theme_about = $this->lang->load('about.html', $this->currentConfig->themesPath . $user_theme . '/', [
+        $theme_about = $this->lang->load('about.html', $this->paths->root . $this->currentConfig->themesPath . $user_theme . '/', [
             'return' => true,
         ]);
 

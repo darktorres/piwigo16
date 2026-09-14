@@ -69,7 +69,7 @@ enum ExtensionType: string
     {
         return match ($this) {
             self::Plugin => PluginLoader::pluginsPath($paths),
-            self::Theme => $currentConfig->themesPath,
+            self::Theme => $paths->root . $currentConfig->themesPath,
             self::Language => $paths->root . 'language/',
         };
     }

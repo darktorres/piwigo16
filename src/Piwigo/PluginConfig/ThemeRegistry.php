@@ -300,7 +300,7 @@ final class ThemeRegistry
             // to themesDir at all. Silently found nothing whenever the two
             // diverge (any real themesDir override), with zero error --
             // Lang::load() just returns false on a miss.
-            $this->lang->load('theme.lang', $this->currentConfig->themesPath . $id . '/');
+            $this->lang->load('theme.lang', $this->paths->root . $this->currentConfig->themesPath . $id . '/');
             $instance->boot($this->contextFactory->build(ThemeId::from($id)));
         }
     }
@@ -445,7 +445,7 @@ final class ThemeRegistry
         if ($manifest->hasSettings !== false && ! $instance instanceof SettingsPageInterface) {
             throw new ThemeValidationException(
                 $manifest->id,
-                rtrim($this->currentConfig->themesPath, '/') . "/{$manifest->id}/theme.json",
+                rtrim($this->paths->root . $this->currentConfig->themesPath, '/') . "/{$manifest->id}/theme.json",
                 "Theme '{$manifest->id}' declares hasSettings but its main class does not implement SettingsPageInterface.",
             );
         }
@@ -458,7 +458,7 @@ final class ThemeRegistry
         if ($manifest === null) {
             throw new ThemeValidationException(
                 $themeId,
-                rtrim($this->currentConfig->themesPath, '/') . "/{$themeId}/theme.json",
+                rtrim($this->paths->root . $this->currentConfig->themesPath, '/') . "/{$themeId}/theme.json",
                 "Theme '{$themeId}' has no validated manifest.",
             );
         }
@@ -472,7 +472,7 @@ final class ThemeRegistry
         if (! class_exists($class)) {
             throw new ThemeValidationException(
                 $manifest->id,
-                rtrim($this->currentConfig->themesPath, '/') . "/{$manifest->id}/theme.json",
+                rtrim($this->paths->root . $this->currentConfig->themesPath, '/') . "/{$manifest->id}/theme.json",
                 "Theme main class '{$class}' does not exist (autoload missing).",
             );
         }
@@ -481,7 +481,7 @@ final class ThemeRegistry
         if (! $instance instanceof ExtensionInterface) {
             throw new ThemeValidationException(
                 $manifest->id,
-                rtrim($this->currentConfig->themesPath, '/') . "/{$manifest->id}/theme.json",
+                rtrim($this->paths->root . $this->currentConfig->themesPath, '/') . "/{$manifest->id}/theme.json",
                 "Theme main class '{$class}' must implement ExtensionInterface.",
             );
         }
@@ -497,7 +497,7 @@ final class ThemeRegistry
 
         $loader = new ClassLoader();
         foreach ($this->manifests as $id => $manifest) {
-            $baseDir = rtrim($this->currentConfig->themesPath, '/') . '/' . $id . '/';
+            $baseDir = rtrim($this->paths->root . $this->currentConfig->themesPath, '/') . '/' . $id . '/';
             foreach ($manifest->autoloadPsr4 as $prefix => $relativeDir) {
                 $loader->addPsr4($prefix, $baseDir . ltrim($relativeDir, '/'));
             }
@@ -583,7 +583,7 @@ final class ThemeRegistry
      */
     private function scanThemeDirs(): iterable
     {
-        $themesDir = rtrim($this->currentConfig->themesPath, '/');
+        $themesDir = rtrim($this->paths->root . $this->currentConfig->themesPath, '/');
         if (! is_dir($themesDir)) {
             return;
         }

@@ -141,10 +141,11 @@ namespace Piwigo\Tests\Integration {
             $currentConfig->enableExtensionsInstall = true;
             $currentConfig->phpExtensionInUrls = false;
             // ThemeCatalog::checkThemeInstalled() (called for real here)
-            // reads CurrentConfig::themesDir() -- provide the production
-            // value so the real filesystem check runs against the real
-            // themes/ dir.
-            $currentConfig->themesDir = CurrentPathsTestFactory::get()->root . 'themes';
+            // reads CurrentConfig::themesDir() -- provide the real,
+            // root-relative production default ('themes/', composed by
+            // every real consumer as `$paths->root . themesPath`) so the
+            // real filesystem check runs against the real themes/ dir.
+            $currentConfig->themesDir = 'themes';
             CurrentUserTestFactory::get()->set(User::fromUserArray([
                 'id' => 1,
             ]));
@@ -1414,34 +1415,21 @@ namespace Piwigo\Tests\Integration {
 
         public function testThemeDeactivateOfTheRealDefaultThemeReassignsAReplacementDefault(): void
         {
-            // performThemeAction()'s own `$id === getDefaultTheme()` gate
-            // (guarding the pickReplacementDefaultTheme()/setDefaultTheme()
-            // call, inside the 'deactivate' case) is unreachable through the
-            // public performAction() API under this class's own setUp():
-            // ThemeCatalog::checkThemeInstalled() composes
-            // `CurrentPathsTestFactory::get()->root . CurrentConfig::themesDir()`, but
-            // setUp() sets themesDir() to an ALREADY-absolute path (`root .
-            // 'themes'`) for a different, unrelated reason (buildThemeMaintain()/
-            // ExtensionScanner need the absolute form) -- composing root
-            // with an already-absolute themesDir() double-prefixes the
-            // path, so checkThemeInstalled() returns false
-            // for every theme id under that setup, and
-            // UserService::getDefaultTheme() always falls through to its
-            // hard 'default' fallback, which can never match a real
-            // performAction()-installed theme id (see the docblock further
-            // below, still true for the pickReplacementDefaultTheme()/
-            // setDefaultTheme() Reflection tests that keep relying on it).
-            //
-            // Overriding themesDir() back to the production-shaped relative
-            // default here makes checkThemeInstalled() compose a real,
-            // correct, single-prefixed path instead, so getDefaultTheme()
-            // can genuinely resolve to a real installed theme id --
-            // reaching the actual call site instead of only its callees.
-            // buildThemeMaintain() (called later in this same 'deactivate'
-            // flow) tolerates the relative value fine either way: a failed
-            // file_exists() there just falls back to the ThemeMaintain
-            // base no-op, a real, already-exercised path elsewhere in
-            // this suite.
+            // Exercises performThemeAction()'s own `$id === getDefaultTheme()`
+            // gate (guarding the pickReplacementDefaultTheme()/
+            // setDefaultTheme() call, inside the 'deactivate' case) through
+            // the public performAction() API end to end: ThemeCatalog::
+            // checkThemeInstalled() composes `$paths->root . themesDir()`,
+            // and setUp() already sets themesDir() to the real,
+            // root-relative production default ('themes'), so
+            // getDefaultTheme() genuinely resolves to a real
+            // performAction()-installed theme id here -- reaching the
+            // actual call site, not just its callees (see the docblock
+            // further below for the Reflection tests that exercise
+            // pickReplacementDefaultTheme()/setDefaultTheme() directly
+            // instead). This explicit re-assignment is redundant with
+            // setUp()'s own default; kept for this test's own readability
+            // rather than relying on that not changing underneath it.
             $currentConfig = CurrentConfigTestFactory::get();
             $currentConfig->themesDir = 'themes';
 

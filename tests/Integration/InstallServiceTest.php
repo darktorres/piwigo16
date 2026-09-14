@@ -291,7 +291,13 @@ final class InstallServiceTest extends IntegrationTestCase
         $this->bootKernelAndConfigService();
 
         $themeId = AppInfo::DEFAULT_TEMPLATE;
-        $themesDir = sys_get_temp_dir() . '/piwigo-install-service-themes-' . bin2hex(random_bytes(6)) . '/';
+        // themesDir is root-relative (composed as `$paths->root . themesPath`
+        // by every real consumer), so the fixture has to live under the
+        // real container Paths::$root rather than sys_get_temp_dir() --
+        // same real, writable `_data/tmp/` scratch convention as
+        // MailServiceTest.php/PictureControllerTest.php.
+        $relativeThemesDir = '_data/tmp/piwigo-install-service-themes-' . bin2hex(random_bytes(6));
+        $themesDir = CurrentPathsTestFactory::get()->root . $relativeThemesDir . '/';
         mkdir($themesDir . $themeId, 0777, true);
         file_put_contents(
             $themesDir . $themeId . '/theme.json',
@@ -303,7 +309,7 @@ final class InstallServiceTest extends IntegrationTestCase
             ], JSON_THROW_ON_ERROR)
         );
         $this->currentConfig()
-            ->themesDir = $themesDir;
+            ->themesDir = $relativeThemesDir;
 
         try {
             $this->conn->executeStatement('DELETE FROM themes');
@@ -324,13 +330,19 @@ final class InstallServiceTest extends IntegrationTestCase
     {
         $this->bootKernelAndConfigService();
 
-        $emptyThemesDir = sys_get_temp_dir() . '/piwigo-install-service-empty-themes-' . bin2hex(random_bytes(6)) . '/';
+        // themesDir is root-relative (composed as `$paths->root . themesPath`
+        // by every real consumer), so the fixture has to live under the
+        // real container Paths::$root rather than sys_get_temp_dir() --
+        // same real, writable `_data/tmp/` scratch convention as
+        // MailServiceTest.php/PictureControllerTest.php.
+        $relativeEmptyThemesDir = '_data/tmp/piwigo-install-service-empty-themes-' . bin2hex(random_bytes(6));
+        $emptyThemesDir = CurrentPathsTestFactory::get()->root . $relativeEmptyThemesDir . '/';
         mkdir($emptyThemesDir, 0777, true);
         // An explicitly empty scan directory proves the "nothing found on
         // disk" branch directly, regardless of what this repo's own real
         // themes/ directory currently contains.
         $this->currentConfig()
-            ->themesDir = $emptyThemesDir;
+            ->themesDir = $relativeEmptyThemesDir;
 
         try {
             $this->conn->executeStatement('DELETE FROM themes');

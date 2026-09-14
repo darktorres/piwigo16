@@ -108,7 +108,11 @@ test('handle() fatal-errors when the requested theme is not among the scanned th
     mkdir($emptyThemesDir, 0o777, true);
     $currentConfig = CurrentConfigTestFactory::get();
     $originalThemesDir = $currentConfig->themesDir;
-    $currentConfig->themesDir = rtrim($emptyThemesDir, '/');
+    // themesDir is root-relative (composed as `$paths->root . themesPath`
+    // by every real consumer) -- Paths::fromRoot($root) below makes
+    // $paths->root === $root, so the bare relative 'empty-themes'
+    // resolves back to $emptyThemesDir.
+    $currentConfig->themesDir = 'empty-themes';
 
     try {
         $subController = new ThemeSubController(

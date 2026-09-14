@@ -1049,6 +1049,22 @@ test('thumbnailOverlays() is empty when no overlay was ever registered', functio
         ->toBe([]);
 });
 
+test('categoryThumbnailOverlays() returns registered overlays sorted by order', function (): void {
+    $t = TemplateTestFactory::build();
+    $t->addCategoryThumbnailOverlay(new ThumbnailOverlay(icon: 'icon-b', order: 50));
+    $t->addCategoryThumbnailOverlay(new ThumbnailOverlay(icon: 'icon-a', order: 10));
+
+    expect(array_map(static fn (ThumbnailOverlay $o): string => $o->icon, $t->categoryThumbnailOverlays()))
+        ->toBe(['icon-a', 'icon-b']);
+});
+
+test('categoryThumbnailOverlays() is empty when no overlay was ever registered', function (): void {
+    $t = TemplateTestFactory::build();
+
+    expect($t->categoryThumbnailOverlays())
+        ->toBe([]);
+});
+
 test('menuItems() returns registered items sorted by order', function (): void {
     $t = TemplateTestFactory::build();
     $t->addMenuItem(new MenuItem(label: 'B', url: '/b', order: 50));

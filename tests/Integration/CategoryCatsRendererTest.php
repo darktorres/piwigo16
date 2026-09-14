@@ -336,6 +336,28 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
     }
 
     /**
+     * gdThumb port: `CategoryThumbnail::$countImages` had no real reader
+     * anywhere before this test -- confirms it carries the same real
+     * count `$captionNbImages` is itself formatted from, as a plain `int`
+     * rather than a translated `Html` string (see the class's own
+     * docblock).
+     */
+    public function testRenderPopulatesCountImagesWithTheRealPerCategoryImageCount(): void
+    {
+        $this->seedUser();
+
+        $result = $this->renderer->render(Section::Categories, null, 0);
+        self::assertNotNull($result);
+
+        $withRepresentative = array_values(array_filter(
+            $result->categoryThumbnails,
+            static fn (CategoryThumbnail $cat): bool => $cat->representative !== null,
+        ));
+        self::assertNotSame([], $withRepresentative, 'fixture must have at least one category with a representative photo');
+        self::assertSame(5, $withRepresentative[0]->countImages);
+    }
+
+    /**
      * gdThumb port: `Template::addCategoryThumbnailOverlay()`/
      * `categoryThumbnailOverlays()` had no real caller before this port
      * -- confirms the new mount point in `mainpage_categories.latte`

@@ -27,9 +27,9 @@ use Piwigo\Core\Env;
 final class SqlDialect
 {
     /**
-     * Pinned to the exact validated MySQL version, not just its window-functions floor (8.0.0).
+     * Minimum supported MySQL version, above its window-functions floor (8.0.0).
      */
-    public const string REQUIRED_MYSQL_VERSION = '8.4.10';
+    public const string REQUIRED_MYSQL_VERSION = '8.4.6';
 
     /**
      * Pinned to the exact validated PostgreSQL version, not just its `DROP DATABASE ... WITH (FORCE)` floor (13.0).

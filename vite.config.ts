@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 import { resolve } from "path";
 import { fileURLToPath } from "url";
-import { collectScriptEntries } from "./build/collectScriptEntries";
+import { collectScriptEntries } from "./build/collectScriptEntries.ts";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const r = (p: string) => resolve(__dirname, p);

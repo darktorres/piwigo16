@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Piwigo\Db;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\MySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Platforms\SQLitePlatform;
+use Doctrine\DBAL\Statement;
 use LogicException;
 
 /**
@@ -280,9 +282,23 @@ final readonly class BatchWriter
 
         // See massInsert()'s own comment -- same Connection::transactional()
         // whole-call (every chunk) single-transaction wrapping.
-        $this->conn->transactional(function () use ($table, $dbfields, $datas, $flags): void {
+        //
+        // $statementCache: reused across every chunk that ends up with an
+        // identical SQL shape (same table/primary/actually-used update
+        // columns/row count) within this one call -- a large sync chunks
+        // into many same-sized batches whose SQL text is byte-identical
+        // except for the bound values, so preparing it once and re-binding
+        // avoids Doctrine re-parsing (`Doctrine\DBAL\SQL\Parser::parse`)
+        // and re-preparing the same statement once per chunk. Scoped to
+        // this one massUpdate() call (a local, not an instance property --
+        // this class is `readonly`) rather than across calls, since a
+        // different call's own $dbfields/$table already produces a
+        // different cache key anyway.
+        $statementCache = [];
+
+        $this->conn->transactional(function () use ($table, $dbfields, $datas, $flags, &$statementCache): void {
             foreach (self::chunk($datas) as $chunk) {
-                $this->updateChunk($table, $dbfields, $chunk, $flags);
+                $this->updateChunk($table, $dbfields, $chunk, $flags, $statementCache);
             }
         });
     }
@@ -304,8 +320,9 @@ final readonly class BatchWriter
      *
      * @param array{primary: string[], update: string[]} $dbfields
      * @param list<array<string, mixed>> $chunk
+     * @param array<string, Statement> $statementCache see {@see massUpdate()}'s own docblock
      */
-    private function updateChunk(string $table, array $dbfields, array $chunk, int $flags): void
+    private function updateChunk(string $table, array $dbfields, array $chunk, int $flags, array &$statementCache): void
     {
         /** @var list<array{primary: array<string, int|float|string>, setValues: array<string, mixed>}> */
         $joinRows = [];
@@ -365,7 +382,7 @@ final readonly class BatchWriter
         }
 
         if ($joinRows !== []) {
-            $this->updateChunkViaJoin($table, $dbfields, $joinRows);
+            $this->updateChunkViaJoin($table, $dbfields, $joinRows, $statementCache);
         }
     }
 
@@ -428,17 +445,25 @@ final readonly class BatchWriter
      *
      * @param array{primary: string[], update: string[]} $dbfields
      * @param list<array{primary: array<string, int|float|string>, setValues: array<string, mixed>}> $rows
+     * @param array<string, Statement> $statementCache see {@see massUpdate()}'s own docblock
      */
-    private function updateChunkViaJoin(string $table, array $dbfields, array $rows): void
+    private function updateChunkViaJoin(string $table, array $dbfields, array $rows, array &$statementCache): void
     {
         // Only the columns at least one row in this chunk actually sets --
         // matches the old CASE-based design's own optimization of
         // omitting a SET clause (and every WHEN branch with it) entirely
-        // when no row in the chunk touches that column.
+        // when no row in the chunk touches that column. A column every row
+        // in the chunk provides needs no `{col}_set` flag or `CASE` at all
+        // -- `SET col = nv.col` directly -- saving both a bound parameter
+        // and a branch per row; a column only SOME rows provide still
+        // needs the full flag/CASE machinery to preserve SKIP_EMPTY's
+        // real per-row fallthrough (see this method's own docblock).
         $usedKeys = [];
+        $providedCount = [];
         foreach ($rows as $row) {
             foreach (array_keys($row['setValues']) as $key) {
                 $usedKeys[$key] = true;
+                $providedCount[$key] = ($providedCount[$key] ?? 0) + 1;
             }
         }
         $updateKeys = array_values(array_filter(
@@ -448,6 +473,12 @@ final readonly class BatchWriter
 
         if ($updateKeys === []) {
             return;
+        }
+
+        $rowCount = count($rows);
+        $alwaysProvided = [];
+        foreach ($updateKeys as $key) {
+            $alwaysProvided[$key] = ($providedCount[$key] ?? 0) === $rowCount;
         }
 
         $platform = $this->conn->getDatabasePlatform();
@@ -463,14 +494,32 @@ final readonly class BatchWriter
         $protectedPrimary = array_map($this->protectColumnName(...), $dbfields['primary']);
         $protectedUpdate = array_combine($updateKeys, array_map($this->protectColumnName(...), $updateKeys));
 
-        // Fixed column layout within each VALUES tuple: primary key(s)
-        // first, then a (value, was-provided-flag) pair per update column,
-        // in $updateKeys order -- the tuple-building loop and the
-        // alias/column-reference logic below must agree on this exactly.
+        // Column layout within each VALUES tuple: primary key(s) first,
+        // then per update column either just its value (always-provided)
+        // or a (value, was-provided-flag) pair (sometimes-provided), in
+        // $updateKeys order -- $columnPositions records each column's own
+        // slot index/indices so the tuple-building loop and the
+        // alias/column-reference logic below agree on this exactly without
+        // hardcoding a uniform per-column width.
         $aliasColumns = [...$dbfields['primary']];
+        /** @var array<string, array{value: int, flag: int|null}> */
+        $columnPositions = [];
         foreach ($updateKeys as $key) {
+            $valueIndex = count($aliasColumns);
             $aliasColumns[] = $key;
+            if ($alwaysProvided[$key]) {
+                $columnPositions[$key] = [
+                    'value' => $valueIndex,
+                    'flag' => null,
+                ];
+                continue;
+            }
+            $flagIndex = count($aliasColumns);
             $aliasColumns[] = $key . '_set';
+            $columnPositions[$key] = [
+                'value' => $valueIndex,
+                'flag' => $flagIndex,
+            ];
         }
 
         // PostgreSQL specifically: a bound parameter inside a bare `VALUES
@@ -512,11 +561,29 @@ final readonly class BatchWriter
 
         $rowTuples = [];
         $params = [];
+        // Explicit type per parameter, keyed by the same index as $params --
+        // only the synthetic `_set` flag parameters (always a literal 0/1
+        // PHP int, never a real table column) are bound as
+        // ParameterType::INTEGER (see the bind loop's own docblock for why).
+        // Primary key and update-value parameters stay ParameterType::STRING
+        // regardless of their real PHP type: an update-value column is
+        // genuinely arbitrary (this class's own docblock) and can be a real
+        // MySQL JSON column (e.g. `config`.`value`) -- confirmed live that
+        // mysqli binding a native integer (ParameterType::INTEGER) into a
+        // JSON column fails with "Invalid JSON text: not a JSON text, may
+        // need CAST", while the exact same value bound as STRING succeeds
+        // (MySQL parses the string bytes as JSON text). Primary keys never
+        // needed INTEGER either -- the earlier SQLite investigation found
+        // the primary-key JOIN condition already worked correctly under the
+        // STRING default because it compares against a real declared-
+        // affinity column, unlike the flag column's bare-literal comparison.
+        $paramTypes = [];
         foreach ($rows as $row) {
             $tupleParts = [];
             foreach ($dbfields['primary'] as $key) {
                 $tupleParts[] = $postgresCast($row['primary'][$key]);
                 $params[] = $row['primary'][$key];
+                $paramTypes[] = ParameterType::STRING;
             }
             foreach ($updateKeys as $key) {
                 $provided = array_key_exists($key, $row['setValues']);
@@ -526,6 +593,12 @@ final readonly class BatchWriter
                 } else {
                     $tupleParts[] = $postgresCast($value);
                     $params[] = $value;
+                    $paramTypes[] = ParameterType::STRING;
+                }
+                if ($alwaysProvided[$key]) {
+                    // Every row in this chunk provides $key -- no flag slot
+                    // at all (see $columnPositions's own construction).
+                    continue;
                 }
                 // The flag column IS compared with a plain `= 1` equality
                 // (`CASE WHEN nv.{col}_set = 1 THEN ...`), the same
@@ -534,6 +607,7 @@ final readonly class BatchWriter
                 // `::integer` cast (no per-value dispatch needed).
                 $tupleParts[] = $platform instanceof PostgreSQLPlatform ? '?::integer' : '?';
                 $params[] = $provided ? 1 : 0;
+                $paramTypes[] = ParameterType::INTEGER;
             }
             $rowTuples[] = $requiresRowWrapper
                 ? 'ROW(' . implode(',', $tupleParts) . ')'
@@ -550,7 +624,6 @@ final readonly class BatchWriter
             return $this->protectColumnName($name);
         };
 
-        $primaryCount = count($dbfields['primary']);
         $joinParts = [];
         foreach ($dbfields['primary'] as $i => $key) {
             $joinParts[] = 't.' . $protectedPrimary[$i] . ' = nv.' . $nvColumnName($i);
@@ -558,9 +631,7 @@ final readonly class BatchWriter
         $joinSql = implode(' AND ', $joinParts);
 
         $setParts = [];
-        foreach ($updateKeys as $j => $key) {
-            $valueColumn = $nvColumnName($primaryCount + $j * 2);
-            $flagColumn = $nvColumnName($primaryCount + $j * 2 + 1);
+        foreach ($updateKeys as $key) {
             $protectedColumn = $protectedUpdate[$key];
             // The SET target itself is table-qualified (`t.col = ...`)
             // only for the JOIN-clause platforms (MySQL/MariaDB) --
@@ -572,7 +643,11 @@ final readonly class BatchWriter
             // (`nv.col`, and `t.col` in the ELSE fallthrough) are
             // unaffected by this restriction on every platform.
             $setTarget = $usesJoinClause ? 't.' . $protectedColumn : $protectedColumn;
-            $setParts[] = $setTarget . ' = CASE WHEN nv.' . $flagColumn . ' = 1 THEN nv.' . $valueColumn . ' ELSE t.' . $protectedColumn . ' END';
+            $valueColumn = $nvColumnName($columnPositions[$key]['value']);
+            $flagIndex = $columnPositions[$key]['flag'];
+            $setParts[] = $flagIndex === null
+                ? $setTarget . ' = nv.' . $valueColumn
+                : $setTarget . ' = CASE WHEN nv.' . $nvColumnName($flagIndex) . ' = 1 THEN nv.' . $valueColumn . ' ELSE t.' . $protectedColumn . ' END';
         }
         $setSql = implode(',', $setParts);
 
@@ -580,13 +655,60 @@ final readonly class BatchWriter
             ? 'nv'
             : 'nv(' . implode(',', array_map($this->protectColumnName(...), $aliasColumns)) . ')';
 
-        $sql = $usesJoinClause
-            ? "UPDATE {$protectedTable} AS t JOIN ({$valuesSql}) AS {$nvAlias} ON {$joinSql} SET {$setSql}"
-            : "UPDATE {$protectedTable} AS t SET {$setSql} FROM ({$valuesSql}) AS {$nvAlias} WHERE {$joinSql}";
+        // Reused (see massUpdate()'s own docblock) whenever a later chunk
+        // produces the byte-identical SQL shape: same table/primary
+        // columns/actually-used update columns/always-vs-sometimes-provided
+        // pattern per column/row count. Any difference in any of those
+        // changes the generated SQL text itself, so the key must capture
+        // all of them, not just $updateKeys -- two chunks with the same
+        // used columns but a different always-provided pattern still
+        // produce different tuple widths and SET clauses.
+        $cacheKey = $table . '|' . implode(',', $dbfields['primary']) . '|' . implode(',', array_map(
+            static fn (string $key): string => $key . ':' . ($alwaysProvided[$key] ? '1' : '0'),
+            $updateKeys,
+        )) . '|' . $rowCount;
 
-        $stmt = $this->conn->prepare($sql);
+        if (isset($statementCache[$cacheKey])) {
+            $stmt = $statementCache[$cacheKey];
+        } else {
+            $sql = $usesJoinClause
+                ? "UPDATE {$protectedTable} AS t JOIN ({$valuesSql}) AS {$nvAlias} ON {$joinSql} SET {$setSql}"
+                : "UPDATE {$protectedTable} AS t SET {$setSql} FROM ({$valuesSql}) AS {$nvAlias} WHERE {$joinSql}";
+            $stmt = $this->conn->prepare($sql);
+            $statementCache[$cacheKey] = $stmt;
+        }
+
+        // Explicit ParameterType per value (from $paramTypes, built above),
+        // not DBAL's own bindValue() default (ParameterType::STRING
+        // regardless of the real PHP type, confirmed by reading
+        // Doctrine\DBAL\Statement::bindValue()'s own signature) -- confirmed
+        // live this isn't cosmetic: DBAL's native `sqlite3` driver (this
+        // project's own real SQLite driver, not pdo_sqlite) forwards the
+        // type as-is to `SQLite3Stmt::bindValue()`, so an int flag column
+        // bound as the default STRING becomes SQLite TEXT '1'/'0' --
+        // compared against the bare numeric literal `1` in `CASE WHEN
+        // nv.{col}_set = 1`, a TEXT-vs-untyped-VALUES-column comparison
+        // silently evaluates false every time (no affinity to coerce
+        // through, unlike comparing against a real declared-affinity
+        // column), so the CASE always fell through to its ELSE branch --
+        // explaining a real, reproduced bug: every "sometimes provided"
+        // column silently never updated on SQLite. PostgreSQL's own driver
+        // does NOT forward ParameterType to a real wire-level type either
+        // way (confirmed live, still fails with it alone) -- the SQL-level
+        // `::cast` above remains the real fix there; this is a second,
+        // independent gap on a second platform, not a replacement for it.
+        // Only the synthetic flag parameters use ParameterType::INTEGER --
+        // NOT a blind is_int($value) check, confirmed live that binding a
+        // genuine primary-key/update-value int as ParameterType::INTEGER
+        // breaks writing to a real MySQL JSON column (e.g. `config`.`value`)
+        // with "Invalid JSON text: not a JSON text, may need CAST" (see
+        // $paramTypes's own construction above for the full explanation).
         foreach ($params as $i => $value) {
-            $stmt->bindValue($i + 1, $value);
+            // Never null: a null value is always spliced as the literal
+            // `NULL` above instead of appended here (see the tuple-building
+            // loop), so $params only ever holds a genuine primary key,
+            // update value, or 0/1 flag.
+            $stmt->bindValue($i + 1, $value, $paramTypes[$i]);
         }
         $stmt->executeStatement();
     }

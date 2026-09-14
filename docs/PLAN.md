@@ -696,7 +696,7 @@ batches. 157 event classes at the time; P34 (below) later pruned dead
 ones to 127, then added 2 more closing its own catalogue gap.
 
 <!-- markdownlint-disable-next-line MD013 -->
-<!-- doc-drift-check: cmd='find src -path "*/Event/*.php" | wc -l' expect="128" -->
+<!-- doc-drift-check: cmd='find src -path "*/Event/*.php" | wc -l' expect="131" -->
 
 `triggerChange()`/`triggerNotify()` were originally kept as "permanent"
 for `'trigger'`, their own internal meta-notification channel, then
@@ -814,13 +814,13 @@ root every system needs.
 `final readonly class FooPageContext implements TemplatePageContext` plus
 a single `assignContext()` call. Zero `Template::assign()` calls with a
 string or array key remain in `src/Piwigo`. 130 context classes shipped
-when this phase closed; **28 remain**, P40 having replaced the rest with
+when this phase closed; **31 remain**, P40 having replaced the rest with
 typed `View` classes — which is also what shrank P60-A, since a
 `{templateType}` template takes its variable types from the View's own
 reflected properties rather than from a context's `array<*, mixed>`.
 
 <!-- markdownlint-disable-next-line MD013 -->
-<!-- doc-drift-check: cmd='grep -rl "implements TemplatePageContext" src/Piwigo --include="*.php" | wc -l' expect="28" -->
+<!-- doc-drift-check: cmd='grep -rl "implements TemplatePageContext" src/Piwigo --include="*.php" | wc -l' expect="31" -->
 
 Four sites are correctly excluded and carry an explicit comment saying so
 — the assign *key* itself is caller-chosen or per-instance-mutable, not a
@@ -2361,13 +2361,14 @@ scoped, of which **93,420 lines (78%) were auto-generated `{varType}`
 boilerplate** — every template carried the same 692-line block while
 referencing 11.5 distinct variables on average, forced by
 `Template::$vars` being one request-global bag. P40 is what removes it,
-and has: **121 templates, 19,719 lines, 1,212 `{varType}` occurrences
-left across 9 templates.**
+and has: **118 templates, 19,719 lines, 1,040 `{varType}` occurrences
+left across 9 templates.** (`template-extension/` itself was deleted
+outright in P40 Batch 1, so both counts below are `themes/`-only now.)
 
 <!-- markdownlint-disable-next-line MD013 -->
-<!-- doc-drift-check: cmd='find themes template-extension -name "*.latte" | wc -l' expect="121" -->
+<!-- doc-drift-check: cmd='find themes -name "*.latte" | wc -l' expect="118" -->
 <!-- markdownlint-disable-next-line MD013 -->
-<!-- doc-drift-check: cmd='grep -rho "{varType" themes template-extension --include="*.latte" | wc -l' expect="1212" -->
+<!-- doc-drift-check: cmd='grep -rho "{varType" themes --include="*.latte" | wc -l' expect="1040" -->
 
 #### Completed Latte foundation
 

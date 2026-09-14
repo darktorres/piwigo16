@@ -700,10 +700,14 @@ Browser suite's own `BrowserTestHelpers::createCategory()`/`createUser()`/
 etc. helpers and `curlApi()` (below) cover `/api/v1` fixture-setup needs
 in the meantime, not response-schema locking.
 
-**Browser tests**: 108 files in `tests/Browser/` (106 E2E flows, plus the
-two special-purpose files below) via `pestphp/pest-plugin-browser`.
+**Browser tests**: 145 files in `tests/Browser/` (138 E2E flows, plus 7
+special-purpose files: `InstallTest.php`/`InstallOverwriteConfirmTest.php`
+(install-flow), `VisualRegressionTest.php`/`StandardPagesVisualRegressionTest.php`/
+`RomaVisualRegressionTest.php` (visual-regression), `GoldenHtmlSnapshotTest.php`
+(golden-html-snapshot), `RegenerateFixtureTest.php` (fixture-regen)) via
+`pestphp/pest-plugin-browser`.
 <!-- markdownlint-disable-next-line MD013 -->
-<!-- doc-drift-check: cmd='find tests/Browser -maxdepth 1 -iname "*.php" | wc -l' expect="108" -->
+<!-- doc-drift-check: cmd='find tests/Browser -maxdepth 1 -iname "*.php" | wc -l' expect="145" -->
 `tests/Browser/Helpers/BrowserTestHelpers.php` centralizes the shared
 patterns (`visitPwg()`/`loginAsAdmin()`, `navigateOk()`, `createCategory()`
 and its sibling `/api/v1` helpers, `uploadPhotoViaApi()`).

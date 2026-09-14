@@ -151,7 +151,7 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
         $error_labels = [
             'PWG-UPDATE-1' => [
                 $this->lang->t('wrong filename'),
-                $this->lang->t('The name of directories and files must be composed of letters, numbers, "-", "_" or "."'),
+                $this->lang->t('The name of directories and files must not contain "/", "\\" or control characters'),
             ],
             'PWG-ERROR-NO-FS' => [
                 $this->lang->t('File/directory read error'),

@@ -181,7 +181,7 @@ dataset('emptyStringFallbackProperties', [
     'syncCharsRegex' => [
         static function (string $v): void { CurrentConfigTestFactory::get()->syncCharsRegex = $v; },
         static fn (): mixed => CurrentConfigTestFactory::get()->syncCharsRegex,
-        '/^[a-zA-Z0-9-_.]+$/',
+        '/^[^\x00-\x1F\x7F\/\\\\]+$/u',
     ],
 ]);
 

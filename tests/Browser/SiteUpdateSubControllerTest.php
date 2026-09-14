@@ -547,7 +547,10 @@ it('simulate mode reports counts without writing to the database', function (): 
 });
 
 it('rejects a directory whose name fails the sync-chars regex', function (): void {
-    $dir = 'ct bad dir! ' . uniqid();
+    // "\" is still rejected by the relaxed default (letters, digits,
+    // spaces and most punctuation are now accepted -- see the next test
+    // -- but a path separator is not).
+    $dir = 'ct' . chr(92) . 'bad_dir_' . uniqid();
     $tempDir = suMakeTempDir($dir);
 
     $page = H::asAdmin($this);
@@ -561,10 +564,37 @@ it('rejects a directory whose name fails the sync-chars regex', function (): voi
         expect($result['status'])->toBe(200);
         expect($result['body'])->toContain('PWG-UPDATE-1');
         expect($result['body'])->toContain('wrong filename');
-        expect($result['body'])->toContain($dir);
         expect($result['body'])->toContain('1 errors during synchronization');
         expect(suCategoryIdByDir(1, $dir))
             ->toBeNull();
+    } finally {
+        suRemoveDirRecursive($tempDir);
+    }
+});
+
+it('accepts a directory/photo whose names contain spaces and other previously-restricted characters', function (): void {
+    $dir = "ct sync, café's dir! " . uniqid();
+    $file = 'my photo (1)_ #2, v2.jpg';
+    $tempDir = suMakeTempDir($dir);
+    $imagePath = H::makeTestImage('CT Sync Special Chars');
+    copy($imagePath, $tempDir . '/' . $file);
+    @unlink($imagePath);
+
+    $page = H::asAdmin($this);
+    $token = H::pwgToken($page);
+
+    try {
+        $result = suSync($page, $token);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->toContain('1 albums added in the database');
+        expect($result['body'])->toContain('1 photos added in the database');
+        expect($result['body'])->toContain('0 errors during synchronization');
+
+        expect(suCategoryIdByDir(1, $dir))
+            ->not->toBeNull();
+        expect(suImageIdByFile($file))
+            ->not->toBeNull();
     } finally {
         suRemoveDirRecursive($tempDir);
     }
@@ -778,7 +808,9 @@ it('assigns a non-zero privacy level, mass-inserts/removes per-image formats, an
     copy($image3, $tempDir . '/photo3.jpg');
     @unlink($image3);
 
-    file_put_contents($tempDir . '/bad name!.jpg', 'not a real image');
+    // "\" is still rejected by the relaxed sync-chars default; a plain
+    // space/"!" (as used elsewhere in this file) would now be accepted.
+    file_put_contents($tempDir . '/bad' . chr(92) . 'name.jpg', 'not a real image');
 
     $page = H::asAdmin($this);
     $token = H::pwgToken($page);

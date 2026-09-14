@@ -2289,8 +2289,8 @@ msgstr "The name of a group must not contain \" or ' or be empty."
 msgid "The name of an album must not be empty"
 msgstr "The name of an album must not be empty"
 
-msgid "The name of directories and files must be composed of letters, numbers, \"-\", \"_\" or \".\""
-msgstr "The name of directories and files must comprise only letters, numbers, \"-\", \"_\" or \".\""
+msgid "The name of directories and files must not contain \"/\", \"\\\" or control characters"
+msgstr "The name of directories and files must not contain \"/\", \"\\\" or control characters"
 
 msgid "The number of comments a page must be between 5 and 50 included."
 msgstr "The number of comments on a page must be between 5 and 50 included."

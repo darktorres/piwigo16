@@ -2383,11 +2383,14 @@ final class CurrentConfig
     // === sync_chars_regex ===
     /**
      * Regex that matches valid filename characters during filesystem
-     * synchronisation.
+     * synchronisation. Permissive by design: real photo directories/files
+     * routinely contain spaces, punctuation and non-ASCII characters, so
+     * this only blocks what's actually unsafe as a path segment -- ASCII
+     * control characters and the "/" and "\" separators.
      */
-    public string $syncCharsRegex = '/^[a-zA-Z0-9-_.]+$/' {
+    public string $syncCharsRegex = '/^[^\x00-\x1F\x7F\/\\\\]+$/u' {
         set(string $value) {
-            $this->syncCharsRegex = $value !== '' ? $value : '/^[a-zA-Z0-9-_.]+$/';
+            $this->syncCharsRegex = $value !== '' ? $value : '/^[^\x00-\x1F\x7F\/\\\\]+$/u';
         }
     }
 

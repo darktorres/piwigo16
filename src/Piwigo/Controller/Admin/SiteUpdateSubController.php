@@ -871,6 +871,13 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
             $start = TimingHelper::getMoment();
             $datas = [];
             $tags_of = [];
+            // Photos confirmed gone from the filesystem (not merely
+            // unreadable) during metadata-only sync -- the *files* sync
+            // stage above already cleans these up itself, but a
+            // metadata-only pass (sync='dirs'/'meta' without 'files') never
+            // reaches that block, so it must self-heal here instead of
+            // just leaving a persistent PWG-ERROR-NO-FS error.
+            $missing_element_ids = [];
 
             $tagService = $this->tagService;
 
@@ -899,6 +906,12 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
                                 }
                             }
                         }
+                    } elseif ($site_reader->isElementFileMissing($element_infos)) {
+                        $missing_element_ids[] = $id;
+                        $infos[] = [
+                            'path' => $element_infos['path'],
+                            'info' => $this->lang->t('deleted'),
+                        ];
                     } else {
                         $errors[] = [
                             'path' => $element_infos['path'],
@@ -908,6 +921,16 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
                 }
             } finally {
                 $exifTool->close();
+            }
+
+            // Unlike $counts['del_elements'] above (the *files* sync
+            // stage's own cleanup), this doesn't feed $update_result's
+            // NB_DEL_ELEMENTS -- that summary is built earlier, before this
+            // metadata-only stage runs. The per-path "deleted" $infos[]
+            // entry pushed above is this stage's own visible signal.
+            if (count($missing_element_ids) > 0 and ! $simulate) {
+                $this->imageService()
+                    ->deleteElements($missing_element_ids, $this->urlService);
             }
 
             if (! $simulate) {

@@ -175,6 +175,21 @@ final class LocalSiteReader
             ->getSyncMetadata($infos, $exifTool);
     }
 
+    /**
+     * Thin delegate to MetadataService::isElementFileMissing() -- lets
+     * SiteUpdateSubController distinguish a confirmed-gone file (safe to
+     * auto-delete the stale DB row for) from one that merely failed
+     * getElementMetadata() above (e.g. permission denied), which must
+     * still be reported as an error, not deleted.
+     *
+     * @param array<string, mixed> $infos
+     */
+    public function isElementFileMissing(array $infos): bool
+    {
+        return $this->metadataService
+            ->isElementFileMissing($infos);
+    }
+
     public function getRepresentativeExt(string $path, string $filename_wo_ext): ?string
     {
         $base_test = $path . '/pwg_representative/' . $filename_wo_ext . '.';

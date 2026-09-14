@@ -887,7 +887,7 @@ it('assigns a non-zero privacy level, mass-inserts/removes per-image formats, an
     }
 });
 
-it('reports a PWG-ERROR-NO-FS error when a registered photo is deleted before its metadata sync runs', function (): void {
+it('auto-deletes the DB row for a registered photo confirmed gone before its metadata sync runs', function (): void {
     $dir = 'ct_site_meta_missing_' . uniqid();
     $file = $dir . '.jpg';
     $tempDir = suMakeTempDir($dir);
@@ -906,9 +906,11 @@ it('reports a PWG-ERROR-NO-FS error when a registered photo is deleted before it
 
         // Delete the physical file but leave the directory (and the DB
         // image row) untouched, then request metadata sync alone (sync
-        // set to 'dirs', which never reaches the element-deletion block --
-        // otherwise the image row itself would be deleted by the
-        // files/elements block before the metadata block ever saw it).
+        // set to 'dirs', which never reaches the *files* stage's own
+        // element-deletion block -- otherwise the image row itself would
+        // be deleted there before the metadata block ever saw it). This
+        // is exactly the confirmed-missing case the metadata block must
+        // now self-heal instead of just reporting PWG-ERROR-NO-FS.
         unlink($tempDir . '/' . $file);
 
         $result = suSync($page, $token, [
@@ -918,15 +920,68 @@ it('reports a PWG-ERROR-NO-FS error when a registered photo is deleted before it
         ]);
 
         expect($result['status'])->toBe(200);
-        // NB_ERRORS on update_result is computed before the metadata block
-        // runs (still 0 here, since sync='dirs' found no bad directory
-        // names) -- the metadata-sync error only surfaces via the
-        // unconditional sync_errors/sync_error_captions listing below,
-        // which reflects the full $errors array at render time.
+        expect($result['body'])->not->toContain('PWG-ERROR-NO-FS');
+        // The unconditional $syncInfos list renders each entry as
+        // "[{path}] {label}" -- "] deleted" only ever appears there (the
+        // always-present "N photos deleted from the database" summary
+        // line reads differently), so this proves a per-path deletion
+        // info entry was actually rendered, not just a stale 0-count.
+        expect($result['body'])->toContain('] deleted');
+        expect($result['body'])->toContain($file);
+        expect(suImageIdByFile($file))
+            ->toBeNull();
+    } finally {
+        suRemoveDirRecursive($tempDir);
+        H::adminPost($page, suPath(), [
+            'submit' => '1',
+            'pwg_token' => $token,
+            'sync' => 'files',
+            'subcats-included' => '1',
+            'privacy_level' => '0',
+            'simulate' => '0',
+        ]);
+    }
+});
+
+it('reports a PWG-ERROR-NO-FS error (and keeps the DB row) for a registered photo that still exists but is unreadable', function (): void {
+    $dir = 'ct_site_meta_unreadable_' . uniqid();
+    $file = $dir . '.jpg';
+    $tempDir = suMakeTempDir($dir);
+    $imagePath = H::makeTestImage('CT Meta Unreadable');
+    copy($imagePath, $tempDir . '/' . $file);
+    @unlink($imagePath);
+
+    $page = H::asAdmin($this);
+    $token = H::pwgToken($page);
+    $diskPath = $tempDir . '/' . $file;
+
+    try {
+        suSync($page, $token);
+        $imageId = suImageIdByFile($file);
+        expect($imageId)
+            ->not->toBeNull();
+
+        // Unlike the "confirmed gone" test above, the file still exists on
+        // disk (file_exists() is true) but is unreadable -- is_readable()
+        // fails, so getSyncMetadata() still returns false, but
+        // isElementFileMissing() must say "not missing" here, so this
+        // stays a reported error, not an auto-deletion.
+        chmod($diskPath, 0000);
+
+        $result = suSync($page, $token, [
+            'sync' => 'dirs',
+            'sync_meta' => '1',
+            'meta_all' => '1',
+        ]);
+
+        expect($result['status'])->toBe(200);
         expect($result['body'])->toContain('PWG-ERROR-NO-FS');
         expect($result['body'])->toContain('File/directory read error');
         expect($result['body'])->toContain('The file or directory cannot be accessed');
+        expect(suImageIdByFile($file))
+            ->not->toBeNull();
     } finally {
+        @chmod($diskPath, 0644);
         suRemoveDirRecursive($tempDir);
         H::adminPost($page, suPath(), [
             'submit' => '1',

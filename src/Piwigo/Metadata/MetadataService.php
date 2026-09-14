@@ -460,6 +460,40 @@ final readonly class MetadataService
     }
 
     /**
+     * `path` is root-relative for uploaded photos (UploadService's own
+     * storage-relative convention) but already absolute for locally
+     * site-synced photos (LocalSiteReader/SiteUpdateSubController --
+     * `galleries_url` itself is seeded as an absolute path by
+     * InstallWizard/install.php, unlike legacy Piwigo's relative
+     * PHPWG_ROOT_PATH). Prepending the root a second time onto an
+     * already-absolute path produced an unreadable, doubled-up path:
+     * metadata sync silently failed with "File/directory read error" for
+     * every photo synced via the "Synchronize" tool on a fresh install.
+     *
+     * @param  array<string, mixed>  $infos  (path[, representative_ext])
+     */
+    private function resolveSyncFilePath(array $infos): string
+    {
+        $path = $infos['path'] ?? null;
+        $path = is_string($path) ? $path : '';
+
+        return str_starts_with($path, '/') ? $path : $this->paths->root . $path;
+    }
+
+    /**
+     * Distinguishes a confirmed-gone file (safe to auto-delete the stale
+     * DB row for) from one that merely failed is_readable() in
+     * getSyncMetadata() below (e.g. permission denied) -- the latter
+     * still exists and must not be deleted, only reported.
+     *
+     * @param  array<string, mixed>  $infos  (path[, representative_ext])
+     */
+    public function isElementFileMissing(array $infos): bool
+    {
+        return ! file_exists($this->resolveSyncFilePath($infos));
+    }
+
+    /**
      * $infos is a cross-domain generic image row, same rationale as
      * SrcImage::__construct(); the return widens it with computed
      * filesize/width/height plus getExifData()/getIptcData()'s own
@@ -472,19 +506,7 @@ final readonly class MetadataService
     public function getSyncMetadata(array $infos, ExifToolFfi $exifTool): array|false
     {
 
-        $path = $infos['path'] ?? null;
-        $path = is_string($path) ? $path : '';
-        // `path` is root-relative for uploaded photos (UploadService's own
-        // storage-relative convention) but already absolute for locally
-        // site-synced photos (LocalSiteReader/SiteUpdateSubController --
-        // `galleries_url` itself is seeded as an absolute path by
-        // InstallWizard/install.php, unlike legacy Piwigo's relative
-        // PHPWG_ROOT_PATH). Prepending the root a second time onto an
-        // already-absolute path produced an unreadable, doubled-up path:
-        // metadata sync silently failed with "File/directory
-        // read error" for every photo synced via the "Synchronize" tool on a
-        // fresh install.
-        $originalFile = str_starts_with($path, '/') ? $path : $this->paths->root . $path;
+        $originalFile = $this->resolveSyncFilePath($infos);
         $file = $originalFile;
         if (! is_readable($file)) {
             return false;

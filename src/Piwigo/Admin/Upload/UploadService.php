@@ -47,7 +47,7 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\Projection\ImageInsertRow;
 use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Image\SrcImage;
-use Piwigo\Metadata\ExifTool\ExifToolProcess;
+use Piwigo\Metadata\ExifTool\ExifToolFfi;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -629,7 +629,7 @@ final readonly class UploadService
         $this->addUploadedFileAddToCategories($image_id, $categories);
 
         // update metadata from the uploaded file (exif/iptc)
-        if ($this->currentConfig->useExif and ! ExifToolProcess::isAvailable()) {
+        if ($this->currentConfig->useExif and ! ExifToolFfi::isAvailable()) {
             $this->currentConfig->useExif = false;
         }
         $this->metadataService

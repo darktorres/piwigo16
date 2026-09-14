@@ -38,7 +38,7 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\Projection\ImageCategoryPair;
 use Piwigo\Image\Projection\ImageSyncInsertRow;
-use Piwigo\Metadata\ExifTool\ExifToolProcess;
+use Piwigo\Metadata\ExifTool\ExifToolFfi;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -874,11 +874,10 @@ final readonly class SiteUpdateSubController implements AdminSubControllerInterf
 
             $tagService = $this->tagService;
 
-            // One persistent ExifTool process for this whole sync pass,
-            // not one per file -- the actual "Synchronize" action's own
-            // real batching win (benchmarked: 200 files, 37.5s naive
-            // per-file spawn vs 1.79s reused across one process).
-            $exifTool = new ExifToolProcess();
+            // One loaded ExifToolFfi library binding for this whole sync
+            // pass, not one per file -- avoids re-parsing FFI::cdef()'s own
+            // header string per image.
+            $exifTool = new ExifToolFfi();
 
             try {
                 foreach ($files as $id => $element_infos) {

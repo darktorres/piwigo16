@@ -16,7 +16,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\TypedRepository;
 use Piwigo\Lang\Translator;
-use Piwigo\Metadata\ExifTool\ExifToolProcess;
+use Piwigo\Metadata\ExifTool\ExifToolFfi;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
@@ -78,7 +78,7 @@ afterEach(function (): void {
 // c13yVersion()/c13yExif() are deterministic in THIS environment: the app
 // itself couldn't be running at all if PHP_VERSION/the real MySQL version
 // didn't already satisfy AppInfo::REQUIRED_PHP_VERSION/SqlDialect::
-// REQUIRED_MYSQL_VERSION, and ExifToolProcess::isAvailable() is confirmed
+// REQUIRED_MYSQL_VERSION, and ExifToolFfi::isAvailable() is confirmed
 // true here (a real installed `exiftool` binary -- a separate, independent
 // fact from native exif_read_data()'s own availability, which ImageBackend's
 // own getRotationAngle() tests confirm separately for its own, deliberately
@@ -96,7 +96,7 @@ test('c13yVersion adds no anomaly when the running PHP/MySQL already satisfy the
 });
 
 test('c13yExif adds no anomaly when ExifTool is available', function (): void {
-    expect(ExifToolProcess::isAvailable())
+    expect(ExifToolFfi::isAvailable())
         ->toBeTrue();
 
     $c13y = c13yInternalTestCheckIntegrity();
@@ -118,7 +118,7 @@ test('c13yExif adds no anomaly when ExifTool is available', function (): void {
 // REQUIRED_MYSQL_VERSION ('8.4.6') is equally unreachable here: this
 // environment's real MySQL server is already above that floor, so it can
 // never report a version below it. c13yExif()'s branch can't be forced
-// either: ExifToolProcess::isAvailable() memoizes its own `command -v`
+// either: ExifToolFfi::isAvailable() memoizes its own `command -v`
 // probe result for the whole process, and exiftool really is installed in
 // this environment -- there is no config knob to make it lie.
 

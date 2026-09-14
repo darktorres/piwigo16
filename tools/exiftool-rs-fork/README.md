@@ -1,24 +1,40 @@
 # exiftool-rs (patched fork, vendored)
 
 A trimmed, locally-patched copy of [exiftool-rs](https://github.com/Le-Syl21/exiftool-rs)
-0.8.0 (forked from upstream commit `51d38a30dc92e5d71b0d41a211ca140adb0851b9`), built by
-Piwigo's Docker image as the `Piwigo\Metadata\ExifTool\ExifToolProcess` backend instead of
-real (Perl) ExifTool.
+0.8.0 (forked from upstream commit `51d38a30dc92e5d71b0d41a211ca140adb0851b9`), built as a
+shared library and loaded in-process (via PHP's `ext-ffi`, `FFI::cdef()`) by
+`Piwigo\Metadata\ExifTool\ExifToolFfi` instead of real (Perl) ExifTool. An earlier
+revision of this integration (`ExifToolProcess`) ran the crate's CLI binary as a
+subprocess over its `-stay_open` protocol; that design is now retired in favor of
+loading the compiled `.so` directly, after benchmarking proved FFI's per-file cost is
+5-6x lower with no subprocess round-trip or polling loop -- see git history for the
+subprocess-era design and its own bug writeups (bugs 3-4 below) if reviving it.
 
-Only what's needed to build the plain `exiftool-rs` CLI binary is vendored here --
-`src/`, `Cargo.toml`, `Cargo.lock`, `build.rs`, `LICENSE`, `locales/` (the GUI binary,
-its icon assets, the crate's own test suite, and its dev scripts are all dropped).
+Only what's needed to build the crate's library target (`--lib`, the cdylib
+`ExifToolFfi` loads) is vendored here -- `src/`, `Cargo.toml`, `Cargo.lock`, `build.rs`,
+`LICENSE`, `locales/` (the GUI binary, its icon assets, the crate's own test suite, and
+its dev scripts are all dropped). The CLI binary (`--bin exiftool-rs`) still builds from
+this same vendored source and is kept for manual debugging of the underlying engine
+(see `src/main.rs`'s own `-stay_open` support, still correct and tested, just no longer
+invoked by Piwigo's runtime) -- Piwigo's Docker image and CI only build `--lib` now.
 `locales/` is required at compile time (`i18n.rs` embeds every file via `include_str!`),
 even though this integration never passes `-lang`.
 
 ## License
 
 **GPLv3+** (see `LICENSE`) -- more restrictive than real ExifTool's own Artistic/GPL-1+
-dual license. Piwigo only ever invokes the compiled binary as a separate subprocess
-(the same `-stay_open` stdio protocol used for real ExifTool), never links against it,
-so this doesn't bring Piwigo itself under the GPL -- but shipping the compiled binary
-inside Piwigo's Docker image does carry GPLv3's own distribution obligation to offer
-corresponding source for *that* binary, which this vendored, patched copy satisfies.
+dual license, and the licensing analysis here is now stronger, not just a formality:
+this crate's compiled code is loaded **in-process** via FFI (`dlopen()` under the hood)
+and called directly from the same PHP process, not run as a separate subprocess talking
+over stdio. GPL's own linking analysis draws a real distinction between the two --
+"mere aggregation" (separate processes, communicating at arm's length) is the
+traditional argument for why invoking a GPL program as a subprocess doesn't bring the
+caller under the GPL, and that argument is materially weaker for a library loaded and
+called directly within the same running process, regardless of the load mechanism being
+dynamic (FFI/`dlopen`) rather than a compile-time link. This wasn't the case when this
+integration ran the CLI as a subprocess (see the retired `ExifToolProcess` design
+above); it is worth a real legal review before treating this as settled, rather than
+assuming the previous subprocess-based conclusion still holds under the new design.
 
 ## Why a patched fork, not upstream as-is
 
@@ -108,4 +124,23 @@ rather than worked around:
 Patches 5 and 6 together are what make GPS extraction genuinely correct through this
 fork -- both magnitude and hemisphere sign -- verified against real ExifTool's own
 output for all four hemisphere combinations, through the exact stay-open protocol and
-tag-request shape `ExifToolProcess` uses, not just the one-shot CLI.
+tag-request shape the retired `ExifToolProcess` design used, not just the one-shot CLI.
+
+## FFI: the in-process module (`src/ffi.rs`)
+
+`ExifToolFfi` calls two `#[no_mangle] extern "C"` functions, `exiftool_rs_extract()` and
+`exiftool_rs_free()`, added in `src/ffi.rs` and exported by adding `"cdylib"` to this
+crate's `[lib]` `crate-type` in `Cargo.toml` (alongside the default `"rlib"`, which the
+CLI binary still needs). `exiftool_rs_extract()` parses a comma-separated
+`-TAG`/`-GROUP:TAG`/`-TAG#` request list (the same syntax `apply_tag_request()` parses
+for the CLI, reimplemented rather than shared since it's a few lines either way) and
+returns a JSON object string.
+
+That JSON serialization itself **is** shared, not reimplemented: `write_json_tags()`
+(`src/json_output.rs`) is the exact same priority-dedup + per-tag-numeric-selection +
+array/scalar-JSON logic bugs 4-6 above fixed, extracted out of the CLI's own
+`print_json_tags()` (now a thin wrapper calling it with stdout) so both the CLI and
+`ffi.rs` call one tested implementation instead of drifting into two. Given how many of
+this crate's own bugs were exactly this kind of duplicated-and-diverged logic, adding a
+*second* caller of that logic without sharing it would have been a bug waiting to
+happen, not a reasonable shortcut.

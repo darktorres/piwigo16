@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Bench\Support;
 
 use InvalidArgumentException;
-use Piwigo\Metadata\ExifTool\ExifToolProcess;
+use Piwigo\Metadata\ExifTool\ExifToolFfi;
 use RuntimeException;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
@@ -31,7 +31,7 @@ use Symfony\Component\Process\Process;
  * tagged bytes, so every generated photo carries the same real tag set.
  * Without this, the benchmark's sync path would call
  * `MetadataService::getSyncExifData()`/`getSyncIptcData()` against
- * perfectly plain images every time, exercising `ExifToolProcess::read()`
+ * perfectly plain images every time, exercising `ExifToolFfi::read()`
  * only for its near-instant "found nothing" case -- not a representative
  * measurement of the batched-process integration this benchmark exists to
  * cover. Skipped (template stays untagged) when `exiftool` isn't
@@ -131,7 +131,7 @@ final class SyncScenarioBuilder
 
     private static function tagJpeg(string $path): void
     {
-        if (! ExifToolProcess::isAvailable()) {
+        if (! ExifToolFfi::isAvailable()) {
             return;
         }
 

@@ -22,7 +22,7 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
  * the required minimum version, real guest/default/webmaster user rows
  * with correct statuses) -- confirmed to add zero anomalies, matching
  * what a real healthy production install also reports. Forcing an
- * actual anomaly would mean faking `ExifToolProcess::isAvailable()`'s
+ * actual anomaly would mean faking `ExifToolFfi::isAvailable()`'s
  * own `command -v` probe/downgrading the real DB version/corrupting
  * real user rows, none of which this class's own thin-checker role
  * justifies. `c13yCorrectionUser()` performs real user-table writes and

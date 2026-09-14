@@ -9,6 +9,7 @@
     "ext-ctype": "*",
     "ext-curl": "*",
     "ext-dom": "*",
+    "ext-ffi": "*",
     "ext-fileinfo": "*",
     "ext-filter": "*",
     "ext-gd": "*",

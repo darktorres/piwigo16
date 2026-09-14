@@ -28,30 +28,32 @@ RUN bun install --frozen-lockfile
 COPY . .
 RUN bun run build
 
-# ─── Stage 3: exiftool-rs build (patched fork, driven via Metadata\ExifTool\
-# ExifToolProcess instead of real Perl ExifTool — see
-# tools/exiftool-rs-fork/README.md for why this is a vendored, patched fork
-# rather than upstream as-is or a system package) ──────────────────────────
+# ─── Stage 3: exiftool-rs build (patched fork, loaded in-process via PHP's
+# FFI extension by Metadata\ExifTool\ExifToolFfi instead of real Perl
+# ExifTool or a subprocess — see tools/exiftool-rs-fork/README.md for why
+# this is a vendored, patched fork rather than upstream as-is or a system
+# package). Builds only the cdylib (--lib): nothing in Piwigo's runtime
+# invokes the CLI binary this crate also produces.────────────────────────
 FROM rust:1-bookworm AS exiftool-rs-builder
 WORKDIR /build
 COPY tools/exiftool-rs-fork/ ./
-RUN cargo build --release --locked --bin exiftool-rs
+RUN cargo build --release --locked --lib
 
 # ─── Stage 4: production runtime (FrankenPHP — see docs/REFERENCE.md's "FrankenPHP worker-mode runtime, Apache as fallback" decision) ──
 FROM dunglas/frankenphp:1-php8.5 AS production
 
 # The base image already ships ctype, curl, dom (+lexbor), fileinfo, filter,
 # iconv, mbstring, openssl, session, SimpleXML built in (verified via `php
-# -m`) — only these five are actually missing from composer.json's require
-# list, so only these get built here. No libvips-dev: P19's libvips backend
-# (jcupitt/vips) is pure FFI against the runtime .so, not a compiled
-# extension, so it needs no -dev headers here at all — add the plain
-# libvips runtime package (not -dev) + php-ffi when P19 actually lands it.
+# -m`) — only these five plus ffi are actually missing from composer.json's
+# require list, so only these get built here. No libvips-dev: P19's libvips
+# backend (jcupitt/vips) is pure FFI against the runtime .so, so it needs no
+# -dev headers here at all, only the ffi extension already being built below
+# for Metadata\ExifTool\ExifToolFfi's own unrelated use.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libicu-dev libzip-dev libwebp-dev libjpeg62-turbo-dev libpng-dev \
-        libxml2-dev libmagickwand-dev \
+        libxml2-dev libmagickwand-dev libffi-dev \
     && docker-php-ext-configure gd --with-jpeg --with-webp \
-    && docker-php-ext-install -j"$(nproc)" calendar gd intl mysqli pcntl zip \
+    && docker-php-ext-install -j"$(nproc)" calendar ffi gd intl mysqli pcntl zip \
     && pecl install imagick redis apcu \
     && docker-php-ext-enable imagick redis apcu \
     # No --auto-remove: that would cascade into removing the runtime shared
@@ -63,12 +65,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libicu-dev libzip-dev libwebp-dev libjpeg62-turbo-dev libpng-dev libxml2-dev libmagickwand-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# ffi.enable's ini default ("preload") only allows FFI::cdef() calls from a
+# script loaded via opcache.preload -- fine for CLI (Pest's own test runner
+# is exempted from this restriction entirely), but FrankenPHP is not the CLI
+# SAPI, so ExifToolFfi's own runtime FFI::cdef() call needs this explicit
+# override to work outside preloading.
+RUN echo 'ffi.enable=true' > /usr/local/etc/php/conf.d/99-piwigo-ffi.ini
+
 WORKDIR /app
 COPY --from=builder /app/vendor ./vendor
 COPY --from=frontend /app/dist ./dist
 COPY . .
 COPY --from=builder /app/vendor/autoload.php ./vendor/autoload.php
-COPY --from=exiftool-rs-builder /build/target/release/exiftool-rs /usr/local/bin/exiftool-rs
+COPY --from=exiftool-rs-builder /build/target/release/libexiftool_rs.so /usr/local/lib/piwigo/libexiftool_rs.so
 COPY docker/Caddyfile /etc/frankenphp/Caddyfile
 
 RUN mkdir -p _data local galleries upload /config/caddy /data/caddy \
@@ -112,9 +121,9 @@ FROM php:8.5-apache AS production-apache
 # both images share the same underlying official php build).
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libicu-dev libzip-dev libwebp-dev libjpeg62-turbo-dev libpng-dev \
-        libxml2-dev libmagickwand-dev \
+        libxml2-dev libmagickwand-dev libffi-dev \
     && docker-php-ext-configure gd --with-jpeg --with-webp \
-    && docker-php-ext-install -j"$(nproc)" calendar gd intl mysqli pcntl zip \
+    && docker-php-ext-install -j"$(nproc)" calendar ffi gd intl mysqli pcntl zip \
     && pecl install imagick redis apcu \
     && docker-php-ext-enable imagick redis apcu \
     && a2enmod rewrite headers \
@@ -125,12 +134,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libicu-dev libzip-dev libwebp-dev libjpeg62-turbo-dev libpng-dev libxml2-dev libmagickwand-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Same ffi.enable reasoning as the production (FrankenPHP) stage above —
+# Apache/mod_php is not the CLI SAPI either.
+RUN echo 'ffi.enable=true' > /usr/local/etc/php/conf.d/99-piwigo-ffi.ini
+
 WORKDIR /var/www/html
 COPY --from=builder /app/vendor ./vendor
 COPY --from=frontend /app/dist ./dist
 COPY . .
 COPY --from=builder /app/vendor/autoload.php ./vendor/autoload.php
-COPY --from=exiftool-rs-builder /build/target/release/exiftool-rs /usr/local/bin/exiftool-rs
+COPY --from=exiftool-rs-builder /build/target/release/libexiftool_rs.so /usr/local/lib/piwigo/libexiftool_rs.so
 # Overwrites the base image's default site (already enabled via
 # sites-enabled/000-default.conf -> ../sites-available/000-default.conf, so
 # no a2ensite call needed) to point DocumentRoot at public/ instead of

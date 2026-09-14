@@ -47,6 +47,10 @@ required-features = ["parity"]
 [lib]
 name = "exiftool_rs"
 path = "src/lib.rs"
+# cdylib: prototype-only, for the in-process FFI benchmark (src/ffi.rs) --
+# see tools/exiftool-rs-fork/README.md's FFI-prototype section before
+# assuming this is the shipped design.
+crate-type = ["rlib", "cdylib"]
 
 [features]
 default = []

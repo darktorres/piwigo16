@@ -70,11 +70,13 @@ pub mod encoding;
 pub mod error;
 
 pub mod exiftool;
+pub mod ffi;
 pub mod file_type;
 pub mod formats;
 pub mod geolocation;
 pub mod geotag;
 pub mod i18n;
+pub mod json_output;
 pub mod md5;
 pub mod metadata;
 pub mod tag;

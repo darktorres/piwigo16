@@ -86,6 +86,19 @@ parameters:
             - ecs.php
     ignoreErrors:
         -
+            # FFI::cdef()'s own header string defines exiftool_rs_extract()/
+            # exiftool_rs_free() at runtime -- there is no static stub PHPStan
+            # (or PHP's own reflection) can resolve these dynamic method calls
+            # against, so both the call itself and its mixed-typed return
+            # (feeding FFI::string(), which wants FFI\CData) are unavoidably
+            # unanalyzable here. Confirmed live: both methods work correctly.
+            identifier: method.notFound
+            path: src/Piwigo/Metadata/ExifTool/ExifToolFfi.php
+        -
+            # Same root cause as the method.notFound entry above.
+            identifier: argument.type
+            path: src/Piwigo/Metadata/ExifTool/ExifToolFfi.php
+        -
             # Queries here target an in-memory sqlite scratch table created
             # fresh per test, never the live DB the bootstrap connects to.
             identifier: dba.syntaxError

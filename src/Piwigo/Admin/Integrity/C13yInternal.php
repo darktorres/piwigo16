@@ -22,7 +22,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Metadata\ExifTool\ExifToolProcess;
+use Piwigo\Metadata\ExifTool\ExifToolFfi;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\UserService;
@@ -117,7 +117,7 @@ final readonly class C13yInternal
             'use_exif' => $this->currentConfig->useExif,
         ];
         foreach ($checks as $value => $enabled) {
-            if ($enabled and (! ExifToolProcess::isAvailable())) {
+            if ($enabled and (! ExifToolFfi::isAvailable())) {
                 $c13y->addAnomaly(
                     sprintf($this->lang->t('%s value is not correct file because ExifTool is not installed'), '$conf[\'' . $value . '\']'),
                     null,

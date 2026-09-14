@@ -563,23 +563,32 @@ file needs to exist inside the image.
 ### Requirements
 
 - PHP 8.5 (`ext-calendar`, `ext-ctype`, `ext-curl`, `ext-dom`, `ext-exif`,
-  `ext-fileinfo`, `ext-filter`, `ext-gd`, `ext-iconv`, `ext-imagick`,
-  `ext-imap`, `ext-intl`, `ext-libxml`, `ext-mbstring`, `ext-mysqli`,
-  `ext-openssl`, `ext-pcntl`, `ext-pgsql`, `ext-session`, `ext-simplexml`,
-  `ext-sqlite3`, `ext-zip`, `ext-zlib`; `pcov` for coverage)
+  `ext-ffi`, `ext-fileinfo`, `ext-filter`, `ext-gd`, `ext-iconv`,
+  `ext-imagick`, `ext-imap`, `ext-intl`, `ext-libxml`, `ext-mbstring`,
+  `ext-mysqli`, `ext-openssl`, `ext-pcntl`, `ext-pgsql`, `ext-session`,
+  `ext-simplexml`, `ext-sqlite3`, `ext-zip`, `ext-zlib`; `pcov` for coverage)
 - `exiftool-rs` -- real photo metadata (EXIF/IPTC/XMP) reads go through
-  `Metadata\ExifTool\ExifToolProcess`, not PHP's own
+  `Metadata\ExifTool\ExifToolFfi`, not PHP's own
   `exif_read_data()`/`iptcparse()` (no XMP support, incomplete tag
   dictionary, JPEG/TIFF-only). A hard requirement, not optional:
   `Metadata\MetadataService::getExifData()`/`getIptcData()` throw without
   it. Not a system package -- a patched fork of a pure-Rust ExifTool
   reimplementation, vendored at `tools/exiftool-rs-fork/` (see its own
-  README.md for why it's a fork, the license, and a known GPS-sign bug it
-  fixes), built by the Dockerfile's own `exiftool-rs-builder` stage and by
-  CI directly from that vendored source. `ext-exif` above stays required
-  only for `Admin\Image\ImageBackend::getRotationAngle()`'s own narrow,
-  unrelated use (reading just the `Orientation` tag to auto-rotate an
-  upload), which native PHP already serves adequately. Real (Perl)
+  README.md for why it's a fork, the license, and the six real bugs it
+  fixes), built as a shared library (`cargo build --lib`) by the
+  Dockerfile's own `exiftool-rs-builder` stage and by CI, then loaded
+  **in-process via `ext-ffi`** (`FFI::cdef()`) rather than run as a
+  subprocess -- a ~5-6x per-file latency win over the subprocess design it
+  replaced, benchmarked at 500-50,000 files, at the cost of no longer
+  isolating a bad read from the calling PHP process (a crash in the loaded
+  library takes the worker down with it; the fork's own README explains
+  why this was accepted). Requires `ffi.enable=true` in php.ini for any
+  non-CLI SAPI (FrankenPHP, Apache/mod_php) -- CLI is exempt from the
+  `ffi.enable=preload` default, so this doesn't affect Composer scripts or
+  the test suite, only production request handling. `ext-exif` above stays
+  required only for `Admin\Image\ImageBackend::getRotationAngle()`'s own
+  narrow, unrelated use (reading just the `Orientation` tag to auto-rotate
+  an upload), which native PHP already serves adequately. Real (Perl)
   ExifTool (`libimage-exiftool-perl` on Debian/Ubuntu) is a separate,
   test-only dependency -- several Integration tests use it to embed
   independently-verified ground-truth tags into fixture images, not part

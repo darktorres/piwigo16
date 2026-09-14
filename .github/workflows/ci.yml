@@ -23,7 +23,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  PHP_EXTENSIONS: calendar,ctype,curl,dom,fileinfo,filter,gd,iconv,intl,libxml,mbstring,mysqli,openssl,session,simplexml,zlib
+  PHP_EXTENSIONS: calendar,ctype,curl,dom,fileinfo,ffi,filter,gd,iconv,intl,libxml,mbstring,mysqli,openssl,session,simplexml,zlib
 
 jobs:
   # ── PHP: lint / static analysis ─────────────────────────────────────────
@@ -40,18 +40,22 @@ jobs:
           coverage: none
           extensions: ${{ env.PHP_EXTENSIONS }}
       - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
-      # Metadata\ExifTool\ExifToolProcess is driven by the patched
-      # exiftool-rs fork vendored at tools/exiftool-rs-fork/ (see its own
-      # README.md) -- built here with the runner's preinstalled Rust
-      # toolchain, same as the Dockerfile's own exiftool-rs-builder stage.
+      # Metadata\ExifTool\ExifToolFfi loads the patched exiftool-rs fork
+      # vendored at tools/exiftool-rs-fork/ (see its own README.md) in-process
+      # via FFI -- built here as a cdylib with the runner's preinstalled Rust
+      # toolchain, same as the Dockerfile's own exiftool-rs-builder stage, and
+      # installed at the path ExifToolFfi's own default expects. No
+      # ffi.enable override needed: PHP CLI (how every job here runs PHP) is
+      # exempt from the ffi.enable=preload restriction that applies to
+      # non-CLI SAPIs like the Dockerfile's own FrankenPHP/Apache targets.
       # Real (Perl) `exiftool` is a separate, test-only dependency: several
       # Integration tests' own tagFileWithExifTool() helper shells out to it
       # to embed real, independently-verified EXIF/IPTC/GPS tags into
       # fixture images -- installed explicitly rather than assumed
       # pre-bundled on the runner image.
       - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libimage-exiftool-perl
-      - run: cd tools/exiftool-rs-fork && cargo build --release --locked --bin exiftool-rs
-      - run: sudo cp tools/exiftool-rs-fork/target/release/exiftool-rs /usr/local/bin/exiftool-rs
+      - run: cd tools/exiftool-rs-fork && cargo build --release --locked --lib
+      - run: sudo mkdir -p /usr/local/lib/piwigo && sudo cp tools/exiftool-rs-fork/target/release/libexiftool_rs.so /usr/local/lib/piwigo/libexiftool_rs.so
       - run: composer test
 
   ecs:
@@ -675,11 +679,11 @@ jobs:
       - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
       # Same two ExifTool dependencies as the pest job above: real `exiftool`
       # for tagFileWithExifTool()'s fixture-tagging helper, and the patched
-      # exiftool-rs fork (tools/exiftool-rs-fork/) built and installed as
-      # what Metadata\ExifTool\ExifToolProcess actually drives.
+      # exiftool-rs fork (tools/exiftool-rs-fork/) built as a cdylib and
+      # installed as what Metadata\ExifTool\ExifToolFfi actually loads.
       - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libimage-exiftool-perl
-      - run: cd tools/exiftool-rs-fork && cargo build --release --locked --bin exiftool-rs
-      - run: sudo cp tools/exiftool-rs-fork/target/release/exiftool-rs /usr/local/bin/exiftool-rs
+      - run: cd tools/exiftool-rs-fork && cargo build --release --locked --lib
+      - run: sudo mkdir -p /usr/local/lib/piwigo && sudo cp tools/exiftool-rs-fork/target/release/libexiftool_rs.so /usr/local/lib/piwigo/libexiftool_rs.so
       - name: Provision piwigo_test from the committed fixture
         run: |
           mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-17.0.sql

@@ -35,7 +35,7 @@ use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\Projection\SrcImageInfo;
 use Piwigo\Image\SrcImage;
-use Piwigo\Metadata\ExifTool\ExifToolProcess;
+use Piwigo\Metadata\ExifTool\ExifToolFfi;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Renderer;
@@ -335,7 +335,7 @@ final readonly class PhotosAddDirectPageRenderer
         if (! isset($_SESSION['upload_hide_warnings'])) {
             $setup_warnings = [];
 
-            if ($this->currentConfig->useExif && ! ExifToolProcess::isAvailable()) {
+            if ($this->currentConfig->useExif && ! ExifToolFfi::isAvailable()) {
                 $setup_warnings[] = $this->lang->t('ExifTool is not installed, admin should disable exif use');
             }
 

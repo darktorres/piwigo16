@@ -10,7 +10,7 @@ use Piwigo\Controller\Projection\PictureElement;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
-use Piwigo\Metadata\ExifTool\ExifToolProcess;
+use Piwigo\Metadata\ExifTool\ExifToolFfi;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Picture\Projection\MetadataPanel;
@@ -38,16 +38,16 @@ final class PictureMetadataRenderer
         // Checked once, up front, for both panels below -- unlike sync
         // (which should fail loudly for an admin when exiftool is
         // missing), a visitor's picture page should never 500 over it:
-        // skip building an ExifToolProcess entirely (no panel) rather than
+        // skip building an ExifToolFfi entirely (no panel) rather than
         // constructing one and catching its throw.
-        if (! ExifToolProcess::isAvailable()) {
+        if (! ExifToolFfi::isAvailable()) {
             return null;
         }
 
-        $exifTool = ($currentConfig->showExif || $currentConfig->showIptc) ? new ExifToolProcess() : null;
+        $exifTool = ($currentConfig->showExif || $currentConfig->showIptc) ? new ExifToolFfi() : null;
 
         try {
-            if ($currentConfig->showExif && $exifTool instanceof ExifToolProcess) {
+            if ($currentConfig->showExif && $exifTool instanceof ExifToolFfi) {
                 $showExifFields = $currentConfig->showExifFields;
 
                 $exifMapping = [];
@@ -84,7 +84,7 @@ final class PictureMetadataRenderer
                 }
             }
 
-            if ($currentConfig->showIptc && $exifTool instanceof ExifToolProcess) {
+            if ($currentConfig->showIptc && $exifTool instanceof ExifToolFfi) {
                 $showIptcMapping = $currentConfig->showIptcMapping;
 
                 $iptc = $metadataService->getIptcData($picture->srcImage->getPath(), $showIptcMapping, $exifTool, ', ');

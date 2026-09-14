@@ -129,6 +129,7 @@ fn pad_display(s: &str, width: usize) -> String {
     }
 }
 
+use exiftool_rs::json_output::{file_is_xmp, group_for_family, suppress_value_lang, write_json_tags};
 use exiftool_rs::{ExifTool, Options};
 
 fn main() {
@@ -1023,37 +1024,6 @@ fn main() {
     }
 }
 
-/// Group name to print for ExifTool's `-G<n>`/`-g<n>` family selector.
-///
-/// Families 4 to 6 (instance, path, format) are not modelled by [`TagGroup`],
-/// so they fall back to family 1 rather than printing nothing.
-/// True when the source is a standalone XMP file (FileType "XMP").
-fn file_is_xmp(tags: &[exiftool_rs::Tag]) -> bool {
-    tags.iter()
-        .find(|t| t.name == "FileType")
-        .map(|t| t.print_value == "XMP")
-        .unwrap_or(false)
-}
-
-/// Whether to skip `-lang` value translation for this tag. In a standalone XMP
-/// file ExifTool re-reads binary metadata (exif:*, MakerNotes, ...) back from the
-/// XMP as their original groups but without running the PrintConv, so `-lang`
-/// leaves those values in English; only genuine XMP-native tags (and the Composite
-/// tags built from them) are localized. Match that by suppressing every non-XMP,
-/// non-Composite group in an XMP file (`xmp_file` is precomputed per file).
-fn suppress_value_lang(xmp_file: bool, tag: &exiftool_rs::Tag) -> bool {
-    xmp_file && tag.group.family0 != "XMP" && tag.group.family0 != "Composite"
-}
-
-fn group_for_family(tag: &exiftool_rs::Tag, family: u8) -> &str {
-    match family {
-        0 => &tag.group.family0,
-        2 => &tag.group.family2,
-        3 => &tag.group.family3,
-        _ => &tag.group.family1,
-    }
-}
-
 // ============================================================================
 // Stay-open mode
 // ============================================================================
@@ -1751,88 +1721,6 @@ fn print_tab(et: &ExifTool, files: &[String]) {
         }
     }
 }
-
-/// Whether a value is emitted as an unquoted JSON number, matching ExifTool's
-/// EscapeJSON regex `^-?(\d|[1-9]\d{1,14})(\.\d{1,16})?(e[-+]?\d{1,3})?$`
-/// (exiftool:3810). A multi-digit integer with a leading zero is NOT a number,
-/// so version strings such as "0221" stay quoted.
-fn json_is_number(s: &str) -> bool {
-    let b = s.as_bytes();
-    let mut i = 0;
-    if i < b.len() && b[i] == b'-' {
-        i += 1;
-    }
-    // integer part: a lone digit, or [1-9] followed by 1..=14 more digits
-    let int_start = i;
-    if i >= b.len() || !b[i].is_ascii_digit() {
-        return false;
-    }
-    if b[i] == b'0' {
-        i += 1; // a single "0" is allowed only if nothing more follows the int part
-    } else {
-        i += 1;
-        while i < b.len() && b[i].is_ascii_digit() && i - int_start <= 14 {
-            i += 1;
-        }
-    }
-    let int_len = i - int_start;
-    if int_len > 1 && b[int_start] == b'0' {
-        return false; // leading zero on a multi-digit integer
-    }
-    if int_len > 15 {
-        return false;
-    }
-    // optional fractional part: '.' then 1..=16 digits
-    if i < b.len() && b[i] == b'.' {
-        i += 1;
-        let frac_start = i;
-        while i < b.len() && b[i].is_ascii_digit() {
-            i += 1;
-        }
-        let frac_len = i - frac_start;
-        if !(1..=16).contains(&frac_len) {
-            return false;
-        }
-    }
-    // optional exponent: e/E, optional sign, 1..=3 digits
-    if i < b.len() && (b[i] == b'e' || b[i] == b'E') {
-        i += 1;
-        if i < b.len() && (b[i] == b'+' || b[i] == b'-') {
-            i += 1;
-        }
-        let exp_start = i;
-        while i < b.len() && b[i].is_ascii_digit() {
-            i += 1;
-        }
-        let exp_len = i - exp_start;
-        if !(1..=3).contains(&exp_len) {
-            return false;
-        }
-    }
-    i == b.len()
-}
-
-/// Elements to emit when a tag prints as a JSON array, or `None` for a scalar.
-///
-/// Mirrors ExifTool: a value that is still an ARRAY ref at print time renders as
-/// a JSON array (exiftool `FormatJSON`, default `$joinLists` off). Our faithful
-/// test is that `raw_value` is a `Value::List` whose plain per-element print join
-/// reproduces `print_value` exactly — meaning no scalar-collapsing conversion ran.
-/// Collapsed lists (GPSLatitude/GPSPosition, whose ValueConv rewrites the whole
-/// rational list into one formatted string) fail this test and stay scalar, which
-/// is what ExifTool prints for them. The per-element strings are `print_value`'s
-/// own segments, so any per-element PrintConv (ComponentsConfiguration → Y/Cb/Cr,
-/// PLUS vocab URIs → phrases) is already reflected in each array element.
-fn json_list_elements(tag: &exiftool_rs::Tag) -> Option<Vec<String>> {
-    if let exiftool_rs::Value::List(items) = &tag.raw_value {
-        let elems: Vec<String> = items.iter().map(|v| v.to_display_string()).collect();
-        if elems.join(", ") == tag.print_value {
-            return Some(elems);
-        }
-    }
-    None
-}
-
 fn print_json_all(
     et: &ExifTool,
     files: &[String],
@@ -1860,6 +1748,8 @@ fn print_json_all(
     println!("]");
 }
 
+/// Thin wrapper over the shared [`write_json_tags`] (used by both this CLI
+/// and the FFI prototype module, `src/ffi.rs`) that writes to stdout.
 #[allow(clippy::too_many_arguments)]
 fn print_json_tags(
     tags: &[exiftool_rs::Tag],
@@ -1871,174 +1761,19 @@ fn print_json_tags(
     lang: Option<&str>,
     numeric_tags: &std::collections::HashSet<String>,
 ) {
-    if prepend_comma {
-        print!(",");
-    }
-    let xmp_file = file_is_xmp(tags);
-    println!("{{");
-    println!("  \"SourceFile\": \"{}\",", escape_json(filename));
-    // ExifTool suppresses duplicate tag names in JSON output (`$noDups`,
-    // exiftool:2688): only the primary tag of each name is printed, its "(N)"
-    // copies are skipped, so no key ever repeats. Our tag list already carries the
-    // primary (priority winner) ahead of its copies, so keeping the first
-    // occurrence of each output key reproduces ExifTool's choice. With -G<n> the
-    // key is group-prefixed, and ExifTool resets the no-dup set per group
-    // (exiftool:2765), so the same name in different groups stays distinct — which
-    // deduping on the prefixed key gives us for free.
-    //
-    // Full deduping is only applied in default extraction: under -ee the
-    // primary/copy ordering of same-named tags from competing sources does not yet
-    // match ExifTool's, so deduping everything there would keep the wrong instance.
-    //
-    // One case is safe whatever the ordering, and is applied in both modes: a tag
-    // belonging to an embedded document can never hold the primary key. FoundTag
-    // only lets an incoming tag take the key over an existing one when
-    // `not $$self{DOC_NUM}` or the stored tag carries the very same G3
-    // (ExifTool.pm:9564-9565), so the copies a sub-document contributes to a name
-    // already claimed by an earlier tag are always the "(N)" ones — MRC's per-frame
-    // FEI headers, a QuickTime track, a FIT record. With -G3 the key already
-    // carries the document, so nothing collides and the rule is inert.
-    let keyed: Vec<(String, &exiftool_rs::Tag)> = if dedup {
-        // Priority-based "no dup" resolution, matching get_info()'s own
-        // identical logic (ExifTool's real $noDups is priority-based too,
-        // ExifTool.pm's FoundTag): the first occurrence of a key establishes
-        // it, and only a STRICTLY higher-priority later tag replaces it --
-        // never just "whichever came first in the tags vector". This
-        // previously used first-occurrence-wins unconditionally, which broke
-        // as soon as a lower-priority duplicate legitimately re-entered the
-        // tags list (e.g. `-a`/`-duplicates` re-exposing the plain
-        // `GPS:GPSLatitude` tag alongside the higher-priority
-        // `Composite:GPSLatitude`): since the plain tag is built before the
-        // composite, it came first in the vector and silently won the JSON
-        // key, discarding the Composite's correct signed-decimal value for
-        // real ExifTool's own `-a -GPSLatitude#` (which keeps the priority
-        // winner regardless of `-a`) -- exactly the request shape Piwigo's
-        // ExifToolProcess always sends.
-        let mut order: Vec<String> = Vec::new();
-        let mut winners: std::collections::HashMap<String, (&exiftool_rs::Tag, i32)> =
-            std::collections::HashMap::new();
-        for tag in tags {
-            let key = if show_groups {
-                format!("{}:{}", group_for_family(tag, group_family), tag.name)
-            } else {
-                tag.name.clone()
-            };
-            let rank = tag.priority_rank();
-            match winners.get_mut(&key) {
-                None => {
-                    order.push(key.clone());
-                    winners.insert(key, (tag, rank));
-                }
-                Some(entry) => {
-                    if rank > entry.1 {
-                        *entry = (tag, rank);
-                    }
-                }
-            }
-        }
-        order
-            .into_iter()
-            .map(|k| {
-                let (tag, _) = winners[&k];
-                (k, tag)
-            })
-            .collect()
-    } else {
-        let mut seen = std::collections::HashSet::new();
-        tags.iter()
-            .filter_map(|tag| {
-                let key = if show_groups {
-                    format!("{}:{}", group_for_family(tag, group_family), tag.name)
-                } else {
-                    tag.name.clone()
-                };
-                let first = seen.insert(key.clone());
-                if first || tag.group.family3 == "Main" {
-                    Some((key, tag))
-                } else {
-                    None
-                }
-            })
-            .collect()
-    };
-    for (i, (key, tag)) in keyed.iter().enumerate() {
-        // ExifTool's per-tag `#` numeric-format suffix (-TAG#) requests the
-        // raw, non-print-converted value for JUST this tag, independent of
-        // any global -n -- e.g. `-GPSLatitude#` returns signed decimal
-        // degrees instead of "D deg M' S\" REF" text. This JSON printer
-        // previously always used `tag.print_value` regardless, so `#`
-        // requests silently got the print-converted value back instead
-        // (the per-tag Options::numeric_tags set built by
-        // apply_tag_request() was never actually consulted here -- only by
-        // get_info(), which -json output doesn't go through at all).
-        let numeric = numeric_tags.contains(&tag.name.to_lowercase());
-        let raw_display;
-        let translated;
-        let value_str: &str = if numeric {
-            raw_display = tag.raw_value.to_display_string();
-            raw_display.as_str()
-        } else {
-            // With -lang, localize the scalar PrintConv value (ExifTool keeps
-            // the tag name as the JSON key and translates only the value).
-            // List values are per-element and not PrintConv-keyed, so they
-            // are left untranslated. Numeric (#) values have no PrintConv to
-            // localize either, matching print_text_full()'s own `!numeric`
-            // guard around -lang.
-            translated = lang
-                .filter(|_| !suppress_value_lang(xmp_file, tag))
-                .and_then(|l| {
-                    exiftool_rs::i18n::translate_value(
-                        l,
-                        &tag.group.family1,
-                        &tag.name,
-                        &tag.print_value,
-                    )
-                });
-            translated.as_deref().unwrap_or(tag.print_value.as_str())
-        };
-        let comma = if i + 1 < keyed.len() { "," } else { "" };
-        // ExifTool's FormatJSON prints an ARRAY-ref value as a JSON array `[...]`
-        // (unless `$joinLists`, only set by -sep/-List — never in default mode).
-        // The faithful reconstruction of "value is an array ref at print time" is:
-        // the tag's `raw_value` is a `Value::List` AND its `print_value` is the
-        // plain per-element print join — i.e. no scalar-collapsing conversion was
-        // applied. GPSLatitude/GPSPosition are rational lists internally but their
-        // ValueConv collapses them into a reformatted scalar string, so their
-        // print_value is NOT the element join and they stay scalar (as ExifTool
-        // emits them). BitsPerSample ("8, 8, 8"), ComponentsConfiguration
-        // ("Y, Cb, Cr, -"), Keywords, Subject, … all keep the join and array.
-        if let Some(elems) = json_list_elements(tag) {
-            print!("  \"{}\": [", key);
-            for (j, el) in elems.iter().enumerate() {
-                let sep = if j + 1 < elems.len() { "," } else { "" };
-                if json_is_number(el) {
-                    print!("{}{}", el, sep);
-                } else if el.eq_ignore_ascii_case("true") || el.eq_ignore_ascii_case("false") {
-                    print!("{}{}", el.to_ascii_lowercase(), sep);
-                } else {
-                    print!("\"{}\"{}", escape_json(el), sep);
-                }
-            }
-            println!("]{}", comma);
-            continue;
-        }
-        // Scalar typing mirrors ExifTool's EscapeJSON (exiftool:3806-3810): a
-        // value is emitted unquoted as a JSON number only if it matches its
-        // number regex (notably NO leading zero on a multi-digit integer, so
-        // version strings like "0221" stay quoted), and "true"/"false"
-        // (case-insensitive) become lowercase JSON booleans. Everything else is
-        // a quoted, escaped string. The number/bool forms print the value
-        // verbatim, exactly as ExifTool returns `$str`.
-        if json_is_number(value_str) {
-            println!("  \"{}\": {}{}", key, value_str, comma);
-        } else if value_str.eq_ignore_ascii_case("true") || value_str.eq_ignore_ascii_case("false")
-        {
-            println!("  \"{}\": {}{}", key, value_str.to_ascii_lowercase(), comma);
-        } else {
-            println!("  \"{}\": \"{}\"{}", key, escape_json(value_str), comma);
-        }
-    }
-    print!("}}");
+    let stdout = io::stdout();
+    let mut lock = stdout.lock();
+    let _ = write_json_tags(
+        &mut lock,
+        tags,
+        filename,
+        prepend_comma,
+        show_groups,
+        group_family,
+        dedup,
+        lang,
+        numeric_tags,
+    );
 }
 
 /// Output in -args format: -TAG=VALUE per line
@@ -2370,29 +2105,6 @@ fn sanitize_display_value(s: &str) -> String {
     // Remove trailing whitespace
     let trimmed = result.trim_end();
     trimmed.to_string()
-}
-
-/// Escape a string for JSON, mirroring ExifTool's EscapeJSON (exiftool:3817-3821):
-/// drop NUL bytes, escape `" \ \t \n \r`, and escape every other control
-/// character (U+0000..=U+001F and U+007F) as `\uXXXX`. Without the last step a
-/// value carrying a raw control byte produces invalid JSON.
-fn escape_json(s: &str) -> String {
-    let mut out = String::with_capacity(s.len());
-    for ch in s.chars() {
-        match ch {
-            '\0' => {} // ExifTool removes all nulls
-            '\\' => out.push_str("\\\\"),
-            '"' => out.push_str("\\\""),
-            '\t' => out.push_str("\\t"),
-            '\n' => out.push_str("\\n"),
-            '\r' => out.push_str("\\r"),
-            c if (c as u32) < 0x20 || c as u32 == 0x7f => {
-                out.push_str(&format!("\\u{:04X}", c as u32));
-            }
-            c => out.push(c),
-        }
-    }
-    out
 }
 
 fn escape_csv(s: &str) -> String {

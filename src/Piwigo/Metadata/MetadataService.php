@@ -26,7 +26,7 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Metadata\Event\CleanIptcValue;
-use Piwigo\Metadata\ExifTool\ExifToolProcess;
+use Piwigo\Metadata\ExifTool\ExifToolFfi;
 use Piwigo\Metadata\Projection\MetadataImage;
 use Piwigo\Metadata\Projection\SvgDimensions;
 use Piwigo\Permission\PermissionService;
@@ -44,15 +44,16 @@ use SimpleXMLElement;
  * {@see MetadataRepository} for their own DB access.
  *
  * EXIF/IPTC extraction goes through {@see \Piwigo\Metadata\ExifTool\
- * ExifToolProcess} (real ExifTool, batched via its `-stay_open` protocol),
- * not PHP's own `exif_read_data()`/`iptcparse()` -- those have no XMP
- * support at all, an incomplete tag dictionary (confirmed live: a real
- * `LensModel` tag came back as `UndefinedTag:0xA434` from
- * `exif_read_data()`), and JPEG/TIFF-only format coverage. Every caller
- * supplies its own `ExifToolProcess` explicitly (no hidden/mutable state
- * on this `readonly` class) so a whole sync batch, or a single picture
- * page's own one-image lookup, can share one persistent process rather
- * than spawning one per file.
+ * ExifToolFfi} (a patched exiftool-rs fork, loaded in-process via FFI --
+ * see `tools/exiftool-rs-fork/README.md`), not PHP's own
+ * `exif_read_data()`/`iptcparse()` -- those have no XMP support at all, an
+ * incomplete tag dictionary (confirmed live: a real `LensModel` tag came
+ * back as `UndefinedTag:0xA434` from `exif_read_data()`), and
+ * JPEG/TIFF-only format coverage. Every caller supplies its own
+ * `ExifToolFfi` explicitly (no hidden/mutable state on this `readonly`
+ * class) so a whole sync batch, or a single picture page's own one-image
+ * lookup, can share one loaded library binding rather than re-parsing
+ * `FFI::cdef()`'s own header string per file.
  *
  * [SEC-20] `getSyncMetadata()`'s SVG dimension parsing strips any
  * `<!DOCTYPE ...>` declaration before calling `simplexml_load_string()`
@@ -147,7 +148,7 @@ final readonly class MetadataService
      * @param  array<string, string>  $map
      * @return array<string, string>
      */
-    public function getIptcData(string $filename, array $map, ExifToolProcess $exifTool, string $arraySep = ','): array
+    public function getIptcData(string $filename, array $map, ExifToolFfi $exifTool, string $arraySep = ','): array
     {
         $result = [];
 
@@ -174,7 +175,7 @@ final readonly class MetadataService
             $rawValue = $row[$tagName];
             if (is_array($rawValue)) {
                 // Multi-value IPTC field (e.g. Keywords) -- ExifTool's own
-                // `-a` flag (always passed by ExifToolProcess) returns
+                // `-a` flag (always passed by ExifToolFfi) returns
                 // every repeated dataset instance as an array, matching
                 // the original iptcparse()-based array-join shape exactly.
                 $stringValues = array_values(array_filter($rawValue, is_string(...)));
@@ -251,7 +252,7 @@ final readonly class MetadataService
      * @param  array<string, string>  $map
      * @return array<string, mixed>
      */
-    public function getExifData(string $filename, array $map, ExifToolProcess $exifTool): array
+    public function getExifData(string $filename, array $map, ExifToolFfi $exifTool): array
     {
         $logger = $this->currentLogger->get();
         $result = [];
@@ -349,7 +350,7 @@ final readonly class MetadataService
     /**
      * @return array<string, string>
      */
-    public function getSyncIptcData(string $file, ExifToolProcess $exifTool): array
+    public function getSyncIptcData(string $file, ExifToolFfi $exifTool): array
     {
 
         $map = $this->stringMap($this->currentConfig->useIptcMapping);
@@ -392,7 +393,7 @@ final readonly class MetadataService
     /**
      * @return array<string, string>
      */
-    public function getSyncExifData(string $file, ExifToolProcess $exifTool): array
+    public function getSyncExifData(string $file, ExifToolFfi $exifTool): array
     {
 
         $map = $this->stringMap($this->currentConfig->useExifMapping);
@@ -468,7 +469,7 @@ final readonly class MetadataService
      * @return array<string, mixed>|false includes data provided in
      *   $infos, or false if the file's size can't be read
      */
-    public function getSyncMetadata(array $infos, ExifToolProcess $exifTool): array|false
+    public function getSyncMetadata(array $infos, ExifToolFfi $exifTool): array|false
     {
 
         $path = $infos['path'] ?? null;
@@ -623,11 +624,10 @@ final readonly class MetadataService
      * Sync all metadata of a list of images. Metadata are fetched from
      * original files and saved in database.
      *
-     * Opens one {@see ExifToolProcess} for the whole batch (closed in
-     * `finally`) rather than one per image -- the actual reason this
-     * batches: a persistent process avoids paying Perl's own interpreter
-     * boot + module load cost per file (benchmarked: 200 files, 37.5s
-     * naive per-file spawn vs 1.79s reused across one process).
+     * Opens one {@see ExifToolFfi} for the whole batch (closed in
+     * `finally`, a no-op under FFI but kept for interface consistency)
+     * rather than one per image -- one loaded library binding avoids
+     * re-parsing `FFI::cdef()`'s own header string per file.
      *
      * @param  list<int>  $ids
      */
@@ -655,7 +655,7 @@ final readonly class MetadataService
         $tagServiceImageService = new ImageService(TypedRepository::narrow($entityManager->getRepository(ImageEntity::class), ImageRepository::class), new ActivityService(TypedRepository::narrow($entityManager->getRepository(ActivityEntity::class), ActivityRepository::class)), $this->eventDispatcher, $this->currentConfig, $this->paths, $tagServiceCategoryService);
         $tagService = new TagService($this->lang, TypedRepository::narrow($entityManager->getRepository(TagEntity::class), TagRepository::class), $permissionService, new ActivityService(TypedRepository::narrow($entityManager->getRepository(ActivityEntity::class), ActivityRepository::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig, $this->currentLogger);
 
-        $exifTool = new ExifToolProcess();
+        $exifTool = new ExifToolFfi();
 
         try {
             foreach ($this->repo->findImagesByIds($ids) as $row) {

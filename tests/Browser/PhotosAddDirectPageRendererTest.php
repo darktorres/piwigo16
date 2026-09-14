@@ -299,12 +299,12 @@ it('warns when upload_form_chunk_size is configured larger than PHP\'s real uplo
 //   `function_exists('gd_info')`), which the "computes the GD..." test
 //   above only ever observes returning true.
 //
-// - `if ($this->currentConfig->useExif && ! ExifToolProcess::isAvailable())`
+// - `if ($this->currentConfig->useExif && ! ExifToolFfi::isAvailable())`
 //   ("ExifTool is not installed"): exiftool is a real, installed hard
 //   requirement in this environment -- exact same "verified untestable
 //   without breaking a real runtime guarantee" conclusion this codebase
 //   already documents in tests/Integration/MetadataServiceTest.php
-//   (getExifData()'s own real ExifToolProcess dependency) and
+//   (getExifData()'s own real ExifToolFfi dependency) and
 //   tests/Integration/Admin/Integrity/C13yInternalTest.php (c13yExif()'s
 //   own identical guard).
 //

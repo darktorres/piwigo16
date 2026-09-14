@@ -21,7 +21,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Metadata\Event\CleanIptcValue;
-    use Piwigo\Metadata\ExifTool\ExifToolProcess;
+    use Piwigo\Metadata\ExifTool\ExifToolFfi;
     use Piwigo\Metadata\MetadataRepository;
     use Piwigo\Metadata\MetadataService;
     use Piwigo\Metadata\Projection\SvgDimensions;
@@ -46,7 +46,7 @@ namespace Piwigo\Tests\Integration {
 
         private string $scratchDir;
 
-        private ExifToolProcess $exifTool;
+        private ExifToolFfi $exifTool;
 
         #[Override]
         protected function setUp(): void
@@ -78,7 +78,7 @@ namespace Piwigo\Tests\Integration {
                 'severity' => Logger::OFF,
             ]));
             $this->service = new MetadataService(LangTestFactory::get(), new MetadataRepository(EntityManagerFactory::build($this->conn)), $currentLogger, EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), CurrentPathsTestFactory::get());
-            $this->exifTool = new ExifToolProcess();
+            $this->exifTool = new ExifToolFfi();
 
             CurrentConfigTestFactory::get()->useIptc = false;
             CurrentConfigTestFactory::get()->useExif = true;
@@ -193,7 +193,7 @@ namespace Piwigo\Tests\Integration {
          * Writes real tags into an existing file via the actual `exiftool`
          * binary -- every getExifData()/getSyncExifData() test below needs
          * genuine embedded tags now that extraction goes through a real
-         * ExifToolProcess, not a `format_exif_data` plugin-injected fake
+         * ExifToolFfi, not a `format_exif_data` plugin-injected fake
          * $exif array (that event no longer exists -- getExifData() has no
          * "PHP found nothing, ask a plugin" moment in the same shape once
          * exif_read_data() itself is gone).
@@ -311,7 +311,7 @@ namespace Piwigo\Tests\Integration {
          * SYSTEM entity that reads a local file must never leak that file's
          * content into the parsed result, and must never hang/crash trying to
          * resolve it -- proven against a real temp file, not just a code
-         * inspection. Also proves the real ExifTool process this file is now
+         * inspection. Also proves the real exiftool-rs engine this file is now
          * also handed to (getExifData()'s own unconditional GPS-tag request,
          * regardless of file type) doesn't reintroduce the same class of leak
          * -- confirmed separately, live, that ExifTool's own XML parsing
@@ -594,7 +594,7 @@ namespace Piwigo\Tests\Integration {
         public function testGetExifDataStripsHtmlRecursivelyFromAnArrayValuedField(): void
         {
             // XMP:Subject is a real, naturally multi-valued tag (an XMP
-            // "Bag") -- ExifToolProcess's own `-a` flag returns it as an
+            // "Bag") -- ExifToolFfi's own `-a` flag returns it as an
             // array when it has multiple entries, exercising the same
             // array_walk_recursive() HTML-strip path the original's
             // fabricated 'MultiField' plugin injection did.
@@ -1033,7 +1033,7 @@ namespace Piwigo\Tests\Integration {
             $imageId = (int) $this->conn->lastInsertId();
 
             try {
-                // syncMetadata() opens its own internal ExifToolProcess for
+                // syncMetadata() opens its own internal ExifToolFfi for
                 // the whole batch -- unlike getSyncMetadata()/getExifData()/
                 // getIptcData(), its own public signature is unchanged.
                 $this->service->syncMetadata([$imageId], $this->permissionService(), EntityManagerFactory::build($this->conn));

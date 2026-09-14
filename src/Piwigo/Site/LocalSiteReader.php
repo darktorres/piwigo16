@@ -14,7 +14,7 @@ namespace Piwigo\Site;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\StringHelper;
-use Piwigo\Metadata\ExifTool\ExifToolProcess;
+use Piwigo\Metadata\ExifTool\ExifToolFfi;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Site\Projection\ElementUpdateAttributes;
 
@@ -163,13 +163,13 @@ final class LocalSiteReader
      * Thin delegate to MetadataService::getSyncMetadata() -- see that
      * method's own docblock for why $infos/the return stay generic.
      * $exifTool is threaded through explicitly (not resolved internally)
-     * so a whole sync pass's own caller can share one persistent
-     * ExifTool process across every file instead of one per call.
+     * so a whole sync pass's own caller can share one loaded ExifToolFfi
+     * library binding across every file instead of one per call.
      *
      * @param array<string, mixed> $infos
      * @return array<string, mixed>|false
      */
-    public function getElementMetadata(array $infos, ExifToolProcess $exifTool): array|false
+    public function getElementMetadata(array $infos, ExifToolFfi $exifTool): array|false
     {
         return $this->metadataService
             ->getSyncMetadata($infos, $exifTool);

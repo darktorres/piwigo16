@@ -28,7 +28,16 @@ RUN bun install --frozen-lockfile
 COPY . .
 RUN bun run build
 
-# ─── Stage 3: production runtime (FrankenPHP — see docs/REFERENCE.md's "FrankenPHP worker-mode runtime, Apache as fallback" decision) ──
+# ─── Stage 3: exiftool-rs build (patched fork, driven via Metadata\ExifTool\
+# ExifToolProcess instead of real Perl ExifTool — see
+# tools/exiftool-rs-fork/README.md for why this is a vendored, patched fork
+# rather than upstream as-is or a system package) ──────────────────────────
+FROM rust:1-bookworm AS exiftool-rs-builder
+WORKDIR /build
+COPY tools/exiftool-rs-fork/ ./
+RUN cargo build --release --locked --bin exiftool-rs
+
+# ─── Stage 4: production runtime (FrankenPHP — see docs/REFERENCE.md's "FrankenPHP worker-mode runtime, Apache as fallback" decision) ──
 FROM dunglas/frankenphp:1-php8.5 AS production
 
 # The base image already ships ctype, curl, dom (+lexbor), fileinfo, filter,
@@ -38,12 +47,9 @@ FROM dunglas/frankenphp:1-php8.5 AS production
 # (jcupitt/vips) is pure FFI against the runtime .so, not a compiled
 # extension, so it needs no -dev headers here at all — add the plain
 # libvips runtime package (not -dev) + php-ffi when P19 actually lands it.
-# libimage-exiftool-perl (real ExifTool, driven via Metadata\ExifTool\
-# ExifToolProcess) is a genuine runtime dependency, not a build-time -dev
-# header package -- kept out of the apt-get purge below on purpose.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libicu-dev libzip-dev libwebp-dev libjpeg62-turbo-dev libpng-dev \
-        libxml2-dev libmagickwand-dev libimage-exiftool-perl \
+        libxml2-dev libmagickwand-dev \
     && docker-php-ext-configure gd --with-jpeg --with-webp \
     && docker-php-ext-install -j"$(nproc)" calendar gd intl mysqli pcntl zip \
     && pecl install imagick redis apcu \
@@ -62,6 +68,7 @@ COPY --from=builder /app/vendor ./vendor
 COPY --from=frontend /app/dist ./dist
 COPY . .
 COPY --from=builder /app/vendor/autoload.php ./vendor/autoload.php
+COPY --from=exiftool-rs-builder /build/target/release/exiftool-rs /usr/local/bin/exiftool-rs
 COPY docker/Caddyfile /etc/frankenphp/Caddyfile
 
 RUN mkdir -p _data local galleries upload /config/caddy /data/caddy \
@@ -102,11 +109,10 @@ ENTRYPOINT ["bun", "run", "test"]
 FROM php:8.5-apache AS production-apache
 
 # Same already-built-in set as the production stage (verified via `php -m` —
-# both images share the same underlying official php build). Same
-# libimage-exiftool-perl runtime-dependency reasoning as that stage too.
+# both images share the same underlying official php build).
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libicu-dev libzip-dev libwebp-dev libjpeg62-turbo-dev libpng-dev \
-        libxml2-dev libmagickwand-dev libimage-exiftool-perl \
+        libxml2-dev libmagickwand-dev \
     && docker-php-ext-configure gd --with-jpeg --with-webp \
     && docker-php-ext-install -j"$(nproc)" calendar gd intl mysqli pcntl zip \
     && pecl install imagick redis apcu \
@@ -124,6 +130,7 @@ COPY --from=builder /app/vendor ./vendor
 COPY --from=frontend /app/dist ./dist
 COPY . .
 COPY --from=builder /app/vendor/autoload.php ./vendor/autoload.php
+COPY --from=exiftool-rs-builder /build/target/release/exiftool-rs /usr/local/bin/exiftool-rs
 # Overwrites the base image's default site (already enabled via
 # sites-enabled/000-default.conf -> ../sites-available/000-default.conf, so
 # no a2ensite call needed) to point DocumentRoot at public/ instead of

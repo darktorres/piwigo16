@@ -265,14 +265,15 @@ test('read() lets a second, unrecovered failure propagate instead of retrying fo
 
 test('constructor throws a clear, actionable exception when the binary cannot be started', function (): void {
     expect(static fn () => new ExifToolProcess('/no/such/binary/exiftool-does-not-exist'))
-        ->toThrow(RuntimeException::class, 'Piwigo requires ExifTool');
+        ->toThrow(RuntimeException::class, 'Piwigo requires exiftool-rs');
 });
 
-test('isAvailable() is true when exiftool is genuinely installed', function (): void {
-    // exiftool is a hard requirement of this project from this change
-    // onward (Dockerfile/CI both install it) -- a false here in any real
-    // dev/CI environment is a genuine environment problem worth failing
-    // loudly on, not something to soften into a weaker assertion.
+test('isAvailable() is true when exiftool-rs is genuinely installed', function (): void {
+    // exiftool-rs is a hard requirement of this project from this change
+    // onward (Dockerfile builds it from tools/exiftool-rs-fork/, CI installs
+    // the same build) -- a false here in any real dev/CI environment is a
+    // genuine environment problem worth failing loudly on, not something to
+    // soften into a weaker assertion.
     expect(ExifToolProcess::isAvailable())
         ->toBeTrue();
 });

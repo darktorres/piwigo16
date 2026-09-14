@@ -12,12 +12,22 @@ use Symfony\Component\Process\Process;
 use Throwable;
 
 /**
- * Drives a single, persistent `exiftool -stay_open` process across many
+ * Drives a single, persistent `exiftool-rs -stay_open` process across many
  * `read()` calls -- one instance is one real batch session (a full sync
  * pass, or a single web request's own one-image lookup), not one process
- * per file. Profiling proved why this matters: 200 files took 37.5s as
- * naive per-file spawns (Perl's own interpreter boot + module load cost
- * paid every time) versus 1.4s reused across one process.
+ * per file. `exiftool-rs` (see `tools/exiftool-rs-fork/README.md`) is a
+ * patched fork of a pure-Rust ExifTool reimplementation, driven over the
+ * same `-stay_open` stdio protocol real (Perl) ExifTool uses -- chosen for
+ * its per-request parsing speed within that same persistent-process model,
+ * which the original prototype against real ExifTool already proved avoids
+ * catastrophic per-file process-spawn cost (200 files: 37.5s naive spawns
+ * vs 1.4s reused across one process).
+ *
+ * exiftool-rs's upstream had six real bugs affecting this integration --
+ * including two that made GPS extraction return nothing at all, and two
+ * more that made it return the correct magnitude but the wrong sign for
+ * the Western/Southern hemispheres -- all patched in the vendored fork; see
+ * `tools/exiftool-rs-fork/README.md` for what each one was and why.
  *
  * Built on `Symfony\Component\Process\Process` (already a project
  * dependency), not raw `proc_open()` -- {@see \Piwigo\Mail\
@@ -66,7 +76,7 @@ final class ExifToolProcess
     private int $executeCounter = 0;
 
     public function __construct(
-        private readonly string $binary = 'exiftool',
+        private readonly string $binary = 'exiftool-rs',
         private readonly float $idleTimeoutSeconds = self::DEFAULT_IDLE_TIMEOUT_SECONDS,
     ) {
         $this->start();
@@ -84,9 +94,11 @@ final class ExifToolProcess
         // doRead() instead of a clear, actionable message here.
         if (! self::commandExists($this->binary)) {
             throw new RuntimeException(
-                'Could not find the "' . $this->binary . '" executable. Piwigo requires ExifTool to '
-                . 'read photo metadata -- install it (e.g. `apt-get install libimage-exiftool-perl` on '
-                . 'Debian/Ubuntu, or the equivalent package for your OS) and ensure it is on PATH.',
+                'Could not find the "' . $this->binary . '" executable. Piwigo requires exiftool-rs to '
+                . 'read photo metadata -- the Docker image builds it automatically from '
+                . 'tools/exiftool-rs-fork/; for local development without Docker, build it yourself '
+                . '(cd tools/exiftool-rs-fork && cargo build --release --locked --bin exiftool-rs) and '
+                . 'put the resulting binary on PATH as "exiftool-rs".',
             );
         }
 
@@ -104,9 +116,8 @@ final class ExifToolProcess
             // resolved path) -- the common "not installed at all" case is
             // already handled synchronously above.
             throw new RuntimeException(
-                'Could not start the exiftool process. Piwigo requires ExifTool to read photo '
-                . 'metadata -- install it (e.g. `apt-get install libimage-exiftool-perl` on '
-                . 'Debian/Ubuntu, or the equivalent package for your OS) and ensure it is on PATH.',
+                'Could not start the exiftool-rs process. Piwigo requires exiftool-rs to read photo '
+                . 'metadata -- see tools/exiftool-rs-fork/README.md for how it is built.',
                 previous: $e,
             );
         }
@@ -129,7 +140,7 @@ final class ExifToolProcess
         static $available = null;
 
         if (! is_bool($available)) {
-            $available = self::commandExists('exiftool');
+            $available = self::commandExists('exiftool-rs');
         }
 
         return $available;
@@ -140,7 +151,7 @@ final class ExifToolProcess
         $cmdOut = [];
         $retval = null;
         // [SEC-16] escapeshellarg() even though $binary is either the
-        // fixed, code-controlled default ('exiftool') or a test's own
+        // fixed, code-controlled default ('exiftool-rs') or a test's own
         // fixed fake-script path -- never end-user input -- matching
         // ImageBackend's own belt-and-suspenders precedent for the same
         // probe shape.

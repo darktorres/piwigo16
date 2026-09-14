@@ -1,0 +1,100 @@
+[package]
+name = "exiftool-rs"
+version = "0.8.0"
+edition = "2021"
+rust-version = "1.82"
+description = "Read, write, and edit metadata in 93 file formats — a pure Rust reimplementation of ExifTool 13.59 with tag-name and value parity across the test corpus"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/Le-Syl21/exiftool-rs"
+homepage = "https://github.com/Le-Syl21/exiftool-rs"
+documentation = "https://docs.rs/exiftool-rs"
+readme = "README.md"
+keywords = ["exif", "metadata", "jpeg", "tiff", "xmp"]
+categories = ["multimedia::images", "parser-implementations"]
+exclude = [
+    "scripts/",
+    ".github/",
+    "tests/images/",
+    "tests/expected/",
+    "assets/fonts/",
+    "assets/screenshot.png",
+]
+
+[[bin]]
+name = "exiftool-rs"
+path = "src/main.rs"
+
+[[bin]]
+name = "exiftool-rs-gui"
+path = "src/gui.rs"
+required-features = ["gui"]
+
+# Live differential parity auditor vs a pinned Perl ExifTool release. Dev-only
+# (needs perl + network), behind a feature so normal builds stay lean.
+[[bin]]
+name = "parity"
+path = "src/bin/parity.rs"
+required-features = ["parity"]
+
+# Counter one of the ISO-ExifTool goal: what share of ExifTool's conversion
+# expressions the evaluator understands. Reads them from a Perl checkout, so the
+# figure can be reproduced rather than taken on trust.
+[[bin]]
+name = "conv_coverage"
+path = "src/bin/conv_coverage.rs"
+required-features = ["parity"]
+
+[lib]
+name = "exiftool_rs"
+path = "src/lib.rs"
+
+[features]
+default = []
+win-icon = ["winres"]
+gui = ["eframe", "egui", "image", "rfd", "noto-fonts-dl"]
+# No extra deps: the parity auditor shells out to curl/tar/perl.
+parity = []
+
+[dependencies]
+thiserror = "2"
+byteorder = "1"
+memmap2 = "0.9"
+# Unpinned again: attribute values reach us through
+# `escape_attribute_whitespace`, which rewrites CR/LF/TAB as character
+# references before parsing. Those are exempt from XML attribute-value
+# normalisation, so ExifTool's raw bytes survive any conforming parser --
+# 1.4 added that normalisation and cost three tags of read parity before.
+xml = "1"
+encoding_rs = "0.8"
+flate2 = "1"
+brotli = "8"
+unicode-width = "0.2"
+
+# GUI dependencies (optional)
+# eframe 0.35 flipped its default renderer to wgpu; its D3D12 backend fails to
+# build on Windows (wgpu/windows-rs mismatch). We render with glow (OpenGL, as in
+# 0.31), so select the default feature set with wgpu swapped for glow — this drops
+# egui-wgpu/wgpu/d3d12 entirely and keeps the build portable.
+eframe = { version = "0.36", optional = true, default-features = false, features = [
+    "accesskit",
+    "default_fonts",
+    "glow",
+    "wayland",
+    "web_screen_reader",
+    "x11",
+] }
+egui = { version = "0.36", optional = true }
+image = { version = "0.25", optional = true, default-features = false, features = ["jpeg", "png", "gif", "bmp", "tiff"] }
+rfd = { version = "0.17", optional = true }
+noto-fonts-dl = { version = "0.1", optional = true, features = ["ar", "bn", "hi", "ja", "ko", "zh", "zh_tw"] }
+filetime = "0.2.27"
+regex-lite = "0.1.9"
+
+[target.'cfg(windows)'.build-dependencies]
+winres = { version = "0.1", optional = true }
+
+[dev-dependencies]
+
+[profile.release]
+opt-level = 3
+lto = "thin"

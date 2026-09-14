@@ -585,7 +585,14 @@ file needs to exist inside the image.
   why this was accepted). Requires `ffi.enable=true` in php.ini for any
   non-CLI SAPI (FrankenPHP, Apache/mod_php) -- CLI is exempt from the
   `ffi.enable=preload` default, so this doesn't affect Composer scripts or
-  the test suite, only production request handling. `ext-exif` above stays
+  the test suite, only production request handling. `ExifToolFfi::resolveLibraryPath()`
+  finds the built library itself: the Docker-deployed `/usr/local/lib/piwigo/libexiftool_rs.so`
+  on non-Windows when present, else the fork's own local `cargo build`
+  output (`tools/exiftool-rs-fork/target/release/`, with `cargo`'s own
+  per-platform basename -- `libexiftool_rs.so` on Linux/macOS,
+  `exiftool_rs.dll` on Windows, where there is no deployed/Docker
+  convention at all); the `PIWIGO_EXIFTOOL_RS_LIBRARY_PATH` env var
+  overrides all of that when set, for any other layout. `ext-exif` above stays
   required only for `Admin\Image\ImageBackend::getRotationAngle()`'s own
   narrow, unrelated use (reading just the `Orientation` tag to auto-rotate
   an upload), which native PHP already serves adequately. Real (Perl)

@@ -94,6 +94,52 @@ test('read() returns null for a file that does not exist', function (): void {
         ->toBeNull();
 });
 
+test('resolveLibraryPath() defaults to the Docker-deployed path on this (non-Windows) box', function (): void {
+    // Real, not simulated: DEFAULT_LIBRARY_PATH is a hard requirement here
+    // too (see isAvailable()'s own test above), so this is the actual
+    // real-world default path this dev/CI box resolves to.
+    expect(ExifToolFfi::resolveLibraryPath())
+        ->toBe('/usr/local/lib/piwigo/libexiftool_rs.so');
+});
+
+test('resolveLibraryPath() falls back to the fork\'s own local cargo build output on Windows', function (): void {
+    // The bug this whole resolution scheme exists to fix: a Windows dev
+    // building tools/exiftool-rs-fork/ locally gets a real exiftool_rs.dll,
+    // not a libexiftool_rs.so -- there is no deployed convention for
+    // Windows (Piwigo ships no Windows production image), so this branch
+    // is unconditional there, independent of what exists on disk.
+    expect(ExifToolFfi::resolveLibraryPath('Windows'))
+        ->toEndWith('/tools/exiftool-rs-fork/target/release/exiftool_rs.dll');
+});
+
+test('resolveLibraryPath() honors the PIWIGO_EXIFTOOL_RS_LIBRARY_PATH env var override, on any OS', function (): void {
+    // Save/restore rather than a blind unset in the finally: this test's
+    // own --parallel worker process keeps this env var for every later
+    // test in the same worker otherwise (only matters if something ever
+    // legitimately sets it outside this test, but restoring the real
+    // prior value costs nothing and is never wrong).
+    $original = getenv('PIWIGO_EXIFTOOL_RS_LIBRARY_PATH');
+    putenv('PIWIGO_EXIFTOOL_RS_LIBRARY_PATH=/custom/path/libexiftool_rs.so');
+
+    try {
+        expect(ExifToolFfi::resolveLibraryPath())
+            ->toBe('/custom/path/libexiftool_rs.so')
+            ->and(ExifToolFfi::resolveLibraryPath('Windows'))
+            ->toBe('/custom/path/libexiftool_rs.so');
+    } finally {
+        if ($original === false) {
+            putenv('PIWIGO_EXIFTOOL_RS_LIBRARY_PATH');
+        } else {
+            putenv('PIWIGO_EXIFTOOL_RS_LIBRARY_PATH=' . $original);
+        }
+    }
+});
+
+test('constructor honors an explicit $libraryPath over resolveLibraryPath(), just like before this env-var/OS resolution existed', function (): void {
+    expect(static fn () => new ExifToolFfi('/no/such/path/libexiftool_rs.so'))
+        ->toThrow(RuntimeException::class, 'Could not find the exiftool-rs shared library at "/no/such/path/libexiftool_rs.so"');
+});
+
 test('close() is a harmless no-op, safe to call repeatedly and before further read()s', function (): void {
     $path = exifToolFfiTestTaggedJpeg();
 

@@ -6,6 +6,7 @@ namespace Piwigo\Db;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
+use Doctrine\DBAL\Platforms\MySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Platforms\SQLitePlatform;
 use LogicException;
@@ -18,28 +19,28 @@ use LogicException;
  *
  * massInsert()/massUpdate() issue real multi-row, chunked SQL (a single
  * multi-row `VALUES (...), (...), ...` per `INSERT` chunk; a single
- * searched-`CASE` `UPDATE` per chunk) rather than one statement per row --
- * profiling a real admin-sync pass at 20,000 images found `massUpdate()`'s
- * former row-by-row loop alone responsible for ~27% of total instrumented
- * time (99s of 367s, 49,600 individual `UPDATE` statements), almost
- * entirely spent in per-statement network/parse/bind/execute overhead
- * rather than genuine work.
+ * `UPDATE ... JOIN (VALUES ...)` per `UPDATE` chunk) rather than one
+ * statement per row -- profiling a real admin-sync pass at 20,000 images
+ * found `massUpdate()`'s former row-by-row loop alone responsible for
+ * ~27% of total instrumented time (99s of 367s, 49,600 individual
+ * `UPDATE` statements), almost entirely spent in per-statement
+ * network/parse/bind/execute overhead rather than genuine work.
  *
- * {@see CHUNK_SIZE} is NOT sized off platform placeholder limits (both
- * PostgreSQL's 65,535-parameter protocol limit and SQLite's 32,766-variable
- * default sit far above where the real ceiling actually bites) -- a
- * `massUpdate()` chunk's searched `CASE` costs the database O(chunk size)
- * comparisons *per row* to find its own matching `WHEN` branch (branches
- * are evaluated in order), so total CASE-evaluation work across one chunk
- * is O(chunk_size²), not O(chunk_size). Measured directly against a real
- * MySQL sync at 10,000 images (`tests/Bench/SiteSyncBench.php`): 100 rows/
- * chunk ~52s, 500 ~54s, 1,000 ~56s (flat, within normal run-to-run noise),
- * 2,000 ~65s, 5,000 ~98s (a clear, reproducible regression) -- bigger
- * chunks trade fewer round trips for quadratically more per-chunk
- * CASE-branch evaluation, and the two effects invert well before any
- * placeholder limit is anywhere close. 500 sits inside the flat, safe
- * region without chasing a marginal, possibly environment-specific
- * "true" optimum between 100-1,000.
+ * `updateChunk()`'s own docblock covers why it's a `VALUES`-derived-table
+ * `JOIN`/`FROM` now, not a searched `CASE` (a real, measured O(chunk²)
+ * problem that approach had -- a session-scoped `CREATE TEMPORARY TABLE`
+ * would also have fixed it, but was rejected in favor of a real,
+ * lifecycle-free derived table).
+ *
+ * {@see CHUNK_SIZE} is shared with `massInsert()`, which never had the
+ * old CASE-based `massUpdate()`'s own O(chunk²) blowup (the reason 500
+ * was chosen over a bigger chunk in the first place -- see git history
+ * for the exact per-chunk-size timings that motivated it) -- the
+ * JOIN-based `updateChunk()` doesn't have that problem either, so 500 is
+ * no longer a correctness-adjacent ceiling for it, just an unexamined
+ * inherited default. Worth its own re-tuning pass if fewer, larger
+ * chunks turn out to help further; not attempted here, since that's a
+ * separate question from replacing the CASE approach itself.
  *
  * The whole call (every chunk) still runs inside one
  * `Connection::transactional()` closure, so a failure in a later chunk
@@ -51,6 +52,13 @@ use LogicException;
  * share) are deliberately NOT batched -- a lone row has no batching
  * upside, and tests/Unit/Db/BatchWriterTest.php's mutation-testing-derived
  * coverage is pinned to updateRow()'s exact per-row internals.
+ * `updateChunk()` also falls back to `updateRow()` for the rare row whose
+ * own primary-key value is null/non-scalar (see its own docblock) --
+ * reusing this already-tested per-row path there rather than
+ * reimplementing `updateRow()`'s own `IS NULL` handling a second time
+ * inside the batched JOIN's own join condition, where it would need a
+ * NULL-safe equality operator with no single portable spelling across
+ * MySQL/MariaDB/PostgreSQL/SQLite.
  */
 final readonly class BatchWriter
 {
@@ -280,40 +288,58 @@ final readonly class BatchWriter
     }
 
     /**
-     * One real, searched-`CASE` batched `UPDATE` for an entire chunk,
-     * replacing what used to be one `updateRow()` call per row. Portable
-     * as-is (searched `CASE`/`AND`/`OR` only) -- no per-platform branch
-     * needed here, unlike buildInsertSql()'s own `ignore` handling.
-     *
-     * Per row, first computes its own primary-key predicate (`col = :k` per
-     * primary column, ANDed together -- `col IS NULL` for a null/non-scalar
-     * key value, exactly like updateRow() -- and dropping the row entirely
-     * if every update column is empty-and-skipped, exactly like
-     * updateRow()'s own all-fields-skipped early return). Then, per SET
-     * column, only rows that actually touch *that* column get a `WHEN`
-     * branch -- a row skipping a column under SKIP_EMPTY simply has none,
-     * so it falls through to `ELSE <column>` (its own current value,
-     * unchanged) for that column specifically, while still being matched
-     * by the shared `WHERE` (built from the exact same per-row predicates)
-     * for whichever *other* column(s) it does set. One predicate per row,
-     * reused for both its own `WHEN` branches and its own `WHERE` branch,
-     * rather than two independently-built copies that could drift apart.
+     * Splits a chunk into the fast path (every row's primary-key value is
+     * a real scalar -- the overwhelming common case) and a rare fallback
+     * (a null/non-scalar primary value, matching via `col IS NULL` rather
+     * than a real key equality -- `$dbfields['primary']` is whichever
+     * WHERE-matching column set the caller chose, not necessarily a real
+     * `NOT NULL` primary key). The fast path batches into one
+     * {@see updateChunkViaJoin()} call per chunk; a null-key row is handed
+     * to the already-tested per-row {@see updateRow()} entirely untouched
+     * (its own `$data`/`$flags`), rather than reimplementing
+     * `updateRow()`'s `IS NULL` handling a second time inside the batched
+     * JOIN's own join condition, where it would need a NULL-safe equality
+     * operator with no single spelling portable across
+     * MySQL/MariaDB/PostgreSQL/SQLite.
      *
      * @param array{primary: string[], update: string[]} $dbfields
      * @param list<array<string, mixed>> $chunk
      */
     private function updateChunk(string $table, array $dbfields, array $chunk, int $flags): void
     {
-        $protectedPrimary = array_map($this->protectColumnName(...), $dbfields['primary']);
-        $protectedUpdate = [];
-        foreach ($dbfields['update'] as $key) {
-            $protectedUpdate[$key] = $this->protectColumnName($key);
-        }
+        /** @var list<array{primary: array<string, int|float|string>, setValues: array<string, mixed>}> */
+        $joinRows = [];
 
-        /** @var list<array{predicateSql: string, predicateParams: array<string, int|float|string>, setValues: array<string, mixed>}> */
-        $rows = [];
-        $paramIndex = 0;
         foreach ($chunk as $data) {
+            $primaryValues = [];
+            $hasNullPrimary = false;
+            foreach ($dbfields['primary'] as $key) {
+                $value = SqlDialect::booleanToInt($data[$key] ?? null);
+                // booleanToInt() already converts a real bool to int, so a
+                // bool can never actually reach here -- ! is_bool() is
+                // genuine defensive narrowing (matches this method's own
+                // updateChunkViaJoin() parameter type), not a no-op check.
+                if (isset($value) && is_scalar($value) && ! is_bool($value)) {
+                    $primaryValues[$key] = $value;
+                } else {
+                    $hasNullPrimary = true;
+                    break;
+                }
+            }
+
+            if ($hasNullPrimary) {
+                $where = [];
+                foreach ($dbfields['primary'] as $key) {
+                    $where[$key] = $data[$key] ?? null;
+                }
+                $updateData = [];
+                foreach ($dbfields['update'] as $key) {
+                    $updateData[$key] = $data[$key] ?? null;
+                }
+                $this->updateRow($table, $updateData, $where, $flags);
+                continue;
+            }
+
             $setValues = [];
             foreach ($dbfields['update'] as $key) {
                 $value = SqlDialect::booleanToInt($data[$key] ?? null);
@@ -332,76 +358,237 @@ final readonly class BatchWriter
                 continue;
             }
 
-            $predicateParts = [];
-            $predicateParams = [];
-            foreach ($dbfields['primary'] as $primaryIndex => $key) {
-                $value = SqlDialect::booleanToInt($data[$key] ?? null);
-                if (isset($value) && is_scalar($value)) {
-                    $placeholder = 'k' . $paramIndex++;
-                    $predicateParts[] = $protectedPrimary[$primaryIndex] . ' = :' . $placeholder;
-                    $predicateParams[$placeholder] = $value;
-                } else {
-                    $predicateParts[] = $protectedPrimary[$primaryIndex] . ' IS NULL';
-                }
-            }
-
-            $rows[] = [
-                'predicateSql' => implode(' AND ', $predicateParts),
-                'predicateParams' => $predicateParams,
+            $joinRows[] = [
+                'primary' => $primaryValues,
                 'setValues' => $setValues,
             ];
         }
 
-        if ($rows === []) {
+        if ($joinRows !== []) {
+            $this->updateChunkViaJoin($table, $dbfields, $joinRows);
+        }
+    }
+
+    /**
+     * One `UPDATE ... JOIN (VALUES ...)` (MySQL/MariaDB) or
+     * `UPDATE ... SET ... FROM (VALUES ...) WHERE ...` (PostgreSQL/SQLite)
+     * per chunk -- replaces a former searched-`CASE` `UPDATE`, which cost
+     * the database O(chunk_size) comparisons *per row* to find its own
+     * matching `WHEN` branch (branches evaluated in order), i.e.
+     * O(chunk_size²) total per chunk. Measured directly against a real
+     * MySQL sync at 10,000 images (`tests/Bench/SiteSyncBench.php`): 100
+     * rows/chunk ~52s, 500 ~54s, 1,000 ~56s (flat, within normal
+     * run-to-run noise), 2,000 ~65s, 5,000 ~98s -- a clear, reproducible
+     * regression once chunk size grew.
+     *
+     * A `VALUES`-derived table joined by primary key gives the database a
+     * real (indexed, on the real table's side) join instead -- back to
+     * O(n) per chunk. Measured ~2-3x faster than the CASE approach at
+     * 1,200/10,000-row scale on real MySQL 8.4, the speedup growing with
+     * chunk size exactly as the O(n²) vs O(n) difference predicts. A
+     * session-scoped `CREATE TEMPORARY TABLE` would get the same join
+     * shape, but was rejected in favor of this lifecycle-free
+     * alternative: no `CREATE`/`DROP` pair, no session-scoping or
+     * naming-collision risk under concurrent connections sharing one
+     * schema.
+     *
+     * Every row here already has a fully scalar primary-key value and a
+     * non-empty `setValues` -- both already validated by
+     * {@see updateChunk()}, not re-checked here.
+     *
+     * Per-column "was this actually provided" flags (`{col}_set` in the
+     * derived table) preserve `SKIP_EMPTY`'s real per-row/per-column
+     * semantics: different rows in the same chunk can legitimately supply
+     * different subsets of `$dbfields['update']` (e.g. different photos'
+     * own available EXIF/IPTC fields), and a row that doesn't touch a
+     * given column must fall through to that column's own current value,
+     * not have some other row's value (or NULL) clobber it. A flat
+     * `SET col = nv.col` for every row would silently break that -- the
+     * `CASE WHEN {col}_set THEN nv.{col} ELSE t.{col} END` per column
+     * reproduces the old CASE-based design's own `WHEN ... ELSE <column>
+     * END` per-column fallthrough exactly, just keyed off a boolean flag
+     * per row instead of a per-row predicate re-match against every other
+     * row's own predicate.
+     *
+     * Tuple/column syntax differs per platform in 2 independent, verified
+     * (not assumed) ways:
+     *
+     * 1. Real MySQL specifically -- not MariaDB, despite both extending
+     *    `AbstractMySQLPlatform` -- requires each `VALUES` tuple wrapped in
+     *    `ROW(...)`. Confirmed live: MariaDB 12.3 rejects `ROW(...)`
+     *    outright ("You have an error in your SQL syntax"), MySQL 8.4
+     *    requires it; MariaDB/PostgreSQL/SQLite all accept a bare
+     *    `(...), (...)` tuple list instead.
+     * 2. SQLite's own `VALUES (...)` table-value-constructor has no
+     *    `AS alias(col1, col2, ...)` named-column form at all -- confirmed
+     *    live, a real syntax error -- only MySQL/MariaDB/PostgreSQL support
+     *    naming columns that way. SQLite's own branch instead references
+     *    columns by their auto-generated `column1`, `column2`, ...
+     *    (1-based) positional names.
+     *
+     * @param array{primary: string[], update: string[]} $dbfields
+     * @param list<array{primary: array<string, int|float|string>, setValues: array<string, mixed>}> $rows
+     */
+    private function updateChunkViaJoin(string $table, array $dbfields, array $rows): void
+    {
+        // Only the columns at least one row in this chunk actually sets --
+        // matches the old CASE-based design's own optimization of
+        // omitting a SET clause (and every WHEN branch with it) entirely
+        // when no row in the chunk touches that column.
+        $usedKeys = [];
+        foreach ($rows as $row) {
+            foreach (array_keys($row['setValues']) as $key) {
+                $usedKeys[$key] = true;
+            }
+        }
+        $updateKeys = array_values(array_filter(
+            $dbfields['update'],
+            static fn (string $key): bool => isset($usedKeys[$key]),
+        ));
+
+        if ($updateKeys === []) {
             return;
         }
 
-        $qb = $this->conn->createQueryBuilder()
-            ->update($this->protectColumnName($table));
+        $platform = $this->conn->getDatabasePlatform();
+        $isSqlite = $platform instanceof SQLitePlatform;
+        // MySQLPlatform and MariaDBPlatform are sibling classes (both
+        // extend AbstractMySQLPlatform, neither extends the other), so
+        // `instanceof MySQLPlatform` alone already excludes MariaDB --
+        // real MySQL's ROW() requirement (below) does not apply to it.
+        $requiresRowWrapper = $platform instanceof MySQLPlatform;
+        $usesJoinClause = $platform instanceof AbstractMySQLPlatform;
 
-        foreach ($dbfields['update'] as $key) {
-            $whenParts = [];
-            $columnParams = [];
-            foreach ($rows as $row) {
-                if (! array_key_exists($key, $row['setValues'])) {
-                    continue;
-                }
+        $protectedTable = $this->protectColumnName($table);
+        $protectedPrimary = array_map($this->protectColumnName(...), $dbfields['primary']);
+        $protectedUpdate = array_combine($updateKeys, array_map($this->protectColumnName(...), $updateKeys));
 
-                $value = $row['setValues'][$key];
-                if ($value === null) {
-                    $whenParts[] = 'WHEN ' . $row['predicateSql'] . ' THEN NULL';
-                } else {
-                    $placeholder = 'v' . $paramIndex++;
-                    $whenParts[] = 'WHEN ' . $row['predicateSql'] . ' THEN :' . $placeholder;
-                    $columnParams[$placeholder] = $value;
-                }
-
-                foreach ($row['predicateParams'] as $pName => $pValue) {
-                    $columnParams[$pName] = $pValue;
-                }
-            }
-
-            if ($whenParts === []) {
-                continue;
-            }
-
-            $protectedColumn = $protectedUpdate[$key];
-            $qb->set($protectedColumn, 'CASE ' . implode(' ', $whenParts) . ' ELSE ' . $protectedColumn . ' END');
-            foreach ($columnParams as $pName => $pValue) {
-                $qb->setParameter($pName, $pValue);
-            }
+        // Fixed column layout within each VALUES tuple: primary key(s)
+        // first, then a (value, was-provided-flag) pair per update column,
+        // in $updateKeys order -- the tuple-building loop and the
+        // alias/column-reference logic below must agree on this exactly.
+        $aliasColumns = [...$dbfields['primary']];
+        foreach ($updateKeys as $key) {
+            $aliasColumns[] = $key;
+            $aliasColumns[] = $key . '_set';
         }
 
-        $whereParts = [];
+        // PostgreSQL specifically: a bound parameter inside a bare `VALUES
+        // (...)` list has no type of its own to infer from context, unlike
+        // MySQL/MariaDB/SQLite's own looser, coercive comparison semantics.
+        // Confirmed live, 3 distinct failures without this: (1) `t.id =
+        // nv.id` -- "operator does not exist: integer = text" -- fixed by
+        // casting every non-null value parameter to match its own PHP
+        // runtime type (this class's own real callers only ever use plain
+        // int/float/string columns, per its class docblock's "genuinely
+        // arbitrary by design" column-value philosophy); (2)
+        // `CASE WHEN nv.col_set = 1` -- the same operator-resolution
+        // problem for the always-int 0/1 flag column, fixed with a fixed
+        // `::integer` cast; (3) `t.rnk = CASE ... THEN nv.rnk ELSE t.rnk
+        // END` for an integer `rnk` column -- "CASE types integer and text
+        // cannot be matched", proving the update-*value* column needs the
+        // exact same per-value cast as the primary key, not just backward
+        // inference from the CASE's own ELSE branch as originally assumed.
+        //
+        // A genuinely null value (either "not provided" or an explicit
+        // SKIP_EMPTY-surviving NULL) is spliced as the bare literal `NULL`
+        // instead of a cast bound parameter -- an explicit `::text`/etc.
+        // cast on a null parameter would itself become a concretely-typed
+        // NULL that can *still* fail to unify against a differently-typed
+        // CASE branch (the exact problem above, just moved), whereas an
+        // untyped `NULL` literal is PostgreSQL's flexible "unknown"
+        // pseudo-type, which unifies against anything.
+        $postgresCast = static function (mixed $value) use ($platform): string {
+            if (! $platform instanceof PostgreSQLPlatform || $value === null) {
+                return '?';
+            }
+
+            return match (true) {
+                is_int($value) => '?::bigint',
+                is_float($value) => '?::double precision',
+                default => '?::text',
+            };
+        };
+
+        $rowTuples = [];
+        $params = [];
         foreach ($rows as $row) {
-            $whereParts[] = '(' . $row['predicateSql'] . ')';
-            foreach ($row['predicateParams'] as $pName => $pValue) {
-                $qb->setParameter($pName, $pValue);
+            $tupleParts = [];
+            foreach ($dbfields['primary'] as $key) {
+                $tupleParts[] = $postgresCast($row['primary'][$key]);
+                $params[] = $row['primary'][$key];
             }
+            foreach ($updateKeys as $key) {
+                $provided = array_key_exists($key, $row['setValues']);
+                $value = $provided ? $row['setValues'][$key] : null;
+                if ($value === null) {
+                    $tupleParts[] = 'NULL';
+                } else {
+                    $tupleParts[] = $postgresCast($value);
+                    $params[] = $value;
+                }
+                // The flag column IS compared with a plain `= 1` equality
+                // (`CASE WHEN nv.{col}_set = 1 THEN ...`), the same
+                // operator-resolution problem as the primary key above.
+                // Always a literal 0/1 PHP int, never null, so a fixed
+                // `::integer` cast (no per-value dispatch needed).
+                $tupleParts[] = $platform instanceof PostgreSQLPlatform ? '?::integer' : '?';
+                $params[] = $provided ? 1 : 0;
+            }
+            $rowTuples[] = $requiresRowWrapper
+                ? 'ROW(' . implode(',', $tupleParts) . ')'
+                : '(' . implode(',', $tupleParts) . ')';
         }
-        $qb->where(implode(' OR ', $whereParts));
+        $valuesSql = 'VALUES ' . implode(',', $rowTuples);
 
-        $qb->executeStatement();
+        $nvColumnName = function (int $index) use ($aliasColumns, $isSqlite): string {
+            // SQLite has no named-column VALUES-alias form (see this
+            // method's own docblock) -- column1/column2/... (1-based) are
+            // its own auto-generated names for a bare VALUES row source.
+            $name = $isSqlite ? 'column' . ($index + 1) : $aliasColumns[$index];
+
+            return $this->protectColumnName($name);
+        };
+
+        $primaryCount = count($dbfields['primary']);
+        $joinParts = [];
+        foreach ($dbfields['primary'] as $i => $key) {
+            $joinParts[] = 't.' . $protectedPrimary[$i] . ' = nv.' . $nvColumnName($i);
+        }
+        $joinSql = implode(' AND ', $joinParts);
+
+        $setParts = [];
+        foreach ($updateKeys as $j => $key) {
+            $valueColumn = $nvColumnName($primaryCount + $j * 2);
+            $flagColumn = $nvColumnName($primaryCount + $j * 2 + 1);
+            $protectedColumn = $protectedUpdate[$key];
+            // The SET target itself is table-qualified (`t.col = ...`)
+            // only for the JOIN-clause platforms (MySQL/MariaDB) --
+            // PostgreSQL rejects a qualified SET target outright
+            // ("SET target columns cannot be qualified with the relation
+            // name", confirmed live), and standard `UPDATE ... FROM`
+            // syntax (which SQLite's own variant follows) never qualifies
+            // it either. The CASE expression's own internal references
+            // (`nv.col`, and `t.col` in the ELSE fallthrough) are
+            // unaffected by this restriction on every platform.
+            $setTarget = $usesJoinClause ? 't.' . $protectedColumn : $protectedColumn;
+            $setParts[] = $setTarget . ' = CASE WHEN nv.' . $flagColumn . ' = 1 THEN nv.' . $valueColumn . ' ELSE t.' . $protectedColumn . ' END';
+        }
+        $setSql = implode(',', $setParts);
+
+        $nvAlias = $isSqlite
+            ? 'nv'
+            : 'nv(' . implode(',', array_map($this->protectColumnName(...), $aliasColumns)) . ')';
+
+        $sql = $usesJoinClause
+            ? "UPDATE {$protectedTable} AS t JOIN ({$valuesSql}) AS {$nvAlias} ON {$joinSql} SET {$setSql}"
+            : "UPDATE {$protectedTable} AS t SET {$setSql} FROM ({$valuesSql}) AS {$nvAlias} WHERE {$joinSql}";
+
+        $stmt = $this->conn->prepare($sql);
+        foreach ($params as $i => $value) {
+            $stmt->bindValue($i + 1, $value);
+        }
+        $stmt->executeStatement();
     }
 
     /**
